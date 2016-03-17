@@ -1,0 +1,4 @@
+$("#no-data-modal-target").html("<%= escape_javascript(render partial: 'no_data') %>");
+$("#failure_modal").modal('show');
+// stop spinner
+$('#<%= params[:cluster] %>').data('spinner').stop();

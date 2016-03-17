@@ -1,0 +1,58 @@
+<h1>Study: <%= @study.name %></h1>
+<div class="panel panel-info">
+	<div class="panel-heading">
+		<div class="panel-title">
+			<h4><%= link_to "Overview <span class='fa fa-chevron-down'></span>".html_safe, "#overview", "data-toggle" => "collapse"  %></h4>
+		</div>
+	</div>
+	<div id="overview" class="panel-collapse collapse in">
+		<div class="panel-body">
+			<%= @study.description.html_safe %>
+		</div>
+	</div>
+</div>
+<div class="row">
+	<div class="col-md-2">
+		<h2>Clusters</h2>
+		<div class="list-group">
+				<%= link_to "All <span class='badge'>#{@num_points}</span>".html_safe, view_study_path, id: 'Major_cell_types', class: 'list-group-item cluster-nav active' %>
+			<% @clusters.each_with_index do |cluster, index| %>
+				<%= link_to "#{cluster.name} <span class='badge'>#{cluster.cluster_points.count}</span>".html_safe, render_cluster_path(study_name: params[:study_name], cluster: cluster.name, index: index), id: cluster.name, class: 'list-group-item cluster-nav spin', 'data-remote' => true %>
+			<% end %>
+		</div>
+	</div>
+	<div class="col-md-10">
+		<h2>Plot</h2>
+		<div id="cluster-plot"></div>
+	</div>
+</div>
+<div id="no-data-modal-target"></div>
+
+<%= javascript_tag do %>
+
+	<% @coordinates.sort_by {|k,v| k}.each_with_index do |(cluster, data), index| %>
+		var <%= cluster %> = {
+			x: <%= raw data[:x] %>,
+			y: <%= raw data[:y] %>,
+			text: <%= raw data[:text] %>,
+			name: "<%= data[:name] %>",
+			mode: 'markers',
+			type: 'scatter',
+			marker: {
+				color: DEFAULT_COLORS[<%= index %>]
+			}
+		};
+	<% end %>
+
+	var data = [];
+	<% @clusters.each do |cluster| %>
+		data.push(<%= cluster.name %>);
+	<% end %>
+
+	Plotly.newPlot('cluster-plot', data, {hovermode: 'closest'});
+
+	$( window ).on('resizeEnd', function() {
+		Plotly.newPlot('cluster-plot', data);
+	});
+
+<% end %>

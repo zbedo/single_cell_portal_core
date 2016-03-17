@@ -1,0 +1,30 @@
+// load each cluster into a single variable to have multiple tracks
+<% @coordinates.each_with_index do |(cluster, data), index| %>
+var <%= cluster %> = {
+	x: <%= raw data[:x] %>,
+	y: <%= raw data[:y] %>,
+	text: <%= raw data[:text] %>,
+	name: "<%= data[:name] %>",
+	mode: 'markers',
+	type: 'scatter',
+	marker: {
+		color: DEFAULT_COLORS[<%= index %>]
+	}
+};
+
+<% end %>
+
+// populate data array for showing legend
+var data = [];
+<% @coordinates.each_key do |cluster| %>
+	data.push(<%= cluster %>);
+<% end %>
+
+Plotly.newPlot('cluster-plot', data, {hovermode: 'closest'});
+
+// re-highlight cluster nav
+$('.cluster-nav').removeClass('active');
+$("#<%= params[:cluster] %>").addClass('active');
+
+// stop spinner
+$('#<%= params[:cluster] %>').data('spinner').stop();

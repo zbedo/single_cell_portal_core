@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Single Cell Portal</title>
+  <%= stylesheet_link_tag    'application', media: 'all' %>
+  <%= javascript_include_tag 'application' %>
+	<%= javascript_include_tag 'https://cdn.plot.ly/plotly-latest.min.js' %>
+  <%= csrf_meta_tags %>
+</head>
+<body>
+<%= render '/layouts/nav' %>
+<%= render '/layouts/notices' %>
+<div class="container-fluid section-pad">
+	<div class="row">
+		<div class="col-md-12">
+			<%= yield %>
+		</div>
+	</div>
+</div>
+</body>
+</html>
