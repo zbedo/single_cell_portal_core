@@ -1,0 +1,107 @@
+<div class="row">
+	<div class="col-md-12">
+		<h1>Gene Expression for <em><%= params[:gene] %></em> <%= params[:cluster] ? "across cluster: #{params[:cluster]}" : 'for all major cell types' %><%= link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, view_study_path(params[:study_name]), class: 'btn btn-lg btn-warning pull-right' %></h1>
+		<%= render partial: 'expression_nav' %>
+	</div>
+</div>
+<div class="row">
+	<div class="col-md-12">
+		<div id="box-plot"></div>
+	</div>
+</div>
+<div class="row">
+	<div class="col-md-6">
+		<div id="scatter-plot"></div>
+	</div>
+	<div class="col-md-6">
+		<div id="cluster-plot"></div>
+	</div>
+</div>
+
+<%= javascript_tag do %>
+
+	// load box plot data
+	<% @values.sort_by {|k,v| k}.each do |cluster, data| %>
+		var <%= cluster %>_exp = {
+			y: <%= raw data[:y] %>,
+			name: "<%= data[:name] %>",
+			boxpoints: 'all',
+			jitter: 0.3	,
+			pointpos: -1.8,
+			boxmean: true,
+			type: 'box'
+		};
+	<% end %>
+
+	var expressionData = [];
+	<% @clusters.each do |cluster| %>
+		expressionData.push(<%= cluster.name %>_exp);
+	<% end %>
+
+	var layout = {
+		hovermode: 'closest',
+		yaxis: {
+			title: 'log(TPM) Expression Values'
+		}
+	};
+
+	Plotly.newPlot('box-plot', expressionData, layout);
+
+	$( window ).on('resizeEnd', function() {
+		Plotly.newPlot('box-plot', expressionData, layout);
+	});
+
+	// load expression scatter plot
+	<% @expression.sort_by {|k,v| k}.each do |cluster, data| %>
+		var <%= cluster %> = {
+			x: <%= raw data[:x] %>,
+			y: <%= raw data[:y] %>,
+			text: <%= raw data[:text] %>,
+			name: "<%= data[:name] %>",
+			mode: 'markers',
+			type: 'scatter',
+			marker: <%= raw data[:marker].to_json %>
+		};
+	<% end %>
+
+	var clusterData = [all];
+
+	var scatterLayout = {
+		hovermode: 'closest'
+	};
+
+	Plotly.newPlot('scatter-plot', clusterData, scatterLayout);
+
+	$( window ).on('resizeEnd', function() {
+		Plotly.newPlot('scatter-plot', clusterData, {hovermode: 'closest'});
+	});
+
+	// load static cluster scatter for reference
+	<% @coordinates.sort_by {|k,v| k}.each do |cluster, data| %>
+		var <%= cluster %>_clst = {
+			x: <%= raw data[:x] %>,
+			y: <%= raw data[:y] %>,
+			text: <%= raw data[:text] %>,
+			name: "<%= data[:name] %>",
+			mode: 'markers',
+			type: 'scatter'
+		};
+	<% end %>
+
+	var data = [];
+	<% @clusters.each do |cluster| %>
+		data.push(<%= cluster.name %>_clst);
+	<% end %>
+
+	var staticLayout = {
+		title: 'Cluster Reference',
+		showlegend: false,
+		annotations: <%= raw @annotations.to_json %>
+	};
+	Plotly.newPlot('cluster-plot', data, staticLayout);
+
+	$( window ).on('resizeEnd', function() {
+		Plotly.newPlot('cluster-plot', data, staticLayout);
+	});
+
+<% end %>

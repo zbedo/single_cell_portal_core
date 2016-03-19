@@ -4,7 +4,7 @@
 
 This application is built and deployed using Docker[https://www.docker.com].  Please refer to their online documentation for instructions on installing and creating a default VM for managing Docker images.
 
-Additionally, you must have {MySQL v5.6}[http://dev.mysql.com/downloads/mysql/] or greater installed on your local machine.
+Additionally, you must have {MongoDB v3}[https://www.mongodb.com] or greater installed on your local machine.
 
 == BUILDING THE DOCKER IMAGE
 
@@ -32,7 +32,7 @@ Before running the container, you will need to alias the Docker VM to a hostname
 <b>We need the hostname be docker-host.com (without www.) for Google OAuth2 to function as this callback host is defined in the Google Dev Console for the Single Cell project.</b>
 
 Once the image has successfully built, use the following command to start the container:
-  docker run --rm -it --name [CONTAINER_NAME] -p 80:80 -p 443:443 -p 3306:3306 -p 587:587 -h docker-host.com -v [PROJECT_DIR]:/home/app/webapp:rw -e PASSENGER_APP_ENV=[PASSENGER_APP_ENV] -e MYSQL_LOCALHOST=[MYSQL_LOCALHOST] -e SENDGRID_USERNAME=[SENDGRID_USERNAME] -e SENDGRID_PASSWORD=[SENDGRID_PASSWORD] single_cell_docker
+  docker run --rm -it --name [CONTAINER_NAME] -p 80:80 -p 443:443 -p 27017:27017 -p 587:587 -h docker-host.com -v [PROJECT_DIR]:/home/app/webapp:rw -e PASSENGER_APP_ENV=[PASSENGER_APP_ENV] -e MONGO_LOCALHOST=[MONGO_LOCALHOST] -e SENDGRID_USERNAME=[SENDGRID_USERNAME] -e SENDGRID_PASSWORD=[SENDGRID_PASSWORD] single_cell_docker
 The container will then start running, and will execute its local startup scripts that will run all migrations and configure the application automatically.
 
 Alternatively, you can use the shortcut script to start Docker that will grab all necessary environment variables from your machine and run the above command.
@@ -45,7 +45,7 @@ There are several variables that need to be passed to the API Docker container i
 1. *CONTAINER_NAME* (passed with --name): This names your container to whatever you want.  This is useful when linking containers.
 3. *PROJECT_DIR* (passed with -v): This mounts your local working directory inside the Docker container.  Makes doing local development via hot deployment possible.
 4. *PASSENGER_APP_ENV* (passed with -e): The Rails environment you wish to load.  Can be either development or production (default is development).
-5. *MYSQL_LOCALHOST* (passed with -e): This can either be the name of your local machine (MyComputer, wmc1a-e8c, etc.) or the special 10.0.2.2 alias for connecting back to a host machine from a local VM running inside an emulator (default is 10.0.2.2 as it is the most generic).
+5. *MONGO_LOCALHOST* (passed with -e): This can either be the name of your local machine (MyComputer, wmc1a-e8c, etc.) or the special 10.0.2.2 alias for connecting back to a host machine from a local VM running inside an emulator (default is 10.0.2.2 as it is the most generic).
 6. *SENDGRID_USERNAME* (passed with -e): The username associated with the Sendgrid account (for sending emails).
 7. *SENDGRID_PASSWORD* (passed with -e): The password associated with the Sendgrid account (for sending emails).
 
@@ -54,11 +54,11 @@ The run command explained in its entirety:
 * *--rm:* This tells Docker to automatically clean up the container after exiting.
 * *-it:* Leaves an interactive shell running in the foreground where the output of Nginx can be seen.
 * <b>--name CONTAINER_NAME:</b> This names your container to whatever you want.  This is useful when linking other Docker containers to the portal container, or when connecting to a running container to check logs or environment variables.
-* <b>-p 80:80 -p 443:443 -p 3306:3306 -p 587:587:</b> Maps ports 80 (HTTP), 443 (HTTPS), 3306 (MySQL) and 587 (smtp) on the host machine to the corresponding ports inside the Docker container.
+* <b>-p 80:80 -p 443:443 -p 27017:27017 -p 587:587:</b> Maps ports 80 (HTTP), 443 (HTTPS), 27017 (MongoDB) and 587 (smtp) on the host machine to the corresponding ports inside the Docker container.
 * <b>-v [PROJECT_DIR]/:/home/app/webapp:</b> This mounts your local working directory inside the running Docker container in the correct location for the portal to run.  This accomplishes two things:
   - Enables hot deployment for local development
   - Persists all project data past destruction of Docker container (since we're running with --rm), but not system-level log or tmp files.
 * <b>-e PASSENGER_APP_ENV= [RAILS_ENV]:</b> The Rails environment.  Will default to production, so if you're doing local development, set this accordingly.
-* <b>-e MYSQL_LOCALHOST= [MYSQL_LOCALHOST]:</b> The name of the host machine for connecting to MySQL (since we're not running MySQL inside docker, we need the name of the host computer).
+* <b>-e MONGO_LOCALHOST= [MONGO_LOCALHOST]:</b> The name of the host machine for connecting to MongoDB (since we're not running MongoDB inside docker, we need the alias back to the host computer).
 * <b>-e SENDGRID_USERNAME= [SENDGRID_USERNAME] -e SENDGRID_PASSWORD= [SENDGRID_PASSWORD]:</b> The credentials for Sendgrid to send emails.  Alternatively, you could decide to not use Sendgrid and configure the application to use a different SMTP server (would be done inside your environment's config file).
 * *single_cell_docker*: This is the name of the image we created earlier.  If you chose a different name, please use that here.

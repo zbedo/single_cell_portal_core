@@ -8,6 +8,6 @@ class SingleCell
   belongs_to :study
   belongs_to :cluster
 
-  validates_uniqueness_of :name, scope: :study_id
+  validates_uniqueness_of :name, scope: [:study_id, :cluster_id]
 
 end

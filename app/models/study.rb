@@ -6,6 +6,8 @@ class Study
   has_many :single_cells
   has_many :expression_scores
 
+  DEFAULT_COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+
   # scoping clusters to allow easy access to top- and sub-level clusters
   has_many :clusters do
     def parent_clusters
@@ -36,7 +38,7 @@ class Study
       entries = Dir.glob('*')
       entries.each do |file|
         study_file = self.study_files.build(name: file, description: 'Default description', path: "#{data_path}/#{file}")
-        study_file.save!
+        study_file.save
         puts "Created study file: #{study_file.name}"
       end
       true
@@ -46,61 +48,34 @@ class Study
     end
   end
 
-  # method to parse expression matrix into individual scores
-  def parse_expression_sparse_matrix
-    Rails.logger.level = 4
-    @score_count = 0
-    @missing = []
-    time = Benchmark.realtime {
-      # load all rows
-      expression_data = File.open(File.join(self.data_load_path, '/DATA_MATRIX_LOG_TPM.txt')).readlines
-      total_rows = expression_data.size
-      # grab list of cells, then shift out 'GENE' label at start
-      cells = expression_data.shift.split("\t")
-      cells.shift
-      # parse each row, saving only non-zero scores
-      expression_data.each_with_index do |row, row_index|
-        scores = row.chomp().split("\t")
-        # grab gene name from first value
-        gene_name = scores.shift
-        puts "Processing row #{row_index}:#{gene_name} of #{total_rows}"
-        # iterate each score, saving only informative scores
-        scores.each_with_index do |score, index|
-          unless score.to_f == 0.0
-            cell = SingleCell.where(name: cells[index]).first
-            @score_count += 1
-            #puts "Would have stored ExpressionScore: cell_name: #{cells[index]}, gene: #{gene_name}, value: #{score}"
-            if cell.nil?
-              @missing.index(cells[index]).nil? ? @missing << cells[index] : nil
-              #puts "Cell #{cells[index]} does not exist yet"
-            end
-          end
-        end
-      end
-    }
-    puts "Completed!"
-    puts "Scores recorded: #{@score_count}"
-    puts "Missing cells: #{@missing.size}"
-    puts "Total time: #{time}"
-  end
-
   # method to parse master expression scores file for study and populate collection
   def make_expression_scores
     Rails.logger.level = 4
     @count = 0
     start_time = Time.now
+    # open data file and grab header row with name of all cells, deleting 'GENE' at start
     expression_data = File.open(File.join(self.data_load_path, 'DATA_MATRIX_LOG_TPM.txt'))
     cells = expression_data.readline.chomp().split("\t")
     cells.shift
+    # store study id for later to save memory
+    study_id = self._id
     while !expression_data.eof?
+      # grab single row of scores, parse out gene name at beginning
       row = expression_data.readline.chomp().split("\t")
       gene_name = row.shift
+      # convert all remaining strings to floats, then store only significant values (!= 0)
       scores = row.map(&:to_f)
-      significant_scores = Hash[cells.zip(scores)].reject {|k,v| v == 0.0}
-      expression_score = self.expression_scores.build(gene: gene_name, scores: significant_scores)
-      expression_score.save!
+      significant_scores = {}
+      scores.each_with_index do |score, index|
+        unless score == 0.0
+          significant_scores[cells[index]] = score
+        end
+      end
+      # create expression score object
+      ExpressionScore.create({gene: gene_name, scores: significant_scores, study_id: study_id})
       @count += 1
     end
+    # clean up, print stats
     expression_data.close
     end_time = Time.now
     time = (end_time - start_time).divmod 60.0
@@ -164,24 +139,24 @@ class Study
             else
               @cluster = self.clusters.build(name: @cluster_name, cluster_type: @cluster_type, parent_cluster: @parent_cluster)
             end
-            @cluster.save!
+            @cluster.save
             @cluster_count += 1
           else
             @cluster = Cluster.where(name: @cluster_name, cluster_type: @cluster_type).first
           end
 
           # create or find single_cell and map associations to study and cluster
-          if !SingleCell.where(name: name, study_id: self._id).any?
+          if !SingleCell.where(name: name, study_id: self._id, cluster_id: @cluster._id).any?
             @cell = self.single_cells.build(name: name, cluster_id: @cluster._id)
-            @cell.save!
+            @cell.save
             @cell_count += 1
           else
-            @cell = SingleCell.where(name: name, study_id: self._id).first
+            @cell = SingleCell.where(name: name, study_id: self._id, cluster_id: @cluster._id).first
           end
 
           # finally, create cluster point with association to cluster & single_cell
           @cluster_point = @cluster.cluster_points.build(x: x, y: y, single_cell_id: @cell._id)
-          @cluster_point.save!
+          @cluster_point.save
           @cluster_point_count += 1
         end
       end

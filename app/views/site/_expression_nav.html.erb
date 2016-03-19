@@ -1,0 +1,17 @@
+<%= form_tag(view_gene_expression_path(study_name: params[:study_name], gene: params[:gene]), class: 'form-inline', id: 'select-cluster', method: :get) do %>
+	<%= label_tag :cluster, "Load sub-cluster" %><br />
+	<%= select_tag :cluster, options_for_select(@options, params[:cluster]), class: 'form-control spin' %>
+<% end %>
+
+<%= javascript_tag do %>
+
+	$("#cluster").change(function() {
+		if ($("#cluster").val() == "") {
+			window.location.href = "<%= view_gene_expression_url(study_name: params[:study_name], gene: params[:gene]) %>";
+		} else {
+			$("#select-cluster").submit();
+		}
+	});
+
+<% end %>
+

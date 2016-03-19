@@ -13,16 +13,28 @@
 </div>
 <div class="row">
 	<div class="col-md-2">
-		<h2>Clusters</h2>
+		<h2>Sub-Clusters</h2>
 		<div class="list-group">
-				<%= link_to "All <span class='badge'>#{@num_points}</span>".html_safe, view_study_path, id: 'Major_cell_types', class: 'list-group-item cluster-nav active' %>
-			<% @clusters.each_with_index do |cluster, index| %>
-				<%= link_to "#{cluster.name} <span class='badge'>#{cluster.cluster_points.count}</span>".html_safe, render_cluster_path(study_name: params[:study_name], cluster: cluster.name, index: index), id: cluster.name, class: 'list-group-item cluster-nav spin', 'data-remote' => true %>
+				<%= link_to "Major Cell Types <span class='badge'>#{@num_points}</span>".html_safe, view_study_path, id: 'Major_cell_types', class: 'list-group-item cluster-nav active spin' %>
+			<% @clusters.each do |cluster| %>
+				<% unless @study.clusters.sub_cluster(cluster.name).empty? %>
+					<%= link_to "#{cluster.name} <span class='badge'>#{cluster.cluster_points.count}</span>".html_safe, render_cluster_path(study_name: params[:study_name], cluster: cluster.name), id: cluster.name, class: 'list-group-item cluster-nav spin', 'data-remote' => true %>
+				<% end %>
 			<% end %>
 		</div>
 	</div>
 	<div class="col-md-10">
-		<h2>Plot</h2>
+		<h2>Plot
+			<%= form_for(:search, url: search_genes_path(@study.url_safe_name), html: {class: 'form-inline', id: 'search-genes-form'}) do |f| %>
+				<%= f.hidden_field :cluster %>
+				<div class="input-group">
+					<%= f.text_field :genes, placeholder: 'Search genes...', class: 'form-control', size: 50 %>
+					<div class="input-group-btn">
+						<button class="btn btn-success" type="submit"><span class="fa fa-search"></span></button>
+					</div>
+				</div>
+			<% end %>
+		</h2>
 		<div id="cluster-plot"></div>
 	</div>
 </div>
@@ -30,17 +42,14 @@
 
 <%= javascript_tag do %>
 
-	<% @coordinates.sort_by {|k,v| k}.each_with_index do |(cluster, data), index| %>
+	<% @coordinates.sort_by {|k,v| k}.each do |cluster, data| %>
 		var <%= cluster %> = {
 			x: <%= raw data[:x] %>,
 			y: <%= raw data[:y] %>,
 			text: <%= raw data[:text] %>,
 			name: "<%= data[:name] %>",
 			mode: 'markers',
-			type: 'scatter',
-			marker: {
-				color: DEFAULT_COLORS[<%= index %>]
-			}
+			type: 'scatter'
 		};
 	<% end %>
 

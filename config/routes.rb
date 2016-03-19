@@ -2,8 +2,9 @@ Rails.application.routes.draw do
   devise_for :users, :controllers => { :omniauth_callbacks => 'users/omniauth_callbacks' }
 
   get 'study/:study_name', to: 'site#study', as: :view_study
-  get 'render_cluster/:study_name/:cluster/:index', to: 'site#render_cluster', as: :render_cluster
-
+  get 'render_cluster/:study_name/:cluster', to: 'site#render_cluster', as: :render_cluster
+  post 'study/:study_name/search', to: 'site#search_genes', as: :search_genes
+  get 'study/:study_name/gene_expression/:gene/', to: 'site#view_gene_expression', as: :view_gene_expression
   get '/', to: 'site#index', as: :site
   root to: 'site#index'
 
