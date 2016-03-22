@@ -1,0 +1,11 @@
+<div class='form-inline navigation-form'>
+	<%= label_tag :gene, 'View single gene-level expression' %><br />
+	<% @genes.map(&:gene).each do |gene| %>
+		<% if params[:cluster] %>
+			<%= link_to gene, view_gene_expression_path(study_name: params[:study_name], gene: gene, cluster: params[:cluster]), class: 'btn btn-primary' %>
+		<% else %>
+			<%= link_to gene, view_gene_expression_path(study_name: params[:study_name], gene: gene), class: 'btn btn-primary' %>
+		<% end %>
+	<% end %>
+</div>
+

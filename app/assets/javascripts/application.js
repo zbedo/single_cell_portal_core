@@ -87,9 +87,23 @@ var smallOpts = {
     , shadow: false // Whether to render a shadow
     , hwaccel: false // Whether to use hardware acceleration
     , position: 'absolute' // Element positioning
-}
+};
 
-var DEFAULT_COLORS = [
+// default title font settings for axis titles in plotly
+var plotlyTitleFont = {
+    family: 'Helvetica Neue',
+    size: 16,
+    color: '#333'
+};
+
+// default label font settings for colorbar titles in plotly
+var plotlyLabelFont = {
+    family: 'Helvetica Neue',
+    size: 12,
+    color: '#333'
+};
+
+var plotlyDefaultColors = [
     '#1f77b4',  // muted blue
     '#ff7f0e',  // safety orange
     '#2ca02c',  // cooked asparagus green
@@ -157,5 +171,6 @@ $(window).resize(function() {
     if(this.resizeTO) clearTimeout(this.resizeTO);
     this.resizeTO = setTimeout(function() {
         $(this).trigger('resizeEnd');
+        console.log('resizeEnd');
     }, 100);
 });

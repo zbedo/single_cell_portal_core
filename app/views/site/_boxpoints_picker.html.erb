@@ -1,0 +1,23 @@
+<div class='form-inline navigation-form'>
+	<%= label_tag :boxpoints_select, 'Select boxpoint mode' %><br />
+	<%= select_tag :boxpoints_select, options_for_select([['None', ''], ['All', 'all'], ['Outliers', 'outliers'] , ['Suspected Outliers','suspectedoutliers']], params[:boxpoints]), class: 'form-control' %>
+</div>
+
+<%= javascript_tag do %>
+
+	$("#boxpoints_select").change(function() {
+		var mode = $(this).val();
+		$('#boxpoints').val(mode);
+		$('#selected_boxpoints').val(mode);
+		$(expressionData).each(function() {
+			this.boxpoints = mode;
+			if (this.boxpoints == '') {
+				this.boxpoints = false;
+			}
+			console.log("setting boxpoints for " + this.name + " to " + this.boxpoints);
+		});
+
+		Plotly.newPlot('box-plot', expressionData, expressionLayout);
+	});
+
+<% end %>

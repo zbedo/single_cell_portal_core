@@ -25,15 +25,7 @@
 	</div>
 	<div class="col-md-10">
 		<h2>Plot
-			<%= form_for(:search, url: search_genes_path(@study.url_safe_name), html: {class: 'form-inline', id: 'search-genes-form'}) do |f| %>
-				<%= f.hidden_field :cluster %>
-				<div class="input-group">
-					<%= f.text_field :genes, placeholder: 'Search genes...', class: 'form-control', size: 50 %>
-					<div class="input-group-btn">
-						<button class="btn btn-success" type="submit"><span class="fa fa-search"></span></button>
-					</div>
-				</div>
-			<% end %>
+			<%= render partial: 'gene_search_form' %>
 		</h2>
 		<div id="cluster-plot"></div>
 	</div>
@@ -58,10 +50,20 @@
 		data.push(<%= cluster.name %>);
 	<% end %>
 
-	Plotly.newPlot('cluster-plot', data, {hovermode: 'closest'});
+	var layout = {
+		hovermode: 'closest',
+		font: plotlyLabelFont
+	}
+
+	Plotly.newPlot('cluster-plot', data, layout);
 
 	$( window ).on('resizeEnd', function() {
-		Plotly.newPlot('cluster-plot', data);
+		var layout = {
+			hovermode: 'closest',
+			font: plotlyLabelFont
+		}
+
+		Plotly.newPlot('cluster-plot', data, layout);
 	});
 
 <% end %>

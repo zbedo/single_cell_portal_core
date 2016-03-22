@@ -1,6 +1,7 @@
-<%= form_tag(view_gene_expression_path(study_name: params[:study_name], gene: params[:gene]), class: 'form-inline', id: 'select-cluster', method: :get) do %>
-	<%= label_tag :cluster, "Load sub-cluster" %><br />
-	<%= select_tag :cluster, options_for_select(@options, params[:cluster]), class: 'form-control spin' %>
+<%= form_tag(view_gene_expression_path(study_name: params[:study_name], gene: params[:gene]), class: 'form-inline navigation-form', id: 'select-cluster', method: :get) do %>
+	<%= label_tag :cluster, 'Select sub-cluster' %><br />
+	<%= select_tag :cluster, options_for_select(@options, params[:cluster]), class: 'form-control' %>
+	<%= hidden_field_tag :boxpoints, params[:boxpoints] %>
 <% end %>
 
 <%= javascript_tag do %>

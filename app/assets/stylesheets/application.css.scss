@@ -150,10 +150,12 @@
   font-weight: 200;
 }
 
-#search-genes-form {
+.navigation-form {
   display: inline-block;
-
+  margin-right: 15px;
 }
+
+
 /* Media Queries */
 
 @media (max-width: 1200px) {

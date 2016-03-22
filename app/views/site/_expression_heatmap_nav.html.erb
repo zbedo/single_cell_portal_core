@@ -1,0 +1,19 @@
+<div class='form-inline navigation-form'>
+	<%= label_tag :cluster, 'Select sub-cluster' %><br />
+	<%= select_tag :cluster, options_for_select(@options, params[:cluster]), class: 'form-control' %>
+</div>
+
+<%= javascript_tag do %>
+
+	$("#cluster").change(function() {
+		var cluster = $(this).val();
+		if (cluster == "") {
+			window.location.href = "<%= view_gene_expression_heatmap_url(study_name: params[:study_name], search: {genes: params[:search][:genes]}) %>";
+		} else {
+			$("#search_cluster").val(cluster);
+			$("#search-genes-form").submit();
+		}
+	});
+
+<% end %>
+

@@ -1,20 +1,49 @@
 <div class="row">
-	<div class="col-md-12">
-		<h1>Gene Expression for <em><%= params[:gene] %></em> <%= params[:cluster] ? "across cluster: #{params[:cluster]}" : 'for all major cell types' %><%= link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, view_study_path(params[:study_name]), class: 'btn btn-lg btn-warning pull-right' %></h1>
-		<%= render partial: 'expression_nav' %>
+	<div class="col-md-10">
+		<h1>Gene Expression for <em><%= link_to params[:gene], "http://www.ncbi.nlm.nih.gov/gene/?term=#{params[:gene]}[sym]", 'data-toggle' => 'tooltip', title: "Search Entrez for '#{params[:gene]}'", 'data-placement' => 'right' %></em> <%= params[:cluster] ? "across cluster: #{params[:cluster]}" : 'for all major cell types' %></h1>
+	</div>
+	<div class="col-md-2">
+		<h1><%= link_to "<span class='fa fa-chevron-left'></span> Back to study".html_safe, view_study_path(params[:study_name]), class: 'btn btn-lg btn-warning pull-right' %></h1>
 	</div>
 </div>
-<div class="row">
-	<div class="col-md-12">
-		<div id="box-plot"></div>
+<div class="panel panel-default">
+	<div class="panel-heading">
+		<div class="panel-title">
+			<h4><%= link_to "Box Plots <span class='fa fa-chevron-down'></span>".html_safe, '#box-controls', 'data-toggle' => 'collapse'  %></h4>
+		</div>
+	</div>
+	<div id="box-controls" class="panel-collapse collapse in">
+		<div class="panel-body">
+			<%= render partial: 'expression_nav' %>
+			<%= render partial: 'boxpoints_picker' %>
+			<%= render partial: 'gene_search_form' %>
+			<div class="row">
+				<div class="col-md-12">
+					<div id="box-plot"></div>
+				</div>
+			</div>
+		</div>
 	</div>
 </div>
-<div class="row">
-	<div class="col-md-6">
-		<div id="scatter-plot"></div>
+
+<div class="panel panel-default">
+	<div class="panel-heading">
+		<div class="panel-title">
+			<h4><%= link_to "Expression Scatter Plot <span class='fa fa-chevron-down'></span>".html_safe, '#scatter-controls', 'data-toggle' => 'collapse'  %></h4>
+		</div>
 	</div>
-	<div class="col-md-6">
-		<div id="cluster-plot"></div>
+	<div id="scatter-controls" class="panel-collapse collapse in">
+		<div class="panel-body">
+			<%= render partial: 'colorscale_picker' %>
+			<div class="row">
+				<div class="col-md-8">
+					<div id="scatter-plot"></div>
+				</div>
+				<div class="col-md-4">
+					<div id="reference-plot"></div>
+				</div>
+			</div>
+		</div>
 	</div>
 </div>
 
@@ -25,8 +54,12 @@
 		var <%= cluster %>_exp = {
 			y: <%= raw data[:y] %>,
 			name: "<%= data[:name] %>",
-			boxpoints: 'all',
-			jitter: 0.3	,
+			<% if params[:boxpoints].blank? %>
+				boxpoints: false,
+			<% else %>
+				boxpoints: "<%= params[:boxpoints] %>",
+			<% end %>
+			jitter: 0.5,
 			pointpos: -1.8,
 			boxmean: true,
 			type: 'box'
@@ -38,18 +71,15 @@
 		expressionData.push(<%= cluster.name %>_exp);
 	<% end %>
 
-	var layout = {
+	var expressionLayout = {
 		hovermode: 'closest',
 		yaxis: {
-			title: 'log(TPM) Expression Values'
+			title: 'log(TPM) Expression Values',
+			titlefont: plotlyTitleFont
 		}
 	};
 
-	Plotly.newPlot('box-plot', expressionData, layout);
-
-	$( window ).on('resizeEnd', function() {
-		Plotly.newPlot('box-plot', expressionData, layout);
-	});
+	Plotly.newPlot('box-plot', expressionData, expressionLayout);
 
 	// load expression scatter plot
 	<% @expression.sort_by {|k,v| k}.each do |cluster, data| %>
@@ -60,6 +90,7 @@
 			name: "<%= data[:name] %>",
 			mode: 'markers',
 			type: 'scatter',
+			hoverinfo: 'text',
 			marker: <%= raw data[:marker].to_json %>
 		};
 	<% end %>
@@ -67,13 +98,21 @@
 	var clusterData = [all];
 
 	var scatterLayout = {
-		hovermode: 'closest'
+		hovermode: 'closest',
+		height: 600
 	};
 
 	Plotly.newPlot('scatter-plot', clusterData, scatterLayout);
 
-	$( window ).on('resizeEnd', function() {
-		Plotly.newPlot('scatter-plot', clusterData, {hovermode: 'closest'});
+	// listener to redraw expression scatter with new color profile
+	$("#colorscale").change(function() {
+
+		var theme = $(this).val();
+		all.marker.colorscale = theme;
+		console.log("setting colorscale to " + theme);
+		var clusterData = [all];
+
+		Plotly.newPlot('scatter-plot', clusterData, scatterLayout);
 	});
 
 	// load static cluster scatter for reference
@@ -94,14 +133,49 @@
 	<% end %>
 
 	var staticLayout = {
-		title: 'Cluster Reference',
+		title: '<%= params[:cluster] ? params[:cluster] : 'Major Cell Type' %> Cluster Reference',
+		titlefont: plotlyTitleFont,
 		showlegend: false,
+		// set width and height to same val to maintain square aspect ratio
+		width: $('#cluster-plot').width(),
+		height: $('#cluster-plot').width(),
+		paper_bgcolor: 'rgb(254, 247, 234)',
+	  plot_bgcolor: 'rgb(254, 247, 234)',
 		annotations: <%= raw @annotations.to_json %>
 	};
-	Plotly.newPlot('cluster-plot', data, staticLayout);
 
+	Plotly.newPlot('reference-plot', data, staticLayout, {staticPlot: true});
+
+	// re-render expression plots on window resize to use available area
 	$( window ).on('resizeEnd', function() {
-		Plotly.newPlot('cluster-plot', data, staticLayout);
+
+		var expressionLayout = {
+			hovermode: 'closest',
+			yaxis: {
+				title: 'log(TPM) Expression Values',
+				titlefont: plotlyTitleFont
+			}
+		};
+
+		var scatterLayout = {
+			hovermode: 'closest',
+			height: 600
+		};
+
+		var staticLayout = {
+			title: '<%= params[:cluster] ? params[:cluster] : 'Major Cell Type' %> Cluster Reference',
+			titlefont: plotlyTitleFont,
+			showlegend: false,
+			width: $('#cluster-plot').width(),
+			height: $('#cluster-plot').width(),
+			paper_bgcolor: 'rgb(254, 247, 234)',
+	  	plot_bgcolor: 'rgb(254, 247, 234)',
+			annotations: <%= raw @annotations.to_json %>
+		};
+
+		Plotly.newPlot('box-plot', expressionData, expressionLayout);
+		Plotly.newPlot('scatter-plot', clusterData, scatterLayout);
+		Plotly.newPlot('reference-plot', data, staticLayout, {staticPlot: true});
 	});
 
 <% end %>

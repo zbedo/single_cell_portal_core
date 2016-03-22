@@ -6,8 +6,6 @@ class Study
   has_many :single_cells
   has_many :expression_scores
 
-  DEFAULT_COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
-
   # scoping clusters to allow easy access to top- and sub-level clusters
   has_many :clusters do
     def parent_clusters
@@ -72,7 +70,7 @@ class Study
         end
       end
       # create expression score object
-      ExpressionScore.create({gene: gene_name, scores: significant_scores, study_id: study_id})
+      ExpressionScore.create({gene: gene_name, searchable_gene: gene_name.downcase, scores: significant_scores, study_id: study_id})
       @count += 1
     end
     # clean up, print stats

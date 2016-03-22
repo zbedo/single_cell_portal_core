@@ -5,6 +5,7 @@ Rails.application.routes.draw do
   get 'render_cluster/:study_name/:cluster', to: 'site#render_cluster', as: :render_cluster
   post 'study/:study_name/search', to: 'site#search_genes', as: :search_genes
   get 'study/:study_name/gene_expression/:gene/', to: 'site#view_gene_expression', as: :view_gene_expression
+  get 'study/:study_name/gene_expression/', to: 'site#view_gene_expression_heatmap', as: :view_gene_expression_heatmap
   get '/', to: 'site#index', as: :site
   root to: 'site#index'
 
