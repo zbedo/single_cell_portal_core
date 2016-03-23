@@ -2,6 +2,8 @@ class Study
   include Mongoid::Document
   include Mongoid::Timestamps
 
+  belongs_to :user
+
   has_many :study_files
   has_many :single_cells
   has_many :expression_scores

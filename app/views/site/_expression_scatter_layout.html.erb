@@ -1,0 +1,16 @@
+	var size = $('#scatter-plot').width();
+
+	var scatterLayout = {
+		hovermode: 'closest',
+		font: plotlyLabelFont,
+		autoscale: false,
+		width: size,
+		height: size,
+		xaxis: {
+			range: <%= raw @range %>
+		},
+		yaxis: {
+			range: <%= raw @range %>
+		}
+	};
+

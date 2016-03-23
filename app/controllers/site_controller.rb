@@ -8,24 +8,20 @@ class SiteController < ApplicationController
   # view study overviews and downloads
   def index
     @studies = Study.order('name ASC')
-    @downloads = {}
-    @studies.each do |study|
-      if study.study_files.any?
-        @downloads[study.url_safe_name] = study.study_files.sort_by(&:name)
-      end
-    end
   end
 
   # load single study and view top-level clusters
   def study
     # parse all coordinates out into hash using generic method
     load_cluster_points
-    @num_points = @coordinates.values.map {|v| v[:text].size}.inject {|sum, x| sum + x}
+    @options = load_sub_cluster_options
+    @range = set_range(@coordinates.values)
   end
 
   # render a single cluster and its constituent sub-clusters
   def render_cluster
     load_cluster_points
+    @range = set_range(@coordinates.values)
   end
 
   # search for one or more genes to view expression information
@@ -90,13 +86,16 @@ class SiteController < ApplicationController
           bgcolor: '#efefef',
           bordercolor: '#ccc',
           borderwidth: 1,
-          opacity: 0.6
+          opacity: 0.6,
+          font: annotation_font
         }
     end
     color_minmax =  @expression[:all][:marker][:color].minmax
     @expression[:all][:marker][:cmin], @expression[:all][:marker][:cmax] = color_minmax
     @expression[:all][:marker][:colorscale] = 'Reds'
     @options = load_sub_cluster_options
+    @range = set_range([@expression[:all]])
+    @static_range = set_range(@coordinates.values)
   end
 
   def view_gene_expression_heatmap
@@ -139,6 +138,7 @@ class SiteController < ApplicationController
   def load_heatmap_scores
     genes = @genes.map(&:gene).sort.reverse
     @values = {x: [], y: genes, z: [], text: [], type: 'heatmap', colorscale: 'Reds'}
+    @annotations = []
     # for each gene & cell, grab expression value
     # if a cell is not present for the gene, score gets set as 0.0
     @genes.reverse_each do |gene|
@@ -154,6 +154,23 @@ class SiteController < ApplicationController
       end
       @values[:z] << scores
       @values[:text] << text
+    end
+    # set labels for cluster bars
+    # hack to fix position of starting at -0.5, plotly always seems to start at 0.5 in x positioning
+    x_pos_tally = -0.5
+    @clusters.each do |cluster|
+      median = cluster.single_cells.size / 2
+      @annotations << {
+          x: x_pos_tally + median,
+          y: 1,
+          xref: 'x',
+          yref: 'paper',
+          yanchor: 'bottom',
+          text: cluster.name,
+          showarrow: false,
+          font: annotation_font
+      }
+      x_pos_tally += cluster.single_cells.size
     end
   end
 
@@ -182,5 +199,20 @@ class SiteController < ApplicationController
       end
     end
     opts
+  end
+
+  # defaults for annotation fonts
+  def annotation_font
+    {
+        family: 'Helvetica Neue',
+        size: 10,
+        color: '#333'
+    }
+  end
+
+  def set_range(inputs)
+    vals = inputs.map {|v| [v[:x].minmax, v[:y].minmax]}.flatten.minmax
+    scope = (vals.first - vals.last) * 0.01
+    [vals.first + scope, vals.last - scope]
   end
 end

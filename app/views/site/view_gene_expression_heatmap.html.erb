@@ -1,6 +1,6 @@
 <div class="row">
 	<div class="col-md-10">
-		<h1>Gene Expression for <em><%= @genes.map {|g| link_to g.gene, "http://www.ncbi.nlm.nih.gov/gene/?term=#{g.gene}[sym]", 'data-toggle' => 'tooltip', title: "Search Entrez for '#{g.gene}'", 'data-placement' => 'right'}.join(', ').html_safe %></em> <%= params[:cluster] ? "across cluster: #{params[:cluster]}" : 'for all major cell types' %></h1>
+		<h1>Gene Expression for <em><%= @genes.map {|g| link_to g.gene, "http://www.ncbi.nlm.nih.gov/gene/?term=#{g.gene}[sym]", 'data-toggle' => 'tooltip', title: "Search Entrez for '#{g.gene}'", 'data-placement' => 'right'}.join(', ').html_safe %></em> across <%= params[:cluster] ? "cluster: #{params[:cluster]}" : 'all major cell types' %></h1>
 	</div>
 	<div class="col-md-2">
 		<h1><%= link_to "<span class='fa fa-chevron-left'></span> Back to study".html_safe, view_study_path(params[:study_name]), class: 'btn btn-lg btn-warning pull-right' %></h1>
@@ -14,9 +14,9 @@
 	</div>
 	<div id="heatmap-controls" class="panel-collapse collapse in">
 		<div class="panel-body">
-			<%= render partial: 'gene_search_form' %>
-			<%= render partial: 'colorscale_picker' %>
 			<%= render partial: 'expression_heatmap_nav' %>
+			<%= render partial: 'colorscale_picker' %>
+			<%= render partial: 'gene_search_form' %>
 			<%= render partial: 'gene_nav' %>
 			<div id="heatmap-plot"></div>
 		</div>
@@ -44,42 +44,7 @@
 
 	var expressionData = [genes];
 
-	var posTally = -0.5;
-
-	var expressionLayout = {
-		hovermode: 'closest',
-		xaxis: {
-			ticks: '',
-			tickmode: 'array',
-			tickvals: [],
-			title: 'Cells [Cluster]',
-			titlefont: plotlyTitleFont
-		},
-		yaxis: {
-			fixedrange: true,
-			ticks: ''
-		},
-		font: plotlyLabelFont,
-		shapes: [
-			// build cluster shapes to group results
-			// use posTally to keep reference
-			<% @clusters.each_with_index do |cluster, index| %>
-				{
-					type: 'rect',
-					xref: 'x',
-					yref: 'paper',
-					x0: posTally,
-					y0: 0.95,
-					x1: (posTally += <%= cluster.single_cells.size %>),
-					y1: 1,
-					line: {
-						width: 0
-					},
-					fillcolor: plotlyDefaultColors[<%= index %>]
-				},
-			<% end %>
-		]
-	};
+	<%= render partial: 'heatmap_layout' %>
 
 	Plotly.newPlot('heatmap-plot', expressionData, expressionLayout);
 
@@ -96,41 +61,7 @@
 
 	// re-render expression plots on window resize to use available area
 	$( window ).on('resizeEnd', function() {
-		var posTally = 0;
-		var expressionLayout = {
-			hovermode: 'closest',
-			xaxis: {
-				ticks: '',
-				tickmode: 'array',
-				tickvals: [],
-				title: 'Cells [Cluster]',
-				titlefont: plotlyTitleFont
-			},
-			yaxis: {
-				fixedrange: true,
-				ticks: ''
-			},
-			font: plotlyLabelFont,
-			shapes: [
-				// build cluster shapes to group results
-				// use posTally to keep reference
-				<% @clusters.each_with_index do |cluster, index| %>
-					{
-						type: 'rect',
-						xref: 'x',
-						yref: 'paper',
-						x0: posTally,
-						y0: 0.95,
-						x1: (posTally += <%= cluster.single_cells.size %>),
-						y1: 1,
-						line: {
-							width: 0
-						},
-						fillcolor: plotlyDefaultColors[<%= index %>]
-					},
-				<% end %>
-			]
-		};
+		<%= render partial: 'heatmap_layout' %>
 
 		Plotly.newPlot('heatmap-plot', expressionData, expressionLayout);
 	});

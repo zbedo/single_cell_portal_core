@@ -1,0 +1,14 @@
+	var size = $('#cluster-plot').width() * .65;
+
+	var layout = {
+		hovermode: 'closest',
+		font: plotlyLabelFont,
+		width: size,
+		height: size,
+		xaxis: {
+			range: <%= raw @range %>
+		},
+		yaxis: {
+			range: <%= raw @range %>
+		}
+	}

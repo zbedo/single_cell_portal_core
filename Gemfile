@@ -54,3 +54,8 @@ gem 'font-awesome-sass', git: 'git://github.com/FortAwesome/font-awesome-sass.gi
 gem 'mongoid'
 gem 'bson_ext'
 gem 'ruby-prof'
+gem 'delayed_job'
+gem 'delayed_job_mongoid'
+gem 'nested_form', github: 'ryanb/nested_form'
+gem 'jquery-datatables-rails', git: 'git://github.com/rweng/jquery-datatables-rails.git'
+gem 'truncate_html'

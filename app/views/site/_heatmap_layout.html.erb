@@ -1,0 +1,37 @@
+// hack to fix positioning, plotly always seems to start at 0.5
+var posTally = -0.5;
+
+var expressionLayout = {
+	hovermode: 'closest',
+	xaxis: {
+		ticks: '',
+		tickmode: 'array',
+		tickvals: []
+	},
+	yaxis: {
+		ticks: ''
+	},
+	height: $('#heatmap-plot').width() * 0.66,
+	font: plotlyLabelFont,
+	shapes: [
+		// build cluster shapes to group results
+		// use posTally to keep reference
+		<% @clusters.each_with_index do |cluster, index| %>
+			{
+				type: 'rect',
+				xref: 'x',
+				yref: 'paper',
+				x0: posTally,
+				y0: 0.99,
+				x1: (posTally += <%= cluster.single_cells.size %>),
+				y1: 1,
+				line: {
+					width: 1,
+					color: '#000'
+				},
+				fillcolor: plotlyDefaultColors[<%= index %>]
+			},
+		<% end %>
+	],
+	annotations: <%= raw @annotations.to_json %>
+};

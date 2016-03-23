@@ -1,6 +1,6 @@
 <div class="row">
 	<div class="col-md-10">
-		<h1>Gene Expression for <em><%= link_to params[:gene], "http://www.ncbi.nlm.nih.gov/gene/?term=#{params[:gene]}[sym]", 'data-toggle' => 'tooltip', title: "Search Entrez for '#{params[:gene]}'", 'data-placement' => 'right' %></em> <%= params[:cluster] ? "across cluster: #{params[:cluster]}" : 'for all major cell types' %></h1>
+		<h1>Gene Expression for <em><%= link_to params[:gene], "http://www.ncbi.nlm.nih.gov/gene/?term=#{params[:gene]}[sym]", 'data-toggle' => 'tooltip', title: "Search Entrez for '#{params[:gene]}'", 'data-placement' => 'right' %></em> across <%= params[:cluster] ? "cluster: #{params[:cluster]}" : 'all major cell types' %></h1>
 	</div>
 	<div class="col-md-2">
 		<h1><%= link_to "<span class='fa fa-chevron-left'></span> Back to study".html_safe, view_study_path(params[:study_name]), class: 'btn btn-lg btn-warning pull-right' %></h1>
@@ -14,7 +14,7 @@
 	</div>
 	<div id="box-controls" class="panel-collapse collapse in">
 		<div class="panel-body">
-			<%= render partial: 'expression_nav' %>
+			<%= render partial: 'cluster_nav' %>
 			<%= render partial: 'boxpoints_picker' %>
 			<%= render partial: 'gene_search_form' %>
 			<div class="row">
@@ -50,7 +50,7 @@
 <%= javascript_tag do %>
 
 	// load box plot data
-	<% @values.sort_by {|k,v| k}.each do |cluster, data| %>
+	<% @values.sort_by {|k,v| k}.each_with_index do |(cluster, data), index| %>
 		var <%= cluster %>_exp = {
 			y: <%= raw data[:y] %>,
 			name: "<%= data[:name] %>",
@@ -59,10 +59,9 @@
 			<% else %>
 				boxpoints: "<%= params[:boxpoints] %>",
 			<% end %>
-			jitter: 0.5,
-			pointpos: -1.8,
 			boxmean: true,
-			type: 'box'
+			type: 'box',
+			marker: {color: plotlyDefaultColors[<%= index %>]}
 		};
 	<% end %>
 
@@ -71,13 +70,7 @@
 		expressionData.push(<%= cluster.name %>_exp);
 	<% end %>
 
-	var expressionLayout = {
-		hovermode: 'closest',
-		yaxis: {
-			title: 'log(TPM) Expression Values',
-			titlefont: plotlyTitleFont
-		}
-	};
+	<%= render partial: 'expression_box_layout' %>
 
 	Plotly.newPlot('box-plot', expressionData, expressionLayout);
 
@@ -97,10 +90,7 @@
 
 	var clusterData = [all];
 
-	var scatterLayout = {
-		hovermode: 'closest',
-		height: 600
-	};
+	<%= render partial: 'expression_scatter_layout' %>
 
 	Plotly.newPlot('scatter-plot', clusterData, scatterLayout);
 
@@ -116,14 +106,15 @@
 	});
 
 	// load static cluster scatter for reference
-	<% @coordinates.sort_by {|k,v| k}.each do |cluster, data| %>
+	<% @coordinates.sort_by {|k,v| k}.each_with_index do |(cluster, data), index| %>
 		var <%= cluster %>_clst = {
 			x: <%= raw data[:x] %>,
 			y: <%= raw data[:y] %>,
 			text: <%= raw data[:text] %>,
 			name: "<%= data[:name] %>",
 			mode: 'markers',
-			type: 'scatter'
+			type: 'scatter',
+			marker: {color: plotlyDefaultColors[<%= index %>]}
 		};
 	<% end %>
 
@@ -132,46 +123,18 @@
 		data.push(<%= cluster.name %>_clst);
 	<% end %>
 
-	var staticLayout = {
-		title: '<%= params[:cluster] ? params[:cluster] : 'Major Cell Type' %> Cluster Reference',
-		titlefont: plotlyTitleFont,
-		showlegend: false,
-		// set width and height to same val to maintain square aspect ratio
-		width: $('#cluster-plot').width(),
-		height: $('#cluster-plot').width(),
-		paper_bgcolor: 'rgb(254, 247, 234)',
-	  plot_bgcolor: 'rgb(254, 247, 234)',
-		annotations: <%= raw @annotations.to_json %>
-	};
+	<%= render partial: 'static_scatter_layout' %>
 
 	Plotly.newPlot('reference-plot', data, staticLayout, {staticPlot: true});
 
 	// re-render expression plots on window resize to use available area
 	$( window ).on('resizeEnd', function() {
 
-		var expressionLayout = {
-			hovermode: 'closest',
-			yaxis: {
-				title: 'log(TPM) Expression Values',
-				titlefont: plotlyTitleFont
-			}
-		};
+		<%= render partial: 'expression_box_layout' %>
 
-		var scatterLayout = {
-			hovermode: 'closest',
-			height: 600
-		};
+		<%= render partial: 'expression_scatter_layout' %>
 
-		var staticLayout = {
-			title: '<%= params[:cluster] ? params[:cluster] : 'Major Cell Type' %> Cluster Reference',
-			titlefont: plotlyTitleFont,
-			showlegend: false,
-			width: $('#cluster-plot').width(),
-			height: $('#cluster-plot').width(),
-			paper_bgcolor: 'rgb(254, 247, 234)',
-	  	plot_bgcolor: 'rgb(254, 247, 234)',
-			annotations: <%= raw @annotations.to_json %>
-		};
+		<%= render partial: 'static_scatter_layout' %>
 
 		Plotly.newPlot('box-plot', expressionData, expressionLayout);
 		Plotly.newPlot('scatter-plot', clusterData, scatterLayout);

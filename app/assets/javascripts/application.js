@@ -15,6 +15,9 @@
 //= require bootstrap-sprockets
 //= require jquery-ui/core
 //= require jquery-ui/datepicker
+//= require ckeditor/init
+//= require dataTables/jquery.dataTables
+//= require dataTables/bootstrap/3/jquery.dataTables.bootstrap
 //= require spin.min
 //= require_tree .
 
@@ -103,6 +106,7 @@ var plotlyLabelFont = {
     color: '#333'
 };
 
+// default colors for plotly
 var plotlyDefaultColors = [
     '#1f77b4',  // muted blue
     '#ff7f0e',  // safety orange
@@ -113,8 +117,12 @@ var plotlyDefaultColors = [
     '#e377c2',  // raspberry yogurt pink
     '#7f7f7f',  // middle gray
     '#bcbd22',  // curry yellow-green
-    '#17becf'   // blue-teal
+    '#17becf',  // blue-teal
+    '#c0c0c0',  // silver
+    '#000000'   // black
 ];
+
+var plotlyDefaultBgColor = '#ddd';
 
 // launch spinner modal whenever someone clicks a survey link with a class of '.spin'
 $(function () {

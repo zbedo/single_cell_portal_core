@@ -1,0 +1,19 @@
+	var staticSize = $('#reference-plot').width();
+
+	var staticLayout = {
+		title: '<%= params[:cluster] ? params[:cluster] : 'Major Cell Type' %> Cluster Reference',
+		font: plotlyLabelFont,
+		titlefont: plotlyTitleFont,
+		showlegend: false,
+		width: staticSize,
+		height: staticSize,
+		paper_bgcolor: 'rgb(254, 247, 234)',
+		plot_bgcolor: 'rgb(254, 247, 234)',
+		xaxis: {
+			range: <%= raw @static_range %>
+		},
+		yaxis: {
+			range: <%= raw @static_range %>
+		},
+		annotations: <%= raw @annotations.to_json %>
+	};

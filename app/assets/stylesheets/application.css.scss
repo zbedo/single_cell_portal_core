@@ -13,6 +13,7 @@
  *= require jquery-ui/core
  *= require jquery-ui/datepicker
  *= require jquery-ui/theme
+ *= require dataTables/bootstrap/3/jquery.dataTables.bootstrap
  *= require_self
  */
 
@@ -29,8 +30,8 @@
   margin-bottom: 20px;
 }
 
-.flag-pad {
-  padding-left: 25px;
+.white {
+  color: #ffffff;
 }
 
 .bs-callout{
@@ -155,12 +156,11 @@
   margin-right: 15px;
 }
 
+.svg-container {
+  margin: 0 auto !important;
+}
 
-/* Media Queries */
-
-@media (max-width: 1200px) {
-  iframe.twitter-timeline {
-    height: 347px !important;
-  }
+.table-responsive .dataTables_wrapper .row {
+  margin: 0;
 }
 
