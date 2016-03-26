@@ -2,7 +2,7 @@
 	<%= label_tag :expression, 'View pre-computed expression scores' %><br />
 	<%= select_tag :expression, options_for_select([
 														 		['All Genes', view_all_gene_expression_heatmap_url(study_name: params[:study_name])],
-																['All genes (row-centered)', view_all_gene_expression_heatmap_url(study_name: params[:study_name], centered: 1)]
+																['All Genes (row-centered)', view_all_gene_expression_heatmap_url(study_name: params[:study_name], centered: 1)]
 															]), {include_blank: true, class: 'form-control'} %>
 </div>
 
