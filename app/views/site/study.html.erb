@@ -44,10 +44,15 @@
 </div>
 
 <div class="row">
-	<div class="col-md-12">
+	<div class="col-sm-12">
 		<%= render partial: 'study_cluster_nav' %>
 		<%= render partial: 'gene_search_form' %>
 		<%= render partial: 'study_precomputed_expression_nav' %>
+	</div>
+	<div class="col-md-3">
+		<%= render partial: 'cluster_info' %>
+	</div>
+	<div class="col-md-9">
 		<div id="cluster-plot"></div>
 	</div>
 </div>
