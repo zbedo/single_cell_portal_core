@@ -7,8 +7,3 @@ if ( cluster != '' ) {
 // load annotation file and re-render plot
 var annotPath = '/data/<%= @study.url_safe_name %>/CLUSTER_AND_SUBCLUSTER_INDEX.txt';
 renderMorpheus(newDataPath, annotPath, '#heatmap-plot');
-
-
-// hide modal and stop spinner
-$('#loading-modal').modal('hide');
-$('#centered').data('spinner').stop();

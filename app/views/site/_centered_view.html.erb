@@ -1,25 +1,11 @@
 <div class='form-inline navigation-form'>
-	<%= label_tag :centered, 'View row-centered values' %><br />
-	<%= check_box_tag :centered %>
-</div>
-<div class="modal fade" id="loading-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-	<div class="modal-dialog">
-		<div class="modal-content">
-			<div class="modal-body">
-				<h3 class="text-center">Recalculating... Please Wait</h3>
-				<div id="spinner_target"></div>
-			</div>
-		</div>
-	</div>
+	<%= label_tag :centered, 'Row centering' %><br />
+	<%= select_tag :centered, options_for_select([['No', 0],['Yes', 1]]), {class: 'form-control'} %>
 </div>
 <%= javascript_tag do %>
 
 	$('#centered').change(function() {
-		var target = document.getElementById("spinner_target");
-		var spinner = new Spinner(opts).spin(target);
-		$("#loading-modal").modal("show");
-		$(this).data('spinner', spinner);
-		if ( $(this).prop('checked') ) {
+		if ( $(this).val() == 1 ) {
 			$.get('<%= javascript_safe_url(render_heatmap_path(study_name: params[:study_name], search: {genes: params[:search][:genes]}, centered: '1')) %>');
 		} else {
 			$.get('<%= javascript_safe_url(render_heatmap_path(study_name: params[:study_name], search: {genes: params[:search][:genes]}, centered: '0')) %>');

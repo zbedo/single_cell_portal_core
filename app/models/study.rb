@@ -211,7 +211,7 @@ class Study
       cells.each do |cell|
         score = gene.scores[cell].to_f
         row << score
-        centered_row << score - mean
+        centered_row << (score - mean).round(3)
       end
       gct_file.write row.join("\t") + "\n"
       centered_gct_file.write centered_row.join("\t") + "\n"

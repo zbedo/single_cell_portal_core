@@ -10,13 +10,14 @@
 	<div class="col-sm-12">
 		<%= render partial: 'gene_search_form' %>
 		<div class='form-inline navigation-form'>
-			<%= label_tag :centered, 'View row-centered values' %><br />
-			<%= check_box_tag :centered %>
+			<%= label_tag :centered, 'Row centering' %><br />
+			<%= select_tag :centered, options_for_select([['No', 0],['Yes', 1]]), {class: 'form-control'} %>
 		</div>
+
 		<%= javascript_tag do %>
 
 			$('#centered').change(function() {
-				if ( $(this).prop('checked') ) {
+				if ( $(this).val() == 1 ) {
 					dataPath = '/data/<%= @study.url_safe_name %>/<%= @study.url_safe_name %>_row_centered.gct'
 				} else {
 					dataPath = '/data/<%= @study.url_safe_name %>/<%= @study.url_safe_name %>.gct'
@@ -31,10 +32,9 @@
 	</div>
 </div>
 <div class="row">
-	<div class="col-md-12" id="heatmap-plot">
-
-	</div>
+	<div class="col-md-12" id="heatmap-plot"></div>
 </div>
+
 <%= javascript_tag do %>
 
 	$(document).ready(function() {
