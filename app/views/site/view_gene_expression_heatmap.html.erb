@@ -1,6 +1,6 @@
 <div class="row">
 	<div class="col-md-10">
-		<h1>Gene Expression for <em><%= @genes.map {|g| link_to g.gene, "http://www.ncbi.nlm.nih.gov/gene/?term=#{g.gene}[sym]", 'data-toggle' => 'tooltip', title: "Search Entrez for '#{g.gene}'", 'data-placement' => 'right'}.join(', ').html_safe %></em> across <%= params[:cluster] ? "cluster: #{params[:cluster]}" : 'all major cell types' %></h1>
+		<h1>Gene Expression for <em><%= @genes.map {|g| link_to g.gene, "http://www.ncbi.nlm.nih.gov/gene/?term=#{g.gene}[sym]", 'data-toggle' => 'tooltip', title: "Search Entrez for '#{g.gene}'", 'data-placement' => 'right'}.join(', ').html_safe %></em></h1>
 	</div>
 	<div class="col-md-2">
 		<%= render partial: 'back_link' %>
@@ -29,6 +29,22 @@
 		var annotPath = '/data/<%= @study.url_safe_name %>/CLUSTER_AND_SUBCLUSTER_INDEX.txt';
 		renderMorpheus(dataPath, annotPath, '#heatmap-plot');
 
+		$("#cluster").change(function() {
+			// re-render Morpheus on cluster selection
+			var newDataPath = '<%= javascript_safe_url(load_heatmap_as_gct_url(study_name: params[:study_name], search: {genes: params[:search][:genes] })) %>';
+			var centered = $('#centered').val();
+			newDataPath += '&centered=' + centered;
+			var cluster = $('#cluster').val();
+			$("#search_cluster").val(cluster);
+			if (cluster != "") {
+				newDataPath += '&cluster=' + cluster;
+
+			};
+
+			renderMorpheus(newDataPath, annotPath, '#heatmap-plot');
+		});
 	});
+
+
 
 <% end %>

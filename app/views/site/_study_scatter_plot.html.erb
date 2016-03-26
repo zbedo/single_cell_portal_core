@@ -1,0 +1,21 @@
+<% @coordinates.sort_by {|k,v| k}.each_with_index do |(cluster, data), index| %>
+	var <%= cluster %> = {
+		x: <%= raw data[:x] %>,
+		y: <%= raw data[:y] %>,
+		text: <%= raw data[:text] %>,
+		name: "<%= data[:name] %>",
+		mode: 'markers',
+		type: 'scatter',
+		marker: { color: plotlyDefaultColors[<%= index %>] }
+	};
+<% end %>
+
+var data = [];
+<% @clusters.each do |cluster| %>
+	data.push(<%= cluster.name %>);
+<% end %>
+
+// use partial for layouts to avoid code duplication
+<%= render 'study_scatter_layout' %>
+
+Plotly.newPlot('cluster-plot', data, layout);

@@ -43,7 +43,7 @@
 	</div>
 </div>
 
-<div class="row">
+<div class="row" id="plots">
 	<div class="col-sm-12">
 		<%= render partial: 'study_cluster_nav' %>
 		<%= render partial: 'gene_search_form' %>
@@ -59,27 +59,7 @@
 
 <%= javascript_tag do %>
 
-	<% @coordinates.sort_by {|k,v| k}.each_with_index do |(cluster, data), index| %>
-		var <%= cluster %> = {
-			x: <%= raw data[:x] %>,
-			y: <%= raw data[:y] %>,
-			text: <%= raw data[:text] %>,
-			name: "<%= data[:name] %>",
-			mode: 'markers',
-			type: 'scatter',
-			marker: { color: plotlyDefaultColors[<%= index %>] }
-		};
-	<% end %>
-
-	var data = [];
-	<% @clusters.each do |cluster| %>
-		data.push(<%= cluster.name %>);
-	<% end %>
-
-	// use partial for layouts to avoid code duplication
-	<%= render 'study_scatter_layout' %>
-
-	Plotly.newPlot('cluster-plot', data, layout);
+	<%= render partial: 'study_scatter_plot' %>
 
 	$( window ).on('resizeEnd', function() {
 		<%= render 'study_scatter_layout' %>

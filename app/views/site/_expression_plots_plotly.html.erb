@@ -1,0 +1,77 @@
+// load box plot data
+<% @values.sort_by {|k,v| k}.each_with_index do |(cluster, data), index| %>
+	var <%= cluster %>_exp = {
+		y: <%= raw data[:y] %>,
+		name: "<%= data[:name] %>",
+		<% if params[:boxpoints].blank? %>
+			boxpoints: false,
+		<% else %>
+			boxpoints: "<%= params[:boxpoints] %>",
+		<% end %>
+		boxmean: true,
+		type: 'box',
+		marker: {color: plotlyDefaultColors[<%= index %>]}
+	};
+<% end %>
+
+var expressionData = [];
+<% @clusters.each do |cluster| %>
+	expressionData.push(<%= cluster.name %>_exp);
+<% end %>
+
+<%= render partial: 'expression_box_layout' %>
+
+Plotly.newPlot('box-plot', expressionData, expressionLayout);
+
+// load expression scatter plot
+<% @expression.sort_by {|k,v| k}.each do |cluster, data| %>
+	var <%= cluster %> = {
+		x: <%= raw data[:x] %>,
+		y: <%= raw data[:y] %>,
+		text: <%= raw data[:text] %>,
+		name: "<%= data[:name] %>",
+		mode: 'markers',
+		type: 'scatter',
+		hoverinfo: 'text',
+		marker: <%= raw data[:marker].to_json %>
+	};
+<% end %>
+
+var clusterData = [all];
+
+<%= render partial: 'expression_scatter_layout' %>
+
+Plotly.newPlot('scatter-plot', clusterData, scatterLayout);
+
+// listener to redraw expression scatter with new color profile
+$("#colorscale").change(function() {
+
+	var theme = $(this).val();
+	all.marker.colorscale = theme;
+	console.log("setting colorscale to " + theme);
+	var clusterData = [all];
+
+	Plotly.newPlot('scatter-plot', clusterData, scatterLayout);
+});
+
+// load static cluster scatter for reference
+<% @coordinates.sort_by {|k,v| k}.each_with_index do |(cluster, data), index| %>
+	var <%= cluster %>_clst = {
+		x: <%= raw data[:x] %>,
+		y: <%= raw data[:y] %>,
+		text: <%= raw data[:text] %>,
+		name: "<%= data[:name] %>",
+		mode: 'markers',
+		type: 'scatter',
+		marker: {color: plotlyDefaultColors[<%= index %>]}
+	};
+<% end %>
+
+var data = [];
+<% @clusters.each do |cluster| %>
+	data.push(<%= cluster.name %>_clst);
+<% end %>
+
+<%= render partial: 'static_scatter_layout' %>
+
+Plotly.newPlot('reference-plot', data, staticLayout, {staticPlot: true});

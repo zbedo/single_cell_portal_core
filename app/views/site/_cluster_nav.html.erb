@@ -1,16 +1,20 @@
-<%= form_tag(view_gene_expression_path(study_name: params[:study_name], gene: params[:gene]), class: 'form-inline navigation-form', id: 'select-cluster', method: :get) do %>
+<div class='form-inline navigation-form'>
 	<%= label_tag :cluster, 'Select sub-cluster' %><br />
 	<%= select_tag :cluster, options_for_select(@options, params[:cluster]), class: 'form-control' %>
-	<%= hidden_field_tag :boxpoints, params[:boxpoints] %>
-<% end %>
-
+</div>
 <%= javascript_tag do %>
 
 	$("#cluster").change(function() {
-		if ($("#cluster").val() == "") {
-			window.location.href = "<%= view_gene_expression_url(study_name: params[:study_name], gene: params[:gene]) %>";
+		var url = '<%= render_gene_expression_plots_path(study_name: params[:study_name], gene: params[:gene]) %>';
+		var target = document.getElementById('expression-plots');
+		opts.top = '10%';
+		var spinner = new Spinner(opts).spin(target);
+		$(target).data('spinner', spinner);
+		var cluster = $('#cluster').val();
+		if (cluster == "") {
+			$.get(url);
 		} else {
-			$("#select-cluster").submit();
+			$.get(url + '?cluster=' + cluster);
 		}
 	});
 

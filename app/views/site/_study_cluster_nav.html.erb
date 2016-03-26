@@ -1,13 +1,12 @@
-<%= form_tag(render_cluster_path(study_name: params[:study_name]), class: 'form-inline navigation-form', id: 'select-cluster', method: :get, remote: true) do %>
+<div class='form-inline navigation-form'>
 	<%= label_tag :cluster, 'Select sub-cluster' %><br />
 	<%= select_tag :cluster, options_for_select(@options, params[:cluster]), class: 'form-control' %>
-<% end %>
-
+</div>
 <%= javascript_tag do %>
 
 	$("#cluster").change(function() {
-		var url = $("#select-cluster").attr('action');
-		var target = document.getElementById('cluster-plot');
+		var url = '<%= render_cluster_path(study_name: params[:study_name]) %>';
+		var target = document.getElementById('plots');
 		var spinner = new Spinner(opts).spin(target);
 		$(target).data('spinner', spinner);
 		var cluster = $('#cluster').val();

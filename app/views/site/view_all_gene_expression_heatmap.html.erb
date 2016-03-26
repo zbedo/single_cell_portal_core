@@ -11,20 +11,20 @@
 		<%= render partial: 'gene_search_form' %>
 		<div class='form-inline navigation-form'>
 			<%= label_tag :centered, 'Row centering' %><br />
-			<%= select_tag :centered, options_for_select([['No', 0],['Yes', 1]]), {class: 'form-control'} %>
+			<%= select_tag :centered, options_for_select([['No', 0],['Yes', 1]], params[:centered]), {class: 'form-control'} %>
 		</div>
 
 		<%= javascript_tag do %>
 
 			$('#centered').change(function() {
 				if ( $(this).val() == 1 ) {
-					dataPath = '/data/<%= @study.url_safe_name %>/<%= @study.url_safe_name %>_row_centered.gct'
+					var newDataPath = '/data/<%= @study.url_safe_name %>/<%= @study.url_safe_name %>_row_centered.gct'
 				} else {
-					dataPath = '/data/<%= @study.url_safe_name %>/<%= @study.url_safe_name %>.gct'
+					var newDataPath = '/data/<%= @study.url_safe_name %>/<%= @study.url_safe_name %>.gct'
 				}
 
-				annotPath = '/data/<%= @study.url_safe_name %>/CLUSTER_AND_SUBCLUSTER_INDEX.txt';
-				renderMorpheus(dataPath, annotPath, '#heatmap-plot');
+				var annotPath = '/data/<%= @study.url_safe_name %>/CLUSTER_AND_SUBCLUSTER_INDEX.txt';
+				renderMorpheus(newDataPath, annotPath, '#heatmap-plot');
 			});
 
 		<% end %>
@@ -38,8 +38,13 @@
 <%= javascript_tag do %>
 
 	$(document).ready(function() {
-		dataPath = '/data/<%= @study.url_safe_name %>/<%= @study.url_safe_name %>.gct';
-		annotPath = '/data/<%= @study.url_safe_name %>/CLUSTER_AND_SUBCLUSTER_INDEX.txt';
+
+		if ( <%= params[:centered].to_i %> == 1 ) {
+			var dataPath = '/data/<%= @study.url_safe_name %>/<%= @study.url_safe_name %>_row_centered.gct'
+		} else {
+			var dataPath = '/data/<%= @study.url_safe_name %>/<%= @study.url_safe_name %>.gct'
+		}
+		var annotPath = '/data/<%= @study.url_safe_name %>/CLUSTER_AND_SUBCLUSTER_INDEX.txt';
 		renderMorpheus(dataPath, annotPath, '#heatmap-plot');
 	});
 

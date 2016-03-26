@@ -15,14 +15,14 @@ class SiteController < ApplicationController
   # load single study and view top-level clusters
   def study
     # parse all coordinates out into hash using generic method
-    load_cluster_points
+    @coordinates = load_cluster_points
     @options = load_sub_cluster_options
     @range = set_range(@coordinates.values)
   end
 
   # render a single cluster and its constituent sub-clusters
   def render_cluster
-    load_cluster_points
+    @coordinates = load_cluster_points
     @range = set_range(@coordinates.values)
   end
 
@@ -55,43 +55,25 @@ class SiteController < ApplicationController
   # render box and scatter plots for parent clusters or a particular sub cluster
   def view_gene_expression
     @gene = ExpressionScore.where(gene: params[:gene]).first
-    load_expression_scores
-    load_cluster_points
-    # load cluster plot, but use expression scores to set numerical color array
-    @expression = {}
-    @annotations = []
-    @expression[:all] = {x: [], y: [], text: [], marker: {cmax: 0, cmin: 0, color: [], showscale: true, colorbar: {title: 'log(TPM) Expression Values', titleside: 'right'}}}
-    @clusters.each do |cluster|
-      points = cluster.cluster_points
-      points.each do |point|
-        @expression[:all][:text] << "<b>#{point.single_cell.name}</b> [#{cluster.name}]<br>log(TPM) expression: #{@gene.scores[point.single_cell.name].to_f}".html_safe
-        @expression[:all][:x] << point.x
-        @expression[:all][:y] << point.y
-        # load in expression score to use as color value
-        @expression[:all][:marker][:color] << @gene.scores[point.single_cell.name].to_f
-      end
-        # calculate median position for cluster labels
-        x_postions = cluster.cluster_points.map(&:x).sort
-        y_postions = cluster.cluster_points.map(&:y).sort
-        x_len = x_postions.size
-        y_len = y_postions.size
-        x_pos = (x_postions[(x_len - 1) / 2] + x_postions[x_len / 2]) / 2.0
-        y_pos = (y_postions[(y_len - 1) / 2] + y_postions[y_len / 2]) / 2.0
-        @annotations << {
-          x: x_pos,
-          y: y_pos,
-          xref: 'x',
-          yref: 'y',
-          text: cluster.name,
-          showarrow: false,
-          borderpad: 4,
-          bgcolor: '#efefef',
-          bordercolor: '#ccc',
-          borderwidth: 1,
-          opacity: 0.6,
-          font: annotation_font
-        }
-    end
+    @values = load_expression_boxplot_scores
+    @coordinates = load_cluster_points
+    @annotations = load_cluster_annotations
+    @expression = load_expression_scatter_points
+    color_minmax =  @expression[:all][:marker][:color].minmax
+    @expression[:all][:marker][:cmin], @expression[:all][:marker][:cmax] = color_minmax
+    @expression[:all][:marker][:colorscale] = 'Reds'
+    @options = load_sub_cluster_options
+    @range = set_range([@expression[:all]])
+    @static_range = set_range(@coordinates.values)
+  end
+
+  # re-renders plots when changing cluster selection
+  def render_gene_expression_plots
+    @gene = ExpressionScore.where(gene: params[:gene]).first
+    @values = load_expression_boxplot_scores
+    @coordinates = load_cluster_points
+    @annotations = load_cluster_annotations
+    @expression = load_expression_scatter_points
     color_minmax =  @expression[:all][:marker][:color].minmax
     @expression[:all][:marker][:cmin], @expression[:all][:marker][:cmax] = color_minmax
     @expression[:all][:marker][:colorscale] = 'Reds'
@@ -102,18 +84,6 @@ class SiteController < ApplicationController
 
   # view genes in Morpheus as heatmap
   def view_gene_expression_heatmap
-    terms = parse_search_terms(:genes)
-    @genes = ExpressionScore.where(:study_id => @study._id, :searchable_gene.in => terms).to_a
-    @options = load_sub_cluster_options
-  end
-
-  # view all genes as heatmap in morpheus, will pull from pre-computed gct file
-  def view_all_gene_expression_heatmap
-
-  end
-
-  # reload expression data, either as normal values or row-centered values
-  def render_heatmap
     terms = parse_search_terms(:genes)
     @genes = ExpressionScore.where(:study_id => @study._id, :searchable_gene.in => terms).to_a
     @options = load_sub_cluster_options
@@ -151,43 +121,94 @@ class SiteController < ApplicationController
     send_data @data, type: 'text/plain'
   end
 
-  # load cluster annotations as file for Morpheus
-  def load_cluster_annotations
-    @data = ["cell\tcluster"]
-    @clusters.each do |cluster|
-      name = cluster.name
-      cluster.single_cells.map {|cell| @data << "#{cell.name}\t#{name}" }
-    end
-    send_data @data.join("\n"), type: 'text/plain'
+  # view all genes as heatmap in morpheus, will pull from pre-computed gct file
+  def view_all_gene_expression_heatmap
+
+  end
+
+  # reload expression data, either as normal values or row-centered values
+  def render_heatmap
+    terms = parse_search_terms(:genes)
+    @genes = ExpressionScore.where(:study_id => @study._id, :searchable_gene.in => terms).to_a
+    @options = load_sub_cluster_options
   end
 
   private
 
   # generic method to populate data structure to render a cluster scatterplot
   def load_cluster_points
-    @coordinates = {}
+    coordinates = {}
     @clusters.each do |cluster|
-      @coordinates[cluster.name] = {x: [], y: [], text: [], name: cluster.name}
+      coordinates[cluster.name] = {x: [], y: [], text: [], name: cluster.name}
       points = cluster.cluster_points
       points.each do |point|
-        @coordinates[cluster.name][:text] << point.single_cell.name
-        @coordinates[cluster.name][:x] << point.x
-        @coordinates[cluster.name][:y] << point.y
+        coordinates[cluster.name][:text] << point.single_cell.name
+        coordinates[cluster.name][:x] << point.x
+        coordinates[cluster.name][:y] << point.y
       end
     end
+    coordinates
+  end
+
+  # loads annotations array if being used for reference plot
+  def load_cluster_annotations
+    annotations = []
+    @clusters.each do |cluster|
+      # calculate median position for cluster labels
+      x_postions = cluster.cluster_points.map(&:x).sort
+      y_postions = cluster.cluster_points.map(&:y).sort
+      x_len = x_postions.size
+      y_len = y_postions.size
+      x_pos = (x_postions[(x_len - 1) / 2] + x_postions[x_len / 2]) / 2.0
+      y_pos = (y_postions[(y_len - 1) / 2] + y_postions[y_len / 2]) / 2.0
+      annotations << {
+          x: x_pos,
+          y: y_pos,
+          xref: 'x',
+          yref: 'y',
+          text: cluster.name,
+          showarrow: false,
+          borderpad: 4,
+          bgcolor: '#efefef',
+          bordercolor: '#ccc',
+          borderwidth: 1,
+          opacity: 0.6,
+          font: annotation_font
+      }
+    end
+    annotations
   end
 
   # generic method to populate data structure to render a box plot
-  def load_expression_scores
-    @values = {}
+  def load_expression_boxplot_scores
+    values = {}
     @clusters.each do |cluster|
-      @values[cluster.name] = {y: [], name: cluster.name }
+      values[cluster.name] = {y: [], name: cluster.name }
       # grab all cells present in the cluster, and use as keys to load expression scores
       # if a cell is not present for the gene, score gets set as 0.0
       cluster.single_cells.map(&:name).each do |cell|
-        @values[cluster.name][:y] << @gene.scores[cell].to_f
+        values[cluster.name][:y] << @gene.scores[cell].to_f
       end
     end
+    values
+  end
+
+  # load cluster plot, but use expression scores to set numerical color array
+  def load_expression_scatter_points
+    expression = {}
+
+    expression[:all] = {x: [], y: [], text: [], marker: {cmax: 0, cmin: 0, color: [], showscale: true, colorbar: {title: 'log(TPM) Expression Values', titleside: 'right'}}}
+    @clusters.each do |cluster|
+      points = cluster.cluster_points
+      points.each do |point|
+        expression[:all][:text] << "<b>#{point.single_cell.name}</b> [#{cluster.name}]<br>log(TPM) expression: #{@gene.scores[point.single_cell.name].to_f}".html_safe
+        expression[:all][:x] << point.x
+        expression[:all][:y] << point.y
+        # load in expression score to use as color value
+        expression[:all][:marker][:color] << @gene.scores[point.single_cell.name].to_f
+      end
+    end
+    expression
   end
 
   # set the current study
