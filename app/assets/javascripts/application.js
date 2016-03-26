@@ -12,7 +12,6 @@
 //
 //= require jquery
 //= require jquery_ujs
-//= require bootstrap-sprockets
 //= require jquery-ui/core
 //= require jquery-ui/datepicker
 //= require ckeditor/init
@@ -47,24 +46,24 @@ $(function() {
 // options for Spin.js
 var opts = {
     lines: 13 // The number of lines to draw
-    , length: 50 // The length of each line
+    , length: 56 // The length of each line
     , width: 14 // The line thickness
     , radius: 42 // The radius of the inner circle
-    , scale: 0.4 // Scales overall size of the spinner
+    , scale: 1 // Scales overall size of the spinner
     , corners: 1 // Corner roundness (0..1)
     , color: '#000' // #rgb or #rrggbb or array of colors
     , opacity: 0.25 // Opacity of the lines
-    , rotate: 21 // The rotation offset
+    , rotate: 0 // The rotation offset
     , direction: 1 // 1: clockwise, -1: counterclockwise
     , speed: 1 // Rounds per second
-    , trail: 46 // Afterglow percentage
+    , trail: 60 // Afterglow percentage
     , fps: 20 // Frames per second when using setTimeout() as a fallback for CSS
     , zIndex: 2e9 // The z-index (defaults to 2000000000)
     , className: 'spinner' // The CSS class to assign to the spinner
     , top: '50%' // Top position relative to parent
     , left: '50%' // Left position relative to parent
     , shadow: false // Whether to render a shadow
-    , hwaccel: true // Whether to use hardware acceleration
+    , hwaccel: false // Whether to use hardware acceleration
     , position: 'absolute' // Element positioning
 };
 
@@ -182,3 +181,20 @@ $(window).resize(function() {
         console.log('resizeEnd');
     }, 100);
 });
+
+// generic function to render Morpheus
+function renderMorpheus(dataPath, annotPath, target) {
+    var heatmap = new morpheus.HeatMap({
+        dataset : dataPath,
+        columnAnnotations : [
+            {
+                file : annotPath,
+                datasetField : 'id',
+                fileField : 'CELL_NAME'
+            }
+        ],
+        columnSortBy: [{field:'CLUSTER', order:0}, {field:'SUB-CLUSTER', order:0}]
+    });
+
+    $(target).html(heatmap.$el);
+}

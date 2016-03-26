@@ -7,4 +7,12 @@ class ExpressionScore
   field :searchable_gene, type: String
   field :scores, type: Hash
 
+  def mean(cells)
+    sum = 0.0
+    cells.each do |cell|
+      sum += self.scores[cell].to_f
+    end
+    sum / cells.size
+  end
+
 end

@@ -1,7 +1,9 @@
 class SiteController < ApplicationController
 
+  respond_to :html, :js
+
   before_action :set_study, except: :index
-  before_action :set_clusters, except: :index
+  before_action :set_clusters, except: [:index, :view_all_gene_expression_heatmap]
 
   COLORSCALE_THEMES = ['Blackbody', 'Bluered', 'Blues', 'Earth', 'Electric', 'Greens', 'Hot', 'Jet', 'Picnic', 'Portland', 'Rainbow', 'RdBu', 'Reds', 'Viridis', 'YlGnBu', 'YlOrRd']
 
@@ -98,11 +100,65 @@ class SiteController < ApplicationController
     @static_range = set_range(@coordinates.values)
   end
 
+  # view genes in Morpheus as heatmap
   def view_gene_expression_heatmap
     terms = parse_search_terms(:genes)
-    @genes = ExpressionScore.where(:study_id => @study._id, :searchable_gene.in => terms).to_a.sort_by {|g| g.gene}
-    load_heatmap_scores
+    @genes = ExpressionScore.where(:study_id => @study._id, :searchable_gene.in => terms).to_a
     @options = load_sub_cluster_options
+  end
+
+  # view all genes as heatmap in morpheus, will pull from pre-computed gct file
+  def view_all_gene_expression_heatmap
+
+  end
+
+  # reload expression data, either as normal values or row-centered values
+  def render_heatmap
+    terms = parse_search_terms(:genes)
+    @genes = ExpressionScore.where(:study_id => @study._id, :searchable_gene.in => terms).to_a
+    @options = load_sub_cluster_options
+  end
+
+  # load data in gct form to render in Morpheus
+  def load_heatmap_as_gct
+    terms = parse_search_terms(:genes)
+    @genes = ExpressionScore.where(:study_id => @study._id, :searchable_gene.in => terms).to_a
+    @cols = @clusters.map {|c| c.single_cells.size}.inject(0) {|sum, x| sum += x}
+    @headers = ["Name", "Description"]
+    @clusters.each do |cluster|
+      cluster.single_cells.each do |cell|
+        @headers << cell.name
+      end
+    end
+    @rows = []
+    @genes.each do |gene|
+      row = [gene.gene, ""]
+      @clusters.each do |cluster|
+        cells = cluster.single_cells
+        # calculate mean to perform row centering if requested
+        mean = 0.0
+        if params[:centered] == '1'
+          mean = gene.mean(cells.map(&:name))
+        end
+        cells.each do |cell|
+          row << gene.scores[cell.name].to_f - mean
+        end
+      end
+      @rows << row.join("\t")
+    end
+    @data = ['#1.2', [@rows.size, @cols].join("\t"), @headers.join("\t"), @rows.join("\n")].join("\n")
+
+    send_data @data, type: 'text/plain'
+  end
+
+  # load cluster annotations as file for Morpheus
+  def load_cluster_annotations
+    @data = ["cell\tcluster"]
+    @clusters.each do |cluster|
+      name = cluster.name
+      cluster.single_cells.map {|cell| @data << "#{cell.name}\t#{name}" }
+    end
+    send_data @data.join("\n"), type: 'text/plain'
   end
 
   private
@@ -134,46 +190,6 @@ class SiteController < ApplicationController
     end
   end
 
-  # generic method to populate data structure to render a heatmap
-  def load_heatmap_scores
-    genes = @genes.map(&:gene).sort.reverse
-    @values = {x: [], y: genes, z: [], text: [], type: 'heatmap', colorscale: 'Reds'}
-    @annotations = []
-    # for each gene & cell, grab expression value
-    # if a cell is not present for the gene, score gets set as 0.0
-    @genes.reverse_each do |gene|
-      scores = []
-      text = []
-      @clusters.each do |cluster|
-        cluster.single_cells.each do |cell|
-          @values[:x] << cell.name
-          score = gene.scores[cell.name].to_f
-          scores << score
-          text << "<b>#{cell.name}</b> [#{cluster.name}]<br><em>#{gene.gene}</em> log(TMP) expression: #{score}"
-        end
-      end
-      @values[:z] << scores
-      @values[:text] << text
-    end
-    # set labels for cluster bars
-    # hack to fix position of starting at -0.5, plotly always seems to start at 0.5 in x positioning
-    x_pos_tally = -0.5
-    @clusters.each do |cluster|
-      median = cluster.single_cells.size / 2
-      @annotations << {
-          x: x_pos_tally + median,
-          y: 1,
-          xref: 'x',
-          yref: 'paper',
-          yanchor: 'bottom',
-          text: cluster.name,
-          showarrow: false,
-          font: annotation_font
-      }
-      x_pos_tally += cluster.single_cells.size
-    end
-  end
-
   # set the current study
   def set_study
     @study = Study.where(url_safe_name: params[:study_name]).first
@@ -193,7 +209,7 @@ class SiteController < ApplicationController
   # generic method to assemble options for sub-cluster dropdown
   def load_sub_cluster_options
     opts = [["Major cell types",""]]
-    @study.clusters.parent_clusters.each do |cluster|
+    @study.clusters.parent_clusters.sort_by(&:name).each do |cluster|
       unless @study.clusters.sub_cluster(cluster.name).empty?
         opts << cluster.name
       end

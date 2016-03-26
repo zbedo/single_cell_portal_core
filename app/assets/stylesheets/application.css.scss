@@ -17,13 +17,22 @@
  *= require_self
  */
 
-@import "bootstrap-sprockets";
-@import "bootstrap";
-@import "bootstrap/theme";
 @import "font-awesome-sprockets";
 @import "font-awesome";
 
 /* additional styles */
+
+html, body {
+  height: 100%;
+}
+
+#main-body {
+  padding-bottom: 155px;
+}
+
+#wrap {
+  min-height: 100%;
+}
 
 .section-pad {
   margin-top: 60px;
@@ -164,3 +173,27 @@
   margin: 0;
 }
 
+#heatmap-plot {
+  width:100%;
+  height: auto;
+  margin-top: 15px;
+}
+
+.footer {
+  background-color: #efefef;
+  padding-top: 25px;
+  position: relative;
+  margin-top: -155px; /* negative value of footer height */
+  height: 155px;
+  clear:both;
+  width: 100%;
+}
+
+.footer img {
+  margin-bottom: 10px;
+}
+
+.footer a {
+  color: inherit;
+  text-decoration: underline;
+}

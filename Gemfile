@@ -14,8 +14,6 @@ gem 'coffee-rails', '~> 4.1.0'
 
 # Use jquery as the JavaScript library
 gem 'jquery-rails'
-# Turbolinks makes following links in your web application faster. Read more: https://github.com/rails/turbolinks
-gem 'turbolinks'
 # Build JSON APIs with ease. Read more: https://github.com/rails/jbuilder
 gem 'jbuilder', '~> 2.0'
 # bundle exec rake doc:rails generates the API under doc/api.
@@ -37,7 +35,6 @@ end
 
 group :development do
   # Access an IRB console on exception pages or by using <%= console %> in views
-  gem 'web-console', '~> 2.0'
 
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem 'spring'
@@ -49,9 +46,8 @@ gem 'selenium-webdriver'
 gem 'ckeditor'
 gem 'paperclip'
 gem 'jquery-ui-rails', :git => 'git://github.com/joliss/jquery-ui-rails.git'
-gem 'bootstrap-sass', :git => 'git://github.com/twbs/bootstrap-sass.git'
 gem 'font-awesome-sass', git: 'git://github.com/FortAwesome/font-awesome-sass.git'
-gem 'mongoid'
+gem 'mongoid', '5.1'
 gem 'bson_ext'
 gem 'ruby-prof'
 gem 'delayed_job'

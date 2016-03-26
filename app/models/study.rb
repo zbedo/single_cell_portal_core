@@ -11,11 +11,11 @@ class Study
   # scoping clusters to allow easy access to top- and sub-level clusters
   has_many :clusters do
     def parent_clusters
-      where(cluster_type: 'parent').to_a
+      where(cluster_type: 'parent').to_a.delete_if {|c| c.cluster_points.empty? }
     end
 
     def sub_cluster(name)
-      where(parent_cluster: name).to_a
+      where(parent_cluster: name).to_a.delete_if {|c| c.cluster_points.empty? }
     end
   end
 
@@ -102,7 +102,36 @@ class Study
       clusters_data.shift
       clusters_data.each do |line|
         vals = line.split("\t")
-        @all_clusters[vals[0]] = {cluster: vals[1], sub_cluster: vals[2]}
+        cluster_name = vals[1]
+        sub_cluster_name = vals[2]
+        cell_name = vals[0]
+        @all_clusters[cell_name] = {cluster: cluster_name, sub_cluster: sub_cluster_name}
+
+        # create cluster and single_cell objects now to associate later as some cells/clusters have no coordinate data
+        parent_cluster = Cluster.where(name: cluster_name, cluster_type: 'parent').first
+        sub_cluster = Cluster.where(name: sub_cluster_name, cluster_type: 'sub_cluster').first
+        if parent_cluster.blank?
+          parent_cluster = self.clusters.build(name: cluster_name, cluster_type: 'parent')
+          parent_cluster.save
+          @cluster_count += 1
+        end
+        if sub_cluster.blank?
+          sub_cluster = self.clusters.build(name: sub_cluster_name, parent_cluster: cluster_name, cluster_type: 'sub_cluster')
+          sub_cluster.save
+          @cluster_count += 1
+        end
+        parent_cell = SingleCell.where(name: cell_name, study_id: self._id, cluster_id: parent_cluster._id).first
+        sub_cell = SingleCell.where(name: cell_name, study_id: self._id, cluster_id: sub_cluster._id).first
+        if parent_cell.blank?
+          parent_cell = self.single_cells.build(name: cell_name, cluster_id: parent_cluster._id)
+          parent_cell.save
+          @cell_count += 1
+        end
+        if sub_cell.blank?
+          sub_cell = self.single_cells.build(name: cell_name, cluster_id: sub_cluster._id)
+          sub_cell.save
+          @cell_count += 1
+        end
       end
 
       # find all coordinates data
@@ -123,41 +152,26 @@ class Study
           x = vals[x_index]
           y = vals[y_index]
 
-          # create cluster first, determining type and saving correct name
+          # load correct cluster & single_cell
           if file == 'Coordinates_Major_cell_types.txt'
-            @cluster_name = @all_clusters[vals[cell_name_index]][:cluster]
+            @cluster_name = @all_clusters[name][:cluster]
             @cluster_type = 'parent'
             @parent_cluster = nil
           else
-            @cluster_name = @all_clusters[vals[cell_name_index]][:sub_cluster]
+            @cluster_name = @all_clusters[name][:sub_cluster]
             @cluster_type = 'sub_cluster'
-            @parent_cluster = @all_clusters[vals[cell_name_index]][:cluster]
-          end
-          if !Cluster.where(name: @cluster_name, cluster_type: @cluster_type).exists?
-            if @parent_cluster.nil?
-              @cluster = self.clusters.build(name: @cluster_name, cluster_type: @cluster_type)
-            else
-              @cluster = self.clusters.build(name: @cluster_name, cluster_type: @cluster_type, parent_cluster: @parent_cluster)
-            end
-            @cluster.save
-            @cluster_count += 1
-          else
-            @cluster = Cluster.where(name: @cluster_name, cluster_type: @cluster_type).first
+            @parent_cluster = @all_clusters[name][:cluster]
           end
 
-          # create or find single_cell and map associations to study and cluster
-          if !SingleCell.where(name: name, study_id: self._id, cluster_id: @cluster._id).any?
-            @cell = self.single_cells.build(name: name, cluster_id: @cluster._id)
-            @cell.save
-            @cell_count += 1
-          else
-            @cell = SingleCell.where(name: name, study_id: self._id, cluster_id: @cluster._id).first
-          end
+          cluster = Cluster.where(name: @cluster_name, cluster_type: @cluster_type).first
+          cell = SingleCell.where(name: name, study_id: self._id, cluster_id: cluster._id).first
 
-          # finally, create cluster point with association to cluster & single_cell
-          @cluster_point = @cluster.cluster_points.build(x: x, y: y, single_cell_id: @cell._id)
-          @cluster_point.save
-          @cluster_point_count += 1
+          unless cell.nil?
+            # finally, create cluster point with association to cluster & single_cell
+            cluster_point = cluster.cluster_points.build(x: x, y: y, single_cell_id: cell._id)
+            cluster_point.save
+            @cluster_point_count += 1
+          end
         end
       end
       # log messages
@@ -170,6 +184,55 @@ class Study
       puts "Cannot open data directory for Study: #{self.name}."
       false
     end
+  end
+
+  # method to generate a gct file of the entire expression matrix to use with Morpheus
+  def generate_master_gct_files
+    count = 0
+    start_time = Time.now
+    genes = self.expression_scores
+    # create files
+    gct_file = File.new(Rails.root.join(self.data_load_path, "#{self.url_safe_name}.gct"), 'w+')
+    centered_gct_file = File.new(Rails.root.join(self.data_load_path, "#{self.url_safe_name}_row_centered.gct"), 'w+')
+    # create headers for gct files
+    cells = self.single_cells.map(&:name).uniq.sort
+    headers = ['Name', 'Description', cells].flatten
+    header_line = "#1.2\n#{genes.size}\t#{cells.size}\n#{headers.join("\t")}\n"
+    # write headers to gct files
+    gct_file.write header_line
+    centered_gct_file.write header_line
+    # parse scores and write to file
+    genes.each do |gene|
+      gene_name = gene.gene
+      row = [gene_name, '']
+      centered_row = [gene_name, '']
+      # calculate mean for row-centered values
+      mean = gene.mean(cells)
+      cells.each do |cell|
+        score = gene.scores[cell].to_f
+        row << score
+        centered_row << score - mean
+      end
+      gct_file.write row.join("\t") + "\n"
+      centered_gct_file.write centered_row.join("\t") + "\n"
+      count += 1
+    end
+    # close files, print stats
+    gct_file.close
+    centered_gct_file.close
+    end_time = Time.now
+    time = (end_time - start_time).divmod 60.0
+    puts "Completed!"
+    puts "Lines written to both files: #{count}"
+    puts "Total Time: #{time.first} minutes, #{time.last} seconds"
+  end
+
+  def gct_path
+    "/data/#{self.url_safe_name}/#{self.url_safe_name}.gct"
+  end
+
+  def centered_gct_path
+    "/data/#{self.url_safe_name}/#{self.url_safe_name}_row_centered.gct"
   end
 
   private

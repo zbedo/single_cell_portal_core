@@ -5,7 +5,11 @@ Rails.application.routes.draw do
   get 'render_cluster/:study_name', to: 'site#render_cluster', as: :render_cluster
   post 'study/:study_name/search', to: 'site#search_genes', as: :search_genes
   get 'study/:study_name/gene_expression/:gene/', to: 'site#view_gene_expression', as: :view_gene_expression
-  get 'study/:study_name/gene_expression/', to: 'site#view_gene_expression_heatmap', as: :view_gene_expression_heatmap
+  get 'study/:study_name/gene_expression', to: 'site#view_gene_expression_heatmap', as: :view_gene_expression_heatmap
+  get 'study/:study_name/all_gene_expression', to: 'site#view_all_gene_expression_heatmap', as: :view_all_gene_expression_heatmap
+  get 'study/:study_name/load_heatmap_as_gct', to: 'site#load_heatmap_as_gct', as: :load_heatmap_as_gct
+  get 'study/:study_name/load_cluster_annotations', to: 'site#load_cluster_annotations', as: :load_cluster_annotations
+  get 'render_heatmap/:study_name', to: 'site#render_heatmap', as: :render_heatmap
   get '/', to: 'site#index', as: :site
   root to: 'site#index'
 

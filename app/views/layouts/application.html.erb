@@ -2,8 +2,11 @@
 <html>
 <head>
   <title>Single Cell Portal</title>
-  <%= stylesheet_link_tag    'application', media: 'all' %>
-  <%= javascript_include_tag 'application' %>
+	<%= stylesheet_link_tag    'application', media: 'all' %>
+	<%= javascript_include_tag 'application' %>
+	<%= javascript_include_tag '//www.broadinstitute.org/cancer/software/morpheus/js/morpheus-external-latest.min.js' %>
+	<%= javascript_include_tag '//www.broadinstitute.org/cancer/software/morpheus/js/morpheus-latest.min.js' %>
+	<%= stylesheet_link_tag    '//www.broadinstitute.org/cancer/software/morpheus/css/morpheus-latest.min.css', media: 'screen' %>
 	<%= javascript_include_tag 'https://cdn.plot.ly/plotly-latest.min.js' %>
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,12 +15,22 @@
 <body>
 <%= render '/layouts/nav' %>
 <%= render '/layouts/notices' %>
-<div class="container-fluid section-pad">
-	<div class="row">
+<div class="container-fluid" id="wrap">
+	<div class="row section-pad" id="main-body">
 		<div class="col-md-12">
 			<%= yield %>
 		</div>
 	</div>
 </div>
+<div class="footer container-fluid">
+	<div class="row">
+		<div class="col-md-12 text-center">
+
+			<%= link_to image_tag("broad-logo.png", class: "center-block img-responsive img-thumbnail"), "http://www.broadinstitute.org" %>
+			<p class="text-muted">&copy; <%= Date.today.year %> The Broad Institute of MIT & Harvard</p>
+		</div>
+	</div>
+</div>
+
 </body>
 </html>

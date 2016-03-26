@@ -1,0 +1,14 @@
+// construct path for search
+var newDataPath = '<%= javascript_safe_url(load_heatmap_as_gct_url(study_name: params[:study_name], search: {genes: params[:search][:genes] }, centered: params[:centered])) %>';
+var cluster = $('#cluster').val();
+if ( cluster != '' ) {
+	newDataPath += '&cluster=' + cluster;
+};
+// load annotation file and re-render plot
+var annotPath = '/data/<%= @study.url_safe_name %>/CLUSTER_AND_SUBCLUSTER_INDEX.txt';
+renderMorpheus(newDataPath, annotPath, '#heatmap-plot');
+
+
+// hide modal and stop spinner
+$('#loading-modal').modal('hide');
+$('#centered').data('spinner').stop();

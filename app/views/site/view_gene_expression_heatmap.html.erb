@@ -3,67 +3,32 @@
 		<h1>Gene Expression for <em><%= @genes.map {|g| link_to g.gene, "http://www.ncbi.nlm.nih.gov/gene/?term=#{g.gene}[sym]", 'data-toggle' => 'tooltip', title: "Search Entrez for '#{g.gene}'", 'data-placement' => 'right'}.join(', ').html_safe %></em> across <%= params[:cluster] ? "cluster: #{params[:cluster]}" : 'all major cell types' %></h1>
 	</div>
 	<div class="col-md-2">
-		<h1><%= link_to "<span class='fa fa-chevron-left'></span> Back to study".html_safe, view_study_path(params[:study_name]), class: 'btn btn-lg btn-warning pull-right' %></h1>
+		<%= render partial: 'back_link' %>
 	</div>
 </div>
-<div class="panel panel-default">
-	<div class="panel-heading">
-		<div class="panel-title">
-			<h4><%= link_to "Expression Heatmap <span class='fa fa-chevron-down'></span>".html_safe, '#heatmap-controls', 'data-toggle' => 'collapse'  %></h4>
-		</div>
-	</div>
-	<div id="heatmap-controls" class="panel-collapse collapse in">
-		<div class="panel-body">
-			<%= render partial: 'expression_heatmap_nav' %>
-			<%= render partial: 'colorscale_picker' %>
-			<%= render partial: 'gene_search_form' %>
-			<%= render partial: 'gene_nav' %>
-			<div id="heatmap-plot"></div>
-		</div>
+<div class="row">
+	<div class="col-sm-12">
+		<%= render partial: 'expression_heatmap_nav' %>
+		<%= render partial: 'gene_search_form' %>
+		<%= render partial: 'centered_view' %>
+		<%= render partial: 'gene_nav' %>
 	</div>
 </div>
+<div class="row">
+	<div class="col-md-12" id="heatmap-plot">
 
+	</div>
+</div>
 <%= javascript_tag do %>
 
-	// load expression plot data
-	var genes = {
-		x: <%= raw @values[:x] %>,
-		y: <%= raw @values[:y] %>,
-		z: <%= raw @values[:z] %>,
-		text: <%= raw @values[:text] %>,
-		colorscale: "<%= @values[:colorscale] %>",
-		type: 'heatmap',
-		showscale: true,
-		hoverinfo: 'text',
-		colorbar: {
-			title: 'log(TPM) Expression Values',
-			titleside: 'right',
-			titlefont: plotlyLabelFont
-		}
-	};
+	$(document).ready(function() {
+		var dataPath = '<%= javascript_safe_url(load_heatmap_as_gct_url(study_name: params[:study_name], search: {genes: params[:search][:genes] })) %>';
+		if ( '<%= params[:cluster] %>' != '' ) {
+			dataPath += '&cluster=<%= params[:cluster ]%>';
+		};
+		var annotPath = '/data/<%= @study.url_safe_name %>/CLUSTER_AND_SUBCLUSTER_INDEX.txt';
+		renderMorpheus(dataPath, annotPath, '#heatmap-plot');
 
-	var expressionData = [genes];
-
-	<%= render partial: 'heatmap_layout' %>
-
-	Plotly.newPlot('heatmap-plot', expressionData, expressionLayout);
-
-	// listener to redraw expression scatter with new color profile
-	$("#colorscale").change(function() {
-
-		var theme = $(this).val();
-		genes.colorscale = theme;
-		console.log("setting colorscale to " + theme);
-		expressionData = [genes];
-
-		Plotly.newPlot('heatmap-plot', expressionData, expressionLayout);
-	});
-
-	// re-render expression plots on window resize to use available area
-	$( window ).on('resizeEnd', function() {
-		<%= render partial: 'heatmap_layout' %>
-
-		Plotly.newPlot('heatmap-plot', expressionData, expressionLayout);
 	});
 
 <% end %>

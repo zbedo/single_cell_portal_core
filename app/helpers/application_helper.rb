@@ -13,4 +13,8 @@ module ApplicationHelper
 			nil
 		end
 	end
+
+	def javascript_safe_url(url)
+		URI.decode(url).html_safe
+	end
 end

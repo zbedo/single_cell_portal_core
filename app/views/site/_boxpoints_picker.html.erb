@@ -16,7 +16,7 @@
 			}
 			console.log("setting boxpoints for " + this.name + " to " + this.boxpoints);
 		});
-
+		<%= render partial: 'expression_scatter_layout' %>
 		Plotly.newPlot('box-plot', expressionData, expressionLayout);
 	});
 

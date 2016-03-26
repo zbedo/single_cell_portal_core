@@ -1,4 +1,4 @@
-<%= form_tag(render_cluster_path(study_name: params[:study_name]), class: 'form-inline navigation-form spin', id: 'select-cluster', method: :get, remote: true) do %>
+<%= form_tag(render_cluster_path(study_name: params[:study_name]), class: 'form-inline navigation-form', id: 'select-cluster', method: :get, remote: true) do %>
 	<%= label_tag :cluster, 'Select sub-cluster' %><br />
 	<%= select_tag :cluster, options_for_select(@options, params[:cluster]), class: 'form-control' %>
 <% end %>
@@ -6,10 +6,15 @@
 <%= javascript_tag do %>
 
 	$("#cluster").change(function() {
-		if ($("#cluster").val() == "") {
-			window.location.href = "<%= view_study_url(study_name: params[:study_name]) %>";
+		var url = $("#select-cluster").attr('action');
+		var target = document.getElementById('cluster-plot');
+		var spinner = new Spinner(opts).spin(target);
+		$(target).data('spinner', spinner);
+		var cluster = $('#cluster').val();
+		if (cluster == "") {
+			$.get(url);
 		} else {
-			$("#select-cluster").submit();
+			$.get(url + '?cluster=' + cluster);
 		}
 	});
 

@@ -1,0 +1,46 @@
+<div class="row">
+	<div class="col-md-10">
+		<h1>Gene Expression for all genes</h1>
+	</div>
+	<div class="col-md-2">
+		<%= render partial: 'back_link' %>
+	</div>
+</div>
+<div class="row">
+	<div class="col-sm-12">
+		<%= render partial: 'gene_search_form' %>
+		<div class='form-inline navigation-form'>
+			<%= label_tag :centered, 'View row-centered values' %><br />
+			<%= check_box_tag :centered %>
+		</div>
+		<%= javascript_tag do %>
+
+			$('#centered').change(function() {
+				if ( $(this).prop('checked') ) {
+					dataPath = '/data/<%= @study.url_safe_name %>/<%= @study.url_safe_name %>_row_centered.gct'
+				} else {
+					dataPath = '/data/<%= @study.url_safe_name %>/<%= @study.url_safe_name %>.gct'
+				}
+
+				annotPath = '/data/<%= @study.url_safe_name %>/CLUSTER_AND_SUBCLUSTER_INDEX.txt';
+				renderMorpheus(dataPath, annotPath, '#heatmap-plot');
+			});
+
+		<% end %>
+
+	</div>
+</div>
+<div class="row">
+	<div class="col-md-12" id="heatmap-plot">
+
+	</div>
+</div>
+<%= javascript_tag do %>
+
+	$(document).ready(function() {
+		dataPath = '/data/<%= @study.url_safe_name %>/<%= @study.url_safe_name %>.gct';
+		annotPath = '/data/<%= @study.url_safe_name %>/CLUSTER_AND_SUBCLUSTER_INDEX.txt';
+		renderMorpheus(dataPath, annotPath, '#heatmap-plot');
+	});
+
+<% end %>
