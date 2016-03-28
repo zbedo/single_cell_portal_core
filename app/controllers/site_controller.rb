@@ -87,6 +87,10 @@ class SiteController < ApplicationController
     terms = parse_search_terms(:genes)
     @genes = ExpressionScore.where(:study_id => @study._id, :searchable_gene.in => terms).to_a
     @options = load_sub_cluster_options
+    if @genes.size > 5
+      @main_genes = @genes.shift(5)
+      @other_genes = @genes
+    end
   end
 
   # load data in gct form to render in Morpheus
@@ -139,7 +143,7 @@ class SiteController < ApplicationController
   def load_cluster_points
     coordinates = {}
     @clusters.each do |cluster|
-      coordinates[cluster.name] = {x: [], y: [], text: [], name: cluster.name}
+      coordinates[cluster.name] = {x: [], y: [], text: [], name: "#{cluster.name}  (#{cluster.cluster_points.size} points)"}
       points = cluster.cluster_points
       points.each do |point|
         coordinates[cluster.name][:text] << point.single_cell.name
@@ -224,12 +228,12 @@ class SiteController < ApplicationController
 
   # generic search term parser
   def parse_search_terms(key)
-    params[:search][key].split.map {|gene| gene.chomp.downcase}.sort
+    params[:search][key].split.map {|gene| gene.chomp.downcase}
   end
 
   # generic method to assemble options for sub-cluster dropdown
   def load_sub_cluster_options
-    opts = [["Major cell types",""]]
+    opts = [["All cell types",""]]
     @study.clusters.parent_clusters.sort_by(&:name).each do |cluster|
       unless @study.clusters.sub_cluster(cluster.name).empty?
         opts << cluster.name

@@ -1,4 +1,4 @@
-<h1>Study: <%= @study.name %></h1>
+<h1 class="study-lead">Study: <%= @study.name %></h1>
 <div class="panel panel-primary">
 	<div class="panel-heading">
 		<div class="panel-title">
@@ -14,7 +14,7 @@
 <div class="panel panel-primary">
 	<div class="panel-heading">
 		<div class="panel-title">
-			<h4><%= link_to "Downloads <span class='fa fa-chevron-right'></span>".html_safe, '#files', 'data-toggle' => 'collapse', class: 'white'  %></h4>
+			<h4><%= link_to "#{@study.name} Data <span class='fa fa-chevron-right'></span>".html_safe, '#files', 'data-toggle' => 'collapse', class: 'white'  %></h4>
 		</div>
 	</div>
 	<div id="files" class="panel-collapse collapse">
@@ -42,20 +42,29 @@
 		</div>
 	</div>
 </div>
-
-<div class="row" id="plots">
-	<div class="col-sm-12">
-		<%= render partial: 'study_cluster_nav' %>
-		<%= render partial: 'gene_search_form' %>
-		<%= render partial: 'study_precomputed_expression_nav' %>
+<div class="panel panel-primary">
+	<div class="panel-heading">
+		<div class="panel-title">
+			<h4><%= link_to "#{@study.name} Visualizations <span class='fa fa-chevron-down'></span>".html_safe, '#plots', 'data-toggle' => 'collapse', class: 'white'  %></h4>
+		</div>
 	</div>
-	<div class="col-md-3">
-		<%= render partial: 'cluster_info' %>
-	</div>
-	<div class="col-md-9">
-		<div id="cluster-plot"></div>
+	<div id="plots" class="panel-collapse collapse in">
+		<div class="panel-body">
+			<div class="row">
+				<div class="col-sm-12">
+					<%= render partial: 'study_cluster_nav' %>
+					<%= render partial: 'gene_search_form' %>
+					<%= render partial: 'study_precomputed_expression_nav' %>
+				</div>
+				<div class="col-md-12">
+					<div id="cluster-plot"></div>
+				</div>
+			</div>
+		</div>
 	</div>
 </div>
+
+
 
 <%= javascript_tag do %>
 

@@ -35,12 +35,26 @@ html, body {
 }
 
 .section-pad {
-  margin-top: 60px;
+  margin-top: 80px;
   margin-bottom: 20px;
 }
 
 .white {
   color: #ffffff;
+}
+
+.sc-navbar {
+  min-height: 70px !important;
+  .navbar-header {
+    margin-top: 10px;
+    .navbar-brand {
+      font-size: 22px;
+    }
+  }
+  .nav {
+    margin-top: 10px;
+    font-size: 18px;
+  }
 }
 
 .bs-callout{
@@ -165,14 +179,16 @@ html, body {
   margin-right: 15px;
 }
 
+.top-pad {
+  margin-top: 10px;
+}
+
 .table-responsive .dataTables_wrapper .row {
   margin: 0;
 }
 
 #heatmap-plot {
-  width:100%;
-  height: auto;
-  margin-top: 15px;
+  margin-top: 40px;
 }
 
 .footer {
@@ -192,4 +208,13 @@ html, body {
 .footer a {
   color: inherit;
   text-decoration: underline;
+}
+
+.svg-container {
+  margin: 0 auto !important;
+}
+
+.more-genes {
+  vertical-align: top !important;
+  margin-top: 2px;
 }

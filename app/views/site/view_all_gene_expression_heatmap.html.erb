@@ -1,9 +1,6 @@
 <div class="row">
-	<div class="col-md-10">
-		<h1>Gene Expression for all genes</h1>
-	</div>
-	<div class="col-md-2">
-		<%= render partial: 'back_link' %>
+	<div class="col-md-12">
+		<h1 class="study-lead">Gene Expression for all genes</h1>
 	</div>
 </div>
 <div class="row">
@@ -32,7 +29,9 @@
 	</div>
 </div>
 <div class="row">
-	<div class="col-md-12" id="heatmap-plot"></div>
+	<div class="col-md-12">
+		<div id="heatmap-plot"></div>
+	</div>
 </div>
 
 <%= javascript_tag do %>

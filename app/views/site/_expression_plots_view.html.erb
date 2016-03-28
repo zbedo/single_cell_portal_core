@@ -1,16 +1,13 @@
 <div class="row">
-	<div class="col-md-10">
-		<h1>Gene Expression for <em><%= link_to params[:gene], "http://www.ncbi.nlm.nih.gov/gene/?term=#{params[:gene]}[sym]", 'data-toggle' => 'tooltip', title: "Search Entrez for '#{params[:gene]}'", 'data-placement' => 'right' %></em></h1>
-	</div>
-	<div class="col-md-2">
-		<%= render partial: 'back_link' %>
+	<div class="col-md-12">
+		<h1 class="study-lead">Gene Expression for <em><%= link_to params[:gene], "http://www.ncbi.nlm.nih.gov/gene/?term=#{params[:gene]}[sym]", 'data-toggle' => 'tooltip', title: "Search Entrez for '#{params[:gene]}'", 'data-placement' => 'right' %></em></h1>
 	</div>
 </div>
 <div id="expression-plots">
 	<div class="panel panel-default">
 		<div class="panel-heading">
 			<div class="panel-title">
-				<h4><%= link_to "Box Plots <span class='fa fa-chevron-down'></span>".html_safe, '#box-controls', 'data-toggle' => 'collapse'  %></h4>
+				<h4><%= link_to "Expression Values for Selected Clusters <span class='fa fa-chevron-down'></span>".html_safe, '#box-controls', 'data-toggle' => 'collapse'  %></h4>
 			</div>
 		</div>
 		<div id="box-controls" class="panel-collapse collapse in">
@@ -30,7 +27,7 @@
 	<div class="panel panel-default">
 		<div class="panel-heading">
 			<div class="panel-title">
-				<h4><%= link_to "Expression Scatter Plot <span class='fa fa-chevron-down'></span>".html_safe, '#scatter-controls', 'data-toggle' => 'collapse'  %></h4>
+				<h4><%= link_to "Expression Values as Scatter Plot <span class='fa fa-chevron-down'></span>".html_safe, '#scatter-controls', 'data-toggle' => 'collapse'  %></h4>
 			</div>
 		</div>
 		<div id="scatter-controls" class="panel-collapse collapse in">

@@ -1,8 +1,0 @@
-<div id="cluster-info">
-	<h4>Cluster Info</h4>
-	<ul class="list-group">
-		<% @clusters.each do |cluster| %>
-			<li class="list-group-item"><%= cluster.name %><span class="badge"><%= cluster.cluster_points.count %></span></li>
-		<% end %>
-	</ul>
-</div>
