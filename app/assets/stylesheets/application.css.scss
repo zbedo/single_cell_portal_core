@@ -218,3 +218,9 @@ html, body {
   vertical-align: top !important;
   margin-top: 2px;
 }
+
+#gene-set-modal textarea {
+  width: 100%;
+  min-height: 300px;
+  margin-bottom: 25px;
+}

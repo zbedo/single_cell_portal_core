@@ -5,16 +5,19 @@
 <%= javascript_tag do %>
 
 	$("#cluster").change(function() {
-		var url = '<%= render_gene_expression_plots_path(study_name: params[:study_name], gene: params[:gene]) %>';
-		var target = document.getElementById('expression-plots');
-		opts.top = '10%';
-		var spinner = new Spinner(opts).spin(target);
-		$(target).data('spinner', spinner);
+		var url = '<%= params[:gene] ? render_gene_expression_plots_path(study_name: params[:study_name], gene: params[:gene]) : render_gene_set_expression_plots_path(study_name: params[:study_name], search: {gene_set: params[:search][:gene_set]}) %>';
+		var target1 = document.getElementById('box-plot');
+		var target2 = document.getElementById('scatter-wrapper');
+		var spinner1 = new Spinner(opts).spin(target1);
+		var spinner2 = new Spinner(opts).spin(target2);
+		$(target1).data('spinner', spinner1);
+		$(target2).data('spinner', spinner2);
 		var cluster = $('#cluster').val();
 		if (cluster == "") {
 			$.get(url);
 		} else {
-			$.get(url + '?cluster=' + cluster);
+			var delimeter = "<%= params[:gene] ? "?".html_safe : "&".html_safe %>";
+			$.get(url + delimeter + 'cluster=' + cluster);
 		}
 	});
 

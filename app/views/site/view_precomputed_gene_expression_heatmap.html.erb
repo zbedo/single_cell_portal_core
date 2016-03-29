@@ -1,0 +1,45 @@
+<div class="row">
+	<div class="col-md-12">
+		<h1 class="study-lead">Gene Expression for <%= @precomputed_score.name %></h1>
+	</div>
+</div>
+<div class="row">
+	<div class="col-sm-12">
+		<%= render partial: 'gene_search_form' %>
+		<%= render partial: 'study_precomputed_expression_nav' %>
+	</div>
+	<%= render 'centered_view' %>
+	<%= javascript_tag do %>
+
+		$('#centered').change(function() {
+			if ( $(this).val() == 1 ) {
+				var newDataPath = "<%= load_precomputed_heatmap_as_gct_path(study_name: params[:study_name], precomputed: params[:precomputed], centered: 1) %>";
+			} else {
+				var newDataPath = "<%= load_precomputed_heatmap_as_gct_path(study_name: params[:study_name], precomputed: params[:precomputed]) %>";
+			}
+
+			renderMorpheus(newDataPath, '', '#heatmap-plot');
+		});
+
+	<% end %>
+</div>
+<div class="row">
+	<div class="col-md-12">
+		<div id="heatmap-plot"></div>
+	</div>
+</div>
+
+<%= javascript_tag do %>
+
+	$(document).ready(function() {
+
+		if ( <%= params[:centered].to_i %> == 1 ) {
+			var dataPath = "<%= load_precomputed_heatmap_as_gct_path(study_name: params[:study_name], precomputed: params[:precomputed], centered: 1) %>";
+		} else {
+			var dataPath = "<%= load_precomputed_heatmap_as_gct_path(study_name: params[:study_name], precomputed: params[:precomputed]) %>";
+		}
+
+		renderMorpheus(dataPath, '', '#heatmap-plot');
+	});
+
+<% end %>

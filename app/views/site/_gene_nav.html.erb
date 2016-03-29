@@ -1,5 +1,5 @@
 <div class='form-inline navigation-form'>
-	<%= label_tag :gene, 'View single gene-level expression' %><br />
+	<%= label_tag :gene, 'Single gene-level expression' %><br />
 	<%= select_tag :gene, options_for_select(load_gene_nav(@genes, params[:cluster])), {class: 'form-control'} %>
 
 	<%= javascript_tag do %>

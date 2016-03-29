@@ -1,13 +1,13 @@
 <div class="row">
 	<div class="col-md-12">
-		<h1 class="study-lead">Gene Expression for <em><%= link_to params[:gene], "http://www.ncbi.nlm.nih.gov/gene/?term=#{params[:gene]}[sym]", 'data-toggle' => 'tooltip', title: "Search Entrez for '#{params[:gene]}'", 'data-placement' => 'right' %></em></h1>
+		<h1 class="study-lead">Gene<%= action_name =~ /set/ ? ' Set' : nil %> Expression for <%= render partial: 'gene_name_list' %></h1>
 	</div>
 </div>
 <div id="expression-plots">
 	<div class="panel panel-default">
 		<div class="panel-heading">
 			<div class="panel-title">
-				<h4><%= link_to "Expression Values for Selected Clusters <span class='fa fa-chevron-down'></span>".html_safe, '#box-controls', 'data-toggle' => 'collapse'  %></h4>
+				<h4><%= link_to "Expression Values for #{params[:cluster] ? params[:cluster] : 'All Cell Types'} <span class='fa fa-chevron-down'></span>".html_safe, '#box-controls', 'data-toggle' => 'collapse'  %></h4>
 			</div>
 		</div>
 		<div id="box-controls" class="panel-collapse collapse in">
@@ -15,6 +15,9 @@
 				<%= render partial: 'cluster_nav' %>
 				<%= render partial: 'boxpoints_picker' %>
 				<%= render partial: 'gene_search_form' %>
+				<% if action_name == 'view_gene_set_expression' %>
+					<%= render partial: 'gene_nav' %>
+			<% end %>
 				<div class="row">
 					<div class="col-md-12">
 						<div id="box-plot"></div>
@@ -27,13 +30,13 @@
 	<div class="panel panel-default">
 		<div class="panel-heading">
 			<div class="panel-title">
-				<h4><%= link_to "Expression Values as Scatter Plot <span class='fa fa-chevron-down'></span>".html_safe, '#scatter-controls', 'data-toggle' => 'collapse'  %></h4>
+				<h4><%= link_to "Expression Values as Scatter Plot <span class='fa fa-chevron-down'></span>".html_safe, '#scatter-plots', 'data-toggle' => 'collapse'  %></h4>
 			</div>
 		</div>
-		<div id="scatter-controls" class="panel-collapse collapse in">
+		<div id="scatter-plots" class="panel-collapse collapse in">
 			<div class="panel-body">
 				<%= render partial: 'colorscale_picker' %>
-				<div class="row">
+				<div class="row" id="scatter-wrapper">
 					<div class="col-md-8">
 						<div id="scatter-plot"></div>
 					</div>

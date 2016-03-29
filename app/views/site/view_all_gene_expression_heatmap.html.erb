@@ -6,10 +6,9 @@
 <div class="row">
 	<div class="col-sm-12">
 		<%= render partial: 'gene_search_form' %>
-		<div class='form-inline navigation-form'>
-			<%= label_tag :centered, 'Row centering' %><br />
-			<%= select_tag :centered, options_for_select([['No', 0],['Yes', 1]], params[:centered]), {class: 'form-control'} %>
-		</div>
+		<%= render partial: 'study_precomputed_expression_nav' %>
+	</div>
+	<%= render partial: 'centered_view' %>
 
 		<%= javascript_tag do %>
 

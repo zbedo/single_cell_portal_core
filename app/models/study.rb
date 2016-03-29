@@ -7,6 +7,7 @@ class Study
   has_many :study_files
   has_many :single_cells
   has_many :expression_scores
+  has_many :precomputed_scores
 
   # scoping clusters to allow easy access to top- and sub-level clusters
   has_many :clusters do
@@ -225,6 +226,49 @@ class Study
     puts "Completed!"
     puts "Lines written to both files: #{count}"
     puts "Total Time: #{time.first} minutes, #{time.last} seconds"
+  end
+
+  # parse precomputed marker gene files and create documents to render in Morpheus
+  def make_precomputed_scores
+    data_path = self.data_load_path
+    # turn off logging to make data load faster
+    Rails.logger.level = 4
+    @count = {}
+    start_time = Time.now
+    if Dir.exists?(data_path)
+      Dir.chdir(data_path)
+      marker_files = Dir.glob("*_marker_genes.txt")
+      marker_files.each do |file|
+        precomputed_score = self.precomputed_scores.build(name: file.gsub(/_/, ' ').chomp('.txt'))
+        @count[file] = 0
+        marker_data = File.open(file).readlines.map(&:chomp).delete_if {|line| line.blank? }
+        clusters = marker_data.shift().split("\t")
+        clusters.shift # remove 'Gene Name' at start
+        precomputed_score.clusters = clusters
+        rows = []
+        marker_data.each do |line|
+          vals = line.split("\t")
+          gene = vals.shift
+          row = {"#{gene}" => {}}
+          clusters.each_with_index do |cluster, index|
+            row[gene][cluster] = vals[index].to_f
+          end
+          rows << row
+          @count[file] += 1
+        end
+        precomputed_score.gene_scores = rows
+        precomputed_score.save
+      end
+    end
+    end_time = Time.now
+    time = (end_time - start_time).divmod 60.0
+    puts "Completed!"
+    puts "Total objects created"
+    @count.each do |file, count|
+      puts "#{file}: #{count}"
+    end
+    puts "Total Time: #{time.first} minutes, #{time.last} seconds"
+    true
   end
 
   def gct_path

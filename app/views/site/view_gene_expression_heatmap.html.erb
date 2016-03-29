@@ -9,9 +9,18 @@
 		<%= render partial: 'gene_search_form' %>
 		<%= render partial: 'gene_nav' %>
 	</div>
-	<div class="col-sm-12">
 		<%= render partial: 'centered_view' %>
-	</div>
+		<%= javascript_tag do %>
+
+			$('#centered').change(function() {
+				if ( $(this).prop('checked') ) {
+					$.get('<%= javascript_safe_url(render_heatmap_path(study_name: params[:study_name], search: {genes: params[:search][:genes]}, centered: '1')) %>');
+				} else {
+					$.get('<%= javascript_safe_url(render_heatmap_path(study_name: params[:study_name], search: {genes: params[:search][:genes]}, centered: '0')) %>');
+				}
+			});
+
+		<% end %>
 </div>
 <div class="row">
 	<div class="col-md-12">
@@ -27,8 +36,6 @@
 		};
 		var annotPath = '/data/<%= @study.url_safe_name %>/CLUSTER_AND_SUBCLUSTER_INDEX.txt';
 		renderMorpheus(dataPath, annotPath, '#heatmap-plot');
-
-		$('[data-toggle="popover"]').popover();
 
 		$("#cluster").change(function() {
 			// re-render Morpheus on cluster selection

@@ -3,7 +3,7 @@ class SiteController < ApplicationController
   respond_to :html, :js
 
   before_action :set_study, except: :index
-  before_action :set_clusters, except: [:index, :view_all_gene_expression_heatmap]
+  before_action :set_clusters, except: [:index, :view_all_gene_expression_heatmap, :load_precomputed_heatmap_as_gct]
 
   COLORSCALE_THEMES = ['Blackbody', 'Bluered', 'Blues', 'Earth', 'Electric', 'Greens', 'Hot', 'Jet', 'Picnic', 'Portland', 'Rainbow', 'RdBu', 'Reds', 'Viridis', 'YlGnBu', 'YlOrRd']
 
@@ -18,6 +18,7 @@ class SiteController < ApplicationController
     @coordinates = load_cluster_points
     @options = load_sub_cluster_options
     @range = set_range(@coordinates.values)
+    @precomputed = load_precomputed_options
   end
 
   # render a single cluster and its constituent sub-clusters
@@ -82,14 +83,53 @@ class SiteController < ApplicationController
     @static_range = set_range(@coordinates.values)
   end
 
+  # view set of genes (scores averaged) as box and scatter plots
+  def view_gene_set_expression
+    terms = parse_search_terms(:gene_set)
+    @genes = ExpressionScore.where(:study_id => @study._id, :searchable_gene.in => terms).to_a
+    @values = load_gene_set_expression_boxplot_scores
+    @coordinates = load_cluster_points
+    @annotations = load_cluster_annotations
+    @expression = load_gene_set_expression_scatter_points
+    color_minmax =  @expression[:all][:marker][:color].minmax
+    @expression[:all][:marker][:cmin], @expression[:all][:marker][:cmax] = color_minmax
+    @expression[:all][:marker][:colorscale] = 'Reds'
+    @options = load_sub_cluster_options
+    @range = set_range([@expression[:all]])
+    @static_range = set_range(@coordinates.values)
+    if @genes.size > 5
+      @main_genes, @other_genes = divide_genes_for_header
+    end
+    render 'view_gene_expression'
+  end
+
+  # re-renders plots when changing cluster selection
+  def render_gene_set_expression_plots
+    terms = parse_search_terms(:gene_set)
+    @genes = ExpressionScore.where(:study_id => @study._id, :searchable_gene.in => terms).to_a
+    @values = load_gene_set_expression_boxplot_scores
+    @coordinates = load_cluster_points
+    @annotations = load_cluster_annotations
+    @expression = load_gene_set_expression_scatter_points
+    color_minmax =  @expression[:all][:marker][:color].minmax
+    @expression[:all][:marker][:cmin], @expression[:all][:marker][:cmax] = color_minmax
+    @expression[:all][:marker][:colorscale] = 'Reds'
+    @options = load_sub_cluster_options
+    @range = set_range([@expression[:all]])
+    @static_range = set_range(@coordinates.values)
+    if @genes.size > 5
+      @main_genes, @other_genes = divide_genes_for_header
+    end
+    render 'render_gene_expression_plots'
+  end
+
   # view genes in Morpheus as heatmap
   def view_gene_expression_heatmap
     terms = parse_search_terms(:genes)
     @genes = ExpressionScore.where(:study_id => @study._id, :searchable_gene.in => terms).to_a
     @options = load_sub_cluster_options
     if @genes.size > 5
-      @main_genes = @genes.shift(5)
-      @other_genes = @genes
+      @main_genes, @other_genes = divide_genes_for_header
     end
   end
 
@@ -125,9 +165,43 @@ class SiteController < ApplicationController
     send_data @data, type: 'text/plain'
   end
 
+  # load precomputed data in gct form to render in Morpheus
+  def load_precomputed_heatmap_as_gct
+    @precomputed_score = PrecomputedScore.where(name: params[:precomputed]).first
+
+    @headers = ["Name", "Description"]
+    @precomputed_score.clusters.each do |cluster|
+      @headers << cluster
+    end
+    @rows = []
+    @precomputed_score.gene_scores.each do |score_row|
+      score_row.each do |gene, scores|
+        puts scores
+        row = [gene, ""]
+        mean = 0.0
+        if params[:centered] == '1'
+          mean = scores.values.inject(0) {|sum, x| sum += x} / scores.values.size
+        end
+        @precomputed_score.clusters.each do |cluster|
+          row << scores[cluster].to_f - mean
+        end
+        @rows << row.join("\t")
+      end
+    end
+    @data = ['#1.2', [@rows.size, @precomputed_score.clusters.size].join("\t"), @headers.join("\t"), @rows.join("\n")].join("\n")
+
+    send_data @data, type: 'text/plain'
+  end
+
   # view all genes as heatmap in morpheus, will pull from pre-computed gct file
   def view_all_gene_expression_heatmap
+    @precomputed = load_precomputed_options
+  end
 
+  # view all genes as heatmap in morpheus, will pull from pre-computed gct file
+  def view_precomputed_gene_expression_heatmap
+    @precomputed_score = PrecomputedScore.where(name: params[:precomputed]).first
+    @precomputed = load_precomputed_options
   end
 
   # reload expression data, either as normal values or row-centered values
@@ -215,6 +289,48 @@ class SiteController < ApplicationController
     expression
   end
 
+  # load boxplot expression scores with average of scores across each gene for all cells
+  def load_gene_set_expression_boxplot_scores
+    values = {}
+    @clusters.each do |cluster|
+      values[cluster.name] = {y: [], name: cluster.name }
+      # grab all cells present in the cluster, and use as keys to load expression scores
+      # if a cell is not present for the gene, score gets set as 0.0
+      cluster.single_cells.map(&:name).each do |cell|
+        values[cluster.name][:y] << calculate_mean(@genes, cell)
+      end
+    end
+    values
+  end
+
+  # load scatter expression scores with average of scores across each gene for all cells
+  def load_gene_set_expression_scatter_points
+    expression = {}
+
+    expression[:all] = {x: [], y: [], text: [], marker: {cmax: 0, cmin: 0, color: [], showscale: true, colorbar: {title: 'log(TPM) Expression Values', titleside: 'right'}}}
+    @clusters.each do |cluster|
+      points = cluster.cluster_points
+      points.each do |point|
+        score = calculate_mean(@genes, point.single_cell.name)
+        expression[:all][:text] << "<b>#{point.single_cell.name}</b> [#{cluster.name}]<br>log(TPM) expression: #{score}".html_safe
+        expression[:all][:x] << point.x
+        expression[:all][:y] << point.y
+        # load in expression score to use as color value
+        expression[:all][:marker][:color] << score
+      end
+    end
+    expression
+  end
+
+  # find mean of expression scores for a given cell
+  def calculate_mean(genes, cell)
+    sum = 0.0
+    genes.each do |gene|
+      sum += gene.scores[cell].to_f
+    end
+    sum / genes.size
+  end
+
   # set the current study
   def set_study
     @study = Study.where(url_safe_name: params[:study_name]).first
@@ -251,9 +367,27 @@ class SiteController < ApplicationController
     }
   end
 
+  # set the range for a plotly scatter
   def set_range(inputs)
     vals = inputs.map {|v| [v[:x].minmax, v[:y].minmax]}.flatten.minmax
     scope = (vals.first - vals.last) * 0.01
     [vals.first + scope, vals.last - scope]
+  end
+
+  # parse gene list into 2 other arrays for formatting the header responsively
+  def divide_genes_for_header
+    main = @genes[0..4]
+    more = @genes[5..@genes.size - 1]
+    [main, more]
+  end
+
+  # load all precomputed options for a study
+  def load_precomputed_options
+    opts = [['All Genes', view_context.view_all_gene_expression_heatmap_url(study_name: params[:study_name])],
+     ['All Genes (row-centered)', view_context.view_all_gene_expression_heatmap_url(study_name: params[:study_name], centered: 1)]]
+    @study.precomputed_scores.order('name ASC').each do |pc|
+      opts << [pc.name, view_context.view_precomputed_gene_expression_heatmap_url(study_name: params[:study_name], precomputed: pc.name)]
+    end
+    opts
   end
 end

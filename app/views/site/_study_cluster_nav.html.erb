@@ -6,7 +6,7 @@
 
 	$("#cluster").change(function() {
 		var url = '<%= render_cluster_path(study_name: params[:study_name]) %>';
-		var target = document.getElementById('plots');
+		var target = document.getElementById('cluster-plot');
 		var spinner = new Spinner(opts).spin(target);
 		$(target).data('spinner', spinner);
 		var cluster = $('#cluster').val();

@@ -41,6 +41,7 @@ $(function() {
     });
 
     $('[data-toggle="tooltip"]').tooltip();
+    $('[data-toggle="popover"]').popover();
 });
 
 // options for Spin.js
@@ -123,15 +124,9 @@ var plotlyDefaultColors = [
 
 var plotlyDefaultBgColor = '#ddd';
 
-// launch spinner modal whenever someone clicks a survey link with a class of '.spin'
-$(function () {
-    $('.spin').on('click', function (event) {
-        var target = document.getElementById($(event.target).attr('id'));
-        var spinner = new Spinner(smallOpts).spin(target);
-        // store spinner to stop later
-        $(target).data('spinner', spinner);
-    });
-});
+function clearForm(target) {
+    $('#' + target).val("");
+}
 
 // check if there are blank text boxes or selects
 function validateFields(selector) {
@@ -184,17 +179,19 @@ $(window).resize(function() {
 
 // generic function to render Morpheus
 function renderMorpheus(dataPath, annotPath, target) {
-    var heatmap = new morpheus.HeatMap({
-        dataset : dataPath,
-        columnAnnotations : [
-            {
-                file : annotPath,
-                datasetField : 'id',
-                fileField : 'CELL_NAME'
-            }
-        ],
-        columnSortBy: [{field:'CLUSTER', order:0}, {field:'SUB-CLUSTER', order:0}]
-    });
+    var config = {dataset: dataPath};
+    if (annotPath != '') {
+        config.columnAnnotations = [{
+            file : annotPath,
+            datasetField : 'id',
+            fileField : 'CELL_NAME'}
+        ];
+        config.columnSortBy = [
+            {field:'CLUSTER', order:0},
+            {field:'SUB-CLUSTER', order:0}
+        ];
+    };
+    var heatmap = new morpheus.HeatMap(config);
 
     $(target).html(heatmap.$el);
 }
