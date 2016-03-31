@@ -123,6 +123,16 @@ development:
 
     # Ensure all times are UTC in the app side. (default: false)
     # use_utc: false
+production:
+  clients:
+    default:
+      database: single_cell_portal_production
+      hosts:
+        - scpp-mongo:27017
+      options:
+        user: single_cell
+        password: <%= ENV['PROD_DATABASE_PASSWORD'] %>
+
 test:
   clients:
     default:
