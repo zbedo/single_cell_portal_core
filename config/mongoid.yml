@@ -130,8 +130,8 @@ production:
       hosts:
         - scpp-mongo:27017
       options:
-        user: single_cell
-        password: <%= ENV['PROD_DATABASE_PASSWORD'] %>
+        user: 'single_cell'
+        password: '<%= ENV['PROD_DATABASE_PASSWORD'] %>'
 
 test:
   clients:
