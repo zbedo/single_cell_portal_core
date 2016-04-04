@@ -18,7 +18,7 @@
 				var newDataPath = "<%= load_precomputed_heatmap_as_gct_path(study_name: params[:study_name], precomputed: params[:precomputed]) %>";
 			}
 
-			renderMorpheus(newDataPath, '', '#heatmap-plot');
+			renderMorpheus(newDataPath, '', '#heatmap-plot', true);
 		});
 
 	<% end %>
@@ -39,7 +39,7 @@
 			var dataPath = "<%= load_precomputed_heatmap_as_gct_path(study_name: params[:study_name], precomputed: params[:precomputed]) %>";
 		}
 
-		renderMorpheus(dataPath, '', '#heatmap-plot');
+		renderMorpheus(dataPath, '', '#heatmap-plot', true);
 	});
 
 <% end %>

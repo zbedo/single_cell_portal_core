@@ -24,6 +24,7 @@ class SiteController < ApplicationController
   # render a single cluster and its constituent sub-clusters
   def render_cluster
     @coordinates = load_cluster_points
+    @options = load_sub_cluster_options
     @range = set_range(@coordinates.values)
   end
 
@@ -66,6 +67,7 @@ class SiteController < ApplicationController
     @options = load_sub_cluster_options
     @range = set_range([@expression[:all]])
     @static_range = set_range(@coordinates.values)
+    @y_axis_title = 'log(TPM) Expression Values'
   end
 
   # re-renders plots when changing cluster selection
@@ -81,12 +83,13 @@ class SiteController < ApplicationController
     @options = load_sub_cluster_options
     @range = set_range([@expression[:all]])
     @static_range = set_range(@coordinates.values)
+    @y_axis_title = 'log(TPM) Expression Values'
   end
 
   # view set of genes (scores averaged) as box and scatter plots
   def view_gene_set_expression
     terms = parse_search_terms(:gene_set)
-    @genes = ExpressionScore.where(:study_id => @study._id, :searchable_gene.in => terms).to_a
+    @genes, @not_found = search_expression_scores(terms)
     @values = load_gene_set_expression_boxplot_scores
     @coordinates = load_cluster_points
     @annotations = load_cluster_annotations
@@ -100,13 +103,14 @@ class SiteController < ApplicationController
     if @genes.size > 5
       @main_genes, @other_genes = divide_genes_for_header
     end
+    @y_axis_title = 'Average of log(TPM) Expression Values'
     render 'view_gene_expression'
   end
 
   # re-renders plots when changing cluster selection
   def render_gene_set_expression_plots
     terms = parse_search_terms(:gene_set)
-    @genes = ExpressionScore.where(:study_id => @study._id, :searchable_gene.in => terms).to_a
+    @genes, @not_found = search_expression_scores(terms)
     @values = load_gene_set_expression_boxplot_scores
     @coordinates = load_cluster_points
     @annotations = load_cluster_annotations
@@ -117,6 +121,7 @@ class SiteController < ApplicationController
     @options = load_sub_cluster_options
     @range = set_range([@expression[:all]])
     @static_range = set_range(@coordinates.values)
+    @y_axis_title = 'Average of log(TPM) Expression Values'
     if @genes.size > 5
       @main_genes, @other_genes = divide_genes_for_header
     end
@@ -126,7 +131,7 @@ class SiteController < ApplicationController
   # view genes in Morpheus as heatmap
   def view_gene_expression_heatmap
     terms = parse_search_terms(:genes)
-    @genes = ExpressionScore.where(:study_id => @study._id, :searchable_gene.in => terms).to_a
+    @genes, @not_found = search_expression_scores(terms)
     @options = load_sub_cluster_options
     if @genes.size > 5
       @main_genes, @other_genes = divide_genes_for_header
@@ -307,7 +312,7 @@ class SiteController < ApplicationController
   def load_gene_set_expression_scatter_points
     expression = {}
 
-    expression[:all] = {x: [], y: [], text: [], marker: {cmax: 0, cmin: 0, color: [], showscale: true, colorbar: {title: 'log(TPM) Expression Values', titleside: 'right'}}}
+    expression[:all] = {x: [], y: [], text: [], marker: {cmax: 0, cmin: 0, color: [], showscale: true, colorbar: {title: 'Average of log(TPM) Expression Values', titleside: 'right'}}}
     @clusters.each do |cluster|
       points = cluster.cluster_points
       points.each do |point|
@@ -347,6 +352,21 @@ class SiteController < ApplicationController
     params[:search][key].split.map {|gene| gene.chomp.downcase}
   end
 
+  # search genes and save terms not found
+  def search_expression_scores(terms)
+    genes = []
+    not_found = []
+    terms.each do |term|
+      gene = ExpressionScore.where(study_id: @study._id, searchable_gene: term).first
+      unless gene.nil?
+        genes << gene
+      else
+        not_found << term
+      end
+    end
+    [genes, not_found]
+  end
+
   # generic method to assemble options for sub-cluster dropdown
   def load_sub_cluster_options
     opts = [["All cell types",""]]
@@ -370,7 +390,8 @@ class SiteController < ApplicationController
   # set the range for a plotly scatter
   def set_range(inputs)
     vals = inputs.map {|v| [v[:x].minmax, v[:y].minmax]}.flatten.minmax
-    scope = (vals.first - vals.last) * 0.01
+    # add 2% padding to range
+    scope = (vals.first - vals.last) * 0.02
     [vals.first + scope, vals.last - scope]
   end
 

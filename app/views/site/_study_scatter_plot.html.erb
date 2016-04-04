@@ -6,7 +6,7 @@
 		name: "<%= data[:name] %>",
 		mode: 'markers',
 		type: 'scatter',
-		marker: { color: plotlyDefaultColors[<%= index %>] }
+		marker: { color: colorBrewerSet[<%= index %>] }
 	};
 <% end %>
 
@@ -17,5 +17,8 @@ var data = [];
 
 // use partial for layouts to avoid code duplication
 <%= render 'study_scatter_layout' %>
+
+
+<%= if params[:cluster] then render 'new_color_vals' else nil end %>
 
 Plotly.newPlot('cluster-plot', data, layout);

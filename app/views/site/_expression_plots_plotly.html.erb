@@ -10,7 +10,7 @@
 		<% end %>
 		boxmean: true,
 		type: 'box',
-		marker: {color: plotlyDefaultColors[<%= index %>]}
+		marker: {color: colorBrewerSet[<%= index %>]}
 	};
 <% end %>
 
@@ -63,7 +63,7 @@ $("#colorscale").change(function() {
 		name: "<%= data[:name] %>",
 		mode: 'markers',
 		type: 'scatter',
-		marker: {color: plotlyDefaultColors[<%= index %>]}
+		marker: {color: colorBrewerSet[<%= index %>]}
 	};
 <% end %>
 

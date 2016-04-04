@@ -20,7 +20,7 @@
 				}
 
 				var annotPath = '/data/<%= @study.url_safe_name %>/CLUSTER_AND_SUBCLUSTER_INDEX.txt';
-				renderMorpheus(newDataPath, annotPath, '#heatmap-plot');
+				renderMorpheus(newDataPath, annotPath, '#heatmap-plot', false);
 			});
 
 		<% end %>
@@ -43,7 +43,7 @@
 			var dataPath = '/data/<%= @study.url_safe_name %>/<%= @study.url_safe_name %>.gct'
 		}
 		var annotPath = '/data/<%= @study.url_safe_name %>/CLUSTER_AND_SUBCLUSTER_INDEX.txt';
-		renderMorpheus(dataPath, annotPath, '#heatmap-plot');
+		renderMorpheus(dataPath, annotPath, '#heatmap-plot', false);
 	});
 
 <% end %>

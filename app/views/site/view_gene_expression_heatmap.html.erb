@@ -1,6 +1,6 @@
 <div class="row">
 	<div class="col-md-12">
-		<h1 class="study-lead">Gene Expression for <%= render partial: 'gene_name_list' %></h1>
+		<h1 class="study-lead">Gene Expression for <%= render partial: 'gene_name_list' %><%= render partial: 'missing_genes' %></h1>
 	</div>
 </div>
 <div class="row">
@@ -35,7 +35,7 @@
 			dataPath += '&cluster=<%= params[:cluster ]%>';
 		};
 		var annotPath = '/data/<%= @study.url_safe_name %>/CLUSTER_AND_SUBCLUSTER_INDEX.txt';
-		renderMorpheus(dataPath, annotPath, '#heatmap-plot');
+		renderMorpheus(dataPath, annotPath, '#heatmap-plot', true);
 
 		$("#cluster").change(function() {
 			// re-render Morpheus on cluster selection
@@ -49,7 +49,7 @@
 
 			};
 
-			renderMorpheus(newDataPath, annotPath, '#heatmap-plot');
+			renderMorpheus(newDataPath, annotPath, '#heatmap-plot', true);
 		});
 	});
 

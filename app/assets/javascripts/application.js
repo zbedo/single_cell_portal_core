@@ -106,21 +106,8 @@ var plotlyLabelFont = {
     color: '#333'
 };
 
-// default colors for plotly
-var plotlyDefaultColors = [
-    '#1f77b4',  // muted blue
-    '#ff7f0e',  // safety orange
-    '#2ca02c',  // cooked asparagus green
-    '#d62728',  // brick red
-    '#9467bd',  // muted purple
-    '#8c564b',  // chestnut brown
-    '#e377c2',  // raspberry yogurt pink
-    '#7f7f7f',  // middle gray
-    '#bcbd22',  // curry yellow-green
-    '#17becf',  // blue-teal
-    '#c0c0c0',  // silver
-    '#000000'   // black
-];
+// default scatter plot colors, a combination of colorbrewer sets 1-3
+var colorBrewerSet = ["#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00","#ffff33","#a65628","#f781bf","#999999","#66c2a5","#fc8d62","#8da0cb","#e78ac3","#a6d854","#ffd92f","#e5c494","#b3b3b3","#8dd3c7","#ffffb3","#bebada","#fb8072","#80b1d3","#fdb462","#b3de69","#fccde5","#d9d9d9","#bc80bd","#ccebc5","#ffed6f"];
 
 var plotlyDefaultBgColor = '#ddd';
 
@@ -178,8 +165,12 @@ $(window).resize(function() {
 });
 
 // generic function to render Morpheus
-function renderMorpheus(dataPath, annotPath, target) {
+function renderMorpheus(dataPath, annotPath, target, fitToWindow) {
     var config = {dataset: dataPath};
+    if (fitToWindow) {
+        config.rowSize ='fit';
+        config.columnSize = 'fit';
+    }
     if (annotPath != '') {
         config.columnAnnotations = [{
             file : annotPath,

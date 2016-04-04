@@ -1,0 +1,3 @@
+<% unless @not_found.nil? && @not_found.empty? %>
+	<%= link_to "#{@not_found.size} not found", '#', 'data-toggle' => 'popover', 'data-trigger' => 'hover', 'data-content' =>  "#{@not_found.join(', ')}", class: 'btn btn-danger more-genes' %>
+<% end %>

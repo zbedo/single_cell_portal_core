@@ -1,0 +1,9 @@
+var clusters = <%= @coordinates.keys.size %>;
+var clusterColor = colorBrewerSet[<%= @study.clusters.parent_clusters.map(&:name).sort.index(params[:cluster]) %>];
+var startingColor = chroma(clusterColor).brighten( clusters / 2);
+var endColor = chroma(clusterColor).darken(clusters / 2);
+var colorScale = chroma.scale([startingColor, clusterColor, endColor]).colors(clusters);
+
+$(data).each(function(index) {
+	this.marker.color = colorScale[index];
+});

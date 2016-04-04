@@ -1,10 +1,11 @@
-	var size = $('#cluster-plot').width() * 0.6;
+	var size = $('#cluster-plot').width() * 0.5;
 
 	var layout = {
 		hovermode: 'closest',
 		font: plotlyLabelFont,
 		// use size * 1.14 to try to square up axes along with legend
 		width: size * 1.14,
+		plot_bgcolor: plotlyDefaultBgColor,
 		height: size,
 		xaxis: {
 			range: <%= raw @range %>
