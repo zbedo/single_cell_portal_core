@@ -92,21 +92,6 @@
 			</div>
 			<hr />
 		<% end %>
-		<div class="row">
-			<div class="col-sm-12">
-				<%= label_tag :expression, 'Load pre-computed expression scores' %><br />
-				<%= select_tag :expression, options_for_select(@precomputed, set_precompute_selection), {include_blank: true, class: 'form-control'} %>
-				<%= javascript_tag do %>
-
-					$("#expression").change(function() {
-						window.location.href = $(this).val();
-					});
-
-				<% end %>
-
-			</div>
-		</div>
-		<hr />
 		<% if action_name !~ /(all|precomputed)/ %>
 			<div class="row">
 				<div class="col-sm-12">
@@ -114,15 +99,30 @@
 					<%= select_tag :cluster, options_for_select(@options, params[:cluster]), class: 'form-control' %>
 				</div>
 			</div>
+			<hr />
 		<% end %>
 		<% if action_name =~ /heatmap/ %>
-			<hr />
 			<div class="row">
 				<div class="col-sm-12">
 					<%= label_tag :centered, 'Row centering' %> <span class="fa fa-question-circle" data-toggle="tooltip" data-placement="right" title="For every value in each row, subtract the mean of the entire row from the value"></span><br />
 					<%= check_box_tag :centered, nil, params[:centered] == "1" %>
 				</div>
 			</div>
+			<hr />
 		<% end %>
+		<div class="row">
+			<div class="col-sm-12">
+				<%= label_tag :expression, 'Load pre-computed expression scores' %><br />
+				<%= select_tag :expression, options_for_select(@precomputed, set_precompute_selection), {include_blank: true, class: 'form-control'} %>
+				<%= javascript_tag do %>
+
+					$("#expression").change(function() {
+					window.location.href = $(this).val();
+					});
+
+				<% end %>
+
+			</div>
+		</div>
 	</div>
 </div>
