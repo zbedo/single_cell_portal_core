@@ -21,10 +21,10 @@
 		var annotPath = '/data/<%= @study.url_safe_name %>/CLUSTER_AND_SUBCLUSTER_INDEX.txt';
 		renderMorpheus(dataPath, annotPath, '#heatmap-plot', 'cols');
 
-		$("#cluster").change(function() {
+		$("#cluster, #centered").change(function() {
 			// re-render Morpheus on cluster selection
 			var newDataPath = '<%= javascript_safe_url(load_heatmap_as_gct_url(study_name: params[:study_name], search: {genes: params[:search][:genes] })) %>';
-			var centered = $('#centered').val();
+			var centered = $('#centered').prop('checked') ? 1 : 0;
 			newDataPath += '&centered=' + centered;
 			var cluster = $('#cluster').val();
 			$("#search_cluster").val(cluster);
@@ -33,17 +33,6 @@
 
 			};
 
-			renderMorpheus(newDataPath, annotPath, '#heatmap-plot', 'cols');
-		});
-
-		$('#centered').change(function() {
-			if ( $(this).prop('checked') ) {
-				var newDataPath = "<%= load_heatmap_as_gct_path(study_name: params[:study_name], search: {genes: params[:search][:genes] }, centered: 1) %>";
-			} else {
-				var newDataPath = "<%= load_heatmap_as_gct_path(study_name: params[:study_name], search: {genes: params[:search][:genes] }) %>";
-			}
-
-			var annotPath = '/data/<%= @study.url_safe_name %>/CLUSTER_AND_SUBCLUSTER_INDEX.txt';
 			renderMorpheus(newDataPath, annotPath, '#heatmap-plot', 'cols');
 		});
 	});

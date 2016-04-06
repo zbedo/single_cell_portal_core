@@ -28,11 +28,7 @@
 
 	$(document).ready(function() {
 
-		if ( <%= params[:centered].to_i %> == 1 ) {
-			var dataPath = "<%= load_precomputed_heatmap_as_gct_path(study_name: params[:study_name], precomputed: params[:precomputed], centered: 1) %>";
-		} else {
-			var dataPath = "<%= load_precomputed_heatmap_as_gct_path(study_name: params[:study_name], precomputed: params[:precomputed]) %>";
-		}
+		var dataPath = "<%= load_precomputed_heatmap_as_gct_path(study_name: params[:study_name], precomputed: params[:precomputed]) %>";
 
 		renderMorpheus(dataPath, '', '#heatmap-plot', 'rows');
 	});
