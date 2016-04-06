@@ -6,7 +6,13 @@
 		name: "<%= data[:name] %>",
 		mode: 'markers',
 		type: 'scatter',
-		marker: { color: colorBrewerSet[<%= index %>] }
+		marker: {
+			color: colorBrewerSet[<%= index %>],
+			line: {
+				color:"rgb(0, 0, 0)",
+				width:0.5
+			}
+		}
 	};
 <% end %>
 
@@ -19,6 +25,14 @@ var data = [];
 <%= render 'study_scatter_layout' %>
 
 
-<%= if params[:cluster] then render 'new_color_vals' else nil end %>
+<% if params[:cluster] %>
+	<%= render 'new_scatter_color_vals' %>
+<% end %>
 
 Plotly.newPlot('cluster-plot', data, layout);
+
+$( window ).on('resizeEnd', function() {
+	<%= render 'study_scatter_layout' %>
+
+	Plotly.newPlot('cluster-plot', data, layout);
+});

@@ -26,6 +26,7 @@
 		var spinner1 = new Spinner(opts).spin(target1);
 		$(target1).data('spinner', spinner1);
 		var cluster = $('#cluster').val();
+		$("#search_cluster").val(cluster);
 		if (cluster == "") {
 			$.get(url);
 		} else {

@@ -247,13 +247,9 @@ html, body {
 }
 
 #show-search-options {
-  position: absolute;
-  z-index: 1000;
-  top: -7px;
-  left: -1px;
+  margin-top: -4px;
 }
 
 #heatmap-plot {
-  overflow-x: auto;
   padding-bottom: 25px;
 }

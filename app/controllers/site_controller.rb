@@ -172,7 +172,7 @@ class SiteController < ApplicationController
         cells = cluster.single_cells
         # calculate mean to perform row centering if requested
         mean = 0.0
-        if params[:centered] == '1'
+        if params[:row_centered] == '1'
           mean = gene.mean(cells.map(&:name))
         end
         cells.each do |cell|
@@ -199,7 +199,7 @@ class SiteController < ApplicationController
       score_row.each do |gene, scores|
         row = [gene, ""]
         mean = 0.0
-        if params[:centered] == '1'
+        if params[:row_centered] == '1'
           mean = scores.values.inject(0) {|sum, x| sum += x} / scores.values.size
         end
         @precomputed_score.clusters.each do |cluster|
@@ -217,9 +217,14 @@ class SiteController < ApplicationController
   def view_all_gene_expression_heatmap
   end
 
+  # redirect to show precomputed marker gene results
+  def search_precomputed_results
+    redirect_to view_precomputed_gene_expression_heatmap_path(study_name: params[:study_name], precomputed: params[:expression])
+  end
+
   # view all genes as heatmap in morpheus, will pull from pre-computed gct file
   def view_precomputed_gene_expression_heatmap
-    @precomputed_score = PrecomputedScore.where(name: params[:precomputed]).first
+    @precomputed_score = PrecomputedScore.where(study_id: @study._id, name: params[:precomputed]).first
   end
 
   private
@@ -295,6 +300,7 @@ class SiteController < ApplicationController
         expression[:all][:y] << point.y
         # load in expression score to use as color value
         expression[:all][:marker][:color] << @gene.scores[point.single_cell.name].to_f
+        expression[:all][:marker][:line] = { color: 'rgb(0,0,0)', width: 0.5}
       end
     end
     expression
@@ -410,10 +416,6 @@ class SiteController < ApplicationController
 
   # load all precomputed options for a study
   def load_precomputed_options
-    @precomputed = [['All Genes', view_context.view_all_gene_expression_heatmap_url(study_name: params[:study_name])],
-     ['All Genes (row-centered)', view_context.view_all_gene_expression_heatmap_url(study_name: params[:study_name], centered: 1)]]
-    @study.precomputed_scores.order('name ASC').each do |pc|
-      @precomputed << [pc.name, view_context.view_precomputed_gene_expression_heatmap_url(study_name: params[:study_name], precomputed: pc.name)]
-    end
+     @precomputed = @study.precomputed_scores.map(&:name).sort
   end
 end

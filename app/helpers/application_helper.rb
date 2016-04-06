@@ -15,19 +15,6 @@ module ApplicationHelper
 		end
 	end
 
-	# set the selected precomputed option in dropdown
-	def set_precompute_selection
-		if action_name == 'view_all_gene_expression_heatmap' && params[:centered].to_i == 0
-			view_all_gene_expression_heatmap_url(study_name: params[:study_name])
-		elsif action_name == 'view_all_gene_expression_heatmap' && params[:centered].to_i == 1
-			view_all_gene_expression_heatmap_url(study_name: params[:study_name], centered: 1)
-		elsif params[:precomputed]
-			view_precomputed_gene_expression_heatmap_url(study_name: params[:study_name], precomputed: params[:precomputed])
-		else
-			''
-		end
-	end
-
 	# create javascript-safe url with parameters
 	def javascript_safe_url(url)
 		URI.decode(url).html_safe

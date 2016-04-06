@@ -12,8 +12,9 @@ Rails.application.routes.draw do
   get 'study/:study_name/render_gene_set_expression_plots', to: 'site#render_gene_set_expression_plots', as: :render_gene_set_expression_plots
   get 'study/:study_name/all_gene_expression', to: 'site#view_all_gene_expression_heatmap', as: :view_all_gene_expression_heatmap
   get 'study/:study_name/load_heatmap_as_gct', to: 'site#load_heatmap_as_gct', as: :load_heatmap_as_gct
-  get 'study/:study_name/precomputed_gene_expression/:precomputed', to: 'site#view_precomputed_gene_expression_heatmap', as: :view_precomputed_gene_expression_heatmap
-  get 'study/:study_name/load_precomputed_heatmap_as_gct/:precomputed', to: 'site#load_precomputed_heatmap_as_gct', as: :load_precomputed_heatmap_as_gct
+  post 'study/:study_name/precomputed_gene_expression', to: 'site#search_precomputed_results', as: :search_precomputed_results
+  get 'study/:study_name/precomputed_gene_expression', to: 'site#view_precomputed_gene_expression_heatmap', as: :view_precomputed_gene_expression_heatmap
+  get 'study/:study_name/load_precomputed_heatmap_as_gct', to: 'site#load_precomputed_heatmap_as_gct', as: :load_precomputed_heatmap_as_gct
   get '/', to: 'site#index', as: :site
   root to: 'site#index'
 

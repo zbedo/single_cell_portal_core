@@ -10,13 +10,23 @@
 		<% end %>
 		boxmean: true,
 		type: 'box',
-		marker: {color: colorBrewerSet[<%= index %>]}
+		marker: {
+			color: colorBrewerSet[<%= index %>],
+			line:{
+				color: "rgb(0, 0, 0)",
+				width: 0.5
+			}
+		}
 	};
 <% end %>
 
 var expressionData = [];
 <% @clusters.each do |cluster| %>
 	expressionData.push(<%= cluster.name %>_exp);
+<% end %>
+
+<% if params[:cluster] %>
+	<%= render 'new_box_color_vals' %>
 <% end %>
 
 <%= render partial: 'expression_box_layout' %>
@@ -63,13 +73,23 @@ $("#colorscale").change(function() {
 		name: "<%= data[:name] %>",
 		mode: 'markers',
 		type: 'scatter',
-		marker: {color: colorBrewerSet[<%= index %>]}
+		marker: {
+			color: colorBrewerSet[<%= index %>],
+			line:{
+				color: "rgb(0, 0, 0)",
+				width: 0.5
+			}
+		}
 	};
 <% end %>
 
 var data = [];
 <% @clusters.each do |cluster| %>
 	data.push(<%= cluster.name %>_clst);
+<% end %>
+
+<% if params[:cluster] %>
+	<%= render 'new_scatter_color_vals' %>
 <% end %>
 
 <%= render partial: 'static_scatter_layout' %>

@@ -1,0 +1,7 @@
+var clusters = <%= @values.keys.size %>;
+var clusterColor = colorBrewerSet[<%= @study.clusters.parent_clusters.map(&:name).sort.index(params[:cluster]) %>];
+var colorScale = computeColorScale(clusterColor, clusters);
+
+$(expressionData).each(function(index) {
+	this.marker.color = colorScale[index];
+});

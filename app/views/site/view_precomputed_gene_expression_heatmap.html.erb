@@ -9,25 +9,36 @@
 		<%= render partial: 'search_render_options' %>
 	</div>
 	<div class="col-md-9" id="render-target">
-		<div id="heatmap-plot"></div>
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<div class="panel-title">
+					<h4><%= link_to "Marker Gene Heatmap <span class='fa fa-chevron-down'></span>".html_safe, '#plots', 'data-toggle' => 'collapse' %> <%= render partial: 'show_options_button' %></h4>
+				</div>
+			</div>
+			<div id="plots" class="panel-collapse collapse in">
+				<div class="panel-body">
+					<div class="col-md-12">
+						<div id="heatmap-plot"></div>
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
 </div>
 
 
 <%= javascript_tag do %>
 
-	$('#centered').change(function() {
-		if ( $(this).prop('checked') ) {
-			var newDataPath = "<%= load_precomputed_heatmap_as_gct_path(study_name: params[:study_name], precomputed: params[:precomputed], centered: 1) %>";
-		} else {
-			var newDataPath = "<%= load_precomputed_heatmap_as_gct_path(study_name: params[:study_name], precomputed: params[:precomputed]) %>";
-		}
+	$('#row_centered, #expression').change(function() {
+		var newDataPath = '<%= load_precomputed_heatmap_as_gct_path(study_name: params[:study_name]) %>';
+		var precomputed = $('#expression').val();
+		var row_centered = $('#row_centered').prop('checked') ? 1 : 0;
+		newDataPath += '?precomputed=' + precomputed + '&row_centered=' + row_centered;
 
 		renderMorpheus(newDataPath, '', '#heatmap-plot', 'rows');
 	});
 
 	$(document).ready(function() {
-
 		var dataPath = "<%= load_precomputed_heatmap_as_gct_path(study_name: params[:study_name], precomputed: params[:precomputed]) %>";
 
 		renderMorpheus(dataPath, '', '#heatmap-plot', 'rows');

@@ -50,7 +50,7 @@
 		<div class="panel panel-default">
 			<div class="panel-heading">
 				<div class="panel-title">
-					<h4><%= link_to "#{@study.name} Clusters <span class='fa fa-chevron-down'></span>".html_safe, '#plots', 'data-toggle' => 'collapse' %></h4>
+					<h4><%= link_to "#{@study.name} Clusters <span class='fa fa-chevron-down'></span>".html_safe, '#plots', 'data-toggle' => 'collapse' %> <%= render partial: 'show_options_button' %></h4>
 				</div>
 			</div>
 			<div id="plots" class="panel-collapse collapse in">
