@@ -3,6 +3,7 @@ class SiteController < ApplicationController
   respond_to :html, :js
 
   before_action :set_study, except: :index
+  before_action :load_precomputed_options, except: :index
   before_action :set_clusters, except: [:index, :view_all_gene_expression_heatmap, :load_precomputed_heatmap_as_gct]
 
   COLORSCALE_THEMES = ['Blackbody', 'Bluered', 'Blues', 'Earth', 'Electric', 'Greens', 'Hot', 'Jet', 'Picnic', 'Portland', 'Rainbow', 'RdBu', 'Reds', 'Viridis', 'YlGnBu', 'YlOrRd']
@@ -18,7 +19,6 @@ class SiteController < ApplicationController
     @coordinates = load_cluster_points
     @options = load_sub_cluster_options
     @range = set_range(@coordinates.values)
-    @precomputed = load_precomputed_options
   end
 
   # render a single cluster and its constituent sub-clusters
@@ -30,8 +30,14 @@ class SiteController < ApplicationController
 
   # search for one or more genes to view expression information
   def search_genes
-    terms = parse_search_terms(:genes)
-    @genes = ExpressionScore.where(:study_id => @study._id, :searchable_gene.in => terms).to_a
+    if params[:search][:upload].blank?
+      terms = parse_search_terms(:genes)
+      @genes = ExpressionScore.where(:study_id => @study._id, :searchable_gene.in => terms).to_a
+    else
+      geneset_file = params[:search][:upload]
+      terms = geneset_file.read.split("\n").map {|gene| gene.chomp.downcase}
+      @genes = ExpressionScore.where(:study_id => @study._id, :searchable_gene.in => terms).to_a
+    end
     # grab saved params for loaded cluster and boxpoints mode
     cluster = params[:search][:cluster]
     boxpoints = params[:search][:boxpoints]
@@ -52,6 +58,16 @@ class SiteController < ApplicationController
         redirect_to view_gene_expression_path(study_name: params[:study_name], gene: gene.gene, boxpoints: boxpoints)
       end
     end
+  end
+
+  def search_gene_sets
+    if params[:search_gene_sets][:upload].blank?
+      @search_terms = params[:search_gene_sets][:gene_set]
+    else
+      geneset_file = params[:search_gene_sets][:upload]
+      @search_terms = geneset_file.read
+    end
+    redirect_to view_gene_set_expression_path(study_name: params[:study_name], search: {gene_set: @search_terms})
   end
 
   # render box and scatter plots for parent clusters or a particular sub cluster
@@ -181,7 +197,6 @@ class SiteController < ApplicationController
     @rows = []
     @precomputed_score.gene_scores.each do |score_row|
       score_row.each do |gene, scores|
-        puts scores
         row = [gene, ""]
         mean = 0.0
         if params[:centered] == '1'
@@ -200,20 +215,11 @@ class SiteController < ApplicationController
 
   # view all genes as heatmap in morpheus, will pull from pre-computed gct file
   def view_all_gene_expression_heatmap
-    @precomputed = load_precomputed_options
   end
 
   # view all genes as heatmap in morpheus, will pull from pre-computed gct file
   def view_precomputed_gene_expression_heatmap
     @precomputed_score = PrecomputedScore.where(name: params[:precomputed]).first
-    @precomputed = load_precomputed_options
-  end
-
-  # reload expression data, either as normal values or row-centered values
-  def render_heatmap
-    terms = parse_search_terms(:genes)
-    @genes = ExpressionScore.where(:study_id => @study._id, :searchable_gene.in => terms).to_a
-    @options = load_sub_cluster_options
   end
 
   private
@@ -404,11 +410,10 @@ class SiteController < ApplicationController
 
   # load all precomputed options for a study
   def load_precomputed_options
-    opts = [['All Genes', view_context.view_all_gene_expression_heatmap_url(study_name: params[:study_name])],
+    @precomputed = [['All Genes', view_context.view_all_gene_expression_heatmap_url(study_name: params[:study_name])],
      ['All Genes (row-centered)', view_context.view_all_gene_expression_heatmap_url(study_name: params[:study_name], centered: 1)]]
     @study.precomputed_scores.order('name ASC').each do |pc|
-      opts << [pc.name, view_context.view_precomputed_gene_expression_heatmap_url(study_name: params[:study_name], precomputed: pc.name)]
+      @precomputed << [pc.name, view_context.view_precomputed_gene_expression_heatmap_url(study_name: params[:study_name], precomputed: pc.name)]
     end
-    opts
   end
 end

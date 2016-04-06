@@ -4,6 +4,7 @@ Rails.application.routes.draw do
   get 'study/:study_name', to: 'site#study', as: :view_study
   get 'render_cluster/:study_name', to: 'site#render_cluster', as: :render_cluster
   post 'study/:study_name/search', to: 'site#search_genes', as: :search_genes
+	post 'study/:study_name/gene_set_search', to: 'site#search_gene_sets', as: :search_gene_sets
   get 'study/:study_name/gene_expression/:gene/', to: 'site#view_gene_expression', as: :view_gene_expression
   get 'study/:study_name/render_gene_expression_plots/:gene/', to: 'site#render_gene_expression_plots', as: :render_gene_expression_plots
   get 'study/:study_name/gene_expression', to: 'site#view_gene_expression_heatmap', as: :view_gene_expression_heatmap
@@ -13,7 +14,6 @@ Rails.application.routes.draw do
   get 'study/:study_name/load_heatmap_as_gct', to: 'site#load_heatmap_as_gct', as: :load_heatmap_as_gct
   get 'study/:study_name/precomputed_gene_expression/:precomputed', to: 'site#view_precomputed_gene_expression_heatmap', as: :view_precomputed_gene_expression_heatmap
   get 'study/:study_name/load_precomputed_heatmap_as_gct/:precomputed', to: 'site#load_precomputed_heatmap_as_gct', as: :load_precomputed_heatmap_as_gct
-  get 'render_heatmap/:study_name', to: 'site#render_heatmap', as: :render_heatmap
   get '/', to: 'site#index', as: :site
   root to: 'site#index'
 

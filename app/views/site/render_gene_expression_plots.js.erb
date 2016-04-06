@@ -1,6 +1,5 @@
-$('#expression-target').html("<%= escape_javascript(render partial: 'expression_plots_view')%>");
+$('#render-target').html("<%= escape_javascript(render partial: 'expression_plots_view')%>");
 <%= render partial: 'expression_plots_plotly' %>
 
-// stop spinners
-$('#box-controls').data('spinner').stop();
-$('#scatter-plots').data('spinner').stop();
+// stop spinner
+$('#expression-plots').data('spinner').stop();

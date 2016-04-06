@@ -10,9 +10,6 @@
  * defined in the other CSS/SCSS files in this directory. It is generally better to create a new
  * file per style scope.
  *
- *= require jquery-ui/core
- *= require jquery-ui/datepicker
- *= require jquery-ui/theme
  *= require dataTables/bootstrap/3/jquery.dataTables.bootstrap
  *= require_self
  */
@@ -223,4 +220,40 @@ html, body {
   width: 100%;
   min-height: 300px;
   margin-bottom: 25px;
+}
+
+.btn-file {
+  position: relative;
+  overflow: hidden;
+}
+.btn-file input[type=file] {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 100%;
+  min-height: 100%;
+  font-size: 100px;
+  text-align: right;
+  filter: alpha(opacity=0);
+  opacity: 0;
+  outline: none;
+  background: white;
+  cursor: inherit;
+  display: block;
+}
+
+.right-border {
+  border-right: 1px solid #DADADA;
+}
+
+#show-search-options {
+  position: absolute;
+  z-index: 1000;
+  top: -7px;
+  left: -1px;
+}
+
+#heatmap-plot {
+  overflow-x: auto;
+  padding-bottom: 25px;
 }

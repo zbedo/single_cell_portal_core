@@ -10,10 +10,6 @@
 // Read Sprockets README (https://github.com/rails/sprockets#sprockets-directives) for details
 // about supported directives.
 //
-//= require jquery
-//= require jquery_ujs
-//= require jquery-ui/core
-//= require jquery-ui/datepicker
 //= require ckeditor/init
 //= require dataTables/jquery.dataTables
 //= require dataTables/bootstrap/3/jquery.dataTables.bootstrap
@@ -25,10 +21,10 @@ function toggleGlyph(el) {
     el.toggleClass('fa-chevron-right fa-chevron-down');
 }
 
-// attach various handlers to bootstrap items
+// attach various handlers to bootstrap items and turn on functionality
 $(function() {
     $('.panel-heading').click(function () {
-        var anchor = $(this).find('a')
+        var anchor = $(this).find('a');
         $(anchor)[0].click();
     });
 
@@ -44,36 +40,27 @@ $(function() {
     $('[data-toggle="popover"]').popover();
 });
 
+// toggle the Search/View options panel
+function toggleSearch() {
+    $('#search-target').toggleClass('col-md-3 hidden');
+    $('#render-target').toggleClass('col-md-9 col-md-12');
+    $('#search-options-panel').toggleClass('hidden');
+    $('#show-search-options').toggleClass('hidden');
+    if ( $('#show-search-options').css('display') == 'none' ) {
+        $('#show-search-options').tooltip('hide');
+    }
+    // trigger resizeEnd to re-render Plotly to use available space
+    setTimeout(function() {
+        $(window).trigger('resizeEnd');
+    }, 100);
+}
+
 // options for Spin.js
 var opts = {
     lines: 13 // The ~number of lines to draw
     , length: 56 // The length of each line
     , width: 14 // The line thickness
     , radius: 42 // The radius of the inner circle
-    , scale: 1 // Scales overall size of the spinner
-    , corners: 1 // Corner roundness (0..1)
-    , color: '#000' // #rgb or #rrggbb or array of colors
-    , opacity: 0.25 // Opacity of the lines
-    , rotate: 0 // The rotation offset
-    , direction: 1 // 1: clockwise, -1: counterclockwise
-    , speed: 1 // Rounds per second
-    , trail: 60 // Afterglow percentage
-    , fps: 20 // Frames per second when using setTimeout() as a fallback for CSS
-    , zIndex: 2e9 // The z-index (defaults to 2000000000)
-    , className: 'spinner' // The CSS class to assign to the spinner
-    , top: '50%' // Top position relative to parent
-    , left: '50%' // Left position relative to parent
-    , shadow: false // Whether to render a shadow
-    , hwaccel: false // Whether to use hardware acceleration
-    , position: 'absolute' // Element positioning
-};
-
-// options for tiny instance of Spinner
-var smallOpts = {
-    lines: 9 // The number of lines to draw
-    , length: 6 // The length of each line
-    , width: 3 // The line thickness
-    , radius: 4 // The radius of the inner circle
     , scale: 1 // Scales overall size of the spinner
     , corners: 1 // Corner roundness (0..1)
     , color: '#000' // #rgb or #rrggbb or array of colors
@@ -106,11 +93,14 @@ var plotlyLabelFont = {
     color: '#333'
 };
 
-// default scatter plot colors, a combination of colorbrewer sets 1-3
-var colorBrewerSet = ["#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00","#ffff33","#a65628","#f781bf","#999999","#66c2a5","#fc8d62","#8da0cb","#e78ac3","#a6d854","#ffd92f","#e5c494","#b3b3b3","#8dd3c7","#ffffb3","#bebada","#fb8072","#80b1d3","#fdb462","#b3de69","#fccde5","#d9d9d9","#bc80bd","#ccebc5","#ffed6f"];
-
+// scatter plot background color when not showing expression values
 var plotlyDefaultBgColor = '#ddd';
 
+// default scatter plot colors, a combination of colorbrewer sets 1-3 with small adjustments to yellow colors
+var colorBrewerSet = ["#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00","#f2f20f","#a65628","#f781bf","#999999","#66c2a5","#fc8d62","#8da0cb","#e78ac3","#a6d854","#ffd92f","#e5c494","#b3b3b3","#8dd3c7","#ebeba5","#bebada","#fb8072","#80b1d3","#fdb462","#b3de69","#fccde5","#d9d9d9","#bc80bd","#ccebc5","#ffed6f"];
+
+
+// clear out text area in a form
 function clearForm(target) {
     $('#' + target).val("");
 }
@@ -155,7 +145,7 @@ function setErrorOnBlank(selector) {
     });
 }
 
-// custom event to trigger event only after user has stopped resizing the window
+// custom event to trigger resize event only after user has stopped resizing the window
 $(window).resize(function() {
     if(this.resizeTO) clearTimeout(this.resizeTO);
     this.resizeTO = setTimeout(function() {
@@ -165,12 +155,20 @@ $(window).resize(function() {
 });
 
 // generic function to render Morpheus
-function renderMorpheus(dataPath, annotPath, target, fitToWindow) {
+function renderMorpheus(dataPath, annotPath, target, fitType) {
     var config = {dataset: dataPath};
-    if (fitToWindow) {
-        config.rowSize ='fit';
+
+    // fit rows, columns, or both to screen
+    if (fitType == 'cols') {
         config.columnSize = 'fit';
+    } else if (fitType == 'rows') {
+        config.rowSize = 'fit';
+    } else if (fitType == 'both') {
+        config.columnSize = 'fit';
+        config.rowSize = 'fit';
     }
+
+    // load annotations if specified
     if (annotPath != '') {
         config.columnAnnotations = [{
             file : annotPath,
@@ -181,8 +179,10 @@ function renderMorpheus(dataPath, annotPath, target, fitToWindow) {
             {field:'CLUSTER', order:0},
             {field:'SUB-CLUSTER', order:0}
         ];
-    };
-    var heatmap = new morpheus.HeatMap(config);
+    }
 
+    // instantiate heatmap and embed in DOM element
+    var heatmap = new morpheus.HeatMap(config);
     $(target).html(heatmap.$el);
 }
+

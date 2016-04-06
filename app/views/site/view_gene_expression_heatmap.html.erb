@@ -4,29 +4,13 @@
 	</div>
 </div>
 <div class="row">
-	<div class="col-sm-12">
-		<%= render partial: 'expression_heatmap_nav' %>
-		<%= render partial: 'gene_search_form' %>
-		<%= render partial: 'gene_nav' %>
+	<div class="col-md-3" id="search-target">
+		<%= render partial: 'search_render_options' %>
 	</div>
-		<%= render partial: 'centered_view' %>
-		<%= javascript_tag do %>
-
-			$('#centered').change(function() {
-				if ( $(this).prop('checked') ) {
-					$.get('<%= javascript_safe_url(render_heatmap_path(study_name: params[:study_name], search: {genes: params[:search][:genes]}, centered: '1')) %>');
-				} else {
-					$.get('<%= javascript_safe_url(render_heatmap_path(study_name: params[:study_name], search: {genes: params[:search][:genes]}, centered: '0')) %>');
-				}
-			});
-
-		<% end %>
+	<div class="col-md-9" id="render-target"><div id="heatmap-plot"></div></div>
 </div>
-<div class="row">
-	<div class="col-md-12">
-		<div id="heatmap-plot"></div>
-	</div>
-</div>
+
+
 <%= javascript_tag do %>
 
 	$(document).ready(function() {
@@ -35,7 +19,7 @@
 			dataPath += '&cluster=<%= params[:cluster ]%>';
 		};
 		var annotPath = '/data/<%= @study.url_safe_name %>/CLUSTER_AND_SUBCLUSTER_INDEX.txt';
-		renderMorpheus(dataPath, annotPath, '#heatmap-plot', true);
+		renderMorpheus(dataPath, annotPath, '#heatmap-plot', 'cols');
 
 		$("#cluster").change(function() {
 			// re-render Morpheus on cluster selection
@@ -49,7 +33,18 @@
 
 			};
 
-			renderMorpheus(newDataPath, annotPath, '#heatmap-plot', true);
+			renderMorpheus(newDataPath, annotPath, '#heatmap-plot', 'cols');
+		});
+
+		$('#centered').change(function() {
+			if ( $(this).prop('checked') ) {
+				var newDataPath = "<%= load_heatmap_as_gct_path(study_name: params[:study_name], search: {genes: params[:search][:genes] }, centered: 1) %>";
+			} else {
+				var newDataPath = "<%= load_heatmap_as_gct_path(study_name: params[:study_name], search: {genes: params[:search][:genes] }) %>";
+			}
+
+			var annotPath = '/data/<%= @study.url_safe_name %>/CLUSTER_AND_SUBCLUSTER_INDEX.txt';
+			renderMorpheus(newDataPath, annotPath, '#heatmap-plot', 'cols');
 		});
 	});
 

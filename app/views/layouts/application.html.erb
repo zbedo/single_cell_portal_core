@@ -2,11 +2,11 @@
 <html>
 <head>
   <title>Single Cell Portal</title>
-	<%= stylesheet_link_tag    'application', media: 'all' %>
-	<%= javascript_include_tag 'application' %>
 	<%= javascript_include_tag '//www.broadinstitute.org/cancer/software/morpheus/js/morpheus-external-latest.min.js' %>
 	<%= javascript_include_tag '//www.broadinstitute.org/cancer/software/morpheus/js/morpheus-latest.min.js' %>
 	<%= stylesheet_link_tag    '//www.broadinstitute.org/cancer/software/morpheus/css/morpheus-latest.min.css', media: 'screen' %>
+	<%= stylesheet_link_tag    'application', media: 'all' %>
+	<%= javascript_include_tag 'application' %>
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
   <%= csrf_meta_tags %>
@@ -17,6 +17,7 @@
 <div class="container-fluid" id="wrap">
 	<div class="row section-pad" id="main-body">
 		<div class="col-md-12">
+			<%= link_to "&nbsp;&nbsp;</span><span class='fa fa-search'></span>&nbsp;<span class='fa fa-long-arrow-right'>".html_safe, 'javascript:toggleSearch();', class: 'btn btn-sm btn-success hidden', id: 'show-search-options', 'data-toggle' => 'tooltip', title: 'Expand Options' %>
 			<%= yield %>
 		</div>
 	</div>
