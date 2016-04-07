@@ -292,7 +292,7 @@ class SiteController < ApplicationController
         expression[:all][:y] << point.y
         # load in expression score to use as color value
         expression[:all][:marker][:color] << @gene.scores[point.single_cell.name].to_f
-        expression[:all][:marker][:line] = { color: 'rgb(0,0,0)', width: 0.5}
+        expression[:all][:marker][:line] = { color: 'rgb(40,40,40)', width: 0.5}
       end
     end
     expression
@@ -326,6 +326,7 @@ class SiteController < ApplicationController
         expression[:all][:y] << point.y
         # load in expression score to use as color value
         expression[:all][:marker][:color] << score
+        expression[:all][:marker][:line] = { color: 'rgb(40,40,40)', width: 0.5}
       end
     end
     expression

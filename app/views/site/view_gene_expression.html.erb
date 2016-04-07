@@ -30,6 +30,8 @@
 		var spinner2 = new Spinner(opts).spin(target2);
 		var spinner3 = new Spinner(opts).spin(target3);
 		$(target1).data('spinner', spinner1);
+		$(target2).data('spinner', spinner2);
+		$(target3).data('spinner', spinner3);
 		var cluster = $('#cluster').val();
 		$("#search_cluster").val(cluster);
 		if (cluster == "") {

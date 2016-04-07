@@ -74,6 +74,15 @@ var opts = {
     , position: 'absolute' // Element positioning
 };
 
+// launch a modal spinner whenever a select changes that will take more than a few seconds
+$(function() {
+   $('.spin').change(function(){
+        var target = $('#spinner_target')[0];
+        new Spinner(opts).spin(target);
+        $('#loading-modal').modal('show');
+    });
+});
+
 // default title font settings for axis titles in plotly
 var plotlyTitleFont = {
     family: 'Helvetica Neue',
@@ -87,6 +96,8 @@ var plotlyLabelFont = {
     size: 12,
     color: '#333'
 };
+
+var plotlyDefaultLineColor = 'rgb(40, 40, 40)';
 
 // default scatter plot colors, a combination of colorbrewer sets 1-3
 var colorBrewerSet = [];
