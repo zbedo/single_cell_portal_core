@@ -3,5 +3,14 @@
 // set the cluster field in the search box to scope search correctly
 $('#search_cluster').val("<%= params[:cluster] %>");
 
+
+// clear listener and reattach
+$(window).off('resizeEnd', "**");
+$(window).on('resizeEnd', function() {
+	<%= render 'study_scatter_layout' %>
+
+	Plotly.newPlot('cluster-plot', data, layout);
+});
+
 // stop spinner
 $('#cluster-plot').data('spinner').stop();

@@ -30,9 +30,3 @@ var data = [];
 <% end %>
 
 Plotly.newPlot('cluster-plot', data, layout);
-
-$( window ).on('resizeEnd', function() {
-	<%= render 'study_scatter_layout' %>
-
-	Plotly.newPlot('cluster-plot', data, layout);
-});

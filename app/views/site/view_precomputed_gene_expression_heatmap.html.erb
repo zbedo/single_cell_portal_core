@@ -30,18 +30,18 @@
 <%= javascript_tag do %>
 
 	$('#row_centered, #expression').change(function() {
-		var newDataPath = '<%= load_precomputed_heatmap_as_gct_path(study_name: params[:study_name]) %>';
+		var newDataPath = '<%= precomputed_results_path(study_name: params[:study_name]) %>';
 		var precomputed = $('#expression').val();
 		var row_centered = $('#row_centered').prop('checked') ? 1 : 0;
 		newDataPath += '?precomputed=' + precomputed + '&row_centered=' + row_centered;
 
-		renderMorpheus(newDataPath, '', '#heatmap-plot', 'rows');
+		renderMorpheus(newDataPath, '', '#heatmap-plot', 'both');
 	});
 
 	$(document).ready(function() {
-		var dataPath = "<%= load_precomputed_heatmap_as_gct_path(study_name: params[:study_name], precomputed: params[:precomputed]) %>";
+		var dataPath = "<%= precomputed_results_path(study_name: params[:study_name], precomputed: params[:precomputed]) %>";
 
-		renderMorpheus(dataPath, '', '#heatmap-plot', 'rows');
+		renderMorpheus(dataPath, '', '#heatmap-plot', 'both');
 	});
 
 <% end %>

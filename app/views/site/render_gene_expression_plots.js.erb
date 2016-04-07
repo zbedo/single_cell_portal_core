@@ -1,12 +1,13 @@
 $('#render-target').html("<%= escape_javascript(render partial: 'expression_plots_view')%>");
 <%= render partial: 'expression_plots_plotly' %>
 
-// stop spinner
-$('#expression-plots').data('spinner').stop();
+// stop spinners
+$('#box-plot').data('spinner').stop();
+$('#scatter-plot').data('spinner').stop();
+$('#reference-plot').data('spinner').stop();
 
-// attach new resize listener with updated layouts
-
-// re-render expression plots on window resize to use available area
+// clear listener and reattach
+$(window).off('resizeEnd', false);
 $( window ).on('resizeEnd', function() {
 
 	<%= render partial: 'expression_box_layout' %>

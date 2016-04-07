@@ -29,16 +29,16 @@
 <%= javascript_tag do %>
 
 	$(document).ready(function() {
-		var dataPath = '<%= javascript_safe_url(load_heatmap_as_gct_url(study_name: params[:study_name], search: {genes: params[:search][:genes] })) %>';
+		var dataPath = '<%= javascript_safe_url(expression_query_path(study_name: params[:study_name], search: {genes: params[:search][:genes] })) %>';
 		if ( '<%= params[:cluster] %>' != '' ) {
 			dataPath += '&cluster=<%= params[:cluster ]%>';
 		};
 		var annotPath = '/data/<%= @study.url_safe_name %>/CLUSTER_AND_SUBCLUSTER_INDEX.txt';
-		renderMorpheus(dataPath, annotPath, '#heatmap-plot', 'cols');
+		renderMorpheus(dataPath, annotPath, '#heatmap-plot', 'both');
 
 		$("#cluster, #row_centered").change(function() {
 			// re-render Morpheus on cluster selection
-			var newDataPath = '<%= javascript_safe_url(load_heatmap_as_gct_url(study_name: params[:study_name], search: {genes: params[:search][:genes] })) %>';
+			var newDataPath = '<%= javascript_safe_url(expression_query_path(study_name: params[:study_name], search: {genes: params[:search][:genes] })) %>';
 			var row_centered = $('#row_centered').prop('checked') ? 1 : 0;
 			newDataPath += '&row_centered=' + row_centered;
 			var cluster = $('#cluster').val();
@@ -48,7 +48,7 @@
 
 			};
 
-			renderMorpheus(newDataPath, annotPath, '#heatmap-plot', 'cols');
+			renderMorpheus(newDataPath, annotPath, '#heatmap-plot', 'both');
 		});
 	});
 

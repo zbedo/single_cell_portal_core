@@ -148,7 +148,8 @@ $(window).resize(function() {
 
 // generic function to render Morpheus
 function renderMorpheus(dataPath, annotPath, target, fitType) {
-    var config = {dataset: dataPath};
+    $(target).empty();
+    var config = {dataset: dataPath, el: $(target)};
 
     // fit rows, columns, or both to screen
     if (fitType == 'cols') {
@@ -174,8 +175,8 @@ function renderMorpheus(dataPath, annotPath, target, fitType) {
     }
 
     // instantiate heatmap and embed in DOM element
-    var heatmap = new morpheus.HeatMap(config);
-    $(target).html(heatmap.$el);
+    new morpheus.HeatMap(config);
+
 }
 
 // helper to compute color gradient scales using chroma.js for sub-cluster members

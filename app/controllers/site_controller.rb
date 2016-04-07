@@ -4,7 +4,7 @@ class SiteController < ApplicationController
 
   before_action :set_study, except: :index
   before_action :load_precomputed_options, except: :index
-  before_action :set_clusters, except: [:index, :view_all_gene_expression_heatmap, :load_precomputed_heatmap_as_gct]
+  before_action :set_clusters, except: [:index, :view_all_gene_expression_heatmap, :precomputed_results]
 
   COLORSCALE_THEMES = ['Blackbody', 'Bluered', 'Blues', 'Earth', 'Electric', 'Greens', 'Hot', 'Jet', 'Picnic', 'Portland', 'Rainbow', 'RdBu', 'Reds', 'Viridis', 'YlGnBu', 'YlOrRd']
 
@@ -60,19 +60,10 @@ class SiteController < ApplicationController
     end
   end
 
-  def search_gene_sets
-    if params[:search_gene_sets][:upload].blank?
-      @search_terms = params[:search_gene_sets][:gene_set]
-    else
-      geneset_file = params[:search_gene_sets][:upload]
-      @search_terms = geneset_file.read
-    end
-    redirect_to view_gene_set_expression_path(study_name: params[:study_name], search: {gene_set: @search_terms})
-  end
-
   # render box and scatter plots for parent clusters or a particular sub cluster
   def view_gene_expression
     @gene = ExpressionScore.where(gene: params[:gene]).first
+    @y_axis_title = 'log(TPM) Expression Values'
     @values = load_expression_boxplot_scores
     @coordinates = load_cluster_points
     @annotations = load_cluster_annotations
@@ -83,12 +74,12 @@ class SiteController < ApplicationController
     @options = load_sub_cluster_options
     @range = set_range([@expression[:all]])
     @static_range = set_range(@coordinates.values)
-    @y_axis_title = 'log(TPM) Expression Values'
   end
 
   # re-renders plots when changing cluster selection
   def render_gene_expression_plots
     @gene = ExpressionScore.where(gene: params[:gene]).first
+    @y_axis_title = 'log(TPM) Expression Values'
     @values = load_expression_boxplot_scores
     @coordinates = load_cluster_points
     @annotations = load_cluster_annotations
@@ -99,13 +90,14 @@ class SiteController < ApplicationController
     @options = load_sub_cluster_options
     @range = set_range([@expression[:all]])
     @static_range = set_range(@coordinates.values)
-    @y_axis_title = 'log(TPM) Expression Values'
   end
 
   # view set of genes (scores averaged) as box and scatter plots
   def view_gene_set_expression
-    terms = parse_search_terms(:gene_set)
-    @genes, @not_found = search_expression_scores(terms)
+    precomputed = PrecomputedScore.where(study_id: @study._id, name: params[:gene_set]).first
+    @genes = []
+    precomputed.gene_list.map {|gene| @genes << ExpressionScore.find_by(gene: gene)}
+    @y_axis_title = 'Mean-centered average of log(TPM) Expression Values'
     @values = load_gene_set_expression_boxplot_scores
     @coordinates = load_cluster_points
     @annotations = load_cluster_annotations
@@ -119,14 +111,15 @@ class SiteController < ApplicationController
     if @genes.size > 5
       @main_genes, @other_genes = divide_genes_for_header
     end
-    @y_axis_title = 'Average of log(TPM) Expression Values'
     render 'view_gene_expression'
   end
 
   # re-renders plots when changing cluster selection
   def render_gene_set_expression_plots
-    terms = parse_search_terms(:gene_set)
-    @genes, @not_found = search_expression_scores(terms)
+    precomputed = PrecomputedScore.where(study_id: @study._id, name: params[:gene_set]).first
+    @genes = []
+    precomputed.gene_list.map {|gene| @genes << ExpressionScore.find_by(gene: gene)}
+    @y_axis_title = 'Mean-centered average of log(TPM) Expression Values'
     @values = load_gene_set_expression_boxplot_scores
     @coordinates = load_cluster_points
     @annotations = load_cluster_annotations
@@ -137,7 +130,6 @@ class SiteController < ApplicationController
     @options = load_sub_cluster_options
     @range = set_range([@expression[:all]])
     @static_range = set_range(@coordinates.values)
-    @y_axis_title = 'Average of log(TPM) Expression Values'
     if @genes.size > 5
       @main_genes, @other_genes = divide_genes_for_header
     end
@@ -155,7 +147,7 @@ class SiteController < ApplicationController
   end
 
   # load data in gct form to render in Morpheus
-  def load_heatmap_as_gct
+  def expression_query
     terms = parse_search_terms(:genes)
     @genes = ExpressionScore.where(:study_id => @study._id, :searchable_gene.in => terms).to_a
     @cols = @clusters.map {|c| c.single_cells.size}.inject(0) {|sum, x| sum += x}
@@ -187,7 +179,7 @@ class SiteController < ApplicationController
   end
 
   # load precomputed data in gct form to render in Morpheus
-  def load_precomputed_heatmap_as_gct
+  def precomputed_results
     @precomputed_score = PrecomputedScore.where(name: params[:precomputed]).first
 
     @headers = ["Name", "Description"]
@@ -210,7 +202,7 @@ class SiteController < ApplicationController
     end
     @data = ['#1.2', [@rows.size, @precomputed_score.clusters.size].join("\t"), @headers.join("\t"), @rows.join("\n")].join("\n")
 
-    send_data @data, type: 'text/plain'
+    send_data @data, type: 'text/plain', filename: 'query.gct'
   end
 
   # view all genes as heatmap in morpheus, will pull from pre-computed gct file
@@ -291,7 +283,7 @@ class SiteController < ApplicationController
   def load_expression_scatter_points
     expression = {}
 
-    expression[:all] = {x: [], y: [], text: [], marker: {cmax: 0, cmin: 0, color: [], showscale: true, colorbar: {title: 'log(TPM) Expression Values', titleside: 'right'}}}
+    expression[:all] = {x: [], y: [], text: [], marker: {cmax: 0, cmin: 0, color: [], showscale: true, colorbar: {title: @y_axis_title , titleside: 'right'}}}
     @clusters.each do |cluster|
       points = cluster.cluster_points
       points.each do |point|
@@ -324,12 +316,12 @@ class SiteController < ApplicationController
   def load_gene_set_expression_scatter_points
     expression = {}
 
-    expression[:all] = {x: [], y: [], text: [], marker: {cmax: 0, cmin: 0, color: [], showscale: true, colorbar: {title: 'Average of log(TPM) Expression Values', titleside: 'right'}}}
+    expression[:all] = {x: [], y: [], text: [], marker: {cmax: 0, cmin: 0, color: [], showscale: true, colorbar: {title: @y_axis_title, titleside: 'right'}}}
     @clusters.each do |cluster|
       points = cluster.cluster_points
       points.each do |point|
         score = calculate_mean(@genes, point.single_cell.name)
-        expression[:all][:text] << "<b>#{point.single_cell.name}</b> [#{cluster.name}]<br>log(TPM) expression: #{score}".html_safe
+        expression[:all][:text] << "<b>#{point.single_cell.name}</b> [#{cluster.name}]<br>avg log(TPM) expression: #{score}".html_safe
         expression[:all][:x] << point.x
         expression[:all][:y] << point.y
         # load in expression score to use as color value

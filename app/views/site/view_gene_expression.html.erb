@@ -2,7 +2,7 @@
 	<div class="col-md-12">
 		<h1 class="study-lead">Gene<%= action_name =~ /set/ ? ' Set' : nil %> Expression for <%= render partial: 'gene_name_list' %><%= render partial: 'missing_genes' %></h1>
 		<% if action_name =~ /set/ %>
-			<h3 class="help-block lead">Expression scores are shown as an average across all queried genes for each cell.</h3>
+			<h3 class="help-block lead">Expression scores are shown as a mean-centered average across all genes for each cell.</h3>
 		<% end %>
 	</div>
 </div>
@@ -21,9 +21,14 @@
 
 	// listener for cluster nav, specific to expression pages
 	$("#cluster").change(function() {
-		var url = '<%= params[:gene] ? render_gene_expression_plots_path(study_name: params[:study_name], gene: params[:gene]) : render_gene_set_expression_plots_path(study_name: params[:study_name], search: {gene_set: params[:search][:gene_set]}) %>';
-		var target1 = document.getElementById('expression-plots');
+		var url = '<%= params[:gene] ? render_gene_expression_plots_path(study_name: params[:study_name], gene: params[:gene]) : render_gene_set_expression_plots_path(study_name: params[:study_name], gene_set: params[:gene_set]) %>';
+		var target1 = document.getElementById('box-plot');
+		var target2 = document.getElementById('scatter-plot');
+		var target3 = document.getElementById('reference-plot');
+
 		var spinner1 = new Spinner(opts).spin(target1);
+		var spinner2 = new Spinner(opts).spin(target2);
+		var spinner3 = new Spinner(opts).spin(target3);
 		$(target1).data('spinner', spinner1);
 		var cluster = $('#cluster').val();
 		$("#search_cluster").val(cluster);
@@ -33,20 +38,6 @@
 			var delimeter = "<%= params[:gene] ? "?".html_safe : "&".html_safe %>";
 			$.get(url + delimeter + 'cluster=' + cluster);
 		}
-	});
-
-	// re-render expression plots on window resize to use available area
-	$( window ).on('resizeEnd', function() {
-
-		<%= render partial: 'expression_box_layout' %>
-
-		<%= render partial: 'expression_scatter_layout' %>
-
-		<%= render partial: 'static_scatter_layout' %>
-
-		Plotly.newPlot('box-plot', expressionData, expressionLayout);
-		Plotly.newPlot('scatter-plot', clusterData, scatterLayout);
-		Plotly.newPlot('reference-plot', data, staticLayout, {staticPlot: true});
 	});
 
 <% end %>
