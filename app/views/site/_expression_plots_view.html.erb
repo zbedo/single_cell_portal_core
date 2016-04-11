@@ -2,7 +2,7 @@
 	<div class="panel panel-default">
 		<div class="panel-heading">
 			<div class="panel-title">
-				<h4><%= link_to "Expression Values for #{params[:cluster] ? params[:cluster] : 'All Cell Types'} <span class='fa fa-chevron-down'></span>".html_safe, '#box-controls', 'data-toggle' => 'collapse'  %> <%= render partial: 'show_options_button' %></h4>
+				<h4><%= link_to "Expression Values for #{params[:cluster] ? params[:cluster] : 'All Cell Types'} <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#box-controls', 'data-toggle' => 'collapse'  %> <%= render partial: 'show_options_button' %></h4>
 			</div>
 		</div>
 		<div id="box-controls" class="panel-collapse collapse in">
@@ -20,7 +20,7 @@
 	<div class="panel panel-default">
 		<div class="panel-heading">
 			<div class="panel-title">
-				<h4><%= link_to "Expression Values as Scatter Plot <span class='fa fa-chevron-down'></span>".html_safe, '#scatter-plots', 'data-toggle' => 'collapse'  %></h4>
+				<h4><%= link_to "Expression Values as Scatter Plot <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#scatter-plots', 'data-toggle' => 'collapse'  %></h4>
 			</div>
 		</div>
 		<div id="scatter-plots" class="panel-collapse collapse in">

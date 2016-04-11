@@ -8,7 +8,7 @@
 		<div class="panel panel-primary">
 			<div class="panel-heading">
 				<div class="panel-title">
-					<h4><%= link_to "#{study.name} <span class='fa fa-chevron-#{ index == 0 ? 'down' : 'right' }'></span>".html_safe, "##{study.url_safe_name}", "data-toggle" => "collapse", 'data-parent' => '#downloads', style: 'color: white;'  %></h4>
+					<h4><%= link_to "#{study.name} <span class='fa fa-chevron-#{ index == 0 ? 'down' : 'right' } toggle-glyph'></span>".html_safe, "##{study.url_safe_name}", "data-toggle" => "collapse", 'data-parent' => '#downloads', style: 'color: white;'  %></h4>
 				</div>
 			</div>
 			<div id="<%= study.url_safe_name %>" class="panel-collapse collapse <%= index == 0 ? 'in' : nil %>">

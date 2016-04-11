@@ -24,11 +24,11 @@ function toggleGlyph(el) {
 // attach various handlers to bootstrap items and turn on functionality
 $(function() {
     $('.panel-collapse').on('show.bs.collapse', function (e) {
-        toggleGlyph($(this).prev().find('span.fa'));
+        toggleGlyph($(this).prev().find('span.toggle-glyph'));
     });
 
     $('.panel-collapse').on('hide.bs.collapse', function (e) {
-        toggleGlyph($(this).prev().find('span.fa'));
+        toggleGlyph($(this).prev().find('span.toggle-glyph'));
     });
 
     $('[data-toggle="tooltip"]').tooltip();
