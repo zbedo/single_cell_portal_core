@@ -1,0 +1,25 @@
+<div class="panel panel-info" id="view-options-panel">
+	<div class="panel-heading">
+		<div class="panel-title">
+			<h4><%= link_to "View/Filter Options <span class='fa fa-cog'></span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#view-options', 'data-toggle' => 'collapse' %> <%= render partial: 'show_search_options_button' %></h4>
+		</div>
+	</div>
+	<div id="view-options" class="panel-collapse collapse in">
+		<div class="panel-body">
+			<div class="row">
+				<% if action_name !~ /(all|precomputed)/ %>
+					<div class="col-sm-6">
+						<%= label_tag :cluster, 'Load a sub-cluster' %><br />
+						<%= select_tag :cluster, options_for_select(@options, params[:cluster]), class: 'form-control' %>
+					</div>
+				<% end %>
+				<% if action_name =~ /heatmap/ %>
+					<div class="col-sm-6">
+						<%= label_tag :row_centered, 'Row centering' %> <span class="fa fa-question-circle" data-toggle="tooltip" data-placement="right" title="For every value in each row, subtract the mean of the entire row from the value"></span><br />
+						<%= check_box_tag :row_centered, nil, params[:row_centered] == "1" %>
+					</div>
+				<% end %>
+			</div>
+		</div>
+	</div>
+</div>

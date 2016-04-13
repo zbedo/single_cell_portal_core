@@ -5,13 +5,14 @@
 </div>
 <div class="row">
 	<div class="col-md-3" id="search-target">
-		<%= render partial: 'search_render_options' %>
+		<%= render partial: 'search_options' %>
 	</div>
 	<div class="col-md-9" id="render-target">
+		<%= render partial: 'view_options' %>
 		<div class="panel panel-default">
 			<div class="panel-heading">
 				<div class="panel-title">
-					<h4><%= link_to "Expression Heatmap <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#plots', 'data-toggle' => 'collapse' %> <%= render partial: 'show_options_button' %></h4>
+					<h4><%= link_to "Expression Heatmap <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#plots', 'data-toggle' => 'collapse' %> <%= render partial: 'show_search_options_button' %></h4>
 				</div>
 			</div>
 			<div id="plots" class="panel-collapse collapse in">
