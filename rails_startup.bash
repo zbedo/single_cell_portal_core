@@ -1,13 +1,16 @@
 #!/bin/bash
 
 cd /home/app/webapp
-
+#openssl req -newkey rsa:4096 -days 365 -nodes -x509 \
+#    -subj "/C=US/ST=Massachusetts/L=Cambridge/O=Broad Institute/OU=BITS DevOps/CN=localhost/emailAddress=bistline@broadinstitute.org" \
+#    -keyout /etc/pki/tls/private/localhost.key \
+#    -out /etc/pki/tls/certs/localhost.crt
 #echo "*** MIGRATING DATABASE ***"
 #bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV db:create
 #bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV db:migrate
 #echo "*** COMPLETED ***"
 echo "*** CLEARING TMP CACHE ***"
-bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV tmp:clear
+sudo -u app -H bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV tmp:clear
 echo "*** COMPLETED ***"
 if [[ $PASSENGER_APP_ENV = "production" ]]
 then

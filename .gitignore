@@ -13,3 +13,4 @@
 /tmp
 .idea
 /public/data/*
+/db/*.json

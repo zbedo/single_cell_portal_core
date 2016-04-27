@@ -36,7 +36,7 @@ Rails.application.configure do
   # Raises error for missing translations
   # config.action_view.raise_on_missing_translations = true
 
-  config.force_ssl = true
+  config.force_ssl = false
   config.action_dispatch.x_sendfile_header = 'X-Accel-Redirect' # for NGINX
 
   config.action_mailer.default_url_options = { :host => 'docker-host.com', protocol: 'https' }

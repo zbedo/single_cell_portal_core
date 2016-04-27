@@ -272,11 +272,11 @@ class Study
   end
 
   def gct_path
-    "/data/#{self.url_safe_name}/#{self.url_safe_name}.gct"
+    "/single_cell_demo/data/#{self.url_safe_name}/#{self.url_safe_name}.gct"
   end
 
   def centered_gct_path
-    "/data/#{self.url_safe_name}/#{self.url_safe_name}_row_centered.gct"
+    "/single_cell_demo/data/#{self.url_safe_name}/#{self.url_safe_name}_row_centered.gct"
   end
 
   private

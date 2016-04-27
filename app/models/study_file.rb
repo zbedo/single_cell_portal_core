@@ -9,7 +9,7 @@ class StudyFile
   field :description, type: String
 
   def download_path
-    "/data/#{self.study.url_safe_name}/#{self.name}"
+    "/single_cell_demo/data/#{self.study.url_safe_name}/#{self.name}"
   end
 
   def file_size
