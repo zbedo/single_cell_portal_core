@@ -28,7 +28,7 @@ class Study
   before_save :set_url_safe_name
 
   def data_load_path
-    Rails.root.join('public', 'data', self.url_safe_name)
+    Rails.root.join('public', 'single_cell_demo', 'data', self.url_safe_name)
   end
 
   # load all study files into database for downloading
