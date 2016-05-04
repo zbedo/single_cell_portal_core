@@ -15,7 +15,7 @@ echo "*** COMPLETED ***"
 if [[ $PASSENGER_APP_ENV = "production" ]]
 then
     echo "*** PRECOMPILING ASSETS ***"
-    rm -rf public/assets
+    rm -rf public/single_cell_demo/assets
     sudo -u app -H bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE assets:precompile
     echo "*** COMPLETED ***"
 fi
