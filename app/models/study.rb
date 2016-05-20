@@ -4,10 +4,10 @@ class Study
 
   belongs_to :user
 
-  has_many :study_files
-  has_many :single_cells
-  has_many :expression_scores
-  has_many :precomputed_scores
+  has_many :study_files, dependent: :destroy
+  has_many :single_cells, dependent: :destroy
+  has_many :expression_scores, dependent: :destroy
+  has_many :precomputed_scores, dependent: :destroy
 
   # scoping clusters to allow easy access to top- and sub-level clusters
   has_many :clusters do
@@ -24,6 +24,10 @@ class Study
   field :url_safe_name, type: String
   field :description, type: String
   field :public, type: Boolean, default: true
+
+  accepts_nested_attributes_for :study_files, reject_if: proc {|attributes| attributes['name'].blank?}
+
+  validates_uniqueness_of :name
 
   before_save :set_url_safe_name
 

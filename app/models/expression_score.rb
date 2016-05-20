@@ -7,6 +7,8 @@ class ExpressionScore
   field :searchable_gene, type: String
   field :scores, type: Hash
 
+  index({ searchable_gene: 1 }, { unique: false })
+
   def mean(cells)
     sum = 0.0
     cells.each do |cell|

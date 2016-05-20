@@ -7,4 +7,7 @@ class ClusterPoint
   field :x, type: Float
   field :y, type: Float
 
+  index({ single_cell_id: 1 }, { unique: false })
+  index({ cluster_id: 1 }, { unique: false })
+
 end

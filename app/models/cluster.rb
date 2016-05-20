@@ -9,4 +9,7 @@ class Cluster
   has_many :cluster_points
   has_many :single_cells
 
+  index({ name: 1 }, { unique: false })
+  index({ study_id: 1 }, { unique: false })
+
 end
