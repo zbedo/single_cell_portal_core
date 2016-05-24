@@ -16,7 +16,7 @@
 					</div>
 					<div class="form-group">
 						<%= f.label :upload, "Or upload a list of genes (one gene per line)" %><br>
-						<%= f.file_field :upload, class: 'btn btn-default search-genes-input' %>
+						<%= f.file_field :upload, class: 'form-control' %>
 					</div>
 					<%= link_to "<span class='fa fa-ban'></span> Clear Search".html_safe, "javascript:clearForm('search_genes');", class: 'btn btn-warning pull-right' %>
 					<%= link_to "<span class='fa fa-search'></span> Search Genes ".html_safe, "javascript:;", class: 'btn btn-success', id: 'submit-gene-search' %>

@@ -1,0 +1,43 @@
+<h1>My Studies</h1>
+<div class="row">
+	<div class="col-md-12">
+		<div class="table-responsive">
+			<div class="well">
+				<table class="table table-striped" id="studies">
+					<thead>
+					<tr>
+						<th>Name</th>
+						<th>Description</th>
+						<th>Visibility</th>
+						<th># Files</th>
+						<th class="actions">Actions</th>
+					</tr>
+					</thead>
+
+					<tbody>
+					<% @studies.each do |study| %>
+						<tr>
+							<td><%= study.name %></td>
+							<td><%= truncate_html(study.description, length: 50) %></td>
+							<td><%= study.visibility %></td>
+							<td><%= study.study_files.count %></td>
+							<td><%= link_to "<span class='fa fa-search'></span> Show".html_safe, study_path(study), class: 'btn btn-xs btn-info' %> <%= link_to "<span class='fa fa-edit'></span> Edit".html_safe, edit_study_path(study), class: 'btn btn-xs btn-primary' %> <%= link_to "<span class='fa fa-times'></span> Delete".html_safe, study, class: 'btn btn-xs btn-danger', method: :delete, data: { confirm: 'Are you sure?' } %></td>
+						</tr>
+					<% end %>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<p><%= link_to "<span class='fa fa-plus'></span> New Study".html_safe, new_study_path, class: 'btn btn-lg btn-success' %></p>
+
+	</div>
+</div>
+
+<%= javascript_tag do %>
+
+	$('#studies').dataTable({
+		"pagingType": "full_numbers",
+		"oLanguage": {"sSearch": "Filter Results By: "}
+	});
+
+<% end %>

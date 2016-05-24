@@ -5,11 +5,11 @@ development:
     default:
       # Defines the name of the default database that Mongoid can connect to.
       # (required).
-      database: single_cell_portal_production
+      database: single_cell_portal_development
       # Provides the hosts the default client can connect to. Must be an array
       # of host:port pairs. (required)
       hosts:
-        - ds025232.mlab.com:25232
+        - <%= ENV['MONGO_LOCALHOST'] %>:27017
       options:
         # Change the default write concern. (default = { w: 1 })
         # write:
@@ -22,10 +22,10 @@ development:
         #   mode: :secondary_preferred
 
         # The name of the user for authentication.
-        user: 'single_cell'
+        # user: 'single_cell'
 
         # The password of the user for authentication.
-        password: '<%= ENV['PROD_DATABASE_PASSWORD'] %>'
+        # password: '<%= ENV['PROD_DATABASE_PASSWORD'] %>'
 
         # The user's database roles.
         # roles:

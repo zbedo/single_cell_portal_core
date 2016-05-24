@@ -25,32 +25,23 @@ class Study
   field :description, type: String
   field :public, type: Boolean, default: true
 
-  accepts_nested_attributes_for :study_files, reject_if: proc {|attributes| attributes['name'].blank?}
+  accepts_nested_attributes_for :study_files, allow_destroy: true
 
   validates_uniqueness_of :name
 
   before_save :set_url_safe_name
+  after_save :check_public?
 
-  def data_load_path
+  def data_public_path
     Rails.root.join('public', 'single_cell_demo', 'data', self.url_safe_name)
   end
 
-  # load all study files into database for downloading
-  def create_study_files
-    data_path = self.data_load_path
-    if Dir.exists?(data_path)
-      Dir.chdir(data_path)
-      entries = Dir.glob('*')
-      entries.each do |file|
-        study_file = self.study_files.build(name: file, description: 'Default description', path: "#{data_path}/#{file}")
-        study_file.save
-        puts "Created study file: #{study_file.name}"
-      end
-      true
-    else
-      puts "Cannot open data directory for Study: #{self.name}."
-      false
-    end
+  def data_store_path
+    Rails.root.join('data', self.url_safe_name)
+  end
+
+  def visibility
+    self.public? ? "<span class='label label-success'>Public</span>".html_safe : "<span class='label label-danger'>Private</span>".html_safe
   end
 
   # method to parse master expression scores file for study and populate collection
@@ -91,7 +82,7 @@ class Study
 
   # will load source data from expected public directory location and populate collections
   def parse_source_data
-    data_path = self.data_load_path
+    data_path = self.data_public_path
     # turn off logging to make data load faster
     Rails.logger.level = 4
 
@@ -191,50 +182,9 @@ class Study
     end
   end
 
-  # method to generate a gct file of the entire expression matrix to use with Morpheus
-  def generate_master_gct_files
-    count = 0
-    start_time = Time.now
-    genes = self.expression_scores
-    # create files
-    gct_file = File.new(Rails.root.join(self.data_load_path, "#{self.url_safe_name}.gct"), 'w+')
-    centered_gct_file = File.new(Rails.root.join(self.data_load_path, "#{self.url_safe_name}_row_centered.gct"), 'w+')
-    # create headers for gct files
-    cells = self.single_cells.map(&:name).uniq.sort
-    headers = ['Name', 'Description', cells].flatten
-    header_line = "#1.2\n#{genes.size}\t#{cells.size}\n#{headers.join("\t")}\n"
-    # write headers to gct files
-    gct_file.write header_line
-    centered_gct_file.write header_line
-    # parse scores and write to file
-    genes.each do |gene|
-      gene_name = gene.gene
-      row = [gene_name, '']
-      centered_row = [gene_name, '']
-      # calculate mean for row-centered values
-      mean = gene.mean(cells)
-      cells.each do |cell|
-        score = gene.scores[cell].to_f
-        row << score
-        centered_row << (score - mean).round(3)
-      end
-      gct_file.write row.join("\t") + "\n"
-      centered_gct_file.write centered_row.join("\t") + "\n"
-      count += 1
-    end
-    # close files, print stats
-    gct_file.close
-    centered_gct_file.close
-    end_time = Time.now
-    time = (end_time - start_time).divmod 60.0
-    puts "Completed!"
-    puts "Lines written to both files: #{count}"
-    puts "Total Time: #{time.first} minutes, #{time.last} seconds"
-  end
-
   # parse precomputed marker gene files and create documents to render in Morpheus
   def make_precomputed_scores
-    data_path = self.data_load_path
+    data_path = self.data_public_path
     # turn off logging to make data load faster
     Rails.logger.level = 4
     @count = {}
@@ -275,18 +225,24 @@ class Study
     true
   end
 
-  def gct_path
-    "/single_cell_demo/data/#{self.url_safe_name}/#{self.url_safe_name}.gct"
-  end
-
-  def centered_gct_path
-    "/single_cell_demo/data/#{self.url_safe_name}/#{self.url_safe_name}_row_centered.gct"
-  end
-
   private
 
   # sets a url-safe version of study name (for linking)
   def set_url_safe_name
     self.url_safe_name = self.name.downcase.gsub(/[^a-zA-Z0-9]+/, '-').chomp('-')
+  end
+
+  # used for creating symbolic links to make data downloadable
+  def check_public?
+    if self.public?
+      if !Dir.exists?(self.data_public_path)
+        Dir.mkdir(self.data_public_path)
+        FileUtils.ln_s(Dir.glob("#{self.data_store_path}/*"), self.data_public_path)
+      end
+    elsif !self.public?
+      if Dir.exists?(self.data_public_path)
+        FileUtils.remove_entry_secure(self.data_public_path, force: true)
+      end
+    end
   end
 end

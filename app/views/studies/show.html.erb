@@ -1,0 +1,29 @@
+<h1><%= @study.name %> <small><%= @study.visibility %></small></h1>
+<%= @study.description.html_safe %>
+<hr />
+<h3>Study Files</h3>
+<div class="table-responsive">
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>Description</th>
+				<th>File Type</th>
+				<th>Download</th>
+			</tr>
+		</thead>
+		<tbody>
+			<% @study.study_files.each do |study_file| %>
+				<tr>
+					<td><%= study_file.name %></td>
+					<td><%= study_file.description %></td>
+					<td><%= study_file.file_type %></td>
+					<td><%= link_to "#{number_to_human_size(study_file.data_file_size, prefix: :si)} <span class='fa fa-download'></span>".html_safe, study_file.download_path, class: 'btn btn-sm btn-primary', download: study_file.data_file_name %></td>
+				</tr>
+			<% end %>
+		</tbody>
+	</table>
+</div>
+
+<%= link_to "<span class='fa fa-edit'></span> Edit".html_safe, edit_study_path(@study), class: 'btn btn-primary' %>
+<%= link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, studies_path, class: 'btn btn-warning' %>

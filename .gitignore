@@ -12,5 +12,6 @@
 !/log/.keep
 /tmp
 .idea
-/public/data/*
+/public/single_cell_demo/data/*
 /db/*.json
+/data/*

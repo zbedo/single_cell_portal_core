@@ -23,20 +23,33 @@ module ApplicationHelper
 	# construct nav menu breadcrumbs
 	def set_breadcrumbs
 		breadcrumbs = []
-		if @study
-			breadcrumbs << {title: @study.name, link: view_study_path(study_name: @study.url_safe_name)}
-		end
-		case action_name
-			when 'view_gene_expression'
-				breadcrumbs << {title: "Gene Expression <span class='badge'>#{params[:gene]}</span>", link: 'javascript:;'}
-			when 'view_gene_set_expression'
-				breadcrumbs << {title: "Gene Set Expression <span class='badge'>Multiple</span>", link: 'javascript:;'}
-			when 'view_gene_expression_heatmap'
-				breadcrumbs << {title: "Gene Expression <span class='badge'>Multiple</span>", link: 'javascript:;'}
-			when 'view_precomputed_gene_expression_heatmap'
-				breadcrumbs << {title: "Gene Expression <span class='badge'>#{params[:precomputed]}</span>", link: 'javascript:;'}
-			when 'view_all_gene_expression_heatmap'
-				breadcrumbs << {title: "Gene Expression <span class='badge'>All</span>", link: 'javascript:;'}
+		if controller_name == 'site'
+			if @study
+				breadcrumbs << {title: @study.name, link: view_study_path(study_name: @study.url_safe_name)}
+			end
+			case action_name
+				when 'view_gene_expression'
+					breadcrumbs << {title: "Gene Expression <span class='badge'>#{params[:gene]}</span>", link: 'javascript:;'}
+				when 'view_gene_set_expression'
+					breadcrumbs << {title: "Gene Set Expression <span class='badge'>Multiple</span>", link: 'javascript:;'}
+				when 'view_gene_expression_heatmap'
+					breadcrumbs << {title: "Gene Expression <span class='badge'>Multiple</span>", link: 'javascript:;'}
+				when 'view_precomputed_gene_expression_heatmap'
+					breadcrumbs << {title: "Gene Expression <span class='badge'>#{params[:precomputed]}</span>", link: 'javascript:;'}
+				when 'view_all_gene_expression_heatmap'
+					breadcrumbs << {title: "Gene Expression <span class='badge'>All</span>", link: 'javascript:;'}
+			end
+		elsif controller_name == 'studies'
+			case action_name
+				when 'index'
+					breadcrumbs << {title: "My Studies", link: 'javascript:;'}
+				when 'new'
+					breadcrumbs << {title: "New Study", link: 'javascript:;'}
+				when 'edit'
+					breadcrumbs << {title: "Editing '#{@study.name}'", link: 'javascript:;'}
+				when 'show'
+					breadcrumbs << {title: "Showing '#{@study.name}'", link: 'javascript:;'}
+			end
 		end
 		breadcrumbs
 	end

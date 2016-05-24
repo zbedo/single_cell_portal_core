@@ -1,7 +1,13 @@
 Rails.application.routes.draw do
 	scope 'single_cell_demo' do
+
+		# admin actions
+		mount Ckeditor::Engine => 'ckeditor'
     devise_for :users, :controllers => { :omniauth_callbacks => 'users/omniauth_callbacks' }
     resources :studies
+    get 'private/data/:study_name/:filename', to: 'studies#download_private_file', as: :download_private_file, constraints: {filename: /.*/}
+
+		# public site actions
     get 'study/:study_name', to: 'site#study', as: :view_study
     get 'render_cluster/:study_name', to: 'site#render_cluster', as: :render_cluster
     post 'study/:study_name/search', to: 'site#search_genes', as: :search_genes
