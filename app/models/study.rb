@@ -29,8 +29,10 @@ class Study
 
   validates_uniqueness_of :name
 
-  before_save :set_url_safe_name
-  after_save :check_public?
+  before_save     :set_url_safe_name
+  after_save      :check_public?
+  before_destroy  :remove_public_symlinks
+
 
   def data_public_path
     Rails.root.join('public', 'single_cell_demo', 'data', self.url_safe_name)
@@ -237,12 +239,19 @@ class Study
     if self.public?
       if !Dir.exists?(self.data_public_path)
         Dir.mkdir(self.data_public_path)
-        FileUtils.ln_s(Dir.glob("#{self.data_store_path}/*"), self.data_public_path)
+        FileUtils.ln_sf(Dir.glob("#{self.data_store_path}/*"), self.data_public_path)
       end
     elsif !self.public?
       if Dir.exists?(self.data_public_path)
         FileUtils.remove_entry_secure(self.data_public_path, force: true)
       end
+    end
+  end
+
+  # clean up any symlinks before deleting a study
+  def remove_public_symlinks
+    if self.public?
+      FileUtils.rm_rf(self.data_public_path)
     end
   end
 end

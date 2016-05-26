@@ -15,6 +15,7 @@
 //= require dataTables/jquery.dataTables
 //= require dataTables/bootstrap/3/jquery.dataTables.bootstrap
 //= require jquery-fileupload
+//= require jquery-fileupload/basic-plus
 //= require jquery_nested_form
 //= require spin.min
 //= require_tree .

@@ -1,25 +1,100 @@
-<div class="well well-sm">
-	<div class="form-group row">
-		<div class="col-sm-4">
-			<%= f.label :name %><br />
-			<%= f.text_field :name, class: 'form-control', readonly: true %>
+<%= form_for(study_file, url: update_study_file_study_path(@study._id), html: {class: 'upload-form', id: study_file._id, remote: true}) do |f| %>
+	<%= f.hidden_field :study_id, value: params[:id] %>
+	<div class="well well-sm">
+		<div class="form-group row">
+			<div class="col-sm-4">
+				<%= f.label :name %><br />
+				<%= f.text_field :name, class: 'form-control filename', readonly: true, placeholder: 'Filename is taken from uploaded file...' %>
+			</div>
+			<div class="col-sm-8">
+				<%= f.label :description %><br />
+				<%= f.text_field :description, class: 'form-control' %>
+			</div>
 		</div>
-		<div class="col-sm-7">
-			<%= f.label :description %><br />
-			<%= f.text_field :description, class: 'form-control' %>
+		<div class="form-group row">
+			<div class="col-sm-4">
+				<%= f.label :file_type %><br />
+				<%= f.select :file_type, options_for_select(StudyFile::STUDY_FILE_TYPES, f.object.file_type), {}, {class: 'form-control'} %>
+			</div>
+			<div class="col-sm-4">
+				<%= f.label :upload, 'Upload Data File' %><br />
+				<%= f.file_field :upload, class: 'btn btn-default fileinput-button' %>
+				<%= f.hidden_field :status, value: 'uploading' %>
+			</div>
+			<div class="col-sm-4">
+				<%= f.label :actions %>
+				<div class="row">
+					<div class="col-xs-6">
+						<%= f.submit 'Save', class: 'btn btn-success btn-block save-study-file' %>
+					</div>
+					<div class="col-xs-6">
+						<%= link_to 'Delete', delete_study_file_study_path(@study._id, study_file._id), method: :delete, class: 'btn btn-block btn-danger', data: {remote: true, confirm: 'Are you sure? This cannot be undone.'} %>
+					</div>
+				</div>
+			</div>
 		</div>
-		<div class="col-sm-1">
-			<%= f.link_to_remove "<span class='fa fa-times'></span>".html_safe, class: 'btn btn-danger pull-right delete-btn', data: {confirm: 'Are you sure?  This cannot be undone unless you reload the page without saving.'} %>
-		</div>
+		<% if study_file.upload_file_name.nil? %>
+			<div class="form-group" class="upload-progress">
+				<table class="table table-condensed">
+					<tbody class="files"></tbody>
+				</table>
+			</div>
+		<% else %>
+			<div class="form-group row">
+				<div class="col-sm-2">
+					<p><%= link_to "Download (#{number_to_human_size(study_file.upload_file_size, prefix: :si)}) <span class='fa fa-download'></span>".html_safe, study_file.download_path, class: 'btn btn-sm btn-primary' %></p>
+				</div>
+			</div>
+		<% end %>
 	</div>
-	<div class="form-group row">
-		<div class="col-sm-4">
-			<%= f.label :file_type %><br />
-			<%= f.select :file_type, options_for_select(StudyFile::STUDY_FILE_TYPES, f.object.file_type), {}, {class: 'form-control'} %>
-		</div>
-		<div class="col-sm-7">
-			<%= f.label :data, 'File' %><br />
-			<%= f.file_field :data, class: 'form-control' %>
-		</div>
-	</div>
-</div>
+<% end %>
+
+<%= javascript_tag do %>
+
+	$(document).ready(function() {
+		var resume_path = "<%= resume_upload_study_path %>";
+		var update_status_path = "<%= update_status_study_path %>";
+		var result_path = "<%= retrieve_upload_study_path(@study._id) %>";
+		var uploader = "#<%= study_file._id %>";
+		// disable save button if this is a new record
+		$(uploader).find('.save-study-file').attr('disabled', $(uploader).find('.filename').val() == '');
+		// attach fileupload plugin and callbacks
+		$(uploader).fileupload({
+			url: "<%= upload_study_path(@study._id) %>",
+			maxChunkSize: 10000000, // 10 MB
+			type: 'PATCH',
+			add: function (e, data) {
+				var that = this;
+				var fileName = data.files[0].name.replace(/ /g, '_');
+				// this is the chunked upload callback, will upload 10MB at a time until finished
+				$.getJSON(resume_path, { file: fileName }, function (result) {
+						var file = result.file;
+						data.uploadedBytes = file && file.size;
+						$.blueimp.fileupload.prototype.options.add.call(that, e, data);
+				});
+			},
+			// on each chunk completion, update status
+			chunkdone: function(e, data) {
+				var perc = parseInt(data.loaded / data.total * 100, 10);
+				$(data.context).find('h1').html(perc + "%");
+			},
+			// file upload is done, now clean up
+			done: function(e, data) {
+				var fileName = data.files[0].name.replace(/ /g, '_');
+				// update upload status
+				$.ajax({
+					url: update_status_path,
+					type: "PATCH",
+					data: { status: 'uploaded', file: fileName}
+				});
+				// replace form with updated values, as IDs may have incremented
+				$.get(result_path, {file: fileName, selector: uploader});
+				// load filename into field
+				$(uploader).find('.filename').val(fileName);
+				// enable save button for future updates
+				$(uploader).find('.save-study-file').attr('disabled', false);
+			}
+		});
+	});
+
+<% end %>

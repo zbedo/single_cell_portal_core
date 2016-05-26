@@ -4,7 +4,19 @@ Rails.application.routes.draw do
 		# admin actions
 		mount Ckeditor::Engine => 'ckeditor'
     devise_for :users, :controllers => { :omniauth_callbacks => 'users/omniauth_callbacks' }
-    resources :studies
+    resources :studies do
+			member do
+          get 'upload', to: 'studies#upload'
+          patch 'upload', to: 'studies#do_upload'
+          get 'resume_upload', to: 'studies#resume_upload'
+          patch 'update_status', to: 'studies#update_status'
+          get 'reset_upload', to: 'studies#reset_upload'
+				  get 'retrieve_upload', to: 'studies#retrieve_upload', as: :retrieve_upload
+          get 'study_files/new', to: 'studies#new_study_file', as: :new_study_file
+          match 'study_files', to: 'studies#update_study_file', via: [:post, :patch], as: :update_study_file
+				  delete 'study_files/:study_file_id', to: 'studies#delete_study_file', as: :delete_study_file
+			end
+		end
     get 'private/data/:study_name/:filename', to: 'studies#download_private_file', as: :download_private_file, constraints: {filename: /.*/}
 
 		# public site actions

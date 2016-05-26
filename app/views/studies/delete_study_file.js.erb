@@ -1,0 +1,5 @@
+$("#<%= params[:study_file_id] %>").remove();
+
+if (<%= !@message.nil? %>) {
+	$("#study-files-notice-target").html("<%= escape_javascript( render partial: 'studies/study_file_notices', locals: {message: @message}) %>");
+};
