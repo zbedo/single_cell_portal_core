@@ -89,10 +89,6 @@
 				});
 				// replace form with updated values, as IDs may have incremented
 				$.get(result_path, {file: fileName, selector: uploader});
-				// load filename into field
-				$(uploader).find('.filename').val(fileName);
-				// enable save button for future updates
-				$(uploader).find('.save-study-file').attr('disabled', false);
 			}
 		});
 	});
