@@ -240,32 +240,9 @@ Devise.setup do |config|
   # up on your models and hooks.
   # config.omniauth :github, 'APP_ID', 'APP_SECRET', scope: 'user,public_repo'
 
-  if Rails.env == "development"
-    config.omniauth :google_oauth2, "177991045523-77hjm3r7r8mvb7trclmgb6c6oc3pqn8d.apps.googleusercontent.com", "siPDnAS_fZor8Fz5ap61GoKN",
-                    {:client_options => {:ssl => {:ca_file => '/etc/pki/tls/certs/ca-bundle.crt'} },
-                     :provider_ignores_state => true,
-                     redirect_uri: 'https://docker-host.com/users/auth/google_oauth2/callback',
-                     setup: (lambda do |env|
-                       request = Rack::Request.new(env)
-                       env['omniauth.strategy'].options['token_params'] = {
-                           redirect_uri: 'https://docker-host.com/users/auth/google_oauth2/callback'
-                       }
-                     end)
-                    }
-  elsif Rails.env == "production" || ENV['PASSENGER_APP_ENV'] == 'production'
-    config.omniauth :google_oauth2, "177991045523-77hjm3r7r8mvb7trclmgb6c6oc3pqn8d.apps.googleusercontent.com", "siPDnAS_fZor8Fz5ap61GoKN",
-                    {:client_options => {:ssl => {:ca_file => '/etc/pki/tls/certs/ca-bundle.crt'} },
-                     :provider_ignores_state => true,
-                     redirect_uri: "https://#{ENV['PROD_HOSTNAME']}/users/auth/google_oauth2/callback",
-                     setup: (lambda do |env|
-                       request = Rack::Request.new(env)
-                       env['omniauth.strategy'].options['token_params'] = {
-                           redirect_uri: "https://#{ENV['PROD_HOSTNAME']}/users/auth/google_oauth2/callback"
-                       }
-                     end)
-                    }
 
-  end
+	config.omniauth :google_oauth2, "177991045523-77hjm3r7r8mvb7trclmgb6c6oc3pqn8d.apps.googleusercontent.com", "siPDnAS_fZor8Fz5ap61GoKN",
+                    {:client_options => {:ssl => {:ca_file => '/etc/pki/tls/certs/ca-bundle.crt'} }}
 
   # ==> Warden configuration
   # If you want to use other strategies, that are not supported by Devise, or

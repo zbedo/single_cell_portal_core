@@ -5,7 +5,7 @@ class StudiesController < ApplicationController
   # GET /studies
   # GET /studies.json
   def index
-    @studies = Study.where(user_id: current_user.id).to_a
+    @studies = Study.editable(current_user).to_a
   end
 
   # GET /studies/1
@@ -62,11 +62,16 @@ class StudiesController < ApplicationController
     end
   end
 
+  def parse_study_file
+
+  end
+
+  # upload study files to study
   def upload
     @study_files = @study.study_files
   end
 
-  # create a new study_file for requestes study
+  # create a new study_file for requested study
   def new_study_file
     @study_file = @study.study_files.build
   end
@@ -87,6 +92,7 @@ class StudiesController < ApplicationController
     end
   end
 
+  # method to perform chunked uploading of data
   def do_upload
     upload = get_upload
     filename = upload.original_filename
@@ -148,10 +154,12 @@ class StudiesController < ApplicationController
     head :ok
   end
 
+  # retrieve study file by filename
   def retrieve_upload
     @study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
   end
 
+  # method to download files if study is private
   def download_private_file
     @study = Study.where(url_safe_name: params[:study_name]).first
     filepath = Rails.root.join('data', params[:study_name], params[:filename])
@@ -169,15 +177,17 @@ class StudiesController < ApplicationController
     @study = Study.find(params[:id])
   end
 
-  # Never trust parameters from the scary internet, only allow the white list through.
+  # study params whitelist
   def study_params
-    params.require(:study).permit(:name, :description, :public, :user_id, study_files_attributes: [:id, :_destroy, :name, :path, :upload, :description, :file_type, :status])
+    params.require(:study).permit(:name, :description, :public, :user_id, study_files_attributes: [:id, :_destroy, :name, :path, :upload, :description, :file_type, :status], study_shares_attributes: [:_id, :_destroy, :email, :permission])
   end
 
+  # study file params whitelist
   def study_file_params
     params.require(:study_file).permit(:_id, :study_id, :name, :upload, :description, :file_type, :status)
   end
 
+  # return upload object from study params
   def get_upload
     study_file_params.to_h['upload']
   end

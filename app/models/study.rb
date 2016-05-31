@@ -8,6 +8,11 @@ class Study
   has_many :single_cells, dependent: :destroy
   has_many :expression_scores, dependent: :destroy
   has_many :precomputed_scores, dependent: :destroy
+  has_many :study_shares do
+    def can_edit
+      where(permission: 'Edit').map(&:email)
+    end
+  end
 
   # scoping clusters to allow easy access to top- and sub-level clusters
   has_many :clusters do
@@ -26,6 +31,7 @@ class Study
   field :public, type: Boolean, default: true
 
   accepts_nested_attributes_for :study_files, allow_destroy: true
+  accepts_nested_attributes_for :study_shares, allow_destroy: true
 
   validates_uniqueness_of :name
 
@@ -33,6 +39,25 @@ class Study
   after_save      :check_public?
   before_destroy  :remove_public_symlinks
 
+  # return all studies that are editable by a given user
+  def self.editable(user)
+    studies = self.where(user_id: user._id).to_a
+    shares = StudyShare.where(email: user.email, permission: 'Edit').map(&:study)
+    [studies + shares].flatten.uniq
+  end
+
+  # return all studies that are viewable by a given user
+  def self.viewable(user)
+    public = self.where(public: true).to_a
+    owned = self.where(user_id: user._id, public: false).to_a
+    shares = StudyShare.where(email: user.email).map(&:study)
+    [public + owned + shares].flatten.uniq
+  end
+
+  # list of emails for accounts that can edit this study
+  def admins
+    [self.user.email, self.study_shares.can_edit].flatten.uniq
+  end
 
   def data_public_path
     Rails.root.join('public', 'single_cell_demo', 'data', self.url_safe_name)
@@ -43,7 +68,7 @@ class Study
   end
 
   def visibility
-    self.public? ? "<span class='label label-success'>Public</span>".html_safe : "<span class='label label-danger'>Private</span>".html_safe
+    self.public? ? "<span class='sc-badge bg-success text-success'>Public</span>".html_safe : "<span class='sc-badge bg-danger text-danger'>Private</span>".html_safe
   end
 
   # method to parse master expression scores file for study and populate collection

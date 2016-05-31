@@ -29,7 +29,7 @@
 		<hr />
 		<h3 class="study-lead">Or you can sign in using Google:</h3>
 
-		<%= link_to "Sign in with <span class='fa fa-google-plus'></span>".html_safe, omniauth_authorize_path(resource_name, :google_oauth2), class: 'btn btn-lg btn-danger' %>
+		<%= link_to "Sign in with <span class='fa fa-google-plus'></span>".html_safe, user_omniauth_authorize_path(:google_oauth2), class: 'btn btn-lg btn-danger' %>
 
 		<%= render "devise/shared/links" %>
 	</div>

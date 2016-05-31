@@ -255,3 +255,12 @@ html, body {
 .delete-btn {
   position: relative;
 }
+
+.sc-badge {
+  display: inline-block;
+  border-radius: 10px;
+  font-size: 14px;
+  min-width: 10px;
+  padding: 3px 7px;
+  vertical-align: middle;
+}

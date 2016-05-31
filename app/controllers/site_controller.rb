@@ -10,7 +10,7 @@ class SiteController < ApplicationController
 
   # view study overviews and downloads
   def index
-    @studies = Study.order('name ASC')
+    @studies = Study.where(public: true).order('name ASC')
   end
 
   # load single study and view top-level clusters

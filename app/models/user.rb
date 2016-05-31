@@ -49,12 +49,13 @@ class User
     data = access_token.info
     provider = access_token.provider
     uid = access_token.uid
-
-    # Uncomment the section below if you want users to be created if they don't exist
-    user = User.create(email: data["email"],
-                       encrypted_password: Devise.friendly_token[0,20],
-                       uid: uid,
-                       provider: provider
+    # create bogus password, Devise will never use it to authenticate
+    password = Devise.friendly_token[0,20]
+    user = User.create!(email: data["email"],
+                        password: password,
+                        password_confirmation: password,
+                        uid: uid,
+                        provider: provider
     )
     user
   end
