@@ -1,0 +1,23 @@
+<%= form_for(:clusters, url: launch_parse_job_study_path(@study._id), html: {class: 'form', id: 'cluster-form', data: {remote: true}}) do |f| %>
+	<div class="form-group row">
+		<div class="col-md-3">
+			<p><label>Cluster assignments file:</label><br /><%= @parseable[:assignment].map(&:name).first %></p>
+		</div>
+		<div class="col-md-7">
+			<p><label>Cluster coordinates files to parse:</label></p>
+			<% @parseable[:points].each_with_index do |file, index| %>
+				<div class="row">
+					<div class="col-xs-8">
+						<%= text_field_tag "clusters_#{index}_cluster_file_name".to_sym, file.name, name: "clusters[#{index}][cluster_file_name]", readonly: true, class: 'form-control' %>
+					</div>
+					<div class="col-xs-4">
+						<%= select_tag "clusters_#{index}_cluster_file_type".to_sym,  options_for_select(['primary', 'sub']), name: "clusters[#{index}][cluster_file_type]", class: 'form-control' %>
+					</div>
+				</div>
+			<% end %>
+		</div>
+		<div class="col-md-2">
+			<%= f.submit "Parse Clusters", class: 'btn btn-success' %>
+		</div>
+	</div>
+<% end %>

@@ -6,6 +6,7 @@ class Cluster
   field :cluster_type, type: String
 
   belongs_to :study
+  belongs_to :study_file
   has_many :cluster_points
   has_many :single_cells
 

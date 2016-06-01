@@ -14,18 +14,18 @@
 		<div class="form-group row">
 			<div class="col-sm-4">
 				<%= f.label :file_type %><br />
-				<%= f.select :file_type, options_for_select(StudyFile::STUDY_FILE_TYPES, f.object.file_type), {}, {class: 'form-control'} %>
+				<%= f.select :file_type, options_for_select(StudyFile::STUDY_FILE_TYPES, f.object.file_type), {}, {class: 'form-control filetype'} %>
 			</div>
-			<div class="col-sm-4">
+			<div class="col-sm-5">
 				<%= f.label :upload, 'Upload Data File' %><br />
 				<%= f.file_field :upload, class: 'btn btn-default fileinput-button' %>
 				<%= f.hidden_field :status, value: 'uploading' %>
 			</div>
-			<div class="col-sm-4">
+			<div class="col-sm-3">
 				<%= f.label :actions %>
 				<div class="row">
 					<div class="col-xs-6">
-						<%= f.submit 'Save', class: 'btn btn-success btn-block save-study-file' %>
+						<%= f.submit 'Update', class: 'btn btn-success btn-block save-study-file' %>
 					</div>
 					<div class="col-xs-6">
 						<%= link_to 'Delete', delete_study_file_study_path(@study._id, study_file._id), method: :delete, class: 'btn btn-block btn-danger', data: {remote: true, confirm: 'Are you sure? This cannot be undone.'} %>
@@ -56,6 +56,7 @@
 		var update_status_path = "<%= update_status_study_path %>";
 		var result_path = "<%= retrieve_upload_study_path(@study._id) %>";
 		var uploader = "#<%= study_file._id %>";
+
 		// disable save button if this is a new record
 		$(uploader).find('.save-study-file').attr('disabled', $(uploader).find('.filename').val() == '');
 		// attach fileupload plugin and callbacks
@@ -66,6 +67,13 @@
 			add: function (e, data) {
 				var that = this;
 				var fileName = data.files[0].name.replace(/ /g, '_');
+				var ext = fileName.split('.').slice(-1)[0];
+				// validates non-human fastq, will remove uploader if user clicks cancel
+				if (ext == 'fq' || ext == 'fastq') {
+					if (!validateNonHumanFastq(uploader)) {
+						return false;
+					}
+				}
 				// this is the chunked upload callback, will upload 10MB at a time until finished
 				$.getJSON(resume_path, { file: fileName }, function (result) {
 						var file = result.file;
@@ -91,6 +99,15 @@
 				$.get(result_path, {file: fileName, selector: uploader});
 			}
 		});
+
+		// add confirm dialog when user selects fastq file
+		$(uploader).find('.filetype').change(function(e) {
+			if ( $(e.target).val() == 'Fastq' ) {
+				validateNonHumanFastq(uploader);
+			}
+		});
+
+		$('[data-toggle="tooltip"]').tooltip({container: 'body'});
 	});
 
 <% end %>

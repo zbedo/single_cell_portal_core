@@ -1,5 +1,5 @@
 class StudiesController < ApplicationController
-  before_action :set_study, only: [:show, :edit, :update, :destroy, :upload, :do_upload, :resume_upload, :update_status, :reset_upload, :new_study_file, :update_study_file, :delete_study_file, :retrieve_upload]
+  before_action :set_study, only: [:show, :edit, :update, :destroy, :upload, :do_upload, :resume_upload, :update_status, :reset_upload, :new_study_file, :update_study_file, :delete_study_file, :retrieve_upload, :parse_study_files, :launch_parse_job]
   before_filter :authenticate_user!
 
   # GET /studies
@@ -62,8 +62,28 @@ class StudiesController < ApplicationController
     end
   end
 
-  def parse_study_file
+  # load all study files available to be parsed
+  def parse_study_files
+    # load files needed for parsing
+    @parseable = {
+        :assignment => @study.study_files.select {|sf| sf.file_type == 'Cluster Assignments'},
+        :points => @study.study_files.select {|sf| sf.file_type == 'Cluster Coordinates' && !sf.parsed},
+        :expression => @study.study_files.select {|sf| sf.file_type == 'Expression Matrix' && !sf.parsed},
+        :markers => @study.study_files.select {|sf| sf.file_type == 'Marker Gene List' && sf.upload_content_type == 'text/plain' && !sf.parsed}
+    }
 
+    # quick assignments to know which forms to render
+    @can_parse = {
+        :clusters => !@parseable[:assignment].empty? && !@parseable[:points].empty?,
+        :expression => !@parseable[:expression].empty?,
+        :markers => !@parseable[:markers].empty?
+    }
+
+  end
+
+  # launches parse job via delayed_job and
+  def launch_parse_job
+    render nothing: true
   end
 
   # upload study files to study
@@ -179,12 +199,12 @@ class StudiesController < ApplicationController
 
   # study params whitelist
   def study_params
-    params.require(:study).permit(:name, :description, :public, :user_id, study_files_attributes: [:id, :_destroy, :name, :path, :upload, :description, :file_type, :status], study_shares_attributes: [:_id, :_destroy, :email, :permission])
+    params.require(:study).permit(:name, :description, :public, :user_id, :embargo, study_files_attributes: [:id, :_destroy, :name, :path, :upload, :description, :file_type, :status], study_shares_attributes: [:id, :_destroy, :email, :permission])
   end
 
   # study file params whitelist
   def study_file_params
-    params.require(:study_file).permit(:_id, :study_id, :name, :upload, :description, :file_type, :status)
+    params.require(:study_file).permit(:_id, :study_id, :name, :upload, :description, :file_type, :status, :downloadable)
   end
 
   # return upload object from study params

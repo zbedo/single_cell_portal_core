@@ -1,4 +1,4 @@
-<h1><%= @study.name %> <%= @study.visibility %></h1>
+<h1><%= @study.name %> <%= @study.visibility %> <%= link_to "<span class='fa fa-area-chart'></span> View Study Live".html_safe, view_study_path(@study.url_safe_name), class: 'btn btn-lg btn-info pull-right' %></h1>
 <%= @study.description.html_safe %>
 <div class="panel panel-info" id="study-files-panel">
 	<div class="panel-heading">
@@ -15,6 +15,8 @@
 						<th>Name</th>
 						<th>Description</th>
 						<th>File Type</th>
+						<th>Downloadable</th>
+						<th>Parsed</th>
 						<th>Download</th>
 					</tr>
 				</thead>
@@ -24,6 +26,8 @@
 							<td><%= study_file.name %></td>
 							<td><%= study_file.description %></td>
 							<td><%= study_file.file_type %></td>
+							<td><%= get_boolean_label(study_file.downloadable)  %></td>
+							<td><%= get_boolean_label(study_file.parsed) %></td>
 							<td><%= link_to "#{number_to_human_size(study_file.upload_file_size, prefix: :si)} <span class='fa fa-download'></span>".html_safe, study_file.download_path, class: 'btn btn-sm btn-primary', download: study_file.upload_file_name %></td>
 						</tr>
 					<% end %>
@@ -62,5 +66,5 @@
 		</div>
 	</div>
 </div>
-<%= link_to "<span class='fa fa-edit'></span> Edit".html_safe, edit_study_path(@study), class: 'btn btn-primary' %>
-<%= link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, studies_path, class: 'btn btn-warning' %>
+<p><%= link_to "<span class='fa fa-edit'></span> Edit Study".html_safe, edit_study_path(@study), class: 'btn btn-primary' %>
+<%= link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, studies_path, class: 'btn btn-warning' %></p>

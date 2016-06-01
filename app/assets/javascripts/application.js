@@ -17,6 +17,7 @@
 //= require jquery-fileupload
 //= require jquery-fileupload/basic-plus
 //= require jquery_nested_form
+//= require jquery-ui/datepicker
 //= require spin.min
 //= require_tree .
 
@@ -31,7 +32,7 @@ $(function() {
         toggleGlyph($(this).prev().find('span.toggle-glyph'));
     });
 
-    $('[data-toggle="tooltip"]').tooltip();
+    $('[data-toggle="tooltip"]').tooltip({container: 'body'});
     $('[data-toggle="popover"]').popover();
 });
 
@@ -200,4 +201,14 @@ function computeColorScale(clusterColor, clusters) {
         return chroma.scale([start.brighten(clusters / 2).desaturate( clusters / 2), clusterColor]).colors(clusters);
     }
 
+}
+
+// function to ask user to confirm non-human fastq data, will remove uploader if user clicks cancel
+function validateNonHumanFastq(uploader) {
+    if (confirm("You must attest that the fastq data you are uploading is not primary human data.  Click 'OK' if your fastq data conforms to this guideline, or 'Cancel' to abort.")) {
+        return true;
+    } else {
+        $(uploader).remove();
+        return false;
+    }
 }

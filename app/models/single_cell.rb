@@ -6,6 +6,7 @@ class SingleCell
   has_many :cluster_points
 
   belongs_to :study
+  belongs_to :study_file
   belongs_to :cluster
 
   validates_uniqueness_of :name, scope: [:study_id, :cluster_id]

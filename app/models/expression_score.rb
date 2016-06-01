@@ -2,6 +2,7 @@ class ExpressionScore
   include Mongoid::Document
 
   belongs_to :study
+  belongs_to :study_file
 
   field :gene, type: String
   field :searchable_gene, type: String

@@ -3,12 +3,13 @@ class Study
   include Mongoid::Timestamps
 
   belongs_to :user
-
   has_many :study_files, dependent: :destroy
+  has_many :clusters, dependent: :destroy
+  has_many :cluster_points, dependent: :destroy
   has_many :single_cells, dependent: :destroy
   has_many :expression_scores, dependent: :destroy
   has_many :precomputed_scores, dependent: :destroy
-  has_many :study_shares do
+  has_many :study_shares, dependent: :destroy do
     def can_edit
       where(permission: 'Edit').map(&:email)
     end
@@ -26,6 +27,7 @@ class Study
   end
 
   field :name, type: String
+  field :embargo, type: Date
   field :url_safe_name, type: String
   field :description, type: String
   field :public, type: Boolean, default: true
@@ -34,6 +36,16 @@ class Study
   accepts_nested_attributes_for :study_shares, allow_destroy: true
 
   validates_uniqueness_of :name
+
+  # populate specific errors for study shares since they share the same form
+  validate do |study|
+    study.study_shares.each do |study_share|
+      next if study_share.valid?
+      study_share.errors.full_messages.each do |msg|
+        errors.add(:base, "Share Error: #{msg}")
+      end
+    end
+  end
 
   before_save     :set_url_safe_name
   after_save      :check_public?
@@ -207,6 +219,99 @@ class Study
       puts "Cannot open data directory for Study: #{self.name}."
       false
     end
+  end
+
+  def make_cluster_points(assignment_file, cluster_file, cluster_type)
+    # turn off logging to make data load faster
+    Rails.logger.level = 4
+    @cell_count = 0
+    @cluster_count = 0
+    @cluster_point_count = 0
+    start_time = Time.now
+
+    # load cluster assignments
+    clusters_data = File.open(assignment_file.upload.path).readlines.map(&:chomp).delete_if {|line| line.blank? }
+    @all_clusters = {}
+    clusters_data.shift
+    clusters_data.each do |line|
+      vals = line.split("\t")
+      cluster_name = vals[1]
+      sub_cluster_name = vals[2]
+      cell_name = vals[0]
+      @all_clusters[cell_name] = {cluster: cluster_name, sub_cluster: sub_cluster_name}
+
+      # create cluster and single_cell objects now to associate later as some cells/clusters have no coordinate data
+      parent_cluster = Cluster.where(name: cluster_name, cluster_type: 'parent', study_id: self._id).first
+      sub_cluster = Cluster.where(name: sub_cluster_name, cluster_type: 'sub_cluster', study_id: self._id).first
+      if parent_cluster.blank?
+        parent_cluster = self.clusters.build(name: cluster_name, cluster_type: 'parent', study_file_id: assignment_file._id)
+        parent_cluster.save
+        @cluster_count += 1
+      end
+      if sub_cluster.blank?
+        sub_cluster = self.clusters.build(name: sub_cluster_name, parent_cluster: cluster_name, cluster_type: 'sub_cluster', study_file_id: assignment_file._id)
+        sub_cluster.save
+        @cluster_count += 1
+      end
+      parent_cell = SingleCell.where(name: cell_name, study_id: self._id, cluster_id: parent_cluster._id).first
+      sub_cell = SingleCell.where(name: cell_name, study_id: self._id, cluster_id: sub_cluster._id).first
+      if parent_cell.blank?
+        parent_cell = self.single_cells.build(name: cell_name, cluster_id: parent_cluster._id, study_file_id: assignment_file._id)
+        parent_cell.save
+        @cell_count += 1
+      end
+      if sub_cell.blank?
+        sub_cell = self.single_cells.build(name: cell_name, cluster_id: sub_cluster._id, study_file_id: assignment_file._id)
+        sub_cell.save
+        @cell_count += 1
+      end
+    end
+
+    # get all lines and proper indices
+    lines = File.open(cluster_file.upload.path).readlines.map(&:chomp).delete_if {|line| line.blank? }
+    headers = lines.shift.split("\t")
+    cell_name_index = headers.index('CELL_NAME')
+    x_index = headers.index('X')
+    y_index = headers.index('Y')
+    lines.each do |line|
+
+      # parse each line and get values
+      vals = line.split("\t")
+      name = vals[cell_name_index]
+      x = vals[x_index]
+      y = vals[y_index]
+
+      # load correct cluster & single_cell
+      if cluster_type == 'primary'
+        @cluster_name = @all_clusters[name][:cluster]
+        @cluster_type = 'parent'
+        @parent_cluster = nil
+      else
+        @cluster_name = @all_clusters[name][:sub_cluster]
+        @cluster_type = 'sub_cluster'
+        @parent_cluster = @all_clusters[name][:cluster]
+      end
+
+      cluster = Cluster.where(name: @cluster_name, cluster_type: @cluster_type).first
+      cell = SingleCell.where(name: name, study_id: self._id, cluster_id: cluster._id).first
+
+      unless cell.nil?
+        # finally, create cluster point with association to cluster & single_cell
+        cluster_point = cluster.cluster_points.build(x: x, y: y, single_cell_id: cell._id, study_file_id: cluster_file._id, study_id: self._id)
+        cluster_point.save
+        @cluster_point_count += 1
+      end
+    end
+
+    # clean up
+    end_time = Time.now
+    time = (end_time - start_time).divmod 60.0
+    puts "Completed!"
+    puts "Finished loading data for Study: #{self.name}:"
+    puts "Single Cells created: #{@cell_count}"
+    puts "Clusters created: #{@cluster_count}"
+    puts "Cluster Points created: #{@cluster_point_count}"
+    puts "Total Time: #{time.first} minutes, #{time.last} seconds"
   end
 
   # parse precomputed marker gene files and create documents to render in Morpheus

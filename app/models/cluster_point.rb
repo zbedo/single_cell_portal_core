@@ -3,6 +3,7 @@ class ClusterPoint
 
   belongs_to :single_cell
   belongs_to :cluster
+  belongs_to :study_file
 
   field :x, type: Float
   field :y, type: Float

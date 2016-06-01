@@ -2,6 +2,7 @@ class PrecomputedScore
 	include Mongoid::Document
 
 	belongs_to :study
+	belongs_to :study_file
 
 	field :name, type: String
 	field :clusters, type: Array

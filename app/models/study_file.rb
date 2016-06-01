@@ -4,10 +4,15 @@ class StudyFile
   include Mongoid::Paperclip
   include Rails.application.routes.url_helpers
 
-  STUDY_FILE_TYPES = ['Cluster Coordinates', 'Cluster Assignments', 'Expression Matrix', 'Marker Gene List', 'Raw Source', 'Documentation', 'Other']
+  STUDY_FILE_TYPES = ['Cluster Coordinates', 'Cluster Assignments', 'Expression Matrix', 'Marker Gene List', 'Fastq', 'Documentation', 'Other']
   UPLOAD_STATUSES = %w(new uploading uploaded)
 
   belongs_to :study, index: true
+  has_many :clusters, dependent: :destroy
+  has_many :single_cells, dependent: :destroy
+  has_many :cluster_points, dependent: :destroy
+  has_many :expression_scores, dependent: :destroy
+  has_many :precomputed_scores, dependent: :destroy
 
   field :name, type: String
   field :path, type: String
@@ -15,6 +20,8 @@ class StudyFile
   field :file_type, type: String
   field :url_safe_name, type: String
   field :status, type: String
+  field :parsed, type: Boolean, default: false
+  field :downloadable, type: Boolean, default: true
 
   before_create   :make_data_dir
   before_create   :set_file_name_and_url_safe_name
