@@ -224,7 +224,6 @@ class Study
     end_time = Time.now
     time = (end_time - start_time).divmod 60.0
     @message << "Completed!"
-    @message << "Finished loading data for Study: #{self.name}:"
     @message << "Single Cells created: #{@cell_count}"
     @message << "Clusters created: #{@cluster_count}"
     @message << "Cluster Points created: #{@cluster_point_count}"
