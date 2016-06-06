@@ -33,7 +33,7 @@
 						<tr>
 							<td class="col-md-5"><%= study_file.name %></td>
 							<td class="col-sm-6"><%= study_file.description %></td>
-							<td class="col-sm-1"><%= link_to "<span class='fa fa-download'></span> #{number_to_human_size(study_file.data_file_size, prefix: :si)}".html_safe, study_file.download_path, class: 'btn btn-primary btn-block', download: study_file.name %></td>
+							<td class="col-sm-1"><%= link_to "<span class='fa fa-download'></span> #{number_to_human_size(study_file.upload_file_size, prefix: :si)}".html_safe, study_file.download_path, class: 'btn btn-primary btn-block', download: study_file.name %></td>
 						</tr>
 					<% end %>
 					</tbody>

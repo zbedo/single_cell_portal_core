@@ -1,6 +1,6 @@
-<%= form_for(study_file, url: update_study_file_study_path(@study._id), html: {class: 'upload-form', id: study_file._id, remote: true}) do |f| %>
-	<%= f.hidden_field :study_id, value: params[:id] %>
-	<div class="well well-sm">
+<div class="well well-sm">
+	<%= form_for(study_file, url: update_study_file_study_path(@study._id), html: {class: 'upload-form', id: study_file._id, remote: true}) do |f| %>
+		<%= f.hidden_field :study_id, value: params[:id] %>
 		<div class="form-group row">
 			<div class="col-sm-4">
 				<%= f.label :name %><br />
@@ -39,17 +39,22 @@
 					<tbody class="files"></tbody>
 				</table>
 			</div>
-		<% else %>
-			<div class="form-group row">
-				<div class="col-sm-2">
-					<p><%= link_to "Download (#{number_to_human_size(study_file.upload_file_size, prefix: :si)}) <span class='fa fa-download'></span>".html_safe, study_file.download_path, class: 'btn btn-sm btn-primary' %></p>
-				</div>
-			</div>
 		<% end %>
-	</div>
-<% end %>
 
-<%= javascript_tag do %>
+	<% end %>
+
+	<% if study_file.file_type == 'Cluster Coordinates' && @study.can_parse_clusters %>
+		<%= render 'parse_cluster_form', study_file: study_file %>
+	<% elsif study_file.file_type == 'Cluster Coordinates' && !@study.can_parse_clusters %>
+		<div class="bs-callout bs-callout-danger">
+			<h4>Cannot parse file yet</h4>
+			<p><%= link_to "Download (#{number_to_human_size(study_file.upload_file_size, prefix: :si)}) <span class='fa fa-download'></span>".html_safe, study_file.download_path, class: 'btn btn-sm btn-primary' %> <%= link_to "<span class='fa fa-refresh'></span> Refresh Form".html_safe, "javascript:refreshUpload('#{study_file.upload_file_name}', '##{study_file._id}');", class: 'btn btn-sm btn-info' %></p>
+			<p class="help-block">In order to parse cluster coordinates, you must first upload a <strong>cluster assignments file</strong>.  Once you have done so, click 'refresh' to load the parsing form.</p>
+		</div>
+	<% end %>
+
+</div>
+<script>
 
 	$(document).ready(function() {
 		var resume_path = "<%= resume_upload_study_path %>";
@@ -108,6 +113,7 @@
 		});
 
 		$('[data-toggle="tooltip"]').tooltip({container: 'body'});
+
 	});
 
-<% end %>
+</script>

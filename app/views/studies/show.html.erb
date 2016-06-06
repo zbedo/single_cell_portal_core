@@ -1,5 +1,66 @@
 <h1><%= @study.name %> <%= @study.visibility %> <%= link_to "<span class='fa fa-area-chart'></span> View Study Live".html_safe, view_study_path(@study.url_safe_name), class: 'btn btn-lg btn-info pull-right' %></h1>
 <%= @study.description.html_safe %>
+<div class="panel panel-default" id="stats-panel">
+	<div class="panel-heading">
+		<div class="panel-title">
+			<h4><%= link_to "Statistics <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#stats', 'data-toggle' => 'collapse' %></h4>
+		</div>
+	</div>
+	<div class="panel-collapse collapse in" id="stats">
+		<div class="panel-body">
+			<div class="row">
+				<div class="col-md-6">
+					<h4>Clusters <span class="badge"><%= @study.clusters.count %></span></h4>
+					<div class="table-responsive">
+						<table class="table table-condensed" id="clusters">
+							<thead>
+								<tr>
+									<th>Name</th>
+									<th>Type</th>
+									<th>Parent</th>
+									<th>Size</th>
+								</tr>
+							</thead>
+							<tbody>
+								<% @study.clusters.each do |cluster| %>
+									<tr>
+										<td><%= cluster.name %></td>
+										<td><%= cluster.cluster_type %></td>
+										<td><%= cluster.parent_cluster %></td>
+										<td><%= cluster.cluster_points.count %></td>
+									</tr>
+								<% end %>
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<h4>Precomputed Data <span class="badge"><%= @study.precomputed_scores.count %></span></h4>
+					<div class="table-responsive">
+						<table class="table table-condensed" id="precomputed">
+							<thead>
+							<tr>
+								<th>Name</th>
+								<th>Clusters</th>
+								<th>Gene</th>
+							</tr>
+							</thead>
+							<tbody>
+							<% @study.precomputed_scores.each do |pc_score| %>
+								<tr>
+									<td><%= pc_score.name %></td>
+									<td><%= pc_score.clusters.count %></td>
+									<td><%= pc_score.gene_list.count %></td>
+								</tr>
+							<% end %>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
 <div class="panel panel-info" id="study-files-panel">
 	<div class="panel-heading">
 		<div class="panel-title">
@@ -15,7 +76,6 @@
 						<th>Name</th>
 						<th>Description</th>
 						<th>File Type</th>
-						<th>Downloadable</th>
 						<th>Parsed</th>
 						<th>Download</th>
 					</tr>
@@ -26,7 +86,6 @@
 							<td><%= study_file.name %></td>
 							<td><%= study_file.description %></td>
 							<td><%= study_file.file_type %></td>
-							<td><%= get_boolean_label(study_file.downloadable)  %></td>
 							<td><%= get_boolean_label(study_file.parsed) %></td>
 							<td><%= link_to "#{number_to_human_size(study_file.upload_file_size, prefix: :si)} <span class='fa fa-download'></span>".html_safe, study_file.download_path, class: 'btn btn-sm btn-primary', download: study_file.upload_file_name %></td>
 						</tr>
@@ -67,4 +126,24 @@
 	</div>
 </div>
 <p><%= link_to "<span class='fa fa-edit'></span> Edit Study".html_safe, edit_study_path(@study), class: 'btn btn-primary' %>
-<%= link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, studies_path, class: 'btn btn-warning' %></p>
+	<%= link_to "<span class='fa fa-upload'></span> Upload/Edit Data".html_safe, upload_study_path(@study), class: 'btn btn-success' %>
+	<%= link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, studies_path, class: 'btn btn-warning' %></p>
+
+<script type="text/javascript">
+	//<![CDATA[
+
+		$('#clusters').dataTable({
+			"pagingType": "simple",
+			'order': [[1, 'asc'],[3, 'desc']],
+			'searching': false
+		});
+
+		$('#precomputed').dataTable({
+			"pagingType": "simple",
+			'order': [[0, 'asc']],
+			'searching': false
+		});
+
+	//]]>
+
+</script>

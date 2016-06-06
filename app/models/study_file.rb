@@ -21,7 +21,6 @@ class StudyFile
   field :url_safe_name, type: String
   field :status, type: String
   field :parsed, type: Boolean, default: false
-  field :downloadable, type: Boolean, default: true
 
   before_create   :make_data_dir
   before_create   :set_file_name_and_url_safe_name

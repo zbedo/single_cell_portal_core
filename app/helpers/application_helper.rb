@@ -40,9 +40,8 @@ module ApplicationHelper
 					breadcrumbs << {title: "Gene Expression <span class='badge'>All</span>", link: 'javascript:;'}
 			end
 		elsif controller_name == 'studies'
+			breadcrumbs << {title: "My Studies", link: studies_path}
 			case action_name
-				when 'index'
-					breadcrumbs << {title: "My Studies", link: 'javascript:;'}
 				when 'new'
 					breadcrumbs << {title: "New Study", link: 'javascript:;'}
 				when 'edit'

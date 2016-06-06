@@ -13,6 +13,7 @@
  *= require dataTables/bootstrap/3/jquery.dataTables.bootstrap
  *= require jquery.fileupload
  *= require jquery.fileupload-ui
+ *= require jquery-ui/core
  *= require jquery-ui/datepicker
  *= require_self
  */
@@ -264,4 +265,8 @@ html, body {
   min-width: 10px;
   padding: 3px 7px;
   vertical-align: middle;
+}
+
+.dark {
+  border-top: 1px dashed #888;
 }

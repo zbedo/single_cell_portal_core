@@ -1,23 +1,24 @@
-<%= form_for(:clusters, url: launch_parse_job_study_path(@study._id), html: {class: 'form', id: 'cluster-form', data: {remote: true}}) do |f| %>
-	<div class="form-group row">
-		<div class="col-md-3">
-			<p><label>Cluster assignments file:</label><br /><%= @parseable[:assignment].map(&:name).first %></p>
+<div class="bs-callout bs-callout-default">
+	<h4>Parse uploaded file <span class="label label-info">Clusters</span></h4>
+	<%= form_for(:clusters, url: launch_parse_job_study_path(@study._id), html: {class: 'form', remote: true}) do |f| %>
+		<div class="form-group row">
+			<div class="col-md-4">
+				<%= f.label :assignment_file, 'Cluster assignment file' %><br />
+				<p><%= @study.cluster_assignment_file.name %></p>
+			</div>
+			<div class="col-md-4">
+				<%= f.label :cluster_file, 'Cluster coordinates file' %><br />
+				<p><%= study_file.name %> <%= link_to "Download (#{number_to_human_size(study_file.upload_file_size, prefix: :si)}) <span class='fa fa-download'></span>".html_safe, study_file.download_path, class: 'btn btn-sm btn-primary pull-right' %></p>
+				<%= f.hidden_field :cluster_file, value: study_file.name, class: 'form-control', readonly: true %>
+			</div>
+			<div class="col-md-2">
+				<%= f.label :cluster_type, 'Cluster type' %><br />
+				<%= f.select :cluster_type, options_for_select(['primary', 'sub']), {}, class: 'form-control' %>
+			</div>
+			<div class="col-md-2">
+				<%= f.label :parse, 'Actions' %><br />
+				<%= f.submit 'Parse', class: 'btn btn-info' %>
+			</div>
 		</div>
-		<div class="col-md-7">
-			<p><label>Cluster coordinates files to parse:</label></p>
-			<% @parseable[:points].each_with_index do |file, index| %>
-				<div class="row">
-					<div class="col-xs-8">
-						<%= text_field_tag "clusters_#{index}_cluster_file_name".to_sym, file.name, name: "clusters[#{index}][cluster_file_name]", readonly: true, class: 'form-control' %>
-					</div>
-					<div class="col-xs-4">
-						<%= select_tag "clusters_#{index}_cluster_file_type".to_sym,  options_for_select(['primary', 'sub']), name: "clusters[#{index}][cluster_file_type]", class: 'form-control' %>
-					</div>
-				</div>
-			<% end %>
-		</div>
-		<div class="col-md-2">
-			<%= f.submit "Parse Clusters", class: 'btn btn-success' %>
-		</div>
-	</div>
-<% end %>
+	<% end %>
+</div>

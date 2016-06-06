@@ -62,28 +62,22 @@ class StudiesController < ApplicationController
     end
   end
 
-  # load all study files available to be parsed
-  def parse_study_files
-    # load files needed for parsing
-    @parseable = {
-        :assignment => @study.study_files.select {|sf| sf.file_type == 'Cluster Assignments'},
-        :points => @study.study_files.select {|sf| sf.file_type == 'Cluster Coordinates' && !sf.parsed},
-        :expression => @study.study_files.select {|sf| sf.file_type == 'Expression Matrix' && !sf.parsed},
-        :markers => @study.study_files.select {|sf| sf.file_type == 'Marker Gene List' && sf.upload_content_type == 'text/plain' && !sf.parsed}
-    }
-
-    # quick assignments to know which forms to render
-    @can_parse = {
-        :clusters => !@parseable[:assignment].empty? && !@parseable[:points].empty?,
-        :expression => !@parseable[:expression].empty?,
-        :markers => !@parseable[:markers].empty?
-    }
-
-  end
-
-  # launches parse job via delayed_job and
+  # launches parse job via delayed_job
   def launch_parse_job
-    render nothing: true
+    if params.include?(:clusters)
+      assignment_file = @study.cluster_assignment_file
+      cluster_file = @study.study_files.where(name: clusters_params[:cluster_file]).first
+      Delayed::Job.enqueue ClusterFileParseJob.new(@study, assignment_file, cluster_file, clusters_params[:cluster_type], current_user)
+      @study.delay.make_cluster_points
+      logger.info "Launching parse job on study id: '#{@study.name}', parse_type: 'clusters', file: '#{cluster_file.name}', cluster_type: '#{clusters_params[:cluster_type]}'"
+      @message = "Cluster file: #{clusters_params[:cluster_file]} is now being parsed.  You will receive an email when this has completed with the details."
+    end
+    if params.include?(:expression)
+
+    end
+    if params.include?(:precomputed)
+
+    end
   end
 
   # upload study files to study
@@ -205,6 +199,10 @@ class StudiesController < ApplicationController
   # study file params whitelist
   def study_file_params
     params.require(:study_file).permit(:_id, :study_id, :name, :upload, :description, :file_type, :status, :downloadable)
+  end
+
+  def clusters_params
+    params.require(:clusters).permit(:assignment_file, :cluster_file, :cluster_type)
   end
 
   # return upload object from study params

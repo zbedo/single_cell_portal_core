@@ -11,6 +11,8 @@
 // about supported directives.
 //
 //= require jquery_ujs
+//= require jquery-ui/effect
+//= require jquery-ui/effect-highlight
 //= require ckeditor/init
 //= require dataTables/jquery.dataTables
 //= require dataTables/bootstrap/3/jquery.dataTables.bootstrap

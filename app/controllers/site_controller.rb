@@ -10,7 +10,11 @@ class SiteController < ApplicationController
 
   # view study overviews and downloads
   def index
-    @studies = Study.where(public: true).order('name ASC')
+    if user_signed_in?
+      @studies = Study.viewable(current_user).sort_by(&:name)
+    else
+      @studies = Study.where(public: true).order('name ASC')
+    end
   end
 
   # load single study and view top-level clusters

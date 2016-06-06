@@ -83,20 +83,30 @@ class Study
     self.public? ? "<span class='sc-badge bg-success text-success'>Public</span>".html_safe : "<span class='sc-badge bg-danger text-danger'>Private</span>".html_safe
   end
 
+  def can_parse_clusters
+    self.study_files.size > 1 && self.study_files.where(file_type:'Cluster Assignments').exists? && self.study_files.where(file_type:'Cluster Coordinates').exists?
+  end
+
+  def cluster_assignment_file
+    self.study_files.where(file_type:'Cluster Assignments').to_a.first
+  end
+
   # method to parse master expression scores file for study and populate collection
-  def make_expression_scores
+  def make_expression_scores(expression_file, user)
     Rails.logger.level = 4
     @count = 0
+    @message = ["Parsing expression file: #{expression_file.name}", "..."]
     start_time = Time.now
     # open data file and grab header row with name of all cells, deleting 'GENE' at start
-    expression_data = File.open(File.join(self.data_load_path, 'DATA_MATRIX_LOG_TPM.txt'))
-    cells = expression_data.readline.chomp().split("\t")
+    expression_data = File.open(expression_file.upload.path)
+    cells = expression_data.readline.chomp.split("\t")
     cells.shift
     # store study id for later to save memory
     study_id = self._id
+    @records = []
     while !expression_data.eof?
       # grab single row of scores, parse out gene name at beginning
-      row = expression_data.readline.chomp().split("\t")
+      row = expression_data.readline.chomp.split("\t")
       gene_name = row.shift
       # convert all remaining strings to floats, then store only significant values (!= 0)
       scores = row.map(&:to_f)
@@ -107,123 +117,28 @@ class Study
         end
       end
       # create expression score object
-      ExpressionScore.create({gene: gene_name, searchable_gene: gene_name.downcase, scores: significant_scores, study_id: study_id})
+      @records << {gene: gene_name, searchable_gene: gene_name.downcase, scores: significant_scores, study_id: study_id}
       @count += 1
+      if @count % 1000 == 0
+        self.create(@records)
+        @records = []
+      end
     end
     # clean up, print stats
     expression_data.close
     end_time = Time.now
     time = (end_time - start_time).divmod 60.0
-    puts "Completed!"
-    puts "ExpressionScores created: #{@count}"
-    puts "Total Time: #{time.first} minutes, #{time.last} seconds"
+    @message << "Completed!"
+    @message << "ExpressionScores created: #{@count}"
+    @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
+    SingleCellMailer.notify_user_parse_complete(user.email, "Expression file: '#{expression_file.name}' has completed parsing", @message).deliver_now
   end
 
-  # will load source data from expected public directory location and populate collections
-  def parse_source_data
-    data_path = self.data_public_path
+  def make_cluster_points(assignment_file, cluster_file, cluster_type, user)
     # turn off logging to make data load faster
     Rails.logger.level = 4
-
-    if Dir.exists?(data_path)
-      Dir.chdir(data_path)
-      @cell_count = 0
-      @cluster_count = 0
-      @cluster_point_count = 0
-
-      # load cluster assignments
-      clusters_data = File.open('CLUSTER_AND_SUBCLUSTER_INDEX.txt').readlines.map(&:chomp).delete_if {|line| line.blank? }
-      @all_clusters = {}
-      clusters_data.shift
-      clusters_data.each do |line|
-        vals = line.split("\t")
-        cluster_name = vals[1]
-        sub_cluster_name = vals[2]
-        cell_name = vals[0]
-        @all_clusters[cell_name] = {cluster: cluster_name, sub_cluster: sub_cluster_name}
-
-        # create cluster and single_cell objects now to associate later as some cells/clusters have no coordinate data
-        parent_cluster = Cluster.where(name: cluster_name, cluster_type: 'parent').first
-        sub_cluster = Cluster.where(name: sub_cluster_name, cluster_type: 'sub_cluster').first
-        if parent_cluster.blank?
-          parent_cluster = self.clusters.build(name: cluster_name, cluster_type: 'parent')
-          parent_cluster.save
-          @cluster_count += 1
-        end
-        if sub_cluster.blank?
-          sub_cluster = self.clusters.build(name: sub_cluster_name, parent_cluster: cluster_name, cluster_type: 'sub_cluster')
-          sub_cluster.save
-          @cluster_count += 1
-        end
-        parent_cell = SingleCell.where(name: cell_name, study_id: self._id, cluster_id: parent_cluster._id).first
-        sub_cell = SingleCell.where(name: cell_name, study_id: self._id, cluster_id: sub_cluster._id).first
-        if parent_cell.blank?
-          parent_cell = self.single_cells.build(name: cell_name, cluster_id: parent_cluster._id)
-          parent_cell.save
-          @cell_count += 1
-        end
-        if sub_cell.blank?
-          sub_cell = self.single_cells.build(name: cell_name, cluster_id: sub_cluster._id)
-          sub_cell.save
-          @cell_count += 1
-        end
-      end
-
-      # find all coordinates data
-      coordinates_files = Dir.glob("Coordinates_*.txt")
-      coordinates_files.each do |file|
-
-        # get all lines and proper indices
-        lines = File.open(file).readlines.map(&:chomp).delete_if {|line| line.blank? }
-        headers = lines.shift.split("\t")
-        cell_name_index = headers.index('CELL_NAME')
-        x_index = headers.index('X')
-        y_index = headers.index('Y')
-        lines.each do |line|
-
-          # parse each line and get values
-          vals = line.split("\t")
-          name = vals[cell_name_index]
-          x = vals[x_index]
-          y = vals[y_index]
-
-          # load correct cluster & single_cell
-          if file == 'Coordinates_Major_cell_types.txt'
-            @cluster_name = @all_clusters[name][:cluster]
-            @cluster_type = 'parent'
-            @parent_cluster = nil
-          else
-            @cluster_name = @all_clusters[name][:sub_cluster]
-            @cluster_type = 'sub_cluster'
-            @parent_cluster = @all_clusters[name][:cluster]
-          end
-
-          cluster = Cluster.where(name: @cluster_name, cluster_type: @cluster_type).first
-          cell = SingleCell.where(name: name, study_id: self._id, cluster_id: cluster._id).first
-
-          unless cell.nil?
-            # finally, create cluster point with association to cluster & single_cell
-            cluster_point = cluster.cluster_points.build(x: x, y: y, single_cell_id: cell._id)
-            cluster_point.save
-            @cluster_point_count += 1
-          end
-        end
-      end
-      # log messages
-      puts "Finished loading data for Study: #{self.name}:"
-      puts "Single Cells created: #{@cell_count}"
-      puts "Clusters created: #{@cluster_count}"
-      puts "Cluster Points created: #{@cluster_point_count}"
-      true
-    else
-      puts "Cannot open data directory for Study: #{self.name}."
-      false
-    end
-  end
-
-  def make_cluster_points(assignment_file, cluster_file, cluster_type)
-    # turn off logging to make data load faster
-    Rails.logger.level = 4
+    # set up variables
+    @message = ["Parsing cluster file: #{cluster_file.name}", "Using assignment file: #{assignment_file.name}", "Cluster type: #{cluster_type}", "..."]
     @cell_count = 0
     @cluster_count = 0
     @cluster_point_count = 0
@@ -292,8 +207,8 @@ class Study
         @parent_cluster = @all_clusters[name][:cluster]
       end
 
-      cluster = Cluster.where(name: @cluster_name, cluster_type: @cluster_type).first
-      cell = SingleCell.where(name: name, study_id: self._id, cluster_id: cluster._id).first
+      cluster = Cluster.where(name: @cluster_name, cluster_type: @cluster_type, study_id: self._id, study_file_id: assignment_file._id).first
+      cell = SingleCell.where(name: name, study_id: self._id, cluster_id: cluster._id, study_file_id: assignment_file._id).first
 
       unless cell.nil?
         # finally, create cluster point with association to cluster & single_cell
@@ -302,59 +217,53 @@ class Study
         @cluster_point_count += 1
       end
     end
+    # mark cluster file as parsed
+    cluster_file.update(parsed: true)
 
     # clean up
     end_time = Time.now
     time = (end_time - start_time).divmod 60.0
-    puts "Completed!"
-    puts "Finished loading data for Study: #{self.name}:"
-    puts "Single Cells created: #{@cell_count}"
-    puts "Clusters created: #{@cluster_count}"
-    puts "Cluster Points created: #{@cluster_point_count}"
-    puts "Total Time: #{time.first} minutes, #{time.last} seconds"
+    @message << "Completed!"
+    @message << "Finished loading data for Study: #{self.name}:"
+    @message << "Single Cells created: #{@cell_count}"
+    @message << "Clusters created: #{@cluster_count}"
+    @message << "Cluster Points created: #{@cluster_point_count}"
+    @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
+    SingleCellMailer.notify_user_parse_complete(user.email, "Cluster file: '#{cluster_file.name}' has completed parsing", @message).deliver_now
   end
 
   # parse precomputed marker gene files and create documents to render in Morpheus
-  def make_precomputed_scores
-    data_path = self.data_public_path
+  def make_precomputed_scores(marker_file, list_name, user)
     # turn off logging to make data load faster
     Rails.logger.level = 4
-    @count = {}
+    @count = 0
+    @message = ["Parsing marker list file: #{marker_file.name}", "..."]
     start_time = Time.now
-    if Dir.exists?(data_path)
-      Dir.chdir(data_path)
-      marker_files = Dir.glob("*_marker_genes.txt")
-      marker_files.each do |file|
-        precomputed_score = self.precomputed_scores.build(name: file.gsub(/_/, ' ').chomp('.txt'))
-        @count[file] = 0
-        marker_data = File.open(file).readlines.map(&:chomp).delete_if {|line| line.blank? }
-        clusters = marker_data.shift().split("\t")
-        clusters.shift # remove 'Gene Name' at start
-        precomputed_score.clusters = clusters
-        rows = []
-        marker_data.each do |line|
-          vals = line.split("\t")
-          gene = vals.shift
-          row = {"#{gene}" => {}}
-          clusters.each_with_index do |cluster, index|
-            row[gene][cluster] = vals[index].to_f
-          end
-          rows << row
-          @count[file] += 1
-        end
-        precomputed_score.gene_scores = rows
-        precomputed_score.save
+    precomputed_score = self.precomputed_scores.build(name: list_name)
+    marker_scores = File.open(marker_file.upload.path).readlines.map(&:strip).delete_if {|line| line.blank? }
+    clusters = marker_scores.shift.split("\t")
+    clusters.shift # remove 'Gene Name' at start
+    precomputed_score.clusters = clusters
+    rows = []
+    marker_scores.each do |line|
+      vals = line.split("\t")
+      gene = vals.shift
+      row = {"#{gene}" => {}}
+      clusters.each_with_index do |cluster, index|
+        row[gene][cluster] = vals[index].to_f
       end
+      rows << row
+      @count += 1
     end
+    precomputed_score.gene_scores = rows
+    precomputed_score.save
+
     end_time = Time.now
     time = (end_time - start_time).divmod 60.0
-    puts "Completed!"
-    puts "Total objects created"
-    @count.each do |file, count|
-      puts "#{file}: #{count}"
-    end
-    puts "Total Time: #{time.first} minutes, #{time.last} seconds"
-    true
+    @message << "Completed!"
+    @message << "Total scores created: #{@count}"
+    @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
+    SingleCellMailer.notify_user_parse_complete(user.email, "Marker gene list file: '#{marker_file.name}' has completed parsing", @message).deliver_now
   end
 
   private
