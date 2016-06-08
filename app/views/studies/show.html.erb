@@ -87,7 +87,7 @@
 							<td><%= study_file.description %></td>
 							<td><%= study_file.file_type %></td>
 							<td><%= get_boolean_label(study_file.parsed) %></td>
-							<td><%= link_to "#{number_to_human_size(study_file.upload_file_size, prefix: :si)} <span class='fa fa-download'></span>".html_safe, study_file.download_path, class: 'btn btn-sm btn-primary', download: study_file.upload_file_name %></td>
+							<td><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></td>
 						</tr>
 					<% end %>
 				</tbody>
@@ -125,12 +125,12 @@
 		</div>
 	</div>
 </div>
+<%= render partial: '/layouts/download_helper' %>
 <p><%= link_to "<span class='fa fa-edit'></span> Edit Study".html_safe, edit_study_path(@study), class: 'btn btn-primary' %>
 	<%= link_to "<span class='fa fa-upload'></span> Upload/Edit Data".html_safe, upload_study_path(@study), class: 'btn btn-success' %>
 	<%= link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, studies_path, class: 'btn btn-warning' %></p>
 
 <script type="text/javascript">
-	//<![CDATA[
 
 		$('#clusters').dataTable({
 			"pagingType": "simple",
@@ -143,7 +143,5 @@
 			'order': [[0, 'asc']],
 			'searching': false
 		});
-
-	//]]>
 
 </script>

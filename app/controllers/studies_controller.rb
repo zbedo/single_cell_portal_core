@@ -67,22 +67,33 @@ class StudiesController < ApplicationController
     if params.include?(:clusters)
       assignment_file = @study.cluster_assignment_file
       cluster_file = @study.study_files.where(name: clusters_params[:cluster_file]).first
+      # queue delayed job to parse clusters using ClusterFileParseJob class for error handling & emails
       Delayed::Job.enqueue ClusterFileParseJob.new(@study, assignment_file, cluster_file, clusters_params[:cluster_type], current_user)
-      @study.delay.make_cluster_points
       logger.info "Launching parse job on study id: '#{@study.name}', parse_type: 'clusters', file: '#{cluster_file.name}', cluster_type: '#{clusters_params[:cluster_type]}'"
       @message = "Cluster file: #{clusters_params[:cluster_file]} is now being parsed.  You will receive an email when this has completed with the details."
+      @target = "##{cluster_file._id}"
     end
     if params.include?(:expression)
-
+      expression_file = @study.study_files.where(name: expression_params[:expression_file]).first
+      # queue delayed job
+      Delayed::Job.enqueue MarkerFileParseJob.new(@study, expression_file, current_user)
+      logger.info "Launching parse job on study id: '#{@study.name}', parse_type: 'expression', file: '#{expression_file.name}"
+      @message = "Expression matrix file: #{expression_params[:expression_file]} is now being parsed.  You will receive an email when this has completed with the details."
+      @target = "##{expression_file._id}"
     end
     if params.include?(:precomputed)
-
+      precomputed_file = @study.study_files.where(name: precomputed_params[:precomputed_file]).first
+      # queue delayed job
+      Delayed::Job.enqueue MarkerFileParseJob.new(@study, precomputed_file, precomputed_params[:precomputed_name], current_user)
+      logger.info "Launching parse job on study id: '#{@study.name}', parse_type: 'marker_genes', file: '#{precomputed_file.name}', list_name: '#{precomputed_params[:precomputed_name]}'"
+      @message = "Marker gene list file: #{precomputed_params[:precomputed_file]} is now being parsed.  You will receive an email when this has completed with the details."
+      @target = "##{precomputed_file._id}"
     end
   end
 
   # upload study files to study
   def upload
-    @study_files = @study.study_files
+    @study_files = @study.study_files.sort_by(&:created_at)
   end
 
   # create a new study_file for requested study
@@ -115,9 +126,8 @@ class StudiesController < ApplicationController
     # do a new upload from scratch
     if study_file.nil?
       study_file = @study.study_files.build
-      study_file.update_attributes(study_file_params)
-      render json: study_file.to_jq_upload and return
-
+      study_file.update(study_file_params)
+      render json: { file: { name: study_file.errors,size: nil } } and return
       # If the already uploaded file has the same filename, try to resume
     else
       current_size = study_file.upload_file_size
@@ -173,16 +183,12 @@ class StudiesController < ApplicationController
     @study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
   end
 
-  # method to download files if study is private
+  # method to download files if study is private, will create temporary symlink and remove after timeout
   def download_private_file
-    @study = Study.where(url_safe_name: params[:study_name]).first
-    filepath = Rails.root.join('data', params[:study_name], params[:filename])
-    if File.exist?(filepath) && @study.user_id == current_user._id
-      send_file filepath,
-                filename: params[:filename],
-                disposition: 'attachment'
-
-    end
+    @study = Study.find_by(url_safe_name: params[:study_name])
+    @study_file = @study.study_files.select {|sf| sf.upload_file_name == params[:filename]}.first
+    @templink = TempFileDownload.create!({study_file_id: @study_file._id})
+    @valid_until = @templink.created_at + TempFileDownloadCleanup::DEFAULT_THRESHOLD.minutes
   end
 
   private
@@ -203,6 +209,14 @@ class StudiesController < ApplicationController
 
   def clusters_params
     params.require(:clusters).permit(:assignment_file, :cluster_file, :cluster_type)
+  end
+
+  def expression_params
+    params.require(:expression).permit(:expression_file)
+  end
+
+  def precomputed_params
+    params.require(:precomputed).permit(:precomputed_file, :precomputed_name)
   end
 
   # return upload object from study params

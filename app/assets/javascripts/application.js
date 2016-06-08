@@ -207,10 +207,10 @@ function computeColorScale(clusterColor, clusters) {
 
 // function to ask user to confirm non-human fastq data, will remove uploader if user clicks cancel
 function validateNonHumanFastq(uploader) {
-    if (confirm("You must attest that the fastq data you are uploading is not primary human data.  Click 'OK' if your fastq data conforms to this guideline, or 'Cancel' to abort.")) {
+    if (confirm("You must attest that the fastq data you are uploading is not primary human data.  Click 'OK' if your fastq data conforms to this guideline, or 'Cancel' to abort and remove this entry from the page.")) {
         return true;
     } else {
-        $(uploader).remove();
+        $(uploader).parent().remove();
         return false;
     }
 }

@@ -37,7 +37,7 @@ case $OPTION in
 		PROJECT_DIR="$OPTARG"
 		;;
 	m)
-  	MYSQL_LOCALHOST="$OPTARG"
+  	MONGO_LOCALHOST="$OPTARG"
   	;;
 	s)
 		SECRET_KEY="$OPTARG"

@@ -5,6 +5,7 @@ class StudyFile
   include Rails.application.routes.url_helpers
 
   STUDY_FILE_TYPES = ['Cluster Coordinates', 'Cluster Assignments', 'Expression Matrix', 'Marker Gene List', 'Fastq', 'Documentation', 'Other']
+  PARSEABLE_TYPES = ['Cluster Coordinates', 'Expression Matrix', 'Marker Gene List']
   UPLOAD_STATUSES = %w(new uploading uploaded)
 
   belongs_to :study, index: true
@@ -13,6 +14,7 @@ class StudyFile
   has_many :cluster_points, dependent: :destroy
   has_many :expression_scores, dependent: :destroy
   has_many :precomputed_scores, dependent: :destroy
+  has_many :temp_file_downloads
 
   field :name, type: String
   field :path, type: String
@@ -34,6 +36,9 @@ class StudyFile
   # turning off validation to allow any kind of data file to be uploaded
   do_not_validate_attachment_file_type :upload
 
+  # use custom content type validator for more control
+  validate :check_upload_content_type
+
   Paperclip.interpolates :url_safe_name do |attachment, style|
     attachment.instance.url_safe_name
   end
@@ -46,10 +51,6 @@ class StudyFile
     end
   end
 
-  def file_size
-    File.size?(self.path)
-  end
-
   def to_jq_upload
     {
         '_id' => self._id,
@@ -59,6 +60,10 @@ class StudyFile
         'delete_url' => delete_study_file_study_path(self.study._id, self._id),
         'delete_type' => "DELETE"
     }
+  end
+
+  def parseable?
+    PARSEABLE_TYPES.include?(self.file_type)
   end
 
   private
@@ -86,6 +91,15 @@ class StudyFile
   def remove_public_symlink
     if self.study.public?
       FileUtils.rm_f(File.join(self.study.data_public_path, self.upload_file_name))
+    end
+  end
+
+  # validate text/plain content type for parseable files
+  def check_upload_content_type
+    if self.parseable?
+      if self.upload.content_type != 'text/plain'
+        errors.add(:base, "Only text files are allowed for study files of type: '#{self.file_type}'")
+      end
     end
   end
 end

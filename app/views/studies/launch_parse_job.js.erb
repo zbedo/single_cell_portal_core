@@ -1,1 +1,2 @@
 $("#study-files-notice-target").html("<%= escape_javascript( render partial: 'studies/study_file_notices', locals: {message: @message}) %>");
+$("<%= @target %>").find('.parse-study-file').attr('disabled', true);

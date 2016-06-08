@@ -25,12 +25,15 @@
 				<%= f.label :actions %>
 				<div class="row">
 					<div class="col-xs-6">
-						<%= f.submit 'Update', class: 'btn btn-success btn-block save-study-file' %>
+						<%= f.submit 'Update', class: 'btn btn-success btn-block save-study-file loading', 'data-loading-text' => 'Saving...'  %>
 					</div>
 					<div class="col-xs-6">
 						<%= link_to 'Delete', delete_study_file_study_path(@study._id, study_file._id), method: :delete, class: 'btn btn-block btn-danger', data: {remote: true, confirm: 'Are you sure? This cannot be undone.'} %>
 					</div>
 				</div>
+			</div>
+			<div class="col-sm-12">
+				<span class="help-block help-text"><%=  f.object.file_type.nil? ? required_help_text[StudyFile::STUDY_FILE_TYPES.first].html_safe : required_help_text[f.object.file_type].html_safe %></span>
 			</div>
 		</div>
 		<% if study_file.upload_file_name.nil? %>
@@ -43,24 +46,41 @@
 
 	<% end %>
 
-	<% if study_file.file_type == 'Cluster Coordinates' && @study.can_parse_clusters %>
+	<% if study_file.parsed? || (!study_file.parseable? && study_file.upload.exists?) %>
+		<p><label>Uploaded File </label><br /><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></p>
+	<% elsif study_file.file_type == 'Cluster Coordinates' && @study.can_parse_clusters %>
 		<%= render 'parse_cluster_form', study_file: study_file %>
 	<% elsif study_file.file_type == 'Cluster Coordinates' && !@study.can_parse_clusters %>
 		<div class="bs-callout bs-callout-danger">
 			<h4>Cannot parse file yet</h4>
-			<p><%= link_to "Download (#{number_to_human_size(study_file.upload_file_size, prefix: :si)}) <span class='fa fa-download'></span>".html_safe, study_file.download_path, class: 'btn btn-sm btn-primary' %> <%= link_to "<span class='fa fa-refresh'></span> Refresh Form".html_safe, "javascript:refreshUpload('#{study_file.upload_file_name}', '##{study_file._id}');", class: 'btn btn-sm btn-info' %></p>
+			<p><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %> <%= render partial: 'refresh_link', locals: {study_file: study_file} %></p>
 			<p class="help-block">In order to parse cluster coordinates, you must first upload a <strong>cluster assignments file</strong>.  Once you have done so, click 'refresh' to load the parsing form.</p>
 		</div>
+	<% elsif study_file.file_type == 'Expression Matrix' %>
+		<%= render 'parse_expression_form', study_file: study_file %>
+	<% elsif study_file.file_type == 'Marker Gene List' %>
+		<%= render 'parse_precomputed_form', study_file: study_file %>
 	<% end %>
 
 </div>
 <script>
+
+	var parseableTypes = /(<%= StudyFile::PARSEABLE_TYPES.join('|') %>)/;
+
+	function setAcceptedFiletypes(fileType) {
+		if ( parseableTypes.test(fileType) ) {
+			return /(\.|\/)(txt|text|fq|fastq)$/i
+		} else {
+			return /.*/
+		}
+	}
 
 	$(document).ready(function() {
 		var resume_path = "<%= resume_upload_study_path %>";
 		var update_status_path = "<%= update_status_study_path %>";
 		var result_path = "<%= retrieve_upload_study_path(@study._id) %>";
 		var uploader = "#<%= study_file._id %>";
+		var fileType = $(uploader).find('.filetype').val();
 
 		// disable save button if this is a new record
 		$(uploader).find('.save-study-file').attr('disabled', $(uploader).find('.filename').val() == '');
@@ -69,6 +89,9 @@
 			url: "<%= upload_study_path(@study._id) %>",
 			maxChunkSize: 10000000, // 10 MB
 			type: 'PATCH',
+			options: {
+				acceptFileTypes: setAcceptedFiletypes(fileType)
+			},
 			add: function (e, data) {
 				var that = this;
 				var fileName = data.files[0].name.replace(/ /g, '_');
@@ -106,13 +129,36 @@
 		});
 
 		// add confirm dialog when user selects fastq file
+		// also change help text
 		$(uploader).find('.filetype').change(function(e) {
-			if ( $(e.target).val() == 'Fastq' ) {
+			var selected = $(e.target).val();
+			var helpText = <%= raw required_help_text.to_json %>;
+			var helpTarget = $(uploader).find('span.help-text');
+			// reinit the tooltip
+			console.log('Changing help text to: ' + selected);
+			$(helpTarget).html(helpText[selected]).effect('highlight', 500);
+
+			if ( selected == 'Fastq' ) {
 				validateNonHumanFastq(uploader);
 			}
+			var allowedTypes = setAcceptedFiletypes(selected);
+			// reset allowed filetypes
+			$(uploader).fileupload('option', 'acceptFileTypes', allowedTypes);
 		});
 
+		// re-enable tooltips
 		$('[data-toggle="tooltip"]').tooltip({container: 'body'});
+
+		// reattach click listener to download a file when private, will open modal for timed HTML5 download
+		$(uploader).find('.download-btn').click(function() {
+			var url = $(this).data('filepath');
+			$.get(url);
+		});
+
+		// enable loading text for necessary buttons
+		$(uploader).find('.loading').click(function() {
+			$(this).button('loading');
+		});
 
 	});
 

@@ -1,19 +1,15 @@
 <div class="bs-callout bs-callout-default">
-	<h4>Parse uploaded file <span class="label label-info">Clusters</span></h4>
-	<%= form_for(:clusters, url: launch_parse_job_study_path(@study._id), html: {class: 'form', remote: true, id: "#{study_file._id}_parse"}) do |f| %>
+	<h4>Parse uploaded file <span class="label label-info">Marker Genes</span></h4>
+	<%= form_for(:precomputed, url: launch_parse_job_study_path(@study._id), html: {class: 'form', remote: true, id: "#{study_file._id}_parse"}) do |f| %>
 		<div class="form-group row">
 			<div class="col-md-4">
-				<%= f.label :assignment_file, 'Cluster assignment file' %><br />
-				<p><%= @study.cluster_assignment_file.name %></p>
-			</div>
-			<div class="col-md-4">
-				<%= f.label :cluster_file, 'Cluster coordinates file' %><br />
+				<%= f.label :precomputed_file, 'Marker Gene List file' %><br />
 				<p><%= render partial: '/layouts/download_link', locals: {study_file: study_file, study: @study} %></p>
-				<%= f.hidden_field :cluster_file, value: study_file.name, class: 'form-control', readonly: true %>
+				<%= f.hidden_field :precomputed_file, value: study_file.name, class: 'form-control' %>
 			</div>
-			<div class="col-md-2">
-				<%= f.label :cluster_type, 'Cluster type' %><br />
-				<%= f.select :cluster_type, options_for_select(['primary', 'sub']), {}, class: 'form-control' %>
+			<div class="col-md-6">
+				<%= f.label :precomputed_name, "Name of gene list <span class='fa fa-question-circle' data-toggle='tooltip' title='Display name used to label this marker gene list in menus and pages'></span>".html_safe %><br />
+				<%= f.text_field :precomputed_name, class: 'form-control' %>
 			</div>
 			<div class="col-md-2">
 				<%= f.label :parse, 'Actions' %><br />
@@ -36,8 +32,5 @@
 	$(parser).find('.loading').click(function() {
 		$(this).button('loading');
 	});
-
-	// re-enable tooltips
-	$(parser > '[data-toggle="tooltip"]').tooltip({container: 'body'});
 
 </script>

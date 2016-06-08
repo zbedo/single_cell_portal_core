@@ -126,6 +126,7 @@ class Study
     end
     # clean up, print stats
     expression_data.close
+    expression_file.update(parsed: true)
     end_time = Time.now
     time = (end_time - start_time).divmod 60.0
     @message << "Completed!"
@@ -147,12 +148,15 @@ class Study
     # load cluster assignments
     clusters_data = File.open(assignment_file.upload.path).readlines.map(&:chomp).delete_if {|line| line.blank? }
     @all_clusters = {}
-    clusters_data.shift
+    assignment_headers = clusters_data.shift.split("\t").map(&:strip)
+    cell_index = assignment_headers.index('CELL_NAME')
+    cluster_index = assignment_headers.index('CLUSTER')
+    sub_index = assignment_headers.index('SUB-CLUSTER')
     clusters_data.each do |line|
       vals = line.split("\t")
-      cluster_name = vals[1]
-      sub_cluster_name = vals[2]
-      cell_name = vals[0]
+      cluster_name = vals[cluster_index]
+      sub_cluster_name = vals[sub_index]
+      cell_name = vals[cell_index]
       @all_clusters[cell_name] = {cluster: cluster_name, sub_cluster: sub_cluster_name}
 
       # create cluster and single_cell objects now to associate later as some cells/clusters have no coordinate data
@@ -256,7 +260,7 @@ class Study
     end
     precomputed_score.gene_scores = rows
     precomputed_score.save
-
+    marker_file.update(parsed: true)
     end_time = Time.now
     time = (end_time - start_time).divmod 60.0
     @message << "Completed!"

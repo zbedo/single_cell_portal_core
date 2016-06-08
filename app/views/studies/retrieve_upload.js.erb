@@ -1,2 +1,12 @@
 $("<%= params[:selector] %>").parent().replaceWith("<%= escape_javascript( render partial: 'study_file_fields', locals: {study_file: @study_file })%>");
 $("<%= params[:selector] %>").parent().effect('highlight', {}, 1000);
+// reattach click listener to download a file when private, will open modal for timed HTML5 download
+$("<%= params[:selector] %>").find('.download-btn').click(function() {
+	var url = $(this).data('filepath');
+	$.get(url);
+});
+
+// enable loading text for necessary buttons
+$("<%= params[:selector] %>").find('.loading').click(function() {
+	$(this).button('loading');
+});

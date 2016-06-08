@@ -1,0 +1,9 @@
+<div id="download-target"></div>
+<script type="text/javascript">
+	// click listener to download a file when private, will open modal for timed HTML5 download
+	$('.download-btn').click(function() {
+		var url = $(this).data('filepath');
+		$.get(url);
+	});
+
+</script>
