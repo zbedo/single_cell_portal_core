@@ -51,12 +51,14 @@ class User
     uid = access_token.uid
     # create bogus password, Devise will never use it to authenticate
     password = Devise.friendly_token[0,20]
-    user = User.create!(email: data["email"],
-                        password: password,
-                        password_confirmation: password,
-                        uid: uid,
-                        provider: provider
-    )
+    user = User.find_by(email: data['email'])
+    if user.nil?
+      user = User.create(email: data["email"],
+                         password: password,
+                         password_confirmation: password,
+                         uid: uid,
+                         provider: provider)
+    end
     user
   end
 end

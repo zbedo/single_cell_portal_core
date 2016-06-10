@@ -9,7 +9,7 @@
 			</div>
 			<div class="col-md-2">
 				<%= f.label :parse, 'Actions' %><br />
-				<%= f.submit 'Parse', class: 'btn btn-info parse-study-file', 'data-loading-text' => 'Parsing...'  %>
+				<%= f.submit 'Parse', class: 'btn btn-info parse-study-file loading', disabled: study_file.parse_status != 'unparsed'  %>
 				<%= render partial: 'refresh_link', locals: {study_file: study_file} %>
 			</div>
 		</div>
@@ -24,9 +24,10 @@
 		$.get(url);
 	});
 
-	// enable loading text for necessary buttons
-	$(parser).find('.loading').on('click', function() {
-		$(this).button('loading');
+	// start small spinner on loading functions
+	$(parser).find('.loading').click(function() {
+		var tgt = $(this).parent()[0];
+		new Spinner(smallOpts).spin(tgt);
 	});
 
 </script>

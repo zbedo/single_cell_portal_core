@@ -33,7 +33,13 @@
 						<tr>
 							<td><%= study_file.name %></td>
 							<td><%= study_file.description %></td>
-							<td><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></td>
+							<td>
+								<% if @study.embargoed?(current_user) %>
+									<span class="label label-warning"><i class="fa fa-ban"></i> Not available until <%= @study.embargo.to_s(:long) %></span>
+								<% else %>
+									<%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %>
+								<% end %>
+							</td>
 						</tr>
 					<% end %>
 					</tbody>

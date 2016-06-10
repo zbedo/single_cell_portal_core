@@ -35,14 +35,14 @@
 					</div>
 				</div>
 				<div class="col-md-6">
-					<h4>Precomputed Data <span class="badge"><%= @study.precomputed_scores.count %></span></h4>
+					<h4>Marker Gene Lists <span class="badge"><%= @study.precomputed_scores.count %></span></h4>
 					<div class="table-responsive">
 						<table class="table table-condensed" id="precomputed">
 							<thead>
 							<tr>
 								<th>Name</th>
 								<th>Clusters</th>
-								<th>Gene</th>
+								<th>Genes</th>
 							</tr>
 							</thead>
 							<tbody>
@@ -86,7 +86,7 @@
 							<td><%= study_file.name %></td>
 							<td><%= study_file.description %></td>
 							<td><%= study_file.file_type %></td>
-							<td><%= get_boolean_label(study_file.parsed) %></td>
+							<td><%= study_file.parseable? ? get_boolean_label(study_file.parsed?) : get_na_label %></td>
 							<td><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></td>
 						</tr>
 					<% end %>

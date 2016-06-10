@@ -29,7 +29,7 @@ class StudiesController < ApplicationController
 
     respond_to do |format|
       if @study.save
-        format.html { redirect_to studies_path, notice: 'Study was successfully created.' }
+        format.html { redirect_to upload_study_path(@study), notice: "Your study '#{@study.name}' was successfully created.  You may now upload and parse data files." }
         format.json { render :show, status: :ok, location: @study }
       else
         format.html { render :new }
@@ -43,7 +43,7 @@ class StudiesController < ApplicationController
   def update
     respond_to do |format|
       if @study.update(study_params)
-        format.html { redirect_to studies_path, notice: 'Study was successfully updated.' }
+        format.html { redirect_to studies_path, notice: "Study '#{@study.name}' was successfully updated." }
         format.json { render :show, status: :ok, location: @study }
       else
         format.html { render :edit }
@@ -55,9 +55,10 @@ class StudiesController < ApplicationController
   # DELETE /studies/1
   # DELETE /studies/1.json
   def destroy
+    name = @study.name
     @study.destroy
     respond_to do |format|
-      format.html { redirect_to studies_path, notice: 'Study was successfully destroyed.' }
+      format.html { redirect_to studies_path, notice: "Study '#{name}'was successfully destroyed.  All uploaded data & parsed database records have also been destroyed." }
       format.json { head :no_content }
     end
   end
@@ -71,15 +72,15 @@ class StudiesController < ApplicationController
       Delayed::Job.enqueue ClusterFileParseJob.new(@study, assignment_file, cluster_file, clusters_params[:cluster_type], current_user)
       logger.info "Launching parse job on study id: '#{@study.name}', parse_type: 'clusters', file: '#{cluster_file.name}', cluster_type: '#{clusters_params[:cluster_type]}'"
       @message = "Cluster file: #{clusters_params[:cluster_file]} is now being parsed.  You will receive an email when this has completed with the details."
-      @target = "##{cluster_file._id}"
+      @target = "##{cluster_file._id}_parse"
     end
     if params.include?(:expression)
       expression_file = @study.study_files.where(name: expression_params[:expression_file]).first
       # queue delayed job
-      Delayed::Job.enqueue MarkerFileParseJob.new(@study, expression_file, current_user)
-      logger.info "Launching parse job on study id: '#{@study.name}', parse_type: 'expression', file: '#{expression_file.name}"
+      Delayed::Job.enqueue ExpressionFileParseJob.new(@study, expression_file, current_user)
+      logger.info "Launching parse job on study id: '#{@study.name}', parse_type: 'expression', file: '#{expression_file.name}'"
       @message = "Expression matrix file: #{expression_params[:expression_file]} is now being parsed.  You will receive an email when this has completed with the details."
-      @target = "##{expression_file._id}"
+      @target = "##{expression_file._id}_parse"
     end
     if params.include?(:precomputed)
       precomputed_file = @study.study_files.where(name: precomputed_params[:precomputed_file]).first
@@ -87,7 +88,7 @@ class StudiesController < ApplicationController
       Delayed::Job.enqueue MarkerFileParseJob.new(@study, precomputed_file, precomputed_params[:precomputed_name], current_user)
       logger.info "Launching parse job on study id: '#{@study.name}', parse_type: 'marker_genes', file: '#{precomputed_file.name}', list_name: '#{precomputed_params[:precomputed_name]}'"
       @message = "Marker gene list file: #{precomputed_params[:precomputed_file]} is now being parsed.  You will receive an email when this has completed with the details."
-      @target = "##{precomputed_file._id}"
+      @target = "##{precomputed_file._id}_parse"
     end
   end
 
@@ -102,8 +103,12 @@ class StudiesController < ApplicationController
   end
 
   # update an existing study file; cannot be called until file is uploaded, so there is no create
+  # if adding an external fastq file link, will create entry from scratch to update
   def update_study_file
-    @study_file = StudyFile.where(study_id: study_file_params[:study_id], upload_file_name: study_file_params[:name]).first
+    @study_file = StudyFile.where(study_id: study_file_params[:study_id], name: study_file_params[:name]).first
+    if @study_file.nil?
+      @study_file = @study.study_files.build
+    end
     @study_file.update_attributes(study_file_params)
     @message = "'#{@study_file.name}' has been successfully updated."
   end
@@ -204,7 +209,7 @@ class StudiesController < ApplicationController
 
   # study file params whitelist
   def study_file_params
-    params.require(:study_file).permit(:_id, :study_id, :name, :upload, :description, :file_type, :status, :downloadable)
+    params.require(:study_file).permit(:_id, :study_id, :name, :upload, :description, :file_type, :status, :human_fastq_url, :human_data)
   end
 
   def clusters_params

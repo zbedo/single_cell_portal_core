@@ -16,16 +16,21 @@
 				<%= f.label :file_type %><br />
 				<%= f.select :file_type, options_for_select(StudyFile::STUDY_FILE_TYPES, f.object.file_type), {}, {class: 'form-control filetype'} %>
 			</div>
-			<div class="col-sm-5">
+			<div class="col-sm-5 upload-field <%= study_file.human_data? ? 'hidden' : nil %>">
 				<%= f.label :upload, 'Upload Data File' %><br />
 				<%= f.file_field :upload, class: 'btn btn-default fileinput-button' %>
 				<%= f.hidden_field :status, value: 'uploading' %>
+			</div>
+			<div class="col-sm-5 fastq-field <%= study_file.human_data? ? nil : 'hidden' %>">
+				<%= f.label :human_fastq_url, 'Link to primary human fastq file' %><br />
+				<%= f.text_field :human_fastq_url, class: 'form-control', disabled: !f.object.human_data? %>
+				<%= f.hidden_field :human_data, value: f.object.human_data %>
 			</div>
 			<div class="col-sm-3">
 				<%= f.label :actions %>
 				<div class="row">
 					<div class="col-xs-6">
-						<%= f.submit 'Update', class: 'btn btn-success btn-block save-study-file loading', 'data-loading-text' => 'Saving...'  %>
+						<%= f.submit 'Update', class: 'btn btn-success btn-block save-study-file' %>
 					</div>
 					<div class="col-xs-6">
 						<%= link_to 'Delete', delete_study_file_study_path(@study._id, study_file._id), method: :delete, class: 'btn btn-block btn-danger', data: {remote: true, confirm: 'Are you sure? This cannot be undone.'} %>
@@ -98,9 +103,7 @@
 				var ext = fileName.split('.').slice(-1)[0];
 				// validates non-human fastq, will remove uploader if user clicks cancel
 				if (ext == 'fq' || ext == 'fastq') {
-					if (!validateNonHumanFastq(uploader)) {
-						return false;
-					}
+					$('#study-files-notice-target').html("<%= escape_javascript(render partial: 'fastq_modal', locals: {target: study_file._id}) %>");
 				}
 				// this is the chunked upload callback, will upload 10MB at a time until finished
 				$.getJSON(resume_path, { file: fileName }, function (result) {
@@ -135,11 +138,16 @@
 			var helpText = <%= raw required_help_text.to_json %>;
 			var helpTarget = $(uploader).find('span.help-text');
 			// reinit the tooltip
-			console.log('Changing help text to: ' + selected);
+			console.log('Changing help text to: ' + selected + ' for ' + uploader);
 			$(helpTarget).html(helpText[selected]).effect('highlight', 500);
 
 			if ( selected == 'Fastq' ) {
-				validateNonHumanFastq(uploader);
+				$('#study-files-notice-target').html("<%= escape_javascript(render partial: 'fastq_modal', locals: {target: study_file._id}) %>");;
+			} else {
+				if ($(uploader).find('.upload-field').css('display') == 'none' ) {
+					console.log('Toggling Fastq fields for ' + uploader);
+					toggleFastqFields("<%= study_file._id %>");
+				}
 			}
 			var allowedTypes = setAcceptedFiletypes(selected);
 			// reset allowed filetypes
@@ -155,9 +163,10 @@
 			$.get(url);
 		});
 
-		// enable loading text for necessary buttons
+		// start small spinner on loading functions
 		$(uploader).find('.loading').click(function() {
-			$(this).button('loading');
+			var tgt = $(this).parent()[0];
+			new Spinner(smallOpts).spin(tgt);
 		});
 
 	});

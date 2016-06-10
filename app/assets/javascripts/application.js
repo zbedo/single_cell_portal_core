@@ -77,6 +77,29 @@ var opts = {
     , position: 'absolute' // Element positioning
 };
 
+var smallOpts = {
+    lines: 11, // The number of lines to draw
+    length: 9, // The length of each line
+    width: 3, // The line thickness
+    radius: 4, // The radius of the inner circle
+    scale: 1 // Scales overall size of the spinner
+    , corners: 1 // Corner roundness (0..1)
+    , color: '#000' // #rgb or #rrggbb or array of colors
+    , opacity: 0.25 // Opacity of the lines
+    , rotate: 0 // The rotation offset
+    , direction: 1 // 1: clockwise, -1: counterclockwise
+    , speed: 1 // Rounds per second
+    , trail: 60 // Afterglow percentage
+    , fps: 20 // Frames per second when using setTimeout() as a fallback for CSS
+    , zIndex: 2e9 // The z-index (defaults to 2000000000)
+    , className: 'spinner' // The CSS class to assign to the spinner
+    , top: '7px' // Top position relative to parent
+    , left: '50%' // Left position relative to parent
+    , shadow: false // Whether to render a shadow
+    , hwaccel: false // Whether to use hardware acceleration
+    , position: 'relative' // Element positioning
+};
+
 // launch a modal spinner whenever a select changes that will take more than a few seconds
 $(function() {
    $('.spin').change(function(){
@@ -205,12 +228,21 @@ function computeColorScale(clusterColor, clusters) {
 
 }
 
-// function to ask user to confirm non-human fastq data, will remove uploader if user clicks cancel
-function validateNonHumanFastq(uploader) {
-    if (confirm("You must attest that the fastq data you are uploading is not primary human data.  Click 'OK' if your fastq data conforms to this guideline, or 'Cancel' to abort and remove this entry from the page.")) {
-        return true;
-    } else {
-        $(uploader).parent().remove();
-        return false;
-    }
+// toggles visibility and disabled status of file upload and fastq url fields
+function toggleFastqFields(target) {
+    var fileField = $("#" + target).find('.upload-field');
+    $(fileField).toggleClass('hidden');
+    var fastqField = $("#" + target).find('.fastq-field');
+    $(fastqField).toggleClass('hidden');
+    // toggle disabled status by returning inverse of current state
+    $(fastqField).find('input').attr('disabled', !$(fastqField).find('input').is('[disabled=disabled]'));
+    // enable name field & update button to allow saving
+    var saveBtn = $('#' + target).find('.save-study-file');
+    $(saveBtn).attr('disabled', !$(saveBtn).is('[disabled=disabled]'));
+    var nameField = $('#' + target).find('.filename');
+    $(nameField).attr('readonly', !$(nameField).is('[readonly=readonly]'));
+    $(nameField).attr('placeholder', '');
+    // set classes to highlight needed inputs
+    $(nameField).parent().toggleClass('has-error has-feedback');
+    $(fastqField).toggleClass('has-error has-feedback');
 }

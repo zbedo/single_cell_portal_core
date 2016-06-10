@@ -3,6 +3,11 @@ module StudiesHelper
 		field ? "<span class='fa fa-check text-success'></span>".html_safe : "<span class='fa fa-times text-danger'></span>".html_safe
 	end
 
+	def get_na_label
+		"<span class='label label-default'><i class='fa fa-ban' aria-hidden='true'></i> N/A</span>".html_safe
+	end
+
+
 	def required_help_text
 		{
 				'Cluster Assignments' => "<strong><span class='fa fa-exclamation-triangle'></span> Requirements:</strong> A tab-delimited .txt file with the following column headers: 'CELL_NAME', 'CLUSTER', and 'SUB-CLUSTER'",

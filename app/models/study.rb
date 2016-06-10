@@ -2,6 +2,7 @@ class Study
   include Mongoid::Document
   include Mongoid::Timestamps
 
+  # associations and scopes
   belongs_to :user
   has_many :study_files, dependent: :destroy
   has_many :clusters, dependent: :destroy
@@ -13,9 +14,12 @@ class Study
     def can_edit
       where(permission: 'Edit').map(&:email)
     end
+
+    def can_view
+      all.to_a.map(&:email)
+    end
   end
 
-  # scoping clusters to allow easy access to top- and sub-level clusters
   has_many :clusters do
     def parent_clusters
       where(cluster_type: 'parent').to_a.delete_if {|c| c.cluster_points.empty? }
@@ -26,6 +30,7 @@ class Study
     end
   end
 
+  # field definitions & nested attributes
   field :name, type: String
   field :embargo, type: Date
   field :url_safe_name, type: String
@@ -47,6 +52,7 @@ class Study
     end
   end
 
+  # callbacks
   before_save     :set_url_safe_name
   after_save      :check_public?
   before_destroy  :remove_public_symlinks
@@ -66,27 +72,57 @@ class Study
     [public + owned + shares].flatten.uniq
   end
 
+  # check if a give use can edit study
+  def can_edit?(user)
+    self.admins.include?(user.email)
+  end
+
+  # check if a given user can view study by share (does not take public into account - use Study.viewable(user) instead)
+  def can_view?(user)
+    self.can_edit?(user) || self.study_shares.can_view.include?(user.email)
+  end
+
   # list of emails for accounts that can edit this study
   def admins
     [self.user.email, self.study_shares.can_edit].flatten.uniq
   end
 
+  # file path to study public folder
   def data_public_path
     Rails.root.join('public', 'single_cell_demo', 'data', self.url_safe_name)
   end
 
+  # file path to upload storage directory
   def data_store_path
     Rails.root.join('data', self.url_safe_name)
   end
 
+  # label for study visibility
   def visibility
     self.public? ? "<span class='sc-badge bg-success text-success'>Public</span>".html_safe : "<span class='sc-badge bg-danger text-danger'>Private</span>".html_safe
   end
 
+  # check whether or not user has uploaded necessary files to parse cluster coords.
   def can_parse_clusters
     self.study_files.size > 1 && self.study_files.where(file_type:'Cluster Assignments').exists? && self.study_files.where(file_type:'Cluster Coordinates').exists?
   end
 
+  # check if study is still under embargo or whether given user can bypass embargo
+  def embargoed?(user)
+    if user.nil?
+      self.check_embargo
+    else
+      # must not be viewable by current user & embargoed to be true
+      !self.can_view?(user) && self.check_embargo
+    end
+  end
+
+  # helper method to check embargo status
+  def check_embargo
+    self.embargo.nil? || self.embargo.blank? ? false : Date.today <= self.embargo
+  end
+
+  # helper method to directly access cluster assignment file
   def cluster_assignment_file
     self.study_files.where(file_type:'Cluster Assignments').to_a.first
   end
@@ -97,6 +133,7 @@ class Study
     @count = 0
     @message = ["Parsing expression file: #{expression_file.name}", "..."]
     start_time = Time.now
+    expression_file.update(parse_status: 'parsing')
     # open data file and grab header row with name of all cells, deleting 'GENE' at start
     expression_data = File.open(expression_file.upload.path)
     cells = expression_data.readline.chomp.split("\t")
@@ -120,13 +157,13 @@ class Study
       @records << {gene: gene_name, searchable_gene: gene_name.downcase, scores: significant_scores, study_id: study_id}
       @count += 1
       if @count % 1000 == 0
-        self.create(@records)
+        ExpressionScore.create(@records)
         @records = []
       end
     end
     # clean up, print stats
     expression_data.close
-    expression_file.update(parsed: true)
+    expression_file.update(parse_status: 'parsed')
     end_time = Time.now
     time = (end_time - start_time).divmod 60.0
     @message << "Completed!"
@@ -144,6 +181,7 @@ class Study
     @cluster_count = 0
     @cluster_point_count = 0
     start_time = Time.now
+    cluster_file.update(parse_status: 'parsing')
 
     # load cluster assignments
     clusters_data = File.open(assignment_file.upload.path).readlines.map(&:chomp).delete_if {|line| line.blank? }
@@ -222,7 +260,7 @@ class Study
       end
     end
     # mark cluster file as parsed
-    cluster_file.update(parsed: true)
+    cluster_file.update(parse_status: 'parsed')
 
     # clean up
     end_time = Time.now
@@ -242,6 +280,7 @@ class Study
     @count = 0
     @message = ["Parsing marker list file: #{marker_file.name}", "..."]
     start_time = Time.now
+    marker_file.update(parse_status: 'parsing')
     precomputed_score = self.precomputed_scores.build(name: list_name)
     marker_scores = File.open(marker_file.upload.path).readlines.map(&:strip).delete_if {|line| line.blank? }
     clusters = marker_scores.shift.split("\t")
@@ -260,7 +299,7 @@ class Study
     end
     precomputed_score.gene_scores = rows
     precomputed_score.save
-    marker_file.update(parsed: true)
+    marker_file.update(parse_status: 'parsed')
     end_time = Time.now
     time = (end_time - start_time).divmod 60.0
     @message << "Completed!"
