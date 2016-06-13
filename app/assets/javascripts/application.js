@@ -236,13 +236,16 @@ function toggleFastqFields(target) {
     $(fastqField).toggleClass('hidden');
     // toggle disabled status by returning inverse of current state
     $(fastqField).find('input').attr('disabled', !$(fastqField).find('input').is('[disabled=disabled]'));
+    // set human data attr to true
+    var humanData = $(fastqField).find('input[type=hidden]');
+    $(humanData).val($(humanData).val() == 'true' ? 'false' : 'true' );
     // enable name field & update button to allow saving
     var saveBtn = $('#' + target).find('.save-study-file');
     $(saveBtn).attr('disabled', !$(saveBtn).is('[disabled=disabled]'));
     var nameField = $('#' + target).find('.filename');
     $(nameField).attr('readonly', !$(nameField).is('[readonly=readonly]'));
     $(nameField).attr('placeholder', '');
-    // set classes to highlight needed inputs
-    $(nameField).parent().toggleClass('has-error has-feedback');
-    $(fastqField).toggleClass('has-error has-feedback');
+    // animate highlight effect to show fields that need changing
+    $(nameField).parent().effect('highlight', 1200);
+    $(fastqField).effect('highlight', 1200);
 }

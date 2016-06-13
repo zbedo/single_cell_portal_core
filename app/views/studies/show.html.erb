@@ -81,7 +81,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					<% @study.study_files.each do |study_file| %>
+					<% @study.study_files.sort_by(&:name).each do |study_file| %>
 						<tr>
 							<td><%= study_file.name %></td>
 							<td><%= study_file.description %></td>
@@ -133,15 +133,19 @@
 <script type="text/javascript">
 
 		$('#clusters').dataTable({
-			"pagingType": "simple",
-			'order': [[1, 'asc'],[3, 'desc']],
-			'searching': false
+			pagingType: "simple",
+			order: [[1, 'asc'],[3, 'desc']],
+			language: {
+				search: "Filter records:"
+			}
 		});
 
 		$('#precomputed').dataTable({
-			"pagingType": "simple",
-			'order': [[0, 'asc']],
-			'searching': false
+			pagingType: "simple",
+			order: [[0, 'asc']],
+			language: {
+				search: "Filter records:"
+			}
 		});
 
 </script>

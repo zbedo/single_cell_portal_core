@@ -20,9 +20,9 @@
 	$('#human-data').click(function() {
 		// if user is supplying human data, hide file uploader and show text field for link
 		// also disable and enable correct inputs
+		$("#fastq-modal").modal('toggle');
 		var target = '<%= target %>';
 		console.log('Toggling Fastq fields for #' + target)
 		toggleFastqFields(target);
-		$("#fastq-modal").modal('toggle');
 	});
 </script>

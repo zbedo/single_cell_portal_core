@@ -4,7 +4,7 @@
 		<div class="form-group row">
 			<div class="col-sm-4">
 				<%= f.label :name %><br />
-				<%= f.text_field :name, class: 'form-control filename', readonly: true, placeholder: 'Filename is taken from uploaded file...' %>
+				<%= f.text_field :name, class: 'form-control filename', readonly: !f.object.human_data?, placeholder: 'Filename is taken from uploaded file...' %>
 			</div>
 			<div class="col-sm-8">
 				<%= f.label :description %><br />
@@ -51,8 +51,8 @@
 
 	<% end %>
 
-	<% if study_file.parsed? || (!study_file.parseable? && study_file.upload.exists?) %>
-		<p><label>Uploaded File </label><br /><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></p>
+	<% if study_file.parsed? || (!study_file.parseable? && study_file.upload.exists?) || study_file.human_data? %>
+		<p><label>Link to file </label><br /><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></p>
 	<% elsif study_file.file_type == 'Cluster Coordinates' && @study.can_parse_clusters %>
 		<%= render 'parse_cluster_form', study_file: study_file %>
 	<% elsif study_file.file_type == 'Cluster Coordinates' && !@study.can_parse_clusters %>
@@ -68,17 +68,7 @@
 	<% end %>
 
 </div>
-<script>
-
-	var parseableTypes = /(<%= StudyFile::PARSEABLE_TYPES.join('|') %>)/;
-
-	function setAcceptedFiletypes(fileType) {
-		if ( parseableTypes.test(fileType) ) {
-			return /(\.|\/)(txt|text|fq|fastq)$/i
-		} else {
-			return /.*/
-		}
-	}
+<script type="text/javascript">
 
 	$(document).ready(function() {
 		var resume_path = "<%= resume_upload_study_path %>";
@@ -94,14 +84,12 @@
 			url: "<%= upload_study_path(@study._id) %>",
 			maxChunkSize: 10000000, // 10 MB
 			type: 'PATCH',
-			options: {
-				acceptFileTypes: setAcceptedFiletypes(fileType)
-			},
+			acceptFileTypes: setAcceptedFiletypes(fileType),
 			add: function (e, data) {
 				var that = this;
 				var fileName = data.files[0].name.replace(/ /g, '_');
 				var ext = fileName.split('.').slice(-1)[0];
-				// validates non-human fastq, will remove uploader if user clicks cancel
+				// validates non-human fastq, will change to text field if user is linking to human data
 				if (ext == 'fq' || ext == 'fastq') {
 					$('#study-files-notice-target').html("<%= escape_javascript(render partial: 'fastq_modal', locals: {target: study_file._id}) %>");
 				}

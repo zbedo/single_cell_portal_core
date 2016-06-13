@@ -20,6 +20,17 @@
 		var refreshPath = "<%= retrieve_upload_study_path(@study) %>";
 		$.get(refreshPath, {file: fileName, selector: selector});
 	}
+
+	var parseableTypes = /(<%= StudyFile::PARSEABLE_TYPES.join('|') %>)/;
+
+	function setAcceptedFiletypes(type) {
+		if ( parseableTypes.test(type) ) {
+			return /(\.|\/)(txt|text|fq|fastq)$/i
+		} else {
+			return /.*/
+		}
+	}
+
 </script>
 
 <script id="template-upload" type="text/x-tmpl">
