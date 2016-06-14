@@ -74,7 +74,7 @@ Rails.application.configure do
       port:                 587,
       user_name:            ENV['SENDGRID_USERNAME'],
       password:             ENV['SENDGRID_PASSWORD'],
-      domain:               'docker-host.com',
+      domain:               ENV['PROD_HOSTNAME'],
       authentication:       'plain',
       enable_starttls_auto: true
   }
