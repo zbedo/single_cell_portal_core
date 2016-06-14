@@ -5,7 +5,7 @@ class ApplicationController < ActionController::Base
 
   before_action :populate_studies
 
-  http_basic_authenticate_with name: 'singlecell', password: 'singlecell'
+  # http_basic_authenticate_with name: 'singlecell', password: 'singlecell'
 
   # get all studies, needed for nav and home page downloads
   def populate_studies
