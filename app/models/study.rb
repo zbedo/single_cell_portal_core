@@ -319,7 +319,7 @@ class Study
   def check_public?
     if self.public?
       if !Dir.exists?(self.data_public_path)
-        Dir.mkdir(self.data_public_path)
+        FileUtils.mkdir_p(self.data_public_path)
         FileUtils.ln_sf(Dir.glob("#{self.data_store_path}/*"), self.data_public_path)
       end
     elsif !self.public?

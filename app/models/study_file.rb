@@ -88,7 +88,7 @@ class StudyFile
   def make_data_dir
     data_dir = Rails.root.join('data', self.study.url_safe_name)
     unless Dir.exist?(data_dir)
-      Dir.mkdir(data_dir)
+      FileUtils.mkdir_p(data_dir)
     end
   end
 
