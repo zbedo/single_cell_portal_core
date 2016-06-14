@@ -109,6 +109,15 @@ $(function() {
     });
 });
 
+// launch a small spinner on elements with 'loading' class
+$(function() {
+    $('.loading').click(function(){
+        var target = $('#spinner_target')[0];
+        new Spinner(opts).spin(target);
+        $('#loading-modal').modal('show');
+    });
+});
+
 // default title font settings for axis titles in plotly
 var plotlyTitleFont = {
     family: 'Helvetica Neue',

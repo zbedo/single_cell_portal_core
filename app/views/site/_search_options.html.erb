@@ -19,7 +19,7 @@
 						<%= f.file_field :upload, class: 'form-control' %>
 					</div>
 					<%= link_to "<span class='fa fa-ban'></span> Clear Search".html_safe, "javascript:clearForm('search_genes');", class: 'btn btn-warning pull-right' %>
-					<%= link_to "<span class='fa fa-search'></span> Search Genes ".html_safe, "javascript:;", class: 'btn btn-success', id: 'submit-gene-search' %>
+					<%= link_to "<span class='fa fa-search'></span> Search Genes ".html_safe, "javascript:;", class: 'btn btn-success loading', id: 'submit-gene-search' %>
 					<%= javascript_tag do %>
 						$('#submit-gene-search').click(function() {
 							if ( $('#search_genes').val() == '' && $('#search_upload').val() == '' ) {

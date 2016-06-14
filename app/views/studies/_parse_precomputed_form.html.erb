@@ -20,18 +20,4 @@
 	<% end %>
 </div>
 
-<script type="text/javascript">
-	var parser = "#<%= study_file._id %>_parse";
-
-	$(parser).find('.download-btn').click(function() {
-		var url = $(this).data('filepath');
-		$.get(url);
-	});
-
-	// start small spinner on loading functions
-	$(parser).find('.loading').click(function() {
-		var tgt = $(this)[0];
-		new Spinner(smallOpts).spin(tgt);
-	});
-
-</script>
+<%= render partial: 'parser_script_tag', locals: {study_file: study_file} %>

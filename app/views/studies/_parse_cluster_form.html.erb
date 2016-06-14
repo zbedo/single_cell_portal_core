@@ -17,28 +17,11 @@
 			</div>
 			<div class="col-md-2">
 				<%= f.label :parse, 'Actions' %><br />
-				<%= f.submit 'Parse', class: 'btn btn-info parse-study-file loading', disabled: study_file.parse_status != 'unparsed'  %>
+				<%= f.submit 'Parse', class: 'btn btn-info parse-study-file', disabled: study_file.parse_status != 'unparsed'  %>
 				<%= render partial: 'refresh_link', locals: {study_file: study_file} %>
 			</div>
 		</div>
 	<% end %>
 </div>
 
-<script type="text/javascript">
-	var parser = "#<%= study_file._id %>_parse";
-
-	$(parser).find('.download-btn').click(function() {
-		var url = $(this).data('filepath');
-		$.get(url);
-	});
-
-	// start small spinner on loading functions
-	$(parser).find('.loading').click(function() {
-		var tgt = $(this).parent()[0];
-		new Spinner(smallOpts).spin(tgt);
-	});
-
-	// re-enable tooltips
-	$(parser > '[data-toggle="tooltip"]').tooltip({container: 'body'});
-
-</script>
+<%= render partial: 'parser_script_tag', locals: {study_file: study_file} %>
