@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # create a date stamp for filename
 TODAY="$(date +%Y-%m-%d)"
 
