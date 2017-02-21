@@ -6,8 +6,10 @@ class UiTestSuite < Test::Unit::TestCase
 
 # Unit Test that is actually a user flow test using the Selenium Webdriver to test dev UI directly
 	def setup
-
-		@driver = Selenium::WebDriver::Driver.for :chrome, driver_path: '/usr/local/opt/chromedriver/bin/chromedriver'
+		caps = Selenium::WebDriver::Remote::Capabilities.chrome("chromeOptions" => {"args" => [ "--enable-webgl-draft-extensions" ]})
+		@driver = Selenium::WebDriver::Driver.for :chrome,
+																							driver_path: '/usr/local/opt/chromedriver/bin/chromedriver',
+																							desired_capabilities: caps
 		@driver.manage.window.maximize
 		@base_url = 'https://localhost/single_cell'
 		@accept_next_alert = true
@@ -81,7 +83,8 @@ class UiTestSuite < Test::Unit::TestCase
 		search_box.send_keys('Test Study')
 		submit = @driver.find_element(:id, 'submit-search')
 		submit.click
-		assert @driver.find_elements(:class, 'study-panel').size == 1, 'incorrect number of studies found'
+		studies = @driver.find_elements(:class, 'study-panel').size
+		assert studies == 1, 'incorrect number of studies found. expected one but found ' + studies
 	end
 
 	test 'load Test Study study' do

@@ -79,13 +79,22 @@ class SiteController < ApplicationController
       @genes = load_expression_scores(terms)
     else
       geneset_file = params[:search][:upload]
-      terms = geneset_file.read.split(/[\s\r\n?,]/).map {|gene| gene.strip.downcase}
+      terms = geneset_file.read.split(/[\s\r\n?,]/).map {|gene| gene.strip}
       @genes = load_expression_scores(terms)
     end
     # grab saved params for loaded cluster and boxpoints mode
     cluster = params[:search][:cluster]
     annotation = params[:search][:annotation]
     boxpoints = params[:search][:boxpoints]
+
+    # check if one gene was searched for, but more than one found
+    # we can assume that in this case there is an exact match possible
+    # cast as an array so block after still works properly
+    if @genes.size > 1 && terms.size == 1
+      @genes = [load_best_gene_match(@genes, terms.first)]
+    end
+
+    # determine which view to load
     if @genes.empty?
       redirect_to request.referrer, alert: "No matches found for: #{terms.join(', ')}."
     elsif @genes.size > 1
@@ -98,7 +107,8 @@ class SiteController < ApplicationController
 
   # render box and scatter plots for parent clusters or a particular sub cluster
   def view_gene_expression
-    @gene = @study.expression_scores.by_gene(params[:gene])
+    matches = @study.expression_scores.by_gene(params[:gene])
+    @gene = load_best_gene_match(matches, params[:gene])
     @options = load_cluster_group_options
     @cluster_annotations = load_cluster_group_annotations
     @top_plot_partial = @selected_annotation[:type] == 'group' ? 'expression_plots_view' : 'expression_annotation_plots_view'
@@ -106,7 +116,8 @@ class SiteController < ApplicationController
 
   # re-renders plots when changing cluster selection
   def render_gene_expression_plots
-    @gene = @study.expression_scores.by_gene(params[:gene])
+    matches = @study.expression_scores.by_gene(params[:gene])
+    @gene = load_best_gene_match(matches, params[:gene])
     @y_axis_title = @study.expression_matrix_file.y_axis_label
     # depending on annotation type selection, set up necessary partial names to use in rendering
     if @selected_annotation[:type] == 'group'
@@ -133,7 +144,10 @@ class SiteController < ApplicationController
   def view_gene_set_expression
     precomputed = @study.precomputed_scores.by_name(params[:gene_set])
     @genes = []
-    precomputed.gene_list.map {|gene| @genes << @study.expression_scores.by_gene(gene)}
+    precomputed.gene_list.each do |gene|
+      matches = @study.expression_scores.by_gene(gene)
+      matches.map {|gene| @genes << gene}
+    end
     @y_axis_title = 'Mean ' + @study.expression_matrix_file.y_axis_label
     # depending on annotation type selection, set up necessary partial names to use in rendering
 		@options = load_cluster_group_options
@@ -150,7 +164,10 @@ class SiteController < ApplicationController
   def render_gene_set_expression_plots
     precomputed = @study.precomputed_scores.by_name(params[:gene_set])
     @genes = []
-    precomputed.gene_list.map {|gene| @genes << @study.expression_scores.by_gene(gene)}
+    precomputed.gene_list.each do |gene|
+      matches = @study.expression_scores.by_gene(gene)
+      matches.map {|gene| @genes << gene}
+    end
     @y_axis_title = 'Mean ' + @study.expression_matrix_file.y_axis_label
     # depending on annotation type selection, set up necessary partial names to use in rendering
     if @selected_annotation[:type] == 'group'
@@ -676,8 +693,10 @@ class SiteController < ApplicationController
   def load_expression_scores(terms)
     genes = []
     terms.each do |term|
-      g = @study.expression_scores.by_gene(term)
-      genes << g unless g.nil?
+      matches = @study.expression_scores.by_gene(term)
+      unless matches.empty?
+        matches.map {|gene| genes << gene}
+      end
     end
     genes
   end
@@ -687,14 +706,26 @@ class SiteController < ApplicationController
     genes = []
     not_found = []
     terms.each do |term|
-      gene = @study.expression_scores.by_gene(term)
-      unless gene.nil?
-        genes << gene
+      matches = @study.expression_scores.by_gene(term)
+      unless matches.empty?
+        matches.map {|gene| genes << gene}
       else
         not_found << term
       end
     end
     [genes, not_found]
+  end
+
+  # load best-matching gene (if possible)
+  def load_best_gene_match(matches, search_term)
+    # iterate through all matches to see if there is an exact match
+    matches.each do |match|
+      if match.gene == search_term
+        return match
+      end
+    end
+    # did not find an exact match, so just return the first one
+    matches.first
   end
 
   # helper method to load all possible cluster groups for a study

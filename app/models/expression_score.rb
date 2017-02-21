@@ -8,6 +8,7 @@ class ExpressionScore
   field :scores, type: Hash
 
   index({ gene: 1, study_id: 1 }, { unique: true })
+  index({study_id: 1}, {unique: false})
 
   validates_uniqueness_of :gene, scope: :study_id
 

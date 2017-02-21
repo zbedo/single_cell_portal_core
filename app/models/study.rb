@@ -22,7 +22,7 @@ class Study
   has_many :single_cells, dependent: :delete
   has_many :expression_scores, dependent: :delete do
     def by_gene(gene)
-      where(gene: gene).first
+      where(gene: /#{gene}/i).to_a
     end
   end
 
@@ -74,6 +74,7 @@ class Study
   field :initialized, type: Boolean, default: false
   field :view_count, type: Integer, default: 0
   field :cell_count, type: Integer, default: 0
+  field :gene_count, type: Integer, default: 0
   field :view_order, type: Float, default: 100.0
 
   accepts_nested_attributes_for :study_files, allow_destroy: true
@@ -380,6 +381,7 @@ class Study
       # clean up, print stats
       expression_data.close
       expression_file.update(parse_status: 'parsed')
+      self.update(gene_count: @genes_parsed.size)
       end_time = Time.now
       time = (end_time - start_time).divmod 60.0
       @message << "#{expression_file.name} parse completed!"
