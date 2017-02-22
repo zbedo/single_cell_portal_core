@@ -19,10 +19,18 @@
 						<%= f.label :upload, "Or upload a list of genes (one gene per line)" %><br>
 						<%= f.file_field :upload, class: 'form-control' %>
 					</div>
-					<%= link_to "<span class='fa fa-ban'></span> Clear Search".html_safe, "javascript:clearForm('search_genes');", class: 'btn btn-warning pull-right' %>
-					<%= link_to "<span class='fa fa-search'></span> Search Genes ".html_safe, "javascript:;", class: 'btn btn-success', id: 'submit-gene-search' %>
+					<%= link_to "<span class='fa fa-ban'></span> Clear Search".html_safe, "javascript:", class: 'btn btn-warning pull-right', id: 'clear-gene-search' %>
+					<%= link_to "<span class='fa fa-search'></span> Search Genes ".html_safe, "javascript:", class: 'btn btn-success', id: 'submit-gene-search' %>
 					<script type="text/javascript">
-						$('#submit-gene-search').click(function() {
+            $('#clear-gene-search').click(function(){
+                clearForm('search_genes');
+            });
+
+            $('#submit-gene-search').click(function(){
+                $('#search-genes-form').submit();
+            });
+
+						$('#search-genes-form').on('submit', function() {
 							if ( $('#search_genes').val() == '' && $('#search_upload').val() == '' ) {
 								alert('You must specify at least one gene or upload a list of genes to search');
 								setErrorOnBlank($('.search-genes-input'));
@@ -30,7 +38,7 @@
 								var target = $('#spinner_target')[0];
 								new Spinner(opts).spin(target);
 								$('#loading-modal').modal('show');
-								$('#search-genes-form').submit();
+								return true
 							}
 						});
 					</script>
