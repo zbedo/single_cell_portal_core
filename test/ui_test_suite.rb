@@ -26,6 +26,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@genes = %w(Itm2a Sergef Chil5 Fam109a Dhx9 Ssu72 Olfr1018 Fam71e2 Eif2b2)
 		@wait = Selenium::WebDriver::Wait.new(:timeout => 30)
 		@test_data_path = File.expand_path(File.join(File.dirname(__FILE__), 'test_data')) + '/'
+		@base_path = File.expand_path(File.join(File.dirname(__FILE__), '..'))
 	end
 
 	def teardown
@@ -84,7 +85,7 @@ class UiTestSuite < Test::Unit::TestCase
 		submit = @driver.find_element(:id, 'submit-search')
 		submit.click
 		studies = @driver.find_elements(:class, 'study-panel').size
-		assert studies == 1, 'incorrect number of studies found. expected one but found ' + studies
+		assert studies == 1, 'incorrect number of studies found. expected one but found ' + studies.to_s
 	end
 
 	test 'load Test Study study' do
@@ -180,7 +181,6 @@ class UiTestSuite < Test::Unit::TestCase
 		sleep(3)
 		annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
 		annotation = annotations.sample
-		annotation_name = annotation['text']
 		annotation_value = annotation['value']
 		annotation.click
 		gene = @genes.sample
@@ -194,6 +194,18 @@ class UiTestSuite < Test::Unit::TestCase
 		loaded_annotation = @driver.find_element(:id, 'annotation')
 		assert loaded_cluster['value'] == cluster_name, "did not load correct cluster; expected #{cluster_name} but loaded #{loaded_cluster['value']}"
 		assert loaded_annotation['value'] == annotation_value, "did not load correct annotation; expected #{annotation_value} but loaded #{loaded_annotation['value']}"
+	end
+
+	# test whether or not maintenance mode functions properly
+	test '0. enable maintenance mode' do
+		# enable maintenance mode
+		system("#{@base_path}/bin/enable_maintenance.sh on")
+		@driver.get @base_url
+		assert element_present?(:id, 'maintenance-notice'), 'could not load maintenance page'
+		# disable maintenance mode
+		system("#{@base_path}/bin/enable_maintenance.sh off")
+		@driver.get @base_url
+		assert element_present?(:id, 'main-banner'), 'could not load home page'
 	end
 
 	# admin backend tests of entire study creation process as order needs to be maintained throughout

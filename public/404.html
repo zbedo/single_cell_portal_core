@@ -4,10 +4,68 @@
   <title>Single Cell Portal</title>
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <link rel="stylesheet" media="all" href="/single_cell/assets/application.css?body=1">
-  <script src="/single_cell/assets/morpheus-external-latest.min.js"></script>
-  <script src="/single_cell/assets/morpheus-latest.min.js"></script>
-  <script src="/single_cell/assets/application.js?body=1"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+  <script src="https://use.fontawesome.com/b3ed42fe0f.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js" ></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  <style>
+    html, body {
+      height: 100%;
+    }
+
+    #main-body {
+      padding-bottom: 155px;
+    }
+
+    #wrap {
+      min-height: 100%;
+    }
+
+    .section-pad {
+      margin-top: 80px;
+      margin-bottom: 20px;
+    }
+
+    .footer {
+      background-color: #efefef;
+      padding-top: 25px;
+      position: relative;
+      margin-top: -155px; /* negative value of footer height */
+      height: 155px;
+      clear:both;
+      width: 100%;
+    }
+
+    .footer img {
+      margin-bottom: 10px;
+    }
+
+    .footer a {
+      color: inherit;
+    }
+
+    .sc-navbar {
+      min-height: 70px !important;
+    }
+    .sc-navbar .navbar-header {
+      margin-top: 10px;
+    }
+    .sc-navbar .navbar-header .navbar-brand {
+      font-size: 22px;
+    }
+    .sc-navbar .nav {
+      margin-top: 12px;
+      font-size: 16px;
+    }
+    .well {
+      background: none;
+      background-color: none;
+    }
+    #notice {
+      background-color: #f2dede;
+    }
+  </style>
 </head>
 <body>
 <nav class="navbar fluid navbar-inverse navbar-fixed-top sc-navbar" role="navigation" id="single-cell-navbar">
@@ -36,7 +94,10 @@
 <div class="container-fluid" id="wrap">
   <div class="row section-pad" id="main-body">
     <div class="col-md-12">
-      <h3 class="alert alert-danger text-center">We're sorry, but the page you are looking for was not found.  Please try again.</h3>
+      <div class="bg-danger well well-lg" id="notice">
+        <h3 class="text-danger text-center">We're sorry, but the page you are looking for was not found.  Please try again.</h3>
+        <p class="lead text-center">Please <a href="https://github.com/broadinstitute/single_cell_portal/issues">report an issue</a> if this problem persists.</p>
+      </div>
     </div>
   </div>
 </div>
