@@ -30,4 +30,14 @@ class SingleCellMailer < ApplicationMailer
       format.text {render text: message}
     end
   end
+
+  def share_notification(user, share)
+    @share = share
+    @study = @share.study
+    @user = user
+
+    mail(to: @share.email, cc: user.email, subject: "[Single Cell Portal Notifier] Study: #{@study.name} has been shared") do |format|
+      format.html
+    end
+  end
 end
