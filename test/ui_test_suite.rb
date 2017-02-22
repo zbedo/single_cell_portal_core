@@ -197,7 +197,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# test whether or not maintenance mode functions properly
-	test '0. enable maintenance mode' do
+	test 'enable maintenance mode' do
 		# enable maintenance mode
 		system("#{@base_path}/bin/enable_maintenance.sh on")
 		@driver.get @base_url
