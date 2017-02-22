@@ -10,7 +10,9 @@ class StudyMetadata
   field :values, type: Array
 
   index({ name: 1, annotation_type: 1, study_id: 1 }, { unique: false })
-  index({study_id: 1}, {unique: false})
+  index({ study_id: 1 }, { unique: false })
+  index({ study_id: 1, study_file_id: 1 }, { unique: false })
+
 
   MAX_ENTRIES = 100000
   SUBSAMPLE_THRESHOLD = 1000

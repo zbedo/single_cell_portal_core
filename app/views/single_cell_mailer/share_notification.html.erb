@@ -1,0 +1,6 @@
+<p>The following study on the <%= link_to 'Single Cell Portal', studies_url %> has been shared:</p>
+<hr />
+<p><strong>Name: </strong><%= @study.name %></p>
+<p><strong>Owner: </strong><%= @user.email %></p>
+<p><strong>Shared With: </strong><%= @share.email %></p>
+<p><strong>Granted Permission: </strong><%= @share.permission %></p>
