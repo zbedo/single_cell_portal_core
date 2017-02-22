@@ -19,6 +19,7 @@ class ClusterGroup
 
 	index({ name: 1, study_id: 1 }, { unique: true })
 	index({ study_id: 1 }, { unique: false })
+	index({ study_id: 1, study_file_id: 1}, { unique: false })
 
 	# maximum number of cells allowed when plotting boxplots
 	SUBSAMPLE_THRESHOLD = 1000
