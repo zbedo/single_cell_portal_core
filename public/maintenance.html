@@ -95,7 +95,8 @@
     <div class="col-md-12">
       <div class="bg-warning well well-lg" id="maintenance-notice">
         <h1 class="text-warning text-center"><span class="fa fa-exclamation-triangle"></span>&nbsp;SITE UNDER MAINTENANCE&nbsp;<span class="fa fa-exclamation-triangle"></span></h1>
-        <p class="lead text-center">The Single Cell Portal is currently under maintenance.  Please try back later.</p>
+        <p class="lead text-center hidden" id="regular-maintenance">The Single Cell Portal is currently under regularly scheduled maintenance.  Normal maintenance windows run from 9:30-10:30AM EST every week.</p>
+        <p class="lead text-center" id="special-maintenance">The Single Cell Portal is currently under maintenance, and will be available again shortly.  Please try back later.</p>
         <p class="lead text-center">Please contact the <a href="mailto:single_cell_portal@broadinstitute.org">webmaster</a> if you have an urgent issue.</p>
       </div>
     </div>
@@ -111,4 +112,24 @@
   </div>
 </div>
 </body>
+
+<script type="text/javascript">
+
+  // determine which maintenance message to display
+  $(document).ready(function() {
+      // get current time
+      var now = new Date();
+      var day = now.getDay();
+      var hour = now.getHours();
+      var min = now.getMinutes();
+      // if monday, check time
+      if (day == 1) {
+          if ((hour == 9 && min >= 30) || (hour == 10 && min <= 30)) {
+              $('#special-maintenance').addClass('hidden');
+              $('#regular-maintenance').removeClass('hidden');
+          }
+      }
+
+  });
+</script>
 </html>
