@@ -20,6 +20,12 @@
 
 <script type="text/javascript">
 
+    var baseCamera = {
+        "up":{"x":0,"y":0,"z":1},
+        "center":{"x":0,"y":0,"z":0},
+        "eye":{"x":1.25,"y":1.25,"z":1.25}
+    };
+
     function renderGeneExpressionPlots() {
         var url = '<%= params[:gene] ? render_gene_expression_plots_path(study_name: params[:study_name], gene: params[:gene]) : render_gene_set_expression_plots_path(study_name: params[:study_name], gene_set: params[:gene_set]) %>';
         var target1 = document.getElementById('box-plot');
@@ -42,6 +48,7 @@
     }
 
     $(document).ready(function() {
+        $('#expression-plots').data('camera', baseCamera);
         renderGeneExpressionPlots();
     });
     // listener for annotation nav, specific to expression pages
@@ -60,8 +67,14 @@
         // keep track for search purposes
         $('#search_cluster').val(newCluster);
         $('#gene_set_cluster').val(newCluster);
+        // grab currently selected annotation
+        var currAnnot = $('#annotation').val();
         // get new annotation options and re-render
-        $.get("<%= get_new_annotations_path(study: params[:study])%>?cluster=" + newCluster, function () {
+        $.get("<%= get_new_annotations_path(study: params[:study])%>?cluster=" + newCluster, function (data) {
+            // parse response as a string and see if currently selected annotation exists in new annotations
+            if (data.indexOf(currAnnot) >= 0) {
+                $('#annotation').val(currAnnot);
+            }
             $(document).ready(function () {
                 // since we now have new annotations, we need to set them in the search form for persistence
                 var an = $('#annotation').val();

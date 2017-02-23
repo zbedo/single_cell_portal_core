@@ -45,11 +45,22 @@ $("#colorscale").change(function() {
 });
 
 
-
 // now that we have the legend size, recalculate adding this to the overall size
 var legendW = parseInt($('#cluster-plot g.legend rect.bg').attr('width'));
 var curSize = $('#cluster-plot').width() * SCATTER_RATIO;
 var newWidth = legendW + curSize;
-Plotly.relayout('cluster-plot', {width: newWidth});
+var updatedLayout = {width: newWidth};
+Plotly.relayout('cluster-plot', updatedLayout);
 
 $('#cluster-figure-legend').html("<p class='text-center help-block'><%= escape_javascript(render text: @cluster.study_file.description) %></p>");
+
+// access actual target div, not jQuery object wrapper for relayout event
+$('#cluster-plot')[0].on('plotly_relayout', function(data) {
+  if (data.scene != null) {
+    var oldScene = $('#cluster-plot').data('camera');
+    var newScene = data.scene;
+    console.log('Updating camera information; was ' + JSON.stringify(oldScene));
+    $('#cluster-plot').data('camera', newScene);
+    console.log('Update complete, camera data now ' + JSON.stringify($('#cluster-plot').data('camera')));
+  }
+});

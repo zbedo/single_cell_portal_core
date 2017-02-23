@@ -1,0 +1,10 @@
+// access actual target div, not jQuery object wrapper for relayout event
+$('#scatter-plot')[0].on('plotly_relayout', function(data) {
+  if (data.scene != null) {
+    var oldScene = $('#expression-plots').data('camera');
+    var newScene = data.scene;
+    console.log('Updating camera information; was ' + JSON.stringify(oldScene));
+    $('#expression-plots').data('camera', newScene);
+    console.log('Update complete, camera data now ' + JSON.stringify($('#expression-plots').data('camera')));
+  }
+});

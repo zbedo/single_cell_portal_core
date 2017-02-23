@@ -12,6 +12,10 @@
 
 	<% if Rails.env == 'production' %>
 		<%= render '/layouts/ga_script' %>
+    <script type="text/javascript">
+        // suppress logging in production
+        var console = { log: function() {} };
+    </script>
 	<% end %>
 </head>
 <body>
