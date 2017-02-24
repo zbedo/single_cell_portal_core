@@ -16,8 +16,8 @@
 	};
 
   <% if @cluster.cluster_type == '3d' %>
-    var currentCamera = $('#expression-plots').data('camera');
-    scatterLayout.scene = {
-      camera: currentCamera
+    var staticCamera = $('#expression-plots').data('scatter-camera');
+    staticLayout.scene = {
+      camera: staticCamera
     };
   <% end %>

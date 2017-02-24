@@ -1,10 +1,13 @@
-// access actual target div, not jQuery object wrapper for relayout event
-$('#scatter-plot')[0].on('plotly_relayout', function(data) {
-  if (data.scene != null) {
-    var oldScene = $('#expression-plots').data('camera');
-    var newScene = data.scene;
-    console.log('Updating camera information; was ' + JSON.stringify(oldScene));
-    $('#expression-plots').data('camera', newScene);
-    console.log('Update complete, camera data now ' + JSON.stringify($('#expression-plots').data('camera')));
+// listen for relayout events and redraw plots accordingly
+$('#scatter-plot')[0].on('plotly_relayout', function(cameraData) {
+  if (cameraData.scene != null) {
+    var oldScene = $('#expression-plots').data('scatter-camera');
+    var newScene = cameraData.scene;
+    console.log('Updating scatter camera information; was ' + JSON.stringify(oldScene));
+    $('#expression-plots').data('scatter-camera', newScene);
+    console.log('Update complete, scatter camera data now ' + JSON.stringify($('#expression-plots').data('scatter-camera')));
+
+    staticLayout.scene = {camera: newScene}
+    Plotly.newPlot('reference-plot', data, staticLayout);
   }
 });

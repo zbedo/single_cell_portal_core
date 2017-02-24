@@ -208,6 +208,42 @@ class UiTestSuite < Test::Unit::TestCase
 		assert element_present?(:id, 'main-banner'), 'could not load home page'
 	end
 
+	# test that camera position is being preserved on cluster/annotation select & rotation
+	test 'check camera position on change' do
+		path = @base_url + '/study/test-study'
+		@driver.get(path)
+		wait_until_page_loads(path)
+		# wait for plot to render
+		sleep(3)
+		# get camera data
+		camera = @driver.execute_script("return $('#cluster-plot').data('camera')")
+		# set new rotation
+		camera['eye']['x'] = (Random.rand * 10 - 5).round(4)
+		camera['eye']['y'] = (Random.rand * 10 - 5).round(4)
+		camera['eye']['z'] = (Random.rand * 10 - 5).round(4)
+		# call relayout to trigger update & camera position save
+		@driver.execute_script("Plotly.relayout('cluster-plot', {'scene': {'camera' : #{camera.to_json}}})")
+		# get new camera
+		sleep(1)
+		new_camera = @driver.execute_script("return $('#cluster-plot').data('camera')")
+		assert camera == new_camera['camera'], "camera position did not save correctly, expected #{camera.to_json}, got #{new_camera.to_json}"
+		# load annotation
+		annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
+		annotations.select {|opt| opt.text == 'Sub-Cluster'}.first.click
+		sleep(1)
+		# verify camera position was saved
+		annot_camera = @driver.execute_script("return $('#cluster-plot').data('camera')")
+		assert camera == annot_camera['camera'], "camera position did not save correctly, expected #{camera.to_json}, got #{annot_camera.to_json}"
+		# load new cluster
+		clusters = @driver.find_element(:id, 'cluster').find_elements(:tag_name, 'option')
+		cluster = clusters.last
+		cluster.click
+		sleep(1)
+		# verify camera position was saved
+		cluster_camera = @driver.execute_script("return $('#cluster-plot').data('camera')")
+		assert camera == cluster_camera['camera'], "camera position did not save correctly, expected #{camera.to_json}, got #{cluster_camera.to_json}"
+	end
+
 	# admin backend tests of entire study creation process as order needs to be maintained throughout
 	# logs test user in, creates study, and deletes study on completion
 	# uses example data as inputs

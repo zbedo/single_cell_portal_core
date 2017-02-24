@@ -14,7 +14,7 @@
 	};
 
   <% if @cluster.cluster_type == '3d' %>
-    var currentCamera = $('#expression-plots').data('camera');
+    var currentCamera = $('#expression-plots').data('scatter-camera');
     scatterLayout.scene = {
       camera: currentCamera
     };
