@@ -1,24 +1,35 @@
 class FireCloudClient < Struct.new(:access_token, :api_root, :storage)
 
+	# Class that wraps API calls to both FireCloud and Google Cloud Storage to manage the CRUDing of both FireCloud workspaces
+	# and files inside the associated GCP storage buckets
+	#
+	# Uses the gems googleauth (for generating access tokens), google-cloud-storage (for bucket/file access),
+	# and rest-client (for HTTP calls)
+
 	## CONSTANTS
 	# base url for all API calls
 	BASE_URL = 'https://api.firecloud.org'
-	# location of Google service account JSON (must be absolute path to file)
-	SERVICE_ACCOUNT_KEY ||= ENV['SERVICE_ACCOUNT_KEY'] || File.absolute_path(Rails.root.join('config', 'broad-singlecellportal-d5dad9c8d7db.json'))
 	# default auth scopes
 	GOOGLE_SCOPES = %w(https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email)
-	# namespace used for all FireCloud project workspaces
-	PORTAL_NAMESPACE = 'single-cell-portal'
-	# Permission values allowed for ACLs
-	WORKSPACE_PERMISSIONS = ['OWNER', 'READER', 'WRITER', 'NO ACCESS']
 	# constant used for retry loops in process_request
 	MAX_RETRY_COUNT = 3
+	# namespace used for all FireCloud project workspaces
+	PORTAL_NAMESPACE = 'single-cell-portal'
+	# location of Google service account JSON (must be absolute path to file)
+	SERVICE_ACCOUNT_KEY ||= ENV['SERVICE_ACCOUNT_KEY'] || File.absolute_path(Rails.root.join('config', 'broad-singlecellportal-d5dad9c8d7db.json'))
+	# Permission values allowed for ACLs
+	WORKSPACE_PERMISSIONS = ['OWNER', 'READER', 'WRITER', 'NO ACCESS']
 	# prefix for workspaces, defaults to blank in production
 	WORKSPACE_NAME_PREFIX = Rails.env != 'production' ? Rails.env + '-' : ''
 
-	## CONTRUCTORS
+	## CONSTRUCTOR
+	#
+	# initialize is called after instantiating with FireCloudClient.new
+	# will set the access token, FireCloud api url root and GCP storage driver instance
+	#
+	# return: FireCloudClient object
 	def initialize
-		self.access_token = FireCloudClient.get_access_token
+		self.access_token = FireCloudClient.generate_access_token
 		self.api_root = BASE_URL
 
 		# instantiate Google Cloud Storage driver to work with files in workspace buckets
@@ -28,20 +39,26 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage)
 		)
 	end
 
-	# retrieve an access token to use for all requests
-	def self.get_access_token
+	# generate an access token to use for all requests
+	#
+	# return: Hash of Google Auth access token
+	# (contains access_token (string), token_type (string) and expires_in (integer, in seconds)
+	def self.generate_access_token
 		json_key = File.open(SERVICE_ACCOUNT_KEY)
 		creds = Google::Auth::ServiceAccountCredentials.make_creds(json_key_io: json_key, scope: GOOGLE_SCOPES)
 		token = creds.fetch_access_token
 		token
 	end
 
+	## FIRECLOUD METHODS
+
 	# generic handler to execute http calls, process returned JSON and handle exceptions
+	#
 	# param: http_method (string, symbol) => valid http method
 	# param: path (string) => FireCloud REST API path
 	# param: payload (hash) => HTTP POST/PATCH/PUT body for creates/updates, defaults to nil
-	# path is constructed in parent object and retrieved from FireCloud
-	# object is then returned for further processing if necessary
+	#
+	# return: object depends on response code
 	def process_request(http_method, path, payload=nil)
 		# set default headers
 		headers = {
@@ -80,6 +97,8 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage)
 	end
 
 	# return a list of all workspaces in the portal namespace
+	#
+	# return: array of JSON objects detailing workspaces
 	def workspaces
 		path = self.api_root + '/api/workspaces'
 		workspaces = process_request(:get, path)
@@ -89,6 +108,8 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage)
 	# get the specified workspace
 	#
 	# param: name (string) => name of workspace
+	#
+	# return: JSON object of workspace instance
 	def get_workspace(name)
 		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{WORKSPACE_NAME_PREFIX}#{name}"
 		process_request(:get, path)
@@ -97,6 +118,8 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage)
 	# create a workspace, prepending WORKSPACE_NAME_PREFIX as necessary
 	#
 	# param: name (string) => name of workspace
+	#
+	# return: JSON object of workspace instance
 	def create_workspace(name)
 		path = self.api_root + '/api/workspaces'
 		# construct payload for POST
@@ -111,6 +134,8 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage)
 	# delete a workspace
 	#
 	# param: name (string) => name of workspace
+	#
+	# return: JSON message of status of workspace deletion
 	def delete_workspace(name)
 		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{WORKSPACE_NAME_PREFIX}#{name}"
 		process_request(:delete, path)
@@ -119,31 +144,31 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage)
 	# get the specified workspace ACL
 	#
 	# param: name (string) => name of workspace
+	#
+	# return: JSON object of workspace ACL instance
 	def get_workspace_acl(name)
 		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{WORKSPACE_NAME_PREFIX}#{name}/acl"
 		process_request(:get, path)
 	end
 
 	# update the specified workspace ACL
-	# can also be used to remove access
+	# can also be used to remove access by passing 'NO ACCESS' to create_acl
 	#
 	# param: name (string) => name of workspace
-	# param: act (JSON) => ACL object (see create_acl)
+	# param: acl (JSON) => ACL object (see create_acl)
+	#
+	# return: JSON response of ACL update
 	def update_workspace_acl(name, acl)
-		granted_permission = JSON.parse(acl).first['accessLevel']
-		if WORKSPACE_PERMISSIONS.include?(granted_permission)
-			path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{WORKSPACE_NAME_PREFIX}#{name}/acl"
-			process_request(:patch, path, acl)
-		else
-			Rails.logger.error "#{Time.now}: Invalid ACL permission (#{granted_permission}) specified for workspace #{name}"
-			false
-		end
+		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{WORKSPACE_NAME_PREFIX}#{name}/acl"
+		process_request(:patch, path, acl)
 	end
 
 	# helper for creating FireCloud ACL objects
 	#
 	# param: email (string) => email of FireCloud user
 	# param: permission (string) => granted permission level
+	#
+	# return: JSON-encoded ACL object for use in HTTP body
 	def create_acl(email, permission)
 		[
 				{
@@ -154,9 +179,13 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage)
 		].to_json
 	end
 
+	## GOOGLE CLOUD STORAGE METHODS
+
 	# retrieve a workspace's GCP bucket
 	#
 	# param: name (string) => name of workspace
+	#
+	# return: GoogleCloudStorage Bucket object
 	def get_workspace_bucket(name)
 		workspace = self.get_workspace(name)
 		bucket_name = workspace['workspace']['bucketName']
@@ -166,19 +195,63 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage)
 	# retrieve all files in a GCP bucket of a workspace
 	#
 	# param: name (string) => name of workspace
+	#
+	# return: array of GoogleCloudStorage File objects
 	def get_workspace_files(name)
 		bucket = self.get_workspace_bucket(name)
 		bucket.files
 	end
 
-	def download_workspace_file(name, filename)
-		workspace = self.get_workspace(name)
-		bucket_name = workspace['workspace']['bucketName']
-		path = self.api_root + "/cookie-authed/download/b/#{bucket_name}/o/#{filename}"
-		process_request(:get, path)
+	# retrieve single study_file in a GCP bucket of a workspace
+	#
+	# param: name (string) => name of workspace
+	# param: study_file (StudyFile) => StudyFile instance
+	#
+	# return: array of GoogleCloudStorage File objects
+	def get_workspace_file(name, study_file)
+		bucket = self.get_workspace_bucket(name)
+		bucket.files.select {|file| file.name == study_file.upload_file_name}.first
+	end
+
+	# add a study_file to a workspace bucket
+	#
+	# param: name (string) => name of workspace
+	# param: study_file (StudyFile) => StudyFile instance
+	#
+	# return: GoogleCloudStorage File object
+	def create_workspace_file(name, study_file)
+		bucket = self.get_workspace_bucket(name)
+		bucket.create_file study_file.upload.path study_file.upload_file_name
+	end
+
+	# delete a study_file to a workspace bucket
+	#
+	# param: name (string) => name of workspace
+	# param: study_file (StudyFile) => StudyFile instance
+	#
+	# return: true on file deletion
+	def delete_workspace_file(name, study_file)
+		file = self.get_workspace_file(name, study_file)
+		file.delete
+	end
+
+	# generate a signed url to download a file that isn't public (set at study level)
+	#
+	# param: name (string) => name of workspace
+	# param: study_file (StudyFile) => StudyFile instance
+	# param: opts (hash) => extra options for signed_url, see https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/file?method=signed_url-instance
+	#
+	# return: signed URL string
+	def generate_signed_url(name, study_file, opts={})
+		file = self.get_workspace_file(name, study_file)
+		file.signed_url(opts)
 	end
 
 	# check if OK response code was found
+	#
+	# param: code (integer) => integer HTTP response code
+	#
+	# return: boolean of whether or not response is a known 'OK' response
 	def ok?(code)
 		[200, 201, 202, 206].include?(code)
 	end
