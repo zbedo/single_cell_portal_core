@@ -44,6 +44,8 @@ end
 
 gem 'devise', '4.1.1'
 gem 'omniauth-google-oauth2'
+gem 'googleauth'
+gem 'google-cloud-storage', require: 'google/cloud/storage'
 gem 'selenium-webdriver', '3.0.3'
 gem 'jquery-ui-rails', :git => 'https://github.com/joliss/jquery-ui-rails'
 gem 'bootstrap-sass', :git => 'https://github.com/twbs/bootstrap-sass'
@@ -65,3 +67,4 @@ gem 'non-stupid-digest-assets'
 gem 'will_paginate_mongoid'
 gem 'rails-jquery-autocomplete', git: 'https://github.com/bigtunacan/rails-jquery-autocomplete'
 gem 'naturally'
+gem 'rest-client'
