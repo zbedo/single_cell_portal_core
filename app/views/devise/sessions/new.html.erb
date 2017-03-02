@@ -1,42 +1,6 @@
-<h1>Sign In</h1>
-<div class="row">
-	<div class="col-md-6">
-		<h3 class="study-lead">You can sign in with a local email address:</h3>
-		<%= form_for(resource, as: resource_name, url: session_path(resource_name), html: {class: 'form'}) do |f| %>
-			<div class="form-group">
-				<%= f.label :email %><br />
-				<%= f.email_field :email, autofocus: true, class: 'form-control' %>
-			</div>
-
-			<div class="form-group">
-				<%= f.label :password %><br />
-				<%= f.password_field :password, autocomplete: "off", class: 'form-control' %>
-			</div>
-
-			<% if devise_mapping.rememberable? -%>
-				<div class="form-group">
-					<div class="checkbox-inline">
-						<%= f.check_box :remember_me %>
-						<%= f.label :remember_me %>
-					</div>
-				</div>
-			<% end -%>
-
-			<div class="form-group">
-				<%= f.submit "Log in", class: 'btn btn-success' %>
-			</div>
-		<% end %>
-	</div>
-	<div class="col-md-6">
-		<h3 class="study-lead">Or you can sign in using Google:</h3>
-		<br />
-		<%= link_to "Sign in with <span class='fa fa-google-plus'></span>".html_safe, user_google_oauth2_omniauth_authorize_path, class: 'btn btn-lg btn-danger' %>
-
-	</div>
-</div>
 <div class="row">
 	<div class="col-md-12">
-		<%= render "devise/shared/links" %>
-	</div>
+    <h3 class="study-lead help-block text-center">Local accounts are no longer permitted.  Please contact <%= mail_to 'single_cell_portal@broadinstitute.org', 'us' %> about migrating your account if needed.</h3>
+    <p class="text-center"><%= link_to "Sign in with <span class='fa fa-google'></span>".html_safe, user_google_oauth2_omniauth_authorize_path, class: 'btn btn-lg btn-danger', id: 'google-auth' %></p>
+  </div>
 </div>
-

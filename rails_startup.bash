@@ -4,6 +4,9 @@ cd /home/app/webapp
 echo "*** CLEARING TMP CACHE ***"
 sudo -E -u app -H bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV tmp:clear
 echo "*** COMPLETED ***"
+echo "*** ROLLING OVER LOGS ***"
+ruby /home/app/webapp/bin/cycle_logs.rb -e=$PASSENGER_APP_ENV
+echo "*** COMPLETED ***"
 if [[ $PASSENGER_APP_ENV = "production" ]] || [[ $PASSENGER_APP_ENV = "staging" ]]
 then
     echo "*** PRECOMPILING ASSETS ***"

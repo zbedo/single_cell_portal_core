@@ -1,6 +1,51 @@
-<h1><%= @study.name %> <%= @study.visibility %> <span class="badge" id="cell-count"><%= @study.cell_count %> cells</span> <span class="badge"><%= @study.gene_count %> genes</span><%= link_to "<span class='fa fa-area-chart'></span> View Study".html_safe, view_study_path(@study.url_safe_name), class: 'btn btn-lg btn-info pull-right' %></h1>
+<h1><%= @study.name %> <%= @study.visibility %> <span class="badge" id="cell-count"><%= @study.cell_count %> cells</span> <span class="badge"><%= @study.gene_count %> genes</span></h1>
 <%= @study.description.html_safe %>
-<div class="panel panel-default" id="stats-panel">
+<div class="panel panel-default top-pad" id="info-panel">
+  <div class="panel-heading">
+    <div class="panel-title">
+      <h4><%= link_to "General Info <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#info', 'data-toggle' => 'collapse' %></h4>
+    </div>
+  </div>
+  <div class="panel-collapse collapse in" id="info">
+    <div class="panel-body">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="table-responsive">
+            <table class="table table-condensed" id="info-table">
+              <thead>
+              <tr>
+                <th>Type</th>
+                <th>ID/Link</th>
+                <th>Action</th>
+              </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Study URL</td>
+                  <td><%= view_study_url(@study.url_safe_name) %></td>
+                  <td><%= link_to "<span class='fa fa-area-chart'></span> View Study".html_safe, view_study_path(@study.url_safe_name), class: 'btn btn-primary' %></td>
+                </tr>
+                <tr>
+                  <td>FireCloud Workspace</td>
+                  <td><%= @study.firecloud_workspace %></td>
+                  <td><%= link_to_if !@study.firecloud_workspace.nil?, "<span class='fa fa-cloud'></span> View FireCloud Workspace".html_safe, @study.workspace_url, class: 'btn btn-info', target: :_blank %>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Google Storage Bucket</td>
+                  <td><%= @study.bucket_id %></td>
+                  <td><%= link_to_if !@study.bucket_id.nil?, "<span class='fa fa-database'></span> View Google Bucket".html_safe, @study.google_bucket_url, class: 'btn btn-success', target: :_blank %>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="panel panel-info top-pad" id="stats-panel">
 	<div class="panel-heading">
 		<div class="panel-title">
 			<h4><%= link_to "Statistics <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#stats', 'data-toggle' => 'collapse' %></h4>

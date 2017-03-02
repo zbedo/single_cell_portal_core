@@ -2,27 +2,84 @@ require 'rubygems'
 require 'test/unit'
 require 'selenium-webdriver'
 
+# Unit Test that is actually a user flow test using the Selenium Webdriver to test dev UI directly
+#
+# REQUIREMENTS
+#
+# This test suite must be run from outside of Docker (i.e. your host machine) as Docker vms have no concept of browsers/screen output
+# Therefore, the following languages/packages must be installed:
+#
+# 1. RVM (or equivalent Ruby language management system)
+# 2. Ruby >= 2.3
+# 3. Gems: rubygems, test-unit, selenium-webdriver
+# 4. Google Chrome with at least 2 Google accounts already signed in (referred to as $test_email & $share_email)
+# 5. Chromedriver (https://sites.google.com/a/chromium.org/chromedriver/)
+
+# USAGE
+#
+# ui_test_suite.rb takes two arguments:
+# 1. path to your Chrome user profile on your system (passed with -p)
+# 2. path to your Chromedriver binary (passed with -c)
+# this must be passed with ruby test/ui_test_suite.rb -- -p=[/path/to/profile/dir] -c=[/path/to/chromedriver]
+# if you do not use -- before the argument and give the appropriate flag (with =), it is processed as a Test::Unit flag and ignored
+
+## INITIALIZATION
+
+# DEFAULTS
+$user = `whoami`.strip
+$profile_dir = "/Users/#{$user}/Library/Application Support/Google/Chrome/Default"
+$chromedriver_path = '/usr/local/bin/chromedriver'
+$usage = 'ruby test/ui_test_suite.rb -- -p=/path/to/profile -c=/path/to/chromedriver -t=testing.email@gmail.com -s=sharing.email@gmail.com'
+$test_email = ''
+$share_email = ''
+
+# parse arguments
+ARGV.each do |arg|
+	if arg =~ /\-p\=/
+		$profile_dir = arg.gsub(/\-p\=/, "")
+	elsif arg =~ /\-c\=/
+	 	$chromedriver_path = arg.gsub(/\-c\=/, "")
+	elsif arg =~ /\-t\=/
+		$test_email = arg.gsub(/\-t\=/, "")
+	elsif arg =~ /\-s\=/
+		$share_email = arg.gsub(/\-s\=/, "")
+	elsif arg == '--'
+		# ignore, this is how args are passed to Test::Unit
+	else
+		puts "Ignored argument: #{arg}"
+	end
+end
+
+# print configuration
+puts "Loaded Chrome Profile: #{$profile_dir}"
+puts "Chromedriver Binary: #{$chromedriver_path}"
+puts "Testing email: #{$test_email}"
+puts "Sharing email: #{$share_email}"
+
+# make sure profile & chromedriver exist, otherwise kill tests before running and print usage
+if !Dir.exists?($profile_dir)
+	puts "No Chrome profile found at #{$profile_dir}"
+	puts $usage
+	exit(1)
+elsif !File.exists?($chromedriver_path)
+	puts "No Chromedriver binary found at #{$chromedriver_path}"
+	puts $usage
+	exit(1)
+end
+
 class UiTestSuite < Test::Unit::TestCase
 
-# Unit Test that is actually a user flow test using the Selenium Webdriver to test dev UI directly
 	def setup
-		caps = Selenium::WebDriver::Remote::Capabilities.chrome("chromeOptions" => {"args" => [ "--enable-webgl-draft-extensions" ]})
 		@driver = Selenium::WebDriver::Driver.for :chrome,
-																							driver_path: '/usr/local/opt/chromedriver/bin/chromedriver',
-																							desired_capabilities: caps
+																							driver_path: $chromedriver_dir,
+																							switches: ["--user-data-dir=#{$profile_dir}",
+																												 '--enable-webgl-draft-extensions']
 		@driver.manage.window.maximize
 		@base_url = 'https://localhost/single_cell'
 		@accept_next_alert = true
 		@driver.manage.timeouts.implicit_wait = 30
-		# test user needs to be created manually before this will work
-		@test_user = {
-				email: 'test.user@gmail.com',
-				password: 'password'
-		}
-		@share_user = {
-				email: 'share.user@gmail.com',
-				password: 'password'
-		}
+		# only Google auth
+
 		@genes = %w(Itm2a Sergef Chil5 Fam109a Dhx9 Ssu72 Olfr1018 Fam71e2 Eif2b2)
 		@wait = Selenium::WebDriver::Wait.new(:timeout => 30)
 		@test_data_path = File.expand_path(File.join(File.dirname(__FILE__), 'test_data')) + '/'
@@ -69,6 +126,26 @@ class UiTestSuite < Test::Unit::TestCase
 	def scroll_to_bottom
 		@driver.execute_script('window.scrollBy(0,1000)')
 		sleep(1)
+	end
+
+	# helper to log into admin portion of site
+	def login(email, path)
+		google_auth = @driver.find_element(:id, 'google-auth')
+		google_auth.click
+		puts 'logging in as ' + email
+		account = @driver.find_element(xpath: "//button[@value='#{email}']")
+		account.click
+		@not_loaded = true
+		puts 'starting check'
+		while @not_loaded == true
+			# we need to return the result of the script to store its value
+			loaded = @driver.execute_script("return elementVisible('.footer')")
+			if loaded == true
+				@not_loaded = false
+			end
+			sleep(1)
+		end
+		puts 'login successful'
 	end
 
 	# front end tests
@@ -253,14 +330,8 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + '/studies/new'
 		@driver.get path
 		close_modal('message_modal')
-		# send login info
-		email = @driver.find_element(:id, 'user_email')
-		email.send_keys(@test_user[:email])
-		password = @driver.find_element(:id, 'user_password')
-		password.send_keys(@test_user[:password])
-		login_form = @driver.find_element(:id, 'new_user')
-		login_form.submit
-		wait_until_page_loads(path)
+		# log in as user #1
+		login($test_email, path)
 		close_modal('message_modal')
 
 		# fill out study form
@@ -274,7 +345,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@wait.until {share.displayed? == true}
 		share.click
 		share_email = study_form.find_element(:class, 'share-email')
-		share_email.send_keys(@share_user[:email])
+		share_email.send_keys($share_email)
 		share_permission = study_form.find_element(:class, 'share-permission')
 		share_permission.send_keys('Edit')
 		# save study
@@ -390,15 +461,7 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + '/studies/new'
 		@driver.get path
 		close_modal('message_modal')
-		# send login info
-		email = @driver.find_element(:id, 'user_email')
-		email.send_keys(@test_user[:email])
-		password = @driver.find_element(:id, 'user_password')
-		password.send_keys(@test_user[:password])
-		login_form = @driver.find_element(:id, 'new_user')
-		login_form.submit
-		wait_until_page_loads(path)
-		close_modal('message_modal')
+		login($test_email, path)
 
 		# fill out study form
 		study_form = @driver.find_element(:id, 'new_study')
@@ -433,15 +496,7 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + '/studies/new'
 		@driver.get path
 		close_modal('message_modal')
-		# send login info
-		email = @driver.find_element(:id, 'user_email')
-		email.send_keys(@test_user[:email])
-		password = @driver.find_element(:id, 'user_password')
-		password.send_keys(@test_user[:password])
-		login_form = @driver.find_element(:id, 'new_user')
-		login_form.submit
-		wait_until_page_loads(path)
-		close_modal('message_modal')
+		login($test_email, path)
 
 		# fill out study form
 		study_form = @driver.find_element(:id, 'new_study')
@@ -511,21 +566,11 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# create private study for testing visibility/edit restrictions
 	# must be run before other tests, so numbered accordingly
-	test '2. create private study' do
+	test '4. create private study' do
 		# log in first
 		path = @base_url + '/studies/new'
 		@driver.get path
-		@driver.manage.window.maximize
-		close_modal('message_modal')
-		# send login info
-		email = @driver.find_element(:id, 'user_email')
-		email.send_keys(@test_user[:email])
-		password = @driver.find_element(:id, 'user_password')
-		password.send_keys(@test_user[:password])
-		login_form = @driver.find_element(:id, 'new_user')
-		login_form.submit
-		wait_until_page_loads(path)
-		close_modal('message_modal')
+		login($test_email, path)
 
 		# fill out study form
 		study_form = @driver.find_element(:id, 'new_study')
@@ -551,14 +596,10 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.manage.window.maximize
 		close_modal('message_modal')
 		# send login info
-		email = @driver.find_element(:id, 'user_email')
-		email.send_keys(@test_user[:email])
-		password = @driver.find_element(:id, 'user_password')
-		password.send_keys(@test_user[:password])
-		login_form = @driver.find_element(:id, 'new_user')
-		login_form.submit
-		wait_until_page_loads(path)
+		login($test_email, path)
 		close_modal('message_modal')
+
+		# get path info
 		edit = @driver.find_element(:class, 'private-study-edit')
 		edit.click
 		sleep(2)
@@ -580,12 +621,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# login as share user
 		login_link = @driver.find_element(:id, 'login-nav')
 		login_link.click
-		email = @driver.find_element(:id, 'user_email')
-		email.send_keys(@share_user[:email])
-		password = @driver.find_element(:id, 'user_password')
-		password.send_keys(@share_user[:password])
-		login_form = @driver.find_element(:id, 'new_user')
-		login_form.submit
+		login($share_email, path)
 		close_modal('message_modal')
 
 		# view study

@@ -2,6 +2,17 @@ class Study
   include Mongoid::Document
   include Mongoid::Timestamps
 
+  # prefix for FireCloud workspaces, defaults to blank in production
+  WORKSPACE_NAME_PREFIX = Rails.env != 'production' ? Rails.env + '-' : ''
+
+  # instantiate one FireCloud client to avoid creating too many tokens
+  @@firecloud_client = FireCloudClient.new
+
+  # getter for FireCloudClient instance
+  def self.firecloud_client
+    @@firecloud_client
+  end
+
   # pagination
   def self.per_page
     5
@@ -70,6 +81,8 @@ class Study
   field :embargo, type: Date
   field :url_safe_name, type: String
   field :description, type: String
+  field :firecloud_workspace, type: String
+  field :bucket_id, type: String
   field :public, type: Boolean, default: true
   field :initialized, type: Boolean, default: false
   field :view_count, type: Integer, default: 0
@@ -95,11 +108,12 @@ class Study
   end
 
   # callbacks
-  before_validation :set_url_safe_name
+  before_validation :set_url_safe_name, :set_firecloud_workspace_name
+  validate          :create_firecloud_workspace, on: :create
   before_update     :check_data_links
   after_save        :check_public?
   before_destroy    :remove_public_symlinks
-  after_destroy     :remove_data_dir
+  after_destroy     :remove_data_dir, :delete_firecloud_workspace
 
   # search definitions
   index({"name" => "text", "description" => "text"})
@@ -159,15 +173,19 @@ class Study
     Rails.root.join('data', self.url_safe_name)
   end
 
+  # helper to generate a URL to a study's FireCloud workspace
+  def workspace_url
+    "https://portal.firecloud.org/#workspaces/#{FireCloudClient::PORTAL_NAMESPACE}%3A#{self.firecloud_workspace}"
+  end
+
+  # helper to generate a URL to a study's GCP bucket
+  def google_bucket_url
+    "https://console.cloud.google.com/storage/browser/#{self.bucket_id}"
+  end
+
   # label for study visibility
   def visibility
     self.public? ? "<span class='sc-badge bg-success text-success'>Public</span>".html_safe : "<span class='sc-badge bg-danger text-danger'>Private</span>".html_safe
-  end
-
-  # check whether or not user has uploaded necessary files to parse cluster coords.
-  # DEPRECATED
-  def can_parse_clusters
-    self.study_files.size > 1 && self.study_files.where(file_type:'Cluster Assignments').exists? && self.study_files.where(file_type:'Cluster Coordinates').exists?
   end
 
   # check if study is still under embargo or whether given user can bypass embargo
@@ -833,158 +851,59 @@ class Study
     true
   end
 
-  # one-time helper to reformat files of an older type into newer current form with 2 header lines
-  # preserves old file as .bak for disaster recovery
-  def reformat_study_file(study_file)
-    orig_file = File.open(study_file.upload.path)
-    new_file_name = study_file.upload.path + '.new'
-    new_file = File.new(new_file_name, 'w+')
-    # double logging for persistence
-    message = "Opening #{study_file.upload_file_name} in #{self.name} for reading, writing new data to #{new_file_name}"
-    Rails.logger.info message
-    puts message
-    while !orig_file.eof?
-      line = orig_file.readline
-      # write correct new header information based on file type
-      if orig_file.lineno == 1
-        vals = line.split(/[\t,]/).map(&:strip)
-        name_index = vals.index('CELL_NAME')
-        vals[name_index] = 'NAME'
-        new_file.puts vals.join("\t")
-        if study_file.file_type == 'Cluster Assignments'
-          new_file.puts "TYPE\tgroup\tgroup"
-        elsif study_file.file_type == 'Cluster Coordinates'
-          new_file.puts "TYPE\tnumeric\tnumeric"
-        end
-      else
-        # write rest of contents
-        new_file.puts line
-      end
-    end
-    # clean up
-    orig_file.close
-    new_file.close
-    # move old file to .bak, then new file to original filename
-    message = "Write complete, moving  #{study_file.upload.path} to #{study_file.upload.path + '.bak'} in #{self.name}"
-    Rails.logger.info message
-    puts message
-    FileUtils.mv study_file.upload.path, study_file.upload.path + '.bak'
-    message = "Finishing up, moving  #{new_file_name} to #{study_file.upload.path} in #{self.name}"
-    Rails.logger.info message
-    puts message
-    FileUtils.mv study_file.upload.path + '.new', study_file.upload.path
-    # update file type accordingly
-    new_file_type = study_file.file_type == 'Cluster Assignments' ? 'Metadata' : 'Cluster'
-    message = "Updating file type of #{study_file.upload.path} to #{new_file_type} in #{self.name}"
-    Rails.logger.info message
-    puts message
-    study_file.update_attributes(file_type: new_file_type)
-    true
-  end
-
-  def migrate_study(user)
-		message = "Beginning migration for #{self.name}"
-		Rails.logger.info message
-		puts message
-		# cluster assignments & coordinates files need to be re-formatted & re-parsed
-		eligible_files = self.study_files.where(file_type: /(Coordinates|Assignments)/).to_a
-		message = "Found #{eligible_files.size} eligible files: #{eligible_files.map(&:upload_file_name).join(', ')}"
-		Rails.logger.info message
-		puts message
-		# re-format and re-parse all matching files
-		eligible_files.each do |file|
-			message = "Beginning reformatting of #{file.upload_file_name}"
-			Rails.logger.info message
-			puts message
-			self.reformat_study_file(file)
-			# reload file to make sure we have updated attributes
-			new_file = StudyFile.find(file._id)
-			# re-parse file to populate database
-			message = "Beginning re-parsing of #{new_file.upload_file_name}"
-			Rails.logger.info message
-			puts message
-			case new_file.file_type
-				when 'Metadata'
-					message = "Parsing #{new_file.upload_file_name} as #{new_file.file_type}"
-					Rails.logger.info message
-					puts message
-					self.initialize_study_metadata(new_file, user)
-				when 'Cluster'
-					message = "Parsing #{new_file.upload_file_name} as #{new_file.file_type}"
-					Rails.logger.info message
-					puts message
-					self.initialize_cluster_group_and_data_arrays(new_file, user)
-				else
-					puts "Ineligible file type for #{new_file.upload_file_name}: #{new_file.file_type}; skipping parse"
-			end
-			message = "Parsing of #{new_file.upload_file_name} complete"
-			Rails.logger.info message
-			puts message
-		end
-		message = "Migration complete for #{self.name}"
-		Rails.logger.info message
-		puts message
-  end
-
-  # Single-use method to migrate all studies without study_metadata or data_arrays into new collections
-  def self.migrate_all_studies(user)
-    # collect all studies and determine which need to be migrated - will have both single_cells and cluster_points
-    self.all.to_a.each do |study|
-      if study.single_cells.any? && study.cluster_points.any?
-        message = "Beginning migration for #{study.name}"
-        Rails.logger.info message
-        puts message
-        # cluster assignments & coordinates files need to be re-formatted & re-parsed
-        eligible_files = study.study_files.where(file_type: /(Coordinates|Assignments)/).to_a
-        message = "Found #{eligible_files.size} eligible files: #{eligible_files.map(&:upload_file_name).join(', ')}"
-        Rails.logger.info message
-        puts message
-        # re-format and re-parse all matching files
-        eligible_files.each do |file|
-          message = "Beginning reformatting of #{file.upload_file_name}"
-          Rails.logger.info message
-          puts message
-          study.reformat_study_file(file)
-          # reload file to make sure we have updated attributes
-          new_file = StudyFile.find(file._id)
-          # re-parse file to populate database
-          message = "Beginning re-parsing of #{new_file.upload_file_name}"
-          Rails.logger.info message
-          puts message
-          case new_file.file_type
-            when 'Metadata'
-              message = "Parsing #{new_file.upload_file_name} as #{new_file.file_type}"
-              Rails.logger.info message
-              puts message
-              study.initialize_study_metadata(new_file, user)
-            when 'Cluster'
-              message = "Parsing #{new_file.upload_file_name} as #{new_file.file_type}"
-              Rails.logger.info message
-              puts message
-              study.initialize_cluster_group_and_data_arrays(new_file, user)
-            else
-              puts "Ineligible file type for #{new_file.upload_file_name}: #{new_file.file_type}; skipping parse"
-          end
-          message = "Parsing of #{new_file.upload_file_name} complete"
-          Rails.logger.info message
-          puts message
-        end
-        message = "Migration complete for #{study.name}"
-        Rails.logger.info message
-        puts message
-      end
-    end
-    message = "All eligible studies migrated; Finishing"
-    Rails.logger.info message
-    puts message
-    true
-  end
-
   private
 
   # sets a url-safe version of study name (for linking)
   def set_url_safe_name
     self.url_safe_name = self.name.downcase.gsub(/[^a-zA-Z0-9]+/, '-').chomp('-')
+  end
+
+  # set the FireCloud workspace name to be used when creating study
+  def set_firecloud_workspace_name
+    self.firecloud_workspace = "#{WORKSPACE_NAME_PREFIX}#{self.url_safe_name}"
+  end
+
+  # automatically create a FireCloud workspace on study creation
+  # will raise validation errors if creation, bucket or ACL assignment fail for any reason and deletes workspace on validation fail
+  def create_firecloud_workspace
+    begin
+      # create workspace
+      workspace = Study.firecloud_client.create_workspace(self.firecloud_workspace)
+      Rails.logger.info "Study: #{self.name} FireCloud workspace creation successful"
+      ws_name = workspace['name']
+      # validate creation
+      unless ws_name == self.firecloud_workspace
+        # delete workspace on validation fail
+        Study.firecloud_client.delete_workspace(self.firecloud_workspace)
+        errors.add(:firecloud_workspace, ' was not created properly (workspace name did not match or was not created).  Please try again later.')
+      end
+      Rails.logger.info "Study: #{self.name} FireCloud workspace validation successful"
+      # set bucket_id
+      bucket = workspace['bucketName']
+      self.bucket_id = bucket
+      if self.bucket_id.nil?
+        # delete workspace on validation fail
+        Study.firecloud_client.delete_workspace(self.firecloud_workspace)
+        errors.add(:firecloud_workspace, ' was not created properly (storage bucket was not set).  Please try again later.')
+      end
+      Rails.logger.info "Study: #{self.name} FireCloud bucket assignment successful"
+      # set workspace acl
+      study_owner = self.user.email
+      acl = Study.firecloud_client.create_acl(study_owner, 'OWNER')
+      Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
+      # validate acl
+      ws_acl = Study.firecloud_client.get_workspace_acl(ws_name)
+      unless ws_acl['acl'][study_owner]['accessLevel'] == 'OWNER'
+        # delete workspace on validation fail
+        Study.firecloud_client.delete_workspace(self.firecloud_workspace)
+        errors.add(:firecloud_workspace, ' was not created properly (permissions do not match).  Please try again later.')
+      end
+      Rails.logger.info "Study: #{self.name} FireCloud workspace acl assignment successful"
+    rescue => e
+      # delete workspace on any fail as this amounts to a validation fail
+      Study.firecloud_client.delete_workspace(self.firecloud_workspace)
+      errors.add(:firecloud_workspace, " creation failed: #{e.message}; Please try again later.")
+    end
   end
 
   # used for creating symbolic links to make data downloadable
@@ -1033,6 +952,16 @@ class Study
   def remove_data_dir
     if Dir.exists?(self.data_store_path)
       FileUtils.rm_rf(self.data_store_path)
+    end
+  end
+
+  # remove firecloud workspace on delete
+  def delete_firecloud_workspace
+    begin
+      Study.firecloud_client.delete_workspace(self.firecloud_workspace)
+    rescue RuntimeError => e
+      # workspace was not found, most likely deleted already
+      Rails.logger.error "#{Time.now}: #{e.message}"
     end
   end
 end

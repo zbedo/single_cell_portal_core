@@ -91,7 +91,7 @@ total memory usage under this limit.
 Memory defaults are:
 * Portal memory: 12GB (production only)
 * MongoDB memory: 12GB (always enabled)
-* MongoDB WiredTiger cache size: 10GB (always enabled)
+* MongoDB WiredTiger cache size: 4GB (always enabled)
 
 These defaults can be overridden inside both <code>boot_docker</code> and <code>boot_mongo</code> by using the appropriate
 flags.  To see these, run <code>bin/boot_docker -H</code> and <code>boot_mongo -H</code>.  Depending on your environment,
@@ -123,6 +123,13 @@ All source files are owned by <code>docker-user</code>, so if you need to pull f
 as <code>root</code>, so exit out of the shell before running them.
 
 The production URL is: https://portals.broadinstitute.org/single_cell
+
+==== MAINTENANCE MODE
+The production Single Cell portal has a defined maintenance window every <b>Monday from 9:30-10:30AM EST</b>.  To minimize
+user dispruption when doing updates during that window (or hot fixes any other time) the portal has a 'maintenance mode'
+feature that will return a 503 and redirect all incoming traffic to a static maintenance HTML page.
+
+To use this feature, run the <code>bin/enable_maintenance.sh [on/off]</code> script accordingly.
 
 ==== PRODUCTION PERSISTENT DISKS
 The production Single Cell portal utilizes two persistent disks for data storage: one for the portal itself, and a second

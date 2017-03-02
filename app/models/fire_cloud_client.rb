@@ -1,4 +1,4 @@
-class FireCloudClient < Struct.new(:access_token, :api_root, :storage)
+class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_at)
 
 	# Class that wraps API calls to both FireCloud and Google Cloud Storage to manage the CRUDing of both FireCloud workspaces
 	# and files inside the associated GCP storage buckets
@@ -19,8 +19,6 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage)
 	SERVICE_ACCOUNT_KEY ||= ENV['SERVICE_ACCOUNT_KEY'] || File.absolute_path(Rails.root.join('config', 'broad-singlecellportal-d5dad9c8d7db.json'))
 	# Permission values allowed for ACLs
 	WORKSPACE_PERMISSIONS = ['OWNER', 'READER', 'WRITER', 'NO ACCESS']
-	# prefix for workspaces, defaults to blank in production
-	WORKSPACE_NAME_PREFIX = Rails.env != 'production' ? Rails.env + '-' : ''
 
 	## CONSTRUCTOR
 	#
@@ -37,7 +35,12 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage)
 				project: PORTAL_NAMESPACE,
 				keyfile: SERVICE_ACCOUNT_KEY
 		)
+
+		# set expiration date of token
+		self.expires_at = Time.now + self.access_token['expires_in']
 	end
+
+	## TOKEN METHODS
 
 	# generate an access token to use for all requests
 	#
@@ -46,8 +49,25 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage)
 	def self.generate_access_token
 		json_key = File.open(SERVICE_ACCOUNT_KEY)
 		creds = Google::Auth::ServiceAccountCredentials.make_creds(json_key_io: json_key, scope: GOOGLE_SCOPES)
-		token = creds.fetch_access_token
+		token = creds.fetch_access_token!
 		token
+	end
+
+	# refresh access_token when expired and stores back in FireCloudClient instance
+	#
+	# return: nil
+	def refresh_access_token
+		new_token = FireCloudClient.generate_access_token
+		new_expiry = Time.now + new_token['expires_in']
+		self.access_token = new_token
+		self.expires_at = new_expiry
+	end
+
+	# check if an access_token is expired
+	#
+	# return: boolean of token exipiration
+	def access_token_expired?
+		Time.now >= self.expires_at
 	end
 
 	## FIRECLOUD METHODS
@@ -60,6 +80,11 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage)
 	#
 	# return: object depends on response code
 	def process_request(http_method, path, payload=nil)
+		# check for token expiry first before executing
+		if self.access_token_expired?
+			Rails.logger.info "#{Time.now}: Token expired, refreshing access token"
+			self.refresh_access_token
+		end
 		# set default headers
 		headers = {
 				'Authorization' => "Bearer #{self.access_token['access_token']}",
@@ -86,8 +111,9 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage)
 			rescue RestClient::Exception => e
 				@retry_count = 0
 				context = " encountered when requesting '#{path}'"
-				Rails.logger.error "#{Time.now}: " + e.message + context
-				false
+				log_message = "#{Time.now}: " + e.message + context
+				Rails.logger.error log_message
+				raise RuntimeError.new(e.message)
 			end
 		else
 			@retry_count = 0
@@ -105,16 +131,6 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage)
 		workspaces.keep_if {|ws| ws['workspace']['namespace'] == PORTAL_NAMESPACE}
 	end
 
-	# get the specified workspace
-	#
-	# param: name (string) => name of workspace
-	#
-	# return: JSON object of workspace instance
-	def get_workspace(name)
-		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{WORKSPACE_NAME_PREFIX}#{name}"
-		process_request(:get, path)
-	end
-
 	# create a workspace, prepending WORKSPACE_NAME_PREFIX as necessary
 	#
 	# param: name (string) => name of workspace
@@ -125,10 +141,20 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage)
 		# construct payload for POST
 		payload = {
 				namespace: PORTAL_NAMESPACE,
-				name: "#{WORKSPACE_NAME_PREFIX}#{name}",
+				name: name,
 				attributes: {}
 		}.to_json
 		process_request(:post, path, payload)
+	end
+
+	# get the specified workspace
+	#
+	# param: name (string) => name of workspace
+	#
+	# return: JSON object of workspace instance
+	def get_workspace(name)
+		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{name}"
+		process_request(:get, path)
 	end
 
 	# delete a workspace
@@ -137,7 +163,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage)
 	#
 	# return: JSON message of status of workspace deletion
 	def delete_workspace(name)
-		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{WORKSPACE_NAME_PREFIX}#{name}"
+		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{name}"
 		process_request(:delete, path)
 	end
 
@@ -147,7 +173,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage)
 	#
 	# return: JSON object of workspace ACL instance
 	def get_workspace_acl(name)
-		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{WORKSPACE_NAME_PREFIX}#{name}/acl"
+		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{name}/acl"
 		process_request(:get, path)
 	end
 
@@ -159,7 +185,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage)
 	#
 	# return: JSON response of ACL update
 	def update_workspace_acl(name, acl)
-		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{WORKSPACE_NAME_PREFIX}#{name}/acl"
+		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{name}/acl?inviteUsersNotFound=true"
 		process_request(:patch, path, acl)
 	end
 

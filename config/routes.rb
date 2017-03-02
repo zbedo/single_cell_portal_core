@@ -34,8 +34,8 @@ Rails.application.routes.draw do
 		get 'render_cluster/:study_name', to: 'site#render_cluster', as: :render_cluster
 		get 'study/:study_name/get_new_annotations', to: 'site#get_new_annotations', as: :get_new_annotations
     post 'study/:study_name/search', to: 'site#search_genes', as: :search_genes
-    get 'study/:study_name/gene_expression/:gene/', to: 'site#view_gene_expression', as: :view_gene_expression
-    get 'study/:study_name/render_gene_expression_plots/:gene/', to: 'site#render_gene_expression_plots', as: :render_gene_expression_plots
+    get 'study/:study_name/gene_expression/:gene/', to: 'site#view_gene_expression', as: :view_gene_expression, constraints: {gene: /.*/}
+    get 'study/:study_name/render_gene_expression_plots/:gene/', to: 'site#render_gene_expression_plots', as: :render_gene_expression_plots, constraints: {gene: /.*/}
     get 'study/:study_name/gene_expression', to: 'site#view_gene_expression_heatmap', as: :view_gene_expression_heatmap
     get 'study/:study_name/gene_set_expression', to: 'site#view_gene_set_expression', as: :view_gene_set_expression
     get 'study/:study_name/render_gene_set_expression_plots', to: 'site#render_gene_set_expression_plots', as: :render_gene_set_expression_plots

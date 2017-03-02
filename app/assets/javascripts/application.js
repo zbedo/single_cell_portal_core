@@ -32,6 +32,10 @@ jQuery.railsAutocomplete.options.noMatchesLabel = "No matches in this study";
 // used for calculating size of plotly graphs to maintain square aspect ratio
 var SCATTER_RATIO = 0.65;
 
+function elementVisible(element) {
+    return $(element).is(":visible");
+}
+
 function paginateStudies(totalPages, order, searchString) {
 
     var paginationOpts = {

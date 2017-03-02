@@ -107,8 +107,8 @@ class SiteController < ApplicationController
 
   # render box and scatter plots for parent clusters or a particular sub cluster
   def view_gene_expression
-    matches = @study.expression_scores.by_gene(params[:gene])
-    @gene = load_best_gene_match(matches, params[:gene])
+    # we don't need to call by_gene since we know we have an exact match (or were redirected to the closest possible by search_genes)
+    @gene = @study.expression_scores.find_by(gene: params[:gene])
     @options = load_cluster_group_options
     @cluster_annotations = load_cluster_group_annotations
     @top_plot_partial = @selected_annotation[:type] == 'group' ? 'expression_plots_view' : 'expression_annotation_plots_view'

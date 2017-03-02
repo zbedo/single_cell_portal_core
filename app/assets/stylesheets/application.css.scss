@@ -149,6 +149,12 @@ html, body {
   color: #5cb85c;
 }
 
+#google-auth {
+  margin-top: 15px;
+  border-radius: 9px;
+  font-size: 32px;
+}
+
 .actions {
   white-space: nowrap;
 }
@@ -318,4 +324,14 @@ html, body {
 #cell-count {
   background-color: #337ab7;
   color: #fff;
+}
+
+#gsutil-command-wrapper {
+  display: none;
+}
+
+#gsutil-command {
+  padding: 7px 13px;
+  margin-left: 20px;
+  background-color: #2b2b2b;
 }
