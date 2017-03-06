@@ -92,6 +92,8 @@
 					});
 					fileUploading = false;
 					$.get("<%= retrieve_wizard_upload_study_path(@study._id) %>", {file: fileName, selector: '#fastq_form_<%= study_file._id %>', partial: 'initialize_fastq_form'});
+					// send to firecloud directly
+          $.post("<%= send_to_firecloud_study_path %>", {file: fileName});
 					if (<%= @study.study_files.select {|sf| sf.file_type == 'Fastq'}.size == 1 %>) {
 						completeWizardStep('initialize_fastq_form_nav');
 						setWizardProgress(getWizardStatus());

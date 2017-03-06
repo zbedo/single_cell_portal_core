@@ -1,9 +1,0 @@
-$('<%= params[:modal_target]%>').modal('hide');
-
-// replace form with new instance
-$("<%= params[:selector] %>").replaceWith("<%= escape_javascript( render params[:partial], study_file: @study_file) %>");
-
-
-// render error message
-$('#study-files-notice-target').html("<%= escape_javascript(render 'error_modal') %>");
-$('#error-modal').modal({show: true, backdrop: 'static'});

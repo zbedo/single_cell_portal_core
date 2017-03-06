@@ -29,7 +29,7 @@ require 'selenium-webdriver'
 $user = `whoami`.strip
 $profile_dir = "/Users/#{$user}/Library/Application Support/Google/Chrome/Default"
 $chromedriver_path = '/usr/local/bin/chromedriver'
-$usage = 'ruby test/ui_test_suite.rb -- -p=/path/to/profile -c=/path/to/chromedriver -t=testing.email@gmail.com -s=sharing.email@gmail.com'
+$usage = 'ruby test/ui_test_suite.rb -- -p=/path/to/profile -c=/path/to/chromedriver -e=testing.email@gmail.com -s=sharing.email@gmail.com'
 $test_email = ''
 $share_email = ''
 
@@ -39,14 +39,10 @@ ARGV.each do |arg|
 		$profile_dir = arg.gsub(/\-p\=/, "")
 	elsif arg =~ /\-c\=/
 	 	$chromedriver_path = arg.gsub(/\-c\=/, "")
-	elsif arg =~ /\-t\=/
-		$test_email = arg.gsub(/\-t\=/, "")
+	elsif arg =~ /\-e\=/
+		$test_email = arg.gsub(/\-e\=/, "")
 	elsif arg =~ /\-s\=/
 		$share_email = arg.gsub(/\-s\=/, "")
-	elsif arg == '--'
-		# ignore, this is how args are passed to Test::Unit
-	else
-		puts "Ignored argument: #{arg}"
 	end
 end
 
@@ -68,6 +64,7 @@ elsif !File.exists?($chromedriver_path)
 end
 
 class UiTestSuite < Test::Unit::TestCase
+	self.test_order = :defined
 
 	def setup
 		@driver = Selenium::WebDriver::Driver.for :chrome,
@@ -112,7 +109,6 @@ class UiTestSuite < Test::Unit::TestCase
 		modal = @driver.find_element(:id, id)
 		dismiss = modal.find_element(:class, 'close')
 		dismiss.click
-		@wait.until {@driver.find_element(:tag_name, 'body')[:class].include?('modal-open') == false}
 		# this is a hack, but different browsers behave differently so this lets the fade animation clear
 		sleep(1)
 	end
@@ -129,26 +125,380 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# helper to log into admin portion of site
-	def login(email, path)
+	# Will also approve terms if not accepted yet, waits for redirect back to site, and closes modal
+	def login(email)
 		google_auth = @driver.find_element(:id, 'google-auth')
 		google_auth.click
 		puts 'logging in as ' + email
 		account = @driver.find_element(xpath: "//button[@value='#{email}']")
 		account.click
-		@not_loaded = true
-		puts 'starting check'
-		while @not_loaded == true
-			# we need to return the result of the script to store its value
-			loaded = @driver.execute_script("return elementVisible('.footer')")
-			if loaded == true
-				@not_loaded = false
+		# check to make sure if we need to accept terms
+		if @driver.current_url.include?('https://accounts.google.com/o/oauth2/auth')
+			puts 'approving access'
+			approve = @driver.find_element(:id, 'submit_approve_access')
+			@clickable = approve['disabled'].nil?
+			while @clickable != true
+				sleep(1)
+				@clickable = @driver.find_element(:id, 'submit_approve_access')['disabled'].nil?
 			end
-			sleep(1)
+			approve.click
+			puts 'access approved'
 		end
+		# wait for redirect to finish by checking for footer element
+		@not_loaded = true
+		while @not_loaded == true
+			begin
+				# we need to return the result of the script to store its value
+				loaded = @driver.execute_script("return elementVisible('.footer')")
+				if loaded == true
+					@not_loaded = false
+				end
+				sleep(1)
+			rescue Selenium::WebDriver::Error::UnknownError
+				sleep(1)
+			end
+		end
+		close_modal('message_modal')
 		puts 'login successful'
 	end
 
-	# front end tests
+	# admin backend tests of entire study creation process including negative/error tests
+	# uses example data in test directoyr as inputs (based off of https://github.com/broadinstitute/single_cell_portal/tree/master/demo_data)
+	# these tests run first to create test studies to use in front-end tests later
+	test 'create a study' do
+		# log in first
+		path = @base_url + '/studies/new'
+		@driver.get path
+		close_modal('message_modal')
+		# log in as user #1
+		login($test_email)
+
+		# fill out study form
+		study_form = @driver.find_element(:id, 'new_study')
+		study_form.find_element(:id, 'study_name').send_keys('Test Study')
+		study_form.find_element(:id, 'study_embargo').send_keys('2016-12-31')
+		public = study_form.find_element(:id, 'study_public')
+		public.send_keys('Yes')
+		# add a share
+		share = @driver.find_element(:id, 'add-study-share')
+		@wait.until {share.displayed? == true}
+		share.click
+		share_email = study_form.find_element(:class, 'share-email')
+		share_email.send_keys($share_email)
+		share_permission = study_form.find_element(:class, 'share-permission')
+		share_permission.send_keys('Edit')
+		# save study
+		save_study = @driver.find_element(:id, 'save-study')
+		save_study.click
+
+		# upload expression matrix
+		close_modal('message_modal')
+		upload_expression = @driver.find_element(:id, 'upload-expression')
+		upload_expression.send_keys(@test_data_path + 'expression_matrix_example.txt')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		# close success modal
+		wait_for_render(:id, 'upload-success-modal')
+		close_modal('upload-success-modal')
+
+		# upload metadata
+		wait_for_render(:id, 'metadata_form')
+		upload_metadata = @driver.find_element(:id, 'upload-metadata')
+		upload_metadata.send_keys(@test_data_path + 'metadata_example.txt')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		wait_for_render(:id, 'upload-success-modal')
+		close_modal('upload-success-modal')
+
+		# upload cluster
+		cluster_form_1 = @driver.find_element(:class, 'initialize_ordinations_form')
+		cluster_name = cluster_form_1.find_element(:class, 'filename')
+		cluster_name.send_keys('Test Cluster 1')
+		upload_cluster = cluster_form_1.find_element(:class, 'upload-clusters')
+		upload_cluster.send_keys(@test_data_path + 'cluster_example.txt')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = cluster_form_1.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		wait_for_render(:id, 'upload-success-modal')
+		close_modal('upload-success-modal')
+
+		# upload a second cluster
+		prev_btn = @driver.find_element(:id, 'prev-btn')
+		prev_btn.click
+		new_cluster = @driver.find_element(:class, 'add-cluster')
+		new_cluster.click
+		sleep(1)
+		scroll_to_bottom
+		# will be second instance since there are two forms
+		cluster_form_2 = @driver.find_element(:class, 'new-cluster-form')
+		cluster_name_2 = cluster_form_2.find_element(:class, 'filename')
+		cluster_name_2.send_keys('Test Cluster 2')
+		upload_cluster_2 = cluster_form_2.find_element(:class, 'upload-clusters')
+		upload_cluster_2.send_keys(@test_data_path + 'cluster_2_example.txt')
+		wait_for_render(:id, 'start-file-upload')
+		scroll_to_bottom
+		upload_btn_2 = cluster_form_2.find_element(:id, 'start-file-upload')
+		upload_btn_2.click
+		wait_for_render(:id, 'upload-success-modal')
+		close_modal('upload-success-modal')
+
+		# upload fastq
+		wait_for_render(:class, 'initialize_fastq_form')
+		upload_fastq = @driver.find_element(:class, 'upload-fastq')
+		upload_fastq.send_keys(@test_data_path + 'cell_1_L1.fastq.gz')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		wait_for_render(:class, 'fastq-file')
+		wait_for_render(:id, 'upload-success-modal')
+		close_modal('upload-success-modal')
+		next_btn = @driver.find_element(:id, 'next-btn')
+		next_btn.click
+
+		# upload marker gene list
+		wait_for_render(:class, 'initialize_marker_genes_form')
+		marker_form = @driver.find_element(:class, 'initialize_marker_genes_form')
+		marker_file_name = marker_form.find_element(:id, 'study_file_name')
+		marker_file_name.send_keys('Test Gene List')
+		upload_markers = marker_form.find_element(:class, 'upload-marker-genes')
+		upload_markers.send_keys(@test_data_path + 'marker_1_gene_list.txt')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = marker_form.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		wait_for_render(:id, 'upload-success-modal')
+		close_modal('upload-success-modal')
+		next_btn = @driver.find_element(:id, 'next-btn')
+		next_btn.click
+
+		# upload doc file
+		wait_for_render(:class, 'initialize_misc_form')
+		upload_doc = @driver.find_element(:class, 'upload-misc')
+		upload_doc.send_keys(@test_data_path + 'table_1.xlsx')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		wait_for_render(:class, 'documentation-file')
+		# close success modal
+		wait_for_render(:id, 'upload-success-modal')
+		close_modal('upload-success-modal')
+
+		# change attributes on file to validate update function
+		misc_form = @driver.find_element(:class, 'initialize_misc_form')
+		desc_field = misc_form.find_element(:id, 'study_file_description')
+		desc_field.send_keys('Supplementary table')
+		save_btn = misc_form.find_element(:class, 'save-study-file')
+		save_btn.click
+		wait_for_render(:id, 'study-file-notices')
+		close_modal('study-file-notices')
+
+	end
+
+	# text gzip parsing of expression matrices
+	test 'parse gzip expression matrix' do
+		# log in first
+		path = @base_url + '/studies/new'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email)
+
+		# fill out study form
+		study_form = @driver.find_element(:id, 'new_study')
+		study_form.find_element(:id, 'study_name').send_keys('Gzip Parse')
+		# save study
+		save_study = @driver.find_element(:id, 'save-study')
+		save_study.click
+
+		# upload bad expression matrix
+		close_modal('message_modal')
+		upload_expression = @driver.find_element(:id, 'upload-expression')
+		upload_expression.send_keys(@test_data_path + 'expression_matrix_example_gzipped.txt.gz')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		# close modal
+		wait_for_render(:id, 'upload-success-modal')
+		close_modal('upload-success-modal')
+
+		# verify parse completed
+		studies_path = @base_url + '/studies'
+		@driver.get studies_path
+		wait_until_page_loads(studies_path)
+		study_file_count = @driver.find_element(:id, 'gzip-parse-study-file-count')
+		assert study_file_count.text == '1', "found incorrect number of study files; expected 1 and found #{study_file_count.text}"
+	end
+
+	# negative tests to check file parsing & validation
+	# since parsing happens in background, all messaging is handled through emails
+	# this test just makes sure that parsing fails and removed entries appropriately
+	# your test email account should receive emails notifying of failure
+	test 'create study error messaging' do
+		# log in first
+		path = @base_url + '/studies/new'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email)
+
+		# fill out study form
+		study_form = @driver.find_element(:id, 'new_study')
+		study_form.find_element(:id, 'study_name').send_keys('Error Messaging Test Study')
+		# save study
+		save_study = @driver.find_element(:id, 'save-study')
+		save_study.click
+
+		# upload bad expression matrix
+		close_modal('message_modal')
+		upload_expression = @driver.find_element(:id, 'upload-expression')
+		upload_expression.send_keys(@test_data_path + 'expression_matrix_example_bad.txt')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		# close modal
+		wait_for_render(:id, 'upload-success-modal')
+		close_modal('upload-success-modal')
+
+		# upload bad metadata assignments
+		wait_for_render(:id, 'metadata_form')
+		upload_assignments = @driver.find_element(:id, 'upload-metadata')
+		upload_assignments.send_keys(@test_data_path + 'metadata_bad.txt')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		# close modal
+		wait_for_render(:id, 'upload-success-modal')
+		close_modal('upload-success-modal')
+
+		# upload bad cluster coordinates
+		upload_clusters = @driver.find_element(:class, 'upload-clusters')
+		upload_clusters.send_keys(@test_data_path + 'cluster_bad.txt')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		# close modal
+		wait_for_render(:id, 'upload-success-modal')
+		close_modal('upload-success-modal')
+		next_btn = @driver.find_element(:id, 'next-btn')
+		next_btn.click
+
+		# upload bad marker gene list
+		marker_form = @driver.find_element(:class, 'initialize_marker_genes_form')
+		marker_file_name = marker_form.find_element(:id, 'study_file_name')
+		marker_file_name.send_keys('Test Gene List')
+		upload_markers = @driver.find_element(:class, 'upload-marker-genes')
+		upload_markers.send_keys(@test_data_path + 'marker_1_gene_list_bad.txt')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		# close modal
+		wait_for_render(:id, 'upload-success-modal')
+		close_modal('upload-success-modal')
+		# wait for a few seconds to allow parses to fail fully
+		sleep(3)
+
+		# assert parses all failed and delete study
+		@driver.get(@base_url + '/studies')
+		wait_until_page_loads(@base_url + '/studies')
+		study_file_count = @driver.find_element(:id, 'error-messaging-test-study-study-file-count')
+		assert study_file_count.text == '0', "found incorrect number of study files; expected 0 and found #{study_file_count.text}"
+		@driver.find_element(:class, 'error-messaging-test-study-delete').click
+		@driver.switch_to.alert.accept
+		wait_for_render(:id, 'message_modal')
+		close_modal('message_modal')
+	end
+
+	# create private study for testing visibility/edit restrictions
+	# must be run before other tests, so numbered accordingly
+	test 'create private study' do
+		# log in first
+		path = @base_url + '/studies/new'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email)
+
+		# fill out study form
+		study_form = @driver.find_element(:id, 'new_study')
+		study_form.find_element(:id, 'study_name').send_keys('Private Study')
+		public = study_form.find_element(:id, 'study_public')
+		public.send_keys('No')
+		# save study
+		save_study = @driver.find_element(:id, 'save-study')
+		save_study.click
+	end
+
+	# check visibility & edit restrictions as well as share access
+	test 'create share and check view and edit' do
+		# check view visibility for unauthenticated users
+		path = @base_url + '/study/private-study'
+		@driver.get path
+		assert @driver.current_url == @base_url, 'did not redirect'
+		assert element_present?(:id, 'message_modal'), 'did not find alert modal'
+		close_modal('message_modal')
+
+		# log in and get study ids for use later
+		path = @base_url + '/studies'
+		@driver.get path
+		@driver.manage.window.maximize
+		close_modal('message_modal')
+		# send login info
+		login($test_email)
+
+		# get path info
+		edit = @driver.find_element(:class, 'private-study-edit')
+		edit.click
+		sleep(2)
+		private_study_id = @driver.current_url.split('/')[5]
+		@driver.get @base_url + '/studies'
+		edit = @driver.find_element(:class, 'test-study-edit')
+		edit.click
+		sleep(2)
+		share_study_id = @driver.current_url.split('/')[5]
+
+		# logout
+		profile = @driver.find_element(:id, 'profile-nav')
+		profile.click
+		logout = @driver.find_element(:id, 'logout-nav')
+		logout.click
+		wait_until_page_loads(@base_url)
+		close_modal('message_modal')
+
+		# login as share user
+		login_link = @driver.find_element(:id, 'login-nav')
+		login_link.click
+		login($share_email)
+
+		# view study
+		path = @base_url + '/study/private-study'
+		@driver.get path
+		assert @driver.current_url == @base_url, 'did not redirect'
+		assert element_present?(:id, 'message_modal'), 'did not find alert modal'
+		close_modal('message_modal')
+		# check public visibility when logged in
+		path = @base_url + '/study/gzip-parse'
+		@driver.get path
+		assert @driver.current_url == path, 'did not load public study without share'
+
+		# edit study
+		edit_path = @base_url + '/studies/' + private_study_id + '/edit'
+		@driver.get edit_path
+		assert @driver.current_url == @base_url + '/studies', 'did not redirect'
+		assert element_present?(:id, 'message_modal'), 'did not find alert modal'
+		close_modal('message_modal')
+
+		# test share
+		share_view_path = @base_url + '/study/test-study'
+		@driver.get share_view_path
+		assert @driver.current_url == share_view_path, 'did not load share study view'
+		share_edit_path = @base_url + '/studies/' + share_study_id + '/edit'
+		@driver.get share_edit_path
+		assert @driver.current_url == share_edit_path, 'did not load share study edit'
+
+	end
+
+	##
+	## FRONT END FUNCTIONALITY TESTS
+	##
+
 	test 'get home page' do
 		@driver.get(@base_url)
 		assert element_present?(:id, 'main-banner'), 'could not find index page title text'
@@ -321,354 +671,18 @@ class UiTestSuite < Test::Unit::TestCase
 		assert camera == cluster_camera['camera'], "camera position did not save correctly, expected #{camera.to_json}, got #{cluster_camera.to_json}"
 	end
 
-	# admin backend tests of entire study creation process as order needs to be maintained throughout
-	# logs test user in, creates study, and deletes study on completion
-	# uses example data as inputs
-	# must be run before other tests, so numbered accordingly
-	test '1. create a study' do
-		# log in first
-		path = @base_url + '/studies/new'
-		@driver.get path
-		close_modal('message_modal')
-		# log in as user #1
-		login($test_email, path)
-		close_modal('message_modal')
-
-		# fill out study form
-		study_form = @driver.find_element(:id, 'new_study')
-		study_form.find_element(:id, 'study_name').send_keys('Test Study')
-		study_form.find_element(:id, 'study_embargo').send_keys('2016-12-31')
-		public = study_form.find_element(:id, 'study_public')
-		public.send_keys('Yes')
-		# add a share
-		share = @driver.find_element(:id, 'add-study-share')
-		@wait.until {share.displayed? == true}
-		share.click
-		share_email = study_form.find_element(:class, 'share-email')
-		share_email.send_keys($share_email)
-		share_permission = study_form.find_element(:class, 'share-permission')
-		share_permission.send_keys('Edit')
-		# save study
-		study_form.submit
-
-		# upload expression matrix
-		close_modal('message_modal')
-		upload_expression = @driver.find_element(:id, 'upload-expression')
-		upload_expression.send_keys(@test_data_path + 'expression_matrix_example.txt')
-		wait_for_render(:id, 'start-file-upload')
-		upload_btn = @driver.find_element(:id, 'start-file-upload')
-		upload_btn.click
-		# close success modal
-		wait_for_render(:id, 'upload-success-modal')
-		close_modal('upload-success-modal')
-
-		# upload metadata
-		wait_for_render(:id, 'metadata_form')
-		upload_metadata = @driver.find_element(:id, 'upload-metadata')
-		upload_metadata.send_keys(@test_data_path + 'metadata_example.txt')
-		wait_for_render(:id, 'start-file-upload')
-		upload_btn = @driver.find_element(:id, 'start-file-upload')
-		upload_btn.click
-		wait_for_render(:id, 'upload-success-modal')
-		close_modal('upload-success-modal')
-
-		# upload cluster
-		cluster_form_1 = @driver.find_element(:class, 'initialize_ordinations_form')
-		cluster_name = cluster_form_1.find_element(:class, 'filename')
-		cluster_name.send_keys('Test Cluster 1')
-		upload_cluster = cluster_form_1.find_element(:class, 'upload-clusters')
-		upload_cluster.send_keys(@test_data_path + 'cluster_example.txt')
-		wait_for_render(:id, 'start-file-upload')
-		upload_btn = cluster_form_1.find_element(:id, 'start-file-upload')
-		upload_btn.click
-		wait_for_render(:id, 'upload-success-modal')
-		close_modal('upload-success-modal')
-
-		# upload a second cluster
-		prev_btn = @driver.find_element(:id, 'prev-btn')
-		prev_btn.click
-		new_cluster = @driver.find_element(:class, 'add-cluster')
-		new_cluster.click
-		sleep(1)
-		scroll_to_bottom
-		# will be second instance since there are two forms
-		cluster_form_2 = @driver.find_element(:class, 'new-cluster-form')
-		cluster_name_2 = cluster_form_2.find_element(:class, 'filename')
-		cluster_name_2.send_keys('Test Cluster 2')
-		upload_cluster_2 = cluster_form_2.find_element(:class, 'upload-clusters')
-		upload_cluster_2.send_keys(@test_data_path + 'cluster_2_example.txt')
-		wait_for_render(:id, 'start-file-upload')
-		scroll_to_bottom
-		upload_btn_2 = cluster_form_2.find_element(:id, 'start-file-upload')
-		upload_btn_2.click
-		wait_for_render(:id, 'upload-success-modal')
-		close_modal('upload-success-modal')
-
-		# upload fastq
-		wait_for_render(:class, 'initialize_fastq_form')
-		upload_fastq = @driver.find_element(:class, 'upload-fastq')
-		upload_fastq.send_keys(@test_data_path + 'cell_1_L1.fastq.gz')
-		wait_for_render(:id, 'start-file-upload')
-		upload_btn = @driver.find_element(:id, 'start-file-upload')
-		upload_btn.click
-		wait_for_render(:class, 'fastq-file')
-		wait_for_render(:id, 'upload-success-modal')
-		close_modal('upload-success-modal')
-		next_btn = @driver.find_element(:id, 'next-btn')
-		next_btn.click
-
-		# upload marker gene list
-		wait_for_render(:class, 'initialize_marker_genes_form')
-		marker_form = @driver.find_element(:class, 'initialize_marker_genes_form')
-		marker_file_name = marker_form.find_element(:id, 'study_file_name')
-		marker_file_name.send_keys('Test Gene List')
-		upload_markers = marker_form.find_element(:class, 'upload-marker-genes')
-		upload_markers.send_keys(@test_data_path + 'marker_1_gene_list.txt')
-		wait_for_render(:id, 'start-file-upload')
-		upload_btn = marker_form.find_element(:id, 'start-file-upload')
-		upload_btn.click
-		wait_for_render(:id, 'upload-success-modal')
-		close_modal('upload-success-modal')
-		next_btn = @driver.find_element(:id, 'next-btn')
-		next_btn.click
-
-		# upload doc file
-		wait_for_render(:class, 'initialize_misc_form')
-		upload_doc = @driver.find_element(:class, 'upload-misc')
-		upload_doc.send_keys(@test_data_path + 'table_1.xlsx')
-		wait_for_render(:id, 'start-file-upload')
-		upload_btn = @driver.find_element(:id, 'start-file-upload')
-		upload_btn.click
-		wait_for_render(:class, 'documentation-file')
-		# close success modal
-		wait_for_render(:id, 'upload-success-modal')
-		close_modal('upload-success-modal')
-
-		# change attributes on file to validate update function
-		misc_form = @driver.find_element(:class, 'initialize_misc_form')
-		desc_field = misc_form.find_element(:id, 'study_file_description')
-		desc_field.send_keys('Supplementary table')
-		save_btn = misc_form.find_element(:class, 'save-study-file')
-		save_btn.click
-		wait_for_render(:id, 'study-file-notices')
-		close_modal('study-file-notices')
-
-	end
-
-	# text gzip parsing of expression matrices
-	test '2. parse gzip expression matrix' do
-		# log in first
-		path = @base_url + '/studies/new'
-		@driver.get path
-		close_modal('message_modal')
-		login($test_email, path)
-
-		# fill out study form
-		study_form = @driver.find_element(:id, 'new_study')
-		study_form.find_element(:id, 'study_name').send_keys('Gzip Parse')
-		# save study
-		study_form.submit
-
-		# upload bad expression matrix
-		close_modal('message_modal')
-		upload_expression = @driver.find_element(:id, 'upload-expression')
-		upload_expression.send_keys(@test_data_path + 'expression_matrix_example_gzipped.txt.gz')
-		wait_for_render(:id, 'start-file-upload')
-		upload_btn = @driver.find_element(:id, 'start-file-upload')
-		upload_btn.click
-		# close modal
-		wait_for_render(:id, 'upload-success-modal')
-		close_modal('upload-success-modal')
-
-		# verify parse completed
-		studies_path = @base_url + '/studies'
-		@driver.get studies_path
-		wait_until_page_loads(studies_path)
-		study_file_count = @driver.find_element(:id, 'gzip-parse-study-file-count')
-		assert study_file_count.text == '1', "found incorrect number of study files; expected 1 and found #{study_file_count.text}"
-	end
-
-	# negative tests to check file parsing & validation
-	# since parsing happens in background, all messaging is handled through emails
-	# this test just makes sure that parsing fails and removed entries appropriately
-	test '3. create study error messaging' do
-		# log in first
-		path = @base_url + '/studies/new'
-		@driver.get path
-		close_modal('message_modal')
-		login($test_email, path)
-
-		# fill out study form
-		study_form = @driver.find_element(:id, 'new_study')
-		study_form.find_element(:id, 'study_name').send_keys('Error Messaging Test Study')
-		# save study
-		study_form.submit
-
-		# upload bad expression matrix
-		close_modal('message_modal')
-		upload_expression = @driver.find_element(:id, 'upload-expression')
-		upload_expression.send_keys(@test_data_path + 'expression_matrix_example_bad.txt')
-		wait_for_render(:id, 'start-file-upload')
-		upload_btn = @driver.find_element(:id, 'start-file-upload')
-		upload_btn.click
-		# close modal
-		wait_for_render(:id, 'upload-success-modal')
-		close_modal('upload-success-modal')
-
-		# upload bad metadata assignments
-		wait_for_render(:id, 'metadata_form')
-		upload_assignments = @driver.find_element(:id, 'upload-metadata')
-		upload_assignments.send_keys(@test_data_path + 'metadata_bad.txt')
-		wait_for_render(:id, 'start-file-upload')
-		upload_btn = @driver.find_element(:id, 'start-file-upload')
-		upload_btn.click
-		# close modal
-		wait_for_render(:id, 'upload-success-modal')
-		close_modal('upload-success-modal')
-
-		# upload bad cluster coordinates
-		upload_clusters = @driver.find_element(:class, 'upload-clusters')
-		upload_clusters.send_keys(@test_data_path + 'cluster_bad.txt')
-		wait_for_render(:id, 'start-file-upload')
-		upload_btn = @driver.find_element(:id, 'start-file-upload')
-		upload_btn.click
-		# close modal
-		wait_for_render(:id, 'upload-success-modal')
-		close_modal('upload-success-modal')
-		next_btn = @driver.find_element(:id, 'next-btn')
-		next_btn.click
-
-		# upload bad marker gene list
-		marker_form = @driver.find_element(:class, 'initialize_marker_genes_form')
-		marker_file_name = marker_form.find_element(:id, 'study_file_name')
-		marker_file_name.send_keys('Test Gene List')
-		upload_markers = @driver.find_element(:class, 'upload-marker-genes')
-		upload_markers.send_keys(@test_data_path + 'marker_1_gene_list_bad.txt')
-		wait_for_render(:id, 'start-file-upload')
-		upload_btn = @driver.find_element(:id, 'start-file-upload')
-		upload_btn.click
-		# close modal
-		wait_for_render(:id, 'upload-success-modal')
-		close_modal('upload-success-modal')
-		# wait for a few seconds to allow parses to fail fully
-		sleep(3)
-
-		# assert parses all failed and delete study
-		@driver.get(@base_url + '/studies')
-		wait_until_page_loads(@base_url + '/studies')
-		study_file_count = @driver.find_element(:id, 'error-messaging-test-study-study-file-count')
-		assert study_file_count.text == '0', "found incorrect number of study files; expected 0 and found #{study_file_count.text}"
-		@driver.find_element(:class, 'error-messaging-test-study-delete').click
-		@driver.switch_to.alert.accept
-		wait_for_render(:id, 'message_modal')
-		close_modal('message_modal')
-	end
-
-	# create private study for testing visibility/edit restrictions
-	# must be run before other tests, so numbered accordingly
-	test '4. create private study' do
-		# log in first
-		path = @base_url + '/studies/new'
-		@driver.get path
-		login($test_email, path)
-
-		# fill out study form
-		study_form = @driver.find_element(:id, 'new_study')
-		study_form.find_element(:id, 'study_name').send_keys('Private Study')
-		public = study_form.find_element(:id, 'study_public')
-		public.send_keys('No')
-		# save study
-		study_form.submit
-	end
-
-	# check visibility & edit restrictions as well as share access
-	test 'create share and check view and edit' do
-		# check view visibility for unauthenticated users
-		path = @base_url + '/study/private-study'
-		@driver.get path
-		assert @driver.current_url == @base_url, 'did not redirect'
-		assert element_present?(:id, 'message_modal'), 'did not find alert modal'
-		close_modal('message_modal')
-
-		# log in and get study ids for use later
-		path = @base_url + '/studies'
-		@driver.get path
-		@driver.manage.window.maximize
-		close_modal('message_modal')
-		# send login info
-		login($test_email, path)
-		close_modal('message_modal')
-
-		# get path info
-		edit = @driver.find_element(:class, 'private-study-edit')
-		edit.click
-		sleep(2)
-		private_study_id = @driver.current_url.split('/')[5]
-		@driver.get @base_url + '/studies'
-		edit = @driver.find_element(:class, 'test-study-edit')
-		edit.click
-		sleep(2)
-		share_study_id = @driver.current_url.split('/')[5]
-
-		# logout
-		profile = @driver.find_element(:id, 'profile-nav')
-		profile.click
-		logout = @driver.find_element(:id, 'logout-nav')
-		logout.click
-		wait_until_page_loads(@base_url)
-		close_modal('message_modal')
-
-		# login as share user
-		login_link = @driver.find_element(:id, 'login-nav')
-		login_link.click
-		login($share_email, path)
-		close_modal('message_modal')
-
-		# view study
-		path = @base_url + '/study/private-study'
-		@driver.get path
-		assert @driver.current_url == @base_url, 'did not redirect'
-		assert element_present?(:id, 'message_modal'), 'did not find alert modal'
-		close_modal('message_modal')
-		# check public visibility when logged in
-		path = @base_url + '/study/gzip-parse'
-		@driver.get path
-		assert @driver.current_url == path, 'did not load public study without share'
-
-		# edit study
-		edit_path = @base_url + '/studies/' + private_study_id + '/edit'
-		@driver.get edit_path
-		assert @driver.current_url == @base_url + '/studies', 'did not redirect'
-		assert element_present?(:id, 'message_modal'), 'did not find alert modal'
-		close_modal('message_modal')
-
-		# test share
-		share_view_path = @base_url + '/study/test-study'
-		@driver.get share_view_path
-		assert @driver.current_url == share_view_path, 'did not load share study view'
-		share_edit_path = @base_url + '/studies/' + share_study_id + '/edit'
-		@driver.get share_edit_path
-		assert @driver.current_url == share_edit_path, 'did not load share study edit'
-
-	end
+	##
+	## CLEANUP
+	##
 
 	# final test, remove test study that was created and used for front-end tests
 	# runs last to clean up data for next test run
-	test 'zzz delete test and private study' do
+	test 'delete test and private study' do
 		# log in first
 		path = @base_url + '/studies'
 		@driver.get path
-		@driver.manage.window.maximize
 		close_modal('message_modal')
-		# send login info
-		email = @driver.find_element(:id, 'user_email')
-		email.send_keys(@test_user[:email])
-		password = @driver.find_element(:id, 'user_password')
-		password.send_keys(@test_user[:password])
-		login_form = @driver.find_element(:id, 'new_user')
-		login_form.submit
-		wait_until_page_loads(path)
-		close_modal('message_modal')
+		login($test_email)
 
 		# delete test
 		@driver.find_element(:class, 'test-study-delete').click

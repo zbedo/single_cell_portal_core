@@ -33,7 +33,8 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 		# instantiate Google Cloud Storage driver to work with files in workspace buckets
 		self.storage = Google::Cloud::Storage.new(
 				project: PORTAL_NAMESPACE,
-				keyfile: SERVICE_ACCOUNT_KEY
+				keyfile: SERVICE_ACCOUNT_KEY,
+				timeout: 3600
 		)
 
 		# set expiration date of token
@@ -247,7 +248,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	# return: GoogleCloudStorage File object
 	def create_workspace_file(name, study_file)
 		bucket = self.get_workspace_bucket(name)
-		bucket.create_file study_file.upload.path study_file.upload_file_name
+		bucket.create_file study_file.upload.path, study_file.upload_file_name
 	end
 
 	# delete a study_file to a workspace bucket

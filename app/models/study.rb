@@ -93,9 +93,8 @@ class Study
   accepts_nested_attributes_for :study_files, allow_destroy: true
   accepts_nested_attributes_for :study_shares, allow_destroy: true, reject_if: proc { |attributes| attributes['email'].blank? }
 
-  validates_uniqueness_of :name
-  validates_uniqueness_of :url_safe_name, message: "and data directory: %{value} is already assigned.  Please rename your study to a different value."
-  validates_presence_of :name
+  # custom validator since we need everything to pass in a specific order (otherwise we get orphaned FireCloud workspaces)
+  validate          :check_values_and_create_firecloud_workspace, on: :create
 
   # populate specific errors for study shares since they share the same form
   validate do |study|
@@ -107,9 +106,13 @@ class Study
     end
   end
 
+  # update validators
+  validates_uniqueness_of :name, on: :update, message: ": %{value} has already been taken.  Please choose another name."
+  validates_presence_of   :name, on: :update
+  validates_uniqueness_of :url_safe_name, on: :update, message: ": The name you provided tried to create a public URL (%{value}) that is already assigned.  Please rename your study to a different value."
+
   # callbacks
   before_validation :set_url_safe_name, :set_firecloud_workspace_name
-  validate          :create_firecloud_workspace, on: :create
   before_update     :check_data_links
   after_save        :check_public?
   before_destroy    :remove_public_symlinks
@@ -222,7 +225,7 @@ class Study
       @cell_count = self.study_metadata_values(metadata_name, metadata_type).keys.size
     end
     self.update(cell_count: @cell_count)
-    Rails.logger.info "Setting cell count in #{self.name} to #{@cell_count}"
+    Rails.logger.info "#{Time.now}: Setting cell count in #{self.name} to #{@cell_count}"
   end
 
   # return an array of all single cell names in study
@@ -293,10 +296,10 @@ class Study
     # validate headers
     begin
       if expression_file.upload_content_type == 'application/gzip'
-        Rails.logger.info "Parsing #{expression_file.name} as application/gzip"
+        Rails.logger.info "#{Time.now}: Parsing #{expression_file.name} as application/gzip"
         file = Zlib::GzipReader.open(expression_file.upload.path)
       else
-        Rails.logger.info "Parsing #{expression_file.name} as text/plain"
+        Rails.logger.info "#{Time.now}: Parsing #{expression_file.name} as text/plain"
         file = File.open(expression_file.upload.path)
       end
       cells = file.readline.strip.split(/[\t,]/)
@@ -310,7 +313,7 @@ class Study
       error_message = "Unexpected error: #{e.message}"
       filename = expression_file.name
       expression_file.destroy
-      Rails.logger.info error_message
+      Rails.logger.info Time.now.to_s + ': ' + error_message
       SingleCellMailer.notify_user_parse_fail(user.email, "Expression file: '#{filename}' parse has failed", error_message).deliver_now
       raise StandardError, error_message
     end
@@ -320,14 +323,14 @@ class Study
       error_message = "file header validation failed: first header should be GENE or blank followed by cell names"
       filename = expression_file.name
       expression_file.destroy
-      Rails.logger.info error_message
+      Rails.logger.info Time.now.to_s + ': ' + error_message
       SingleCellMailer.notify_user_parse_fail(user.email, "Expression file: '#{filename}' parse has failed", error_message).deliver_now
       raise StandardError, error_message
     end
 
     # begin parse
     begin
-      Rails.logger.info "Beginning expression score parse from #{expression_file.name} for #{self.name}"
+      Rails.logger.info "#{Time.now}: Beginning expression score parse from #{expression_file.name} for #{self.name}"
       expression_file.update(parse_status: 'parsing')
       # open data file and grab header row with name of all cells, deleting 'GENE' at start
       # determine proper reader
@@ -346,7 +349,7 @@ class Study
       # keep a running record of genes already parsed to catch validation errors before they happen
       # this is needed since we're creating records in batch and won't know which gene was responsible
       @genes_parsed = []
-      Rails.logger.info "Expression scores loaded, starting record creation for #{self.name}"
+      Rails.logger.info "#{Time.now}: Expression scores loaded, starting record creation for #{self.name}"
       while !expression_data.eof?
         # grab single row of scores, parse out gene name at beginning
         line = expression_data.readline.strip.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
@@ -381,8 +384,7 @@ class Study
           Rails.logger.info "Processed #{@count} expression scores from #{expression_file.name} for #{self.name}"
         end
       end
-      Rails.logger.info "Creating last #{@records.size} expression scores from #{expression_file.name} for #{self.name}"
-      Rails.logger.info "#{@records}"
+      Rails.logger.info "#{Time.now}: Creating last #{@records.size} expression scores from #{expression_file.name} for #{self.name}"
       ExpressionScore.create!(@records)
       # create array of all cells for study
       @cell_data_array = self.data_arrays.build(name: 'All Cells', array_type: 'cells', array_index: 1, study_file_id: expression_file._id)
@@ -390,8 +392,7 @@ class Study
       cells.each_slice(DataArray::MAX_ENTRIES) do |slice|
         new_array_index = @cell_data_array.array_index + 1
         @cell_data_array.values = slice
-        Rails.logger.info "Saving all cells data array ##{@cell_data_array.array_index} using #{expression_file.name} for #{self.name}"
-        Rails.logger.info "#{@cell_data_array.attributes}"
+        Rails.logger.info "#{Time.now}: Saving all cells data array ##{@cell_data_array.array_index} using #{expression_file.name} for #{self.name}"
         @cell_data_array.save
         @cell_data_array = self.data_arrays.build(name: 'All Cells', array_type: 'cells', array_index: new_array_index, study_file_id: expression_file._id)
       end
@@ -402,7 +403,7 @@ class Study
       self.update(gene_count: @genes_parsed.size)
       end_time = Time.now
       time = (end_time - start_time).divmod 60.0
-      @message << "#{expression_file.name} parse completed!"
+      @message << "#{Time.now}: #{expression_file.name} parse completed!"
       @message << "ExpressionScores created: #{@count}"
       @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
       Rails.logger.info @message.join("\n")
@@ -411,6 +412,9 @@ class Study
         self.update(initialized: true)
       end
       SingleCellMailer.notify_user_parse_complete(user.email, "Expression file: '#{expression_file.name}' has completed parsing", @message).deliver_now
+
+      # now that parsing is complete, we can move file into storage bucket and delete local
+      self.send_to_firecloud(expression_file)
     rescue => e
       # error has occurred, so clean up records and remove file
       ExpressionScore.where(study_id: self.id).delete_all
@@ -418,7 +422,7 @@ class Study
       filename = expression_file.name
       expression_file.destroy
       error_message = "#{@last_line}: #{e.message}"
-      Rails.logger.info error_message
+      Rails.logger.info Time.now.to_s + ': ' + error_message
       SingleCellMailer.notify_user_parse_fail(user.email, "Expression file: '#{filename}' parse has failed", error_message).deliver_now
     end
     true
@@ -445,7 +449,7 @@ class Study
     rescue => e
       ordinations_file.update(parse_status: 'failed')
       error_message = "#{e.message}"
-      Rails.logger.info error_message
+      Rails.logger.info Time.now.to_s + ': ' + error_message
       filename = ordinations_file.upload_file_name
       ordinations_file.destroy
       SingleCellMailer.notify_user_parse_fail(user.email, "Cluster file: '#{filename}' parse has failed", error_message).deliver_now
@@ -455,7 +459,7 @@ class Study
     # raise validation error if needed
     if @validation_error
       error_message = "file header validation failed: should be at least NAME, X, Y with second line starting with TYPE"
-      Rails.logger.info error_message
+      Rails.logger.info Time.now.to_s + ': ' + error_message
       filename = ordinations_file.upload_file_name
       ordinations_file.destroy
       SingleCellMailer.notify_user_parse_fail(user.email, "Cluster file: '#{filename}' parse has failed", error_message).deliver_now
@@ -469,7 +473,7 @@ class Study
     # begin parse
     begin
       cluster_name = ordinations_file.name
-      Rails.logger.info "Beginning cluster initialization using #{ordinations_file.upload_file_name} for cluster: #{cluster_name} in #{self.name}"
+      Rails.logger.info "#{Time.now}: Beginning cluster initialization using #{ordinations_file.upload_file_name} for cluster: #{cluster_name} in #{self.name}"
 
       cluster_data = File.open(ordinations_file.upload.path)
       header_data = cluster_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
@@ -499,7 +503,7 @@ class Study
       end
 
       # create cluster object for use later
-      Rails.logger.info "Creating cluster group object: #{cluster_name} in study: #{self.name}"
+      Rails.logger.info "#{Time.now}: Creating cluster group object: #{cluster_name} in study: #{self.name}"
       @cluster_group = self.cluster_groups.build(name: cluster_name, study_file_id: ordinations_file._id, cluster_type: cluster_type)
 
       # add cell-level annotation definitions and save (will be used to populate dropdown menu)
@@ -531,7 +535,7 @@ class Study
         @data_arrays[metadata[:index]] = self.data_arrays.build(name: metadata[:name], cluster_name: cluster_name, array_type: 'annotations', array_index: 1, study_file_id: ordinations_file._id, cluster_group_id: @cluster_group._id, values: [])
       end
 
-      Rails.logger.info "Headers/Metadata loaded for cluster initialization using #{ordinations_file.upload_file_name} for cluster: #{cluster_name} in #{self.name}"
+      Rails.logger.info "#{Time.now}: Headers/Metadata loaded for cluster initialization using #{ordinations_file.upload_file_name} for cluster: #{cluster_name} in #{self.name}"
       # begin reading data
       while !cluster_data.eof?
         line = cluster_data.readline.strip.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
@@ -545,7 +549,7 @@ class Study
             # of same name & type with array_index incremented by 1
             current_data_array_index = @data_arrays[index].array_index
             data_array = @data_arrays[index]
-            Rails.logger.info "Saving data array: #{data_array.name}-#{data_array.array_type}-#{data_array.array_index} using #{ordinations_file.upload_file_name} for cluster: #{cluster_name} in #{self.name}"
+            Rails.logger.info "#{Time.now}: Saving data array: #{data_array.name}-#{data_array.array_type}-#{data_array.array_index} using #{ordinations_file.upload_file_name} for cluster: #{cluster_name} in #{self.name}"
             data_array.save
             new_data_array = self.data_arrays.build(name: data_array.name, cluster_name: data_array.cluster_name ,array_type: data_array.array_type, array_index: current_data_array_index + 1, study_file_id: ordinations_file._id, cluster_group_id: @cluster_group._id, values: [])
             @data_arrays[index] = new_data_array
@@ -562,7 +566,7 @@ class Study
               metadata_idx = cell_annotations.index(existing_vals)
               unless existing_vals[:values].include?(val)
                 cell_annotations[metadata_idx][:values] << val
-                Rails.logger.info "Adding #{val} to #{@cluster_group.name} list of group values for #{header_data[index]}"
+                Rails.logger.info "#{Time.now}: Adding #{val} to #{@cluster_group.name} list of group values for #{header_data[index]}"
               end
             end
           end
@@ -571,7 +575,7 @@ class Study
       end
       # clean up
       @data_arrays.each do |data_array|
-        Rails.logger.info "Saving data array: #{data_array.name}-#{data_array.array_type}-#{data_array.array_index} using #{ordinations_file.upload_file_name} for cluster: #{cluster_name} in #{self.name}"
+        Rails.logger.info "#{Time.now}: Saving data array: #{data_array.name}-#{data_array.array_type}-#{data_array.array_index} using #{ordinations_file.upload_file_name} for cluster: #{cluster_name} in #{self.name}"
         data_array.save
       end
       cluster_data.close
@@ -599,6 +603,9 @@ class Study
         self.update(initialized: true)
       end
       SingleCellMailer.notify_user_parse_complete(user.email, "Cluster file: '#{ordinations_file.upload_file_name}' has completed parsing", @message).deliver_now
+
+      # now that parsing is complete, we can move file into storage bucket and delete local
+      self.send_to_firecloud(ordinations_file)
     rescue => e
       # error has occurred, so clean up records and remove file
       ClusterGroup.where(study_file_id: ordinations_file.id).delete_all
@@ -606,7 +613,7 @@ class Study
       filename = ordinations_file.upload_file_name
       ordinations_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
-      Rails.logger.info error_message
+      Rails.logger.info Time.now.to_s + ': ' + error_message
       SingleCellMailer.notify_user_parse_fail(user.email, "Cluster file: '#{filename}' parse has failed", error_message).deliver_now
     end
     true
@@ -620,7 +627,7 @@ class Study
     @validation_error = false
     start_time = Time.now
     begin
-      Rails.logger.info "Validating metadata file headers for #{metadata_file.name} in #{self.name}"
+      Rails.logger.info "#{Time.now}: Validating metadata file headers for #{metadata_file.name} in #{self.name}"
       m_file = File.open(metadata_file.upload.path)
       headers = m_file.readline.split(/[\t,]/).map(&:strip)
       @last_line = "#{metadata_file.name}, line 1"
@@ -636,7 +643,7 @@ class Study
       filename = metadata_file.upload_file_name
       metadata_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
-      Rails.logger.info error_message
+      Rails.logger.info Time.now.to_s + ': ' + error_message
       SingleCellMailer.notify_user_parse_fail(user.email, "Metadata file: '#{filename}' parse has failed", error_message).deliver_now
       raise StandardError, error_message
     end
@@ -646,7 +653,7 @@ class Study
       error_message = "file header validation failed: should be at least NAME and one other column with second line starting with TYPE followed by either 'group' or 'numeric'"
       filename = metadata_file.upload_file_name
       metadata_file.destroy
-      Rails.logger.info error_message
+      Rails.logger.info Time.now.to_s + ': ' + error_message
       SingleCellMailer.notify_user_parse_fail(user.email, "Metadata file: '#{filename}' parse has failed", error_message).deliver_now
       raise StandardError, error_message
     end
@@ -656,7 +663,7 @@ class Study
     @message = []
     # begin parse
     begin
-      Rails.logger.info "Beginning metadata initialization using #{metadata_file.upload_file_name} in #{self.name}"
+      Rails.logger.info "#{Time.now}: Beginning metadata initialization using #{metadata_file.upload_file_name} in #{self.name}"
 
       # open files for parsing and grab header & type data
       metadata_data = File.open(metadata_file.upload.path)
@@ -673,7 +680,7 @@ class Study
         end
       end
 
-      Rails.logger.info "Study metadata objects initialized using: #{metadata_file.name} for #{self.name}; beginning parse"
+      Rails.logger.info "#{Time.now}: Study metadata objects initialized using: #{metadata_file.name} for #{self.name}; beginning parse"
       # read file data
       while !metadata_data.eof?
         line = metadata_data.readline.strip.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
@@ -709,7 +716,7 @@ class Study
       @metadata_records.each do |metadata|
         # since first element is nil to preserve index order from file...
         unless metadata.nil?
-          Rails.logger.info "Saving study metadata: #{metadata.name}-#{metadata.annotation_type} using #{metadata_file.upload_file_name} in #{self.name}"
+          Rails.logger.info "#{Time.now}: Saving study metadata: #{metadata.name}-#{metadata.annotation_type} using #{metadata_file.upload_file_name} in #{self.name}"
           metadata.save
         end
       end
@@ -725,7 +732,7 @@ class Study
       end_time = Time.now
       time = (end_time - start_time).divmod 60.0
       # assemble email message parts
-      @message << "#{metadata_file.upload_file_name} parse completed!"
+      @message << "#{Time.now}: #{metadata_file.upload_file_name} parse completed!"
       @message << "Entries created:"
       @metadata_records.each do |metadata|
         unless metadata.nil?
@@ -735,13 +742,16 @@ class Study
       @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
       # send email on completion
       SingleCellMailer.notify_user_parse_complete(user.email, "Metadata file: '#{metadata_file.upload_file_name}' has completed parsing", @message).deliver_now
+
+      # now that parsing is complete, we can move file into storage bucket and delete local
+      self.send_to_firecloud(metadata_file)
     rescue => e
       # parse has failed, so clean up records and remove file
       StudyMetadata.where(study_id: self.id).delete_all
       filename = metadata_file.upload_file_name
       metadata_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
-      Rails.logger.info error_message
+      Rails.logger.info Time.now.to_s + ': ' + error_message
       SingleCellMailer.notify_user_parse_fail(user.email, "Metadata file: '#{filename}' parse has failed", error_message).deliver_now
     end
     true
@@ -769,7 +779,7 @@ class Study
       filename = marker_file.upload_file_name
       marker_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
-      Rails.logger.info error_message
+      Rails.logger.info Time.now.to_s + ': ' + error_message
       SingleCellMailer.notify_user_parse_fail(user.email, "Gene List file: '#{filename}' parse has failed", error_message).deliver_now
       # raise standard error to halt execution
       raise StandardError, error_message
@@ -780,14 +790,14 @@ class Study
       error_message = "file header validation failed: #{@last_line}: first header must be 'GENE NAMES' followed by clusters"
       filename = marker_file.upload_file_name
       marker_file.destroy
-      Rails.logger.info error_message
+      Rails.logger.info Time.now.to_s + ': ' + error_message
       SingleCellMailer.notify_user_parse_fail(user.email, "Gene List file: '#{filename}' parse has failed", error_message).deliver_now
       raise StandardError, error_message
     end
 
     # begin parse
     begin
-      Rails.logger.info "Beginning precomputed score parse using #{marker_file.name} for #{self.name}"
+      Rails.logger.info "#{Time.now}: Beginning precomputed score parse using #{marker_file.name} for #{self.name}"
       marker_file.update(parse_status: 'parsing')
       list_name = marker_file.name
       if list_name.nil? || list_name.blank?
@@ -812,7 +822,7 @@ class Study
           marker_file.update(parse_status: 'failed')
           user_error_message = "You have a duplicate gene entry (#{gene}) in your gene list.  Please check your file and try again."
           error_message = "Duplicate gene #{gene} in #{marker_file.name} (#{marker_file._id}) for study: #{self.name}"
-          Rails.logger.info error_message
+          Rails.logger.info Time.now.to_s + ': ' + error_message
           raise StandardError, user_error_message
         else
           # gene is unique so far so add to list
@@ -833,22 +843,37 @@ class Study
       # assemble message
       end_time = Time.now
       time = (end_time - start_time).divmod 60.0
-      @message << "#{marker_file.name} parse completed!"
+      @message << "#{Time.now}: #{marker_file.name} parse completed!"
       @message << "Total scores created: #{@count}"
       @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
       Rails.logger.info @message.join("\n")
       # send email
       SingleCellMailer.notify_user_parse_complete(user.email, "Gene list file: '#{marker_file.name}' has completed parsing", @message).deliver_now
+
+      # now that parsing is complete, we can move file into storage bucket and delete local
+      self.send_to_firecloud(marker_file)
     rescue => e
       # parse has failed, so clean up records and remove file
       PrecomputedScore.where(study_file_id: marker_file.id).delete_all
       filename = marker_file.upload_file_name
       marker_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
-      Rails.logger.info error_message
+      Rails.logger.info Time.now.to_s + ': ' + error_message
       SingleCellMailer.notify_user_parse_fail(user.email, "Gene List file: '#{filename}' parse has failed", error_message).deliver_now
     end
     true
+  end
+
+  # shortcut method to send an uploaded file straight to firecloud from parser
+  def send_to_firecloud(file)
+    begin
+      Rails.logger.info "#{Time.now}: Uploading #{file.upload_file_name} to FireCloud workspace: #{self.firecloud_workspace}"
+      Study.firecloud_client.create_workspace_file(self.firecloud_workspace, file)
+      File.delete(file.upload.path)
+      Rails.logger.info "#{Time.now}: Upload of #{file.upload_file_name} complete"
+    rescue => e
+      Rails.logger.error e.message
+    end
   end
 
   private
@@ -863,46 +888,59 @@ class Study
     self.firecloud_workspace = "#{WORKSPACE_NAME_PREFIX}#{self.url_safe_name}"
   end
 
-  # automatically create a FireCloud workspace on study creation
+  # automatically create a FireCloud workspace on study creation after validating name & url_safe_name
   # will raise validation errors if creation, bucket or ACL assignment fail for any reason and deletes workspace on validation fail
-  def create_firecloud_workspace
-    begin
-      # create workspace
-      workspace = Study.firecloud_client.create_workspace(self.firecloud_workspace)
-      Rails.logger.info "Study: #{self.name} FireCloud workspace creation successful"
-      ws_name = workspace['name']
-      # validate creation
-      unless ws_name == self.firecloud_workspace
-        # delete workspace on validation fail
+  def check_values_and_create_firecloud_workspace
+    # check name and url_safe_name first and set validation error
+    if self.name.blank? || self.name.nil?
+      errors.add(:name, " cannot be blank - please provide a name for your study.")
+    end
+    if Study.where(name: self.name).any?
+      errors.add(:name, ": #{self.name} has already been taken.  Please choose another name.")
+    end
+    if Study.where(url_safe_name: self.url_safe_name).any?
+      errors.add(:url_safe_name, ": The name you provided (#{self.name}) tried to create a public URL (#{self.url_safe_name}) that is already assigned.  Please rename your study to a different value.")
+    end
+    unless self.errors.any?
+      begin
+        # create workspace
+        workspace = Study.firecloud_client.create_workspace(self.firecloud_workspace)
+        Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace creation successful"
+        ws_name = workspace['name']
+        # validate creation
+        unless ws_name == self.firecloud_workspace
+          # delete workspace on validation fail
+          Study.firecloud_client.delete_workspace(self.firecloud_workspace)
+          errors.add(:firecloud_workspace, ' was not created properly (workspace name did not match or was not created).  Please try again later.')
+        end
+        Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace validation successful"
+        # set bucket_id
+        bucket = workspace['bucketName']
+        self.bucket_id = bucket
+        if self.bucket_id.nil?
+          # delete workspace on validation fail
+          Study.firecloud_client.delete_workspace(self.firecloud_workspace)
+          errors.add(:firecloud_workspace, ' was not created properly (storage bucket was not set).  Please try again later.')
+        end
+        Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud bucket assignment successful"
+        # set workspace acl
+        study_owner = self.user.email
+        acl = Study.firecloud_client.create_acl(study_owner, 'OWNER')
+        Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
+        # validate acl
+        ws_acl = Study.firecloud_client.get_workspace_acl(ws_name)
+        unless ws_acl['acl'][study_owner]['accessLevel'] == 'OWNER'
+          # delete workspace on validation fail
+          Study.firecloud_client.delete_workspace(self.firecloud_workspace)
+          errors.add(:firecloud_workspace, ' was not created properly (permissions do not match).  Please try again later.')
+        end
+        Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment successful"
+      rescue => e
+        # delete workspace on any fail as this amounts to a validation fail
+        Rails.logger.info "#{Time.now}: Error creating workspace: #{e.message}"
         Study.firecloud_client.delete_workspace(self.firecloud_workspace)
-        errors.add(:firecloud_workspace, ' was not created properly (workspace name did not match or was not created).  Please try again later.')
+        errors.add(:firecloud_workspace, " creation failed: #{e.message}; Please try again later.")
       end
-      Rails.logger.info "Study: #{self.name} FireCloud workspace validation successful"
-      # set bucket_id
-      bucket = workspace['bucketName']
-      self.bucket_id = bucket
-      if self.bucket_id.nil?
-        # delete workspace on validation fail
-        Study.firecloud_client.delete_workspace(self.firecloud_workspace)
-        errors.add(:firecloud_workspace, ' was not created properly (storage bucket was not set).  Please try again later.')
-      end
-      Rails.logger.info "Study: #{self.name} FireCloud bucket assignment successful"
-      # set workspace acl
-      study_owner = self.user.email
-      acl = Study.firecloud_client.create_acl(study_owner, 'OWNER')
-      Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
-      # validate acl
-      ws_acl = Study.firecloud_client.get_workspace_acl(ws_name)
-      unless ws_acl['acl'][study_owner]['accessLevel'] == 'OWNER'
-        # delete workspace on validation fail
-        Study.firecloud_client.delete_workspace(self.firecloud_workspace)
-        errors.add(:firecloud_workspace, ' was not created properly (permissions do not match).  Please try again later.')
-      end
-      Rails.logger.info "Study: #{self.name} FireCloud workspace acl assignment successful"
-    rescue => e
-      # delete workspace on any fail as this amounts to a validation fail
-      Study.firecloud_client.delete_workspace(self.firecloud_workspace)
-      errors.add(:firecloud_workspace, " creation failed: #{e.message}; Please try again later.")
     end
   end
 

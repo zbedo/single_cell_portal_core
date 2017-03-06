@@ -1,5 +1,5 @@
 class StudiesController < ApplicationController
-  before_action :set_study, only: [:show, :edit, :update, :initialize_study, :destroy, :upload, :do_upload, :resume_upload, :update_status, :reset_upload, :new_study_file, :update_study_file, :delete_study_file, :retrieve_upload, :retrieve_wizard_upload, :parse, :launch_parse_job, :parse_progress]
+  before_action :set_study, only: [:show, :edit, :update, :initialize_study, :destroy, :upload, :do_upload, :resume_upload, :update_status, :reset_upload, :new_study_file, :update_study_file, :delete_study_file, :retrieve_wizard_upload, :parse, :send_to_firecloud]
   before_filter :check_edit_permissions, except: [:index, :new, :create, :download_private_file]
   before_filter :authenticate_user!
 
@@ -101,14 +101,6 @@ class StudiesController < ApplicationController
     end
   end
 
-  def parse_progress
-    @study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
-    # gotcha in case parsing has failed and study file as been destroyed
-    if @study_file.nil?
-      render nothing: true
-    end
-  end
-
   # create a new study_file for requested study
   def new_study_file
     file_type = params[:file_type] ? params[:file_type] : 'Cluster'
@@ -163,12 +155,16 @@ class StudiesController < ApplicationController
         else
           @partial = 'initialize_misc_form'
       end
-      # remove record to also delete uploaded source file
+      # delete source file in FireCloud and then remove record
+      Study.firecloud_client.delete_workspace_file(@study.firecloud_workspace, @study_file)
       @study_file.destroy
+
+      # reset initialized if needed
       if @study.cluster_ordinations_files.empty? || @study.expression_matrix_file.nil? || @study.metadata_file.nil?
         @study.update(initialized: false)
       end
     end
+
     is_required = ['Cluster', 'Expression Matrix', 'Metadata'].include?(@file_type)
     @color = is_required ? 'danger' : 'info'
     @status = is_required ? 'Required' : 'Optional'
@@ -250,11 +246,6 @@ class StudiesController < ApplicationController
     head :ok
   end
 
-  # retrieve study file by filename
-  def retrieve_upload
-    @study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
-  end
-
   # retrieve study file by filename during initializer wizard
   def retrieve_wizard_upload
     @study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
@@ -273,6 +264,13 @@ class StudiesController < ApplicationController
       # redirect directly to file to trigger download
       redirect_to @templink.download_url
     end
+  end
+
+  # for files that don't need parsing, send directly to firecloud on upload completion
+  def send_to_firecloud
+    @study_file = StudyFile.find_by(study_id: params[:id], upload_file_name: params[:file])
+    @study.delay.send_to_firecloud(@study_file)
+    head :ok
   end
 
   private

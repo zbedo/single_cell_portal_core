@@ -78,6 +78,8 @@
 					});
 					fileUploading = false;
 					$.get("<%= retrieve_wizard_upload_study_path(@study._id) %>", {file: fileName, selector: '#misc_form_<%= study_file._id %>', partial: 'initialize_misc_form'});
+					// send to firecloud directly
+          $.post("<%= send_to_firecloud_study_path %>", {file: fileName});
 					if (<%= @study.study_files.select {|sf| %w(Documentation Other).include?(sf.file_type) }.size == 1 %>) {
 						completeWizardStep('initialize_misc_form_nav');
 						setWizardProgress(getWizardStatus());
