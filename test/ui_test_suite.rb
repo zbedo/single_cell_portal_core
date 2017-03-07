@@ -292,7 +292,70 @@ class UiTestSuite < Test::Unit::TestCase
 		save_btn.click
 		wait_for_render(:id, 'study-file-notices')
 		close_modal('study-file-notices')
+	end
 
+	# verify that recently created study uploaded to firecloud
+	test 'verify firecloud workspace' do
+		path = @base_url + '/studies'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email)
+
+		show_study = @driver.find_element(:class, 'test-study-show')
+		show_study.click
+
+		# verify firecloud workspace creation
+		firecloud_link = @driver.find_element(:id, 'firecloud-link')
+		firecloud_url = 'https://portal.firecloud.org/#workspaces/single-cell-portal%3Adevelopment-test-study'
+		firecloud_link.click
+		@driver.switch_to.window(@driver.window_handles.last)
+		# log in
+		login = @driver.find_element(:class, 'button')
+		login.click
+		assert @driver.current_url == firecloud_url, 'did not open firecloud workspace'
+		completed = @driver.find_elements(:class, 'fa-check-circle')
+		assert completed.size >= 1, 'did not provision workspace properly'
+
+		# verify gcs bucket and uploads
+		@driver.switch_to.window(@driver.window_handles.first)
+		gcs_link = @driver.find_element(:id, 'gcs-link')
+		gcs_link.click
+		@driver.switch_to.window(@driver.window_handles.last)
+		files = @driver.find_elements(:class, 'p6n-clickable-row')
+		assert files.size == 7, "did not find correct number of files, expected 7 but found #{files.size}"
+	end
+
+	# test to verify deleting files removes them from gcs buckets
+	test 'delete study file' do
+		path = @base_url + '/studies'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email)
+
+		# delete file to test study
+		add_files = @driver.find_element(:class, 'test-study-upload')
+		add_files.click
+		misc_tab = @driver.find_element(:id, 'initialize_misc_form_nav')
+		misc_tab.click
+		form = @driver.find_element(:class, 'initialize_misc_form')
+		delete = form.find_element(:class, 'delete-file')
+		delete.click
+		@driver.switch_to.alert.accept
+		# wait a few seconds to allow delete call to propogate all the way to FireCloud
+		sleep(5)
+
+		@driver.get path
+		files = @driver.find_element(:id, 'test-study-study-file-count')
+		assert files.text == '6', "did not find correct number of files, expected 6 but found #{files.text}"
+
+		# verify deletion in google
+		show_study = @driver.find_element(:class, 'test-study-show')
+		show_study.click
+		gcs_link = @driver.find_element(:id, 'gcs-link')
+		gcs_link.click
+		@driver.switch_to.window(@driver.window_handles.last)
+		google_files = @driver.find_elements(:class, 'p6n-clickable-row')
+		assert google_files.size == 6, "did not find correct number of files, expected 6 but found #{google_files.size}"
 	end
 
 	# text gzip parsing of expression matrices

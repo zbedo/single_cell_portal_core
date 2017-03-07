@@ -23,18 +23,18 @@
                 <tr>
                   <td>Study URL</td>
                   <td><%= view_study_url(@study.url_safe_name) %></td>
-                  <td><%= link_to "<span class='fa fa-area-chart'></span> View Study".html_safe, view_study_path(@study.url_safe_name), class: 'btn btn-primary' %></td>
+                  <td><%= link_to "<span class='fa fa-area-chart'></span> View Study".html_safe, view_study_path(@study.url_safe_name), class: 'btn btn-primary', id: 'study-link' %></td>
                 </tr>
                 <tr>
                   <td>FireCloud Workspace</td>
                   <td><%= @study.firecloud_workspace %></td>
-                  <td><%= link_to_if !@study.firecloud_workspace.nil?, "<span class='fa fa-cloud'></span> View FireCloud Workspace".html_safe, @study.workspace_url, class: 'btn btn-info', target: :_blank %>
+                  <td><%= link_to_if !@study.firecloud_workspace.nil?, "<span class='fa fa-cloud'></span> View FireCloud Workspace".html_safe, @study.workspace_url, class: 'btn btn-info', id: 'firecloud-link', target: :_blank %>
                   </td>
                 </tr>
                 <tr>
                   <td>Google Storage Bucket</td>
                   <td><%= @study.bucket_id %></td>
-                  <td><%= link_to_if !@study.bucket_id.nil?, "<span class='fa fa-database'></span> View Google Bucket".html_safe, @study.google_bucket_url, class: 'btn btn-success', target: :_blank %>
+                  <td><%= link_to_if !@study.bucket_id.nil?, "<span class='fa fa-database'></span> View Google Bucket".html_safe, @study.google_bucket_url, class: 'btn btn-success', id: 'gcs-link', target: :_blank %>
                   </td>
                 </tr>
               </tbody>

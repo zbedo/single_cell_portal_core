@@ -207,22 +207,23 @@ class Study
   end
 
   # helper method to get number of unique single cells
-  def set_cell_count
+  # since local files are ephemeral
+  def set_cell_count(file_type)
     @cell_count = 0
-    if !self.expression_matrix_file.nil?
-      if self.expression_matrix_file.upload_content_type == 'application/gzip'
-        @file = Zlib::GzipReader.open(self.expression_matrix_file.upload.path)
-      else
-        @file = File.open(self.expression_matrix_file.upload.path)
-      end
-      cells = @file.readline.split(/[\t,]/)
-      @file.close
-      cells.shift
-      @cell_count = cells.size
-    elsif self.expression_matrix_file.nil? && !self.metadata_file.nil?
-      # we have no expression matrix, but we do have a metadata file
-      metadata_name, metadata_type = StudyMetadata.where(study_id: self.id).pluck(:name, :annotation_type).flatten
-      @cell_count = self.study_metadata_values(metadata_name, metadata_type).keys.size
+    case file_type
+      when 'Expression Matrix'
+        if self.expression_matrix_file.upload_content_type == 'application/gzip'
+          @file = Zlib::GzipReader.open(self.expression_matrix_file.upload.path)
+        else
+          @file = File.open(self.expression_matrix_file.upload.path)
+        end
+        cells = @file.readline.split(/[\t,]/)
+        @file.close
+        cells.shift
+        @cell_count = cells.size
+      when 'Metadata'
+        metadata_name, metadata_type = StudyMetadata.where(study_id: self.id).pluck(:name, :annotation_type).flatten
+        @cell_count = self.study_metadata_values(metadata_name, metadata_type).keys.size
     end
     self.update(cell_count: @cell_count)
     Rails.logger.info "#{Time.now}: Setting cell count in #{self.name} to #{@cell_count}"
@@ -412,6 +413,9 @@ class Study
         self.update(initialized: true)
       end
       SingleCellMailer.notify_user_parse_complete(user.email, "Expression file: '#{expression_file.name}' has completed parsing", @message).deliver_now
+
+      # update study cell count
+      self.set_cell_count(expression_file.file_type)
 
       # now that parsing is complete, we can move file into storage bucket and delete local
       self.send_to_firecloud(expression_file)
@@ -742,6 +746,9 @@ class Study
       @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
       # send email on completion
       SingleCellMailer.notify_user_parse_complete(user.email, "Metadata file: '#{metadata_file.upload_file_name}' has completed parsing", @message).deliver_now
+
+      # set the cell count
+      self.set_cell_count(metadata_file.file_type)
 
       # now that parsing is complete, we can move file into storage bucket and delete local
       self.send_to_firecloud(metadata_file)

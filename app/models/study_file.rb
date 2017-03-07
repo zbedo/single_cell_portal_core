@@ -39,7 +39,7 @@ class StudyFile
   # callbacks
   before_create   :make_data_dir
   before_create   :set_file_name_and_url_safe_name
-  after_save      :check_public?, :update_cell_count
+  after_save      :check_public?
   before_destroy  :remove_public_symlink
 
   has_mongoid_attached_file :upload,
@@ -140,14 +140,6 @@ class StudyFile
       if self.study.public?
         FileUtils.rm_f(self.public_data_path)
       end
-    end
-  end
-
-  # update a study's cell count if uploading an expression matrix or cluster assignment file
-  def update_cell_count
-    if ['Metadata', 'Expression Matrix'].include?(self.file_type) && self.status == 'uploaded' && self.parsed?
-      study = self.study
-      study.set_cell_count
     end
   end
 end
