@@ -14,14 +14,21 @@ require 'selenium-webdriver'
 # 3. Gems: rubygems, test-unit, selenium-webdriver
 # 4. Google Chrome with at least 2 Google accounts already signed in (referred to as $test_email & $share_email)
 # 5. Chromedriver (https://sites.google.com/a/chromium.org/chromedriver/)
+# 6. Register for FireCloud (https://portal.firecloud.org) for both Google accounts (needed for auth & sharing acls)
 
 # USAGE
 #
-# ui_test_suite.rb takes two arguments:
-# 1. path to your Chrome user profile on your system (passed with -p)
-# 2. path to your Chromedriver binary (passed with -c)
-# this must be passed with ruby test/ui_test_suite.rb -- -p=[/path/to/profile/dir] -c=[/path/to/chromedriver]
+# ui_test_suite.rb takes four arguments:
+# 1. path to your Chrome user profile on your system (passed with -p=)
+# 2. path to your Chromedriver binary (passed with -c=)
+# 3. test email account (passed with -e=); this must be a valid Google & FireCloud user and already signed into Chrome
+# 4. share email account (passed with -s=); this must be a valid Google & FireCloud user and already signed into Chrome
+# 5. test order (passed with -o=); defaults to defined order (can be alphabetical or random, but random will most likely fail horribly)
+# these must be passed with ruby test/ui_test_suite.rb -- -p=[/path/to/profile/dir] -c=[/path/to/chromedriver] -e=[test_email] -s=[share_email]
 # if you do not use -- before the argument and give the appropriate flag (with =), it is processed as a Test::Unit flag and ignored
+#
+# Also, due to how these tests are implemented using Webdriver, they cannot be run individually (usually done with -n [test_name])
+# to run an individual test
 
 ## INITIALIZATION
 
@@ -32,6 +39,7 @@ $chromedriver_path = '/usr/local/bin/chromedriver'
 $usage = 'ruby test/ui_test_suite.rb -- -p=/path/to/profile -c=/path/to/chromedriver -e=testing.email@gmail.com -s=sharing.email@gmail.com'
 $test_email = ''
 $share_email = ''
+$order = 'defined'
 
 # parse arguments
 ARGV.each do |arg|
@@ -43,6 +51,8 @@ ARGV.each do |arg|
 		$test_email = arg.gsub(/\-e\=/, "")
 	elsif arg =~ /\-s\=/
 		$share_email = arg.gsub(/\-s\=/, "")
+	elsif arg =~ /\-o\=/
+		$order = arg.gsub(/\-o\=/, "").to_sym
 	end
 end
 
@@ -64,7 +74,7 @@ elsif !File.exists?($chromedriver_path)
 end
 
 class UiTestSuite < Test::Unit::TestCase
-	self.test_order = :defined
+	self.test_order = $order
 
 	def setup
 		@driver = Selenium::WebDriver::Driver.for :chrome,
@@ -74,7 +84,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.manage.window.maximize
 		@base_url = 'https://localhost/single_cell'
 		@accept_next_alert = true
-		@driver.manage.timeouts.implicit_wait = 30
+		@driver.manage.timeouts.implicit_wait = 15
 		# only Google auth
 
 		@genes = %w(Itm2a Sergef Chil5 Fam109a Dhx9 Ssu72 Olfr1018 Fam71e2 Eif2b2)
@@ -166,6 +176,8 @@ class UiTestSuite < Test::Unit::TestCase
 	# uses example data in test directoyr as inputs (based off of https://github.com/broadinstitute/single_cell_portal/tree/master/demo_data)
 	# these tests run first to create test studies to use in front-end tests later
 	test 'create a study' do
+		puts "Test method: #{self.method_name}"
+
 		# log in first
 		path = @base_url + '/studies/new'
 		@driver.get path
@@ -296,6 +308,8 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# verify that recently created study uploaded to firecloud
 	test 'verify firecloud workspace' do
+		puts "Test method: #{self.method_name}"
+
 		path = @base_url + '/studies'
 		@driver.get path
 		close_modal('message_modal')
@@ -309,9 +323,6 @@ class UiTestSuite < Test::Unit::TestCase
 		firecloud_url = 'https://portal.firecloud.org/#workspaces/single-cell-portal%3Adevelopment-test-study'
 		firecloud_link.click
 		@driver.switch_to.window(@driver.window_handles.last)
-		# log in
-		login = @driver.find_element(:class, 'button')
-		login.click
 		assert @driver.current_url == firecloud_url, 'did not open firecloud workspace'
 		completed = @driver.find_elements(:class, 'fa-check-circle')
 		assert completed.size >= 1, 'did not provision workspace properly'
@@ -327,6 +338,8 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# test to verify deleting files removes them from gcs buckets
 	test 'delete study file' do
+		puts "Test method: #{self.method_name}"
+
 		path = @base_url + '/studies'
 		@driver.get path
 		close_modal('message_modal')
@@ -355,11 +368,14 @@ class UiTestSuite < Test::Unit::TestCase
 		gcs_link.click
 		@driver.switch_to.window(@driver.window_handles.last)
 		google_files = @driver.find_elements(:class, 'p6n-clickable-row')
+		sleep(5)
 		assert google_files.size == 6, "did not find correct number of files, expected 6 but found #{google_files.size}"
 	end
 
 	# text gzip parsing of expression matrices
 	test 'parse gzip expression matrix' do
+		puts "Test method: #{self.method_name}"
+
 		# log in first
 		path = @base_url + '/studies/new'
 		@driver.get path
@@ -397,6 +413,8 @@ class UiTestSuite < Test::Unit::TestCase
 	# this test just makes sure that parsing fails and removed entries appropriately
 	# your test email account should receive emails notifying of failure
 	test 'create study error messaging' do
+		puts "Test method: #{self.method_name}"
+
 		# log in first
 		path = @base_url + '/studies/new'
 		@driver.get path
@@ -473,6 +491,8 @@ class UiTestSuite < Test::Unit::TestCase
 	# create private study for testing visibility/edit restrictions
 	# must be run before other tests, so numbered accordingly
 	test 'create private study' do
+		puts "Test method: #{self.method_name}"
+
 		# log in first
 		path = @base_url + '/studies/new'
 		@driver.get path
@@ -490,7 +510,10 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# check visibility & edit restrictions as well as share access
+	# will also verify FireCloud ACL settings on shares
 	test 'create share and check view and edit' do
+		puts "Test method: #{self.method_name}"
+
 		# check view visibility for unauthenticated users
 		path = @base_url + '/study/private-study'
 		@driver.get path
@@ -556,6 +579,30 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get share_edit_path
 		assert @driver.current_url == share_edit_path, 'did not load share study edit'
 
+		# test uploading a file
+		upload_path = @base_url + '/studies/' + share_study_id + '/upload'
+		@driver.get upload_path
+		misc_tab = @driver.find_element(:id, 'initialize_misc_form_nav')
+		misc_tab.click
+
+		upload_doc = @driver.find_element(:class, 'upload-misc')
+		upload_doc.send_keys(@test_data_path + 'README.txt')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		wait_for_render(:id, 'upload-success-modal')
+		close_modal('upload-success-modal')
+
+		# verify upload has completed and is in FireCloud bucket
+		@driver.get @base_url + '/studies/'
+		file_count = @driver.find_element(:id, 'test-study-study-file-count')
+		assert file_count.text == '7', "did not find correct number of files, expected 7 but found #{file_count.text}"
+		show_study = @driver.find_element(:class, 'test-study-show')
+		show_study.click
+		gcs_link = @driver.find_element(:id, 'gcs-link')
+		gcs_link.click
+		@driver.switch_to.window(@driver.window_handles.last)
+		files = @driver.find_elements(:class, 'p6n-clickable-row')
+		assert files.size == 7, "did not find correct number of files, expected 7 but found #{files.size}"
 	end
 
 	##
@@ -563,12 +610,16 @@ class UiTestSuite < Test::Unit::TestCase
 	##
 
 	test 'get home page' do
+		puts "Test method: #{self.method_name}"
+
 		@driver.get(@base_url)
 		assert element_present?(:id, 'main-banner'), 'could not find index page title text'
 		assert @driver.find_elements(:class, 'panel-primary').size >= 1, 'did not find any studies'
 	end
 
 	test 'perform search' do
+		puts "Test method: #{self.method_name}"
+
 		@driver.get(@base_url)
 		search_box = @driver.find_element(:id, 'search_terms')
 		search_box.send_keys('Test Study')
@@ -579,6 +630,8 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	test 'load Test Study study' do
+		puts "Test method: #{self.method_name}"
+
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
@@ -596,6 +649,8 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	test 'download study data file' do
+		puts "Test method: #{self.method_name}"
+
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
@@ -610,6 +665,8 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	test 'search for single gene' do
+		puts "Test method: #{self.method_name}"
+
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
@@ -624,6 +681,8 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	test 'search for multiple gene' do
+		puts "Test method: #{self.method_name}"
+
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
@@ -637,6 +696,8 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	test 'load marker gene heatmap' do
+		puts "Test method: #{self.method_name}"
+
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
@@ -649,6 +710,8 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	test 'load marker gene box/scatter' do
+		puts "Test method: #{self.method_name}"
+
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
@@ -660,6 +723,8 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	test 'load different cluster and annotation then search gene expression' do
+		puts "Test method: #{self.method_name}"
+
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
@@ -688,6 +753,8 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# test whether or not maintenance mode functions properly
 	test 'enable maintenance mode' do
+		puts "Test method: #{self.method_name}"
+
 		# enable maintenance mode
 		system("#{@base_path}/bin/enable_maintenance.sh on")
 		@driver.get @base_url
@@ -700,6 +767,8 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# test that camera position is being preserved on cluster/annotation select & rotation
 	test 'check camera position on change' do
+		puts "Test method: #{self.method_name}"
+
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
@@ -740,7 +809,9 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# final test, remove test study that was created and used for front-end tests
 	# runs last to clean up data for next test run
-	test 'delete test and private study' do
+	test 'delete all test studies' do
+		puts "Test method: #{self.method_name}"
+
 		# log in first
 		path = @base_url + '/studies'
 		@driver.get path

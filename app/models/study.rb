@@ -29,8 +29,7 @@ class Study
       end
     end
   end
-  has_many :cluster_points, dependent: :delete
-  has_many :single_cells, dependent: :delete
+
   has_many :expression_scores, dependent: :delete do
     def by_gene(gene)
       where(gene: /#{gene}/i).to_a
@@ -43,7 +42,7 @@ class Study
     end
   end
 
-  has_many :study_shares, dependent: :delete do
+  has_many :study_shares, dependent: :destroy do
     def can_edit
       where(permission: 'Edit').map(&:email)
     end
@@ -57,16 +56,6 @@ class Study
   has_many :data_arrays, dependent: :delete do
     def by_name_and_type(name, type)
       where(name: name, array_type: type).order_by(&:array_index).to_a
-    end
-  end
-
-  has_many :clusters, dependent: :delete do
-    def parent_clusters
-      where(cluster_type: 'parent').to_a.delete_if {|c| c.cluster_points.empty? }
-    end
-
-    def sub_cluster(name)
-      where(parent_cluster: name).to_a.delete_if {|c| c.cluster_points.empty? }
     end
   end
 
@@ -101,7 +90,7 @@ class Study
     study.study_shares.each do |study_share|
       next if study_share.valid?
       study_share.errors.full_messages.each do |msg|
-        errors.add(:base, "Share Error: #{msg}")
+        errors.add(:base, "Share Error - #{msg}")
       end
     end
   end
@@ -898,6 +887,7 @@ class Study
   # automatically create a FireCloud workspace on study creation after validating name & url_safe_name
   # will raise validation errors if creation, bucket or ACL assignment fail for any reason and deletes workspace on validation fail
   def check_values_and_create_firecloud_workspace
+    Rails.logger.info "#{Time.now}: Study: #{self.name} creating FireCloud workspace"
     # check name and url_safe_name first and set validation error
     if self.name.blank? || self.name.nil?
       errors.add(:name, " cannot be blank - please provide a name for your study.")
@@ -942,6 +932,19 @@ class Study
           errors.add(:firecloud_workspace, ' was not created properly (permissions do not match).  Please try again later.')
         end
         Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment successful"
+        if self.study_shares.any?
+          Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares starting"
+          self.study_shares.each do |share|
+            begin
+              acl = Study.firecloud_client.create_acl(share.email, StudyShare::FIRECLOUD_ACL_MAP[share.permission])
+              Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
+              Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares #{share.email} successful"
+            rescue RuntimeError => e
+              errors.add(:study_shares, "Could not create a share for #{share.email} to workspace #{self.firecloud_workspace} due to: #{e.message}")
+              false
+            end
+          end
+        end
       rescue => e
         # delete workspace on any fail as this amounts to a validation fail
         Rails.logger.info "#{Time.now}: Error creating workspace: #{e.message}"
@@ -970,19 +973,10 @@ class Study
     end
   end
 
-  # in case user has renamed study, validate link to data store
-  # check_public? is fired after this, so symlinks will be checked next
+  # in case user has renamed study, validate link to data store (needed for uploads still)
   def check_data_links
     if self.url_safe_name != self.url_safe_name_was
       FileUtils.mv Rails.root.join('data', self.url_safe_name_was).to_s, Rails.root.join('data', self.url_safe_name).to_s
-      # change url_safe_name in all study files
-      self.study_files.each do |study_file|
-        study_file.update(url_safe_name: self.url_safe_name)
-      end
-      # remove old symlink if changed
-      if self.public?
-        FileUtils.rm_rf(Rails.root.join('public', 'single_cell', 'data', self.url_safe_name_was))
-      end
     end
   end
 

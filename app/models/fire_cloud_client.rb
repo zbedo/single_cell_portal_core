@@ -191,19 +191,24 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	end
 
 	# helper for creating FireCloud ACL objects
+	# will raise a RuntimeError if permission requested does not match allowed values in WORKSPACE_PERMISSONS
 	#
 	# param: email (string) => email of FireCloud user
 	# param: permission (string) => granted permission level
 	#
 	# return: JSON-encoded ACL object for use in HTTP body
 	def create_acl(email, permission)
-		[
-				{
-						'email' => email,
-						'accessLevel' => permission,
-						'canShare' => true
-				}
-		].to_json
+		if WORKSPACE_PERMISSIONS.include?(permission)
+			[
+					{
+							'email' => email,
+							'accessLevel' => permission,
+							'canShare' => true
+					}
+			].to_json
+		else
+			raise RuntimeError.new("Invalid FireCloud ACL permission setting: #{permission}")
+		end
 	end
 
 	## GOOGLE CLOUD STORAGE METHODS
