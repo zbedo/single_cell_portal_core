@@ -2,30 +2,30 @@ require 'rubygems'
 require 'test/unit'
 require 'selenium-webdriver'
 
-# Unit Test that is actually a user flow test using the Selenium Webdriver to test dev UI directly
+# Test suite that exercises functionality through simulating user interactions via Webdriver
 #
 # REQUIREMENTS
 #
 # This test suite must be run from outside of Docker (i.e. your host machine) as Docker vms have no concept of browsers/screen output
-# Therefore, the following languages/packages must be installed:
+# Therefore, the following languages/packages must be installed on your host:
 #
 # 1. RVM (or equivalent Ruby language management system)
 # 2. Ruby >= 2.3
-# 3. Gems: rubygems, test-unit, selenium-webdriver
+# 3. Gems: rubygems, test-unit, selenium-webdriver (see Gemfile.lock for version requirements)
 # 4. Google Chrome with at least 2 Google accounts already signed in (referred to as $test_email & $share_email)
 # 5. Chromedriver (https://sites.google.com/a/chromium.org/chromedriver/)
 # 6. Register for FireCloud (https://portal.firecloud.org) for both Google accounts (needed for auth & sharing acls)
 
 # USAGE
 #
-# ui_test_suite.rb takes four arguments:
+# ui_test_suite.rb takes five arguments:
 # 1. path to your Chrome user profile on your system (passed with -p=)
 # 2. path to your Chromedriver binary (passed with -c=)
 # 3. test email account (passed with -e=); this must be a valid Google & FireCloud user and already signed into Chrome
 # 4. share email account (passed with -s=); this must be a valid Google & FireCloud user and already signed into Chrome
-# 5. test order (passed with -o=); defaults to defined order (can be alphabetical or random, but random will most likely fail horribly)
+# 5. test order (passed with -o=); defaults to defined order (can be alphabetic or random, but random will most likely fail horribly)
 # 6. download directory (passed with -d=); place where files are downloaded on your OS, defaults to standard OSX location (/Users/`whoami`/Downloads)
-# these must be passed with ruby test/ui_test_suite.rb -- -p=[/path/to/profile/dir] -c=[/path/to/chromedriver] -e=[test_email] -s=[share_email]
+# these must be passed with ruby test/ui_test_suite.rb -- -p=[/path/to/profile/dir] -c=[/path/to/chromedriver] -e=[test_email] -s=[share_email] -d=[/path/to/download/dir]
 # if you do not use -- before the argument and give the appropriate flag (with =), it is processed as a Test::Unit flag and ignored
 #
 # Also, due to how these tests are implemented using Webdriver, they cannot be run individually (usually done with -n [test_name])
@@ -37,7 +37,7 @@ require 'selenium-webdriver'
 $user = `whoami`.strip
 $profile_dir = "/Users/#{$user}/Library/Application Support/Google/Chrome/Default"
 $chromedriver_path = '/usr/local/bin/chromedriver'
-$usage = 'ruby test/ui_test_suite.rb -- -p=/path/to/profile -c=/path/to/chromedriver -e=testing.email@gmail.com -s=sharing.email@gmail.com'
+$usage = 'ruby test/ui_test_suite.rb -- -p=/path/to/profile -c=/path/to/chromedriver -e=testing.email@gmail.com -s=sharing.email@gmail.com -o=order -d=/path/to/downloads'
 $test_email = ''
 $share_email = ''
 $order = 'defined'
@@ -55,6 +55,8 @@ ARGV.each do |arg|
 		$share_email = arg.gsub(/\-s\=/, "")
 	elsif arg =~ /\-o\=/
 		$order = arg.gsub(/\-o\=/, "").to_sym
+	elsif arg =~ /\-d\=/
+		$download_dir = arg.gsub(/\-d\=/, "")
 	end
 end
 
