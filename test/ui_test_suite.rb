@@ -65,6 +65,7 @@ puts "Loaded Chrome Profile: #{$profile_dir}"
 puts "Chromedriver Binary: #{$chromedriver_path}"
 puts "Testing email: #{$test_email}"
 puts "Sharing email: #{$share_email}"
+puts "Download directory: #{$download_dir}"
 
 # make sure profile & chromedriver exist, otherwise kill tests before running and print usage
 if !Dir.exists?($profile_dir)
@@ -73,6 +74,10 @@ if !Dir.exists?($profile_dir)
 	exit(1)
 elsif !File.exists?($chromedriver_path)
 	puts "No Chromedriver binary found at #{$chromedriver_path}"
+	puts $usage
+	exit(1)
+elsif !Dir.exists?($download_dir)
+	puts "No download directory found at #{$download_dir}"
 	puts $usage
 	exit(1)
 end
@@ -99,6 +104,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.quit
 	end
 
+	# return true/false if element is present in DOM
 	def element_present?(how, what)
 		@driver.find_element(how, what)
 		true
@@ -106,12 +112,7 @@ class UiTestSuite < Test::Unit::TestCase
 		false
 	end
 
-	def verify(&blk)
-		yield
-	rescue Test::Unit::AssertionFailedError => ex
-		@verification_errors << ex
-	end
-
+	# explicit wait until requested page loads
 	def wait_until_page_loads(path)
 		@wait.until { @driver.current_url == path }
 	end
@@ -173,6 +174,10 @@ class UiTestSuite < Test::Unit::TestCase
 		close_modal('message_modal')
 		puts 'login successful'
 	end
+
+	##
+	## STUDY ADMIN TESTS
+	##
 
 	# admin backend tests of entire study creation process including negative/error tests
 	# uses example data in test directoyr as inputs (based off of https://github.com/broadinstitute/single_cell_portal/tree/master/demo_data)
