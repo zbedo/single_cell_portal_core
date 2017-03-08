@@ -103,8 +103,6 @@ class Study
   # callbacks
   before_validation :set_url_safe_name, :set_firecloud_workspace_name
   before_update     :check_data_links
-  after_save        :check_public?
-  before_destroy    :remove_public_symlinks
   after_destroy     :remove_data_dir, :delete_firecloud_workspace
 
   # search definitions
@@ -954,36 +952,10 @@ class Study
     end
   end
 
-  # used for creating symbolic links to make data downloadable
-  def check_public?
-    if self.public?
-      if !Dir.exists?(self.data_public_path)
-        FileUtils.mkdir_p(self.data_public_path)
-        FileUtils.ln_sf(Dir.glob("#{self.data_store_path}/*"), self.data_public_path)
-      else
-        entries = Dir.entries(self.data_public_path).delete_if {|e| e.start_with?('.')}
-        if entries.map {|e| File.directory?(Rails.root.join(self.data_public_path, e))}.uniq == [true] || entries.empty?
-          FileUtils.ln_sf(Dir.glob("#{self.data_store_path}/*"), self.data_public_path)
-        end
-      end
-    elsif !self.public?
-      if Dir.exists?(self.data_public_path)
-        FileUtils.remove_entry_secure(self.data_public_path, force: true)
-      end
-    end
-  end
-
   # in case user has renamed study, validate link to data store (needed for uploads still)
   def check_data_links
     if self.url_safe_name != self.url_safe_name_was
       FileUtils.mv Rails.root.join('data', self.url_safe_name_was).to_s, Rails.root.join('data', self.url_safe_name).to_s
-    end
-  end
-
-  # clean up any symlinks before deleting a study
-  def remove_public_symlinks
-    if Dir.exist?(self.data_public_path)
-      FileUtils.rm_rf(self.data_public_path)
     end
   end
 

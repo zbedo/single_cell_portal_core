@@ -72,6 +72,14 @@ class SiteController < ApplicationController
     @cluster_annotations = load_cluster_group_annotations
   end
 
+  # method to download files if study is private, will create temporary symlink and remove after timeout
+  def download_file
+    @study_file = @study.study_files.select {|sf| sf.upload_file_name == params[:filename]}.first
+    @signed_url = Study.firecloud_client.generate_signed_url(@study.firecloud_workspace, @study_file)
+    # redirect directly to file to trigger download
+    redirect_to @signed_url
+  end
+
   # search for one or more genes to view expression information
   def search_genes
     if params[:search][:upload].blank?

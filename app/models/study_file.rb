@@ -39,8 +39,6 @@ class StudyFile
   # callbacks
   before_create   :make_data_dir
   before_create   :set_file_name_and_url_safe_name
-  after_save      :check_public?
-  before_destroy  :remove_public_symlink
 
   has_mongoid_attached_file :upload,
                             :path => ":rails_root/data/:url_safe_name/:filename",
@@ -61,7 +59,7 @@ class StudyFile
       self.human_fastq_url
     else
       if self.study.public?
-        self.upload.url
+        download_file_path(self.study.url_safe_name, self.upload_file_name)
       else
         download_private_file_path(self.study.url_safe_name, self.upload_file_name)
       end
@@ -86,11 +84,6 @@ class StudyFile
 
   def parsed?
     self.parse_status == 'parsed'
-  end
-
-  # return an integer percentage of the parsing status
-  def percent_parsed
-    (self.bytes_parsed / self.upload_file_size.to_f * 100).floor
   end
 
   # file type as a css class
@@ -123,23 +116,5 @@ class StudyFile
       self.name = self.upload_file_name
     end
     self.url_safe_name = self.study.url_safe_name
-  end
-
-  # add symlink if study is public and doesn't already exist
-  def check_public?
-    unless self.upload_file_name.nil?
-      if self.study.public? && self.status == 'uploaded' && !File.exists?(self.public_data_path)
-        FileUtils.ln_sf(self.upload.path, self.public_data_path)
-      end
-    end
-  end
-
-  # clean up any symlinks before deleting a study file
-  def remove_public_symlink
-    unless self.upload_file_name.nil?
-      if self.study.public?
-        FileUtils.rm_f(self.public_data_path)
-      end
-    end
   end
 end

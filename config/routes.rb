@@ -21,7 +21,9 @@ Rails.application.routes.draw do
         post 'parse', to: 'studies#parse', as: :parse_study_file
 			end
 		end
-    get 'private/data/:study_name/:filename', to: 'studies#download_private_file', as: :download_private_file, constraints: {filename: /.*/}
+		# public/private file download links (redirect to signed_urls from Google)
+		get 'data/public/:study_name/:filename', to: 'site#download_file', as: :download_file, constraints: {filename: /.*/}
+    get 'data/private/:study_name/:filename', to: 'studies#download_private_file', as: :download_private_file, constraints: {filename: /.*/}
 
 		# autocomplete
 		resources :expression_score, only: [:show, :index] do

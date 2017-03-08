@@ -259,10 +259,9 @@ class StudiesController < ApplicationController
       redirect_to site_path, alert: 'You do not have permission to perform that action' and return
     else
       @study_file = @study.study_files.select {|sf| sf.upload_file_name == params[:filename]}.first
-      @templink = TempFileDownload.create!({study_file_id: @study_file._id})
-      @valid_until = @templink.created_at + TempFileDownloadCleanup::DEFAULT_THRESHOLD.minutes
+      @signed_url = Study.firecloud_client.generate_signed_url(@study.firecloud_workspace, @study_file)
       # redirect directly to file to trigger download
-      redirect_to @templink.download_url
+      redirect_to @signed_url
     end
   end
 

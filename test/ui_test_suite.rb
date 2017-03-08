@@ -24,6 +24,7 @@ require 'selenium-webdriver'
 # 3. test email account (passed with -e=); this must be a valid Google & FireCloud user and already signed into Chrome
 # 4. share email account (passed with -s=); this must be a valid Google & FireCloud user and already signed into Chrome
 # 5. test order (passed with -o=); defaults to defined order (can be alphabetical or random, but random will most likely fail horribly)
+# 6. download directory (passed with -d=); place where files are downloaded on your OS, defaults to standard OSX location (/Users/`whoami`/Downloads)
 # these must be passed with ruby test/ui_test_suite.rb -- -p=[/path/to/profile/dir] -c=[/path/to/chromedriver] -e=[test_email] -s=[share_email]
 # if you do not use -- before the argument and give the appropriate flag (with =), it is processed as a Test::Unit flag and ignored
 #
@@ -40,6 +41,7 @@ $usage = 'ruby test/ui_test_suite.rb -- -p=/path/to/profile -c=/path/to/chromedr
 $test_email = ''
 $share_email = ''
 $order = 'defined'
+$download_dir = "/Users/#{$user}/Downloads"
 
 # parse arguments
 ARGV.each do |arg|
@@ -77,10 +79,7 @@ class UiTestSuite < Test::Unit::TestCase
 	self.test_order = $order
 
 	def setup
-		@driver = Selenium::WebDriver::Driver.for :chrome,
-																							driver_path: $chromedriver_dir,
-																							switches: ["--user-data-dir=#{$profile_dir}",
-																												 '--enable-webgl-draft-extensions']
+		@driver = Selenium::WebDriver::Driver.for :chrome, driver_path: $chromedriver_dir, switches: ["--user-data-dir=#{$profile_dir}", '--enable-webgl-draft-extensions']
 		@driver.manage.window.maximize
 		@base_url = 'https://localhost/single_cell'
 		@accept_next_alert = true
@@ -91,6 +90,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@wait = Selenium::WebDriver::Wait.new(:timeout => 30)
 		@test_data_path = File.expand_path(File.join(File.dirname(__FILE__), 'test_data')) + '/'
 		@base_path = File.expand_path(File.join(File.dirname(__FILE__), '..'))
+		puts "\n"
 	end
 
 	def teardown
@@ -304,6 +304,7 @@ class UiTestSuite < Test::Unit::TestCase
 		save_btn.click
 		wait_for_render(:id, 'study-file-notices')
 		close_modal('study-file-notices')
+		puts "Test method: #{self.method_name} successful!\n"
 	end
 
 	# verify that recently created study uploaded to firecloud
@@ -334,6 +335,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.switch_to.window(@driver.window_handles.last)
 		files = @driver.find_elements(:class, 'p6n-clickable-row')
 		assert files.size == 7, "did not find correct number of files, expected 7 but found #{files.size}"
+		puts "Test method: #{self.method_name} successful!\n"
 	end
 
 	# test to verify deleting files removes them from gcs buckets
@@ -370,6 +372,7 @@ class UiTestSuite < Test::Unit::TestCase
 		google_files = @driver.find_elements(:class, 'p6n-clickable-row')
 		sleep(5)
 		assert google_files.size == 6, "did not find correct number of files, expected 6 but found #{google_files.size}"
+		puts "Test method: #{self.method_name} successful!\n"
 	end
 
 	# text gzip parsing of expression matrices
@@ -406,6 +409,7 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(studies_path)
 		study_file_count = @driver.find_element(:id, 'gzip-parse-study-file-count')
 		assert study_file_count.text == '1', "found incorrect number of study files; expected 1 and found #{study_file_count.text}"
+		puts "Test method: #{self.method_name} successful!\n"
 	end
 
 	# negative tests to check file parsing & validation
@@ -486,6 +490,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.switch_to.alert.accept
 		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
+		puts "Test method: #{self.method_name} successful!\n"
 	end
 
 	# create private study for testing visibility/edit restrictions
@@ -507,6 +512,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# save study
 		save_study = @driver.find_element(:id, 'save-study')
 		save_study.click
+		puts "Test method: #{self.method_name} successful!\n"
 	end
 
 	# check visibility & edit restrictions as well as share access
@@ -603,6 +609,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.switch_to.window(@driver.window_handles.last)
 		files = @driver.find_elements(:class, 'p6n-clickable-row')
 		assert files.size == 7, "did not find correct number of files, expected 7 but found #{files.size}"
+		puts "Test method: #{self.method_name} successful!\n"
 	end
 
 	##
@@ -615,6 +622,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get(@base_url)
 		assert element_present?(:id, 'main-banner'), 'could not find index page title text'
 		assert @driver.find_elements(:class, 'panel-primary').size >= 1, 'did not find any studies'
+		puts "Test method: #{self.method_name} successful!\n"
 	end
 
 	test 'perform search' do
@@ -627,6 +635,7 @@ class UiTestSuite < Test::Unit::TestCase
 		submit.click
 		studies = @driver.find_elements(:class, 'study-panel').size
 		assert studies == 1, 'incorrect number of studies found. expected one but found ' + studies.to_s
+		puts "Test method: #{self.method_name} successful!\n"
 	end
 
 	test 'load Test Study study' do
@@ -646,6 +655,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@wait.until {@driver.find_elements(:class, 'traces').size == 6}
 		legend = @driver.find_elements(:class, 'traces').size
 		assert legend == 6, "incorrect number of traces found in Sub-Cluster, expected 6 - found #{legend}"
+		puts "Test method: #{self.method_name} successful!\n"
 	end
 
 	test 'download study data file' do
@@ -658,10 +668,18 @@ class UiTestSuite < Test::Unit::TestCase
 		# gotcha when clicking, must wait until completes
 		download_section.click
 		files = @driver.find_elements(:class, 'dl-link')
-		file_link = files.first
+		file_link = files.last
+		filename = file_link['download']
+		basename = filename.split('.').first
 		@wait.until { file_link.displayed? }
 		downloaded = file_link.click
 		assert downloaded == nil, 'could not click download link'
+		# give browser 2 seconds to initiate download
+		sleep(2)
+		# make sure file was actually downloaded
+		file_exists = Dir.entries($download_dir).select {|f| f =~ /#{basename}/}.size >= 1 || File.exists?(File.join($download_dir, filename))
+		assert file_exists, "did not find downloaded file: #{filename} in #{Dir.entries($download_dir).join(', ')}"
+		puts "Test method: #{self.method_name} successful!\n"
 	end
 
 	test 'search for single gene' do
@@ -678,6 +696,7 @@ class UiTestSuite < Test::Unit::TestCase
 		search_form.submit
 		assert element_present?(:id, 'box-controls'), 'could not find expression boxplot'
 		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
+		puts "Test method: #{self.method_name} successful!\n"
 	end
 
 	test 'search for multiple gene' do
@@ -693,6 +712,7 @@ class UiTestSuite < Test::Unit::TestCase
 		search_form = @driver.find_element(:id, 'search-genes-form')
 		search_form.submit
 		assert element_present?(:id, 'plots'), 'could not find expression heatmap'
+		puts "Test method: #{self.method_name} successful!\n"
 	end
 
 	test 'load marker gene heatmap' do
@@ -707,6 +727,7 @@ class UiTestSuite < Test::Unit::TestCase
 		list.click
 		assert element_present?(:id, 'box-controls'), 'could not find marker list expression boxplot'
 		assert element_present?(:id, 'scatter-plots'), 'could not find marker list expression scatter plots'
+		puts "Test method: #{self.method_name} successful!\n"
 	end
 
 	test 'load marker gene box/scatter' do
@@ -720,6 +741,7 @@ class UiTestSuite < Test::Unit::TestCase
 		list = opts.sample
 		list.click
 		assert element_present?(:id, 'plots'), 'could not find marker list expression heatmap'
+		puts "Test method: #{self.method_name} successful!\n"
 	end
 
 	test 'load different cluster and annotation then search gene expression' do
@@ -749,6 +771,7 @@ class UiTestSuite < Test::Unit::TestCase
 		loaded_annotation = @driver.find_element(:id, 'annotation')
 		assert loaded_cluster['value'] == cluster_name, "did not load correct cluster; expected #{cluster_name} but loaded #{loaded_cluster['value']}"
 		assert loaded_annotation['value'] == annotation_value, "did not load correct annotation; expected #{annotation_value} but loaded #{loaded_annotation['value']}"
+		puts "Test method: #{self.method_name} successful!\n"
 	end
 
 	# test whether or not maintenance mode functions properly
@@ -763,6 +786,7 @@ class UiTestSuite < Test::Unit::TestCase
 		system("#{@base_path}/bin/enable_maintenance.sh off")
 		@driver.get @base_url
 		assert element_present?(:id, 'main-banner'), 'could not load home page'
+		puts "Test method: #{self.method_name} successful!\n"
 	end
 
 	# test that camera position is being preserved on cluster/annotation select & rotation
@@ -801,6 +825,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# verify camera position was saved
 		cluster_camera = @driver.execute_script("return $('#cluster-plot').data('camera')")
 		assert camera == cluster_camera['camera'], "camera position did not save correctly, expected #{camera.to_json}, got #{cluster_camera.to_json}"
+		puts "Test method: #{self.method_name} successful!\n"
 	end
 
 	##
@@ -835,5 +860,6 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.switch_to.alert.accept
 		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
+		puts "Test method: #{self.method_name} successful!"
 	end
 end
