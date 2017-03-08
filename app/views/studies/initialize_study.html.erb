@@ -60,10 +60,9 @@
         <div class="well well-sm">
           <h2>Step 4. Upload Fastq Files <small class="initialize-label" id="initialize_fastq_form_completed"><span class="label label-info">Optional</span></small></h2>
           <p class="lead"><strong>Primary Human Data</strong>: Primary sequence data derived from humans should be stored in other biological databases and can be linked here by selecting 'Yes' for 'Primary Human Data' and then providing a link in the text field.</p>
-          <p class="lead"><strong>Non-human Data</strong>: If you have a few, small (under 2GB) non-human fastq.gz files, they can be uploaded here. For uploading many or larger files, please refer to the instructions <%= link_to 'on our wiki', 'https://github.com/broadinstitute/single_cell_portal/wiki/Uploading-Files-Using-Gsutil-Tool', target: :_blank %>.  If you already have <code>gsutil</code> installed, you can upload files directly using the following <%= link_to "command:".html_safe, 'javascript:;', id: 'show-gsutil-command', class: 'btn btn-default', title: 'Click to show command', data: {toggle: 'tooltip', placement: 'right'} %></p>
-          <div class="bs-callout bs-callout-default" id="gsutil-command-wrapper">
-            <p class="lead text-center"><code id="gsutil-command">gsutil cp *.fastq.gz gs://<%= @study.bucket_id %></code></p>
-          </div>
+          <p class="lead"><strong>Non-human Data</strong>: If you have a few, small (under 2GB) non-human fastq.gz files, they can be uploaded here. For uploading many or larger files, please refer to the instructions <%= link_to 'on our wiki', 'https://github.com/broadinstitute/single_cell_portal/wiki/Uploading-Files-Using-Gsutil-Tool', target: :_blank %>.</p>
+          <p class="lead">If you already have <code>gsutil</code> installed you can upload files directly using the following command:</p>
+          <pre class="lead">gsutil cp *.fastq.gz gs://<%= @study.bucket_id %></pre>
           <p class="lead"><strong class="text-danger">If you are uploading fastq files through the wizard, they must be compressed first using gzip.</strong></p>
           <p><%= link_to "FASTQ File Format <span class='fa fa-info-circle'></span>".html_safe, 'https://en.wikipedia.org/wiki/FASTQ_format#Format', class: 'btn btn-default' %>&nbsp;<%= link_to "gzip Documentation <span class='fa fa-info-circle'></span>".html_safe, 'http://www.gnu.org/software/gzip/manual/gzip.html', class: 'btn btn-default' %></p>
         </div>

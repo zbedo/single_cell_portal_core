@@ -870,6 +870,83 @@ class Study
     end
   end
 
+  # one-time use method to push a study into FireCloud from local storage
+  def migrate_to_firecloud
+    @migration_error = false
+    begin
+      # set firecloud workspace name
+      puts "#{Time.now}: Study: #{self.name} beginning FireCloud migration"
+      ws_id = "#{WORKSPACE_NAME_PREFIX}#{self.url_safe_name}"
+      self.firecloud_workspace = ws_id
+      # must make an explicit call to save to database as we can't update reference to self
+      Study.where(id: self.id).update(firecloud_workspace: ws_id)
+
+      # begin workspace & acl creation
+      workspace = Study.firecloud_client.create_workspace(self.firecloud_workspace)
+      puts "#{Time.now}: Study: #{self.name} FireCloud workspace creation successful"
+      ws_name = workspace['name']
+      # validate creation
+      unless ws_name == self.firecloud_workspace
+        raise RuntimeError.new 'workspace was not created properly (workspace name did not match or was not created)'
+      end
+      puts "#{Time.now}: Study: #{self.name} FireCloud workspace validation successful"
+      # set bucket_id
+      bucket = workspace['bucketName']
+      if bucket.nil?
+        raise RuntimeError.new 'workspace was not created properly (storage bucket was not found)'
+      end
+      self.bucket_id = bucket
+      Study.where(id: self.id).update(bucket_id: bucket)
+      puts "#{Time.now}: Study: #{self.name} FireCloud bucket assignment successful"
+
+      # set workspace acl
+      study_owner = self.user.email
+      acl = Study.firecloud_client.create_acl(study_owner, 'OWNER')
+      Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
+      # validate acl
+      ws_acl = Study.firecloud_client.get_workspace_acl(ws_name)
+      unless ws_acl['acl'][study_owner]['accessLevel'] == 'OWNER'
+        raise RuntimeError.new 'workspace was not created properly (permissions do not match)'
+      end
+      puts "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment successful"
+      if self.study_shares.any?
+        puts "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares starting"
+        self.study_shares.each do |share|
+          acl = Study.firecloud_client.create_acl(share.email, StudyShare::FIRECLOUD_ACL_MAP[share.permission])
+          Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
+          puts "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares #{share.email} successful"
+        end
+      end
+      puts "#{Time.now}: Uploading #{self.name} study files to FireCloud workspace: #{self.firecloud_workspace}"
+      self.study_files.each do |file|
+        puts "#{Time.now}: Uploading #{file.upload_file_name} to FireCloud workspace: #{self.firecloud_workspace}"
+        Study.firecloud_client.create_workspace_file(self.firecloud_workspace, file)
+        puts "#{Time.now}: Upload of #{file.upload_file_name} complete"
+      end
+      puts "#{Time.now}: Study: #{self.name} FireCloud migration successful!"
+    rescue => e
+      # delete workspace on any fail as this amounts to a validation fail
+      Study.firecloud_client.delete_workspace(self.firecloud_workspace)
+      puts "#{self.name} workspace migration failed due to #{e.message}; reverting"
+      @migration_error = true
+    end
+    if @migration_error == false
+      puts "#{Time.now}: Study: #{self.name} FireCloud migration complete, deleting local files"
+      Dir.chdir(self.data_store_path)
+      self.study_files.each do |file|
+        puts "#{Time.now}: deleting #{file.upload_file_name} from #{self.data_store_path} for Study: #{self.name}"
+        File.delete(file.upload_file_name)
+        puts "#{Time.now}: deletion of #{file.upload_file_name} successful"
+      end
+      puts "#{Time.now}: deleting public data dir #{self.data_public_path} for Study: #{self.name}"
+      FileUtils.rm_f self.data_public_path
+      puts "#{Time.now}: Study: #{self.name} cleanup complete"
+      true
+    else
+      false
+    end
+  end
+
   private
 
   # sets a url-safe version of study name (for linking)

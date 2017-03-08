@@ -42,7 +42,7 @@ class StudyFile
 
   has_mongoid_attached_file :upload,
                             :path => ":rails_root/data/:url_safe_name/:filename",
-                            :url => "/single_cell/data/:url_safe_name/:filename"
+                            :url => ''
 
   # turning off validation to allow any kind of data file to be uploaded
   do_not_validate_attachment_file_type :upload

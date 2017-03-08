@@ -228,11 +228,7 @@ class SiteController < ApplicationController
     else
       @cluster_file = @study.metadata_file
     end
-    if @study.public?
-      @clusters_url = @cluster_file.download_path
-    else
-      @clusters_url = TempFileDownload.create!({study_file_id: @cluster_file._id}).download_url
-    end
+    @clusters_url = @cluster_file.morpheus_url
   end
 
   # load data in gct form to render in Morpheus, preserving query order
