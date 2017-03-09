@@ -14,8 +14,6 @@ class ClusterGroup
 			where(name: name, array_type: type).order_by(&:array_index).to_a
 		end
 	end
-	has_many :cluster_points
-	has_many :single_cells
 
 	index({ name: 1, study_id: 1 }, { unique: true })
 	index({ study_id: 1 }, { unique: false })

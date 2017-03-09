@@ -72,7 +72,9 @@ class Study
   field :description, type: String
   field :firecloud_workspace, type: String
   field :bucket_id, type: String
+  field :data_dir, type: String
   field :public, type: Boolean, default: true
+  field :queued_for_deletion, type: Boolean, default: false
   field :initialized, type: Boolean, default: false
   field :view_count, type: Integer, default: 0
   field :cell_count, type: Integer, default: 0
@@ -83,11 +85,12 @@ class Study
   accepts_nested_attributes_for :study_shares, allow_destroy: true, reject_if: proc { |attributes| attributes['email'].blank? }
 
   # custom validator since we need everything to pass in a specific order (otherwise we get orphaned FireCloud workspaces)
-  validate          :check_values_and_create_firecloud_workspace, on: :create
+  validate  :check_values_and_create_firecloud_workspace, on: :create
 
   # populate specific errors for study shares since they share the same form
   validate do |study|
     study.study_shares.each do |study_share|
+      Rails.logger.info "Study validation study share: #{study_share.id}"
       next if study_share.valid?
       study_share.errors.full_messages.each do |msg|
         errors.add(:base, "Share Error - #{msg}")
@@ -101,9 +104,10 @@ class Study
   validates_uniqueness_of :url_safe_name, on: :update, message: ": The name you provided tried to create a public URL (%{value}) that is already assigned.  Please rename your study to a different value."
 
   # callbacks
-  before_validation :set_url_safe_name, :set_firecloud_workspace_name
-  before_update     :check_data_links
-  after_destroy     :remove_data_dir, :delete_firecloud_workspace
+  before_validation :set_url_safe_name
+  before_validation :set_data_dir, :set_firecloud_workspace_name, on: :create
+  after_create      :make_data_dir
+  after_destroy     :remove_data_dir
 
   # search definitions
   index({"name" => "text", "description" => "text"})
@@ -111,7 +115,7 @@ class Study
   # return all studies that are editable by a given user
   def self.editable(user)
     if user.admin?
-      self.all.to_a
+      self.where(queued_for_deletion: false).to_a
     else
       studies = self.where(user_id: user._id).to_a
       shares = StudyShare.where(email: user.email, permission: 'Edit').map(&:study)
@@ -160,7 +164,7 @@ class Study
 
   # file path to upload storage directory
   def data_store_path
-    Rails.root.join('data', self.url_safe_name)
+    Rails.root.join('data', self.data_dir)
   end
 
   # helper to generate a URL to a study's FireCloud workspace
@@ -272,6 +276,29 @@ class Study
   def metadata_file
     self.study_files.where(file_type:'Metadata').first
   end
+
+  # nightly cron to delete any studies that are 'queued for deletion'
+  # will run after database is re-indexed to make performance better
+  # calls delete_all on collections to minimize memory usage
+  def self.delete_queued_studies
+    studies = self.where(queued_for_deletion: true)
+    studies.each do |study|
+      ExpressionScore.where(study_id: study.id).delete_all
+      DataArray.where(study_id: study.id).delete_all
+      StudyMetadata.where(study_id: study.id).delete_all
+      PrecomputedScore.where(study_id: study.id).delete_all
+      ClusterGroup.where(study_id: study.id).delete_all
+      StudyFile.where(study_id: study.id).delete_all
+
+      # now destroy study to ensure everything is removed
+      study.destroy
+    end
+    true
+  end
+
+  ##
+  ## PARSERS
+  ##
 
   # method to parse master expression scores file for study and populate collection
   def make_expression_scores(expression_file, user)
@@ -405,7 +432,12 @@ class Study
       self.set_cell_count(expression_file.file_type)
 
       # now that parsing is complete, we can move file into storage bucket and delete local
-      self.send_to_firecloud(expression_file)
+      begin
+        self.send_to_firecloud(expression_file)
+      rescue => e
+        Rails.logger.info "#{Time.now}: Metadata file: '#{expression_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
+        SingleCellMailer.notify_admin_upload_fail(expression_file, e.message).deliver_now
+      end
     rescue => e
       # error has occurred, so clean up records and remove file
       ExpressionScore.where(study_id: self.id).delete_all
@@ -457,7 +489,6 @@ class Study
       raise StandardError, error_message
     end
 
-    @update_chunk = ordinations_file.upload_file_size / 4.0
     @message = []
     @cluster_metadata = []
     @point_count = 0
@@ -596,7 +627,12 @@ class Study
       SingleCellMailer.notify_user_parse_complete(user.email, "Cluster file: '#{ordinations_file.upload_file_name}' has completed parsing", @message).deliver_now
 
       # now that parsing is complete, we can move file into storage bucket and delete local
-      self.send_to_firecloud(ordinations_file)
+      begin
+        self.send_to_firecloud(ordinations_file)
+      rescue => e
+        Rails.logger.info "#{Time.now}: Metadata file: '#{ordinations_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
+        SingleCellMailer.notify_admin_upload_fail(ordinations_file, e.message).deliver_now
+      end
     rescue => e
       # error has occurred, so clean up records and remove file
       ClusterGroup.where(study_file_id: ordinations_file.id).delete_all
@@ -649,7 +685,6 @@ class Study
       raise StandardError, error_message
     end
 
-    @update_chunk = metadata_file.upload_file_size / 4.0
     @metadata_records = []
     @message = []
     # begin parse
@@ -738,7 +773,12 @@ class Study
       self.set_cell_count(metadata_file.file_type)
 
       # now that parsing is complete, we can move file into storage bucket and delete local
-      self.send_to_firecloud(metadata_file)
+      begin
+        self.send_to_firecloud(metadata_file)
+      rescue => e
+        Rails.logger.info "#{Time.now}: Metadata file: '#{metadata_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
+        SingleCellMailer.notify_admin_upload_fail(metadata_file, e.message).deliver_now
+      end
     rescue => e
       # parse has failed, so clean up records and remove file
       StudyMetadata.where(study_id: self.id).delete_all
@@ -845,7 +885,12 @@ class Study
       SingleCellMailer.notify_user_parse_complete(user.email, "Gene list file: '#{marker_file.name}' has completed parsing", @message).deliver_now
 
       # now that parsing is complete, we can move file into storage bucket and delete local
-      self.send_to_firecloud(marker_file)
+      begin
+        self.send_to_firecloud(marker_file)
+      rescue => e
+        Rails.logger.info "#{Time.now}: Metadata file: '#{marker_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
+        SingleCellMailer.notify_admin_upload_fail(marker_file, e.message).deliver_now
+      end
     rescue => e
       # parse has failed, so clean up records and remove file
       PrecomputedScore.where(study_file_id: marker_file.id).delete_all
@@ -917,7 +962,7 @@ class Study
           puts "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares #{share.email} successful"
         end
       end
-      puts "#{Time.now}: Uploading #{self.name} study files to FireCloud workspace: #{self.firecloud_workspace}"
+      puts "#{Time.now}: Study #{self.name} uploading study files to FireCloud workspace: #{self.firecloud_workspace}"
       self.study_files.each do |file|
         puts "#{Time.now}: Uploading #{file.upload_file_name} to FireCloud workspace: #{self.firecloud_workspace}"
         Study.firecloud_client.create_workspace_file(self.firecloud_workspace, file)
@@ -927,20 +972,26 @@ class Study
     rescue => e
       # delete workspace on any fail as this amounts to a validation fail
       Study.firecloud_client.delete_workspace(self.firecloud_workspace)
-      puts "#{self.name} workspace migration failed due to #{e.message}; reverting"
+      puts "Study: #{self.name} workspace migration failed due to #{e.message}; reverting"
       @migration_error = true
     end
     if @migration_error == false
-      puts "#{Time.now}: Study: #{self.name} FireCloud migration complete, deleting local files"
-      Dir.chdir(self.data_store_path)
-      self.study_files.each do |file|
-        puts "#{Time.now}: deleting #{file.upload_file_name} from #{self.data_store_path} for Study: #{self.name}"
-        File.delete(file.upload_file_name)
-        puts "#{Time.now}: deletion of #{file.upload_file_name} successful"
+      begin
+        puts "#{Time.now}: Study: #{self.name} FireCloud migration complete, deleting local files"
+        FileUtils.rm_rf(Rails.root.join('data', self.url_safe_name))
+        puts "#{Time.now}: Study: #{self.name} local data deleted successfully"
+        puts "#{Time.now}: Study: #{self.name} deleting public data dir #{self.data_public_path}"
+        FileUtils.rm_rf self.data_public_path
+        puts "#{Time.now}: Study: #{self.name} assigning new data dir "
+        new_data_dir = SecureRandom.hex(32)
+        Study.where(id: self.id).update(data_dir: new_data_dir)
+        FileUtils.mkdir_p(Rails.root.join('data', new_data_dir))
+        puts "#{Time.now}: Study: #{self.name} new data dir #{new_data_dir} created"
+        puts "#{Time.now}: Study: #{self.name} cleanup complete"
+      rescue => e
+        puts "#{Time.now}: Study: #{self.name} data cleanup failed due to #{e.message}; manual cleanup required"
+        false
       end
-      puts "#{Time.now}: deleting public data dir #{self.data_public_path} for Study: #{self.name}"
-      FileUtils.rm_f self.data_public_path
-      puts "#{Time.now}: Study: #{self.name} cleanup complete"
       true
     else
       false
@@ -955,8 +1006,26 @@ class Study
   end
 
   # set the FireCloud workspace name to be used when creating study
+  # will only set the first time
   def set_firecloud_workspace_name
     self.firecloud_workspace = "#{WORKSPACE_NAME_PREFIX}#{self.url_safe_name}"
+  end
+
+  # set the data directory to a random value to use as a temp location for uploads while parsing
+  # this is useful as study deletes will happen asynchronously, so while the study is marked for deletion we can allow
+  # other users to re-use the old name & url_safe_name
+  # will only set the first time
+  def set_data_dir
+    @dir_val = SecureRandom.hex(32)
+    while Study.where(data_dir: @dir_val).exists?
+      @dir_val = SecureRandom.hex(32)
+    end
+    self.data_dir = @dir_val
+  end
+
+  # make data directory after study creation is successful
+  def make_data_dir
+    FileUtils.mkdir_p(self.data_store_path)
   end
 
   # automatically create a FireCloud workspace on study creation after validating name & url_safe_name
@@ -1026,13 +1095,6 @@ class Study
         Study.firecloud_client.delete_workspace(self.firecloud_workspace)
         errors.add(:firecloud_workspace, " creation failed: #{e.message}; Please try again later.")
       end
-    end
-  end
-
-  # in case user has renamed study, validate link to data store (needed for uploads still)
-  def check_data_links
-    if self.url_safe_name != self.url_safe_name_was
-      FileUtils.mv Rails.root.join('data', self.url_safe_name_was).to_s, Rails.root.join('data', self.url_safe_name).to_s
     end
   end
 

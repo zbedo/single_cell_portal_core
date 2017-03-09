@@ -1,6 +1,16 @@
 class SingleCellMailer < ApplicationMailer
   default from: 'no-reply@broadinstitute.org'
 
+  def notify_admin_upload_fail(study_file, error)
+    @users = User.where(admin: true).map(&:email)
+    @study = study_file.study
+    @study_file = study_file
+    @error = error
+    mail(to: @users, subject: '[Single Cell Portal ERROR] FireCloud auto-upload fail in ' + @study.name) do |format|
+      format.html
+    end
+  end
+
   def notify_user_parse_complete(email, title, message)
     @message = message
     mail(to: email, subject: '[Single Cell Portal Notifier] ' + title)

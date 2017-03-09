@@ -61,6 +61,9 @@ class User
                          password_confirmation: password,
                          uid: uid,
                          provider: provider)
+    # update info if account was originally local but switching to Google auth
+    elsif user.provider.nil? || user.uid.nil?
+      user.update(provider: provider, uid: uid)
     end
     user
   end

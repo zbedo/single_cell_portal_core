@@ -58,13 +58,16 @@ class StudyShare
 		if self.new_record? && self.study.new_record?
 			return true
 		end
-		Rails.logger.info "#{Time.now}: Creating FireCloud ACLs for study #{self.study.name}"
-		begin
-			acl = Study.firecloud_client.create_acl(self.email, FIRECLOUD_ACL_MAP[self.permission])
-			Study.firecloud_client.update_workspace_acl(self.study.firecloud_workspace, acl)
-		rescue RuntimeError => e
-			errors.add(:base, "Could not create a share for #{self.email} to workspace #{self.firecloud_workspace} due to: #{e.message}")
-			false
+		# set acls only if a new share or if the permission has changed
+		if (self.new_record? && !self.study.new_record?) || (!self.new_record? && self.permission_changed?)
+			Rails.logger.info "#{Time.now}: Creating FireCloud ACLs for study #{self.study.name} - share #{self.email}, permission: #{self.permission}"
+			begin
+				acl = Study.firecloud_client.create_acl(self.email, FIRECLOUD_ACL_MAP[self.permission])
+				Study.firecloud_client.update_workspace_acl(self.study.firecloud_workspace, acl)
+			rescue RuntimeError => e
+				errors.add(:base, "Could not create a share for #{self.email} to workspace #{self.firecloud_workspace} due to: #{e.message}")
+				false
+			end
 		end
 	end
 

@@ -67,18 +67,28 @@ class StudiesController < ApplicationController
   # DELETE /studies/1.json
   def destroy
     name = @study.name
-    ### GOTCHA ON MEMORY USAGE
-    # calling @study.destroy will load all dependent objects into memory and call their dependent removal methods
-    # even if the association is dependent: :delete, it still has to be loaded into memory and removed one at a time
-    # instead, manually remove any documents with Model.delete_all that will consume a lot of RAM (expression_scores,
-    # study_metadatas, data_arrays and precomputed_scores) before calling @study.destroy to remove all other objects
-    ExpressionScore.where(study_id: @study.id).delete_all
-    DataArray.where(study_id: @study.id).delete_all
-    StudyMetadata.where(study_id: @study.id).delete_all
-    PrecomputedScore.where(study_id: @study.id).delete_all
+    ### DESTROY PROCESS FOR PORTAL
+    #
+    # Studies are not deleted on-demand due to memory performance.  Instead, studies are queued for deletion and
+    # destroyed nightly after the database has been re-indexed.  This uses less memory and also makes the process
+    # faster for end users
 
-    # now we can delete the study to remove study_files, cluster_groups and any other children
-    @study.destroy
+    # delete firecloud workspace so it can be reused, and raise error if unsuccessful
+    # if successful, we're clear to queue the study for deletion
+    begin
+      Study.firecloud_client.delete_workspace(@study.firecloud_workspace)
+    rescue RuntimeError => e
+      Rails.logger.error "#{Time.now} unable to delete workspace: #{@study.firecloud_workspace}; #{e.message}"
+      redirect_to studies_path, alert: "We were unable to delete your study due to: #{e.message}.<br /><br />No files or database records have been deleted.  Please try again later" and return
+    end
+
+    # revoke all study_shares without firing callbacks
+    @study.study_shares.delete_all
+
+    # mark for deletion, rename study to free up old name for use, and restrict access by removing owner
+    new_name = "DELETE-#{@study.data_dir}"
+    @study.update!(queued_for_deletion: true, public: false, user_id: nil, name: new_name, url_safe_name: new_name)
+
     respond_to do |format|
       format.html { redirect_to studies_path, notice: "Study '#{name}'was successfully destroyed.  All uploaded data & parsed database records have also been destroyed." }
       format.json { head :no_content }
@@ -259,7 +269,7 @@ class StudiesController < ApplicationController
       redirect_to site_path, alert: 'You do not have permission to perform that action' and return
     else
       @study_file = @study.study_files.select {|sf| sf.upload_file_name == params[:filename]}.first
-      @signed_url = Study.firecloud_client.generate_signed_url(@study.firecloud_workspace, @study_file)
+      @signed_url = Study.firecloud_client.generate_signed_url(@study.firecloud_workspace, @study_file, expires: 15)
       # redirect directly to file to trigger download
       redirect_to @signed_url
     end

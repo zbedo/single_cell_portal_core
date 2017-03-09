@@ -3,9 +3,9 @@ class SiteController < ApplicationController
   respond_to :html, :js, :json
 
   before_action :set_study, except: [:index, :search]
-  before_action :load_precomputed_options, except: [:index, :search]
-  before_action :set_cluster_group, except: [:index, :search, :view_all_gene_expression_heatmap, :precomputed_results]
-  before_action :set_selected_annotation, except: [:index, :search, :study, :precomputed_results, :get_new_annotations]
+  before_action :load_precomputed_options, except: [:index, :search, :annotation_query]
+  before_action :set_cluster_group, except: [:index, :search, :precomputed_results]
+  before_action :set_selected_annotation, except: [:index, :search, :study, :precomputed_results, :expression_query, :get_new_annotations]
   before_action :check_view_permissions, except: [:index, :search]
   COLORSCALE_THEMES = ['Blackbody', 'Bluered', 'Blues', 'Earth', 'Electric', 'Greens', 'Hot', 'Jet', 'Picnic', 'Portland', 'Rainbow', 'RdBu', 'Reds', 'Viridis', 'YlGnBu', 'YlOrRd']
 
@@ -75,7 +75,7 @@ class SiteController < ApplicationController
   # method to download files if study is private, will create temporary symlink and remove after timeout
   def download_file
     @study_file = @study.study_files.select {|sf| sf.upload_file_name == params[:filename]}.first
-    @signed_url = Study.firecloud_client.generate_signed_url(@study.firecloud_workspace, @study_file)
+    @signed_url = Study.firecloud_client.generate_signed_url(@study.firecloud_workspace, @study_file, expires: 15)
     # redirect directly to file to trigger download
     redirect_to @signed_url
   end
@@ -222,13 +222,6 @@ class SiteController < ApplicationController
       @main_genes, @other_genes = divide_genes_for_header
     end
 
-    # select cluster file to load annotations from
-    if @selected_annotation[:scope] == 'cluster'
-      @cluster_file = @study.cluster_ordinations_file(params[:cluster])
-    else
-      @cluster_file = @study.metadata_file
-    end
-    @clusters_url = @cluster_file.morpheus_url
   end
 
   # load data in gct form to render in Morpheus, preserving query order
@@ -261,20 +254,26 @@ class SiteController < ApplicationController
     send_data @data, type: 'text/plain'
   end
 
-  # dynamically return a URL to a file based on annotation type (cluster- or study-based)
-  def get_annotation_url
-    # select cluster file to load annotations from
+  # load annotations in tsv format for Morpheus
+  def annotation_query
+    @cells = @cluster.concatenate_data_arrays('text', 'cells')
     if @selected_annotation[:scope] == 'cluster'
-      @cluster_file = @study.cluster_ordinations_file(params[:cluster])
+      @annotations = @cluster.concatenate_data_arrays(@selected_annotation[:name], 'annotations')
     else
-      @cluster_file = @study.metadata_file
+      study_annotations = @study.study_metadata_values(@selected_annotation[:name], @selected_annotation[:type])
+      @annotations = []
+      @cells.each do |cell|
+        @annotations << study_annotations[cell]
+      end
     end
-    if @study.public?
-      @clusters_url = @cluster_file.download_path
-    else
-      @clusters_url = TempFileDownload.create!({study_file_id: @cluster_file._id}).download_url
+    # assemble rows of data
+    @rows = []
+    @cells.each_with_index do |cell, index|
+      @rows << [cell, @annotations[index]].join("\t")
     end
-    render json: {url: @clusters_url}
+    @headers = ['NAME', @selected_annotation[:name]]
+    @data = [@headers.join("\t"), @rows.join("\n")].join("\n")
+    send_data @data, type: 'text/plain'
   end
 
   # load precomputed data in gct form to render in Morpheus

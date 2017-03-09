@@ -12,13 +12,9 @@ class StudyFile
 
   # associations
   belongs_to :study, index: true
-  has_many :clusters, dependent: :destroy
   has_many :cluster_groups, dependent: :destroy
-  has_many :single_cells, dependent: :destroy
-  has_many :cluster_points, dependent: :destroy
   has_many :expression_scores, dependent: :destroy
   has_many :precomputed_scores, dependent: :destroy
-  has_many :temp_file_downloads
   has_many :study_metadatas, dependent: :destroy
 
   # field definitions
@@ -27,9 +23,9 @@ class StudyFile
   field :description, type: String
   field :file_type, type: String
   field :cluster_type, type: String
-  field :url_safe_name, type: String
   field :status, type: String
   field :parse_status, type: String, default: 'unparsed'
+  field :data_dir, type: String
   field :human_fastq_url, type: String
   field :human_data, type: Boolean, default: false
   field :x_axis_label, type: String, default: ''
@@ -37,11 +33,10 @@ class StudyFile
   field :z_axis_label, type: String, default: ''
 
   # callbacks
-  before_create   :make_data_dir
-  before_create   :set_file_name_and_url_safe_name
+  before_create   :set_file_name_and_data_dir
 
   has_mongoid_attached_file :upload,
-                            :path => ":rails_root/data/:url_safe_name/:filename",
+                            :path => ":rails_root/data/:data_dir/:filename",
                             :url => ''
 
   # turning off validation to allow any kind of data file to be uploaded
@@ -49,8 +44,8 @@ class StudyFile
 
   validates_uniqueness_of :upload_file_name, scope: :study_id, unless: Proc.new {|f| f.human_data?}
 
-  Paperclip.interpolates :url_safe_name do |attachment, style|
-    attachment.instance.url_safe_name
+  Paperclip.interpolates :data_dir do |attachment, style|
+    attachment.instance.data_dir
   end
 
   # return public url if study is public, otherwise redirect to create templink download url
@@ -96,17 +91,21 @@ class StudyFile
     File.join(self.study.data_public_path, self.upload_file_name)
   end
 
-  private
-
-  def make_data_dir
-    data_dir = Rails.root.join('data', self.study.url_safe_name)
-    unless Dir.exist?(data_dir)
-      FileUtils.mkdir_p(data_dir)
+  # single-use method to set data_dir for existing study_files
+  def self.set_data_dir
+    self.all.each do |study_file|
+      if study_file.data_dir.nil?
+        study_file.update(data_dir: study_file.study.data_dir)
+        puts "Updated #{study_file.upload_file_name} with data_dir #{study_file.data_dir}"
+      end
     end
+    true
   end
 
+  private
+
   # set filename and construct url safe name from study
-  def set_file_name_and_url_safe_name
+  def set_file_name_and_data_dir
     if self.upload_file_name.nil?
       self.status = 'uploaded'
       if self.name.nil?
@@ -115,6 +114,6 @@ class StudyFile
     elsif (self.name.nil? || self.name.blank?) || (!self.new_record? && self.upload_file_name != self.name)
       self.name = self.upload_file_name
     end
-    self.url_safe_name = self.study.url_safe_name
+    self.data_dir = self.study.data_dir
   end
 end
