@@ -52,8 +52,22 @@ class StudiesController < ApplicationController
   # PATCH/PUT /studies/1
   # PATCH/PUT /studies/1.json
   def update
+    # check if any changes were made to sharing for notifications
+    @share_changes = @study.study_shares.count != study_params[:study_shares_attributes].keys.size
+    study_params[:study_shares_attributes].values.each do |share|
+      if share["_destroy"] == "1"
+        @share_changes = true
+      end
+    end
     respond_to do |format|
       if @study.update(study_params)
+        changes = @study.previous_changes.delete_if {|k,v| k == 'updated_at'}.keys.map {|k| k.humanize.capitalize}
+        if @share_changes == true
+          changes << 'Study shares'
+        end
+        if @study.study_shares.any?
+          SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
+        end
         format.html { redirect_to studies_path, notice: "Study '#{@study.name}' was successfully updated." }
         format.json { render :show, status: :ok, location: @study }
       else
@@ -81,6 +95,8 @@ class StudiesController < ApplicationController
       Rails.logger.error "#{Time.now} unable to delete workspace: #{@study.firecloud_workspace}; #{e.message}"
       redirect_to studies_path, alert: "We were unable to delete your study due to: #{e.message}.<br /><br />No files or database records have been deleted.  Please try again later" and return
     end
+    # notify users of deletion before removing shares & owner
+    SingleCellMailer.study_delete_notification(@study, current_user).deliver_now
 
     # revoke all study_shares without firing callbacks
     @study.study_shares.delete_all
@@ -109,6 +125,10 @@ class StudiesController < ApplicationController
       when 'Metadata'
         @study.delay.initialize_study_metadata(@study_file, current_user)
     end
+    changes = ["Study file added: #{@study_file.upload_file_name}"]
+    if @study.study_shares.any?
+      SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
+    end
   end
 
   # create a new study_file for requested study
@@ -135,6 +155,12 @@ class StudiesController < ApplicationController
     @message = "'#{@study_file.name}' has been successfully updated."
     @selector = params[:selector]
     @partial = params[:partial]
+
+    # notify users of updated file
+    changes = ["Study file updated: #{@study_file.upload_file_name}"]
+    if @study.study_shares.any?
+      SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
+    end
   end
 
   # delete the requested study file
@@ -167,6 +193,10 @@ class StudiesController < ApplicationController
       end
       # delete source file in FireCloud and then remove record
       Study.firecloud_client.delete_workspace_file(@study.firecloud_workspace, @study_file)
+      changes = ["Study file deleted: #{@study_file.upload_file_name}"]
+      if @study.study_shares.any?
+        SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
+      end
       @study_file.destroy
 
       # reset initialized if needed
@@ -279,6 +309,10 @@ class StudiesController < ApplicationController
   def send_to_firecloud
     @study_file = StudyFile.find_by(study_id: params[:id], upload_file_name: params[:file])
     @study.delay.send_to_firecloud(@study_file)
+    changes = ["Study file added: #{@study_file.upload_file_name}"]
+    if @study.study_shares.any?
+      SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
+    end
     head :ok
   end
 

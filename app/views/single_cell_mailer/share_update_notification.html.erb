@@ -1,0 +1,5 @@
+<p>The following study on the <%= link_to 'Single Cell Portal', studies_url %> has been updated:</p>
+<hr />
+<p><strong>Name: </strong><%= @study.name %></p>
+<p>The following attributes were updated:</strong> <strong><%= @changes.join(', ') %></strong></p>
+<p>Please <%= link_to 'log in', studies_url %> to view the resulting changes.</p>

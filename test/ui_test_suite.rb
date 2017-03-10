@@ -423,7 +423,7 @@ class UiTestSuite < Test::Unit::TestCase
 	# since parsing happens in background, all messaging is handled through emails
 	# this test just makes sure that parsing fails and removed entries appropriately
 	# your test email account should receive emails notifying of failure
-	test 'create study error messaging' do
+	test '0. create study error messaging' do
 		puts "Test method: #{self.method_name}"
 
 		# log in first
@@ -867,6 +867,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.switch_to.alert.accept
 		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
+
 		puts "Test method: #{self.method_name} successful!"
 	end
 end

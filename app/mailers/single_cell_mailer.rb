@@ -49,5 +49,31 @@ class SingleCellMailer < ApplicationMailer
     mail(to: @share.email, cc: user.email, subject: "[Single Cell Portal Notifier] Study: #{@study.name} has been shared") do |format|
       format.html
     end
-  end
+	end
+
+	def share_update_notification(study, changes, update_user)
+		@study = study
+		@changes = changes
+		@notify = @study.study_shares.map(&:email)
+		@notify << @study.user.email
+
+		# remove user performing action from notification
+		@notify.delete(update_user.email)
+		mail(to: @notify, subject: "[Single Cell Portal Notifier] Study: #{@study.name} has been updated") do |format|
+			format.html
+		end
+	end
+
+	def study_delete_notification(study, user)
+		@study = study
+		@user = user.email
+
+		@notify = @study.study_shares.map(&:email)
+		@notify << @study.user.email
+		@notify.delete_if(&:blank?)
+
+		mail(to: @notify, subject: "[Single Cell Portal Notifier] Study: #{@study.name} has been deleted") do |format|
+			format.html {render html: "<p>The study #{@study.name} has been deleted by #{@user}</p>".html_safe}
+		end
+	end
 end
