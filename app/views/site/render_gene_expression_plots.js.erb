@@ -11,6 +11,8 @@ $('#box-controls, #scatter-plots').on('show.bs.collapse hide.bs.collapse', funct
 
 <%= render partial: @top_plot_plotly %>
 
+$('#toggle-traces').tooltip({container: 'body', placement: 'left', trigger: 'hover'});
+
 // clear listeners and reattach
 $( window ).off('resizeEnd', "**");
 
@@ -27,3 +29,7 @@ $( window ).on('resizeEnd', function() {
 	Plotly.newPlot('reference-plot', data, staticLayout);
 });
 
+// attach click event for toggle switch
+$('#toggle-traces').click(function() {
+    togglePlotlyTraces('box-plot');
+});

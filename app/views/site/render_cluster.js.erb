@@ -1,8 +1,12 @@
 // render colorscale picker if needed
 if (<%= @selected_annotation[:type] == 'numeric' %>) {
     $('#colorscale-picker').html("<%= escape_javascript(render partial: 'colorscale_picker') %>");
+    $('#toggle-plots').html("");
 } else {
     $('#colorscale-picker').html("");
+    $('#toggle-plots').html("<%= escape_javascript(render partial: 'trace_toggle') %>");
+    $('#toggle-traces').tooltip({container: 'body', placement: 'left', trigger: 'hover'});
+
 }
 
 <%= render partial: 'study_scatter_plot' %>
@@ -26,3 +30,8 @@ $(window).on('resizeEnd', function() {
 
 // stop spinner
 $('#cluster-plot').data('spinner').stop();
+
+// attach click event for toggle switch
+$('#toggle-traces').click(function() {
+    togglePlotlyTraces('cluster-plot');
+});

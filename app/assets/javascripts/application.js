@@ -405,3 +405,23 @@ function toggleFastqFields(target) {
     $(nameField).parent().effect('highlight', 1200);
     $(fastqField).effect('highlight', 1200);
 }
+
+// function to toggle all traces in a Plotly div
+function togglePlotlyTraces(div) {
+    console.log('toggling all traces in ' + div);
+    var plotlyData = document.getElementById(div).data;
+    var visibility = plotlyData[0].visible;
+
+    // if visibility is undefined or true, that means it is visible and we want to set this to 'legendonly'
+    // when visibility == 'legendonly', we can set this back to true to show all traces
+    if( visibility === undefined || visibility === true) {
+        visibility = 'legendonly';
+    } else {
+        visibility = true
+    }
+
+    Plotly.restyle(div, 'visible', visibility);
+    // toggle class of toggle glyph
+    $('#toggle-traces').children().toggleClass('fa-toggle-on fa-toggle-off')
+    console.log('toggle complete in ' + div + '; visibility now ' + visibility);
+}

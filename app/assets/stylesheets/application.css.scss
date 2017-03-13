@@ -195,6 +195,15 @@ html, body {
   margin-right: 15px;
 }
 
+#colorscale-picker, #boxpoints-picker {
+  display: inline-block;
+}
+
+#toggle-plots {
+  display: inline-block;
+  float: right;
+}
+
 .top-pad {
   margin-top: 10px;
 }
