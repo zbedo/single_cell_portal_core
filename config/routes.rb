@@ -16,6 +16,7 @@ Rails.application.routes.draw do
         get 'retrieve_wizard_upload', to: 'studies#retrieve_wizard_upload', as: :retrieve_wizard_upload
         get 'study_files/new', to: 'studies#new_study_file', as: :new_study_file
         match 'study_files', to: 'studies#update_study_file', via: [:post, :patch], as: :update_study_file
+				get 'get_bucket_files', to: 'studies#get_bucket_files', as: :get_bucket_files
 				post 'send_to_firecloud', to: 'studies#send_to_firecloud', as: :send_to_firecloud
 				delete 'study_files/:study_file_id', to: 'studies#delete_study_file', as: :delete_study_file
         post 'parse', to: 'studies#parse', as: :parse_study_file

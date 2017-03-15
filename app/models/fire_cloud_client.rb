@@ -134,15 +134,15 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 
 	# create a workspace, prepending WORKSPACE_NAME_PREFIX as necessary
 	#
-	# param: name (string) => name of workspace
+	# param: workspace_name (string) => name of workspace
 	#
 	# return: JSON object of workspace instance
-	def create_workspace(name)
+	def create_workspace(workspace_name)
 		path = self.api_root + '/api/workspaces'
 		# construct payload for POST
 		payload = {
 				namespace: PORTAL_NAMESPACE,
-				name: name,
+				name: workspace_name,
 				attributes: {}
 		}.to_json
 		process_request(:post, path, payload)
@@ -150,17 +150,17 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 
 	# get the specified workspace
 	#
-	# param: name (string) => name of workspace
+	# param: workspace_name (string) => name of workspace
 	#
 	# return: JSON object of workspace instance
-	def get_workspace(name)
-		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{name}"
+	def get_workspace(workspace_name)
+		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{workspace_name}"
 		process_request(:get, path)
 	end
 
 	# delete a workspace
 	#
-	# param: name (string) => name of workspace
+	# param: workspace_name (string) => name of workspace
 	#
 	# return: JSON message of status of workspace deletion
 	def delete_workspace(name)
@@ -170,7 +170,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 
 	# get the specified workspace ACL
 	#
-	# param: name (string) => name of workspace
+	# param: workspace_name (string) => name of workspace
 	#
 	# return: JSON object of workspace ACL instance
 	def get_workspace_acl(name)
@@ -181,7 +181,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	# update the specified workspace ACL
 	# can also be used to remove access by passing 'NO ACCESS' to create_acl
 	#
-	# param: name (string) => name of workspace
+	# param: workspace_name (string) => name of workspace
 	# param: acl (JSON) => ACL object (see create_acl)
 	#
 	# return: JSON response of ACL update
@@ -215,7 +215,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 
 	# retrieve a workspace's GCP bucket
 	#
-	# param: name (string) => name of workspace
+	# param: workspace_name (string) => name of workspace
 	#
 	# return: GoogleCloudStorage Bucket object
 	def get_workspace_bucket(name)
@@ -226,7 +226,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 
 	# retrieve all files in a GCP bucket of a workspace
 	#
-	# param: name (string) => name of workspace
+	# param: workspace_name (string) => name of workspace
 	#
 	# return: array of GoogleCloudStorage File objects
 	def get_workspace_files(name)
@@ -236,7 +236,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 
 	# retrieve single study_file in a GCP bucket of a workspace
 	#
-	# param: name (string) => name of workspace
+	# param: workspace_name (string) => name of workspace
 	# param: study_file (StudyFile) => StudyFile instance
 	#
 	# return: array of GoogleCloudStorage File objects
@@ -247,7 +247,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 
 	# add a study_file to a workspace bucket
 	#
-	# param: name (string) => name of workspace
+	# param: workspace_name (string) => name of workspace
 	# param: study_file (StudyFile) => StudyFile instance
 	#
 	# return: GoogleCloudStorage File object
@@ -258,7 +258,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 
 	# delete a study_file to a workspace bucket
 	#
-	# param: name (string) => name of workspace
+	# param: workspace_name (string) => name of workspace
 	# param: study_file (StudyFile) => StudyFile instance
 	#
 	# return: true on file deletion
@@ -269,7 +269,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 
 	# generate a signed url to download a file that isn't public (set at study level)
 	#
-	# param: name (string) => name of workspace
+	# param: workspace_name (string) => name of workspace
 	# param: study_file (StudyFile) => StudyFile instance
 	# param: opts (hash) => extra options for signed_url, see https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/file?method=signed_url-instance
 	#

@@ -1,5 +1,7 @@
 class StudiesController < ApplicationController
-  before_action :set_study, only: [:show, :edit, :update, :initialize_study, :destroy, :upload, :do_upload, :resume_upload, :update_status, :reset_upload, :new_study_file, :update_study_file, :delete_study_file, :retrieve_wizard_upload, :parse, :send_to_firecloud]
+  before_action :set_study, only: [:show, :edit, :update, :initialize_study, :destroy, :upload, :do_upload, :resume_upload,
+                                   :update_status, :reset_upload, :new_study_file, :update_study_file, :delete_study_file,
+                                   :retrieve_wizard_upload, :parse, :send_to_firecloud, :get_bucket_files]
   before_filter :check_edit_permissions, except: [:index, :new, :create, :download_private_file]
   before_filter :authenticate_user!
 
@@ -314,6 +316,12 @@ class StudiesController < ApplicationController
       SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
     end
     head :ok
+  end
+
+  # get a list of files in a study's bucket
+  def get_bucket_files
+    @bucket = Study.firecloud_client.get_workspace_bucket(@study.firecloud_workspace)
+    @files = @bucket.files
   end
 
   private
