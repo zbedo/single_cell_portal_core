@@ -3,9 +3,9 @@ class SiteController < ApplicationController
   respond_to :html, :js, :json
 
   before_action :set_study, except: [:index, :search]
-  before_action :load_precomputed_options, except: [:index, :search, :annotation_query]
-  before_action :set_cluster_group, except: [:index, :search, :precomputed_results]
-  before_action :set_selected_annotation, except: [:index, :search, :study, :precomputed_results, :expression_query, :get_new_annotations]
+  before_action :load_precomputed_options, except: [:index, :search, :annotation_query, :download_file, :download_fastq_file]
+  before_action :set_cluster_group, except: [:index, :search, :precomputed_results, :download_file, :download_fastq_file]
+  before_action :set_selected_annotation, except: [:index, :search, :study, :precomputed_results, :expression_query, :get_new_annotations, :download_file, :download_fastq_file]
   before_action :check_view_permissions, except: [:index, :search]
   COLORSCALE_THEMES = ['Blackbody', 'Bluered', 'Blues', 'Earth', 'Electric', 'Greens', 'Hot', 'Jet', 'Picnic', 'Portland', 'Rainbow', 'RdBu', 'Reds', 'Viridis', 'YlGnBu', 'YlOrRd']
 
@@ -48,6 +48,7 @@ class SiteController < ApplicationController
   # load single study and view top-level clusters
   def study
     @study.update(view_count: @study.view_count + 1)
+    @study_files = @study.study_files.delete_if {|sf| sf.file_type == 'fastq'}.sort_by(&:name)
     # parse all coordinates out into hash using generic method
     if @study.initialized?
       @options = load_cluster_group_options
@@ -75,7 +76,24 @@ class SiteController < ApplicationController
   # method to download files if study is private, will create temporary symlink and remove after timeout
   def download_file
     @study_file = @study.study_files.select {|sf| sf.upload_file_name == params[:filename]}.first
-    @signed_url = Study.firecloud_client.generate_signed_url(@study.firecloud_workspace, @study_file, expires: 15)
+    begin
+      @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, @study_file.upload_file_name, expires: 15)
+    rescue RuntimeError => e
+      logger.error "#{Time.now}: error generating signed url for #{@study_file.upload_file_name}; #{e.message}"
+      redirect_to request.referrer, alert: "We were unable to download the file #{@study_file.upload_file_name} do to an error: #{e.message}" and return
+    end
+    # redirect directly to file to trigger download
+    redirect_to @signed_url
+  end
+
+  # method to download fastq file directly from bucket
+  def download_fastq_file
+    begin
+      @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, params[:filename], expires: 15)
+    rescue RuntimeError => e
+      logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
+      redirect_to request.referrer, alert: "We were unable to download the file #{params[:filename]} do to an error: #{e.message}" and return
+    end
     # redirect directly to file to trigger download
     redirect_to @signed_url
   end
@@ -317,6 +335,71 @@ class SiteController < ApplicationController
     @precomputed_score = @study.precomputed_scores.by_name(params[:precomputed])
     @options = load_cluster_group_options
     @cluster_annotations = load_cluster_group_annotations
+  end
+
+  # method to populate an array with entries corresponding to all fastq files for a study (both owner defined as study_files
+  # and extra fastq's that happen to be in the bucket)
+  def get_fastq_files
+    # load study_file fastqs first
+    @fastq_files = {data: []}
+    study_fastqs = @study.study_files.select {|sf| sf.file_type == 'fastq'}
+    study_fastqs.each do |sfq|
+      @icon = ""
+      @download = ""
+      if sfq.human_data == true
+        @icon = "<span class='label fastq-label label-success'>Yes <i class='fa fa-check'></i></span>"
+        @download = view_context.link_to("<span class='fa fa-cloud-download'></span> External".html_safe, sfq.download_path, class: 'btn btn-primary', target: :_blank)
+      else
+        @icon = "<span class='label fastq-label label-danger'>No <i class='fa fa-times text-danger'></i></span>"
+        @download = view_context.link_to("<span class='fa fa-download'></span> #{number_to_human_size(sfq.upload_file_size, prefix: :si)}".html_safe, sfq.download_path, class: "btn btn-primary dl-link #{sfq.file_type_class}", download: sfq.upload_file_name)
+      end
+
+      @fastq_files << [
+          sfq.name,
+          sfq.description,
+          @icon,
+          @download
+      ]
+    end
+
+    # call workspace bucket to find all fastq files
+    begin
+      @bucket_fastqs = []
+      bucket_files = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, @study.firecloud_workspace)
+
+      # add initial list to array if a fastq
+      bucket_files.map do |bf|
+        if bf.name =~ /\.(fq|fastq)/
+          @bucket_fastqs << bf
+        end
+      end
+
+      # since we might have a lot of files, wrap in block calling next?
+      while bucket_files.next?
+        files = bucket_files.next
+        files.map do |f|
+          if f.name =~ /\.(fq|fastq)/
+            @bucket_fastqs << f
+          end
+        end
+      end
+    rescue RuntimeError => e
+      logger.error "#{Time.now}: error loading fastq files from #{@study.firecloud_workspace}; #{e.message}"
+      @fastq_files[:data] << ['Error loading fastq files from workspace', '', '', '']
+    end
+
+    @bucket_fastqs.each do |bucket_fastq|
+      bucket_entry = [
+          bucket_fastq.name,
+          '',
+          "<span class='label fastq-label label-danger'>No <i class='fa fa-times'></i></span>",
+          view_context.link_to("<span class='fa fa-download'></span> #{view_context.number_to_human_size(bucket_fastq.size, prefix: :si)}".html_safe, @study.public? ? download_fastq_file_path(@study.url_safe_name, URI.encode(bucket_fastq.name)) : download_private_fastq_file_path(@study.url_safe_name, URI.encode(bucket_fastq.name)), class: "btn btn-primary dl-link fastq-file", download: bucket_fastq.name)
+      ]
+      if @fastq_files[:data].find {|f| f.first == bucket_fastq.name}.nil?
+        @fastq_files[:data] << bucket_entry
+      end
+    end
+    render json: @fastq_files.to_json
   end
 
   private

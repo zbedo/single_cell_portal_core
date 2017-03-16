@@ -13,23 +13,25 @@ require 'selenium-webdriver'
 # 2. Ruby >= 2.3
 # 3. Gems: rubygems, test-unit, selenium-webdriver (see Gemfile.lock for version requirements)
 # 4. Google Chrome with at least 2 Google accounts already signed in (referred to as $test_email & $share_email)
-# 5. Chromedriver (https://sites.google.com/a/chromium.org/chromedriver/)
+# 5. Chromedriver (https://sites.google.com/a/chromium.org/chromedriver/); make sure the verison you install works with your version of chrome
 # 6. Register for FireCloud (https://portal.firecloud.org) for both Google accounts (needed for auth & sharing acls)
 
 # USAGE
 #
-# ui_test_suite.rb takes five arguments:
+# ui_test_suite.rb takes six arguments:
 # 1. path to your Chrome user profile on your system (passed with -p=)
 # 2. path to your Chromedriver binary (passed with -c=)
 # 3. test email account (passed with -e=); this must be a valid Google & FireCloud user and already signed into Chrome
 # 4. share email account (passed with -s=); this must be a valid Google & FireCloud user and already signed into Chrome
-# 5. test order (passed with -o=); defaults to defined order (can be alphabetic or random, but random will most likely fail horribly)
+# 5. test order (passed with -o=); defaults to defined order (can be alphabetic or random, but random will most likely fail horribly
 # 6. download directory (passed with -d=); place where files are downloaded on your OS, defaults to standard OSX location (/Users/`whoami`/Downloads)
 # these must be passed with ruby test/ui_test_suite.rb -- -p=[/path/to/profile/dir] -c=[/path/to/chromedriver] -e=[test_email] -s=[share_email] -d=[/path/to/download/dir]
 # if you do not use -- before the argument and give the appropriate flag (with =), it is processed as a Test::Unit flag and ignored
 #
-# Also, due to how these tests are implemented using Webdriver, they cannot be run individually (usually done with -n [test_name])
-# to run an individual test
+# Also, due to how these tests are implemented using Webdriver, they cannot be run individually using the test/unit framework (usually done with -n [test_name])
+# to run an individual test, set the order to alphabetic and prepend the deisred test with 0. [test_name])
+#
+# Lastly, these tests generate on the order of ~20 emails per complete run.
 
 ## INITIALIZATION
 
@@ -797,14 +799,14 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# test that camera position is being preserved on cluster/annotation select & rotation
-	test 'check camera position on change' do
+	test '0. check camera position on change' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
 		# wait for plot to render
-		sleep(3)
+		sleep(5)
 		# get camera data
 		camera = @driver.execute_script("return $('#cluster-plot').data('camera')")
 		# set new rotation

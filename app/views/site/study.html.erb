@@ -29,7 +29,7 @@
 					</tr>
 					</thead>
 					<tbody>
-					<% @study.study_files.sort_by(&:name).each do |study_file| %>
+					<% @study_files.each do |study_file| %>
 						<tr>
 							<td><%= study_file.upload_file_name.nil? ? study_file.name : study_file.upload_file_name %> <%= study_file.file_type == 'Cluster' ? "<strong>(#{study_file.name})</strong>".html_safe : nil %></td>
 							<td><%= study_file.description %></td>
@@ -44,6 +44,20 @@
 					<% end %>
 					</tbody>
 				</table>
+        <h4><i class="fa fa-file-archive-o"></i> Primary Data</h4>
+        <table class="table table-striped tabled-condensed" id="fastq-table">
+          <div class="table-responsive">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Primary Human Data</th>
+                <th>Download</th>
+              </tr>
+            </thead>
+            <tbody id="fastq-files-target"></tbody>
+          </div>
+        </table>
         <%= render partial: '/layouts/download_helper' %>
 			</div>
 		</div>
@@ -92,7 +106,7 @@
         var url = '<%= render_cluster_path(study_name: params[:study_name]) %>';
         var target = $('#cluster-plot')[0];
         var spinner = new Spinner(opts).spin(target);
-        $(target).data('spinner', spinner);
+        $('#cluster-plot').data('spinner', spinner);
         var cluster = $('#cluster').val();
         var annotation = $('#annotation').val();
         $.get(url + '?cluster=' + cluster + '&annotation=' + annotation);
@@ -133,6 +147,18 @@
                 renderScatter();
             })
         });
+    });
+
+		$('#fastq-table').dataTable({
+        pagingType: 'full',
+        order: [[0, 'desc']],
+        ajax: "<%= get_fastq_files_path(study: params[:study_name]) %>",
+        deferRender: true
+    });
+
+		$('#files').on('shown.bs.collapse', function() {
+		    var width = $('#fastq-table').parent().width();
+        $('#fastq-table').width(width);
     });
 
 	</script>

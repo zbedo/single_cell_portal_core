@@ -6,7 +6,6 @@ if (<%= @selected_annotation[:type] == 'numeric' %>) {
     $('#colorscale-picker').html("");
     $('#toggle-plots').html("<%= escape_javascript(render partial: 'trace_toggle') %>");
     $('#toggle-traces').tooltip({container: 'body', placement: 'left', trigger: 'hover'});
-
 }
 
 <%= render partial: 'study_scatter_plot' %>

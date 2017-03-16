@@ -907,94 +907,96 @@ class Study
   def send_to_firecloud(file)
     begin
       Rails.logger.info "#{Time.now}: Uploading #{file.upload_file_name} to FireCloud workspace: #{self.firecloud_workspace}"
-      Study.firecloud_client.create_workspace_file(self.firecloud_workspace, file)
+      Study.firecloud_client.execute_gcloud_method(:create_workspace_file, self.firecloud_workspace, file.upload.path, file.upload_file_name)
       File.delete(file.upload.path)
       Rails.logger.info "#{Time.now}: Upload of #{file.upload_file_name} complete"
-    rescue => e
-      Rails.logger.error e.message
+    rescue RuntimeError => e
+      SingleCellMailer.notify_admin_upload_fail(file, e.message).deliver_now
     end
   end
 
   # one-time use method to push a study into FireCloud from local storage
   def migrate_to_firecloud
     @migration_error = false
-    begin
-      # set firecloud workspace name
-      puts "#{Time.now}: Study: #{self.name} beginning FireCloud migration"
-      ws_id = "#{WORKSPACE_NAME_PREFIX}#{self.url_safe_name}"
-      self.firecloud_workspace = ws_id
-      # must make an explicit call to save to database as we can't update reference to self
-      Study.where(id: self.id).update(firecloud_workspace: ws_id)
-
-      # begin workspace & acl creation
-      workspace = Study.firecloud_client.create_workspace(self.firecloud_workspace)
-      puts "#{Time.now}: Study: #{self.name} FireCloud workspace creation successful"
-      ws_name = workspace['name']
-      # validate creation
-      unless ws_name == self.firecloud_workspace
-        raise RuntimeError.new 'workspace was not created properly (workspace name did not match or was not created)'
-      end
-      puts "#{Time.now}: Study: #{self.name} FireCloud workspace validation successful"
-      # set bucket_id
-      bucket = workspace['bucketName']
-      if bucket.nil?
-        raise RuntimeError.new 'workspace was not created properly (storage bucket was not found)'
-      end
-      self.bucket_id = bucket
-      Study.where(id: self.id).update(bucket_id: bucket)
-      puts "#{Time.now}: Study: #{self.name} FireCloud bucket assignment successful"
-
-      # set workspace acl
-      study_owner = self.user.email
-      acl = Study.firecloud_client.create_acl(study_owner, 'OWNER')
-      Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
-      # validate acl
-      ws_acl = Study.firecloud_client.get_workspace_acl(ws_name)
-      unless ws_acl['acl'][study_owner]['accessLevel'] == 'OWNER'
-        raise RuntimeError.new 'workspace was not created properly (permissions do not match)'
-      end
-      puts "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment successful"
-      if self.study_shares.any?
-        puts "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares starting"
-        self.study_shares.each do |share|
-          acl = Study.firecloud_client.create_acl(share.email, StudyShare::FIRECLOUD_ACL_MAP[share.permission])
-          Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
-          puts "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares #{share.email} successful"
-        end
-      end
-      puts "#{Time.now}: Study #{self.name} uploading study files to FireCloud workspace: #{self.firecloud_workspace}"
-      self.study_files.each do |file|
-        puts "#{Time.now}: Uploading #{file.upload_file_name} to FireCloud workspace: #{self.firecloud_workspace}"
-        Study.firecloud_client.create_workspace_file(self.firecloud_workspace, file)
-        puts "#{Time.now}: Upload of #{file.upload_file_name} complete"
-      end
-      puts "#{Time.now}: Study: #{self.name} FireCloud migration successful!"
-    rescue => e
-      # delete workspace on any fail as this amounts to a validation fail
-      Study.firecloud_client.delete_workspace(self.firecloud_workspace)
-      puts "Study: #{self.name} workspace migration failed due to #{e.message}; reverting"
-      @migration_error = true
-    end
-    if @migration_error == false
+    if self.firecloud_workspace.nil?
       begin
-        puts "#{Time.now}: Study: #{self.name} FireCloud migration complete, deleting local files"
-        FileUtils.rm_rf(Rails.root.join('data', self.url_safe_name))
-        puts "#{Time.now}: Study: #{self.name} local data deleted successfully"
-        puts "#{Time.now}: Study: #{self.name} deleting public data dir #{self.data_public_path}"
-        FileUtils.rm_rf self.data_public_path
-        puts "#{Time.now}: Study: #{self.name} assigning new data dir "
-        new_data_dir = SecureRandom.hex(32)
-        Study.where(id: self.id).update(data_dir: new_data_dir)
-        FileUtils.mkdir_p(Rails.root.join('data', new_data_dir))
-        puts "#{Time.now}: Study: #{self.name} new data dir #{new_data_dir} created"
-        puts "#{Time.now}: Study: #{self.name} cleanup complete"
+        # set firecloud workspace name
+        puts "#{Time.now}: Study: #{self.name} beginning FireCloud migration"
+        ws_id = "#{WORKSPACE_NAME_PREFIX}#{self.url_safe_name}"
+        self.firecloud_workspace = ws_id
+        # must make an explicit call to save to database as we can't update reference to self
+        Study.where(id: self.id).update(firecloud_workspace: ws_id)
+
+        # begin workspace & acl creation
+        workspace = Study.firecloud_client.create_workspace(self.firecloud_workspace)
+        puts "#{Time.now}: Study: #{self.name} FireCloud workspace creation successful"
+        ws_name = workspace['name']
+        # validate creation
+        unless ws_name == self.firecloud_workspace
+          raise RuntimeError.new 'workspace was not created properly (workspace name did not match or was not created)'
+        end
+        puts "#{Time.now}: Study: #{self.name} FireCloud workspace validation successful"
+        # set bucket_id
+        bucket = workspace['bucketName']
+        if bucket.nil?
+          raise RuntimeError.new 'workspace was not created properly (storage bucket was not found)'
+        end
+        self.bucket_id = bucket
+        Study.where(id: self.id).update(bucket_id: bucket)
+        puts "#{Time.now}: Study: #{self.name} FireCloud bucket assignment successful"
+
+        # set workspace acl
+        study_owner = self.user.email
+        acl = Study.firecloud_client.create_acl(study_owner, 'OWNER')
+        Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
+        # validate acl
+        ws_acl = Study.firecloud_client.get_workspace_acl(ws_name)
+        unless ws_acl['acl'][study_owner]['accessLevel'] == 'OWNER'
+          raise RuntimeError.new 'workspace was not created properly (permissions do not match)'
+        end
+        puts "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment successful"
+        if self.study_shares.any?
+          puts "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares starting"
+          self.study_shares.each do |share|
+            acl = Study.firecloud_client.create_acl(share.email, StudyShare::FIRECLOUD_ACL_MAP[share.permission])
+            Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
+            puts "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares #{share.email} successful"
+          end
+        end
+        puts "#{Time.now}: Study #{self.name} uploading study files to FireCloud workspace: #{self.firecloud_workspace}"
+        self.study_files.each do |file|
+          puts "#{Time.now}: Uploading #{file.upload_file_name} to FireCloud workspace: #{self.firecloud_workspace}"
+          Study.firecloud_client.execute_gcloud_method(:create_workspace_file, self.firecloud_workspace, file.upload.path, file.upload_file_name)
+          puts "#{Time.now}: Upload of #{file.upload_file_name} complete"
+        end
+        puts "#{Time.now}: Study: #{self.name} FireCloud migration successful!"
       rescue => e
-        puts "#{Time.now}: Study: #{self.name} data cleanup failed due to #{e.message}; manual cleanup required"
+        # delete workspace on any fail as this amounts to a validation fail
+        Study.firecloud_client.delete_workspace(self.firecloud_workspace)
+        puts "Study: #{self.name} workspace migration failed due to #{e.message}; reverting"
+        @migration_error = true
+      end
+      if @migration_error == false
+        begin
+          puts "#{Time.now}: Study: #{self.name} FireCloud migration complete, deleting local files"
+          FileUtils.rm_rf(Rails.root.join('data', self.url_safe_name))
+          puts "#{Time.now}: Study: #{self.name} local data deleted successfully"
+          puts "#{Time.now}: Study: #{self.name} deleting public data dir #{self.data_public_path}"
+          FileUtils.rm_rf self.data_public_path
+          puts "#{Time.now}: Study: #{self.name} assigning new data dir "
+          new_data_dir = SecureRandom.hex(32)
+          Study.where(id: self.id).update(data_dir: new_data_dir)
+          FileUtils.mkdir_p(Rails.root.join('data', new_data_dir))
+          puts "#{Time.now}: Study: #{self.name} new data dir #{new_data_dir} created"
+          puts "#{Time.now}: Study: #{self.name} cleanup complete"
+        rescue => e
+          puts "#{Time.now}: Study: #{self.name} data cleanup failed due to #{e.message}; manual cleanup required"
+          false
+        end
+        true
+      else
         false
       end
-      true
-    else
-      false
     end
   end
 

@@ -24,7 +24,9 @@ Rails.application.routes.draw do
 		end
 		# public/private file download links (redirect to signed_urls from Google)
 		get 'data/public/:study_name/:filename', to: 'site#download_file', as: :download_file, constraints: {filename: /.*/}
-    get 'data/private/:study_name/:filename', to: 'studies#download_private_file', as: :download_private_file, constraints: {filename: /.*/}
+		get 'fastq_data/public/:study_name/:filename', to: 'site#download_fastq_file', as: :download_fastq_file, constraints: {filename: /.*/}
+		get 'data/private/:study_name/:filename', to: 'studies#download_private_file', as: :download_private_file, constraints: {filename: /.*/}
+		get 'fastq_data/private/:study_name/:filename', to: 'studies#download_private_fastq_file', as: :download_private_fastq_file, constraints: {filename: /.*/}
 
 		# autocomplete
 		resources :expression_score, only: [:show, :index] do
@@ -32,7 +34,8 @@ Rails.application.routes.draw do
 		end
 
 		# public site actions
-    get 'study/:study_name', to: 'site#study', as: :view_study
+		get 'study/:study_name', to: 'site#study', as: :view_study
+		get 'study/:study_name/get_fastq_files', to: 'site#get_fastq_files', as: :get_fastq_files
 		get 'render_cluster/:study_name', to: 'site#render_cluster', as: :render_cluster
 		get 'study/:study_name/get_new_annotations', to: 'site#get_new_annotations', as: :get_new_annotations
     post 'study/:study_name/search', to: 'site#search_genes', as: :search_genes

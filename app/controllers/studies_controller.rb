@@ -94,7 +94,7 @@ class StudiesController < ApplicationController
     begin
       Study.firecloud_client.delete_workspace(@study.firecloud_workspace)
     rescue RuntimeError => e
-      Rails.logger.error "#{Time.now} unable to delete workspace: #{@study.firecloud_workspace}; #{e.message}"
+      logger.error "#{Time.now} unable to delete workspace: #{@study.firecloud_workspace}; #{e.message}"
       redirect_to studies_path, alert: "We were unable to delete your study due to: #{e.message}.<br /><br />No files or database records have been deleted.  Please try again later" and return
     end
     # notify users of deletion before removing shares & owner
@@ -194,7 +194,12 @@ class StudiesController < ApplicationController
           @partial = 'initialize_misc_form'
       end
       # delete source file in FireCloud and then remove record
-      Study.firecloud_client.delete_workspace_file(@study.firecloud_workspace, @study_file)
+      begin
+        Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, @study.firecloud_workspace, @study_file.upload_file_name)
+      rescue RuntimeError => e
+        logger.error "#{Time.now}: error in deleting #{@study_file.upload_file_name} from workspace: #{@study.firecloud_workspace}; #{e.message}"
+        redirect_to request.referrer, alert: "We were unable to delete #{@study_file.upload_file_name} due to an error: #{e.message}.  Please try again later."
+      end
       changes = ["Study file deleted: #{@study_file.upload_file_name}"]
       if @study.study_shares.any?
         SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
@@ -301,7 +306,30 @@ class StudiesController < ApplicationController
       redirect_to site_path, alert: 'You do not have permission to perform that action' and return
     else
       @study_file = @study.study_files.select {|sf| sf.upload_file_name == params[:filename]}.first
-      @signed_url = Study.firecloud_client.generate_signed_url(@study.firecloud_workspace, @study_file, expires: 15)
+      begin
+        @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, @study_file.upload_file_name, expires: 15)
+      rescue RuntimeError => e
+        logger.error "#{Time.now}: error generating signed url for #{@study_file.upload_file_name}; #{e.message}"
+        redirect_to request.referrer, alert: "We were unable to download the file #{@study_file.upload_file_name} do to an error: #{e.message}" and return
+      end
+      # redirect directly to file to trigger download
+      redirect_to @signed_url
+    end
+  end
+
+  # method to download files if study is private, will create temporary symlink and remove after timeout
+  def download_private_fastq_file
+    @study = Study.find_by(url_safe_name: params[:study_name])
+    # check if user has permission in case someone is phishing
+    if current_user.nil? || !@study.can_view?(current_user)
+      redirect_to site_path, alert: 'You do not have permission to perform that action' and return
+    else
+      begin
+        @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, params[:filename], expires: 15)
+      rescue RuntimeError => e
+        logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
+        redirect_to request.referrer, alert: "We were unable to download the file #{params[:filename]} do to an error: #{e.message}" and return
+      end
       # redirect directly to file to trigger download
       redirect_to @signed_url
     end
@@ -320,7 +348,7 @@ class StudiesController < ApplicationController
 
   # get a list of files in a study's bucket
   def get_bucket_files
-    @bucket = Study.firecloud_client.get_workspace_bucket(@study.firecloud_workspace)
+    @bucket = Study.firecloud_client.execute_gcloud_method(:get_workspace_bucket, @study.firecloud_workspace)
     @files = @bucket.files
   end
 

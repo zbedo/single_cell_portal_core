@@ -80,7 +80,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	# param: payload (hash) => HTTP POST/PATCH/PUT body for creates/updates, defaults to nil
 	#
 	# return: object depends on response code
-	def process_request(http_method, path, payload=nil)
+	def process_firecloud_request(http_method, path, payload=nil)
 		# check for token expiry first before executing
 		if self.access_token_expired?
 			Rails.logger.info "#{Time.now}: Token expired, refreshing access token"
@@ -95,8 +95,8 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 		# initialize counter to prevent endless feedback loop
 		@retry_count.nil? ? @retry_count = 0 : nil
 		if @retry_count < MAX_RETRY_COUNT
-			@retry_count += 1
 			begin
+				@retry_count += 1
 				@obj = RestClient::Request.execute(method: http_method, url: path, payload: payload, headers: headers)
 				# handle response codes as necessary
 				if self.ok?(@obj.code) && !@obj.body.blank?
@@ -110,11 +110,11 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 					@obj.message
 				end
 			rescue RestClient::Exception => e
-				@retry_count = 0
 				context = " encountered when requesting '#{path}'"
 				log_message = "#{Time.now}: " + e.message + context
 				Rails.logger.error log_message
-				raise RuntimeError.new(e.message)
+				@error = e.message
+				process_firecloud_request(http_method, path, payload)
 			end
 		else
 			@retry_count = 0
@@ -128,7 +128,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	# return: array of JSON objects detailing workspaces
 	def workspaces
 		path = self.api_root + '/api/workspaces'
-		workspaces = process_request(:get, path)
+		workspaces = process_firecloud_request(:get, path)
 		workspaces.keep_if {|ws| ws['workspace']['namespace'] == PORTAL_NAMESPACE}
 	end
 
@@ -145,7 +145,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 				name: workspace_name,
 				attributes: {}
 		}.to_json
-		process_request(:post, path, payload)
+		process_firecloud_request(:post, path, payload)
 	end
 
 	# get the specified workspace
@@ -155,7 +155,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	# return: JSON object of workspace instance
 	def get_workspace(workspace_name)
 		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{workspace_name}"
-		process_request(:get, path)
+		process_firecloud_request(:get, path)
 	end
 
 	# delete a workspace
@@ -163,9 +163,9 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	# param: workspace_name (string) => name of workspace
 	#
 	# return: JSON message of status of workspace deletion
-	def delete_workspace(name)
-		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{name}"
-		process_request(:delete, path)
+	def delete_workspace(workspace_name)
+		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{workspace_name}"
+		process_firecloud_request(:delete, path)
 	end
 
 	# get the specified workspace ACL
@@ -173,9 +173,9 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	# param: workspace_name (string) => name of workspace
 	#
 	# return: JSON object of workspace ACL instance
-	def get_workspace_acl(name)
-		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{name}/acl"
-		process_request(:get, path)
+	def get_workspace_acl(workspace_name)
+		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{workspace_name}/acl"
+		process_firecloud_request(:get, path)
 	end
 
 	# update the specified workspace ACL
@@ -185,9 +185,9 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	# param: acl (JSON) => ACL object (see create_acl)
 	#
 	# return: JSON response of ACL update
-	def update_workspace_acl(name, acl)
-		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{name}/acl?inviteUsersNotFound=true"
-		process_request(:patch, path, acl)
+	def update_workspace_acl(workspace_name, acl)
+		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{workspace_name}/acl?inviteUsersNotFound=true"
+		process_firecloud_request(:patch, path, acl)
 	end
 
 	# helper for creating FireCloud ACL objects
@@ -212,14 +212,35 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	end
 
 	## GOOGLE CLOUD STORAGE METHODS
+	##
+	## All methods are convenience wrappers around google-cloud-storage methods
+	## see https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2 for more detail
+
+	# generic handler to process
+	def execute_gcloud_method(method_name, *params)
+		@retries ||= 0
+		if @retries < MAX_RETRY_COUNT
+			begin
+				self.send(method_name, *params)
+			rescue => e
+				@error = e.message
+				Rails.logger.info "#{Time.now}: error calling #{method_name} with #{params.join(', ')}; #{e.message} -- retry ##{@retries}"
+				@retries += 1
+				execute_gcloud_method(method_name, *params)
+			end
+		else
+			Rails.logger.info "#{Time.now}: Retry count exceeded: #{@error}"
+			raise RuntimeError.new "#{@error}"
+		end
+	end
 
 	# retrieve a workspace's GCP bucket
 	#
 	# param: workspace_name (string) => name of workspace
 	#
 	# return: GoogleCloudStorage Bucket object
-	def get_workspace_bucket(name)
-		workspace = self.get_workspace(name)
+	def get_workspace_bucket(workspace_name)
+		workspace = self.get_workspace(workspace_name)
 		bucket_name = workspace['workspace']['bucketName']
 		self.storage.bucket bucket_name
 	end
@@ -227,55 +248,59 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	# retrieve all files in a GCP bucket of a workspace
 	#
 	# param: workspace_name (string) => name of workspace
+	# param: opts (hash) => hash of optional parameters, see
+	# https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=files-instance
 	#
 	# return: array of GoogleCloudStorage File objects
-	def get_workspace_files(name)
-		bucket = self.get_workspace_bucket(name)
-		bucket.files
+	def get_workspace_files(workspace_name, opts={})
+		bucket = self.execute_gcloud_method(:get_workspace_bucket, workspace_name)
+		bucket.files(opts)
 	end
 
 	# retrieve single study_file in a GCP bucket of a workspace
 	#
 	# param: workspace_name (string) => name of workspace
-	# param: study_file (StudyFile) => StudyFile instance
+	# param: filename (string) => name of file
 	#
-	# return: array of GoogleCloudStorage File objects
-	def get_workspace_file(name, study_file)
-		bucket = self.get_workspace_bucket(name)
-		bucket.files.select {|file| file.name == study_file.upload_file_name}.first
+	# return: Google::Cloud::Storage::File::List
+	def get_workspace_file(workspace_name, filename)
+		bucket = self.execute_gcloud_method(:get_workspace_bucket, workspace_name)
+		bucket.files.select {|file| file.name == filename}.first
 	end
 
 	# add a study_file to a workspace bucket
 	#
 	# param: workspace_name (string) => name of workspace
-	# param: study_file (StudyFile) => StudyFile instance
+	# param: filepath (string) => path to file
+	# param: filename (string) => name of file
 	#
-	# return: GoogleCloudStorage File object
-	def create_workspace_file(name, study_file)
-		bucket = self.get_workspace_bucket(name)
-		bucket.create_file study_file.upload.path, study_file.upload_file_name
+	# return: Google::Cloud::Storage::File
+	def create_workspace_file(workspace_name, filepath, filename)
+		bucket = self.execute_gcloud_method(:get_workspace_bucket, workspace_name)
+		bucket.create_file filepath, filename
 	end
 
 	# delete a study_file to a workspace bucket
 	#
 	# param: workspace_name (string) => name of workspace
-	# param: study_file (StudyFile) => StudyFile instance
+	# param: filename (string) => name of file
 	#
 	# return: true on file deletion
-	def delete_workspace_file(name, study_file)
-		file = self.get_workspace_file(name, study_file)
+	def delete_workspace_file(workspace_name, filename)
+		file = self.execute_gcloud_method(:get_workspace_file, workspace_name, filename)
 		file.delete
 	end
 
 	# generate a signed url to download a file that isn't public (set at study level)
 	#
 	# param: workspace_name (string) => name of workspace
-	# param: study_file (StudyFile) => StudyFile instance
-	# param: opts (hash) => extra options for signed_url, see https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/file?method=signed_url-instance
+	# param: filename (string) => name of file
+	# param: opts (hash) => extra options for signed_url, see
+	# https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/file?method=signed_url-instance
 	#
-	# return: signed URL string
-	def generate_signed_url(name, study_file, opts={})
-		file = self.get_workspace_file(name, study_file)
+	# return: signed URL (string)
+	def generate_signed_url(workspace_name, filename, opts={})
+		file = self.execute_gcloud_method(:get_workspace_file, workspace_name, filename)
 		file.signed_url(opts)
 	end
 
