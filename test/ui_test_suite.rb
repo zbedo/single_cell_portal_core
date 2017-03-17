@@ -244,6 +244,23 @@ class UiTestSuite < Test::Unit::TestCase
 		assert camera == cluster_camera['camera'], "camera position did not save correctly, expected #{camera.to_json}, got #{cluster_camera.to_json}"
 	end
 
+	# test that axes are rendering custom domains and labels properly
+	test 'check axes domains and labels' do
+		path = @base_url + '/study/test-study'
+		@driver.get(path)
+		wait_until_page_loads(path)
+		# wait for plot to render
+		sleep(3)
+		# get layout object from browser and verify labels & ranges
+		layout = @driver.execute_script('return layout;')
+		assert layout['scene']['xaxis']['range'] == [-100, 100], "X range was not correctly set, expected [-100, 100] but found #{layout['scene']['xaxis']['range']}"
+		assert layout['scene']['yaxis']['range'] == [-75, 75], "Y range was not correctly set, expected [-75, 75] but found #{layout['scene']['xaxis']['range']}"
+		assert layout['scene']['zaxis']['range'] == [-125, 125], "Z range was not correctly set, expected [-125, 125] but found #{layout['scene']['xaxis']['range']}"
+		assert layout['scene']['xaxis']['title'] == 'X Axis', "X title was not set correctly, expected 'X Axis' but found #{layout['scene']['xaxis']['title']}"
+		assert layout['scene']['yaxis']['title'] == 'Y Axis', "Y title was not set correctly, expected 'Y Axis' but found #{layout['scene']['yaxis']['title']}"
+		assert layout['scene']['zaxis']['title'] == 'Z Axis', "Z title was not set correctly, expected 'Z Axis' but found #{layout['scene']['zaxis']['title']}"
+	end
+
 	# admin backend tests of entire study creation process as order needs to be maintained throughout
 	# logs test user in, creates study, and deletes study on completion
 	# uses example data as inputs
@@ -308,6 +325,17 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_cluster = cluster_form_1.find_element(:class, 'upload-clusters')
 		upload_cluster.send_keys(@test_data_path + 'cluster_example.txt')
 		wait_for_render(:id, 'start-file-upload')
+		# add labels and axis ranges
+		cluster_form_1.find_element(:id, :study_file_x_axis_min).send_key(-100)
+		cluster_form_1.find_element(:id, :study_file_x_axis_max).send_key(100)
+		cluster_form_1.find_element(:id, :study_file_y_axis_min).send_key(-75)
+		cluster_form_1.find_element(:id, :study_file_y_axis_max).send_key(75)
+		cluster_form_1.find_element(:id, :study_file_z_axis_min).send_key(-125)
+		cluster_form_1.find_element(:id, :study_file_z_axis_max).send_key(125)
+		cluster_form_1.find_element(:id, :study_file_x_axis_label).send_key('X Axis')
+		cluster_form_1.find_element(:id, :study_file_y_axis_label).send_key('Y Axis')
+		cluster_form_1.find_element(:id, :study_file_z_axis_label).send_key('Z Axis')
+		# perform upload
 		upload_btn = cluster_form_1.find_element(:id, 'start-file-upload')
 		upload_btn.click
 		wait_for_render(:id, 'upload-success-modal')

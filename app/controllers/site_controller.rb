@@ -751,12 +751,25 @@ class SiteController < ApplicationController
     }
   end
 
-  # set the range for a plotly scatter
+  # set the range for a plotly scatter, will default to data-defined if cluster hasn't defined its own ranges
   def set_range(inputs)
-    vals = inputs.map {|v| [v[:x].minmax, v[:y].minmax]}.flatten.minmax
-    # add 2% padding to range
-    scope = (vals.first - vals.last) * 0.02
-    [vals.first + scope, vals.last - scope]
+    range = {
+        x: [],
+        y: [],
+        z: []
+    }
+    if @cluster.has_range?
+      range = @cluster.domain_ranges
+    else
+      vals = inputs.map {|v| [v[:x].minmax, v[:y].minmax]}.flatten.minmax
+      # add 2% padding to range
+      scope = (vals.first - vals.last) * 0.02
+      raw_range = [vals.first + scope, vals.last - scope]
+      range[:x] = raw_range
+      range[:y] = raw_range
+      range[:z] = raw_range
+    end
+    range
   end
 
   # parse gene list into 2 other arrays for formatting the header responsively
@@ -775,9 +788,9 @@ class SiteController < ApplicationController
   def load_axis_labels
     coordinates_file = @cluster.study_file
     {
-        x: coordinates_file.x_axis_label,
-        y: coordinates_file.y_axis_label,
-        z: coordinates_file.z_axis_label
+        x: coordinates_file.x_axis_label.blank? ? 'X' : coordinates_file.x_axis_label,
+        y: coordinates_file.y_axis_label.blank? ? 'Y' : coordinates_file.y_axis_label,
+        z: coordinates_file.z_axis_label.blank? ? 'Z' : coordinates_file.z_axis_label
     }
   end
 end
