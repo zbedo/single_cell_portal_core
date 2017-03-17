@@ -31,6 +31,13 @@ class StudyFile
   field :x_axis_label, type: String, default: ''
   field :y_axis_label, type: String, default: ''
   field :z_axis_label, type: String, default: ''
+  field :x_axis_min, type: Float
+  field :x_axis_max, type: Float
+  field :y_axis_min, type: Float
+  field :y_axis_max, type: Float
+  field :z_axis_min, type: Float
+  field :z_axis_max, type: Float
+
 
   # callbacks
   before_create   :set_file_name_and_data_dir
@@ -115,5 +122,26 @@ class StudyFile
       self.name = self.upload_file_name
     end
     self.data_dir = self.study.data_dir
+  end
+
+  # set ranges for cluster_groups if necessary
+  def set_cluster_group_ranges
+    if self.file_type == 'Cluster' && self.cluster_groups.any?
+      cluster = self.cluster_groups.first
+      # check if range values are present and set accordingly
+      if !self.x_axis_min.nil? && !self.x_axis_max.nil? && !self.y_axis_min.nil? && !self.y_axis_max.nil?
+        domain_ranges = {
+            x: [self.x_axis_min, self.x_axis_max],
+            y: [self.y_axis_min, self.y_axis_max]
+        }
+        if !self.z_axis_min.nil? && !self.z_axis_max.nil?
+          domain_ranges[:z] = [self.z_axis_min, self.z_axis_max]
+        end
+        cluster.update(domain_ranges: domain_ranges)
+      else
+        # either user has not supplied ranges or is deleting them, so clear entry for cluster_group
+        cluster.update(domain_ranges: nil)
+      end
+    end
   end
 end

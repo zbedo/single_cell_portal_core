@@ -4,6 +4,7 @@ class ClusterGroup
 	field :name, type: String
 	field :cluster_type, type: String
 	field :cell_annotations, type: Array
+	field :domain_ranges, type: Hash
 
 	validates_uniqueness_of :name, scope: :study_id
 
@@ -40,5 +41,10 @@ class ClusterGroup
 
 	def is_3d?
 		self.cluster_type == '3d'
+	end
+
+	# check if user has defined a range for this cluster_group (provided in study file)
+	def has_range?
+		!self.domain_ranges.nil?
 	end
 end

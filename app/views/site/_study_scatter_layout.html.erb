@@ -1,32 +1,43 @@
 var size = $('#cluster-plot').width() * SCATTER_RATIO;
 
 var layout = {
-  hovermode: 'closest',
-  font: plotlyLabelFont,
-  width: size,
-  height: size,
-  xaxis: {
-    range: <%= raw @range %>,
-    title: '<%= @axes[:x].blank? ? 'X' : @axes[:x] %>'
-  },
-  yaxis: {
-    range: <%= raw @range %>,
-    title: '<%= @axes[:y].blank? ? 'Y' : @axes[:y] %>'
-  },
-  <% if @cluster.cluster_type == '3d' %>
-    zaxis: {
-      title: '<%= @axes[:z].blank? ? 'Y' : @axes[:z] %>'
-    },
-  <% end %>
-  legend: {
-    x: 100,
-    y: 1
-  }
+    hovermode: 'closest',
+    font: plotlyLabelFont,
+    width: size,
+    height: size,
+    legend: {
+        x: 100,
+        y: 1
+    }
 }
 
 <% if @cluster.cluster_type == '3d' %>
   var currentCamera = $('#cluster-plot').data('camera');
   layout.scene = {
-    camera: currentCamera
+      camera: currentCamera,
+      xaxis: {
+          range: <%= raw @range[:x] %>,
+          title: '<%=  @axes[:x] %>'
+      },
+      yaxis: {
+          range: <%= raw @range[:y] %>,
+          title: '<%= @axes[:y] %>'
+      },
+      zaxis: {
+          range: <%= raw @range[:z] %>,
+          title: '<%= @axes[:z] %>'
+      },
+      aspectmode: '<%= @cluster.has_range? ? 'data' : 'cube' %>'
+  };
+
+<% else %>
+  layout.xaxis = {
+      range: <%= raw @range[:x] %>,
+      title: '<%=  @axes[:x] %>'
+  };
+
+  layout.yaxis = {
+      range: <%= raw @range[:y] %>,
+      title: '<%= @axes[:y] %>'
   };
 <% end %>

@@ -526,7 +526,26 @@ class Study
 
       # create cluster object for use later
       Rails.logger.info "#{Time.now}: Creating cluster group object: #{cluster_name} in study: #{self.name}"
-      @cluster_group = self.cluster_groups.build(name: cluster_name, study_file_id: ordinations_file._id, cluster_type: cluster_type)
+      @domain_ranges = {
+          x: [ordinations_file.x_axis_min, ordinations_file.x_axis_max],
+          y: [ordinations_file.y_axis_min, ordinations_file.y_axis_max]
+      }
+      required_values = 4
+      if is_3d
+        @domain_ranges[:z] = [ordinations_file.z_axis_min, ordinations_file.z_axis_max]
+        required_values = 6
+      end
+
+      # check if ranges are valid
+      unless @domain_ranges.values.flatten.compact.size == required_values
+        @domain_ranges = nil
+      end
+
+      @cluster_group = self.cluster_groups.build(name: cluster_name,
+                                                 study_file_id: ordinations_file._id,
+                                                 cluster_type: cluster_type,
+                                                 domain_ranges: @domain_ranges
+      )
 
       # add cell-level annotation definitions and save (will be used to populate dropdown menu)
       # this object will not be saved until after parse is done as we need to collect all possible values
