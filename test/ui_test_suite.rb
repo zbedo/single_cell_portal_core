@@ -202,7 +202,7 @@ class UiTestSuite < Test::Unit::TestCase
 		public.send_keys('Yes')
 		# add a share
 		share = @driver.find_element(:id, 'add-study-share')
-		@wait.until {share.displayed? == true}
+		@wait.until {share.displayed?}
 		share.click
 		share_email = study_form.find_element(:class, 'share-email')
 		share_email.send_keys($share_email)
@@ -819,23 +819,23 @@ class UiTestSuite < Test::Unit::TestCase
 		# wait for plot to render
 		sleep(5)
 		# get camera data
-		camera = @driver.execute_script("return $('#cluster-plot').data('camera')")
+		camera = @driver.execute_script("return $('#cluster-plot').data('camera');")
 		# set new rotation
 		camera['eye']['x'] = (Random.rand * 10 - 5).round(4)
 		camera['eye']['y'] = (Random.rand * 10 - 5).round(4)
 		camera['eye']['z'] = (Random.rand * 10 - 5).round(4)
 		# call relayout to trigger update & camera position save
-		@driver.execute_script("Plotly.relayout('cluster-plot', {'scene': {'camera' : #{camera.to_json}}})")
+		@driver.execute_script("Plotly.relayout('cluster-plot', {'scene': {'camera' : #{camera.to_json}}});")
 		# get new camera
 		sleep(1)
-		new_camera = @driver.execute_script("return $('#cluster-plot').data('camera')")
+		new_camera = @driver.execute_script("return $('#cluster-plot').data('camera');")
 		assert camera == new_camera['camera'], "camera position did not save correctly, expected #{camera.to_json}, got #{new_camera.to_json}"
 		# load annotation
 		annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
 		annotations.select {|opt| opt.text == 'Sub-Cluster'}.first.click
 		sleep(1)
 		# verify camera position was saved
-		annot_camera = @driver.execute_script("return $('#cluster-plot').data('camera')")
+		annot_camera = @driver.execute_script("return $('#cluster-plot').data('camera');")
 		assert camera == annot_camera['camera'], "camera position did not save correctly, expected #{camera.to_json}, got #{annot_camera.to_json}"
 		# load new cluster
 		clusters = @driver.find_element(:id, 'cluster').find_elements(:tag_name, 'option')
@@ -843,13 +843,15 @@ class UiTestSuite < Test::Unit::TestCase
 		cluster.click
 		sleep(1)
 		# verify camera position was saved
-		cluster_camera = @driver.execute_script("return $('#cluster-plot').data('camera')")
+		cluster_camera = @driver.execute_script("return $('#cluster-plot').data('camera');")
 		assert camera == cluster_camera['camera'], "camera position did not save correctly, expected #{camera.to_json}, got #{cluster_camera.to_json}"
 		puts "Test method: #{self.method_name} successful!"
 	end
 
 	# test that axes are rendering custom domains and labels properly
 	test 'check axes domains and labels' do
+		puts "Test method: #{self.method_name}"
+
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
@@ -863,6 +865,30 @@ class UiTestSuite < Test::Unit::TestCase
 		assert layout['scene']['xaxis']['title'] == 'X Axis', "X title was not set correctly, expected 'X Axis' but found #{layout['scene']['xaxis']['title']}"
 		assert layout['scene']['yaxis']['title'] == 'Y Axis', "Y title was not set correctly, expected 'Y Axis' but found #{layout['scene']['yaxis']['title']}"
 		assert layout['scene']['zaxis']['title'] == 'Z Axis', "Z title was not set correctly, expected 'Z Axis' but found #{layout['scene']['zaxis']['title']}"
+		puts "Test method: #{self.method_name} successful!"
+	end
+
+	# test that toggle traces button works
+	test 'check toggle traces button' do
+		puts "Test method: #{self.method_name}"
+
+		path = @base_url + '/study/test-study'
+		@driver.get(path)
+		wait_until_page_loads(path)
+		# wait for plot to render
+		sleep(3)
+		# toggle traces off
+		toggle = @driver.find_element(:id, 'toggle-traces')
+		toggle.click
+		# check visiblity
+		visible = @driver.execute_script('return data[0].visible')
+		assert visible == 'legendonly', "did not toggle trace visibility, expected 'legendonly' but found #{visible}"
+		# toggle traces on
+		toggle.click
+		# check visiblity
+		visible = @driver.execute_script('return data[0].visible')
+		assert visible == true, "did not toggle trace visibility, expected 'true' but found #{visible}"
+		puts "Test method: #{self.method_name} successful!"
 	end
 
 	##

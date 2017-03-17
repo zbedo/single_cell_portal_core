@@ -32,6 +32,7 @@ echo "*** COMPLETED ***"
 
 echo "*** ADDING CRONTAB TO REINDEX DATABASE ***"
 (crontab -u app -l ; echo "@daily . /home/app/.cron_env ; cd /home/app/webapp/; bin/bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV db:mongoid:create_indexes >> /home/app/webapp/log/cron_out.log 2>&1") | crontab -u app -
+echo "*** COMPLETED ***"
 
 echo "*** ADDING CRONTAB TO DELETE QUEUED STUDIES ***"
 (crontab -u app -l ; echo "0 1 * * * . /home/app/.cron_env ; cd /home/app/webapp/; /home/app/webapp/bin/rails runner -e $PASSENGER_APP_ENV \"Study.delete_queued_studies\" >> /home/app/webapp/log/cron_out.log 2>&1") | crontab -u app -
