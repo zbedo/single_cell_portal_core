@@ -761,7 +761,7 @@ class SiteController < ApplicationController
     if @cluster.has_range?
       range = @cluster.domain_ranges
     else
-      vals = inputs.map {|v| [v[:x].minmax, v[:y].minmax]}.flatten.minmax
+      vals = inputs.map {|v| [v[:x].minmax, v[:y].minmax, v[:z].minmax]}.flatten.compact.minmax
       # add 2% padding to range
       scope = (vals.first - vals.last) * 0.02
       raw_range = [vals.first + scope, vals.last - scope]
