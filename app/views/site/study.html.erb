@@ -23,7 +23,7 @@
 				<table class="table table-striped table-condensed">
 					<thead>
 					<tr>
-						<th class="col-md-5">Filename</th>
+						<th class="col-sm-5">Filename</th>
 						<th class="col-sm-6">Description</th>
 						<th class="col-sm-1">Download</th>
 					</tr>
@@ -46,17 +46,14 @@
 				</table>
         <h4><i class="fa fa-file-archive-o"></i> Primary Data</h4>
         <table class="table table-striped tabled-condensed" id="fastq-table">
-          <div class="table-responsive">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Primary Human Data</th>
-                <th>Download</th>
+                <th class="col-sm-5">Filename</th>
+                <th class="col-sm-6">Description</th>
+                <th class="col-sm-1">Download</th>
               </tr>
             </thead>
             <tbody id="fastq-files-target"></tbody>
-          </div>
         </table>
         <%= render partial: '/layouts/download_helper' %>
 			</div>
@@ -151,9 +148,10 @@
 
 		$('#fastq-table').dataTable({
         pagingType: 'full',
-        order: [[0, 'desc']],
+        order: [[0, 'asc']],
         ajax: "<%= get_fastq_files_path(study: params[:study_name]) %>",
-        deferRender: true
+        deferRender: true,
+        autoWidth: false
     });
 
 		$('#files').on('shown.bs.collapse', function() {

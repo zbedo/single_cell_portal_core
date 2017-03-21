@@ -344,20 +344,16 @@ class SiteController < ApplicationController
     @fastq_files = {data: []}
     study_fastqs = @study.study_files.select {|sf| sf.file_type == 'fastq'}
     study_fastqs.each do |sfq|
-      @icon = ""
       @download = ""
       if sfq.human_data == true
-        @icon = "<span class='label fastq-label label-success'>Yes <i class='fa fa-check'></i></span>"
         @download = view_context.link_to("<span class='fa fa-cloud-download'></span> External".html_safe, sfq.download_path, class: 'btn btn-primary', target: :_blank)
       else
-        @icon = "<span class='label fastq-label label-danger'>No <i class='fa fa-times text-danger'></i></span>"
         @download = view_context.link_to("<span class='fa fa-download'></span> #{number_to_human_size(sfq.upload_file_size, prefix: :si)}".html_safe, sfq.download_path, class: "btn btn-primary dl-link #{sfq.file_type_class}", download: sfq.upload_file_name)
       end
 
       @fastq_files << [
           sfq.name,
           sfq.description,
-          @icon,
           @download
       ]
     end
@@ -385,17 +381,16 @@ class SiteController < ApplicationController
       end
     rescue RuntimeError => e
       logger.error "#{Time.now}: error loading fastq files from #{@study.firecloud_workspace}; #{e.message}"
-      @fastq_files[:data] << ['Error loading fastq files from workspace', '', '', '']
+      @fastq_files[:data] << ['Error loading fastq files from workspace', '', '']
     end
 
     @bucket_fastqs.each do |bucket_fastq|
       bucket_entry = [
           bucket_fastq.name,
           '',
-          "<span class='label fastq-label label-danger'>No <i class='fa fa-times'></i></span>",
           view_context.link_to("<span class='fa fa-download'></span> #{view_context.number_to_human_size(bucket_fastq.size, prefix: :si)}".html_safe, @study.public? ? download_fastq_file_path(@study.url_safe_name, URI.encode(bucket_fastq.name)) : download_private_fastq_file_path(@study.url_safe_name, URI.encode(bucket_fastq.name)), class: "btn btn-primary dl-link fastq-file", download: bucket_fastq.name)
       ]
-      if @fastq_files[:data].find {|f| f.first == bucket_fastq.name}.nil?
+      if @fastq_files[:data].select {|f| f.first == bucket_fastq.name}.nil?
         @fastq_files[:data] << bucket_entry
       end
     end
