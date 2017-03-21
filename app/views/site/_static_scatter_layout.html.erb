@@ -6,18 +6,30 @@
 		titlefont: plotlyTitleFont,
 		showlegend: false,
 		width: staticSize,
-		height: staticSize,
-		xaxis: {
-			range: <%= raw @static_range %>
-		},
-		yaxis: {
-			range: <%= raw @static_range %>
-		}
+		height: staticSize
 	};
 
   <% if @cluster.cluster_type == '3d' %>
     var staticCamera = $('#expression-plots').data('scatter-camera');
     staticLayout.scene = {
-      camera: staticCamera
+      camera: staticCamera,
+      xaxis: {
+          range: <%= raw @static_range[:x] %>
+      },
+      yaxis: {
+          range: <%= raw @static_range[:y] %>
+      },
+      zaxis: {
+          range: <%= raw @static_range[:z] %>
+      },
+      aspectmode: '<%= @cluster.has_range? ? 'data' : 'cube' %>'
+    };
+  <% else %>
+    staticLayout.xaxis = {
+        range: <%= raw @static_range[:x] %>
+    };
+
+    staticLayout.yaxis = {
+        range: <%= raw @static_range[:y] %>
     };
   <% end %>

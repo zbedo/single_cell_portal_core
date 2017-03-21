@@ -4,18 +4,33 @@
 		hovermode: 'closest',
 		font: plotlyLabelFont,
 		width: size,
-		height: size,
-		xaxis: {
-			range: <%= raw @range %>
-		},
-		yaxis: {
-			range: <%= raw @range %>
-		}
+		height: size
 	};
 
-  <% if @cluster.cluster_type == '3d' %>
-    var currentCamera = $('#expression-plots').data('scatter-camera');
+
+
+<% if @cluster.cluster_type == '3d' %>
+  var currentCamera = $('#scatter-plot').data('camera');
     scatterLayout.scene = {
-      camera: currentCamera
-    };
-  <% end %>
+      camera: currentCamera,
+      xaxis: {
+          range: <%= raw @range[:x] %>
+      },
+      yaxis: {
+          range: <%= raw @range[:y] %>
+      },
+      zaxis: {
+          range: <%= raw @range[:z] %>
+      },
+      aspectmode: '<%= @cluster.has_range? ? 'data' : 'cube' %>'
+  };
+
+<% else %>
+    scatterLayout.xaxis = {
+      range: <%= raw @range[:x] %>
+  };
+
+    scatterLayout.yaxis = {
+      range: <%= raw @range[:y] %>
+  };
+<% end %>
