@@ -26,6 +26,7 @@
 //= require autocomplete-rails
 
 var fileUploading = false;
+var PAGE_RENDERED = false;
 
 jQuery.railsAutocomplete.options.noMatchesLabel = "No matches in this study";
 
@@ -336,6 +337,7 @@ $(window).resize(function() {
 
 // generic function to render Morpheus
 function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, target, fitType) {
+    console.log('render status of ' + target + ' at start: ' + $(target).data('rendered'));
     $(target).empty();
     var config = {dataset: dataPath, el: $(target)};
 
@@ -368,6 +370,10 @@ function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, t
 
     // instantiate heatmap and embed in DOM element
     new morpheus.HeatMap(config);
+
+    // set render variable to true for tests
+    $(target).data('rendered', true);
+    console.log('render status of ' + target + ' at end: ' + $(target).data('rendered'));
 
 }
 

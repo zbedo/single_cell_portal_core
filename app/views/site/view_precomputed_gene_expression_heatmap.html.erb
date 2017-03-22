@@ -29,21 +29,25 @@
 
 <script type="text/javascript">
 
-	$('#row_centered, #expression').change(function() {
-    if ($('#expression').val() != '') {
-      var newDataPath = '<%= precomputed_results_path(study_name: params[:study_name]) %>';
-      var precomputed = $('#expression').val();
-      var row_centered = $('#row_centered').prop('checked') ? 1 : 0;
-      newDataPath += '?precomputed=' + precomputed + '&row_centered=' + row_centered;
+    // monitor status of rendering plots for tests
+    $('#heatmap-plot').data('rendered', false);
 
-      renderMorpheus(newDataPath, '', '', '', '#heatmap-plot', 'both');
-    }
-	});
+    $('#row_centered, #expression').change(function() {
+        if ($('#expression').val() != '') {
+            var newDataPath = '<%= precomputed_results_path(study_name: params[:study_name]) %>';
+            var precomputed = $('#expression').val();
+            var row_centered = $('#row_centered').prop('checked') ? 1 : 0;
+            newDataPath += '?precomputed=' + precomputed + '&row_centered=' + row_centered;
 
-	$(document).ready(function() {
-		var dataPath = "<%= precomputed_results_path(study_name: params[:study_name], precomputed: params[:precomputed]) %>";
+            // reset status on render call
+            $('#heatmap-plot').data('rendered', false);
+            renderMorpheus(newDataPath, '', '', '', '#heatmap-plot', 'both');
+          }
+    });
 
-		renderMorpheus(dataPath, '', '', '', '#heatmap-plot', 'both');
-	});
+    $(document).ready(function() {
+        var dataPath = "<%= precomputed_results_path(study_name: params[:study_name], precomputed: params[:precomputed]) %>";
+        renderMorpheus(dataPath, '', '', '', '#heatmap-plot', 'both');
+    });
 
 </script>

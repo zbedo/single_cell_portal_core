@@ -26,17 +26,22 @@
     };
 
     function renderGeneExpressionPlots() {
+
+        // monitor rendering for tests, must store in parent div to persist past render (entire plotly area is replaced on render)
+        $('#expression-plots').data('box-rendered', false);
+        $('#expression-plots').data('scatter-rendered', false);
+        $('#expression-plots').data('reference-rendered', false);
+
         var url = '<%= params[:gene] ? render_gene_expression_plots_path(study_name: params[:study_name], gene: params[:gene]) : render_gene_set_expression_plots_path(study_name: params[:study_name], gene_set: params[:gene_set]) %>';
         var target1 = document.getElementById('box-plot');
         var target2 = document.getElementById('scatter-plot');
         var target3 = document.getElementById('reference-plot');
 
-        var spinner1 = new Spinner(opts).spin(target1);
-        var spinner2 = new Spinner(opts).spin(target2);
-        var spinner3 = new Spinner(opts).spin(target3);
-        $(target1).data('spinner', spinner1);
-        $(target2).data('spinner', spinner2);
-        $(target3).data('spinner', spinner3);
+        // no need to store spinners in data attribute as entire plot div will be re-rendered
+        new Spinner(opts).spin(target1);
+        new Spinner(opts).spin(target2);
+        new Spinner(opts).spin(target3);
+
         var cluster = $('#cluster').val();
         var annotation = $('#annotation').val();
         $("#search_cluster").val(cluster);
@@ -47,6 +52,7 @@
     }
 
     $(document).ready(function() {
+        // store camera data in outer plot so it will persist past render
         $('#expression-plots').data('scatter-camera', baseCamera);
         renderGeneExpressionPlots();
     });

@@ -28,8 +28,8 @@ require 'selenium-webdriver'
 # these must be passed with ruby test/ui_test_suite.rb -- -p=[/path/to/profile/dir] -c=[/path/to/chromedriver] -e=[test_email] -s=[share_email] -d=[/path/to/download/dir]
 # if you do not use -- before the argument and give the appropriate flag (with =), it is processed as a Test::Unit flag and ignored
 #
-# Also, due to how these tests are implemented using Webdriver, they cannot be run individually using the test/unit framework (usually done with -n [test_name])
-# to run an individual test, set the order to alphabetic and prepend the deisred test with 0. [test_name])
+# Tests can be run singly or in groups by passing -n /pattern/ before the -- on the command line.  This will run any tests that match
+# the given pattern.  You can run all 'front-end' and 'admin' tests this way (although front-end tests require the tests studies to have been created already)
 #
 # Lastly, these tests generate on the order of ~20 emails per complete run.
 
@@ -116,7 +116,8 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# explicit wait until requested page loads
 	def wait_until_page_loads(path)
-		@wait.until { @driver.current_url == path }
+		@wait.until { @driver.execute_script('return PAGE_RENDERED;') == true }
+		puts "#{path} successfully loaded"
 	end
 
 	# method to close a bootstrap modal by id
@@ -131,6 +132,24 @@ class UiTestSuite < Test::Unit::TestCase
 	# wait until element is rendered and visible
 	def wait_for_render(how, what)
 		@wait.until {@driver.find_element(how, what).displayed? == true}
+	end
+
+	# wait until plotly chart has finished rendering
+	def wait_for_plotly_render(plot, data_id)
+		i = 1
+		i.upto(10) do
+			done = @driver.execute_script("return $('#{plot}').data('#{data_id}')")
+			if !done
+				puts "Waiting for render of #{plot} - rendered currently: #{done}; try ##{i}"
+				i += 1
+				sleep(1)
+				next
+			else
+				puts "Rendering of #{plot} complete"
+				return true
+			end
+		end
+		raise Selenium::WebDriver::Error::TimeOutError, "Timing out on render check of #{plot}"
 	end
 
 	# scroll to bottom of page as needed
@@ -178,13 +197,13 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	##
-	## STUDY ADMIN TESTS
+	## ADMIN TESTS
 	##
 
 	# admin backend tests of entire study creation process including negative/error tests
 	# uses example data in test directoyr as inputs (based off of https://github.com/broadinstitute/single_cell_portal/tree/master/demo_data)
 	# these tests run first to create test studies to use in front-end tests later
-	test 'create a study' do
+	test 'admin: create a study' do
 		puts "Test method: #{self.method_name}"
 
 		# log in first
@@ -328,7 +347,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# verify that recently created study uploaded to firecloud
-	test 'verify firecloud workspace' do
+	test 'admin: verify firecloud workspace' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + '/studies'
@@ -359,7 +378,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# test to verify deleting files removes them from gcs buckets
-	test 'delete study file' do
+	test 'admin: delete study file' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + '/studies'
@@ -396,7 +415,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# text gzip parsing of expression matrices
-	test 'parse gzip expression matrix' do
+	test 'admin: parse gzip expression matrix' do
 		puts "Test method: #{self.method_name}"
 
 		# log in first
@@ -436,7 +455,7 @@ class UiTestSuite < Test::Unit::TestCase
 	# since parsing happens in background, all messaging is handled through emails
 	# this test just makes sure that parsing fails and removed entries appropriately
 	# your test email account should receive emails notifying of failure
-	test 'create study error messaging' do
+	test 'admin: create study error messaging' do
 		puts "Test method: #{self.method_name}"
 
 		# log in first
@@ -515,7 +534,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# create private study for testing visibility/edit restrictions
 	# must be run before other tests, so numbered accordingly
-	test 'create private study' do
+	test 'admin: create private study' do
 		puts "Test method: #{self.method_name}"
 
 		# log in first
@@ -537,7 +556,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# check visibility & edit restrictions as well as share access
 	# will also verify FireCloud ACL settings on shares
-	test 'create share and check view and edit' do
+	test 'admin: create share and check view and edit' do
 		puts "Test method: #{self.method_name}"
 
 		# check view visibility for unauthenticated users
@@ -636,7 +655,7 @@ class UiTestSuite < Test::Unit::TestCase
 	## FRONT END FUNCTIONALITY TESTS
 	##
 
-	test 'get home page' do
+	test 'front-end: get home page' do
 		puts "Test method: #{self.method_name}"
 
 		@driver.get(@base_url)
@@ -645,7 +664,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'perform search' do
+	test 'front-end: perform search' do
 		puts "Test method: #{self.method_name}"
 
 		@driver.get(@base_url)
@@ -658,7 +677,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'load Test Study study' do
+	test 'front-end: load Test Study study' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + '/study/test-study'
@@ -666,19 +685,29 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(path)
 		assert element_present?(:class, 'study-lead'), 'could not find study title'
 		assert element_present?(:id, 'cluster-plot'), 'could not find study cluster plot'
+
+		# wait until cluster finishes rendering
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
+		assert rendered, "cluster plot did not finish rendering, expected true but found #{rendered}"
+
 		# load subclusters
 		clusters = @driver.find_element(:id, 'cluster').find_elements(:tag_name, 'option')
 		assert clusters.size == 2, 'incorrect number of clusters found'
 		annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
 		assert annotations.size == 5, 'incorrect number of annotations found'
 		annotations.select {|opt| opt.text == 'Sub-Cluster'}.first.click
-		@wait.until {@driver.find_elements(:class, 'traces').size == 6}
+
+		# wait for render again
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		sub_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
+		assert sub_rendered, "cluster plot did not finish rendering on change, expected true but found #{sub_rendered}"
 		legend = @driver.find_elements(:class, 'traces').size
 		assert legend == 6, "incorrect number of traces found in Sub-Cluster, expected 6 - found #{legend}"
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'download study data file' do
+	test 'front-end: download study data file' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + '/study/test-study'
@@ -702,7 +731,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'search for single gene' do
+	test 'front-end: search for single gene' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + '/study/test-study'
@@ -716,10 +745,19 @@ class UiTestSuite < Test::Unit::TestCase
 		search_form.submit
 		assert element_present?(:id, 'box-controls'), 'could not find expression boxplot'
 		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
+
+		# wait until box plot renders, at this point all 3 should be done
+		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		box_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+		assert box_rendered, "box plot did not finish rendering, expected true but found #{box_rendered}"
+		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'search for multiple gene' do
+	test 'front-end: search for multiple genes' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + '/study/test-study'
@@ -732,39 +770,56 @@ class UiTestSuite < Test::Unit::TestCase
 		search_form = @driver.find_element(:id, 'search-genes-form')
 		search_form.submit
 		assert element_present?(:id, 'plots'), 'could not find expression heatmap'
+		@wait.until {wait_for_plotly_render('#heatmap-plot', 'rendered')}
+		rendered = @driver.execute_script("return $('#heatmap-plot').data('rendered')")
+		assert rendered, "heatmap plot did not finish rendering, expected true but found #{rendered}"
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'load marker gene heatmap' do
+	test 'front-end: load marker gene heatmap' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
-		expression_list = @driver.find_element(:id, 'gene_set')
-		opts = expression_list.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
-		list = opts.sample
-		list.click
-		assert element_present?(:id, 'box-controls'), 'could not find marker list expression boxplot'
-		assert element_present?(:id, 'scatter-plots'), 'could not find marker list expression scatter plots'
-		puts "Test method: #{self.method_name} successful!"
-	end
 
-	test 'load marker gene box/scatter' do
-		puts "Test method: #{self.method_name}"
-
-		path = @base_url + '/study/test-study'
-		@driver.get(path)
-		wait_until_page_loads(path)
 		expression_list = @driver.find_element(:id, 'expression')
 		opts = expression_list.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
 		list = opts.sample
 		list.click
-		assert element_present?(:id, 'plots'), 'could not find marker list expression heatmap'
+		assert element_present?(:id, 'heatmap-plot'), 'could not find heatmap plot'
+
+		# wait for heatmap to render
+		@wait.until {wait_for_plotly_render('#heatmap-plot', 'rendered')}
+		rendered = @driver.execute_script("return $('#heatmap-plot').data('rendered')")
+		assert rendered, "heatmap plot did not finish rendering, expected true but found #{rendered}"
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'load different cluster and annotation then search gene expression' do
+	test 'front-end: load marker gene box/scatter' do
+		puts "Test method: #{self.method_name}"
+
+		path = @base_url + '/study/test-study'
+		@driver.get(path)
+		wait_until_page_loads(path)
+		gene_sets = @driver.find_element(:id, 'gene_set')
+		opts = gene_sets.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
+		list = opts.sample
+		list.click
+		assert element_present?(:id, 'expression-plots'), 'could not find box/scatter divs'
+
+		# wait until box plot renders, at this point all 3 should be done
+		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		box_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+		assert box_rendered, "box plot did not finish rendering, expected true but found #{box_rendered}"
+		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+		puts "Test method: #{self.method_name} successful!"
+	end
+
+	test 'front-end: load different cluster and annotation then search gene expression' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + '/study/test-study'
@@ -774,12 +829,22 @@ class UiTestSuite < Test::Unit::TestCase
 		cluster = clusters.last
 		cluster_name = cluster['text']
 		cluster.click
-		# wait for 3 seconds as new annotation options load
-		sleep(3)
+
+		# wait for render to complete
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		cluster_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
+		assert cluster_rendered, "cluster plot did not finish rendering on cluster change, expected true but found #{cluster_rendered}"
+
+		# select an annotation and wait for render
 		annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
 		annotation = annotations.sample
 		annotation_value = annotation['value']
 		annotation.click
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
+		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
+
+		# now search for a gene and make sure values are preserved
 		gene = @genes.sample
 		search_box = @driver.find_element(:id, 'search_genes')
 		search_box.send_key(gene)
@@ -787,6 +852,19 @@ class UiTestSuite < Test::Unit::TestCase
 		search_form.submit
 		new_path = "#{@base_url}/study/test-study/gene_expression/#{gene}?annotation=#{annotation_value.split.join('+')}&boxpoints=all&cluster=#{cluster_name.split.join('+')}"
 		wait_until_page_loads(new_path)
+
+		# wait for rendering to complete
+		assert element_present?(:id, 'expression-plots'), 'could not find box/scatter divs'
+
+		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		box_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+		assert box_rendered, "box plot did not finish rendering, expected true but found #{box_rendered}"
+		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+
+		# now check values
 		loaded_cluster = @driver.find_element(:id, 'cluster')
 		loaded_annotation = @driver.find_element(:id, 'annotation')
 		assert loaded_cluster['value'] == cluster_name, "did not load correct cluster; expected #{cluster_name} but loaded #{loaded_cluster['value']}"
@@ -795,7 +873,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# test whether or not maintenance mode functions properly
-	test 'enable maintenance mode' do
+	test 'front-end: enable maintenance mode' do
 		puts "Test method: #{self.method_name}"
 
 		# enable maintenance mode
@@ -810,14 +888,20 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# test that camera position is being preserved on cluster/annotation select & rotation
-	test 'check camera position on change' do
+	test 'front-end: check camera position on change' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
-		# wait for plot to render
-		sleep(5)
+		assert element_present?(:class, 'study-lead'), 'could not find study title'
+		assert element_present?(:id, 'cluster-plot'), 'could not find study cluster plot'
+
+		# wait until cluster finishes rendering
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
+		assert rendered, "cluster plot did not finish rendering, expected true but found #{rendered}"
+
 		# get camera data
 		camera = @driver.execute_script("return $('#cluster-plot').data('camera');")
 		# set new rotation
@@ -826,6 +910,7 @@ class UiTestSuite < Test::Unit::TestCase
 		camera['eye']['z'] = (Random.rand * 10 - 5).round(4)
 		# call relayout to trigger update & camera position save
 		@driver.execute_script("Plotly.relayout('cluster-plot', {'scene': {'camera' : #{camera.to_json}}});")
+
 		# get new camera
 		sleep(1)
 		new_camera = @driver.execute_script("return $('#cluster-plot').data('camera');")
@@ -833,15 +918,26 @@ class UiTestSuite < Test::Unit::TestCase
 		# load annotation
 		annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
 		annotations.select {|opt| opt.text == 'Sub-Cluster'}.first.click
-		sleep(1)
+
+		# wait until cluster finishes rendering
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
+		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
+
 		# verify camera position was saved
 		annot_camera = @driver.execute_script("return $('#cluster-plot').data('camera');")
 		assert camera == annot_camera['camera'], "camera position did not save correctly, expected #{camera.to_json}, got #{annot_camera.to_json}"
+
 		# load new cluster
 		clusters = @driver.find_element(:id, 'cluster').find_elements(:tag_name, 'option')
 		cluster = clusters.last
 		cluster.click
-		sleep(1)
+
+		# wait until cluster finishes rendering
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		cluster_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
+		assert cluster_rendered, "cluster plot did not finish rendering on cluster change, expected true but found #{cluster_rendered}"
+
 		# verify camera position was saved
 		cluster_camera = @driver.execute_script("return $('#cluster-plot').data('camera');")
 		assert camera == cluster_camera['camera'], "camera position did not save correctly, expected #{camera.to_json}, got #{cluster_camera.to_json}"
@@ -849,14 +945,20 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# test that axes are rendering custom domains and labels properly
-	test 'check axes domains and labels' do
+	test 'front-end: check axis domains and labels' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
-		# wait for plot to render
-		sleep(3)
+		assert element_present?(:class, 'study-lead'), 'could not find study title'
+		assert element_present?(:id, 'cluster-plot'), 'could not find study cluster plot'
+
+		# wait until cluster finishes rendering
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
+		assert rendered, "cluster plot did not finish rendering, expected true but found #{rendered}"
+
 		# get layout object from browser and verify labels & ranges
 		layout = @driver.execute_script('return layout;')
 		assert layout['scene']['xaxis']['range'] == [-100, 100], "X range was not correctly set, expected [-100, 100] but found #{layout['scene']['xaxis']['range']}"
@@ -869,22 +971,31 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# test that toggle traces button works
-	test 'check toggle traces button' do
+	test 'front-end: check toggle traces button' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
-		# wait for plot to render
-		sleep(3)
+		assert element_present?(:class, 'study-lead'), 'could not find study title'
+		assert element_present?(:id, 'cluster-plot'), 'could not find study cluster plot'
+
+		# wait until cluster finishes rendering
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
+		assert rendered, "cluster plot did not finish rendering, expected true but found #{rendered}"
+
 		# toggle traces off
 		toggle = @driver.find_element(:id, 'toggle-traces')
 		toggle.click
+
 		# check visiblity
 		visible = @driver.execute_script('return data[0].visible')
 		assert visible == 'legendonly', "did not toggle trace visibility, expected 'legendonly' but found #{visible}"
+
 		# toggle traces on
 		toggle.click
+
 		# check visiblity
 		visible = @driver.execute_script('return data[0].visible')
 		assert visible == true, "did not toggle trace visibility, expected 'true' but found #{visible}"
@@ -897,7 +1008,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# final test, remove test study that was created and used for front-end tests
 	# runs last to clean up data for next test run
-	test 'delete all test studies' do
+	test 'admin: delete all test studies' do
 		puts "Test method: #{self.method_name}"
 
 		# log in first

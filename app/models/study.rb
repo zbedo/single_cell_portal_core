@@ -419,7 +419,7 @@ class Study
       end_time = Time.now
       time = (end_time - start_time).divmod 60.0
       @message << "#{Time.now}: #{expression_file.name} parse completed!"
-      @message << "ExpressionScores created: #{@count}"
+      @message << "Gene-level entries created: #{@count}"
       @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
       Rails.logger.info @message.join("\n")
       # set initialized to true if possible
@@ -897,7 +897,7 @@ class Study
       end_time = Time.now
       time = (end_time - start_time).divmod 60.0
       @message << "#{Time.now}: #{marker_file.name} parse completed!"
-      @message << "Total scores created: #{@count}"
+      @message << "Total gene list entries created: #{@count}"
       @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
       Rails.logger.info @message.join("\n")
       # send email

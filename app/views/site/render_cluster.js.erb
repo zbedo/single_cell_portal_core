@@ -1,3 +1,5 @@
+// check render status
+console.log('render status at start: ' + $('#cluster-plot').data('rendered'));
 // render colorscale picker if needed
 if (<%= @selected_annotation[:type] == 'numeric' %>) {
     $('#colorscale-picker').html("<%= escape_javascript(render partial: 'colorscale_picker') %>");
@@ -27,10 +29,16 @@ $(window).on('resizeEnd', function() {
     $(target).data('spinner').stop();
 });
 
-// stop spinner
-$('#cluster-plot').data('spinner').stop();
-
 // attach click event for toggle switch
 $('#toggle-traces').click(function() {
     togglePlotlyTraces('cluster-plot');
 });
+
+// stop spinner
+$('#cluster-plot').data('spinner').stop();
+
+// monitor rendering status for tests
+$('#cluster-plot').data('rendered', true);
+
+// check render status
+console.log('render status at end: ' + $('#cluster-plot').data('rendered'));

@@ -1,7 +1,7 @@
-// stop spinners
-$('#box-plot').data('spinner').stop();
-$('#scatter-plot').data('spinner').stop();
-$('#reference-plot').data('spinner').stop();
+// check render status
+console.log('render status of box plot at start: ' + $('#expression-plots').data('box-rendered'));
+console.log('render status of scatter plot at start: ' + $('#expression-plots').data('scatter-rendered'));
+console.log('render status of reference plot at start: ' + $('#expression-plots').data('reference-rendered'));
 
 $('#expression-plots').html("<%= escape_javascript(render partial: @top_plot_partial)%>");
 
@@ -33,3 +33,13 @@ $( window ).on('resizeEnd', function() {
 $('#toggle-traces').click(function() {
     togglePlotlyTraces('box-plot');
 });
+
+// monitor rendering for tests
+$('#expression-plots').data('box-rendered', true);
+$('#expression-plots').data('scatter-rendered', true);
+$('#expression-plots').data('reference-rendered', true);
+
+// check render status
+console.log('render status of box plot at end: ' + $('#expression-plots').data('box-rendered'));
+console.log('render status of scatter plot at end: ' + $('#expression-plots').data('scatter-rendered'));
+console.log('render status of reference plot at end: ' + $('#expression-plots').data('reference-rendered'));
