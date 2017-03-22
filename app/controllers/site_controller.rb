@@ -75,7 +75,7 @@ class SiteController < ApplicationController
 
   # method to download files if study is private, will create temporary symlink and remove after timeout
   def download_file
-    @study_file = @study.study_files.select {|sf| sf.upload_file_name == params[:filename]}.first
+    @study_file = @study.study_files.detect {|sf| sf.upload_file_name == params[:filename]}
     begin
       @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, @study_file.upload_file_name, expires: 15)
     rescue RuntimeError => e
@@ -390,7 +390,7 @@ class SiteController < ApplicationController
           '',
           view_context.link_to("<span class='fa fa-download'></span> #{view_context.number_to_human_size(bucket_fastq.size, prefix: :si)}".html_safe, @study.public? ? download_fastq_file_path(@study.url_safe_name, URI.encode(bucket_fastq.name)) : download_private_fastq_file_path(@study.url_safe_name, URI.encode(bucket_fastq.name)), class: "btn btn-primary dl-link fastq-file", download: bucket_fastq.name)
       ]
-      if @fastq_files[:data].select {|f| f.first == bucket_fastq.name}.nil?
+      if @fastq_files[:data].find {|f| f.first == bucket_fastq.name}.nil?
         @fastq_files[:data] << bucket_entry
       end
     end
@@ -407,10 +407,10 @@ class SiteController < ApplicationController
   def set_cluster_group
     # determine which URL param to use for selection
     selector = params[:cluster].nil? ? params[:gene_set_cluster] : params[:cluster]
-    if selector.nil?
+    if selector.nil? || selector.empty?
       @cluster = @study.cluster_groups.first
     else
-      @cluster = @study.cluster_groups.select {|c| c.name == selector}.first
+      @cluster = @study.cluster_groups.detect {|c| c.name == selector}
     end
   end
 
@@ -423,7 +423,7 @@ class SiteController < ApplicationController
       # determine whether cluster- or study-level annotations are requested
       annot_name, annot_type, annot_scope = selector.split('--')
       if annot_scope == 'cluster'
-        @selected_annotation = @cluster.cell_annotations.select {|ca| ca[:name] == annot_name && ca[:type] == annot_type}.first
+        @selected_annotation = @cluster.cell_annotations.find {|ca| ca[:name] == annot_name && ca[:type] == annot_type}
       else
         @selected_annotation = {name: annot_name, type: annot_type, scope: annot_scope}
         if annot_type == 'group'

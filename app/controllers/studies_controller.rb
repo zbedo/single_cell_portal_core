@@ -228,7 +228,7 @@ class StudiesController < ApplicationController
   def do_upload
     upload = get_upload
     filename = upload.original_filename
-    study_file = @study.study_files.select {|sf| sf.upload_file_name == filename}.first
+    study_file = @study.study_files.detect {|sf| sf.upload_file_name == filename}
     # If no file has been uploaded or the uploaded file has a different filename,
     # do a new upload from scratch
     if study_file.nil?
@@ -305,7 +305,7 @@ class StudiesController < ApplicationController
     if current_user.nil? || !@study.can_view?(current_user)
       redirect_to site_path, alert: 'You do not have permission to perform that action' and return
     else
-      @study_file = @study.study_files.select {|sf| sf.upload_file_name == params[:filename]}.first
+      @study_file = @study.study_files.detect {|sf| sf.upload_file_name == params[:filename]}
       begin
         @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, @study_file.upload_file_name, expires: 15)
       rescue RuntimeError => e

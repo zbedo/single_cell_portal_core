@@ -603,7 +603,7 @@ class Study
             # check if this is a group annotation, and if so store its value in the cluster_group.cell_annotations
             # hash if the value is not already present
             if type_data[index] == 'group'
-              existing_vals = cell_annotations.select {|annot| annot[:name] == header_data[index]}.first
+              existing_vals = cell_annotations.find {|annot| annot[:name] == header_data[index]}
               metadata_idx = cell_annotations.index(existing_vals)
               unless existing_vals[:values].include?(val)
                 cell_annotations[metadata_idx][:values] << val
