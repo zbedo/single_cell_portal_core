@@ -66,7 +66,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 
 	# check if an access_token is expired
 	#
-	# return: boolean of token exipiration
+	# return: boolean of token expiration
 	def access_token_expired?
 		Time.now >= self.expires_at
 	end
@@ -251,7 +251,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	# param: opts (hash) => hash of optional parameters, see
 	# https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=files-instance
 	#
-	# return: array of GoogleCloudStorage File objects
+	# return: Google::Cloud::Storage::File::List
 	def get_workspace_files(workspace_name, opts={})
 		bucket = self.execute_gcloud_method(:get_workspace_bucket, workspace_name)
 		bucket.files(opts)
@@ -262,10 +262,10 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	# param: workspace_name (string) => name of workspace
 	# param: filename (string) => name of file
 	#
-	# return: Google::Cloud::Storage::File::List
+	# return: Google::Cloud::Storage::File
 	def get_workspace_file(workspace_name, filename)
 		bucket = self.execute_gcloud_method(:get_workspace_bucket, workspace_name)
-		bucket.files.select {|file| file.name == filename}.first
+		bucket.file filename
 	end
 
 	# add a study_file to a workspace bucket
@@ -302,6 +302,77 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	def generate_signed_url(workspace_name, filename, opts={})
 		file = self.execute_gcloud_method(:get_workspace_file, workspace_name, filename)
 		file.signed_url(opts)
+	end
+
+	# retrieve all directories in a GCP bucket of a workspace
+	# this is achieved by looking at filenames containing '/' and keeping the preceding token
+	# only first-level directories are returned
+	#
+	# param: workspace_name (string) => name of workspace
+	# param: opts (hash) => hash of optional parameters, see
+	# https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=files-instance
+	#
+	# return: array of Google::Cloud::Storage::File objects mapping to directories
+	def get_workspace_directories(workspace_name, opts={})
+		files = self.execute_gcloud_method(:get_workspace_files, workspace_name, opts)
+		directories = []
+		files.each do |file|
+			if file.name.include?('/')
+				directories << file.name.split('/').first
+			end
+		end
+		# make sure we've looked at all files
+		while files.next?
+			files = files.next
+			files.each do |file|
+				if file.name.include?('/')
+					directories << file.name.split('/').first
+				end
+			end
+		end
+		directories.uniq
+	end
+
+	# retrieve all files in a GCP directory
+	#
+	# param: workspace_name (string) => name of workspace
+	# param: directory (string) => name of directory in bucket
+	# param: opts (hash) => hash of optional parameters, see
+	# https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=files-instance
+	#
+	# return: Google::Cloud::Storage::File::List
+	def get_workspace_directory_files(workspace_name, directory, opts={})
+		# makes sure directory ends with '/', otherwise append to prevent spurious matches
+		directory += '/' unless directory.last == '/'
+		opts.merge!(prefix: directory)
+		self.execute_gcloud_method(:get_workspace_files, workspace_name, opts)
+	end
+
+	# retrieve number of files in a GCP directory
+	#
+	# param: workspace_name (string) => name of workspace
+	# param: directory (string) => name of directory in bucket
+	# param: opts (hash) => hash of optional parameters, see
+	# https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=files-instance
+	#
+	# return: integer count of files in directory (ignoring 0 size objects which may be folders)
+	def get_workspace_directory_size(workspace_name, directory, opts={})
+		# makes sure directory ends with '/', otherwise append to prevent spurious matches
+		directory += '/' unless directory.last == '/'
+		opts.merge!(prefix: directory)
+		files = self.execute_gcloud_method(:get_workspace_directory_files, workspace_name, directory, opts)
+		count = 0
+		files.each do |file|
+			count += 1 if file.size != 0
+		end
+		# make sure we've counted all files
+		while files.next?
+			files = files.next
+			files.each do |file|
+				count += 1 if file.size != 0
+			end
+		end
+		count
 	end
 
 	# check if OK response code was found
