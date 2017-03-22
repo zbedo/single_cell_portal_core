@@ -5,12 +5,10 @@ var expressionLayout = {
   font: plotlyLabelFont,
   width: size,
   height: size,
-  xaxis: {
-    range: <%= raw @annotation_scatter_range %>,
+  xaxis:{
     title: '<%= @selected_annotation[:name] %>'
   },
   yaxis: {
-    range: <%= raw @annotation_scatter_range %>,
     title: '<%= @study.expression_matrix_file.y_axis_label %>'
   }
 }
