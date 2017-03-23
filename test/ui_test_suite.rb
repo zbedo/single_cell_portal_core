@@ -386,11 +386,24 @@ class UiTestSuite < Test::Unit::TestCase
 		close_modal('message_modal')
 		login($test_email)
 
-		# delete file to test study
 		add_files = @driver.find_element(:class, 'test-study-upload')
 		add_files.click
 		misc_tab = @driver.find_element(:id, 'initialize_misc_form_nav')
 		misc_tab.click
+
+		# test abort functionality first
+		add_misc = @driver.find_element(:class, 'add-misc')
+		add_misc.click
+		new_misc_form = @driver.find_element(:class, 'new-misc-form')
+		upload_doc = new_misc_form.find_element(:class, 'upload-misc')
+		upload_doc.send_keys(@test_data_path + 'README.txt')
+		wait_for_render(:id, 'start-file-upload')
+		cancel = @driver.find_element(:class, 'cancel')
+		cancel.click
+		wait_for_render(:id, 'study-file-notices')
+		close_modal('study-file-notices')
+
+		# delete file from test study
 		form = @driver.find_element(:class, 'initialize_misc_form')
 		delete = form.find_element(:class, 'delete-file')
 		delete.click

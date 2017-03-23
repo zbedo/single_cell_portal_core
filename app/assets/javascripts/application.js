@@ -185,15 +185,20 @@ $(function() {
 function deleteFileConfirmation() {
     var conf = confirm('Are you sure?  This file will be deleted and any associated database records removed.  This cannot be undone.');
     if ( conf == true) {
-        var modal = $('#delete-modal');
-        var modalTgt = modal.find('.spinner-target')[0];
-        var spin = new Spinner(opts).spin(modalTgt);
-        $(modalTgt).data('spinner', spin);
-        modal.modal('show');
+        showDeleteModal();
         return true;
     } else {
         return false;
     }
+}
+
+// function to render delete modal (can be used with or without confirmation)
+function showDeleteModal() {
+    var modal = $('#delete-modal');
+    var modalTgt = modal.find('.spinner-target')[0];
+    var spin = new Spinner(opts).spin(modalTgt);
+    $(modalTgt).data('spinner', spin);
+    modal.modal('show');
 }
 
 // toggle the Search/View options panel

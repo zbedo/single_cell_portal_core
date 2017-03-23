@@ -7,7 +7,8 @@ Rails.application.routes.draw do
     devise_for :users, :controllers => { :omniauth_callbacks => 'users/omniauth_callbacks' }
     resources :studies do
 			member do
-        get 'upload', to: 'studies#initialize_study', as: :initialize
+				get 'upload', to: 'studies#initialize_study', as: :initialize
+				get 'sync', to: 'studies#sync_study', as: :sync
         patch 'upload', to: 'studies#do_upload'
         get 'resume_upload', to: 'studies#resume_upload'
         patch 'update_status', to: 'studies#update_status'
@@ -15,10 +16,13 @@ Rails.application.routes.draw do
         get 'retrieve_upload', to: 'studies#retrieve_upload', as: :retrieve_upload
         get 'retrieve_wizard_upload', to: 'studies#retrieve_wizard_upload', as: :retrieve_wizard_upload
         get 'study_files/new', to: 'studies#new_study_file', as: :new_study_file
-        match 'study_files', to: 'studies#update_study_file', via: [:post, :patch], as: :update_study_file
+				match 'study_files', to: 'studies#update_study_file', via: [:post, :patch], as: :update_study_file
+				match 'sync_study_file', to: 'studies#sync_study_file', via: [:post, :patch], as: :sync_study_file
+				match 'sync_directory_listing', to: 'studies#sync_directory_listing', via: [:post, :patch], as: :sync_directory_listing
 				get 'get_bucket_files', to: 'studies#get_bucket_files', as: :get_bucket_files
 				post 'send_to_firecloud', to: 'studies#send_to_firecloud', as: :send_to_firecloud
 				delete 'study_files/:study_file_id', to: 'studies#delete_study_file', as: :delete_study_file
+				delete 'directory_listings/:directory_listing_id', to: 'studies#delete_directory_listing', as: :delete_directory_listing
         post 'parse', to: 'studies#parse', as: :parse_study_file
 			end
 		end

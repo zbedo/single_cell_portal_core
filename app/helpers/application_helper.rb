@@ -50,6 +50,8 @@ module ApplicationHelper
 					breadcrumbs << {title: "Showing '#{truncate(@study.name, length: 20)}'", link: 'javascript:;'}
 				when 'initialize_study'
 					breadcrumbs << {title: "Upload/Edit Study Data", link: 'javascript:;'}
+				when 'sync_study'
+					breadcrumbs << {title: "Syncronize Workspace", link: 'javascript:;'}
 			end
 		end
 		breadcrumbs

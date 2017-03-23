@@ -1,8 +1,6 @@
 class StudiesController < ApplicationController
-  before_action :set_study, only: [:show, :edit, :update, :initialize_study, :destroy, :upload, :do_upload, :resume_upload,
-                                   :update_status, :reset_upload, :new_study_file, :update_study_file, :delete_study_file,
-                                   :retrieve_wizard_upload, :parse, :send_to_firecloud, :get_bucket_files]
-  before_filter :check_edit_permissions, except: [:index, :new, :create, :download_private_file]
+  before_action :set_study, except: [:index, :new, :download_private_file, :download_private_fastq_file]
+  before_filter :check_edit_permissions, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
   before_filter :authenticate_user!
 
   # GET /studies
@@ -48,6 +46,37 @@ class StudiesController < ApplicationController
     # check if study has been properly initialized yet, set to true if not
     if !@cluster_ordinations.last.new_record? && !@expression_file.new_record? && !@metadata_file.new_record? && !@study.initialized?
       @study.update_attributes(initialized: true)
+    end
+  end
+
+  # allow a user to sync files uploaded outside the portal into a workspace bucket with an existing study
+  def sync_study
+    @study_files = @study.study_files
+    @directories = @study.directory_listings
+    @file_types = StudyFile::STUDY_FILE_TYPES.delete_if {|f| f == 'Fastq'}
+    @unsynced_files = []
+    @unsynced_directories = @study.directory_listings.unsynced
+
+    begin
+      workspace_files = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, @study.firecloud_workspace)
+      process_workspace_bucket_files(workspace_files)
+      while workspace_files.next?
+        workspace_files = workspace_files.next
+        process_workspace_bucket_files(workspace_files)
+      end
+    rescue RuntimeError => e
+      Rails.logger.error "#{Time.now}: error loading workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
+      redirect_to studies_path, alert: "We were unable to sync with your workspace bucket due to an error: #{e.message}"
+    end
+
+    # check if no sync is necessary
+    if @unsynced_files.empty? && @unsynced_directories.empty?
+      redirect_to studies_path, notice: "Your study '#{@study.name}' is up-to-date with your workspace bucket." and return
+    else
+      # we have unsynced data, so provisionally directory entries so we don't have to get all the filenames again later
+      @unsynced_directories.each do |directory|
+        directory.save
+      end
     end
   end
 
@@ -195,7 +224,10 @@ class StudiesController < ApplicationController
       end
       # delete source file in FireCloud and then remove record
       begin
-        Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, @study.firecloud_workspace, @study_file.upload_file_name)
+        # make sure file is in FireCloud first as user may be aborting the upload
+        if !Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_workspace, @study_file.upload_file_name).nil?
+          Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, @study.firecloud_workspace, @study_file.upload_file_name)
+        end
       rescue RuntimeError => e
         logger.error "#{Time.now}: error in deleting #{@study_file.upload_file_name} from workspace: #{@study.firecloud_workspace}; #{e.message}"
         redirect_to request.referrer, alert: "We were unable to delete #{@study_file.upload_file_name} due to an error: #{e.message}.  Please try again later."
@@ -210,6 +242,29 @@ class StudiesController < ApplicationController
       if @study.cluster_ordinations_files.empty? || @study.expression_matrix_file.nil? || @study.metadata_file.nil?
         @study.update(initialized: false)
       end
+    else
+      # user most likely aborted upload before it began, so determine file type based on form target
+      @message = "Upload sucessfully cancelled."
+      case params[:target]
+        when /expression/
+          @file_type = 'Expression Matrix'
+          @partial = 'initialize_expression_form'
+        when /metadata/
+          @file_type = 'Metadata'
+          @partial = 'initialize_metadata_form'
+        when /ordinations/
+          @file_type = 'Cluster'
+          @partial = 'initialize_ordinations_form'
+        when /fastq/
+          @file_type = 'Fastq'
+          @partial = 'initialize_fastq_form'
+        when /marker/
+          @file_type = 'Gene List'
+          @partial = 'initialize_marker_genes_form'
+        else
+          @file_type = 'Other'
+          @partial = 'initialize_misc_form'
+      end
     end
 
     is_required = ['Cluster', 'Expression Matrix', 'Metadata'].include?(@file_type)
@@ -217,11 +272,40 @@ class StudiesController < ApplicationController
     @status = is_required ? 'Required' : 'Optional'
     @study_file = @study.build_study_file({file_type: @file_type})
 
+    logger.info @study_file.attributes
     unless @file_type.nil?
       @reset_status = @study.study_files.select {|sf| sf.file_type == @file_type && !sf.new_record?}.count == 0
     else
       @reset_status = false
     end
+  end
+
+  def sync_study_file
+    @study_file = @study.study_files.build
+    if @study_file.update(study_file_params)
+      @message = "New Study File '#{@study_file.name}' successfully synced."
+      @form = "#study-file-#{@study_file.id}"
+      respond_to do |format|
+        format.js {render action: 'sync_action_success'}
+      end
+    end
+  end
+
+  def sync_directory_listing
+    @directory = DirectoryListing.find(directory_listing_params[:_id])
+    if @directory.update(directory_listing_params)
+      @message = "Directory listing for '#{@directory.name}' successfully synced."
+      @form = "#directory-listing-#{@directory.id}"
+      respond_to do |format|
+        format.js {render action: 'sync_action_success'}
+      end
+    end
+  end
+
+  def delete_directory_listing
+    @directory_listing = DirectoryListing.find(params[:directory_listing_id])
+    @directory_listing.destroy
+    head :ok
   end
 
   # method to perform chunked uploading of data
@@ -365,19 +449,11 @@ class StudiesController < ApplicationController
 
   # study file params whitelist
   def study_file_params
-    params.require(:study_file).permit(:_id, :study_id, :name, :upload, :description, :file_type, :status, :human_fastq_url, :human_data, :cluster_type, :x_axis_label, :y_axis_label, :z_axis_label, :x_axis_min, :x_axis_max, :y_axis_min, :y_axis_max, :z_axis_min, :z_axis_max)
+    params.require(:study_file).permit(:_id, :study_id, :name, :upload, :upload_file_name, :upload_content_type, :description, :file_type, :status, :human_fastq_url, :human_data, :cluster_type, :x_axis_label, :y_axis_label, :z_axis_label, :x_axis_min, :x_axis_max, :y_axis_min, :y_axis_max, :z_axis_min, :z_axis_max)
   end
 
-  def clusters_params
-    params.require(:clusters).permit(:assignment_file, :cluster_file, :cluster_type)
-  end
-
-  def expression_params
-    params.require(:expression).permit(:expression_file)
-  end
-
-  def precomputed_params
-    params.require(:precomputed).permit(:precomputed_file, :precomputed_name)
+  def directory_listing_params
+    params.require(:directory_listing).permit(:_id, :name, :description, :synced)
   end
 
   # return upload object from study params
@@ -419,6 +495,33 @@ class StudiesController < ApplicationController
     end
     if @other_files.empty?
       @other_files << @study.build_study_file({file_type: 'Documentation'})
+    end
+  end
+
+  # sub-method to iterate through list of GCP bucket files and build up necessary sync list objects
+  def process_workspace_bucket_files(files)
+    files.each do |file|
+      if !%w(.fastq. .fq.).any? {|str| file.name.include?(str)}
+        if @study_files.detect {|f| f.upload_file_name == file.name || f.name == file.name}.nil?
+          @unsynced_files << @study.study_files.build(name: file.name, upload_file_name: file.name, upload_content_type: file.content_type)
+        end
+      else
+        # we have a fastq file now
+        directory = file.name.include?('/') ? file.name.split('/').first : '/'
+        all_dirs = @directories.to_a + @unsynced_directories
+        existing_dir = all_dirs.detect {|d| d.name == directory}
+        if existing_dir.nil?
+          dir = @study.directory_listings.build(name: directory, files: [file.name], synced: false)
+          @unsynced_directories << dir
+        elsif !existing_dir.files.include?(file.name)
+          existing_dir.files << file.name
+          existing_dir.synced = false
+          if @unsynced_directories.map(&:name).include?(existing_dir.name)
+            @unsynced_directories.delete(existing_dir)
+          end
+          @unsynced_directories << existing_dir
+        end
+      end
     end
   end
 end

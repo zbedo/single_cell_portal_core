@@ -1,0 +1,15 @@
+<h1>Sync Study Data for '<%= @study.name %>' <%= render partial: 'initialize_study_label' %></h1>
+<h3>Unsynced Study Files</h3>
+<div id="study-files">
+<% @unsynced_files.each do |study_file| %>
+  <%= render partial: 'study_file_form', locals: {study_file: study_file} %>
+<% end %>
+</div>
+<h3>Unsynced Primary Data Directories</h3>
+<% @unsynced_directories.each do |directory| %>
+  <%= render partial: 'directory_listing_form', locals: {directory: directory} %>
+<% end %>
+
+<div id="sync-notices">
+
+</div>

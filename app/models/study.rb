@@ -65,6 +65,12 @@ class Study
     end
   end
 
+  has_many :directory_listings, dependent: :delete do
+    def unsynced
+      where(synced: false).to_a
+    end
+  end
+
   # field definitions
   field :name, type: String
   field :embargo, type: Date

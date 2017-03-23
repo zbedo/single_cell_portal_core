@@ -97,7 +97,21 @@
 					});
 					fileUploading = false;
 					$.post("<%= parse_study_file_study_path(@study._id) %>", {file: fileName, modal_target: '#expression-parse-modal', partial: 'initialize_expression_form', selector: "#expression_form"});
-				}
+				},
+        fail: function(e, data) {
+				    // check if upload is in progress and abort
+				    if (data.jqXHR != undefined) {
+                data.jqXHR.abort();
+                fileUploading = false;
+            }
+            console.log('Aborting upload on study_file: <%= study_file.id %>');
+            showDeleteModal();
+            $.ajax({
+                url: "<%= delete_study_file_study_path(@study._id, study_file._id, target: '#expression_form') %>",
+                type: 'DELETE',
+                dataType: 'script'
+            });
+        }
 			});
 		});
 

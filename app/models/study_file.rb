@@ -37,7 +37,7 @@ class StudyFile
   field :y_axis_max, type: Float
   field :z_axis_min, type: Float
   field :z_axis_max, type: Float
-
+  field :synced, type: Boolean, default: false
 
   # callbacks
   before_create   :set_file_name_and_data_dir

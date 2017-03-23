@@ -1,0 +1,3 @@
+$('#sync-notices').html("<%= escape_javascript(render partial: 'sync_notice_modal', locals: {message: @message}) %>");
+$('#sync-notice-modal').modal('show');
+$("<%= @form %>").remove();

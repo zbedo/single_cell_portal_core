@@ -23,8 +23,10 @@
 							<td><%= truncate_html(study.description, length: 50) %></td>
 							<td><%= study.visibility %></td>
               <td id="<%= study.url_safe_name %>-study-file-count"><%= study.study_files.count %></td>
-							<td><%= link_to "<span class='fa fa-info-circle'></span> Show Details".html_safe, study_path(study), class: "btn btn-xs btn-info #{study.url_safe_name}-show" %>
+							<td>
+                  <%= link_to "<span class='fa fa-info-circle'></span> Show Details".html_safe, study_path(study), class: "btn btn-xs btn-info #{study.url_safe_name}-show" %>
                   <%= link_to "<span class='fa fa-upload'></span> Upload/Edit Data".html_safe, initialize_study_path(study), class: "btn btn-xs btn-success #{study.url_safe_name}-upload" %>
+                  <%= link_to "<span class='fa fa-refresh'></span> Sync Workspace".html_safe, sync_study_path(study), class: "btn btn-xs btn-warning #{study.url_safe_name}-sync sync-button" %>
                   <%= link_to "<span class='fa fa-edit'></span> Edit Study".html_safe, edit_study_path(study), class: "btn btn-xs btn-primary #{study.url_safe_name}-edit" %>
                   <%= link_to "<span class='fa fa-trash'></span> Delete".html_safe, study, class: "btn btn-xs btn-danger delete-btn #{study.url_safe_name}-delete", method: :delete %>
               </td>
@@ -37,6 +39,21 @@
 		<p><%= link_to "<span class='fa fa-plus'></span> New Study".html_safe, new_study_path, class: 'btn btn-lg btn-success' %></p>
 
 	</div>
+</div>
+<div class="modal fade" id="sync-modal" tabindex="-1" role="dialog" aria-labelledby="sync-modal-label" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="text-center">Syncing Files... Please Wait.</h4>
+      </div>
+      <div class="modal-body">
+        <div class="spinner-target"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="close" data-dismiss="modal">×</button>
+      </div>
+    </div>
+  </div>
 </div>
 <script type="text/javascript">
 
@@ -55,12 +72,18 @@
 	    // get name of study for confirmation
 	    var study = $(this).parent().parent().find('.study-name').text();
       if ( confirm('Are you sure you want to delete \"' + study + '\"? This will remove all associated database records, including the FireCloud workspace and all uploaded files.')) {
-          var target = $('.spinner-target')[0];
+          var target = $('#delete-modal .spinner-target')[0];
           new Spinner(opts).spin(target);
           $('#delete-modal').modal('show');
       } else {
           return false;
       }
 	});
+
+	$('.sync-button').click(function() {
+      var target = $('#sync-modal .spinner-target')[0];
+      new Spinner(opts).spin(target);
+      $('#sync-modal').modal('show');
+  })
 
 </script>
