@@ -64,6 +64,16 @@ class SingleCellMailer < ApplicationMailer
 		end
 	end
 
+	def share_delete_fail(study, share)
+		@study = study
+		@share = share
+		@message = "<p>The study #{@study.name} was unable to properly revoke sharing to #{@share}</p>
+								<p>Please log into <a href='https://portal.firecloud.org'>FireCloud</a> and manually remove this user</p>".html_safe
+		mail(to: @study.user.email, subject: "[Single Cell Portal Notifier] Study: #{@study.name} sharing update failed") do |format|
+			format.html {render html: @message}
+		end
+	end
+
 	def study_delete_notification(study, user)
 		@study = study
 		@user = user.email

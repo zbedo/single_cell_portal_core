@@ -86,17 +86,18 @@ class Study
   field :cell_count, type: Integer, default: 0
   field :gene_count, type: Integer, default: 0
   field :view_order, type: Float, default: 100.0
+  field :use_existing_workspace, type: Boolean, default: false
 
   accepts_nested_attributes_for :study_files, allow_destroy: true
   accepts_nested_attributes_for :study_shares, allow_destroy: true, reject_if: proc { |attributes| attributes['email'].blank? }
 
   # custom validator since we need everything to pass in a specific order (otherwise we get orphaned FireCloud workspaces)
-  validate  :check_values_and_create_firecloud_workspace, on: :create
+  validate :initialize_with_new_workspace, on: :create, if: Proc.new {|study| !study.use_existing_workspace}
+  validate :initialize_with_existing_workspace, on: :create, if: Proc.new {|study| study.use_existing_workspace}
 
   # populate specific errors for study shares since they share the same form
   validate do |study|
     study.study_shares.each do |study_share|
-      Rails.logger.info "Study validation study share: #{study_share.id}"
       next if study_share.valid?
       study_share.errors.full_messages.each do |msg|
         errors.add(:base, "Share Error - #{msg}")
@@ -258,6 +259,18 @@ class Study
     vals.uniq
   end
 
+  # helper method to return key-value pairs of sharing permissions local to portal (not what is persisted in FireCloud)
+  # primarily used when syncing study with FireCloud workspace
+  def local_acl
+    acl = {
+      "#{self.user.email}" => "Owner"
+    }
+    self.study_shares.each do |share|
+      acl["#{share.email}"] = share.permission
+    end
+    acl
+  end
+
   # helper to build a study file of the requested type
   def build_study_file(attributes)
     self.study_files.build(attributes)
@@ -307,12 +320,23 @@ class Study
   ##
 
   # method to parse master expression scores file for study and populate collection
-  def make_expression_scores(expression_file, user)
+  def make_expression_scores(expression_file, user, opts={local: true})
     @count = 0
     @message = []
     @last_line = ""
     start_time = Time.now
     @validation_error = false
+
+    # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
+    if !opts[:local]
+      remote_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_workspace, expression_file.upload_file_name, self.data_store_path)
+      expression_file.update(upload: remote_file)
+    end
+
+    # next, check if this is a re-parse job, in which case we need to remove all existing entries first
+    if opts[:reparse]
+      self.expression_scores.delete_all
+    end
 
     # validate headers
     begin
@@ -437,12 +461,22 @@ class Study
       # update study cell count
       self.set_cell_count(expression_file.file_type)
 
-      # now that parsing is complete, we can move file into storage bucket and delete local
-      begin
-        self.send_to_firecloud(expression_file)
-      rescue => e
-        Rails.logger.info "#{Time.now}: Metadata file: '#{expression_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
-        SingleCellMailer.notify_admin_upload_fail(expression_file, e.message).deliver_now
+      # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
+      if opts
+        begin
+          self.send_to_firecloud(expression_file)
+        rescue => e
+          Rails.logger.info "#{Time.now}: Metadata file: '#{expression_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
+          SingleCellMailer.notify_admin_upload_fail(expression_file, e.message).deliver_now
+        end
+      else
+        # we have the file in FireCloud already, so just delete it
+        begin
+          File.delete(expression_file.upload.path)
+        rescue => e
+          # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
+          Rails.logger.error "#{Time.now}: Could not delete #{expression_file.name} in study #{self.name}; aborting"
+        end
       end
     rescue => e
       # error has occurred, so clean up records and remove file
@@ -460,8 +494,21 @@ class Study
   # parse single cluster coordinate & metadata file (name, x, y, z, metadata_cols* format)
   # uses cluster_group model instead of single clusters; group membership now defined by metadata
   # stores point data in cluster_group_data_arrays instead of single_cells and cluster_points
-  def initialize_cluster_group_and_data_arrays(ordinations_file, user)
-    # validate headers of definition file
+  def initialize_cluster_group_and_data_arrays(ordinations_file, user, opts={local: true})
+
+    # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
+    if !opts[:local]
+      remote_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_workspace, ordinations_file.upload_file_name, self.data_store_path)
+      ordinations_file.update(upload: remote_file)
+    end
+
+    # next, check if this is a re-parse job, in which case we need to remove all existing entries first
+    if opts[:reparse]
+      self.cluster_groups.where(study_file_id: ordinations_file.id).delete_all
+      self.data_arrays.where(study_file_id: ordinations_file.id).delete_all
+    end
+
+    # validate headers of cluster file
     @validation_error = false
     start_time = Time.now
     begin
@@ -651,12 +698,22 @@ class Study
       end
       SingleCellMailer.notify_user_parse_complete(user.email, "Cluster file: '#{ordinations_file.upload_file_name}' has completed parsing", @message).deliver_now
 
-      # now that parsing is complete, we can move file into storage bucket and delete local
-      begin
-        self.send_to_firecloud(ordinations_file)
-      rescue => e
-        Rails.logger.info "#{Time.now}: Metadata file: '#{ordinations_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
-        SingleCellMailer.notify_admin_upload_fail(ordinations_file, e.message).deliver_now
+      # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
+      if opts[:local]
+        begin
+          self.send_to_firecloud(ordinations_file)
+        rescue => e
+          Rails.logger.info "#{Time.now}: Cluster file: '#{ordinations_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
+          SingleCellMailer.notify_admin_upload_fail(ordinations_file, e.message).deliver_now
+        end
+      else
+        # we have the file in FireCloud already, so just delete it
+        begin
+          File.delete(ordinations_file.upload.path)
+        rescue => e
+          # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
+          Rails.logger.error "#{Time.now}: Could not delete #{ordinations_file.name} in study #{self.name}; aborting"
+        end
       end
     rescue => e
       # error has occurred, so clean up records and remove file
@@ -674,7 +731,18 @@ class Study
   # parse a study metadata file and create necessary study_metadata objects
   # study_metadata objects are hashes that store annotations in cell_name/annotation_value pairs
   # call @study.study_metadata_values(metadata_name, metadata_type) to return all values as one hash
-  def initialize_study_metadata(metadata_file, user)
+  def initialize_study_metadata(metadata_file, user, opts={local: true})
+    # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
+    if !opts[:local]
+      remote_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_workspace, metadata_file.upload_file_name, self.data_store_path)
+      metadata_file.update(upload: remote_file)
+    end
+
+    # next, check if this is a re-parse job, in which case we need to remove all existing entries first
+    if opts[:reparse]
+      self.study_metadatas.delete_all
+    end
+
     # validate headers of definition file
     @validation_error = false
     start_time = Time.now
@@ -797,12 +865,22 @@ class Study
       # set the cell count
       self.set_cell_count(metadata_file.file_type)
 
-      # now that parsing is complete, we can move file into storage bucket and delete local
-      begin
-        self.send_to_firecloud(metadata_file)
-      rescue => e
-        Rails.logger.info "#{Time.now}: Metadata file: '#{metadata_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
-        SingleCellMailer.notify_admin_upload_fail(metadata_file, e.message).deliver_now
+      # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
+      if opts[:local]
+        begin
+          self.send_to_firecloud(metadata_file)
+        rescue => e
+          Rails.logger.info "#{Time.now}: Metadata file: '#{metadata_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
+          SingleCellMailer.notify_admin_upload_fail(metadata_file, e.message).deliver_now
+        end
+      else
+        # we have the file in FireCloud already, so just delete it
+        begin
+          File.delete(metadata_file.upload.path)
+        rescue => e
+          # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
+          Rails.logger.error "#{Time.now}: Could not delete #{metadata_file.name} in study #{self.name}; aborting"
+        end
       end
     rescue => e
       # parse has failed, so clean up records and remove file
@@ -817,7 +895,18 @@ class Study
   end
 
   # parse precomputed marker gene files and create documents to render in Morpheus
-  def make_precomputed_scores(marker_file, user)
+  def make_precomputed_scores(marker_file, user, opts={local: true})
+    # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
+    if !opts[:local]
+      remote_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_workspace, marker_file.upload_file_name, self.data_store_path)
+      marker_file.update(upload: remote_file)
+    end
+
+    # next, check if this is a re-parse job, in which case we need to remove all existing entries first
+    if opts[:reparse]
+      self.precomputed_scores.where(study_file_id: marker_file.id).delete_all
+    end
+
     @count = 0
     @message = []
     start_time = Time.now
@@ -909,12 +998,22 @@ class Study
       # send email
       SingleCellMailer.notify_user_parse_complete(user.email, "Gene list file: '#{marker_file.name}' has completed parsing", @message).deliver_now
 
-      # now that parsing is complete, we can move file into storage bucket and delete local
-      begin
-        self.send_to_firecloud(marker_file)
-      rescue => e
-        Rails.logger.info "#{Time.now}: Metadata file: '#{marker_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
-        SingleCellMailer.notify_admin_upload_fail(marker_file, e.message).deliver_now
+      # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
+      if opts[:local]
+        begin
+          self.send_to_firecloud(marker_file)
+        rescue => e
+          Rails.logger.info "#{Time.now}: Gene List file: '#{marker_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
+          SingleCellMailer.notify_admin_upload_fail(marker_file, e.message).deliver_now
+        end
+      else
+        # we have the file in FireCloud already, so just delete it
+        begin
+          File.delete(marker_file.upload.path)
+        rescue => e
+          # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
+          Rails.logger.error "#{Time.now}: Could not delete #{marker_file.name} in study #{self.name}; aborting"
+        end
       end
     rescue => e
       # parse has failed, so clean up records and remove file
@@ -972,7 +1071,7 @@ class Study
 
         # set workspace acl
         study_owner = self.user.email
-        acl = Study.firecloud_client.create_acl(study_owner, 'OWNER')
+        acl = Study.firecloud_client.create_workspace_acl(study_owner, 'OWNER')
         Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
         # validate acl
         ws_acl = Study.firecloud_client.get_workspace_acl(ws_name)
@@ -983,7 +1082,7 @@ class Study
         if self.study_shares.any?
           puts "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares starting"
           self.study_shares.each do |share|
-            acl = Study.firecloud_client.create_acl(share.email, StudyShare::FIRECLOUD_ACL_MAP[share.permission])
+            acl = Study.firecloud_client.create_workspace_acl(share.email, StudyShare::FIRECLOUD_ACL_MAP[share.permission])
             Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
             puts "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares #{share.email} successful"
           end
@@ -1033,9 +1132,11 @@ class Study
   end
 
   # set the FireCloud workspace name to be used when creating study
-  # will only set the first time
+  # will only set the first time, and will not set if user is initializing from an existing workspace
   def set_firecloud_workspace_name
-    self.firecloud_workspace = "#{WORKSPACE_NAME_PREFIX}#{self.url_safe_name}"
+    unless self.use_existing_workspace
+      self.firecloud_workspace = "#{WORKSPACE_NAME_PREFIX}#{self.url_safe_name}"
+    end
   end
 
   # set the data directory to a random value to use as a temp location for uploads while parsing
@@ -1057,18 +1158,9 @@ class Study
 
   # automatically create a FireCloud workspace on study creation after validating name & url_safe_name
   # will raise validation errors if creation, bucket or ACL assignment fail for any reason and deletes workspace on validation fail
-  def check_values_and_create_firecloud_workspace
+  def initialize_with_new_workspace
     Rails.logger.info "#{Time.now}: Study: #{self.name} creating FireCloud workspace"
-    # check name and url_safe_name first and set validation error
-    if self.name.blank? || self.name.nil?
-      errors.add(:name, " cannot be blank - please provide a name for your study.")
-    end
-    if Study.where(name: self.name).any?
-      errors.add(:name, ": #{self.name} has already been taken.  Please choose another name.")
-    end
-    if Study.where(url_safe_name: self.url_safe_name).any?
-      errors.add(:url_safe_name, ": The name you provided (#{self.name}) tried to create a public URL (#{self.url_safe_name}) that is already assigned.  Please rename your study to a different value.")
-    end
+    validate_name_and_url
     unless self.errors.any?
       begin
         # create workspace
@@ -1080,6 +1172,7 @@ class Study
           # delete workspace on validation fail
           Study.firecloud_client.delete_workspace(self.firecloud_workspace)
           errors.add(:firecloud_workspace, ' was not created properly (workspace name did not match or was not created).  Please try again later.')
+          return false
         end
         Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace validation successful"
         # set bucket_id
@@ -1089,11 +1182,12 @@ class Study
           # delete workspace on validation fail
           Study.firecloud_client.delete_workspace(self.firecloud_workspace)
           errors.add(:firecloud_workspace, ' was not created properly (storage bucket was not set).  Please try again later.')
+          return false
         end
         Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud bucket assignment successful"
         # set workspace acl
         study_owner = self.user.email
-        acl = Study.firecloud_client.create_acl(study_owner, 'OWNER')
+        acl = Study.firecloud_client.create_workspace_acl(study_owner, 'OWNER')
         Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
         # validate acl
         ws_acl = Study.firecloud_client.get_workspace_acl(ws_name)
@@ -1101,18 +1195,19 @@ class Study
           # delete workspace on validation fail
           Study.firecloud_client.delete_workspace(self.firecloud_workspace)
           errors.add(:firecloud_workspace, ' was not created properly (permissions do not match).  Please try again later.')
+          return false
         end
         Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment successful"
         if self.study_shares.any?
           Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares starting"
           self.study_shares.each do |share|
             begin
-              acl = Study.firecloud_client.create_acl(share.email, StudyShare::FIRECLOUD_ACL_MAP[share.permission])
+              acl = Study.firecloud_client.create_workspace_acl(share.email, StudyShare::FIRECLOUD_ACL_MAP[share.permission])
               Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
               Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares #{share.email} successful"
             rescue RuntimeError => e
               errors.add(:study_shares, "Could not create a share for #{share.email} to workspace #{self.firecloud_workspace} due to: #{e.message}")
-              false
+              return false
             end
           end
         end
@@ -1121,7 +1216,73 @@ class Study
         Rails.logger.info "#{Time.now}: Error creating workspace: #{e.message}"
         Study.firecloud_client.delete_workspace(self.firecloud_workspace)
         errors.add(:firecloud_workspace, " creation failed: #{e.message}; Please try again later.")
+        return false
       end
+    end
+  end
+
+  # validator to use existing FireCloud workspace
+  def initialize_with_existing_workspace
+    Rails.logger.info "#{Time.now}: Study: #{self.name} using FireCloud workspace: #{self.firecloud_workspace}"
+    validate_name_and_url
+    # check if workspace is already being used
+    if Study.where(firecloud_workspace: self.firecloud_workspace).exists?
+      errors.add(:firecloud_workspace, ': The workspace you provided is already in use by another study.  Please use another workspace.')
+      return false
+    end
+    unless self.errors.any?
+      begin
+        workspace = Study.firecloud_client.get_workspace(self.firecloud_workspace)
+        acl = Study.firecloud_client.get_workspace_acl(self.firecloud_workspace)
+        study_owner = self.user.email
+        # check permissions first
+        unless acl['acl'][study_owner]['accessLevel'] == 'OWNER'
+          errors.add(:firecloud_workspace, ': The workspace you provided is not owned by the current user.  Please use another workspace.')
+          return false
+        end
+        Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl check successful"
+        # set bucket_id, it is nested lower since we had to get an existing workspace
+        bucket = workspace['workspace']['bucketName']
+        self.bucket_id = bucket
+        if self.bucket_id.nil?
+          # delete workspace on validation fail
+          errors.add(:firecloud_workspace, ' was not created properly (storage bucket was not set).  Please try again later.')
+          return false
+        end
+        Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud bucket assignment successful"
+        if self.study_shares.any?
+          Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares starting"
+          self.study_shares.each do |share|
+            begin
+              acl = Study.firecloud_client.create_workspace_acl(share.email, StudyShare::FIRECLOUD_ACL_MAP[share.permission])
+              Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
+              Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares #{share.email} successful"
+            rescue RuntimeError => e
+              errors.add(:study_shares, "Could not create a share for #{share.email} to workspace #{self.firecloud_workspace} due to: #{e.message}")
+              return false
+            end
+          end
+        end
+      rescue => e
+        # delete workspace on any fail as this amounts to a validation fail
+        Rails.logger.info "#{Time.now}: Error assigning workspace: #{e.message}"
+        errors.add(:firecloud_workspace, " assignment failed: #{e.message}; Please try again later.")
+        return false
+      end
+    end
+  end
+
+  # sub-validation used on create
+  def validate_name_and_url
+    # check name and url_safe_name first and set validation error
+    if self.name.blank? || self.name.nil?
+      errors.add(:name, " cannot be blank - please provide a name for your study.")
+    end
+    if Study.where(name: self.name).any?
+      errors.add(:name, ": #{self.name} has already been taken.  Please choose another name.")
+    end
+    if Study.where(url_safe_name: self.url_safe_name).any?
+      errors.add(:url_safe_name, ": The name you provided (#{self.name}) tried to create a public URL (#{self.url_safe_name}) that is already assigned.  Please rename your study to a different value.")
     end
   end
 

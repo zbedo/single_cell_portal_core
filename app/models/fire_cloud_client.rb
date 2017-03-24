@@ -182,7 +182,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	# can also be used to remove access by passing 'NO ACCESS' to create_acl
 	#
 	# param: workspace_name (string) => name of workspace
-	# param: acl (JSON) => ACL object (see create_acl)
+	# param: acl (JSON) => ACL object (see create_workspace_acl)
 	#
 	# return: JSON response of ACL update
 	def update_workspace_acl(workspace_name, acl)
@@ -197,7 +197,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	# param: permission (string) => granted permission level
 	#
 	# return: JSON-encoded ACL object for use in HTTP body
-	def create_acl(email, permission)
+	def create_workspace_acl(email, permission)
 		if WORKSPACE_PERMISSIONS.include?(permission)
 			[
 					{
@@ -289,6 +289,20 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	def delete_workspace_file(workspace_name, filename)
 		file = self.execute_gcloud_method(:get_workspace_file, workspace_name, filename)
 		file.delete
+	end
+
+	# retrieve single file in a GCP bucket of a workspace and download locally to portal (likely for parsing)
+	#
+	# param: workspace_name (string) => name of workspace
+	# param: filename (string) => name of file
+	# param: destination (string) => destination path for downloaded file
+	#
+	# return: File object
+	def download_workspace_file(workspace_name, filename, destination)
+		file = self.execute_gcloud_method(:get_workspace_file, workspace_name, filename)
+		# create a valid path by combining destination directory and filename, making sure no double / exist
+		end_path = [destination, filename].join('/').gsub(/\/\//, '/')
+		file.download end_path
 	end
 
 	# generate a signed url to download a file that isn't public (set at study level)

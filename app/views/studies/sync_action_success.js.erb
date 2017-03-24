@@ -1,3 +1,19 @@
 $('#sync-notices').html("<%= escape_javascript(render partial: 'sync_notice_modal', locals: {message: @message}) %>");
 $('#sync-notice-modal').modal('show');
 $("<%= @form %>").remove();
+
+// check if there are headers we can remove from the page
+if ($('#unsynced-study-files').html().trim() == "") {
+    $('#unsynced-header').remove();
+}
+
+if ($('#orphaned-study-files').html().trim() == "") {
+    $('#orphaned-header').remove();
+}
+
+if ($('#unsynced-directories').html().trim() == "") {
+    $('#directories-header').remove();
+}
+
+$("#initialized").replaceWith("<%= escape_javascript(render partial: 'initialize_study_label') %>");
+$('.initialize-label').tooltip({container: 'body'});

@@ -1,5 +1,5 @@
 class StudiesController < ApplicationController
-  before_action :set_study, except: [:index, :new, :download_private_file, :download_private_fastq_file]
+  before_action :set_study, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
   before_filter :check_edit_permissions, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
   before_filter :authenticate_user!
 
@@ -30,7 +30,8 @@ class StudiesController < ApplicationController
 
     respond_to do |format|
       if @study.save
-        format.html { redirect_to initialize_study_path(@study), notice: "Your study '#{@study.name}' was successfully created." }
+        path = @study.use_existing_workspace ? sync_study_path(@study) : initialize_study_path(@study)
+        format.html { redirect_to path, notice: "Your study '#{@study.name}' was successfully created." }
         format.json { render :show, status: :ok, location: @study }
       else
         format.html { render :new }
@@ -54,9 +55,48 @@ class StudiesController < ApplicationController
     @study_files = @study.study_files
     @directories = @study.directory_listings
     @file_types = StudyFile::STUDY_FILE_TYPES.delete_if {|f| f == 'Fastq'}
+    @synced_study_files = []
     @unsynced_files = []
     @unsynced_directories = @study.directory_listings.unsynced
+    @permissions_changed = []
 
+    # first sync permissions if necessary
+    begin
+      portal_permissions = @study.local_acl
+      firecloud_permissions = Study.firecloud_client.get_workspace_acl(@study.firecloud_workspace)
+      firecloud_permissions['acl'].each do |user, permissions|
+        # skip project owner permissions, they aren't relevant in this context
+        if permissions['accessLevel'] == 'PROJECT_OWNER'
+          next
+        else
+          # determine whether permissions are incorrect or missing completely
+          if !portal_permissions.has_key?(user)
+            new_share = @study.study_shares.build(email: user,
+                                                 permission: StudyShare::PORTAL_ACL_MAP[permissions['accessLevel']],
+                                                 firecloud_workspace: @study.firecloud_workspace
+            )
+            # skip validation as we don't wont to set the acl in FireCloud as it already exists
+            logger.info "adding new share: #{new_share.attributes}"
+            new_share.save(validate: false)
+            @permissions_changed << new_share
+          elsif portal_permissions[user] != StudyShare::PORTAL_ACL_MAP[permissions['accessLevel']]
+            # share exists, but permissions are wrong
+            share = @study.study_shares.detect(email: user)
+            share.update(permission: StudyShare::PORTAL_ACL_MAP[permissions['accessLevel']])
+            logger.info "updating share: #{share.attributes}"
+            @permissions_changed << share
+          else
+            # permissions are correct, skip
+            next
+          end
+        end
+      end
+    rescue => e
+      Rails.logger.error "#{Time.now}: error syncing ACLs in workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
+      redirect_to studies_path, alert: "We were unable to sync with your workspace bucket due to an error: #{e.message}" and return
+    end
+
+    # begin determining sync status with study_files and fastq data
     begin
       workspace_files = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, @study.firecloud_workspace)
       process_workspace_bucket_files(workspace_files)
@@ -65,18 +105,25 @@ class StudiesController < ApplicationController
         process_workspace_bucket_files(workspace_files)
       end
     rescue RuntimeError => e
-      Rails.logger.error "#{Time.now}: error loading workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
-      redirect_to studies_path, alert: "We were unable to sync with your workspace bucket due to an error: #{e.message}"
+      Rails.logger.error "#{Time.now}: error syncing files in workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
+      redirect_to studies_path, alert: "We were unable to sync with your workspace bucket due to an error: #{e.message}" and return
     end
 
     # check if no sync is necessary
     if @unsynced_files.empty? && @unsynced_directories.empty?
-      redirect_to studies_path, notice: "Your study '#{@study.name}' is up-to-date with your workspace bucket." and return
+      message = "Your study '#{@study.name}' is up-to-date with your workspace bucket."
+      if !@permissions_changed.empty?
+        message = message.chomp('.') + ", but the following shares were added/updated: #{@permissions_changed.map {|p| "#{p.email}: #{p.permission}"}.join(', ')}."
+      end
+      redirect_to studies_path, notice: message and return
     else
       # we have unsynced data, so provisionally directory entries so we don't have to get all the filenames again later
       @unsynced_directories.each do |directory|
         directory.save
       end
+      # now determine if we have study_files that have been 'orphaned' (cannot find a corresponding bucket file)
+      @orphaned_study_files = @study_files - @synced_study_files
+      @available_files = @unsynced_files.map(&:name)
     end
   end
 
@@ -280,13 +327,114 @@ class StudiesController < ApplicationController
     end
   end
 
+  # adding new study_file entries based on remote files in GCP
   def sync_study_file
     @study_file = @study.study_files.build
     if @study_file.update(study_file_params)
       @message = "New Study File '#{@study_file.name}' successfully synced."
+      # only grab id after update as it will change on new entries
       @form = "#study-file-#{@study_file.id}"
+      if @study_file.parseable?
+        logger.info "Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
+        @message += " You will receive and email at #{current_user.email} when the parse has completed."
+        case @study_file.file_type
+          when 'Cluster'
+            @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false})
+          when 'Expression Matrix'
+            @study.delay.make_expression_scores(@study_file, current_user, {local: false})
+          when 'Gene List'
+            @study.delay.make_precomputed_scores(@study_file, current_user, {local: false})
+          when 'Metadata'
+            @study.delay.initialize_study_metadata(@study_file, current_user, {local: false})
+        end
+      end
       respond_to do |format|
         format.js {render action: 'sync_action_success'}
+      end
+    else
+      respond_to do |format|
+        format.js {render action: 'sync_action_fail'}
+      end
+    end
+  end
+
+  # re-associated a study_file entry in the database with a remote file in GCP that has changed
+  def sync_orphaned_study_file
+    @study_file = StudyFile.find_by(study_id: study_file_params[:study_id], _id: study_file_params[:_id])
+    @form = "#study-file-#{@study_file.id}"
+
+    # overwrite name with requested file
+    update_params = study_file_params
+    update_params[:name] = params[:existing_file]
+    if @study_file.update(update_params)
+      @message = "New Study File '#{@study_file.name}' successfully synced."
+      # only reparse if user requests
+      if @study_file.parseable? && params[:reparse] == 'Yes'
+        logger.info "Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
+        @message += " You will receive an email "
+        case @study_file.file_type
+          when 'Cluster'
+            @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false, reparse: true})
+          when 'Expression Matrix'
+            @study.delay.make_expression_scores(@study_file, current_user, {local: false, reparse: true})
+          when 'Gene List'
+            @study.delay.make_precomputed_scores(@study_file, current_user, {local: false, reparse: true})
+          when 'Metadata'
+            @study.delay.initialize_study_metadata(@study_file, current_user, {local: false, reparse: true})
+        end
+      end
+      # special case in where a user is re-syncing a gene list and not re-parsing, we need to update the names
+      if @study_file.file_type == 'Gene List' && params[:reparse] == 'No'
+        @precomputed_entry = @study.precomputed_scores.where(study_file_id: study_file_params[:_id])
+        @precomputed_entry.update(name: study_file_params[:name])
+      end
+      respond_to do |format|
+        format.js {render action: 'sync_action_success'}
+      end
+    else
+
+    end
+  end
+
+  # similar to delete_study_file, but called when a study_file record has been orphaned (no corresponding bucket file)
+  def unsync_study_file
+    @study_file = StudyFile.find(params[:study_file_id])
+    @message = ""
+    unless @study_file.nil?
+      @file_type = @study_file.file_type
+      @message = "'#{@study_file.name}' has been successfully deleted."
+      # clean up records before removing file (for memory optimization)
+      case @file_type
+        when 'Cluster'
+          ClusterGroup.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
+          DataArray.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
+        when 'Expression Matrix'
+          ExpressionScore.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
+          DataArray.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
+        when 'Metadata'
+          StudyMetadata.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
+        when 'Gene List'
+          PrecomputedScore.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
+        else
+          nil
+      end
+
+      changes = ["Study file deleted: #{@study_file.upload_file_name}"]
+      if @study.study_shares.any?
+        SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
+      end
+
+      if @study_file.destroy
+        @message = "'#{@study_file.name}' has been successfully deleted."
+
+        # reset initialized if needed
+        if @study.cluster_ordinations_files.empty? || @study.expression_matrix_file.nil? || @study.metadata_file.nil?
+          @study.update(initialized: false)
+        end
+
+        respond_to do |format|
+          format.js {render action: 'sync_action_success'}
+        end
       end
     end
   end
@@ -347,15 +495,6 @@ class StudiesController < ApplicationController
 
       render json: study_file.to_jq_upload and return
     end
-  end
-
-  # GET /courses/:id/reset_upload
-  def reset_upload
-    # Allow users to delete uploads only if they are incomplete
-    study_file = StudyFile.where(study_id: params[:id], name: params[:file]).first
-    raise StandardError, "Action not allowed" unless study_file.status == 'uploading'
-    study_file.update!(status: 'new', upload: nil)
-    redirect_to upload_study_path(@study._id), notice: "Upload reset successfully. You can now start over"
   end
 
   # GET /courses/:id/resume_upload.json
@@ -430,12 +569,6 @@ class StudiesController < ApplicationController
     head :ok
   end
 
-  # get a list of files in a study's bucket
-  def get_bucket_files
-    @bucket = Study.firecloud_client.execute_gcloud_method(:get_workspace_bucket, @study.firecloud_workspace)
-    @files = @bucket.files
-  end
-
   private
   # Use callbacks to share common setup or constraints between actions.
   def set_study
@@ -444,7 +577,7 @@ class StudiesController < ApplicationController
 
   # study params whitelist
   def study_params
-    params.require(:study).permit(:name, :description, :public, :user_id, :embargo, study_files_attributes: [:id, :_destroy, :name, :path, :upload, :description, :file_type, :status], study_shares_attributes: [:id, :_destroy, :email, :permission])
+    params.require(:study).permit(:name, :description, :public, :user_id, :embargo, :use_existing_workspace, :firecloud_workspace, study_shares_attributes: [:id, :_destroy, :email, :permission])
   end
 
   # study file params whitelist
@@ -502,11 +635,15 @@ class StudiesController < ApplicationController
   def process_workspace_bucket_files(files)
     files.each do |file|
       if !%w(.fastq. .fq.).any? {|str| file.name.include?(str)}
-        if @study_files.detect {|f| f.upload_file_name == file.name || f.name == file.name}.nil?
-          @unsynced_files << @study.study_files.build(name: file.name, upload_file_name: file.name, upload_content_type: file.content_type)
+        # make sure filename and size are identical, otherwise we have an unknown file
+        study_match = @study_files.detect {|f| (f.upload_file_name == file.name || f.name == file.name) && f.upload_file_size == file.size }
+        if study_match.nil?
+          @unsynced_files << StudyFile.new(study_id: @study.id, name: file.name, upload_file_name: file.name, upload_content_type: file.content_type)
+        else
+          @synced_study_files << study_match
         end
       else
-        # we have a fastq file now
+        # we have a fastq file now, so check if we know about it yet
         directory = file.name.include?('/') ? file.name.split('/').first : '/'
         all_dirs = @directories.to_a + @unsynced_directories
         existing_dir = all_dirs.detect {|d| d.name == directory}

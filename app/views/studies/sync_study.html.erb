@@ -1,15 +1,32 @@
 <h1>Sync Study Data for '<%= @study.name %>' <%= render partial: 'initialize_study_label' %></h1>
-<h3>Unsynced Study Files</h3>
-<div id="study-files">
-<% @unsynced_files.each do |study_file| %>
-  <%= render partial: 'study_file_form', locals: {study_file: study_file} %>
+<% if @unsynced_files.any? %>
+  <h3 id="unsynced-header">Unsynced Study Files <i class="fa fa-question-circle" title="These are files that are possibly new and are ready to sync with your study" data-toggle="tooltip" data-placement="right"></i> </h3>
+  <div id="unsynced-study-files">
+    <% @unsynced_files.each do |study_file| %>
+      <%= render partial: 'study_file_form', locals: {study_file: study_file} %>
+    <% end %>
+  </div>
 <% end %>
-</div>
-<h3>Unsynced Primary Data Directories</h3>
-<% @unsynced_directories.each do |directory| %>
-  <%= render partial: 'directory_listing_form', locals: {directory: directory} %>
+<% if @orphaned_study_files.any? %>
+  <h3 id="orphaned-header">Orphaned Study Files <i class="fa fa-question-circle" title="These are existing study files for which there is no corresponding file in your study workspace and may need to be deleted or re-parsed" data-toggle="tooltip" data-placement="right"></i> </h3>
+  <div id="orphaned-study-files">
+    <% @orphaned_study_files.each do |study_file| %>
+      <%= render partial: 'orphaned_study_file_form', locals: {study_file: study_file} %>
+    <% end %>
+  </div>
+<% end %>
+
+<% if @unsynced_directories.any? %>
+  <h3 id="directory-header">Unsynced Primary Data Directories <i class="fa fa-question-circle" title="These are directories containing primary data (fastq) for which you can supply a block description" data-toggle="tooltip" data-placement="right"></i></h3>
+  <div id="unsynced-directories">
+    <% @unsynced_directories.each do |directory| %>
+      <%= render partial: 'directory_listing_form', locals: {directory: directory} %>
+    <% end %>
+  </div>
 <% end %>
 
 <div id="sync-notices">
 
 </div>
+
+<%= link_to "<i class='fa fa-chevron-left'></i> Back".html_safe, studies_path, class: 'btn btn-warning' %>

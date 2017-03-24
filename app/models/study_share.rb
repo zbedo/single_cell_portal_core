@@ -10,16 +10,19 @@ class StudyShare
 
 	validates_uniqueness_of :email, scope: :study_id
 
-	PERMISSION_TYPES = %w(Edit View)
-	FIRECLOUD_ACLS = %w(WRITER READER)
+	PERMISSION_TYPES = %w(Owner Edit View)
+	FIRECLOUD_ACLS = %w(OWNER WRITER READER)
+
+	# hashes that represent ACL mapping between the portal & firecloud and the inverse
 	FIRECLOUD_ACL_MAP = Hash[PERMISSION_TYPES.zip(FIRECLOUD_ACLS)]
+	PORTAL_ACL_MAP = Hash[FIRECLOUD_ACLS.zip(PERMISSION_TYPES)]
 
 	before_validation		:set_firecloud_workspace, on: :create
 	before_save					:clean_email
 	after_create				:send_notification
 	after_update				:check_updated_permissions
 	validate						:set_firecloud_acl, on: [:create, :update]
-	validate						:revoke_firecloud_acl, on: :destroy
+	before_destroy			:revoke_firecloud_acl
 
 	# method to set firecloud_workspace in all existing shares (without firing callbacks)
 	def self.set_all_firecloud_workspaces
@@ -37,7 +40,7 @@ class StudyShare
 	end
 
 	def clean_email
-		self.email.strip!
+		self.email = self.email.strip
 	end
 
 	# send an email to both study owner & share user notifying them of the share
@@ -62,7 +65,7 @@ class StudyShare
 			if (self.new_record? && !self.study.new_record?) || (!self.new_record? && self.permission_changed?)
 				Rails.logger.info "#{Time.now}: Creating FireCloud ACLs for study #{self.study.name} - share #{self.email}, permission: #{self.permission}"
 				begin
-					acl = Study.firecloud_client.create_acl(self.email, FIRECLOUD_ACL_MAP[self.permission])
+					acl = Study.firecloud_client.create_workspace_acl(self.email, FIRECLOUD_ACL_MAP[self.permission])
 					Study.firecloud_client.update_workspace_acl(self.study.firecloud_workspace, acl)
 				rescue RuntimeError => e
 					errors.add(:base, "Could not create a share for #{self.email} to workspace #{self.firecloud_workspace} due to: #{e.message}")
@@ -72,14 +75,14 @@ class StudyShare
 		end
 	end
 
-	# revoke FireCloud workspace access on share deletion, raise validation error on fail and halt execution
+	# revoke FireCloud workspace access on share deletion, will email owner on fail to manually remove sharing as we can't do a validation on destroy
 	def revoke_firecloud_acl
 		begin
-			acl = Study.firecloud_client.create_acl(self.email, 'NO ACCESS')
+			acl = Study.firecloud_client.create_workspace_acl(self.email, 'NO ACCESS')
 			Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
 		rescue RuntimeError => e
-			errors.add(:base, "Could not remove share for #{self.email} to workspace #{self.firecloud_workspace} due to: #{e.message}")
-			false
+			Rails.logger.error "#{Time.now}: Could not remove share for #{self.email} to workspace #{self.firecloud_workspace} due to: #{e.message}"
+			SingleCellMailer.share_delete_fail(self.study, self.email).deliver_now
 		end
 	end
 end

@@ -2,6 +2,17 @@
   <%= f.hidden_field :_id, value: directory.id %>
   <%= f.hidden_field :study_id, value: params[:id] %>
   <%= f.hidden_field :synced, value: 1 %>
+  <% if directory.errors.any? %>
+    <div class="bs-callout bs-callout-danger">
+      <h4><%= pluralize(directory.errors.count, "error") %> prohibited this study from being saved:</h4>
+
+      <ul>
+        <% directory.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
   <div class="form-group row">
     <div class="col-sm-4">
       <%= f.label :name, 'Path' %><br />
