@@ -1,29 +1,85 @@
 <h1>Sync Study Data for '<%= @study.name %>' <%= render partial: 'initialize_study_label' %></h1>
-<% if @unsynced_files.any? %>
-  <h3 id="unsynced-header">Unsynced Study Files <i class="fa fa-question-circle" title="These are files that are possibly new and are ready to sync with your study" data-toggle="tooltip" data-placement="right"></i> </h3>
-  <div id="unsynced-study-files">
-    <% @unsynced_files.each do |study_file| %>
-      <%= render partial: 'study_file_form', locals: {study_file: study_file} %>
-    <% end %>
+<% if @orphaned_study_files.any? %>
+  <div class="panel panel-danger">
+    <div class="panel-heading">
+      <div class="panel-title">
+        <h4><%= link_to "<i class='fa fa-exclamation'></i> Orphaned Study Files <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#orphaned-study-files', class: 'red', 'data-toggle' => 'collapse' %></h4>
+      </div>
+    </div>
+    <div id="orphaned-study-files" class="panel-collapse collapse in unsynced">
+      <div class="panel-body">
+        <p class="text-danger">The following study files no longer have a corresponding file in your study workspace and may need to be deleted or re-parsed.</p>
+        <div id="orphaned-study-files-forms" class="unsynced-content">
+          <% @orphaned_study_files.each do |study_file| %>
+            <%= render partial: 'orphaned_study_file_form', locals: {study_file: study_file} %>
+          <% end %>
+        </div>
+      </div>
+    </div>
   </div>
 <% end %>
-<% if @orphaned_study_files.any? %>
-  <h3 id="orphaned-header">Orphaned Study Files <i class="fa fa-question-circle" title="These are existing study files for which there is no corresponding file in your study workspace and may need to be deleted or re-parsed" data-toggle="tooltip" data-placement="right"></i> </h3>
-  <div id="orphaned-study-files">
-    <% @orphaned_study_files.each do |study_file| %>
-      <%= render partial: 'orphaned_study_file_form', locals: {study_file: study_file} %>
-    <% end %>
+
+<% if @unsynced_files.any? %>
+  <div class="panel panel-info">
+    <div class="panel-heading">
+      <div class="panel-title">
+        <h4><%= link_to "<i class='fa fa-question'></i> Unsynced Study Files <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#unsynced-study-files', 'data-toggle' => 'collapse' %></h4>
+      </div>
+    </div>
+    <div id="unsynced-study-files" class="panel-collapse collapse in unsynced">
+      <div class="panel-body">
+        <p class="help-block">These are files that are possibly new and are ready to sync with your study.</p>
+        <div id="unsynced-study-files-forms" class="unsynced-content">
+          <% @unsynced_files.each do |study_file| %>
+            <%= render partial: 'study_file_form', locals: {study_file: study_file} %>
+          <% end %>
+        </div>
+      </div>
+    </div>
   </div>
 <% end %>
 
 <% if @unsynced_directories.any? %>
-  <h3 id="directory-header">Unsynced Primary Data Directories <i class="fa fa-question-circle" title="These are directories containing primary data (fastq) for which you can supply a block description" data-toggle="tooltip" data-placement="right"></i></h3>
-  <div id="unsynced-directories">
-    <% @unsynced_directories.each do |directory| %>
-      <%= render partial: 'directory_listing_form', locals: {directory: directory} %>
-    <% end %>
+  <div class="panel panel-warning">
+    <div class="panel-heading">
+      <div class="panel-title">
+        <h4><%= link_to "<i class='fa fa-question'></i>  Unsynced Primary Data Directories <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#unsynced-directories', 'data-toggle' => 'collapse' %></h4>
+      </div>
+    </div>
+    <div id="unsynced-directories" class="panel-collapse collapse in unsynced">
+      <div class="panel-body">
+        <p class="help-block">These are directories containing new or updated primary data (fastq) for which you can supply a block description.</p>
+        <div id="unsynced-directories-forms" class="unsynced-content">
+          <% @unsynced_directories.each do |directory| %>
+            <%= render partial: 'directory_listing_form', locals: {directory: directory} %>
+          <% end %>
+        </div>
+      </div>
+    </div>
   </div>
+
 <% end %>
+
+<hr class="divider" />
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <div class="panel-title">
+      <h4><%= link_to "<i class='fa fa-check'></i> Synced Data <span class='fa fa-chevron-right toggle-glyph'></span>".html_safe, '#synced-data', 'data-toggle' => 'collapse' %></h4>
+    </div>
+  </div>
+  <div id="synced-data" class="panel-collapse collapse">
+    <div class="panel-body">
+      <h4>Study Files</h4>
+      <% @synced_study_files.each do |sf| %>
+        <%= render partial: 'synced_study_file_form', locals: {study_file: sf} %>
+      <% end %>
+      <h4>Primary Data Directories</h4>
+      <% @synced_directories.each do |dir| %>
+        <%= render partial: 'directory_listing_form', locals: {directory: dir} %>
+      <% end %>
+    </div>
+  </div>
+</div>
 
 <div id="sync-notices">
 

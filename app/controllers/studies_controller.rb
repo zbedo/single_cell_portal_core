@@ -54,8 +54,11 @@ class StudiesController < ApplicationController
   def sync_study
     @study_files = @study.study_files
     @directories = @study.directory_listings
+    # keep a list of what we expect to be
+    @files_by_dir = {}
     @file_types = StudyFile::STUDY_FILE_TYPES.delete_if {|f| f == 'Fastq'}
     @synced_study_files = []
+    @synced_directories = []
     @unsynced_files = []
     @unsynced_directories = @study.directory_listings.unsynced
     @permissions_changed = []
@@ -99,6 +102,7 @@ class StudiesController < ApplicationController
     # begin determining sync status with study_files and fastq data
     begin
       workspace_files = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, @study.firecloud_workspace)
+      # see process_workspace_bucket_files in private methods for more details on syncing
       process_workspace_bucket_files(workspace_files)
       while workspace_files.next?
         workspace_files = workspace_files.next
@@ -109,22 +113,35 @@ class StudiesController < ApplicationController
       redirect_to studies_path, alert: "We were unable to sync with your workspace bucket due to an error: #{e.message}" and return
     end
 
-    # check if no sync is necessary
-    if @unsynced_files.empty? && @unsynced_directories.empty?
-      message = "Your study '#{@study.name}' is up-to-date with your workspace bucket."
-      if !@permissions_changed.empty?
-        message = message.chomp('.') + ", but the following shares were added/updated: #{@permissions_changed.map {|p| "#{p.email}: #{p.permission}"}.join(', ')}."
+    # check against latest list of files by directory vs. what was just found to see if we are missing anything and add directory to unsynced list
+    @directories.each do |directory|
+      synced = true
+      directory.files.each do |file|
+        unless @files_by_dir[directory.name].find {|f| f[:name] = file[:name] && f[:size] == file[:size]}.nil?
+          next
+        else
+          synced = false
+          directory.files.delete(file)
+        end
       end
-      redirect_to studies_path, notice: message and return
-    else
-      # we have unsynced data, so provisionally directory entries so we don't have to get all the filenames again later
-      @unsynced_directories.each do |directory|
-        directory.save
+      # if no longer synced, check if already in the list and remove as files list has changed
+      if !synced
+        @unsynced_directories.delete_if {|dir| dir.name == directory.name}
+        @unsynced_directories << directory
+      else
+        @synced_directories << directory
       end
-      # now determine if we have study_files that have been 'orphaned' (cannot find a corresponding bucket file)
-      @orphaned_study_files = @study_files - @synced_study_files
-      @available_files = @unsynced_files.map(&:name)
     end
+
+    # provisionally save unsynced directories so we don't have to pass huge arrays of filenames/sizes in the form
+    # users clicking "don't sync" actually delete entries
+    @unsynced_directories.each do |directory|
+      directory.save
+    end
+
+    # now determine if we have study_files that have been 'orphaned' (cannot find a corresponding bucket file)
+    @orphaned_study_files = @study_files - @synced_study_files
+    @available_files = @unsynced_files.map(&:name)
   end
 
   # PATCH/PUT /studies/1
@@ -528,25 +545,6 @@ class StudiesController < ApplicationController
     if current_user.nil? || !@study.can_view?(current_user)
       redirect_to site_path, alert: 'You do not have permission to perform that action' and return
     else
-      @study_file = @study.study_files.detect {|sf| sf.upload_file_name == params[:filename]}
-      begin
-        @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, @study_file.upload_file_name, expires: 15)
-      rescue RuntimeError => e
-        logger.error "#{Time.now}: error generating signed url for #{@study_file.upload_file_name}; #{e.message}"
-        redirect_to request.referrer, alert: "We were unable to download the file #{@study_file.upload_file_name} do to an error: #{e.message}" and return
-      end
-      # redirect directly to file to trigger download
-      redirect_to @signed_url
-    end
-  end
-
-  # method to download files if study is private, will create temporary symlink and remove after timeout
-  def download_private_fastq_file
-    @study = Study.find_by(url_safe_name: params[:study_name])
-    # check if user has permission in case someone is phishing
-    if current_user.nil? || !@study.can_view?(current_user)
-      redirect_to site_path, alert: 'You do not have permission to perform that action' and return
-    else
       begin
         @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, params[:filename], expires: 15)
       rescue RuntimeError => e
@@ -638,7 +636,7 @@ class StudiesController < ApplicationController
         # make sure filename and size are identical, otherwise we have an unknown file
         study_match = @study_files.detect {|f| (f.upload_file_name == file.name || f.name == file.name) && f.upload_file_size == file.size }
         if study_match.nil?
-          @unsynced_files << StudyFile.new(study_id: @study.id, name: file.name, upload_file_name: file.name, upload_content_type: file.content_type)
+          @unsynced_files << StudyFile.new(study_id: @study.id, name: file.name, upload_file_name: file.name, upload_content_type: file.content_type, upload_file_size: file.size)
         else
           @synced_study_files << study_match
         end
@@ -647,11 +645,14 @@ class StudiesController < ApplicationController
         directory = file.name.include?('/') ? file.name.split('/').first : '/'
         all_dirs = @directories.to_a + @unsynced_directories
         existing_dir = all_dirs.detect {|d| d.name == directory}
+        # add to list of discovered files
+        @files_by_dir[directory] ||= []
+        @files_by_dir[directory] << {name: file.name, size: file.size}
         if existing_dir.nil?
-          dir = @study.directory_listings.build(name: directory, files: [file.name], synced: false)
+          dir = @study.directory_listings.build(name: directory, files: [{name: file.name, size: file.size}], synced: false)
           @unsynced_directories << dir
-        elsif !existing_dir.files.include?(file.name)
-          existing_dir.files << file.name
+        elsif existing_dir.files.find {|f| f[:name] == file.name && f[:size] == file.size }.nil?
+          existing_dir.files << {name: file.name, size: file.size}
           existing_dir.synced = false
           if @unsynced_directories.map(&:name).include?(existing_dir.name)
             @unsynced_directories.delete(existing_dir)

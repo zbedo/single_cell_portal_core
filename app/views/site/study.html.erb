@@ -44,18 +44,19 @@
 					<% end %>
 					</tbody>
 				</table>
-        <h4><i class="fa fa-file-archive-o"></i> Primary Data</h4>
-        <table class="table table-striped tabled-condensed" id="fastq-table">
-            <thead>
-              <tr>
-                <th class="col-sm-5">Filename</th>
-                <th class="col-sm-6">Description</th>
-                <th class="col-sm-1">Download</th>
-              </tr>
-            </thead>
-            <tbody id="fastq-files-target"></tbody>
-        </table>
-        <%= render partial: '/layouts/download_helper' %>
+        <div class="well well-sm">
+        <h2 class="text-center"><span class="label label-default"><i class="fa fa-file-archive-o"></i> Primary Data</span></h2>
+          <table class="table table-striped tabled-condensed" id="fastq-table">
+              <thead>
+                <tr>
+                  <th class="col-sm-5">Filename</th>
+                  <th class="col-sm-6">Description</th>
+                  <th class="col-sm-1">Download</th>
+                </tr>
+              </thead>
+              <tbody id="fastq-files-target"></tbody>
+          </table>
+        </div>
 			</div>
 		</div>
 	</div>

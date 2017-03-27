@@ -315,6 +315,17 @@ class Study
     true
   end
 
+  # one-time helper to update all file sizes after format migration
+  def update_study_file_sizes
+    self.study_files.each do |study_file|
+      unless study_file.upload.nil?
+        bucket_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, self.firecloud_workspace, study_file.upload_file_name)
+        puts "Updating file size for #{study_file.upload_file_name} from #{study_file.upload_file_size} to #{bucket_file.size}"
+        study_file.update(upload_file_size: bucket_file.size)
+      end
+    end
+  end
+
   ##
   ## PARSERS
   ##

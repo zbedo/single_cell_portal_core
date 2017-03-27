@@ -49,6 +49,14 @@ html, body {
   color: palegoldenrod;
 }
 
+.red {
+  color: #d9534f;
+}
+
+.red:hover {
+  color: #c9302c;
+}
+
 .sc-navbar {
   min-height: 70px !important;
   .navbar-header {

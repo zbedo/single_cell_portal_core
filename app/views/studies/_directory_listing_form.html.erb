@@ -15,8 +15,8 @@
   <% end %>
   <div class="form-group row">
     <div class="col-sm-4">
-      <%= f.label :name, 'Path' %><br />
-      <%= f.text_field :name, class: 'form-control' %>
+      <%= f.label :name, 'Folder/Location' %><br />
+      <%= f.text_field :name, class: 'form-control', readonly: true %>
     </div>
     <div class="col-sm-8">
       <%= f.label :description, 'Description' %><br />
@@ -25,7 +25,7 @@
   </div>
   <div class="form-group row">
     <div class="col-sm-6">
-      <p>Files found: <strong><%= directory.files.size %></strong></p>
+      <%= f.label :files, 'Files found' %> <span class="badge"> <%= directory.files.size %></span>
     </div>
     <div class="col-sm-6">
       <%= f.label :actions %>
@@ -39,11 +39,12 @@
       </div>
     </div>
   </div>
+
+  <script type="text/javascript">
+      $("#delete-directory-<%= directory.id %>").click(function() {
+          $("#directory-listing-<%= directory.id %>").remove();
+          return true;
+      });
+  </script>
 <% end %>
 
-<script type="text/javascript">
-    $("#delete-directory-<%= directory.id %>").click(function() {
-        $("#directory-listing-<%= directory.id %>").remove();
-        return true;
-    });
-</script>
