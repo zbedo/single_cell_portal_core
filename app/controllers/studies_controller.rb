@@ -182,26 +182,30 @@ class StudiesController < ApplicationController
     # destroyed nightly after the database has been re-indexed.  This uses less memory and also makes the process
     # faster for end users
 
-    # delete firecloud workspace so it can be reused, and raise error if unsuccessful
+    # delete firecloud workspace so it can be reused (unless specified by user), and raise error if unsuccessful
     # if successful, we're clear to queue the study for deletion
-    begin
-      Study.firecloud_client.delete_workspace(@study.firecloud_workspace)
-    rescue RuntimeError => e
-      logger.error "#{Time.now} unable to delete workspace: #{@study.firecloud_workspace}; #{e.message}"
-      redirect_to studies_path, alert: "We were unable to delete your study due to: #{e.message}.<br /><br />No files or database records have been deleted.  Please try again later" and return
+    unless params[:workspace] == 'persist'
+      begin
+        Study.firecloud_client.delete_workspace(@study.firecloud_workspace)
+      rescue RuntimeError => e
+        logger.error "#{Time.now} unable to delete workspace: #{@study.firecloud_workspace}; #{e.message}"
+        redirect_to studies_path, alert: "We were unable to delete your study due to: #{e.message}.<br /><br />No files or database records have been deleted.  Please try again later" and return
+      end
     end
+
     # notify users of deletion before removing shares & owner
     SingleCellMailer.study_delete_notification(@study, current_user).deliver_now
 
-    # revoke all study_shares without firing callbacks
+    # revoke all study_shares
     @study.study_shares.delete_all
 
     # mark for deletion, rename study to free up old name for use, and restrict access by removing owner
     new_name = "DELETE-#{@study.data_dir}"
     @study.update!(queued_for_deletion: true, public: false, user_id: nil, name: new_name, url_safe_name: new_name)
+    update_message = "Study '#{name}'was successfully destroyed. All#{params[:workspace].nil? ? ' workspace data & ' : ' '}parsed database records have been destroyed."
 
     respond_to do |format|
-      format.html { redirect_to studies_path, notice: "Study '#{name}'was successfully destroyed.  All uploaded data & parsed database records have also been destroyed." }
+      format.html { redirect_to studies_path, notice: update_message }
       format.json { head :no_content }
     end
   end
