@@ -133,7 +133,7 @@ class Study
   # return all studies that are viewable by a given user
   def self.viewable(user)
     if user.admin?
-      self.all
+      self.where(queued_for_deletion: false)
     else
       public = self.where(public: true).map(&:_id)
       owned = self.where(user_id: user._id, public: false).map(&:_id)
