@@ -22,7 +22,16 @@
       zaxis: {
           range: <%= raw @static_range[:z] %>
       },
-      aspectmode: '<%= @cluster.has_range? ? 'data' : 'cube' %>'
+      <% if @cluster.has_range? %>
+        aspectmode: '<%= @static_aspect[:mode] %>',
+        aspectratio: {
+          x: <%= @static_aspect[:x] %>,
+          y: <%= @static_aspect[:y] %>,
+          z: <%= @static_aspect[:z] %>
+        }
+      <% else %>
+        aspectmode: 'cube'
+      <% end %>
     };
   <% else %>
     staticLayout.xaxis = {

@@ -22,7 +22,16 @@
       zaxis: {
           range: <%= raw @range[:z] %>
       },
-      aspectmode: '<%= @cluster.has_range? ? 'data' : 'cube' %>'
+      <% if @cluster.has_range? %>
+        aspectmode: '<%= @expression_aspect[:mode] %>',
+        aspectratio: {
+          x: <%= @expression_aspect[:x] %>,
+          y: <%= @expression_aspect[:y] %>,
+          z: <%= @expression_aspect[:z] %>
+        }
+      <% else %>
+        aspectmode: 'cube'
+      <% end %>
   };
 
 <% else %>

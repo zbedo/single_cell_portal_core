@@ -65,6 +65,9 @@ class SiteController < ApplicationController
     @options = load_cluster_group_options
     @cluster_annotations = load_cluster_group_annotations
     @range = set_range(@coordinates.values)
+    if @cluster.is_3d? && @cluster.has_range?
+      @aspect = compute_aspect_ratios(@range)
+    end
     @axes = load_axis_labels
   end
 
@@ -150,6 +153,10 @@ class SiteController < ApplicationController
     @range = set_range([@expression[:all]])
     @coordinates = load_cluster_group_data_array_points(@selected_annotation)
     @static_range = set_range(@coordinates.values)
+    if @cluster.is_3d? && @cluster.has_range?
+      @expression_aspect = compute_aspect_ratios(@range)
+      @static_aspect = compute_aspect_ratios(@static_range)
+    end
     @cluster_annotations = load_cluster_group_annotations
   end
 
@@ -206,6 +213,12 @@ class SiteController < ApplicationController
     @options = load_cluster_group_options
     @range = set_range([@expression[:all]])
     @static_range = set_range(@coordinates.values)
+
+    if @cluster.is_3d? && @cluster.has_range?
+      @expression_aspect = compute_aspect_ratios(@range)
+      @static_aspect = compute_aspect_ratios(@static_range)
+    end
+
     @cluster_annotations = load_cluster_group_annotations
 
     if @genes.size > 5
@@ -798,6 +811,24 @@ class SiteController < ApplicationController
       range[:z] = raw_range
     end
     range
+  end
+
+  # compute the aspect ratio between all ranges and use to enforce equal-aspect ranges on 3d plots
+  def compute_aspect_ratios(range)
+    # determine largest range for computing aspect ratio
+    extent = {}
+    range.each.map {|axis, domain| extent[axis] = domain.first.upto(domain.last).size - 1}
+    largest_range = extent.values.max
+
+    # now compute aspect mode and ratios
+    aspect = {
+        mode: extent.values.uniq.size == 1 ? 'cube' : 'manual'
+    }
+    range.each_key do |axis|
+      aspect[axis.to_sym] = extent[axis].to_f / largest_range
+    end
+    logger.info "aspect: #{aspect}"
+    aspect
   end
 
   # parse gene list into 2 other arrays for formatting the header responsively

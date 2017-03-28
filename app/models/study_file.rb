@@ -31,15 +31,16 @@ class StudyFile
   field :x_axis_label, type: String, default: ''
   field :y_axis_label, type: String, default: ''
   field :z_axis_label, type: String, default: ''
-  field :x_axis_min, type: Float
-  field :x_axis_max, type: Float
-  field :y_axis_min, type: Float
-  field :y_axis_max, type: Float
-  field :z_axis_min, type: Float
-  field :z_axis_max, type: Float
+  field :x_axis_min, type: Integer
+  field :x_axis_max, type: Integer
+  field :y_axis_min, type: Integer
+  field :y_axis_max, type: Integer
+  field :z_axis_min, type: Integer
+  field :z_axis_max, type: Integer
 
   # callbacks
   before_create   :set_file_name_and_data_dir
+  after_save      :set_cluster_group_ranges
 
   has_mongoid_attached_file :upload,
                             :path => ":rails_root/data/:data_dir/:filename",
@@ -106,6 +107,37 @@ class StudyFile
       end
     end
     true
+  end
+
+  # convert all domain ranges from floats to integers
+  def convert_all_ranges
+    if self.file_type == 'Cluster'
+      required_vals = 4
+      domain = {
+          x_axis_min: self.x_axis_min.to_i == 0 ? nil : self.x_axis_min.to_i,
+          x_axis_max: self.x_axis_max.to_i == 0 ? nil : self.x_axis_max.to_i,
+          y_axis_min: self.y_axis_min.to_i == 0 ? nil : self.y_axis_min.to_i,
+          y_axis_max: self.y_axis_max.to_i == 0 ? nil : self.y_axis_max.to_i
+      }
+      empty_domain = {
+          x_axis_min: nil,
+          x_axis_max: nil,
+          y_axis_min: nil,
+          y_axis_max: nil
+      }
+      if self.cluster_groups.first.is_3d?
+        domain[:z_axis_min] = self.z_axis_min.to_i == 0 ? nil : self.z_axis_min.to_i
+        domain[:z_axis_max] = self.z_axis_max.to_i == 0 ? nil : self.z_axis_max.to_i
+        empty_domain[:z_axis_min] = nil
+        empty_domain[:z_axis_max] = nil
+        required_vals = 6
+      end
+      # need to clear out domain first to force persistence
+      self.update(empty_domain)
+      if required_vals == domain.values.compact.size
+        self.update(domain)
+      end
+    end
   end
 
   private
