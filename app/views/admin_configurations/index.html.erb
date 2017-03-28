@@ -1,0 +1,95 @@
+<h1>Admin Configuration Options</h1>
+
+<div class="row">
+  <div class="col-md-12">
+    <div class="table-responsive">
+      <div class="well">
+        <table class="table table-striped" id="config">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Value</th>
+              <th class="actions">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <% @admin_configurations.each do |config| %>
+              <tr>
+                <td class="config-type"><%= config.config_type %></td>
+                <td><%= config.display_value.html_safe %></td>
+                <td>
+                  <%= link_to "<span class='fa fa-edit'></span> Edit".html_safe, edit_admin_configuration_path(config), class: "btn btn-xs btn-primary #{config.url_safe_name}-edit" %>
+                  <%= link_to "<span class='fa fa-trash'></span> Delete".html_safe, config, method: :delete, data: {confirm: 'Are you sure?' }, class: "btn btn-xs btn-danger delete-btn #{config.url_safe_name}-delete" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p>
+      <%= link_to "<span class='fa fa-plus'></span> New Config Option".html_safe, new_admin_configuration_path, class: 'btn btn-lg btn-success', id: 'create-new-configuration' %>
+      <% if @download_status %>
+        <%= link_to "<span class='fa fa-exclamation-circle'></span> DISABLE DATA DOWNLOADS".html_safe, '#', class: 'btn btn-lg btn-danger pull-right panic', id: 'halt-all-downloads' %>
+      <% else %>
+        <%= link_to "<span class='fa fa-check-circle'></span> ENABLE DATA DOWNLOADS".html_safe, '#', class: 'btn btn-lg btn-success pull-right panic', id: 'enable-all-downloads' %>
+      <% end %>
+    </p>
+  </div>
+</div>
+
+<div class="modal fade" id="panic-modal" tabindex="-1" role="dialog" aria-labelledby="sync-modal-label" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="text-center text-danger">DISABLE DATA DOWNLOADS</h4>
+      </div>
+      <div class="modal-body">
+          <p class="lead text-center">Downloads are currently: <%= @download_status_label %></p>
+          <p class="lead text-danger">Clicking 'Disable Downloads' will revoke all user permissions to workspaces, thereby preventing any users from downloading data.  This also prevents users from updating any files in their workspaces.  Are you sure you wish to proceed?</p>
+          <div class="row">
+            <div class="col-xs-6">
+              <%= link_to "Disable Downloads".html_safe, manage_data_downloads_path(status: 'off'), class: 'btn btn-lg btn-block btn-danger data-download-status', method: :post, data: {dismiss: 'modal', download_status: 'off'} %>
+            </div>
+            <div class="col-xs-6">
+              <%= link_to "Enable Downloads".html_safe, manage_data_downloads_path(status: 'on'), class: 'btn btn-lg btn-block btn-success data-download-status', method: :post, data: {dismiss: 'modal', download_status: 'on'} %>
+            </div>
+          </div>
+      </div>
+      <div class="modal-footer">
+        <button class="close" data-dismiss="modal">×</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+
+    $('#config').dataTable({
+        pagingType: "full_numbers",
+        order: [[0, 'asc']],
+        language: {
+            search: "Filter Results By: "
+        }
+    });
+
+    // ask user to confirm delete, then show modal
+    // use event delegation to attach to all delete-btn regardless
+    // of whether they are visible yet or not
+    $('#config').on('click', '.delete-btn', function(){
+        // get name of study for confirmation
+        var config = $(this).parent().parent().find('.config-type').text();
+        if ( confirm('Are you sure you want to delete \"' + config + '\"?')) {
+            var target = $('#delete-modal .spinner-target')[0];
+            new Spinner(opts).spin(target);
+            $('#delete-modal').modal('show');
+        } else {
+            return false;
+        }
+    });
+
+    $('.panic').click(function() {
+       $('#panic-modal').modal({show: true, backdrop: 'static'});
+    });
+</script>

@@ -78,8 +78,17 @@ class SiteController < ApplicationController
 
   # method to download files if study is private, will create temporary symlink and remove after timeout
   def download_file
+    # get filesize and make sure the user is under their quota
+
     begin
-      @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, params[:filename], expires: 15)
+      filesize = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_workspace, params[:filename]).size
+      user_quota = current_user.daily_download_quota + filesize
+      if user_quota <= ApplicationController::DAILY_DOWNLOAD_LIMIT
+        @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, params[:filename], expires: 15)
+        current_user.update(daily_download_quota: user_quota)
+      else
+        redirect_to request.referrer, alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
+      end
     rescue RuntimeError => e
       logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
       redirect_to request.referrer, alert: "We were unable to download the file #{params[:filename]} do to an error: #{e.message}" and return

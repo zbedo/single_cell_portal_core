@@ -1,8 +1,10 @@
 Rails.application.routes.draw do
-
 	scope 'single_cell' do
 
-		# admin actions
+		resources :admin_configurations, path: 'admin'
+		post 'admin/data_downloads', to: 'admin_configurations#manage_data_downloads', as: :manage_data_downloads
+
+		# study admin actions
 		mount Ckeditor::Engine => 'ckeditor'
     devise_for :users, :controllers => { :omniauth_callbacks => 'users/omniauth_callbacks' }
     resources :studies do

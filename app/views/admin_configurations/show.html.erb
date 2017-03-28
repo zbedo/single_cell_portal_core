@@ -1,0 +1,16 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Name:</strong>
+  <%= @admin_configuration.name %>
+</p>
+
+<p>
+  <strong>Value:</strong>
+  <%= @admin_configuration.value %>
+</p>
+
+<p>
+  <%= link_to 'Edit', edit_admin_configuration_path(@admin_configuration) %>
+  <%= link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, studies_path, class: 'btn btn-warning' %>
+</p>

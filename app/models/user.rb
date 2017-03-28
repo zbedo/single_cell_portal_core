@@ -47,6 +47,7 @@ class User
 
   ## Custom
   field :admin, type: Boolean
+  field :daily_download_quota, type: Integer, default: 0
 
   def self.from_omniauth(access_token)
     data = access_token.info

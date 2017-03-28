@@ -47,6 +47,10 @@ echo "*** ADDING DAILY ADMIN DISK MONITOR EMAIL ***"
 (crontab -u app -l ; echo "0 3 * * * . /home/app/.cron_env ; /home/app/webapp/bin/rails runner -e $PASSENGER_APP_ENV \"SingleCellMailer.daily_disk_status.deliver_now\" >> /home/app/webapp/log/cron_out.log 2>&1") | crontab -u app -
 echo "*** COMPLETED ***"
 
+echo "*** ADDING DAILY RESET OF USER DOWNLOAD QUOTAS ***"
+(crontab -u app -l ; echo "@daily . /home/app/.cron_env ; /home/app/webapp/bin/rails runner -e $PASSENGER_APP_ENV \"User.update_all(daily_download_quota: 0)\" >> /home/app/webapp/log/cron_out.log 2>&1") | crontab -u app -
+echo "*** COMPLETED ***"
+
 echo "*** REINDEXING COLLECTIONS ***"
 sudo -E -u app -H bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV db:mongoid:create_indexes
 echo "*** COMPLETED ***"
