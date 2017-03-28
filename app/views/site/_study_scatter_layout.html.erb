@@ -27,7 +27,16 @@ var layout = {
           range: <%= raw @range[:z] %>,
           title: '<%= @axes[:z] %>'
       },
-      aspectmode: '<%= @cluster.has_range? ? 'data' : 'cube' %>'
+      <% if @cluster.has_range? %>
+        aspectmode: '<%= @aspect[:mode] %>',
+        aspectratio: {
+          x: <%= @aspect[:x] %>,
+          y: <%= @aspect[:y] %>,
+          z: <%= @aspect[:z] %>
+        }
+      <% else %>
+        aspectmode: 'cube'
+      <% end %>
   };
 
 <% else %>

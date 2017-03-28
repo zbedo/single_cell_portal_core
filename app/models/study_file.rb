@@ -12,10 +12,7 @@ class StudyFile
 
   # associations
   belongs_to :study, index: true
-  has_many :clusters, dependent: :destroy
   has_many :cluster_groups, dependent: :destroy
-  has_many :single_cells, dependent: :destroy
-  has_many :cluster_points, dependent: :destroy
   has_many :expression_scores, dependent: :destroy
   has_many :precomputed_scores, dependent: :destroy
   has_many :temp_file_downloads
@@ -35,13 +32,12 @@ class StudyFile
   field :x_axis_label, type: String, default: ''
   field :y_axis_label, type: String, default: ''
   field :z_axis_label, type: String, default: ''
-  field :x_axis_min, type: Float
-  field :x_axis_max, type: Float
-  field :y_axis_min, type: Float
-  field :y_axis_max, type: Float
-  field :z_axis_min, type: Float
-  field :z_axis_max, type: Float
-
+  field :x_axis_min, type: Integer
+  field :x_axis_max, type: Integer
+  field :y_axis_min, type: Integer
+  field :y_axis_max, type: Integer
+  field :z_axis_min, type: Integer
+  field :z_axis_max, type: Integer
 
   # callbacks
   before_create   :make_data_dir
@@ -108,6 +104,48 @@ class StudyFile
   # return path to a file's 'public data' path (which will be a symlink to data dir)
   def public_data_path
     File.join(self.study.data_public_path, self.upload_file_name)
+  end
+
+  # single-use method to set data_dir for existing study_files
+  def self.set_data_dir
+    self.all.each do |study_file|
+      if study_file.data_dir.nil?
+        study_file.update(data_dir: study_file.study.data_dir)
+        puts "Updated #{study_file.upload_file_name} with data_dir #{study_file.data_dir}"
+      end
+    end
+    true
+  end
+
+  # convert all domain ranges from floats to integers
+  def convert_all_ranges
+    if self.file_type == 'Cluster'
+      required_vals = 4
+      domain = {
+          x_axis_min: self.x_axis_min.to_i == 0 ? nil : self.x_axis_min.to_i,
+          x_axis_max: self.x_axis_max.to_i == 0 ? nil : self.x_axis_max.to_i,
+          y_axis_min: self.y_axis_min.to_i == 0 ? nil : self.y_axis_min.to_i,
+          y_axis_max: self.y_axis_max.to_i == 0 ? nil : self.y_axis_max.to_i
+      }
+      empty_domain = {
+          x_axis_min: nil,
+          x_axis_max: nil,
+          y_axis_min: nil,
+          y_axis_max: nil
+      }
+      if self.cluster_groups.first.is_3d?
+        domain[:z_axis_min] = self.z_axis_min.to_i == 0 ? nil : self.z_axis_min.to_i
+        domain[:z_axis_max] = self.z_axis_max.to_i == 0 ? nil : self.z_axis_max.to_i
+        empty_domain[:z_axis_min] = nil
+        empty_domain[:z_axis_max] = nil
+        required_vals = 6
+      end
+      # need to clear out domain first to force persistence
+      self.update(empty_domain)
+      if required_vals == domain.values.compact.size
+        self.update(domain)
+      end
+    end
   end
 
   private
