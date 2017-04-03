@@ -21,7 +21,7 @@ require 'selenium-webdriver'
 # ui_test_suite.rb takes six arguments:
 # 1. path to your Chrome user profile on your system (passed with -p=)
 # 2. path to your Chromedriver binary (passed with -c=)
-# 3. test email account (passed with -e=); this must be a valid Google & FireCloud user and already signed into Chrome
+# 3. test email account (passed with -e=); this must be a valid Google & FireCloud user and already signed into Chrome, and also configured as an 'admin' account in the portal
 # 4. share email account (passed with -s=); this must be a valid Google & FireCloud user and already signed into Chrome
 # 5. test order (passed with -o=); defaults to defined order (can be alphabetic or random, but random will most likely fail horribly
 # 6. download directory (passed with -d=); place where files are downloaded on your OS, defaults to standard OSX location (/Users/`whoami`/Downloads)
@@ -116,6 +116,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# explicit wait until requested page loads
 	def wait_until_page_loads(path)
+		# now wait for PAGE_RENDERED to return true
 		@wait.until { @driver.execute_script('return PAGE_RENDERED;') == true }
 		puts "#{path} successfully loaded"
 	end
@@ -661,6 +662,44 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.switch_to.window(@driver.window_handles.last)
 		files = @driver.find_elements(:class, 'p6n-clickable-row')
 		assert files.size == 7, "did not find correct number of files, expected 7 but found #{files.size}"
+		puts "Test method: #{self.method_name} successful!"
+	end
+
+	test 'admin: toggle data downloads' do
+		puts "Test method: #{self.method_name}"
+		path = @base_url + '/admin'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email)
+
+		# show the 'panic' modal and disable downloads
+		panic_modal_link = @driver.find_element(:id, 'show-disable-panic-modal')
+		panic_modal_link.click
+		wait_for_render(:id, 'panic-modal')
+		disable_button = @driver.find_element(:id, 'disable-all-downloads')
+		disable_button.click
+		wait_for_render(:id, 'show-enable-panic-modal')
+		close_modal('message_modal')
+
+		# assert access is revoked
+		firecloud_url = 'https://portal.firecloud.org/#workspaces/single-cell-portal%3Adevelopment-test-study'
+		@driver.get firecloud_url
+		assert !element_present?(:class, 'fa-check-circle'), 'did not revoke access - study workspace still loads'
+
+		# now restore access
+		@driver.get path
+		panic_modal_link = @driver.find_element(:id, 'show-enable-panic-modal')
+		panic_modal_link.click
+		wait_for_render(:id, 'panic-modal')
+		disable_button = @driver.find_element(:id, 'enable-all-downloads')
+		disable_button.click
+		wait_for_render(:id, 'show-disable-panic-modal')
+		close_modal('message_modal')
+
+		# assert access is restored
+		@driver.get firecloud_url
+		assert element_present?(:class, 'fa-check-circle'), 'did not restore access - study workspace does not load'
+
 		puts "Test method: #{self.method_name} successful!"
 	end
 

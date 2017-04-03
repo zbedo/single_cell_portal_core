@@ -745,7 +745,7 @@ class SiteController < ApplicationController
     terms.each do |term|
       matches = @study.expression_scores.by_gene(term)
       unless matches.empty?
-        matches.map {|gene| genes << gene}
+        genes << load_best_gene_match(matches, term)
       end
     end
     genes
@@ -758,7 +758,7 @@ class SiteController < ApplicationController
     terms.each do |term|
       matches = @study.expression_scores.by_gene(term)
       unless matches.empty?
-        matches.map {|gene| genes << gene}
+        genes << load_best_gene_match(matches, term)
       else
         not_found << term
       end
@@ -811,7 +811,8 @@ class SiteController < ApplicationController
     if @cluster.has_range?
       range = @cluster.domain_ranges
     else
-      vals = inputs.map {|v| [v[:x].minmax, v[:y].minmax, v[:z].minmax]}.flatten.compact.minmax
+      # collect all axes from each traces and grab the minmax
+      vals = inputs.map {|v| [v[:x].minmax, v[:y].minmax, v[:z].nil? ? nil : v[:z].minmax]}.flatten.compact.minmax
       # add 2% padding to range
       scope = (vals.first - vals.last) * 0.02
       raw_range = [vals.first + scope, vals.last - scope]
@@ -836,7 +837,6 @@ class SiteController < ApplicationController
     range.each_key do |axis|
       aspect[axis.to_sym] = extent[axis].to_f / largest_range
     end
-    logger.info "aspect: #{aspect}"
     aspect
   end
 

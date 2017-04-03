@@ -8,7 +8,7 @@ class AdminConfigurationsController < ApplicationController
   # GET /admin_configurations
   # GET /admin_configurations.json
   def index
-    @admin_configurations = AdminConfiguration.all
+    @admin_configurations = AdminConfiguration.not_in(config_type: AdminConfiguration::GLOBAL_DOWNLOAD_STATUS_NAME)
     status_config = AdminConfiguration.find_by(config_type: AdminConfiguration::GLOBAL_DOWNLOAD_STATUS_NAME)
     if status_config.nil? || (!status_config.nil? && status_config.value == 'on')
       @download_status = true
@@ -74,6 +74,20 @@ class AdminConfigurationsController < ApplicationController
 
   def manage_data_downloads
     @config = AdminConfiguration.find_or_create_by(config_type: AdminConfiguration::GLOBAL_DOWNLOAD_STATUS_NAME)
+    status = params[:status]
+    begin
+      case status
+        when 'on'
+          AdminConfiguration.enable_all_downloads
+        when 'off'
+          AdminConfiguration.disable_all_downloads
+        else
+          nil
+      end
+    rescue RuntimeError => e
+      logger.error "#{Time.now}: error in setting download status to #{status}; #{e.message}"
+      redirect_to admin_configuration_path, alert: "An error occured while turing #{status} downloads: #{e.message}" and return
+    end
     @config.update(value: params[:status])
     redirect_to admin_configurations_path, alert: 'Data downloads setting recorded successfully.'
   end
