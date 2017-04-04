@@ -540,9 +540,12 @@ class StudiesController < ApplicationController
   # retrieve study file by filename during initializer wizard
   def retrieve_wizard_upload
     @study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
+    if @study_file.nil?
+
+    end
   end
 
-  # method to download files if study is private, will create temporary symlink and remove after timeout
+  # method to download files if study is private, will create temporary signed_url after checking user quota
   def download_private_file
     @study = Study.find_by(url_safe_name: params[:study_name])
     # check if user has permission in case someone is phishing
@@ -550,7 +553,15 @@ class StudiesController < ApplicationController
       redirect_to site_path, alert: 'You do not have permission to perform that action' and return
     else
       begin
-        @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, params[:filename], expires: 15)
+        filesize = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_workspace, params[:filename]).size
+        user_quota = current_user.daily_download_quota + filesize
+        # check against download quota that is loaded in ApplicationController.get_download_quota
+        if user_quota <= @download_quota
+          @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, params[:filename], expires: 15)
+          current_user.update(daily_download_quota: user_quota)
+        else
+          redirect_to view_study_path(@study.url_safe_name), alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
+        end
       rescue RuntimeError => e
         logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
         redirect_to request.referrer, alert: "We were unable to download the file #{params[:filename]} do to an error: #{e.message}" and return

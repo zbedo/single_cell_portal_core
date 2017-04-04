@@ -3,9 +3,9 @@ class SiteController < ApplicationController
   respond_to :html, :js, :json
 
   before_action :set_study, except: [:index, :search]
-  before_action :load_precomputed_options, except: [:index, :search, :annotation_query, :download_file, :download_fastq_file]
-  before_action :set_cluster_group, except: [:index, :search, :precomputed_results, :download_file, :download_fastq_file]
-  before_action :set_selected_annotation, except: [:index, :search, :study, :precomputed_results, :expression_query, :get_new_annotations, :download_file, :download_fastq_file]
+  before_action :load_precomputed_options, except: [:index, :search, :annotation_query, :download_file]
+  before_action :set_cluster_group, except: [:index, :search, :precomputed_results, :download_file]
+  before_action :set_selected_annotation, except: [:index, :search, :study, :precomputed_results, :expression_query, :get_new_annotations, :download_file]
   before_action :check_view_permissions, except: [:index, :search]
   COLORSCALE_THEMES = ['Blackbody', 'Bluered', 'Blues', 'Earth', 'Electric', 'Greens', 'Hot', 'Jet', 'Picnic', 'Portland', 'Rainbow', 'RdBu', 'Reds', 'Viridis', 'YlGnBu', 'YlOrRd']
 
@@ -78,20 +78,24 @@ class SiteController < ApplicationController
 
   # method to download files if study is private, will create temporary symlink and remove after timeout
   def download_file
-    # get filesize and make sure the user is under their quota
+    unless user_signed_in?
+      redirect_to view_study_path(@study.url_safe_name), alert: 'You must be signed in to download data.' and return
+    end
 
+    # get filesize and make sure the user is under their quota
     begin
       filesize = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_workspace, params[:filename]).size
       user_quota = current_user.daily_download_quota + filesize
-      if user_quota <= ApplicationController::DAILY_DOWNLOAD_LIMIT
+      # check against download quota that is loaded in ApplicationController.get_download_quota
+      if user_quota <= @download_quota
         @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, params[:filename], expires: 15)
         current_user.update(daily_download_quota: user_quota)
       else
-        redirect_to request.referrer, alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
+        redirect_to view_study_path(@study.url_safe_name), alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
       end
     rescue RuntimeError => e
       logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
-      redirect_to request.referrer, alert: "We were unable to download the file #{params[:filename]} do to an error: #{e.message}" and return
+      redirect_to view_study_path(@study.url_safe_name), alert: "We were unable to download the file #{params[:filename]} do to an error: #{e.message}" and return
     end
     # redirect directly to file to trigger download
     redirect_to @signed_url

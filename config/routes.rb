@@ -31,9 +31,7 @@ Rails.application.routes.draw do
 		end
 		# public/private file download links (redirect to signed_urls from Google)
 		get 'data/public/:study_name/:filename', to: 'site#download_file', as: :download_file, constraints: {filename: /.*/}
-		get 'fastq_data/public/:study_name/:filename', to: 'site#download_fastq_file', as: :download_fastq_file, constraints: {filename: /.*/}
 		get 'data/private/:study_name/:filename', to: 'studies#download_private_file', as: :download_private_file, constraints: {filename: /.*/}
-		get 'fastq_data/private/:study_name/:filename', to: 'studies#download_private_fastq_file', as: :download_private_fastq_file, constraints: {filename: /.*/}
 
 		# autocomplete
 		resources :expression_score, only: [:show, :index] do

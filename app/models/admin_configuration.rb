@@ -63,7 +63,8 @@ class AdminConfiguration
   # method that disables all downloads by revoking permissions to studies directly in firecloud
   def self.disable_all_downloads
     Rails.logger.info "#{Time.now}: revoking access to all studies"
-		Study.all.each do |study|
+    # only use studies not queued for deletion; those have already had access revoked
+    Study.not_in(queued_for_deletion: true).each do |study|
       Rails.logger.info "#{Time.now}: begin revoking access to study: #{study.name}"
       # first remove share access
       shares = study.study_shares.map(&:email)
@@ -85,7 +86,8 @@ class AdminConfiguration
   # method that enables all downloads by restoring permissions to studies directly in firecloud
   def self.enable_all_downloads
     Rails.logger.info "#{Time.now}: restoring access to all studies"
-    Study.all.each do |study|
+    # only use studies not queued for deletion; those have already had access revoked
+    Study.not_in(queued_for_deletion: true).each do |study|
       Rails.logger.info "#{Time.now}: begin restoring access to study: #{study.name}"
       # first remove share access
       shares = study.study_shares

@@ -25,13 +25,13 @@
         <%= f.label :value %><br>
         <%= f.text_field :value, class: 'form-control' %>
       </div>
-      <div class="col-sm-2" id="extra-info" style="display: <%= @admin_configuration.value_type == 'Numeric' ? 'block' : 'none' %>;">
+      <div class="col-sm-2" id="extra-info" style="display: <%= @admin_configuration.value_type == 'Numeric' || @admin_configuration.value_type.nil? ? 'block' : 'none' %>;">
         <%= f.label :multiplier, "Byte Operator <i class='fa fa-question-circle'></i>".html_safe, title: 'Convert a numeric value into a byte value using this multiplier', data: {toggle: 'tooltip'} %><br/>
         <%= f.select :multiplier, options_for_select(AdminConfiguration::NUMERIC_VALS, f.object.multiplier), {include_blank: 'None/As Typed'}, class: 'form-control'%>
       </div>
       <div class="col-sm-2">
         <label>&nbsp;</label>
-        <%= f.submit 'Save Configuration', class: 'btn btn-block btn-success' %>
+        <%= f.submit 'Save Configuration', class: 'btn btn-block btn-success', id: 'save-configuration' %>
       </div>
     </div>
 

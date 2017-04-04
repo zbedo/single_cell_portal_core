@@ -114,6 +114,12 @@ class UiTestSuite < Test::Unit::TestCase
 		false
 	end
 
+	def element_visible?(how, what)
+		@driver.find_element(how, what).displayed?
+	rescue Selenium::WebDriver::Error::NoSuchElementError
+		false
+	end
+
 	# explicit wait until requested page loads
 	def wait_until_page_loads(path)
 		# now wait for PAGE_RENDERED to return true
@@ -126,7 +132,7 @@ class UiTestSuite < Test::Unit::TestCase
 		modal = @driver.find_element(:id, id)
 		dismiss = modal.find_element(:class, 'close')
 		dismiss.click
-		# this is a hack, but different browsers behave differently so this lets the fade animation clear
+		@wait.until {@driver.find_element(:id, id).displayed? == false}
 		sleep(1)
 	end
 
@@ -162,6 +168,11 @@ class UiTestSuite < Test::Unit::TestCase
 	# helper to log into admin portion of site
 	# Will also approve terms if not accepted yet, waits for redirect back to site, and closes modal
 	def login(email)
+		if element_present?(:id, 'message_modal')
+			if element_visible?(:id, 'message_modal')
+				close_modal('message_modal')
+			end
+		end
 		google_auth = @driver.find_element(:id, 'google-auth')
 		google_auth.click
 		puts 'logging in as ' + email
@@ -193,7 +204,9 @@ class UiTestSuite < Test::Unit::TestCase
 				sleep(1)
 			end
 		end
-		close_modal('message_modal')
+		if element_present?(:id, 'message_modal') && element_visible?(:id, 'message_modal')
+			close_modal('message_modal')
+		end
 		puts 'login successful'
 	end
 
@@ -373,7 +386,9 @@ class UiTestSuite < Test::Unit::TestCase
 		gcs_link = @driver.find_element(:id, 'gcs-link')
 		gcs_link.click
 		@driver.switch_to.window(@driver.window_handles.last)
-		files = @driver.find_elements(:class, 'p6n-clickable-row')
+		table = @driver.find_element(:id, 'p6n-storage-objects-table')
+		table_body = table.find_element(:tag_name, 'tbody')
+		files = table_body.find_elements(:tag_name, 'tr')
 		assert files.size == 7, "did not find correct number of files, expected 7 but found #{files.size}"
 		puts "Test method: #{self.method_name} successful!"
 	end
@@ -401,6 +416,7 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_for_render(:id, 'start-file-upload')
 		cancel = @driver.find_element(:class, 'cancel')
 		cancel.click
+		sleep(3)
 		wait_for_render(:id, 'study-file-notices')
 		close_modal('study-file-notices')
 
@@ -422,9 +438,10 @@ class UiTestSuite < Test::Unit::TestCase
 		gcs_link = @driver.find_element(:id, 'gcs-link')
 		gcs_link.click
 		@driver.switch_to.window(@driver.window_handles.last)
-		google_files = @driver.find_elements(:class, 'p6n-clickable-row')
-		sleep(5)
-		assert google_files.size == 6, "did not find correct number of files, expected 6 but found #{google_files.size}"
+		table = @driver.find_element(:id, 'p6n-storage-objects-table')
+		table_body = table.find_element(:tag_name, 'tbody')
+		files = table_body.find_elements(:tag_name, 'tr')
+		assert files.size == 6, "did not find correct number of files, expected 6 but found #{files.size}"
 		puts "Test method: #{self.method_name} successful!"
 	end
 
@@ -565,6 +582,28 @@ class UiTestSuite < Test::Unit::TestCase
 		# save study
 		save_study = @driver.find_element(:id, 'save-study')
 		save_study.click
+
+		close_modal('message_modal')
+		misc_tab = @driver.find_element(:id, 'initialize_misc_form_nav')
+		misc_tab.click
+		wait_for_render(:id, 'required-modal')
+		ok = @driver.find_element(:id, 'accept-skip-required')
+		ok.click
+		sleep(1) # wait for required-modal to close
+
+		# test abort functionality first
+		add_misc = @driver.find_element(:class, 'add-misc')
+		add_misc.click
+		new_misc_form = @driver.find_element(:class, 'new-misc-form')
+		upload_doc = new_misc_form.find_element(:class, 'upload-misc')
+		upload_doc.send_keys(@test_data_path + 'README.txt')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		# close modal
+		wait_for_render(:id, 'upload-success-modal')
+		close_modal('upload-success-modal')
+
 		puts "Test method: #{self.method_name} successful!"
 	end
 
@@ -583,8 +622,8 @@ class UiTestSuite < Test::Unit::TestCase
 		# log in and get study ids for use later
 		path = @base_url + '/studies'
 		@driver.get path
-		@driver.manage.window.maximize
 		close_modal('message_modal')
+
 		# send login info
 		login($test_email)
 
@@ -660,7 +699,9 @@ class UiTestSuite < Test::Unit::TestCase
 		gcs_link = @driver.find_element(:id, 'gcs-link')
 		gcs_link.click
 		@driver.switch_to.window(@driver.window_handles.last)
-		files = @driver.find_elements(:class, 'p6n-clickable-row')
+		table = @driver.find_element(:id, 'p6n-storage-objects-table')
+		table_body = table.find_element(:tag_name, 'tbody')
+		files = table_body.find_elements(:tag_name, 'tr')
 		assert files.size == 7, "did not find correct number of files, expected 7 but found #{files.size}"
 		puts "Test method: #{self.method_name} successful!"
 	end
@@ -701,6 +742,64 @@ class UiTestSuite < Test::Unit::TestCase
 		assert element_present?(:class, 'fa-check-circle'), 'did not restore access - study workspace does not load'
 
 		puts "Test method: #{self.method_name} successful!"
+	end
+
+	test 'admin: configure download quota and test redirect' do
+		puts "Test method: #{self.method_name}"
+		path = @base_url + '/admin'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email)
+
+		# find quota object or create if needed
+		if element_present?(:class, 'daily-user-download-quota-edit')
+			quota_edit = @driver.find_element(:class, 'daily-user-download-quota-edit')
+			quota_edit.click
+			multiplier = @driver.find_element(:id, 'admin_configuration_multiplier')
+			multiplier.send_key('byte')
+			save = @driver.find_element(:id, 'save-configuration')
+			save.click
+			wait_until_page_loads(path)
+			close_modal('message_modal')
+		else
+			create = @driver.find_element(id: 'create-new-configuration')
+			create.click
+			value = @driver.find_element(:id, 'admin_configuration_value')
+			value.send_key(2)
+			multiplier = @driver.find_element(:id, 'admin_configuration_multiplier')
+			multiplier.send_key('byte')
+			save = @driver.find_element(:id, 'save-configuration')
+			save.click
+			wait_until_page_loads(path)
+			close_modal('message_modal')
+		end
+
+		# now test downloads
+		study_path = @base_url + '/study/test-study'
+		@driver.get(study_path)
+		wait_until_page_loads(study_path)
+		download_section = @driver.find_element(:id, 'study-data-files')
+		# gotcha when clicking, must wait until completes
+		download_section.click
+		files = @driver.find_elements(:class, 'disabled-download')
+		assert files.size >= 1, 'downloads not properly disabled (did not find any disabled-download links)'
+
+		# try bypassing download with a direct call to file we uploaded earlier
+		direct_link = @base_url + '/data/public/test-study/expression_matrix_example.txt'
+		@driver.get direct_link
+		alert_content = @driver.find_element(:id, 'alert-content')
+		assert alert_content.text == 'You have exceeded your current daily download quota. You must wait until tomorrow to download this file.', 'download was not successfully blocked'
+
+		# reset quota back to default, we don't need to test downloads again because that gets done in front-end: download study data file
+		@driver.get path
+		quota_edit = @driver.find_element(:class, 'daily-user-download-quota-edit')
+		quota_edit.click
+		multiplier = @driver.find_element(:id, 'admin_configuration_multiplier')
+		multiplier.send_key('terabyte')
+		save = @driver.find_element(:id, 'save-configuration')
+		save.click
+		wait_until_page_loads(path)
+		close_modal('message_modal')
 	end
 
 	##
@@ -761,6 +860,11 @@ class UiTestSuite < Test::Unit::TestCase
 
 	test 'front-end: download study data file' do
 		puts "Test method: #{self.method_name}"
+		login_path = @base_url + '/users/sign_in'
+		# downloads require login now
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login($test_email)
 
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
@@ -770,16 +874,35 @@ class UiTestSuite < Test::Unit::TestCase
 		download_section.click
 		files = @driver.find_elements(:class, 'dl-link')
 		file_link = files.last
-		filename = file_link['download']
+		filename = file_link['data-filename']
 		basename = filename.split('.').first
 		@wait.until { file_link.displayed? }
-		downloaded = file_link.click
-		assert downloaded == nil, 'could not click download link'
-		# give browser 2 seconds to initiate download
-		sleep(2)
+		file_link.click
+		# give browser 5 seconds to initiate download
+		sleep(5)
 		# make sure file was actually downloaded
 		file_exists = Dir.entries($download_dir).select {|f| f =~ /#{basename}/}.size >= 1 || File.exists?(File.join($download_dir, filename))
 		assert file_exists, "did not find downloaded file: #{filename} in #{Dir.entries($download_dir).join(', ')}"
+
+		# now download a file from a private study
+		private_path = @base_url + '/study/private-study'
+		@driver.get(private_path)
+		sleep(5)
+		wait_until_page_loads(private_path)
+		download_section = @driver.find_element(:id, 'study-data-files')
+		# gotcha when clicking, must wait until completes
+		download_section.click
+		private_files = @driver.find_elements(:class, 'dl-link')
+		private_file_link = private_files.first
+		private_filename = private_file_link['data-filename']
+		private_basename = private_filename.split('.').first
+		@wait.until { private_file_link.displayed? }
+		private_file_link.click
+		# give browser 5 seconds to initiate download
+		sleep(5)
+		# make sure file was actually downloaded
+		private_file_exists = Dir.entries($download_dir).select {|f| f =~ /#{private_basename}/}.size >= 1 || File.exists?(File.join($download_dir, private_filename))
+		assert private_file_exists, "did not find downloaded file: #{private_filename} in #{Dir.entries($download_dir).join(', ')}"
 		puts "Test method: #{self.method_name} successful!"
 	end
 
@@ -1060,7 +1183,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# final test, remove test study that was created and used for front-end tests
 	# runs last to clean up data for next test run
-	test 'admin: delete all test studies' do
+	test 'cleanup: delete all test studies' do
 		puts "Test method: #{self.method_name}"
 
 		# log in first

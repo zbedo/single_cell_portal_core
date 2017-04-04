@@ -20,7 +20,7 @@
                 <td><%= config.display_value.html_safe %></td>
                 <td>
                   <%= link_to "<span class='fa fa-edit'></span> Edit".html_safe, edit_admin_configuration_path(config), class: "btn btn-xs btn-primary #{config.url_safe_name}-edit" %>
-                  <%= link_to "<span class='fa fa-trash'></span> Delete".html_safe, config, method: :delete, data: {confirm: 'Are you sure?' }, class: "btn btn-xs btn-danger delete-btn #{config.url_safe_name}-delete" %>
+                  <%= link_to "<span class='fa fa-trash'></span> Delete".html_safe, config, method: :delete, class: "btn btn-xs btn-danger delete-btn #{config.url_safe_name}-delete" %>
                 </td>
               </tr>
             <% end %>
