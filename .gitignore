@@ -17,6 +17,6 @@
 /data/*
 /public/single_cell/assets
 /public/single_cell/ckeditor_assets
-/config/broad-singlecellportal-d5dad9c8d7db.json
+/config/broad-singlecellportal.json
 /config/firecloud-print-access-token.py
 /single-cell-staging.broadinstitute.org.*

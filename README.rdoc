@@ -40,11 +40,11 @@ Note: Once the container has been run once, you can stop & restart it using: <co
 == RUNNING THE CONTAINER
 
 Once the image has successfully built and the database container is running, use the following command to start the container:
-  bin/boot_docker -u (sendgrid username) -P (sendgrid password)
+  bin/boot_docker -u (sendgrid username) -P (sendgrid password) -k (service account key path)
 <em>Contact bistline@broadinstitute.org[mailto:bistline@broadinstitute.org] for credentials to use in development and production.</em>
 
 This sets up several environment variables in your shell and then runs the following command:
-  docker run --rm -it --name $CONTAINER_NAME -p 80:80 -p 443:443 -p 587:587 --link mongodb:mongodb -h localhost -v $PROJECT_DIR:/home/app/webapp:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e SENDGRID_USERNAME=$SENDGRID_USERNAME -e SENDGRID_PASSWORD=$SENDGRID_PASSWORD -e SECRET_KEY_BASE=$SECRET_KEY_BASE single_cell_docker
+  docker run --rm -it --name $CONTAINER_NAME -p 80:80 -p 443:443 -p 587:587 --link mongodb:mongodb -h localhost -v $PROJECT_DIR:/home/app/webapp:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e SENDGRID_USERNAME=$SENDGRID_USERNAME -e SENDGRID_PASSWORD=$SENDGRID_PASSWORD -e SECRET_KEY_BASE=$SECRET_KEY_BASE -e SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY single_cell_docker
 
 The container will then start running, and will execute its local startup scripts that will configure the application automatically.
 
@@ -62,6 +62,7 @@ There are several variables that need to be passed to the Docker container in or
 6. *SENDGRID_USERNAME* (passed with -e): The username associated with the Sendgrid account (for sending emails).
 7. *SENDGRID_PASSWORD* (passed with -e): The password associated with the Sendgrid account (for sending emails).
 8. *SECRET_KEY_BASE* (passed with -e): Sets the Rails SECRET_KEY_BASE environment variable, used mostly by Devise in authentication for cookies.
+9. *SERVICE_ACCOUNT_KEY* (passed with -e): Sets the Rails SERVICE_ACCOUNT_KEY environment variable, used for making authenticated API calls to FireCloud & GCP.
 
 === RUN COMMAND IN DETAIL
 The run command explained in its entirety:
@@ -77,6 +78,7 @@ The run command explained in its entirety:
 * <b>-e MONGO_LOCALHOST= [MONGO_LOCALHOST]:</b> Name of the container running MongoDB.  Even though our two containers are linked, this needs to be set to allow Rails to communicate with the database.
 * <b>-e SENDGRID_USERNAME= [SENDGRID_USERNAME] -e SENDGRID_PASSWORD= [SENDGRID_PASSWORD]:</b> The credentials for Sendgrid to send emails.  Alternatively, you could decide to not use Sendgrid and configure the application to use a different SMTP server (would be done inside your environment's config file).
 * <b>-e SECRET_KEY_BASE= [SECRET_KEY_BASE]:</b> Setting the SECRET_KEY_BASE variable is necessary for creating secure cookies for authentication.  This variable automatically resets every time we restart the container.
+* <b>-e SERVICE_ACCOUNT_KEY= [SERVICE_ACCOUNT_KEY]:</b> Setting the SERVICE_ACCOUNT_KEY variable is necessary for making authenticated API calls to FireCloud and GCP.  This should be a file path <b>relative to the app root</b> that points to the JSON service account key file you exported from GCP.
 * *single_cell_docker*: This is the name of the image we created earlier.  If you chose a different name, please use that here.
 
 === MEMORY CONSTRAINTS
@@ -171,7 +173,7 @@ project directory as <code>root</code>:
 2. Stop the portal: <code>docker stop single_cell</code>
 3. Remove the container instance: <code>docker rm single_cell</code>
 4. Launch a new instance of the portal with the updated container:
-  bin/boot_docker -u (sendgrid username) -P (sendgrid password) -e production -p (prod database password) -h portals.broadinstitute.org
+  bin/boot_docker -u (sendgrid username) -P (sendgrid password) -e production -p (prod database password) -h portals.broadinstitute.org -k (service account key path)
 
 <em>Contact bistline@broadinstitute.org[mailto:bistline@broadinstitute.org] for credentials to use with production</em>
 

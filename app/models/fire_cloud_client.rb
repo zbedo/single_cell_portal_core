@@ -16,7 +16,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	# namespace used for all FireCloud project workspaces
 	PORTAL_NAMESPACE = 'single-cell-portal'
 	# location of Google service account JSON (must be absolute path to file)
-	SERVICE_ACCOUNT_KEY ||= ENV['SERVICE_ACCOUNT_KEY'] || File.absolute_path(Rails.root.join('config', 'broad-singlecellportal-d5dad9c8d7db.json'))
+	SERVICE_ACCOUNT_KEY = File.absolute_path(ENV['SERVICE_ACCOUNT_KEY'])
 	# Permission values allowed for ACLs
 	WORKSPACE_PERMISSIONS = ['OWNER', 'READER', 'WRITER', 'NO ACCESS']
 
