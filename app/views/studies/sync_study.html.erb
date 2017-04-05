@@ -70,13 +70,17 @@
   <div id="synced-data" class="panel-collapse collapse">
     <div class="panel-body">
       <h4>Study Files</h4>
-      <% @synced_study_files.each do |sf| %>
-        <%= render partial: 'synced_study_file_form', locals: {study_file: sf} %>
-      <% end %>
+      <div id="synced-study-files">
+        <% @synced_study_files.each do |sf| %>
+          <%= render partial: 'synced_study_file_form', locals: {study_file: sf} %>
+        <% end %>
+      </div>
       <h4>Primary Data Directories</h4>
-      <% @synced_directories.each do |dir| %>
-        <%= render partial: 'directory_listing_form', locals: {directory: dir} %>
-      <% end %>
+      <div id="synced-directory-listings">
+        <% @synced_directories.each do |dir| %>
+          <%= render partial: 'directory_listing_form', locals: {directory: dir} %>
+        <% end %>
+      </div>
     </div>
   </div>
 </div>

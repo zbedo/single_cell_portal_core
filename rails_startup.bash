@@ -20,6 +20,7 @@ echo "export PROD_DATABASE_PASSWORD=$PROD_DATABASE_PASSWORD" >> /home/app/.cron_
 echo "export SENDGRID_USERNAME=$SENDGRID_USERNAME" >> /home/app/.cron_env
 echo "export SENDGRID_PASSWORD=$SENDGRID_PASSWORD" >> /home/app/.cron_env
 echo "export MONGO_LOCALHOST=$MONGO_LOCALHOST" >> /home/app/.cron_env
+echo "export SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY" >> /home/app/.cron_env
 chmod 400 /home/app/.cron_env
 chown app:app /home/app/.cron_env
 echo "*** COMPLETED ***"

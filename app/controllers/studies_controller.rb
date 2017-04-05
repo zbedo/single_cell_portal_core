@@ -1,5 +1,6 @@
 class StudiesController < ApplicationController
   before_action :set_study, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
+  before_action :set_file_types, only: [:sync_study, :sync_study_file, :sync_orphaned_study_file]
   before_filter :check_edit_permissions, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
   before_filter :authenticate_user!
 
@@ -57,7 +58,6 @@ class StudiesController < ApplicationController
     @directories = @study.directory_listings.to_a
     # keep a list of what we expect to be
     @files_by_dir = {}
-    @file_types = StudyFile::STUDY_FILE_TYPES.delete_if {|f| f == 'Fastq'}
     @synced_study_files = []
     @synced_directories = []
     @unsynced_files = []
@@ -373,7 +373,7 @@ class StudiesController < ApplicationController
         end
       end
       respond_to do |format|
-        format.js {render action: 'sync_action_success'}
+        format.js
       end
     else
       respond_to do |format|
@@ -385,6 +385,7 @@ class StudiesController < ApplicationController
   # re-associated a study_file entry in the database with a remote file in GCP that has changed
   def sync_orphaned_study_file
     @study_file = StudyFile.find_by(study_id: study_file_params[:study_id], _id: study_file_params[:_id])
+
     @form = "#study-file-#{@study_file.id}"
 
     # overwrite name with requested file
@@ -598,11 +599,15 @@ class StudiesController < ApplicationController
 
   # study file params whitelist
   def study_file_params
-    params.require(:study_file).permit(:_id, :study_id, :name, :upload, :upload_file_name, :upload_content_type, :description, :file_type, :status, :human_fastq_url, :human_data, :cluster_type, :x_axis_label, :y_axis_label, :z_axis_label, :x_axis_min, :x_axis_max, :y_axis_min, :y_axis_max, :z_axis_min, :z_axis_max)
+    params.require(:study_file).permit(:_id, :study_id, :name, :upload, :upload_file_name, :upload_content_type, :upload_file_size, :description, :file_type, :status, :human_fastq_url, :human_data, :cluster_type, :x_axis_label, :y_axis_label, :z_axis_label, :x_axis_min, :x_axis_max, :y_axis_min, :y_axis_max, :z_axis_min, :z_axis_max)
   end
 
   def directory_listing_params
     params.require(:directory_listing).permit(:_id, :name, :description, :sync_status)
+  end
+
+  def set_file_types
+    @file_types = StudyFile::STUDY_FILE_TYPES.delete_if {|f| f == 'Fastq'}
   end
 
   # return upload object from study params
@@ -654,7 +659,7 @@ class StudiesController < ApplicationController
         # make sure filename and size are identical, otherwise we have an unknown file
         study_match = @study_files.detect {|f| (f.upload_file_name == file.name || f.name == file.name) && f.upload_file_size == file.size }
         # make sure file is not acutally a folder by checking its size and name
-        if study_match.nil? && file.size > 0 && !file.name.include?('/')
+        if study_match.nil? && file.size > 0
           @unsynced_files << StudyFile.new(study_id: @study.id, name: file.name, upload_file_name: file.name, upload_content_type: file.content_type, upload_file_size: file.size)
         elsif !study_match.nil?
           @synced_study_files << study_match
