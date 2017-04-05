@@ -1,8 +1,9 @@
 Rails.application.routes.draw do
 	scope 'single_cell' do
 
-		resources :admin_configurations, path: 'admin'
+		get 'admin/reset_user_download_quotas', to: 'admin_configurations#reset_user_download_quotas', as: :reset_user_download_quotas
 		post 'admin/data_downloads', to: 'admin_configurations#manage_data_downloads', as: :manage_data_downloads
+		resources :admin_configurations, path: 'admin'
 
 		# study admin actions
 		mount Ckeditor::Engine => 'ckeditor'

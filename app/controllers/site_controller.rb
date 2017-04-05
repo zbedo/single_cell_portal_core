@@ -355,11 +355,18 @@ class SiteController < ApplicationController
   def get_fastq_files
     # load study_file fastqs first
     @fastq_files = {data: []}
+    @study.study_files.select {|file| file.file_type == 'Fastq'}.each do |file|
+      @fastq_files[:data] << [
+          file.name,
+          file.description,
+          file.download_path
+      ]
+    end
+    # now load fastq's from directory_listings
     @study.directory_listings.each do |directory|
       directory.files.each do |file|
-        dl_path = @study.public? ? download_file_path(@study.url_safe_name, file[:name]) : download_private_file_path(@study.url_safe_name, file[:name])
         basename = file[:name].split('/').last
-        link = view_context.link_to("<span class='fa fa-download'></span> #{view_context.number_to_human_size(file[:size], prefix: :si)}".html_safe, dl_path, class: "btn btn-primary dl-link fastq", download: basename)
+        link = view_context.link_to("<span class='fa fa-download'></span> #{view_context.number_to_human_size(file[:size], prefix: :si)}".html_safe, directory.download_path(file[:name]), class: "btn btn-primary dl-link fastq", download: basename)
         @fastq_files[:data] << [
             file[:name],
             directory.description,

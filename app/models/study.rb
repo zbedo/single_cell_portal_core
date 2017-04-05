@@ -28,6 +28,10 @@ class Study
         where(file_type: file_type).to_a
       end
     end
+
+    def non_fastq
+      not_in(file_type: 'Fastq').to_a
+    end
   end
 
   has_many :expression_scores, dependent: :delete do
@@ -67,7 +71,7 @@ class Study
 
   has_many :directory_listings, dependent: :delete do
     def unsynced
-      where(synced: false).to_a
+      where(sync_status: false).to_a
     end
   end
 
@@ -227,6 +231,11 @@ class Study
     Rails.logger.info "#{Time.now}: Setting cell count in #{self.name} to #{@cell_count}"
   end
 
+  # return a count of the number of fastq files (stored via directory_listings) for a study
+  def fastq_file_count
+    self.directory_listings.map {|d| d.files.size}.reduce(:+)
+  end
+
   # return an array of all single cell names in study
   def all_cells
     cell_arrays = self.data_arrays.where(name: 'All Cells').order('array_index asc').to_a
@@ -308,7 +317,7 @@ class Study
       PrecomputedScore.where(study_id: study.id).delete_all
       ClusterGroup.where(study_id: study.id).delete_all
       StudyFile.where(study_id: study.id).delete_all
-
+      DirectoryListing.where(study_id: study.id).delete_all
       # now destroy study to ensure everything is removed
       study.destroy
     end

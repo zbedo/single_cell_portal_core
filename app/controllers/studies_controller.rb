@@ -12,6 +12,7 @@ class StudiesController < ApplicationController
   # GET /studies/1
   # GET /studies/1.json
   def show
+
   end
 
   # GET /studies/new
@@ -53,7 +54,7 @@ class StudiesController < ApplicationController
   # allow a user to sync files uploaded outside the portal into a workspace bucket with an existing study
   def sync_study
     @study_files = @study.study_files
-    @directories = @study.directory_listings
+    @directories = @study.directory_listings.to_a
     # keep a list of what we expect to be
     @files_by_dir = {}
     @file_types = StudyFile::STUDY_FILE_TYPES.delete_if {|f| f == 'Fastq'}
@@ -128,7 +129,7 @@ class StudiesController < ApplicationController
       if !synced
         @unsynced_directories.delete_if {|dir| dir.name == directory.name}
         @unsynced_directories << directory
-      else
+      elsif directory.sync_status
         @synced_directories << directory
       end
     end
@@ -184,7 +185,9 @@ class StudiesController < ApplicationController
 
     # delete firecloud workspace so it can be reused (unless specified by user), and raise error if unsuccessful
     # if successful, we're clear to queue the study for deletion
-    unless params[:workspace] == 'persist'
+    if params[:workspace] == 'persist'
+      @study.update(firecloud_workspace: nil)
+    else
       begin
         Study.firecloud_client.delete_workspace(@study.firecloud_workspace)
       rescue RuntimeError => e
@@ -599,7 +602,7 @@ class StudiesController < ApplicationController
   end
 
   def directory_listing_params
-    params.require(:directory_listing).permit(:_id, :name, :description, :synced)
+    params.require(:directory_listing).permit(:_id, :name, :description, :sync_status)
   end
 
   # return upload object from study params
@@ -650,25 +653,26 @@ class StudiesController < ApplicationController
       if !%w(.fastq. .fq.).any? {|str| file.name.include?(str)}
         # make sure filename and size are identical, otherwise we have an unknown file
         study_match = @study_files.detect {|f| (f.upload_file_name == file.name || f.name == file.name) && f.upload_file_size == file.size }
-        if study_match.nil?
+        # make sure file is not acutally a folder by checking its size and name
+        if study_match.nil? && file.size > 0 && !file.name.include?('/')
           @unsynced_files << StudyFile.new(study_id: @study.id, name: file.name, upload_file_name: file.name, upload_content_type: file.content_type, upload_file_size: file.size)
-        else
+        elsif !study_match.nil?
           @synced_study_files << study_match
         end
       else
         # we have a fastq file now, so check if we know about it yet
         directory = file.name.include?('/') ? file.name.split('/').first : '/'
-        all_dirs = @directories.to_a + @unsynced_directories
+        all_dirs = @directories + @unsynced_directories
         existing_dir = all_dirs.detect {|d| d.name == directory}
         # add to list of discovered files
         @files_by_dir[directory] ||= []
         @files_by_dir[directory] << {name: file.name, size: file.size}
         if existing_dir.nil?
-          dir = @study.directory_listings.build(name: directory, files: [{name: file.name, size: file.size}], synced: false)
+          dir = @study.directory_listings.build(name: directory, files: [{name: file.name, size: file.size}], sync_status: false)
           @unsynced_directories << dir
         elsif existing_dir.files.find {|f| f[:name] == file.name && f[:size] == file.size }.nil?
           existing_dir.files << {name: file.name, size: file.size}
-          existing_dir.synced = false
+          existing_dir.sync_status = false
           if @unsynced_directories.map(&:name).include?(existing_dir.name)
             @unsynced_directories.delete(existing_dir)
           end

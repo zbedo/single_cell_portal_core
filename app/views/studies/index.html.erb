@@ -72,18 +72,14 @@
         // get name of study for confirmation
         var study = $(this).parent().parent().find('.study-name').text();
         if ( confirm('Are you sure you want to delete \"' + study + '\"? This will remove all associated database records, including the FireCloud workspace and all uploaded files.')) {
-            var target = $('#delete-modal .spinner-target')[0];
-            new Spinner(opts).spin(target);
-            $('#delete-modal').modal('show');
+            showModalSpinner('#delete-modal');
         } else {
             return false;
         }
     });
 
     $('.sync-button').click(function() {
-        var target = $('#sync-modal .spinner-target')[0];
-        new Spinner(opts).spin(target);
-        $('#sync-modal').modal('show');
+        showModalSpinner('#sync-modal');
     });
 
 </script>

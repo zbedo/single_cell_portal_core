@@ -136,7 +136,7 @@
                   fileUploading = false;
               }
               console.log('Aborting upload on study_file: <%= study_file.id %>');
-              showDeleteModal();
+              showModalSpinner();
               $.ajax({
                   url: "<%= delete_study_file_study_path(@study._id, study_file._id, target: "#ordinations_form_#{study_file._id}") %>",
                   type: 'DELETE',

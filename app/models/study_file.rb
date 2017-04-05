@@ -2,7 +2,7 @@ class StudyFile
   include Mongoid::Document
   include Mongoid::Timestamps
   include Mongoid::Paperclip
-  include Rails.application.routes.url_helpers
+  include Rails.application.routes.url_helpers # for accessing download_file_path and download_private_file_path
 
   # constants, used for statuses and file types
   STUDY_FILE_TYPES = ['Cluster', 'Expression Matrix', 'Gene List', 'Metadata', 'Fastq', 'Documentation', 'Other']
@@ -55,7 +55,7 @@ class StudyFile
     attachment.instance.data_dir
   end
 
-  # return public url if study is public, otherwise redirect to create templink download url
+  # return correct path to file based on visibility & type
   def download_path
     if self.upload_file_name.nil?
       self.human_fastq_url

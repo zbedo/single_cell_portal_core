@@ -1,7 +1,7 @@
 <%= form_for(directory, url: sync_directory_listing_study_path(@study.id), html: {class: 'bs-callout bs-callout-warning', id: "directory-listing-#{directory.id}"}, data: {remote: true}) do |f| %>
   <%= f.hidden_field :_id, value: directory.id %>
   <%= f.hidden_field :study_id, value: params[:id] %>
-  <%= f.hidden_field :synced, value: 1 %>
+  <%= f.hidden_field :sync_status, value: 1 %>
   <% if directory.errors.any? %>
     <div class="bs-callout bs-callout-danger">
       <h4><%= pluralize(directory.errors.count, "error") %> prohibited this study from being saved:</h4>

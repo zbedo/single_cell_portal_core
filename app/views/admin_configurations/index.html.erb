@@ -1,9 +1,10 @@
-<h1>Admin Configuration Options</h1>
+<h1>Admin Control Panel</h1>
 
 <div class="row">
   <div class="col-md-12">
     <div class="table-responsive">
       <div class="well">
+        <h4><i class="fa fa-cog"></i> Configuration Options</h4>
         <table class="table table-striped" id="config">
           <thead>
             <tr>
@@ -26,10 +27,11 @@
             <% end %>
           </tbody>
         </table>
+        <p><%= link_to "<span class='fa fa-plus'></span> New Config Option".html_safe, new_admin_configuration_path, class: 'btn btn-success', id: 'create-new-configuration' %>&nbsp;</p>
       </div>
     </div>
     <p>
-      <%= link_to "<span class='fa fa-plus'></span> New Config Option".html_safe, new_admin_configuration_path, class: 'btn btn-lg btn-success', id: 'create-new-configuration' %>
+      <%= link_to "<span class='fa fa-refresh'></span> Reset User Download Quotas".html_safe, reset_user_download_quotas_path, class: 'btn btn-lg btn-primary', id: 'reset-user-download-quotas', data: {remote: true} %>
       <% if @download_status %>
         <%= link_to "<span class='fa fa-exclamation-circle'></span> DISABLE DATA DOWNLOADS".html_safe, '#', class: 'btn btn-lg btn-danger pull-right panic', id: 'show-disable-panic-modal' %>
       <% else %>
@@ -64,6 +66,22 @@
   </div>
 </div>
 
+<div class="modal fade" id="quota-modal" tabindex="-1" role="dialog" aria-labelledby="sync-modal-label" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="text-center">Resetting Download Quotas... Please Wait</h4>
+      </div>
+      <div class="modal-body">
+        <div class="spinner-target"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="close" data-dismiss="modal">×</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script type="text/javascript">
 
     $('#config').dataTable({
@@ -81,9 +99,7 @@
         // get name of study for confirmation
         var config = $(this).parent().parent().find('.config-type').text();
         if ( confirm('Are you sure you want to delete \"' + config + '\"?')) {
-            var target = $('#delete-modal .spinner-target')[0];
-            new Spinner(opts).spin(target);
-            $('#delete-modal').modal('show');
+            showModalSpinner('#delete-modal');
         } else {
             return false;
         }
@@ -92,4 +108,10 @@
     $('.panic').click(function() {
        $('#panic-modal').modal({show: true, backdrop: 'static'});
     });
+
+    $('#reset-user-download-quotas').click(function(){
+        $('#quota-modal .spinner-target').empty();
+        showModalSpinner('#quota-modal');
+        $.get("<%= reset_user_download_quotas_path %>");
+    })
 </script>

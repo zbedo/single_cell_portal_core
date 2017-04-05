@@ -51,7 +51,15 @@ module ApplicationHelper
 				when 'initialize_study'
 					breadcrumbs << {title: "Upload/Edit Study Data", link: 'javascript:;'}
 				when 'sync_study'
-					breadcrumbs << {title: "Syncronize Workspace", link: 'javascript:;'}
+					breadcrumbs << {title: "Synchronize Workspace", link: 'javascript:;'}
+			end
+		elsif controller_name == 'admin_configurations'
+			breadcrumbs << {title: 'Admin Control Panel', link: admin_configurations_path}
+			case action_name
+				when 'new'
+					breadcrumbs << {title: "New Config Option", link: 'javascript:;'}
+				when 'edit'
+					breadcrumbs << {title: "Editing '#{@admin_configuration.config_type}'", link: 'javascript:;'}
 			end
 		end
 		breadcrumbs

@@ -1,4 +1,7 @@
-<h1><%= @study.name %> <%= @study.visibility %> <span class="badge" id="cell-count"><%= @study.cell_count %> cells</span> <span class="badge"><%= @study.gene_count %> genes</span></h1>
+<h1>
+  <%= @study.name %> <%= @study.visibility %> <span class="badge" id="cell-count"><%= @study.cell_count %> cells</span> <span class="badge"><%= @study.gene_count %> genes</span>
+  <%= link_to "Toggle All Panels <i class='fa fa-toggle-on'></i>".html_safe, 'javascript:;', class: 'btn btn-default btn-sm pull-right', id: 'toggle-panels' %>
+</h1>
 <%= @study.description.html_safe %>
 <div class="panel panel-default top-pad" id="info-panel">
   <div class="panel-heading">
@@ -171,7 +174,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					<% @study.study_files.sort_by(&:name).each do |study_file| %>
+					<% @study.study_files.non_fastq.sort_by(&:name).each do |study_file| %>
 						<tr>
 							<td><%= study_file.name %></td>
 							<td><%= study_file.description %></td>
@@ -185,6 +188,30 @@
 		</div>
 	</div>
 </div>
+
+<div class="panel panel-warning" id="fastq-files-panel">
+  <div class="panel-heading">
+    <div class="panel-title">
+      <h4><%= link_to "Primary Data <span class='badge'>#{@study.fastq_file_count}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#fastq-files', 'data-toggle' => 'collapse' %></h4>
+    </div>
+  </div>
+
+  <div class="panel-collapse collapse in" id="fastq-files">
+    <div class="panel-body table-responsive">
+      <table class="table table-striped tabled-condensed" id="fastq-table">
+        <thead>
+        <tr>
+          <th class="col-sm-5">Filename</th>
+          <th class="col-sm-6">Description</th>
+          <th class="col-sm-1">Download</th>
+        </tr>
+        </thead>
+        <tbody id="fastq-files-target"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <div class="panel panel-success" id="study-shares-panel">
 	<div class="panel-heading">
 		<div class="panel-title">
@@ -228,5 +255,18 @@
 				search: "Filter records:"
 			}
 		});
+
+    $('#fastq-table').dataTable({
+        pagingType: 'full',
+        order: [[0, 'asc']],
+        ajax: "<%= get_fastq_files_path(study_name: @study.url_safe_name) %>",
+        deferRender: true,
+        autoWidth: false
+    });
+
+    $('#toggle-panels').click(function() {
+        $('.collapse').collapse('toggle');
+        $('#toggle-panels').children().toggleClass('fa-toggle-on fa-toggle-off')
+    })
 
 </script>

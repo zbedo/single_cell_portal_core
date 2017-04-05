@@ -2,7 +2,7 @@
   <%= render partial: 'study_file_errors', locals: {study_file: study_file} %>
   <%= f.hidden_field :study_id, value: params[:id] %>
   <%= f.hidden_field :_id, value: study_file._id %>
-  <%= f.hidden_field :synced, value: 1 %>
+  <%= f.hidden_field :sync_status, value: 1 %>
   <%= f.hidden_field :upload_file_name %>
   <%= f.hidden_field :upload_content_type %>
   <div class="form-group row">

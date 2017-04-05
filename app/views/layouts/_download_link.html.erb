@@ -1,6 +1,4 @@
 <% if user_signed_in? %>
-
-
   <% if study_file.upload_file_name.nil? %>
     <%= link_to "<span class='fa fa-cloud-download'></span> External".html_safe, study_file.download_path, class: 'btn btn-primary', target: :_blank %>
   <% else %>

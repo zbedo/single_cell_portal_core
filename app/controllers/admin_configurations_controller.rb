@@ -39,7 +39,7 @@ class AdminConfigurationsController < ApplicationController
     @admin_configuration = AdminConfiguration.new(admin_configuration_params)
     respond_to do |format|
       if @admin_configuration.save
-        format.html { redirect_to admin_configurations_path, notice: "Config option #{@admin_configuration.config_type} was successfully created." }
+        format.html { redirect_to admin_configurations_path, notice: "Configuration option '#{@admin_configuration.config_type}' was successfully created." }
         format.json { render :show, status: :created, location: @admin_configuration }
       else
         format.html { render :new }
@@ -53,7 +53,7 @@ class AdminConfigurationsController < ApplicationController
   def update
     respond_to do |format|
       if @admin_configuration.update(admin_configuration_params)
-        format.html { redirect_to admin_configurations_path, notice: "Config option #{@admin_configuration.config_type} was successfully updated." }
+        format.html { redirect_to admin_configurations_path, notice: "Configuration option '#{@admin_configuration.config_type}' was successfully updated." }
         format.json { render :show, status: :ok, location: @admin_configuration }
       else
         format.html { render :edit }
@@ -67,11 +67,12 @@ class AdminConfigurationsController < ApplicationController
   def destroy
     @admin_configuration.destroy
     respond_to do |format|
-      format.html { redirect_to admin_configurations_path, notice: "Config option #{@admin_configuration.config_type} was successfully destroyed." }
+      format.html { redirect_to admin_configurations_path, notice: "Configuration option '#{@admin_configuration.config_type}' was successfully destroyed." }
       format.json { head :no_content }
     end
   end
 
+  # disable/enable all downloads by revoking workspace ACLs
   def manage_data_downloads
     @config = AdminConfiguration.find_or_create_by(config_type: AdminConfiguration::GLOBAL_DOWNLOAD_STATUS_NAME)
     status = params[:status]
@@ -90,6 +91,11 @@ class AdminConfigurationsController < ApplicationController
     end
     @config.update(value: params[:status])
     redirect_to admin_configurations_path, alert: 'Data downloads setting recorded successfully.'
+  end
+
+  # reset user download quotas ahead of daily reset
+  def reset_user_download_quotas
+    User.update_all(daily_download_quota: 0)
   end
 
   private

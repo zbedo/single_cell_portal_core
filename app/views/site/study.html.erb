@@ -45,7 +45,7 @@
 					</tbody>
 				</table>
         <div class="well well-sm">
-        <h2 class="text-center"><span class="label label-default"><i class="fa fa-file-archive-o"></i> Primary Data</span></h2>
+        <h2 class="text-center"><span class="label label-primary"><i class="fa fa-file-archive-o"></i> Primary Data</span></h2>
           <table class="table table-striped tabled-condensed" id="fastq-table">
               <thead>
                 <tr>
@@ -154,7 +154,7 @@
       $('#fastq-table').dataTable({
           pagingType: 'full',
           order: [[0, 'asc']],
-          ajax: "<%= get_fastq_files_path(study: params[:study_name]) %>",
+          ajax: "<%= get_fastq_files_path(study_name: params[:study_name]) %>",
           deferRender: true,
           autoWidth: false
       });
