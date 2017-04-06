@@ -99,7 +99,7 @@ var completed = {
     initialize_metadata_form_nav: false,
     initialize_ordinations_form_nav: false,
     initialize_marker_genes_form_nav: false,
-    initialize_fastq_form_nav: false,
+    initialize_primary_data_form_nav: false,
     initialize_misc_form_nav: false
 };
 

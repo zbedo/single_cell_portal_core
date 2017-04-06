@@ -310,7 +310,7 @@ class UiTestSuite < Test::Unit::TestCase
 		close_modal('upload-success-modal')
 
 		# upload fastq
-		wait_for_render(:class, 'initialize_fastq_form')
+		wait_for_render(:class, 'initialize_primary_data_form')
 		upload_fastq = @driver.find_element(:class, 'upload-fastq')
 		upload_fastq.send_keys(@test_data_path + 'cell_1_L1.fastq.gz')
 		wait_for_render(:id, 'start-file-upload')

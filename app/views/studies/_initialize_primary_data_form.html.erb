@@ -1,9 +1,9 @@
-<%= form_for(study_file, url: update_study_file_study_path(@study._id), html: {id: "fastq_form_#{study_file._id}", class: "bs-callout bs-callout-info initialize_fastq_form #{study_file.new_record? ? 'new-fastq-form' : nil}", data: {remote: true}}) do |f| %>
+<%= form_for(study_file, url: update_study_file_study_path(@study._id), html: {id: "primary_data_form_#{study_file._id}", class: "bs-callout bs-callout-info initialize_primary_data_form #{study_file.new_record? ? 'new-fastq-form' : nil}", data: {remote: true}}) do |f| %>
   <%= render partial: 'study_file_errors', locals: {study_file: study_file} %>
   <%= f.hidden_field :study_id, value: params[:id] %>
   <%= f.hidden_field :_id, value: study_file._id %>
-  <%= hidden_field_tag :selector, "#fastq_form_#{study_file._id}" %>
-  <%= hidden_field_tag :partial, 'initialize_fastq_form' %>
+  <%= hidden_field_tag :selector, "#primary_data_form_#{study_file._id}" %>
+  <%= hidden_field_tag :partial, 'initialize_primary_data_form' %>
 	<div class="form-group row">
 		<div class="col-sm-4">
 			<%= f.label :name %><br />
@@ -39,7 +39,7 @@
 					<%= f.submit 'Save', class: 'btn btn-block btn-success save-study-file', disabled: !study_file.human_data? %>
 				</div>
 				<div class="col-xs-6">
-					<%= link_to 'Delete', delete_study_file_study_path(@study._id, study_file._id, target: "#fastq_form_#{study_file._id}"), method: :delete, class: 'btn btn-block btn-danger delete-file', data: {remote: true} %>
+					<%= link_to 'Delete', delete_study_file_study_path(@study._id, study_file._id, target: "#primary_data_form_#{study_file._id}"), method: :delete, class: 'btn btn-block btn-danger delete-file', data: {remote: true} %>
 				</div>
 			</div>
 		</div>
@@ -51,12 +51,12 @@
 	</div>
 	<script type="text/javascript">
 
-		$('#fastq_form_<%= study_file._id %>').find('.human-data').change(function() {
-			toggleFastqFields('fastq_form_<%= study_file._id %>');
+		$('#primary_data_form_<%= study_file._id %>').find('.human-data').change(function() {
+			toggleFastqFields('primary_data_form_<%= study_file._id %>');
 		});
 
 		$(function() {
-			$('#fastq_form_<%= study_file._id %>').fileupload({
+			$('#primary_data_form_<%= study_file._id %>').fileupload({
 				url: "<%= upload_study_path(@study._id) %>",
 				maxChunkSize: 10000000, // 10 MB
 				type: 'PATCH',
@@ -92,15 +92,15 @@
 						data: { status: 'uploaded', file: fileName}
 					});
 					fileUploading = false;
-					$.get("<%= retrieve_wizard_upload_study_path(@study._id) %>", {file: fileName, selector: '#fastq_form_<%= study_file._id %>', partial: 'initialize_fastq_form'});
+					$.get("<%= retrieve_wizard_upload_study_path(@study._id) %>", {file: fileName, selector: '#primary_data_form_<%= study_file._id %>', partial: 'initialize_primary_data_form'});
 					// send to firecloud directly
           $.post("<%= send_to_firecloud_study_path %>", {file: fileName});
 					if (<%= @study.study_files.select {|sf| sf.file_type == 'Fastq'}.size == 1 %>) {
-						completeWizardStep('initialize_fastq_form_nav');
+						completeWizardStep('initialize_primary_data_form_nav');
 						setWizardProgress(getWizardStatus());
-						console.log('incrementing status for fastq upload');
-						$('#initialize_fastq_form_completed').replaceWith("<%= escape_javascript(render partial: 'step_completed', locals: {id: 'initialize_fastq_form_completed'}) %>");
-						$('#initialize_fastq_form_nav_completed').html("<span class='fa fa-check text-success'></span>");
+						console.log('incrementing status for primary data upload');
+						$('#initialize_primary_data_form_completed').replaceWith("<%= escape_javascript(render partial: 'step_completed', locals: {id: 'initialize_primary_data_form_completed'}) %>");
+						$('#initialize_primary_data_form_nav_completed').html("<span class='fa fa-check text-success'></span>");
 					}
 				},
         fail: function(e, data) {
@@ -112,7 +112,7 @@
             console.log('Aborting upload on study_file: <%= study_file.id %>');
             showModalSpinner('#delete-modal');
             $.ajax({
-                url: "<%= delete_study_file_study_path(@study._id, study_file._id, target: "#fastq_form_#{study_file._id}") %>",
+                url: "<%= delete_study_file_study_path(@study._id, study_file._id, target: "#primary_data_form_#{study_file._id}") %>",
                 type: 'DELETE',
                 dataType: 'script'
             });
