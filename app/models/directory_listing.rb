@@ -25,4 +25,13 @@ class DirectoryListing
 			download_private_file_path(self.study.url_safe_name, file)
 		end
 	end
+
+	# helper to render name appropriately for use in download modals
+	def download_display_name
+		if self.name == '/'
+			self.name
+		else
+			'/' + self.name + '/'
+		end
+	end
 end

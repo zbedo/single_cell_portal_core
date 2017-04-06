@@ -3,9 +3,9 @@ class SiteController < ApplicationController
   respond_to :html, :js, :json
 
   before_action :set_study, except: [:index, :search]
-  before_action :load_precomputed_options, except: [:index, :search, :annotation_query, :download_file]
-  before_action :set_cluster_group, except: [:index, :search, :precomputed_results, :download_file]
-  before_action :set_selected_annotation, except: [:index, :search, :study, :precomputed_results, :expression_query, :get_new_annotations, :download_file]
+  before_action :load_precomputed_options, except: [:index, :search, :annotation_query, :download_file, :get_fastq_files]
+  before_action :set_cluster_group, except: [:index, :search, :precomputed_results, :download_file, :get_fastq_files]
+  before_action :set_selected_annotation, except: [:index, :search, :study, :precomputed_results, :expression_query, :get_new_annotations, :download_file, :get_fastq_files]
   before_action :check_view_permissions, except: [:index, :search]
   COLORSCALE_THEMES = ['Blackbody', 'Bluered', 'Blues', 'Earth', 'Electric', 'Greens', 'Hot', 'Jet', 'Picnic', 'Portland', 'Rainbow', 'RdBu', 'Reds', 'Viridis', 'YlGnBu', 'YlOrRd']
 
@@ -48,7 +48,8 @@ class SiteController < ApplicationController
   # load single study and view top-level clusters
   def study
     @study.update(view_count: @study.view_count + 1)
-    @study_files = @study.study_files.delete_if {|sf| sf.file_type == 'fastq'}.sort_by(&:name)
+    @study_files = @study.study_files.non_primary_data.sort_by(&:name)
+    @directories = @study.directory_listings.are_synced
     # parse all coordinates out into hash using generic method
     if @study.initialized?
       @options = load_cluster_group_options
@@ -76,9 +77,9 @@ class SiteController < ApplicationController
     @cluster_annotations = load_cluster_group_annotations
   end
 
-  # method to download files if study is private, will create temporary symlink and remove after timeout
+  # method to download files if study is public
   def download_file
-    unless user_signed_in?
+    if !user_signed_in?
       redirect_to view_study_path(@study.url_safe_name), alert: 'You must be signed in to download data.' and return
     end
 
@@ -362,8 +363,8 @@ class SiteController < ApplicationController
           file.download_path
       ]
     end
-    # now load fastq's from directory_listings
-    @study.directory_listings.each do |directory|
+    # now load fastq's from directory_listings (only synced directories)
+    @study.directory_listings.where(sync_status: true).each do |directory|
       directory.files.each do |file|
         basename = file[:name].split('/').last
         link = view_context.link_to("<span class='fa fa-download'></span> #{view_context.number_to_human_size(file[:size], prefix: :si)}".html_safe, directory.download_path(file[:name]), class: "btn btn-primary dl-link fastq", download: basename)
@@ -418,7 +419,7 @@ class SiteController < ApplicationController
   def check_view_permissions
     unless @study.public?
       if (!user_signed_in? && !@study.public?) || (user_signed_in? && !@study.can_view?(current_user))
-        redirect_to site_path, alert: 'You do not have permission to view the requested page' and return
+        redirect_to site_path, alert: 'You do not have permission to view the requested page.' and return
       end
     end
   end

@@ -29,9 +29,9 @@ require 'selenium-webdriver'
 # if you do not use -- before the argument and give the appropriate flag (with =), it is processed as a Test::Unit flag and ignored
 #
 # Tests can be run singly or in groups by passing -n /pattern/ before the -- on the command line.  This will run any tests that match
-# the given pattern.  You can run all 'front-end' and 'admin' tests this way (although front-end tests require the tests studies to have been created already)
+# the given regular expression.  You can run all 'front-end' and 'admin' tests this way (although front-end tests require the tests studies to have been created already)
 #
-# Lastly, these tests generate on the order of ~20 emails per complete run.
+# Lastly, these tests generate on the order of ~20 emails per complete run per account.
 
 ## INITIALIZATION
 
@@ -87,6 +87,7 @@ end
 class UiTestSuite < Test::Unit::TestCase
 	self.test_order = $order
 
+	# setup is called before every test is run, this instatiates the driver and configures waits and other variables needed
 	def setup
 		@driver = Selenium::WebDriver::Driver.for :chrome, driver_path: $chromedriver_dir, switches: ["--user-data-dir=#{$profile_dir}", '--enable-webgl-draft-extensions']
 		@driver.manage.window.maximize
@@ -102,6 +103,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "\n"
 	end
 
+	# called on completion of every test (whether it passes or fails)
 	def teardown
 		@driver.quit
 	end
@@ -114,6 +116,7 @@ class UiTestSuite < Test::Unit::TestCase
 		false
 	end
 
+	# return true/false if an element is displayed (will handle if element doesn't exist either)
 	def element_visible?(how, what)
 		@driver.find_element(how, what).displayed?
 	rescue Selenium::WebDriver::Error::NoSuchElementError
@@ -130,18 +133,20 @@ class UiTestSuite < Test::Unit::TestCase
 	# method to close a bootstrap modal by id
 	def close_modal(id)
 		modal = @driver.find_element(:id, id)
-		dismiss = modal.find_element(:class, 'close')
-		dismiss.click
-		@wait.until {@driver.find_element(:id, id).displayed? == false}
-		sleep(1)
+		if modal.displayed?
+			dismiss = modal.find_element(:class, 'close')
+			dismiss.click
+			@wait.until {@driver.find_element(:id, id).displayed? == false}
+			sleep(1)
+		end
 	end
 
 	# wait until element is rendered and visible
 	def wait_for_render(how, what)
-		@wait.until {@driver.find_element(how, what).displayed? == true}
+		@wait.until {element_visible?(how, what)}
 	end
 
-	# wait until plotly chart has finished rendering
+	# wait until plotly chart has finished rendering, will run for 10 seconds and then raise a timeout error
 	def wait_for_plotly_render(plot, data_id)
 		i = 1
 		i.upto(10) do
@@ -169,9 +174,7 @@ class UiTestSuite < Test::Unit::TestCase
 	# Will also approve terms if not accepted yet, waits for redirect back to site, and closes modal
 	def login(email)
 		if element_present?(:id, 'message_modal')
-			if element_visible?(:id, 'message_modal')
-				close_modal('message_modal')
-			end
+			close_modal('message_modal')
 		end
 		google_auth = @driver.find_element(:id, 'google-auth')
 		google_auth.click
@@ -215,7 +218,7 @@ class UiTestSuite < Test::Unit::TestCase
 	##
 
 	# admin backend tests of entire study creation process including negative/error tests
-	# uses example data in test directoyr as inputs (based off of https://github.com/broadinstitute/single_cell_portal/tree/master/demo_data)
+	# uses example data in test directory as inputs (based off of https://github.com/broadinstitute/single_cell_portal/tree/master/demo_data)
 	# these tests run first to create test studies to use in front-end tests later
 	test 'admin: create a study' do
 		puts "Test method: #{self.method_name}"
@@ -486,7 +489,7 @@ class UiTestSuite < Test::Unit::TestCase
 	# since parsing happens in background, all messaging is handled through emails
 	# this test just makes sure that parsing fails and removed entries appropriately
 	# your test email account should receive emails notifying of failure
-	test 'admin: create study error messaging' do
+	test 'admin: parse failure check' do
 		puts "Test method: #{self.method_name}"
 
 		# log in first
@@ -706,6 +709,104 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
+	# this test depends on a workspace already existing in FireCloud called development-sync-test
+	# if this study has been deleted, this test will fail until the workspace is re-created with at least
+	# 3 default files for expression, metadata, and one cluster (using the test data from test/test_data)
+	test 'admin: sync study' do
+		puts "Test method: #{self.method_name}"
+
+		# log in first
+		path = @base_url + '/studies/new'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email)
+
+		# create a new study using an existing workspace, also generate a random name to validate that workspace name
+		# and study name can be different
+		uuid = SecureRandom.uuid
+		random_name = "Sync Test #{uuid}"
+		study_form = @driver.find_element(:id, 'new_study')
+		study_form.find_element(:id, 'study_name').send_keys(random_name)
+		study_form.find_element(:id, 'study_use_existing_workspace').send_keys('Yes')
+		study_form.find_element(:id, 'study_firecloud_workspace').send_keys('development-sync-test-study')
+		# save study
+		save_study = @driver.find_element(:id, 'save-study')
+		save_study.click
+		wait_until_page_loads('sync path')
+		close_modal('message_modal')
+
+		# sync each file
+		study_file_forms = @driver.find_elements(:class, 'unsynced-study-file')
+		study_file_forms.each do |form|
+			filename = form.find_element(:id, 'study_file_name')['value']
+			puts "syncing study file form for #{filename}"
+			file_type = form.find_element(:id, 'study_file_file_type')
+			case filename
+				when 'cluster_example.txt'
+					file_type.send_keys('Cluster')
+				when 'expression_matrix_example.txt'
+					file_type.send_keys('Expression Matrix')
+				when 'metadata_example.txt'
+					file_type.send_keys('Metadata')
+				else
+					file_type.send_keys('Other')
+			end
+			sync_button = form.find_element(:class, 'save-study-file')
+			sync_button.click
+			wait_for_render(:id, 'sync-notice-modal')
+			close_modal('sync-notice-modal')
+		end
+
+		# sync directory listings
+		directory_forms = @driver.find_elements(:class, 'unsynced-directory-listing')
+		num_files = 0
+		directory_forms.each do |form|
+			files_found = form.find_element(:class, 'directory-files-found').text.to_i
+			num_files += files_found
+			sync_button = form.find_element(:class, 'save-directory-listing')
+			sync_button.click
+			wait_for_render(:id, 'sync-notice-modal')
+			close_modal('sync-notice-modal')
+		end
+
+		# now assert that forms were re-rendered in synced data panel
+		sync_panel = @driver.find_element(:id, 'synced-data-panel-toggle')
+		sync_panel.click
+		synced_files_div = @driver.find_element(:id, 'synced-study-files')
+		synced_files = synced_files_div.find_elements(:tag_name, 'form')
+		assert synced_files.size == study_file_forms.size, "did not find correct number of synced files, expected #{study_file_forms.size} but found #{synced_files.size}"
+
+		synced_dirs_div = @driver.find_element(:id, 'synced-directory-listings')
+		synced_dirs = synced_dirs_div.find_elements(:tag_name, 'form')
+		assert synced_dirs.size == directory_forms.size, "did not find correct number of synced files, expected #{directory_forms.size} but found #{synced_dirs.size}"
+
+		# lastly, check info page to make sure everything did in fact parse and complete
+		studies_path = @base_url + '/studies'
+		@driver.get studies_path
+		wait_until_page_loads(studies_path)
+
+		show_button = @driver.find_element(:class, "sync-test-#{uuid}-show")
+		show_button.click
+		wait_until_page_loads('show path')
+
+		# assert number of files using the count badges (faster than counting table rows)
+		study_file_count = @driver.find_element(:id, 'study-file-count').text.to_i
+		primary_data_count = @driver.find_element(:id, 'primary-data-count').text.to_i
+		assert study_file_count == study_file_forms.size, "did not find correct number of study files, expected #{study_file_forms.size} but found #{study_file_count}"
+		assert primary_data_count == directory_forms.size, "did not find correct number of primary data files, expected #{directory_forms.size} but found #{primary_data_count}"
+
+		# clean up study
+		@driver.get studies_path
+		wait_until_page_loads(studies_path)
+		delete_local_link = @driver.find_element(:class, "sync-test-#{uuid}-delete-local")
+		delete_local_link.click
+		@driver.switch_to.alert.accept
+		wait_for_render(:id, 'message_modal')
+		close_modal('message_modal')
+
+		puts "Test method: #{self.method_name} successful!"
+	end
+
 	test 'admin: toggle data downloads' do
 		puts "Test method: #{self.method_name}"
 		path = @base_url + '/admin'
@@ -903,6 +1004,63 @@ class UiTestSuite < Test::Unit::TestCase
 		# make sure file was actually downloaded
 		private_file_exists = Dir.entries($download_dir).select {|f| f =~ /#{private_basename}/}.size >= 1 || File.exists?(File.join($download_dir, private_filename))
 		assert private_file_exists, "did not find downloaded file: #{private_filename} in #{Dir.entries($download_dir).join(', ')}"
+
+		# logout
+		profile = @driver.find_element(:id, 'profile-nav')
+		profile.click
+		logout = @driver.find_element(:id, 'logout-nav')
+		logout.click
+		wait_until_page_loads(@base_url)
+		close_modal('message_modal')
+
+		# now login as share user and test downloads
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login($share_email)
+
+		@driver.get(path)
+		wait_until_page_loads(path)
+		download_section = @driver.find_element(:id, 'study-data-files')
+		download_section.click
+		files = @driver.find_elements(:class, 'dl-link')
+		share_file_link = files.first
+		share_filename = share_file_link['data-filename']
+		share_basename = share_filename.split('.').first
+		@wait.until { share_file_link.displayed? }
+		share_file_link.click
+		# give browser 5 seconds to initiate download
+		sleep(5)
+		# make sure file was actually downloaded
+		share_file_exists = Dir.entries($download_dir).select {|f| f =~ /#{share_basename}/}.size >= 1 || File.exists?(File.join($download_dir, share_filename))
+		assert share_file_exists, "did not find downloaded file: #{share_filename} in #{Dir.entries($download_dir).join(', ')}"
+
+		puts "Test method: #{self.method_name} successful!"
+	end
+
+	test 'front-end: check privacy restrictions on file download' do
+		puts "Test method: #{self.method_name}"
+
+		login_path = @base_url + '/users/sign_in'
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login($share_email)
+
+		# negative test, should not be able to download private files from study without access
+		non_share_public_link = @base_url + '/data/public/private-study/README.txt'
+		non_share_private_link = @base_url + '/data/private/private-study/README.txt'
+
+		# try public rout
+		@driver.get non_share_public_link
+		public_alert_text = @driver.find_element(:id, 'alert-content').text
+		assert public_alert_text == 'You do not have permission to view the requested page.',
+					 "did not properly redirect, expected 'You do not have permission to view the requested page.' but got #{public_alert_text}"
+
+		# try private route
+		@driver.get non_share_private_link
+		private_alert_text = @driver.find_element(:id, 'alert-content').text
+		assert private_alert_text == 'You do not have permission to perform that action.',
+					 "did not properly redirect, expected 'You do not have permission to view the requested page.' but got #{private_alert_text}"
+
 		puts "Test method: #{self.method_name} successful!"
 	end
 

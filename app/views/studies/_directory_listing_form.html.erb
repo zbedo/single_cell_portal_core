@@ -1,4 +1,4 @@
-<%= form_for(directory, url: sync_directory_listing_study_path(@study.id), html: {class: 'bs-callout bs-callout-warning', id: "directory-listing-#{directory.id}"}, data: {remote: true}) do |f| %>
+<%= form_for(directory, url: sync_directory_listing_study_path(@study.id), html: {class: "bs-callout bs-callout-warning #{directory.sync_status == true ? 'synced' : 'unsynced'}-directory-listing", id: "directory-listing-#{directory.id}"}, data: {remote: true}) do |f| %>
   <%= f.hidden_field :_id, value: directory.id %>
   <%= f.hidden_field :study_id, value: params[:id] %>
   <%= f.hidden_field :sync_status, value: 1 %>
@@ -25,13 +25,13 @@
   </div>
   <div class="form-group row">
     <div class="col-sm-6">
-      <%= f.label :files, 'Files found' %> <span class="badge"> <%= directory.files.size %></span>
+      <%= f.label :files, 'Files found' %> <span class="badge directory-files-found"> <%= directory.files.size %></span>
     </div>
     <div class="col-sm-6">
       <%= f.label :actions %>
       <div class="row">
         <div class="col-xs-6">
-          <%= f.submit 'Sync', class: 'btn btn-block btn-success save-study-file' %>
+          <%= f.submit 'Sync', class: 'btn btn-block btn-success save-directory-listing' %>
         </div>
         <div class="col-xs-6">
           <%= link_to "Don't Sync", delete_directory_listing_study_path(@study.id, directory.id), class: 'btn btn-block btn-danger', id: "delete-directory-#{directory.id}", method: :delete, data: {remote: true} %>

@@ -13,7 +13,8 @@ class StudiesController < ApplicationController
   # GET /studies/1
   # GET /studies/1.json
   def show
-
+    @study_fastq_files = @study.study_files.by_type('Fastq')
+    @directories = @study.directory_listings.are_synced
   end
 
   # GET /studies/new
@@ -149,12 +150,17 @@ class StudiesController < ApplicationController
   # PATCH/PUT /studies/1.json
   def update
     # check if any changes were made to sharing for notifications
-    @share_changes = @study.study_shares.count != study_params[:study_shares_attributes].keys.size
-    study_params[:study_shares_attributes].values.each do |share|
-      if share["_destroy"] == "1"
-        @share_changes = true
+    if !study_params[:study_shares_attributes].nil?
+      @share_changes = @study.study_shares.count != study_params[:study_shares_attributes].keys.size
+      study_params[:study_shares_attributes].values.each do |share|
+        if share["_destroy"] == "1"
+          @share_changes = true
+        end
       end
+    else
+      @share_changes = false
     end
+
     respond_to do |format|
       if @study.update(study_params)
         changes = @study.previous_changes.delete_if {|k,v| k == 'updated_at'}.keys.map {|k| k.humanize.capitalize}
@@ -286,7 +292,7 @@ class StudiesController < ApplicationController
           StudyMetadata.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
           @partial = 'initialize_metadata_form'
         when 'Fastq'
-          @partial = 'initialize_fastq_form'
+          @partial = 'initialize_primary_data_form'
         when 'Gene List'
           PrecomputedScore.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
           @partial = 'initialize_marker_genes_form'
@@ -328,7 +334,7 @@ class StudiesController < ApplicationController
           @partial = 'initialize_ordinations_form'
         when /fastq/
           @file_type = 'Fastq'
-          @partial = 'initialize_fastq_form'
+          @partial = 'initialize_primary_data_form'
         when /marker/
           @file_type = 'Gene List'
           @partial = 'initialize_marker_genes_form'
@@ -385,9 +391,7 @@ class StudiesController < ApplicationController
   # re-associated a study_file entry in the database with a remote file in GCP that has changed
   def sync_orphaned_study_file
     @study_file = StudyFile.find_by(study_id: study_file_params[:study_id], _id: study_file_params[:_id])
-
     @form = "#study-file-#{@study_file.id}"
-
     # overwrite name with requested file
     update_params = study_file_params
     update_params[:name] = params[:existing_file]
@@ -414,10 +418,12 @@ class StudiesController < ApplicationController
         @precomputed_entry.update(name: study_file_params[:name])
       end
       respond_to do |format|
-        format.js {render action: 'sync_action_success'}
+        format.js {render action: 'sync_study_file'}
       end
     else
-
+      respond_to do |format|
+        format.js {render action: 'sync_action_fail'}
+      end
     end
   end
 
@@ -456,29 +462,47 @@ class StudiesController < ApplicationController
         if @study.cluster_ordinations_files.empty? || @study.expression_matrix_file.nil? || @study.metadata_file.nil?
           @study.update(initialized: false)
         end
-
         respond_to do |format|
           format.js {render action: 'sync_action_success'}
+        end
+      else
+        respond_to do |format|
+          format.js {render action: 'sync_action_fail'}
         end
       end
     end
   end
 
+  # synchronize a directory_listing object
   def sync_directory_listing
     @directory = DirectoryListing.find(directory_listing_params[:_id])
     if @directory.update(directory_listing_params)
       @message = "Directory listing for '#{@directory.name}' successfully synced."
       @form = "#directory-listing-#{@directory.id}"
       respond_to do |format|
-        format.js {render action: 'sync_action_success'}
+        format.js {render action: 'sync_directory_listing'}
+      end
+    else
+      respond_to do |format|
+        format.js {render action: 'sync_action_fail'}
       end
     end
   end
 
+  # delete a directory_listing object
   def delete_directory_listing
-    @directory_listing = DirectoryListing.find(params[:directory_listing_id])
-    @directory_listing.destroy
-    head :ok
+    @directory = DirectoryListing.find(params[:directory_listing_id])
+    @form = "#directory-listing-#{@directory.id}"
+    if @directory.destroy
+      @message = "Directory listing for '#{@directory.name}' successfully unsynced."
+      respond_to do |format|
+        format.js {render action: 'sync_action_success'}
+      end
+    else
+      respond_to do |format|
+        format.js {render action: 'sync_action_fail'}
+      end
+    end
   end
 
   # method to perform chunked uploading of data
@@ -554,7 +578,7 @@ class StudiesController < ApplicationController
     @study = Study.find_by(url_safe_name: params[:study_name])
     # check if user has permission in case someone is phishing
     if current_user.nil? || !@study.can_view?(current_user)
-      redirect_to site_path, alert: 'You do not have permission to perform that action' and return
+      redirect_to site_path, alert: 'You do not have permission to perform that action.' and return
     else
       begin
         filesize = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_workspace, params[:filename]).size

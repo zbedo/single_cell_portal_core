@@ -29,7 +29,7 @@ class Study
       end
     end
 
-    def non_fastq
+    def non_primary_data
       not_in(file_type: 'Fastq').to_a
     end
   end
@@ -72,6 +72,11 @@ class Study
   has_many :directory_listings, dependent: :delete do
     def unsynced
       where(sync_status: false).to_a
+    end
+
+    # can't used 'synced' as this is a built-in ruby method
+    def are_synced
+      where(sync_status: true).to_a
     end
   end
 
@@ -232,8 +237,8 @@ class Study
   end
 
   # return a count of the number of fastq files (stored via directory_listings) for a study
-  def fastq_file_count
-    self.directory_listings.map {|d| d.files.size}.reduce(:+)
+  def primary_data_file_count
+    self.directory_listings.where(sync_status: true).map {|d| d.files.size}.reduce(:+)
   end
 
   # return an array of all single cell names in study

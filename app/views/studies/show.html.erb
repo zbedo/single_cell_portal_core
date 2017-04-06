@@ -157,7 +157,7 @@
 <div class="panel panel-primary" id="study-files-panel">
 	<div class="panel-heading">
 		<div class="panel-title">
-			<h4><%= link_to "Study Files <span class='badge'>#{@study.study_files.size}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#study-files', 'data-toggle' => 'collapse', class: 'white' %></h4>
+			<h4><%= link_to "Study Files <span class='badge' id='study-file-count'>#{@study.study_files.size}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#study-files', 'data-toggle' => 'collapse', class: 'white' %></h4>
 		</div>
 	</div>
 
@@ -174,7 +174,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					<% @study.study_files.non_fastq.sort_by(&:name).each do |study_file| %>
+					<% @study.study_files.non_primary_data.sort_by(&:name).each do |study_file| %>
 						<tr>
 							<td><%= study_file.name %></td>
 							<td><%= study_file.description %></td>
@@ -192,7 +192,7 @@
 <div class="panel panel-warning" id="fastq-files-panel">
   <div class="panel-heading">
     <div class="panel-title">
-      <h4><%= link_to "Primary Data <span class='badge'>#{@study.fastq_file_count}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#fastq-files', 'data-toggle' => 'collapse' %></h4>
+      <h4><%= link_to "Primary Data <span class='badge' id='primary-data-count'>#{@study.primary_data_file_count}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#fastq-files', 'data-toggle' => 'collapse' %></h4>
     </div>
   </div>
 

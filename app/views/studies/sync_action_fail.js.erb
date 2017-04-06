@@ -1,1 +1,5 @@
-$('<%= @form %>').html("<%= escape_javascript(render partial: 'study_file_form', locals: {study_file: @study_file}) %>");
+<% if !@study_file.nil? %>
+  $('<%= @form %>').html("<%= escape_javascript(render partial: 'study_file_form', locals: {study_file: @study_file}) %>");
+<% else %>
+  $('<%= @form %>').html("<%= escape_javascript(render partial: 'directory_listing_form', locals: {directory: @directory}) %>");
+<% end %>
