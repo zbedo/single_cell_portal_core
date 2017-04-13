@@ -5,7 +5,7 @@ class Study
   # prefix for FireCloud workspaces, defaults to blank in production
   WORKSPACE_NAME_PREFIX = Rails.env != 'production' ? Rails.env + '-' : ''
 
-  # instantiate one FireCloud client to avoid creating too many tokens
+  # instantiate one FireCloudClient to avoid creating too many tokens
   @@firecloud_client = FireCloudClient.new
 
   # getter for FireCloudClient instance
