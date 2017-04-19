@@ -340,11 +340,40 @@ class Study
     end
   end
 
+  # transform expression data from db into mtx format
+  def expression_to_mtx
+    puts "Generating MTX file for #{self.name} expression data"
+    puts 'Reading source data'
+    expression_scores = self.expression_scores.to_a
+    score_count = expression_scores.size
+    cell_count = self.cell_count
+    total_values = expression_scores.inject(0) {|total, score| total + score.scores.size}
+    puts 'Creating file and writing headers'
+    output_file = File.new(self.data_store_path.to_s + '/expression_matrix.mtx', 'w+')
+    output_file.write "#{score_count}\t#{cell_count}\t#{total_values}\n"
+    puts 'Headers successfully written'
+    counter = 0
+    expression_scores.each do |entry|
+      gene = entry.gene
+      entry.scores.each do |cell, score|
+        output_file.write "#{gene}\t#{cell}\t#{score}\n"
+      end
+      counter += 1
+      if counter % 1000 == 0
+        puts "#{counter} genes written out of #{score_count}"
+      end
+    end
+    puts 'Finished!'
+    puts "Output file: #{File.absolute_path(output_file)}"
+    output_file.close
+  end
+
   ##
   ## PARSERS
   ##
 
   # method to parse master expression scores file for study and populate collection
+  # this parser assumes the data is a non-sparse square matrix
   def make_expression_scores(expression_file, user, opts={local: true})
     @count = 0
     @message = []

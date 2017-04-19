@@ -428,8 +428,10 @@ class UiTestSuite < Test::Unit::TestCase
 		delete = form.find_element(:class, 'delete-file')
 		delete.click
 		@driver.switch_to.alert.accept
-		# wait a few seconds to allow delete call to propogate all the way to FireCloud
-		sleep(5)
+		# wait a few seconds to allow delete call to propogate all the way to FireCloud after confirmation modal
+		wait_for_render(:id, 'study-file-notices')
+		close_modal('study-file-notices')
+		sleep(3)
 
 		@driver.get path
 		files = @driver.find_element(:id, 'test-study-study-file-count')
@@ -1090,7 +1092,36 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'front-end: search for multiple genes' do
+	test 'front-end: search for multiple genes as consensus' do
+		puts "Test method: #{self.method_name}"
+
+		path = @base_url + '/study/test-study'
+		@driver.get(path)
+		wait_until_page_loads(path)
+
+		# load random genes to search
+		genes = @genes.shuffle.take(1 + rand(@genes.size) + 1)
+		search_box = @driver.find_element(:id, 'search_genes')
+		search_box.send_keys(genes.join(' '))
+		consensus = @driver.find_element(:id, 'search_consensus')
+		consensus.click
+		search_form = @driver.find_element(:id, 'search-genes-form')
+		search_form.submit
+		assert element_present?(:id, 'box-controls'), 'could not find expression boxplot'
+		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
+
+		# wait until box plot renders, at this point all 3 should be done
+		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		box_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+		assert box_rendered, "box plot did not finish rendering, expected true but found #{box_rendered}"
+		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+		puts "Test method: #{self.method_name} successful!"
+	end
+
+	test 'front-end: search for multiple genes as heatmap' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + '/study/test-study'

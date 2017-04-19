@@ -32,7 +32,13 @@
         $('#expression-plots').data('scatter-rendered', false);
         $('#expression-plots').data('reference-rendered', false);
 
-        var url = '<%= params[:gene] ? render_gene_expression_plots_path(study_name: params[:study_name], gene: params[:gene]) : render_gene_set_expression_plots_path(study_name: params[:study_name], gene_set: params[:gene_set]) %>';
+        <% if !params[:gene].nil? %>
+          var url = '<%= render_gene_expression_plots_path(study_name: params[:study_name], gene: params[:gene]) %>';
+        <% elsif !params[:gene_set].nil? %>
+          var url = '<%= render_gene_set_expression_plots_path(study_name: params[:study_name], gene_set: params[:gene_set]) %>';
+        <% else %>
+          var url = '<%= render_gene_set_expression_plots_path(study_name: params[:study_name], search: {genes: @gene_list}) %>';
+        <% end %>
         var target1 = document.getElementById('box-plot');
         var target2 = document.getElementById('scatter-plot');
         var target3 = document.getElementById('reference-plot');
@@ -44,11 +50,12 @@
 
         var cluster = $('#cluster').val();
         var annotation = $('#annotation').val();
+        var consensus = $('#search_consensus').prop('checked') ? '1' : '0';
         $("#search_cluster").val(cluster);
         $("#search_annotation").val(''); // clear value first
         $("#search_annotation").val(annotation);
         var delimeter = "<%= params[:gene] ? "?".html_safe : "&".html_safe %>";
-        $.get(url + delimeter + 'cluster=' + cluster + '&annotation=' + annotation);
+        $.get(url + delimeter + 'cluster=' + cluster + '&annotation=' + annotation + '&consensus=' + consensus);
     }
 
     $(document).ready(function() {

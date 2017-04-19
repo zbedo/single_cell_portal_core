@@ -16,9 +16,13 @@
 						<%= f.autocomplete_field :genes, autocomplete_expression_score_gene_expression_score_index_path(study_id: @study._id), {multiple: true, class: 'form-control search-genes-input', placeholder: 'Search genes...', value: set_search_value, data: {delimiter: ' '}} %>
 					</div>
 					<div class="form-group">
-						<%= f.label :upload, "Or upload a list of genes (one gene per line)" %><br>
+						<%= f.label :upload, "Or upload a list of genes (one gene per line)" %><br/>
 						<%= f.file_field :upload, class: 'form-control' %>
 					</div>
+          <div class="form-group">
+            <%= f.label :consensus, "Consensus measurment <i class='fa fa-question-circle' title='Multiple genes only: Use a metric to view gene expression as a consensus.  Selecting &quot;None&quot; will view genes discretely as a heatmap.' data-toggle='tooltip'></i>".html_safe %><br/>
+            <%= f.select :consensus, options_for_select([['Mean-centered average', 'mean']], params[:consensus]), {include_blank: 'None'}, {class: 'form-control'} %>
+          </div>
 					<%= link_to "<span class='fa fa-ban'></span> Clear Search".html_safe, "javascript:", class: 'btn btn-warning pull-right', id: 'clear-gene-search' %>
 					<%= link_to "<span class='fa fa-search'></span> Search Genes ".html_safe, "javascript:", class: 'btn btn-success', id: 'submit-gene-search' %>
 					<script type="text/javascript">
@@ -71,7 +75,7 @@
 			</div>
 		</div>
 		<hr />
-		<% if action_name =~ /(set|heatmap)/ && action_name !~ /(all|precomputed)/ %>
+		<% if action_name =~ /(set|heatmap)/ && action_name !~ /precomputed/ %>
 			<div class="row">
 				<div class="col-sm-12">
 					<%= label_tag :gene, 'Load single gene-level expression' %><br />

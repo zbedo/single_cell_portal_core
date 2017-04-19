@@ -4,7 +4,7 @@ module ApplicationHelper
 	def set_search_value
 		if params[:search]
 			if params[:search][:gene]
-				@gene.gene
+				@gene
 			elsif !params[:search][:genes].nil?
 				@genes.map(&:gene).join(' ')
 			end
@@ -68,8 +68,8 @@ module ApplicationHelper
 	# construct a dropdown for navigating to single gene-level expression views
 	def load_gene_nav(genes)
 		nav = [['All queried genes', '']]
-		genes.map(&:gene).each do |gene|
-			nav << [gene, view_gene_expression_url(study_name: params[:study_name], gene: gene)]
+		genes.each do |gene|
+			nav << [gene.gene, view_gene_expression_url(study_name: params[:study_name], gene: gene.gene)]
 		end
 		nav
 	end
