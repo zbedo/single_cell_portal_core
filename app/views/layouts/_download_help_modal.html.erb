@@ -7,24 +7,26 @@
         <h2 class="text-center">Download Help</h2>
       </div>
       <div class="modal-body">
-        <p class="lead">To download any individual file, click the download link in the corresponding row.</p>
-        <p class="lead">To download <strong>all</strong> files, run the following command:</p>
+        <p class="lead">To download any individual file, click the download button in the corresponding row.</p>
+        <p class="lead">To download all files using <code>gsutil</code>, run the following command:</p>
         <pre>gsutil -m cp -r gs://<%= @study.bucket_id %> [target path]</pre>
-        <p class="lead">To download all primary data files in a specific folder, use the following commands:</p>
-        <table class="table table-condensed table-striped">
-          <thead>
-          <tr>
-            <th>Folder</th>
-            <th>gsutil command</th>
-          </tr>
-          <% @directories.each do |directory| %>
+        <% if @directories.any? %>
+          <p class="lead">To download all primary data files in a specific folder, use the following commands:</p>
+          <table class="table table-condensed table-striped">
+            <thead>
             <tr>
-              <td><%= directory.name %></td>
-              <td><pre>gsutil -m cp gs://<%= @study.bucket_id %><%= directory.download_display_name %>*.fastq.*<%= %> [target path]</pre></td>
+              <th>Folder</th>
+              <th>gsutil command</th>
             </tr>
-          <% end %>
-          </thead>
-        </table>
+            <% @directories.each do |directory| %>
+              <tr>
+                <td><%= directory.name %></td>
+                <td><pre>gsutil -m cp gs://<%= @study.bucket_id %><%= directory.download_display_name %>*.fastq.*<%= %> [target path]</pre></td>
+              </tr>
+            <% end %>
+            </thead>
+          </table>
+        <% end %>
       </div>
       <div class="modal-footer">
         <button class="close" data-dismiss="modal">×</button>

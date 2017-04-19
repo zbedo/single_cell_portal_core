@@ -1,5 +1,5 @@
 <% if params[:gene] %>
-	<em><%= link_to @gene.gene, "http://www.ncbi.nlm.nih.gov/gene/?term=#{@gene.gene}[sym]", 'data-toggle' => 'tooltip', title: "Search Entrez for '#{@gene.gene}'", 'data-placement' => 'right', target: :_blank %></em>
+	<em><%= link_to params[:gene], "http://www.ncbi.nlm.nih.gov/gene/?term=#{params[:gene]}[sym]", 'data-toggle' => 'tooltip', title: "Search Entrez for '#{params[:gene]}'", 'data-placement' => 'right', target: :_blank %></em>
 <% elsif @main_genes.nil? %>
 	<em><%= @genes.map {|g| link_to g.gene, "http://www.ncbi.nlm.nih.gov/gene/?term=#{g.gene}[sym]", 'data-toggle' => 'tooltip', title: "Search Entrez for '#{g.gene}'", 'data-placement' => 'right', target: :_blank}.join(', ').html_safe %></em>
 <% else %>
