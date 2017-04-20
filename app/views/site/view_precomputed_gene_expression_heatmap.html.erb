@@ -37,7 +37,8 @@
             var newDataPath = '<%= precomputed_results_path(study_name: params[:study_name]) %>';
             var precomputed = $('#expression').val();
             var row_centered = $('#row_centered').prop('checked') ? 1 : 0;
-            newDataPath += '?precomputed=' + precomputed + '&row_centered=' + row_centered;
+            var requestUser = '<%= user_signed_in? ? current_user.id : nil %>';
+            newDataPath += '?precomputed=' + precomputed + '&row_centered=' + row_centered + '&request_user_id=' + requestUser;
 
             // reset status on render call
             $('#heatmap-plot').data('rendered', false);
@@ -46,7 +47,9 @@
     });
 
     $(document).ready(function() {
-        var dataPath = "<%= precomputed_results_path(study_name: params[:study_name], precomputed: params[:precomputed]) %>";
+        var requestUser = '<%= user_signed_in? ? current_user.id : nil %>';
+        var dataPath = "<%= precomputed_results_path(study_name: params[:study_name], precomputed: params[:precomputed]) %>&request_user_id=" + requestUser;
+
         renderMorpheus(dataPath, '', '', '', '#heatmap-plot', 'both');
     });
 

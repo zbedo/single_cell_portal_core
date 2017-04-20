@@ -43,7 +43,8 @@
         $("#search_cluster").val(cluster);
         $('#search_annotation').val(''); // clear value first
         $("#search_annotation").val(selectedAnnot);
-        dataPath += '&cluster=' + cluster;
+        var requestUser = '<%= user_signed_in? ? current_user.id : nil %>';
+        dataPath += '&cluster=' + cluster + '&request_user_id=' + requestUser;
         var newAnnotPath = '<%= annotation_query_path(study_name: params[:study_name]) %>?cluster=' + cluster + '&annotation=' + selectedAnnot;
 
         // reset status on render call
@@ -51,7 +52,8 @@
         renderMorpheus(dataPath, newAnnotPath, annotName, annotType, '#heatmap-plot', 'both');
     }
 
-    var path = '<%= javascript_safe_url(expression_query_path(study_name: params[:study_name], cluster: params[:cluster], search: {genes: @gene_list })) %>';
+    var requestUser = '<%= user_signed_in? ? current_user.id : nil %>';
+    var path = '<%= javascript_safe_url(expression_query_path(study_name: params[:study_name], cluster: params[:cluster], search: {genes: @gene_list })) %>&request_user_id=' + requestUser;
     var annotPath = '<%= annotation_query_path(study_name: params[:study_name], annotation: params[:annotation], cluster: params[:cluster]) %>';
     var selectedAnnotName = '<%= params[:annotation].split('--').first %>';
     var selectedAnnotType = '<%= @selected_annotation[:type] %>';

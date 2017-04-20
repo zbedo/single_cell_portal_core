@@ -6,7 +6,8 @@ class SiteController < ApplicationController
   before_action :load_precomputed_options, except: [:index, :search, :annotation_query, :download_file, :get_fastq_files]
   before_action :set_cluster_group, except: [:index, :search, :precomputed_results, :download_file, :get_fastq_files]
   before_action :set_selected_annotation, except: [:index, :search, :study, :precomputed_results, :expression_query, :get_new_annotations, :download_file, :get_fastq_files]
-  before_action :check_view_permissions, except: [:index, :search]
+  before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query]
+  before_action :check_xhr_view_permissions, only: [:precomputed_results, :expression_query]
   COLORSCALE_THEMES = ['Blackbody', 'Bluered', 'Blues', 'Earth', 'Electric', 'Greens', 'Hot', 'Jet', 'Picnic', 'Portland', 'Rainbow', 'RdBu', 'Reds', 'Viridis', 'YlGnBu', 'YlOrRd']
 
   # view study overviews and downloads
@@ -445,6 +446,15 @@ class SiteController < ApplicationController
     end
   end
 
+  def check_xhr_view_permissions
+    unless @study.public?
+      request_user = User.find(params[:request_user_id])
+      unless !request_user.nil? && @study.can_view?(request_user)
+        head 403
+      end
+    end
+  end
+
 	# SUB METHODS
 
   # generic method to populate data structure to render a cluster scatter plot
@@ -864,10 +874,14 @@ class SiteController < ApplicationController
       range = @cluster.domain_ranges
     else
       # collect all axes from each traces and grab the minmax
-      vals = inputs.map {|v| [v[:x].minmax, v[:y].minmax, v[:z].nil? ? nil : v[:z].minmax]}.flatten.compact.minmax
+      if @cluster.is_3d?
+        @vals = inputs.map {|v| [v[:x].minmax, v[:y].minmax, v[:z].minmax]}.flatten.compact.minmax
+      else
+        @vals = inputs.map {|v| [v[:x].minmax, v[:y].minmax]}.flatten.compact.minmax
+      end
       # add 2% padding to range
-      scope = (vals.first - vals.last) * 0.02
-      raw_range = [vals.first + scope, vals.last - scope]
+      scope = (@vals.first - @vals.last) * 0.02
+      raw_range = [@vals.first + scope, @vals.last - scope]
       range[:x] = raw_range
       range[:y] = raw_range
       range[:z] = raw_range
