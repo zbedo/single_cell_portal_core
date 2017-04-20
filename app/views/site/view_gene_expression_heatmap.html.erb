@@ -39,7 +39,9 @@
         $("#search_cluster").val(cluster);
         $('#search_annotation').val(''); // clear value first
         $("#search_annotation").val(selectedAnnot);
-        dataPath += '&cluster=' + cluster + '&annotation=' + annotName;
+        var requestUser = '<%= user_signed_in? ? current_user.id : nil %>';
+        dataPath += '&cluster=' + cluster + '&annotation=' + annotName + '&request_user_id=' + requestUser;
+
         // call get_annotation_url to load new annotation file url if user has switched from cluster- to study-based or vice versa
         $.getJSON("<%= get_annotation_url_path %>?annotation=" + selectedAnnot + "&cluster=" + cluster, function (data) {
             var newAnnotPath = data.url;
@@ -47,7 +49,8 @@
         } );
     }
 
-    var path = '<%= javascript_safe_url(expression_query_path(study_name: params[:study_name], search: {genes: params[:search][:genes] })) %>';
+    var requestUser = '<%= user_signed_in? ? current_user.id : nil %>';
+    var path = '<%= javascript_safe_url(expression_query_path(study_name: params[:study_name], search: {genes: params[:search][:genes] })) %>&request_user_id=' + requestUser;
     if ( '<%= params[:cluster] %>' != '' ) {
         path += '&cluster=<%= params[:cluster ]%>';
     };

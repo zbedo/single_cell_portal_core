@@ -263,6 +263,10 @@ html, body {
   padding-bottom: 25px;
 }
 
+#heatmap-plot li.active {
+  display: none;
+}
+
 .delete-btn {
   position: relative;
 }
