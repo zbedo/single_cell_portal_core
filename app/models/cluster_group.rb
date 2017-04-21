@@ -34,6 +34,13 @@ class ClusterGroup
 		all_values
 	end
 
+	# subsample data array by a variable amount to speed up visualization (or show larger groups of cells/points)
+	# can supply a random seed to change sort order
+	def subsample_data_arrays(array_name, array_type, sample_threshold, seed=1)
+		values = self.concatenate_data_arrays(array_name, array_type)
+		values.shuffle(random: Random.new(seed)).take(sample_threshold)
+	end
+
 	# return number of points in cluster_group, use x axis as all cluster_groups must have either x or y
 	def points
 		self.concatenate_data_arrays('x', 'coordinates').count

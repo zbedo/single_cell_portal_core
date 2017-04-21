@@ -4,8 +4,10 @@ var expressionData = [];
 	var cluster_<%= index %>_exp = {
 		y: <%= raw data[:y] %>,
 		name: "<%= data[:name] %>",
-		<% if params[:boxpoints].blank? %>
+		<% if params[:boxpoints].nil? %>
 			boxpoints: 'all',
+    <% elsif params[:boxpoints].blank? %>
+      boxpoints: false,
 		<% else %>
 			boxpoints: "<%= params[:boxpoints] %>",
 		<% end %>

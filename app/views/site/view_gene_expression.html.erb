@@ -51,11 +51,13 @@
         var cluster = $('#cluster').val();
         var annotation = $('#annotation').val();
         var consensus = $('#search_consensus').prop('checked') ? '1' : '0';
+        var subsample = $('#subsample').val();
+        var boxpoints = $('#boxpoints_select').val() == undefined ? 'all' : $('#boxpoints_select').val();
         $("#search_cluster").val(cluster);
         $("#search_annotation").val(''); // clear value first
         $("#search_annotation").val(annotation);
         var delimeter = "<%= params[:gene] ? "?".html_safe : "&".html_safe %>";
-        $.get(url + delimeter + 'cluster=' + cluster + '&annotation=' + annotation + '&consensus=' + consensus);
+        $.get(url + delimeter + 'cluster=' + cluster + '&annotation=' + annotation + '&boxpoints=' + boxpoints + '&consensus=' + consensus + '&subsample=' + subsample);
     }
 
     $(document).ready(function() {
@@ -70,6 +72,12 @@
         $('#search_annotation').val(val);
         $('#gene_set_annotation').val(val);
 
+        renderGeneExpressionPlots();
+    });
+
+    $('#subsample').change(function() {
+        var sample = $(this).val();
+        $('#search_subsample').val(sample);
         renderGeneExpressionPlots();
     });
 

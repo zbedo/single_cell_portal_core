@@ -112,9 +112,10 @@
           $('#cluster-plot').data('spinner', spinner);
           var cluster = $('#cluster').val();
           var annotation = $('#annotation').val();
+          var subsample = $('#subsample').val();
 
           $('#cluster-plot').data('rendered', false);
-          $.get(url + '?cluster=' + cluster + '&annotation=' + annotation);
+          $.get(url + '?cluster=' + cluster + '&annotation=' + annotation + '&subsample=' + subsample);
       }
 
       $(document).ready(function() {
@@ -128,6 +129,12 @@
           // keep track for search purposes
           $('#search_annotation').val(an);
           $('#gene_set_annotation').val(an);
+          renderScatter();
+      });
+
+      $('#subsample').change(function() {
+          var sample = $(this).val();
+          $('#search_subsample').val(sample);
           renderScatter();
       });
 
