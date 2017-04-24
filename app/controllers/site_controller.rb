@@ -8,12 +8,10 @@ class SiteController < ApplicationController
   before_action :set_selected_annotation, except: [:index, :search, :study, :precomputed_results, :expression_query, :get_new_annotations, :download_file, :get_fastq_files]
   before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query]
   before_action :check_xhr_view_permissions, only: [:precomputed_results, :expression_query]
-  COLORSCALE_THEMES = ['Blackbody', 'Bluered', 'Blues', 'Earth', 'Electric', 'Greens', 'Hot', 'Jet', 'Picnic', 'Portland', 'Rainbow', 'RdBu', 'Reds', 'Viridis', 'YlGnBu', 'YlOrRd']
+  COLORSCALE_THEMES = %w(Blackbody Bluered Blues Earth Electric Greens Hot Jet Picnic Portland Rainbow RdBu Reds Viridis YlGnBu YlOrRd)
 
   # view study overviews and downloads
   def index
-    @study_count = Study.count
-    @cell_count = Study.all.map(&:cell_count).inject(&:+)
     # set study order
     case params[:order]
       when 'recent'
@@ -37,12 +35,16 @@ class SiteController < ApplicationController
     else
       @studies = @viewable.paginate(page: params[:page], per_page: Study.per_page)
     end
+
+    # determine study/cell count based on viewable to user
+    @study_count = @viewable.count
+    @cell_count = @viewable.map(&:cell_count).inject(&:+)
   end
 
   # search for matching studies
   def search
     # use built-in MongoDB text index (supports quoting terms & case sensitivity)
-    @studies = Study.where({:$text => {:$search => params[:search_terms]}})
+    @studies = Study.where({'$text' => {'$search' => params[:search_terms]}})
     render 'index'
   end
 
