@@ -22,7 +22,12 @@ class Study
   has_many :single_cells, dependent: :delete
   has_many :expression_scores, dependent: :delete do
     def by_gene(gene)
-      where(gene: /#{gene}/i).to_a
+      # to prevent huge lists of matches, only go for exact matches less than 2 characters
+      if gene.size <= 2
+        any_of({gene: gene}, {gene: gene.downcase}, {gene: gene.upcase}).to_a
+      else
+        where(gene: /#{gene}/i).to_a
+      end
     end
   end
 
@@ -364,7 +369,6 @@ class Study
         end
       end
       Rails.logger.info "Creating last #{@records.size} expression scores from #{expression_file.name} for #{self.name}"
-      Rails.logger.info "#{@records}"
       ExpressionScore.create!(@records)
       # create array of all cells for study
       @cell_data_array = self.data_arrays.build(name: 'All Cells', array_type: 'cells', array_index: 1, study_file_id: expression_file._id)

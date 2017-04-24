@@ -718,7 +718,7 @@ class SiteController < ApplicationController
     terms.each do |term|
       matches = @study.expression_scores.by_gene(term)
       unless matches.empty?
-        matches.map {|gene| genes << gene}
+        genes << load_best_gene_match(matches, term)
       end
     end
     genes
@@ -731,7 +731,7 @@ class SiteController < ApplicationController
     terms.each do |term|
       matches = @study.expression_scores.by_gene(term)
       unless matches.empty?
-        matches.map {|gene| genes << gene}
+        genes << load_best_gene_match(matches, term)
       else
         not_found << term
       end
@@ -744,6 +744,13 @@ class SiteController < ApplicationController
     # iterate through all matches to see if there is an exact match
     matches.each do |match|
       if match.gene == search_term
+        return match
+      end
+    end
+    # go through a second time to see if there is a case-insensitive match
+    # this is done after a complete iteration to ensure that there wasn't an exact match available
+    matches.each do |match|
+      if match.gene.downcase == search_term.downcase
         return match
       end
     end
