@@ -36,7 +36,12 @@ class Study
 
   has_many :expression_scores, dependent: :delete do
     def by_gene(gene)
-      where(gene: /#{gene}/i).to_a
+      # to prevent huge lists of matches, only go for exact matches less than 2 characters
+      if gene.size <= 2
+        any_of({gene: gene}, {gene: gene.downcase}, {gene: gene.upcase}).to_a
+      else
+        where(gene: /#{gene}/i).to_a
+      end
     end
   end
 
