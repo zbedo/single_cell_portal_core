@@ -850,6 +850,13 @@ class SiteController < ApplicationController
         return match
       end
     end
+    # go through a second time to see if there is a case-insensitive match
+    # this is done after a complete iteration to ensure that there wasn't an exact match available
+    matches.each do |match|
+      if match.gene.downcase == search_term.downcase
+        return match
+      end
+    end
     # did not find an exact match, so just return the first one
     matches.first
   end
