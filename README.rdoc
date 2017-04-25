@@ -127,7 +127,7 @@ minumum requirements are as follows:
 * Chromedriver
 * FireCloud accounts for both Google accounts used above
 
-To launch the test suite, run the following command in the portal root directory:
+To begin the test suite, launch an instance of the portal and run the following command in the portal root directory:
 
   ruby test/ui_test_suite.rb -- -e=(email account #1) -s=(email account #2)
 
