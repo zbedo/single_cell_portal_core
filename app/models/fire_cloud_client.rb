@@ -101,7 +101,11 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 				# handle response codes as necessary
 				if self.ok?(@obj.code) && !@obj.body.blank?
 					@retry_count = 0
-					return JSON.parse(@obj.body)
+					begin
+						return JSON.parse(@obj.body)
+					rescue JSON::ParserError => e
+						return @obj.body
+					end
 				elsif self.ok?(@obj.code) && @obj.body.blank?
 					@retry_count = 0
 					return true
@@ -120,6 +124,19 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 			@retry_count = 0
 			Rails.logger.error "#{Time.now}: Retry count exceeded - #{@error}"
 			raise RuntimeError.new("Retry count exceeded - #{@error}")
+		end
+	end
+
+	# determine if FireCloud api is currently up/available
+	#
+	# return: boolean indication of FireCloud current status
+	def api_available?
+		path = self.api_root + '/health'
+		begin
+			process_firecloud_request(:get, path)
+			true
+		rescue RuntimeError => e
+			false
 		end
 	end
 
