@@ -9,7 +9,7 @@ class AdminConfigurationsController < ApplicationController
   # GET /admin_configurations.json
   def index
     @admin_configurations = AdminConfiguration.not_in(config_type: AdminConfiguration::GLOBAL_DOWNLOAD_STATUS_NAME)
-    status_config = AdminConfiguration.find_by(config_type: AdminConfiguration::GLOBAL_DOWNLOAD_STATUS_NAME)
+    status_config = AdminConfiguration.download_status_config
     if status_config.nil? || (!status_config.nil? && status_config.value == 'on')
       @download_status = true
       @download_status_label = "<span class='label label-success'><i class='fa fa-check'></i> Enabled</span>".html_safe
@@ -75,22 +75,28 @@ class AdminConfigurationsController < ApplicationController
   # disable/enable all downloads by revoking workspace ACLs
   def manage_data_downloads
     @config = AdminConfiguration.find_or_create_by(config_type: AdminConfiguration::GLOBAL_DOWNLOAD_STATUS_NAME)
-    status = params[:status]
+    # make sure that the value type has been set if just created
+    @config.value_type ||= 'String'
+    status = params[:status].downcase
     begin
       case status
         when 'on'
           AdminConfiguration.enable_all_downloads
+          @config.update(value: status)
+          redirect_to admin_configurations_path, alert: "Data downloads setting recorded successfully as 'on'."
         when 'off'
           AdminConfiguration.disable_all_downloads
+          @config.update(value: status)
+          redirect_to admin_configurations_path, alert: "Data downloads setting recorded successfully as 'off'.  User study access & downloads are now disabled."
         else
+          # do nothing, protect against bad status parameters
           nil
+          redirect_to admin_configuration_path, alert: 'Invalid configuration option; ignored.'
       end
     rescue RuntimeError => e
       logger.error "#{Time.now}: error in setting download status to #{status}; #{e.message}"
       redirect_to admin_configuration_path, alert: "An error occured while turing #{status} downloads: #{e.message}" and return
     end
-    @config.update(value: params[:status])
-    redirect_to admin_configurations_path, alert: 'Data downloads setting recorded successfully.'
   end
 
   # reset user download quotas ahead of daily reset

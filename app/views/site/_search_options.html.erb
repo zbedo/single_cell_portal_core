@@ -21,8 +21,8 @@
 						<%= f.file_field :upload, class: 'form-control' %>
 					</div>
           <div class="form-group">
-            <%= f.label :consensus, "Consensus measurment <i class='fa fa-question-circle' title='Multiple genes only: Use a metric to view gene expression as a consensus.  Selecting &quot;None&quot; will view genes discretely as a heatmap.' data-toggle='tooltip'></i>".html_safe %><br/>
-            <%= f.select :consensus, options_for_select([['Mean-centered average', 'mean']], params[:consensus]), {include_blank: 'None'}, {class: 'form-control'} %>
+            <%= f.label :consensus, "Collapse Genes by <i class='fa fa-question-circle' title='Multiple genes only: Collapse expression scores of multiple genes for each cell using this metric.  Selecting &quot;None&quot; will view genes individually as a heatmap.' data-toggle='tooltip'></i>".html_safe %><br/>
+            <%= f.select :consensus, options_for_select([['Mean', 'mean'],['Median', 'median']], params[:consensus]), {include_blank: 'None'}, {class: 'form-control'} %>
           </div>
 					<%= link_to "<span class='fa fa-ban'></span> Clear Search".html_safe, "javascript:", class: 'btn btn-warning pull-right', id: 'clear-gene-search' %>
 					<%= link_to "<span class='fa fa-search'></span> Search Genes ".html_safe, "javascript:", class: 'btn btn-success', id: 'submit-gene-search' %>
@@ -54,7 +54,7 @@
 		<div class="row">
 			<div class="col-sm-12">
 				<%= form_tag(view_gene_set_expression_path(study_name: params[:study_name]), id: 'gene-sets', method: :get) do %>
-					<%= label_tag :gene_set, 'View curated gene lists as mean-centered expression (box & scatter plots)' %>
+					<%= label_tag :gene_set, 'View curated gene lists as mean expression (box & scatter plots)' %>
 					<%= select_tag :gene_set, options_for_select(@precomputed, params[:gene_set]), {include_blank: 'Please select a gene list', class: 'form-control'} %>
           <%= hidden_field_tag :gene_set_cluster %>
           <%= hidden_field_tag :gene_set_annotation %>

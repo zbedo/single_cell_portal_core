@@ -2,7 +2,7 @@
 	<div class="col-md-12">
 		<h1 class="study-lead">Gene<%= action_name =~ /set/ ? ' Set' : nil %> Expression for <%= render partial: 'gene_name_list' %><%= render partial: 'missing_genes' %></h1>
 		<% if action_name =~ /set/ %>
-			<h3 class="help-block lead">Expression scores are shown as a mean-centered average across all genes for each cell.</h3>
+			<h3 class="help-block lead">Expression values are shown as the <strong><%= params[:consensus].nil? ? 'mean' : params[:consensus] %></strong> of expression values across all genes for each cell.</h3>
 		<% end %>
 	</div>
 </div>
@@ -50,7 +50,7 @@
 
         var cluster = $('#cluster').val();
         var annotation = $('#annotation').val();
-        var consensus = $('#search_consensus').prop('checked') ? '1' : '0';
+        var consensus = $('#search_consensus').val();
         var subsample = $('#subsample').val();
         var boxpoints = $('#boxpoints_select').val() == undefined ? 'all' : $('#boxpoints_select').val();
         $("#search_cluster").val(cluster);

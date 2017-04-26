@@ -36,12 +36,7 @@ class Study
 
   has_many :expression_scores, dependent: :delete do
     def by_gene(gene)
-      # to prevent huge lists of matches, only go for exact matches less than 2 characters
-      if gene.size <= 2
-        any_of({gene: gene}, {gene: gene.downcase}, {gene: gene.upcase}).to_a
-      else
-        where(gene: /#{gene}/i).to_a
-      end
+      any_of({gene: gene}, {searchable_gene: gene.downcase}).to_a
     end
   end
 
@@ -480,7 +475,7 @@ class Study
           end
         end
         # create expression score object
-        @records << {gene: gene_name, scores: significant_scores, study_id: study_id, study_file_id: expression_file._id}
+        @records << {gene: gene_name, searchable_gene: gene_name.downcase, scores: significant_scores, study_id: study_id, study_file_id: expression_file._id}
         @count += 1
         if @count % 1000 == 0
           ExpressionScore.create(@records)

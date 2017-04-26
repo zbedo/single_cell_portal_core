@@ -869,6 +869,14 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get firecloud_url
 		assert !element_present?(:class, 'fa-check-circle'), 'did not revoke access - study workspace still loads'
 
+		# test that study admin access is disabled
+		# go to homepage first to set referrer
+		@driver.get @base_url
+		studies_path = @base_url + '/studies'
+		@driver.get studies_path
+		assert element_present?(:id, 'message_modal'), 'did not show alert'
+		assert @driver.current_url == @base_url, 'did not redirect to home page'
+
 		# now restore access
 		@driver.get path
 		panic_modal_link = @driver.find_element(:id, 'show-enable-panic-modal')
@@ -882,6 +890,11 @@ class UiTestSuite < Test::Unit::TestCase
 		# assert access is restored
 		@driver.get firecloud_url
 		assert element_present?(:class, 'fa-check-circle'), 'did not restore access - study workspace does not load'
+
+		# assert study access is restored
+		@driver.get studies_path
+		assert element_present?(:id, 'studies'), 'did not find studies table'
+		assert @driver.current_url == studies_path, 'did not load studies path correctly'
 
 		puts "Test method: #{self.method_name} successful!"
 	end
@@ -1133,6 +1146,10 @@ class UiTestSuite < Test::Unit::TestCase
 		assert element_present?(:id, 'box-controls'), 'could not find expression boxplot'
 		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
 
+		# confirm queried gene is the one returned
+		queried_gene = @driver.find_element(:class, 'queried-gene')
+		assert queried_gene.text == gene, "did not load the correct gene, expected #{gene} but found #{queried_gene.text}"
+
 		# wait until box plot renders, at this point all 3 should be done
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
 		box_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
@@ -1158,6 +1175,10 @@ class UiTestSuite < Test::Unit::TestCase
 		search_form.submit
 		assert element_present?(:id, 'box-controls'), 'could not find expression boxplot'
 		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
+
+		# confirm queried gene is the one returned
+		new_queried_gene = @driver.find_element(:class, 'queried-gene')
+		assert new_queried_gene.text == new_gene, "did not load the correct gene, expected #{new_gene} but found #{new_queried_gene.text}"
 
 		# wait until box plot renders, at this point all 3 should be done
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
@@ -1189,6 +1210,10 @@ class UiTestSuite < Test::Unit::TestCase
 		assert element_present?(:id, 'box-controls'), 'could not find expression boxplot'
 		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
 
+		# confirm queried genes are correct
+		queried_genes = @driver.find_elements(:class, 'queried-gene').map(&:text)
+		assert genes.sort == queried_genes.sort, "found incorrect genes, expected #{genes.sort} but found #{queried_genes.sort}"
+
 		# wait until box plot renders, at this point all 3 should be done
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
 		box_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
@@ -1216,6 +1241,10 @@ class UiTestSuite < Test::Unit::TestCase
 		search_form.submit
 		assert element_present?(:id, 'box-controls'), 'could not find expression boxplot'
 		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
+
+		# confirm queried genes are correct
+		new_queried_genes = @driver.find_elements(:class, 'queried-gene').map(&:text)
+		assert new_genes.sort == new_queried_genes.sort, "found incorrect genes, expected #{new_genes.sort} but found #{new_queried_genes.sort}"
 
 		# wait until box plot renders, at this point all 3 should be done
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
@@ -1246,6 +1275,10 @@ class UiTestSuite < Test::Unit::TestCase
 		rendered = @driver.execute_script("return $('#heatmap-plot').data('rendered')")
 		assert rendered, "heatmap plot did not finish rendering, expected true but found #{rendered}"
 
+		# confirm queried genes are correct
+		queried_genes = @driver.find_elements(:class, 'queried-gene').map(&:text)
+		assert genes.sort == queried_genes.sort, "found incorrect genes, expected #{genes.sort} but found #{queried_genes.sort}"
+
 		# now test private study
 		login_path = @base_url + '/users/sign_in'
 		@driver.get login_path
@@ -1264,6 +1297,10 @@ class UiTestSuite < Test::Unit::TestCase
 		@wait.until {wait_for_plotly_render('#heatmap-plot', 'rendered')}
 		private_rendered = @driver.execute_script("return $('#heatmap-plot').data('rendered')")
 		assert private_rendered, "private heatmap plot did not finish rendering, expected true but found #{private_rendered}"
+
+		# confirm queried genes are correct
+		new_queried_genes = @driver.find_elements(:class, 'queried-gene').map(&:text)
+		assert new_genes.sort == new_queried_genes.sort, "found incorrect genes, expected #{new_genes.sort} but found #{new_queried_genes.sort}"
 
 		puts "Test method: #{self.method_name} successful!"
 	end

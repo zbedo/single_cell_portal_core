@@ -2,7 +2,10 @@ class StudiesController < ApplicationController
   before_action :set_study, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
   before_action :set_file_types, only: [:sync_study, :sync_study_file, :sync_orphaned_study_file]
   before_filter :check_edit_permissions, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
-  before_filter :authenticate_user!
+  before_filter do
+    authenticate_user!
+    check_access_settings
+  end
 
   # GET /studies
   # GET /studies.json

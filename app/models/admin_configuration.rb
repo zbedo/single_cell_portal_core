@@ -10,7 +10,6 @@ class AdminConfiguration
   validate :validate_value_by_type
 
   GLOBAL_DOWNLOAD_STATUS_NAME = 'Global Data Download Status'
-  BOOLEAN_VALS = %w(1 yes y on true enabled)
   NUMERIC_VALS = %w(byte kilobyte megabyte terabyte petabyte exabyte)
 
   # really only used for IDs in the table...
@@ -24,6 +23,10 @@ class AdminConfiguration
 
   def self.value_types
     ['Numeric', 'Boolean', 'String']
+  end
+
+  def self.download_status_config
+    AdminConfiguration.find_by(config_type: AdminConfiguration::GLOBAL_DOWNLOAD_STATUS_NAME)
   end
 
   # display value formatted by type
@@ -113,9 +116,11 @@ class AdminConfiguration
   def validate_value_by_type
     case self.value_type
       when 'Numeric'
-
-      when 'Boolean'
+        unless self.value.to_f >= 0
+          errors.add(:value, 'must be greater than or equal to zero.  Please enter another value.')
+        end
       else
+        # for booleans, we use a select box so values are constrained.  for strings, any value is valid
         return true
     end
   end

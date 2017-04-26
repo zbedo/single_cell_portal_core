@@ -198,9 +198,9 @@ class SiteController < ApplicationController
         matches.map {|gene| @genes << gene}
       end
     end
-
+    consensus = params[:consensus].nil? ? 'Mean ' : params[:consensus].capitalize + ' '
     @gene_list = @genes.map(&:gene).join(' ')
-    @y_axis_title = 'Mean ' + @study.expression_matrix_file.y_axis_label
+    @y_axis_title = consensus + @study.expression_matrix_file.y_axis_label
     # depending on annotation type selection, set up necessary partial names to use in rendering
 		@options = load_cluster_group_options
 		@cluster_annotations = load_cluster_group_annotations
@@ -229,7 +229,9 @@ class SiteController < ApplicationController
       end
     end
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
-    @y_axis_title = 'Mean ' + @study.expression_matrix_file.y_axis_label
+    consensus = params[:consensus].nil? ? 'Mean ' : params[:consensus].capitalize + ' '
+    @gene_list = @genes.map(&:gene).join(' ')
+    @y_axis_title = consensus + @study.expression_matrix_file.y_axis_label
     # depending on annotation type selection, set up necessary partial names to use in rendering
     if @selected_annotation[:type] == 'group'
       @values = load_gene_set_expression_boxplot_scores(@selected_annotation, params[:consensus], subsample)
@@ -617,6 +619,8 @@ class SiteController < ApplicationController
       case consensus
         when 'mean'
           expression_value = calculate_mean(@genes, cell)
+        when 'median'
+          expression_value = calculate_median(@genes, cell)
         else
           expression_value = calculate_mean(@genes, cell)
       end
@@ -714,6 +718,8 @@ class SiteController < ApplicationController
         case consensus
           when 'mean'
             values[annotations[index]][:y] << calculate_mean(@genes, cell)
+          when 'median'
+            values[annotations[index]][:y] << calculate_median(@genes, cell)
           else
             values[annotations[index]][:y] << calculate_mean(@genes, cell)
         end
@@ -728,6 +734,8 @@ class SiteController < ApplicationController
           case consensus
             when 'mean'
               values[annotations[cell]][:y] << calculate_mean(@genes, cell)
+            when 'median'
+              values[annotations[cell]][:y] << calculate_median(@genes, cell)
             else
               values[annotations[cell]][:y] << calculate_mean(@genes, cell)
           end
@@ -769,6 +777,8 @@ class SiteController < ApplicationController
       case consensus
         when 'mean'
           expression_score = calculate_mean(@genes, cell)
+        when 'median'
+          expression_score = calculate_median(@genes, cell)
         else
           expression_score = calculate_mean(@genes, cell)
       end
@@ -796,13 +806,24 @@ class SiteController < ApplicationController
     values
   end
 
-  # find mean of expression scores for a given cell
+  # find mean of expression scores for a given cell & list of genes
   def calculate_mean(genes, cell)
     sum = 0.0
     genes.each do |gene|
       sum += gene.scores[cell].to_f
     end
     sum / genes.size
+  end
+
+  # find median expression score for a given cell & list of genes
+  def calculate_median(genes, cell)
+    gene_scores = []
+    genes.each do |gene|
+      gene_scores << gene.scores[cell].to_f
+    end
+    sorted = gene_scores.sort
+    len = sorted.length
+    (sorted[(len - 1) / 2] + sorted[len / 2]) / 2.0
   end
 
   # generic search term parser
@@ -857,8 +878,6 @@ class SiteController < ApplicationController
         return match
       end
     end
-    # did not find an exact match, so just return the first one
-    matches.first
   end
 
   # helper method to load all possible cluster groups for a study

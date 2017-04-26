@@ -16,9 +16,13 @@
 	<script type="text/javascript">
 		$("#message_modal").modal("show");
 
-		setTimeout(function() {
-			$("#message_modal").modal("hide");
-		}, 3000);
+		// don't timeout alert messages
+		if (<%= alert.nil? %>) {
+        setTimeout(function() {
+            $("#message_modal").modal("hide");
+        }, 3000);
+    }
+
 	</script>
 
 <% end %>
