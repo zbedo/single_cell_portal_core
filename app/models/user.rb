@@ -34,6 +34,9 @@ class User
   field :uid,       type: String
   field :provider,  type: String
 
+  # token auth for AJAX calls
+  field :authentication_token
+
   ## Confirmable
   # field :confirmation_token,   type: String
   # field :confirmed_at,         type: Time

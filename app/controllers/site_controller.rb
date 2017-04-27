@@ -7,7 +7,6 @@ class SiteController < ApplicationController
   before_action :set_cluster_group, except: [:index, :search, :view_all_gene_expression_heatmap, :precomputed_results]
   before_action :set_selected_annotation, except: [:index, :search, :study, :precomputed_results, :get_new_annotations]
   before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query]
-  before_action :check_xhr_view_permissions, only: [:precomputed_results, :expression_query]
   COLORSCALE_THEMES = ['Blackbody', 'Bluered', 'Blues', 'Earth', 'Electric', 'Greens', 'Hot', 'Jet', 'Picnic', 'Portland', 'Rainbow', 'RdBu', 'Reds', 'Viridis', 'YlGnBu', 'YlOrRd']
 
   # view study overviews and downloads
@@ -243,32 +242,36 @@ class SiteController < ApplicationController
 
   # load data in gct form to render in Morpheus, preserving query order
   def expression_query
-    terms = parse_search_terms(:genes)
-    @genes = load_expression_scores(terms)
-    @headers = ["Name", "Description"]
-    @cells = @cluster.concatenate_data_arrays('text', 'cells')
-    @cols = @cells.size
-    @cells.each do |cell|
-      @headers << cell
-    end
-
-    @rows = []
-    @genes.each do |gene|
-      row = [gene.gene, ""]
-      # calculate mean to perform row centering if requested
-      mean = 0.0
-      if params[:row_centered] == '1'
-        mean = gene.mean(@cells)
-      end
+    if check_xhr_view_permissions
+      terms = parse_search_terms(:genes)
+      @genes = load_expression_scores(terms)
+      @headers = ["Name", "Description"]
+      @cells = @cluster.concatenate_data_arrays('text', 'cells')
+      @cols = @cells.size
       @cells.each do |cell|
-        row << gene.scores[cell].to_f - mean
+        @headers << cell
       end
 
-      @rows << row.join("\t")
-    end
-    @data = ['#1.2', [@rows.size, @cols].join("\t"), @headers.join("\t"), @rows.join("\n")].join("\n")
+      @rows = []
+      @genes.each do |gene|
+        row = [gene.gene, ""]
+        # calculate mean to perform row centering if requested
+        mean = 0.0
+        if params[:row_centered] == '1'
+          mean = gene.mean(@cells)
+        end
+        @cells.each do |cell|
+          row << gene.scores[cell].to_f - mean
+        end
 
-    send_data @data, type: 'text/plain'
+        @rows << row.join("\t")
+      end
+      @data = ['#1.2', [@rows.size, @cols].join("\t"), @headers.join("\t"), @rows.join("\n")].join("\n")
+
+      send_data @data, type: 'text/plain'
+    else
+      head 403
+    end
   end
 
   # dynamically return a URL to a file based on annotation type (cluster- or study-based)
@@ -289,29 +292,33 @@ class SiteController < ApplicationController
 
   # load precomputed data in gct form to render in Morpheus
   def precomputed_results
-    @precomputed_score = @study.precomputed_scores.by_name(params[:precomputed])
+    if check_xhr_view_permissions
+      @precomputed_score = @study.precomputed_scores.by_name(params[:precomputed])
 
-    @headers = ["Name", "Description"]
-    @precomputed_score.clusters.each do |cluster|
-      @headers << cluster
-    end
-    @rows = []
-    @precomputed_score.gene_scores.each do |score_row|
-      score_row.each do |gene, scores|
-        row = [gene, ""]
-        mean = 0.0
-        if params[:row_centered] == '1'
-          mean = scores.values.inject(0) {|sum, x| sum += x} / scores.values.size
-        end
-        @precomputed_score.clusters.each do |cluster|
-          row << scores[cluster].to_f - mean
-        end
-        @rows << row.join("\t")
+      @headers = ["Name", "Description"]
+      @precomputed_score.clusters.each do |cluster|
+        @headers << cluster
       end
-    end
-    @data = ['#1.2', [@rows.size, @precomputed_score.clusters.size].join("\t"), @headers.join("\t"), @rows.join("\n")].join("\n")
+      @rows = []
+      @precomputed_score.gene_scores.each do |score_row|
+        score_row.each do |gene, scores|
+          row = [gene, ""]
+          mean = 0.0
+          if params[:row_centered] == '1'
+            mean = scores.values.inject(0) {|sum, x| sum += x} / scores.values.size
+          end
+          @precomputed_score.clusters.each do |cluster|
+            row << scores[cluster].to_f - mean
+          end
+          @rows << row.join("\t")
+        end
+      end
+      @data = ['#1.2', [@rows.size, @precomputed_score.clusters.size].join("\t"), @headers.join("\t"), @rows.join("\n")].join("\n")
 
-    send_data @data, type: 'text/plain', filename: 'query.gct'
+      send_data @data, type: 'text/plain', filename: 'query.gct'
+    else
+      head 403
+    end
   end
 
   # view all genes as heatmap in morpheus, will pull from pre-computed gct file
@@ -376,12 +383,21 @@ class SiteController < ApplicationController
     end
   end
 
+  # check permissions manually on AJAX call via authentication token
   def check_xhr_view_permissions
     unless @study.public?
-      request_user = User.find(params[:request_user_id])
-      unless !request_user.nil? && @study.can_view?(request_user)
-        head 403
+      if params[:request_user_token].nil?
+        return false
+      else
+        request_user_id, auth_token = params[:request_user_token].split(':')
+        request_user = User.find_by(id: request_user_id, authentication_token: auth_token)
+        unless !request_user.nil? && @study.can_view?(request_user)
+          return false
+        end
       end
+      return true
+    else
+      return true
     end
   end
 
