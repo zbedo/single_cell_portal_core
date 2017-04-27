@@ -19,7 +19,9 @@
 	</div>
 	<div id="files" class="panel-collapse collapse">
 		<div class="panel-body">
-      <%= render partial: 'layouts/download_help_modal', locals: {study: @study, directories: @directories} %>
+      <% if @allow_downloads %>
+        <%= render partial: 'layouts/download_help_modal', locals: {study: @study, directories: @directories} %>
+      <% end %>
       <h2>Study Files <span class="badge"><%= @study_files.count %></span></h2>
 			<div class="table-responsive">
 				<table class="table table-striped table-condensed">
@@ -39,7 +41,11 @@
 								<% if @study.embargoed?(current_user) %>
 									<span class="label label-warning"><i class="fa fa-ban"></i> Not available until <%= @study.embargo.to_s(:long) %></span>
 								<% else %>
-									<%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %>
+                  <% if @allow_downloads %>
+  									<%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %>
+                  <% else %>
+                    <%= button_to 'Currently Unavailable', 'javascript:;', class: 'btn btn-danger', disabled: true %>
+                  <% end %>
 								<% end %>
 							</td>
 						</tr>

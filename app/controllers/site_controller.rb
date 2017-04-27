@@ -7,7 +7,7 @@ class SiteController < ApplicationController
   before_action :set_cluster_group, except: [:index, :search, :precomputed_results, :download_file, :get_fastq_files]
   before_action :set_selected_annotation, except: [:index, :search, :study, :precomputed_results, :expression_query, :get_new_annotations, :download_file, :get_fastq_files]
   before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query]
-  before_action :check_xhr_view_permissions, only: [:precomputed_results, :expression_query]
+
   COLORSCALE_THEMES = %w(Blackbody Bluered Blues Earth Electric Greens Hot Jet Picnic Portland Rainbow RdBu Reds Viridis YlGnBu YlOrRd)
 
   # view study overviews and downloads
@@ -53,7 +53,11 @@ class SiteController < ApplicationController
     @study.update(view_count: @study.view_count + 1)
     @study_files = @study.study_files.non_primary_data.sort_by(&:name)
     @directories = @study.directory_listings.are_synced
-    # parse all coordinates out into hash using generic method
+
+    # check if FireCloud is available and disable download links if necessary
+    @allow_downloads = Study.firecloud_client.api_available?
+
+    # load options and annotations
     if @study.initialized?
       @options = load_cluster_group_options
       @cluster_annotations = load_cluster_group_annotations
@@ -85,6 +89,11 @@ class SiteController < ApplicationController
   def download_file
     if !user_signed_in?
       redirect_to view_study_path(@study.url_safe_name), alert: 'You must be signed in to download data.' and return
+    end
+
+    # check if FireCloud is unavailable and abort if so
+    if !Study.firecloud_client.api_available?
+      head 503 and return
     end
 
     # get filesize and make sure the user is under their quota
@@ -287,32 +296,36 @@ class SiteController < ApplicationController
 
   # load data in gct form to render in Morpheus, preserving query order
   def expression_query
-    terms = parse_search_terms(:genes)
-    @genes = load_expression_scores(terms)
-    @headers = ["Name", "Description"]
-    @cells = @cluster.concatenate_data_arrays('text', 'cells')
-    @cols = @cells.size
-    @cells.each do |cell|
-      @headers << cell
-    end
-
-    @rows = []
-    @genes.each do |gene|
-      row = [gene.gene, ""]
-      # calculate mean to perform row centering if requested
-      mean = 0.0
-      if params[:row_centered] == '1'
-        mean = gene.mean(@cells)
-      end
+    if check_xhr_view_permissions
+      terms = parse_search_terms(:genes)
+      @genes = load_expression_scores(terms)
+      @headers = ["Name", "Description"]
+      @cells = @cluster.concatenate_data_arrays('text', 'cells')
+      @cols = @cells.size
       @cells.each do |cell|
-        row << gene.scores[cell].to_f - mean
+        @headers << cell
       end
 
-      @rows << row.join("\t")
-    end
-    @data = ['#1.2', [@rows.size, @cols].join("\t"), @headers.join("\t"), @rows.join("\n")].join("\n")
+      @rows = []
+      @genes.each do |gene|
+        row = [gene.gene, ""]
+        # calculate mean to perform row centering if requested
+        mean = 0.0
+        if params[:row_centered] == '1'
+          mean = gene.mean(@cells)
+        end
+        @cells.each do |cell|
+          row << gene.scores[cell].to_f - mean
+        end
 
-    send_data @data, type: 'text/plain'
+        @rows << row.join("\t")
+      end
+      @data = ['#1.2', [@rows.size, @cols].join("\t"), @headers.join("\t"), @rows.join("\n")].join("\n")
+
+      send_data @data, type: 'text/plain'
+    else
+      head 403
+    end
   end
 
   # load annotations in tsv format for Morpheus
@@ -339,29 +352,33 @@ class SiteController < ApplicationController
 
   # load precomputed data in gct form to render in Morpheus
   def precomputed_results
-    @precomputed_score = @study.precomputed_scores.by_name(params[:precomputed])
+    if check_xhr_view_permissions
+      @precomputed_score = @study.precomputed_scores.by_name(params[:precomputed])
 
-    @headers = ["Name", "Description"]
-    @precomputed_score.clusters.each do |cluster|
-      @headers << cluster
-    end
-    @rows = []
-    @precomputed_score.gene_scores.each do |score_row|
-      score_row.each do |gene, scores|
-        row = [gene, ""]
-        mean = 0.0
-        if params[:row_centered] == '1'
-          mean = scores.values.inject(0) {|sum, x| sum += x} / scores.values.size
-        end
-        @precomputed_score.clusters.each do |cluster|
-          row << scores[cluster].to_f - mean
-        end
-        @rows << row.join("\t")
+      @headers = ["Name", "Description"]
+      @precomputed_score.clusters.each do |cluster|
+        @headers << cluster
       end
-    end
-    @data = ['#1.2', [@rows.size, @precomputed_score.clusters.size].join("\t"), @headers.join("\t"), @rows.join("\n")].join("\n")
+      @rows = []
+      @precomputed_score.gene_scores.each do |score_row|
+        score_row.each do |gene, scores|
+          row = [gene, ""]
+          mean = 0.0
+          if params[:row_centered] == '1'
+            mean = scores.values.inject(0) {|sum, x| sum += x} / scores.values.size
+          end
+          @precomputed_score.clusters.each do |cluster|
+            row << scores[cluster].to_f - mean
+          end
+          @rows << row.join("\t")
+        end
+      end
+      @data = ['#1.2', [@rows.size, @precomputed_score.clusters.size].join("\t"), @headers.join("\t"), @rows.join("\n")].join("\n")
 
-    send_data @data, type: 'text/plain', filename: 'query.gct'
+      send_data @data, type: 'text/plain', filename: 'query.gct'
+    else
+      head 403
+    end
   end
 
   # view all genes as heatmap in morpheus, will pull from pre-computed gct file
@@ -383,13 +400,17 @@ class SiteController < ApplicationController
   # method to populate an array with entries corresponding to all fastq files for a study (both owner defined as study_files
   # and extra fastq's that happen to be in the bucket)
   def get_fastq_files
+    # check if FireCloud is available first
+    @allow_downloads = Study.firecloud_client.api_available?
+    @disabled_link = "<button type='button' class='btn btn-danger' disabled>Currently Unavailable</button>".html_safe
     # load study_file fastqs first
     @fastq_files = {data: []}
     @study.study_files.select {|file| file.file_type == 'Fastq'}.each do |file|
+      link = view_context.link_to("<span class='fa fa-download'></span> #{view_context.number_to_human_size(file.upload_file_size, prefix: :si)}".html_safe, file.download_path, class: "btn btn-primary dl-link fastq", download: file.upload_file_name)
       @fastq_files[:data] << [
           file.name,
           file.description,
-          view_context.link_to("<span class='fa fa-download'></span> #{view_context.number_to_human_size(file.upload_file_size, prefix: :si)}".html_safe, file.download_path, class: "btn btn-primary dl-link fastq", download: file.upload_file_name)
+          @allow_downloads ? link : @disabled_link
       ]
     end
     # now load fastq's from directory_listings (only synced directories)
@@ -400,7 +421,7 @@ class SiteController < ApplicationController
         @fastq_files[:data] << [
             file[:name],
             directory.description,
-            link
+            @allow_downloads ? link : @disabled_link
         ]
       end
     end
@@ -453,12 +474,21 @@ class SiteController < ApplicationController
     end
   end
 
+  # check permissions manually on AJAX call via authentication token
   def check_xhr_view_permissions
     unless @study.public?
-      request_user = User.find(params[:request_user_id])
-      unless !request_user.nil? && @study.can_view?(request_user)
-        head 403
+      if params[:request_user_token].nil?
+        return false
+      else
+        request_user_id, auth_token = params[:request_user_token].split(':')
+        request_user = User.find_by(id: request_user_id, authentication_token: auth_token)
+        unless !request_user.nil? && @study.can_view?(request_user)
+          return false
+        end
       end
+      return true
+    else
+      return true
     end
   end
 

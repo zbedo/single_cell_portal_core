@@ -374,7 +374,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# verify firecloud workspace creation
 		firecloud_link = @driver.find_element(:id, 'firecloud-link')
-		firecloud_url = 'https://portal.firecloud.org/#workspaces/single-cell-portal%3Adevelopment-test-study'
+		firecloud_url = 'https://portal.firecloud.org/#workspaces/single-cell-portal/development-test-study'
 		firecloud_link.click
 		@driver.switch_to.window(@driver.window_handles.last)
 		assert @driver.current_url == firecloud_url, 'did not open firecloud workspace'
@@ -865,7 +865,7 @@ class UiTestSuite < Test::Unit::TestCase
 		close_modal('message_modal')
 
 		# assert access is revoked
-		firecloud_url = 'https://portal.firecloud.org/#workspaces/single-cell-portal%3Adevelopment-test-study'
+		firecloud_url = 'https://portal.firecloud.org/#workspaces/single-cell-portal/development-test-study'
 		@driver.get firecloud_url
 		assert !element_present?(:class, 'fa-check-circle'), 'did not revoke access - study workspace still loads'
 
@@ -1199,20 +1199,26 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get(path)
 		wait_until_page_loads(path)
 
-		# load random genes to search
-		genes = @genes.shuffle.take(1 + rand(@genes.size) + 1)
+		# load random genes to search, take between 2-5
+		genes = @genes.shuffle.take(rand(2..5))
 		search_box = @driver.find_element(:id, 'search_genes')
 		search_box.send_keys(genes.join(' '))
 		consensus = @driver.find_element(:id, 'search_consensus')
-		consensus.send_keys('mean')
+		# select a random consensus measurement
+		opts = consensus.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'None'}
+		selected_consensus = opts.sample
+		selected_consensus_value = selected_consensus['value']
+		selected_consensus.click
 		search_form = @driver.find_element(:id, 'search-genes-form')
 		search_form.submit
 		assert element_present?(:id, 'box-controls'), 'could not find expression boxplot'
 		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
 
-		# confirm queried genes are correct
+		# confirm queried genes and selected consensus are correct
 		queried_genes = @driver.find_elements(:class, 'queried-gene').map(&:text)
 		assert genes.sort == queried_genes.sort, "found incorrect genes, expected #{genes.sort} but found #{queried_genes.sort}"
+		queried_consensus = @driver.find_element(:id, 'selected-consensus')
+		assert selected_consensus_value == queried_consensus.text, "did not load correct consensus metric, expected #{selected_consensus_value} but found #{queried_consensus.text}"
 
 		# wait until box plot renders, at this point all 3 should be done
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
@@ -1232,11 +1238,15 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get private_study_path
 		wait_until_page_loads(private_study_path)
 
-		new_genes = @genes.shuffle.take(1 + rand(@genes.size) + 1)
+		new_genes = @genes.shuffle.take(rand(2..5))
 		search_box = @driver.find_element(:id, 'search_genes')
 		search_box.send_keys(new_genes.join(' '))
-		consensus = @driver.find_element(:id, 'search_consensus')
-		consensus.send_keys('mean')
+		new_consensus = @driver.find_element(:id, 'search_consensus')
+		# select a random consensus measurement
+		new_opts = new_consensus.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'None'}
+		new_selected_consensus = new_opts.sample
+		new_selected_consensus_value = new_selected_consensus['value']
+		new_selected_consensus.click
 		search_form = @driver.find_element(:id, 'search-genes-form')
 		search_form.submit
 		assert element_present?(:id, 'box-controls'), 'could not find expression boxplot'
@@ -1245,6 +1255,8 @@ class UiTestSuite < Test::Unit::TestCase
 		# confirm queried genes are correct
 		new_queried_genes = @driver.find_elements(:class, 'queried-gene').map(&:text)
 		assert new_genes.sort == new_queried_genes.sort, "found incorrect genes, expected #{new_genes.sort} but found #{new_queried_genes.sort}"
+		new_queried_consensus = @driver.find_element(:id, 'selected-consensus')
+		assert new_selected_consensus_value == new_queried_consensus.text, "did not load correct consensus metric, expected #{new_selected_consensus_value} but found #{new_queried_consensus.text}"
 
 		# wait until box plot renders, at this point all 3 should be done
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
@@ -1264,8 +1276,8 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
-		# load random genes to search
-		genes = @genes.shuffle.take(1 + rand(@genes.size) + 1)
+		# load random genes to search, take between 2-5
+		genes = @genes.shuffle.take(rand(2..5))
 		search_box = @driver.find_element(:id, 'search_genes')
 		search_box.send_keys(genes.join(' '))
 		search_form = @driver.find_element(:id, 'search-genes-form')
@@ -1288,7 +1300,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get private_study_path
 		wait_until_page_loads(private_study_path)
 
-		new_genes = @genes.shuffle.take(1 + rand(@genes.size) + 1)
+		new_genes = @genes.shuffle.take(rand(2..5))
 		search_box = @driver.find_element(:id, 'search_genes')
 		search_box.send_keys(new_genes.join(' '))
 		search_form = @driver.find_element(:id, 'search-genes-form')

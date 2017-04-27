@@ -6,6 +6,8 @@ class StudiesController < ApplicationController
     authenticate_user!
     check_access_settings
   end
+  # special before_filter to make sure FireCloud is available and pre-empt any calls when down
+  before_filter :check_firecloud_status, except: [:index, :do_upload, :resume_upload, :update_status, :retrieve_wizard_upload, :parse ]
 
   # GET /studies
   # GET /studies.json
@@ -49,7 +51,7 @@ class StudiesController < ApplicationController
   # wizard for adding study files after user creates a study
   def initialize_study
     # load any existing files if user restarted for some reason (unlikely)
-    intitialize_wizard_files
+    initialize_wizard_files
     # check if study has been properly initialized yet, set to true if not
     if !@cluster_ordinations.last.new_record? && !@expression_file.new_record? && !@metadata_file.new_record? && !@study.initialized?
       @study.update_attributes(initialized: true)
@@ -572,7 +574,7 @@ class StudiesController < ApplicationController
   def retrieve_wizard_upload
     @study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
     if @study_file.nil?
-
+      head 404 and return
     end
   end
 
@@ -648,8 +650,21 @@ class StudiesController < ApplicationController
     end
   end
 
+  # check on FireCloud API status and respond accordingly
+  def check_firecloud_status
+    unless Study.firecloud_client.api_available?
+      if request.format.html?
+        redirect_to studies_path, alert: 'Study workspaces are temporarily unavailable, so we cannot complete your request.  Please try again later.' and return
+      elsif request.xhr?
+        render template: '/layouts/firecloud_unavailable'
+      else
+        head 503
+      end
+    end
+  end
+
   # set up variables for wizard
-  def intitialize_wizard_files
+  def initialize_wizard_files
     @expression_file = @study.expression_matrix_file
     @metadata_file = @study.metadata_file
     @cluster_ordinations = @study.study_files.select {|sf| sf.file_type == 'Cluster'}

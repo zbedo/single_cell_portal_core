@@ -185,7 +185,7 @@ class Study
 
   # helper to generate a URL to a study's FireCloud workspace
   def workspace_url
-    "https://portal.firecloud.org/#workspaces/#{FireCloudClient::PORTAL_NAMESPACE}%3A#{self.firecloud_workspace}"
+    "https://portal.firecloud.org/#workspaces/#{FireCloudClient::PORTAL_NAMESPACE}/#{self.firecloud_workspace}"
   end
 
   # helper to generate a URL to a study's GCP bucket
@@ -516,9 +516,13 @@ class Study
       self.set_cell_count(expression_file.file_type)
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
-      if opts
+      if opts[:local]
         begin
-          self.send_to_firecloud(expression_file)
+          if Study.firecloud_client.api_available?
+            self.send_to_firecloud(expression_file)
+          else
+            SingleCellMailer.notify_admin_upload_fail(expression_file, 'FireCloud API unavailable').deliver_now
+          end
         rescue => e
           Rails.logger.info "#{Time.now}: Metadata file: '#{expression_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
           SingleCellMailer.notify_admin_upload_fail(expression_file, e.message).deliver_now
@@ -755,7 +759,11 @@ class Study
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       if opts[:local]
         begin
-          self.send_to_firecloud(ordinations_file)
+          if Study.firecloud_client.api_available?
+            self.send_to_firecloud(ordinations_file)
+          else
+            SingleCellMailer.notify_admin_upload_fail(ordinations_file, 'FireCloud API unavailable').deliver_now
+          end
         rescue => e
           Rails.logger.info "#{Time.now}: Cluster file: '#{ordinations_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
           SingleCellMailer.notify_admin_upload_fail(ordinations_file, e.message).deliver_now
@@ -922,7 +930,11 @@ class Study
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       if opts[:local]
         begin
-          self.send_to_firecloud(metadata_file)
+          if Study.firecloud_client.api_available?
+            self.send_to_firecloud(metadata_file)
+          else
+            SingleCellMailer.notify_admin_upload_fail(metadata_file, 'FireCloud API unavailable').deliver_now
+          end
         rescue => e
           Rails.logger.info "#{Time.now}: Metadata file: '#{metadata_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
           SingleCellMailer.notify_admin_upload_fail(metadata_file, e.message).deliver_now
@@ -1055,7 +1067,11 @@ class Study
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       if opts[:local]
         begin
-          self.send_to_firecloud(marker_file)
+          if Study.firecloud_client.api_available?
+            self.send_to_firecloud(marker_file)
+          else
+            SingleCellMailer.notify_admin_upload_fail(marker_file, 'FireCloud API unavailable').deliver_now
+          end
         rescue => e
           Rails.logger.info "#{Time.now}: Gene List file: '#{marker_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
           SingleCellMailer.notify_admin_upload_fail(marker_file, e.message).deliver_now

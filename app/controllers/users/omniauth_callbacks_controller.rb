@@ -5,6 +5,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
 		if @user.persisted?
 			flash[:notice] = I18n.t "devise.omniauth_callbacks.success", :kind => "Google"
+			@user.update(authentication_token: Devise.friendly_token(32))
 			sign_in_and_redirect @user, :event => :authentication
 		else
 			redirect_to new_user_session_path
