@@ -20,3 +20,4 @@
 /config/broad-singlecellportal.json
 /config/firecloud-print-access-token.py
 /single-cell-staging.broadinstitute.org.*
+/config/client_secret*.json
