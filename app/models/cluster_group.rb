@@ -150,6 +150,12 @@ class ClusterGroup
 				end
 		end
 
+		# garbage collect to reduce memory usage; objects no longer needed
+		@cells = nil
+		@annotations = nil
+		@annotation_key = nil
+		raw_data = nil
+
 		# determine number of entries per group required
 		@num_per_group = sample_size / groups.size
 
