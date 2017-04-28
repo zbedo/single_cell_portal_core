@@ -22,8 +22,9 @@ class ClusterGroup
 
 	# method to return a single data array of values for a given data array name, annotation name, and annotation value
 	# gathers all matching data arrays and orders by index, then concatenates into single array
-	def concatenate_data_arrays(array_name, array_type)
-		data_arrays = self.data_arrays.by_name_and_type(array_name, array_type)
+	# can also load subsample arrays by supplying optional subsample_threshold
+	def concatenate_data_arrays(array_name, array_type, subsample_threshold=nil)
+		data_arrays = self.data_arrays.by_name_and_type(array_name, array_type, subsample_threshold)
 		all_values = []
 		data_arrays.each do |array|
 			all_values += array.values
