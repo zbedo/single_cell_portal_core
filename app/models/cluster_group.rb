@@ -76,7 +76,7 @@ class ClusterGroup
 
 		# create a container to store subsets of arrays
 		@data_by_group = {}
-		groups = annotation_type == 'group' ? @annotations.uniq : 1.upto(self.points < 20 ? self.points : 20).map {|i| "group_#{i}"}
+		groups = annotation_type == 'group' ? @annotations.uniq : 1.upto(20).map {|i| "group_#{i}"}
 		groups.each do |group|
 			@data_by_group[group] = {
 					x: [],
