@@ -127,10 +127,10 @@ class ClusterGroup
 						# store values by original_index
 						@data_by_group[group][:x] << raw_data[:x][original_index]
 						@data_by_group[group][:y] << raw_data[:y][original_index]
-						# we only need annotations if this is a cluster-level annotation
 						@data_by_group[group][:text] << cell
+						# we only need annotations if this is a cluster-level annotation
 						if annotation_scope == 'cluster'
-							@data_by_group[annot][annotation_name.to_sym] << annot
+							@data_by_group[group][annotation_name.to_sym] << annot
 						end
 						if self.is_3d?
 							@data_by_group[group][:z] << raw_data[:z][original_index]
@@ -145,6 +145,10 @@ class ClusterGroup
 						@data_by_group[groups.last][:x] << raw_data[:x][original_index]
 						@data_by_group[groups.last][:y] << raw_data[:y][original_index]
 						@data_by_group[groups.last][:text] << cell
+						# we only need annotations if this is a cluster-level annotation
+						if annotation_scope == 'cluster'
+							@data_by_group[groups.last][annotation_name.to_sym] << annot
+						end
 						if self.is_3d?
 							@data_by_group[groups.last][:z] << raw_data[:z][original_index]
 						end
