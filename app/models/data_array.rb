@@ -14,7 +14,7 @@ class DataArray
 	belongs_to :study_file
 	belongs_to :cluster_group
 
-	index({ name: 1, study_id: 1, cluster_group_id: 1, cluster_name: 1, array_type: 1, array_index: 1 }, { unique: true })
+	index({ name: 1, study_id: 1, cluster_group_id: 1, cluster_name: 1, array_type: 1, array_index: 1, subsample_threshold: 1 }, { unique: true })
 	index({ study_id: 1 }, { unique: false })
 	index({ study_id: 1, study_file_id: 1}, { unique: false })
 

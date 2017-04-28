@@ -11,8 +11,8 @@ class ClusterGroup
 	belongs_to :study
 	belongs_to :study_file
 	has_many :data_arrays do
-		def by_name_and_type(name, type)
-			where(name: name, array_type: type).order_by(&:array_index).to_a
+		def by_name_and_type(name, type, subsample_threshold=nil)
+			where(name: name, array_type: type, subsample_threshold: subsample_threshold).order_by(&:array_index).to_a
 		end
 	end
 
