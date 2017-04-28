@@ -241,7 +241,7 @@ Devise.setup do |config|
   # config.omniauth :github, 'APP_ID', 'APP_SECRET', scope: 'user,public_repo'
 
 
-	config.omniauth :google_oauth2, "116798894341-0ds31rblt3ie73ko64i6vomc71ealmt3.apps.googleusercontent.com", "Oygv1udGXpNQQ5kyMEw0e-pO",
+	config.omniauth :google_oauth2, ENV['OAUTH_CLIENT_ID'], ENV['OAUTH_CLIENT_SECRET'],
                     {:client_options => {:ssl => {:ca_file => '/etc/pki/tls/certs/ca-bundle.crt'} }}
 
   # ==> Warden configuration

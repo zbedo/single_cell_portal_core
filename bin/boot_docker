@@ -14,6 +14,8 @@ $0 [OPTION]
 -h VALUE	set the PROD_HOSTNAME variable (used for callbacks, defaults to 'portals.broadinstitute.org')
 -u VALUE	set the SENDGRID_USERNAME variable (used for emails)
 -P VALUE	set the SENDGRID_PASSWORD variable (used for emails)
+-o VALUE	set the OAUTH_CLIENT_ID variable (for Google OAuth2)
+-S VALUE	set the OAUTH_CLIENT_SECRET variable (for Google OAuth2)
 -H COMMAND	print this text
 EOF
 )
@@ -27,7 +29,7 @@ PROD_HOSTNAME="portals.broadinstitute.org"
 SECRET_KEY_BASE=`openssl rand -hex 64`
 MAX_RAM=12GB
 
-while getopts "n:e:d:m:r:s:k:p:h:u:P:H" OPTION; do
+while getopts "n:e:d:m:r:s:k:p:h:u:P:H:o:S:" OPTION; do
 case $OPTION in
 	n)
 		CONTAINER_NAME="$OPTARG"
@@ -59,6 +61,12 @@ case $OPTION in
 	P)
 		SENDGRID_PASSWORD="$OPTARG"
 		;;
+	o)
+		OAUTH_CLIENT_ID="$OPTARG"
+		;;
+	S)
+		OAUTH_CLIENT_SECRET="$OPTARG"
+		;;
 	H)
 		echo "$usage"
 		exit 0
@@ -73,7 +81,7 @@ done
 if [[ $PASSENGER_APP_ENV = "production" ]] || [[ $PASSENGER_APP_ENV = "staging" ]]
 then
 	# generate random secret key for secure cookies
-	docker run -d --name $CONTAINER_NAME -p 80:80 -p 443:443 --link mongodb:mongodb -h $PROD_HOSTNAME -v $PROJECT_DIR:/home/app/webapp:rw -v $PROJECT_DIR/data:/home/app/webapp/data:rw -m $MAX_RAM -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e PROD_DATABASE_PASSWORD=$PROD_DATABASE_PASSWORD -e SECRET_KEY_BASE=$SECRET_KEY_BASE -e PROD_HOSTNAME=$PROD_HOSTNAME -e SENDGRID_USERNAME=$SENDGRID_USERNAME -e SENDGRID_PASSWORD=$SENDGRID_PASSWORD single_cell_docker
+	docker run -d --name $CONTAINER_NAME -p 80:80 -p 443:443 --link mongodb:mongodb -h $PROD_HOSTNAME -v $PROJECT_DIR:/home/app/webapp:rw -v $PROJECT_DIR/data:/home/app/webapp/data:rw -m $MAX_RAM -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e PROD_DATABASE_PASSWORD=$PROD_DATABASE_PASSWORD -e SECRET_KEY_BASE=$SECRET_KEY_BASE -e PROD_HOSTNAME=$PROD_HOSTNAME -e SENDGRID_USERNAME=$SENDGRID_USERNAME -e SENDGRID_PASSWORD=$SENDGRID_PASSWORD -e OAUTH_CLIENT_ID=$OAUTH_CLIENT_ID -e OAUTH_CLIENT_SECRET=$OAUTH_CLIENT_SECRET single_cell_docker
 else
-	docker run --rm -it --name $CONTAINER_NAME -p 80:80 -p 443:443 -p 587:587 --link mongodb:mongodb -h localhost -v $PROJECT_DIR:/home/app/webapp:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e SENDGRID_USERNAME=$SENDGRID_USERNAME -e SENDGRID_PASSWORD=$SENDGRID_PASSWORD -e SECRET_KEY_BASE=$SECRET_KEY_BASE single_cell_docker
+	docker run --rm -it --name $CONTAINER_NAME -p 80:80 -p 443:443 -p 587:587 --link mongodb:mongodb -h localhost -v $PROJECT_DIR:/home/app/webapp:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e SENDGRID_USERNAME=$SENDGRID_USERNAME -e SENDGRID_PASSWORD=$SENDGRID_PASSWORD -e SECRET_KEY_BASE=$SECRET_KEY_BASE -e OAUTH_CLIENT_ID=$OAUTH_CLIENT_ID -e OAUTH_CLIENT_SECRET=$OAUTH_CLIENT_SECRET single_cell_docker
 fi
