@@ -8,6 +8,7 @@ class DataArray
 	field :array_type, type: String
 	field :array_index, type: Integer
 	field :values, type: Array
+	field :subsample_threshold, type: Integer
 
 	belongs_to :study
 	belongs_to :study_file

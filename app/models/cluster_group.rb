@@ -20,9 +20,6 @@ class ClusterGroup
 	index({ study_id: 1 }, { unique: false })
 	index({ study_id: 1, study_file_id: 1}, { unique: false })
 
-	# maximum number of cells allowed when plotting boxplots
-	SUBSAMPLE_THRESHOLD = 1000
-
 	# method to return a single data array of values for a given data array name, annotation name, and annotation value
 	# gathers all matching data arrays and orders by index, then concatenates into single array
 	def concatenate_data_arrays(array_name, array_type)
@@ -53,5 +50,174 @@ class ClusterGroup
 	# check if user has defined a range for this cluster_group (provided in study file)
 	def has_range?
 		!self.domain_ranges.nil?
+	end
+
+	# method used during parsing to generate representative sub-sampled data_arrays for rendering
+	#
+	# annotation_name: name of annotation to subsample off of
+	# annotation_type: group/numeric
+	# annotation_scope: cluster or study - determines where to pull metadata from to key groups off of
+	def generate_subsample_arrays(sample_size, annotation_name, annotation_type, annotation_scope)
+		@cells = self.concatenate_data_arrays('text', 'cells')
+		case annotation_scope
+			when 'cluster'
+				@annotations = self.concatenate_data_arrays(annotation_name, annotation_type)
+			when 'study'
+				# in addition to array of annotation values, we need a key to preserve the associations once we sort
+				# the annotations by value
+				all_annots = self.study.study_metadata_values(annotation_name, annotation_type)
+				@annotation_key = {}
+				@annotations = []
+				@cells.each do |cell|
+					@annotations << all_annots[cell]
+					@annotation_key[cell] = all_annots[cell]
+				end
+		end
+
+		# create a container to store subsets of arrays
+		@data_by_group = {}
+		groups = annotation_type == 'group' ? @annotations.uniq : 1.upto(self.points < 20 ? self.points : 20).map {|i| "group_#{i}"}
+		groups.each do |group|
+			@data_by_group[group] = {
+					x: [],
+					y: [],
+					text: []
+			}
+			if self.is_3d?
+				@data_by_group[group][:z] = []
+			end
+			if annotation_scope == 'cluster'
+				@data_by_group[group][annotation_name.to_sym] = []
+			end
+		end
+		raw_data = {
+				text: @cells,
+				x: self.concatenate_data_arrays('x', 'coordinates'),
+				y: self.concatenate_data_arrays('y', 'coordinates'),
+		}
+		if self.is_3d?
+			raw_data[:z] = self.concatenate_data_arrays('z', 'coordinates')
+		end
+
+		# divide up groups by labels (either categorical or sorted by continuous score and sliced)
+		case annotation_type
+			when 'group'
+				@annotations.each_with_index do |annot, index|
+					@data_by_group[annot][:x] << raw_data[:x][index]
+					@data_by_group[annot][:y] << raw_data[:y][index]
+					@data_by_group[annot][:text] << raw_data[:text][index]
+					# we only need annotations if this is a cluster-level annotation
+					if annotation_scope == 'cluster'
+						@data_by_group[annot][annotation_name.to_sym] << annot
+					end
+					if self.is_3d?
+						@data_by_group[annot][:z] << raw_data[:z][index]
+					end
+				end
+			when 'numeric'
+				slice_size = @cells.size / groups.size
+				# create a sorted array of arrays using the annotation value as the sort metric
+				# first value in each sub-array is the cell name, last value is the corresponding annotation value
+				sorted_annotations = @annotation_key.sort_by(&:last)
+				groups.each do |group|
+					sub_population = sorted_annotations.slice!(0..slice_size - 1)
+					sub_population.each do |cell, annot|
+						# determine where in the original source data current value resides
+						original_index = @cells.index(cell)
+						# store values by original_index
+						@data_by_group[group][:x] << raw_data[:x][original_index]
+						@data_by_group[group][:y] << raw_data[:y][original_index]
+						# we only need annotations if this is a cluster-level annotation
+						@data_by_group[group][:text] << cell
+						if annotation_scope == 'cluster'
+							@data_by_group[annot][annotation_name.to_sym] << annot
+						end
+						if self.is_3d?
+							@data_by_group[group][:z] << raw_data[:z][original_index]
+						end
+					end
+				end
+				# add leftovers to last group
+				if sorted_annotations.size > 0
+					sorted_annotations.each do |cell, annot|
+						# determine where in the original source data current value resides
+						original_index = @cells.index(cell)
+						@data_by_group[groups.last][:x] << raw_data[:x][original_index]
+						@data_by_group[groups.last][:y] << raw_data[:y][original_index]
+						@data_by_group[groups.last][:text] << cell
+						if self.is_3d?
+							@data_by_group[groups.last][:z] << raw_data[:z][original_index]
+						end
+					end
+				end
+		end
+
+		# determine number of entries per group required
+		@num_per_group = sample_size / groups.size
+
+		# sort groups by size
+		group_order = @data_by_group.sort_by {|k,v| v[:x].size}.map(&:first)
+
+		# build data_array objects
+		data_arrays = []
+		raw_data.each_key do |axis|
+			case axis.to_s
+				when 'text'
+					@array_type = 'cells'
+				when annotation_name
+					@array_type = 'annotations'
+				else
+					@array_type = 'coordinates'
+			end
+			data_array = self.data_arrays.build(name: axis.to_s,
+																					array_type: @array_type,
+																					cluster_name: self.name,
+																					array_index: 1,
+																					subsample_threshold: sample_size,
+																					study_file_id: self.study_file_id,
+																					study_id: self.study_id,
+																					values: []
+			)
+			data_arrays << data_array
+		end
+
+		# special case for cluster-based annotations
+		if annotation_scope == 'cluster'
+			data_array = self.data_arrays.build(name: annotation_name,
+																					array_type: 'annotations',
+																					cluster_name: self.name,
+																					array_index: 1,
+																					subsample_threshold: sample_size,
+																					study_file_id: self.study_file_id,
+																					study_id: self.study_id,
+																					values: []
+			)
+			data_arrays << data_array
+		end
+
+		@cells_left = sample_size
+
+		# iterate through groups, taking requested num_per_group and recalculating as necessary
+		group_order.each_with_index do |group, index|
+			data = @data_by_group[group]
+			# take remaining cells if last batch, otherwise take num_per_group
+			requested_sample = index == group_order.size - 1 ? @cells_left : @num_per_group
+			data.each do |axis, values|
+				array = data_arrays.find {|a| a.name == axis.to_s}
+				sample = values.shuffle(random: Random.new(1)).take(requested_sample)
+				array.values += sample
+			end
+			# determine how many were taken in sampling pass, will either be size of requested sample
+			# or all values if requested_sample is larger than size of total values for group
+			cells_taken = data[:x].size > requested_sample ? requested_sample : data[:x].size
+			@cells_left -= cells_taken
+			# were done with this 'group', so remove from master list
+			groups.delete(group)
+			# recalculate num_per_group, unless last time
+			unless index == group_order.size - 1
+				@num_per_group = @cells_left / groups.size
+			end
+		end
+		data_arrays
 	end
 end
