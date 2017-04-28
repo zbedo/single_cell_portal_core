@@ -62,6 +62,7 @@ class ClusterGroup
 		case annotation_scope
 			when 'cluster'
 				@annotations = self.concatenate_data_arrays(annotation_name, annotation_type)
+				@annotation_key = Hash[@cells.zip(@annotations)]
 			when 'study'
 				# in addition to array of annotation values, we need a key to preserve the associations once we sort
 				# the annotations by value
@@ -103,15 +104,12 @@ class ClusterGroup
 		case annotation_type
 			when 'group'
 				@annotations.each_with_index do |annot, index|
-					@data_by_group[annot][:x] << raw_data[:x][index]
-					@data_by_group[annot][:y] << raw_data[:y][index]
-					@data_by_group[annot][:text] << raw_data[:text][index]
+					raw_data.each_key do |axis|
+						@data_by_group[annot][axis] << raw_data[axis][index]
+					end
 					# we only need annotations if this is a cluster-level annotation
 					if annotation_scope == 'cluster'
 						@data_by_group[annot][annotation_name.to_sym] << annot
-					end
-					if self.is_3d?
-						@data_by_group[annot][:z] << raw_data[:z][index]
 					end
 				end
 			when 'numeric'
@@ -125,15 +123,12 @@ class ClusterGroup
 						# determine where in the original source data current value resides
 						original_index = @cells.index(cell)
 						# store values by original_index
-						@data_by_group[group][:x] << raw_data[:x][original_index]
-						@data_by_group[group][:y] << raw_data[:y][original_index]
-						@data_by_group[group][:text] << cell
+						raw_data.each_key do |axis|
+							@data_by_group[group][axis] << raw_data[axis][original_index]
+						end
 						# we only need annotations if this is a cluster-level annotation
 						if annotation_scope == 'cluster'
 							@data_by_group[group][annotation_name.to_sym] << annot
-						end
-						if self.is_3d?
-							@data_by_group[group][:z] << raw_data[:z][original_index]
 						end
 					end
 				end
@@ -142,15 +137,13 @@ class ClusterGroup
 					sorted_annotations.each do |cell, annot|
 						# determine where in the original source data current value resides
 						original_index = @cells.index(cell)
-						@data_by_group[groups.last][:x] << raw_data[:x][original_index]
-						@data_by_group[groups.last][:y] << raw_data[:y][original_index]
-						@data_by_group[groups.last][:text] << cell
+						# store values by original_index
+						raw_data.each_key do |axis|
+							@data_by_group[groups.last][axis] << raw_data[axis][original_index]
+						end
 						# we only need annotations if this is a cluster-level annotation
 						if annotation_scope == 'cluster'
 							@data_by_group[groups.last][annotation_name.to_sym] << annot
-						end
-						if self.is_3d?
-							@data_by_group[groups.last][:z] << raw_data[:z][original_index]
 						end
 					end
 				end
