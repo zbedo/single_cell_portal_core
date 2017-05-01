@@ -99,19 +99,8 @@ module ApplicationHelper
 	end
 
 	# return an array of values to use for subsampling dropdown scaled to number of cells in study
+	# only options allowed are 1000, 10000, 20000
 	def subsampling_options(max_cells)
-		opts = []
-		i = 3
-		base = 10
-		while base ** i <= max_cells
-			opts << base ** i
-			five_times = (base ** i) * 5
-			if five_times <= max_cells
-				opts << five_times
-			end
-			i += 1
-		end
-		opts
+		ClusterGroup::SUBSAMPLE_THRESHOLDS.select {|sample| sample < max_cells}
 	end
-
 end

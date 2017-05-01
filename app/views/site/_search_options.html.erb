@@ -21,7 +21,7 @@
 						<%= f.file_field :upload, class: 'form-control' %>
 					</div>
           <div class="form-group">
-            <%= f.label :consensus, "Collapse Genes by <i class='fa fa-question-circle' title='Multiple genes only: Collapse expression scores of multiple genes for each cell using this metric.  Selecting &quot;None&quot; will view genes individually as a heatmap.' data-toggle='tooltip'></i>".html_safe %><br/>
+            <%= f.label :consensus, "Collapse Genes by <i class='fa fa-question-circle'></i>".html_safe, title: "Multiple genes only: Collapse expression scores of multiple genes for each cell using this metric.  Selecting 'None' will view genes individually as a heatmap.", data: {toggle: 'tooltip', placement: 'right'} %><br/>
             <%= f.select :consensus, options_for_select([['Mean', 'mean'],['Median', 'median']], params[:consensus]), {include_blank: 'None'}, {class: 'form-control'} %>
           </div>
 					<%= link_to "<span class='fa fa-ban'></span> Clear Search".html_safe, "javascript:", class: 'btn btn-warning pull-right', id: 'clear-gene-search' %>

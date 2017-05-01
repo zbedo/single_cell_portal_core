@@ -20,23 +20,30 @@ class ClusterGroup
 	index({ study_id: 1 }, { unique: false })
 	index({ study_id: 1, study_file_id: 1}, { unique: false })
 
+	# fixed values to
+	SUBSAMPLE_THRESHOLDS = [1000, 10000, 20000].freeze
+
 	# method to return a single data array of values for a given data array name, annotation name, and annotation value
 	# gathers all matching data arrays and orders by index, then concatenates into single array
 	# can also load subsample arrays by supplying optional subsample_threshold
-	def concatenate_data_arrays(array_name, array_type, subsample_threshold=nil)
-		data_arrays = self.data_arrays.by_name_and_type(array_name, array_type, subsample_threshold)
-		all_values = []
-		data_arrays.each do |array|
-			all_values += array.values
+	def concatenate_data_arrays(array_name, array_type, subsample_threshold=nil, subsample_annotation=nil)
+		if subsample_threshold.nil?
+			data_arrays = self.data_arrays.by_name_and_type(array_name, array_type)
+			all_values = []
+			data_arrays.each do |array|
+				all_values += array.values
+			end
+			return all_values
+		else
+			data_array = self.data_arrays.find_by(name: array_name, array_type: array_type,
+																					subsample_threshold: subsample_threshold,
+																					subsample_annotation: subsample_annotation)
+			if data_array.nil?
+				return []
+			else
+				return data_array.values
+			end
 		end
-		all_values
-	end
-
-	# subsample data array by a variable amount to speed up visualization (or show larger groups of cells/points)
-	# can supply a random seed to change sort order
-	def subsample_data_arrays(array_name, array_type, sample_threshold, seed=1)
-		values = self.concatenate_data_arrays(array_name, array_type)
-		values.shuffle(random: Random.new(seed)).take(sample_threshold)
 	end
 
 	# return number of points in cluster_group, use x axis as all cluster_groups must have either x or y
@@ -59,10 +66,11 @@ class ClusterGroup
 	# annotation_type: group/numeric
 	# annotation_scope: cluster or study - determines where to pull metadata from to key groups off of
 	def generate_subsample_arrays(sample_size, annotation_name, annotation_type, annotation_scope)
+		Rails.logger.info "#{Time.now}: Generating subsample data_array for cluster '#{self.name}' using annotation: #{annotation_name} (#{annotation_type}, #{annotation_scope}) at resolution #{sample_size}"
 		@cells = self.concatenate_data_arrays('text', 'cells')
 		case annotation_scope
 			when 'cluster'
-				@annotations = self.concatenate_data_arrays(annotation_name, annotation_type)
+				@annotations = self.concatenate_data_arrays(annotation_name, 'annotations')
 				@annotation_key = Hash[@cells.zip(@annotations)]
 			when 'study'
 				# in addition to array of annotation values, we need a key to preserve the associations once we sort
@@ -78,6 +86,7 @@ class ClusterGroup
 
 		# create a container to store subsets of arrays
 		@data_by_group = {}
+		# determine how many groups we have; if annotations are continuous scores, divide into 20 temporary groups
 		groups = annotation_type == 'group' ? @annotations.uniq : 1.upto(20).map {|i| "group_#{i}"}
 		groups.each do |group|
 			@data_by_group[group] = {
@@ -108,7 +117,7 @@ class ClusterGroup
 					raw_data.each_key do |axis|
 						@data_by_group[annot][axis] << raw_data[axis][index]
 					end
-					# we only need annotations if this is a cluster-level annotation
+					# we only need subsampled annotations if this is a cluster-level annotation
 					if annotation_scope == 'cluster'
 						@data_by_group[annot][annotation_name.to_sym] << annot
 					end
@@ -127,7 +136,7 @@ class ClusterGroup
 						raw_data.each_key do |axis|
 							@data_by_group[group][axis] << raw_data[axis][original_index]
 						end
-						# we only need annotations if this is a cluster-level annotation
+						# we only need subsampled annotations if this is a cluster-level annotation
 						if annotation_scope == 'cluster'
 							@data_by_group[group][annotation_name.to_sym] << annot
 						end
@@ -142,19 +151,14 @@ class ClusterGroup
 						raw_data.each_key do |axis|
 							@data_by_group[groups.last][axis] << raw_data[axis][original_index]
 						end
-						# we only need annotations if this is a cluster-level annotation
+						# we only need subsampled annotations if this is a cluster-level annotation
 						if annotation_scope == 'cluster'
 							@data_by_group[groups.last][annotation_name.to_sym] << annot
 						end
 					end
 				end
 		end
-
-		# garbage collect to reduce memory usage; objects no longer needed
-		@cells = nil
-		@annotations = nil
-		@annotation_key = nil
-		raw_data = nil
+		Rails.logger.info "#{Time.now}: Data assembled, now subsampling for cluster '#{self.name}' using annotation: #{annotation_name} (#{annotation_type}, #{annotation_scope}) at resolution #{sample_size}"
 
 		# determine number of entries per group required
 		@num_per_group = sample_size / groups.size
@@ -164,6 +168,9 @@ class ClusterGroup
 
 		# build data_array objects
 		data_arrays = []
+		# string key that identifies how these data_arrays were assembled, will be used to query database
+		# value is identical to the annotation URL query parameter when rendering clusters
+		subsample_annotation = "#{annotation_name}--#{annotation_type}--#{annotation_scope}"
 		raw_data.each_key do |axis|
 			case axis.to_s
 				when 'text'
@@ -178,6 +185,7 @@ class ClusterGroup
 																					cluster_name: self.name,
 																					array_index: 1,
 																					subsample_threshold: sample_size,
+																					subsample_annotation: subsample_annotation,
 																					study_file_id: self.study_file_id,
 																					study_id: self.study_id,
 																					values: []
@@ -192,6 +200,7 @@ class ClusterGroup
 																					cluster_name: self.name,
 																					array_index: 1,
 																					subsample_threshold: sample_size,
+																					subsample_annotation: subsample_annotation,
 																					study_file_id: self.study_file_id,
 																					study_id: self.study_id,
 																					values: []
@@ -222,6 +231,10 @@ class ClusterGroup
 				@num_per_group = @cells_left / groups.size
 			end
 		end
+		data_arrays.each do |array|
+			array.save
+		end
+		Rails.logger.info "#{Time.now}: Subsampling complete for cluster '#{self.name}' using annotation: #{annotation_name} (#{annotation_type}, #{annotation_scope}) at resolution #{sample_size}"
 		data_arrays
 	end
 end

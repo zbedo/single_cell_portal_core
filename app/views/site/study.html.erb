@@ -126,6 +126,11 @@
 
       $(document).ready(function() {
           $('#cluster-plot').data('camera', baseCamera);
+          // set default subsample option of 10K or all cells
+          if (<%= @cluster.points > 10000 %>) {
+              $('#subsample').val(10000);
+              $('#search_subsample').val(10000);
+          }
           renderScatter();
       });
 

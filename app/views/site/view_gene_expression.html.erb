@@ -63,6 +63,10 @@
     $(document).ready(function() {
         // store camera data in outer plot so it will persist past render
         $('#expression-plots').data('scatter-camera', baseCamera);
+        // default to outliers on first render if over 1000 points
+        if (<%= params[:subsample].to_i > 1000 %>) {
+            $("#boxpoints_select").val('outliers');
+        }
         renderGeneExpressionPlots();
     });
     // listener for annotation nav, specific to expression pages
@@ -78,6 +82,10 @@
     $('#subsample').change(function() {
         var sample = $(this).val();
         $('#search_subsample').val(sample);
+        // turn off boxpoints over 1000
+        if (parseInt(sample) > 1000) {
+            $("#boxpoints_select").val('');
+        }
         renderGeneExpressionPlots();
     });
 

@@ -260,7 +260,7 @@ class SiteController < ApplicationController
     @expression[:all][:marker][:cmin], @expression[:all][:marker][:cmax] = color_minmax
     @expression[:all][:marker][:colorscale] = 'Reds'
     # load static cluster reference plot
-    @coordinates = load_cluster_group_data_array_points(@selected_annotation)
+    @coordinates = load_cluster_group_data_array_points(@selected_annotation, subsample)
     # set up options, annotations and ranges
     @options = load_cluster_group_options
     @range = set_range([@expression[:all]])
@@ -497,15 +497,18 @@ class SiteController < ApplicationController
   # generic method to populate data structure to render a cluster scatter plot
   # uses cluster_group model and loads annotation for both group & numeric plots
   # data values are pulled from associated data_array entries for each axis and annotation/text value
-  def load_cluster_group_data_array_points(annotation, sample_threshold=nil)
-    x_array = sample_threshold.nil? ? @cluster.concatenate_data_arrays('x', 'coordinates') : @cluster.subsample_data_arrays('x', 'coordinates', sample_threshold)
-    y_array = sample_threshold.nil? ? @cluster.concatenate_data_arrays('y', 'coordinates') : @cluster.subsample_data_arrays('y', 'coordinates', sample_threshold)
-    z_array = sample_threshold.nil? ? @cluster.concatenate_data_arrays('z', 'coordinates') : @cluster.subsample_data_arrays('z', 'coordinates', sample_threshold)
-    cells = sample_threshold.nil? ? @cluster.concatenate_data_arrays('text', 'cells') : @cluster.subsample_data_arrays('text', 'cells', sample_threshold)
+  def load_cluster_group_data_array_points(annotation, subsample_threshold=nil)
+    # construct annotation key to load subsample data_arrays if needed, will be identical to params[:annotation]
+    subsample_annotation = "#{annotation[:name]}--#{annotation[:type]}--#{annotation[:scope]}"
+    # load data - passing nil for subsample_threshold automatically loads all values
+    x_array = @cluster.concatenate_data_arrays('x', 'coordinates', subsample_threshold, subsample_annotation)
+    y_array = @cluster.concatenate_data_arrays('y', 'coordinates', subsample_threshold, subsample_annotation)
+    z_array = @cluster.concatenate_data_arrays('z', 'coordinates', subsample_threshold, subsample_annotation)
+    cells = @cluster.concatenate_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     annotation_array = []
     annotation_hash = {}
     if annotation[:scope] == 'cluster'
-      annotation_array = sample_threshold.nil? ? @cluster.concatenate_data_arrays(annotation[:name], 'annotations') : @cluster.subsample_data_arrays(annotation[:name], 'annotations', sample_threshold)
+      annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
     else
       # for study-wide annotations, load from study_metadata values instead of cluster-specific annotations
       annotation_hash = @study.study_metadata_values(annotation[:name], annotation[:type])
@@ -595,12 +598,14 @@ class SiteController < ApplicationController
   end
 
   # method to load a 2-d scatter of selected numeric annotation vs. gene expression
-  def load_annotation_based_data_array_scatter(annotation, sample_threshold=nil)
-    cells = sample_threshold.nil? ? @cluster.concatenate_data_arrays('text', 'cells') : @cluster.subsample_data_arrays('text', 'cells', sample_threshold)
+  def load_annotation_based_data_array_scatter(annotation, subsample_threshold=nil)
+    # construct annotation key to load subsample data_arrays if needed, will be identical to params[:annotation]
+    subsample_annotation = "#{annotation[:name]}--#{annotation[:type]}--#{annotation[:scope]}"
+    cells = @cluster.concatenate_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     annotation_array = []
     annotation_hash = {}
     if annotation[:scope] == 'cluster'
-      annotation_array = sample_threshold.nil? ? @cluster.concatenate_data_arrays(annotation[:name], 'annotations') : @cluster.subsample_data_arrays(annotation[:name], 'annotations', sample_threshold)
+      annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
     else
       annotation_hash = @study.study_metadata_values(annotation[:name], annotation[:type])
     end
@@ -633,14 +638,16 @@ class SiteController < ApplicationController
 
   # method to load a 2-d scatter of selected numeric annotation vs. gene set expression
   # will support a variety of consensus modes (default is mean)
-  def load_gene_set_annotation_based_scatter(annotation, consensus, sample_threshold=nil)
+  def load_gene_set_annotation_based_scatter(annotation, consensus, subsample_threshold=nil)
+    # construct annotation key to load subsample data_arrays if needed, will be identical to params[:annotation]
+    subsample_annotation = "#{annotation[:name]}--#{annotation[:type]}--#{annotation[:scope]}"
     values = {}
     values[:all] = {x: [], y: [], text: [], marker_size: []}
-    cells = sample_threshold.nil? ? @cluster.concatenate_data_arrays('text', 'cells') : @cluster.subsample_data_arrays('text', 'cells', sample_threshold)
+    cells = @cluster.concatenate_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     annotation_array = []
     annotation_hash = {}
     if annotation[:scope] == 'cluster'
-      annotation_array = sample_threshold.nil? ? @cluster.concatenate_data_arrays(annotation[:name], 'annotations') : @cluster.subsample_data_arrays(annotation[:name], 'annotations', sample_threshold)
+      annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
     else
       annotation_hash = @study.study_metadata_values(annotation[:name], annotation[:type])
     end
@@ -663,17 +670,17 @@ class SiteController < ApplicationController
   end
 
   # load box plot scores from gene expression values using data array of cell names for given cluster
-  def load_expression_boxplot_data_array_scores(annotation, sample_threshold=nil)
+  def load_expression_boxplot_data_array_scores(annotation, subsample_threshold=nil)
+    # construct annotation key to load subsample data_arrays if needed, will be identical to params[:annotation]
+    subsample_annotation = "#{annotation[:name]}--#{annotation[:type]}--#{annotation[:scope]}"
     values = initialize_plotly_objects_by_annotation(annotation)
 
     # grab all cells present in the cluster, and use as keys to load expression scores
     # if a cell is not present for the gene, score gets set as 0.0
-    # will check if there are more than SUBSAMPLE_THRESHOLD cells present in the cluster, and subsample accordingly
-    # values hash will be assembled differently depending on annotation scope (cluster-based is array, study-based is a hash)
-    cells = sample_threshold.nil? ? @cluster.concatenate_data_arrays('text', 'cells') : @cluster.subsample_data_arrays('text', 'cells', sample_threshold)
+    cells = @cluster.concatenate_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     if annotation[:scope] == 'cluster'
       # we can take a subsample of the same size for the annotations since the sort order is non-stochastic (i.e. the indices chosen are the same every time for all arrays)
-      annotations = sample_threshold.nil? ? @cluster.concatenate_data_arrays(annotation[:name], 'annotations') : @cluster.subsample_data_arrays(annotation[:name], 'annotations', sample_threshold)
+      annotations = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       cells.each_with_index do |cell, index|
         values[annotations[index]][:y] << @gene.scores[cell].to_f.round(4)
       end
@@ -694,15 +701,17 @@ class SiteController < ApplicationController
   end
 
   # load cluster_group data_array values, but use expression scores to set numerical color array
-  def load_expression_data_array_points(annotation, sample_threshold=nil)
-    x_array = sample_threshold.nil? ? @cluster.concatenate_data_arrays('x', 'coordinates') : @cluster.subsample_data_arrays('x', 'coordinates', sample_threshold)
-    y_array = sample_threshold.nil? ? @cluster.concatenate_data_arrays('y', 'coordinates') : @cluster.subsample_data_arrays('y', 'coordinates', sample_threshold)
-    z_array = sample_threshold.nil? ? @cluster.concatenate_data_arrays('z', 'coordinates') : @cluster.subsample_data_arrays('z', 'coordinates', sample_threshold)
-    cells = sample_threshold.nil? ? @cluster.concatenate_data_arrays('text', 'cells') : @cluster.subsample_data_arrays('text', 'cells', sample_threshold)
+  def load_expression_data_array_points(annotation, subsample_threshold=nil)
+    # construct annotation key to load subsample data_arrays if needed, will be identical to params[:annotation]
+    subsample_annotation = "#{annotation[:name]}--#{annotation[:type]}--#{annotation[:scope]}"
+    x_array = @cluster.concatenate_data_arrays('x', 'coordinates', subsample_threshold, subsample_annotation)
+    y_array = @cluster.concatenate_data_arrays('y', 'coordinates', subsample_threshold, subsample_annotation)
+    z_array = @cluster.concatenate_data_arrays('z', 'coordinates', subsample_threshold, subsample_annotation)
+    cells = @cluster.concatenate_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     annotation_array = []
     annotation_hash = {}
     if annotation[:scope] == 'cluster'
-      annotation_array = sample_threshold.nil? ? @cluster.concatenate_data_arrays(annotation[:name], 'annotations') : @cluster.subsample_data_arrays(annotation[:name], 'annotations', sample_threshold)
+      annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold)
     else
       # for study-wide annotations, load from study_metadata values instead of cluster-specific annotations
       annotation_hash = @study.study_metadata_values(annotation[:name], annotation[:type])
@@ -734,16 +743,18 @@ class SiteController < ApplicationController
 
   # load boxplot expression scores vs. scores across each gene for all cells
   # will support a variety of consensus modes (default is mean)
-  def load_gene_set_expression_boxplot_scores(annotation, consensus, sample_threshold=nil)
+  def load_gene_set_expression_boxplot_scores(annotation, consensus, subsample_threshold=nil)
 		values = initialize_plotly_objects_by_annotation(annotation)
+    # construct annotation key to load subsample data_arrays if needed, will be identical to params[:annotation]
+    subsample_annotation = "#{annotation[:name]}--#{annotation[:type]}--#{annotation[:scope]}"
 
     # grab all cells present in the cluster, and use as keys to load expression scores
     # if a cell is not present for the gene, score gets set as 0.0
     # will check if there are more than SUBSAMPLE_THRESHOLD cells present in the cluster, and subsample accordingly
     # values hash will be assembled differently depending on annotation scope (cluster-based is array, study-based is a hash)
-    cells = sample_threshold.nil? ? @cluster.concatenate_data_arrays('text', 'cells') : @cluster.subsample_data_arrays('text', 'cells', sample_threshold)
+    cells = @cluster.concatenate_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     if annotation[:scope] == 'cluster'
-      annotations = sample_threshold.nil? ? @cluster.concatenate_data_arrays(annotation[:name], 'annotations') : @cluster.subsample_data_arrays(annotation[:name], 'annotations', sample_threshold)
+      annotations = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       cells.each_with_index do |cell, index|
         case consensus
           when 'mean'
@@ -780,15 +791,18 @@ class SiteController < ApplicationController
   # load scatter expression scores with average of scores across each gene for all cells
 	# uses data_array as source for each axis
   # will support a variety of consensus modes (default is mean)
-	def load_gene_set_expression_data_arrays(annotation, consensus, sample_threshold=nil)
-    x_array = sample_threshold.nil? ? @cluster.concatenate_data_arrays('x', 'coordinates') : @cluster.subsample_data_arrays('x', 'coordinates', sample_threshold)
-    y_array = sample_threshold.nil? ? @cluster.concatenate_data_arrays('y', 'coordinates') : @cluster.subsample_data_arrays('y', 'coordinates', sample_threshold)
-    z_array = sample_threshold.nil? ? @cluster.concatenate_data_arrays('z', 'coordinates') : @cluster.subsample_data_arrays('z', 'coordinates', sample_threshold)
-    cells = sample_threshold.nil? ? @cluster.concatenate_data_arrays('text', 'cells') : @cluster.subsample_data_arrays('text', 'cells', sample_threshold)
+	def load_gene_set_expression_data_arrays(annotation, consensus, subsample_threshold=nil)
+    # construct annotation key to load subsample data_arrays if needed, will be identical to params[:annotation]
+    subsample_annotation = "#{annotation[:name]}--#{annotation[:type]}--#{annotation[:scope]}"
+
+    x_array = @cluster.concatenate_data_arrays('x', 'coordinates', subsample_threshold, subsample_annotation)
+    y_array = @cluster.concatenate_data_arrays('y', 'coordinates', subsample_threshold, subsample_annotation)
+    z_array = @cluster.concatenate_data_arrays('z', 'coordinates', subsample_threshold, subsample_annotation)
+    cells = @cluster.concatenate_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     annotation_array = []
     annotation_hash = {}
     if annotation[:scope] == 'cluster'
-      annotation_array = sample_threshold.nil? ? @cluster.concatenate_data_arrays(annotation[:name], 'annotations') : @cluster.subsample_data_arrays(annotation[:name], 'annotations', sample_threshold)
+      annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
     else
       # for study-wide annotations, load from study_metadata values instead of cluster-specific annotations
       annotation_hash = @study.study_metadata_values(annotation[:name], annotation[:type])

@@ -21,7 +21,7 @@
         <% end %>
         <% if action_name !~ /heatmap/ %>
           <div class="col-sm-4">
-            <%= label_tag :subsample, 'Subsampling threshold' %><br />
+            <%= label_tag :subsample, "Subsampling threshold <i class='fa fa-question-circle'></i>".html_safe, title: 'Take a representative subsample of the current cluster.  Choosing all cells may dramatically increase rendering time.', data: {toggle: 'tooltip'} %><br />
             <%= select_tag :subsample, options_for_select(subsampling_options(@cluster.points), params[:subsample]), {include_blank: 'All Cells', class: 'form-control'} %>
           </div>
         <% end %>

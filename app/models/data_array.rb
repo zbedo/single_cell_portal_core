@@ -9,12 +9,14 @@ class DataArray
 	field :array_index, type: Integer
 	field :values, type: Array
 	field :subsample_threshold, type: Integer
-
+	field :subsample_annotation, type: String
 	belongs_to :study
 	belongs_to :study_file
 	belongs_to :cluster_group
 
-	index({ name: 1, study_id: 1, cluster_group_id: 1, cluster_name: 1, array_type: 1, array_index: 1, subsample_threshold: 1 }, { unique: true })
+	index({ name: 1, study_id: 1, cluster_group_id: 1, cluster_name: 1,
+								array_type: 1, array_index: 1, subsample_threshold: 1, subsample_annotation: 1 },
+				{ unique: true, name: 'unique_data_arrays_index' })
 	index({ study_id: 1 }, { unique: false })
 	index({ study_id: 1, study_file_id: 1}, { unique: false })
 

@@ -754,6 +754,24 @@ class Study
       if !self.expression_matrix_file.nil? && !self.metadata_file.nil? && !self.initialized?
         self.update(initialized: true)
       end
+
+      # create subsampled data_arrays for visualization
+      study_metadata = StudyMetadata.where(study_id: self.id, study_file_id: metadata_file.id).to_a
+      # determine how many levels to subsample based on size of cluster_group
+      required_subsamples = ClusterGroup::SUBSAMPLE_THRESHOLDS.select {|sample| sample < @cluster_group.points}
+      required_subsamples.each do |sample_size|
+        # create cluster-based annotation subsamples first
+        if @cluster_group.cell_annotations.any?
+          @cluster_group.cell_annotations.each do |cell_annot|
+            @cluster_group.delay.generate_subsample_arrays(sample_size, cell_annot[:name], cell_annot[:type], 'cluster')
+          end
+        end
+        # create study-based annotation subsamples
+        study_metadata.each do |metadata|
+          @cluster_group.delay.generate_subsample_arrays(sample_size, metadata.name, metadata.annotation_type, 'study')
+        end
+      end
+
       SingleCellMailer.notify_user_parse_complete(user.email, "Cluster file: '#{ordinations_file.upload_file_name}' has completed parsing", @message).deliver_now
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
