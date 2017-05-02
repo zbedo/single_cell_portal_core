@@ -2,10 +2,10 @@
 console.log('render status at start: ' + $('#cluster-plot').data('rendered'));
 // render colorscale picker if needed
 if (<%= @selected_annotation[:type] == 'numeric' %>) {
-    $('#colorscale-picker').html("<%= escape_javascript(render partial: 'colorscale_picker') %>");
+    $('#colorscale-target').html("<%= escape_javascript(render partial: 'colorscale_picker') %>");
     $('#toggle-plots').html("");
 } else {
-    $('#colorscale-picker').html("");
+    $('#colorscale-target').html("");
     $('#toggle-plots').html("<%= escape_javascript(render partial: 'trace_toggle') %>");
     $('#toggle-traces').tooltip({container: 'body', placement: 'left', trigger: 'hover'});
 }

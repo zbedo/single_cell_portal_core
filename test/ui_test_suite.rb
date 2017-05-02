@@ -31,6 +31,9 @@ require 'selenium-webdriver'
 # Tests can be run singly or in groups by passing -n /pattern/ before the -- on the command line.  This will run any tests that match
 # the given regular expression.  You can run all 'front-end' and 'admin' tests this way (although front-end tests require the tests studies to have been created already)
 #
+# NOTE: when running this test harness, it tends to perform better on an external monitor.  Webdriver is very sensitive to elements not
+# being clickable, and the more screen area available, the better
+#
 # Lastly, these tests generate on the order of ~20 emails per complete run per account.
 
 ## INITIALIZATION
@@ -164,9 +167,16 @@ class UiTestSuite < Test::Unit::TestCase
 		raise Selenium::WebDriver::Error::TimeOutError, "Timing out on render check of #{plot}"
 	end
 
-	# scroll to bottom of page as needed
-	def scroll_to_bottom
-		@driver.execute_script('window.scrollBy(0,1000)')
+	# scroll to section of page as needed
+	def scroll_to(section)
+		case section
+			when :bottom
+				@driver.execute_script('window.scrollBy(0,9999)')
+			when :top
+				@driver.execute_script('window.scrollBy(0,-9999)')
+			else
+				nil
+		end
 		sleep(1)
 	end
 
@@ -295,7 +305,7 @@ class UiTestSuite < Test::Unit::TestCase
 		new_cluster = @driver.find_element(:class, 'add-cluster')
 		new_cluster.click
 		sleep(1)
-		scroll_to_bottom
+		scroll_to(:bottom)
 		# will be second instance since there are two forms
 		cluster_form_2 = @driver.find_element(:class, 'new-cluster-form')
 		cluster_name_2 = cluster_form_2.find_element(:class, 'filename')
@@ -303,7 +313,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_cluster_2 = cluster_form_2.find_element(:class, 'upload-clusters')
 		upload_cluster_2.send_keys(@test_data_path + 'cluster_2_example.txt')
 		wait_for_render(:id, 'start-file-upload')
-		scroll_to_bottom
+		scroll_to(:bottom)
 		upload_btn_2 = cluster_form_2.find_element(:id, 'start-file-upload')
 		upload_btn_2.click
 		wait_for_render(:id, 'upload-success-modal')
@@ -620,6 +630,7 @@ class UiTestSuite < Test::Unit::TestCase
 		close_modal('upload-success-modal')
 
 		# upload marker gene list
+		scroll_to(:top)
 		gene_list_tab = @driver.find_element(:id, 'initialize_marker_genes_form_nav')
 		gene_list_tab.click
 		marker_form = @driver.find_element(:class, 'initialize_marker_genes_form')
