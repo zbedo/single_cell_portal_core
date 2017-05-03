@@ -8,7 +8,7 @@
     </div>
     <div id="orphaned-study-files" class="panel-collapse collapse in unsynced">
       <div class="panel-body">
-        <p class="text-danger">The following study files no longer have a corresponding file in your study workspace and may need to be deleted or re-parsed.</p>
+        <p class="text-danger">The following study files entries no longer have a corresponding file in your study workspace and may need to be deleted or re-parsed.</p>
         <div id="orphaned-study-files-forms" class="unsynced-content">
           <% @orphaned_study_files.each do |study_file| %>
             <%= render partial: 'orphaned_study_file_form', locals: {study_file: study_file} %>
@@ -90,3 +90,27 @@
 </div>
 
 <%= link_to "<i class='fa fa-chevron-left'></i> Back".html_safe, studies_path, class: 'btn btn-warning' %>
+
+<script type="text/javascript">
+
+    // when changing the existing file dropdown, dynamically update the file generation value for the specified form
+    $('.existing-file-select').change(function() {
+        var selectedFile = $(this).val();
+        if (selectedFile != '') {
+            console.log('updating existing file');
+            var availableFiles = <%= raw @available_files.to_json %>;
+            var studyFileId = $(this).data('study-file-id');
+            console.log('study file: ' + studyFileId);
+            console.log('choosing file: ' + selectedFile);
+            var result = $.grep(availableFiles, function(e) {return e.name == selectedFile})[0];
+            if (result != undefined) {
+                console.log('found result: ' + result);
+                var form = $('#study-file-' + studyFileId);
+                form.find('#study_file_generation').val(result.generation);
+                form.find('#study_file_upload_file_name').val(result.name);
+                form.find('#study_file_upload_file_size').val(result.size);
+            }
+        }
+    });
+
+</script>

@@ -1,5 +1,5 @@
 <% if !@study_file.nil? %>
-  $('<%= @form %>').html("<%= escape_javascript(render partial: 'study_file_form', locals: {study_file: @study_file}) %>");
+  $('<%= @form %>').replaceWith("<%= escape_javascript(render partial: @partial, locals: {study_file: @study_file}) %>");
 <% else %>
-  $('<%= @form %>').html("<%= escape_javascript(render partial: 'directory_listing_form', locals: {directory: @directory}) %>");
+  $('<%= @form %>').replaceWith("<%= escape_javascript(render partial: 'directory_listing_form', locals: {directory: @directory}) %>");
 <% end %>

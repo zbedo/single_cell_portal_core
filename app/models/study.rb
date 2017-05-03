@@ -1119,7 +1119,9 @@ class Study
   def send_to_firecloud(file)
     begin
       Rails.logger.info "#{Time.now}: Uploading #{file.upload_file_name} to FireCloud workspace: #{self.firecloud_workspace}"
-      Study.firecloud_client.execute_gcloud_method(:create_workspace_file, self.firecloud_workspace, file.upload.path, file.upload_file_name)
+      remote_file = Study.firecloud_client.execute_gcloud_method(:create_workspace_file, self.firecloud_workspace, file.upload.path, file.upload_file_name)
+      # store generation tag to know whether a file has been updated in GCP
+      file.update(generation: remote_file.generation)
       File.delete(file.upload.path)
       Rails.logger.info "#{Time.now}: Upload of #{file.upload_file_name} complete"
     rescue RuntimeError => e
@@ -1178,7 +1180,8 @@ class Study
         puts "#{Time.now}: Study #{self.name} uploading study files to FireCloud workspace: #{self.firecloud_workspace}"
         self.study_files.each do |file|
           puts "#{Time.now}: Uploading #{file.upload_file_name} to FireCloud workspace: #{self.firecloud_workspace}"
-          Study.firecloud_client.execute_gcloud_method(:create_workspace_file, self.firecloud_workspace, file.upload.path, file.upload_file_name)
+          remote_file = Study.firecloud_client.execute_gcloud_method(:create_workspace_file, self.firecloud_workspace, file.upload.path, file.upload_file_name)
+          file.update(generation: remote_file.generation)
           puts "#{Time.now}: Upload of #{file.upload_file_name} complete"
         end
         puts "#{Time.now}: Study: #{self.name} FireCloud migration successful!"

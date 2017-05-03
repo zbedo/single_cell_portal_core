@@ -1,6 +1,6 @@
 class StudiesController < ApplicationController
   before_action :set_study, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
-  before_action :set_file_types, only: [:sync_study, :sync_study_file, :sync_orphaned_study_file]
+  before_action :set_file_types, only: [:sync_study, :sync_study_file, :sync_orphaned_study_file, :update_study_file_from_sync]
   before_filter :check_edit_permissions, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
   before_filter do
     authenticate_user!
@@ -148,7 +148,7 @@ class StudiesController < ApplicationController
 
     # now determine if we have study_files that have been 'orphaned' (cannot find a corresponding bucket file)
     @orphaned_study_files = @study_files - @synced_study_files
-    @available_files = @unsynced_files.map(&:name)
+    @available_files = @unsynced_files.map {|f| {name: f.name, generation: f.generation, size: f.upload_file_size}}
   end
 
   # PATCH/PUT /studies/1
@@ -251,7 +251,7 @@ class StudiesController < ApplicationController
     @study_file = @study.build_study_file({file_type: file_type, cluster_type: cluster_type})
   end
 
-  # update an existing study file; cannot be called until file is uploaded, so there is no create
+  # update an existing study file via upload wizard; cannot be called until file is uploaded, so there is no create
   # if adding an external fastq file link, will create entry from scratch to update
   def update_study_file
     @study_file = StudyFile.where(study_id: study_file_params[:study_id], _id: study_file_params[:_id]).first
@@ -260,14 +260,47 @@ class StudiesController < ApplicationController
       @study_file = @study.study_files.build
     end
     @study_file.update_attributes(study_file_params)
-    # if a gene list got updated, we need to update the precomputed_score entry
+    # if a gene list or cluster got updated, we need to update the associated records
     if study_file_params[:file_type] == 'Gene List'
-      @precomputed_entry = PrecomputedScore.where(study_file_id: study_file_params[:_id])
+      @precomputed_entry = PrecomputedScore.find_by(study_file_id: study_file_params[:_id])
       @precomputed_entry.update(name: study_file_params[:name])
+    elsif study_file_params[:file_type] == 'Cluster'
+      @cluster = ClusterGroup.find_by(study_file_id: study_file_params[:_id])
+      @cluster.update(name: study_file_params[:name])
+      # also update data_arrays
+      @cluster.data_arrays.update_all(cluster_name: study_file_params[:name])
     end
     @message = "'#{@study_file.name}' has been successfully updated."
     @selector = params[:selector]
     @partial = params[:partial]
+
+    # notify users of updated file
+    changes = ["Study file updated: #{@study_file.upload_file_name}"]
+    if @study.study_shares.any?
+      SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
+    end
+  end
+
+  # update an existing study file via sync page
+  def update_study_file_from_sync
+    @study_file = StudyFile.find_by(study_id: study_file_params[:study_id], _id: study_file_params[:_id])
+    if @study_file.nil?
+      # don't use helper as we're about to mass-assign params
+      @study_file = @study.study_files.build
+    end
+    @study_file.update_attributes(study_file_params)
+    # if a gene list or cluster got updated, we need to update the associated records
+    if study_file_params[:file_type] == 'Gene List'
+      @precomputed_entry = PrecomputedScore.find_by(study_file_id: study_file_params[:_id])
+      @precomputed_entry.update(name: study_file_params[:name])
+    elsif study_file_params[:file_type] == 'Cluster'
+      @cluster = ClusterGroup.find_by(study_file_id: study_file_params[:_id])
+      @cluster.update(name: study_file_params[:name])
+      # also update data_arrays
+      @cluster.data_arrays.update_all(cluster_name: study_file_params[:name])
+    end
+    @message = "'#{@study_file.name}' has been successfully updated."
+    @form = "#study-file-#{@study_file.id}"
 
     # notify users of updated file
     changes = ["Study file updated: #{@study_file.upload_file_name}"]
@@ -369,6 +402,7 @@ class StudiesController < ApplicationController
       @message = "New Study File '#{@study_file.name}' successfully synced."
       # only grab id after update as it will change on new entries
       @form = "#study-file-#{@study_file.id}"
+      @partial = 'study_file_form'
       if @study_file.parseable?
         logger.info "Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
         @message += " You will receive and email at #{current_user.email} when the parse has completed."
@@ -397,9 +431,13 @@ class StudiesController < ApplicationController
   def sync_orphaned_study_file
     @study_file = StudyFile.find_by(study_id: study_file_params[:study_id], _id: study_file_params[:_id])
     @form = "#study-file-#{@study_file.id}"
-    # overwrite name with requested file
+    @partial = 'orphaned_study_file_form'
+    # overwrite name with requested file unless study_file is a cluster or gene list
     update_params = study_file_params
-    update_params[:name] = params[:existing_file]
+    if @study_file.file_type != 'Cluster' && @study_file.file_type != 'Gene List'
+      update_params[:name] = params[:existing_file]
+    end
+
     if @study_file.update(update_params)
       @message = "New Study File '#{@study_file.name}' successfully synced."
       # only reparse if user requests
@@ -417,11 +455,7 @@ class StudiesController < ApplicationController
             @study.delay.initialize_study_metadata(@study_file, current_user, {local: false, reparse: true})
         end
       end
-      # special case in where a user is re-syncing a gene list and not re-parsing, we need to update the names
-      if @study_file.file_type == 'Gene List' && params[:reparse] == 'No'
-        @precomputed_entry = @study.precomputed_scores.where(study_file_id: study_file_params[:_id])
-        @precomputed_entry.update(name: study_file_params[:name])
-      end
+
       respond_to do |format|
         format.js {render action: 'sync_study_file'}
       end
@@ -628,7 +662,7 @@ class StudiesController < ApplicationController
 
   # study file params whitelist
   def study_file_params
-    params.require(:study_file).permit(:_id, :study_id, :name, :upload, :upload_file_name, :upload_content_type, :upload_file_size, :description, :file_type, :status, :human_fastq_url, :human_data, :cluster_type, :x_axis_label, :y_axis_label, :z_axis_label, :x_axis_min, :x_axis_max, :y_axis_min, :y_axis_max, :z_axis_min, :z_axis_max)
+    params.require(:study_file).permit(:_id, :study_id, :name, :upload, :upload_file_name, :upload_content_type, :upload_file_size, :description, :file_type, :status, :human_fastq_url, :human_data, :cluster_type, :generation, :x_axis_label, :y_axis_label, :z_axis_label, :x_axis_min, :x_axis_max, :y_axis_min, :y_axis_max, :z_axis_min, :z_axis_max)
   end
 
   def directory_listing_params
@@ -698,11 +732,13 @@ class StudiesController < ApplicationController
   def process_workspace_bucket_files(files)
     files.each do |file|
       if !%w(.fastq. .fq.).any? {|str| file.name.include?(str)}
-        # make sure filename and size are identical, otherwise we have an unknown file
-        study_match = @study_files.detect {|f| (f.upload_file_name == file.name || f.name == file.name) && f.upload_file_size == file.size }
+        # make sure filename and generation are identical, otherwise we have an unknown file
+        study_match = @study_files.detect {|f| (f.upload_file_name == file.name || f.name == file.name) && f.generation == file.generation }
         # make sure file is not acutally a folder by checking its size and name
         if study_match.nil? && file.size > 0
-          @unsynced_files << StudyFile.new(study_id: @study.id, name: file.name, upload_file_name: file.name, upload_content_type: file.content_type, upload_file_size: file.size)
+          # create a new entry and default to cluster file (user can change via dropdown)
+          unsynced_file = StudyFile.new(study_id: @study.id, name: file.name, file_type: 'Cluster', upload_file_name: file.name, upload_content_type: file.content_type, upload_file_size: file.size, generation: file.generation)
+          @unsynced_files << unsynced_file
         elsif !study_match.nil?
           @synced_study_files << study_match
         end
@@ -713,12 +749,12 @@ class StudiesController < ApplicationController
         existing_dir = all_dirs.detect {|d| d.name == directory}
         # add to list of discovered files
         @files_by_dir[directory] ||= []
-        @files_by_dir[directory] << {name: file.name, size: file.size}
+        @files_by_dir[directory] << {name: file.name, size: file.size, generation: file.generation}
         if existing_dir.nil?
-          dir = @study.directory_listings.build(name: directory, files: [{name: file.name, size: file.size}], sync_status: false)
+          dir = @study.directory_listings.build(name: directory, files: [{name: file.name, size: file.size, generation: file.generation}], sync_status: false)
           @unsynced_directories << dir
-        elsif existing_dir.files.find {|f| f[:name] == file.name && f[:size] == file.size }.nil?
-          existing_dir.files << {name: file.name, size: file.size}
+        elsif existing_dir.files.find {|f| f[:name] == file.name && f[:generation] == file.generation }.nil?
+          existing_dir.files << {name: file.name, size: file.size, generation: file.generation}
           existing_dir.sync_status = false
           if @unsynced_directories.map(&:name).include?(existing_dir.name)
             @unsynced_directories.delete(existing_dir)

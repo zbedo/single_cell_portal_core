@@ -28,6 +28,7 @@ class StudyFile
   field :data_dir, type: String
   field :human_fastq_url, type: String
   field :human_data, type: Boolean, default: false
+  field :generation, type: String
   field :x_axis_label, type: String, default: ''
   field :y_axis_label, type: String, default: ''
   field :z_axis_label, type: String, default: ''

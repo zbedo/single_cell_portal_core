@@ -2,17 +2,25 @@
   <%= render partial: 'study_file_errors', locals: {study_file: study_file} %>
   <%= f.hidden_field :study_id, value: params[:id] %>
   <%= f.hidden_field :_id, value: study_file._id %>
-  <%= f.hidden_field :sync_status, value: 1 %>
-  <%= f.hidden_field :upload_file_name %>
+  <% if study_file.file_type == 'Cluster' || study_file.file_type == 'Gene List' %>
+    <%= f.hidden_field :upload_file_name %>
+  <% end %>
   <%= f.hidden_field :upload_content_type %>
+  <%= f.hidden_field :upload_file_size %>
+  <%= f.hidden_field :generation %>
   <div class="form-group row">
     <div class="col-sm-3">
-      <%= f.label :name %><br />
-      <%= f.text_field :name, class: 'form-control filename' %>
+      <% if study_file.file_type == 'Cluster' || study_file.file_type == 'Gene List' %>
+        <%= f.label :upload_file_name, 'File Name' %><br />
+        <%= f.text_field :upload_file_name, class: 'form-control filename', readonly: true %>
+      <% else %>
+        <%= f.label :name %><br />
+        <%= f.text_field :name, class: 'form-control filename', readonly: true %>
+      <% end %>
     </div>
     <div class="col-sm-3">
       <%= label_tag :existing_file, 'Sync with existing file' %>
-      <%= select_tag :existing_file, options_for_select(@available_files), {class: 'form-control', include_blank: 'Please select a file', id: "existing-file-#{study_file.id}" } %>
+      <%= select_tag :existing_file, options_for_select(@available_files.map {|f| f[:name]}), {class: 'form-control existing-file-select', include_blank: 'Please select a file', id: "existing-file-#{study_file.id}", data: {study_file_id: "#{study_file.id}"} } %>
     </div>
     <div class="col-sm-6">
       <%= f.label :description, 'Description' %><br />
@@ -29,7 +37,7 @@
   <div class="form-group row">
     <div class="col-sm-4">
       <%= f.label :file_type %><br />
-      <%= f.select :file_type, options_for_select(@file_types, study_file.file_type), {}, class: 'form-control' %>
+      <%= f.text_field :file_type, class: 'form-control', readonly: true %>
     </div>
     <div class="col-sm-2">
       <%= label_tag :reparse, 'Reparse File?' %><br/>
@@ -49,16 +57,6 @@
   </div>
 
   <script type="text/javascript">
-      $('#study-file-<%= study_file._id %> #study_file_file_type').change(function() {
-          var fileType = $(this).val();
-          if (fileType == 'Cluster') {
-              $("#study-file-<%= study_file._id %>-extra-info").html("<%= escape_javascript(render partial: 'cluster_axis_fields', locals: {f: f}) %>");
-          } else if (fileType == 'Expression Matrix') {
-              $("#study-file-<%= study_file._id %>-extra-info").html("<%= escape_javascript(render partial: 'expression_axis_fields', locals: {f: f}) %>");
-          } else {
-              $("#study-file-<%= study_file._id %>-extra-info").empty();
-          }
-      });
 
       $('#sync-study-file-<%= study_file.id %>').click(function() {
          if ($("#existing-file-<%= study_file.id%> ").val() != '') {
@@ -68,5 +66,6 @@
              return false;
          }
       });
+
   </script>
 <% end %>

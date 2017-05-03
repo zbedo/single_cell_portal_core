@@ -20,6 +20,7 @@ Rails.application.routes.draw do
         get 'retrieve_wizard_upload', to: 'studies#retrieve_wizard_upload', as: :retrieve_wizard_upload
         get 'study_files/new', to: 'studies#new_study_file', as: :new_study_file
 				match 'study_files', to: 'studies#update_study_file', via: [:post, :patch], as: :update_study_file
+				match 'update_synced_file', to: 'studies#update_study_file_from_sync', via: [:post, :patch], as: :update_study_file_from_sync
 				match 'sync_study_file', to: 'studies#sync_study_file', via: [:post, :patch], as: :sync_study_file
 				match 'sync_orphaned_study_file', to: 'studies#sync_orphaned_study_file', via: [:post, :patch], as: :sync_orphaned_study_file
 				match 'sync_directory_listing', to: 'studies#sync_directory_listing', via: [:post, :patch], as: :sync_directory_listing
