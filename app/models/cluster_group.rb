@@ -7,6 +7,7 @@ class ClusterGroup
   field :domain_ranges, type: Hash
 
   validates_uniqueness_of :name, scope: :study_id
+  validates_presence_of :name, :cluster_type
 
   belongs_to :study
   belongs_to :study_file

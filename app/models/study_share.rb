@@ -10,6 +10,8 @@ class StudyShare
 
 	validates_uniqueness_of :email, scope: :study_id
 
+	index({ email: 1, study_id: 1 }, { unique: true })
+
 	PERMISSION_TYPES = %w(Owner Edit View)
 	FIRECLOUD_ACLS = %w(OWNER WRITER READER)
 

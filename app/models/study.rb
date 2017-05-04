@@ -1235,130 +1235,140 @@ class Study
   # other users to re-use the old name & url_safe_name
   # will only set the first time
   def set_data_dir
-    @dir_val = SecureRandom.hex(32)
-    while Study.where(data_dir: @dir_val).exists?
+    unless Rails.env == 'test'
       @dir_val = SecureRandom.hex(32)
+      while Study.where(data_dir: @dir_val).exists?
+        @dir_val = SecureRandom.hex(32)
+      end
+      self.data_dir = @dir_val
     end
-    self.data_dir = @dir_val
   end
 
   # make data directory after study creation is successful
   def make_data_dir
-    FileUtils.mkdir_p(self.data_store_path)
+    unless Rails.env == 'test'
+      FileUtils.mkdir_p(self.data_store_path)
+    end
   end
 
   # automatically create a FireCloud workspace on study creation after validating name & url_safe_name
   # will raise validation errors if creation, bucket or ACL assignment fail for any reason and deletes workspace on validation fail
   def initialize_with_new_workspace
-    Rails.logger.info "#{Time.now}: Study: #{self.name} creating FireCloud workspace"
-    validate_name_and_url
-    unless self.errors.any?
-      begin
-        # create workspace
-        workspace = Study.firecloud_client.create_workspace(self.firecloud_workspace)
-        Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace creation successful"
-        ws_name = workspace['name']
-        # validate creation
-        unless ws_name == self.firecloud_workspace
-          # delete workspace on validation fail
-          Study.firecloud_client.delete_workspace(self.firecloud_workspace)
-          errors.add(:firecloud_workspace, ' was not created properly (workspace name did not match or was not created).  Please try again later.')
-          return false
-        end
-        Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace validation successful"
-        # set bucket_id
-        bucket = workspace['bucketName']
-        self.bucket_id = bucket
-        if self.bucket_id.nil?
-          # delete workspace on validation fail
-          Study.firecloud_client.delete_workspace(self.firecloud_workspace)
-          errors.add(:firecloud_workspace, ' was not created properly (storage bucket was not set).  Please try again later.')
-          return false
-        end
-        Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud bucket assignment successful"
-        # set workspace acl
-        study_owner = self.user.email
-        acl = Study.firecloud_client.create_workspace_acl(study_owner, 'OWNER')
-        Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
-        # validate acl
-        ws_acl = Study.firecloud_client.get_workspace_acl(ws_name)
-        unless ws_acl['acl'][study_owner]['accessLevel'] == 'OWNER'
-          # delete workspace on validation fail
-          Study.firecloud_client.delete_workspace(self.firecloud_workspace)
-          errors.add(:firecloud_workspace, ' was not created properly (permissions do not match).  Please try again later.')
-          return false
-        end
-        Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment successful"
-        if self.study_shares.any?
-          Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares starting"
-          self.study_shares.each do |share|
-            begin
-              acl = Study.firecloud_client.create_workspace_acl(share.email, StudyShare::FIRECLOUD_ACL_MAP[share.permission])
-              Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
-              Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares #{share.email} successful"
-            rescue RuntimeError => e
-              errors.add(:study_shares, "Could not create a share for #{share.email} to workspace #{self.firecloud_workspace} due to: #{e.message}")
-              return false
+    unless Rails.env == 'test' # testing for this is handled through ui_test_suite.rb which runs against development database
+
+      Rails.logger.info "#{Time.now}: Study: #{self.name} creating FireCloud workspace"
+      validate_name_and_url
+      unless self.errors.any?
+        begin
+          # create workspace
+          workspace = Study.firecloud_client.create_workspace(self.firecloud_workspace)
+          Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace creation successful"
+          ws_name = workspace['name']
+          # validate creation
+          unless ws_name == self.firecloud_workspace
+            # delete workspace on validation fail
+            Study.firecloud_client.delete_workspace(self.firecloud_workspace)
+            errors.add(:firecloud_workspace, ' was not created properly (workspace name did not match or was not created).  Please try again later.')
+            return false
+          end
+          Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace validation successful"
+          # set bucket_id
+          bucket = workspace['bucketName']
+          self.bucket_id = bucket
+          if self.bucket_id.nil?
+            # delete workspace on validation fail
+            Study.firecloud_client.delete_workspace(self.firecloud_workspace)
+            errors.add(:firecloud_workspace, ' was not created properly (storage bucket was not set).  Please try again later.')
+            return false
+          end
+          Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud bucket assignment successful"
+          # set workspace acl
+          study_owner = self.user.email
+          acl = Study.firecloud_client.create_workspace_acl(study_owner, 'OWNER')
+          Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
+          # validate acl
+          ws_acl = Study.firecloud_client.get_workspace_acl(ws_name)
+          unless ws_acl['acl'][study_owner]['accessLevel'] == 'OWNER'
+            # delete workspace on validation fail
+            Study.firecloud_client.delete_workspace(self.firecloud_workspace)
+            errors.add(:firecloud_workspace, ' was not created properly (permissions do not match).  Please try again later.')
+            return false
+          end
+          Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment successful"
+          if self.study_shares.any?
+            Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares starting"
+            self.study_shares.each do |share|
+              begin
+                acl = Study.firecloud_client.create_workspace_acl(share.email, StudyShare::FIRECLOUD_ACL_MAP[share.permission])
+                Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
+                Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares #{share.email} successful"
+              rescue RuntimeError => e
+                errors.add(:study_shares, "Could not create a share for #{share.email} to workspace #{self.firecloud_workspace} due to: #{e.message}")
+                return false
+              end
             end
           end
+        rescue => e
+          # delete workspace on any fail as this amounts to a validation fail
+          Rails.logger.info "#{Time.now}: Error creating workspace: #{e.message}"
+          Study.firecloud_client.delete_workspace(self.firecloud_workspace)
+          errors.add(:firecloud_workspace, " creation failed: #{e.message}; Please try again later.")
+          return false
         end
-      rescue => e
-        # delete workspace on any fail as this amounts to a validation fail
-        Rails.logger.info "#{Time.now}: Error creating workspace: #{e.message}"
-        Study.firecloud_client.delete_workspace(self.firecloud_workspace)
-        errors.add(:firecloud_workspace, " creation failed: #{e.message}; Please try again later.")
-        return false
       end
     end
   end
 
   # validator to use existing FireCloud workspace
   def initialize_with_existing_workspace
-    Rails.logger.info "#{Time.now}: Study: #{self.name} using FireCloud workspace: #{self.firecloud_workspace}"
-    validate_name_and_url
-    # check if workspace is already being used
-    if Study.where(firecloud_workspace: self.firecloud_workspace).exists?
-      errors.add(:firecloud_workspace, ': The workspace you provided is already in use by another study.  Please use another workspace.')
-      return false
-    end
-    unless self.errors.any?
-      begin
-        workspace = Study.firecloud_client.get_workspace(self.firecloud_workspace)
-        acl = Study.firecloud_client.get_workspace_acl(self.firecloud_workspace)
-        study_owner = self.user.email
-        # check permissions first
-        unless acl['acl'][study_owner]['accessLevel'] == 'OWNER'
-          errors.add(:firecloud_workspace, ': The workspace you provided is not owned by the current user.  Please use another workspace.')
-          return false
-        end
-        Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl check successful"
-        # set bucket_id, it is nested lower since we had to get an existing workspace
-        bucket = workspace['workspace']['bucketName']
-        self.bucket_id = bucket
-        if self.bucket_id.nil?
-          # delete workspace on validation fail
-          errors.add(:firecloud_workspace, ' was not created properly (storage bucket was not set).  Please try again later.')
-          return false
-        end
-        Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud bucket assignment successful"
-        if self.study_shares.any?
-          Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares starting"
-          self.study_shares.each do |share|
-            begin
-              acl = Study.firecloud_client.create_workspace_acl(share.email, StudyShare::FIRECLOUD_ACL_MAP[share.permission])
-              Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
-              Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares #{share.email} successful"
-            rescue RuntimeError => e
-              errors.add(:study_shares, "Could not create a share for #{share.email} to workspace #{self.firecloud_workspace} due to: #{e.message}")
-              return false
+    unless Rails.env == 'test'
+
+      Rails.logger.info "#{Time.now}: Study: #{self.name} using FireCloud workspace: #{self.firecloud_workspace}"
+      validate_name_and_url
+      # check if workspace is already being used
+      if Study.where(firecloud_workspace: self.firecloud_workspace).exists?
+        errors.add(:firecloud_workspace, ': The workspace you provided is already in use by another study.  Please use another workspace.')
+        return false
+      end
+      unless self.errors.any?
+        begin
+          workspace = Study.firecloud_client.get_workspace(self.firecloud_workspace)
+          acl = Study.firecloud_client.get_workspace_acl(self.firecloud_workspace)
+          study_owner = self.user.email
+          # check permissions first
+          unless acl['acl'][study_owner]['accessLevel'] == 'OWNER'
+            errors.add(:firecloud_workspace, ': The workspace you provided is not owned by the current user.  Please use another workspace.')
+            return false
+          end
+          Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl check successful"
+          # set bucket_id, it is nested lower since we had to get an existing workspace
+          bucket = workspace['workspace']['bucketName']
+          self.bucket_id = bucket
+          if self.bucket_id.nil?
+            # delete workspace on validation fail
+            errors.add(:firecloud_workspace, ' was not created properly (storage bucket was not set).  Please try again later.')
+            return false
+          end
+          Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud bucket assignment successful"
+          if self.study_shares.any?
+            Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares starting"
+            self.study_shares.each do |share|
+              begin
+                acl = Study.firecloud_client.create_workspace_acl(share.email, StudyShare::FIRECLOUD_ACL_MAP[share.permission])
+                Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
+                Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares #{share.email} successful"
+              rescue RuntimeError => e
+                errors.add(:study_shares, "Could not create a share for #{share.email} to workspace #{self.firecloud_workspace} due to: #{e.message}")
+                return false
+              end
             end
           end
+        rescue => e
+          # delete workspace on any fail as this amounts to a validation fail
+          Rails.logger.info "#{Time.now}: Error assigning workspace: #{e.message}"
+          errors.add(:firecloud_workspace, " assignment failed: #{e.message}; Please try again later.")
+          return false
         end
-      rescue => e
-        # delete workspace on any fail as this amounts to a validation fail
-        Rails.logger.info "#{Time.now}: Error assigning workspace: #{e.message}"
-        errors.add(:firecloud_workspace, " assignment failed: #{e.message}; Please try again later.")
-        return false
       end
     end
   end
@@ -1379,18 +1389,22 @@ class Study
 
   # remove data directory on delete
   def remove_data_dir
-    if Dir.exists?(self.data_store_path)
-      FileUtils.rm_rf(self.data_store_path)
+    unless Rails.env == 'test'
+      if Dir.exists?(self.data_store_path)
+        FileUtils.rm_rf(self.data_store_path)
+      end
     end
   end
 
   # remove firecloud workspace on delete
   def delete_firecloud_workspace
-    begin
-      Study.firecloud_client.delete_workspace(self.firecloud_workspace)
-    rescue RuntimeError => e
-      # workspace was not found, most likely deleted already
-      Rails.logger.error "#{Time.now}: #{e.message}"
+    unless Rails.env == 'test'
+      begin
+        Study.firecloud_client.delete_workspace(self.firecloud_workspace)
+      rescue RuntimeError => e
+        # workspace was not found, most likely deleted already
+        Rails.logger.error "#{Time.now}: #{e.message}"
+      end
     end
   end
 end

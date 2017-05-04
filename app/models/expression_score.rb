@@ -14,6 +14,7 @@ class ExpressionScore
   index({ study_id: 1, study_file_id: 1} , { unique: false })
 
   validates_uniqueness_of :gene, scope: :study_id
+  validates_presence_of :gene, :scores
 
   def mean(cells)
     sum = 0.0

@@ -13,6 +13,9 @@ class StudyMetadata
   index({ study_id: 1 }, { unique: false })
   index({ study_id: 1, study_file_id: 1 }, { unique: false })
 
+  validates_uniqueness_of :name, scope: [:study_id, :annotation_type]
+  validates_presence_of :name, :annotation_type, :cell_annotations
+
 
   MAX_ENTRIES = 100000
   SUBSAMPLE_THRESHOLD = 1000
