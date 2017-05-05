@@ -933,7 +933,7 @@ class SiteController < ApplicationController
   def load_cluster_group_annotations
     grouped_options = {
         'Cluster-based' => @cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]},
-        'Study Wide' => @study.study_metadatas.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
+        'Study Wide' => @study.study_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
     }
     grouped_options
   end

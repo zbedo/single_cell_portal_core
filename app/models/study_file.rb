@@ -15,7 +15,7 @@ class StudyFile
   has_many :cluster_groups, dependent: :destroy
   has_many :expression_scores, dependent: :destroy
   has_many :precomputed_scores, dependent: :destroy
-  has_many :study_metadatas, dependent: :destroy
+  has_many :study_metadata, dependent: :destroy
 
   # field definitions
   field :name, type: String

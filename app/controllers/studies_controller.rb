@@ -327,7 +327,7 @@ class StudiesController < ApplicationController
           DataArray.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
           @partial = 'initialize_expression_form'
         when 'Metadata'
-          StudyMetadata.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
+          StudyMetadatum.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
           @partial = 'initialize_metadata_form'
         when 'Fastq'
           @partial = 'initialize_primary_data_form'
@@ -482,7 +482,7 @@ class StudiesController < ApplicationController
           ExpressionScore.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
           DataArray.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
         when 'Metadata'
-          StudyMetadata.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
+          StudyMetadatum.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
         when 'Gene List'
           PrecomputedScore.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
         else

@@ -1,6 +1,6 @@
 require "test_helper"
 
-class StudyMetadataTest < ActiveSupport::TestCase
+class StudyMetadatumTest < ActiveSupport::TestCase
   def setup
     @study_metadata = nil
   end

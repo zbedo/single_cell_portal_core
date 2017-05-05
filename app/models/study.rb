@@ -63,7 +63,7 @@ class Study
     end
   end
 
-  has_many :study_metadatas, dependent: :delete do
+  has_many :study_metadata, dependent: :delete do
     def by_name_and_type(name, type)
       where(name: name, annotation_type: type).to_a
     end
@@ -229,7 +229,7 @@ class Study
         cells.shift
         @cell_count = cells.size
       when 'Metadata'
-        metadata_name, metadata_type = StudyMetadata.where(study_id: self.id).pluck(:name, :annotation_type).flatten
+        metadata_name, metadata_type = StudyMetadatum.where(study_id: self.id).pluck(:name, :annotation_type).flatten
         @cell_count = self.study_metadata_values(metadata_name, metadata_type).keys.size
     end
     self.update(cell_count: @cell_count)
@@ -253,7 +253,7 @@ class Study
 
   # return a hash keyed by cell name of the requested study_metadata values
   def study_metadata_values(metadata_name, metadata_type)
-    metadata_objects = self.study_metadatas.by_name_and_type(metadata_name, metadata_type)
+    metadata_objects = self.study_metadata.by_name_and_type(metadata_name, metadata_type)
     vals = {}
     metadata_objects.each do |metadata|
       vals.merge!(metadata.cell_annotations)
@@ -261,11 +261,11 @@ class Study
     vals
   end
 
-  # return array of possible values for a given study_metadata annotation (only for group-based)
+  # return array of possible values for a given study_metadata annotation (valid only for group-based)
   def study_metadata_keys(metadata_name, metadata_type)
     vals = []
     unless metadata_type == 'numeric'
-      metadata_objects = self.study_metadatas.by_name_and_type(metadata_name, metadata_type)
+      metadata_objects = self.study_metadata.by_name_and_type(metadata_name, metadata_type)
       metadata_objects.each do |metadata|
         vals += metadata.values
       end
@@ -318,7 +318,7 @@ class Study
     studies.each do |study|
       ExpressionScore.where(study_id: study.id).delete_all
       DataArray.where(study_id: study.id).delete_all
-      StudyMetadata.where(study_id: study.id).delete_all
+      StudyMetadatum.where(study_id: study.id).delete_all
       PrecomputedScore.where(study_id: study.id).delete_all
       ClusterGroup.where(study_id: study.id).delete_all
       StudyFile.where(study_id: study.id).delete_all
@@ -756,7 +756,7 @@ class Study
       end
 
       # create subsampled data_arrays for visualization
-      study_metadata = StudyMetadata.where(study_id: self.id, study_file_id: metadata_file.id).to_a
+      study_metadata = StudyMetadatum.where(study_id: self.id, study_file_id: metadata_file.id).to_a
       # determine how many levels to subsample based on size of cluster_group
       required_subsamples = ClusterGroup::SUBSAMPLE_THRESHOLDS.select {|sample| sample < @cluster_group.points}
       required_subsamples.each do |sample_size|
@@ -820,7 +820,7 @@ class Study
 
     # next, check if this is a re-parse job, in which case we need to remove all existing entries first
     if opts[:reparse]
-      self.study_metadatas.delete_all
+      self.study_metadata.delete_all
     end
 
     # validate headers of definition file
@@ -874,7 +874,7 @@ class Study
       header_data.each_with_index do |header, index|
         # don't need an object for the cell names, only metadata values
         unless index == name_index
-          m_obj = self.study_metadatas.build(name: header, annotation_type: type_data[index], study_file_id: metadata_file._id, cell_annotations: {}, values: [])
+          m_obj = self.study_metadata.build(name: header, annotation_type: type_data[index], study_file_id: metadata_file._id, cell_annotations: {}, values: [])
           @metadata_records[index] = m_obj
         end
       end
@@ -889,12 +889,12 @@ class Study
         # assign values to correct study_metadata object
         vals.each_with_index do |val, index|
           unless index == name_index
-            if @metadata_records[index].cell_annotations.size >= StudyMetadata::MAX_ENTRIES
+            if @metadata_records[index].cell_annotations.size >= StudyMetadatum::MAX_ENTRIES
               # study metadata already has max number of values, so save it and replace it with a new study_metadata of same name & type
               metadata = @metadata_records[index]
               Rails.logger.info "Saving study metadata: #{metadata.name}-#{metadata.annotation_type} using #{metadata_file.upload_file_name} in #{self.name}"
               metadata.save
-              new_metadata = self.study_metadatas.build(name: metadata.name, annotation_type: metadata.annotation_type, study_file_id: metadata_file._id, cell_annotations: {}, values: [])
+              new_metadata = self.study_metadata.build(name: metadata.name, annotation_type: metadata.annotation_type, study_file_id: metadata_file._id, cell_annotations: {}, values: [])
               @metadata_records[index] = new_metadata
             end
             # determine whether or not value needs to be cast as a float or not
@@ -968,7 +968,7 @@ class Study
       end
     rescue => e
       # parse has failed, so clean up records and remove file
-      StudyMetadata.where(study_id: self.id).delete_all
+      StudyMetadatum.where(study_id: self.id).delete_all
       filename = metadata_file.upload_file_name
       metadata_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
@@ -1235,13 +1235,11 @@ class Study
   # other users to re-use the old name & url_safe_name
   # will only set the first time
   def set_data_dir
-    unless Rails.env == 'test'
+    @dir_val = SecureRandom.hex(32)
+    while Study.where(data_dir: @dir_val).exists?
       @dir_val = SecureRandom.hex(32)
-      while Study.where(data_dir: @dir_val).exists?
-        @dir_val = SecureRandom.hex(32)
-      end
-      self.data_dir = @dir_val
     end
+    self.data_dir = @dir_val
   end
 
   # make data directory after study creation is successful

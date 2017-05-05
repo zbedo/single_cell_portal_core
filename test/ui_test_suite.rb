@@ -184,9 +184,10 @@ class UiTestSuite < Test::Unit::TestCase
 	# Will also approve terms if not accepted yet, waits for redirect back to site, and closes modal
 	def login(email)
 		google_auth = @driver.find_element(:id, 'google-auth')
+		sleep(1)
 		google_auth.click
 		puts 'logging in as ' + email
-		account = @driver.find_element(xpath: "//button[@value='#{email}']")
+		account = @driver.find_element(xpath: "//p[@data-email='#{email}']")
 		account.click
 		# check to make sure if we need to accept terms
 		if @driver.current_url.include?('https://accounts.google.com/o/oauth2/auth')

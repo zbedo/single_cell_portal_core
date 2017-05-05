@@ -1,4 +1,4 @@
-class StudyMetadata
+class StudyMetadatum
   include Mongoid::Document
 
   belongs_to :study
