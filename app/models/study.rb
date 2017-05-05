@@ -1244,9 +1244,7 @@ class Study
 
   # make data directory after study creation is successful
   def make_data_dir
-    unless Rails.env == 'test'
-      FileUtils.mkdir_p(self.data_store_path)
-    end
+    FileUtils.mkdir_p(self.data_store_path)
   end
 
   # automatically create a FireCloud workspace on study creation after validating name & url_safe_name
@@ -1387,22 +1385,18 @@ class Study
 
   # remove data directory on delete
   def remove_data_dir
-    unless Rails.env == 'test'
-      if Dir.exists?(self.data_store_path)
-        FileUtils.rm_rf(self.data_store_path)
-      end
+    if Dir.exists?(self.data_store_path)
+      FileUtils.rm_rf(self.data_store_path)
     end
   end
 
   # remove firecloud workspace on delete
   def delete_firecloud_workspace
-    unless Rails.env == 'test'
-      begin
-        Study.firecloud_client.delete_workspace(self.firecloud_workspace)
-      rescue RuntimeError => e
-        # workspace was not found, most likely deleted already
-        Rails.logger.error "#{Time.now}: #{e.message}"
-      end
+    begin
+      Study.firecloud_client.delete_workspace(self.firecloud_workspace)
+    rescue RuntimeError => e
+      # workspace was not found, most likely deleted already
+      Rails.logger.error "#{Time.now}: #{e.message}"
     end
   end
 end
