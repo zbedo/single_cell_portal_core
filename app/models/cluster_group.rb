@@ -236,6 +236,6 @@ class ClusterGroup
       array.save
     end
     Rails.logger.info "#{Time.now}: Subsampling complete for cluster '#{self.name}' using annotation: #{annotation_name} (#{annotation_type}, #{annotation_scope}) at resolution #{sample_size}"
-    data_arrays
+    true
   end
 end

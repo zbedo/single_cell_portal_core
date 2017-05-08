@@ -382,10 +382,8 @@ class Study
 
     # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
     if !opts[:local]
-      # first check if directory exists, there are instances when it can accidentally get deleted
-      if !Dir.exists?(self.data_store_path)
-
-      end
+      # make sure data dir exists first
+      self.make_data_dir
       remote_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_workspace, expression_file.upload_file_name, self.data_store_path)
       expression_file.update(upload: remote_file)
     end
@@ -559,6 +557,8 @@ class Study
 
     # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
     if !opts[:local]
+      # make sure data dir exists first
+      self.make_data_dir
       remote_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_workspace, ordinations_file.upload_file_name, self.data_store_path)
       ordinations_file.update(upload: remote_file)
     end
@@ -759,7 +759,7 @@ class Study
       end
 
       # create subsampled data_arrays for visualization
-      study_metadata = StudyMetadatum.where(study_id: self.id, study_file_id: metadata_file.id).to_a
+      study_metadata = StudyMetadatum.find_by(study_id: self.id)
       # determine how many levels to subsample based on size of cluster_group
       required_subsamples = ClusterGroup::SUBSAMPLE_THRESHOLDS.select {|sample| sample < @cluster_group.points}
       required_subsamples.each do |sample_size|
@@ -817,6 +817,8 @@ class Study
   def initialize_study_metadata(metadata_file, user, opts={local: true})
     # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
     if !opts[:local]
+      # make sure data dir exists first
+      self.make_data_dir
       remote_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_workspace, metadata_file.upload_file_name, self.data_store_path)
       metadata_file.update(upload: remote_file)
     end
@@ -942,6 +944,26 @@ class Study
         end
       end
       @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
+
+      # load newly parsed data
+      new_metadata = StudyMetadatum.find_by(study_id: self.id, study_file_id: metadata_file.id)
+
+      # check to make sure that all the necessary metadata-based subsample arrays exist for this study
+      # if parsing first before clusters, will simply exit without performing any action and will be created when clusters are parsed
+      self.cluster_groups.each do |cluster_group|
+        new_metadata.each do |metadatum|
+          # determine necessary subsamples
+          required_subsamples = ClusterGroup::SUBSAMPLE_THRESHOLDS.select {|sample| sample < cluster_group.points}
+          # for each subsample size, cluster & metadata combination, remove any existing entries and re-create
+          # the delete call is necessary as we may be reparsing the file in which case the old entries need to be removed
+          # if we are not reparsing, the delete call does nothing
+          required_subsamples.each do |sample_size|
+            DataArray.where(subsample_theshold: sample_size, subsample_annotation: "#{metadatum.name}--#{metadatum.annotation_type}--study").delete_all
+            cluster_group.delay.generate_subsample_arrays(sample_size, metadatum.name, metadatum.annotation_type, 'study')
+          end
+        end
+      end
+
       # send email on completion
       SingleCellMailer.notify_user_parse_complete(user.email, "Metadata file: '#{metadata_file.upload_file_name}' has completed parsing", @message).deliver_now
 
@@ -985,6 +1007,8 @@ class Study
   def initialize_precomputed_scores(marker_file, user, opts={local: true})
     # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
     if !opts[:local]
+      # make sure data dir exists first
+      self.make_data_dir
       remote_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_workspace, marker_file.upload_file_name, self.data_store_path)
       marker_file.update(upload: remote_file)
     end
