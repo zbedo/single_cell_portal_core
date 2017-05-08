@@ -112,17 +112,23 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# return true/false if element is present in DOM
+	# will handle if element doesn't exist or if reference is stale due to race condition
 	def element_present?(how, what)
 		@driver.find_element(how, what)
 		true
 	rescue Selenium::WebDriver::Error::NoSuchElementError
 		false
+	rescue Selenium::WebDriver::Error::StaleElementReferenceError
+		false
 	end
 
-	# return true/false if an element is displayed (will handle if element doesn't exist either)
+	# return true/false if an element is displayed
+	# will handle if element doesn't exist or if reference is stale due to race condition
 	def element_visible?(how, what)
 		@driver.find_element(how, what).displayed?
 	rescue Selenium::WebDriver::Error::NoSuchElementError
+		false
+	rescue Selenium::WebDriver::Error::StaleElementReferenceError
 		false
 	end
 

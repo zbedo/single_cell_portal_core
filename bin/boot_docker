@@ -92,7 +92,7 @@ then
 elif [[ $PASSENGER_APP_ENV = "test" ]]
 then
 	# used only to run all unit tests
-	docker run --rm -it --name $CONTAINER_NAME --link mongodb:mongodb -h localhost -v $PROJECT_DIR:/home/app/webapp:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY -e SECRET_KEY_BASE=$SECRET_KEY_BASE single_cell_docker bin/run_unit_tests.sh
+	docker run --rm -it --name single_cell_test --link mongodb:mongodb -h localhost -v $PROJECT_DIR:/home/app/webapp:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY -e SECRET_KEY_BASE=$SECRET_KEY_BASE single_cell_docker bin/run_unit_tests.sh
 else
 	docker run --rm -it --name $CONTAINER_NAME -p 80:80 -p 443:443 -p 587:587 --link mongodb:mongodb -h localhost -v $PROJECT_DIR:/home/app/webapp:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY -e SENDGRID_USERNAME=$SENDGRID_USERNAME -e SENDGRID_PASSWORD=$SENDGRID_PASSWORD -e SECRET_KEY_BASE=$SECRET_KEY_BASE -e OAUTH_CLIENT_ID=$OAUTH_CLIENT_ID -e OAUTH_CLIENT_SECRET=$OAUTH_CLIENT_SECRET single_cell_docker
 fi
