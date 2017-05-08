@@ -232,9 +232,9 @@ class StudiesController < ApplicationController
       when 'Cluster'
         @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user)
       when 'Expression Matrix'
-        @study.delay.make_expression_scores(@study_file, current_user)
+        @study.delay.initialize_expression_scores(@study_file, current_user)
       when 'Gene List'
-        @study.delay.make_precomputed_scores(@study_file, current_user)
+        @study.delay.initialize_precomputed_scores(@study_file, current_user)
       when 'Metadata'
         @study.delay.initialize_study_metadata(@study_file, current_user)
     end
@@ -410,9 +410,9 @@ class StudiesController < ApplicationController
           when 'Cluster'
             @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false})
           when 'Expression Matrix'
-            @study.delay.make_expression_scores(@study_file, current_user, {local: false})
+            @study.delay.initialize_expression_scores(@study_file, current_user, {local: false})
           when 'Gene List'
-            @study.delay.make_precomputed_scores(@study_file, current_user, {local: false})
+            @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false})
           when 'Metadata'
             @study.delay.initialize_study_metadata(@study_file, current_user, {local: false})
         end
@@ -448,9 +448,9 @@ class StudiesController < ApplicationController
           when 'Cluster'
             @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false, reparse: true})
           when 'Expression Matrix'
-            @study.delay.make_expression_scores(@study_file, current_user, {local: false, reparse: true})
+            @study.delay.initialize_expression_scores(@study_file, current_user, {local: false, reparse: true})
           when 'Gene List'
-            @study.delay.make_precomputed_scores(@study_file, current_user, {local: false, reparse: true})
+            @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false, reparse: true})
           when 'Metadata'
             @study.delay.initialize_study_metadata(@study_file, current_user, {local: false, reparse: true})
         end

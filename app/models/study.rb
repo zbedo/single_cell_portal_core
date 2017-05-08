@@ -214,7 +214,6 @@ class Study
   end
 
   # helper method to get number of unique single cells
-  # since local files are ephemeral
   def set_cell_count(file_type)
     @cell_count = 0
     case file_type
@@ -374,7 +373,7 @@ class Study
 
   # method to parse master expression scores file for study and populate collection
   # this parser assumes the data is a non-sparse square matrix
-  def make_expression_scores(expression_file, user, opts={local: true})
+  def initialize_expression_scores(expression_file, user, opts={local: true})
     @count = 0
     @message = []
     @last_line = ""
@@ -383,6 +382,10 @@ class Study
 
     # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
     if !opts[:local]
+      # first check if directory exists, there are instances when it can accidentally get deleted
+      if !Dir.exists?(self.data_store_path)
+
+      end
       remote_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_workspace, expression_file.upload_file_name, self.data_store_path)
       expression_file.update(upload: remote_file)
     end
@@ -979,7 +982,7 @@ class Study
   end
 
   # parse precomputed marker gene files and create documents to render in Morpheus
-  def make_precomputed_scores(marker_file, user, opts={local: true})
+  def initialize_precomputed_scores(marker_file, user, opts={local: true})
     # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
     if !opts[:local]
       remote_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_workspace, marker_file.upload_file_name, self.data_store_path)
@@ -1215,6 +1218,14 @@ class Study
     end
   end
 
+  # make data directory after study creation is successful
+  # this is now a public method so that we can use it whenever remote files are downloaded to validate that the directory exists
+  def make_data_dir
+    unless Dir.exists?(self.data_store_path)
+      FileUtils.mkdir_p(self.data_store_path)
+    end
+  end
+
   private
 
   # sets a url-safe version of study name (for linking)
@@ -1240,11 +1251,6 @@ class Study
       @dir_val = SecureRandom.hex(32)
     end
     self.data_dir = @dir_val
-  end
-
-  # make data directory after study creation is successful
-  def make_data_dir
-    FileUtils.mkdir_p(self.data_store_path)
   end
 
   # automatically create a FireCloud workspace on study creation after validating name & url_safe_name
