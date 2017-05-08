@@ -54,8 +54,9 @@ class SiteController < ApplicationController
     @study_files = @study.study_files.non_primary_data.sort_by(&:name)
     @directories = @study.directory_listings.are_synced
 
-    # check if FireCloud is available and disable download links if necessary
-    @allow_downloads = Study.firecloud_client.api_available?
+    # double check on download availability: first, check if administrator has disabled downloads
+    # then check if FireCloud is available and disable download links if either is true
+    @allow_downloads = AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
 
     # load options and annotations
     if @study.initialized?
@@ -91,8 +92,10 @@ class SiteController < ApplicationController
       redirect_to view_study_path(@study.url_safe_name), alert: 'You must be signed in to download data.' and return
     end
 
-    # check if FireCloud is unavailable and abort if so
-    if !Study.firecloud_client.api_available?
+    # next check if downloads have been disabled by administrator, this will abort the download
+    # download links shouldn't be rendered in any case, this just catches someone doing a straight GET on a file
+    # also check if FireCloud is unavailable and abort if so as well
+    if !AdminConfiguration.firecloud_access_enabled? || !Study.firecloud_client.api_available?
       head 503 and return
     end
 

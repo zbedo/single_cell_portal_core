@@ -9,7 +9,7 @@ class AdminConfiguration
 
   validate :validate_value_by_type
 
-  GLOBAL_DOWNLOAD_STATUS_NAME = 'Global Data Download Status'
+  FIRECLOUD_ACCESS_NAME = 'FireCloud Access'
   NUMERIC_VALS = %w(byte kilobyte megabyte terabyte petabyte exabyte)
 
   # really only used for IDs in the table...
@@ -25,8 +25,13 @@ class AdminConfiguration
     ['Numeric', 'Boolean', 'String']
   end
 
-  def self.download_status_config
-    AdminConfiguration.find_by(config_type: AdminConfiguration::GLOBAL_DOWNLOAD_STATUS_NAME)
+  def self.firecloud_access_enabled?
+    status = AdminConfiguration.find_by(config_type: AdminConfiguration::FIRECLOUD_ACCESS_NAME)
+    if status.nil?
+      true
+    else
+      status.value == 'on'
+    end
   end
 
   # display value formatted by type

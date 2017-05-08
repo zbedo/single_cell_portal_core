@@ -2,7 +2,7 @@ Rails.application.routes.draw do
 	scope 'single_cell' do
 
 		get 'admin/reset_user_download_quotas', to: 'admin_configurations#reset_user_download_quotas', as: :reset_user_download_quotas
-		post 'admin/data_downloads', to: 'admin_configurations#manage_data_downloads', as: :manage_data_downloads
+		post 'admin/firecloud_access', to: 'admin_configurations#manage_firecloud_access', as: :manage_firecloud_access
 		resources :admin_configurations, path: 'admin'
 
 		# study admin actions

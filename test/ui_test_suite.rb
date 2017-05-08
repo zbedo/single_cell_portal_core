@@ -860,7 +860,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'admin: toggle data downloads' do
+	test 'admin: toggle firecloud access' do
 		puts "Test method: #{self.method_name}"
 		path = @base_url + '/admin'
 		@driver.get path
@@ -871,7 +871,7 @@ class UiTestSuite < Test::Unit::TestCase
 		panic_modal_link = @driver.find_element(:id, 'show-disable-panic-modal')
 		panic_modal_link.click
 		wait_for_render(:id, 'panic-modal')
-		disable_button = @driver.find_element(:id, 'disable-all-downloads')
+		disable_button = @driver.find_element(:id, 'disable-firecloud-access')
 		disable_button.click
 		wait_for_render(:id, 'show-enable-panic-modal')
 		close_modal('message_modal')
@@ -894,12 +894,13 @@ class UiTestSuite < Test::Unit::TestCase
 		panic_modal_link = @driver.find_element(:id, 'show-enable-panic-modal')
 		panic_modal_link.click
 		wait_for_render(:id, 'panic-modal')
-		disable_button = @driver.find_element(:id, 'enable-all-downloads')
+		disable_button = @driver.find_element(:id, 'enable-firecloud-access')
 		disable_button.click
 		wait_for_render(:id, 'show-disable-panic-modal')
 		close_modal('message_modal')
 
-		# assert access is restored
+		# assert access is restored, wait a few seconds for changes to propogate
+		sleep(3)
 		@driver.get firecloud_url
 		assert element_present?(:class, 'fa-check-circle'), 'did not restore access - study workspace does not load'
 

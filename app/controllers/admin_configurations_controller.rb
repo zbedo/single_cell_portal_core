@@ -8,9 +8,9 @@ class AdminConfigurationsController < ApplicationController
   # GET /admin_configurations
   # GET /admin_configurations.json
   def index
-    @admin_configurations = AdminConfiguration.not_in(config_type: AdminConfiguration::GLOBAL_DOWNLOAD_STATUS_NAME)
-    status_config = AdminConfiguration.download_status_config
-    if status_config.nil? || (!status_config.nil? && status_config.value == 'on')
+    @admin_configurations = AdminConfiguration.not_in(config_type: AdminConfiguration::FIRECLOUD_ACCESS_NAME)
+    downloads_enabled = AdminConfiguration.firecloud_access_enabled?
+    if downloads_enabled
       @download_status = true
       @download_status_label = "<span class='label label-success'><i class='fa fa-check'></i> Enabled</span>".html_safe
     else
@@ -73,8 +73,8 @@ class AdminConfigurationsController < ApplicationController
   end
 
   # disable/enable all downloads by revoking workspace ACLs
-  def manage_data_downloads
-    @config = AdminConfiguration.find_or_create_by(config_type: AdminConfiguration::GLOBAL_DOWNLOAD_STATUS_NAME)
+  def manage_firecloud_access
+    @config = AdminConfiguration.find_or_create_by(config_type: AdminConfiguration::FIRECLOUD_ACCESS_NAME)
     # make sure that the value type has been set if just created
     @config.value_type ||= 'String'
     status = params[:status].downcase
@@ -83,11 +83,11 @@ class AdminConfigurationsController < ApplicationController
         when 'on'
           AdminConfiguration.enable_all_downloads
           @config.update(value: status)
-          redirect_to admin_configurations_path, alert: "Data downloads setting recorded successfully as 'on'."
+          redirect_to admin_configurations_path, alert: "FireCloud access setting recorded successfully as 'on'."
         when 'off'
           AdminConfiguration.disable_all_downloads
           @config.update(value: status)
-          redirect_to admin_configurations_path, alert: "Data downloads setting recorded successfully as 'off'.  User study access & downloads are now disabled."
+          redirect_to admin_configurations_path, alert: "FireCloud access setting recorded successfully as 'off'.  Portal study & workspace access is now disabled."
         else
           # do nothing, protect against bad status parameters
           nil

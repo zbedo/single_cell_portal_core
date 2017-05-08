@@ -33,9 +33,9 @@
     <p>
       <%= link_to "<span class='fa fa-refresh'></span> Reset User Download Quotas".html_safe, reset_user_download_quotas_path, class: 'btn btn-lg btn-primary', id: 'reset-user-download-quotas', data: {remote: true} %>
       <% if @download_status %>
-        <%= link_to "<span class='fa fa-exclamation-circle'></span> DISABLE DATA DOWNLOADS".html_safe, '#', class: 'btn btn-lg btn-danger pull-right panic', id: 'show-disable-panic-modal' %>
+        <%= link_to "<span class='fa fa-exclamation-circle'></span> DISABLE FIRECLOUD ACCESS".html_safe, '#', class: 'btn btn-lg btn-danger pull-right panic', id: 'show-disable-panic-modal' %>
       <% else %>
-        <%= link_to "<span class='fa fa-check-circle'></span> ENABLE DATA DOWNLOADS".html_safe, '#', class: 'btn btn-lg btn-success pull-right panic', id: 'show-enable-panic-modal' %>
+        <%= link_to "<span class='fa fa-check-circle'></span> ENABLE FIRECLOUD ACCESS".html_safe, '#', class: 'btn btn-lg btn-success pull-right panic', id: 'show-enable-panic-modal' %>
       <% end %>
     </p>
   </div>
@@ -45,17 +45,18 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h4 class="text-center text-danger">MANAGE DATA DOWNLOADS</h4>
+        <h4 class="text-center text-danger">MANAGE FIRECLOUD ACCESS</h4>
       </div>
       <div class="modal-body">
-          <p class="lead text-center">Downloads are currently: <%= @download_status_label %></p>
-          <p class="lead text-danger">Clicking 'Disable Downloads' will revoke all user permissions to workspaces, thereby preventing any users from downloading data.  This also prevents users from updating any files in their workspaces.  Are you sure you wish to proceed?</p>
+          <p class="lead text-center">FireCloud Access is currently: <%= @download_status_label %></p>
+          <p class="lead text-danger">Clicking 'Disable FireCloud Access' will revoke all user permissions to workspaces, thereby preventing any users from uploading/downloading data or running computes.  As a result, access to updating studies will be disabled.</p>
+          <p class="lead text-danger text-center"><strong>Are you sure you wish to proceed?</strong></p>
           <div class="row">
             <div class="col-xs-6">
-              <%= link_to "Disable Downloads".html_safe, manage_data_downloads_path(status: 'off'), class: 'btn btn-lg btn-block btn-danger data-download-status', id: 'disable-all-downloads', method: :post, data: {dismiss: 'modal'} %>
+              <%= link_to "Disable FireCloud Access".html_safe, manage_firecloud_access_path(status: 'off'), class: 'btn btn-lg btn-block btn-danger data-download-status', id: 'disable-firecloud-access', method: :post, data: {dismiss: 'modal'} %>
             </div>
             <div class="col-xs-6">
-              <%= link_to "Enable Downloads".html_safe, manage_data_downloads_path(status: 'on'), class: 'btn btn-lg btn-block btn-success data-download-status', id: 'enable-all-downloads', method: :post, data: {dismiss: 'modal'} %>
+              <%= link_to "Enable FireCloud Access".html_safe, manage_firecloud_access_path(status: 'on'), class: 'btn btn-lg btn-block btn-success data-download-status', id: 'enable-firecloud-access', method: :post, data: {dismiss: 'modal'} %>
             </div>
           </div>
       </div>
