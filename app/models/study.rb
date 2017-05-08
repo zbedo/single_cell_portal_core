@@ -946,7 +946,7 @@ class Study
       @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
 
       # load newly parsed data
-      new_metadata = StudyMetadatum.find_by(study_id: self.id, study_file_id: metadata_file.id)
+      new_metadata = StudyMetadatum.where(study_id: self.id, study_file_id: metadata_file.id).to_a
 
       # check to make sure that all the necessary metadata-based subsample arrays exist for this study
       # if parsing first before clusters, will simply exit without performing any action and will be created when clusters are parsed
