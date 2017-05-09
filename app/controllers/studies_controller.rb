@@ -86,14 +86,12 @@ class StudiesController < ApplicationController
                                                  firecloud_workspace: @study.firecloud_workspace
             )
             # skip validation as we don't wont to set the acl in FireCloud as it already exists
-            logger.info "adding new share: #{new_share.attributes}"
             new_share.save(validate: false)
             @permissions_changed << new_share
           elsif portal_permissions[user] != StudyShare::PORTAL_ACL_MAP[permissions['accessLevel']]
             # share exists, but permissions are wrong
             share = @study.study_shares.detect(email: user)
             share.update(permission: StudyShare::PORTAL_ACL_MAP[permissions['accessLevel']])
-            logger.info "updating share: #{share.attributes}"
             @permissions_changed << share
           else
             # permissions are correct, skip
@@ -102,7 +100,7 @@ class StudiesController < ApplicationController
         end
       end
     rescue => e
-      Rails.logger.error "#{Time.now}: error syncing ACLs in workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
+      logger.error "#{Time.now}: error syncing ACLs in workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
       redirect_to studies_path, alert: "We were unable to sync with your workspace bucket due to an error: #{e.message}" and return
     end
 
@@ -116,7 +114,7 @@ class StudiesController < ApplicationController
         process_workspace_bucket_files(workspace_files)
       end
     rescue RuntimeError => e
-      Rails.logger.error "#{Time.now}: error syncing files in workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
+      logger.error "#{Time.now}: error syncing files in workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
       redirect_to studies_path, alert: "We were unable to sync with your workspace bucket due to an error: #{e.message}" and return
     end
 
@@ -227,7 +225,7 @@ class StudiesController < ApplicationController
   # parses file in foreground to maintain UI state for immediate messaging
   def parse
     @study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
-    logger.info "Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name}"
+    logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name}"
     case @study_file.file_type
       when 'Cluster'
         @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user)
@@ -400,7 +398,6 @@ class StudiesController < ApplicationController
     @status = is_required ? 'Required' : 'Optional'
     @study_file = @study.build_study_file({file_type: @file_type})
 
-    logger.info @study_file.attributes
     unless @file_type.nil?
       @reset_status = @study.study_files.select {|sf| sf.file_type == @file_type && !sf.new_record?}.count == 0
     else
@@ -417,7 +414,7 @@ class StudiesController < ApplicationController
       @form = "#study-file-#{@study_file.id}"
       @partial = 'study_file_form'
       if @study_file.parseable?
-        logger.info "Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
+        logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
         @message += " You will receive and email at #{current_user.email} when the parse has completed."
         case @study_file.file_type
           when 'Cluster'
@@ -455,7 +452,7 @@ class StudiesController < ApplicationController
       @message = "New Study File '#{@study_file.name}' successfully synced."
       # only reparse if user requests
       if @study_file.parseable? && params[:reparse] == 'Yes'
-        logger.info "Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
+        logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
         @message += " You will receive an email "
         case @study_file.file_type
           when 'Cluster'
@@ -567,9 +564,13 @@ class StudiesController < ApplicationController
     if study_file.nil?
       # don't use helper as we're about to mass-assign params
       study_file = @study.study_files.build
-      study_file.update(study_file_params)
-      render json: { file: { name: study_file.errors,size: nil } } and return
-      # If the already uploaded file has the same filename, try to resume
+      if study_file.update(study_file_params)
+        render json: { file: { name: study_file.errors,size: nil } } and return
+        # If the already uploaded file has the same filename, try to resume
+      else
+        logger.error "#{Time.now}: upload failed due to #{@study_file.errors}"
+        head 422 and return
+      end
     else
       current_size = study_file.upload_file_size
       content_range = request.headers['CONTENT-RANGE']
