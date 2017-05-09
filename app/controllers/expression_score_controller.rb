@@ -10,8 +10,9 @@ class ExpressionScoreController < ApplicationController
   end
 
   def get_autocomplete_items(parameters)
-    items = mongoid_get_autocomplete_items(parameters)
-    items = items.where(:study_id => params[:study_id])
+    all_items = mongoid_get_autocomplete_items(parameters)
+    items = all_items.where(:study_id => params[:study_id])
+    items
   end
 
   private
