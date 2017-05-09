@@ -22,7 +22,6 @@ class StudyFile
   field :path, type: String
   field :description, type: String
   field :file_type, type: String
-  field :cluster_type, type: String
   field :status, type: String
   field :parse_status, type: String, default: 'unparsed'
   field :data_dir, type: String
@@ -40,7 +39,7 @@ class StudyFile
   field :z_axis_max, type: Integer
 
   # callbacks
-  before_create   :set_file_name_and_data_dir
+  before_validation   :set_file_name_and_data_dir, on: :create
   after_save      :set_cluster_group_ranges
 
   has_mongoid_attached_file :upload,
@@ -51,6 +50,8 @@ class StudyFile
   do_not_validate_attachment_file_type :upload
 
   validates_uniqueness_of :upload_file_name, scope: :study_id, unless: Proc.new {|f| f.human_data?}
+  validates_presence_of :name
+  validate :check_study_file_type
 
   Paperclip.interpolates :data_dir do |attachment, style|
     attachment.instance.data_dir
@@ -174,6 +175,13 @@ class StudyFile
         # either user has not supplied ranges or is deleting them, so clear entry for cluster_group
         cluster.update(domain_ranges: nil)
       end
+    end
+  end
+
+  # make sure study file has a valid type
+  def check_study_file_type
+    unless STUDY_FILE_TYPES.include?(self.file_type)
+      errors.add(:file_type, " is invlaid.  Please use one of the following: #{STUDY_FILE_TYPES.join(', ')}")
     end
   end
 end

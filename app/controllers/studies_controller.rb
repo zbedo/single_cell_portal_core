@@ -247,8 +247,8 @@ class StudiesController < ApplicationController
   # create a new study_file for requested study
   def new_study_file
     file_type = params[:file_type] ? params[:file_type] : 'Cluster'
-    cluster_type = params[:cluster_type] ? params[:cluster_type] : nil
-    @study_file = @study.build_study_file({file_type: file_type, cluster_type: cluster_type})
+    @study_file = @study.build_study_file({file_type: file_type})
+    @study_file = @study.build_study_file({file_type: file_type})
   end
 
   # update an existing study file via upload wizard; cannot be called until file is uploaded, so there is no create
@@ -259,25 +259,31 @@ class StudiesController < ApplicationController
       # don't use helper as we're about to mass-assign params
       @study_file = @study.study_files.build
     end
-    @study_file.update_attributes(study_file_params)
-    # if a gene list or cluster got updated, we need to update the associated records
-    if study_file_params[:file_type] == 'Gene List'
-      @precomputed_entry = PrecomputedScore.find_by(study_file_id: study_file_params[:_id])
-      @precomputed_entry.update(name: study_file_params[:name])
-    elsif study_file_params[:file_type] == 'Cluster'
-      @cluster = ClusterGroup.find_by(study_file_id: study_file_params[:_id])
-      @cluster.update(name: study_file_params[:name])
-      # also update data_arrays
-      @cluster.data_arrays.update_all(cluster_name: study_file_params[:name])
-    end
-    @message = "'#{@study_file.name}' has been successfully updated."
     @selector = params[:selector]
     @partial = params[:partial]
+    if @study_file.update_attributes(study_file_params)
+      # if a gene list or cluster got updated, we need to update the associated records
+      if study_file_params[:file_type] == 'Gene List'
+        @precomputed_entry = PrecomputedScore.find_by(study_file_id: study_file_params[:_id])
+        @precomputed_entry.update(name: study_file_params[:name])
+      elsif study_file_params[:file_type] == 'Cluster'
+        @cluster = ClusterGroup.find_by(study_file_id: study_file_params[:_id])
+        @cluster.update(name: study_file_params[:name])
+        # also update data_arrays
+        @cluster.data_arrays.update_all(cluster_name: study_file_params[:name])
+      end
+      @message = "'#{@study_file.name}' has been successfully updated."
 
-    # notify users of updated file
-    changes = ["Study file updated: #{@study_file.upload_file_name}"]
-    if @study.study_shares.any?
-      SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
+
+      # notify users of updated file
+      changes = ["Study file updated: #{@study_file.upload_file_name}"]
+      if @study.study_shares.any?
+        SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
+      end
+    else
+      respond_to do |format|
+        format.js {render action: 'update_fail'}
+      end
     end
   end
 
@@ -288,24 +294,31 @@ class StudiesController < ApplicationController
       # don't use helper as we're about to mass-assign params
       @study_file = @study.study_files.build
     end
-    @study_file.update_attributes(study_file_params)
-    # if a gene list or cluster got updated, we need to update the associated records
-    if study_file_params[:file_type] == 'Gene List'
-      @precomputed_entry = PrecomputedScore.find_by(study_file_id: study_file_params[:_id])
-      @precomputed_entry.update(name: study_file_params[:name])
-    elsif study_file_params[:file_type] == 'Cluster'
-      @cluster = ClusterGroup.find_by(study_file_id: study_file_params[:_id])
-      @cluster.update(name: study_file_params[:name])
-      # also update data_arrays
-      @cluster.data_arrays.update_all(cluster_name: study_file_params[:name])
-    end
-    @message = "'#{@study_file.name}' has been successfully updated."
     @form = "#study-file-#{@study_file.id}"
+    if @study_file.update_attributes(study_file_params)
+      # if a gene list or cluster got updated, we need to update the associated records
+      if study_file_params[:file_type] == 'Gene List'
+        @precomputed_entry = PrecomputedScore.find_by(study_file_id: study_file_params[:_id])
+        @precomputed_entry.update(name: study_file_params[:name])
+      elsif study_file_params[:file_type] == 'Cluster'
+        @cluster = ClusterGroup.find_by(study_file_id: study_file_params[:_id])
+        @cluster.update(name: study_file_params[:name])
+        # also update data_arrays
+        @cluster.data_arrays.update_all(cluster_name: study_file_params[:name])
+      end
+      @message = "'#{@study_file.name}' has been successfully updated."
 
-    # notify users of updated file
-    changes = ["Study file updated: #{@study_file.upload_file_name}"]
-    if @study.study_shares.any?
-      SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
+
+      # notify users of updated file
+      changes = ["Study file updated: #{@study_file.upload_file_name}"]
+      if @study.study_shares.any?
+        SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
+      end
+    else
+      @partial = 'synced_study_file_form'
+      respond_to do |format|
+        format.js {render action: 'update_fail'}
+      end
     end
   end
 
@@ -612,6 +625,7 @@ class StudiesController < ApplicationController
     end
   end
 
+  # method to download files if study is private, will create temporary signed_url after checking user quota
   # method to download files if study is private, will create temporary signed_url after checking user quota
   def download_private_file
     @study = Study.find_by(url_safe_name: params[:study_name])
