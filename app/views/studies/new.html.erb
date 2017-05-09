@@ -1,4 +1,4 @@
-<h1>New Study <%= link_to "<i class='fa fa-question-circle'></i>".html_safe, 'javascript:;', class: 'text-info', id: 'firecloud-help' %></h1>
+<h1>New Study</h1>
 <div class="bs-callout bs-callout-default" id="firecloud-disclaimer">
   <h4>Data File Storage & Workspaces</h4>
   <p>All uploaded data files for studies are stored in <%= link_to 'FireCloud', 'https://portal.firecloud.org', target: :_blank %> workspaces.
@@ -6,7 +6,7 @@
     While you can interact with your uploaded files directly through the Single Cell Portal, you must complete the FireCloud registration process
     before you can see or use your files in your FireCloud workspace.  You will also receive an email letting you know that the Single Cell Portal
     service account has shared the study workspace with you.</p>
-  <p>You may also create a study based on an existing workspace you already own.  To do so, click <strong>'Use Existing Workspace'</strong>
+  <p>You may also create a study based on an existing workspace you already own.  To do so, select <strong>'Yes'</strong> under <strong>'Use Existing Workspace'</strong>
     and then provide the name in the text box.</p>
 </div>
 
@@ -35,10 +35,6 @@
     $('#save-study').click(function() {
         launchSpinner('create-study-spinner');
         $('#create-modal').modal('show');
-    });
-
-    $('#firecloud-help').click(function() {
-        $('#firecloud-disclaimer').slideToggle();
     });
 
 </script>
