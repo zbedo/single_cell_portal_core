@@ -101,8 +101,15 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# setup is called before every test is run, this instatiates the driver and configures waits and other variables needed
 	def setup
-		# boot Chrome in incognito mode so it doesn't depend on cached credentials or profiles
-		@driver = Selenium::WebDriver::Driver.for :chrome, driver_path: $chromedriver_dir, switches: ['--enable-webgl-draft-extensions']
+		# disable the 'save your password' prompt
+		opts = {
+				'prefs' => {
+						'credentials_enable_service' => false
+				}
+		}
+		caps = Selenium::WebDriver::Remote::Capabilities.chrome("chromeOptions" => opts)
+		@driver = Selenium::WebDriver::Driver.for :chrome, driver_path: $chromedriver_dir,
+																							switches: ['--enable-webgl-draft-extensions'], desired_capabilities: caps
 		@driver.manage.window.maximize
 		@base_url = $portal_url
 		@accept_next_alert = true
@@ -873,7 +880,6 @@ class UiTestSuite < Test::Unit::TestCase
 		study_file_forms = @driver.find_elements(:class, 'unsynced-study-file')
 		study_file_forms.each do |form|
 			filename = form.find_element(:id, 'study_file_name')['value']
-			puts "syncing study file form for #{filename}"
 			file_type = form.find_element(:id, 'study_file_file_type')
 			case filename
 				when 'cluster_example.txt'
@@ -914,6 +920,40 @@ class UiTestSuite < Test::Unit::TestCase
 		synced_dirs = synced_dirs_div.find_elements(:tag_name, 'form')
 		assert synced_dirs.size == directory_forms.size, "did not find correct number of synced files, expected #{directory_forms.size} but found #{synced_dirs.size}"
 
+		updated_files = {}
+    # now use synced data forms to update entries and keep track of changes for comparison later
+    synced_files.each do |sync_form|
+      file_type = sync_form.find_element(:id, 'study_file_file_type')[:value]
+			name = sync_form.find_element(:id, 'study_file_name')[:value]
+      description = "Description for #{file_type}"
+      description_field = sync_form.find_element(:id, 'study_file_description')
+      description_field.send_keys(description)
+			updated_files["#{sync_form[:id]}"] = {
+				name: name,
+				file_type: file_type,
+				description: description,
+				parsed: file_type != 'Other'
+			}
+      sync_button = sync_form.find_element(:class, 'save-study-file')
+			sync_button.click
+			close_modal('sync-notice-modal')
+		end
+
+		# update directory listings too
+		updated_dirs = {}
+		synced_dirs.each do |sync_form|
+			name = sync_form.find_element(:id, 'directory_listing_name')[:value]
+			description = "Description for #{name}"
+			description_field = sync_form.find_element(:id, 'directory_listing_description')
+			description_field.send_keys(description)
+			updated_dirs["#{sync_form[:id]}"] = {
+					description: description
+			}
+			sync_button = sync_form.find_element(:class, 'save-directory-listing')
+			sync_button.click
+			close_modal('sync-notice-modal')
+		end
+
 		# lastly, check info page to make sure everything did in fact parse and complete
 		studies_path = @base_url + '/studies'
 		@driver.get studies_path
@@ -929,6 +969,28 @@ class UiTestSuite < Test::Unit::TestCase
 		assert study_file_count == study_file_forms.size, "did not find correct number of study files, expected #{study_file_forms.size} but found #{study_file_count}"
 		assert primary_data_count == directory_forms.size, "did not find correct number of primary data files, expected #{directory_forms.size} but found #{primary_data_count}"
 
+		# make sure edits saved by going through updated list of synced files and comparing values
+		updated_files.each do |id, values|
+			study_file_table_row = @driver.find_element(:id, id)
+			entry_name = study_file_table_row.find_element(:class, 'study-file-name').text
+			entry_file_type = study_file_table_row.find_element(:class, 'study-file-file-type').text
+			entry_description = study_file_table_row.find_element(:class, 'study-file-description').text
+			entry_parsed = study_file_table_row.find_element(:class, 'study-file-parsed')['data-parsed'] == 'true'
+			assert values[:name] == entry_name, "study file entry #{id} name incorrect, expected #{values[:name]} but found #{entry_name}"
+			assert values[:file_type] == entry_file_type, "study file entry #{id} file type incorrect, expected #{values[:file_type]} but found #{entry_file_type}"
+			assert values[:description] == entry_description, "study file entry #{id} description incorrect, expected #{values[:description]} but found #{entry_description}"
+			assert values[:parsed] == entry_parsed, "study file entry #{id} parse incorrect, expected #{values[:parsed]} but found #{entry_parsed}"
+		end
+
+		# now check directory listings datatable - there should only be one entry in this test
+		# since we cannot easily assign ids/classes to entries in the datatable, reference values by position index
+		updated_dirs.each_value do |values|
+			directory_listing_row = @driver.find_element(:id, 'fastq-files-target').find_element(:tag_name, 'tr')
+			row_cells = directory_listing_row.find_elements(:tag_name, 'td')
+			assert values[:description] == row_cells[1].text, "directory listing description incorrect, expected #{values[:description]} but found #{row_cells[1].text}"
+		end
+
+		sleep 10
 		# clean up study
 		@driver.get studies_path
 		wait_until_page_loads(studies_path)

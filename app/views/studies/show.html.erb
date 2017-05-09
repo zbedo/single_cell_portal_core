@@ -175,11 +175,11 @@
 				</thead>
 				<tbody>
 					<% @study.study_files.non_primary_data.sort_by(&:name).each do |study_file| %>
-						<tr>
-							<td><%= study_file.name %></td>
-							<td><%= study_file.description %></td>
-							<td><%= study_file.file_type %></td>
-							<td><%= study_file.parseable? ? get_boolean_label(study_file.parsed?) : get_na_label %></td>
+						<tr id="study-file-<%= study_file.id %>">
+							<td class="study-file-name"><%= study_file.name %></td>
+							<td class="study-file-description"><%= study_file.description %></td>
+							<td class="study-file-file-type"><%= study_file.file_type %></td>
+							<td class="study-file-parsed" data-parsed="<%= study_file.parsed? %>"><%= study_file.parseable? ? get_boolean_label(study_file.parsed?) : get_na_label %></td>
 							<td><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></td>
 						</tr>
 					<% end %>
