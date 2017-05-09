@@ -12,20 +12,23 @@ require 'selenium-webdriver'
 # 1. RVM (or equivalent Ruby language management system)
 # 2. Ruby >= 2.3
 # 3. Gems: rubygems, test-unit, selenium-webdriver (see Gemfile.lock for version requirements)
-# 4. Google Chrome with at least 2 Google accounts already signed in (referred to as $test_email & $share_email)
+# 4. Google Chrome
 # 5. Chromedriver (https://sites.google.com/a/chromium.org/chromedriver/); make sure the verison you install works with your version of chrome
 # 6. Register for FireCloud (https://portal.firecloud.org) for both Google accounts (needed for auth & sharing acls)
 
 # USAGE
 #
-# ui_test_suite.rb takes six arguments:
-# 1. path to your Chrome user profile on your system (passed with -p=)
-# 2. path to your Chromedriver binary (passed with -c=)
-# 3. test email account (passed with -e=); this must be a valid Google & FireCloud user and already signed into Chrome, and also configured as an 'admin' account in the portal
-# 4. share email account (passed with -s=); this must be a valid Google & FireCloud user and already signed into Chrome
-# 5. test order (passed with -o=); defaults to defined order (can be alphabetic or random, but random will most likely fail horribly
-# 6. download directory (passed with -d=); place where files are downloaded on your OS, defaults to standard OSX location (/Users/`whoami`/Downloads)
-# these must be passed with ruby test/ui_test_suite.rb -- -p=[/path/to/profile/dir] -c=[/path/to/chromedriver] -e=[test_email] -s=[share_email] -d=[/path/to/download/dir]
+# ui_test_suite.rb takes up to eight arguments:
+# 1. path to your Chromedriver binary (passed with -c=)
+# 2. test email account (passed with -e=); this must be a valid Google & FireCloud user and also configured as an 'admin' account in the portal
+# 3. test email account password (passed with -p) NOTE: you must quote the password to ensure it is passed correctly
+# 4. share email account (passed with -s=); this must be a valid Google & FireCloud user
+# 5. share email account password (passed with -P) NOTE: you must quote the password to ensure it is passed correctly
+# 6. test order (passed with -o=); defaults to defined order (can be alphabetic or random, but random will most likely fail horribly
+# 7. download directory (passed with -d=); place where files are downloaded on your OS, defaults to standard OSX location (/Users/`whoami`/Downloads)
+# these must be passed with ruby test/ui_test_suite.rb -- -c=[/path/to/chromedriver] -e=[test_email] -p=[test_email_password] \
+#                                                         -s=[share_email] -P=[share_email_password] -d=[/path/to/download/dir]
+#                                                         -u=[portal_url]
 # if you do not use -- before the argument and give the appropriate flag (with =), it is processed as a Test::Unit flag and ignored
 #
 # Tests can be run singly or in groups by passing -n /pattern/ before the -- on the command line.  This will run any tests that match
@@ -40,44 +43,46 @@ require 'selenium-webdriver'
 
 # DEFAULTS
 $user = `whoami`.strip
-$profile_dir = "/Users/#{$user}/Library/Application Support/Google/Chrome/Default"
 $chromedriver_path = '/usr/local/bin/chromedriver'
-$usage = 'ruby test/ui_test_suite.rb -- -p=/path/to/profile -c=/path/to/chromedriver -e=testing.email@gmail.com -s=sharing.email@gmail.com -o=order -d=/path/to/downloads'
+$usage = "ruby test/ui_test_suite.rb -- -c=/path/to/chromedriver -e=testing.email@gmail.com -p='testing_email_password' -s=sharing.email@gmail.com -P='sharing_email_password' -o=order -d=/path/to/downloads -u=portal_url"
 $test_email = ''
 $share_email = ''
+$test_email_password = ''
+$share_email_password  = ''
 $order = 'defined'
 $download_dir = "/Users/#{$user}/Downloads"
+$portal_url = 'https://localhost/single_cell'
 
 # parse arguments
 ARGV.each do |arg|
-	if arg =~ /\-p\=/
-		$profile_dir = arg.gsub(/\-p\=/, "")
-	elsif arg =~ /\-c\=/
+	if arg =~ /\-c\=/
 	 	$chromedriver_path = arg.gsub(/\-c\=/, "")
 	elsif arg =~ /\-e\=/
 		$test_email = arg.gsub(/\-e\=/, "")
+  elsif arg =~ /\-p\=/
+		$test_email_password = arg.gsub(/\-p\=/, "")
 	elsif arg =~ /\-s\=/
 		$share_email = arg.gsub(/\-s\=/, "")
+  elsif arg =~ /\-P\=/
+		$share_email_password = arg.gsub(/\-P\=/, "")
 	elsif arg =~ /\-o\=/
 		$order = arg.gsub(/\-o\=/, "").to_sym
 	elsif arg =~ /\-d\=/
 		$download_dir = arg.gsub(/\-d\=/, "")
+  elsif arg =~ /\-u\=/
+    $portal_url = arg.gsub(/\-u\=/, "")
 	end
 end
 
 # print configuration
-puts "Loaded Chrome Profile: #{$profile_dir}"
 puts "Chromedriver Binary: #{$chromedriver_path}"
 puts "Testing email: #{$test_email}"
 puts "Sharing email: #{$share_email}"
 puts "Download directory: #{$download_dir}"
+puts "Portal URL: #{$portal_url}"
 
-# make sure profile & chromedriver exist, otherwise kill tests before running and print usage
-if !Dir.exists?($profile_dir)
-	puts "No Chrome profile found at #{$profile_dir}"
-	puts $usage
-	exit(1)
-elsif !File.exists?($chromedriver_path)
+# make sure download & chromedriver paths exist and portal url is valid, otherwise kill tests before running and print usage
+if !File.exists?($chromedriver_path)
 	puts "No Chromedriver binary found at #{$chromedriver_path}"
 	puts $usage
 	exit(1)
@@ -85,6 +90,10 @@ elsif !Dir.exists?($download_dir)
 	puts "No download directory found at #{$download_dir}"
 	puts $usage
 	exit(1)
+elsif !$portal_url.start_with?('https://') || $portal_url[($portal_url.size - 12)..($portal_url.size - 1)] != '/single_cell'
+  puts "Invalid portal url: #{$portal_url}; must begin with https:// and end with /single_cell"
+  puts $usage
+  exit(1)
 end
 
 class UiTestSuite < Test::Unit::TestCase
@@ -92,9 +101,10 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# setup is called before every test is run, this instatiates the driver and configures waits and other variables needed
 	def setup
-		@driver = Selenium::WebDriver::Driver.for :chrome, driver_path: $chromedriver_dir, switches: ["--user-data-dir=#{$profile_dir}", '--enable-webgl-draft-extensions']
+		# boot Chrome in incognito mode so it doesn't depend on cached credentials or profiles
+		@driver = Selenium::WebDriver::Driver.for :chrome, driver_path: $chromedriver_dir, switches: ['--enable-webgl-draft-extensions']
 		@driver.manage.window.maximize
-		@base_url = 'https://localhost/single_cell'
+		@base_url = $portal_url
 		@accept_next_alert = true
 		@driver.manage.timeouts.implicit_wait = 15
 		# only Google auth
@@ -186,15 +196,80 @@ class UiTestSuite < Test::Unit::TestCase
 		sleep(1)
 	end
 
-	# helper to log into admin portion of site
+	# helper to log into admin portion of site using supplied credentials
 	# Will also approve terms if not accepted yet, waits for redirect back to site, and closes modal
 	def login(email)
+		# determine which password to use
+		password = email == $test_email ? $test_email_password : $share_email_password
 		google_auth = @driver.find_element(:id, 'google-auth')
 		sleep(1)
 		google_auth.click
 		puts 'logging in as ' + email
-		account = @driver.find_element(xpath: "//p[@data-email='#{email}']")
-		account.click
+		email_field = @driver.find_element(:id, 'identifierId')
+		email_field.send_key(email)
+		sleep(0.5) # this lets the animation complete
+		email_next = @driver.find_element(:id, 'identifierNext')
+		email_next.click
+		password_field = @driver.find_element(:name, 'password')
+		password_field.send_key(password)
+		sleep(0.5) # this lets the animation complete
+		password_next = @driver.find_element(:id, 'passwordNext')
+		password_next.click
+		# check to make sure if we need to accept terms
+		if @driver.current_url.include?('https://accounts.google.com/o/oauth2/auth')
+			puts 'approving access'
+			approve = @driver.find_element(:id, 'submit_approve_access')
+			@clickable = approve['disabled'].nil?
+			while @clickable != true
+				sleep(1)
+				@clickable = @driver.find_element(:id, 'submit_approve_access')['disabled'].nil?
+			end
+			approve.click
+			puts 'access approved'
+		end
+		# wait for redirect to finish by checking for footer element
+		@not_loaded = true
+		while @not_loaded == true
+			begin
+				# we need to return the result of the script to store its value
+				loaded = @driver.execute_script("return elementVisible('.footer')")
+				if loaded == true
+					@not_loaded = false
+				end
+				sleep(1)
+			rescue Selenium::WebDriver::Error::UnknownError
+				sleep(1)
+			end
+		end
+		if element_present?(:id, 'message_modal') && element_visible?(:id, 'message_modal')
+			close_modal('message_modal')
+		end
+		puts 'login successful'
+	end
+
+	# method to log out of google so that we can log in with a different account
+	def login_as_other(email)
+		# determine which password to use
+		password = email == $test_email ? $test_email_password : $share_email_password
+		@driver.get 'https://accounts.google.com/Logout'
+		@driver.get @base_url + '/users/sign_in'
+		google_auth = @driver.find_element(:id, 'google-auth')
+		sleep(1)
+		google_auth.click
+		puts 'logging in as ' + email
+		use_new = @driver.find_element(:id, 'identifierLink')
+		use_new.click
+		sleep(0.5)
+		email_field = @driver.find_element(:id, 'identifierId')
+		email_field.send_key(email)
+		sleep(0.5) # this lets the animation complete
+		email_next = @driver.find_element(:id, 'identifierNext')
+		email_next.click
+		password_field = @driver.find_element(:name, 'password')
+		password_field.send_key(password)
+		sleep(0.5) # this lets the animation complete
+		password_next = @driver.find_element(:id, 'passwordNext')
+		password_next.click
 		# check to make sure if we need to accept terms
 		if @driver.current_url.include?('https://accounts.google.com/o/oauth2/auth')
 			puts 'approving access'
@@ -711,7 +786,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# login as share user
 		login_link = @driver.find_element(:id, 'login-nav')
 		login_link.click
-		login($share_email)
+		login_as_other($share_email)
 
 		# view study
 		path = @base_url + '/study/private-study'
@@ -1102,7 +1177,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# now login as share user and test downloads
 		@driver.get login_path
 		wait_until_page_loads(login_path)
-		login($share_email)
+		login_as_other($share_email)
 
 		@driver.get(path)
 		wait_until_page_loads(path)
