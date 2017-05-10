@@ -759,7 +759,7 @@ class Study
       end
 
       # create subsampled data_arrays for visualization
-      study_metadata = StudyMetadatum.find_by(study_id: self.id)
+      study_metadata = StudyMetadatum.where(study_id: self.id).to_a
       # determine how many levels to subsample based on size of cluster_group
       required_subsamples = ClusterGroup::SUBSAMPLE_THRESHOLDS.select {|sample| sample < @cluster_group.points}
       required_subsamples.each do |sample_size|
