@@ -96,6 +96,7 @@ class Study
   field :gene_count, type: Integer, default: 0
   field :view_order, type: Float, default: 100.0
   field :use_existing_workspace, type: Boolean, default: false
+  field :default_options, type: Hash, default: {} # extensible hash where we can put arbitrary values as 'defaults'
 
   accepts_nested_attributes_for :study_files, allow_destroy: true
   accepts_nested_attributes_for :study_shares, allow_destroy: true, reject_if: proc { |attributes| attributes['email'].blank? }
@@ -122,6 +123,7 @@ class Study
   # callbacks
   before_validation :set_url_safe_name
   before_validation :set_data_dir, :set_firecloud_workspace_name, on: :create
+  # before_save       :verify_default_options
   after_create      :make_data_dir
   after_destroy     :remove_data_dir
 
@@ -213,6 +215,55 @@ class Study
     self.embargo.nil? || self.embargo.blank? ? false : Date.today <= self.embargo
   end
 
+  # helper to return default cluster to load, will fall back to first cluster if no preference has been set
+  # or default cluster cannot be loaded
+  def default_cluster
+    default = self.cluster_groups.first
+    unless self.default_options[:cluster].nil?
+      new_default = self.cluster_groups.find_by(name: self.default_options[:cluster])
+      unless new_default.nil?
+        default = new_default
+      end
+    end
+    default
+  end
+
+  # helper to return default annotation to load, will fall back to first available annotation if no preference has been set
+  # or default annotation cannot be loaded
+  def default_annotation
+    default_cluster = self.default_cluster
+    default_annot = self.default_options[:annotation]
+    # in case default has not been set
+    if default_annot.nil?
+      if default_cluster.cell_annotations.any?
+        annot = default_cluster.cell_annotations.first
+        default_annot = "#{annot[:name]}--#{annot[:type]}--cluster"
+      elsif self.study_metadata.any?
+        metadatum = self.study_metadata.first
+        default_annot = "#{metadatum.name}--#{metadatum.annotation_type}--study"
+      else
+        # annotation won't be set yet if a user is parsing metadata without clusters, or vice versa
+        default_annot = nil
+      end
+    end
+    default_annot
+  end
+
+  # helper to return default annotation type (group or numeric)
+  def default_annotation_type
+    if self.default_options[:annotation].nil?
+      nil
+    else
+      # middle part of the annotation string is the type, e.g. Label--group--study
+      self.default_options[:annotation].split('--')[1]
+    end
+  end
+
+  # return color profile value, converting blanks to nils
+  def default_color_profile
+    self.default_options[:color_profile].presence
+  end
+
   # helper method to get number of unique single cells
   def set_cell_count(file_type)
     @cell_count = 0
@@ -235,9 +286,16 @@ class Study
     Rails.logger.info "#{Time.now}: Setting cell count in #{self.name} to #{@cell_count}"
   end
 
-  # return a count of the number of fastq files (stored via directory_listings) for a study
+  # return a count of the number of fastq files both uploaded and referenced via directory_listings for a study
   def primary_data_file_count
-    self.directory_listings.where(sync_status: true).map {|d| d.files.size}.reduce(:+)
+    study_file_count = self.study_files.by_type('Fastq').size
+    directory_listing_count = self.directory_listings.where(sync_status: true).map {|d| d.files.size}.reduce(:+)
+    [study_file_count, directory_listing_count].compact.reduce(:+)
+  end
+
+  # count the number of cluster-based annotations in a study
+  def cluster_annotation_count
+    self.cluster_groups.map {|c| c.cell_annotations.size}.reduce(:+)
   end
 
   # return an array of all single cell names in study
@@ -500,7 +558,7 @@ class Study
       # clean up, print stats
       expression_data.close
       expression_file.update(parse_status: 'parsed')
-      self.update(gene_count: @genes_parsed.size)
+      Study.find(self.id).update(gene_count: @genes_parsed.size)
       end_time = Time.now
       time = (end_time - start_time).divmod 60.0
       @message << "#{Time.now}: #{expression_file.name} parse completed!"
@@ -758,6 +816,37 @@ class Study
         self.update(initialized: true)
       end
 
+      # check to see if a default cluster & annotation have been set yet
+      # must load reference to self into a local variable as we cannot call self.save to update attributes
+      study_obj = Study.find(self.id)
+      if study_obj.default_options[:cluster].nil?
+        study_obj.default_options[:cluster] = @cluster_group.name
+      end
+
+      if study_obj.default_options[:annotation].nil?
+        if @cluster_group.cell_annotations.any?
+          cell_annot = @cluster_group.cell_annotations.first
+          study_obj.default_options[:annotation] = "#{cell_annot[:name]}--#{cell_annot[:type]}--cluster"
+          if cell_annot[:type] == 'numeric'
+            # set a default color profile if this is a numeric annotation
+            study_obj.default_options[:color_profile] = 'Reds'
+          end
+        elsif study_obj.study_metadata.any?
+          metadatum = study_obj.study_metadata.first
+          study_obj.default_options[:annotation] = "#{metadatum.name}--#{metadatum.annotation_type}--study"
+          if metadatum.annotation_type == 'numeric'
+            # set a default color profile if this is a numeric annotation
+            study_obj.default_options[:color_profile] = 'Reds'
+          end
+        else
+          # no possible annotations to set, but enter annotation key into default_options
+          study_obj.default_options[:annotation] = nil
+        end
+      end
+
+      # update study.default_options
+      study_obj.save
+
       # create subsampled data_arrays for visualization
       study_metadata = StudyMetadatum.where(study_id: self.id).to_a
       # determine how many levels to subsample based on size of cluster_group
@@ -962,6 +1051,20 @@ class Study
             cluster_group.delay.generate_subsample_arrays(sample_size, metadatum.name, metadatum.annotation_type, 'study')
           end
         end
+      end
+
+      # check to see if default annotation has been set
+      study_obj = Study.find(self.id)
+      if study_obj.default_options[:annotation].nil?
+        metadatum = new_metadata.first
+        study_obj.default_options[:annotation] = "#{metadatum.name}--#{metadatum.annotation_type}--study"
+        if metadatum.annotation_type == 'numeric'
+          # set a default color profile if this is a numeric annotation
+          study_obj.default_options[:color_profile] = 'Reds'
+        end
+
+        # update study.default_options
+        study_obj.save
       end
 
       # send email on completion

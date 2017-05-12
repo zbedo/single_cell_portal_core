@@ -51,7 +51,6 @@ class StudyFile
 
   validates_uniqueness_of :upload_file_name, scope: :study_id, unless: Proc.new {|f| f.human_data?}
   validates_presence_of :name
-  validate :check_study_file_type
 
   Paperclip.interpolates :data_dir do |attachment, style|
     attachment.instance.data_dir
@@ -175,13 +174,6 @@ class StudyFile
         # either user has not supplied ranges or is deleting them, so clear entry for cluster_group
         cluster.update(domain_ranges: nil)
       end
-    end
-  end
-
-  # make sure study file has a valid type
-  def check_study_file_type
-    unless STUDY_FILE_TYPES.include?(self.file_type)
-      errors.add(:file_type, " is invlaid.  Please use one of the following: #{STUDY_FILE_TYPES.join(', ')}")
     end
   end
 end

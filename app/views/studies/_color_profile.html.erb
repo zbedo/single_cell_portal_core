@@ -1,0 +1,1 @@
+<%= label_tag :color_profile, 'Color profile' %>&nbsp;<%= select_tag :color_profile, options_for_select(SiteController::COLORSCALE_THEMES, @study.default_color_profile), class: 'form-control' %>

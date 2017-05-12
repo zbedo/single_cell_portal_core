@@ -20,6 +20,8 @@ class StudiesController < ApplicationController
   def show
     @study_fastq_files = @study.study_files.by_type('Fastq')
     @directories = @study.directory_listings.are_synced
+    # load study default options
+    set_study_default_options
   end
 
   # GET /studies/new
@@ -568,7 +570,9 @@ class StudiesController < ApplicationController
         render json: { file: { name: study_file.errors,size: nil } } and return
         # If the already uploaded file has the same filename, try to resume
       else
-        logger.error "#{Time.now}: upload failed due to #{@study_file.errors}"
+        study_file.errors.each do |error|
+          logger.error "#{Time.now}: upload failed due to #{error.inspect}"
+        end
         head 422 and return
       end
     else
@@ -664,6 +668,32 @@ class StudiesController < ApplicationController
     head :ok
   end
 
+  # load annotations for a given study and cluster
+  def load_annotation_options
+    @cluster = @study.cluster_groups.detect {|cluster| cluster.name == params[:cluster]}
+    @cluster_annotations = {
+        'Cluster-based' => @cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]},
+        'Study Wide' => @study.study_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
+    }
+  end
+
+  def update_default_options
+    @study.default_options = default_options_params
+    # get new annotation type from parameters
+    new_annotation_type = default_options_params[:annotation].split('--')[1]
+    # clean up color profile if changing from numeric- to group-based annotation
+    if new_annotation_type == 'group'
+      @study.default_options[:color_profile] = nil
+    end
+    if @study.save
+      set_study_default_options
+      render action: 'update_default_options_success'
+    else
+      set_study_default_options
+      render action: 'update_default_options_fail'
+    end
+  end
+
   private
   # Use callbacks to share common setup or constraints between actions.
   def set_study
@@ -682,6 +712,10 @@ class StudiesController < ApplicationController
 
   def directory_listing_params
     params.require(:directory_listing).permit(:_id, :name, :description, :sync_status)
+  end
+
+  def default_options_params
+    params.require(:default_options).permit(:cluster, :annotation, :color_profile)
   end
 
   def set_file_types
@@ -778,5 +812,14 @@ class StudiesController < ApplicationController
         end
       end
     end
+  end
+
+  # load default study options for updating
+  def set_study_default_options
+    @cluster = @study.default_cluster
+    @cluster_annotations = {
+        'Cluster-based' => @cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]},
+        'Study Wide' => @study.study_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
+    }
   end
 end

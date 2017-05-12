@@ -33,6 +33,7 @@ require 'selenium-webdriver'
 #
 # Tests can be run singly or in groups by passing -n /pattern/ before the -- on the command line.  This will run any tests that match
 # the given regular expression.  You can run all 'front-end' and 'admin' tests this way (although front-end tests require the tests studies to have been created already)
+# To run a single test by name, pass -n 'test: [name of test]', e.g -n 'test: admin: create a study'
 #
 # NOTE: when running this test harness, it tends to perform better on an external monitor.  Webdriver is very sensitive to elements not
 # being clickable, and the more screen area available, the better
@@ -158,13 +159,12 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# method to close a bootstrap modal by id
 	def close_modal(id)
+		@wait.until {@driver.find_element(:id, id).displayed?}
 		modal = @driver.find_element(:id, id)
-		if modal.displayed?
-			dismiss = modal.find_element(:class, 'close')
-			dismiss.click
-			@wait.until {@driver.find_element(:id, id).displayed? == false}
-			sleep(1)
-		end
+		dismiss = modal.find_element(:class, 'close')
+		dismiss.click
+		@wait.until {@driver.find_element(:id, id).displayed? == false}
+		sleep(1)
 	end
 
 	# wait until element is rendered and visible
@@ -209,7 +209,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# determine which password to use
 		password = email == $test_email ? $test_email_password : $share_email_password
 		google_auth = @driver.find_element(:id, 'google-auth')
-		sleep(1)
+		sleep(1.5)
 		google_auth.click
 		puts 'logging in as ' + email
 		email_field = @driver.find_element(:id, 'identifierId')
@@ -456,6 +456,35 @@ class UiTestSuite < Test::Unit::TestCase
 		save_btn.click
 		wait_for_render(:id, 'study-file-notices')
 		close_modal('study-file-notices')
+
+		# now check newly created study info page
+		studies_path = @base_url + '/studies'
+		@driver.get studies_path
+
+		show_study = @driver.find_element(:class, 'test-study-show')
+		show_study.click
+
+		# verify that counts are correct, this will ensure that everything uploaded & parsed correctly
+		cell_count = @driver.find_element(:id, 'cell-count').text.to_i
+		gene_count = @driver.find_element(:id, 'gene-count').text.to_i
+		cluster_count = @driver.find_element(:id, 'cluster-count').text.to_i
+		gene_list_count = @driver.find_element(:id, 'precomputed-count').text.to_i
+		metadata_count = @driver.find_element(:id, 'metadata-count').text.to_i
+		cluster_annot_count = @driver.find_element(:id, 'cluster-annotation-count').text.to_i
+		study_file_count = @driver.find_element(:id, 'study-file-count').text.to_i
+		primary_data_count = @driver.find_element(:id, 'primary-data-count').text.to_i
+		share_count = @driver.find_element(:id, 'share-count').text.to_i
+
+		assert cell_count == 15, "did not find correct number of cells, expected 15 but found #{cell_count}"
+		assert gene_count == 19, "did not find correct number of genes, expected 19 but found #{gene_count}"
+		assert cluster_count == 2, "did not find correct number of clusters, expected 2 but found #{cluster_count}"
+		assert gene_list_count == 1, "did not find correct number of gene lists, expected 1 but found #{gene_list_count}"
+		assert metadata_count == 3, "did not find correct number of metadata objects, expected 3 but found #{metadata_count}"
+		assert cluster_annot_count == 3, "did not find correct number of cluster annotations, expected 2 but found #{cluster_annot_count}"
+		assert study_file_count == 6, "did not find correct number of study files, expected 6 but found #{study_file_count}"
+		assert primary_data_count == 1, "did not find correct number of primary data files, expected 1 but found #{primary_data_count}"
+		assert share_count == 1, "did not find correct number of study shares, expected 1 but found #{share_count}"
+
 		puts "Test method: #{self.method_name} successful!"
 	end
 
@@ -895,6 +924,7 @@ class UiTestSuite < Test::Unit::TestCase
 			sync_button.click
 			wait_for_render(:id, 'sync-notice-modal')
 			close_modal('sync-notice-modal')
+			sleep(1)
 		end
 
 		# sync directory listings
@@ -907,11 +937,13 @@ class UiTestSuite < Test::Unit::TestCase
 			sync_button.click
 			wait_for_render(:id, 'sync-notice-modal')
 			close_modal('sync-notice-modal')
+			sleep(1)
 		end
 
 		# now assert that forms were re-rendered in synced data panel
 		sync_panel = @driver.find_element(:id, 'synced-data-panel-toggle')
 		sync_panel.click
+		sleep(1)
 		synced_files_div = @driver.find_element(:id, 'synced-study-files')
 		synced_files = synced_files_div.find_elements(:tag_name, 'form')
 		assert synced_files.size == study_file_forms.size, "did not find correct number of synced files, expected #{study_file_forms.size} but found #{synced_files.size}"
@@ -937,6 +969,7 @@ class UiTestSuite < Test::Unit::TestCase
       sync_button = sync_form.find_element(:class, 'save-study-file')
 			sync_button.click
 			close_modal('sync-notice-modal')
+			sleep(1)
 		end
 
 		# update directory listings too
@@ -990,7 +1023,6 @@ class UiTestSuite < Test::Unit::TestCase
 			assert values[:description] == row_cells[1].text, "directory listing description incorrect, expected #{values[:description]} but found #{row_cells[1].text}"
 		end
 
-		sleep 10
 		# clean up study
 		@driver.get studies_path
 		wait_until_page_loads(studies_path)
@@ -1155,9 +1187,9 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# load subclusters
 		clusters = @driver.find_element(:id, 'cluster').find_elements(:tag_name, 'option')
-		assert clusters.size == 2, 'incorrect number of clusters found'
+		assert clusters.size == 2, "incorrect number of clusters found, expected 2 but found #{clusters.size}"
 		annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
-		assert annotations.size == 5, 'incorrect number of annotations found'
+		assert annotations.size == 5, "incorrect number of annotations found, expected 5 but found #{annotations.size}"
 		annotations.select {|opt| opt.text == 'Sub-Cluster'}.first.click
 
 		# wait for render again
@@ -1796,6 +1828,83 @@ class UiTestSuite < Test::Unit::TestCase
 		# check visiblity
 		visible = @driver.execute_script('return data[0].visible')
 		assert visible == true, "did not toggle trace visibility, expected 'true' but found #{visible}"
+		puts "Test method: #{self.method_name} successful!"
+	end
+
+	# change the default study options and verify they are being preserved across views
+	# this is a blend of admin and front-end tests and is run last as has the potential to break previous tests
+	test 'front-end: check study default options' do
+		puts "Test method: #{self.method_name}"
+
+		path = @base_url + '/studies'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email)
+
+		show_study = @driver.find_element(:class, 'test-study-show')
+		show_study.click
+
+		# change cluster
+		options_form = @driver.find_element(:id, 'default-study-options-form')
+		cluster_dropdown = options_form.find_element(:id, 'default_options_cluster')
+		cluster_opts = cluster_dropdown.find_elements(:tag_name, 'option')
+		new_cluster = cluster_opts.select {|opt| !opt.selected?}.sample.text
+		cluster_dropdown.send_key(new_cluster)
+
+		# wait one second while annotation options update
+		sleep(1)
+
+		# change annotation
+		annotation_dropdown = options_form.find_element(:id, 'default_options_annotation')
+		annotation_opts = annotation_dropdown.find_elements(:tag_name, 'option')
+		# get value, not text, of dropdown
+		new_annot = annotation_opts.select {|opt| !opt.selected?}.sample['value']
+		annotation_dropdown.send_key(new_annot)
+
+		# if annotation option is now numeric, pick a color val
+		new_color = ''
+		color_dropdown = options_form.find_element(:id, 'default_options_color_profile')
+		if color_dropdown['disabled'] != 'true'
+			color_opts = color_dropdown.find_elements(:tag_name, 'option')
+			new_color = color_opts.select {|opt| !opt.selected?}.sample.text
+			color_dropdown.send_key(new_color)
+		end
+
+		# save options
+		options_form.submit
+		close_modal('study-file-notices')
+
+		study_page = @base_url + '/study/test-study'
+		@driver.get study_page
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+
+		# assert values have persisted
+		loaded_cluster = @driver.find_element(:id, 'cluster')['value']
+		loaded_annotation = @driver.find_element(:id, 'annotation')['value']
+		assert new_cluster == loaded_cluster, "default cluster incorrect, expected #{new_cluster} but found #{loaded_cluster}"
+		assert new_annot == loaded_annotation, "default annotation incorrect, expected #{new_annot} but found #{loaded_annotation}"
+		unless new_color.empty?
+			loaded_color = @driver.find_element(:id, 'colorscale')['value']
+			assert new_color == loaded_color, "default color incorrect, expected #{new_color} but found #{loaded_color}"
+		end
+
+		# now check gene expression pages
+		gene = @genes.sample
+		search_box = @driver.find_element(:id, 'search_genes')
+		search_box.send_key(gene)
+		search_form = @driver.find_element(:id, 'search-genes-form')
+		search_form.submit
+		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+
+		exp_loaded_cluster = @driver.find_element(:id, 'cluster')['value']
+		exp_loaded_annotation = @driver.find_element(:id, 'annotation')['value']
+		assert new_cluster == exp_loaded_cluster, "default cluster incorrect, expected #{new_cluster} but found #{exp_loaded_cluster}"
+		assert new_annot == exp_loaded_annotation, "default annotation incorrect, expected #{new_annot} but found #{exp_loaded_annotation}"
+		unless new_color.empty?
+			exp_loaded_color = @driver.find_element(:id, 'colorscale')['value']
+			assert new_color == exp_loaded_color, "default color incorrect, expected #{new_color} but found #{exp_loaded_color}"
+		end
+
 		puts "Test method: #{self.method_name} successful!"
 	end
 

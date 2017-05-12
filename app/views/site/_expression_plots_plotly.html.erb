@@ -108,6 +108,7 @@ $('#cluster-figure-legend').html("<p class='text-center help-block'><%= escape_j
 // will also redraw reference plot if needed
 $("#colorscale").change(function() {
 
+    <%= render partial: 'expression_scatter_layout' %>
 	  var theme = $(this).val();
     clusterData[0].marker.colorscale = theme;
 	  console.log("setting colorscale to " + theme);
@@ -115,6 +116,7 @@ $("#colorscale").change(function() {
 
     // re-render reference plot if showing numeric annotations
     if (<%= @selected_annotation[:type] == 'numeric' %>) {
+        <%= render partial: 'static_scatter_layout' %>
         data[0].marker.colorscale = theme;
         Plotly.newPlot('reference-plot', data, staticLayout);
     }

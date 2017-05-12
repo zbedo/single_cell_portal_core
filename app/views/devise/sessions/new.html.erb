@@ -1,6 +1,13 @@
 <div class="row">
 	<div class="col-md-12">
-    <h3 class="study-lead help-block text-center">Local accounts are no longer permitted.  Please contact <%= mail_to 'single_cell_portal@broadinstitute.org', 'us' %> about migrating your account if needed.</h3>
+    <div class="row">
+      <div class="col-md-offset-3 col-md-6">
+        <div class="bs-callout bs-callout-danger">
+          <h4>Returning Users with Non-Google Accounts</h4>
+          <p class="help-block">We have consolidated to Google-based authentication.  If you have been using a non Google-based account, please email <%= mail_to 'single_cell_portal@broadinstitute.org' %> about migrating your account.</p>
+        </div>
+      </div>
+    </div>
     <p class="text-center"><%= link_to "Sign in with <span class='fa fa-google'></span>".html_safe, user_google_oauth2_omniauth_authorize_path, class: 'btn btn-lg btn-danger', id: 'google-auth' %></p>
   </div>
 </div>

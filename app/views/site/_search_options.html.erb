@@ -8,9 +8,9 @@
 		<div class="row">
 			<div class="col-sm-12">
 				<%= form_for(:search, url: search_genes_path(@study.url_safe_name), html: {class: 'form', id: 'search-genes-form'}) do |f| %>
-					<%= f.hidden_field :cluster, value: set_cluster_value(@options, params) %>
+					<%= f.hidden_field :cluster, value: set_cluster_value(@study, params) %>
           <%= f.hidden_field :boxpoints, value: params[:boxpoints].nil? ? 'all' : params[:boxpoints] %>
-          <%= f.hidden_field :annotation, value: set_annotation_value(@cluster_annotations, params) %>
+          <%= f.hidden_field :annotation, value: set_annotation_value(@study, params) %>
           <%= f.hidden_field :subsample, value: params[:subsample] %>
 					<div class="form-group">
 						<%= f.label :genes, 'Search for genes of interest (autocomplete)' %>

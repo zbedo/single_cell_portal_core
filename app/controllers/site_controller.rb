@@ -79,6 +79,11 @@ class SiteController < ApplicationController
       @aspect = compute_aspect_ratios(@range)
     end
     @axes = load_axis_labels
+
+    # load default color profile if necessary
+    if params[:annotation] == @study.default_annotation && @study.default_annotation_type == 'numeric' && !@study.default_color_profile.nil?
+      @coordinates[:all][:marker][:colorscale] = @study.default_color_profile
+    end
   end
 
   # dynamically reload cluster-based annotations list when changing clusters
@@ -192,6 +197,12 @@ class SiteController < ApplicationController
       @static_aspect = compute_aspect_ratios(@static_range)
     end
     @cluster_annotations = load_cluster_group_annotations
+
+    # load default color profile if necessary
+    if params[:annotation] == @study.default_annotation && @study.default_annotation_type == 'numeric' && !@study.default_color_profile.nil?
+      @expression[:all][:marker][:colorscale] = @study.default_color_profile
+      @coordinates[:all][:marker][:colorscale] = @study.default_color_profile
+    end
   end
 
   # view set of genes (scores averaged) as box and scatter plots
@@ -261,7 +272,7 @@ class SiteController < ApplicationController
     @expression = load_gene_set_expression_data_arrays(@selected_annotation, params[:consensus], subsample)
     color_minmax =  @expression[:all][:marker][:color].minmax
     @expression[:all][:marker][:cmin], @expression[:all][:marker][:cmax] = color_minmax
-    @expression[:all][:marker][:colorscale] = 'Reds'
+
     # load static cluster reference plot
     @coordinates = load_cluster_group_data_array_points(@selected_annotation, subsample)
     # set up options, annotations and ranges
@@ -279,6 +290,13 @@ class SiteController < ApplicationController
     if @genes.size > 5
       @main_genes, @other_genes = divide_genes_for_header
     end
+
+    # load default color profile if necessary
+    if params[:annotation] == @study.default_annotation && @study.default_annotation_type == 'numeric' && !@study.default_color_profile.nil?
+      @expression[:all][:marker][:colorscale] = @study.default_color_profile
+      @coordinates[:all][:marker][:colorscale] = @study.default_color_profile
+    end
+
     render 'render_gene_expression_plots'
   end
 
@@ -442,31 +460,27 @@ class SiteController < ApplicationController
     # determine which URL param to use for selection
     selector = params[:cluster].nil? ? params[:gene_set_cluster] : params[:cluster]
     if selector.nil? || selector.empty?
-      @cluster = @study.cluster_groups.first
+      @cluster = @study.default_cluster
     else
       @cluster = @study.cluster_groups.detect {|c| c.name == selector}
     end
   end
 
   def set_selected_annotation
-    # determine which URL param to use for selection
+    # determine which URL param to use for selection and construct base object
     selector = params[:annotation].nil? ? params[:gene_set_annotation] : params[:annotation]
-    if selector.nil?
-      @selected_annotation = @cluster.cell_annotations.first
-    else
-      # determine whether cluster- or study-level annotations are requested
-      annot_name, annot_type, annot_scope = selector.split('--')
-      if annot_scope == 'cluster'
-        @selected_annotation = @cluster.cell_annotations.find {|ca| ca[:name] == annot_name && ca[:type] == annot_type}
-      else
-        @selected_annotation = {name: annot_name, type: annot_type, scope: annot_scope}
-        if annot_type == 'group'
-          @selected_annotation[:values] = @study.study_metadata_keys(annot_name, annot_type)
-        end
-      end
+    annot_name, annot_type, annot_scope = selector.nil? ? @study.default_annotation.split('--') : selector.split('--')
+    # construct object based on name, type & scope
+    if annot_scope == 'cluster'
+      @selected_annotation = @cluster.cell_annotations.find {|ca| ca[:name] == annot_name && ca[:type] == annot_type}
       @selected_annotation[:scope] = annot_scope
-      @selected_annotation
+    else
+      @selected_annotation = {name: annot_name, type: annot_type, scope: annot_scope}
+      if annot_type == 'group'
+        @selected_annotation[:values] = @study.study_metadata_keys(annot_name, annot_type)
+      end
     end
+    @selected_annotation
   end
 
   def check_view_permissions

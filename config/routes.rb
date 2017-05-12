@@ -29,6 +29,8 @@ Rails.application.routes.draw do
 				delete 'study_files/unsync/:study_file_id', to: 'studies#unsync_study_file', as: :unsync_study_file
 				delete 'directory_listings/:directory_listing_id', to: 'studies#delete_directory_listing', as: :delete_directory_listing
         post 'parse', to: 'studies#parse', as: :parse_study_file
+        get 'load_annotation_options', to: 'studies#load_annotation_options', as: :load_annotation_options
+        post 'update_default_options', to: 'studies#update_default_options', as: :update_default_options
 			end
 		end
 		# public/private file download links (redirect to signed_urls from Google)
