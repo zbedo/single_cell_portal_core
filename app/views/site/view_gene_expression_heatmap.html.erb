@@ -98,11 +98,16 @@
 
     $('#view-fullscreen').click(function() {
         toggleSearch();
-        if ($('#search-options-panel').css('display') === 'none') {
-            console.log($('#search-options-panel').css('display'));
+        var searchDisplay = $('#search-options-panel').css('display');
+        var currHeight = $('#heatmap_size').val();
+        console.log('current height: ' + currHeight);
+        if (searchDisplay === 'none') {
             $('#view-options').collapse('hide');
+            // if currHeight is blank, calling drawHeatmap with NaN for height will render all rows visible
+            drawHeatmap(parseInt(currHeight));
+        } else if (currHeight === '') {
+            drawHeatmap();
         }
-        drawHeatmap();
     });
 
 </script>
