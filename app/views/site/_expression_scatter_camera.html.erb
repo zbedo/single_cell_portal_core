@@ -8,6 +8,6 @@ $('#scatter-plot')[0].on('plotly_relayout', function(cameraData) {
     console.log('Update complete, scatter camera data now ' + JSON.stringify($('#expression-plots').data('scatter-camera')));
 
     staticLayout.scene.camera = newScene;
-    Plotly.newPlot('reference-plot', data, staticLayout);
+    Plotly.relayout('reference-plot', staticLayout);
   }
 });

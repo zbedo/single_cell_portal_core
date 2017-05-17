@@ -10,8 +10,10 @@
 // Read Sprockets README (https://github.com/rails/sprockets#sprockets-directives) for details
 // about supported directives.
 //
+//= require jquery2
 //= require jquery_ujs
 //= require ckeditor/init
+//= require bootstrap-sprockets
 //= require dataTables/jquery.dataTables
 //= require dataTables/bootstrap/3/jquery.dataTables.bootstrap
 //= require jquery.bootstrap.wizard
@@ -20,10 +22,32 @@
 //= require jquery_nested_form
 //= require spin.min
 //= require chroma.min
+//= require jquery-ui/core
 //= require jquery-ui/widgets/datepicker
 //= require jquery-ui/widgets/autocomplete
+//= require jquery-ui/widgets/sortable
+//= require jquery-ui/widgets/dialog
 //= require jquery-ui/effects/effect-highlight
 //= require autocomplete-rails
+//= require bootstrap-select.min
+//= require canvas2svg
+//= require canvg
+//= require colorbrewer
+//= require d3.min
+//= require FileSaver.min
+//= require hammer.min
+//= require jquery.event.drag-2.2
+//= require jquery.mousewheel.min
+//= require newick
+//= require papaparse.min
+//= require parser
+//= require rgbcolor
+//= require slick.min
+//= require StackBlur
+//= require tsne
+//= require underscore-min
+//= require xlsx.full.min
+//= require morpheus-latest.min
 
 var fileUploading = false;
 var PAGE_RENDERED = false;
@@ -271,12 +295,6 @@ function launchSpinner(divId) {
     $('#loading-modal').modal('show');
 };
 
-function stopSpinner(divId) {
-    $('#' + divId).data('spinner').stop();
-    $('#loading-modal').modal('hide');
-}
-
-
 // default title font settings for axis titles in plotly
 var plotlyTitleFont = {
     family: 'Helvetica Neue',
@@ -303,23 +321,6 @@ function clearForm(target) {
     $('#' + target).val("");
 }
 
-// check if there are blank text boxes or selects
-function validateFields(selector) {
-    var values = selector.map(function() {return $(this).val()}).get();
-    return values.indexOf("") === -1;
-}
-
-// set error state for items that have a property of 'checked' == false
-function setErrorOnChecked(selector) {
-    selector.map(function() {
-        if ( !$(this).prop('checked') ) {
-            $(this).parent().addClass('has-error has-feedback');
-        } else {
-            $(this).parent().removeClass('has-error has-feedback');
-        }
-    });
-}
-
 // set error state on blank text boxes or selects
 function setErrorOnBlank(selector) {
     selector.map(function() {
@@ -341,23 +342,33 @@ $(window).resize(function() {
 });
 
 // generic function to render Morpheus
-function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, target, fitType) {
+function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, target, fitType, heatmapHeight) {
     console.log('render status of ' + target + ' at start: ' + $(target).data('rendered'));
     $(target).empty();
-    var config = {dataset: dataPath, el: $(target)};
+    var config = {dataset: dataPath, el: $(target), menu: null};
+
+    // set height if specified, otherwise use default setting of 500 px
+    if (heatmapHeight !== undefined) {
+        config.height = heatmapHeight;
+    } else {
+        config.height = 500;
+    }
 
     // fit rows, columns, or both to screen
-    if (fitType == 'cols') {
+    if (fitType === 'cols') {
         config.columnSize = 'fit';
-    } else if (fitType == 'rows') {
+    } else if (fitType === 'rows') {
         config.rowSize = 'fit';
-    } else if (fitType == 'both') {
+    } else if (fitType === 'both') {
         config.columnSize = 'fit';
         config.rowSize = 'fit';
+    } else {
+        config.columnSize = null;
+        config.rowSize = null;
     }
 
     // load annotations if specified
-    if (annotPath != '') {
+    if (annotPath !== '') {
         config.columnAnnotations = [{
             file : annotPath,
             datasetField : 'id',
@@ -369,7 +380,7 @@ function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, t
         ];
         config.columns = [
             {field:'id', display:'text'},
-            {field: selectedAnnot, display: selectedAnnotType == 'group' ? 'color' : 'bar'}
+            {field: selectedAnnot, display: selectedAnnotType === 'group' ? 'color' : 'bar'}
         ];
     }
 

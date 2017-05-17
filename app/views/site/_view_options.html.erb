@@ -1,12 +1,12 @@
 <div class="panel panel-info" id="view-options-panel">
 	<div class="panel-heading">
 		<div class="panel-title">
-			<h4><%= link_to "View/Filter Options <span class='fa fa-cog'></span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#view-options', 'data-toggle' => 'collapse' %> <%= render partial: 'show_search_options_button' %></h4>
+			<h4><%= link_to "View/Filter Options <span class='fa fa-cog'></span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#view-options', 'data-toggle' => 'collapse', id: 'view-options-toggle' %> <%= render partial: 'show_search_options_button' %></h4>
 		</div>
 	</div>
 	<div id="view-options" class="panel-collapse collapse in">
 		<div class="panel-body">
-			<div class="row">
+			<div class="form-group row">
 				<% if action_name !~ /precomputed/ %>
 					<div class="col-sm-4">
 						<%= label_tag :cluster, 'Load a cluster' %><br />
@@ -32,6 +32,21 @@
 					</div>
 				<% end %>
 			</div>
+      <% if action_name =~ /heatmap/ %>
+        <div class="row">
+          <div class="col-sm-4">
+            <div class="input-group">
+              <%= number_field_tag :heatmap_size, nil, placeholder: 'Heatmap size (in pixels)', class: 'form-control' %>
+              <div class="input-group-btn">
+                <button type="submit" id="resize-heatmap" class="btn btn-success"><i class="fa fa-fw fa-refresh"></i></button>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <%= link_to "<i class='fa fa-fw fa-arrows-alt'></i> Toggle Fullscreen View".html_safe, 'javascript:;', id: 'view-fullscreen', class: 'btn btn-success' %>
+          </div>
+        </div>
+      <% end %>
 		</div>
 	</div>
 </div>

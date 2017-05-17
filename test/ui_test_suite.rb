@@ -393,7 +393,6 @@ class UiTestSuite < Test::Unit::TestCase
 		prev_btn.click
 		new_cluster = @driver.find_element(:class, 'add-cluster')
 		new_cluster.click
-		sleep(1)
 		scroll_to(:bottom)
 		# will be second instance since there are two forms
 		cluster_form_2 = @driver.find_element(:class, 'new-cluster-form')
@@ -553,6 +552,7 @@ class UiTestSuite < Test::Unit::TestCase
 		delete = form.find_element(:class, 'delete-file')
 		delete.click
 		@driver.switch_to.alert.accept
+
 		# wait a few seconds to allow delete call to propogate all the way to FireCloud after confirmation modal
 		wait_for_render(:id, 'study-file-notices')
 		close_modal('study-file-notices')
@@ -702,7 +702,6 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + '/studies/new'
 		@driver.get path
 		close_modal('message_modal')
-		sleep(1)
 		login($test_email)
 
 		# fill out study form
@@ -803,11 +802,13 @@ class UiTestSuite < Test::Unit::TestCase
 		# get path info
 		edit = @driver.find_element(:class, 'private-study-edit')
 		edit.click
+		# wait a few seconds for page to load before getting url
 		sleep(2)
 		private_study_id = @driver.current_url.split('/')[5]
 		@driver.get @base_url + '/studies'
 		edit = @driver.find_element(:class, 'test-study-edit')
 		edit.click
+		# wait a few seconds for page to load before getting url
 		sleep(2)
 		share_study_id = @driver.current_url.split('/')[5]
 
@@ -924,7 +925,6 @@ class UiTestSuite < Test::Unit::TestCase
 			sync_button.click
 			wait_for_render(:id, 'sync-notice-modal')
 			close_modal('sync-notice-modal')
-			sleep(1)
 		end
 
 		# sync directory listings
@@ -937,12 +937,12 @@ class UiTestSuite < Test::Unit::TestCase
 			sync_button.click
 			wait_for_render(:id, 'sync-notice-modal')
 			close_modal('sync-notice-modal')
-			sleep(1)
 		end
 
 		# now assert that forms were re-rendered in synced data panel
 		sync_panel = @driver.find_element(:id, 'synced-data-panel-toggle')
 		sync_panel.click
+		# wait a second for panel to open
 		sleep(1)
 		synced_files_div = @driver.find_element(:id, 'synced-study-files')
 		synced_files = synced_files_div.find_elements(:tag_name, 'form')
@@ -969,7 +969,6 @@ class UiTestSuite < Test::Unit::TestCase
       sync_button = sync_form.find_element(:class, 'save-study-file')
 			sync_button.click
 			close_modal('sync-notice-modal')
-			sleep(1)
 		end
 
 		# update directory listings too
@@ -1243,7 +1242,6 @@ class UiTestSuite < Test::Unit::TestCase
 		# now download a file from a private study
 		private_path = @base_url + '/study/private-study'
 		@driver.get(private_path)
-		sleep(5)
 		wait_until_page_loads(private_path)
 		download_section = @driver.find_element(:id, 'study-data-files')
 		# gotcha when clicking, must wait until completes
@@ -1479,6 +1477,22 @@ class UiTestSuite < Test::Unit::TestCase
 		queried_genes = @driver.find_elements(:class, 'queried-gene').map(&:text)
 		assert genes.sort == queried_genes.sort, "found incorrect genes, expected #{genes.sort} but found #{queried_genes.sort}"
 
+		# resize heatmap
+		heatmap_size = @driver.find_element(:id, 'heatmap_size')
+		heatmap_size.send_key(1000)
+		@wait.until {wait_for_plotly_render('#heatmap-plot', 'rendered')}
+		resize_rendered = @driver.execute_script("return $('#heatmap-plot').data('rendered')")
+		assert resize_rendered, "heatmap plot did not finish rendering, expected true but found #{resize_rendered}"
+
+		# toggle fullscreen
+		fullscreen = @driver.find_element(:id, 'view-fullscreen')
+		fullscreen.click
+		@wait.until {wait_for_plotly_render('#heatmap-plot', 'rendered')}
+		fullscreen_rendered = @driver.execute_script("return $('#heatmap-plot').data('rendered')")
+		assert fullscreen_rendered, "heatmap plot did not finish rendering, expected true but found #{fullscreen_rendered}"
+		search_opts_visible = element_visible?(:id, 'search-options-panel')
+		assert !search_opts_visible, "fullscreen mode did not launch correctly, expected search options visibility == false but found #{!search_opts_visible}"
+
 		# now test private study
 		login_path = @base_url + '/users/sign_in'
 		@driver.get login_path
@@ -1687,7 +1701,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# call relayout to trigger update & camera position save
 		@driver.execute_script("Plotly.relayout('cluster-plot', {'scene': {'camera' : #{camera.to_json}}});")
 
-		# get new camera
+		# wait a second for event to fire, then get new camera
 		sleep(1)
 		new_camera = @driver.execute_script("return $('#cluster-plot').data('camera');")
 		assert camera == new_camera['camera'], "camera position did not save correctly, expected #{camera.to_json}, got #{new_camera.to_json}"
@@ -1738,7 +1752,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# call relayout to trigger update & camera position save
 		@driver.execute_script("Plotly.relayout('scatter-plot', {'scene': {'camera' : #{scatter_camera.to_json}}});")
 
-		# get new camera
+		# wait a second for event to fire, then get new camera
 		sleep(1)
 		new_scatter_camera = @driver.execute_script("return $('#expression-plots').data('scatter-camera');")
 		assert scatter_camera == new_scatter_camera['camera'], "scatter camera position did not save correctly, expected #{scatter_camera.to_json}, got #{new_scatter_camera.to_json}"

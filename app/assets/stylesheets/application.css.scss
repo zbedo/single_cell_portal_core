@@ -10,15 +10,25 @@
  * defined in the other CSS/SCSS files in this directory. It is generally better to create a new
  * file per style scope.
  *
- *= require morpheus-latest.min
  *= require dataTables/bootstrap/3/jquery.dataTables.bootstrap
  *= require jquery.fileupload
  *= require jquery.fileupload-ui
  *= require jquery-ui/core
+ *= require jquery-ui/theme
  *= require jquery-ui/datepicker
+ *= require jquery-ui/autocomplete
+ *= require jquery-ui/menu
+ *= require jquery-ui/dialog
+ *= require morpheus
+ *= require morpheus.grid
+ *= require slick.grid
+ *= require animate
+ *= require bootstrap-select.min
  *= require_self
  */
 
+@import "bootstrap-sprockets";
+@import "bootstrap";
 @import "font-awesome-sprockets";
 @import "font-awesome";
 
@@ -194,7 +204,7 @@ html, body {
   margin: 20px 0;
 }
 
-#cluster-plot, #heatmap-plot {
+#cluster-plot {
   min-height: 600px;
 }
 
@@ -292,7 +302,7 @@ html, body {
   padding-bottom: 25px;
 }
 
-#heatmap-plot li.active {
+#heatmap-plot li.active, #morpheus-fullscreen li.active {
   display: none;
 }
 
@@ -366,3 +376,8 @@ html, body {
 #panic-modal {
   background: rgba(255, 128, 128, 0.4);
 }
+
+#heatmap-plot .morpheus-nav, #morpheus-fullscreen .morpheus-nav {
+  border: none !important;
+}
+
