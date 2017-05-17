@@ -43,6 +43,10 @@
             </div>
           </div>
           <div class="col-sm-4">
+            <%= link_to "<i class='fa fa-fw fa-arrows-v'></i> Fit Rows".html_safe, 'javascript:;', id: 'fit-rows', class: 'btn btn-default fit-btn', data: {fit: 'rows', active: 'off' } %>
+            <%= link_to "<i class='fa fa-fw fa-arrows-h'></i> Fit Columns".html_safe, 'javascript:;', id: 'fit-cols', class: 'btn btn-default fit-btn', data: {fit: 'cols', active: 'off' } %>
+          </div>
+          <div class="col-sm-4">
             <%= link_to "<i class='fa fa-fw fa-arrows-alt'></i> Toggle Fullscreen View".html_safe, 'javascript:;', id: 'view-fullscreen', class: 'btn btn-success' %>
           </div>
         </div>

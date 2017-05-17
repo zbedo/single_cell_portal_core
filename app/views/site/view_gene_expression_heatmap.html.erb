@@ -33,6 +33,13 @@
     $('#heatmap-plot').data('rendered', false);
 
     function drawHeatmap(height) {
+        // if height isn't specified, pull from stored value, defaults to 500
+        if (height === undefined) {
+            height = $('#heatmap-plot').data('height');
+        }
+        // pull fit type as well, defaults to ''
+        var fit = $('#heatmap-plot').data('fit');
+
         var dataPath = '<%= javascript_safe_url(expression_query_path(study_name: params[:study_name], search: {genes: @gene_list })) %>';
         var row_centered = $('#row_centered').prop('checked') ? 1 : 0;
         var selectedAnnot = $('#annotation').val();
@@ -49,16 +56,17 @@
 
         // reset status on render call
         $('#heatmap-plot').data('rendered', false);
-        renderMorpheus(dataPath, newAnnotPath, annotName, annotType, '#heatmap-plot', '', height);
+        renderMorpheus(dataPath, newAnnotPath, annotName, annotType, '#heatmap-plot', fit, height);
     }
 
 
     $(document).ready(function() {
+        $('#heatmap-plot').data('fit', '');
+        $('#heatmap-plot').data('height', 500);
         drawHeatmap();
     });
 
     $("#row_centered, #annotation").change(function() {
-
         if ($(this).attr('id') == 'annotation') {
             var an = $(this).val();
             // keep track for search purposes
@@ -91,22 +99,54 @@
     });
 
     $('#resize-heatmap').click(function() {
-       var newHeight = parseInt($('#heatmap_size').val());
-       console.log('resizing heatmap to ' + newHeight);
-       drawHeatmap(newHeight);
+        var newHeight = parseInt($('#heatmap_size').val());
+        $("#heatmap-plot").data('height', newHeight);
+        console.log('resizing heatmap to ' + newHeight);
+        drawHeatmap(newHeight);
     });
 
     $('#view-fullscreen').click(function() {
         toggleSearch();
         var searchDisplay = $('#search-options-panel').css('display');
         var currHeight = $('#heatmap_size').val();
+        var redraw = searchDisplay === 'none' || currHeight !== '';
+        // toggle view options if search options has been hidden
         if (searchDisplay === 'none') {
             $('#view-options').collapse('hide');
+        }
+        if (redraw) {
             // if currHeight is blank, calling drawHeatmap with NaN for height will render all rows visible
             drawHeatmap(parseInt(currHeight));
-        } else if (currHeight === '') {
+        } else {
             drawHeatmap();
         }
+    });
+
+    $('.fit-btn').click(function() {
+        var btn = $(this);
+        var btnState = btn.data('active');
+        var newState = btnState === 'on' ? 'off' : 'on';
+        btn.data('active', newState);
+        var fitType = btn.data('fit');
+        console.log('setting fit type: ' + fitType + 'to ' + newState);
+        var plot = $('#heatmap-plot');
+        btn.toggleClass('active');
+        currFit = plot.data('fit');
+        // determine state and set appropriately
+        if (newState == 'on') {
+            if (currFit !== '' && fitType !== currFit) {
+                fitType = 'both'
+            }
+        } else {
+            if (currFit === 'both') {
+                fitType = fitType === 'rows' ? 'cols' : 'rows';
+            } else {
+                fitType = '';
+            }
+        }
+
+        plot.data('fit', fitType);
+        drawHeatmap();
     });
 
 </script>
