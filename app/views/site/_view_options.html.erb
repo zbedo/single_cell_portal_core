@@ -35,19 +35,35 @@
       <% if action_name =~ /heatmap/ %>
         <div class="row">
           <div class="col-sm-4">
-            <div class="input-group">
-              <%= number_field_tag :heatmap_size, nil, placeholder: 'Heatmap size (in pixels)', class: 'form-control' %>
-              <div class="input-group-btn">
-                <button type="submit" id="resize-heatmap" class="btn btn-success"><i class="fa fa-fw fa-refresh"></i></button>
+            <div class="row">
+              <div class="col-xs-12">
+                <%= label_tag :heatmap_size, 'Heatmap size (in pixels)', class: 'control-label' %><i class="fa fa-fw fa-question-circle" title="Redraw heatmap plot to specified size in pixels.  Leaving this blank will show all rows at 100% zoom." data-toggle="tooltip"></i>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xs-12">
+                <div class="input-group">
+                  <%= number_field_tag :heatmap_size, nil, class: 'form-control' %>
+                  <div class="input-group-btn">
+                    <button type="submit" id="resize-heatmap" class="btn btn-success"><i class="fa fa-fw fa-refresh"></i></button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-          <div class="col-sm-4">
-            <%= link_to "<i class='fa fa-fw fa-arrows-v'></i> Fit Rows".html_safe, 'javascript:;', id: 'fit-rows', class: 'btn btn-default fit-btn', data: {fit: 'rows', active: 'off' } %>
-            <%= link_to "<i class='fa fa-fw fa-arrows-h'></i> Fit Columns".html_safe, 'javascript:;', id: 'fit-cols', class: 'btn btn-default fit-btn', data: {fit: 'cols', active: 'off' } %>
-          </div>
-          <div class="col-sm-4">
-            <%= link_to "<i class='fa fa-fw fa-arrows-alt'></i> Toggle Fullscreen View".html_safe, 'javascript:;', id: 'view-fullscreen', class: 'btn btn-success' %>
+          <div class="col-sm-8">
+            <div class="row">
+              <div class="col-xs-12">
+                <%= label_tag :fit_options, 'Fit Options', class: 'control-label' %><i class="fa fa-fw fa-question-circle" title="Use these buttons to rescale the contents of the heatmap plot." data-toggle="tooltip"></i>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xs-12">
+                <%= link_to "<i class='fa fa-fw fa-arrows-v'></i> Fit Rows".html_safe, 'javascript:;', id: 'fit-rows', class: 'btn btn-default fit-btn', title: 'Rescale heatmap to show all rows in plot area', data: {fit: 'rows', active: 'off', toggle: 'tooltip' } %>
+                <%= link_to "<i class='fa fa-fw fa-arrows-h'></i> Fit Columns".html_safe, 'javascript:;', id: 'fit-cols', class: 'btn btn-default fit-btn', title: 'Rescale heatmap to show all columns in plot area', data: {fit: 'cols', active: 'off', toggle: 'tooltip' } %>
+                <%= link_to "<i class='fa fa-fw fa-arrows-alt'></i> Toggle Fullscreen".html_safe, 'javascript:;', id: 'view-fullscreen', class: 'btn btn-default', title: 'Close all options panels and redraw heatmap to use available area', data: {active: 'off', toggle: 'tooltip' } %>
+              </div>
+            </div>
           </div>
         </div>
       <% end %>
