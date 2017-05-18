@@ -123,7 +123,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 		else
 			@retry_count = 0
 			Rails.logger.error "#{Time.now}: Retry count exceeded - #{@error}"
-			raise RuntimeError.new("Retry count exceeded - #{@error}")
+			raise RuntimeError.new(@error)
 		end
 	end
 

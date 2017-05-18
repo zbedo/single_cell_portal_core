@@ -1465,7 +1465,7 @@ class Study
           acl = Study.firecloud_client.get_workspace_acl(self.firecloud_workspace)
           study_owner = self.user.email
           # check permissions first
-          unless acl['acl'][study_owner]['accessLevel'] == 'OWNER'
+          unless !acl['acl'][study_owner].nil? == 'OWNER' && acl['acl'][study_owner]['accessLevel'] == 'OWNER'
             errors.add(:firecloud_workspace, ': The workspace you provided is not owned by the current user.  Please use another workspace.')
             return false
           end
@@ -1495,7 +1495,7 @@ class Study
         rescue => e
           # delete workspace on any fail as this amounts to a validation fail
           Rails.logger.info "#{Time.now}: Error assigning workspace: #{e.message}"
-          errors.add(:firecloud_workspace, " assignment failed: #{e.message}; Please try again later.")
+          errors.add(:firecloud_workspace, " assignment failed: #{e.message}; Please check the workspace in question and try again.")
           return false
         end
       end
