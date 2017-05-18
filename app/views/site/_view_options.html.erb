@@ -21,13 +21,13 @@
         <% end %>
         <% if action_name !~ /heatmap/ %>
           <div class="col-sm-4">
-            <%= label_tag :subsample, "Subsampling threshold <i class='fa fa-question-circle'></i>".html_safe, title: 'Take a representative subsample of the current cluster.  Choosing all cells may dramatically increase rendering time.', data: {toggle: 'tooltip'} %><br />
+            <%= label_tag :subsample, 'Subsampling threshold' %>&nbsp;<i class='fa fa-question-circle' title="Take a representative subsample of the current cluster.  Choosing all cells may dramatically increase rendering time." data-toggle="tooltip"></i><br />
             <%= select_tag :subsample, options_for_select(subsampling_options(@cluster.points), params[:subsample]), {include_blank: 'All Cells', class: 'form-control'} %>
           </div>
         <% end %>
 				<% if action_name =~ /heatmap/ %>
 					<div class="col-sm-4">
-						<%= label_tag :row_centered, 'Row centering' %> <span class="fa fa-question-circle" data-toggle="tooltip" data-placement="right" title="For every value in each row, subtract the mean of the entire row from the value"></span><br />
+						<%= label_tag :row_centered, 'Row centering' %> <span class="fa fa-question-circle" data-toggle="tooltip" title="For every value in each row, subtract the mean of the entire row from the value"></span><br />
 						<%= check_box_tag :row_centered, nil, params[:row_centered] == "1" %>
 					</div>
 				<% end %>
@@ -54,7 +54,7 @@
           <div class="col-sm-8">
             <div class="row">
               <div class="col-xs-12">
-                <%= label_tag :fit_options, 'Fit Options', class: 'control-label' %><i class="fa fa-fw fa-question-circle" title="Use these buttons to rescale the contents of the heatmap plot." data-toggle="tooltip"></i>
+                <%= label_tag :fit_options, 'Fit Options', class: 'control-label' %><i class="fa fa-fw fa-question-circle" title="Use these buttons to rescale the contents of the heatmap plot.  Each option is can be toggled and combined with other options." data-toggle="tooltip"></i>
               </div>
             </div>
             <div class="row">
