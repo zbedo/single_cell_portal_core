@@ -75,7 +75,7 @@
     display: block;
 }
 
-.slick-table:not (.slick-stacked) .slick-visible-not-stacked {
+.slick-table:not(.slick-stacked) .slick-visible-not-stacked {
     display: block;
 }
 
