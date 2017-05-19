@@ -57,7 +57,12 @@
         $("#search_annotation").val(''); // clear value first
         $("#search_annotation").val(annotation);
         var delimeter = "<%= params[:gene] ? "?".html_safe : "&".html_safe %>";
-        $.get(url + delimeter + 'cluster=' + cluster + '&annotation=' + annotation + '&boxpoints=' + boxpoints + '&consensus=' + consensus + '&subsample=' + subsample);
+        url += delimeter + 'cluster=' + cluster + '&annotation=' + annotation + '&boxpoints=' + boxpoints + '&consensus=' + consensus + '&subsample=' + subsample
+        $.ajax({
+            url: url,
+            method: 'GET',
+            dataType: 'script'
+        });
     }
 
     $(document).ready(function() {
@@ -98,18 +103,23 @@
         // grab currently selected annotation
         var currAnnot = $('#annotation').val();
         // get new annotation options and re-render
-        $.get("<%= get_new_annotations_path(study: params[:study])%>?cluster=" + newCluster, function (data) {
-            // parse response as a string and see if currently selected annotation exists in new annotations
-            if (data.indexOf(currAnnot) >= 0) {
-                $('#annotation').val(currAnnot);
+        $.ajax({
+            url: "<%= get_new_annotations_path(study: params[:study])%>?cluster=" + newCluster,
+            method: 'GET',
+            dataType: 'script',
+            success: function (data) {
+                // parse response as a string and see if currently selected annotation exists in new annotations
+                if (data.indexOf(currAnnot) >= 0) {
+                    $('#annotation').val(currAnnot);
+                }
+                $(document).ready(function () {
+                    // since we now have new annotations, we need to set them in the search form for persistence
+                    var an = $('#annotation').val();
+                    $('#search_annotation').val(an);
+                    $('#gene_set_annotation').val(an);
+                    renderGeneExpressionPlots();
+                });
             }
-            $(document).ready(function () {
-                // since we now have new annotations, we need to set them in the search form for persistence
-                var an = $('#annotation').val();
-                $('#search_annotation').val(an);
-                $('#gene_set_annotation').val(an);
-                renderGeneExpressionPlots();
-            })
         });
     });
 

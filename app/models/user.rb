@@ -1,3 +1,5 @@
+require 'rest-client'
+
 class User
   include Mongoid::Document
   include Mongoid::Timestamps
@@ -35,7 +37,10 @@ class User
   field :provider,  type: String
 
   # token auth for AJAX calls
-  field :authentication_token
+  field :authentication_token, type: String
+
+  # Google OAuth refresh token fields
+  field :refresh_token, type: String
 
   ## Confirmable
   # field :confirmation_token,   type: String
@@ -69,6 +74,19 @@ class User
     elsif user.provider.nil? || user.uid.nil?
       user.update(provider: provider, uid: uid)
     end
+    # update refresh token
+    user.update(refresh_token: access_token.credentials.refresh_token)
     user
+  end
+
+  # generate an access token based on user's refresh token
+  def access_token
+    response = RestClient.post 'https://accounts.google.com/o/oauth2/token',
+                               :grant_type => 'refresh_token',
+                               :refresh_token => self.refresh_token,
+                               :client_id => ENV['OAUTH_CLIENT_ID'],
+                               :client_secret => ENV['OAUTH_CLIENT_SECRET']
+    token_vals = JSON.parse(response.body)
+    token_vals['access_token']
   end
 end
