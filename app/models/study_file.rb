@@ -141,6 +141,31 @@ class StudyFile
     end
   end
 
+  # helper method to invalidate any matching front-end caches when parsing a study_file
+  # this will be called from the various file parser methods in the Study class so that they're done in the background
+  def invalidate_cache_by_file_type
+    study_name = self.study.url_safe_name
+    case self.file_type
+      when 'Cluster'
+        name_key = self.name.split.join('-')
+        @cache_key = "#{study_name}.*render_cluster.*#{name_key}.*"
+      when 'Expression Matrix'
+        @cache_key = "#{study_name}.*expression.*"
+      when 'Gene List'
+        name_key = self.name.split.join('-')
+        @cache_key = "#{study_name}.*#{name_key}.*"
+      when 'Metadata'
+        # when reparsing metadata, almost all caches now become invalid so we just clear all matching the study
+        @cache_key =  "#{study_name}"
+      else
+        @cache_key = nil
+    end
+    unless @cache_key.nil?
+      # clear matching caches
+      Rails.cache.delete_matched(/#{@cache_key}/)
+    end
+  end
+
   private
 
   # set filename and construct url safe name from study

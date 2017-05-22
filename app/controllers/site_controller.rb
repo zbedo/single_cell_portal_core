@@ -10,7 +10,7 @@ class SiteController < ApplicationController
 
   # caching
   caches_action :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots,
-                :expression_query, :annotation_query, :precomputed_results, :get_fastq_files,
+                :expression_query, :annotation_query, :precomputed_results,
                 cache_path: :set_cache_path
 
   COLORSCALE_THEMES = %w(Blackbody Bluered Blues Earth Electric Greens Hot Jet Picnic Portland Rainbow RdBu Reds Viridis YlGnBu YlOrRd)
@@ -174,6 +174,7 @@ class SiteController < ApplicationController
     @options = load_cluster_group_options
     @cluster_annotations = load_cluster_group_annotations
     @top_plot_partial = @selected_annotation[:type] == 'group' ? 'expression_plots_view' : 'expression_annotation_plots_view'
+    @y_axis_title = load_expression_axis_title
   end
 
   # re-renders plots when changing cluster selection
@@ -181,7 +182,7 @@ class SiteController < ApplicationController
     matches = @study.expression_scores.by_gene(params[:gene])
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
     @gene = load_best_gene_match(matches, params[:gene])
-    @y_axis_title = @study.expression_matrix_file.y_axis_label
+    @y_axis_title = load_expression_axis_title
     # depending on annotation type selection, set up necessary partial names to use in rendering
     if @selected_annotation[:type] == 'group'
       @values = load_expression_boxplot_data_array_scores(@selected_annotation, subsample)
@@ -231,7 +232,7 @@ class SiteController < ApplicationController
     end
     consensus = params[:consensus].nil? ? 'Mean ' : params[:consensus].capitalize + ' '
     @gene_list = @genes.map(&:gene).join(' ')
-    @y_axis_title = consensus + @study.expression_matrix_file.y_axis_label
+    @y_axis_title = consensus + ' ' + load_expression_axis_title
     # depending on annotation type selection, set up necessary partial names to use in rendering
 		@options = load_cluster_group_options
 		@cluster_annotations = load_cluster_group_annotations
@@ -262,7 +263,7 @@ class SiteController < ApplicationController
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
     consensus = params[:consensus].nil? ? 'Mean ' : params[:consensus].capitalize + ' '
     @gene_list = @genes.map(&:gene).join(' ')
-    @y_axis_title = consensus + @study.expression_matrix_file.y_axis_label
+    @y_axis_title = consensus + ' ' + load_expression_axis_title
     # depending on annotation type selection, set up necessary partial names to use in rendering
     if @selected_annotation[:type] == 'group'
       @values = load_gene_set_expression_boxplot_scores(@selected_annotation, params[:consensus], subsample)
@@ -1033,6 +1034,10 @@ class SiteController < ApplicationController
     }
   end
 
+  def load_expression_axis_title
+    @study.expression_matrix_file.y_axis_label.empty? ? 'Expression' : @study.expression_matrix_file.y_axis_label
+  end
+
   # create a unique hex digest of a list of genes for use in set_cache_path
   def construct_gene_list_hash(query_list)
     genes = query_list.split.map(&:strip).sort.join
@@ -1043,7 +1048,7 @@ class SiteController < ApplicationController
 
   # construct a path to store cache results based on query parameters
   def set_cache_path
-    params_key = "_#{params[:cluster]}_#{params[:annotation]}"
+    params_key = "_#{params[:cluster].to_s.split.join('-')}_#{params[:annotation]}"
     case action_name
       when 'render_cluster'
         unless params[:subsample].nil?
@@ -1056,7 +1061,7 @@ class SiteController < ApplicationController
       when 'render_gene_set_expression_plots'
         params_key += "_#{params[:subsample]}"
         if params[:gene_set]
-          params_key += "_#{params[:gene_set]}"
+          params_key += "_#{params[:gene_set].split.join('-')}"
         else
           gene_list = params[:search][:genes]
           gene_key = construct_gene_list_hash(gene_list)
@@ -1072,9 +1077,7 @@ class SiteController < ApplicationController
       when 'annotation_query'
         annotation_query_url(study_name: params[:study_name]) + params_key
       when 'precomputed_results'
-        precomputed_results_url(study_name: params[:study_name], precomputed: params[:precomputed])
-      when 'get_fastq_files'
-        get_fastq_files_url(study_name: params[:study_name])
+        precomputed_results_url(study_name: params[:study_name], precomputed: params[:precomputed].split.join('-'))
     end
   end
 end

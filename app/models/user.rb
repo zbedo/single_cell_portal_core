@@ -74,19 +74,30 @@ class User
     elsif user.provider.nil? || user.uid.nil?
       user.update(provider: provider, uid: uid)
     end
-    # update refresh token
-    user.update(refresh_token: access_token.credentials.refresh_token)
+    # store refresh token
+    if !access_token.credentials.refresh_token.nil?
+      user.update(refresh_token: access_token.credentials.refresh_token)
+    end
     user
   end
 
   # generate an access token based on user's refresh token
   def access_token
-    response = RestClient.post 'https://accounts.google.com/o/oauth2/token',
-                               :grant_type => 'refresh_token',
-                               :refresh_token => self.refresh_token,
-                               :client_id => ENV['OAUTH_CLIENT_ID'],
-                               :client_secret => ENV['OAUTH_CLIENT_SECRET']
-    token_vals = JSON.parse(response.body)
-    token_vals['access_token']
+    unless self.refresh_token.nil?
+      begin
+        response = RestClient.post 'https://accounts.google.com/o/oauth2/token',
+                                   :grant_type => 'refresh_token',
+                                   :refresh_token => self.refresh_token,
+                                   :client_id => ENV['OAUTH_CLIENT_ID'],
+                                   :client_secret => ENV['OAUTH_CLIENT_SECRET']
+        token_vals = JSON.parse(response.body)
+        token_vals['access_token']
+      rescue RestClient::BadRequest => e
+        Rails.logger.info "#{Time.now}: Unable to generate access token for user #{self.email}; refresh token is invalid."
+        nil
+      end
+    else
+      nil
+    end
   end
 end
