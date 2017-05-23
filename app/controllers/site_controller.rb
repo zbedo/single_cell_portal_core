@@ -1056,10 +1056,14 @@ class SiteController < ApplicationController
         end
         render_cluster_url(study_name: params[:study_name]) + params_key
       when 'render_gene_expression_plots'
-        params_key += "_#{params[:subsample]}"
+        unless params[:subsample].nil?
+          params_key += "_#{params[:subsample]}"
+        end
         render_gene_expression_plots_url(study_name: params[:study_name], gene: params[:gene]) + params_key
       when 'render_gene_set_expression_plots'
-        params_key += "_#{params[:subsample]}"
+        unless params[:subsample].nil?
+          params_key += "_#{params[:subsample]}"
+        end
         if params[:gene_set]
           params_key += "_#{params[:gene_set].split.join('-')}"
         else

@@ -213,8 +213,8 @@ class StudiesController < ApplicationController
     # revoke all study_shares
     @study.study_shares.delete_all
 
-    # delete cache for study as once study is renamed we lose the reference to existing caches
-    Rails.cache.delete_matched(/#{@study.url_safe_name}/)
+    # queue job to delete study caches
+    CacheRemovalJob.new(@study.url_safe_name).delay.perform
 
     # mark for deletion, rename study to free up old name for use, and restrict access by removing owner
     new_name = "DELETE-#{@study.data_dir}"
@@ -265,7 +265,14 @@ class StudiesController < ApplicationController
     end
     @selector = params[:selector]
     @partial = params[:partial]
-    if @study_file.update_attributes(study_file_params)
+
+    # do a test assignment and check for validity; if valid and either Cluster or Gene List, invalidate caches
+    @study_file.assign_attributes(study_file_params)
+    if ['Cluster', 'Gene List'].include?(@study_file.file_type) && @study_file.valid?
+      @study_file.invalidate_cache_by_file_type
+    end
+
+    if @study_file.save
       # if a gene list or cluster got updated, we need to update the associated records
       if study_file_params[:file_type] == 'Gene List'
         @precomputed_entry = PrecomputedScore.find_by(study_file_id: study_file_params[:_id])
@@ -277,7 +284,6 @@ class StudiesController < ApplicationController
         @cluster.data_arrays.update_all(cluster_name: study_file_params[:name])
       end
       @message = "'#{@study_file.name}' has been successfully updated."
-
 
       # notify users of updated file
       changes = ["Study file updated: #{@study_file.upload_file_name}"]
@@ -299,7 +305,14 @@ class StudiesController < ApplicationController
       @study_file = @study.study_files.build
     end
     @form = "#study-file-#{@study_file.id}"
-    if @study_file.update_attributes(study_file_params)
+
+    # do a test assignment and check for validity; if valid and either Cluster or Gene List, invalidate caches
+    @study_file.assign_attributes(study_file_params)
+    if ['Cluster', 'Gene List'].include?(@study_file.file_type) && @study_file.valid?
+      @study_file.invalidate_cache_by_file_type
+    end
+
+    if @study_file.save
       # if a gene list or cluster got updated, we need to update the associated records
       if study_file_params[:file_type] == 'Gene List'
         @precomputed_entry = PrecomputedScore.find_by(study_file_id: study_file_params[:_id])
@@ -311,7 +324,6 @@ class StudiesController < ApplicationController
         @cluster.data_arrays.update_all(cluster_name: study_file_params[:name])
       end
       @message = "'#{@study_file.name}' has been successfully updated."
-
 
       # notify users of updated file
       changes = ["Study file updated: #{@study_file.upload_file_name}"]
@@ -355,7 +367,7 @@ class StudiesController < ApplicationController
           @partial = 'initialize_misc_form'
       end
       # delete matching caches
-      @study_file.delay.invalidate_cache_by_file_type
+      @study_file.invalidate_cache_by_file_type
       # delete source file in FireCloud and then remove record
       begin
         # make sure file is in FireCloud first as user may be aborting the upload

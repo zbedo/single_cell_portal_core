@@ -9,3 +9,7 @@ require "minitest/rails"
 
 # Uncomment for awesome colorful output
 require "minitest/pride"
+
+class ActiveSupport::TestCase
+  include Rails.application.routes.url_helpers
+end
