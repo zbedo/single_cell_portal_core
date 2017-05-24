@@ -21,13 +21,7 @@ cluster = ClusterGroup.create(name: 'Test Cluster', study_id: study.id, study_fi
         type: 'numeric',
         values: []
     }
-],
-    domain_ranges: {
-        x: [0, 2859],
-        y: [0, 2859],
-        z: [0, 2859]
-    }
-)
+])
 # create raw arrays of values to use in DataArrays and StudyMetadatum
 category_array = ['a', 'b', 'c', 'd'].repeated_combination(10).to_a.flatten
 metadata_label_array = ['E', 'F', 'G', 'H'].repeated_combination(10).to_a.flatten

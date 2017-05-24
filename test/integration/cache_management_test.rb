@@ -14,17 +14,17 @@ class CacheManagementTest < ActionDispatch::IntegrationTest
     @cluster_file = @study.cluster_ordinations_files.first
     @expression_file = @study.expression_matrix_file
     cell_annotation = @cluster.cell_annotations.sample
-    @annotation = "#{cell_annotation[:name]}--#{cell_annotation[:type]}--study"
+    @annotation = "#{cell_annotation[:name]}--#{cell_annotation[:type]}--cluster"
     @genes = ExpressionScore.all.map(&:gene)
     @gene = @genes.sample
     genes_hash = Digest::SHA256.hexdigest @genes.sort.join
 
     # get various actions subject to caching
-    xhr :get, render_cluster_path(study_name: @study.url_safe_name, cluster: @cluster.name, annotation: @annotation), format: 'js'
-    xhr :get, render_gene_expression_plots_path(study_name: @study.url_safe_name, cluster: @cluster.name, annotation: @annotation, gene: @gene), format: 'js'
-    xhr :get, render_gene_set_expression_plots_path(study_name: @study.url_safe_name, cluster: @cluster.name, annotation: @annotation, search: {genes: @genes.join(' ')} ), format: 'js'
-    xhr :get, expression_query_path(study_name: @study.url_safe_name, cluster: @cluster.name, annotation: @annotation, search: {genes: @genes.join(' ')} ), format: 'js'
-    xhr :get, annotation_query_path(study_name: @study.url_safe_name, annotation: @annotation, cluster: @cluster.name), format: 'js'
+    xhr :get, render_cluster_path(study_name: @study.url_safe_name, cluster: @cluster.name, annotation: @annotation)
+    xhr :get, render_gene_expression_plots_path(study_name: @study.url_safe_name, cluster: @cluster.name, annotation: @annotation, gene: @gene)
+    xhr :get, render_gene_set_expression_plots_path(study_name: @study.url_safe_name, cluster: @cluster.name, annotation: @annotation, search: {genes: @genes.join(' ')} )
+    xhr :get, expression_query_path(study_name: @study.url_safe_name, cluster: @cluster.name, annotation: @annotation, search: {genes: @genes.join(' ')} )
+    xhr :get, annotation_query_path(study_name: @study.url_safe_name, annotation: @annotation, cluster: @cluster.name)
 
     # construct various cache keys for direct lookup (cannot lookup via regex)
     cluster_cache_key = "views/localhost/single_cell/study/#{@study.url_safe_name}/render_cluster_#{@cluster.name.split.join('-')}_#{@annotation}.js"
