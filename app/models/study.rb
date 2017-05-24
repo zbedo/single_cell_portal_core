@@ -371,15 +371,14 @@ class Study
       Rails.logger.info "Creating last #{@records.size} expression scores from #{expression_file.name} for #{self.name}"
       ExpressionScore.create!(@records)
       # create array of all cells for study
-      @cell_data_array = self.data_arrays.build(name: 'All Cells', array_type: 'cells', array_index: 1, study_file_id: expression_file._id)
+      @cell_data_array = self.data_arrays.build(name: 'All Cells', cluster_name: expression_file.name, array_type: 'cells', array_index: 1, study_file_id: expression_file._id)
       # chunk into pieces as necessary
-      cells.each_slice(DataArray::MAX_ENTRIES) do |slice|
+      cells.each_slice(5) do |slice|
         new_array_index = @cell_data_array.array_index + 1
         @cell_data_array.values = slice
-        Rails.logger.info "Saving all cells data array ##{@cell_data_array.array_index} using #{expression_file.name} for #{self.name}"
-        Rails.logger.info "#{@cell_data_array.attributes}"
-        @cell_data_array.save
-        @cell_data_array = self.data_arrays.build(name: 'All Cells', array_type: 'cells', array_index: new_array_index, study_file_id: expression_file._id)
+        Rails.logger.info "#{Time.now}: Saving all cells data array ##{@cell_data_array.array_index} using #{expression_file.name} for #{self.name}"
+        @cell_data_array.save!
+        @cell_data_array = self.data_arrays.build(name: 'All Cells', cluster_name: expression_file.name, array_type: 'cells', array_index: new_array_index, study_file_id: expression_file._id)
       end
 
       # clean up, print stats
