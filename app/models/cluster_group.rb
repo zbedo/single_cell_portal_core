@@ -21,7 +21,7 @@ class ClusterGroup
   index({ study_id: 1 }, { unique: false })
   index({ study_id: 1, study_file_id: 1}, { unique: false })
 
-  # fixed values to
+  # fixed values to subsample at
   SUBSAMPLE_THRESHOLDS = [1000, 10000, 20000].freeze
 
   # method to return a single data array of values for a given data array name, annotation name, and annotation value

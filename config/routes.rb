@@ -45,7 +45,7 @@ Rails.application.routes.draw do
 		# public site actions
 		get 'study/:study_name', to: 'site#study', as: :view_study
 		get 'study/:study_name/get_fastq_files', to: 'site#get_fastq_files', as: :get_fastq_files
-		get 'render_cluster/:study_name', to: 'site#render_cluster', as: :render_cluster
+		get 'study/:study_name/render_cluster', to: 'site#render_cluster', as: :render_cluster
 		get 'study/:study_name/get_new_annotations', to: 'site#get_new_annotations', as: :get_new_annotations
     post 'study/:study_name/search', to: 'site#search_genes', as: :search_genes
     get 'study/:study_name/gene_expression/:gene/', to: 'site#view_gene_expression', as: :view_gene_expression, constraints: {gene: /.*/}

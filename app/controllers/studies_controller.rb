@@ -213,6 +213,9 @@ class StudiesController < ApplicationController
     # revoke all study_shares
     @study.study_shares.delete_all
 
+    # queue job to delete study caches
+    CacheRemovalJob.new(@study.url_safe_name).delay.perform
+
     # mark for deletion, rename study to free up old name for use, and restrict access by removing owner
     new_name = "DELETE-#{@study.data_dir}"
     @study.update!(queued_for_deletion: true, public: false, user_id: nil, name: new_name, url_safe_name: new_name)
@@ -230,6 +233,7 @@ class StudiesController < ApplicationController
     logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name}"
     case @study_file.file_type
       when 'Cluster'
+        @cache_key = render_cluster_url(study_name: @study.url_safe_name, cluster: @study_file.name)
         @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user)
       when 'Expression Matrix'
         @study.delay.initialize_expression_scores(@study_file, current_user)
@@ -261,7 +265,14 @@ class StudiesController < ApplicationController
     end
     @selector = params[:selector]
     @partial = params[:partial]
-    if @study_file.update_attributes(study_file_params)
+
+    # do a test assignment and check for validity; if valid and either Cluster or Gene List, invalidate caches
+    @study_file.assign_attributes(study_file_params)
+    if ['Cluster', 'Gene List'].include?(@study_file.file_type) && @study_file.valid?
+      @study_file.invalidate_cache_by_file_type
+    end
+
+    if @study_file.save
       # if a gene list or cluster got updated, we need to update the associated records
       if study_file_params[:file_type] == 'Gene List'
         @precomputed_entry = PrecomputedScore.find_by(study_file_id: study_file_params[:_id])
@@ -273,7 +284,6 @@ class StudiesController < ApplicationController
         @cluster.data_arrays.update_all(cluster_name: study_file_params[:name])
       end
       @message = "'#{@study_file.name}' has been successfully updated."
-
 
       # notify users of updated file
       changes = ["Study file updated: #{@study_file.upload_file_name}"]
@@ -295,7 +305,14 @@ class StudiesController < ApplicationController
       @study_file = @study.study_files.build
     end
     @form = "#study-file-#{@study_file.id}"
-    if @study_file.update_attributes(study_file_params)
+
+    # do a test assignment and check for validity; if valid and either Cluster or Gene List, invalidate caches
+    @study_file.assign_attributes(study_file_params)
+    if ['Cluster', 'Gene List'].include?(@study_file.file_type) && @study_file.valid?
+      @study_file.invalidate_cache_by_file_type
+    end
+
+    if @study_file.save
       # if a gene list or cluster got updated, we need to update the associated records
       if study_file_params[:file_type] == 'Gene List'
         @precomputed_entry = PrecomputedScore.find_by(study_file_id: study_file_params[:_id])
@@ -307,7 +324,6 @@ class StudiesController < ApplicationController
         @cluster.data_arrays.update_all(cluster_name: study_file_params[:name])
       end
       @message = "'#{@study_file.name}' has been successfully updated."
-
 
       # notify users of updated file
       changes = ["Study file updated: #{@study_file.upload_file_name}"]
@@ -350,6 +366,8 @@ class StudiesController < ApplicationController
         else
           @partial = 'initialize_misc_form'
       end
+      # delete matching caches
+      @study_file.invalidate_cache_by_file_type
       # delete source file in FireCloud and then remove record
       begin
         # make sure file is in FireCloud first as user may be aborting the upload
@@ -418,6 +436,7 @@ class StudiesController < ApplicationController
       if @study_file.parseable?
         logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
         @message += " You will receive and email at #{current_user.email} when the parse has completed."
+        # parse file as appropriate type
         case @study_file.file_type
           when 'Cluster'
             @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false})
@@ -505,6 +524,9 @@ class StudiesController < ApplicationController
       if @study.study_shares.any?
         SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
       end
+
+      # delete matching caches
+      @study_file.delay.invalidate_cache_by_file_typ
 
       if @study_file.destroy
         @message = "'#{@study_file.name}' has been successfully deleted."

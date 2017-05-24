@@ -373,6 +373,7 @@ class Study
   def self.delete_queued_studies
     studies = self.where(queued_for_deletion: true)
     studies.each do |study|
+      Rails.logger.info "#{Time.now}: deleting queued study #{study.name}"
       ExpressionScore.where(study_id: study.id).delete_all
       DataArray.where(study_id: study.id).delete_all
       StudyMetadatum.where(study_id: study.id).delete_all
@@ -382,6 +383,7 @@ class Study
       DirectoryListing.where(study_id: study.id).delete_all
       # now destroy study to ensure everything is removed
       study.destroy
+      Rails.logger.info "#{Time.now}: delete of #{study.name} completed"
     end
     true
   end
@@ -449,6 +451,7 @@ class Study
     # next, check if this is a re-parse job, in which case we need to remove all existing entries first
     if opts[:reparse]
       self.expression_scores.delete_all
+      expression_file.invalidate_cache_by_file_type
     end
 
     # validate headers
@@ -625,6 +628,7 @@ class Study
     if opts[:reparse]
       self.cluster_groups.where(study_file_id: ordinations_file.id).delete_all
       self.data_arrays.where(study_file_id: ordinations_file.id).delete_all
+      ordinations_file.invalidate_cache_by_file_type
     end
 
     # validate headers of cluster file
@@ -915,6 +919,7 @@ class Study
     # next, check if this is a re-parse job, in which case we need to remove all existing entries first
     if opts[:reparse]
       self.study_metadata.delete_all
+      metadata_file.invalidate_cache_by_file_type
     end
 
     # validate headers of definition file
@@ -1119,6 +1124,7 @@ class Study
     # next, check if this is a re-parse job, in which case we need to remove all existing entries first
     if opts[:reparse]
       self.precomputed_scores.where(study_file_id: marker_file.id).delete_all
+      marker_file.invalidate_cache_by_file_type
     end
 
     @count = 0

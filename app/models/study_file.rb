@@ -141,6 +141,36 @@ class StudyFile
     end
   end
 
+  # helper method to invalidate any matching front-end caches when parsing/deleting a study_file
+  def invalidate_cache_by_file_type
+    cache_key = self.cache_removal_key
+    unless cache_key.nil?
+      # clear matching caches in background
+      CacheRemovalJob.new(cache_key).delay.perform
+    end
+  end
+
+  # helper method to return cache removal key based on file type (this is refactored out for use in tests)
+  def cache_removal_key
+    study_name = self.study.url_safe_name
+    case self.file_type
+      when 'Cluster'
+        name_key = self.name.split.join('-')
+        @cache_key = "#{study_name}.*render_cluster.*#{name_key}"
+      when 'Expression Matrix'
+        @cache_key = "#{study_name}.*expression"
+      when 'Gene List'
+        name_key = self.name.split.join('-')
+        @cache_key = "#{study_name}.*#{name_key}"
+      when 'Metadata'
+        # when reparsing metadata, almost all caches now become invalid so we just clear all matching the study
+        @cache_key =  "#{study_name}"
+      else
+        @cache_key = nil
+    end
+    @cache_key
+  end
+
   private
 
   # set filename and construct url safe name from study
