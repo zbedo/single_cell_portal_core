@@ -373,7 +373,7 @@ class Study
       # create array of all cells for study
       @cell_data_array = self.data_arrays.build(name: 'All Cells', cluster_name: expression_file.name, array_type: 'cells', array_index: 1, study_file_id: expression_file._id)
       # chunk into pieces as necessary
-      cells.each_slice(5) do |slice|
+      cells.each_slice(DataArray::MAX_ENTRIES) do |slice|
         new_array_index = @cell_data_array.array_index + 1
         @cell_data_array.values = slice
         Rails.logger.info "#{Time.now}: Saving all cells data array ##{@cell_data_array.array_index} using #{expression_file.name} for #{self.name}"
