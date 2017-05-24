@@ -21,7 +21,7 @@ class DataArray
 	index({ study_id: 1, study_file_id: 1}, { unique: false })
 
   validates_presence_of :name, :cluster_name, :array_type, :array_index, :values
-  validates_uniqueness_of :name, scope: [:study_id, :cluster_group_id, :array_type, :subsample_threshold, :subsample_annotation]
+  validates_uniqueness_of :name, scope: [:study_id, :cluster_name, :cluster_group_id, :array_type, :array_index, :subsample_threshold, :subsample_annotation]
 
 
 	# maximum number of entries for values array (to avoid MongoDB max document size problems)
