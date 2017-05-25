@@ -28,9 +28,11 @@
                   <%= link_to "<span class='fa fa-upload'></span> Upload/Edit Data".html_safe, initialize_study_path(study), class: "btn btn-xs btn-success #{study.url_safe_name}-upload" %>
                   <%= link_to "<span class='fa fa-refresh'></span> Sync Workspace".html_safe, sync_study_path(study), class: "btn btn-xs btn-warning #{study.url_safe_name}-sync sync-button" %>
                   <%= link_to "<span class='fa fa-edit'></span> Edit Study".html_safe, edit_study_path(study), class: "btn btn-xs btn-primary #{study.url_safe_name}-edit" %>
-                  <%= link_to "<span class='fa fa-trash'></span> Delete All".html_safe, study, class: "btn btn-xs btn-danger delete-btn #{study.url_safe_name}-delete", title: 'Delete everything including FireCloud workspace' , method: :delete, data: {toggle: 'tooltip', placement: 'top'} %>
-                  <%= link_to "<span class='fa fa-trash'></span> Delete Local Only".html_safe, study_path(id: study.id, workspace: 'persist'), class: "btn btn-xs btn-danger delete-btn #{study.url_safe_name}-delete-local", title: 'Delete all database records but keep FireCloud workspace' , method: :delete, data: {toggle: 'tooltip', placement: 'top'} %>
-              </td>
+                  <% if study.can_delete?(current_user) %>
+                    <%= link_to "<span class='fa fa-trash'></span> Delete All".html_safe, study, class: "btn btn-xs btn-danger delete-btn #{study.url_safe_name}-delete", title: 'Delete everything including FireCloud workspace' , method: :delete, data: {toggle: 'tooltip', placement: 'top'} %>
+                    <%= link_to "<span class='fa fa-trash'></span> Delete Local Only".html_safe, study_path(id: study.id, workspace: 'persist'), class: "btn btn-xs btn-danger delete-btn #{study.url_safe_name}-delete-local", title: 'Delete all database records but keep FireCloud workspace' , method: :delete, data: {toggle: 'tooltip', placement: 'top'} %>
+                  <% end %>
+                </td>
 						</tr>
 					<% end %>
 					</tbody>

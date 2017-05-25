@@ -187,43 +187,48 @@ class StudiesController < ApplicationController
   # DELETE /studies/1
   # DELETE /studies/1.json
   def destroy
-    name = @study.name
-    ### DESTROY PROCESS FOR PORTAL
-    #
-    # Studies are not deleted on-demand due to memory performance.  Instead, studies are queued for deletion and
-    # destroyed nightly after the database has been re-indexed.  This uses less memory and also makes the process
-    # faster for end users
+    # check if user is allowed to delete study
+    if @study.can_destroy?(current_user)
+      name = @study.name
+      ### DESTROY PROCESS FOR PORTAL
+      #
+      # Studies are not deleted on-demand due to memory performance.  Instead, studies are queued for deletion and
+      # destroyed nightly after the database has been re-indexed.  This uses less memory and also makes the process
+      # faster for end users
 
-    # delete firecloud workspace so it can be reused (unless specified by user), and raise error if unsuccessful
-    # if successful, we're clear to queue the study for deletion
-    if params[:workspace] == 'persist'
-      @study.update(firecloud_workspace: nil)
-    else
-      begin
-        Study.firecloud_client.delete_workspace(@study.firecloud_workspace)
-      rescue RuntimeError => e
-        logger.error "#{Time.now} unable to delete workspace: #{@study.firecloud_workspace}; #{e.message}"
-        redirect_to studies_path, alert: "We were unable to delete your study due to: #{e.message}.<br /><br />No files or database records have been deleted.  Please try again later" and return
+      # delete firecloud workspace so it can be reused (unless specified by user), and raise error if unsuccessful
+      # if successful, we're clear to queue the study for deletion
+      if params[:workspace] == 'persist'
+        @study.update(firecloud_workspace: nil)
+      else
+        begin
+          Study.firecloud_client.delete_workspace(@study.firecloud_workspace)
+        rescue RuntimeError => e
+          logger.error "#{Time.now} unable to delete workspace: #{@study.firecloud_workspace}; #{e.message}"
+          redirect_to studies_path, alert: "We were unable to delete your study due to: #{e.message}.<br /><br />No files or database records have been deleted.  Please try again later" and return
+        end
       end
-    end
 
-    # notify users of deletion before removing shares & owner
-    SingleCellMailer.study_delete_notification(@study, current_user).deliver_now
+      # notify users of deletion before removing shares & owner
+      SingleCellMailer.study_delete_notification(@study, current_user).deliver_now
 
-    # revoke all study_shares
-    @study.study_shares.delete_all
+      # revoke all study_shares
+      @study.study_shares.delete_all
 
-    # queue job to delete study caches
-    CacheRemovalJob.new(@study.url_safe_name).delay.perform
+      # queue job to delete study caches
+      CacheRemovalJob.new(@study.url_safe_name).delay.perform
 
-    # mark for deletion, rename study to free up old name for use, and restrict access by removing owner
-    new_name = "DELETE-#{@study.data_dir}"
-    @study.update!(queued_for_deletion: true, public: false, user_id: nil, name: new_name, url_safe_name: new_name)
-    update_message = "Study '#{name}'was successfully destroyed. All#{params[:workspace].nil? ? ' workspace data & ' : ' '}parsed database records have been destroyed."
+      # mark for deletion, rename study to free up old name for use, and restrict access by removing owner
+      new_name = "DELETE-#{@study.data_dir}"
+      @study.update!(queued_for_deletion: true, public: false, user_id: nil, name: new_name, url_safe_name: new_name)
+      update_message = "Study '#{name}'was successfully destroyed. All#{params[:workspace].nil? ? ' workspace data & ' : ' '}parsed database records have been destroyed."
 
-    respond_to do |format|
-      format.html { redirect_to studies_path, notice: update_message }
-      format.json { head :no_content }
+      respond_to do |format|
+        format.html { redirect_to studies_path, notice: update_message }
+        format.json { head :no_content }
+      end
+    else
+      redirect_to studies_path, alert: 'You do not have permission to perform that action' and return
     end
   end
 
