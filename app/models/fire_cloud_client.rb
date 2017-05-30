@@ -270,7 +270,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	#
 	# return: Google::Cloud::Storage::File::List
 	def get_workspace_files(workspace_name, opts={})
-		bucket = self.execute_gcloud_method(:get_workspace_bucket, workspace_name)
+		bucket = self.get_workspace_bucket(workspace_name)
 		bucket.files(opts)
 	end
 
@@ -281,7 +281,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	#
 	# return: Google::Cloud::Storage::File
 	def get_workspace_file(workspace_name, filename)
-		bucket = self.execute_gcloud_method(:get_workspace_bucket, workspace_name)
+		bucket = self.get_workspace_bucket(workspace_name)
 		bucket.file filename
 	end
 
@@ -295,7 +295,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	#
 	# return: Google::Cloud::Storage::File
 	def create_workspace_file(workspace_name, filepath, filename, opts={})
-		bucket = self.execute_gcloud_method(:get_workspace_bucket, workspace_name)
+		bucket = self.get_workspace_bucket(workspace_name)
 		bucket.create_file filepath, filename, opts
 	end
 
@@ -306,7 +306,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	#
 	# return: true on file deletion
 	def delete_workspace_file(workspace_name, filename)
-		file = self.execute_gcloud_method(:get_workspace_file, workspace_name, filename)
+		file = self.get_workspace_file(workspace_name, filename)
 		file.delete
 	end
 
@@ -318,7 +318,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	#
 	# return: File object
 	def download_workspace_file(workspace_name, filename, destination)
-		file = self.execute_gcloud_method(:get_workspace_file, workspace_name, filename)
+		file = self.get_workspace_file(workspace_name, filename)
 		# create a valid path by combining destination directory and filename, making sure no double / exist
 		end_path = [destination, filename].join('/').gsub(/\/\//, '/')
 		file.download end_path
@@ -333,7 +333,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	#
 	# return: signed URL (string)
 	def generate_signed_url(workspace_name, filename, opts={})
-		file = self.execute_gcloud_method(:get_workspace_file, workspace_name, filename)
+		file = self.get_workspace_file(workspace_name, filename)
 		file.signed_url(opts)
 	end
 
@@ -347,7 +347,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	#
 	# return: array of Google::Cloud::Storage::File objects mapping to directories
 	def get_workspace_directories(workspace_name, opts={})
-		files = self.execute_gcloud_method(:get_workspace_files, workspace_name, opts)
+		files = self.get_workspace_files(workspace_name, opts)
 		directories = []
 		files.each do |file|
 			if file.name.include?('/')
@@ -378,7 +378,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 		# makes sure directory ends with '/', otherwise append to prevent spurious matches
 		directory += '/' unless directory.last == '/'
 		opts.merge!(prefix: directory)
-		self.execute_gcloud_method(:get_workspace_files, workspace_name, opts)
+		self.get_workspace_files(workspace_name, opts)
 	end
 
 	# retrieve number of files in a GCP directory
@@ -393,7 +393,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 		# makes sure directory ends with '/', otherwise append to prevent spurious matches
 		directory += '/' unless directory.last == '/'
 		opts.merge!(prefix: directory)
-		files = self.execute_gcloud_method(:get_workspace_directory_files, workspace_name, directory, opts)
+		files = self.get_workspace_directory_files(workspace_name, directory, opts)
 		count = 0
 		files.each do |file|
 			count += 1 if file.size != 0

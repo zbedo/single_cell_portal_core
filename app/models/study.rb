@@ -1354,7 +1354,7 @@ class Study
           new_data_dir = SecureRandom.hex(32)
           Study.where(id: self.id).update_all(data_dir: new_data_dir)
           FileUtils.mkdir_p(Rails.root.join('data', new_data_dir))
-          StudyFile.where(study_id: self.id).update(data_dir: new_data_dir)
+          StudyFile.where(study_id: self.id).update_all(data_dir: new_data_dir)
           puts "#{Time.now}: Study: #{self.name} new data dir #{new_data_dir} created"
           puts "#{Time.now}: Study: #{self.name} cleanup complete"
         rescue => e
@@ -1366,6 +1366,32 @@ class Study
         false
       end
     end
+  end
+
+  # one time method to generate subsample data_arrays as needed
+  def generate_subsample_data_arrays
+    if self.cluster_groups.any?
+      study_metadata = StudyMetadatum.where(study_id: self.id).to_a
+      cluster_groups = self.cluster_groups.to_a
+      cluster_groups.each do |cluster_group|
+        # determine how many levels to subsample based on size of cluster_group
+        required_subsamples = ClusterGroup::SUBSAMPLE_THRESHOLDS.select {|sample| sample < cluster_group.points}
+        required_subsamples.each do |sample_size|
+          # create cluster-based annotation subsamples first
+          if cluster_group.cell_annotations.any?
+            cluster_group.cell_annotations.each do |cell_annot|
+              cluster_group.delay.generate_subsample_arrays(sample_size, cell_annot[:name], cell_annot[:type], 'cluster')
+            end
+          end
+          # create study-based annotation subsamples
+          study_metadata.each do |metadata|
+            cluster_group.delay.generate_subsample_arrays(sample_size, metadata.name, metadata.annotation_type, 'study')
+          end
+        end
+      end
+
+    end
+
   end
 
   # make data directory after study creation is successful
