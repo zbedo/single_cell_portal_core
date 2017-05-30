@@ -1380,13 +1380,13 @@ class Study
           # create cluster-based annotation subsamples first
           if cluster_group.cell_annotations.any?
             cluster_group.cell_annotations.each do |cell_annot|
-              puts "Generating subsample array for #{study.name}:#{cluster_group.name} (#{cell_annot[:name]},#{cell_annot[:type]},cluster) at #{sample_size}"
+              puts "Generating subsample array for #{self.name}:#{cluster_group.name} (#{cell_annot[:name]},#{cell_annot[:type]},cluster) at #{sample_size}"
               cluster_group.generate_subsample_arrays(sample_size, cell_annot[:name], cell_annot[:type], 'cluster')
             end
           end
           # create study-based annotation subsamples
           study_metadata.each do |metadata|
-            puts "Generating subsample array for #{study.name}:#{cluster_group.name} (#{metadata.name},#{metadata.annotation_type},study) at #{sample_size}"
+            puts "Generating subsample array for #{self.name}:#{cluster_group.name} (#{metadata.name},#{metadata.annotation_type},study) at #{sample_size}"
             cluster_group.generate_subsample_arrays(sample_size, metadata.name, metadata.annotation_type, 'study')
           end
         end
