@@ -1328,7 +1328,7 @@ class Study
         end
         puts "#{Time.now}: Study #{self.name} uploading study files to FireCloud workspace: #{self.firecloud_workspace}"
         self.study_files.each do |file|
-          if file.human_fastq_url.nil? && file.exists?(file.upload.path)
+          if file.human_fastq_url.nil? && File.exists?(file.upload.path)
             puts "#{Time.now}: Uploading #{file.upload_file_name} to FireCloud workspace: #{self.firecloud_workspace}"
             remote_file = Study.firecloud_client.execute_gcloud_method(:create_workspace_file, self.firecloud_workspace, file.upload.path, file.upload_file_name)
             file.update(generation: remote_file.generation)
