@@ -1339,6 +1339,7 @@ class Study
       rescue => e
         # delete workspace on any fail as this amounts to a validation fail
         Study.firecloud_client.delete_workspace(self.firecloud_workspace)
+        self.update(firecloud_workspace: nil)
         puts "Study: #{self.name} workspace migration failed due to #{e.message}; reverting"
         @migration_error = true
       end
