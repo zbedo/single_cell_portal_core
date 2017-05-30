@@ -1306,20 +1306,24 @@ class Study
 
         # set workspace acl
         study_owner = self.user.email
-        acl = Study.firecloud_client.create_workspace_acl(study_owner, 'OWNER')
-        Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
-        # validate acl
-        ws_acl = Study.firecloud_client.get_workspace_acl(ws_name)
-        unless ws_acl['acl'][study_owner]['accessLevel'] == 'OWNER'
-          raise RuntimeError.new 'workspace was not created properly (permissions do not match)'
+        if study_owner.include?('gmail') || study_owner.include?('broadinstitute')
+          acl = Study.firecloud_client.create_workspace_acl(study_owner, 'OWNER')
+          Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
+          # validate acl
+          ws_acl = Study.firecloud_client.get_workspace_acl(ws_name)
+          unless ws_acl['acl'][study_owner]['accessLevel'] == 'OWNER'
+            raise RuntimeError.new 'workspace was not created properly (permissions do not match)'
+          end
+          puts "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment successful"
         end
-        puts "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment successful"
         if self.study_shares.any?
           puts "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares starting"
           self.study_shares.each do |share|
-            acl = Study.firecloud_client.create_workspace_acl(share.email, StudyShare::FIRECLOUD_ACL_MAP[share.permission])
-            Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
-            puts "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares #{share.email} successful"
+            if share.email.include?('gmail') || share.email.include?('broadinstitute')
+              acl = Study.firecloud_client.create_workspace_acl(share.email, StudyShare::FIRECLOUD_ACL_MAP[share.permission])
+              Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
+              puts "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares #{share.email} successful"
+            end
           end
         end
         puts "#{Time.now}: Study #{self.name} uploading study files to FireCloud workspace: #{self.firecloud_workspace}"
