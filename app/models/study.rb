@@ -1352,7 +1352,7 @@ class Study
           FileUtils.rm_rf self.data_public_path
           puts "#{Time.now}: Study: #{self.name} assigning new data dir "
           new_data_dir = SecureRandom.hex(32)
-          Study.where(id: self.id).update(data_dir: new_data_dir)
+          Study.where(id: self.id).update_all(data_dir: new_data_dir)
           FileUtils.mkdir_p(Rails.root.join('data', new_data_dir))
           StudyFile.where(study_id: self.id).update(data_dir: new_data_dir)
           puts "#{Time.now}: Study: #{self.name} new data dir #{new_data_dir} created"
