@@ -1354,6 +1354,7 @@ class Study
           new_data_dir = SecureRandom.hex(32)
           Study.where(id: self.id).update(data_dir: new_data_dir)
           FileUtils.mkdir_p(Rails.root.join('data', new_data_dir))
+          StudyFile.where(study_id: self.id).update(data_dir: new_data_dir)
           puts "#{Time.now}: Study: #{self.name} new data dir #{new_data_dir} created"
           puts "#{Time.now}: Study: #{self.name} cleanup complete"
         rescue => e
