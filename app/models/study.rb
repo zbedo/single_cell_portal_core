@@ -1328,10 +1328,12 @@ class Study
         end
         puts "#{Time.now}: Study #{self.name} uploading study files to FireCloud workspace: #{self.firecloud_workspace}"
         self.study_files.each do |file|
-          puts "#{Time.now}: Uploading #{file.upload_file_name} to FireCloud workspace: #{self.firecloud_workspace}"
-          remote_file = Study.firecloud_client.execute_gcloud_method(:create_workspace_file, self.firecloud_workspace, file.upload.path, file.upload_file_name)
-          file.update(generation: remote_file.generation)
-          puts "#{Time.now}: Upload of #{file.upload_file_name} complete"
+          if file.human_fastq_url.nil? && file.exists?(file.upload.path)
+            puts "#{Time.now}: Uploading #{file.upload_file_name} to FireCloud workspace: #{self.firecloud_workspace}"
+            remote_file = Study.firecloud_client.execute_gcloud_method(:create_workspace_file, self.firecloud_workspace, file.upload.path, file.upload_file_name)
+            file.update(generation: remote_file.generation)
+            puts "#{Time.now}: Upload of #{file.upload_file_name} complete"
+          end
         end
         puts "#{Time.now}: Study: #{self.name} FireCloud migration successful!"
       rescue => e
