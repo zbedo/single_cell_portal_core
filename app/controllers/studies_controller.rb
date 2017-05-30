@@ -188,7 +188,7 @@ class StudiesController < ApplicationController
   # DELETE /studies/1.json
   def destroy
     # check if user is allowed to delete study
-    if @study.can_destroy?(current_user)
+    if @study.can_delete?(current_user)
       name = @study.name
       ### DESTROY PROCESS FOR PORTAL
       #
