@@ -40,11 +40,10 @@ Note: Once the container has been run once, you can stop & restart it using: <co
 == RUNNING THE CONTAINER
 
 Once the image has successfully built and the database container is running, use the following command to start the container:
-  bin/boot_docker -u (sendgrid username) -P (sendgrid password) -k (service account key path)
-<em>Contact bistline@broadinstitute.org[mailto:bistline@broadinstitute.org] for credentials to use in development and production.</em>
+  bin/boot_docker -u (sendgrid username) -P (sendgrid password) -k (service account key path) -o (oauth client id) -S (oauth client secret)
 
 This sets up several environment variables in your shell and then runs the following command:
-  docker run --rm -it --name $CONTAINER_NAME -p 80:80 -p 443:443 -p 587:587 --link mongodb:mongodb -h localhost -v $PROJECT_DIR:/home/app/webapp:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e SENDGRID_USERNAME=$SENDGRID_USERNAME -e SENDGRID_PASSWORD=$SENDGRID_PASSWORD -e SECRET_KEY_BASE=$SECRET_KEY_BASE -e SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY single_cell_docker
+  docker run --rm -it --name $CONTAINER_NAME -p 80:80 -p 443:443 -p 587:587 --link mongodb:mongodb -h localhost -v $PROJECT_DIR:/home/app/webapp:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e SENDGRID_USERNAME=$SENDGRID_USERNAME -e SENDGRID_PASSWORD=$SENDGRID_PASSWORD -e SECRET_KEY_BASE=$SECRET_KEY_BASE -e SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY -e OAUTH_CLIENT_ID=$OAUTH_CLIENT_ID -e OAUTH_CLIENT_SECRET=$OAUTH_CLIENT_SECRET single_cell_docker
 
 The container will then start running, and will execute its local startup scripts that will configure the application automatically.
 
@@ -57,18 +56,20 @@ than <code>--rm -it</code>.</em>
 There are several variables that need to be passed to the Docker container in order to run properly:
 1. *CONTAINER_NAME* (passed with --name): This names your container to whatever you want.  This is useful when linking containers.
 3. *PROJECT_DIR* (passed with -v): This mounts your local working directory inside the Docker container.  Makes doing local development via hot deployment possible.
-4. *PASSENGER_APP_ENV* (passed with -e): The Rails environment you wish to load.  Can be either development or production (default is development).
+4. *PASSENGER_APP_ENV* (passed with -e): The Rails environment you wish to load.  Can be either development, test, or production (default is development).
 5. *MONGO_LOCALHOST* (passed with -e): Name of the container running MongoDB.  Even though our two containers are linked, this needs to be set to allow Rails to communicate with the database.
-6. *SENDGRID_USERNAME* (passed with -e): The username associated with the Sendgrid account (for sending emails).
-7. *SENDGRID_PASSWORD* (passed with -e): The password associated with the Sendgrid account (for sending emails).
+6. *SENDGRID_USERNAME* (passed with -e): The username associated with a Sendgrid account (for sending emails).
+7. *SENDGRID_PASSWORD* (passed with -e): The password associated with a Sendgrid account (for sending emails).
 8. *SECRET_KEY_BASE* (passed with -e): Sets the Rails SECRET_KEY_BASE environment variable, used mostly by Devise in authentication for cookies.
-9. *SERVICE_ACCOUNT_KEY* (passed with -e): Sets the Rails SERVICE_ACCOUNT_KEY environment variable, used for making authenticated API calls to FireCloud & GCP.
+9. *SERVICE_ACCOUNT_KEY* (passed with -e): Sets the SERVICE_ACCOUNT_KEY environment variable, used for making authenticated API calls to FireCloud & GCP.
+10. *OAUTH_CLIENT_ID* (passed with -e): Sets the OAUTH_CLIENT_ID environment variable, used for Google OAuth2 integration.
+11. *OAUTH_CLIENT_SECRET* (passed with -e): Sets the OAUTH_CLIENT_SECRET environment variable, used for Google OAuth2 integration.
 
 === RUN COMMAND IN DETAIL
 The run command explained in its entirety:
 * *--rm:* This tells Docker to automatically clean up the container after exiting.
 * *-it:* Leaves an interactive shell running in the foreground where the output of Nginx can be seen.
-* <b>--name CONTAINER_NAME:</b> This names your container to whatever you want.  This is useful when linking other Docker containers to the portal container, or when connecting to a running container to check logs or environment variables.
+* <b>--name CONTAINER_NAME:</b> This names your container to whatever you want.  This is useful when linking other Docker containers to the portal container, or when connecting to a running container to check logs or environment variables.  The default is <b>single_cell</b>.
 * <b>-p 80:80 -p 443:443 -p 587:587:</b> Maps ports 80 (HTTP), 443 (HTTPS), and 587 (smtp) on the host machine to the corresponding ports inside the Docker container.
 * <b>--link mongodb:mongodb</b>: Connects our webapp container to the mongodb container, creating a virtual hostname inside the single_cell_docker container called mongodb.
 * <b>-v [PROJECT_DIR]/:/home/app/webapp:</b> This mounts your local working directory inside the running Docker container in the correct location for the portal to run.  This accomplishes two things:
@@ -79,6 +80,8 @@ The run command explained in its entirety:
 * <b>-e SENDGRID_USERNAME= [SENDGRID_USERNAME] -e SENDGRID_PASSWORD= [SENDGRID_PASSWORD]:</b> The credentials for Sendgrid to send emails.  Alternatively, you could decide to not use Sendgrid and configure the application to use a different SMTP server (would be done inside your environment's config file).
 * <b>-e SECRET_KEY_BASE= [SECRET_KEY_BASE]:</b> Setting the SECRET_KEY_BASE variable is necessary for creating secure cookies for authentication.  This variable automatically resets every time we restart the container.
 * <b>-e SERVICE_ACCOUNT_KEY= [SERVICE_ACCOUNT_KEY]:</b> Setting the SERVICE_ACCOUNT_KEY variable is necessary for making authenticated API calls to FireCloud and GCP.  This should be a file path <b>relative to the app root</b> that points to the JSON service account key file you exported from GCP.
+* <b>-e OAUTH_CLIENT_ID= [OAUTH_CLIENT_ID]:</b> Setting the OAUTH_CLIENT_ID variable is necessary for allowing Google user authentication.  For instructions on creating OAuth 2.0 Client IDs, refer to the {Google OAuth 2.0 documentation}[https://support.google.com/cloud/answer/6158849].
+* <b>-e OAUTH_CLIENT_SECRET= [OAUTH_CLIENT_SECRET]:</b> Setting the OAUTH_CLIENT_SECRET variable is necessary for allowing Google user authentication.  For instructions on creating OAuth 2.0 Client IDs, refer to the {Google OAuth 2.0 documentation}[https://support.google.com/cloud/answer/6158849].
 * *single_cell_docker*: This is the name of the image we created earlier.  If you chose a different name, please use that here.
 
 === MEMORY CONSTRAINTS
@@ -113,30 +116,40 @@ To create an admin user account:
 
 == TESTS
 
-All tests are handle through {Selenium Webdriver}[http://www.seleniumhq.org/docs/03_webdriver.jsp] and Chromedriver[https://sites.google.com/a/chromium.org/chromedriver/]
+=== UI REGRESSION SUITE
+
+==== TEST SETUP
+
+All user interface tests are handle through {Selenium Webdriver}[http://www.seleniumhq.org/docs/03_webdriver.jsp] and Chromedriver[https://sites.google.com/a/chromium.org/chromedriver/]
 and are run against a regular instance of the portal, usually in development mode.  The test suite is run from the
 <code>test/ui_test_suite.rb</code> script.
 
-Due to the nature of Docker, the tests cannot be run from inside the container as the Docker image cannot connect back to Chromedriver
-and the display from inside the VM.  Therefore, you will need to have a minimal portal environment enabled outside of Docker. The
-minumum requirements are as follows:
+Due to the nature of Docker, the tests cannot be run from inside the container as the Docker container cannot connect back to Chromedriver
+and the display from inside the VM.  As a result, the UI test suite has no knowledge of the Rails environment or application stack.
+Therefore, you will need to have a minimal portal environment enabled outside of Docker. The minumum requirements are as follows:
 
 * Ruby >= 2.3, preferably mangaged through RVM[https://rvm.io/] or rbenv[https://github.com/rbenv/rbenv]
 * Gems: rubygems[https://github.com/rubygems/rubygems], test-unit[http://test-unit.github.io], selenium-webdriver[https://github.com/SeleniumHQ/selenium/tree/master/rb] (see Gemfile.lock for version requirements)
-* Google Chrome with 2 Google accounts already signed in, one of which needs to be a portal admin account (see above)
+* Google Chrome along with 2 Google accounts, one of which needs to be a portal admin account (see above)
 * Chromedriver
-* FireCloud accounts for both Google accounts used above
+* FireCloud accounts for both Google accounts (see FIRECLOUD INTEGRATION below)
 
-To begin the test suite, launch an instance of the portal and run the following command in the portal root directory:
+==== RUNNING UI TESTS
 
-  ruby test/ui_test_suite.rb -- -e=(email account #1) -s=(email account #2)
+To begin the test suite, launch an instance of the portal in development mode and run the following command in another shell
+in the portal root directory:
 
-The test suite will use your default Chrome profile to load Google accounts so that you do not need to authenticate in manually.
-This can be configured with the <code>-p</code> flag as such:
+  ruby test/ui_test_suite.rb -- -e=(email account #1) -s=(email account #2) -p (email account #1 password) -P (email account #2 password)
 
-  ruby test/ui_test_suite.rb -- -e=(email account #1) -s=(email account #2) -p=/path/to/chrome/profile
+Passwords are required as all portal accounts are actual Google accounts, so we pass in passwords at runtime to allow the
+script to authenticate as the specified user.  Passwords are only stored temporarily in-memory and are not persisted to disk
+at any point.
 
 Paths to the chromedriver binary and your profile download directory can also be configured with the <code>-c</code> and <code>-d</code> flags, respectively.
+
+In addition to the above configuration options, it is possible to run the UI test suite against a deployed instance of the
+portal by passing in the base portal URL via the <code>-u</code> flag.  Note that all of the above user requirements must be
+met for whatever instance you test.
 
 There are 3 main groups of tests: admin (study creation & editing), front-end (study data searching & visualization), and cleanup
 (removing studies created during testing).  You can run groups discretely by passing <code>-n /pattern/</code> to the test suite as follows:
@@ -149,16 +162,42 @@ To run all front-end tests:
 
   ruby test/ui_test_suite.rb -n /front-end/ -- (rest of test parameters)
 
-This can also be used to run single tests, or smaller groups by refining the regular expression to match only certain names
-of tests.  For example, to run all front-end tests that deal with file downloads:
+This can also be used to run smaller groups by refining the regular expression to match only certain names of tests.  For
+example, to run all front-end tests that deal with file downloads:
 
   ruby test/ui_test_suite.rb -n /front-end.*download/ -- (rest of test parameters)
 
+You can also run a single test by passing the entire test name as the name paramenter:
+
+	ruby test/ui_test_suite.rb -n 'test: admin: create a study' -- (rest of test parameters)
+
 More information on usage & test configuration can be found in the comments at the top of the test suite.
 
+=== UNIT & INTEGRATION TESTS
+There is a small unit & integration test framework for the Single Cell Portal that is run using the built-in test Rails harness,
+which uses {Test::Unit}[https://github.com/test-unit/test-unit] and minitest-rails[https://github.com/blowmage/minitest-rails].
+These unit & integration tests only cover specific functionality that requires integration with portal models and methods,
+and therefore cannot be run from the UI test suite.
+
+These tests are run via the usual <code>rake test</code> command after seeding the test database.  This is handled via a
+shell script <code>(bin/run_unit_tests.sh</code> that will seed the test database, run the tests, and then destroy all
+created records to clean up after running.
+
+To run the unit & integration test suite, the <code>boot_docker</code> script can be used:
+
+  bin/boot_docker -e test -k (service account key path)
+
+This will boot a new instance of the portal in test mode and run all associated tests, <em>not including the UI test suite</em>.
+
 == GOOGLE DEPLOYMENT
-The production Single Cell portal is deployed in Google Cloud Platform.  The project name is *broad-singlecellportal*.
-If you need to access the production instance for maintenance purposes:
+
+=== PRODUCTION
+
+The official production Single Cell Portal is deployed in Google Cloud Platform.  The project name is *broad-singlecellportal*.
+Only Broad Institute Single Cell Portal team members have access to this instance.  If you are a collaborator and require
+access, please email single_cell_portal@broadinstitute.org[mailto:single_cell_portal@broadinstitute.org].
+
+To access the production instance for maintenance purposes:
 * Go to the broad-singlecellportal[https://console.cloud.google.com/home/dashboard?project=broad-singlecellportal] GCP page
 * Select "Compute Engine" from the top-left nav dropdown
 * At the bottom of the page is the entry for the production VM (called singlecell-production)
@@ -171,50 +210,14 @@ as <code>root</code>, so exit out of the shell before running them.
 
 The production URL is: https://portals.broadinstitute.org/single_cell
 
-=== FIRECLOUD INTEGRATION
+If you are deploying your own production instance in a different project, the following VM/OS configurations are recommended:
+* VM: n1-highmem-4 (4 vCPUs, 26 GB memory)
+* OS: Ubuntu 15.10 (Wily) or later
+* Disks: Two standard persistent disks, one for the portal/database, and a second for upload tmp space mounted at <code>[/path/to/portal/root]/data</code>
 
-The Single Cell Portal stores uploaded study data files in FireCloud[https://software.broadinstitute.org/firecloud/] workspaces,
-which in turn store data in GCP buckets.  This is all managed through a GCP service account which in turn owns all portal workspaces
-and manages them on behalf of portal users.  All portal-related workspaces are within the <code>single-cell-portal</code>
-namespace, which should be noted is a separate project from the one the portal operates out of.
+For more information on formatting and mounting additional persistent disks to a GCP VM, please read the {GCP Documentation}[https://cloud.google.com/compute/docs/disks/add-persistent-disk#formatting].
 
-When a study is created through the portal, a call is made to the FireCloud API to provision a workspace and set the ACL to allow
-owner access to the user who created the study, and read/write access to any designated shares.  Every FireCloud workspace comes
-with a GCP storage bucket, which is where all uploaded files are deposited.  No ACLs are set on individual files as all permissions
-are inherited from the workspace itself.  Files are first uploaded temporarily locally to the portal (so that they can be parsed
-if needed) and then sent to the workspace bucket in the background after uploading and parsing have completed.
-
-Deleting a study will also delete the associated workspace, unless the user specifies that they want the workspace to be persisted.
-New studies can also be initialized from an existing workspace (specified by the user during creation) which will synchronize all
-files and permissions.
-
-==== ADMIN CONTROL PANEL, DOWNLOAD QUOTAS & ACCESS REVOCATION
-
-All portal users are required to authenticate before downloading data as we implement daily per-user quotas.  These are configurable
-through the admin control panel which can be accessed only by portal admin accounts (available through the profile menu or at /single_cell/admin).
-
-There are currently 2 configuration options:
-
-* Daily download quota limit (defaults to 2 terabytes, but is configurable to any amount, including 0)
-* Disabling all downloads
-
-Disabling all downloads is achieved by revoking all access to studies directly in FireCloud and using the portal permission map
-(study ownership & shares) as a backup cache.  This will prevent anyone from downloading data either through the portal or directly from the
-workspaces themselves.  This will have the side effect of disallowing any edits to studies while in effect, so this feature should only
-be used as a last resort to curtail runaway downloads.  While downloads are disabled, only the portal service account will have
-access to workspaces.
-
-Re-enabling downloads will restore all permissions back to their previous state.
-
-=== MAINTENANCE MODE
-
-The production Single Cell portal has a defined maintenance window every <b>Monday from 9:30-10:30AM EST</b>.  To minimize
-user dispruption when doing updates during that window (or hot fixes any other time) the portal has a 'maintenance mode'
-feature that will return a 503 and redirect all incoming traffic to a static maintenance HTML page.
-
-To use this feature, run the <code>bin/enable_maintenance.sh [on/off]</code> script accordingly.
-
-=== PRODUCTION DOCKER COMMANDS
+==== PRODUCTION DOCKER COMMANDS
 
 * To bounce MongoDB: <code>docker restart mongodb</code>
 * To bounce the portal: <code>docker restart single_cell</code> <em>Note: MongoDB must be running to restart the portal, otherwise it cannot instantiate the link to the database.</em>
@@ -227,9 +230,7 @@ project directory as <code>root</code>:
 2. Stop the portal: <code>docker stop single_cell</code>
 3. Remove the container instance: <code>docker rm single_cell</code>
 4. Launch a new instance of the portal with the updated container:
-  bin/boot_docker -u (sendgrid username) -P (sendgrid password) -e production -p (prod database password) -h portals.broadinstitute.org -k (service account key path)
-
-<em>Contact bistline@broadinstitute.org[mailto:bistline@broadinstitute.org] for credentials to use with production</em>
+  bin/boot_docker -u (sendgrid username) -P (sendgrid password) -e production -p (prod database password) -h (production hostname) -k (service account key path) -o (oauth client id) -S (oauth client secret)
 
 <b>You will need to rebuild the docker image if you do any of the following:</b>
 * Edit the Dockerfile
@@ -246,3 +247,60 @@ command and perform various Rails-specific actions, like:
 
 * Re-index the database: <code>bin/rake RAILS_ENV=production db:mongoid:create_indexes</code>
 * Launch the Rails console (to inspect database records, for instance): <code>bin/rails console production</code>
+
+=== STAGING
+
+There is also a staging instance of the Single Cell Portal used for testing new functionality in a production-like setting.
+This is running inside the same project on the <code>singlecell-staging</code> VM.  The staging instance URL is https://single-cell-staging.broadinstitute.org/single_cell
+
+The run command for staging is identical to that of production, with the exception of passing <code>-e staging</code> as the
+environment, and any differing values for hostnames/client secrets/passwords as needed.
+
+=== FIRECLOUD INTEGRATION
+
+The Single Cell Portal stores uploaded study data files in FireCloud[https://software.broadinstitute.org/firecloud/] workspaces,
+which in turn store data in GCP buckets.  This is all managed through a GCP service account which in turn owns all portal workspaces
+and manages them on behalf of portal users.  All portal-related workspaces are within the <code>single-cell-portal</code>
+namespace, which should be noted is a separate project from the one the portal operates out of.
+
+When a study is created through the portal, a call is made to the FireCloud API to provision a workspace and set the ACL to allow
+owner access to the user who created the study, and read/write access to any designated shares.  Every FireCloud workspace comes
+with a GCP storage bucket, which is where all uploaded files are deposited.  No ACLs are set on individual files as all permissions
+are inherited from the workspace itself.  Files are first uploaded temporarily locally to the portal (so that they can be parsed
+if needed) and then sent to the workspace bucket in the background after uploading and parsing have completed.
+
+If a user has not signed up for a FireCloud account, they will receive and invitation email from FireCloud asking them to
+complete their registraiton.  While they will be able to interact with their study/data through the portal without completing
+their registration, they will not be able to load their FireCloud workspace or access the associated GCP bucket until they have done so.
+
+Deleting a study will also delete the associated workspace, unless the user specifies that they want the workspace to be persisted.
+New studies can also be initialized from an existing workspace (specified by the user during creation) which will synchronize all
+files and permissions.
+
+== OTHER FEATURES
+
+=== ADMIN CONTROL PANEL, DOWNLOAD QUOTAS & ACCESS REVOCATION
+
+All portal users are required to authenticate before downloading data as we implement daily per-user quotas.  These are configurable
+through the admin control panel which can be accessed only by portal admin accounts (available through the profile menu or at /single_cell/admin).
+
+There are currently 2 configuration options:
+
+* Daily download quota limit (defaults to 2 terabytes, but is configurable to any amount, including 0)
+* Disabling all FireCloud access
+
+Disabling all FireCloud access is achieved by revoking all access to studies directly in FireCloud and using the portal permission map
+(study ownership & shares) as a backup cache.  This will prevent anyone from downloading data either through the portal or directly from the
+workspaces themselves.  This will have the side effect of disallowing any edits to studies while in effect, so this feature should only
+be used as a last resort to curtail runaway downloads.  While access is disabled, only the portal service account will have
+access to workspaces.
+
+Re-enabling FireCloud access will restore all permissions back to their previous state.
+
+=== MAINTENANCE MODE
+
+The production Single Cell portal has a defined maintenance window every <b>Monday from 9:30-10:30AM EST</b>.  To minimize
+user dispruption when doing updates during that window (or hot fixes any other time) the portal has a 'maintenance mode'
+feature that will return a 503 and redirect all incoming traffic to a static maintenance HTML page.
+
+To use this feature, run the <code>bin/enable_maintenance.sh [on/off]</code> script accordingly.
