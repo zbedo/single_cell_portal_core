@@ -1,0 +1,4 @@
+$('#default-study-options-form').replaceWith("<%= escape_javascript(render partial: 'study_default_options_form') %>");
+
+// show success modal
+$('#notice-target').html("<%= escape_javascript(render partial: 'study_file_notices', locals: {message: 'Study default view options successfully saved.'}) %>");

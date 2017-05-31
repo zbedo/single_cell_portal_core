@@ -1,0 +1,75 @@
+<%= form_for(study_file, url: sync_study_file_study_path(@study._id), html: {id: "study-file-#{study_file._id}" , class: "bs-callout bs-callout-info unsynced-study-file" }, data: {remote: true}) do |f| %>
+  <%= render partial: 'study_file_errors', locals: {study_file: study_file} %>
+  <%= f.hidden_field :study_id, value: params[:id] %>
+  <%= f.hidden_field :_id, value: study_file._id %>
+  <%= f.hidden_field :upload_file_name %>
+  <%= f.hidden_field :upload_file_size %>
+  <%= f.hidden_field :status, value: 'uploaded' %>
+  <%= f.hidden_field :upload_content_type %>
+  <%= f.hidden_field :generation %>
+  <div class="row">
+    <div class="col-xs-12">
+      <%= f.label :upload_file_name, "Unsynced File: #{study_file.upload_file_name}" %>
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-sm-4">
+      <%= f.label :name %><br />
+      <%= f.text_field :name, class: 'form-control filename', placeholder: 'Please enter a name for this entity...', readonly: !['Cluster', 'Gene List'].include?(study_file.file_type) %>
+    </div>
+    <div class="col-sm-8">
+      <%= f.label :description, 'Description' %><br />
+      <%= f.text_field :description, class: 'form-control' %>
+    </div>
+  </div>
+  <div id="study-file-<%= study_file._id %>-extra-info">
+    <%= render partial: 'cluster_axis_fields', locals: {f: f} %>
+  </div>
+  <div class="form-group row">
+    <div class="col-sm-6">
+      <%= f.label :file_type %><br />
+      <%= f.select :file_type, options_for_select(@file_types, study_file.file_type), {}, class: 'form-control' %>
+    </div>
+    <div class="col-sm-6">
+      <%= f.label :actions %>
+      <div class="row">
+        <div class="col-xs-6">
+          <%= f.submit 'Sync', class: 'btn btn-block btn-success save-study-file' %>
+        </div>
+        <div class="col-xs-6">
+          <%= link_to "Don't Sync", '#', id: "remove-#{study_file._id}", class: 'btn btn-block btn-danger remove-unsynced' %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+      $('#study-file-<%= study_file._id %> #study_file_file_type').change(function() {
+          var fileType = $(this).val();
+          var nameField = $("#study-file-<%= study_file.id %> #study_file_name");
+          var extraInfo = $("#study-file-<%= study_file._id %>-extra-info");
+          if (fileType == 'Cluster') {
+              extraInfo.html("<%= escape_javascript(render partial: 'cluster_axis_fields', locals: {f: f}) %>");
+              nameField.attr('readonly', false);
+          } else if (fileType == 'Expression Matrix') {
+              extraInfo.html("<%= escape_javascript(render partial: 'expression_axis_fields', locals: {f: f}) %>");
+              nameField.val('<%= study_file.name %>');
+              nameField.attr('readonly', 'readonly');
+          } else if (fileType == 'Gene List') {
+              extraInfo.empty();
+              nameField.attr('readonly', false);
+          } else {
+              extraInfo.empty();
+              nameField.val('<%= study_file.name %>');
+              nameField.attr('readonly', 'readonly');
+          }
+      });
+
+      $("#remove-<%= study_file._id %>").click(function() {
+          $('#study-file-<%= study_file._id %>').remove();
+          if ($('#unsynced-study-files').html().trim() == "") {
+              $('#unsynced-header').remove();
+          }
+      });
+  </script>
+<% end %>

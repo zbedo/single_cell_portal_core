@@ -36,12 +36,13 @@ Plotly.newPlot('cluster-plot', data, layout);
 
 // listener to redraw expression scatter with new color profile
 $("#colorscale").change(function() {
-
+    <%= render 'study_scatter_layout' %>
     var theme = $(this).val();
     data[0].marker.colorscale = theme;
     console.log("setting colorscale to " + theme);
 
     Plotly.newPlot('cluster-plot', data, layout);
+
 });
 
 

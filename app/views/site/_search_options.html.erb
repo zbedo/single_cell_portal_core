@@ -8,19 +8,24 @@
 		<div class="row">
 			<div class="col-sm-12">
 				<%= form_for(:search, url: search_genes_path(@study.url_safe_name), html: {class: 'form', id: 'search-genes-form'}) do |f| %>
-					<%= f.hidden_field :cluster, value: set_cluster_value(@options, params) %>
+					<%= f.hidden_field :cluster, value: set_cluster_value(@study, params) %>
           <%= f.hidden_field :boxpoints, value: params[:boxpoints].nil? ? 'all' : params[:boxpoints] %>
-          <%= f.hidden_field :annotation, value: set_annotation_value(@cluster_annotations, params) %>
+          <%= f.hidden_field :annotation, value: set_annotation_value(@study, params) %>
+          <%= f.hidden_field :subsample, value: params[:subsample] %>
 					<div class="form-group">
 						<%= f.label :genes, 'Search for genes of interest (autocomplete)' %>
 						<%= f.autocomplete_field :genes, autocomplete_expression_score_gene_expression_score_index_path(study_id: @study._id), {multiple: true, class: 'form-control search-genes-input', placeholder: 'Search genes...', value: set_search_value, data: {delimiter: ' '}} %>
 					</div>
 					<div class="form-group">
-						<%= f.label :upload, "Or upload a list of genes (one gene per line)" %><br>
+						<%= f.label :upload, "Or upload a list of genes (one gene per line)" %><br/>
 						<%= f.file_field :upload, class: 'form-control' %>
 					</div>
-					<%= link_to "<span class='fa fa-ban'></span> Clear Search".html_safe, "javascript:", class: 'btn btn-warning pull-right', id: 'clear-gene-search' %>
-					<%= link_to "<span class='fa fa-search'></span> Search Genes ".html_safe, "javascript:", class: 'btn btn-success', id: 'submit-gene-search' %>
+          <div class="form-group">
+            <%= f.label :consensus, "Collapse Genes by <i class='fa fa-question-circle'></i>".html_safe, title: "Multiple genes only: Collapse expression scores of multiple genes for each cell using this metric.  Selecting 'None' will view genes individually as a heatmap.", data: {toggle: 'tooltip', placement: 'right'} %><br/>
+            <%= f.select :consensus, options_for_select([['Mean', 'mean'],['Median', 'median']], params[:consensus]), {include_blank: 'None'}, {class: 'form-control'} %>
+          </div>
+					<%= link_to "<span class='fa fa-ban'></span> Clear".html_safe, "javascript:", class: 'btn btn-warning pull-right', id: 'clear-gene-search' %>
+					<%= link_to "<span class='fa fa-search'></span> Search".html_safe, "javascript:", class: 'btn btn-success', id: 'submit-gene-search' %>
 					<script type="text/javascript">
             $('#clear-gene-search').click(function(){
                 clearForm('search_genes');
@@ -49,7 +54,7 @@
 		<div class="row">
 			<div class="col-sm-12">
 				<%= form_tag(view_gene_set_expression_path(study_name: params[:study_name]), id: 'gene-sets', method: :get) do %>
-					<%= label_tag :gene_set, 'View curated gene lists as mean-centered expression (box & scatter plots)' %>
+					<%= label_tag :gene_set, 'View curated gene lists as mean expression (box & scatter plots)' %>
 					<%= select_tag :gene_set, options_for_select(@precomputed, params[:gene_set]), {include_blank: 'Please select a gene list', class: 'form-control'} %>
           <%= hidden_field_tag :gene_set_cluster %>
           <%= hidden_field_tag :gene_set_annotation %>
@@ -71,7 +76,7 @@
 			</div>
 		</div>
 		<hr />
-		<% if action_name =~ /(set|heatmap)/ && action_name !~ /(all|precomputed)/ %>
+		<% if action_name =~ /(set|heatmap)/ && action_name !~ /precomputed/ %>
 			<div class="row">
 				<div class="col-sm-12">
 					<%= label_tag :gene, 'Load single gene-level expression' %><br />

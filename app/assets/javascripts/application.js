@@ -10,8 +10,10 @@
 // Read Sprockets README (https://github.com/rails/sprockets#sprockets-directives) for details
 // about supported directives.
 //
+//= require jquery2
 //= require jquery_ujs
 //= require ckeditor/init
+//= require bootstrap-sprockets
 //= require dataTables/jquery.dataTables
 //= require dataTables/bootstrap/3/jquery.dataTables.bootstrap
 //= require jquery.bootstrap.wizard
@@ -20,17 +22,44 @@
 //= require jquery_nested_form
 //= require spin.min
 //= require chroma.min
+//= require jquery-ui/core
 //= require jquery-ui/widgets/datepicker
 //= require jquery-ui/widgets/autocomplete
+//= require jquery-ui/widgets/sortable
+//= require jquery-ui/widgets/dialog
 //= require jquery-ui/effects/effect-highlight
 //= require autocomplete-rails
+//= require bootstrap-select.min
+//= require canvas2svg
+//= require canvg
+//= require colorbrewer
+//= require d3.min
+//= require FileSaver.min
+//= require hammer.min
+//= require jquery.event.drag-2.2
+//= require jquery.mousewheel.min
+//= require newick
+//= require papaparse.min
+//= require parser
+//= require rgbcolor
+//= require slick.min
+//= require StackBlur
+//= require tsne
+//= require underscore-min
+//= require xlsx.full.min
+//= require morpheus-latest.min
 
 var fileUploading = false;
+var PAGE_RENDERED = false;
 
 jQuery.railsAutocomplete.options.noMatchesLabel = "No matches in this study";
 
 // used for calculating size of plotly graphs to maintain square aspect ratio
 var SCATTER_RATIO = 0.65;
+
+function elementVisible(element) {
+    return $(element).is(":visible");
+}
 
 function paginateStudies(totalPages, order, searchString) {
 
@@ -94,7 +123,7 @@ var completed = {
     initialize_metadata_form_nav: false,
     initialize_ordinations_form_nav: false,
     initialize_marker_genes_form_nav: false,
-    initialize_fastq_form_nav: false,
+    initialize_primary_data_form_nav: false,
     initialize_misc_form_nav: false
 };
 
@@ -180,15 +209,20 @@ $(function() {
 function deleteFileConfirmation() {
     var conf = confirm('Are you sure?  This file will be deleted and any associated database records removed.  This cannot be undone.');
     if ( conf == true) {
-        var modal = $('#delete-modal');
-        var modalTgt = modal.find('.spinner-target')[0];
-        var spin = new Spinner(opts).spin(modalTgt);
-        $(modalTgt).data('spinner', spin);
-        modal.modal('show');
+        showModalSpinner('#delete-modal');
         return true;
     } else {
         return false;
     }
+}
+
+// function to render a modal dialog with a spinner
+function showModalSpinner(id) {
+    var modal = $(id);
+    var modalTgt = modal.find('.spinner-target')[0];
+    var spin = new Spinner(opts).spin(modalTgt);
+    $(modalTgt).data('spinner', spin);
+    modal.modal('show');
 }
 
 // toggle the Search/View options panel
@@ -261,12 +295,6 @@ function launchSpinner(divId) {
     $('#loading-modal').modal('show');
 };
 
-function stopSpinner(divId) {
-    $('#' + divId).data('spinner').stop();
-    $('#loading-modal').modal('hide');
-}
-
-
 // default title font settings for axis titles in plotly
 var plotlyTitleFont = {
     family: 'Helvetica Neue',
@@ -293,23 +321,6 @@ function clearForm(target) {
     $('#' + target).val("");
 }
 
-// check if there are blank text boxes or selects
-function validateFields(selector) {
-    var values = selector.map(function() {return $(this).val()}).get();
-    return values.indexOf("") === -1;
-}
-
-// set error state for items that have a property of 'checked' == false
-function setErrorOnChecked(selector) {
-    selector.map(function() {
-        if ( !$(this).prop('checked') ) {
-            $(this).parent().addClass('has-error has-feedback');
-        } else {
-            $(this).parent().removeClass('has-error has-feedback');
-        }
-    });
-}
-
 // set error state on blank text boxes or selects
 function setErrorOnBlank(selector) {
     selector.map(function() {
@@ -331,22 +342,33 @@ $(window).resize(function() {
 });
 
 // generic function to render Morpheus
-function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, target, fitType) {
+function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, target, fitType, heatmapHeight) {
+    console.log('render status of ' + target + ' at start: ' + $(target).data('rendered'));
     $(target).empty();
-    var config = {dataset: dataPath, el: $(target)};
+    var config = {dataset: dataPath, el: $(target), menu: null};
+
+    // set height if specified, otherwise use default setting of 500 px
+    if (heatmapHeight !== undefined) {
+        config.height = heatmapHeight;
+    } else {
+        config.height = 500;
+    }
 
     // fit rows, columns, or both to screen
-    if (fitType == 'cols') {
+    if (fitType === 'cols') {
         config.columnSize = 'fit';
-    } else if (fitType == 'rows') {
+    } else if (fitType === 'rows') {
         config.rowSize = 'fit';
-    } else if (fitType == 'both') {
+    } else if (fitType === 'both') {
         config.columnSize = 'fit';
         config.rowSize = 'fit';
+    } else {
+        config.columnSize = null;
+        config.rowSize = null;
     }
 
     // load annotations if specified
-    if (annotPath != '') {
+    if (annotPath !== '') {
         config.columnAnnotations = [{
             file : annotPath,
             datasetField : 'id',
@@ -358,12 +380,16 @@ function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, t
         ];
         config.columns = [
             {field:'id', display:'text'},
-            {field: selectedAnnot, display: selectedAnnotType == 'group' ? 'color' : 'bar'}
+            {field: selectedAnnot, display: selectedAnnotType === 'group' ? 'color' : 'bar'}
         ];
     }
 
     // instantiate heatmap and embed in DOM element
     new morpheus.HeatMap(config);
+
+    // set render variable to true for tests
+    $(target).data('rendered', true);
+    console.log('render status of ' + target + ' at end: ' + $(target).data('rendered'));
 
 }
 
@@ -400,4 +426,24 @@ function toggleFastqFields(target) {
     // animate highlight effect to show fields that need changing
     $(nameField).parent().effect('highlight', 1200);
     $(fastqField).effect('highlight', 1200);
+}
+
+// function to toggle all traces in a Plotly div
+function togglePlotlyTraces(div) {
+    console.log('toggling all traces in ' + div);
+    var plotlyData = document.getElementById(div).data;
+    var visibility = plotlyData[0].visible;
+
+    // if visibility is undefined or true, that means it is visible and we want to set this to 'legendonly'
+    // when visibility == 'legendonly', we can set this back to true to show all traces
+    if( visibility === undefined || visibility === true) {
+        visibility = 'legendonly';
+    } else {
+        visibility = true
+    }
+
+    Plotly.restyle(div, 'visible', visibility);
+    // toggle class of toggle glyph
+    $('#toggle-traces').children().toggleClass('fa-toggle-on fa-toggle-off')
+    console.log('toggle complete in ' + div + '; visibility now ' + visibility);
 }

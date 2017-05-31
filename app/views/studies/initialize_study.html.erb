@@ -5,9 +5,9 @@
     <li role="presentation" class="wizard-nav" id="initialize_expression_form_nav"><a href="#expression" data-toggle="tab">1. Expression Matrix <span id="initialize_expression_form_nav_completed"></span></a></li>
     <li role="presentation" class="wizard-nav" id="initialize_metadata_form_nav"><a href="#metadata" data-toggle="tab">2. Metadata <span id="initialize_metadata_form_nav_completed"></span></a></li>
     <li role="presentation" class="wizard-nav" id="initialize_ordinations_form_nav"><a href="#ordinations" data-toggle="tab">3. Clusters <span id="initialize_ordinations_form_nav_completed"></span></a></li>
-		<li role="presentation" class="wizard-nav" id="initialize_fastq_form_nav"><a href="#fastq" data-toggle="tab">3. Fastq Data <span id="initialize_fastq_form_nav_completed"></span></a></li>
-    <li role="presentation" class="wizard-nav" id="initialize_marker_genes_form_nav"><a href="#marker-genes" data-toggle="tab">4. Gene Lists <span id="initialize_marker_genes_form_nav_completed"></span></a></li>
-		<li role="presentation" class="wizard-nav" id="initialize_misc_form_nav"><a href="#misc" data-toggle="tab">5. Miscellaneous <span id="initialize_misc_form_nav_completed"></span></a></li>
+		<li role="presentation" class="wizard-nav" id="initialize_primary_data_form_nav"><a href="#primary-data" data-toggle="tab">4. Primary Data <span id="initialize_primary_data_form_nav_completed"></span></a></li>
+    <li role="presentation" class="wizard-nav" id="initialize_marker_genes_form_nav"><a href="#marker-genes" data-toggle="tab">5. Gene Lists <span id="initialize_marker_genes_form_nav_completed"></span></a></li>
+		<li role="presentation" class="wizard-nav" id="initialize_misc_form_nav"><a href="#misc" data-toggle="tab">6. Miscellaneous <span id="initialize_misc_form_nav_completed"></span></a></li>
 	</ul>
 
 	<div id="bar" class="progress">
@@ -55,27 +55,30 @@
 			</div>
 			<p><%= link_to "<span class='fa fa-plus'></span> Add a Cluster File".html_safe, new_study_file_study_path(@study._id, file_type: 'Cluster', target: '#ordinations-target', form: 'initialize_ordinations_form'), class: 'btn btn-sm btn-primary add-cluster', 'data-remote' => true %></p>
 		</div>
-    <div class="tab-pane" id="fastq">
-      <div id="fastq-target">
+    <div class="tab-pane" id="primary-data">
+      <div id="primary-data-target">
         <div class="well well-sm">
-          <h2>Step 4. Upload Fastq Files <small class="initialize-label" id="initialize_fastq_form_completed"><span class="label label-info">Optional</span></small></h2>
-          <p class="lead">Upload any non-primary human fastq data files <strong>under 80GB in size</strong>.  If your data is primary human data, or over 80GB, you can link to it here by selecting 'Yes' in the 'Primary Human Data / Over 80GB' field and then entering the URL in the corresponding text box.<br /><strong class="text-danger">If you are uploading fastq files, they must be compressed first using gzip.</strong></p>
-          <p class="lead">For more help uploading files, please refer to our <%= link_to 'wiki', 'https://github.com/broadinstitute/single_cell_portal/wiki/Uploading-Data' %>.</p>
-          <p><%= link_to "FASTQ File Format <span class='fa fa-info-circle'></span>".html_safe, 'https://en.wikipedia.org/wiki/FASTQ_format#Format', class: 'btn btn-default' %>&nbsp;<%= link_to "gzip Documentation <span class='fa fa-info-circle'></span>".html_safe, 'http://www.gnu.org/software/gzip/manual/gzip.html', class: 'btn btn-default' %></p>
+          <h2>Step 4. Upload Primary Data Files <small class="initialize-label" id="initialize_primary_data_form_completed"><span class="label label-info">Optional</span></small></h2>
+          <p class="lead"><strong>Primary Human Data</strong>: Primary sequence data derived from humans should be stored in other biological databases and can be linked here by selecting 'Yes' for 'Primary Human Data' and then providing a link in the text field.</p>
+          <p class="lead"><strong>Non-human Data</strong>: If you have a few, small (under 2GB) non-human fastq.gz files, they can be uploaded here. For uploading many or larger files, please refer to the instructions <%= link_to 'on our wiki', 'https://github.com/broadinstitute/single_cell_portal/wiki/Uploading-Files-Using-Gsutil-Tool', target: :_blank %>.</p>
+          <p class="lead">If you already have <code>gsutil</code> installed you can upload files directly using the following command:</p>
+          <pre class="lead">gsutil -m cp *.fastq.gz gs://<%= @study.bucket_id %></pre>
+          <p class="lead"><strong class="text-danger">If you are uploading fastq files through the wizard, they must be compressed first using gzip.</strong></p>
+          <p><%= link_to "FASTQ File Format <span class='fa fa-info-circle'></span>".html_safe, 'https://en.wikipedia.org/wiki/FASTQ_format#Format', class: 'btn btn-default', target: :_blank %>&nbsp;<%= link_to "gzip Documentation <span class='fa fa-info-circle'></span>".html_safe, 'http://www.gnu.org/software/gzip/manual/gzip.html', class: 'btn btn-default', target: :_blank %></p>
         </div>
         <% @fastq_files.each do |study_file| %>
-          <%= render partial: 'initialize_fastq_form', locals: {study_file: study_file} %>
+          <%= render partial: 'initialize_primary_data_form', locals: {study_file: study_file} %>
         <% end %>
         <script type="text/javascript">
           if (<%= !@fastq_files.first.new_record? %>) {
-            completeWizardStep('initialize_fastq_form_nav');
+            completeWizardStep('initialize_primary_data_form_nav');
             console.log('incrementing status for fastq upload');
-            $('#initialize_fastq_form_completed').replaceWith("<%= escape_javascript(render partial: 'step_completed', locals: {id: 'initialize_fastq_form_completed'}) %>");
-            $('#initialize_fastq_form_nav_completed').html("<span class='fa fa-check text-success'></span>");
+            $('#initialize_primary_data_form_completed').replaceWith("<%= escape_javascript(render partial: 'step_completed', locals: {id: 'initialize_primary_data_form_completed'}) %>");
+            $('#initialize_primary_data_form_nav_completed').html("<span class='fa fa-check text-success'></span>");
           }
         </script>
       </div>
-      <p><%= link_to "<span class='fa fa-plus'></span> Add a Fastq File".html_safe, new_study_file_study_path(@study._id, file_type: 'Fastq', target: '#fastq-target', form: 'initialize_fastq_form'), class: 'btn btn-sm btn-primary add-fastq', 'data-remote' => true %></p>
+      <p><%= link_to "<span class='fa fa-plus'></span> Add a Primary Data File".html_safe, new_study_file_study_path(@study._id, file_type: 'Fastq', target: '#primary-data-target', form: 'initialize_primary_data_form'), class: 'btn btn-sm btn-primary add-primary-data', 'data-remote' => true %></p>
 
     </div>
 		<div class="tab-pane" id="marker-genes">
@@ -128,7 +131,6 @@
 		</ul>
 	</div>
 </div>
-<%= render partial: '/layouts/download_helper' %>
 <div id="study-files-notice-target"></div>
 <%= render 'fileupload_templates' %>
 <%= render 'required_modal' %>
@@ -177,5 +179,9 @@
 				return true;
 			}
 		});
+
+		$('#show-gsutil-command').click(function() {
+		   $('#gsutil-command-wrapper').slideToggle('slow');
+    });
 	});
 </script>

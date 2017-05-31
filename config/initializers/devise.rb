@@ -241,8 +241,10 @@ Devise.setup do |config|
   # config.omniauth :github, 'APP_ID', 'APP_SECRET', scope: 'user,public_repo'
 
 
-	config.omniauth :google_oauth2, ENV['OAUTH_CLIENT_ID'], ENV['OAUTH_CLIENT_SECRET'],
-                    {:client_options => {:ssl => {:ca_file => '/etc/pki/tls/certs/ca-bundle.crt'} }}
+  config.omniauth :google_oauth2, ENV['OAUTH_CLIENT_ID'], ENV['OAUTH_CLIENT_SECRET'],
+                  prompt: 'consent', access_type: 'offline',
+                  scope: FireCloudClient::GOOGLE_SCOPES.join(' '),
+                  :client_options => {:ssl => {:ca_file => '/etc/pki/tls/certs/ca-bundle.crt'} }
 
   # ==> Warden configuration
   # If you want to use other strategies, that are not supported by Devise, or

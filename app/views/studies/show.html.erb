@@ -1,6 +1,55 @@
-<h1><%= @study.name %> <%= @study.visibility %> <span class="badge" id="cell-count"><%= @study.cell_count %> cells</span> <span class="badge"><%= @study.gene_count %> genes</span><%= link_to "<span class='fa fa-area-chart'></span> View Study".html_safe, view_study_path(@study.url_safe_name), class: 'btn btn-lg btn-info pull-right' %></h1>
+<h1>
+  <%= @study.name %> <%= @study.visibility %> <span class="badge" id="cell-count"><%= @study.cell_count %> cells</span> <span class="badge" id="gene-count"><%= @study.gene_count %> genes</span>
+  <%= link_to "Toggle All Panels <i class='fa fa-toggle-on'></i>".html_safe, 'javascript:;', class: 'btn btn-default btn-sm pull-right', id: 'toggle-panels' %>
+</h1>
 <%= @study.description.html_safe %>
-<div class="panel panel-default" id="stats-panel">
+<div class="panel panel-default top-pad" id="info-panel">
+  <div class="panel-heading">
+    <div class="panel-title">
+      <h4><%= link_to "General Info & Defaults <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#info', 'data-toggle' => 'collapse' %></h4>
+    </div>
+  </div>
+  <div class="panel-collapse collapse in" id="info">
+    <div class="panel-body">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="table-responsive">
+            <table class="table table-condensed" id="info-table">
+              <thead>
+              <tr>
+                <th>Type</th>
+                <th>ID/Link</th>
+                <th>Action</th>
+              </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Study URL</td>
+                  <td><%= view_study_url(@study.url_safe_name) %></td>
+                  <td><%= link_to "<span class='fa fa-area-chart'></span> View Study".html_safe, view_study_path(@study.url_safe_name), class: 'btn btn-primary', id: 'study-link' %></td>
+                </tr>
+                <tr>
+                  <td>FireCloud Workspace</td>
+                  <td><%= @study.firecloud_workspace %></td>
+                  <td><%= link_to_if !@study.firecloud_workspace.nil?, "<span class='fa fa-cloud'></span> View FireCloud Workspace".html_safe, @study.workspace_url, class: 'btn btn-info', id: 'firecloud-link', target: :_blank %>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Google Storage Bucket</td>
+                  <td><%= @study.bucket_id %></td>
+                  <td><%= link_to_if !@study.bucket_id.nil?, "<span class='fa fa-database'></span> View Google Bucket".html_safe, @study.google_bucket_url, class: 'btn btn-success', id: 'gcs-link', target: :_blank %>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <%= render partial: 'study_default_options_form' %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="panel panel-info top-pad" id="stats-panel">
 	<div class="panel-heading">
 		<div class="panel-title">
 			<h4><%= link_to "Statistics <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#stats', 'data-toggle' => 'collapse' %></h4>
@@ -10,7 +59,7 @@
 		<div class="panel-body">
 			<div class="row">
 				<div class="col-md-6">
-					<h4>Clusters <span class="badge"><%= @study.cluster_groups.count %></span></h4>
+					<h4>Clusters <span class="badge" id="cluster-count"><%= @study.cluster_groups.count %></span></h4>
 					<div class="table-responsive">
 						<table class="table table-condensed" id="clusters">
 							<thead>
@@ -35,7 +84,7 @@
 					</div>
 				</div>
 				<div class="col-md-6">
-					<h4>Gene Lists <span class="badge"><%= @study.precomputed_scores.count %></span></h4>
+					<h4>Gene Lists <span class="badge" id="precomputed-count"><%= @study.precomputed_scores.count %></span></h4>
 					<div class="table-responsive">
 						<table class="table table-condensed" id="precomputed">
 							<thead>
@@ -64,7 +113,7 @@
 <div class="panel panel-info" id="metadatas-annotations-panel">
   <div class="panel-heading">
     <div class="panel-title">
-      <h4><%= link_to "Metadata <span class='badge'>#{@study.study_metadatas.count}</span> & Cluster Annotations <span class='badge'>#{@study.cluster_groups.keep_if {|c| c.cell_annotations.any?}.count}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#metadatas-annotations', 'data-toggle' => 'collapse' %></h4>
+      <h4><%= link_to "Metadata <span class='badge' id='metadata-count'>#{@study.study_metadata.count}</span> & Cluster Annotations <span class='badge' id='cluster-annotation-count'>#{@study.cluster_annotation_count}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#metadatas-annotations', 'data-toggle' => 'collapse' %></h4>
     </div>
   </div>
 
@@ -81,7 +130,7 @@
         </tr>
         </thead>
         <tbody>
-          <% @study.study_metadatas.each do |metadata| %>
+          <% @study.study_metadata.each do |metadata| %>
             <tr>
               <td>Metadata</td>
               <td><%= metadata.name %></td>
@@ -109,7 +158,7 @@
 <div class="panel panel-primary" id="study-files-panel">
 	<div class="panel-heading">
 		<div class="panel-title">
-			<h4><%= link_to "Study Files <span class='badge'>#{@study.study_files.size}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#study-files', 'data-toggle' => 'collapse', class: 'white' %></h4>
+			<h4><%= link_to "Study Files <span class='badge' id='study-file-count'>#{@study.study_files.non_primary_data.size}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#study-files', 'data-toggle' => 'collapse', class: 'white' %></h4>
 		</div>
 	</div>
 
@@ -126,12 +175,12 @@
 					</tr>
 				</thead>
 				<tbody>
-					<% @study.study_files.sort_by(&:name).each do |study_file| %>
-						<tr>
-							<td><%= study_file.name %></td>
-							<td><%= study_file.description %></td>
-							<td><%= study_file.file_type %></td>
-							<td><%= study_file.parseable? ? get_boolean_label(study_file.parsed?) : get_na_label %></td>
+					<% @study.study_files.non_primary_data.sort_by(&:name).each do |study_file| %>
+						<tr id="study-file-<%= study_file.id %>">
+							<td class="study-file-name"><%= study_file.name %></td>
+							<td class="study-file-description"><%= study_file.description %></td>
+							<td class="study-file-file-type"><%= study_file.file_type %></td>
+							<td class="study-file-parsed" data-parsed="<%= study_file.parsed? %>"><%= study_file.parseable? ? get_boolean_label(study_file.parsed?) : get_na_label %></td>
 							<td><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></td>
 						</tr>
 					<% end %>
@@ -140,10 +189,34 @@
 		</div>
 	</div>
 </div>
+
+<div class="panel panel-warning" id="fastq-files-panel">
+  <div class="panel-heading">
+    <div class="panel-title">
+      <h4><%= link_to "Primary Data <span class='badge' id='primary-data-count'>#{@study.primary_data_file_count}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#fastq-files', 'data-toggle' => 'collapse' %></h4>
+    </div>
+  </div>
+
+  <div class="panel-collapse collapse in" id="fastq-files">
+    <div class="panel-body table-responsive">
+      <table class="table table-striped tabled-condensed" id="fastq-table">
+        <thead>
+        <tr>
+          <th class="col-sm-5">Filename</th>
+          <th class="col-sm-6">Description</th>
+          <th class="col-sm-1">Download</th>
+        </tr>
+        </thead>
+        <tbody id="fastq-files-target"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <div class="panel panel-success" id="study-shares-panel">
 	<div class="panel-heading">
 		<div class="panel-title">
-			<h4><%= link_to "Sharing <span class='badge'>#{@study.study_shares.size}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#study-shares', class: 'text-success', 'data-toggle' => 'collapse' %></h4>
+			<h4><%= link_to "Sharing <span class='badge' id='share-count'>#{@study.study_shares.size}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#study-shares', class: 'text-success', 'data-toggle' => 'collapse' %></h4>
 		</div>
 	</div>
 
@@ -170,7 +243,7 @@
 		</div>
 	</div>
 </div>
-<%= render partial: '/layouts/download_helper' %>
+<div id="notice-target"></div>
 <p><%= link_to "<span class='fa fa-edit'></span> Edit Study".html_safe, edit_study_path(@study), class: 'btn btn-primary' %>
 	<%= link_to "<span class='fa fa-upload'></span> Upload/Edit Data".html_safe, upload_study_path(@study), class: 'btn btn-success' %>
 	<%= link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, studies_path, class: 'btn btn-warning' %></p>
@@ -184,5 +257,18 @@
 				search: "Filter records:"
 			}
 		});
+
+    $('#fastq-table').dataTable({
+        pagingType: 'full',
+        order: [[0, 'asc']],
+        ajax: "<%= get_fastq_files_path(study_name: @study.url_safe_name) %>",
+        deferRender: true,
+        autoWidth: false
+    });
+
+    $('#toggle-panels').click(function() {
+        $('.collapse').collapse('toggle');
+        $('#toggle-panels').children().toggleClass('fa-toggle-on fa-toggle-off')
+    });
 
 </script>

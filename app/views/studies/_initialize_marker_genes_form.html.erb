@@ -1,5 +1,6 @@
 <%= form_for(study_file, url: update_study_file_study_path(@study._id), html: {id: "marker_genes_form_#{study_file._id}", class: "bs-callout bs-callout-info initialize_marker_genes_form #{study_file.new_record? ? 'new-gene-list-form' : nil}", data: {remote: true}}) do |f| %>
-	<%= f.hidden_field :study_id, value: params[:id] %>
+  <%= render partial: 'study_file_errors', locals: {study_file: study_file} %>
+  <%= f.hidden_field :study_id, value: params[:id] %>
   <%= f.hidden_field :_id, value: study_file._id %>
   <%= hidden_field_tag :selector, "#marker_genes_form_#{study_file._id}" %>
   <%= hidden_field_tag :partial, 'initialize_marker_genes_form' %>
@@ -86,7 +87,21 @@
 					});
 					fileUploading = false;
 					$.post("<%= parse_study_file_study_path(@study._id) %>", {file: fileName, modal_target: '#marker-gene-parse-<%= study_file._id %>-modal', partial: 'initialize_marker_genes_form', selector: "#marker_genes_form_<%= study_file._id %>"});
-				}
+				},
+        fail: function(e, data) {
+            // check if upload is in progress and abort
+            if (data.jqXHR != undefined) {
+                data.jqXHR.abort();
+                fileUploading = false;
+            }
+            console.log('Aborting upload on study_file: <%= study_file.id %>');
+            showModalSpinner('#delete-modal');
+            $.ajax({
+                url: "<%= delete_study_file_study_path(@study._id, study_file._id, target: "#marker_genes_form_#{study_file._id}") %>",
+                type: 'DELETE',
+                dataType: 'script'
+            });
+        }
 			});
 		});
 

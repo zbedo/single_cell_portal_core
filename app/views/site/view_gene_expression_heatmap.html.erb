@@ -18,7 +18,8 @@
 			<div id="plots" class="panel-collapse collapse in">
 				<div class="panel-body">
 					<div class="col-md-12">
-						<div id="heatmap-plot"></div>
+            <%= render partial: 'morpheus_help' %>
+            <div id="heatmap-plot"></div>
 					</div>
 				</div>
 			</div>
@@ -26,10 +27,20 @@
 	</div>
 </div>
 
-
 <script type="text/javascript">
-    function drawHeatmap() {
-        var dataPath = '<%= javascript_safe_url(expression_query_path(study_name: params[:study_name], search: {genes: params[:search][:genes] })) %>';
+
+    // monitor status of rendering plots for tests
+    $('#heatmap-plot').data('rendered', false);
+
+    function drawHeatmap(height) {
+        // if height isn't specified, pull from stored value, defaults to 500
+        if (height === undefined) {
+            height = $('#heatmap-plot').data('height');
+        }
+        // pull fit type as well, defaults to ''
+        var fit = $('#heatmap-plot').data('fit');
+
+        var dataPath = '<%= javascript_safe_url(expression_query_path(study_name: params[:study_name], search: {genes: @gene_list })) %>';
         var row_centered = $('#row_centered').prop('checked') ? 1 : 0;
         var selectedAnnot = $('#annotation').val();
         var annotName = selectedAnnot.split('--')[0];
@@ -40,28 +51,22 @@
         $('#search_annotation').val(''); // clear value first
         $("#search_annotation").val(selectedAnnot);
         var requestToken = '<%= user_signed_in? ? current_user.id.to_s + ':' + current_user.authentication_token : nil %>';
-        dataPath += '&cluster=' + cluster + '&annotation=' + annotName + '&request_user_token=' + requestToken;
+        dataPath += '&cluster=' + cluster + '&request_user_token=' + requestToken;
+        var newAnnotPath = '<%= annotation_query_path(study_name: params[:study_name]) %>?cluster=' + cluster + '&annotation=' + selectedAnnot;
 
-        // call get_annotation_url to load new annotation file url if user has switched from cluster- to study-based or vice versa
-        $.getJSON("<%= get_annotation_url_path %>?annotation=" + selectedAnnot + "&cluster=" + cluster, function (data) {
-            var newAnnotPath = data.url;
-            renderMorpheus(dataPath, newAnnotPath, annotName, annotType, '#heatmap-plot', 'both');
-        } );
+        // reset status on render call
+        $('#heatmap-plot').data('rendered', false);
+        renderMorpheus(dataPath, newAnnotPath, annotName, annotType, '#heatmap-plot', fit, height);
     }
 
-    var requestToken = '<%= user_signed_in? ? current_user.id.to_s + ':' + current_user.authentication_token : nil %>';
-    var path = '<%= javascript_safe_url(expression_query_path(study_name: params[:study_name], search: {genes: params[:search][:genes] })) %>&request_user_token=' + requestToken;
-    if ( '<%= params[:cluster] %>' != '' ) {
-        path += '&cluster=<%= params[:cluster ]%>';
-    };
 
-    var annotPath = '<%= @clusters_url %>';
-    var selectedAnnotName = '<%= params[:annotation].split('--').first %>';
-    var selectedAnnotType = '<%= @selected_annotation[:type] %>';
-    renderMorpheus(path, annotPath, selectedAnnotName, selectedAnnotType, '#heatmap-plot', 'both');
+    $(document).ready(function() {
+        $('#heatmap-plot').data('fit', '');
+        $('#heatmap-plot').data('height', 500);
+        drawHeatmap();
+    });
 
     $("#row_centered, #annotation").change(function() {
-
         if ($(this).attr('id') == 'annotation') {
             var an = $(this).val();
             // keep track for search purposes
@@ -78,20 +83,80 @@
         $('#gene_set_cluster').val(newCluster);
         var currAnnot = $('#annotation').val();
         // get new annotation options and re-render
-        $.get("<%= get_new_annotations_path(study: params[:study])%>?cluster=" + newCluster, function (data) {
-            // parse response as a string and see if currently selected annotation exists in new annotations
-            if (data.indexOf(currAnnot) >= 0) {
-                $('#annotation').val(currAnnot);
+        $.ajax({
+            url: "<%= get_new_annotations_path(study: params[:study])%>?cluster=" + newCluster,
+            method: 'GET',
+            dataType: 'script',
+            success: function (data) {
+                // parse response as a string and see if currently selected annotation exists in new annotations
+                if (data.indexOf(currAnnot) >= 0) {
+                    $('#annotation').val(currAnnot);
+                }
+                $(document).ready(function () {
+                    // since we now have new annotations, we need to set them in the search form for persistence
+                    var an = $('#annotation').val();
+                    $('#search_annotation').val(an);
+                    $('#gene_set_annotation').val(an);
+                    drawHeatmap();
+                });
             }
-            $(document).ready(function () {
-                // since we now have new annotations, we need to set them in the search form for persistence
-                var an = $('#annotation').val();
-                $('#search_annotation').val(an);
-                $('#gene_set_annotation').val(an);
-                drawHeatmap();
-            })
         });
     });
 
+    $('#resize-heatmap').click(function() {
+        var newHeight = parseInt($('#heatmap_size').val());
+        $("#heatmap-plot").data('height', newHeight);
+        console.log('resizing heatmap to ' + newHeight);
+        drawHeatmap(newHeight);
+    });
+
+    $('#view-fullscreen').click(function() {
+        var btn = $(this);
+        var btnState = btn.data('active');
+        var newState = btnState === 'on' ? 'off' : 'on';
+        btn.data('active', newState);
+        btn.toggleClass('active');
+        toggleSearch();
+        var searchDisplay = $('#search-options-panel').css('display');
+        var currHeight = $('#heatmap_size').val();
+        var redraw = searchDisplay === 'none' || currHeight !== '';
+        // toggle view options if search options has been hidden
+        if (searchDisplay === 'none') {
+            $('#view-options').collapse('hide');
+        }
+        if (redraw) {
+            // if currHeight is blank, calling drawHeatmap with NaN for height will render all rows visible
+            drawHeatmap(parseInt(currHeight));
+        } else {
+            drawHeatmap();
+        }
+    });
+
+    $('.fit-btn').click(function() {
+        var btn = $(this);
+        var btnState = btn.data('active');
+        var newState = btnState === 'on' ? 'off' : 'on';
+        btn.data('active', newState);
+        var fitType = btn.data('fit');
+        console.log('setting fit type: ' + fitType + 'to ' + newState);
+        var plot = $('#heatmap-plot');
+        btn.toggleClass('active');
+        currFit = plot.data('fit');
+        // determine state and set appropriately
+        if (newState == 'on') {
+            if (currFit !== '' && fitType !== currFit) {
+                fitType = 'both'
+            }
+        } else {
+            if (currFit === 'both') {
+                fitType = fitType === 'rows' ? 'cols' : 'rows';
+            } else {
+                fitType = '';
+            }
+        }
+
+        plot.data('fit', fitType);
+        drawHeatmap();
+    });
 
 </script>

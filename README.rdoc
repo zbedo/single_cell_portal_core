@@ -40,11 +40,11 @@ Note: Once the container has been run once, you can stop & restart it using: <co
 == RUNNING THE CONTAINER
 
 Once the image has successfully built and the database container is running, use the following command to start the container:
-  bin/boot_docker -u (sendgrid username) -P (sendgrid password)
+  bin/boot_docker -u (sendgrid username) -P (sendgrid password) -k (service account key path)
 <em>Contact bistline@broadinstitute.org[mailto:bistline@broadinstitute.org] for credentials to use in development and production.</em>
 
 This sets up several environment variables in your shell and then runs the following command:
-  docker run --rm -it --name $CONTAINER_NAME -p 80:80 -p 443:443 -p 587:587 --link mongodb:mongodb -h localhost -v $PROJECT_DIR:/home/app/webapp:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e SENDGRID_USERNAME=$SENDGRID_USERNAME -e SENDGRID_PASSWORD=$SENDGRID_PASSWORD -e SECRET_KEY_BASE=$SECRET_KEY_BASE single_cell_docker
+  docker run --rm -it --name $CONTAINER_NAME -p 80:80 -p 443:443 -p 587:587 --link mongodb:mongodb -h localhost -v $PROJECT_DIR:/home/app/webapp:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e SENDGRID_USERNAME=$SENDGRID_USERNAME -e SENDGRID_PASSWORD=$SENDGRID_PASSWORD -e SECRET_KEY_BASE=$SECRET_KEY_BASE -e SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY single_cell_docker
 
 The container will then start running, and will execute its local startup scripts that will configure the application automatically.
 
@@ -62,6 +62,7 @@ There are several variables that need to be passed to the Docker container in or
 6. *SENDGRID_USERNAME* (passed with -e): The username associated with the Sendgrid account (for sending emails).
 7. *SENDGRID_PASSWORD* (passed with -e): The password associated with the Sendgrid account (for sending emails).
 8. *SECRET_KEY_BASE* (passed with -e): Sets the Rails SECRET_KEY_BASE environment variable, used mostly by Devise in authentication for cookies.
+9. *SERVICE_ACCOUNT_KEY* (passed with -e): Sets the Rails SERVICE_ACCOUNT_KEY environment variable, used for making authenticated API calls to FireCloud & GCP.
 
 === RUN COMMAND IN DETAIL
 The run command explained in its entirety:
@@ -77,6 +78,7 @@ The run command explained in its entirety:
 * <b>-e MONGO_LOCALHOST= [MONGO_LOCALHOST]:</b> Name of the container running MongoDB.  Even though our two containers are linked, this needs to be set to allow Rails to communicate with the database.
 * <b>-e SENDGRID_USERNAME= [SENDGRID_USERNAME] -e SENDGRID_PASSWORD= [SENDGRID_PASSWORD]:</b> The credentials for Sendgrid to send emails.  Alternatively, you could decide to not use Sendgrid and configure the application to use a different SMTP server (would be done inside your environment's config file).
 * <b>-e SECRET_KEY_BASE= [SECRET_KEY_BASE]:</b> Setting the SECRET_KEY_BASE variable is necessary for creating secure cookies for authentication.  This variable automatically resets every time we restart the container.
+* <b>-e SERVICE_ACCOUNT_KEY= [SERVICE_ACCOUNT_KEY]:</b> Setting the SERVICE_ACCOUNT_KEY variable is necessary for making authenticated API calls to FireCloud and GCP.  This should be a file path <b>relative to the app root</b> that points to the JSON service account key file you exported from GCP.
 * *single_cell_docker*: This is the name of the image we created earlier.  If you chose a different name, please use that here.
 
 === MEMORY CONSTRAINTS
@@ -91,7 +93,7 @@ total memory usage under this limit.
 Memory defaults are:
 * Portal memory: 12GB (production only)
 * MongoDB memory: 12GB (always enabled)
-* MongoDB WiredTiger cache size: 10GB (always enabled)
+* MongoDB WiredTiger cache size: 4GB (always enabled)
 
 These defaults can be overridden inside both <code>boot_docker</code> and <code>boot_mongo</code> by using the appropriate
 flags.  To see these, run <code>bin/boot_docker -H</code> and <code>boot_mongo -H</code>.  Depending on your environment,
@@ -99,17 +101,62 @@ you may wish to override these depending on resources available.
 
 === ADMIN USER ACCOUNTS
 The Single Cell Portal has the concept of a 'super-admin' user account, which will allow portal admins to view & edit any
-studies in the portal for QA purposes, as well as receive certain admin-related emails (see PRODUCTION PERSISTENT DISKS
-below).  This can only be enabled manually through the console.
+studies in the portal for QA purposes, as well as receive certain admin-related emails.  This can only be enabled manually
+through the console.
 
 To create an admin user account:
-1. Create a user account normally through the UI (using sign-up or Google auth features)
-2. Start the portal locally (or ssh into production VM)
-3. Connect to the running portal container: <code>docker exec -it single_cell bash</code>
-4. Query for the desired user account: <code>user = User.find_by(email: '<email address here>')</code>
-5. Set the admin flag to true: <code>user.update(admin: true)</code>
+* Create a user account normally through the UI (using sign-up or Google auth features)
+* Start the portal locally (or ssh into production VM)
+* Connect to the running portal container: <code>docker exec -it single_cell bash</code>
+* Query for the desired user account: <code>user = User.find_by(email: '<email address here>')</code>
+* Set the admin flag to true: <code>user.update(admin: true)</code>
 
-=== GOOGLE DEPLOYMENT
+== TESTS
+
+All tests are handle through {Selenium Webdriver}[http://www.seleniumhq.org/docs/03_webdriver.jsp] and Chromedriver[https://sites.google.com/a/chromium.org/chromedriver/]
+and are run against a regular instance of the portal, usually in development mode.  The test suite is run from the
+<code>test/ui_test_suite.rb</code> script.
+
+Due to the nature of Docker, the tests cannot be run from inside the container as the Docker image cannot connect back to Chromedriver
+and the display from inside the VM.  Therefore, you will need to have a minimal portal environment enabled outside of Docker. The
+minumum requirements are as follows:
+
+* Ruby >= 2.3, preferably mangaged through RVM[https://rvm.io/] or rbenv[https://github.com/rbenv/rbenv]
+* Gems: rubygems[https://github.com/rubygems/rubygems], test-unit[http://test-unit.github.io], selenium-webdriver[https://github.com/SeleniumHQ/selenium/tree/master/rb] (see Gemfile.lock for version requirements)
+* Google Chrome with 2 Google accounts already signed in, one of which needs to be a portal admin account (see above)
+* Chromedriver
+* FireCloud accounts for both Google accounts used above
+
+To begin the test suite, launch an instance of the portal and run the following command in the portal root directory:
+
+  ruby test/ui_test_suite.rb -- -e=(email account #1) -s=(email account #2)
+
+The test suite will use your default Chrome profile to load Google accounts so that you do not need to authenticate in manually.
+This can be configured with the <code>-p</code> flag as such:
+
+  ruby test/ui_test_suite.rb -- -e=(email account #1) -s=(email account #2) -p=/path/to/chrome/profile
+
+Paths to the chromedriver binary and your profile download directory can also be configured with the <code>-c</code> and <code>-d</code> flags, respectively.
+
+There are 3 main groups of tests: admin (study creation & editing), front-end (study data searching & visualization), and cleanup
+(removing studies created during testing).  You can run groups discretely by passing <code>-n /pattern/</code> to the test suite as follows:
+
+To run all admin tests:
+
+  ruby test/ui_test_suite.rb -n /admin/ -- (rest of test parameters)
+
+To run all front-end tests:
+
+  ruby test/ui_test_suite.rb -n /front-end/ -- (rest of test parameters)
+
+This can also be used to run single tests, or smaller groups by refining the regular expression to match only certain names
+of tests.  For example, to run all front-end tests that deal with file downloads:
+
+  ruby test/ui_test_suite.rb -n /front-end.*download/ -- (rest of test parameters)
+
+More information on usage & test configuration can be found in the comments at the top of the test suite.
+
+== GOOGLE DEPLOYMENT
 The production Single Cell portal is deployed in Google Cloud Platform.  The project name is *broad-singlecellportal*.
 If you need to access the production instance for maintenance purposes:
 * Go to the broad-singlecellportal[https://console.cloud.google.com/home/dashboard?project=broad-singlecellportal] GCP page
@@ -124,34 +171,50 @@ as <code>root</code>, so exit out of the shell before running them.
 
 The production URL is: https://portals.broadinstitute.org/single_cell
 
-==== PRODUCTION PERSISTENT DISKS
-The production Single Cell portal utilizes two persistent disks for data storage: one for the portal itself, and a second
-non-boot persistent disk for data (mounted at <code>/home/docker-user/single_cell_portal/data</code>).  During normal
-operation and updates, there is nothing that needs to be done pertaining these disks.  When launching the portal in
-production mode, the <code>bin/boot_docker</code> script automatically enables a second mount at the
-<code>/home/app/webapp/data</code> location that reads from this secondary data disk.  <em>Note: when running locally in
-production mode, this second mount has no effect, but in Google it allows Docker to read from the second partition since
-it cannot distinguish the additional disk via the mountpoint).</em>
+=== FIRECLOUD INTEGRATION
 
-There is a weekly cron that calls a script (bin/weekly_disk_snapshot.bash) that backs up both disks and removes any
-snapshots over a month old.  Also, a daily cron runs that calls a Rails mailer method <code>(SingleCellMailer.daily_disk_status)</code>
-that will send a daily email to portal admins.  However, if the host VM is ever stopped or restarted (if the VM is
-upgraded, or a disk is resized), then the data disk must be manually remounted.  If this is not done, data uploads will
-continue to deposit on the boot disk, which has a limit of 2TB and could run out of space, causing the application to
-die unrecoverably.
+The Single Cell Portal stores uploaded study data files in FireCloud[https://software.broadinstitute.org/firecloud/] workspaces,
+which in turn store data in GCP buckets.  This is all managed through a GCP service account which in turn owns all portal workspaces
+and manages them on behalf of portal users.  All portal-related workspaces are within the <code>single-cell-portal</code>
+namespace, which should be noted is a separate project from the one the portal operates out of.
 
-To manually remount the data volume:
-1. SSH into production VM
-2. Find data disk volume name: <code>ls /dev/disk/by-id</code> (the name should be google-singlecell-production-data)
-3. Verify that a data directory exists, and create if not: <code>mkdir /home/docker-user/single_cell_portal/data</code>
-4. Remount the disk:
-	sudo mount -o discard,defaults /dev/disk/by-id/google-singlecell-production-data /home/docker-user/single_cell_portal/data
-5. If a disk has been resized in the Google Console, extend the filesystem:
-	sudo resize2fs /dev/disk/by-id/google-google-singlecell-production-data
+When a study is created through the portal, a call is made to the FireCloud API to provision a workspace and set the ACL to allow
+owner access to the user who created the study, and read/write access to any designated shares.  Every FireCloud workspace comes
+with a GCP storage bucket, which is where all uploaded files are deposited.  No ACLs are set on individual files as all permissions
+are inherited from the workspace itself.  Files are first uploaded temporarily locally to the portal (so that they can be parsed
+if needed) and then sent to the workspace bucket in the background after uploading and parsing have completed.
 
-More information is available at https://cloud.google.com/compute/docs/disks/add-persistent-disk
+Deleting a study will also delete the associated workspace, unless the user specifies that they want the workspace to be persisted.
+New studies can also be initialized from an existing workspace (specified by the user during creation) which will synchronize all
+files and permissions.
 
-==== PRODUCTION DOCKER COMMANDS
+==== ADMIN CONTROL PANEL, DOWNLOAD QUOTAS & ACCESS REVOCATION
+
+All portal users are required to authenticate before downloading data as we implement daily per-user quotas.  These are configurable
+through the admin control panel which can be accessed only by portal admin accounts (available through the profile menu or at /single_cell/admin).
+
+There are currently 2 configuration options:
+
+* Daily download quota limit (defaults to 2 terabytes, but is configurable to any amount, including 0)
+* Disabling all downloads
+
+Disabling all downloads is achieved by revoking all access to studies directly in FireCloud and using the portal permission map
+(study ownership & shares) as a backup cache.  This will prevent anyone from downloading data either through the portal or directly from the
+workspaces themselves.  This will have the side effect of disallowing any edits to studies while in effect, so this feature should only
+be used as a last resort to curtail runaway downloads.  While downloads are disabled, only the portal service account will have
+access to workspaces.
+
+Re-enabling downloads will restore all permissions back to their previous state.
+
+=== MAINTENANCE MODE
+
+The production Single Cell portal has a defined maintenance window every <b>Monday from 9:30-10:30AM EST</b>.  To minimize
+user dispruption when doing updates during that window (or hot fixes any other time) the portal has a 'maintenance mode'
+feature that will return a 503 and redirect all incoming traffic to a static maintenance HTML page.
+
+To use this feature, run the <code>bin/enable_maintenance.sh [on/off]</code> script accordingly.
+
+=== PRODUCTION DOCKER COMMANDS
 
 * To bounce MongoDB: <code>docker restart mongodb</code>
 * To bounce the portal: <code>docker restart single_cell</code> <em>Note: MongoDB must be running to restart the portal, otherwise it cannot instantiate the link to the database.</em>
@@ -164,7 +227,7 @@ project directory as <code>root</code>:
 2. Stop the portal: <code>docker stop single_cell</code>
 3. Remove the container instance: <code>docker rm single_cell</code>
 4. Launch a new instance of the portal with the updated container:
-  bin/boot_docker -u (sendgrid username) -P (sendgrid password) -e production -p (prod database password) -h portals.broadinstitute.org
+  bin/boot_docker -u (sendgrid username) -P (sendgrid password) -e production -p (prod database password) -h portals.broadinstitute.org -k (service account key path)
 
 <em>Contact bistline@broadinstitute.org[mailto:bistline@broadinstitute.org] for credentials to use with production</em>
 

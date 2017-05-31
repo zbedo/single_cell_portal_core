@@ -1,0 +1,13 @@
+$('#sync-notices').html("<%= escape_javascript(render partial: 'sync_notice_modal', locals: {message: @message}) %>");
+$('#sync-notice-modal').modal('show');
+$("<%= @form %>").remove();
+
+// now append synced study file to synced data panel
+$('#synced-directory-listings').append("<%= escape_javascript(render partial: 'directory_listing_form', locals: {directory: @directory}) %>");
+
+// close any empty panels
+$('.unsynced').each(function() {
+    if ($(this).find('.unsynced-content').html().trim() == "") {
+        $(this).collapse('hide');
+    }
+});

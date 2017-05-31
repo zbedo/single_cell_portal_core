@@ -1,6 +1,16 @@
 class SingleCellMailer < ApplicationMailer
   default from: 'no-reply@broadinstitute.org'
 
+  def notify_admin_upload_fail(study_file, error)
+    @users = User.where(admin: true).map(&:email)
+    @study = study_file.study
+    @study_file = study_file
+    @error = error
+    mail(to: @users, subject: '[Single Cell Portal ERROR] FireCloud auto-upload fail in ' + @study.name) do |format|
+      format.html
+    end
+  end
+
   def notify_user_parse_complete(email, title, message)
     @message = message
     mail(to: email, subject: '[Single Cell Portal Notifier] ' + title)
@@ -39,5 +49,41 @@ class SingleCellMailer < ApplicationMailer
     mail(to: @share.email, cc: user.email, subject: "[Single Cell Portal Notifier] Study: #{@study.name} has been shared") do |format|
       format.html
     end
-  end
+	end
+
+	def share_update_notification(study, changes, update_user)
+		@study = study
+		@changes = changes
+		@notify = @study.study_shares.map(&:email)
+		@notify << @study.user.email
+
+		# remove user performing action from notification
+		@notify.delete(update_user.email)
+		mail(to: @notify, subject: "[Single Cell Portal Notifier] Study: #{@study.name} has been updated") do |format|
+			format.html
+		end
+	end
+
+	def share_delete_fail(study, share)
+		@study = study
+		@share = share
+		@message = "<p>The study #{@study.name} was unable to properly revoke sharing to #{@share}</p>
+								<p>Please log into <a href='https://portal.firecloud.org'>FireCloud</a> and manually remove this user</p>".html_safe
+		mail(to: @study.user.email, subject: "[Single Cell Portal Notifier] Study: #{@study.name} sharing update failed") do |format|
+			format.html {render html: @message}
+		end
+	end
+
+	def study_delete_notification(study, user)
+		@study = study
+		@user = user.email
+
+		@notify = @study.study_shares.map(&:email)
+		@notify << @study.user.email
+		@notify.delete_if(&:blank?)
+
+		mail(to: @notify, subject: "[Single Cell Portal Notifier] Study: #{@study.name} has been deleted") do |format|
+			format.html {render html: "<p>The study #{@study.name} has been deleted by #{@user}</p>".html_safe}
+		end
+	end
 end

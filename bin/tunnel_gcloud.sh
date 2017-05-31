@@ -5,16 +5,22 @@ usage=$(
 cat <<EOF
 $0 [OPTION]
 -e VALUE	set the environment, defaults to 'production' (determines which VM to ssh into).
+-u VALUE	set the login user, defaults to 'root'
 -H COMMAND	print this text
 EOF
 )
 
 # set variables & defaults
 ENV="production"
-while getopts "e:H" OPTION; do
+USER='root'
+
+while getopts "e:u:H" OPTION; do
 case $OPTION in
 	e)
 		ENV="$OPTARG"
+		;;
+	u)
+		USER="$OPTARG"
 		;;
 	H)
 		echo "$usage"
@@ -27,4 +33,4 @@ case $OPTION in
 	esac
 done
 
-gcloud compute ssh root@singlecell-$ENV --project broad-singlecellportal --zone us-central1-a
+gcloud compute ssh $USER@singlecell-$ENV --project broad-singlecellportal --zone us-central1-a

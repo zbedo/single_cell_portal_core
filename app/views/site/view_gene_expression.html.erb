@@ -2,7 +2,7 @@
 	<div class="col-md-12">
 		<h1 class="study-lead">Gene<%= action_name =~ /set/ ? ' Set' : nil %> Expression for <%= render partial: 'gene_name_list' %><%= render partial: 'missing_genes' %></h1>
 		<% if action_name =~ /set/ %>
-			<h3 class="help-block lead">Expression scores are shown as a mean-centered average across all genes for each cell.</h3>
+			<h3 class="help-block lead">Expression values are shown as the <strong id="selected-consensus"><%= params[:consensus].nil? ? 'mean' : params[:consensus] %></strong> of expression values across all genes for each cell.</h3>
 		<% end %>
 	</div>
 </div>
@@ -17,7 +17,6 @@
     </div>
 	</div>
 </div>
-
 <script type="text/javascript">
 
     var baseCamera = {
@@ -27,28 +26,52 @@
     };
 
     function renderGeneExpressionPlots() {
-        var url = '<%= params[:gene] ? render_gene_expression_plots_path(study_name: params[:study_name], gene: params[:gene]) : render_gene_set_expression_plots_path(study_name: params[:study_name], gene_set: params[:gene_set]) %>';
+
+        // monitor rendering for tests, must store in parent div to persist past render (entire plotly area is replaced on render)
+        $('#expression-plots').data('box-rendered', false);
+        $('#expression-plots').data('scatter-rendered', false);
+        $('#expression-plots').data('reference-rendered', false);
+
+        <% if !params[:gene].nil? %>
+          var url = '<%= render_gene_expression_plots_path(study_name: params[:study_name], gene: params[:gene]) %>';
+        <% elsif !params[:gene_set].nil? %>
+          var url = '<%= render_gene_set_expression_plots_path(study_name: params[:study_name], gene_set: params[:gene_set]) %>';
+        <% else %>
+          var url = '<%= render_gene_set_expression_plots_path(study_name: params[:study_name], search: {genes: @gene_list}) %>';
+        <% end %>
         var target1 = document.getElementById('box-plot');
         var target2 = document.getElementById('scatter-plot');
         var target3 = document.getElementById('reference-plot');
 
-        var spinner1 = new Spinner(opts).spin(target1);
-        var spinner2 = new Spinner(opts).spin(target2);
-        var spinner3 = new Spinner(opts).spin(target3);
-        $(target1).data('spinner', spinner1);
-        $(target2).data('spinner', spinner2);
-        $(target3).data('spinner', spinner3);
+        // no need to store spinners in data attribute as entire plot div will be re-rendered
+        new Spinner(opts).spin(target1);
+        new Spinner(opts).spin(target2);
+        new Spinner(opts).spin(target3);
+
         var cluster = $('#cluster').val();
         var annotation = $('#annotation').val();
+        var consensus = $('#search_consensus').val();
+        var subsample = $('#subsample').val();
+        var boxpoints = $('#boxpoints_select').val() == undefined ? 'all' : $('#boxpoints_select').val();
         $("#search_cluster").val(cluster);
         $("#search_annotation").val(''); // clear value first
         $("#search_annotation").val(annotation);
         var delimeter = "<%= params[:gene] ? "?".html_safe : "&".html_safe %>";
-        $.get(url + delimeter + 'cluster=' + cluster + '&annotation=' + annotation);
+        url += delimeter + 'cluster=' + cluster + '&annotation=' + annotation + '&boxpoints=' + boxpoints + '&consensus=' + consensus + '&subsample=' + subsample
+        $.ajax({
+            url: url,
+            method: 'GET',
+            dataType: 'script'
+        });
     }
 
     $(document).ready(function() {
+        // store camera data in outer plot so it will persist past render
         $('#expression-plots').data('scatter-camera', baseCamera);
+        // default to outliers on first render if over 1000 points
+        if (<%= params[:subsample].to_i > 1000 %>) {
+            $("#boxpoints_select").val('outliers');
+        }
         renderGeneExpressionPlots();
     });
     // listener for annotation nav, specific to expression pages
@@ -61,6 +84,16 @@
         renderGeneExpressionPlots();
     });
 
+    $('#subsample').change(function() {
+        var sample = $(this).val();
+        $('#search_subsample').val(sample);
+        // turn off boxpoints over 1000
+        if (parseInt(sample) > 1000) {
+            $("#boxpoints_select").val('');
+        }
+        renderGeneExpressionPlots();
+    });
+
     // when changing cluster, re-render annotation options and call render function
     $("#cluster").change(function() {
         var newCluster = $(this).val();
@@ -70,18 +103,23 @@
         // grab currently selected annotation
         var currAnnot = $('#annotation').val();
         // get new annotation options and re-render
-        $.get("<%= get_new_annotations_path(study: params[:study])%>?cluster=" + newCluster, function (data) {
-            // parse response as a string and see if currently selected annotation exists in new annotations
-            if (data.indexOf(currAnnot) >= 0) {
-                $('#annotation').val(currAnnot);
+        $.ajax({
+            url: "<%= get_new_annotations_path(study: params[:study])%>?cluster=" + newCluster,
+            method: 'GET',
+            dataType: 'script',
+            success: function (data) {
+                // parse response as a string and see if currently selected annotation exists in new annotations
+                if (data.indexOf(currAnnot) >= 0) {
+                    $('#annotation').val(currAnnot);
+                }
+                $(document).ready(function () {
+                    // since we now have new annotations, we need to set them in the search form for persistence
+                    var an = $('#annotation').val();
+                    $('#search_annotation').val(an);
+                    $('#gene_set_annotation').val(an);
+                    renderGeneExpressionPlots();
+                });
             }
-            $(document).ready(function () {
-                // since we now have new annotations, we need to set them in the search form for persistence
-                var an = $('#annotation').val();
-                $('#search_annotation').val(an);
-                $('#gene_set_annotation').val(an);
-                renderGeneExpressionPlots();
-            })
         });
     });
 

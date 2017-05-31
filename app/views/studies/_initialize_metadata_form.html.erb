@@ -1,5 +1,6 @@
 <%= form_for(study_file, url: update_study_file_study_path(@study._id), html: {id: "metadata_form", class: 'initialize_metadata_form', data: {remote: true}}) do |f| %>
-	<%= f.hidden_field :study_id, value: params[:id] %>
+  <%= render partial: 'study_file_errors', locals: {study_file: study_file} %>
+  <%= f.hidden_field :study_id, value: params[:id] %>
   <%= f.hidden_field :_id, value: study_file._id %>
   <%= hidden_field_tag :selector, '#metadata_form' %>
   <%= hidden_field_tag :partial, 'initialize_metadata_form' %>
@@ -91,7 +92,21 @@
 					});
 					fileUploading = false;
 					$.post("<%= parse_study_file_study_path(@study._id) %>", {file: fileName, modal_target: '#metadata-parse-modal', partial: 'initialize_metadata_form', selector: "#metadata_form"});
-				}
+				},
+        fail: function(e, data) {
+            // check if upload is in progress and abort
+            if (data.jqXHR != undefined) {
+                data.jqXHR.abort();
+                fileUploading = false;
+            }
+            console.log('Aborting upload on study_file: <%= study_file.id %>');
+            showModalSpinner('#delete-modal');
+            $.ajax({
+                url: "<%= delete_study_file_study_path(@study._id, study_file._id, target: '#metadata_form') %>",
+                type: 'DELETE',
+                dataType: 'script'
+            });
+        }
 			});
 		});
 

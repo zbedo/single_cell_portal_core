@@ -19,17 +19,21 @@
 	</div>
 	<div id="files" class="panel-collapse collapse">
 		<div class="panel-body">
+      <% if @allow_downloads %>
+        <%= render partial: 'layouts/download_help_modal', locals: {study: @study, directories: @directories} %>
+      <% end %>
+      <h2>Study Files <span class="badge"><%= @study_files.count %></span></h2>
 			<div class="table-responsive">
 				<table class="table table-striped table-condensed">
 					<thead>
 					<tr>
-						<th class="col-md-5">Filename</th>
+						<th class="col-sm-5">Filename</th>
 						<th class="col-sm-6">Description</th>
 						<th class="col-sm-1">Download</th>
 					</tr>
 					</thead>
 					<tbody>
-					<% @study.study_files.sort_by(&:name).each do |study_file| %>
+					<% @study_files.each do |study_file| %>
 						<tr>
 							<td><%= study_file.upload_file_name.nil? ? study_file.name : study_file.upload_file_name %> <%= study_file.file_type == 'Cluster' ? "<strong>(#{study_file.name})</strong>".html_safe : nil %></td>
 							<td><%= study_file.description %></td>
@@ -37,17 +41,34 @@
 								<% if @study.embargoed?(current_user) %>
 									<span class="label label-warning"><i class="fa fa-ban"></i> Not available until <%= @study.embargo.to_s(:long) %></span>
 								<% else %>
-									<%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %>
+                  <% if @allow_downloads %>
+  									<%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %>
+                  <% else %>
+                    <%= button_to 'Currently Unavailable', 'javascript:;', class: 'btn btn-danger', disabled: true %>
+                  <% end %>
 								<% end %>
 							</td>
 						</tr>
 					<% end %>
 					</tbody>
 				</table>
-        <%= render partial: '/layouts/download_helper' %>
+        <div class="well well-sm">
+          <h2>Primary Data <span class="badge"><%= @study.primary_data_file_count %></span> </h2>
+          <table class="table table-striped tabled-condensed" id="fastq-table">
+              <thead>
+                <tr>
+                  <th class="col-sm-5">Filename</th>
+                  <th class="col-sm-6">Description</th>
+                  <th class="col-sm-1">Download</th>
+                </tr>
+              </thead>
+              <tbody id="fastq-files-target"></tbody>
+          </table>
+        </div>
 			</div>
 		</div>
 	</div>
+
 </div>
 <% if @study.initialized? %>
 	<div class="row">
@@ -65,7 +86,12 @@
 				<div id="plots" class="panel-collapse collapse in">
 					<div class="panel-body">
 						<div class="col-md-12">
-              <div id="colorscale-picker"></div>
+              <div class="row">
+                <div class="col-xs-12">
+                  <div id="colorscale-target"></div>
+                  <div id="toggle-plots"></div>
+                </div>
+              </div>
               <div id="cluster-plot"></div>
               <div id="cluster-figure-legend"></div>
 						</div>
@@ -77,58 +103,98 @@
 
 	<script type="text/javascript">
 
-    var baseCamera = {
+      $('#cluster-plot').data('rendered', false);
+
+      var baseCamera = {
           "up":{"x":0,"y":0,"z":1},
           "center":{"x":0,"y":0,"z":0},
           "eye":{"x":1.25,"y":1.25,"z":1.25}
-    };
+      };
 
-    function renderScatter() {
-        var url = '<%= render_cluster_path(study_name: params[:study_name]) %>';
-        var target = $('#cluster-plot')[0];
-        var spinner = new Spinner(opts).spin(target);
-        $(target).data('spinner', spinner);
-        var cluster = $('#cluster').val();
-        var annotation = $('#annotation').val();
-        $.get(url + '?cluster=' + cluster + '&annotation=' + annotation);
-    }
+      function renderScatter() {
+          var url = '<%= render_cluster_path(study_name: params[:study_name]) %>';
+          var target = $('#cluster-plot')[0];
+          var spinner = new Spinner(opts).spin(target);
+          $('#cluster-plot').data('spinner', spinner);
+          var cluster = $('#cluster').val();
+          var annotation = $('#annotation').val();
+          var subsample = $('#subsample').val();
+          url += '?cluster=' + cluster + '&annotation=' + annotation + '&subsample=' + subsample;
 
-		$(document).ready(function() {
-        $('#cluster-plot').data('camera', baseCamera);
-		    renderScatter();
-    });
+          $('#cluster-plot').data('rendered', false);
+          $.ajax({
+              url: url,
+              method: 'GET',
+              dataType: 'script'
+          });
+      }
 
-		// listener for cluster nav, specific to study page
-		$("#annotation").change(function() {
-		    var an = $(this).val();
-        // keep track for search purposes
-        $('#search_annotation').val(an);
-        $('#gene_set_annotation').val(an);
-        renderScatter();
-		});
+      $(document).ready(function() {
+          $('#cluster-plot').data('camera', baseCamera);
+          // set default subsample option of 10K or all cells
+          if (<%= @cluster.points > 10000 %>) {
+              $('#subsample').val(10000);
+              $('#search_subsample').val(10000);
+          }
 
-		$("#cluster").change(function() {
-		    var newCluster = $(this).val();
-		    // keep track for search purposes
-        $('#search_cluster').val(newCluster);
-        $('#gene_set_cluster').val(newCluster);
-        // grab currently selected annotation
-        var currAnnot = $('#annotation').val();
-        // get new annotation options and re-render
-        $.get("<%= get_new_annotations_path(study: params[:study])%>?cluster=" + newCluster, function (data) {
-            // parse response as a string and see if currently selected annotation exists in new annotations
-            if (data.indexOf(currAnnot) >= 0) {
-                $('#annotation').val(currAnnot);
-            }
-            $(document).ready(function () {
-                // since we now have new annotations, we need to set them in the search form for persistence
-                var an = $('#annotation').val();
-                $('#search_annotation').val(an);
-                $('#gene_set_annotation').val(an);
-                renderScatter();
-            })
-        });
-    });
+          renderScatter();
+      });
+
+      // listener for cluster nav, specific to study page
+      $("#annotation").change(function() {
+          var an = $(this).val();
+          // keep track for search purposes
+          $('#search_annotation').val(an);
+          $('#gene_set_annotation').val(an);
+          renderScatter();
+      });
+
+      $('#subsample').change(function() {
+          var sample = $(this).val();
+          $('#search_subsample').val(sample);
+          renderScatter();
+      });
+
+      $("#cluster").change(function() {
+          var newCluster = $(this).val();
+          // keep track for search purposes
+          $('#search_cluster').val(newCluster);
+          $('#gene_set_cluster').val(newCluster);
+          // grab currently selected annotation
+          var currAnnot = $('#annotation').val();
+          // get new annotation options and re-render
+          $.ajax({
+              url: "<%= get_new_annotations_path(study: params[:study])%>?cluster=" + newCluster,
+              method: 'GET',
+              dataType: 'script',
+              success: function (data) {
+                  // parse response as a string and see if currently selected annotation exists in new annotations
+                  if (data.indexOf(currAnnot) >= 0) {
+                      $('#annotation').val(currAnnot);
+                  }
+                  $(document).ready(function () {
+                      // since we now have new annotations, we need to set them in the search form for persistence
+                      var an = $('#annotation').val();
+                      $('#search_annotation').val(an);
+                      $('#gene_set_annotation').val(an);
+                      renderScatter();
+                  });
+              }
+          });
+      });
+
+      $('#fastq-table').dataTable({
+          pagingType: 'full',
+          order: [[0, 'asc']],
+          ajax: "<%= get_fastq_files_path(study_name: params[:study_name]) %>",
+          deferRender: true,
+          autoWidth: false
+      });
+
+      $('#files').on('shown.bs.collapse', function() {
+          var width = $('#fastq-table').parent().width();
+          $('#fastq-table').width(width);
+      });
 
 	</script>
 <% end %>

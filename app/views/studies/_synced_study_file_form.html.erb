@@ -1,0 +1,67 @@
+<%= form_for(study_file, url: update_study_file_from_sync_study_path(@study._id), html: {id: "study-file-#{study_file._id}" , class: "bs-callout bs-callout-default" }, data: {remote: true}) do |f| %>
+  <%= render partial: 'study_file_errors', locals: {study_file: study_file} %>
+  <%= f.hidden_field :study_id, value: params[:id] %>
+  <%= f.hidden_field :_id, value: study_file._id %>
+  <%= f.hidden_field :upload_file_name %>
+  <%= f.hidden_field :upload_content_type %>
+  <div class="form-group row">
+    <div class="col-sm-4">
+      <%= f.label :name %><br />
+      <%= f.text_field :name, class: 'form-control filename', readonly: !['Cluster', 'Gene List'].include?(study_file.file_type) , placeholder: 'Please provide a name for this entity...' %>
+    </div>
+    <div class="col-sm-8">
+      <%= f.label :description, 'Description' %><br />
+      <%= f.text_field :description, class: 'form-control' %>
+    </div>
+  </div>
+  <div id="study-file-<%= study_file._id %>-extra-info">
+    <% if study_file.file_type == 'Cluster'  %>
+      <%= render partial: 'cluster_axis_fields', locals: {f: f} %>
+    <% elsif study_file.file_type == 'Expression Matrix' %>
+      <%= render partial: 'expression_axis_fields', locals: {f: f} %>
+    <% end %>
+  </div>
+  <div class="form-group row">
+    <div class="col-sm-3">
+      <%= f.label :file_type %><br />
+      <%= f.select :file_type, options_for_select(@file_types, study_file.file_type), {}, class: 'form-control' %>
+    </div>
+    <div class="col-sm-3">
+      <%= f.label :upload, 'Download' %><br />
+      <%= render partial: 'layouts/download_link', locals: {study_file: study_file} %>
+    </div>
+    <div class="col-sm-6">
+      <%= f.label :actions %>
+      <div class="row">
+        <div class="col-xs-6">
+          <%= f.submit 'Update', class: 'btn btn-block btn-success save-study-file', id: "sync-study-file-#{study_file.id}" %>
+        </div>
+        <div class="col-xs-6">
+          <%= link_to "Delete", unsync_study_file_study_path(@study._id, study_file._id), method: :delete, class: 'btn btn-block btn-danger delete-file', data: {remote: true} %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+      $('#study-file-<%= study_file._id %> #study_file_file_type').change(function() {
+          var fileType = $(this).val();
+          if (fileType == 'Cluster') {
+              $("#study-file-<%= study_file._id %>-extra-info").html("<%= escape_javascript(render partial: 'cluster_axis_fields', locals: {f: f}) %>");
+          } else if (fileType == 'Expression Matrix') {
+              $("#study-file-<%= study_file._id %>-extra-info").html("<%= escape_javascript(render partial: 'expression_axis_fields', locals: {f: f}) %>");
+          } else {
+              $("#study-file-<%= study_file._id %>-extra-info").empty();
+          }
+      });
+
+      $('#sync-study-file-<%= study_file.id %>').click(function() {
+         if ($("#existing-file-<%= study_file.id%> ").val() != '') {
+             return true;
+         } else {
+             alert('You must select an existing file to sync with first');
+             return false;
+         }
+      });
+  </script>
+<% end %>

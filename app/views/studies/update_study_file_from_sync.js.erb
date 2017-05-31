@@ -1,0 +1,8 @@
+$('#sync-notices').html("<%= escape_javascript(render partial: 'sync_notice_modal', locals: {message: @message}) %>");
+$('#sync-notice-modal').modal('show');
+
+// now replace synced study file to synced data panel
+$("<%= @form %>").replaceWith("<%= escape_javascript(render partial: 'synced_study_file_form', locals: {study_file: @study_file}) %>");
+
+$("#initialized").replaceWith("<%= escape_javascript(render partial: 'initialize_study_label') %>");
+$('.initialize-label').tooltip({container: 'body'});

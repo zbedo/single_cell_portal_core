@@ -10,15 +10,25 @@
  * defined in the other CSS/SCSS files in this directory. It is generally better to create a new
  * file per style scope.
  *
- *= require morpheus-latest.min
  *= require dataTables/bootstrap/3/jquery.dataTables.bootstrap
  *= require jquery.fileupload
  *= require jquery.fileupload-ui
  *= require jquery-ui/core
+ *= require jquery-ui/theme
  *= require jquery-ui/datepicker
+ *= require jquery-ui/autocomplete
+ *= require jquery-ui/menu
+ *= require jquery-ui/dialog
+ *= require morpheus
+ *= require morpheus.grid
+ *= require slick.grid
+ *= require animate
+ *= require bootstrap-select.min
  *= require_self
  */
 
+@import "bootstrap-sprockets";
+@import "bootstrap";
 @import "font-awesome-sprockets";
 @import "font-awesome";
 
@@ -47,6 +57,14 @@ html, body {
 
 .white:hover {
   color: palegoldenrod;
+}
+
+.red {
+  color: #d9534f;
+}
+
+.red:hover {
+  color: #c9302c;
 }
 
 .sc-navbar {
@@ -149,6 +167,12 @@ html, body {
   color: #5cb85c;
 }
 
+#google-auth {
+  margin-top: 15px;
+  border-radius: 9px;
+  font-size: 32px;
+}
+
 .actions {
   white-space: nowrap;
 }
@@ -160,6 +184,10 @@ html, body {
 
 .devise-btn {
   margin-top: 20px;
+}
+
+.fastq-label {
+  font-size: 100% !important;
 }
 
 #main-banner h1 sup small {
@@ -187,6 +215,17 @@ html, body {
 .navigation-form {
   display: inline-block;
   margin-right: 15px;
+}
+
+#colorscale-picker, #boxpoints-picker {
+  display: inline-block;
+  width: 33%;
+  float: left;
+}
+
+#toggle-plots {
+  display: inline-block;
+  float: right;
 }
 
 .top-pad {
@@ -263,7 +302,7 @@ html, body {
   padding-bottom: 25px;
 }
 
-#heatmap-plot li.active {
+#heatmap-plot li.active, #morpheus-fullscreen li.active {
   display: none;
 }
 
@@ -323,3 +362,22 @@ html, body {
   background-color: #337ab7;
   color: #fff;
 }
+
+#gsutil-command-wrapper {
+  display: none;
+}
+
+#gsutil-command {
+  padding: 7px 13px;
+  margin-left: 20px;
+  background-color: #2b2b2b;
+}
+
+#panic-modal {
+  background: rgba(255, 128, 128, 0.4);
+}
+
+#heatmap-plot .morpheus-nav, #morpheus-fullscreen .morpheus-nav {
+  border: none !important;
+}
+

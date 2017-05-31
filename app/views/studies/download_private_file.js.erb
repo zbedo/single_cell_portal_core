@@ -1,6 +1,0 @@
-$('#download-target').html("<%= escape_javascript(render 'download_modal') %>");
-$('#download-modal').modal('show');
-
-setTimeout(function() {
-	$('#download-modal').modal('hide');
-}, <%= ((@valid_until - @templink.created_at) * 1000).floor %>);

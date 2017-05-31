@@ -1,0 +1,58 @@
+<div class="well well-lg">
+  <%= form_for(@admin_configuration) do |f| %>
+    <% if @admin_configuration.errors.any? %>
+      <div class="bs-callout bs-callout-danger">
+        <h4><%= pluralize(@admin_configuration.errors.count, "error") %> prohibited this admin_configuration from being saved:</h4>
+
+        <ul>
+          <% @admin_configuration.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="form-group row">
+      <div class="col-sm-3">
+        <%= f.label :config_type, 'Configuration Type' %><br>
+        <%= f.select :config_type, options_for_select(AdminConfiguration.config_types, f.object.config_type), {}, {class: 'form-control', disabled: !@admin_configuration.new_record?} %>
+      </div>
+      <div class="col-sm-3">
+        <%= f.label :value_type, 'Type of Value' %><br>
+        <%= f.select :value_type, options_for_select(AdminConfiguration.value_types, f.object.value_type), {}, class: 'form-control' %>
+      </div>
+      <div class="col-sm-2" id="value-options">
+        <%= f.label :value %><br>
+        <%= f.text_field :value, class: 'form-control' %>
+      </div>
+      <div class="col-sm-2" id="extra-info" style="display: <%= @admin_configuration.value_type == 'Numeric' || @admin_configuration.value_type.nil? ? 'block' : 'none' %>;">
+        <%= f.label :multiplier, "Byte Operator <i class='fa fa-question-circle'></i>".html_safe, title: 'Convert a numeric value into a byte value using this multiplier', data: {toggle: 'tooltip'} %><br/>
+        <%= f.select :multiplier, options_for_select(AdminConfiguration::NUMERIC_VALS, f.object.multiplier), {include_blank: 'None/As Typed'}, class: 'form-control'%>
+      </div>
+      <div class="col-sm-2">
+        <label>&nbsp;</label>
+        <%= f.submit 'Save Configuration', class: 'btn btn-block btn-success', id: 'save-configuration' %>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+
+        $('#admin_configuration_value_type').change(function() {
+            var val = $(this).val();
+            if (val == 'Numeric') {
+                $('#extra-info').show();
+                $('#value-options').html("<%= escape_javascript(render partial: 'config_value_text', locals: {f: f}) %>")
+            } else if (val == 'Boolean') {
+                $('#admin_configuration_mulitplier').val('');
+                $('#extra-info').hide();
+                $('#value-options').html("<%= escape_javascript(render partial: 'config_value_select', locals: {f: f}) %>")
+            } else {
+                $('#admin_configuration_mulitplier').val('');
+                $('#extra-info').hide();
+                $('#value-options').html("<%= escape_javascript(render partial: 'config_value_text', locals: {f: f}) %>")
+            }
+        });
+    </script>
+  <% end %>
+</div>
+

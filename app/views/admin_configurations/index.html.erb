@@ -1,0 +1,118 @@
+<h1>Admin Control Panel</h1>
+
+<div class="row">
+  <div class="col-md-12">
+    <div class="table-responsive">
+      <div class="well">
+        <h4><i class="fa fa-cog"></i> Configuration Options</h4>
+        <table class="table table-striped" id="config">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Value</th>
+              <th class="actions">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <% @admin_configurations.each do |config| %>
+              <tr>
+                <td class="config-type"><%= config.config_type %></td>
+                <td><%= config.display_value.html_safe %></td>
+                <td>
+                  <%= link_to "<span class='fa fa-edit'></span> Edit".html_safe, edit_admin_configuration_path(config), class: "btn btn-xs btn-primary #{config.url_safe_name}-edit" %>
+                  <%= link_to "<span class='fa fa-trash'></span> Delete".html_safe, config, method: :delete, class: "btn btn-xs btn-danger delete-btn #{config.url_safe_name}-delete" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+        <p><%= link_to "<span class='fa fa-plus'></span> New Config Option".html_safe, new_admin_configuration_path, class: 'btn btn-success', id: 'create-new-configuration' %>&nbsp;</p>
+      </div>
+    </div>
+    <p>
+      <%= link_to "<span class='fa fa-refresh'></span> Reset User Download Quotas".html_safe, reset_user_download_quotas_path, class: 'btn btn-lg btn-primary', id: 'reset-user-download-quotas', data: {remote: true} %>
+      <% if @download_status %>
+        <%= link_to "<span class='fa fa-exclamation-circle'></span> DISABLE FIRECLOUD ACCESS".html_safe, '#', class: 'btn btn-lg btn-danger pull-right panic', id: 'show-disable-panic-modal' %>
+      <% else %>
+        <%= link_to "<span class='fa fa-check-circle'></span> ENABLE FIRECLOUD ACCESS".html_safe, '#', class: 'btn btn-lg btn-success pull-right panic', id: 'show-enable-panic-modal' %>
+      <% end %>
+    </p>
+  </div>
+</div>
+
+<div class="modal fade" id="panic-modal" tabindex="-1" role="dialog" aria-labelledby="sync-modal-label" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="text-center text-danger">MANAGE FIRECLOUD ACCESS</h4>
+      </div>
+      <div class="modal-body">
+          <p class="lead text-center">FireCloud Access is currently: <%= @download_status_label %></p>
+          <p class="lead text-danger">Clicking 'Disable FireCloud Access' will revoke all user permissions to workspaces, thereby preventing any users from uploading/downloading data or running computes.  As a result, access to updating studies will be disabled.</p>
+          <p class="lead text-danger text-center"><strong>Are you sure you wish to proceed?</strong></p>
+          <div class="row">
+            <div class="col-xs-6">
+              <%= link_to "Disable FireCloud Access".html_safe, manage_firecloud_access_path(status: 'off'), class: 'btn btn-lg btn-block btn-danger data-download-status', id: 'disable-firecloud-access', method: :post, data: {dismiss: 'modal'} %>
+            </div>
+            <div class="col-xs-6">
+              <%= link_to "Enable FireCloud Access".html_safe, manage_firecloud_access_path(status: 'on'), class: 'btn btn-lg btn-block btn-success data-download-status', id: 'enable-firecloud-access', method: :post, data: {dismiss: 'modal'} %>
+            </div>
+          </div>
+      </div>
+      <div class="modal-footer">
+        <button class="close" data-dismiss="modal">×</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="quota-modal" tabindex="-1" role="dialog" aria-labelledby="sync-modal-label" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="text-center">Resetting Download Quotas... Please Wait</h4>
+      </div>
+      <div class="modal-body">
+        <div class="spinner-target"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="close" data-dismiss="modal">×</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+
+    $('#config').dataTable({
+        pagingType: "full_numbers",
+        order: [[0, 'asc']],
+        language: {
+            search: "Filter Results By: "
+        }
+    });
+
+    // ask user to confirm delete, then show modal
+    // use event delegation to attach to all delete-btn regardless
+    // of whether they are visible yet or not
+    $('#config').on('click', '.delete-btn', function(){
+        // get name of study for confirmation
+        var config = $(this).parent().parent().find('.config-type').text();
+        if ( confirm('Are you sure you want to delete \"' + config + '\"?')) {
+            showModalSpinner('#delete-modal');
+        } else {
+            return false;
+        }
+    });
+
+    $('.panic').click(function() {
+       $('#panic-modal').modal({show: true, backdrop: 'static'});
+    });
+
+    $('#reset-user-download-quotas').click(function(){
+        $('#quota-modal .spinner-target').empty();
+        showModalSpinner('#quota-modal');
+        $.get("<%= reset_user_download_quotas_path %>");
+    })
+</script>

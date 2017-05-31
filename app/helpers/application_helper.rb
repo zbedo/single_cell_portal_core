@@ -4,7 +4,7 @@ module ApplicationHelper
 	def set_search_value
 		if params[:search]
 			if params[:search][:gene]
-				@gene.gene
+				@gene
 			elsif !params[:search][:genes].nil?
 				@genes.map(&:gene).join(' ')
 			end
@@ -50,6 +50,16 @@ module ApplicationHelper
 					breadcrumbs << {title: "Showing '#{truncate(@study.name, length: 20)}'", link: 'javascript:;'}
 				when 'initialize_study'
 					breadcrumbs << {title: "Upload/Edit Study Data", link: 'javascript:;'}
+				when 'sync_study'
+					breadcrumbs << {title: "Synchronize Workspace", link: 'javascript:;'}
+			end
+		elsif controller_name == 'admin_configurations'
+			breadcrumbs << {title: 'Admin Control Panel', link: admin_configurations_path}
+			case action_name
+				when 'new'
+					breadcrumbs << {title: "New Config Option", link: 'javascript:;'}
+				when 'edit'
+					breadcrumbs << {title: "Editing '#{@admin_configuration.config_type}'", link: 'javascript:;'}
 			end
 		end
 		breadcrumbs
@@ -58,34 +68,50 @@ module ApplicationHelper
 	# construct a dropdown for navigating to single gene-level expression views
 	def load_gene_nav(genes)
 		nav = [['All queried genes', '']]
-		genes.map(&:gene).each do |gene|
-			nav << [gene, view_gene_expression_url(study_name: params[:study_name], gene: gene)]
+		genes.each do |gene|
+			nav << [gene.gene, view_gene_expression_url(study_name: params[:study_name], gene: gene.gene)]
 		end
 		nav
 	end
 
 	# method to set cluster value based on options and parameters
-	# will default to first cluster if none are specified
-	def set_cluster_value(clusters, parameters)
+	# will fall back to default cluster if nothing is specified
+	def set_cluster_value(selected_study, parameters)
 		if !parameters[:gene_set_cluster].nil?
 			parameters[:gene_set_cluster]
 		elsif !parameters[:cluster].nil?
 			parameters[:cluster]
 		else
-			clusters.first
+			selected_study.default_cluster.name
 		end
 	end
 
 	# method to set annotation value by parameters or load a 'default' annotation when first loading a study (none have been selected yet)
-	# will load the first cluster-based annotation if available, otherwise will default to first study-based instead
-	def set_annotation_value(annotations, parameters)
+	# will fall back to default annotation if nothing is specified
+	def set_annotation_value(selected_study, parameters)
 		if !parameters[:gene_set_annotation].nil?
 			parameters[:gene_set_annotation]
 		elsif !parameters[:annotation].nil?
 			parameters[:annotation]
 		else
-			annotations['Cluster-based'].empty? ? annotations['Study Wide'].first.last : annotations['Cluster-based'].first.last
+			selected_study.default_annotation
 		end
 	end
 
+	# set colorscale value
+	def set_colorscale_value(selected_study, parameters)
+		if !parameters[:colorscale].nil?
+			parameters[:colorscale]
+		elsif selected_study.default_cluster.name == parameters[:cluster] && !selected_study.default_color_profile.nil?
+			selected_study.default_color_profile
+		else
+			'Reds'
+		end
+	end
+
+	# return an array of values to use for subsampling dropdown scaled to number of cells in study
+	# only options allowed are 1000, 10000, 20000
+	def subsampling_options(max_cells)
+		ClusterGroup::SUBSAMPLE_THRESHOLDS.select {|sample| sample < max_cells}
+	end
 end

@@ -43,13 +43,18 @@ end
 # checks to see if any workers have been killed
 @date = Time.now.strftime("%Y-%m-%d %H:%M:%S")
 if @running == false
-	@log_message = "#{@date}: One or more delayed_job workers have died.  Restarting daemon."
+	@log_message = "#{@date}: One or more delayed_job workers have died.  Restarting daemon.\n"
 
 	# restart delayed job workers
 	system(". /home/app/.cron_env ; cd /home/app/webapp ; bin/delayed_job restart #{@env} -n #{@num_workers}")
 
 	# send email via mailer to handle auth correctly
 	system(". /home/app/.cron_env ; /home/app/webapp/bin/rails runner -e #{@env} \"SingleCellMailer.delayed_job_email('#{@log_message}').deliver_now\"")
+
+	# write to log
+	log = File.open('log/delayed_job.log', 'w+')
+	log.write @log_message
+	log.close
 
 elsif @interactive && @running
 	puts "All jobs are running normally in #{@env}"

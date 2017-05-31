@@ -1,0 +1,11 @@
+<% if study_file.errors.any? %>
+  <div class="bs-callout bs-callout-danger">
+    <h4><%= pluralize(study_file.errors.count, "error") %> prohibited this study from being saved:</h4>
+
+    <ul>
+      <% study_file.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
