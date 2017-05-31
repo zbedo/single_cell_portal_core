@@ -4,13 +4,12 @@ TODAY="$(date +%Y-%m-%d)"
 
 # create the snapshots for portal and data disk
 echo "$(gcloud compute disks snapshot singlecell-production-disk --snapshot-names portal-backup-${TODAY} --zone us-central1-a)"
-echo "$(gcloud compute disks snapshot singlecell-production-data --snapshot-names data-backup-${TODAY} --zone us-central1-a)"
 
 #
 # DELETE OLD SNAPSHOTS (OLDER THAN 1 MONTH)
 #
-# get a list of existing snapshots
-SNAPSHOT_LIST="$(gcloud compute snapshots list | awk '{print $1}' | sed '/NAME/ d')"
+# get a list of existing snapshots, excluding data backups (no longer necessary)
+SNAPSHOT_LIST="$(gcloud compute snapshots list | awk '{print $1}' | sed '/NAME/ d' | grep portal)"
 
 # loop through the snapshots
 echo "${SNAPSHOT_LIST}" | while read line ; do
