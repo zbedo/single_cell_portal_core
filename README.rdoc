@@ -80,8 +80,7 @@ The run command explained in its entirety:
 * <b>-e SENDGRID_USERNAME= [SENDGRID_USERNAME] -e SENDGRID_PASSWORD= [SENDGRID_PASSWORD]:</b> The credentials for Sendgrid to send emails.  Alternatively, you could decide to not use Sendgrid and configure the application to use a different SMTP server (would be done inside your environment's config file).
 * <b>-e SECRET_KEY_BASE= [SECRET_KEY_BASE]:</b> Setting the SECRET_KEY_BASE variable is necessary for creating secure cookies for authentication.  This variable automatically resets every time we restart the container.
 * <b>-e SERVICE_ACCOUNT_KEY= [SERVICE_ACCOUNT_KEY]:</b> Setting the SERVICE_ACCOUNT_KEY variable is necessary for making authenticated API calls to FireCloud and GCP.  This should be a file path <b>relative to the app root</b> that points to the JSON service account key file you exported from GCP.
-* <b>-e OAUTH_CLIENT_ID= [OAUTH_CLIENT_ID]:</b> Setting the OAUTH_CLIENT_ID variable is necessary for allowing Google user authentication.  For instructions on creating OAuth 2.0 Client IDs, refer to the {Google OAuth 2.0 documentation}[https://support.google.com/cloud/answer/6158849].
-* <b>-e OAUTH_CLIENT_SECRET= [OAUTH_CLIENT_SECRET]:</b> Setting the OAUTH_CLIENT_SECRET variable is necessary for allowing Google user authentication.  For instructions on creating OAuth 2.0 Client IDs, refer to the {Google OAuth 2.0 documentation}[https://support.google.com/cloud/answer/6158849].
+* <b>-e OAUTH_CLIENT_ID= [OAUTH_CLIENT_ID] -e OAUTH_CLIENT_SECRET= [OAUTH_CLIENT_SECRET]:</b> Setting the OAUTH_CLIENT_ID and OAUTH_CLIENT_SECRET variables are necessary for allowing Google user authentication.  For instructions on creating OAuth 2.0 Client IDs, refer to the {Google OAuth 2.0 documentation}[https://support.google.com/cloud/answer/6158849].
 * *single_cell_docker*: This is the name of the image we created earlier.  If you chose a different name, please use that here.
 
 === MEMORY CONSTRAINTS
