@@ -28,6 +28,7 @@
 //= require jquery-ui/widgets/sortable
 //= require jquery-ui/widgets/dialog
 //= require jquery-ui/effects/effect-highlight
+//= require jquery.actual.min
 //= require autocomplete-rails
 //= require bootstrap-select.min
 //= require canvas2svg
