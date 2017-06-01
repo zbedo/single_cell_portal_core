@@ -1,0 +1,14 @@
+$('#study-settings-form-target').html("<%= escape_javascript(render partial: 'study_settings_form') %>");
+// re-instantiate CKEditor for description
+CKEDITOR.replace('study_description')
+// re-enable datepicker & tooltips
+$('.datepicker').datepicker({dateFormat: 'yy-mm-dd'});
+$('[data-toggle="tooltip"]').tooltip({container: 'body'});
+
+<% if @study.valid? %>
+  $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {notice: 'Settings successfully updated.'}) %>");
+<% else %>
+  $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {alert: 'An error occurred while trying to save.'}) %>");
+<% end %>
+// scroll back to the top of the page
+window.scrollBy(0,-9999)

@@ -1,0 +1,5 @@
+closeModalSpinner('#spinner_target', '#loading-modal', function () {
+    $('#single-cell-navbar').replaceWith("<%= escape_javascript(render partial: '/layouts/nav') %>");
+    $('#title-bar').html("<%= escape_javascript(render partial: 'view_gene_expression_heatmap_title_bar') %>");
+    $('#study-visualize').html("<%= escape_javascript(render partial: 'view_gene_expression_heatmap') %>");
+});

@@ -697,9 +697,9 @@ class StudiesController < ApplicationController
 
   # load annotations for a given study and cluster
   def load_annotation_options
-    @cluster = @study.cluster_groups.detect {|cluster| cluster.name == params[:cluster]}
-    @cluster_annotations = {
-        'Cluster-based' => @cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]},
+    @default_cluster = @study.cluster_groups.detect {|cluster| cluster.name == params[:cluster]}
+    @default_cluster_annotations = {
+        'Cluster-based' => @default_cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]},
         'Study Wide' => @study.study_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
     }
   end
@@ -742,7 +742,7 @@ class StudiesController < ApplicationController
   end
 
   def default_options_params
-    params.require(:default_options).permit(:cluster, :annotation, :color_profile)
+    params.require(:study_default_options).permit(:cluster, :annotation, :color_profile)
   end
 
   def set_file_types
@@ -839,14 +839,5 @@ class StudiesController < ApplicationController
         end
       end
     end
-  end
-
-  # load default study options for updating
-  def set_study_default_options
-    @cluster = @study.default_cluster
-    @cluster_annotations = {
-        'Cluster-based' => @cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]},
-        'Study Wide' => @study.study_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
-    }
   end
 end

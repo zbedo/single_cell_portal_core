@@ -1,4 +1,4 @@
-<%= form_for(:default_options, url: update_default_options_study_path, html: {class: 'form', id: 'default-study-options-form', data: {remote: true}}) do |f| %>
+<%= form_for(:study_default_options, url: update_default_options_study_path, html: {class: 'form', id: 'default-study-options-form', data: {remote: true}}) do |f| %>
   <div class="well well-sm">
     <% if @study.errors.any? %>
       <div class="bs-callout bs-callout-danger">
@@ -16,11 +16,11 @@
     <div class="form-group row">
       <div class="col-sm-3">
         <%= f.label :cluster %><br />
-        <%= f.select :cluster, options_for_select(@study.cluster_groups.map(&:name), @cluster.name), {}, class: 'form-control' %>
+        <%= f.select :cluster, options_for_select(@study.cluster_groups.map(&:name), @default_cluster.name), {}, class: 'form-control' %>
       </div>
       <div class="col-sm-3">
         <%= f.label :annotation %><br />
-        <%= f.select :annotation, grouped_options_for_select(@cluster_annotations, @study.default_annotation), {},class: 'form-control' %>
+        <%= f.select :annotation, grouped_options_for_select(@default_cluster_annotations, @study.default_annotation), {},class: 'form-control' %>
       </div>
       <div class="col-sm-3">
         <%= f.label :color_profile %><br />
@@ -34,17 +34,17 @@
   </div>
 
   <script type="text/javascript">
-      $('#default_options_annotation').change(function() {
+      $('#study_default_options_annotation').change(function() {
           var annotType = $(this).val().split('--')[1];
           if (annotType == 'group') {
-              $('#default_options_color_profile').val('');
-              $('#default_options_color_profile').attr('disabled', true);
+              $('#study_default_options_color_profile').val('');
+              $('#study_default_options_color_profile').attr('disabled', true);
           } else {
-              $('#default_options_color_profile').attr('disabled', false);
+              $('#study_default_options_color_profile').attr('disabled', false);
           }
       });
 
-      $('#default_options_cluster').change(function(){
+      $('#study_default_options_cluster').change(function(){
           var cluster = $(this).val();
           $.get("<%= load_annotation_options_study_path %>?cluster=" + cluster)
       });

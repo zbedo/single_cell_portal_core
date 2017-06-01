@@ -69,7 +69,14 @@ class SiteController < ApplicationController
       @cluster_annotations = load_cluster_group_annotations
       # call set_selected_annotation manually
       set_selected_annotation
+      set_study_default_options
     end
+  end
+
+  # update selected attributes via study settings tab
+  def update_study_settings
+    @study.update(study_params)
+    set_study_default_options
   end
 
   # render a single cluster and its constituent sub-clusters
@@ -490,6 +497,11 @@ class SiteController < ApplicationController
       end
     end
     @selected_annotation
+  end
+
+  # whitelist parameters for updating studies on study settings tab (smaller list than in studies controller)
+  def study_params
+    params.require(:study).permit(:name, :description, :public, :embargo, :default_options => [:cluster, :annotation, :color_profile], study_shares_attributes: [:id, :_destroy, :email, :permission])
   end
 
   def check_view_permissions

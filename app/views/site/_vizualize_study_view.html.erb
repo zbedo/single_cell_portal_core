@@ -1,0 +1,113 @@
+<div class="row">
+  <div class="col-md-3" id="search-target">
+    <%= render partial: 'search_options' %>
+  </div>
+  <div class="col-md-9" id="render-target">
+    <%= render partial: 'view_options' %>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <div class="panel-title">
+          <h4><%= link_to "#{@study.name} Clusters <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#plots', 'data-toggle' => 'collapse' %></h4>
+        </div>
+      </div>
+      <div id="plots" class="panel-collapse collapse in">
+        <div class="panel-body">
+          <div class="col-md-12">
+            <div class="row">
+              <div class="col-xs-12">
+                <div id="colorscale-target"></div>
+                <div id="toggle-plots"></div>
+              </div>
+            </div>
+            <div id="cluster-plot"></div>
+            <div id="cluster-figure-legend"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+
+    $('#cluster-plot').data('rendered', false);
+
+    var baseCamera = {
+        "up":{"x":0,"y":0,"z":1},
+        "center":{"x":0,"y":0,"z":0},
+        "eye":{"x":1.25,"y":1.25,"z":1.25}
+    };
+
+    function renderScatter() {
+        var url = '<%= render_cluster_path(study_name: params[:study_name]) %>';
+        var target = $('#cluster-plot')[0];
+        var spinner = new Spinner(opts).spin(target);
+        $('#cluster-plot').data('spinner', spinner);
+        var cluster = $('#cluster').val();
+        var annotation = $('#annotation').val();
+        var subsample = $('#subsample').val();
+        url += '?cluster=' + cluster + '&annotation=' + annotation + '&subsample=' + subsample;
+
+        $('#cluster-plot').data('rendered', false);
+        $.ajax({
+            url: url,
+            method: 'GET',
+            dataType: 'script'
+        });
+    }
+
+    $(document).ready(function() {
+        $('#cluster-plot').data('camera', baseCamera);
+        // set default subsample option of 10K or all cells
+        if (<%= @cluster.points > 10000 %>) {
+            $('#subsample').val(10000);
+            $('#search_subsample').val(10000);
+        }
+
+        renderScatter();
+    });
+
+    // listener for cluster nav, specific to study page
+    $("#annotation").change(function() {
+        var an = $(this).val();
+        // keep track for search purposes
+        $('#search_annotation').val(an);
+        $('#gene_set_annotation').val(an);
+        renderScatter();
+    });
+
+    $('#subsample').change(function() {
+        var sample = $(this).val();
+        $('#search_subsample').val(sample);
+        renderScatter();
+    });
+
+    $("#cluster").change(function() {
+        var newCluster = $(this).val();
+        // keep track for search purposes
+        $('#search_cluster').val(newCluster);
+        $('#gene_set_cluster').val(newCluster);
+        // grab currently selected annotation
+        var currAnnot = $('#annotation').val();
+        // get new annotation options and re-render
+        $.ajax({
+            url: "<%= get_new_annotations_path(study: params[:study])%>?cluster=" + newCluster,
+            method: 'GET',
+            dataType: 'script',
+            success: function (data) {
+                // parse response as a string and see if currently selected annotation exists in new annotations
+                if (data.indexOf(currAnnot) >= 0) {
+                    $('#annotation').val(currAnnot);
+                }
+                $(document).ready(function () {
+                    // since we now have new annotations, we need to set them in the search form for persistence
+                    var an = $('#annotation').val();
+                    $('#search_annotation').val(an);
+                    $('#gene_set_annotation').val(an);
+                    renderScatter();
+                });
+            }
+        });
+    });
+
+</script>

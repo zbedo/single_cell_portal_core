@@ -1,29 +1,23 @@
 <div class="row">
-	<div class="col-md-12">
-		<h1 class="study-lead">Gene Expression for <%= @precomputed_score.name %></h1>
-	</div>
-</div>
-
-<div class="row">
-	<div class="col-md-3" id="search-target">
-		<%= render partial: 'search_options' %>
-	</div>
-	<div class="col-md-9" id="render-target">
-		<div class="panel panel-default">
-			<div class="panel-heading">
-				<div class="panel-title">
-					<h4><%= link_to "Gene List Heatmap <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#plots', 'data-toggle' => 'collapse' %> <%= render partial: 'show_search_options_button' %></h4>
-				</div>
-			</div>
-			<div id="plots" class="panel-collapse collapse in">
-				<div class="panel-body">
-					<div class="col-md-12">
-						<div id="heatmap-plot"></div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+  <div class="col-md-3" id="search-target">
+    <%= render partial: 'search_options' %>
+  </div>
+  <div class="col-md-9" id="render-target">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <div class="panel-title">
+          <h4><%= link_to "Gene List Heatmap <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#plots', 'data-toggle' => 'collapse' %> <%= render partial: 'show_search_options_button' %></h4>
+        </div>
+      </div>
+      <div id="plots" class="panel-collapse collapse in">
+        <div class="panel-body">
+          <div class="col-md-12">
+            <div id="heatmap-plot"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 
@@ -43,7 +37,7 @@
             // reset status on render call
             $('#heatmap-plot').data('rendered', false);
             renderMorpheus(newDataPath, '', '', '', '#heatmap-plot', 'both');
-          }
+        }
     });
 
     $(document).ready(function() {
@@ -53,5 +47,8 @@
 
         renderMorpheus(dataPath, '', '', '', '#heatmap-plot', 'both');
     });
+
+    // reattach tooltips on render
+    $('[data-toggle="tooltip"]').tooltip({container: 'body'});
 
 </script>
