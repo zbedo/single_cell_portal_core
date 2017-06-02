@@ -1176,6 +1176,8 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
+		visualize_tab = @driver.find_element(:id, 'study-visualize-nav')
+		visualize_tab.click
 		assert element_present?(:class, 'study-lead'), 'could not find study title'
 		assert element_present?(:id, 'cluster-plot'), 'could not find study cluster plot'
 
@@ -1206,6 +1208,8 @@ class UiTestSuite < Test::Unit::TestCase
 		private_study_path = @base_url + '/study/private-study'
 		@driver.get private_study_path
 		wait_until_page_loads(private_study_path)
+		visualize_tab = @driver.find_element(:id, 'study-visualize-nav')
+		visualize_tab.click
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 		private_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
 		assert private_rendered, "private cluster plot did not finish rendering, expected true but found #{private_rendered}"
@@ -1224,9 +1228,8 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
-		download_section = @driver.find_element(:id, 'study-data-files')
-		# gotcha when clicking, must wait until completes
-		download_section.click
+		download_tab = @driver.find_element(:id, 'study-download-nav')
+		download_tab.click
 		files = @driver.find_elements(:class, 'dl-link')
 		file_link = files.last
 		filename = file_link['download']
@@ -1243,9 +1246,8 @@ class UiTestSuite < Test::Unit::TestCase
 		private_path = @base_url + '/study/private-study'
 		@driver.get(private_path)
 		wait_until_page_loads(private_path)
-		download_section = @driver.find_element(:id, 'study-data-files')
-		# gotcha when clicking, must wait until completes
-		download_section.click
+		download_tab = @driver.find_element(:id, 'study-download-nav')
+		download_tab.click
 		private_files = @driver.find_elements(:class, 'dl-link')
 		private_file_link = private_files.first
 		private_filename = private_file_link['download']
@@ -1273,8 +1275,8 @@ class UiTestSuite < Test::Unit::TestCase
 
 		@driver.get(path)
 		wait_until_page_loads(path)
-		download_section = @driver.find_element(:id, 'study-data-files')
-		download_section.click
+		download_tab = @driver.find_element(:id, 'study-download-nav')
+		download_tab.click
 		files = @driver.find_elements(:class, 'dl-link')
 		share_file_link = files.first
 		share_filename = share_file_link['data-filename']
@@ -1323,12 +1325,14 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
+		visualize_tab = @driver.find_element(:id, 'study-visualize-nav')
+		visualize_tab.click
 		# load random gene to search
 		gene = @genes.sample
 		search_box = @driver.find_element(:id, 'search_genes')
 		search_box.send_key(gene)
-		search_form = @driver.find_element(:id, 'search-genes-form')
-		search_form.submit
+		search_genes = @driver.find_element(:id, 'perform-gene-search')
+		search_genes.click
 		assert element_present?(:id, 'box-controls'), 'could not find expression boxplot'
 		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
 
@@ -1353,12 +1357,14 @@ class UiTestSuite < Test::Unit::TestCase
 		private_study_path = @base_url + '/study/private-study'
 		@driver.get private_study_path
 		wait_until_page_loads(private_study_path)
+		visualize_tab = @driver.find_element(:id, 'study-visualize-nav')
+		visualize_tab.click
 
 		new_gene = @genes.sample
 		search_box = @driver.find_element(:id, 'search_genes')
 		search_box.send_key(new_gene)
-		search_form = @driver.find_element(:id, 'search-genes-form')
-		search_form.submit
+		search_genes = @driver.find_element(:id, 'perform-gene-search')
+		search_genes.click
 		assert element_present?(:id, 'box-controls'), 'could not find expression boxplot'
 		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
 
@@ -1384,6 +1390,8 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
+		visualize_tab = @driver.find_element(:id, 'study-visualize-nav')
+		visualize_tab.click
 
 		# load random genes to search, take between 2-5
 		genes = @genes.shuffle.take(rand(2..5))
@@ -1395,8 +1403,8 @@ class UiTestSuite < Test::Unit::TestCase
 		selected_consensus = opts.sample
 		selected_consensus_value = selected_consensus['value']
 		selected_consensus.click
-		search_form = @driver.find_element(:id, 'search-genes-form')
-		search_form.submit
+		search_genes = @driver.find_element(:id, 'perform-gene-search')
+		search_genes.click
 		assert element_present?(:id, 'box-controls'), 'could not find expression boxplot'
 		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
 
@@ -1423,6 +1431,8 @@ class UiTestSuite < Test::Unit::TestCase
 		private_study_path = @base_url + '/study/private-study'
 		@driver.get private_study_path
 		wait_until_page_loads(private_study_path)
+		visualize_tab = @driver.find_element(:id, 'study-visualize-nav')
+		visualize_tab.click
 
 		new_genes = @genes.shuffle.take(rand(2..5))
 		search_box = @driver.find_element(:id, 'search_genes')
@@ -1433,8 +1443,8 @@ class UiTestSuite < Test::Unit::TestCase
 		new_selected_consensus = new_opts.sample
 		new_selected_consensus_value = new_selected_consensus['value']
 		new_selected_consensus.click
-		search_form = @driver.find_element(:id, 'search-genes-form')
-		search_form.submit
+		search_genes = @driver.find_element(:id, 'perform-gene-search')
+		search_genes.click
 		assert element_present?(:id, 'box-controls'), 'could not find expression boxplot'
 		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
 
@@ -1462,12 +1472,15 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
+		visualize_tab = @driver.find_element(:id, 'study-visualize-nav')
+		visualize_tab.click
+
 		# load random genes to search, take between 2-5
 		genes = @genes.shuffle.take(rand(2..5))
 		search_box = @driver.find_element(:id, 'search_genes')
 		search_box.send_keys(genes.join(' '))
-		search_form = @driver.find_element(:id, 'search-genes-form')
-		search_form.submit
+		search_genes = @driver.find_element(:id, 'perform-gene-search')
+		search_genes.click
 		assert element_present?(:id, 'plots'), 'could not find expression heatmap'
 		@wait.until {wait_for_plotly_render('#heatmap-plot', 'rendered')}
 		rendered = @driver.execute_script("return $('#heatmap-plot').data('rendered')")
@@ -1501,12 +1514,14 @@ class UiTestSuite < Test::Unit::TestCase
 		private_study_path = @base_url + '/study/private-study'
 		@driver.get private_study_path
 		wait_until_page_loads(private_study_path)
+		visualize_tab = @driver.find_element(:id, 'study-visualize-nav')
+		visualize_tab.click
 
 		new_genes = @genes.shuffle.take(rand(2..5))
 		search_box = @driver.find_element(:id, 'search_genes')
 		search_box.send_keys(new_genes.join(' '))
-		search_form = @driver.find_element(:id, 'search-genes-form')
-		search_form.submit
+		search_genes = @driver.find_element(:id, 'perform-gene-search')
+		search_genes.click
 		assert element_present?(:id, 'plots'), 'could not find expression heatmap'
 		@wait.until {wait_for_plotly_render('#heatmap-plot', 'rendered')}
 		private_rendered = @driver.execute_script("return $('#heatmap-plot').data('rendered')")
@@ -1519,12 +1534,58 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
+	test 'front-end: search for genes by uploading gene list' do
+		puts "Test method: #{self.method_name}"
+
+		path = @base_url + '/study/test-study'
+		@driver.get(path)
+		wait_until_page_loads(path)
+		visualize_tab = @driver.find_element(:id, 'study-visualize-nav')
+		visualize_tab.click
+
+		# upload gene list
+		search_upload = @driver.find_element(:id, 'search_upload')
+		search_upload.send_keys(@test_data_path + 'search_genes.txt')
+		search_genes = @driver.find_element(:id, 'perform-gene-search')
+		search_genes.click
+
+		assert element_present?(:id, 'plots'), 'could not find expression heatmap'
+		@wait.until {wait_for_plotly_render('#heatmap-plot', 'rendered')}
+		rendered = @driver.execute_script("return $('#heatmap-plot').data('rendered')")
+		assert rendered, "heatmap plot did not finish rendering, expected true but found #{rendered}"
+
+		# now test private study
+		login_path = @base_url + '/users/sign_in'
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login($test_email)
+		private_study_path = @base_url + '/study/private-study'
+		@driver.get private_study_path
+		wait_until_page_loads(private_study_path)
+		visualize_tab = @driver.find_element(:id, 'study-visualize-nav')
+		visualize_tab.click
+
+		search_upload = @driver.find_element(:id, 'search_upload')
+		search_upload.send_keys(@test_data_path + 'search_genes.txt')
+		search_genes = @driver.find_element(:id, 'perform-gene-search')
+		search_genes.click
+		assert element_present?(:id, 'plots'), 'could not find expression heatmap'
+		@wait.until {wait_for_plotly_render('#heatmap-plot', 'rendered')}
+
+		private_rendered = @driver.execute_script("return $('#heatmap-plot').data('rendered')")
+		assert private_rendered, "private heatmap plot did not finish rendering, expected true but found #{private_rendered}"
+
+		puts "Test method: #{self.method_name} successful!"
+	end
+
 	test 'front-end: load marker gene heatmap' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
+		visualize_tab = @driver.find_element(:id, 'study-visualize-nav')
+		visualize_tab.click
 
 		expression_list = @driver.find_element(:id, 'expression')
 		opts = expression_list.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
@@ -1545,6 +1606,8 @@ class UiTestSuite < Test::Unit::TestCase
 		private_study_path = @base_url + '/study/private-study'
 		@driver.get private_study_path
 		wait_until_page_loads(private_study_path)
+		visualize_tab = @driver.find_element(:id, 'study-visualize-nav')
+		visualize_tab.click
 
 		private_expression_list = @driver.find_element(:id, 'expression')
 		opts = private_expression_list.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
@@ -1566,6 +1629,9 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
+		visualize_tab = @driver.find_element(:id, 'study-visualize-nav')
+		visualize_tab.click
+
 		gene_sets = @driver.find_element(:id, 'gene_set')
 		opts = gene_sets.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
 		list = opts.sample
@@ -1589,6 +1655,8 @@ class UiTestSuite < Test::Unit::TestCase
 		private_study_path = @base_url + '/study/private-study'
 		@driver.get private_study_path
 		wait_until_page_loads(private_study_path)
+		visualize_tab = @driver.find_element(:id, 'study-visualize-nav')
+		visualize_tab.click
 
 		private_gene_sets = @driver.find_element(:id, 'gene_set')
 		opts = private_gene_sets.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
@@ -1615,6 +1683,9 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
+		visualize_tab = @driver.find_element(:id, 'study-visualize-nav')
+		visualize_tab.click
+
 		clusters = @driver.find_element(:id, 'cluster').find_elements(:tag_name, 'option')
 		cluster = clusters.last
 		cluster_name = cluster['text']
@@ -1638,8 +1709,8 @@ class UiTestSuite < Test::Unit::TestCase
 		gene = @genes.sample
 		search_box = @driver.find_element(:id, 'search_genes')
 		search_box.send_key(gene)
-		search_form = @driver.find_element(:id, 'search-genes-form')
-		search_form.submit
+		search_genes = @driver.find_element(:id, 'perform-gene-search')
+		search_genes.click
 		new_path = "#{@base_url}/study/test-study/gene_expression/#{gene}?annotation=#{annotation_value.split.join('+')}&boxpoints=all&cluster=#{cluster_name.split.join('+')}"
 		wait_until_page_loads(new_path)
 
@@ -1684,6 +1755,9 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
+		visualize_tab = @driver.find_element(:id, 'study-visualize-nav')
+		visualize_tab.click
+
 		assert element_present?(:class, 'study-lead'), 'could not find study title'
 		assert element_present?(:id, 'cluster-plot'), 'could not find study cluster plot'
 
@@ -1737,8 +1811,8 @@ class UiTestSuite < Test::Unit::TestCase
 		gene = @genes.sample
 		search_box = @driver.find_element(:id, 'search_genes')
 		search_box.send_key(gene)
-		search_form = @driver.find_element(:id, 'search-genes-form')
-		search_form.submit
+		search_genes = @driver.find_element(:id, 'perform-gene-search')
+		search_genes.click
 
 		# wait until box plot renders, at this point all 3 should be done
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
@@ -1794,6 +1868,9 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
+		visualize_tab = @driver.find_element(:id, 'study-visualize-nav')
+		visualize_tab.click
+
 		assert element_present?(:class, 'study-lead'), 'could not find study title'
 		assert element_present?(:id, 'cluster-plot'), 'could not find study cluster plot'
 
@@ -1820,6 +1897,9 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + '/study/test-study'
 		@driver.get(path)
 		wait_until_page_loads(path)
+		visualize_tab = @driver.find_element(:id, 'study-visualize-nav')
+		visualize_tab.click
+
 		assert element_present?(:class, 'study-lead'), 'could not find study title'
 		assert element_present?(:id, 'cluster-plot'), 'could not find study cluster plot'
 
@@ -1891,6 +1971,8 @@ class UiTestSuite < Test::Unit::TestCase
 		study_page = @base_url + '/study/test-study'
 		@driver.get study_page
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		visualize_tab = @driver.find_element(:id, 'study-visualize-nav')
+		visualize_tab.click
 
 		# assert values have persisted
 		loaded_cluster = @driver.find_element(:id, 'cluster')['value']
@@ -1906,8 +1988,8 @@ class UiTestSuite < Test::Unit::TestCase
 		gene = @genes.sample
 		search_box = @driver.find_element(:id, 'search_genes')
 		search_box.send_key(gene)
-		search_form = @driver.find_element(:id, 'search-genes-form')
-		search_form.submit
+		search_genes = @driver.find_element(:id, 'perform-gene-search')
+		search_genes.click
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
 
 		exp_loaded_cluster = @driver.find_element(:id, 'cluster')['value']

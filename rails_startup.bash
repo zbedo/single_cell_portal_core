@@ -16,6 +16,7 @@ then
 fi
 
 echo "*** CREATING CRON ENV FILES ***"
+rm /home/app/.cron_env
 echo "export PROD_DATABASE_PASSWORD=$PROD_DATABASE_PASSWORD" >> /home/app/.cron_env
 echo "export SENDGRID_USERNAME=$SENDGRID_USERNAME" >> /home/app/.cron_env
 echo "export SENDGRID_PASSWORD=$SENDGRID_PASSWORD" >> /home/app/.cron_env
@@ -45,11 +46,11 @@ fi
 echo "*** COMPLETED ***"
 
 echo "*** ADDING DAILY ADMIN DISK MONITOR EMAIL ***"
-(crontab -u app -l ; echo "0 3 * * * . /home/app/.cron_env ; /home/app/webapp/bin/rails runner -e $PASSENGER_APP_ENV \"SingleCellMailer.daily_disk_status.deliver_now\" >> /home/app/webapp/log/cron_out.log 2>&1") | crontab -u app -
+(crontab -u app -l ; echo "0 3 * * * . /home/app/.cron_env ; cd /home/app/webapp/; /home/app/webapp/bin/rails runner -e $PASSENGER_APP_ENV \"SingleCellMailer.daily_disk_status.deliver_now\" >> /home/app/webapp/log/cron_out.log 2>&1") | crontab -u app -
 echo "*** COMPLETED ***"
 
 echo "*** ADDING DAILY RESET OF USER DOWNLOAD QUOTAS ***"
-(crontab -u app -l ; echo "@daily . /home/app/.cron_env ; /home/app/webapp/bin/rails runner -e $PASSENGER_APP_ENV \"User.update_all(daily_download_quota: 0)\" >> /home/app/webapp/log/cron_out.log 2>&1") | crontab -u app -
+(crontab -u app -l ; echo "@daily . /home/app/.cron_env ; cd /home/app/webapp/; /home/app/webapp/bin/rails runner -e $PASSENGER_APP_ENV \"User.update_all(daily_download_quota: 0)\" >> /home/app/webapp/log/cron_out.log 2>&1") | crontab -u app -
 echo "*** COMPLETED ***"
 
 echo "*** REINDEXING COLLECTIONS ***"

@@ -7,7 +7,7 @@
 	<div class="panel-body">
 		<div class="row">
 			<div class="col-sm-12">
-				<%= form_for(:search, url: search_genes_path(@study.url_safe_name), html: {multipart: true, class: 'form', id: 'search-genes-form', data: {remote: true}}) do |f| %>
+				<%= form_for(:search, url: search_genes_path(@study.url_safe_name), html: {class: 'form', id: 'search-genes-form', data: {remote: true}}) do |f| %>
 					<%= f.hidden_field :cluster, value: set_cluster_value(@study, params) %>
           <%= f.hidden_field :boxpoints, value: params[:boxpoints].nil? ? 'all' : params[:boxpoints] %>
           <%= f.hidden_field :annotation, value: set_annotation_value(@study, params) %>
@@ -25,25 +25,49 @@
             <%= f.select :consensus, options_for_select([['Mean', 'mean'],['Median', 'median']], params[:consensus]), {include_blank: 'None'}, {class: 'form-control'} %>
           </div>
 					<%= link_to "<span class='fa fa-ban'></span> Clear".html_safe, "javascript:", class: 'btn btn-warning pull-right', id: 'clear-gene-search' %>
-					<%= link_to "<span class='fa fa-search'></span> Search".html_safe, "javascript:", class: 'btn btn-success', id: 'submit-gene-search' %>
+					<%= link_to "<span class='fa fa-search'></span> Search".html_safe, "javascript:", class: 'btn btn-success', id: 'perform-gene-search' %>
 					<script type="text/javascript">
             $('#clear-gene-search').click(function(){
                 clearForm('search_genes');
             });
 
-            $('#submit-gene-search').click(function(){
-                $('#search-genes-form').submit();
+            $('#perform-gene-search').click(function(){
+                var fileInput = $('#search_upload')[0];
+                if (fileInput.files.length) {
+                    var reader = new FileReader();
+                    var upload = fileInput.files[0];
+                    reader.readAsText(upload);
+                    $(reader).on('load', function(e) {
+                        var file = e.target.result,
+                            results;
+                        if (file && file.length) {
+                            results = file.split(/[,\n]/).join(' ');
+                            $('#search_genes').val(results);
+                            $(fileInput).val("").change(submitGeneSearch());
+                        }
+                    });
+                } else {
+                    submitGeneSearch();
+                }
             });
 
-						$('#search-genes-form').on('submit', function() {
-							if ( $('#search_genes').val() == '' && $('#search_upload').val() == '' ) {
-							    alert('You must specify at least one gene or upload a list of genes to search');
-							    setErrorOnBlank($('.search-genes-input'));
-							} else {
-                  launchModalSpinner('#spinner_target', '#loading-modal');
-							    return true
-							}
-						});
+						function submitGeneSearch() {
+                if ( $('#search_genes').val() == '' && $('#search_upload').val() == '' ) {
+                    alert('You must specify at least one gene or upload a list of genes to search');
+                    setErrorOnBlank($('.search-genes-input'));
+                } else {
+                    launchModalSpinner('#spinner_target', '#loading-modal');
+                    var form = $('#search-genes-form');
+                    $.ajax({
+                        type: 'POST',
+                        url: form.attr('action'),
+                        data: form.serialize(),
+                        dataType: 'script'
+                    });
+                }
+						};
+
+
 					</script>
 				<% end %>
 			</div>

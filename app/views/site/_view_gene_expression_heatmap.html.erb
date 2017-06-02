@@ -26,6 +26,7 @@
 
     // monitor status of rendering plots for tests
     $('#heatmap-plot').data('rendered', false);
+    $(window).off('resizeEnd');
 
     function drawHeatmap(height) {
         // if height isn't specified, pull from stored value, defaults to 500
@@ -154,7 +155,8 @@
         drawHeatmap();
     });
 
-    // reattach tooltips on render
+    // reattach tooltips & popovers on render
     $('[data-toggle="tooltip"]').tooltip({container: 'body'});
+    $('[data-toggle="popover"]').popover();
 
 </script>

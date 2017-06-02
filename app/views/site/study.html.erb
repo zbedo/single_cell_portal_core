@@ -1,9 +1,5 @@
 <div id="title-bar">
-  <div class="row">
-    <div class="col-md-12">
-      <h1 class="study-lead">Study: <%= @study.name %> <span class="badge" id="cell-count"> <%= @study.cell_count %> cells</span></h1>
-    </div>
-  </div>
+  <%= render partial: 'study_title_bar' %>
 </div>
 <div id="tab-root">
   <ul class="nav nav-tabs" role="tablist" id="study-tabs">
@@ -25,7 +21,7 @@
     </div>
     <div class="tab-pane" id="study-visualize" role="tabpanel">
       <% if @study.initialized? %>
-        <%= render partial: 'vizualize_study_view' %>
+        <%= render partial: 'study_visualize' %>
       <% end %>
     </div>
     <div class="tab-pane" id="study-download" role="tabpanel">
