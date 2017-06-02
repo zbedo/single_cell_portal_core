@@ -50,8 +50,6 @@
         dataPath += '&cluster=' + cluster + '&request_user_token=' + requestToken;
         var newAnnotPath = '<%= annotation_query_path(study_name: params[:study_name]) %>?cluster=' + cluster + '&annotation=' + selectedAnnot;
 
-        // reset status on render call
-        $('#heatmap-plot').data('rendered', false);
         renderMorpheus(dataPath, newAnnotPath, annotName, annotType, '#heatmap-plot', fit, height);
     }
 
@@ -63,6 +61,7 @@
     });
 
     $("#row_centered, #annotation").change(function() {
+        $('#heatmap-plot').data('rendered', false);
         if ($(this).attr('id') == 'annotation') {
             var an = $(this).val();
             // keep track for search purposes
@@ -73,6 +72,7 @@
     });
     // when changing cluster, re-render annotation options and call render function
     $("#cluster").change(function(){
+        $('#heatmap-plot').data('rendered', false);
         var newCluster = $(this).val();
         // keep track for search purposes
         $('#search_cluster').val(newCluster);
@@ -100,6 +100,7 @@
     });
 
     $('#resize-heatmap').click(function() {
+        $('#heatmap-plot').data('rendered', false);
         var newHeight = parseInt($('#heatmap_size').val());
         $("#heatmap-plot").data('height', newHeight);
         console.log('resizing heatmap to ' + newHeight);
@@ -107,6 +108,7 @@
     });
 
     $('#view-fullscreen').click(function() {
+        $('#heatmap-plot').data('rendered', false);
         var btn = $(this);
         var btnState = btn.data('active');
         var newState = btnState === 'on' ? 'off' : 'on';
@@ -129,6 +131,7 @@
     });
 
     $('.fit-btn').click(function() {
+        $('#heatmap-plot').data('rendered', false);
         var btn = $(this);
         var btnState = btn.data('active');
         var newState = btnState === 'on' ? 'off' : 'on';

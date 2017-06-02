@@ -11,7 +11,6 @@
       <li role="presentation" class="study-nav disabled" id="study-download-nav"><a href="#study-download" data-toggle="tooltip" title="Please login to download">Download <i class="fa fa-fw fa-download"></i></a></li>
     <% end %>
     <% if user_signed_in? && @study.can_edit?(current_user) %>
-      <li role="presentation" class="study-nav disabled" id="study-analyze-nav"><a href="#study-analyze">Analyze <i class="fa fa-fw fa-calculator"></i></a></li>
       <li role="presentation" class="study-nav" id="study-settings-nav"><a href="#study-settings" data-toggle="tab">Settings <i class="fa fa-fw fa-gears"></i></a></li>
     <% end %>
   </ul>
@@ -26,13 +25,6 @@
     </div>
     <div class="tab-pane" id="study-download" role="tabpanel">
       <%= render partial: 'study_download_data' %>
-    </div>
-    <div class="tab-pane" id="study-analyze" role="tabpanel">
-      <div class="row">
-        <div class="col-xs-12">
-          <h2>Analyze</h2>
-        </div>
-      </div>
     </div>
     <div class="tab-pane" id="study-settings" role="tabpanel">
       <div class="row">

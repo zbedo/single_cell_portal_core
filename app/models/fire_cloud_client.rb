@@ -137,6 +137,8 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 			true
 		rescue RuntimeError => e
 			false
+		rescue Errno::ECONNREFUSED => e
+			false
 		end
 	end
 

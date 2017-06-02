@@ -19,11 +19,6 @@
 
     function renderGeneExpressionPlots() {
 
-        // monitor rendering for tests, must store in parent div to persist past render (entire plotly area is replaced on render)
-        $('#expression-plots').data('box-rendered', false);
-        $('#expression-plots').data('scatter-rendered', false);
-        $('#expression-plots').data('reference-rendered', false);
-
         <% if !params[:gene].nil? %>
         var url = '<%= render_gene_expression_plots_path(study_name: params[:study_name], gene: params[:gene]) %>';
         <% elsif !params[:gene_set].nil? %>
@@ -68,6 +63,9 @@
     });
     // listener for annotation nav, specific to expression pages
     $("#annotation").change(function() {
+        $('#expression-plots').data('box-rendered', false);
+        $('#expression-plots').data('scatter-rendered', false);
+        $('#expression-plots').data('reference-rendered', false);
         // keep track for search purposes
         var val = $(this).val();
         $('#search_annotation').val(val);
@@ -77,6 +75,9 @@
     });
 
     $('#subsample').change(function() {
+        $('#expression-plots').data('box-rendered', false);
+        $('#expression-plots').data('scatter-rendered', false);
+        $('#expression-plots').data('reference-rendered', false);
         var sample = $(this).val();
         $('#search_subsample').val(sample);
         // turn off boxpoints over 1000
@@ -88,6 +89,9 @@
 
     // when changing cluster, re-render annotation options and call render function
     $("#cluster").change(function() {
+        $('#expression-plots').data('box-rendered', false);
+        $('#expression-plots').data('scatter-rendered', false);
+        $('#expression-plots').data('reference-rendered', false);
         var newCluster = $(this).val();
         // keep track for search purposes
         $('#search_cluster').val(newCluster);

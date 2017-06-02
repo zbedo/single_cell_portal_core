@@ -48,7 +48,6 @@
         var subsample = $('#subsample').val();
         url += '?cluster=' + cluster + '&annotation=' + annotation + '&subsample=' + subsample;
 
-        $('#cluster-plot').data('rendered', false);
         $.ajax({
             url: url,
             method: 'GET',
@@ -69,6 +68,7 @@
 
     // listener for cluster nav, specific to study page
     $("#annotation").change(function() {
+        $('#cluster-plot').data('rendered', false);
         var an = $(this).val();
         // keep track for search purposes
         $('#search_annotation').val(an);
@@ -77,12 +77,14 @@
     });
 
     $('#subsample').change(function() {
+        $('#cluster-plot').data('rendered', false);
         var sample = $(this).val();
         $('#search_subsample').val(sample);
         renderScatter();
     });
 
     $("#cluster").change(function() {
+        $('#cluster-plot').data('rendered', false);
         var newCluster = $(this).val();
         // keep track for search purposes
         $('#search_cluster').val(newCluster);
