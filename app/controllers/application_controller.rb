@@ -31,4 +31,15 @@ class ApplicationController < ActionController::Base
       redirect_to redirect, alert: "Study access has been temporarily disabled by the site adminsitrator.  Please contact #{view_context.mail_to('single_cell_portal@broadinstitute.org')} if you require assistance." and return
     end
   end
+
+  # load default study options for updating
+  def set_study_default_options
+    @cluster = @study.default_cluster
+    @default_cluster_annotations = {
+        'Study Wide' => @study.study_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
+    }
+    unless @default_cluster.nil?
+      @default_cluster_annotations['Cluster-based'] = @default_cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]}
+    end
+  end
 end
