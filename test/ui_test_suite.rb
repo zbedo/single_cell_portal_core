@@ -1120,9 +1120,10 @@ class UiTestSuite < Test::Unit::TestCase
 		study_path = @base_url + '/study/test-study'
 		@driver.get(study_path)
 		wait_until_page_loads(study_path)
-		download_section = @driver.find_element(:id, 'study-data-files')
-		# gotcha when clicking, must wait until completes
-		download_section.click
+
+		download_tab = @driver.find_element(:id, 'study-download-nav')
+		download_tab.click
+
 		files = @driver.find_elements(:class, 'disabled-download')
 		assert files.size >= 1, 'downloads not properly disabled (did not find any disabled-download links)'
 
@@ -1248,6 +1249,7 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(private_path)
 		download_tab = @driver.find_element(:id, 'study-download-nav')
 		download_tab.click
+
 		private_files = @driver.find_elements(:class, 'dl-link')
 		private_file_link = private_files.first
 		private_filename = private_file_link['download']
@@ -1940,7 +1942,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# change cluster
 		options_form = @driver.find_element(:id, 'default-study-options-form')
-		cluster_dropdown = options_form.find_element(:id, 'default_options_cluster')
+		cluster_dropdown = options_form.find_element(:id, 'study_default_options_cluster')
 		cluster_opts = cluster_dropdown.find_elements(:tag_name, 'option')
 		new_cluster = cluster_opts.select {|opt| !opt.selected?}.sample.text
 		cluster_dropdown.send_key(new_cluster)
@@ -1949,7 +1951,7 @@ class UiTestSuite < Test::Unit::TestCase
 		sleep(1)
 
 		# change annotation
-		annotation_dropdown = options_form.find_element(:id, 'default_options_annotation')
+		annotation_dropdown = options_form.find_element(:id, 'study_default_options_annotation')
 		annotation_opts = annotation_dropdown.find_elements(:tag_name, 'option')
 		# get value, not text, of dropdown
 		new_annot = annotation_opts.select {|opt| !opt.selected?}.sample['value']
@@ -1957,7 +1959,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# if annotation option is now numeric, pick a color val
 		new_color = ''
-		color_dropdown = options_form.find_element(:id, 'default_options_color_profile')
+		color_dropdown = options_form.find_element(:id, 'study_default_options_color_profile')
 		if color_dropdown['disabled'] != 'true'
 			color_opts = color_dropdown.find_elements(:tag_name, 'option')
 			new_color = color_opts.select {|opt| !opt.selected?}.sample.text

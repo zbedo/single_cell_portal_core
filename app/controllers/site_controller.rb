@@ -76,6 +76,10 @@ class SiteController < ApplicationController
   # update selected attributes via study settings tab
   def update_study_settings
     @study.update(study_params)
+    # invalidate caches as needed
+    if @study.previous_changes.keys.include?('default_options')
+      @study.default_cluster.study_file.invalidate_cache_by_file_type
+    end
     set_study_default_options
   end
 
@@ -96,6 +100,7 @@ class SiteController < ApplicationController
     if params[:annotation] == @study.default_annotation && @study.default_annotation_type == 'numeric' && !@study.default_color_profile.nil?
       @coordinates[:all][:marker][:colorscale] = @study.default_color_profile
     end
+
     respond_to do |format|
       format.js
     end

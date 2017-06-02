@@ -36,8 +36,10 @@ class ApplicationController < ActionController::Base
   def set_study_default_options
     @default_cluster = @study.default_cluster
     @default_cluster_annotations = {
-        'Cluster-based' => @default_cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]},
         'Study Wide' => @study.study_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
     }
+    unless @default_cluster.nil?
+      @default_cluster_annotations['Cluster-based'] = @default_cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]}
+    end
   end
 end
