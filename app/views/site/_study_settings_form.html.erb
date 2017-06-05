@@ -34,7 +34,7 @@
     <p class="help-block">Use this form to choose what the default cluster, annotation, and (if applicable) color profile are when someone views your study.<br/>
       <span class="text-warning"><i class="fa fa-info-circle"></i> The default color profile only applies to the selected annotation (if the type is numeric).</span>
     </p>
-    <div class="well well-sm">
+    <div class="well well-sm" id="default-study-options-form">
       <div class="form-group row">
         <%= f.fields_for :default_options do |opts| %>
           <div class="col-sm-4">
@@ -55,17 +55,29 @@
     <script type="text/javascript">
         $('#study_default_options_annotation').change(function() {
             var annotType = $(this).val().split('--')[1];
+            var colorProfile = $('#study_default_options_color_profile');
             if (annotType == 'group') {
-                $('#default_options_color_profile').val('');
-                $('#default_options_color_profile').attr('disabled', true);
+                colorProfile.val('');
+                colorProfile.attr('disabled', true);
             } else {
-                $('#default_options_color_profile').attr('disabled', false);
+                colorProfile.attr('disabled', false);
             }
         });
 
         $('#study_default_options_cluster').change(function(){
             var cluster = $(this).val();
-            $.get("<%= load_annotation_options_study_path(@study) %>?cluster=" + cluster)
+            $.get("<%= load_annotation_options_study_path(@study) %>?cluster=" + cluster, function() {
+                $(document).ready(function() {
+                    var newAnnotType = $('#study_default_options_annotation').val().split('--')[1];
+                    var colorProfile = $('#study_default_options_color_profile');
+                    if (newAnnotType == 'group') {
+                        colorProfile.val('');
+                        colorProfile.attr('disabled', true);
+                    } else {
+                        colorProfile.attr('disabled', false);
+                    }
+                });
+            })
         });
     </script>
   <% end %>

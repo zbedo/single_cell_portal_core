@@ -2014,6 +2014,82 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
+	# update a study via the study settings panel
+	test 'front-end: edit study settings' do
+		puts "Test method: #{self.method_name}"
+
+		login_path = @base_url + '/users/sign_in'
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login($test_email)
+
+		study_page = @base_url + '/study/test-study'
+		@driver.get study_page
+		wait_until_page_loads(study_page)
+		open_study_ui_tab('study-settings')
+
+		# since ckeditor is a seperate DOM, we need to switch to the iframe containing it
+		@driver.switch_to.frame(@driver.find_element(:tag_name, 'iframe'))
+		description = @driver.find_element(:class, 'cke_editable')
+		description.clear
+		new_description = "This is the description with a random element: #{SecureRandom.uuid}."
+		description.send_keys(new_description)
+		@driver.switch_to.default_content
+
+		# update default options
+		options_form = @driver.find_element(:id, 'default-study-options-form')
+		cluster_dropdown = options_form.find_element(:id, 'study_default_options_cluster')
+		cluster_opts = cluster_dropdown.find_elements(:tag_name, 'option')
+		new_cluster = cluster_opts.select {|opt| !opt.selected?}.sample.text
+		cluster_dropdown.send_key(new_cluster)
+
+		# wait one second while annotation options update
+		sleep(1)
+
+		# change annotation
+		annotation_dropdown = options_form.find_element(:id, 'study_default_options_annotation')
+		annotation_opts = annotation_dropdown.find_elements(:tag_name, 'option')
+		# get value, not text, of dropdown
+		new_annot = annotation_opts.select {|opt| !opt.selected?}.sample['value']
+		annotation_dropdown.send_key(new_annot)
+
+		# if annotation option is now numeric, pick a color val
+		new_color = ''
+		color_dropdown = options_form.find_element(:id, 'study_default_options_color_profile')
+		if color_dropdown['disabled'] != 'true'
+			color_opts = color_dropdown.find_elements(:tag_name, 'option')
+			new_color = color_opts.select {|opt| !opt.selected?}.sample.text
+			color_dropdown.send_key(new_color)
+		end
+
+		# manually set rendered to false to avoid a race condition when checking for updates
+		@driver.execute_script("$('#cluster-plot').data('rendered', false);")
+		# now save changes
+		update_btn = @driver.find_element(:id, 'update-study-settings')
+		update_btn.click
+		close_modal('message_modal')
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+
+		# check description change
+		summary_tab = @driver.find_element(:id, 'study-summary-nav')
+		summary_tab.click
+		study_description = @driver.find_element(:id, 'study-summary').text
+		assert study_description == new_description, "study description did not update correctly, expected #{new_description} but found #{study_description}"
+
+		# assert values have persisted
+		open_study_ui_tab('study-visualize')
+		loaded_cluster = @driver.find_element(:id, 'cluster')['value']
+		loaded_annotation = @driver.find_element(:id, 'annotation')['value']
+		assert new_cluster == loaded_cluster, "default cluster incorrect, expected #{new_cluster} but found #{loaded_cluster}"
+		assert new_annot == loaded_annotation, "default annotation incorrect, expected #{new_annot} but found #{loaded_annotation}"
+		unless new_color.empty?
+			loaded_color = @driver.find_element(:id, 'colorscale')['value']
+			assert new_color == loaded_color, "default color incorrect, expected #{new_color} but found #{loaded_color}"
+		end
+
+		puts "Test method: #{self.method_name} successful!"
+	end
+
 	##
 	## CLEANUP
 	##

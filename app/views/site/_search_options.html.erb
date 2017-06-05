@@ -98,7 +98,7 @@
 			</div>
 		</div>
 		<hr />
-		<% if action_name =~ /(set|heatmap)/ && action_name !~ /precomputed/ %>
+		<% if action_name =~ /(gene_set|heatmap)/ && action_name !~ /precomputed/ %>
 			<div class="row">
 				<div class="col-sm-12">
 					<%= label_tag :gene, 'Load single gene-level expression' %><br />

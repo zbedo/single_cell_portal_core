@@ -7,6 +7,9 @@ $('[data-toggle="tooltip"]').tooltip({container: 'body'});
 
 <% if @study.valid? %>
   $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {notice: 'Settings successfully updated.'}) %>");
+  // update summary and visualize tabs
+  $('#study-summary').html("<%= escape_javascript(@study.description.html_safe) %>");
+  $('#study-visualize').html("<%= escape_javascript(render partial: 'study_visualize') %>");
 <% else %>
   $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {alert: 'An error occurred while trying to save.'}) %>");
 <% end %>
