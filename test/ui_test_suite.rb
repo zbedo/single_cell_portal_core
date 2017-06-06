@@ -1050,12 +1050,11 @@ class UiTestSuite < Test::Unit::TestCase
 		login($test_email)
 
 		# show the 'panic' modal and disable downloads
-		panic_modal_link = @driver.find_element(:id, 'show-disable-panic-modal')
+		panic_modal_link = @driver.find_element(:id, 'show-panic-modal')
 		panic_modal_link.click
 		wait_for_render(:id, 'panic-modal')
 		disable_button = @driver.find_element(:id, 'disable-firecloud-access')
 		disable_button.click
-		wait_for_render(:id, 'show-enable-panic-modal')
 		close_modal('message_modal')
 
 		# assert access is revoked
@@ -1071,14 +1070,35 @@ class UiTestSuite < Test::Unit::TestCase
 		assert element_present?(:id, 'message_modal'), 'did not show alert'
 		assert @driver.current_url == @base_url, 'did not redirect to home page'
 
+		# set access to readonly
+		@driver.get path
+		panic_modal_link = @driver.find_element(:id, 'show-panic-modal')
+		panic_modal_link.click
+		wait_for_render(:id, 'panic-modal')
+		compute_button = @driver.find_element(:id, 'disable-compute-access')
+		compute_button.click
+		close_modal('message_modal')
+
+		# assert access is revoked
+		firecloud_url = 'https://portal.firecloud.org/#workspaces/single-cell-portal/development-test-study'
+		@driver.get firecloud_url
+		assert !element_present?(:class, 'fa-trash'), 'did not revoke compute access - study workspace can still be deleted'
+
+		# test that study admin access is disabled
+		# go to homepage first to set referrer
+		@driver.get @base_url
+		studies_path = @base_url + '/studies'
+		@driver.get studies_path
+		assert element_present?(:id, 'message_modal'), 'did not show alert'
+		assert @driver.current_url == @base_url, 'did not redirect to home page'
+
 		# now restore access
 		@driver.get path
-		panic_modal_link = @driver.find_element(:id, 'show-enable-panic-modal')
+		panic_modal_link = @driver.find_element(:id, 'show-panic-modal')
 		panic_modal_link.click
 		wait_for_render(:id, 'panic-modal')
 		disable_button = @driver.find_element(:id, 'enable-firecloud-access')
 		disable_button.click
-		wait_for_render(:id, 'show-disable-panic-modal')
 		close_modal('message_modal')
 
 		# assert access is restored, wait a few seconds for changes to propogate

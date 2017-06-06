@@ -1,5 +1,5 @@
 closeModalSpinner('#spinner_target', '#loading-modal', function () {
-    $('#single-cell-navbar').replaceWith("<%= escape_javascript(render partial: '/layouts/nav') %>");
+    $('#breadcrumbs').replaceWith("<%= escape_javascript(render partial: '/layouts/breadcrumbs') %>");
     $('#title-bar').html("<%= escape_javascript(render partial: 'view_gene_expression_title_bar') %>");
     $('#study-visualize').html("<%= escape_javascript(render partial: 'view_gene_expression') %>");
     $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices') %>");

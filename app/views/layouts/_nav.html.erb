@@ -9,16 +9,13 @@
 		<%= link_to "<span class='fa fa-home'></span> Single Cell Portal<sup class='text-danger'><small> BETA</small></sup>".html_safe, site_path, class: "navbar-brand hidden-xs check-upload" %>
 	</div>
 	<div class="collapse navbar-collapse">
-		<ul class="nav navbar-nav">
-			<% set_breadcrumbs.each do |breadcrumb| %>
-				<li><%= link_to "<span class='fa fa-chevron-right'></span> 	#{breadcrumb[:title]}".html_safe, breadcrumb[:link], class: 'check-upload' %></li>
-			<% end %>
-		</ul>
+		<%= render partial: '/layouts/breadcrumbs' %>
 		<ul class="nav navbar-nav pull-right">
 			<li class='dropdown'><%= link_to "<span class='fa fa-question-circle'></span> Help <span class='caret'></span>".html_safe, "#", class: "dropdown-toggle", "data-toggle" => "dropdown" %>
 				<ul class="dropdown-menu dropdown-menu-right">
-					<li><%= link_to "<span class='fa fa-info-circle fa-fw'></span> Documentation/Wiki".html_safe, 'https://github.com/broadinstitute/single_cell_portal/wiki', class: 'check-upload', target: '_blank' %></li>
-					<li><%= link_to "<span class='fa fa-github fa-fw'></span> Issues".html_safe, 'https://github.com/broadinstitute/single_cell_portal/issues', class: 'check-upload', target: '_blank' %></li>
+					<li><%= link_to "<span class='fa fa-fw fa-info-circle'></span> Documentation/Wiki".html_safe, 'https://github.com/broadinstitute/single_cell_portal/wiki', target: '_blank' %></li>
+          <li><%= link_to "<span class='fa fa-fw fa-exclamation-circle'></span> Issues".html_safe, 'https://github.com/broadinstitute/single_cell_portal/issues', target: '_blank' %></li>
+          <li><%= link_to "<span class='fa fa-fw fa-github'></span> Portal Source Code".html_safe, 'https://github.com/broadinstitute/single_cell_portal_core', target: '_blank' %></li>
 				</ul>
 			</li>
 			<% if user_signed_in? %>
