@@ -5,7 +5,7 @@ echo "*** CLEARING TMP CACHE ***"
 sudo -E -u app -H bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV tmp:clear
 echo "*** COMPLETED ***"
 echo "*** ROLLING OVER LOGS ***"
-ruby /home/app/webapp/bin/cycle_logs.rb -e=$PASSENGER_APP_ENV
+ruby /home/app/webapp/bin/cycle_logs.rb
 echo "*** COMPLETED ***"
 if [[ $PASSENGER_APP_ENV = "production" ]] || [[ $PASSENGER_APP_ENV = "staging" ]]
 then
@@ -16,8 +16,7 @@ then
 fi
 
 echo "*** CREATING CRON ENV FILES ***"
-rm /home/app/.cron_env
-echo "export PROD_DATABASE_PASSWORD=$PROD_DATABASE_PASSWORD" >> /home/app/.cron_env
+echo "export PROD_DATABASE_PASSWORD=$PROD_DATABASE_PASSWORD" >| /home/app/.cron_env
 echo "export SENDGRID_USERNAME=$SENDGRID_USERNAME" >> /home/app/.cron_env
 echo "export SENDGRID_PASSWORD=$SENDGRID_PASSWORD" >> /home/app/.cron_env
 echo "export MONGO_LOCALHOST=$MONGO_LOCALHOST" >> /home/app/.cron_env
