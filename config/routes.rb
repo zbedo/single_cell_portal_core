@@ -44,6 +44,7 @@ Rails.application.routes.draw do
 
 		# public site actions
 		get 'study/:study_name', to: 'site#study', as: :view_study
+		get 'study/:study_name/edit_study_description', to: 'site#edit_study_description', as: :edit_study_description
 		match 'study/:study_name/update_settings', to: 'site#update_study_settings', via: [:post, :patch], as: :update_study_settings
 		get 'study/:study_name/get_fastq_files', to: 'site#get_fastq_files', as: :get_fastq_files
 		get 'study/:study_name/render_cluster', to: 'site#render_cluster', as: :render_cluster

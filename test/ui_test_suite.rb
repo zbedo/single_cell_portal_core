@@ -2046,8 +2046,11 @@ class UiTestSuite < Test::Unit::TestCase
 		study_page = @base_url + '/study/test-study'
 		@driver.get study_page
 		wait_until_page_loads(study_page)
-		open_study_ui_tab('study-settings')
 
+		# update description first
+		edit_btn = @driver.find_element(:id, 'edit-study-description')
+		edit_btn.click
+		wait_for_render(:id, 'update-study-description')
 		# since ckeditor is a seperate DOM, we need to switch to the iframe containing it
 		@driver.switch_to.frame(@driver.find_element(:tag_name, 'iframe'))
 		description = @driver.find_element(:class, 'cke_editable')
@@ -2055,8 +2058,16 @@ class UiTestSuite < Test::Unit::TestCase
 		new_description = "This is the description with a random element: #{SecureRandom.uuid}."
 		description.send_keys(new_description)
 		@driver.switch_to.default_content
+		update_btn = @driver.find_element(:id, 'update-study-description')
+		update_btn.click
+		wait_for_render(:id, 'edit-study-description')
+
+		study_description = @driver.find_element(:id, 'study-description-content').text
+		assert study_description == new_description, "study description did not update correctly, expected #{new_description} but found #{study_description}"
 
 		# update default options
+		close_modal('message_modal')
+		open_study_ui_tab('study-settings')
 		options_form = @driver.find_element(:id, 'default-study-options-form')
 		cluster_dropdown = options_form.find_element(:id, 'study_default_options_cluster')
 		cluster_opts = cluster_dropdown.find_elements(:tag_name, 'option')
@@ -2087,14 +2098,9 @@ class UiTestSuite < Test::Unit::TestCase
 		# now save changes
 		update_btn = @driver.find_element(:id, 'update-study-settings')
 		update_btn.click
+		close_modal('update-study-settings-modal')
 		close_modal('message_modal')
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
-
-		# check description change
-		summary_tab = @driver.find_element(:id, 'study-summary-nav')
-		summary_tab.click
-		study_description = @driver.find_element(:id, 'study-summary').text
-		assert study_description == new_description, "study description did not update correctly, expected #{new_description} but found #{study_description}"
 
 		# assert values have persisted
 		open_study_ui_tab('study-visualize')

@@ -100,7 +100,7 @@
         var currAnnot = $('#annotation').val();
         // get new annotation options and re-render
         $.ajax({
-            url: "<%= get_new_annotations_path(study: params[:study])%>?cluster=" + newCluster,
+            url: "<%= get_new_annotations_path(study_name: params[:study_name])%>?cluster=" + newCluster,
             method: 'GET',
             dataType: 'script',
             success: function (data) {

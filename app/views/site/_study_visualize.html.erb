@@ -39,7 +39,7 @@
     };
 
     function renderScatter() {
-        var url = '<%= render_cluster_path(study_name: params[:study_name]) %>';
+        var url = '<%= render_cluster_path(study_name: @study.url_safe_name) %>';
         var target = $('#cluster-plot')[0];
         var spinner = new Spinner(opts).spin(target);
         $('#cluster-plot').data('spinner', spinner);
@@ -93,7 +93,7 @@
         var currAnnot = $('#annotation').val();
         // get new annotation options and re-render
         $.ajax({
-            url: "<%= get_new_annotations_path(study: params[:study])%>?cluster=" + newCluster,
+            url: "<%= get_new_annotations_path(study_name: @study.url_safe_name)%>?cluster=" + newCluster,
             method: 'GET',
             dataType: 'script',
             success: function (data) {

@@ -94,7 +94,7 @@
     $('#fastq-table').dataTable({
         pagingType: 'full',
         order: [[0, 'asc']],
-        ajax: "<%= get_fastq_files_path(study_name: params[:study_name]) %>",
+        ajax: "<%= get_fastq_files_path(study_name: @study.url_safe_name) %>",
         deferRender: true,
         autoWidth: false
     });

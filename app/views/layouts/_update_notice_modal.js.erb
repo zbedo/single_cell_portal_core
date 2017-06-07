@@ -1,0 +1,14 @@
+<% unless notice.nil? && alert.nil? %>
+  if ($('#notices-target').html().trim() == '') {
+      $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices') %>");
+  } else {
+      $('#notice-content').html('<%= notice %>');
+      $('#alert-content').html('<%= alert %>');
+      $("#message_modal").modal("show");
+    <% if !notice.nil? %>
+      setTimeout(function() {
+          $("#message_modal").modal("hide");
+      }, 3000);
+    <% end %>
+  }
+<% end %>

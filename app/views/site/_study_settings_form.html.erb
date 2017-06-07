@@ -1,5 +1,5 @@
 <h2>Study Settings</h2>
-<%= nested_form_for(@study, url: update_study_settings_path, html: {multipart: true, data: {remote: true}}) do |f| %>
+<%= nested_form_for(@study, url: update_study_settings_path(study_name: @study.url_safe_name.blank? ? params[:study_name] : @study.url_safe_name), html: {class: 'update-study-settings-form', multipart: true, data: {remote: true}}) do |f| %>
   <% if @study.errors.any? %>
     <div class="bs-callout bs-callout-danger">
       <h4><%= pluralize(@study.errors.count, "error") %> prohibited this study from being saved:</h4>
@@ -24,10 +24,6 @@
       <%= f.label :public %><br />
       <%= f.select :public, options_for_select([['Yes',1],['No',0]], @study.public? ? 1: 0), {}, {class: 'form-control'} %>
     </div>
-  </div>
-  <div class="form-group">
-    <%= f.label :description %>
-    <%= f.cktext_area :description %>
   </div>
   <% unless @study.default_cluster.nil? %>
     <h4>Study Default View Options</h4>
@@ -120,3 +116,9 @@
     </div>
   </div>
 <% end %>
+
+<script type="text/javascript">
+    $('#update-study-settings').click( function() {
+        launchModalSpinner('#update-study-settings-spinner', '#update-study-settings-modal');
+    });
+</script>

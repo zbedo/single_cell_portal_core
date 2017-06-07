@@ -3,9 +3,9 @@ class SiteController < ApplicationController
   respond_to :html, :js, :json
 
   before_action :set_study, except: [:index, :search]
-  before_action :load_precomputed_options, except: [:index, :search, :annotation_query, :download_file, :get_fastq_files]
-  before_action :set_cluster_group, except: [:index, :search, :update_study_settings, :precomputed_results, :download_file, :get_fastq_files]
-  before_action :set_selected_annotation, except: [:index, :search, :study, :update_study_settings, :precomputed_results, :expression_query, :get_new_annotations, :download_file, :get_fastq_files]
+  before_action :load_precomputed_options, except: [:index, :search, :edit_study_description, :annotation_query, :download_file, :get_fastq_files]
+  before_action :set_cluster_group, except: [:index, :search, :update_study_settings, :edit_study_description, :precomputed_results, :download_file, :get_fastq_files]
+  before_action :set_selected_annotation, except: [:index, :search, :study, :update_study_settings, :edit_study_description, :precomputed_results, :expression_query, :get_new_annotations, :download_file, :get_fastq_files]
   before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query]
 
   # caching
@@ -73,18 +73,35 @@ class SiteController < ApplicationController
     end
   end
 
+  # re-render study description as CKEditor instance
+  def edit_study_description
+
+  end
+
   # update selected attributes via study settings tab
   def update_study_settings
     if @study.update(study_params)
       # invalidate caches as needed
       if @study.previous_changes.keys.include?('default_options')
         @study.default_cluster.study_file.invalidate_cache_by_file_type
+      elsif @study.previous_changes.keys.include?('name')
+        # if user renames a study, invalidate all caches
+        old_name = @study.previous_changes['url_safe_name'].first
+        CacheRemovalJob.new(old_name).delay.perform
       end
-      set_study_default_options
-      @cluster = @study.default_cluster
-      @options = load_cluster_group_options
-      @cluster_annotations = load_cluster_group_annotations
-      set_selected_annotation
+      if @study.initialized?
+        set_study_default_options
+        @cluster = @study.default_cluster
+        @options = load_cluster_group_options
+        @cluster_annotations = load_cluster_group_annotations
+        set_selected_annotation
+      end
+      @study_files = @study.study_files.non_primary_data.sort_by(&:name)
+      @directories = @study.directory_listings.are_synced
+
+      # double check on download availability: first, check if administrator has disabled downloads
+      # then check if FireCloud is available and disable download links if either is true
+      @allow_downloads = AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
     else
       set_study_default_options
     end

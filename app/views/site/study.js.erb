@@ -2,5 +2,5 @@ closeModalSpinner('#spinner_target', '#loading-modal', function () {
     $('#breadcrumbs').replaceWith("<%= escape_javascript(render partial: '/layouts/breadcrumbs') %>");
     $('#title-bar').html("<%= escape_javascript(render partial: 'study_title_bar') %>");
     $('#study-visualize').html("<%= escape_javascript(render partial: 'study_visualize') %>");
-    $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices') %>");
+    <%= render '/layouts/update_notice_modal' %>
 });
