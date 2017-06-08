@@ -2098,7 +2098,6 @@ class UiTestSuite < Test::Unit::TestCase
 		# now save changes
 		update_btn = @driver.find_element(:id, 'update-study-settings')
 		update_btn.click
-		close_modal('update-study-settings-modal')
 		close_modal('message_modal')
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 
