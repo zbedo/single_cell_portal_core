@@ -210,20 +210,11 @@ $(function() {
 function deleteFileConfirmation() {
     var conf = confirm('Are you sure?  This file will be deleted and any associated database records removed.  This cannot be undone.');
     if ( conf == true) {
-        showModalSpinner('#delete-modal');
+        launchModalSpinner('#delete-modal-spinner','#delete-modal');
         return true;
     } else {
         return false;
     }
-}
-
-// function to render a modal dialog with a spinner
-function showModalSpinner(id) {
-    var modal = $(id);
-    var modalTgt = modal.find('.spinner-target')[0];
-    var spin = new Spinner(opts).spin(modalTgt);
-    $(modalTgt).data('spinner', spin);
-    modal.modal('show');
 }
 
 // toggle the Search/View options panel
@@ -290,6 +281,7 @@ var smallOpts = {
 
 // functions to show loading modals with spinners
 function launchModalSpinner(spinnerTarget, modalTarget) {
+    $(spinnerTarget).empty();
     var target = $(spinnerTarget)[0];
     var spinner = new Spinner(opts).spin(target);
     $(target).data('spinner', spinner);
