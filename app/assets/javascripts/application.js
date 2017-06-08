@@ -299,10 +299,13 @@ function launchModalSpinner(spinnerTarget, modalTarget) {
 // function to close modals with spinners launched from launchModalSpinner
 // callback function will execute after modal closes
 function closeModalSpinner(spinnerTarget, modalTarget, callback) {
-    $(modalTarget).on('hide.bs.modal', callback );
+    // set listener to fire callback, and immediately clear listener to prevent multiple requests queueing
+    $(modalTarget).on('hidden.bs.modal', function() {
+        $(modalTarget).off('hidden.bs.modal');
+        callback();
+    });
     $(spinnerTarget).data('spinner').stop();
     $(modalTarget).modal('hide');
-    $(modalTarget).off('hide.bs.modal');
 }
 
 // default title font settings for axis titles in plotly
