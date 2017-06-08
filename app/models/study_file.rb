@@ -40,7 +40,8 @@ class StudyFile
 
   # callbacks
   before_validation   :set_file_name_and_data_dir, on: :create
-  after_save      :set_cluster_group_ranges
+  before_save         :sanitize_name
+  after_save          :set_cluster_group_ranges
 
   has_mongoid_attached_file :upload,
                             :path => ":rails_root/data/:data_dir/:filename",
@@ -172,6 +173,13 @@ class StudyFile
   end
 
   private
+
+  # strip whitespace from name if the file is a cluster or gene list (will cause problems when rendering)
+  def sanitize_name
+    if ['Gene List', 'Cluster'].include?(self.file_type)
+      self.name.strip!
+    end
+  end
 
   # set filename and construct url safe name from study
   def set_file_name_and_data_dir

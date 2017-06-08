@@ -286,12 +286,12 @@ class StudiesController < ApplicationController
       # if a gene list or cluster got updated, we need to update the associated records
       if study_file_params[:file_type] == 'Gene List'
         @precomputed_entry = PrecomputedScore.find_by(study_file_id: study_file_params[:_id])
-        @precomputed_entry.update(name: study_file_params[:name])
+        @precomputed_entry.update(name: @study_file.name)
       elsif study_file_params[:file_type] == 'Cluster'
         @cluster = ClusterGroup.find_by(study_file_id: study_file_params[:_id])
-        @cluster.update(name: study_file_params[:name])
+        @cluster.update(name: @study_file.name)
         # also update data_arrays
-        @cluster.data_arrays.update_all(cluster_name: study_file_params[:name])
+        @cluster.data_arrays.update_all(cluster_name: @study_file.name)
       end
       @message = "'#{@study_file.name}' has been successfully updated."
 
@@ -326,12 +326,12 @@ class StudiesController < ApplicationController
       # if a gene list or cluster got updated, we need to update the associated records
       if study_file_params[:file_type] == 'Gene List'
         @precomputed_entry = PrecomputedScore.find_by(study_file_id: study_file_params[:_id])
-        @precomputed_entry.update(name: study_file_params[:name])
+        @precomputed_entry.update(name: @study_file.name)
       elsif study_file_params[:file_type] == 'Cluster'
         @cluster = ClusterGroup.find_by(study_file_id: study_file_params[:_id])
-        @cluster.update(name: study_file_params[:name])
+        @cluster.update(name: @study_file.name)
         # also update data_arrays
-        @cluster.data_arrays.update_all(cluster_name: study_file_params[:name])
+        @cluster.data_arrays.update_all(cluster_name: @study_file.name)
       end
       @message = "'#{@study_file.name}' has been successfully updated."
 

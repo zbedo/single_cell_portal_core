@@ -4,30 +4,15 @@ closeModalSpinner('#update-study-settings-spinner', '#update-study-settings-moda
     $('.datepicker').datepicker({dateFormat: 'yy-mm-dd'});
     $('[data-toggle="tooltip"]').tooltip({container: 'body'});
     <% if @study.valid? %>
-        if ($('#notices-target').html().trim() == '') {
-            $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {notice: 'Study successfully updated.'}) %>");
-        } else {
-            $('#alert-content').empty();
-            $('#notice-content').html('Study successfully updated.')
-            $('#message_modal').modal('show');
-            setTimeout(function() {
-                $("#message_modal").modal("hide");
-            }, 3000);
-        }
+        $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {notice: 'Study successfully updated.'}) %>");
+
         // update summary and visualize tabs
         $('#study-summary').html("<%= escape_javascript(render partial: 'study_description_view') %>");
         $('#study-download').html("<%= escape_javascript(render partial: 'study_download_data') %>");
         $('#study-visualize').html("<%= escape_javascript(render partial: 'study_visualize') %>");
     <% else %>
-        if ($('#notices-target').html().trim() == '') {
-            $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {alert: 'An error occurred while trying to save.'}) %>");
-        } else {
-            $('#notice-content').empty();
-            $('#alert-content').html('An error occurred while trying to save.')
-            $('#message_modal').modal('show');
-        }
+        $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {alert: 'An error occurred while trying to save.'}) %>");
     <% end %>
     // scroll back to the top of the page
     window.scrollBy(0,-9999)
 });
-

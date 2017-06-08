@@ -302,6 +302,7 @@ function closeModalSpinner(spinnerTarget, modalTarget, callback) {
     $(modalTarget).on('hide.bs.modal', callback );
     $(spinnerTarget).data('spinner').stop();
     $(modalTarget).modal('hide');
+    $(modalTarget).off('hide.bs.modal');
 }
 
 // default title font settings for axis titles in plotly
