@@ -1,0 +1,16 @@
+<h1>Reports</h1>
+<h3 class="lead">Updated as of <%= DateTime.now.strftime("%A, %B %-d %Y %r") %></h3>
+<div id="tab-root">
+  <ul class="nav nav-tabs" role="tablist" id="reports-tabs">
+    <li role="presentation" class="reports-nav active" id="study-stats-nav"><a href="#study-stats" data-toggle="tab">Studies <i class="fa fa-fw fa-book"></i></a></li>
+    <li role="presentation" class="reports-nav" id="user-stats-nav"><a href="#user-stats" data-toggle="tab">Users <i class="fa fa-fw fa-users"></i></a></li>
+  </ul>
+  <div class="tab-content top-pad">
+    <div class="tab-pane active" id="study-stats" role="tabpanel">
+      <h2 class="lead">Studies</h2>
+    </div>
+    <div class="tab-pane" id="user-stats" role="tabpanel">
+      <h2 class="lead">Users</h2>
+    </div>
+  </div>
+</div>

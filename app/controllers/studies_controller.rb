@@ -331,7 +331,7 @@ class StudiesController < ApplicationController
         @cluster = ClusterGroup.find_by(study_file_id: study_file_params[:_id])
         @cluster.update(name: @study_file.name)
         # also update data_arrays
-        @cluster.data_arrays.update_all(cluster_name: @study_file.name)
+        @cluster.data_arrays.update_all(cluster_name: study_file_params[:name])
       end
       @message = "'#{@study_file.name}' has been successfully updated."
 

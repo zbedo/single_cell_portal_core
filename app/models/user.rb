@@ -55,6 +55,7 @@ class User
 
   ## Custom
   field :admin, type: Boolean
+  field :reporter, type: Boolean
   field :daily_download_quota, type: Integer, default: 0
 
   def self.from_omniauth(access_token)
@@ -99,5 +100,9 @@ class User
     else
       nil
     end
+  end
+
+  def acts_like_reporter?
+    self.admin? || self.reporter?
   end
 end
