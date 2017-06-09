@@ -452,3 +452,49 @@ function togglePlotlyTraces(div) {
     $('#toggle-traces').children().toggleClass('fa-toggle-on fa-toggle-off')
     console.log('toggle complete in ' + div + '; visibility now ' + visibility);
 }
+
+// function to return a plotly histogram data object from an array of input values
+function formatPlotlyHistogramData(values, colorIdx) {
+    return [{
+            x: values,
+            type: 'histogram',
+            histnorm: '',
+            autobinx: false,
+            xbins: {
+                start: Math.min.apply(Math, values) - 0.5,
+                end: Math.max.apply(Math, values) + 0.5,
+                size: 1
+            },
+            marker: {
+                color: colorBrewerSet[colorIdx]
+            }
+    }];
+}
+
+// load column totals for bar charts
+function loadBarChartAnnotations(plotlyData) {
+    var annotationsArray = [];
+    for (var i = 0; i < plotlyData[0]['x'].length ; i++){
+        var total = 0;
+        plotlyData.map(function(el) {
+            var c = parseInt(el['y'][i]);
+            if (isNaN(c)) {
+                c = 0;
+            }
+            total += c;
+        });
+        var annot = {
+            x: plotlyData[0]['x'][i],
+            y: total,
+            text: total,
+            xanchor: 'center',
+            yanchor: 'bottom',
+            showarrow: false,
+            font: {
+                size: 12
+            }
+        };
+        annotationsArray.push(annot);
+    }
+    return annotationsArray;
+}
