@@ -21,7 +21,7 @@
         </div>
         <div class="col-sm-3">
           <%= f.label :annotation %><br />
-          <%= f.select :annotation, grouped_options_for_select(@cluster_annotations, @study.default_annotation), {},class: 'form-control' %>
+          <%= f.select :annotation, grouped_options_for_select(@default_cluster_annotations, @study.default_annotation), {},class: 'form-control' %>
         </div>
         <div class="col-sm-3">
           <%= f.label :color_profile %><br />
