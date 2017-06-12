@@ -47,7 +47,8 @@
             title: 'Study counts by type<br><b>Total: ' + <%= @all_studies.size %> + '</b>',
             titlefont: plotlyTitleFont,
             bargap: 0,
-            bargroupgap: 0.5
+            bargroupgap: 0.5,
+            hovermode: 'closest'
         }
     );
 
@@ -64,7 +65,8 @@
             title: 'Cell counts by type<br><b>Total: ' + <%= @all_studies.map(&:cell_count).reduce(:+) %> + '</b>',
             titlefont: plotlyTitleFont,
             bargap: 0,
-            bargroupgap: 0.5
+            bargroupgap: 0.5,
+            hovermode: 'closest'
         }
     );
 
@@ -89,7 +91,8 @@
             bargap: 0,
             bargroupgap: 0.5,
             barmode: 'stack',
-            annotations: loadBarChartAnnotations(cellDistData)
+            annotations: loadBarChartAnnotations(cellDistData),
+            hovermode: 'closest'
         }
     );
 
@@ -98,7 +101,8 @@
             title: 'Distribution of private study ages (in weeks)<br><b>Average: ' + <%= @private_dist_avg.round(2) %> + '</b>',
             titlefont: plotlyTitleFont,
             bargap: 0,
-            bargroupgap: 0.5
+            bargroupgap: 0.5,
+            hovermode: 'closest'
         }
     );
 
@@ -107,7 +111,8 @@
             title: "Distribution of number of collaborators per study <br><b>Average: " + <%= @collab_dist_avg.round(2) %> + '</b>',
             titlefont: plotlyTitleFont,
             bargap: 0,
-            bargroupgap: 0.5
+            bargroupgap: 0.5,
+            hovermode: 'closest'
         }
     );
 
@@ -116,7 +121,8 @@
             title: 'Distribution of number of studies per user<br><b>Average: ' + <%= @user_study_avg.round(2) %> + '</b>',
             titlefont: plotlyTitleFont,
             bargap: 0,
-            bargroupgap: 0.5
+            bargroupgap: 0.5,
+            hovermode: 'closest'
         }
     );
 
@@ -133,7 +139,8 @@
             title: 'Distribution of studies by user email domain<br><b>Average: ' + <%= @email_domain_avg.round %> + '</b>',
             titlefont: plotlyTitleFont,
             bargap: 0,
-            bargroupgap: 0.5
+            bargroupgap: 0.5,
+            hovermode: 'closest'
         }
     );
 
