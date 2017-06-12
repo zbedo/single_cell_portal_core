@@ -54,6 +54,9 @@ $order = 'defined'
 $download_dir = "/Users/#{$user}/Downloads"
 $portal_url = 'https://localhost/single_cell'
 
+# generate a global random seed to use with study name creation to prevent naming conflicts
+$random_seed = SecureRandom.uuid
+
 # parse arguments
 ARGV.each do |arg|
 	if arg =~ /\-c\=/
@@ -335,7 +338,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# fill out study form
 		study_form = @driver.find_element(:id, 'new_study')
-		study_form.find_element(:id, 'study_name').send_keys('Test Study')
+		study_form.find_element(:id, 'study_name').send_keys("Test Study #{$random_seed}")
 		study_form.find_element(:id, 'study_embargo').send_keys('2016-12-31')
 		public = study_form.find_element(:id, 'study_public')
 		public.send_keys('Yes')
@@ -467,7 +470,7 @@ class UiTestSuite < Test::Unit::TestCase
 		studies_path = @base_url + '/studies'
 		@driver.get studies_path
 
-		show_study = @driver.find_element(:class, 'test-study-show')
+		show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
 		show_study.click
 
 		# verify that counts are correct, this will ensure that everything uploaded & parsed correctly
@@ -503,12 +506,12 @@ class UiTestSuite < Test::Unit::TestCase
 		close_modal('message_modal')
 		login($test_email)
 
-		show_study = @driver.find_element(:class, 'test-study-show')
+		show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
 		show_study.click
 
 		# verify firecloud workspace creation
 		firecloud_link = @driver.find_element(:id, 'firecloud-link')
-		firecloud_url = 'https://portal.firecloud.org/#workspaces/single-cell-portal/development-test-study'
+		firecloud_url = "https://portal.firecloud.org/#workspaces/single-cell-portal/development-test-study-#{$random_seed}"
 		firecloud_link.click
 		@driver.switch_to.window(@driver.window_handles.last)
 		assert @driver.current_url == firecloud_url, 'did not open firecloud workspace'
@@ -536,7 +539,7 @@ class UiTestSuite < Test::Unit::TestCase
 		close_modal('message_modal')
 		login($test_email)
 
-		add_files = @driver.find_element(:class, 'test-study-upload')
+		add_files = @driver.find_element(:class, "test-study-#{$random_seed}-upload")
 		add_files.click
 		misc_tab = @driver.find_element(:id, 'initialize_misc_form_nav')
 		misc_tab.click
@@ -566,17 +569,16 @@ class UiTestSuite < Test::Unit::TestCase
 		sleep(3)
 
 		@driver.get path
-		files = @driver.find_element(:id, 'test-study-study-file-count')
+		files = @driver.find_element(:id, "test-study-study-#{$random_seed}-file-count")
 		assert files.text == '6', "did not find correct number of files, expected 6 but found #{files.text}"
 
 		# verify deletion in google
-		show_study = @driver.find_element(:class, 'test-study-show')
+		show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
 		show_study.click
 		gcs_link = @driver.find_element(:id, 'gcs-link')
 		gcs_link.click
 		@driver.switch_to.window(@driver.window_handles.last)
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
-		table_body = table.find_element(:tag_name, 'tbody')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
 		assert files.size == 6, "did not find correct number of files, expected 6 but found #{files.size}"
@@ -595,7 +597,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# fill out study form
 		study_form = @driver.find_element(:id, 'new_study')
-		study_form.find_element(:id, 'study_name').send_keys('Gzip Parse')
+		study_form.find_element(:id, 'study_name').send_keys("Gzip Parse #{$random_seed}")
 		# save study
 		save_study = @driver.find_element(:id, 'save-study')
 		save_study.click
@@ -615,7 +617,7 @@ class UiTestSuite < Test::Unit::TestCase
 		studies_path = @base_url + '/studies'
 		@driver.get studies_path
 		wait_until_page_loads(studies_path)
-		study_file_count = @driver.find_element(:id, 'gzip-parse-study-file-count')
+		study_file_count = @driver.find_element(:id, "gzip-parse-#{$random_seed}-study-file-count")
 		assert study_file_count.text == '1', "found incorrect number of study files; expected 1 and found #{study_file_count.text}"
 		puts "Test method: #{self.method_name} successful!"
 	end
@@ -635,7 +637,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# fill out study form
 		study_form = @driver.find_element(:id, 'new_study')
-		study_form.find_element(:id, 'study_name').send_keys('Error Messaging Test Study')
+		study_form.find_element(:id, 'study_name').send_keys("Error Messaging Test Study #{$random_seed}")
 		# save study
 		save_study = @driver.find_element(:id, 'save-study')
 		save_study.click
@@ -692,9 +694,9 @@ class UiTestSuite < Test::Unit::TestCase
 		# assert parses all failed and delete study
 		@driver.get(@base_url + '/studies')
 		wait_until_page_loads(@base_url + '/studies')
-		study_file_count = @driver.find_element(:id, 'error-messaging-test-study-study-file-count')
+		study_file_count = @driver.find_element(:id, "error-messaging-test-study-#{$random_seed}-study-file-count")
 		assert study_file_count.text == '0', "found incorrect number of study files; expected 0 and found #{study_file_count.text}"
-		@driver.find_element(:class, 'error-messaging-test-study-delete').click
+		@driver.find_element(:class, "error-messaging-test-study-#{$random_seed}-delete").click
 		@driver.switch_to.alert.accept
 		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
@@ -714,7 +716,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# fill out study form
 		study_form = @driver.find_element(:id, 'new_study')
-		study_form.find_element(:id, 'study_name').send_keys('Private Study')
+		study_form.find_element(:id, 'study_name').send_keys("Private Study #{$random_seed}")
 		public = study_form.find_element(:id, 'study_public')
 		public.send_keys('No')
 		# save study
@@ -793,7 +795,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name}"
 
 		# check view visibility for unauthenticated users
-		path = @base_url + '/study/private-study'
+		path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get path
 		assert @driver.current_url == @base_url, 'did not redirect'
 		assert element_present?(:id, 'message_modal'), 'did not find alert modal'
@@ -808,13 +810,13 @@ class UiTestSuite < Test::Unit::TestCase
 		login($test_email)
 
 		# get path info
-		edit = @driver.find_element(:class, 'private-study-edit')
+		edit = @driver.find_element(:class, "private-study-#{$random_seed}-edit")
 		edit.click
 		# wait a few seconds for page to load before getting url
 		sleep(2)
 		private_study_id = @driver.current_url.split('/')[5]
 		@driver.get @base_url + '/studies'
-		edit = @driver.find_element(:class, 'test-study-edit')
+		edit = @driver.find_element(:class, "test-study-#{$random_seed}-edit")
 		edit.click
 		# wait a few seconds for page to load before getting url
 		sleep(2)
@@ -834,13 +836,13 @@ class UiTestSuite < Test::Unit::TestCase
 		login_as_other($share_email)
 
 		# view study
-		path = @base_url + '/study/private-study'
+		path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get path
 		assert @driver.current_url == @base_url, 'did not redirect'
 		assert element_present?(:id, 'message_modal'), 'did not find alert modal'
 		close_modal('message_modal')
 		# check public visibility when logged in
-		path = @base_url + '/study/gzip-parse'
+		path = @base_url + "/study/gzip-parse-#{$random_seed}"
 		@driver.get path
 		assert @driver.current_url == path, 'did not load public study without share'
 
@@ -852,7 +854,7 @@ class UiTestSuite < Test::Unit::TestCase
 		close_modal('message_modal')
 
 		# test share
-		share_view_path = @base_url + '/study/test-study'
+		share_view_path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get share_view_path
 		assert @driver.current_url == share_view_path, 'did not load share study view'
 		share_edit_path = @base_url + '/studies/' + share_study_id + '/edit'
@@ -874,9 +876,9 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# verify upload has completed and is in FireCloud bucket
 		@driver.get @base_url + '/studies/'
-		file_count = @driver.find_element(:id, 'test-study-study-file-count')
+		file_count = @driver.find_element(:id, "test-study-#{$random_seed}-study-file-count")
 		assert file_count.text == '7', "did not find correct number of files, expected 7 but found #{file_count.text}"
-		show_study = @driver.find_element(:class, 'test-study-show')
+		show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
 		show_study.click
 		gcs_link = @driver.find_element(:id, 'gcs-link')
 		gcs_link.click
@@ -1058,7 +1060,7 @@ class UiTestSuite < Test::Unit::TestCase
 		close_modal('message_modal')
 
 		# assert access is revoked
-		firecloud_url = 'https://portal.firecloud.org/#workspaces/single-cell-portal/development-test-study'
+		firecloud_url = "https://portal.firecloud.org/#workspaces/single-cell-portal/development-test-study-#{$random_seed}"
 		@driver.get firecloud_url
 		assert !element_present?(:class, 'fa-check-circle'), 'did not revoke access - study workspace still loads'
 
@@ -1080,7 +1082,6 @@ class UiTestSuite < Test::Unit::TestCase
 		close_modal('message_modal')
 
 		# assert access is revoked
-		firecloud_url = 'https://portal.firecloud.org/#workspaces/single-cell-portal/development-test-study'
 		@driver.get firecloud_url
 		assert !element_present?(:class, 'fa-trash'), 'did not revoke compute access - study workspace can still be deleted'
 
@@ -1145,7 +1146,7 @@ class UiTestSuite < Test::Unit::TestCase
 		end
 
 		# now test downloads
-		study_path = @base_url + '/study/test-study'
+		study_path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(study_path)
 		wait_until_page_loads(study_path)
 
@@ -1155,7 +1156,7 @@ class UiTestSuite < Test::Unit::TestCase
 		assert files.size >= 1, 'downloads not properly disabled (did not find any disabled-download links)'
 
 		# try bypassing download with a direct call to file we uploaded earlier
-		direct_link = @base_url + '/data/public/test-study/expression_matrix_example.txt'
+		direct_link = @base_url + "/data/public/test-study-#{$random_seed}/expression_matrix_example.txt"
 		@driver.get direct_link
 		alert_content = @driver.find_element(:id, 'alert-content')
 		assert alert_content.text == 'You have exceeded your current daily download quota. You must wait until tomorrow to download this file.', 'download was not successfully blocked'
@@ -1201,7 +1202,7 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'front-end: load study page' do
 		puts "Test method: #{self.method_name}"
 
-		path = @base_url + '/study/test-study'
+		path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(path)
 		wait_until_page_loads(path)
 		open_study_ui_tab('study-visualize')
@@ -1233,7 +1234,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get login_path
 		wait_until_page_loads(login_path)
 		login($test_email)
-		private_study_path = @base_url + '/study/private-study'
+		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
 		wait_until_page_loads(private_study_path)
 		open_study_ui_tab('study-visualize')
@@ -1253,7 +1254,7 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(login_path)
 		login($test_email)
 
-		path = @base_url + '/study/test-study'
+		path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(path)
 		wait_until_page_loads(path)
 		open_study_ui_tab('study-download')
@@ -1274,7 +1275,7 @@ class UiTestSuite < Test::Unit::TestCase
 		File.delete(File.join($download_dir, filename))
 
 		# now download a file from a private study
-		private_path = @base_url + '/study/private-study'
+		private_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get(private_path)
 		wait_until_page_loads(private_path)
 		open_study_ui_tab('study-download')
@@ -1339,8 +1340,8 @@ class UiTestSuite < Test::Unit::TestCase
 		login($share_email)
 
 		# negative test, should not be able to download private files from study without access
-		non_share_public_link = @base_url + '/data/public/private-study/README.txt'
-		non_share_private_link = @base_url + '/data/private/private-study/README.txt'
+		non_share_public_link = @base_url + "/data/public/private-study-#{$random_seed}/README.txt"
+		non_share_private_link = @base_url + "/data/private/private-study-#{$random_seed}/README.txt"
 
 		# try public rout
 		@driver.get non_share_public_link
@@ -1360,7 +1361,7 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'front-end: search for single gene' do
 		puts "Test method: #{self.method_name}"
 
-		path = @base_url + '/study/test-study'
+		path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(path)
 		wait_until_page_loads(path)
 		open_study_ui_tab('study-visualize')
@@ -1392,7 +1393,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get login_path
 		wait_until_page_loads(login_path)
 		login($test_email)
-		private_study_path = @base_url + '/study/private-study'
+		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
 		wait_until_page_loads(private_study_path)
 		open_study_ui_tab('study-visualize')
@@ -1425,7 +1426,7 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'front-end: search for multiple genes as consensus' do
 		puts "Test method: #{self.method_name}"
 
-		path = @base_url + '/study/test-study'
+		path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(path)
 		wait_until_page_loads(path)
 		open_study_ui_tab('study-visualize')
@@ -1466,7 +1467,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get login_path
 		wait_until_page_loads(login_path)
 		login($test_email)
-		private_study_path = @base_url + '/study/private-study'
+		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
 		wait_until_page_loads(private_study_path)
 		open_study_ui_tab('study-visualize')
@@ -1507,7 +1508,7 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'front-end: search for multiple genes as heatmap' do
 		puts "Test method: #{self.method_name}"
 
-		path = @base_url + '/study/test-study'
+		path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(path)
 		wait_until_page_loads(path)
 		open_study_ui_tab('study-visualize')
@@ -1549,7 +1550,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get login_path
 		wait_until_page_loads(login_path)
 		login($test_email)
-		private_study_path = @base_url + '/study/private-study'
+		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
 		wait_until_page_loads(private_study_path)
 		open_study_ui_tab('study-visualize')
@@ -1575,7 +1576,7 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'front-end: search for genes by uploading gene list' do
 		puts "Test method: #{self.method_name}"
 
-		path = @base_url + '/study/test-study'
+		path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(path)
 		wait_until_page_loads(path)
 		open_study_ui_tab('study-visualize')
@@ -1596,7 +1597,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get login_path
 		wait_until_page_loads(login_path)
 		login($test_email)
-		private_study_path = @base_url + '/study/private-study'
+		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
 		wait_until_page_loads(private_study_path)
 		open_study_ui_tab('study-visualize')
@@ -1617,7 +1618,7 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'front-end: load marker gene heatmap' do
 		puts "Test method: #{self.method_name}"
 
-		path = @base_url + '/study/test-study'
+		path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(path)
 		wait_until_page_loads(path)
 		open_study_ui_tab('study-visualize')
@@ -1638,7 +1639,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get login_path
 		wait_until_page_loads(login_path)
 		login($test_email)
-		private_study_path = @base_url + '/study/private-study'
+		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
 		wait_until_page_loads(private_study_path)
 		open_study_ui_tab('study-visualize')
@@ -1660,7 +1661,7 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'front-end: load marker gene box/scatter' do
 		puts "Test method: #{self.method_name}"
 
-		path = @base_url + '/study/test-study'
+		path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(path)
 		wait_until_page_loads(path)
 		open_study_ui_tab('study-visualize')
@@ -1685,7 +1686,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get login_path
 		wait_until_page_loads(login_path)
 		login($test_email)
-		private_study_path = @base_url + '/study/private-study'
+		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
 		wait_until_page_loads(private_study_path)
 		open_study_ui_tab('study-visualize')
@@ -1712,7 +1713,7 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'front-end: load different cluster and annotation then search gene expression' do
 		puts "Test method: #{self.method_name}"
 
-		path = @base_url + '/study/test-study'
+		path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(path)
 		wait_until_page_loads(path)
 		open_study_ui_tab('study-visualize')
@@ -1745,7 +1746,7 @@ class UiTestSuite < Test::Unit::TestCase
 		search_box.send_key(gene)
 		search_genes = @driver.find_element(:id, 'perform-gene-search')
 		search_genes.click
-		new_path = "#{@base_url}/study/test-study/gene_expression/#{gene}?annotation=#{annotation_value.split.join('+')}&boxpoints=all&cluster=#{cluster_name.split.join('+')}"
+		new_path = "#{@base_url}/study/test-study-#{$random_seed}/gene_expression/#{gene}?annotation=#{annotation_value.split.join('+')}&boxpoints=all&cluster=#{cluster_name.split.join('+')}"
 		wait_until_page_loads(new_path)
 
 		# wait for rendering to complete
@@ -1786,7 +1787,7 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'front-end: check camera position on change' do
 		puts "Test method: #{self.method_name}"
 
-		path = @base_url + '/study/test-study'
+		path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(path)
 		wait_until_page_loads(path)
 		open_study_ui_tab('study-visualize')
@@ -1898,7 +1899,7 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'front-end: check axis domains and labels' do
 		puts "Test method: #{self.method_name}"
 
-		path = @base_url + '/study/test-study'
+		path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(path)
 		wait_until_page_loads(path)
 		open_study_ui_tab('study-visualize')
@@ -1926,7 +1927,7 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'front-end: check toggle traces button' do
 		puts "Test method: #{self.method_name}"
 
-		path = @base_url + '/study/test-study'
+		path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(path)
 		wait_until_page_loads(path)
 		open_study_ui_tab('study-visualize')
@@ -1966,7 +1967,7 @@ class UiTestSuite < Test::Unit::TestCase
 		close_modal('message_modal')
 		login($test_email)
 
-		show_study = @driver.find_element(:class, 'test-study-show')
+		show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
 		show_study.click
 
 		# change cluster
@@ -1999,7 +2000,7 @@ class UiTestSuite < Test::Unit::TestCase
 		options_form.submit
 		close_modal('study-file-notices')
 
-		study_page = @base_url + '/study/test-study'
+		study_page = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get study_page
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 		open_study_ui_tab('study-visualize')
@@ -2043,7 +2044,7 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(login_path)
 		login($test_email)
 
-		study_page = @base_url + '/study/test-study'
+		study_page = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get study_page
 		wait_until_page_loads(study_page)
 
@@ -2131,19 +2132,19 @@ class UiTestSuite < Test::Unit::TestCase
 		login($test_email)
 
 		# delete test
-		@driver.find_element(:class, 'test-study-delete').click
+		@driver.find_element(:class, "test-study-#{$random_seed}-delete").click
 		@driver.switch_to.alert.accept
 		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
 
 		# delete private
-		@driver.find_element(:class, 'private-study-delete').click
+		@driver.find_element(:class, "private-study-#{$random_seed}-delete").click
 		@driver.switch_to.alert.accept
 		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
 
 		# delete gzip parse
-		@driver.find_element(:class, 'gzip-parse-delete').click
+		@driver.find_element(:class, "gzip-parse-#{$random_seed}-delete").click
 		@driver.switch_to.alert.accept
 		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')

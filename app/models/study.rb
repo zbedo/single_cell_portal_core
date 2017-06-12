@@ -167,7 +167,7 @@ class Study
 
   # check if user can delete a study - only owners can
   def can_delete?(user)
-    if self.user_id == user.id
+    if self.user_id == user.id || user.admin?
       true
     else
       share = self.study_shares.detect {|s| s.email == user.email}
