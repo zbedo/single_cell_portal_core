@@ -449,26 +449,37 @@ function togglePlotlyTraces(div) {
 
     Plotly.restyle(div, 'visible', visibility);
     // toggle class of toggle glyph
-    $('#toggle-traces').children().toggleClass('fa-toggle-on fa-toggle-off')
+    $('#toggle-traces').children().toggleClass('fa-toggle-on fa-toggle-off');
     console.log('toggle complete in ' + div + '; visibility now ' + visibility);
 }
 
 // function to return a plotly histogram data object from an array of input values
-function formatPlotlyHistogramData(values, colorIdx) {
-    return [{
-            x: values,
+function formatPlotlyHistogramData(valuesHash, offset) {
+    var dataArray = [];
+    var i = offset;
+    if (i === undefined) {
+        i = 0;
+    }
+    $.each(valuesHash, function(keyName, distData) {
+        var trace = {
+            x: distData,
             type: 'histogram',
+            name: keyName,
             histnorm: '',
             autobinx: false,
             xbins: {
-                start: Math.min.apply(Math, values) - 0.5,
-                end: Math.max.apply(Math, values) + 0.5,
+                start: Math.min.apply(Math, distData) - 0.5,
+                end: Math.max.apply(Math, distData) + 0.5,
                 size: 1
             },
             marker: {
-                color: colorBrewerSet[colorIdx]
+                color: colorBrewerSet[i]
             }
-    }];
+        };
+        dataArray.push(trace);
+        i++;
+    });
+    return dataArray;
 }
 
 // load column totals for bar charts
@@ -496,5 +507,28 @@ function loadBarChartAnnotations(plotlyData) {
         };
         annotationsArray.push(annot);
     }
+    return annotationsArray;
+}
+
+// load bin counts for histogram charts
+function loadHistogramAnnotations(plotlyData) {
+    var annotationsArray = [];
+    var counts = plotlyData[0]['x'];
+    $(counts).each(function(i, c) {
+        var count = counts.filter(function(a){return (a == c)}).length;
+        var annot = {
+            x: c,
+            y: count,
+            text: count,
+            xanchor: 'center',
+            yanchor: 'bottom',
+            showarrow: false,
+            font: {
+                size: 12
+            }
+        };
+        annotationsArray.push(annot);
+    });
+
     return annotationsArray;
 }

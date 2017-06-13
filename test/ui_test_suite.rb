@@ -1173,6 +1173,35 @@ class UiTestSuite < Test::Unit::TestCase
 		close_modal('message_modal')
 	end
 
+	test 'admin: view study reports' do
+		puts "Test method: #{self.method_name}"
+
+		path = @base_url + '/reports'
+		@driver.get(path)
+		close_modal('message_modal')
+		login($test_email)
+		wait_until_page_loads(path)
+
+		# check for reports
+		report_plots = @driver.find_elements(:class, 'plotly-report')
+		assert report_plots.size == 7, "did not find correct number of plots, expected 7 but found #{report_plots.size}"
+
+		# test toggle column total button by turning on counts
+		toggle_btn = @driver.find_element(:id, 'toggle-column-annots')
+		toggle_btn.click
+		@wait.until {wait_for_plotly_render('#plotly-study-email-domain-dist', 'rendered')}
+		layout = @driver.execute_script("return document.getElementById('plotly-study-email-domain-dist').layout")
+		assert !layout['annotations'].nil?, "did not turn on annotations, expected annotations array but found #{layout['annotations']}"
+
+		# turn off
+		toggle_btn.click
+		@wait.until {wait_for_plotly_render('#plotly-study-email-domain-dist', 'rendered')}
+		new_layout = @driver.execute_script("return document.getElementById('plotly-study-email-domain-dist').layout")
+		assert new_layout['annotations'].nil?, "did not turn off annotations, expected nil but found #{new_layout['annotations']}"
+
+		puts "Test method: #{self.method_name} successful!"
+	end
+
 	##
 	## FRONT END FUNCTIONALITY TESTS
 	##

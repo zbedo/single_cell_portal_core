@@ -12,11 +12,12 @@ class ReportsController < ApplicationController
 
     # study distributions
     today = Date.today
-    @private_study_age_dist = @private_studies.map {|s| (today - s.created_at.to_date).to_i / 7}
-    @private_dist_avg = @private_study_age_dist.reduce(:+) / @private_study_age_dist.size.to_f
+    @private_study_age_dist = {'Private' => @private_studies.map {|s| (today - s.created_at.to_date).to_i / 7}}
+    @private_dist_avg = @private_study_age_dist['Private'].reduce(:+) / @private_study_age_dist['Private'].size.to_f
 
-    @collab_dist = @all_studies.map {|s| s.study_shares.size}
-    @collab_dist_avg = @collab_dist.reduce(:+) / @collab_dist.size.to_f
+    @collab_dist = {'All' => @all_studies.map {|s| s.study_shares.size}}
+    @collab_dist_avg = @collab_dist['All'].reduce(:+) / @collab_dist['All'].size.to_f
+
 
     @cell_dist = @all_studies.map(&:cell_count)
     max_cells = @cell_dist.max - @cell_dist.max % 1000
@@ -29,15 +30,17 @@ class ReportsController < ApplicationController
 
     # user distributions
     @users = User.all.to_a
-    @user_study_dist = @users.map {|u| u.studies.count}
-    @user_study_avg = @user_study_dist.reduce(:+) / @user_study_dist.size.to_f
-
+    @user_study_dist = {"All" => @users.map {|u| u.studies.size}}
     @email_domains = @users.map(&:email).map {|email| email.split('@').last}.uniq
     @user_study_email_dist = {}
-    @email_domains.sort.each do |domain|
-      @user_study_email_dist[domain] = @users.select {|u| u.email =~ /#{domain}/}.map {|u| u.studies.size}.reduce(:+)
+    ['Public', 'Private'].each do |study_type|
+      @user_study_email_dist[study_type] = {}
+      @email_domains.sort.each do |domain|
+        @user_study_email_dist[study_type][domain] = @users.select {|u| u.email =~ /#{domain}/}.map {|u| u.studies.select {|s| study_type == 'Public' ? s.public? : !s.public?}.size}.reduce(:+)
+      end
     end
-    @email_domain_avg = @user_study_email_dist.values.reduce(:+) / @user_study_email_dist.values.size.to_f
+    @user_study_avg = @user_study_dist['All'].reduce(:+) / @user_study_dist['All'].size.to_f
+    @email_domain_avg = @user_study_email_dist.values.map {|v| v.values.reduce(:+)}.reduce(:+) / @user_study_email_dist.values.map(&:values).uniq.size.to_f
 
   end
 
