@@ -1,5 +1,5 @@
 <h1>Reports</h1>
-<h3 class="lead">Updated as of <%= DateTime.now.strftime("%A, %B %-d %Y %r") %> <%= link_to "<i class='fa fa-toggle-off'></i> Toggle Totals".html_safe, 'javascript:;', class: 'btn btn-default pull-right', id: 'toggle-column-annots' %></h3>
+<h3 class="lead">Updated as of <%= DateTime.now.strftime("%A, %B %-d %Y %r") %> <%= link_to "<i class='fa fa-toggle-on'></i> Toggle Totals".html_safe, 'javascript:;', class: 'btn btn-default pull-right', id: 'toggle-column-annots' %></h3>
 <div class="row">
   <div class="col-md-6">
     <div id="plotly-study-count" class="plotly-report"></div>
@@ -45,17 +45,25 @@
         y: [<%= @public_studies.size %>, <%= @private_studies.size %>],
         type: 'bar',
         marker: {
-            color: [colorBrewerSet[1], colorBrewerSet[2]]
+            color: [colorBrewerSet[3], colorBrewerSet[4]]
         }
     }];
 
     Plotly.newPlot('plotly-study-count', studyCounts,
         {
-            title: 'Study counts by type<br><b>Total: ' + <%= @all_studies.size %> + '</b>',
+            title: 'How many studies are private or public?<br><b>Total number of studies in portal: ' + <%= @all_studies.size %> + '</b>',
             titlefont: plotlyTitleFont,
+            font: plotlyLabelFont,
             bargap: 0,
             bargroupgap: 0.5,
-            hovermode: 'closest'
+            hovermode: 'closest',
+            xaxis: {
+                title: 'Study visibility'
+            },
+            yaxis: {
+                title: 'Number of studies'
+            },
+            annotations: loadBarChartAnnotations(studyCounts)
         }
     ).then(setRenderStatus('#plotly-study-count', true));
 
@@ -64,17 +72,25 @@
         y: [<%= @public_studies.map(&:cell_count).reduce(:+) %>, <%= @private_studies.map(&:cell_count).reduce(:+) %>],
         type: 'bar',
         marker: {
-            color: [colorBrewerSet[1], colorBrewerSet[2]]
+            color: [colorBrewerSet[3], colorBrewerSet[4]]
         }
     }];
 
     Plotly.newPlot('plotly-cell-count', cellCounts,
         {
-            title: 'Cell counts by type<br><b>Total: ' + <%= @all_studies.map(&:cell_count).reduce(:+) %> + '</b>',
+            title: 'How many cells total are in private or public studies?<br><b>Total number of cells in portal: ' + <%= @all_studies.map(&:cell_count).reduce(:+) %> + '</b>',
             titlefont: plotlyTitleFont,
+            font: plotlyLabelFont,
             bargap: 0,
             bargroupgap: 0.5,
-            hovermode: 'closest'
+            hovermode: 'closest',
+            xaxis: {
+                title: 'Study visibility'
+            },
+            yaxis: {
+                title: 'Number of cells'
+            },
+            annotations: loadBarChartAnnotations(cellCounts)
         }
     ).then(setRenderStatus('#plotly-cell-count', true));
 
@@ -87,7 +103,7 @@
                 type: 'bar',
                 name: '<%= key %>',
                 marker: {
-                    color: colorBrewerSet[<%= index + 1 %>]
+                    color: colorBrewerSet[<%= index + 3 %>]
                 }
             }
         );
@@ -95,24 +111,41 @@
 
     Plotly.newPlot('plotly-study-cell-dist', cellDistData,
         {
-            title: 'Distribution of study cells counts<br><b>Average: ' + <%= @cell_avg.round %> + '</b>',
+            title: 'How large are studies (by cell count)?<br><b>Average number of cells per study: ' + <%= @cell_avg.round %> + '</b>',
             titlefont: plotlyTitleFont,
+            font: plotlyLabelFont,
             bargap: 0,
             bargroupgap: 0.5,
             barmode: 'stack',
-            hovermode: 'closest'
+            hovermode: 'closest',
+            xaxis: {
+                title: 'Amount of cells per study'
+            },
+            yaxis: {
+                title: 'Number of studies'
+            },
+            annotations: loadBarChartAnnotations(cellDistData)
         }
     ).then(setRenderStatus('#plotly-study-cell-dist', true));
 
-    var privateAgeDist = formatPlotlyHistogramData(<%= raw @private_study_age_dist.to_json %>, 2);
+    var privateAgeDist = formatPlotlyHistogramData(<%= raw @private_study_age_dist.to_json %>, 4);
 
     Plotly.newPlot('plotly-private-study-age-dist', privateAgeDist,
         {
-            title: 'Distribution of private study ages (in weeks)<br><b>Average: ' + <%= @private_dist_avg.round(2) %> + '</b>',
+            title: 'How old are private studies (in weeks)?<br><b>Average age of private study: ' + <%= @private_dist_avg.round(2) %> + '</b>',
             titlefont: plotlyTitleFont,
+            font: plotlyLabelFont,
             bargap: 0,
             bargroupgap: 0.5,
-            hovermode: 'closest'
+            hovermode: 'closest',
+            xaxis: {
+                title: 'Age in weeks'
+            },
+            yaxis: {
+                title: 'Number of studies'
+            },
+            showlegend: true,
+            annotations: loadHistogramAnnotations(privateAgeDist)
         }
     ).then(setRenderStatus('#plotly-private-study-age-dist', true));
 
@@ -120,12 +153,21 @@
 
     Plotly.newPlot('plotly-study-share-dist', studyShareDist,
         {
-            title: "Distribution of number of collaborators per study <br><b>Average: " + <%= @collab_dist_avg.round(2) %> + '</b>',
+            title: "How many collaborators do studies have?<br><b>Average number of collaborators per study: " + <%= @collab_dist_avg.round(2) %> + '</b>',
             titlefont: plotlyTitleFont,
+            font: plotlyLabelFont,
             bargap: 0,
             bargroupgap: 0.5,
             hovermode: 'closest',
-            barmode: 'stack'
+            barmode: 'stack',
+            showlegend: true,
+            xaxis: {
+                title: 'Number of collaborators'
+            },
+            yaxis: {
+                title: 'Number of studies'
+            },
+            annotations: loadHistogramAnnotations(studyShareDist)
         }
     ).then(setRenderStatus('#plotly-study-share-dist', true));
 
@@ -133,17 +175,26 @@
 
     Plotly.newPlot('plotly-user-study-dist', userStudyDist,
         {
-            title: 'Distribution of number of studies per user<br><b>Average: ' + <%= @user_study_avg.round(2) %> + '</b>',
+            title: 'How many studies do users have?<br><b>Average number of studies per user: ' + <%= @user_study_avg.round(2) %> + '</b>',
             titlefont: plotlyTitleFont,
+            font: plotlyLabelFont,
             bargap: 0,
             bargroupgap: 0.5,
             hovermode: 'closest',
-            barmode: 'stack'
+            barmode: 'stack',
+            showlegend: true,
+            xaxis: {
+                title: 'Number of studies'
+            },
+            yaxis: {
+                title: 'Number of users'
+            },
+            annotations: loadHistogramAnnotations(userStudyDist)
         }
     ).then(setRenderStatus('#plotly-user-study-dist', true));
 
     var studyEmailDist = [];
-    <% @user_study_email_dist.each_with_index do |(key, vals), index| %>
+    <% @sorted_email_domain_dist.each_with_index do |(key, vals), index| %>
       studyEmailDist.push(
           {
               x: <%= raw vals.keys %>,
@@ -151,7 +202,7 @@
               type: 'bar',
               name: '<%= key %>',
               marker: {
-                  color: colorBrewerSet[<%= index + 1 %>]
+                  color: colorBrewerSet[<%= index + 3 %>]
               }
           }
       );
@@ -159,12 +210,20 @@
 
     Plotly.newPlot('plotly-study-email-domain-dist', studyEmailDist,
         {
-            title: 'Distribution of studies by user email domain<br><b>Average: ' + <%= @email_domain_avg.round %> + '</b>',
+            title: 'How many studies by email domain?<br><b>Average: ' + <%= @email_domain_avg.round %> + '</b>',
+            font: plotlyLabelFont,
             titlefont: plotlyTitleFont,
             bargap: 0,
             bargroupgap: 0.5,
             barmode: 'stack',
-            hovermode: 'closest'
+            hovermode: 'closest',
+            xaxis: {
+                title: 'Email domain'
+            },
+            yaxis: {
+                title: 'Number of studies'
+            },
+            annotations: loadBarChartAnnotations(studyEmailDist)
         }
     ).then(setRenderStatus('#plotly-study-email-domain-dist', true));
 

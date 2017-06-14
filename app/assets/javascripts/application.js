@@ -21,7 +21,6 @@
 //= require jquery-fileupload/basic-plus
 //= require jquery_nested_form
 //= require spin.min
-//= require chroma.min
 //= require jquery-ui/core
 //= require jquery-ui/widgets/datepicker
 //= require jquery-ui/widgets/autocomplete
@@ -395,18 +394,6 @@ function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, t
     // set render variable to true for tests
     $(target).data('rendered', true);
     console.log('render status of ' + target + ' at end: ' + $(target).data('rendered'));
-
-}
-
-// helper to compute color gradient scales using chroma.js for sub-cluster members
-function computeColorScale(clusterColor, clusters) {
-    // check brightness to know which direction to scale colors
-    var start = chroma(clusterColor);
-    if (start.luminance() > 0.5) {
-        return chroma.scale([clusterColor, start.darken(clusters / 2).saturate(clusters / 2)]).colors(clusters);
-    } else {
-        return chroma.scale([start.brighten(clusters / 3).desaturate( clusters / 3), clusterColor]).colors(clusters);
-    }
 
 }
 

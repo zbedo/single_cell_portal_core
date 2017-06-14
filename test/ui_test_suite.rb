@@ -569,7 +569,7 @@ class UiTestSuite < Test::Unit::TestCase
 		sleep(3)
 
 		@driver.get path
-		files = @driver.find_element(:id, "test-study-study-#{$random_seed}-file-count")
+		files = @driver.find_element(:id, "test-study-#{$random_seed}-study-file-count")
 		assert files.text == '6', "did not find correct number of files, expected 6 but found #{files.text}"
 
 		# verify deletion in google
@@ -1186,18 +1186,20 @@ class UiTestSuite < Test::Unit::TestCase
 		report_plots = @driver.find_elements(:class, 'plotly-report')
 		assert report_plots.size == 7, "did not find correct number of plots, expected 7 but found #{report_plots.size}"
 
-		# test toggle column total button by turning on counts
+		# test toggle column total button
 		toggle_btn = @driver.find_element(:id, 'toggle-column-annots')
-		toggle_btn.click
-		@wait.until {wait_for_plotly_render('#plotly-study-email-domain-dist', 'rendered')}
-		layout = @driver.execute_script("return document.getElementById('plotly-study-email-domain-dist').layout")
-		assert !layout['annotations'].nil?, "did not turn on annotations, expected annotations array but found #{layout['annotations']}"
 
 		# turn off
 		toggle_btn.click
 		@wait.until {wait_for_plotly_render('#plotly-study-email-domain-dist', 'rendered')}
 		new_layout = @driver.execute_script("return document.getElementById('plotly-study-email-domain-dist').layout")
 		assert new_layout['annotations'].nil?, "did not turn off annotations, expected nil but found #{new_layout['annotations']}"
+
+		# turn on
+		toggle_btn.click
+		@wait.until {wait_for_plotly_render('#plotly-study-email-domain-dist', 'rendered')}
+		layout = @driver.execute_script("return document.getElementById('plotly-study-email-domain-dist').layout")
+		assert !layout['annotations'].nil?, "did not turn on annotations, expected annotations array but found #{layout['annotations']}"
 
 		puts "Test method: #{self.method_name} successful!"
 	end
