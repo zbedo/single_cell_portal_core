@@ -172,6 +172,11 @@ class StudiesController < ApplicationController
         if @share_changes == true
           changes << 'Study shares'
         end
+        if @study.previous_changes.keys.include?('name')
+          # if user renames a study, invalidate all caches
+          old_name = @study.previous_changes['url_safe_name'].first
+          CacheRemovalJob.new(old_name).delay.perform
+        end
         if @study.study_shares.any?
           SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
         end
@@ -281,12 +286,12 @@ class StudiesController < ApplicationController
       # if a gene list or cluster got updated, we need to update the associated records
       if study_file_params[:file_type] == 'Gene List'
         @precomputed_entry = PrecomputedScore.find_by(study_file_id: study_file_params[:_id])
-        @precomputed_entry.update(name: study_file_params[:name])
+        @precomputed_entry.update(name: @study_file.name)
       elsif study_file_params[:file_type] == 'Cluster'
         @cluster = ClusterGroup.find_by(study_file_id: study_file_params[:_id])
-        @cluster.update(name: study_file_params[:name])
+        @cluster.update(name: @study_file.name)
         # also update data_arrays
-        @cluster.data_arrays.update_all(cluster_name: study_file_params[:name])
+        @cluster.data_arrays.update_all(cluster_name: @study_file.name)
       end
       @message = "'#{@study_file.name}' has been successfully updated."
 
@@ -321,10 +326,10 @@ class StudiesController < ApplicationController
       # if a gene list or cluster got updated, we need to update the associated records
       if study_file_params[:file_type] == 'Gene List'
         @precomputed_entry = PrecomputedScore.find_by(study_file_id: study_file_params[:_id])
-        @precomputed_entry.update(name: study_file_params[:name])
+        @precomputed_entry.update(name: @study_file.name)
       elsif study_file_params[:file_type] == 'Cluster'
         @cluster = ClusterGroup.find_by(study_file_id: study_file_params[:_id])
-        @cluster.update(name: study_file_params[:name])
+        @cluster.update(name: @study_file.name)
         # also update data_arrays
         @cluster.data_arrays.update_all(cluster_name: study_file_params[:name])
       end
@@ -697,7 +702,7 @@ class StudiesController < ApplicationController
 
   # load annotations for a given study and cluster
   def load_annotation_options
-    @cluster = @study.cluster_groups.detect {|cluster| cluster.name == params[:cluster]}
+    @default_cluster = @study.cluster_groups.detect {|cluster| cluster.name == params[:cluster]}
     @default_cluster_annotations = {
         'Study Wide' => @study.study_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
     }
@@ -745,7 +750,7 @@ class StudiesController < ApplicationController
   end
 
   def default_options_params
-    params.require(:default_options).permit(:cluster, :annotation, :color_profile)
+    params.require(:study_default_options).permit(:cluster, :annotation, :color_profile)
   end
 
   def set_file_types

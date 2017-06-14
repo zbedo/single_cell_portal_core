@@ -32,32 +32,35 @@
     </div>
     <p>
       <%= link_to "<span class='fa fa-refresh'></span> Reset User Download Quotas".html_safe, reset_user_download_quotas_path, class: 'btn btn-lg btn-primary', id: 'reset-user-download-quotas', data: {remote: true} %>
-      <% if @download_status %>
-        <%= link_to "<span class='fa fa-exclamation-circle'></span> DISABLE FIRECLOUD ACCESS".html_safe, '#', class: 'btn btn-lg btn-danger pull-right panic', id: 'show-disable-panic-modal' %>
-      <% else %>
-        <%= link_to "<span class='fa fa-check-circle'></span> ENABLE FIRECLOUD ACCESS".html_safe, '#', class: 'btn btn-lg btn-success pull-right panic', id: 'show-enable-panic-modal' %>
-      <% end %>
+      <%= link_to "<span class='fa fa-exclamation-circle'></span> MANAGE FIRECLOUD ACCESS".html_safe, '#', class: 'btn btn-lg btn-danger pull-right panic', id: 'show-panic-modal' %>
     </p>
   </div>
 </div>
 
-<div class="modal fade" id="panic-modal" tabindex="-1" role="dialog" aria-labelledby="sync-modal-label" aria-hidden="true">
-  <div class="modal-dialog">
+<div class="modal fade" id="panic-modal" role="dialog" aria-labelledby="sync-modal-label" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
         <h4 class="text-center text-danger">MANAGE FIRECLOUD ACCESS</h4>
       </div>
       <div class="modal-body">
           <p class="lead text-center">FireCloud Access is currently: <%= @download_status_label %></p>
-          <p class="lead text-danger">Clicking 'Disable FireCloud Access' will revoke all user permissions to workspaces, thereby preventing any users from uploading/downloading data or running computes.  As a result, access to updating studies will be disabled.</p>
+        <p class="lead text-danger">Clicking 'Disable All Access' will revoke all user permissions to workspaces, thereby preventing any users from uploading/downloading data or running computes.  As a result, access to updating studies will be disabled.</p>
+        <p class="lead text-danger">Clicking 'Disable Compute Access' will set all user permissions for workspaces to Read Only, thereby preventing any users from uploading data or running computes.  Users can still download data.  Access to updating studies will be still be disabled.</p>
           <p class="lead text-danger text-center"><strong>Are you sure you wish to proceed?</strong></p>
           <div class="row">
-            <div class="col-xs-6">
-              <%= link_to "Disable FireCloud Access".html_safe, manage_firecloud_access_path(status: 'off'), class: 'btn btn-lg btn-block btn-danger data-download-status', id: 'disable-firecloud-access', method: :post, data: {dismiss: 'modal'} %>
-            </div>
-            <div class="col-xs-6">
-              <%= link_to "Enable FireCloud Access".html_safe, manage_firecloud_access_path(status: 'on'), class: 'btn btn-lg btn-block btn-success data-download-status', id: 'enable-firecloud-access', method: :post, data: {dismiss: 'modal'} %>
-            </div>
+            <%= form_for(:firecloud_access, url: manage_firecloud_access_path, html: {class: 'form', id: 'firecloud-status-form'}) do |f| %>
+              <%= f.hidden_field :status, value: @current_firecloud_status %>
+              <div class="col-md-4">
+                <%= link_to "Disable All Access".html_safe, 'javascript:;', class: "btn btn-lg btn-block btn-danger #{@current_firecloud_status == 'off' ? 'disabled' : 'firecloud-status'}", id: 'disable-firecloud-access', method: :post, data: {dismiss: @current_firecloud_status == 'off' ? nil : 'modal', status: 'off'} %>
+              </div>
+              <div class="col-md-4">
+                <%= link_to "Disable Compute Access".html_safe, 'javascript:;', class: "btn btn-lg btn-block btn-warning #{@current_firecloud_status == 'readonly' ? 'disabled' : 'firecloud-status'}", id: 'disable-compute-access', method: :post, data: {dismiss: @current_firecloud_status == 'readonly' ? nil : 'modal', status: 'readonly'} %>
+              </div>
+              <div class="col-md-4">
+                <%= link_to "Enable All Access".html_safe, 'javascript:;', class: "btn btn-lg btn-block btn-success #{@current_firecloud_status == 'on' ? 'disabled' : 'firecloud-status'}", id: 'enable-firecloud-access', method: :post, data: {dismiss: @current_firecloud_status == 'on' ? nil : 'modal', status: 'on'} %>
+              </div>
+            <% end %>
           </div>
       </div>
       <div class="modal-footer">
@@ -67,14 +70,14 @@
   </div>
 </div>
 
-<div class="modal fade" id="quota-modal" tabindex="-1" role="dialog" aria-labelledby="sync-modal-label" aria-hidden="true">
+<div class="modal fade" id="working-modal" role="dialog" aria-labelledby="sync-modal-label" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h4 class="text-center">Resetting Download Quotas... Please Wait</h4>
+        <h4 class="text-center">Working... Please Wait</h4>
       </div>
       <div class="modal-body">
-        <div class="spinner-target"></div>
+        <div class="spinner-target" id="working-modal-spinner"></div>
       </div>
       <div class="modal-footer">
         <button class="close" data-dismiss="modal">×</button>
@@ -100,7 +103,7 @@
         // get name of study for confirmation
         var config = $(this).parent().parent().find('.config-type').text();
         if ( confirm('Are you sure you want to delete \"' + config + '\"?')) {
-            showModalSpinner('#delete-modal');
+            launchModalSpinner('#delete-modal-spinner','#delete-modal');
         } else {
             return false;
         }
@@ -111,8 +114,17 @@
     });
 
     $('#reset-user-download-quotas').click(function(){
-        $('#quota-modal .spinner-target').empty();
-        showModalSpinner('#quota-modal');
+        launchModalSpinner('#working-modal-spinner','#working-modal');
         $.get("<%= reset_user_download_quotas_path %>");
-    })
+    });
+
+    $('.firecloud-status').click(function() {
+        var statusSetting = $(this).data('status');
+        var statusForm = $('#firecloud-status-form');
+        $('#panic-modal').on('hidden.bs.modal', function() {
+            launchModalSpinner('#working-modal-spinner','#working-modal');
+            statusForm.find('#firecloud_access_status').val(statusSetting);
+            statusForm.submit();
+        });
+    });
 </script>

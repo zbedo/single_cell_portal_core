@@ -9,13 +9,17 @@ class AdminConfigurationsController < ApplicationController
   # GET /admin_configurations.json
   def index
     @admin_configurations = AdminConfiguration.not_in(config_type: AdminConfiguration::FIRECLOUD_ACCESS_NAME)
-    downloads_enabled = AdminConfiguration.firecloud_access_enabled?
-    if downloads_enabled
-      @download_status = true
-      @download_status_label = "<span class='label label-success'><i class='fa fa-check'></i> Enabled</span>".html_safe
-    else
-      @download_status = false
-      @download_status_label = "<span class='label label-danger'><i class='fa fa-times'></i> Disabled</span>".html_safe
+    @current_firecloud_status = AdminConfiguration.current_firecloud_access
+    case @current_firecloud_status
+      when 'on'
+        @download_status = true
+        @download_status_label = "<span class='label label-success'><i class='fa fa-check'></i> Enabled</span>".html_safe
+      when 'readonly'
+        @download_status = true
+        @download_status_label = "<span class='label label-warning'><i class='fa fa-exclamation-circle'></i> Read Only</span>".html_safe
+      when 'off'
+        @download_status = false
+        @download_status_label = "<span class='label label-danger'><i class='fa fa-times'></i> Disabled</span>".html_safe
     end
   end
 
@@ -77,17 +81,21 @@ class AdminConfigurationsController < ApplicationController
     @config = AdminConfiguration.find_or_create_by(config_type: AdminConfiguration::FIRECLOUD_ACCESS_NAME)
     # make sure that the value type has been set if just created
     @config.value_type ||= 'String'
-    status = params[:status].downcase
+    status = params[:firecloud_access][:status].downcase
     begin
       case status
         when 'on'
-          AdminConfiguration.enable_all_downloads
+          AdminConfiguration.enable_firecloud_access
           @config.update(value: status)
           redirect_to admin_configurations_path, alert: "FireCloud access setting recorded successfully as 'on'."
         when 'off'
-          AdminConfiguration.disable_all_downloads
+          AdminConfiguration.configure_firecloud_access('off')
           @config.update(value: status)
           redirect_to admin_configurations_path, alert: "FireCloud access setting recorded successfully as 'off'.  Portal study & workspace access is now disabled."
+        when 'readonly'
+          AdminConfiguration.configure_firecloud_access('readonly')
+          @config.update(value: status)
+          redirect_to admin_configurations_path, alert: "FireCloud access setting recorded successfully as 'readonly'.  Downloads are still enabled, but portal study access and workspace computes are disabled."
         else
           # do nothing, protect against bad status parameters
           nil

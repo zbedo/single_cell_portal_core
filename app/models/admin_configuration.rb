@@ -25,6 +25,15 @@ class AdminConfiguration
     ['Numeric', 'Boolean', 'String']
   end
 
+  def self.current_firecloud_access
+    status = AdminConfiguration.find_by(config_type: AdminConfiguration::FIRECLOUD_ACCESS_NAME)
+    if status.nil?
+      'on'
+    else
+      status.value
+    end
+  end
+
   def self.firecloud_access_enabled?
     status = AdminConfiguration.find_by(config_type: AdminConfiguration::FIRECLOUD_ACCESS_NAME)
     if status.nil?
@@ -68,31 +77,43 @@ class AdminConfiguration
     end
   end
 
-  # method that disables all downloads by revoking permissions to studies directly in firecloud
-  def self.disable_all_downloads
-    Rails.logger.info "#{Time.now}: revoking access to all studies"
-    # only use studies not queued for deletion; those have already had access revoked
-    Study.not_in(queued_for_deletion: true).each do |study|
-      Rails.logger.info "#{Time.now}: begin revoking access to study: #{study.name}"
-      # first remove share access
-      shares = study.study_shares.map(&:email)
-      shares.each do |user|
-        Rails.logger.info "#{Time.now}: revoking share access for #{user}"
-        revoke_share_acl = Study.firecloud_client.create_workspace_acl(user, 'NO ACCESS')
-        Study.firecloud_client.update_workspace_acl(study.firecloud_workspace, revoke_share_acl)
-      end
-      # last, remove study owner access
-      owner = study.user.email
-      Rails.logger.info "#{Time.now}: revoking owner access for #{owner}"
-      revoke_owner_acl = Study.firecloud_client.create_workspace_acl(owner, 'NO ACCESS')
-      Study.firecloud_client.update_workspace_acl(study.firecloud_workspace, revoke_owner_acl)
-      Rails.logger.info "#{Time.now}: access revocation for #{study.name} complete"
+  # method that disables access by revoking permissions to studies directly in FireCloud
+  def self.configure_firecloud_access(status)
+    case status
+      when 'readonly'
+        @config_setting = 'READER'
+      when 'off'
+        @config_setting = 'NO ACCESS'
+      else
+        @config_setting = 'ERROR'
     end
-    Rails.logger.info "#{Time.now}: all study access revoked"
+    unless @config_setting == 'ERROR'
+      Rails.logger.info "#{Time.now}: setting access on all studies to #{@config_setting}"
+      # only use studies not queued for deletion; those have already had access revoked
+      Study.not_in(queued_for_deletion: true).each do |study|
+        Rails.logger.info "#{Time.now}: begin revoking access to study: #{study.name}"
+        # first remove share access
+        shares = study.study_shares.map(&:email)
+        shares.each do |user|
+          Rails.logger.info "#{Time.now}: revoking share access for #{user}"
+          revoke_share_acl = Study.firecloud_client.create_workspace_acl(user, @config_setting)
+          Study.firecloud_client.update_workspace_acl(study.firecloud_workspace, revoke_share_acl)
+        end
+        # last, remove study owner access
+        owner = study.user.email
+        Rails.logger.info "#{Time.now}: revoking owner access for #{owner}"
+        revoke_owner_acl = Study.firecloud_client.create_workspace_acl(owner, @config_setting)
+        Study.firecloud_client.update_workspace_acl(study.firecloud_workspace, revoke_owner_acl)
+        Rails.logger.info "#{Time.now}: access revocation for #{study.name} complete"
+      end
+      Rails.logger.info "#{Time.now}: all study access set to #{@config_setting}"
+    else
+      Rails.logger.info "#{Time.now}: invalid status setting: #{status}; aborting"
+    end
   end
 
-  # method that enables all downloads by restoring permissions to studies directly in firecloud
-  def self.enable_all_downloads
+  # method that re-enables access by restoring permissions to studies directly in FireCloud
+  def self.enable_firecloud_access
     Rails.logger.info "#{Time.now}: restoring access to all studies"
     # only use studies not queued for deletion; those have already had access revoked
     Study.not_in(queued_for_deletion: true).each do |study|

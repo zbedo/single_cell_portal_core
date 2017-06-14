@@ -7,7 +7,14 @@ class ApplicationController < ActionController::Base
 
   # auth action for portal admins
   def authenticate_admin
-    unless current_user.admin
+    unless current_user.admin?
+      redirect_to site_path, alert: 'You do not have permission to access that page.' and return
+    end
+  end
+
+  # auth action for portal reporters
+  def authenticate_reporter
+    unless current_user.acts_like_reporter?
       redirect_to site_path, alert: 'You do not have permission to access that page.' and return
     end
   end
@@ -34,7 +41,7 @@ class ApplicationController < ActionController::Base
 
   # load default study options for updating
   def set_study_default_options
-    @cluster = @study.default_cluster
+    @default_cluster = @study.default_cluster
     @default_cluster_annotations = {
         'Study Wide' => @study.study_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
     }

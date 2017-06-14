@@ -69,7 +69,7 @@ module ApplicationHelper
 	def load_gene_nav(genes)
 		nav = [['All queried genes', '']]
 		genes.each do |gene|
-			nav << [gene.gene, view_gene_expression_url(study_name: params[:study_name], gene: gene.gene)]
+			nav << [gene.gene, view_gene_expression_path(study_name: params[:study_name], gene: gene.gene)]
 		end
 		nav
 	end

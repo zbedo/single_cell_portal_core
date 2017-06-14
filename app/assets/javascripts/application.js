@@ -21,13 +21,13 @@
 //= require jquery-fileupload/basic-plus
 //= require jquery_nested_form
 //= require spin.min
-//= require chroma.min
 //= require jquery-ui/core
 //= require jquery-ui/widgets/datepicker
 //= require jquery-ui/widgets/autocomplete
 //= require jquery-ui/widgets/sortable
 //= require jquery-ui/widgets/dialog
 //= require jquery-ui/effects/effect-highlight
+//= require jquery.actual.min
 //= require autocomplete-rails
 //= require bootstrap-select.min
 //= require canvas2svg
@@ -209,20 +209,11 @@ $(function() {
 function deleteFileConfirmation() {
     var conf = confirm('Are you sure?  This file will be deleted and any associated database records removed.  This cannot be undone.');
     if ( conf == true) {
-        showModalSpinner('#delete-modal');
+        launchModalSpinner('#delete-modal-spinner','#delete-modal');
         return true;
     } else {
         return false;
     }
-}
-
-// function to render a modal dialog with a spinner
-function showModalSpinner(id) {
-    var modal = $(id);
-    var modalTgt = modal.find('.spinner-target')[0];
-    var spin = new Spinner(opts).spin(modalTgt);
-    $(modalTgt).data('spinner', spin);
-    modal.modal('show');
 }
 
 // toggle the Search/View options panel
@@ -287,13 +278,26 @@ var smallOpts = {
     position: 'relative' // Element positioning
 };
 
-// functions to show/hide loading modals with spinners
-function launchSpinner(divId) {
-    var target = $('#' + divId)[0];
+// functions to show loading modals with spinners
+function launchModalSpinner(spinnerTarget, modalTarget) {
+    $(spinnerTarget).empty();
+    var target = $(spinnerTarget)[0];
     var spinner = new Spinner(opts).spin(target);
     $(target).data('spinner', spinner);
-    $('#loading-modal').modal('show');
+    $(modalTarget).modal('show');
 };
+
+// function to close modals with spinners launched from launchModalSpinner
+// callback function will execute after modal closes
+function closeModalSpinner(spinnerTarget, modalTarget, callback) {
+    // set listener to fire callback, and immediately clear listener to prevent multiple requests queueing
+    $(modalTarget).on('hidden.bs.modal', function() {
+        $(modalTarget).off('hidden.bs.modal');
+        callback();
+    });
+    $(spinnerTarget).data('spinner').stop();
+    $(modalTarget).modal('hide');
+}
 
 // default title font settings for axis titles in plotly
 var plotlyTitleFont = {
@@ -393,18 +397,6 @@ function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, t
 
 }
 
-// helper to compute color gradient scales using chroma.js for sub-cluster members
-function computeColorScale(clusterColor, clusters) {
-    // check brightness to know which direction to scale colors
-    var start = chroma(clusterColor);
-    if (start.luminance() > 0.5) {
-        return chroma.scale([clusterColor, start.darken(clusters / 2).saturate(clusters / 2)]).colors(clusters);
-    } else {
-        return chroma.scale([start.brighten(clusters / 3).desaturate( clusters / 3), clusterColor]).colors(clusters);
-    }
-
-}
-
 // toggles visibility and disabled status of file upload and fastq url fields
 function toggleFastqFields(target) {
     var selector = $("#" + target);
@@ -444,6 +436,86 @@ function togglePlotlyTraces(div) {
 
     Plotly.restyle(div, 'visible', visibility);
     // toggle class of toggle glyph
-    $('#toggle-traces').children().toggleClass('fa-toggle-on fa-toggle-off')
+    $('#toggle-traces').children().toggleClass('fa-toggle-on fa-toggle-off');
     console.log('toggle complete in ' + div + '; visibility now ' + visibility);
+}
+
+// function to return a plotly histogram data object from an array of input values
+function formatPlotlyHistogramData(valuesHash, offset) {
+    var dataArray = [];
+    var i = offset;
+    if (i === undefined) {
+        i = 0;
+    }
+    $.each(valuesHash, function(keyName, distData) {
+        var trace = {
+            x: distData,
+            type: 'histogram',
+            name: keyName,
+            histnorm: '',
+            autobinx: false,
+            xbins: {
+                start: Math.min.apply(Math, distData) - 0.5,
+                end: Math.max.apply(Math, distData) + 0.5,
+                size: 1
+            },
+            marker: {
+                color: colorBrewerSet[i]
+            }
+        };
+        dataArray.push(trace);
+        i++;
+    });
+    return dataArray;
+}
+
+// load column totals for bar charts
+function loadBarChartAnnotations(plotlyData) {
+    var annotationsArray = [];
+    for (var i = 0; i < plotlyData[0]['x'].length ; i++){
+        var total = 0;
+        plotlyData.map(function(el) {
+            var c = parseInt(el['y'][i]);
+            if (isNaN(c)) {
+                c = 0;
+            }
+            total += c;
+        });
+        var annot = {
+            x: plotlyData[0]['x'][i],
+            y: total,
+            text: total,
+            xanchor: 'center',
+            yanchor: 'bottom',
+            showarrow: false,
+            font: {
+                size: 12
+            }
+        };
+        annotationsArray.push(annot);
+    }
+    return annotationsArray;
+}
+
+// load bin counts for histogram charts
+function loadHistogramAnnotations(plotlyData) {
+    var annotationsArray = [];
+    var counts = plotlyData[0]['x'];
+    $(counts).each(function(i, c) {
+        var count = counts.filter(function(a){return (a == c)}).length;
+        var annot = {
+            x: c,
+            y: count,
+            text: count,
+            xanchor: 'center',
+            yanchor: 'bottom',
+            showarrow: false,
+            font: {
+                size: 12
+            }
+        };
+        annotationsArray.push(annot);
+    });
+
+    return annotationsArray;
 }

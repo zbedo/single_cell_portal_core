@@ -1,11 +1,15 @@
 Rails.application.routes.draw do
 	scope 'single_cell' do
 
+		# portal admin actions
 		get 'admin/reset_user_download_quotas', to: 'admin_configurations#reset_user_download_quotas', as: :reset_user_download_quotas
 		post 'admin/firecloud_access', to: 'admin_configurations#manage_firecloud_access', as: :manage_firecloud_access
 		resources :admin_configurations, path: 'admin'
 
-		# study admin actions
+    # study reporter actions
+    get 'reports', to: 'reports#index', as: :reports
+
+    # study admin actions
 		mount Ckeditor::Engine => 'ckeditor'
     devise_for :users, :controllers => { :omniauth_callbacks => 'users/omniauth_callbacks' }
     resources :studies do
@@ -44,6 +48,8 @@ Rails.application.routes.draw do
 
 		# public site actions
 		get 'study/:study_name', to: 'site#study', as: :view_study
+		get 'study/:study_name/edit_study_description', to: 'site#edit_study_description', as: :edit_study_description
+		match 'study/:study_name/update_settings', to: 'site#update_study_settings', via: [:post, :patch], as: :update_study_settings
 		get 'study/:study_name/get_fastq_files', to: 'site#get_fastq_files', as: :get_fastq_files
 		get 'study/:study_name/render_cluster', to: 'site#render_cluster', as: :render_cluster
 		get 'study/:study_name/get_new_annotations', to: 'site#get_new_annotations', as: :get_new_annotations

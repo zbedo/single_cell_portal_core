@@ -1,34 +1,33 @@
 #! /usr/bin/env ruby
 
-# roll over log files every time app is rebooted
+# roll over all log files every time app is rebooted
 
 require "fileutils"
 
 APP_ROOT = File.expand_path(File.join(File.dirname(__FILE__), '..'))
 Dir.chdir(APP_ROOT)
 
-# set up defaults
-@env = "production"
+all_logs = Dir.entries("log").keep_if {|l| !l.start_with?('.')}
 
-ARGV.each do |arg|
-	arg =~ /\-e\=/ ? @env = arg.gsub(/\-e\=/, "") : nil
-	arg =~ /\-p\=/ ? @port = arg.gsub(/\-p\=/, "") : nil
-end
-
-logs = Dir.entries("log").keep_if {|log| log =~ /#{@env}/}
-
-if logs.include?("#{@env}.4.log")
-	File.delete("log/#{@env}.4.log")
-end
-if logs.include?("#{@env}.3.log")
-	File.rename("log/#{@env}.3.log", "log/#{@env}.4.log")
-end
-if logs.include?("#{@env}.2.log")
-	File.rename("log/#{@env}.2.log", "log/#{@env}.3.log")
-end
-if logs.include?("#{@env}.1.log")
-	File.rename("log/#{@env}.1.log", "log/#{@env}.2.log")
+# increment each old log by 1
+4.downto(1) do |i|
+  if i == 4
+    all_logs.select {|l| l =~ /#{i}/}.each do |log|
+			File.delete("log/#{log}")
+    end
+  else
+		all_logs.select {|l| l =~ /#{i}/}.each do |log|
+      basename = log.split('.').first
+			File.rename("log/#{basename}.#{i}.log", "log/#{basename}.#{i + 1}.log")
+		end
+  end
 end
 
-FileUtils.cp("log/#{@env}.log", "log/#{@env}.1.log")
-File.delete("log/#{@env}.log")
+# find all logs that haven't been rolled over yet and rename
+all_logs.select {|l| l.split('.')[1] == 'log'}.each do |log|
+	basename = log.split('.').first
+	FileUtils.cp("log/#{basename}.log", "log/#{basename}.1.log")
+	File.delete("log/#{basename}.log")
+end
+
+

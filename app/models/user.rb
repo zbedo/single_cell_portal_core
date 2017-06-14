@@ -55,6 +55,7 @@ class User
 
   ## Custom
   field :admin, type: Boolean
+  field :reporter, type: Boolean
   field :daily_download_quota, type: Integer, default: 0
 
   def self.from_omniauth(access_token)
@@ -99,5 +100,23 @@ class User
     else
       nil
     end
+  end
+
+  # determine if user has access to reports functionality
+  def acts_like_reporter?
+    self.admin? || self.reporter?
+  end
+
+  # helper method to migrate study ownership & shares from old email to new email
+  def self.migrate_studies_and_shares(existing_email, new_email)
+    existing_user = self.find_by(email: existing_email)
+    new_user = self.find_by(email: new_email)
+    studies = existing_user.studies
+    shares = StudyShare.where(email: existing_email).to_a
+    puts "Migrating #{studies.size} studies from #{existing_email} to #{new_email}"
+    studies.update_all(user_id: new_user.id)
+    puts "Migrating #{shares.size} shares from #{existing_email} to #{new_email}"
+    shares.update_all(email: new_email)
+    puts "Migration complete"
   end
 end

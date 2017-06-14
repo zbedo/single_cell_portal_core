@@ -1,0 +1,266 @@
+<h1>Reports</h1>
+<h3 class="lead">Updated as of <%= DateTime.now.strftime("%A, %B %-d %Y %r") %> <%= link_to "<i class='fa fa-toggle-on'></i> Toggle Totals".html_safe, 'javascript:;', class: 'btn btn-default pull-right', id: 'toggle-column-annots' %></h3>
+<div class="row">
+  <div class="col-md-6">
+    <div id="plotly-study-count" class="plotly-report"></div>
+  </div>
+  <div class="col-md-6">
+    <div id="plotly-cell-count" class="plotly-report"></div>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
+    <div id="plotly-study-cell-dist" class="plotly-report"></div>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
+    <div id="plotly-private-study-age-dist" class="plotly-report"></div>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-6">
+    <div id="plotly-study-share-dist" class="plotly-report"></div>
+  </div>
+  <div class="col-md-6">
+    <div id="plotly-user-study-dist" class="plotly-report"></div>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
+    <div id="plotly-study-email-domain-dist" class="plotly-report"></div>
+  </div>
+</div>
+
+<script type="text/javascript">
+
+    $('.plotly-report').data('rendered', false);
+
+    function setRenderStatus(div, status) {
+      $(div).data('rendered', status)
+    }
+
+    var studyCounts = [{
+        x: ['Public', 'Private'],
+        y: [<%= @public_studies.size %>, <%= @private_studies.size %>],
+        type: 'bar',
+        marker: {
+            color: [colorBrewerSet[3], colorBrewerSet[4]]
+        }
+    }];
+
+    Plotly.newPlot('plotly-study-count', studyCounts,
+        {
+            title: 'How many studies are private or public?<br><b>Total number of studies in portal: ' + <%= @all_studies.size %> + '</b>',
+            titlefont: plotlyTitleFont,
+            font: plotlyLabelFont,
+            bargap: 0,
+            bargroupgap: 0.5,
+            hovermode: 'closest',
+            xaxis: {
+                title: 'Study visibility'
+            },
+            yaxis: {
+                title: 'Number of studies'
+            },
+            annotations: loadBarChartAnnotations(studyCounts)
+        }
+    ).then(setRenderStatus('#plotly-study-count', true));
+
+    var cellCounts = [{
+        x: ['Public', 'Private'],
+        y: [<%= @public_studies.map(&:cell_count).reduce(:+) %>, <%= @private_studies.map(&:cell_count).reduce(:+) %>],
+        type: 'bar',
+        marker: {
+            color: [colorBrewerSet[3], colorBrewerSet[4]]
+        }
+    }];
+
+    Plotly.newPlot('plotly-cell-count', cellCounts,
+        {
+            title: 'How many cells total are in private or public studies?<br><b>Total number of cells in portal: ' + <%= @all_studies.map(&:cell_count).reduce(:+) %> + '</b>',
+            titlefont: plotlyTitleFont,
+            font: plotlyLabelFont,
+            bargap: 0,
+            bargroupgap: 0.5,
+            hovermode: 'closest',
+            xaxis: {
+                title: 'Study visibility'
+            },
+            yaxis: {
+                title: 'Number of cells'
+            },
+            annotations: loadBarChartAnnotations(cellCounts)
+        }
+    ).then(setRenderStatus('#plotly-cell-count', true));
+
+    var cellDistData = [];
+    <% @cell_count_bin_dist.each_with_index do |(key, vals), index| %>
+        cellDistData.push(
+            {
+                x: <%= raw vals.keys %>,
+                y: <%= raw vals.values %>,
+                type: 'bar',
+                name: '<%= key %>',
+                marker: {
+                    color: colorBrewerSet[<%= index + 3 %>]
+                }
+            }
+        );
+    <% end %>
+
+    Plotly.newPlot('plotly-study-cell-dist', cellDistData,
+        {
+            title: 'How large are studies (by cell count)?<br><b>Average number of cells per study: ' + <%= @cell_avg.round %> + '</b>',
+            titlefont: plotlyTitleFont,
+            font: plotlyLabelFont,
+            bargap: 0,
+            bargroupgap: 0.5,
+            barmode: 'stack',
+            hovermode: 'closest',
+            xaxis: {
+                title: 'Amount of cells per study'
+            },
+            yaxis: {
+                title: 'Number of studies'
+            },
+            annotations: loadBarChartAnnotations(cellDistData)
+        }
+    ).then(setRenderStatus('#plotly-study-cell-dist', true));
+
+    var privateAgeDist = formatPlotlyHistogramData(<%= raw @private_study_age_dist.to_json %>, 4);
+
+    Plotly.newPlot('plotly-private-study-age-dist', privateAgeDist,
+        {
+            title: 'How old are private studies (in weeks)?<br><b>Average age of private study: ' + <%= @private_dist_avg.round(2) %> + '</b>',
+            titlefont: plotlyTitleFont,
+            font: plotlyLabelFont,
+            bargap: 0,
+            bargroupgap: 0.5,
+            hovermode: 'closest',
+            xaxis: {
+                title: 'Age in weeks'
+            },
+            yaxis: {
+                title: 'Number of studies'
+            },
+            showlegend: true,
+            annotations: loadHistogramAnnotations(privateAgeDist)
+        }
+    ).then(setRenderStatus('#plotly-private-study-age-dist', true));
+
+    var studyShareDist = formatPlotlyHistogramData(<%= raw @collab_dist.to_json %>, 7);
+
+    Plotly.newPlot('plotly-study-share-dist', studyShareDist,
+        {
+            title: "How many collaborators do studies have?<br><b>Average number of collaborators per study: " + <%= @collab_dist_avg.round(2) %> + '</b>',
+            titlefont: plotlyTitleFont,
+            font: plotlyLabelFont,
+            bargap: 0,
+            bargroupgap: 0.5,
+            hovermode: 'closest',
+            barmode: 'stack',
+            showlegend: true,
+            xaxis: {
+                title: 'Number of collaborators'
+            },
+            yaxis: {
+                title: 'Number of studies'
+            },
+            annotations: loadHistogramAnnotations(studyShareDist)
+        }
+    ).then(setRenderStatus('#plotly-study-share-dist', true));
+
+    var userStudyDist = formatPlotlyHistogramData(<%= raw @user_study_dist.to_json %>, 7);
+
+    Plotly.newPlot('plotly-user-study-dist', userStudyDist,
+        {
+            title: 'How many studies do users have?<br><b>Average number of studies per user: ' + <%= @user_study_avg.round(2) %> + '</b>',
+            titlefont: plotlyTitleFont,
+            font: plotlyLabelFont,
+            bargap: 0,
+            bargroupgap: 0.5,
+            hovermode: 'closest',
+            barmode: 'stack',
+            showlegend: true,
+            xaxis: {
+                title: 'Number of studies'
+            },
+            yaxis: {
+                title: 'Number of users'
+            },
+            annotations: loadHistogramAnnotations(userStudyDist)
+        }
+    ).then(setRenderStatus('#plotly-user-study-dist', true));
+
+    var studyEmailDist = [];
+    <% @sorted_email_domain_dist.each_with_index do |(key, vals), index| %>
+      studyEmailDist.push(
+          {
+              x: <%= raw vals.keys %>,
+              y: <%= raw vals.values %>,
+              type: 'bar',
+              name: '<%= key %>',
+              marker: {
+                  color: colorBrewerSet[<%= index + 3 %>]
+              }
+          }
+      );
+    <% end %>
+
+    Plotly.newPlot('plotly-study-email-domain-dist', studyEmailDist,
+        {
+            title: 'How many studies by email domain?<br><b>Average: ' + <%= @email_domain_avg.round %> + '</b>',
+            font: plotlyLabelFont,
+            titlefont: plotlyTitleFont,
+            bargap: 0,
+            bargroupgap: 0.5,
+            barmode: 'stack',
+            hovermode: 'closest',
+            xaxis: {
+                title: 'Email domain'
+            },
+            yaxis: {
+                title: 'Number of studies'
+            },
+            annotations: loadBarChartAnnotations(studyEmailDist)
+        }
+    ).then(setRenderStatus('#plotly-study-email-domain-dist', true));
+
+    $('#toggle-column-annots').click(function() {
+        // immediate set render status to false
+        setRenderStatus('.plotly-report', false);
+
+        // set button state
+        var btn = $(this);
+        var toggle = btn.find('i');
+        $(toggle).toggleClass('fa-toggle-on fa-toggle-off');
+        var state = $(toggle).hasClass('fa-toggle-on');
+
+        // toggle annotations on each div
+        $('.plotly-report').each(function(index, div) {
+            var divId = $(div).attr('id');
+
+            console.log('render status for ' + divId + ' is ' + $(div).data('rendered'));
+            var plotData = document.getElementById(divId).data;
+            var annotUpdate = {annotations: null};
+            if (state) {
+                btn.addClass('active');
+                console.log('toggling annotations to on for div ' + divId);
+                if (plotData[0]['type'] === 'bar') {
+                    annotUpdate['annotations'] = loadBarChartAnnotations(plotData)
+                } else {
+                    annotUpdate['annotations'] = loadHistogramAnnotations(plotData)
+                }
+            } else {
+                btn.removeClass('active');
+                console.log('toggling annotations to off for div ' + divId);
+            }
+
+            // update plotly div
+            Plotly.relayout(divId, annotUpdate).then(setRenderStatus(div, true));
+            console.log('render status for ' + divId + ' is ' + $(div).data('rendered'));
+        });
+    });
+
+</script>

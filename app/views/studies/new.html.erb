@@ -14,7 +14,7 @@
 
 <%= link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, studies_path, class: 'btn btn-warning' %>
 
-<div class="modal fade" id="create-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div class="modal fade" id="create-modal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -33,8 +33,7 @@
 <script type="text/javascript">
 
     $('#save-study').click(function() {
-        launchSpinner('create-study-spinner');
-        $('#create-modal').modal('show');
+        launchModalSpinner('#create-study-spinner', '#create-modal');
     });
 
 </script>

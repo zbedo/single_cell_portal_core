@@ -1,36 +1,32 @@
 <div class="row">
-	<div class="col-md-12">
-		<h1 class="study-lead">Gene Expression for <%= render partial: 'gene_name_list' %><%= render partial: 'missing_genes' %></h1>
-	</div>
-</div>
-<div class="row">
-	<div class="col-md-3" id="search-target">
-		<%= render partial: 'search_options' %>
-	</div>
-	<div class="col-md-9" id="render-target">
-		<%= render partial: 'view_options' %>
-		<div class="panel panel-default">
-			<div class="panel-heading">
-				<div class="panel-title">
-					<h4><%= link_to "Expression Heatmap <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#plots', 'data-toggle' => 'collapse' %> <%= render partial: 'show_search_options_button' %></h4>
-				</div>
-			</div>
-			<div id="plots" class="panel-collapse collapse in">
-				<div class="panel-body">
-					<div class="col-md-12">
+  <div class="col-md-3" id="search-target">
+    <%= render partial: 'search_options' %>
+  </div>
+  <div class="col-md-9" id="render-target">
+    <%= render partial: 'view_options' %>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <div class="panel-title">
+          <h4><%= link_to "Expression Heatmap <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#plots', 'data-toggle' => 'collapse' %> <%= render partial: 'show_search_options_button' %></h4>
+        </div>
+      </div>
+      <div id="plots" class="panel-collapse collapse in">
+        <div class="panel-body">
+          <div class="col-md-12">
             <%= render partial: 'morpheus_help' %>
             <div id="heatmap-plot"></div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script type="text/javascript">
 
     // monitor status of rendering plots for tests
     $('#heatmap-plot').data('rendered', false);
+    $(window).off('resizeEnd');
 
     function drawHeatmap(height) {
         // if height isn't specified, pull from stored value, defaults to 500
@@ -54,8 +50,6 @@
         dataPath += '&cluster=' + cluster + '&request_user_token=' + requestToken;
         var newAnnotPath = '<%= annotation_query_path(study_name: params[:study_name]) %>?cluster=' + cluster + '&annotation=' + selectedAnnot;
 
-        // reset status on render call
-        $('#heatmap-plot').data('rendered', false);
         renderMorpheus(dataPath, newAnnotPath, annotName, annotType, '#heatmap-plot', fit, height);
     }
 
@@ -67,6 +61,7 @@
     });
 
     $("#row_centered, #annotation").change(function() {
+        $('#heatmap-plot').data('rendered', false);
         if ($(this).attr('id') == 'annotation') {
             var an = $(this).val();
             // keep track for search purposes
@@ -77,6 +72,7 @@
     });
     // when changing cluster, re-render annotation options and call render function
     $("#cluster").change(function(){
+        $('#heatmap-plot').data('rendered', false);
         var newCluster = $(this).val();
         // keep track for search purposes
         $('#search_cluster').val(newCluster);
@@ -104,6 +100,7 @@
     });
 
     $('#resize-heatmap').click(function() {
+        $('#heatmap-plot').data('rendered', false);
         var newHeight = parseInt($('#heatmap_size').val());
         $("#heatmap-plot").data('height', newHeight);
         console.log('resizing heatmap to ' + newHeight);
@@ -111,6 +108,7 @@
     });
 
     $('#view-fullscreen').click(function() {
+        $('#heatmap-plot').data('rendered', false);
         var btn = $(this);
         var btnState = btn.data('active');
         var newState = btnState === 'on' ? 'off' : 'on';
@@ -133,6 +131,7 @@
     });
 
     $('.fit-btn').click(function() {
+        $('#heatmap-plot').data('rendered', false);
         var btn = $(this);
         var btnState = btn.data('active');
         var newState = btnState === 'on' ? 'off' : 'on';
@@ -158,5 +157,9 @@
         plot.data('fit', fitType);
         drawHeatmap();
     });
+
+    // reattach tooltips & popovers on render
+    $('[data-toggle="tooltip"]').tooltip({container: 'body'});
+    $('[data-toggle="popover"]').popover();
 
 </script>
