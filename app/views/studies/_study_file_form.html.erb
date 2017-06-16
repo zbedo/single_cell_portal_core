@@ -28,13 +28,13 @@
   <div class="form-group row">
     <div class="col-sm-6">
       <%= f.label :file_type %><br />
-      <%= f.select :file_type, options_for_select(@file_types, study_file.file_type), {}, class: 'form-control' %>
+      <%= f.select :file_type, options_for_select(@file_types, study_file.file_type), {include_blank: 'Please select a file type'}, class: 'form-control file-type' %>
     </div>
     <div class="col-sm-6">
       <%= f.label :actions %>
       <div class="row">
         <div class="col-xs-6">
-          <%= f.submit 'Sync', class: 'btn btn-block btn-success save-study-file' %>
+          <%= f.submit 'Sync', class: 'btn btn-block btn-success save-study-file', id: "sync-study-file-#{study_file.id}" %>
         </div>
         <div class="col-xs-6">
           <%= link_to "Don't Sync", '#', id: "remove-#{study_file._id}", class: 'btn btn-block btn-danger remove-unsynced' %>
@@ -70,6 +70,18 @@
           if ($('#unsynced-study-files').html().trim() == "") {
               $('#unsynced-header').remove();
           }
+      });
+
+      $("#sync-study-file-<%= study_file.id %>").click(function() {
+         var form = $("#study-file-<%= study_file._id %>");
+         var fileType = form.find('.file-type');
+         if (fileType.val() == '') {
+             alert('You must select a file type before saving this file.');
+             fileType.parent().addClass('has-error');
+             return false;
+         } else {
+             return true;
+         }
       });
   </script>
 <% end %>

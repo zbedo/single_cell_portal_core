@@ -34,7 +34,7 @@
           <%= f.submit 'Sync', class: 'btn btn-block btn-success save-directory-listing' %>
         </div>
         <div class="col-xs-6">
-          <%= link_to "Don't Sync", delete_directory_listing_study_path(@study.id, directory.id), class: 'btn btn-block btn-danger', id: "delete-directory-#{directory.id}", method: :delete, data: {remote: true} %>
+          <%= link_to "Don't Sync", delete_directory_listing_study_path(@study.id, directory.id), class: 'btn btn-block btn-danger delete-file-sync delete-directory-listing', id: "delete-directory-#{directory.id}", method: :delete, data: {remote: true} %>
         </div>
       </div>
     </div>

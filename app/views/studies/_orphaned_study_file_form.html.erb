@@ -50,7 +50,7 @@
           <%= f.submit 'Sync', class: 'btn btn-block btn-success save-study-file', id: "sync-study-file-#{study_file.id}" %>
         </div>
         <div class="col-xs-6">
-          <%= link_to "Delete", unsync_study_file_study_path(@study._id, study_file._id), method: :delete, class: 'btn btn-block btn-danger delete-file', data: {remote: true} %>
+          <%= link_to "Delete", unsync_study_file_study_path(@study._id, study_file._id), method: :delete, title: "This will delete all database records associated with #{study_file.name} but leave the remote file in the workspace.", class: 'btn btn-block btn-danger delete-file-sync delete-study-file', data: {remote: true, toggle: 'tooltip'} %>
         </div>
       </div>
     </div>

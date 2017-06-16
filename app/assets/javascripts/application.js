@@ -197,7 +197,16 @@ $(function() {
 
     // handler for file deletion clicks, need to grab return value and pass to window
     $('.delete-file').click(function() {
-        if (deleteFileConfirmation()) {
+        if (deleteFileConfirmation('Are you sure?  This file will be deleted and any associated database records removed.  This cannot be undone.')) {
+            return true;
+        } else {
+            return false;
+        }
+    });
+
+    // handler for file deletion clicks, need to grab return value and pass to window
+    $('.delete-file-sync').click(function() {
+        if (deleteFileConfirmation('Are you sure?  This will remove any database records associated with this file.  This cannot be undone.')) {
             return true;
         } else {
             return false;
@@ -206,8 +215,8 @@ $(function() {
 });
 
 // generic warning and spinner for deleting files
-function deleteFileConfirmation() {
-    var conf = confirm('Are you sure?  This file will be deleted and any associated database records removed.  This cannot be undone.');
+function deleteFileConfirmation(confMessage) {
+    var conf = confirm(confMessage);
     if ( conf == true) {
         launchModalSpinner('#delete-modal-spinner','#delete-modal');
         return true;

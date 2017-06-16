@@ -335,6 +335,22 @@ class StudiesController < ApplicationController
       end
       @message = "'#{@study_file.name}' has been successfully updated."
 
+      # only reparse if user requests
+      if @study_file.parseable? && params[:reparse] == 'Yes'
+        logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
+        @message += " You will receive and email at #{current_user.email} when the parse has completed."
+jon        case @study_file.file_type
+          when 'Cluster'
+            @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false, reparse: true})
+          when 'Expression Matrix'
+            @study.delay.initialize_expression_scores(@study_file, current_user, {local: false, reparse: true})
+          when 'Gene List'
+            @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false, reparse: true})
+          when 'Metadata'
+            @study.delay.initialize_study_metadata(@study_file, current_user, {local: false, reparse: true})
+        end
+      end
+
       # notify users of updated file
       changes = ["Study file updated: #{@study_file.upload_file_name}"]
       if @study.study_shares.any?
@@ -484,7 +500,7 @@ class StudiesController < ApplicationController
       # only reparse if user requests
       if @study_file.parseable? && params[:reparse] == 'Yes'
         logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
-        @message += " You will receive an email "
+        @message += " You will receive and email at #{current_user.email} when the parse has completed."
         case @study_file.file_type
           when 'Cluster'
             @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false, reparse: true})
@@ -510,6 +526,7 @@ class StudiesController < ApplicationController
   # similar to delete_study_file, but called when a study_file record has been orphaned (no corresponding bucket file)
   def unsync_study_file
     @study_file = StudyFile.find(params[:study_file_id])
+    @form = "#study-file-#{@study_file.id}"
     @message = ""
     unless @study_file.nil?
       @file_type = @study_file.file_type
@@ -536,7 +553,7 @@ class StudiesController < ApplicationController
       end
 
       # delete matching caches
-      @study_file.delay.invalidate_cache_by_file_typ
+      @study_file.delay.invalidate_cache_by_file_type
 
       if @study_file.destroy
         @message = "'#{@study_file.name}' has been successfully deleted."
@@ -821,7 +838,7 @@ class StudiesController < ApplicationController
         # make sure file is not acutally a folder by checking its size and name
         if study_match.nil? && file.size > 0
           # create a new entry and default to cluster file (user can change via dropdown)
-          unsynced_file = StudyFile.new(study_id: @study.id, name: file.name, file_type: 'Cluster', upload_file_name: file.name, upload_content_type: file.content_type, upload_file_size: file.size, generation: file.generation)
+          unsynced_file = StudyFile.new(study_id: @study.id, name: file.name, upload_file_name: file.name, upload_content_type: file.content_type, upload_file_size: file.size, generation: file.generation)
           @unsynced_files << unsynced_file
         elsif !study_match.nil?
           @synced_study_files << study_match

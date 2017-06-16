@@ -1,13 +1,15 @@
-$('#sync-notices').html("<%= escape_javascript(render partial: 'sync_notice_modal', locals: {message: @message}) %>");
-$('#sync-notice-modal').modal('show');
-$("<%= @form %>").remove();
+closeModalSpinner('#delete-modal-spinner', '#delete-modal', function() {
+    $('#sync-notices').html("<%= escape_javascript(render partial: 'sync_notice_modal', locals: {message: @message}) %>");
+    $('#sync-notice-modal').modal('show');
+    $("<%= @form %>").remove();
 
 // close any empty panels
-$('.unsynced').each(function() {
-    if ($(this).find('.unsynced-content').html().trim() == "") {
-        $(this).collapse('hide');
-    }
-});
+    $('.unsynced').each(function() {
+        if ($(this).find('.unsynced-content').html().trim() == "") {
+            $(this).collapse('hide');
+        }
+    });
 
-$("#initialized").replaceWith("<%= escape_javascript(render partial: 'initialize_study_label') %>");
-$('.initialize-label').tooltip({container: 'body'});
+    $("#initialized").replaceWith("<%= escape_javascript(render partial: 'initialize_study_label') %>");
+    $('.initialize-label').tooltip({container: 'body'});
+});

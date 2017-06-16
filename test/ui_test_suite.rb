@@ -181,7 +181,7 @@ class UiTestSuite < Test::Unit::TestCase
 		i.upto(10) do
 			done = @driver.execute_script("return $('#{plot}').data('#{data_id}')")
 			if !done
-				puts "Waiting for render of #{plot} - rendered currently: #{done}; try ##{i}"
+				puts "Waiting for render of #{plot}; try ##{i}"
 				i += 1
 				sleep(1)
 				next
@@ -251,6 +251,7 @@ class UiTestSuite < Test::Unit::TestCase
 				sleep(1)
 			end
 		end
+		@wait.until {@driver.execute_script("return PAGE_RENDERED;")}
 		if element_present?(:id, 'message_modal') && element_visible?(:id, 'message_modal')
 			close_modal('message_modal')
 		end
@@ -1032,9 +1033,41 @@ class UiTestSuite < Test::Unit::TestCase
 			assert values[:description] == row_cells[1].text, "directory listing description incorrect, expected #{values[:description]} but found #{row_cells[1].text}"
 		end
 
-		# clean up study
+		# now test removing items
+		@driver.get(@base_url + '/studies')
+		sync_button_class = random_name.split.map(&:downcase).join('-') + '-sync'
+		sync_button = @driver.find_element(:class, sync_button_class)
+		sync_button.click
+		wait_until_page_loads('sync path')
+
+		sync_panel = @driver.find_element(:id, 'synced-data-panel-toggle')
+		sync_panel.click
+		sleep(1)
+		synced_files = @driver.find_elements(:class, 'synced-study-file')
+		synced_directory_listing = @driver.find_element(:class, 'synced-directory-listing')
+
+		# delete random file
+		file_to_delete = synced_files.sample
+		delete_file_btn = file_to_delete.find_element(:class, 'delete-study-file')
+		delete_file_btn.click
+		@driver.switch_to.alert.accept
+		wait_for_render(:id, 'sync-notice-modal')
+		close_modal('sync-notice-modal')
+
+		# delete directory listing
+		delete_dir_btn = synced_directory_listing.find_element(:class, 'delete-directory-listing')
+		delete_dir_btn.click
+		@driver.switch_to.alert.accept
+		wait_for_render(:id, 'sync-notice-modal')
+		close_modal('sync-notice-modal')
+
+		# confirm files were removed
 		@driver.get studies_path
 		wait_until_page_loads(studies_path)
+		study_file_count = @driver.find_element(:id, "sync-test-#{uuid}-study-file-count").text.to_i
+		assert study_file_count == 3, "did not remove files, expected 3 but found #{study_file_count}"
+
+		# clean up study
 		delete_local_link = @driver.find_element(:class, "sync-test-#{uuid}-delete-local")
 		delete_local_link.click
 		@driver.switch_to.alert.accept
