@@ -44,8 +44,8 @@ class ReportsController < ApplicationController
     user_study_email_dist = {}
     study_types.each do |study_type|
       user_study_email_dist[study_type] = {}
-      totals_by_domain[domain] = 0
       email_domains.sort.each do |domain|
+        totals_by_domain[domain] ||= 0
         count = users.select {|u| u.email =~ /#{domain}/}.map {|u| u.studies.select {|s| study_type == public_label ? s.public? : !s.public?}.size}.reduce(:+)
         totals_by_domain[domain] += count
         user_study_email_dist[study_type][domain] = count
