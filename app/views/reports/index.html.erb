@@ -119,12 +119,17 @@
             barmode: 'stack',
             hovermode: 'closest',
             xaxis: {
-                title: 'Amount of cells per study'
+                title: 'Amount of cells per study',
+                tickangle: -45
             },
             yaxis: {
                 title: 'Number of studies'
             },
-            annotations: loadBarChartAnnotations(cellDistData)
+            annotations: loadBarChartAnnotations(cellDistData),
+            margin: {
+                b: 150,
+                pad: 5
+            }
         }
     ).then(setRenderStatus('#plotly-study-cell-dist', true));
 
@@ -218,12 +223,17 @@
             barmode: 'stack',
             hovermode: 'closest',
             xaxis: {
-                title: 'Email domain'
+                title: 'Email domain',
+                tickangle: -45
             },
             yaxis: {
                 title: 'Number of studies'
             },
-            annotations: loadBarChartAnnotations(studyEmailDist)
+            annotations: loadBarChartAnnotations(studyEmailDist),
+            margin: {
+                b: 150,
+                pad: 5
+            }
         }
     ).then(setRenderStatus('#plotly-study-email-domain-dist', true));
 

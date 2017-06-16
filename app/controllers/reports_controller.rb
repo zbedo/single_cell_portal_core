@@ -28,23 +28,23 @@ class ReportsController < ApplicationController
     @collab_dist_avg = @collab_dist[all_studies_label].reduce(:+) / @collab_dist[all_studies_label].size.to_f
     @cell_dist = @all_studies.map(&:cell_count)
     max_cells = @cell_dist.max - @cell_dist.max % 1000
-    @cell_count_bin_dist = Hash[study_types.zip(Array.new(study_types.size, {}))]
+    @cell_count_bin_dist = {'Public' => {}, 'Private' => {}}
     # bin studies by cell counts into groups of 1000
     0.step(max_cells, 1000).each do |bin|
-      study_types.each do |study_type|
-        studies = study_type == 'Public' ? @public_studies : @private_studies
-        @cell_count_bin_dist[study_type]["#{bin}-#{bin + 1000}"] = studies.map(&:cell_count).select {|c| c >= bin && c < bin + 1000}.size
-      end
+      bin_label = "#{bin}-#{bin + 1000}"
+      @cell_count_bin_dist['Public'][bin_label] = @public_studies.select {|s| s.cell_count >= bin && s.cell_count < (bin + 1000)}.size
+      @cell_count_bin_dist['Private'][bin_label] = @private_studies.select {|s| s.cell_count >= bin && s.cell_count < (bin + 1000)}.size
     end
     @cell_avg = @cell_dist.reduce(:+) / @cell_dist.size.to_f
 
     # user distributions
     @user_study_dist = {all_studies_label => users.map {|u| u.studies.size}}
     email_domains = users.map(&:email).map {|email| email.split('@').last}.uniq
-    totals_by_domain = Hash[email_domains.zip(Array.new(email_domains.size, 0))]
+    totals_by_domain = {}
     user_study_email_dist = {}
     study_types.each do |study_type|
       user_study_email_dist[study_type] = {}
+      totals_by_domain[domain] = 0
       email_domains.sort.each do |domain|
         count = users.select {|u| u.email =~ /#{domain}/}.map {|u| u.studies.select {|s| study_type == public_label ? s.public? : !s.public?}.size}.reduce(:+)
         totals_by_domain[domain] += count
