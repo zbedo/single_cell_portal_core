@@ -39,12 +39,13 @@
         var annotation = $('#annotation').val();
         var consensus = $('#search_consensus').val();
         var subsample = $('#subsample').val();
+        var plot_type = $('#plot_type').val() == undefined ? 'Violin Plot' : $('#plot_type').val();
         var boxpoints = $('#boxpoints_select').val() == undefined ? 'all' : $('#boxpoints_select').val();
         $("#search_cluster").val(cluster);
         $("#search_annotation").val(''); // clear value first
         $("#search_annotation").val(annotation);
         var delimeter = "<%= params[:gene] ? "?".html_safe : "&".html_safe %>";
-        url += delimeter + 'cluster=' + cluster + '&annotation=' + annotation + '&boxpoints=' + boxpoints + '&consensus=' + consensus + '&subsample=' + subsample
+        url += delimeter + 'cluster=' + cluster + '&annotation=' + annotation + '&boxpoints=' + boxpoints + '&consensus=' + consensus + '&subsample=' + subsample + '&plot_type=' + plot_type
         $.ajax({
             url: url,
             method: 'GET',
@@ -61,6 +62,12 @@
         }
         renderGeneExpressionPlots();
     });
+    $('#plot_type').change(function() {
+        $('#expression-plots').data('box-rendered', false);
+
+        renderGeneExpressionPlots();
+    });
+
     // listener for annotation nav, specific to expression pages
     $("#annotation").change(function() {
         $('#expression-plots').data('box-rendered', false);

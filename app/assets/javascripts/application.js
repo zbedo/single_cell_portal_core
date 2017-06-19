@@ -48,6 +48,8 @@
 //= require underscore-min
 //= require xlsx.full.min
 //= require morpheus-latest.min
+//= require kernel-functions
+//= require simple-statistics.min
 
 var fileUploading = false;
 var PAGE_RENDERED = false;
@@ -449,6 +451,7 @@ function togglePlotlyTraces(div) {
     $('#toggle-traces').children().toggleClass('fa-toggle-on fa-toggle-off');
     console.log('toggle complete in ' + div + '; visibility now ' + visibility);
 }
+
 
 // function to return a plotly histogram data object from an array of input values
 function formatPlotlyHistogramData(valuesHash, offset) {

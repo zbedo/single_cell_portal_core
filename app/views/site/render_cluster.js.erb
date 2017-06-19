@@ -34,6 +34,11 @@ $('#toggle-traces').click(function() {
     togglePlotlyTraces('cluster-plot');
 });
 
+// attach click event for toggle violin
+$('#toggle-violin').click(function() {
+    toggleViolinPlot();
+});
+
 // stop spinner
 $('#cluster-plot').data('spinner').stop();
 

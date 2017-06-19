@@ -222,6 +222,11 @@ class SiteController < ApplicationController
     # depending on annotation type selection, set up necessary partial names to use in rendering
     if @selected_annotation[:type] == 'group'
       @values = load_expression_boxplot_data_array_scores(@selected_annotation, subsample)
+      if params[:plot_type] == 'Box Plot'
+        @values_box_type = 'Box Plot'
+      else
+        @values_box_type = 'Violin Plot'
+      end
       @top_plot_partial = 'expression_plots_view'
       @top_plot_plotly = 'expression_plots_plotly'
       @top_plot_layout = 'expression_box_layout'
@@ -303,6 +308,11 @@ class SiteController < ApplicationController
     # depending on annotation type selection, set up necessary partial names to use in rendering
     if @selected_annotation[:type] == 'group'
       @values = load_gene_set_expression_boxplot_scores(@selected_annotation, params[:consensus], subsample)
+      if params[:plot_type] == 'Box Plot'
+        @values_box_type = 'Box Plot'
+      else
+        @values_box_type = 'Violin Plot'
+      end
       @top_plot_partial = 'expression_plots_view'
       @top_plot_plotly = 'expression_plots_plotly'
       @top_plot_layout = 'expression_box_layout'

@@ -6,7 +6,9 @@
 	</div>
 	<div id="box-controls" class="panel-collapse collapse in">
 		<div class="panel-body">
-      <%= render partial: 'boxpoints_picker' %>
+      <% if @values_box_type == 'Box Plot' %>
+        <%= render partial: 'boxpoints_picker' %>
+      <% end %>
       <div id="toggle-plots">
         <%= render partial: 'trace_toggle' %>
       </div>
