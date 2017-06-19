@@ -398,9 +398,10 @@ function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, t
     }
 
     // instantiate heatmap and embed in DOM element
-    new morpheus.HeatMap(config);
+    var heatmap = new morpheus.HeatMap(config);
 
     // set render variable to true for tests
+    $(target).data('morpheus', heatmap);
     $(target).data('rendered', true);
     console.log('render status of ' + target + ' at end: ' + $(target).data('rendered'));
 

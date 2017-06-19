@@ -29,6 +29,8 @@
     $(window).off('resizeEnd');
 
     function drawHeatmap(height) {
+        // clear out previous stored heatmap object
+        $('#heatmap-plot').data('heatmap', null);
         // if height isn't specified, pull from stored value, defaults to 500
         if (height === undefined) {
             height = $('#heatmap-plot').data('height');

@@ -27,6 +27,8 @@
     $('#heatmap-plot').data('rendered', false);
 
     $('#row_centered, #expression').change(function() {
+        // clear out previous stored heatmap object
+        $('#heatmap-plot').data('heatmap', null);
         if ($('#expression').val() != '') {
             var newDataPath = '<%= precomputed_results_path(study_name: params[:study_name]) %>';
             var precomputed = $('#expression').val();

@@ -18,7 +18,7 @@ require 'selenium-webdriver'
 
 # USAGE
 #
-# ui_test_suite.rb takes up to eight arguments:
+# ui_test_suite.rb takes up to nine arguments:
 # 1. path to your Chromedriver binary (passed with -c=)
 # 2. test email account (passed with -e=); this must be a valid Google & FireCloud user and also configured as an 'admin' account in the portal
 # 3. test email account password (passed with -p) NOTE: you must quote the password to ensure it is passed correctly
@@ -26,9 +26,12 @@ require 'selenium-webdriver'
 # 5. share email account password (passed with -P) NOTE: you must quote the password to ensure it is passed correctly
 # 6. test order (passed with -o=); defaults to defined order (can be alphabetic or random, but random will most likely fail horribly
 # 7. download directory (passed with -d=); place where files are downloaded on your OS, defaults to standard OSX location (/Users/`whoami`/Downloads)
+# 8. portal url (passed with -u=); url to point tests at, defaults to https://localhost/single_cell
+# 9. random seed (passed with -r=); random seed to use when running tests (will be needed if you're running front end tests against previously
+# 	 created studies from test suite)
 # these must be passed with ruby test/ui_test_suite.rb -- -c=[/path/to/chromedriver] -e=[test_email] -p=[test_email_password] \
 #                                                         -s=[share_email] -P=[share_email_password] -d=[/path/to/download/dir]
-#                                                         -u=[portal_url]
+#                                                         -u=[portal_url] -r=[random_seed]
 # if you do not use -- before the argument and give the appropriate flag (with =), it is processed as a Test::Unit flag and ignored
 #
 # Tests can be run singly or in groups by passing -n /pattern/ before the -- on the command line.  This will run any tests that match
@@ -45,7 +48,7 @@ require 'selenium-webdriver'
 # DEFAULTS
 $user = `whoami`.strip
 $chromedriver_path = '/usr/local/bin/chromedriver'
-$usage = "ruby test/ui_test_suite.rb -- -c=/path/to/chromedriver -e=testing.email@gmail.com -p='testing_email_password' -s=sharing.email@gmail.com -P='sharing_email_password' -o=order -d=/path/to/downloads -u=portal_url"
+$usage = "ruby test/ui_test_suite.rb -- -c=/path/to/chromedriver -e=testing.email@gmail.com -p='testing_email_password' -s=sharing.email@gmail.com -P='sharing_email_password' -o=order -d=/path/to/downloads -u=portal_url -r=random_seed"
 $test_email = ''
 $share_email = ''
 $test_email_password = ''
@@ -75,7 +78,9 @@ ARGV.each do |arg|
 		$download_dir = arg.gsub(/\-d\=/, "")
   elsif arg =~ /\-u\=/
     $portal_url = arg.gsub(/\-u\=/, "")
-	end
+  elsif arg =~ /\-r\=/
+    $random_seed = arg.gsub(/\-r\=/, "")
+  end
 end
 
 # print configuration
@@ -84,6 +89,7 @@ puts "Testing email: #{$test_email}"
 puts "Sharing email: #{$share_email}"
 puts "Download directory: #{$download_dir}"
 puts "Portal URL: #{$portal_url}"
+puts "Random Seed: #{$random_seed}"
 
 # make sure download & chromedriver paths exist and portal url is valid, otherwise kill tests before running and print usage
 if !File.exists?($chromedriver_path)
@@ -180,6 +186,26 @@ class UiTestSuite < Test::Unit::TestCase
 		i = 1
 		i.upto(10) do
 			done = @driver.execute_script("return $('#{plot}').data('#{data_id}')")
+			if !done
+				puts "Waiting for render of #{plot}; try ##{i}"
+				i += 1
+				sleep(1)
+				next
+			else
+				puts "Rendering of #{plot} complete"
+				return true
+			end
+		end
+		raise Selenium::WebDriver::Error::TimeOutError, "Timing out on render check of #{plot}"
+	end
+
+	# wait until Morpheus has completed rendering (will happened after data.rendered is true)
+	def wait_for_morpheus_render(plot, data_id)
+		# first need to wait for data.rendered to be true on plot
+		wait_for_plotly_render(plot, 'rendered')
+		i = 1
+		i.upto(10) do
+			done = @driver.execute_script("return $('#{plot}').data('#{data_id}').heatmap !== undefined")
 			if !done
 				puts "Waiting for render of #{plot}; try ##{i}"
 				i += 1
@@ -1585,9 +1611,10 @@ class UiTestSuite < Test::Unit::TestCase
 		search_genes = @driver.find_element(:id, 'perform-gene-search')
 		search_genes.click
 		assert element_present?(:id, 'plots'), 'could not find expression heatmap'
-		@wait.until {wait_for_plotly_render('#heatmap-plot', 'rendered')}
-		rendered = @driver.execute_script("return $('#heatmap-plot').data('rendered')")
-		assert rendered, "heatmap plot did not finish rendering, expected true but found #{rendered}"
+		@wait.until {wait_for_morpheus_render('#heatmap-plot', 'morpheus')}
+
+		heatmap_drawn = @driver.execute_script("return $('#heatmap-plot').data('morpheus').heatmap !== undefined;")
+		assert heatmap_drawn, "heatmap plot encountered error, expected true but found #{heatmap_drawn}"
 
 		# confirm queried genes are correct
 		queried_genes = @driver.find_elements(:class, 'queried-gene').map(&:text)
@@ -1596,16 +1623,17 @@ class UiTestSuite < Test::Unit::TestCase
 		# resize heatmap
 		heatmap_size = @driver.find_element(:id, 'heatmap_size')
 		heatmap_size.send_key(1000)
-		@wait.until {wait_for_plotly_render('#heatmap-plot', 'rendered')}
-		resize_rendered = @driver.execute_script("return $('#heatmap-plot').data('rendered')")
-		assert resize_rendered, "heatmap plot did not finish rendering, expected true but found #{resize_rendered}"
+		@wait.until {wait_for_morpheus_render('#heatmap-plot', 'morpheus')}
+
+		resize_heatmap_drawn = @driver.execute_script("return $('#heatmap-plot').data('morpheus').heatmap !== undefined;")
+		assert resize_heatmap_drawn, "heatmap plot encountered error, expected true but found #{resize_heatmap_drawn}"
 
 		# toggle fullscreen
 		fullscreen = @driver.find_element(:id, 'view-fullscreen')
 		fullscreen.click
-		@wait.until {wait_for_plotly_render('#heatmap-plot', 'rendered')}
-		fullscreen_rendered = @driver.execute_script("return $('#heatmap-plot').data('rendered')")
-		assert fullscreen_rendered, "heatmap plot did not finish rendering, expected true but found #{fullscreen_rendered}"
+		@wait.until {wait_for_morpheus_render('#heatmap-plot', 'morpheus')}
+		fullscreen_heatmap_drawn = @driver.execute_script("return $('#heatmap-plot').data('morpheus').heatmap !== undefined;")
+		assert fullscreen_heatmap_drawn, "heatmap plot encountered error, expected true but found #{fullscreen_heatmap_drawn}"
 		search_opts_visible = element_visible?(:id, 'search-options-panel')
 		assert !search_opts_visible, "fullscreen mode did not launch correctly, expected search options visibility == false but found #{!search_opts_visible}"
 
@@ -1629,6 +1657,8 @@ class UiTestSuite < Test::Unit::TestCase
 		@wait.until {wait_for_plotly_render('#heatmap-plot', 'rendered')}
 		private_rendered = @driver.execute_script("return $('#heatmap-plot').data('rendered')")
 		assert private_rendered, "private heatmap plot did not finish rendering, expected true but found #{private_rendered}"
+		private_heatmap_drawn = @driver.execute_script("return $('#heatmap-plot').data('morpheus').heatmap !== undefined;")
+		assert private_heatmap_drawn, "heatmap plot encountered error, expected true but found #{private_heatmap_drawn}"
 
 		# confirm queried genes are correct
 		new_queried_genes = @driver.find_elements(:class, 'queried-gene').map(&:text)
@@ -1652,9 +1682,9 @@ class UiTestSuite < Test::Unit::TestCase
 		search_genes.click
 
 		assert element_present?(:id, 'plots'), 'could not find expression heatmap'
-		@wait.until {wait_for_plotly_render('#heatmap-plot', 'rendered')}
-		rendered = @driver.execute_script("return $('#heatmap-plot').data('rendered')")
-		assert rendered, "heatmap plot did not finish rendering, expected true but found #{rendered}"
+		@wait.until {wait_for_morpheus_render('#heatmap-plot', 'morpheus')}
+		heatmap_drawn = @driver.execute_script("return $('#heatmap-plot').data('morpheus').heatmap !== undefined;")
+		assert heatmap_drawn, "heatmap plot encountered error, expected true but found #{heatmap_drawn}"
 
 		# now test private study
 		login_path = @base_url + '/users/sign_in'
@@ -1671,10 +1701,9 @@ class UiTestSuite < Test::Unit::TestCase
 		search_genes = @driver.find_element(:id, 'perform-gene-search')
 		search_genes.click
 		assert element_present?(:id, 'plots'), 'could not find expression heatmap'
-		@wait.until {wait_for_plotly_render('#heatmap-plot', 'rendered')}
-
-		private_rendered = @driver.execute_script("return $('#heatmap-plot').data('rendered')")
-		assert private_rendered, "private heatmap plot did not finish rendering, expected true but found #{private_rendered}"
+		@wait.until {wait_for_morpheus_render('#heatmap-plot', 'morpheus')}
+		private_heatmap_drawn = @driver.execute_script("return $('#heatmap-plot').data('morpheus').heatmap !== undefined;")
+		assert private_heatmap_drawn, "heatmap plot encountered error, expected true but found #{private_heatmap_drawn}"
 
 		puts "Test method: #{self.method_name} successful!"
 	end
@@ -1694,9 +1723,9 @@ class UiTestSuite < Test::Unit::TestCase
 		assert element_present?(:id, 'heatmap-plot'), 'could not find heatmap plot'
 
 		# wait for heatmap to render
-		@wait.until {wait_for_plotly_render('#heatmap-plot', 'rendered')}
-		rendered = @driver.execute_script("return $('#heatmap-plot').data('rendered')")
-		assert rendered, "heatmap plot did not finish rendering, expected true but found #{rendered}"
+		@wait.until {wait_for_morpheus_render('#heatmap-plot', 'morpheus')}
+		heatmap_drawn = @driver.execute_script("return $('#heatmap-plot').data('morpheus').heatmap !== undefined;")
+		assert heatmap_drawn, "heatmap plot encountered error, expected true but found #{heatmap_drawn}"
 
 		# now test private study
 		login_path = @base_url + '/users/sign_in'
@@ -1715,9 +1744,9 @@ class UiTestSuite < Test::Unit::TestCase
 		assert element_present?(:id, 'heatmap-plot'), 'could not find heatmap plot'
 
 		# wait for heatmap to render
-		@wait.until {wait_for_plotly_render('#heatmap-plot', 'rendered')}
-		private_rendered = @driver.execute_script("return $('#heatmap-plot').data('rendered')")
-		assert private_rendered, "heatmap plot did not finish rendering, expected true but found #{private_rendered}"
+		@wait.until {wait_for_morpheus_render('#heatmap-plot', 'morpheus')}
+		private_heatmap_drawn = @driver.execute_script("return $('#heatmap-plot').data('morpheus').heatmap !== undefined;")
+		assert private_heatmap_drawn, "heatmap plot encountered error, expected true but found #{private_heatmap_drawn}"
 
 		puts "Test method: #{self.method_name} successful!"
 	end
