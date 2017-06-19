@@ -43,7 +43,7 @@
     $(document).ready(function() {
         var dataPath = "<%= precomputed_results_path(study_name: params[:study_name], precomputed: params[:precomputed]) %>";
         var requestToken = '<%= user_signed_in? ? current_user.id.to_s + ':' + current_user.authentication_token : nil %>';
-        dataPath += '&request_token=' + requestToken;
+        dataPath += '&request_user_token=' + requestToken;
 
         renderMorpheus(dataPath, '', '', '', '#heatmap-plot', 'both');
     });
