@@ -16,7 +16,7 @@ if (<%= @selected_annotation[:type] == 'numeric' %>) {
 $('#search_cluster').val("<%= params[:cluster] %>");
 
 // clear listener and reattach
-$(window).off('resizeEnd', "**");
+$(window).off('resizeEnd');
 $(window).on('resizeEnd', function() {
     <%= render 'study_scatter_layout' %>
     var target = $('#cluster-plot')[0];
