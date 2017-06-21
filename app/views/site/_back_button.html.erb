@@ -1,0 +1,14 @@
+<%= link_to "<i class='fa fa-fw fa-chevron-left'></i> Back".html_safe, 'javascript:;', class: 'btn btn-warning more-genes', id: 'study-overview-btn' %>
+
+<script type="text/javascript">
+
+    $('#study-overview-btn').click(function() {
+        launchModalSpinner('#spinner_target', '#loading-modal');
+        clearForm('search_genes');
+        $.ajax({
+            url: "<%= view_study_path(study_name: params[:study_name]) %>",
+            dataType: 'script'
+        });
+    });
+
+</script>

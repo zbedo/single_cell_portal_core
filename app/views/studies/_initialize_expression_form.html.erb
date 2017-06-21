@@ -26,10 +26,14 @@
 			<%= f.text_field :file_type, readonly: true, class: 'form-control' %>
 		</div>
 		<div class="col-sm-5 upload-field">
-			<%= f.label :upload, 'Upload Data File' %><br />
-			<%= f.file_field :upload, class: 'btn btn-info fileinput-button', id: 'upload-expression' %>
-      <%= f.hidden_field :status, value: study_file.new_record? ? 'uploading' : 'uploaded' %>
-		</div>
+      <% if !study_file.upload_file_name.nil? %>
+        <p><label>Link to file </label><br /><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></p>
+      <% else %>
+        <%= f.label :upload, 'Upload Data File' %><br />
+        <%= f.file_field :upload, class: 'btn btn-info fileinput-button', id: 'upload-expression' %>
+        <%= f.hidden_field :status, value: study_file.new_record? ? 'uploading' : 'uploaded' %>
+      <% end %>
+    </div>
 		<div class="col-sm-3">
 			<%= f.label :actions %>
 			<div class="row">
@@ -47,9 +51,6 @@
 			<tbody class="files"></tbody>
 		</table>
 	</div>
-	<% if !study_file.upload_file_name.nil? %>
-		<p><label>Link to file </label><br /><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></p>
-	<% end %>
 
 	<script type="text/javascript">
 
