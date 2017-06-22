@@ -18,7 +18,7 @@
 					<tbody>
 					<% @studies.each do |study| %>
 						<tr class="study-entry">
-              <td class="study-name"><%= study.name %></td>
+              <td class="study-name"><%= link_to study.name, view_study_path(study_name: study.url_safe_name), title: 'View Live', data: {toggle: 'tooltip', placement: 'right'} %></td>
               <td><%= study.user.email %></td>
 							<td><%= truncate_html(study.description, length: 50) %></td>
 							<td><%= study.visibility %></td>

@@ -101,6 +101,15 @@ class StudiesController < ApplicationController
           end
         end
       end
+
+      # now check to see if there have been permissions removed in FireCloud that need to be removed on the portal side
+      new_study_permissions = @study.study_shares.to_a
+      new_study_permissions.each do |share|
+        if firecloud_permissions['acl'][share.email].nil?
+          logger.info "#{Time.now}: removing #{share.email} access to #{@study.name} via sync - no longer in FireCloud acl"
+          share.delete
+        end
+      end
     rescue => e
       logger.error "#{Time.now}: error syncing ACLs in workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
       redirect_to studies_path, alert: "We were unable to sync with your workspace bucket due to an error: #{e.message}" and return
@@ -654,7 +663,7 @@ jon        case @study_file.file_type
 
   # GET /courses/:id/resume_upload.json
   def resume_upload
-    study_file = StudyFile.where(study_id: params[:id], name: params[:file]).first
+    study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
     if study_file.nil?
       render json: { file: { name: "/uploads/default/missing.png",size: nil } } and return
     elsif study_file.status == 'uploaded'
@@ -679,7 +688,6 @@ jon        case @study_file.file_type
     end
   end
 
-  # method to download files if study is private, will create temporary signed_url after checking user quota
   # method to download files if study is private, will create temporary signed_url after checking user quota
   def download_private_file
     @study = Study.find_by(url_safe_name: params[:study_name])

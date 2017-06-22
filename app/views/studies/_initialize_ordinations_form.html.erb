@@ -7,7 +7,7 @@
 	<div class="form-group row">
 		<div class="col-sm-4">
 			<%= f.label :name %><br />
-			<%= f.text_field :name, class: 'form-control filename', placeholder: 'Please provide a name for this group of ordinations...' %>
+			<%= f.text_field :name, class: 'form-control filename cluster-name', placeholder: 'Please provide a name for this group of ordinations...' %>
 		</div>
 		<div class="col-sm-8">
 			<%= f.label :description, 'Description/Figure Legend (this will be displayed below cluster)' %><br />
@@ -94,6 +94,9 @@
         }
     });
 
+    // validate uniqueness of names before submit
+    validateUnique("#ordinations_form_<%= study_file._id %>", '.cluster-name');
+
 		$(function() {
 
 			$('#ordinations_form_<%= study_file._id %>').fileupload({
@@ -109,6 +112,7 @@
 					$.getJSON("<%= resume_upload_study_path %>", { file: fileName }, function (result) {
 						var file = result.file;
             if (file == null) {
+              fileUploading = false;
               $("#study-files-notice-target").html("<%= escape_javascript( render partial: 'studies/study_file_notices', locals: {message: "You have already uploaded this file.  Please select another file."}) %>");
             } else {
               data.uploadedBytes = file && file.size;
@@ -137,8 +141,8 @@
               // check if upload is in progress and abort
               if (data.jqXHR != undefined) {
                   data.jqXHR.abort();
-                  fileUploading = false;
               }
+              fileUploading = false;
               console.log('Aborting upload on study_file: <%= study_file.id %>');
               launchModalSpinner('#delete-modal-spinner','#delete-modal');
               $.ajax({

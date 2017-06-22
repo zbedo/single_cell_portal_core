@@ -7,7 +7,7 @@
 	<div class="form-group row">
 		<div class="col-sm-4">
 			<%= f.label :name %><br />
-			<%= f.text_field :name, class: 'form-control filename', placeholder: 'Enter name of marker list (for display purposes)' %>
+			<%= f.text_field :name, class: 'form-control filename gene-list-name', placeholder: 'Enter name of marker list (for display purposes)' %>
 		</div>
 		<div class="col-sm-8">
 			<%= f.label :description %><br />
@@ -54,6 +54,9 @@
           return false;
         }
     });
+
+    // validate uniqueness of names before submit
+    validateUnique("#marker_genes_form_<%= study_file._id %>", '.gene-list-name');
 
 		$(function() {
 			$('#marker_genes_form_<%= study_file._id %>').fileupload({

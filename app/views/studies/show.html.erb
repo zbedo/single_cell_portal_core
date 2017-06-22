@@ -232,9 +232,9 @@
 				</thead>
 				<tbody>
 				<% @study.study_shares.each do |study_share| %>
-					<tr>
-						<td><%= study_share.email %></td>
-						<td><%= study_share.permission %></td>
+					<tr id="study-share-<%= study_share.email.gsub(/[@.]/, '-') %>">
+						<td class="share-email"><%= study_share.email %></td>
+						<td class="share-permission"><%= study_share.permission %></td>
 						<td><%= study_share.updated_at.to_s(:long) %></td>
 					</tr>
 				<% end %>

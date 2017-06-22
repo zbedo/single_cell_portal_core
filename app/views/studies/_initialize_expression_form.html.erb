@@ -76,7 +76,8 @@
 					$.getJSON("<%= resume_upload_study_path %>", { file: fileName }, function (result) {
 						var file = result.file;
             if (file == null) {
-              $("#study-files-notice-target").html("<%= escape_javascript( render partial: 'studies/study_file_notices', locals: {message: "You have already uploaded this file.  Please select another file."}) %>");
+                fileUploading = false;
+                $("#study-files-notice-target").html("<%= escape_javascript( render partial: 'studies/study_file_notices', locals: {message: "You have already uploaded this file.  Please select another file."}) %>");
             } else {
               data.uploadedBytes = file && file.size;
               $.blueimp.fileupload.prototype.options.add.call(that, e, data);
@@ -104,8 +105,8 @@
 				    // check if upload is in progress and abort
 				    if (data.jqXHR != undefined) {
                 data.jqXHR.abort();
-                fileUploading = false;
             }
+            fileUploading = false;
             console.log('Aborting upload on study_file: <%= study_file.id %>');
             launchModalSpinner('#delete-modal-spinner','#delete-modal');
             $.ajax({
