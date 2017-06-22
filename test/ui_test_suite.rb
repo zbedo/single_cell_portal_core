@@ -937,6 +937,12 @@ class UiTestSuite < Test::Unit::TestCase
 		study_form.find_element(:id, 'study_name').send_keys(random_name)
 		study_form.find_element(:id, 'study_use_existing_workspace').send_keys('Yes')
 		study_form.find_element(:id, 'study_firecloud_workspace').send_keys('development-sync-test-study')
+		share = @driver.find_element(:id, 'add-study-share')
+		@wait.until {share.displayed?}
+		share.click
+		share_email = study_form.find_element(:class, 'share-email')
+		share_email.send_keys($share_email)
+
 		# save study
 		save_study = @driver.find_element(:id, 'save-study')
 		save_study.click
@@ -1059,6 +1065,15 @@ class UiTestSuite < Test::Unit::TestCase
 			assert values[:description] == row_cells[1].text, "directory listing description incorrect, expected #{values[:description]} but found #{row_cells[1].text}"
 		end
 
+		# assert share was added
+		share_email_id = $share_email.gsub(/[@.]/, '-')
+		share_row = @driver.find_element(:id, share_email_id)
+		assert share_row.size == 1, 'did not find proper share entry'
+		shared_email = share_row.find_element(:class, 'share-email').text
+		assert shared_email == $share_email, "did not find correct email for share, expected #{$share_email} but found #{shared_email}"
+		shared_permission = share_row.find_element(:class, 'share-permission').text
+		assert shared_permission == 'View', "did not find correct share permissions, expected View but found #{shared_permission}"
+
 		# now test removing items
 		@driver.get(@base_url + '/studies')
 		sync_button_class = random_name.split.map(&:downcase).join('-') + '-sync'
@@ -1092,6 +1107,26 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(studies_path)
 		study_file_count = @driver.find_element(:id, "sync-test-#{uuid}-study-file-count").text.to_i
 		assert study_file_count == 3, "did not remove files, expected 3 but found #{study_file_count}"
+
+		# remove share and resync
+		edit_button = @driver.find_element(:class, "sync-test-#{uuid}-edit")
+		edit_button.click
+		wait_for_render(:class, 'edit_study')
+		remove_share = @driver.find_element(:class, 'remove_nested_fields')
+		remove_share.click
+		@driver.switch_to.alert.accept
+		save_study = @driver.find_element(:id, 'save-study')
+		save_study.click
+		wait_for_render(:id, 'message_modal')
+		close_modal('message_modal')
+
+
+		sync_button = @driver.find_element(:class, "sync-test-#{uuid}-sync")
+		sync_button.click
+		wait_for_render(:id, 'synced-data-panel-toggle')
+
+		# now confirm share was removed at FireCloud level
+
 
 		# clean up study
 		delete_local_link = @driver.find_element(:class, "sync-test-#{uuid}-delete-local")
@@ -1802,8 +1837,8 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	# tests that form values for loaded clusters & annotations are being persisted when switching between different views
-	test 'front-end: load different cluster and annotation then search gene expression' do
+	# tests that form values for loaded clusters & annotations are being persisted when switching between different views and using 'back' button in search box
+	test 'front-end: check cluster and annotation persistence' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + "/study/test-study-#{$random_seed}"
@@ -1818,14 +1853,12 @@ class UiTestSuite < Test::Unit::TestCase
 		cluster.click
 
 		# wait for render to complete
-		puts @driver.execute_script("return $('#cluster-plot').data('rendered')")
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 		cluster_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
 		assert cluster_rendered, "cluster plot did not finish rendering on cluster change, expected true but found #{cluster_rendered}"
 
 		# select an annotation and wait for render
 		annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
-		annotations.map {|a| puts a['value']}
 		annotation = annotations.sample
 		annotation_value = annotation['value']
 		annotation.click
@@ -1839,8 +1872,6 @@ class UiTestSuite < Test::Unit::TestCase
 		search_box.send_key(gene)
 		search_genes = @driver.find_element(:id, 'perform-gene-search')
 		search_genes.click
-		new_path = "#{@base_url}/study/test-study-#{$random_seed}/gene_expression/#{gene}?annotation=#{annotation_value.split.join('+')}&boxpoints=all&cluster=#{cluster_name.split.join('+')}"
-		wait_until_page_loads(new_path)
 
 		# wait for rendering to complete
 		assert element_present?(:id, 'expression-plots'), 'could not find box/scatter divs'
@@ -1858,6 +1889,54 @@ class UiTestSuite < Test::Unit::TestCase
 		loaded_annotation = @driver.find_element(:id, 'annotation')
 		assert loaded_cluster['value'] == cluster_name, "did not load correct cluster; expected #{cluster_name} but loaded #{loaded_cluster['value']}"
 		assert loaded_annotation['value'] == annotation_value, "did not load correct annotation; expected #{annotation_value} but loaded #{loaded_annotation['value']}"
+
+		# now check the back button in the search box to make sure it preserves values
+		back_btn = @driver.find_element(:id, 'clear-gene-search')
+		back_btn.click
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+
+		current_cluster = @driver.find_element(:id, 'cluster')
+		current_annotation = @driver.find_element(:id, 'annotation')
+		assert current_cluster['value'] == cluster_name, "did not load correct cluster after back button; expected #{cluster_name} but loaded #{current_cluster['value']}"
+		assert current_annotation['value'] == annotation_value, "did not load correct annotation after back button; expected #{current_annotation} but loaded #{loaded_annotation['value']}"
+
+		# now search for multiple genes as a heatmap
+		genes = @genes.shuffle.take(rand(2..5))
+		search_box = @driver.find_element(:id, 'search_genes')
+		search_box.send_keys(genes.join(' '))
+		search_genes = @driver.find_element(:id, 'perform-gene-search')
+		search_genes.click
+		assert element_present?(:id, 'plots'), 'could not find expression heatmap'
+		@wait.until {wait_for_morpheus_render('#heatmap-plot', 'morpheus')}
+
+		# click back button in search box
+		back_btn = @driver.find_element(:id, 'clear-gene-search')
+		back_btn.click
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+
+		heatmap_cluster =  @driver.find_element(:id, 'cluster')['value']
+		heatmap_annot = @driver.find_element(:id, 'annotation')['value']
+		assert heatmap_cluster == cluster_name, "cluster was not preserved correctly from heatmap view, expected #{cluster_name} but found #{heatmap_cluster}"
+		assert heatmap_annot == annotation_value, "cluster was not preserved correctly from heatmap view, expected #{annotation_value} but found #{heatmap_annot}"
+
+		# show gene list in scatter mode
+		gene_sets = @driver.find_element(:id, 'gene_set')
+		opts = gene_sets.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
+		list = opts.sample
+		list.click
+		assert element_present?(:id, 'expression-plots'), 'could not find box/scatter divs'
+		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+
+		# click back button in search box
+		back_btn = @driver.find_element(:id, 'clear-gene-search')
+		back_btn.click
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+
+		gene_list_cluster =  @driver.find_element(:id, 'cluster')['value']
+		gene_list_annot = @driver.find_element(:id, 'annotation')['value']
+		assert gene_list_cluster == cluster_name, "cluster was not preserved correctly from gene list scatter view, expected #{cluster_name} but found #{gene_list_cluster}"
+		assert gene_list_annot == annotation_value, "cluster was not preserved correctly from gene list scatter view, expected #{gene_list_annot} but found #{heatmap_annot}"
+
 		puts "Test method: #{self.method_name} successful!"
 	end
 
