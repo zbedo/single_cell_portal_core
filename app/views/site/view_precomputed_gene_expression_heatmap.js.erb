@@ -5,4 +5,5 @@ closeModalSpinner('#spinner_target', '#loading-modal', function () {
     $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices') %>");
     // clear any resize listeners
     $(window).off('resizeEnd');
+    enableDefaultActions();
 });

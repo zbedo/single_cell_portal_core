@@ -1,8 +1,5 @@
 closeModalSpinner('#update-study-settings-spinner', '#update-study-settings-modal', function() {
     $('#study-settings-form-target').html("<%= escape_javascript(render partial: 'study_settings_form') %>");
-    // re-enable datepicker & tooltips
-    $('.datepicker').datepicker({dateFormat: 'yy-mm-dd'});
-    $('[data-toggle="tooltip"]').tooltip({container: 'body'});
     <% if @study.valid? %>
         $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {notice: 'Study successfully updated.'}) %>");
 
@@ -15,4 +12,5 @@ closeModalSpinner('#update-study-settings-spinner', '#update-study-settings-moda
     <% end %>
     // scroll back to the top of the page
     window.scrollBy(0,-9999)
+    enableDefaultActions();
 });

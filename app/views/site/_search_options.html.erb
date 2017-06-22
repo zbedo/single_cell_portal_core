@@ -11,7 +11,7 @@
 					<%= f.hidden_field :cluster, value: set_cluster_value(@study, params) %>
           <%= f.hidden_field :boxpoints, value: params[:boxpoints].nil? ? 'all' : params[:boxpoints] %>
           <%= f.hidden_field :annotation, value: set_annotation_value(@study, params) %>
-          <%= f.hidden_field :subsample, value: params[:subsample] %>
+          <%= f.hidden_field :subsample, value: set_subsample_value(params) %>
 					<div class="form-group">
 						<%= f.label :genes, 'Search for genes of interest (autocomplete)' %>
 						<%= f.autocomplete_field :genes, autocomplete_expression_score_gene_expression_score_index_path(study_id: @study._id), {multiple: true, class: 'form-control search-genes-input', placeholder: 'Search genes...', value: set_search_value, data: {delimiter: ' '}} %>
@@ -24,11 +24,22 @@
             <%= f.label :consensus, "Collapse Genes by <i class='fa fa-question-circle'></i>".html_safe, title: "Multiple genes only: Collapse expression scores of multiple genes for each cell using this metric.  Selecting 'None' will view genes individually as a heatmap.", data: {toggle: 'tooltip', placement: 'right'} %><br/>
             <%= f.select :consensus, options_for_select([['Mean', 'mean'],['Median', 'median']], params[:consensus]), {include_blank: 'None'}, {class: 'form-control'} %>
           </div>
-					<%= link_to "<span class='fa fa-ban'></span> Clear".html_safe, "javascript:", class: 'btn btn-warning pull-right', id: 'clear-gene-search' %>
+					<%= link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, "javascript:", class: "btn btn-warning pull-right #{action_name == 'study' ? 'disabled' : nil}", id: 'clear-gene-search', title: 'Clear gene search and return to cluster scatter plots', data: {toggle: 'tooltip'} %>
 					<%= link_to "<span class='fa fa-search'></span> Search".html_safe, "javascript:", class: 'btn btn-success', id: 'perform-gene-search' %>
 					<script type="text/javascript">
             $('#clear-gene-search').click(function(){
                 clearForm('search_genes');
+                $(this).tooltip('hide');
+                var cluster = $('#search_cluster').val();
+                var annotation = $('#search_annotation').val();
+                var subsample = $('#search_subsample').val();
+                var url = "<%= view_study_path(study_name: @study.url_safe_name )%>?cluster=" + cluster + "&annotation=" + annotation + "&subsample=" + subsample;
+                launchModalSpinner('#spinner_target', '#loading-modal');
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    dataType: 'script'
+                });
             });
 
             $('#perform-gene-search').click(function(){
@@ -80,11 +91,13 @@
 					<%= select_tag :gene_set, options_for_select(@precomputed, params[:gene_set]), {include_blank: 'Please select a gene list', class: 'form-control'} %>
           <%= hidden_field_tag :gene_set_cluster %>
           <%= hidden_field_tag :gene_set_annotation %>
+          <%= hidden_field_tag :gene_set_subsample %>
 					<script type="text/javascript">
 
             // set default values on render
             $('#gene_set_cluster').val($('#search_cluster').val());
             $('#gene_set_annotation').val($('#search_annotation').val());
+            $('#gene_set_subsample').val($('#search_subsample').val());
 
 						$('#gene_set').change(function() {
 						    if ($(this).val() != '') {
@@ -111,7 +124,8 @@
                   var url = $(this).val();
                   var cluster = $('#search_cluster').val();
                   var annotation = $('#search_annotation').val();
-                  $.get( url + '?cluster=' + cluster + '&annotation=' + annotation);
+                  var subsample = $('#search_subsample').val();
+                  $.get( url + '?cluster=' + cluster + '&annotation=' + annotation + '&subsample=' + subsample);
               }
 						});
 

@@ -11,8 +11,6 @@ $('#box-controls, #scatter-plots').on('show.bs.collapse hide.bs.collapse', funct
 
 <%= render partial: @top_plot_plotly %>
 
-$('#toggle-traces').tooltip({container: 'body', placement: 'left', trigger: 'hover'});
-
 // clear listeners and reattach
 $( window ).off('resizeEnd');
 
@@ -34,6 +32,8 @@ $('#toggle-traces').click(function() {
 $('#expression-plots').data('box-rendered', true);
 $('#expression-plots').data('scatter-rendered', true);
 $('#expression-plots').data('reference-rendered', true);
+
+enableDefaultActions();
 
 // check render status
 console.log('render status of box plot at end: ' + $('#expression-plots').data('box-rendered'));

@@ -98,6 +98,19 @@ module ApplicationHelper
 		end
 	end
 
+	# method to set annotation value by parameters or load a 'default' annotation when first loading a study (none have been selected yet)
+	# will fall back to default annotation if nothing is specified
+	def set_subsample_value(parameters)
+		logger.info "PARAMS: #{parameters}"
+		if !parameters[:gene_set_subsample].nil?
+			parameters[:gene_set_subsample].to_i
+		elsif !parameters[:subsample].nil?
+			parameters[:subsample].to_i
+		else
+			'All Cells'
+		end
+	end
+
 	# set colorscale value
 	def set_colorscale_value(selected_study, parameters)
 		if !parameters[:colorscale].nil?
