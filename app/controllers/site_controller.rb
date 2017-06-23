@@ -226,6 +226,7 @@ class SiteController < ApplicationController
         @values_box_type = 'Box Plot'
       else
         @values_box_type = 'Violin Plot'
+        @values_kernel_type = params[:kernel_type]
       end
       @top_plot_partial = 'expression_plots_view'
       @top_plot_plotly = 'expression_plots_plotly'
@@ -312,6 +313,7 @@ class SiteController < ApplicationController
         @values_box_type = 'Box Plot'
       else
         @values_box_type = 'Violin Plot'
+        @values_kernel_type = params[:kernel_type]
       end
       @top_plot_partial = 'expression_plots_view'
       @top_plot_plotly = 'expression_plots_plotly'
@@ -922,7 +924,7 @@ class SiteController < ApplicationController
   def initialize_plotly_objects_by_annotation(annotation)
     values = {}
     annotation[:values].each do |value|
-      values["#{value}"] = {y: [], name: "#{annotation[:name]}: #{value}" }
+      values["#{value}"] = {y: [], name: "#{value}" }
     end
     values
   end

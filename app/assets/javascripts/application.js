@@ -50,6 +50,7 @@
 //= require morpheus-latest.min
 //= require kernel-functions
 //= require simple-statistics.min
+//= require sheather_jones
 
 var fileUploading = false;
 var PAGE_RENDERED = false;
@@ -237,9 +238,8 @@ function toggleSearch() {
         $('#show-search-options').tooltip('hide');
     }
     // trigger resizeEnd to re-render Plotly to use available space
-    setTimeout(function() {
-        $(window).trigger('resizeEnd');
-    }, 100);
+    $(window).trigger('resize');
+
 }
 
 // options for Spin.js

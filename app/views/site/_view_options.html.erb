@@ -14,25 +14,19 @@
 					</div>
 				<% end %>
         <% if action_name !~ /precomputed/ %>
-          <div class="col-sm-3">
+          <div class="col-sm-4">
             <%= label_tag :annotation, 'Select an annotation' %><br />
             <%= select_tag :annotation, grouped_options_for_select(@cluster_annotations, set_annotation_value(@study, params)), class: 'form-control' %>
           </div>
         <% end %>
         <% if action_name !~ /heatmap/ %>
-          <div class="col-sm-3">
+          <div class="col-sm-4">
             <%= label_tag :subsample, 'Subsampling threshold' %>&nbsp;<i class='fa fa-question-circle' title="Take a representative subsample of the current cluster.  Choosing all cells may dramatically increase rendering time." data-toggle="tooltip"></i><br />
             <%= select_tag :subsample, options_for_select(subsampling_options(@cluster.points), params[:subsample]), {include_blank: 'All Cells', class: 'form-control'} %>
           </div>
         <% end %>
-        <% if action_name !~ /heatmap/ %>
-            <div class="col-sm-3">
-              <%= label_tag :plot_type, 'Distribution Plot Type' %>&nbsp;<i class='fa fa-question-circle' title="Choose which distribution type to display." data-toggle="tooltip"></i><br />
-              <%= select_tag :plot_type, options_for_select(['Violin Plot', 'Box Plot'], params[:plot_type]), {class: 'form-control'} %>
-            </div>
-        <% end %>
 				<% if action_name =~ /heatmap/ %>
-					<div class="col-sm-3">
+					<div class="col-sm-4">
 						<%= label_tag :row_centered, 'Row centering' %> <span class="fa fa-question-circle" data-toggle="tooltip" title="For every value in each row, subtract the mean of the entire row from the value"></span><br />
 						<%= check_box_tag :row_centered, nil, params[:row_centered] == "1" %>
 					</div>

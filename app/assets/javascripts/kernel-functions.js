@@ -6,7 +6,6 @@
 
 
 //Kernel Density Estimator takes a kernel function and array of 1d data and returns a function that can create an array of density probabilty
-//estimates
 function kernelDensityEstimator(kernel, X) {
     return function(V) {
         return X.map(function(x) {
@@ -15,11 +14,17 @@ function kernelDensityEstimator(kernel, X) {
     };
 }
 
-/* Rule of thumb bandwidth selector from :
+/* Advanced Rule of thumb bandwidth selector from :
 *  https://en.wikipedia.org/wiki/Kernel_density_estimation#Bandwidth_selection
+*  and https://stat.ethz.ch/R-manual/R-devel/library/stats/html/bandwidth.html
 */
+
 function rotBandwidth(X){
-    return 1.06 * ss.standardDeviation(X) * Math.pow(X.length, -0.2)
+    var iqr = ss.quantile(X, 0.75) - ss.quantile(X, 0.25);
+    var iqrM = iqr /1.34;
+    var std = ss.standardDeviation(X);
+    var min = std < iqrM ? std : iqrM;
+    return 0.9 * min * Math.pow(X.length, -0.2)
 }
 
 /* Kernels are functions that transform a data point, used in Kernel Density Estimator
@@ -53,6 +58,7 @@ function kernelQuartic(k) {
         return 0;
     };
 }
+
 function kernelTriweight(k) {
     return function(v) {
         if (Math.abs(v /= k) <= 1) {
@@ -63,11 +69,13 @@ function kernelTriweight(k) {
     };
 }
 
+//This gives poor results-- it's far to over smoothed and only shows the most extreme of bimodality
 function kernelGaussian(k) {
     return function(v) {
-        return 1 / Math.sqrt(2 * Math.PI) * Math.exp(-.5 * v * v) / k;
+        return 1.0 / Math.sqrt(2.0 * Math.PI) * Math.exp(-0.5 * v * v) / k;
     };
 }
+
 function kernelCosine(k) {
     return function(v) {
         if (Math.abs(v /= k) <= 1) return Math.PI / 4 * Math.cos(Math.PI / 2 * v) / k;
@@ -85,18 +93,21 @@ function kernelTricube(k) {
         return 0;
     };
 }
+
 function kernelLogistic(k) {
     return function(v) {
         if (Math.abs(v /= k) <= 1) return 1 / (Math.pow(Math.E, v) + 2 + Math.pow(Math.E, -v))  / k;
         return 0;
     };
 }
+
 function kernelSigmoid(k) {
     return function(v) {
         if (Math.abs(v /= k) <= 1) return 2 / (Math.PI * (Math.pow(Math.E, v) + Math.pow(Math.E, -v)))  / k;
         return 0;
     };
 }
+
 function kernelSilverman(k) {
     return function(v) {
         if (Math.abs(v /= k) <= 1) return 0.5 *  Math.pow(Math.E, -1 * (Math.abs(v)) / Math.sqrt(2.0)) * Math.sin((Math.abs(v) / Math.sqrt(2.0)) + Math.PI/4.0)  / k;
@@ -128,7 +139,6 @@ function getMinOfArray(numArray) {
 function isOutlier(x, l, u){
     var con = (u-l) * 1.5;
     return x >= u ? ((x - con) > u) : ((x + con) < l);
-
 }
 
 //This function splits an array into two arrays- its outliers and its normal data
@@ -146,107 +156,62 @@ function cutOutliers(arr, l, u){
 
 }
 
-
 /*
  *For Javascript only file for testing, this is the array of colors from colorbrewer
  var colorBrewerSet = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#a65628", "#f781bf", "#999999",
  "#66c2a5", "#fc8d62", "#8da0cb", "#e78ac3", "#a6d854", "#ffd92f", "#e5c494", "#b3b3b3", "#8dd3c7",
  "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd", "#ccebc5", "#ffed6f"];*/
 
-/*
- * this works faster than simple statistics for <10000 entries for unknown reasons, but simple statistics is being used instead
 
- function quartile(arr){
- // find the median as you did
- arr.sort( function(a,b) {return a - b;} );
- var _median = medianIndex(arr);
- var _firstHalf, _secondHalf;
- // split the data by the median
- //if odd
- if((arr.length % 2) === 1) {
- _firstHalf = arr.slice(0, _median -1);
- _secondHalf = arr.slice(_median +1);
- }
- //if even
- else
- {
- _firstHalf = arr.slice(0, _median);
- _secondHalf = arr.slice(_median + 0.5);
- }
-
- // find the medians for each split
- var _25percent = median(_firstHalf);
- var _75percent = median(_secondHalf);
- // this will be the upper bounds for each quartile
- return [_25percent, _75percent];
- }
-
-
- function medianIndex(values) {
-
- values.sort( function(a,b) {return a - b;} );
-
- var half = Math.floor(values.length/2.0);
-
- //if odd
- if((values.length % 2) === 1)
- return half + 0.5;
- //if even
- else
- return half - 0.5;
- }
-
- function median(values) {
-
- values.sort( function(a,b) {return a - b;} );
-
- var half = Math.floor(values.length/2);
-
- if(values.length % 2)
- return values[half];
- else
- return (values[half-1] + values[half]) / 2.0;
- }
-
- */
-
-function createTracesAndLayout(arr){
+function createTracesAndLayout(arr, title){
     //dataA is the array of plotly traces that is returned by this method
     dataA = [];
 
     //group is the current violin plot number being formatted
     var group = 0;
-
     //this is the default layout set up, before additional x axis are added on
     var layout = {
-        height: 800,
+        hovermode: 'closest',
+        title: title,
+        height: 1000,
+        font: plotlyLabelFont,
         yaxis: {
             zeroline: true,
             showline: true
 
         },
         margin: {
-            pad: 10
+            pad: 10,
+            b: 100
 
-        },
-        //x axis may be more than |1| math wise so commented out
-        // xaxis: {range: [-1, 1]},
-        width: 1000};
+        }
+        };
 
     //This is the maximum horizontal value of every violin plot, used later to re-range the plots and provide padding horizontally
+    //TRemnant of multiple X axis
     var x_vals_maxs = [];
+
+    //Setting up single X axis
+    var name_array = [];
+    //Center Lines is for the xAxis labels to make sure they line up with appropriate trace
+    var center_lines = [];
+    //Inital offset is 0 because its the first trace
+    var x_offset = 0;
 
     //Iterate through every violin plot
     //fullData is the array of information about one violin plot in format [name, array of data points, kernel type, bandwidth]
     arr.forEach(function(fullData) {
-        //Set the name of the group of traces (Violin Plot)
+        //Set the name of the group of traces (Violin Plot), is the cluster name
+
         var group_name = fullData[0];
+        name_array.push(group_name);
+
         //Set the bandwidth
         bandwidth = typeof fullData[3] !== 'undefined' ? fullData[3] : rotBandwidth(fullData[1]);
 
         //Set the Kernel based on passed parameters
         //Potential Kernel Options: "sil", "sig", "log","uni", "gau", "tri","triw", "qua", "tric","cos", "epa"
-        //var current_kernel = kernelSilverman(bandwidth);
+
         var kernel_name = fullData[2];
         switch (kernel_name) {
             case "sil":
@@ -290,7 +255,7 @@ function createTracesAndLayout(arr){
         //We only need the array of points now
         var pointData = fullData[1];
 
-        //Set the color of the trace to a color brewer constan.
+        //Set the color of the trace to a color brewer constant
         // If there are more than 20 traces the colors start from the beginning again
         var color = colorBrewerSet[group % 20];
 
@@ -302,22 +267,37 @@ function createTracesAndLayout(arr){
         var lower_q = ss.quantile(pointData, 0.25);
         var upper_q = ss.quantile(pointData, 0.75);
 
+        //Remnant of multiple x axis refactor
         //Set the X axis for this violin plot
-        var axis = 'x' + (group + 1).toString();
-
+        //var axis = 'x' + (group + 1).toString();
+        var axis = 'x';
         //Separate outliers from the data
-        var out_array = cutOutliers(pointData, lower_q, upper_q);
+        //This is not desired behavior but I'm leaving it in in case it is wanted in future
+        var out_array = cutOutliers(pointData.slice(), lower_q, upper_q);
 
-        //Set new arrays to the outliers and normal data
+        //Set new arrays to the outliers and normal data-- normal data is supposed to include outliers so it goes back to original full point data
         var noOutData = out_array[1];
         var outliers = out_array[0];
 
-        //Create the Kernel Estimating Function
-        var kdeT = kernelDensityEstimator(current_kernel, noOutData);
-
         //Get the array of density values
-        var kde_array = kdeT(noOutData);
+        var min = getMinOfArray(pointData);
+        var max = getMaxOfArray(pointData);
 
+        //Resolution is the number of equally spaced y values that will have their density, x, calculated
+        //Resolution = larger of 512 or length of data
+        var resolution = pointData.length > 512 ? pointData.length : 512;
+
+        //Calculate equal spacing of y Points and push all to array
+        var ratio = (max-min) /resolution;
+        var res_points =[];
+
+        for(i = 0.0; i < resolution; i++){
+            res_points.push((ratio * i) + min);
+        }
+
+        //Create the Kernel Estimating Function
+        var kde = kernelDensityEstimator(current_kernel, res_points);
+        var kde_array = kde(pointData);
 
         //Format the Array for use in traces, and mirror it to mirror half of violin plot across Y axis
         var x_vals = [];
@@ -325,35 +305,50 @@ function createTracesAndLayout(arr){
         var mir_x_vals = [];
 
         kde_array.forEach(function(element) {
+            //right x values
             x_val = element[1];
+            //Left side of traces = -1 * right side x values
             mir_x_val = - element[1];
+            //kde conveniently gives us the y values again, although its the same as res points its best to double check by returning the same values
             y_val = element[0];
+
+            //push to arrays
             x_vals.push(x_val);
             y_vals.push(y_val);
             mir_x_vals.push(mir_x_val);
         });
 
+        //Get the max value of x for ranging the horizontal size of plot
+        var x_vals_max = getMaxOfArray(x_vals);
+
+        //offset x values.
+        //The offset value each time is equal to the maximum width of the plot + a constant 1. The offset tells you where the left side (mirror trace) should extend to maximally
+        x_vals = x_vals.map(function(x) {return x + x_offset + x_vals_max});
+
+        //offset mirrored x vals
+        mir_x_vals = mir_x_vals.map(function(x) {return x + x_offset + x_vals_max});
 
         //Trace1 is the right hand (positive value) Violin Plot
         var trace1 = {
             x: x_vals,
             y: y_vals,
-            fill: 'tonextx',
+            //color brewer color
             fillcolor: color,
-            //Identify the plot as master to all other plots in the legend
+            //Slave the plot to Trace2 and hide it from the legend
             legendgroup: 'Group: ' + group.toString(),
-            layer: 'below',
+            showlegend: false,
             //Edge of Violin Line
             line: {
                 color: 'rgb(0,0,0)',
                 shape: 'spline',
-                width: 2
+                width: 1
             },
             mode: 'lines',
             //Set plot name
             name: group_name,
-            xaxis: axis,
-            opacity: 0.05
+            hoverinfo: 'none',
+            xaxis: axis
+            //opacity: 0.05
         };
 
         //Trace2 is the mirrored version of Trace1 across the Y axis
@@ -362,74 +357,58 @@ function createTracesAndLayout(arr){
             y: y_vals,
             fill: 'tonextx',
             fillcolor: color,
-            //Slave the plot to Trace1 and hide it from the legend
+            name: group_name,
+            //Identify the plot as master to all other plots in the legend
             legendgroup: 'Group: ' + group.toString(),
-            showlegend: false,
-            layer: 'below',
+
             //Edge of Violin Line
             line: {
                 color: 'rgb(0,0,0)',
                 shape: 'spline',
-                width: 2
+                width: 1
             },
             mode: 'lines',
-            xaxis: axis,
-            opacity: 0.05
-        };
-
-        //Get the max value of x for ranging the horizontal size of plot
-        var x_vals_max = getMaxOfArray(x_vals);
-
-        //For the sideline trace, create an array of equal x values for plotting line mode scatter plot
-        var x_array_offset = new Array(noOutData.length);
-        x_array_offset.fill(x_vals_max * -1.2);
-
-        //Trace10 is the blue line trace to the right. Currently this feature is unwanted
-        var trace10 = {
-            y: noOutData,
-            x: x_array_offset,
-            type: 'scatter',
-            //Slave the plot to Trace1 and hide it from the legend
-            legendgroup: 'Group: ' + group.toString(),
-            showlegend: false,
-            marker: {
-                color: 'rgb(31, 119, 180)',
-                symbol: 'line-ew-open'
-            },
-            mode: 'markers',
+            hoverinfo: 'none',
             xaxis: axis
-
-
         };
 
         //This code is for generating random x values for the jitter scatter plot trace
         var x_array_random = [];
         //This code is to restrain the jitter to the shape of the violin plot, which is currently unwanted
-        /*for (var i=0; i< element.length; i++) {
+        /*for (var i=0; i< noOutData.length; i++) {
          c = x_vals[i];
          d = randomSign();
          //The reason for this math is to place the dot randomly within the bounds of the violin plot but offset it away from the
          //center line as to not obscure the median or quartiles
          x_array_random.push((c * d * Math.random() * 0.75 ) + (d * 0.1 * c))
-         }*/
+         }
+         */
 
         //Generate unconstrained random x values
-        for (var i=0; i< noOutData.length; i++) {
-            //The values are actually constrained to the domain of the graph
+        for (i=0; i < noOutData.length; i++) {
+            //The values are actually constrained to the domain of the trace
             c = x_vals_max;
-            //Calling random sign means that the jitter points will appear on either side of the Y axis
+            //Calling random sign means that the jitter points will appear on either side of the Y axis, randomly
             d = randomSign();
             //The reason for this math is to place the dot randomly within the bounds of the violin plot but offset it away from the
             //center line as to not obscure the median or quartiles
-            x_array_random.push((d * c * Math.random() * 0.75 ) + (d * 0.1 * c))
+            x_array_random.push((d * c * Math.random() * 0.75 ) + (d * 0.1 * c) + x_offset + x_vals_max)
         }
 
         //Trace3 is the jitter scatter plot. X values are generated randomly, and Y values represent non outlier points
+        //Generate overlay text in format 'Cluster X Jitter: Value'
+        var jitter_text = [];
+        for(i = 0; i < noOutData.length; i++){
+            jitter_text.push(group_name + ' Jitter: ' + noOutData[i])
+        }
+
         var trace3 = {
+            //Y values are data minus outliers
             y: noOutData,
+            //X values have no significance, so are random
             x: x_array_random,
             type: 'scatter',
-            //Slave the plot to Trace1 and hide it from the legend
+            //Slave the plot to Trace2 and hide it from the legend
             legendgroup: 'Group: ' + group.toString(),
             showlegend: false,
             marker: {
@@ -437,50 +416,57 @@ function createTracesAndLayout(arr){
                 size: 3
             },
             mode: 'markers',
-            xaxis: axis
-
-
+            xaxis: axis,
+            hoverinfo: 'text',
+            text: jitter_text
         };
 
         //Create random X values for outlier points
-        var outliers_x = new Array();
+        var outliers_x = [];
         for (var i=0; i< outliers.length; i++) {
             //The values are actually constrained to the domain of the graph
-            c = x_vals_max;
-            //Calling random sign means that the jitter points will appear on either side of the Y axis
+            c = x_vals_max ;
+            //Calling random sign means that the outlier points will appear on either side of the Y axis
             d = randomSign();
             //The reason for this math is to place the dot randomly within the bounds of the violin plot but offset it away from the
             //center line as to not obscure the median or quartiles
             //The range of X values for outliers is much smaller than non outliers
-            outliers_x.push((d * c * Math.random() * 0.1 ))
+            outliers_x.push((d * c * Math.random() * 0.1 ) + x_offset + x_vals_max)
         }
 
         //Trace 7 is the outliers scatter plot, plots outliers as 'X's
+        //Generate overlay text in format 'Cluster X Outlier: Value'
+        var outlier_text = [];
+        for(i = 0; i < outliers.length; i++){
+            outlier_text.push(group_name + ' Outlier: ' + outliers[i])
+        }
+
         var trace7 = {
             y: outliers,
             x: outliers_x,
             type: 'scatter',
-            //Slave the plot to Trace1 and hide it from the legend
+            text: outlier_text,
+            //Slave the plot to Trace2 and hide it from the legend
             legendgroup: 'Group: ' + group.toString(),
             showlegend: false,
             marker: {
-                color: 'rgb(40, 40, 255)',
+                //color: color,
+                color: 'rgb(0,0,0)',
                 symbol: 'x'
             },
             mode: 'markers',
-            xaxis: axis
-
-
+            xaxis: axis,
+            hoverinfo: 'text'
         };
 
         //Shape Traces
-
         //Trace 4 is the center line of the violin plot
         var trace4 = {
             //Center the line in the middle of the plot
-            x: [0, 0],
+            //because x offset tells you where the leftmost boundary of the trace should be, you must add the maximum value, aka the width of the mirrored left trace to it to get the cent of the trace
+            x: [x_offset + x_vals_max, x_offset + x_vals_max],
             //Y values are set to the minimum and maximum of the y data, to draw a line between the top and bottom of the violin
-            y: [getMinOfArray(noOutData), getMaxOfArray(noOutData)],
+            y: [getMinOfArray(pointData), getMaxOfArray(pointData)],
             //Slave the plot to Trace1 and hide it from the legend
             legendgroup: 'Group: ' + group.toString(),
             showlegend: false,
@@ -489,15 +475,17 @@ function createTracesAndLayout(arr){
                 width: 1
             },
             mode: 'lines',
-            name: '',
+            name: 'Center ' + group_name,
             type: 'scatter',
             xaxis: axis
 
         };
+        //record middle of trace for labels
+        center_lines.push(x_offset + x_vals_max);
 
         //Trace5 is the quartile line
         var trace5 = {
-            x: [0, 0],
+            x: [x_offset + x_vals_max, x_offset + x_vals_max],
             xaxis: axis,
             y: [lower_q, upper_q],
             //Slave the plot to Trace1 and hide it from the legend
@@ -515,7 +503,7 @@ function createTracesAndLayout(arr){
 
         //Trace6 is the median white square
         var trace6 = {
-            x: [0],
+            x: [x_offset + x_vals_max],
             xaxis: axis,
             y: [median_v],
             hoverinfo: 'text',
@@ -533,7 +521,7 @@ function createTracesAndLayout(arr){
 
         //Trace 8 is the capping line on top of violin plot
         var trace8 = {
-            x: [-x_vals[x_vals.length-1], x_vals[x_vals.length-1]],
+            x: [mir_x_vals[x_vals.length-1], x_vals[x_vals.length-1]],
             xaxis: axis,
             y: [y_vals[x_vals.length-1], y_vals[x_vals.length-1] ],
             showlegend: false,
@@ -541,14 +529,15 @@ function createTracesAndLayout(arr){
             legendgroup: 'Group: ' + group.toString(),
             line: {
                 color: 'rgb(0,0,0)',
-                width: 2
+                width: 1
             },
-            mode: 'lines'
+            mode: 'lines',
+            hoverinfo: 'none'
         };
 
         //Trace9 is the capping line on the bottom of the violin plot
         var trace9 = {
-            x: [-x_vals[0], x_vals[0]],
+            x: [mir_x_vals[0], x_vals[0]],
             xaxis: axis,
             y: [y_vals[0], y_vals[0] ],
             showlegend: false,
@@ -556,37 +545,42 @@ function createTracesAndLayout(arr){
             legendgroup: 'Group: ' + group.toString(),
             line: {
                 color: 'rgb(0,0,0)',
-                width: 2
+                width: 1
             },
-            mode: 'lines'
+            mode: 'lines',
+            hoverinfo: 'none'
         };
 
         //Append the traces to the larger group of traces
-        dataA.push([trace1, trace2, trace3, trace4, trace5, trace6, trace7, trace8, trace9]);
+        //Alternate order is for overlaing
+        //Order is [right violin, left violin, jitter points, center line, quartile line, median white square, top capping line, bottom capping line, outliers]
+        dataA.push([trace1, trace2, trace3, trace4, trace5, trace6, trace8, trace9, trace7]);
 
-        //Increment group number and record maximum horizontal value
+        //Increment group number and record maximum horizontal value for offset
         group++;
         x_vals_maxs.push(x_vals_max);
-
+        //The offset value each time is equal to the maximum width of the plot + a constant 1. The offset tells you where the left side (mirror trace) should extend to maximally
+        x_offset = ((2.0 * x_vals_max) + x_offset ) + 1 ;
     });
 
+    //This was code used for muliple X axis which has since been refactored out
     //Domain step is used as a reference for parsing the width of the div among th Plotly plots
     //As the number of plots increases, each plots share of the width decreases proportionally
-    var domain_step = 1.0/arr.length;
-
+    //var domain_step = 1.0/arr.length;
     //Create the X Axes
-    for(var i = 1;i <= group; i++){
-
+    //var num_plots = group + 1;
+    /*for(var i = 1;i <= group; i++){
         var x_axis = {
             //Defailt X Axis settings
-            showticklabels: false,
+            showticklabels: true,
             margin: {
                 r: 20
-
             },
+            ticktext: [name_array[i-1]],
+            tickvals: [0],
+            tickangle: 45,
             zeroline: false,
             showgrid: false,
-
             //Set the positioning and relative width of the plot. Proportional to the number of plots being plotted overall
             domain: [(domain_step * (i-1)), (domain_step * (i))],
             //Set the width of the plot to slighlty more than that of the violin, to give the appearance of padding
@@ -597,9 +591,19 @@ function createTracesAndLayout(arr){
         var current_axis = 'xaxis' + i.toString();
         layout[current_axis] = x_axis
 
-    }
+    }*/
 
+    var x_axis = {
+        showticklabels: true,
+
+        zeroline: false,
+        ticktext: name_array,
+        showgrid: false,
+        tickvals: center_lines
+
+    };
     //Return the Plotly data array and Plotly layout array
+    layout["xaxis"] = x_axis;
     return [dataA, layout]
 
 }

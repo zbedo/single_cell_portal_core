@@ -1,47 +1,74 @@
 <div class="panel panel-default">
-	<div class="panel-heading">
-		<div class="panel-title">
-			<h4><%= link_to "Expression Values for #{params[:cluster]} (#{@selected_annotation[:name]}) <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#box-controls', 'data-toggle' => 'collapse'  %> <%= render partial: 'show_search_options_button' %></h4>
-		</div>
-	</div>
-	<div id="box-controls" class="panel-collapse collapse in">
-		<div class="panel-body">
-      <% if @values_box_type == 'Box Plot' %>
-        <%= render partial: 'boxpoints_picker' %>
+  <div class="panel-heading">
+    <div class="panel-title">
+      <h4><%= link_to "Expression Values for #{params[:cluster]} (#{@selected_annotation[:name]}) <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#box-controls', 'data-toggle' => 'collapse'  %> <%= render partial: 'show_search_options_button' %></h4>
+    </div>
+  </div>
+  <div id="box-controls" class="panel-collapse collapse in">
+    <div class="panel-body">
+      <div class="row">
+      <% if action_name !~ /heatmap/ %>
+          <div class="col-md-4">
+            <%= label_tag :plot_type, 'Distribution Plot Type' %>&nbsp;<i class='fa fa-question-circle' title="Choose which distribution type to display." data-toggle="tooltip"></i>
+            <%= select_tag :plot_type, options_for_select(['Violin Plot', 'Box Plot'], params[:plot_type]), {class: 'form-control'} %>
+          </div>
+          <script>
+              $('#plot_type').change(function() {
+                  $('#expression-plots').data('box-rendered', false);
+                  renderGeneExpressionPlots();
+              });
+          </script>
       <% end %>
-      <div id="toggle-plots">
-        <%= render partial: 'trace_toggle' %>
+      <div class="col-md-4">
+        <% if @values_box_type == 'Box Plot' %>
+            <%= render partial: 'boxpoints_picker' %>
+        <% elsif action_name !~ /heatmap/ %>
+            <%= label_tag :kernel_type, 'Kernel Type' %>&nbsp;<i class='fa fa-question-circle' title="Choose which kernel function to use to calculate violin plot density." data-toggle="tooltip"></i>
+            <%= select_tag :kernel_type, options_for_select([['Epanechnikov', "epa"], ['Silverman', "sil"], ['Sigmoid', "sig"], ['Logistic', "log"],['Uniform', "uni"], ['Gaussian', "gau"], ['Triangular', "tri"], ['Triweight', "triw"], ['Quartic', "qua"], ['Tricube', "tric"],['Cosine', "cos"]], params[:kernel_type]), {class: 'form-control'} %>
+            <script>
+                $('#kernel_type').change(function() {
+                    $('#expression-plots').data('box-rendered', false);
+                    renderGeneExpressionPlots();
+                });
+            </script>
+        <% end %>
       </div>
-			<div class="row">
-				<div class="col-md-12">
-					<div id="box-plot"></div>
-				</div>
-			</div>
-		</div>
-	</div>
+      <div class="col-md-4">
+        <div id="toggle-plots">
+          <%= render partial: 'trace_toggle' %>
+        </div>
+      </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <div id="box-plot"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 <div class="panel panel-default">
-	<div class="panel-heading">
-		<div class="panel-title">
-			<h4><%= link_to "Expression Values as Scatter Plot <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#scatter-plots', 'data-toggle' => 'collapse'  %></h4>
-		</div>
-	</div>
-	<div id="scatter-plots" class="panel-collapse collapse in">
-		<div class="panel-body">
+  <div class="panel-heading">
+    <div class="panel-title">
+      <h4><%= link_to "Expression Values as Scatter Plot <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#scatter-plots', 'data-toggle' => 'collapse'  %></h4>
+    </div>
+  </div>
+  <div id="scatter-plots" class="panel-collapse collapse in">
+    <div class="panel-body">
       <div class="row">
         <div class="col-xs-12">
           <%= render partial: 'colorscale_picker' %>
         </div>
       </div>
-			<div class="row" id="scatter-wrapper">
-				<div class="col-md-7">
-					<div id="scatter-plot"></div>
-				</div>
-				<div class="col-md-5">
-					<div id="reference-plot"></div>
+      <div class="row" id="scatter-wrapper">
+        <div class="col-md-7">
+          <div id="scatter-plot"></div>
+        </div>
+        <div class="col-md-5">
+          <div id="reference-plot"></div>
           <div id="cluster-figure-legend"></div>
-				</div>
-			</div>
-		</div>
-	</div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
