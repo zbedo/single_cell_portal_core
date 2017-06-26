@@ -919,7 +919,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# this test depends on a workspace already existing in FireCloud called development-sync-test
 	# if this study has been deleted, this test will fail until the workspace is re-created with at least
-	# 3 default files for expression, metadata, and one cluster (using the test data from test/test_data)
+	# 3 default files for expression, metadata, one cluster, and one fastq file (using the test data from test/test_data)
 	test 'admin: sync study' do
 		puts "Test method: #{self.method_name}"
 
@@ -1066,9 +1066,9 @@ class UiTestSuite < Test::Unit::TestCase
 		end
 
 		# assert share was added
-		share_email_id = $share_email.gsub(/[@.]/, '-')
+		share_email_id = 'study-share-' + $share_email.gsub(/[@.]/, '-')
+		assert element_present?(:id, share_email_id), 'did not find proper share entry'
 		share_row = @driver.find_element(:id, share_email_id)
-		assert share_row.size == 1, 'did not find proper share entry'
 		shared_email = share_row.find_element(:class, 'share-email').text
 		assert shared_email == $share_email, "did not find correct email for share, expected #{$share_email} but found #{shared_email}"
 		shared_permission = share_row.find_element(:class, 'share-permission').text
@@ -1119,16 +1119,38 @@ class UiTestSuite < Test::Unit::TestCase
 		save_study.click
 		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
-
-
 		sync_button = @driver.find_element(:class, "sync-test-#{uuid}-sync")
 		sync_button.click
 		wait_for_render(:id, 'synced-data-panel-toggle')
 
 		# now confirm share was removed at FireCloud level
+		profile = @driver.find_element(:id, 'profile-nav')
+		profile.click
+		logout = @driver.find_element(:id, 'logout-nav')
+		logout.click
+		wait_until_page_loads(@base_url)
+		close_modal('message_modal')
 
+		# now login as share user and check workspace
+		login_path = @base_url + '/users/sign_in'
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login_as_other($share_email)
+		firecloud_workspace = "https://portal.firecloud.org/#workspaces/single-cell-portal/sync-test-#{uuid}"
+		@driver.get firecloud_workspace
+		assert !element_present?(:class, 'fa-check-circle'), 'did not revoke access - study workspace still loads'
 
-		# clean up study
+		# log back in as test user and clean up study
+		@driver.get @base_url
+		profile = @driver.find_element(:id, 'profile-nav')
+		profile.click
+		logout = @driver.find_element(:id, 'logout-nav')
+		logout.click
+		wait_until_page_loads(@base_url)
+		close_modal('message_modal')
+		@driver.get @base_url + '/studies'
+		close_modal('message_modal')
+		login_as_other($test_email)
 		delete_local_link = @driver.find_element(:class, "sync-test-#{uuid}-delete-local")
 		delete_local_link.click
 		@driver.switch_to.alert.accept
@@ -1404,7 +1426,6 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get(private_path)
 		wait_until_page_loads(private_path)
 		open_study_ui_tab('study-download')
-
 
 		private_files = @driver.find_elements(:class, 'dl-link')
 		private_file_link = private_files.first
