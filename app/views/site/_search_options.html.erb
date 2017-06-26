@@ -24,7 +24,7 @@
             <%= f.label :consensus, "Collapse Genes by <i class='fa fa-question-circle'></i>".html_safe, title: "Multiple genes only: Collapse expression scores of multiple genes for each cell using this metric.  Selecting 'None' will view genes individually as a heatmap.", data: {toggle: 'tooltip', placement: 'right'} %><br/>
             <%= f.select :consensus, options_for_select([['Mean', 'mean'],['Median', 'median']], params[:consensus]), {include_blank: 'None'}, {class: 'form-control'} %>
           </div>
-					<%= link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, "javascript:", class: "btn btn-warning pull-right #{action_name == 'study' ? 'disabled' : nil}", id: 'clear-gene-search', title: 'Clear gene search and return to cluster scatter plots', data: {toggle: 'tooltip'} %>
+					<%= link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, "javascript:", class: "btn pull-right #{action_name == 'study' ? 'btn-default disabled' : 'btn-warning'}", id: 'clear-gene-search', title: 'Clear gene search and return to cluster scatter plots', data: {toggle: 'tooltip'} %>
 					<%= link_to "<span class='fa fa-search'></span> Search".html_safe, "javascript:", class: 'btn btn-success', id: 'perform-gene-search' %>
 					<script type="text/javascript">
             $('#clear-gene-search').click(function(){
