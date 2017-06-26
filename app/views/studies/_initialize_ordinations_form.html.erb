@@ -7,7 +7,7 @@
 	<div class="form-group row">
 		<div class="col-sm-4">
 			<%= f.label :name %><br />
-			<%= f.text_field :name, class: 'form-control filename cluster-name', placeholder: 'Please provide a name for this group of ordinations...' %>
+			<%= f.text_field :name, class: 'form-control filename cluster-name', placeholder: 'Please provide a name for this group of ordinations...', autocomplete: 'off' %>
 		</div>
 		<div class="col-sm-8">
 			<%= f.label :description, 'Description/Figure Legend (this will be displayed below cluster)' %><br />
