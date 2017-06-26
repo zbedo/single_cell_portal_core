@@ -153,7 +153,6 @@ function cutOutliers(arr, l, u){
         }
     }
     return [outliers, small_arr]
-
 }
 
 /*
@@ -463,7 +462,8 @@ function createTracesAndLayout(arr, title){
         //Trace 4 is the center line of the violin plot
         var trace4 = {
             //Center the line in the middle of the plot
-            //because x offset tells you where the leftmost boundary of the trace should be, you must add the maximum value, aka the width of the mirrored left trace to it to get the cent of the trace
+            //because x offset tells you where the leftmost boundary of the trace should be, you must add the maximum value,
+            // aka the width of the mirrored left trace to it to get the cent of the trace
             x: [x_offset + x_vals_max, x_offset + x_vals_max],
             //Y values are set to the minimum and maximum of the y data, to draw a line between the top and bottom of the violin
             y: [getMinOfArray(pointData), getMaxOfArray(pointData)],
