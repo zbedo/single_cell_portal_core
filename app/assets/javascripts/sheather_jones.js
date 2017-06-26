@@ -83,7 +83,7 @@ function dnorm(x){
     return pdf(x, 0.0, 1.0)
 }
 
-//Sheather Jones bandwith selector
+//Sheather Jones bandwidth selector
 //As far as I can tell, this compares SJ vs normal bandwidth to find the best one
 function hsj(x){
     /*

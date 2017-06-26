@@ -34,7 +34,7 @@ function rotBandwidth(X){
 
 function kernelEpanechnikov(k) {
     return function(v) {
-        return Math.abs(v /= k) <= 1 ? 0.75 * (1 - v * v) / k : 0;
+        return Math.abs(v /= k) <= 1 ? 0.75 * (1 - (Math.pow(v, 2))) / k : 0;
     };
 }
 function kernelUniform(k) {
@@ -70,9 +70,15 @@ function kernelTriweight(k) {
 }
 
 //This gives poor results-- it's far to over smoothed and only shows the most extreme of bimodality
-function kernelGaussian(k) {
+function kernelGaussianOld(k) {
     return function(v) {
         return 1.0 / Math.sqrt(2.0 * Math.PI) * Math.exp(-0.5 * v * v) / k;
+    };
+}
+
+function kernelGaussian(k) {
+    return function(v) {
+        return pdf(v, 0,k);
     };
 }
 
@@ -189,6 +195,9 @@ function createTracesAndLayout(arr, title){
     //This is the maximum horizontal value of every violin plot, used later to re-range the plots and provide padding horizontally
     //TRemnant of multiple X axis
     var x_vals_maxs = [];
+
+    //Hardcoding a maximum value to scale all violin plots
+    var scale_max = 1.0;
 
     //Setting up single X axis
     var name_array = [];
@@ -319,7 +328,18 @@ function createTracesAndLayout(arr, title){
 
         //Get the max value of x for ranging the horizontal size of plot
         var x_vals_max = getMaxOfArray(x_vals);
+        var x_vals_min = getMinOfArray(x_vals);
+        x_vals_max = Math.abs(x_vals_max) > Math.abs(x_vals_min) ? x_vals_max : x_vals_min;
 
+        //scaling all violin plots
+        var scale_factor = scale_max / x_vals_max ;
+
+        x_vals_max = x_vals_max * scale_factor;
+        if(scale_factor === Infinity){
+            scale_factor = scale_max;
+        }
+        x_vals = x_vals.map(function(x) {return x * scale_factor});
+        mir_x_vals = mir_x_vals.map(function(x) {return x * scale_factor});
         //offset x values.
         //The offset value each time is equal to the maximum width of the plot + a constant 1. The offset tells you where the left side (mirror trace) should extend to maximally
         x_vals = x_vals.map(function(x) {return x + x_offset + x_vals_max});
@@ -386,12 +406,12 @@ function createTracesAndLayout(arr, title){
         //Generate unconstrained random x values
         for (i=0; i < noOutData.length; i++) {
             //The values are actually constrained to the domain of the trace
-            c = x_vals_max;
+            c = scale_max;
             //Calling random sign means that the jitter points will appear on either side of the Y axis, randomly
             d = randomSign();
             //The reason for this math is to place the dot randomly within the bounds of the violin plot but offset it away from the
             //center line as to not obscure the median or quartiles
-            x_array_random.push((d * c * Math.random() * 0.75 ) + (d * 0.1 * c) + x_offset + x_vals_max)
+            x_array_random.push((d * c * Math.random() * 0.75 ) + (d * 0.1 * c) + x_offset + scale_max)
         }
 
         //Trace3 is the jitter scatter plot. X values are generated randomly, and Y values represent non outlier points
@@ -424,13 +444,13 @@ function createTracesAndLayout(arr, title){
         var outliers_x = [];
         for (var i=0; i< outliers.length; i++) {
             //The values are actually constrained to the domain of the graph
-            c = x_vals_max ;
+            c = scale_max;
             //Calling random sign means that the outlier points will appear on either side of the Y axis
             d = randomSign();
             //The reason for this math is to place the dot randomly within the bounds of the violin plot but offset it away from the
             //center line as to not obscure the median or quartiles
             //The range of X values for outliers is much smaller than non outliers
-            outliers_x.push((d * c * Math.random() * 0.1 ) + x_offset + x_vals_max)
+            outliers_x.push((d * c * Math.random() * 0.1 ) + x_offset + scale_max)
         }
 
         //Trace 7 is the outliers scatter plot, plots outliers as 'X's
@@ -481,7 +501,7 @@ function createTracesAndLayout(arr, title){
 
         };
         //record middle of trace for labels
-        center_lines.push(x_offset + x_vals_max);
+        center_lines.push(x_offset + scale_max);
 
         //Trace5 is the quartile line
         var trace5 = {
@@ -560,7 +580,8 @@ function createTracesAndLayout(arr, title){
         group++;
         x_vals_maxs.push(x_vals_max);
         //The offset value each time is equal to the maximum width of the plot + a constant 1. The offset tells you where the left side (mirror trace) should extend to maximally
-        x_offset = ((2.0 * x_vals_max) + x_offset ) + 1 ;
+
+        x_offset = x_offset + (2.1 * scale_max);
     });
 
     //This was code used for muliple X axis which has since been refactored out
