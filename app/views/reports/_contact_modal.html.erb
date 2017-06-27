@@ -1,0 +1,28 @@
+<div class="modal fade" id="contact-modal" role="dialog" aria-labelledby="contact-modal" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="text-center">Send a request for a new plot</h3>
+      </div>
+      <div class="modal-body">
+        <%= form_for(:report_request, url: report_request_path, html: {class: 'form', id: 'report-request-form', data: {remote: true}}) do |f| %>
+          <div class="form-group">
+            <%= f.hidden_field :requester, value: current_user.email %>
+            <%= f.label :subject %><br />
+            <%= f.text_field :subject, value: 'Request for a new report plot', class: 'form-control' %>
+          </div>
+          <div class="form-group">
+            <%= f.cktext_area :message, ckeditor: {toolbar: 'mini'} %>
+          </div>
+          <div class="form-group">
+            <%= f.submit 'Send Request', class: 'btn btn-lg btn-success', id: 'send-report-request' %>
+            <%= link_to 'Cancel', 'javascript:;', class: 'btn btn-lg btn-warning pull-right', data: {dismiss: 'modal'} %>
+          </div>
+        <% end %>
+      </div>
+      <div class="modal-footer">
+        <button class="close" data-dismiss="modal">×</button>
+      </div>
+    </div>
+  </div>
+</div>

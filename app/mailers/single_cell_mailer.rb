@@ -85,5 +85,16 @@ class SingleCellMailer < ApplicationMailer
 		mail(to: @notify, subject: "[Single Cell Portal Notifier] Study: #{@study.name} has been deleted") do |format|
 			format.html {render html: "<p>The study #{@study.name} has been deleted by #{@user}</p>".html_safe}
 		end
-	end
+  end
+
+  def admin_notification(subject, requester, message)
+    @subject = subject
+    @requester = requester
+    @message = message
+    @admins = User.where(admin: true).map(&:email)
+
+    mail(to: @admins, reply_to: @requester, subject: "[Single Cell Portal Admin Notification]: #{@subject}") do |format|
+      format.html
+    end
+  end
 end

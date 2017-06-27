@@ -153,6 +153,8 @@ class UiTestSuite < Test::Unit::TestCase
 	# will handle if element doesn't exist or if reference is stale due to race condition
 	def element_visible?(how, what)
 		@driver.find_element(how, what).displayed?
+	rescue Selenium::WebDriver::Error::ElementNotVisibleError
+		false
 	rescue Selenium::WebDriver::Error::NoSuchElementError
 		false
 	rescue Selenium::WebDriver::Error::StaleElementReferenceError
@@ -1316,6 +1318,36 @@ class UiTestSuite < Test::Unit::TestCase
 		@wait.until {wait_for_plotly_render('#plotly-study-email-domain-dist', 'rendered')}
 		layout = @driver.execute_script("return document.getElementById('plotly-study-email-domain-dist').layout")
 		assert !layout['annotations'].nil?, "did not turn on annotations, expected annotations array but found #{layout['annotations']}"
+
+		puts "Test method: #{self.method_name} successful!"
+	end
+
+	# send a request to site admins for a new report plot
+	test 'admin: request a new report' do
+		puts "Test method: #{self.method_name}"
+
+		path = @base_url + '/reports'
+		@driver.get(path)
+		close_modal('message_modal')
+		login($test_email)
+		wait_until_page_loads(path)
+
+		request_modal = @driver.find_element(:id, 'report-request')
+		request_modal.click
+		wait_for_render(:id, 'contact-modal')
+
+		@driver.switch_to.frame(@driver.find_element(:tag_name, 'iframe'))
+		message = @driver.find_element(:class, 'cke_editable')
+		message_content = "This is a report request."
+		message.send_keys(message_content)
+		@driver.switch_to.default_content
+		send_request = @driver.find_element(:id, 'send-report-request')
+		send_request.click
+		wait_for_render(:id, 'message_modal')
+		assert element_visible?(:id, 'message_modal'), 'confirmation modal did not show.'
+		notice_content = @driver.find_element(:id, 'notice-content')
+		confirmation_message = 'Your message has been successfully delivered.'
+		assert notice_content.text == confirmation_message, "did not find confirmation message, expected #{confirmation_message} but found #{notice_content.text}"
 
 		puts "Test method: #{self.method_name} successful!"
 	end

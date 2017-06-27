@@ -8,6 +8,7 @@ Rails.application.routes.draw do
 
     # study reporter actions
     get 'reports', to: 'reports#index', as: :reports
+    post 'reports/report_request', to: 'reports#report_request', as: :report_request
 
     # study admin actions
 		mount Ckeditor::Engine => 'ckeditor'
