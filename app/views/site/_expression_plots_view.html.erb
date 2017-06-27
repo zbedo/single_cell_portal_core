@@ -24,7 +24,7 @@
             <%= render partial: 'boxpoints_picker' %>
         <% elsif action_name !~ /heatmap/ %>
             <%= label_tag :kernel_type, 'Kernel Type' %>&nbsp;<i class='fa fa-question-circle' title="Choose which kernel function to use to calculate violin plot density." data-toggle="tooltip"></i>
-            <%= select_tag :kernel_type, options_for_select([['Epanechnikov', "epa"], ['Silverman', "sil"], ['Sigmoid', "sig"], ['Logistic', "log"],['Uniform', "uni"], ['Gaussian', "gau"], ['Triangular', "tri"], ['Triweight', "triw"], ['Quartic', "qua"], ['Tricube', "tric"],['Cosine', "cos"]], params[:kernel_type]), {class: 'form-control'} %>
+            <%= select_tag :kernel_type, options_for_select([['Gaussian', "gau"],['Epanechnikov', "epa"]], params[:kernel_type]), {class: 'form-control'} %>
             <script>
                 $('#kernel_type').change(function() {
                     $('#expression-plots').data('box-rendered', false);
@@ -33,7 +33,20 @@
             </script>
         <% end %>
       </div>
-      <div class="col-md-4">
+      <div class="col-md-2">
+        <% if @values_box_type == 'Box Plot' %>
+        <% elsif action_name !~ /heatmap/ %>
+            <%= label_tag :band_type, 'Bandwidth Selector' %>&nbsp;<i class='fa fa-question-circle' title="Choose which bandwidth selector to use to calculate violin plot density. SJ selector may hurt performance with larger datasets." data-toggle="tooltip"></i>
+            <%= select_tag :band_type, options_for_select([['nrd0', "nrd0"],['SJ-STE', "sjste"]], params[:band_type]), {class: 'form-control'} %>
+            <script>
+                $('#band_type').change(function() {
+                    $('#expression-plots').data('box-rendered', false);
+                    renderGeneExpressionPlots();
+                });
+            </script>
+        <% end %>
+      </div>
+      <div class="col-md-2">
         <div id="toggle-plots">
           <%= render partial: 'trace_toggle' %>
         </div>

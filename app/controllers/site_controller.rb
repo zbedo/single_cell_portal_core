@@ -227,6 +227,7 @@ class SiteController < ApplicationController
       else
         @values_box_type = 'Violin Plot'
         @values_kernel_type = params[:kernel_type]
+        @values_band_type = params[:band_type]
       end
       @top_plot_partial = 'expression_plots_view'
       @top_plot_plotly = 'expression_plots_plotly'
@@ -314,6 +315,7 @@ class SiteController < ApplicationController
       else
         @values_box_type = 'Violin Plot'
         @values_kernel_type = params[:kernel_type]
+        @values_band_type = params[:band_type]
       end
       @top_plot_partial = 'expression_plots_view'
       @top_plot_plotly = 'expression_plots_plotly'

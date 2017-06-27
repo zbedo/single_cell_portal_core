@@ -40,13 +40,14 @@
         var consensus = $('#search_consensus').val();
         var subsample = $('#subsample').val();
         var plot_type = $('#plot_type').val() == undefined ? 'Violin Plot' : $('#plot_type').val();
-        var kernel_type = $('#kernel_type').val() == undefined ? 'epa' : $('#kernel_type').val();
+        var kernel_type = $('#kernel_type').val() == undefined ? 'gau' : $('#kernel_type').val();
+        var band_type = $('#band_type').val() == undefined ? 'nrd0' : $('#band_type').val();
         var boxpoints = $('#boxpoints_select').val() == undefined ? 'all' : $('#boxpoints_select').val();
         $("#search_cluster").val(cluster);
         $("#search_annotation").val(''); // clear value first
         $("#search_annotation").val(annotation);
         var delimeter = "<%= params[:gene] ? "?".html_safe : "&".html_safe %>";
-        url += delimeter + 'cluster=' + cluster + '&annotation=' + annotation + '&boxpoints=' + boxpoints + '&consensus=' + consensus + '&subsample=' + subsample + '&plot_type=' + plot_type + '&kernel_type=' + kernel_type
+        url += delimeter + 'cluster=' + cluster + '&annotation=' + annotation + '&boxpoints=' + boxpoints + '&consensus=' + consensus + '&subsample=' + subsample + '&plot_type=' + plot_type + '&kernel_type=' + kernel_type + '&band_type=' + band_type
         $.ajax({
             url: url,
             method: 'GET',

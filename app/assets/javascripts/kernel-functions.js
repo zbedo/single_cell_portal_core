@@ -19,11 +19,20 @@ function kernelDensityEstimator(kernel, X) {
 *  and https://stat.ethz.ch/R-manual/R-devel/library/stats/html/bandwidth.html
 */
 
-function rotBandwidth(X){
+function nrd0(X){
     var iqr = ss.quantile(X, 0.75) - ss.quantile(X, 0.25);
     var iqrM = iqr /1.34;
     var std = ss.standardDeviation(X);
     var min = std < iqrM ? std : iqrM;
+    if(min === 0){
+        min = std
+    }
+    if(min === 0){
+        min = Math.abs(X[1])
+    }
+    if(min === 0){
+        min = 1.0
+    }
     return 0.9 * min * Math.pow(X.length, -0.2)
 }
 
@@ -39,7 +48,7 @@ function kernelEpanechnikov(k) {
 }
 function kernelUniform(k) {
     return function(v) {
-        if (Math.abs(v /= k) <= 1) return .5 / k;
+        if (Math.abs(v /= k) <= 1) return 0.5 / k;
         return 0;
     };
 }
@@ -69,19 +78,6 @@ function kernelTriweight(k) {
     };
 }
 
-//This gives poor results-- it's far to over smoothed and only shows the most extreme of bimodality
-function kernelGaussianOld(k) {
-    return function(v) {
-        return 1.0 / Math.sqrt(2.0 * Math.PI) * Math.exp(-0.5 * v * v) / k;
-    };
-}
-
-function kernelGaussian(k) {
-    return function(v) {
-        return pdf(v, 0,k);
-    };
-}
-
 function kernelCosine(k) {
     return function(v) {
         if (Math.abs(v /= k) <= 1) return Math.PI / 4 * Math.cos(Math.PI / 2 * v) / k;
@@ -90,6 +86,15 @@ function kernelCosine(k) {
 }
 
 //The following kernel functions were written by Yanay
+
+//This gives the best results-- It represents essentially exact copies of R default violin plots
+function kernelGaussian(k) {
+    return function(v) {
+        //get normal distribution probabilty of v in sample with mean of 0 and standard deviation of k (the bandwidth)
+        return pdf(v, 0,k);
+    };
+}
+
 function kernelTricube(k) {
     return function(v) {
         if (Math.abs(v /= k) <= 1) {
@@ -167,7 +172,8 @@ function cutOutliers(arr, l, u){
  "#66c2a5", "#fc8d62", "#8da0cb", "#e78ac3", "#a6d854", "#ffd92f", "#e5c494", "#b3b3b3", "#8dd3c7",
  "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd", "#ccebc5", "#ffed6f"];*/
 
-
+//This is the master function that creates all the plotly traces.
+//Takes an array of arrays and returns the data array of traces and the layout variable
 function createTracesAndLayout(arr, title){
     //dataA is the array of plotly traces that is returned by this method
     dataA = [];
@@ -196,14 +202,14 @@ function createTracesAndLayout(arr, title){
     //TRemnant of multiple X axis
     var x_vals_maxs = [];
 
-    //Hardcoding a maximum value to scale all violin plots
-    var scale_max = 1.0;
+    //Hardcoding a maximum value to scale all violin plots. Essentially this value shouldn't matter as long as it is >0
+    var scale_max = 0.5;
 
     //Setting up single X axis
     var name_array = [];
     //Center Lines is for the xAxis labels to make sure they line up with appropriate trace
     var center_lines = [];
-    //Inital offset is 0 because its the first trace
+    //Inital offset is 0 because it's the first trace
     var x_offset = 0;
 
     //Iterate through every violin plot
@@ -215,7 +221,21 @@ function createTracesAndLayout(arr, title){
         name_array.push(group_name);
 
         //Set the bandwidth
-        bandwidth = typeof fullData[3] !== 'undefined' ? fullData[3] : rotBandwidth(fullData[1]);
+        var bandwidth_type = fullData[3];
+        switch (bandwidth_type) {
+            case "nrd0":
+                var bandwidth = nrd0(fullData[1]);
+                var modifiers = true;
+                break;
+            case "sjste":
+                var bandwidth = hsj(fullData[1]);
+                break;
+            default:
+                //Gaussian is the best kernel
+                var bandwidth = nrd0(fullData[1]);
+        }
+
+
 
         //Set the Kernel based on passed parameters
         //Potential Kernel Options: "sil", "sig", "log","uni", "gau", "tri","triw", "qua", "tric","cos", "epa"
@@ -232,32 +252,37 @@ function createTracesAndLayout(arr, title){
                 var current_kernel = kernelLogistic(bandwidth);
                 break;
             case "uni":
+                bandwidth = bandwidth * Math.sqrt(3.0);
                 var current_kernel = kernelUniform(bandwidth);
                 break;
             case "gau":
                 var current_kernel = kernelGaussian(bandwidth);
                 break;
             case "tri":
+                bandwidth = bandwidth * Math.sqrt(6.0);
                 var current_kernel = kernelTriangular(bandwidth);
                 break;
             case "triw":
                 var current_kernel = kernelTriweight(bandwidth);
                 break;
             case "qua":
+                bandwidth = bandwidth * Math.sqrt(7.0);
                 var current_kernel = kernelQuartic(bandwidth);
                 break;
             case "tric":
                 var current_kernel = kernelTricube(bandwidth);
                 break;
             case "cos":
+                bandwidth = bandwidth/(Math.sqrt((1.0/3.0) - (2/(Math.PI * Math.PI))));
                 var current_kernel = kernelCosine(bandwidth);
                 break;
             case "epa":
+                bandwidth = bandwidth * Math.sqrt(5.0);
                 var current_kernel = kernelEpanechnikov(bandwidth);
                 break;
             default:
-                //Epanechnikov is the most used kernel
-                var current_kernel = kernelEpanechnikov(bandwidth);
+                //Gaussian is the best kernel
+                var current_kernel = kernelGaussian(bandwidth);
         }
 
         //We only need the array of points now
@@ -281,6 +306,7 @@ function createTracesAndLayout(arr, title){
         var axis = 'x';
         //Separate outliers from the data
         //This is not desired behavior but I'm leaving it in in case it is wanted in future
+        //No outlier data is actually useful, as it is used for jitter points
         var out_array = cutOutliers(pointData.slice(), lower_q, upper_q);
 
         //Set new arrays to the outliers and normal data-- normal data is supposed to include outliers so it goes back to original full point data
@@ -326,18 +352,24 @@ function createTracesAndLayout(arr, title){
             mir_x_vals.push(mir_x_val);
         });
 
-        //Get the max value of x for ranging the horizontal size of plot
+        //Get the max value of x for ranging the horizontal size of plot. Some kernels give negative numbers for unknown reason.
+        //Therefore, getting the largest abs value number and setting it to max
         var x_vals_max = getMaxOfArray(x_vals);
         var x_vals_min = getMinOfArray(x_vals);
         x_vals_max = Math.abs(x_vals_max) > Math.abs(x_vals_min) ? x_vals_max : x_vals_min;
 
-        //scaling all violin plots
+        //scaling all violin plots. Scale factor means max width = scale_max
         var scale_factor = scale_max / x_vals_max ;
 
+        //Reset maximum
         x_vals_max = x_vals_max * scale_factor;
+
+        //If heavy zero data, scale factor may be 1/0 or infinity, so reduce it to irrelevant
         if(scale_factor === Infinity){
             scale_factor = scale_max;
         }
+
+        //Reduce x's and mirrored x's to max width scaled
         x_vals = x_vals.map(function(x) {return x * scale_factor});
         mir_x_vals = mir_x_vals.map(function(x) {return x * scale_factor});
         //offset x values.
@@ -581,11 +613,11 @@ function createTracesAndLayout(arr, title){
         x_vals_maxs.push(x_vals_max);
         //The offset value each time is equal to the maximum width of the plot + a constant 1. The offset tells you where the left side (mirror trace) should extend to maximally
 
-        x_offset = x_offset + (2.1 * scale_max);
+        x_offset = x_offset + (2.2 * scale_max);
     });
 
     //This was code used for muliple X axis which has since been refactored out
-    //Domain step is used as a reference for parsing the width of the div among th Plotly plots
+    //Domain step is used as a reference for parsing the width of the div among the Plotly plots
     //As the number of plots increases, each plots share of the width decreases proportionally
     //var domain_step = 1.0/arr.length;
     //Create the X Axes
