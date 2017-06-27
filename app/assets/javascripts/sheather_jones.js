@@ -28,7 +28,6 @@ function ones(n){
         a[i] = 1.0;
     }
     return a
-
 }
 
 //get the weighted mean
@@ -47,15 +46,14 @@ function wvar(x, w){
 
 //Normal distribution?
 function hnorm(x){
-    /*
-     Bandwidth estimate assuming f is normal. See paragraph 2.4.2 of
-     Bowman and Azzalini[1]_ for details.
-     References
-     ----------
-     .. [1] Applied Smoothing Techniques for Data Analysis: the
-     Kernel Approach with S-Plus Illustrations.
-     Bowman, A.W. and Azzalini, A. (1997).
-     Oxford University Press, Oxford
+     /*Bandwidth estimate assuming f is normal. See paragraph 2.4.2 of
+     * Bowman and Azzalini[1]_ for details.
+     * References
+     * ----------
+     * .. [1] Applied Smoothing Techniques for Data Analysis: the
+     * Kernel Approach with S-Plus Illustrations.
+     * Bowman, A.W. and Azzalini, A. (1997).
+     * Oxford University Press, Oxford
      */
 
     //new one array with length x
@@ -86,13 +84,12 @@ function dnorm(x){
 //Sheather Jones bandwidth selector
 //As far as I can tell, this compares SJ vs normal bandwidth to find the best one
 function hsj(x){
-    /*
-     Sheather-Jones bandwidth estimator [1]_.
-     References
-     ----------
-     .. [1] A reliable data-based bandwidth selection method for kernel
-     density estimation. Simon J. Sheather and Michael C. Jones.
-     Journal of the Royal Statistical Society, Series B. 1991
+     /*Sheather-Jones bandwidth estimator [1]_.
+     * References
+     * ----------
+     * .. [1] A reliable data-based bandwidth selection method for kernel
+     * density estimation. Simon J. Sheather and Michael C. Jones.
+     * Journal of the Royal Statistical Society, Series B. 1991
      */
 
     var h0 = hnorm(x);
@@ -221,9 +218,10 @@ function quartile(input){
         _firstHalf = arr.slice(0, Math.ceil(_median_index));
         _secondHalf = arr.slice(Math.ceil(_median_index));
 
-        //linear interpolation from numpy
-        //This optional parameter specifies the interpolation method to use when the desired quantile lies between two data points i < j:
-        //linear: i + (j - i) * fraction, where fraction is the fractional part of the index surrounded by i and j.
+        /*linear interpolation from numpy
+        * This optional parameter specifies the interpolation method to use when the desired quantile lies between two data points i < j:
+        * linear: i + (j - i) * fraction, where fraction is the fractional part of the index surrounded by i and j.
+        */
 
         var upperQ_upperVal = _secondHalf[Math.ceil(medianIndex(_secondHalf))];
         var upperQ_lowerVal = _secondHalf[Math.floor(medianIndex(_secondHalf))];
@@ -242,13 +240,12 @@ function quartile(input){
 
 //Sheather Jones Bandwidth Selection
 function sj(x, h){
-    /*
-     Equation 12 of Sheather and Jones [1]_
-     References
-     ----------
-     .. [1] A reliable data-based bandwidth selection method for kernel
-     density estimation. Simon J. Sheather and Michael C. Jones.
-     Journal of the Royal Statistical Society, Series B. 1991
+     /*Equation 12 of Sheather and Jones [1]_
+     * References
+     * ----------
+     * .. [1] A reliable data-based bandwidth selection method for kernel
+     * density estimation. Simon J. Sheather and Michael C. Jones.
+     * Journal of the Royal Statistical Society, Series B. 1991
      */
     var n = x.length;
 
@@ -269,7 +266,6 @@ function sj(x, h){
     //switch rows and columns
     var wT = specialTranspose(W);
 
-    //python code W = W - W.T
     //Subtract transposed values from original values-- works because arrays is square (due to tiling)
     var new_W = [];
     for(r = 0; r < W.length; r++){
@@ -316,6 +312,7 @@ function sj(x, h){
 
     var alpha2 = 1.357 * (Math.pow(Math.abs(sda[0] / tdb[0]) , (1.0 / 7.0))) * Math.pow(h , (5.0 / 7.0));
     //divide w1 by value of alpha2
+
     W1 = [];
     for(r = 0; r < W.length; r++){
         var row = [];

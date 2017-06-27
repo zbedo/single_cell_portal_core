@@ -96,7 +96,7 @@ $("#colorscale").change(function() {
 // load box plot data
 var expressionData = [];
 
-<% if @values_box_type == 'Box Plot' %>
+<% if @values_box_type == 'box' %>
     <% @values.sort_by {|k,v| k}.each_with_index do |(cluster, data), index| %>
       var cluster_<%= index %>_exp = {
         y: <%= raw data[:y] %>,

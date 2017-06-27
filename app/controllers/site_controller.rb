@@ -222,10 +222,10 @@ class SiteController < ApplicationController
     # depending on annotation type selection, set up necessary partial names to use in rendering
     if @selected_annotation[:type] == 'group'
       @values = load_expression_boxplot_data_array_scores(@selected_annotation, subsample)
-      if params[:plot_type] == 'Box Plot'
-        @values_box_type = 'Box Plot'
+      if params[:plot_type] == 'box'
+        @values_box_type = 'box'
       else
-        @values_box_type = 'Violin Plot'
+        @values_box_type = 'violin'
         @values_kernel_type = params[:kernel_type]
         @values_band_type = params[:band_type]
       end
@@ -310,8 +310,8 @@ class SiteController < ApplicationController
     # depending on annotation type selection, set up necessary partial names to use in rendering
     if @selected_annotation[:type] == 'group'
       @values = load_gene_set_expression_boxplot_scores(@selected_annotation, params[:consensus], subsample)
-      if params[:plot_type] == 'Box Plot'
-        @values_box_type = 'Box Plot'
+      if params[:plot_type] == 'box'
+        @values_box_type = 'box'
       else
         @values_box_type = 'Violin Plot'
         @values_kernel_type = params[:kernel_type]
