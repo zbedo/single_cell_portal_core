@@ -137,6 +137,41 @@ class AdminConfiguration
     Rails.logger.info "#{Time.now}: all study access restored"
   end
 
+  # sends an email to all site administrators on startup notifying them of portal restart
+  def self.restart_notification
+    current_time = Time.now.to_s(:long)
+    locked_jobs = Delayed::Job.where(:locked_by.nin => [nil]).count
+    message = "<p>The Single Cell Portal was restarted at #{current_time}.</p><p>There are currently #{locked_jobs} jobs waiting to be restarted.</p>"
+    SingleCellMailer.admin_notification('Portal restart', nil, message).deliver_now
+  end
+
+  # method to unlock all current delayed_jobs to allow them to be restarted
+  def self.restart_locked_jobs
+    # determine current processes and their pids
+    job_count = 0
+    pid_files = Dir.entries(Rails.root.join('tmp','pids')).delete_if {|p| p.start_with?('.')}
+    pids = {}
+    pid_files.each do |file|
+      pids[file.chomp('.pid')] = File.open(Rails.root.join('tmp', 'pids', file)).read.strip
+    end
+    locked_jobs = Delayed::Job.where(:locked_by.nin => [nil]).to_a
+    locked_jobs.each do |job|
+      # grab worker number and pid
+      worker, pid_str = job.locked_by.split.minmax
+      pid = pid_str.split(':').last
+      # check if current job worker has matching pid; if not, then the job is orphaned and should be unlocked
+      unless pids[worker] == pid
+        # deserialize handler object to get attributes for logging
+        deserialized_handler = YAML::load(job.handler)
+        job_method = deserialized_handler.method_name.to_s
+        Rails.logger.info "#{Time.now}: Restarting orphaned process #{job.id}:#{job_method} initially queued on #{job.created_at.to_s(:long)}"
+        job.update(locked_by: nil, locked_at: nil)
+        job_count += 1
+      end
+    end
+    job_count
+  end
+
   private
 
   def validate_value_by_type
@@ -151,3 +186,4 @@ class AdminConfiguration
     end
   end
 end
+

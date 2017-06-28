@@ -55,3 +55,6 @@ echo "*** COMPLETED ***"
 echo "*** REINDEXING COLLECTIONS ***"
 sudo -E -u app -H bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV db:mongoid:create_indexes
 echo "*** COMPLETED ***"
+
+echo "*** SENDING RESTART NOTIFICATION ***"
+sudo -E -u app -H /home/app/webapp/bin/rails runner -e $PASSENGER_APP_ENV "AdminConfiguration.restart_notification"

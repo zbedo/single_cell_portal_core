@@ -30,10 +30,18 @@
         <p><%= link_to "<span class='fa fa-plus'></span> New Config Option".html_safe, new_admin_configuration_path, class: 'btn btn-success', id: 'create-new-configuration' %>&nbsp;</p>
       </div>
     </div>
-    <p>
-      <%= link_to "<span class='fa fa-refresh'></span> Reset User Download Quotas".html_safe, reset_user_download_quotas_path, class: 'btn btn-lg btn-primary', id: 'reset-user-download-quotas', data: {remote: true} %>
-      <%= link_to "<span class='fa fa-exclamation-circle'></span> MANAGE FIRECLOUD ACCESS".html_safe, '#', class: 'btn btn-lg btn-danger pull-right panic', id: 'show-panic-modal' %>
-    </p>
+    <h3>Other Tasks</h3>
+    <div class="row">
+      <div class="col-sm-4">
+        <%= link_to "<span class='fa fa-refresh'></span> Reset User Download Quotas".html_safe, 'javascript:;', class: 'btn btn-lg btn-primary', id: 'reset-user-download-quotas' %>
+      </div>
+      <div class="col-sm-4 text-center">
+        <%= link_to "<span class='fa fa-unlock'></span> Unlock Orphaned Jobs".html_safe, 'javascript:;', class: 'btn btn-lg btn-warning', id: 'restart-locked-jobs', title: 'This will restart any parse jobs that were locked and did not complete due to a restart', data: {toggle: 'tooltip'} %>
+      </div>
+      <div class="col-sm-4 text-right">
+        <%= link_to "<span class='fa fa-exclamation-circle'></span> MANAGE FIRECLOUD ACCESS".html_safe, '#', class: 'btn btn-lg btn-danger panic', id: 'show-panic-modal' %>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -115,7 +123,20 @@
 
     $('#reset-user-download-quotas').click(function(){
         launchModalSpinner('#working-modal-spinner','#working-modal');
-        $.get("<%= reset_user_download_quotas_path %>");
+        $.ajax({
+            url: "<%= reset_user_download_quotas_path %>",
+            method: 'POST',
+            dataType: 'script'
+        });
+    });
+
+    $('#restart-locked-jobs').click(function(){
+        launchModalSpinner('#working-modal-spinner','#working-modal');
+        $.ajax({
+            url: "<%= restart_locked_jobs_path %>",
+            method: 'POST',
+            dataType: 'script'
+        });
     });
 
     $('.firecloud-status').click(function() {

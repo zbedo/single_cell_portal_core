@@ -112,14 +112,11 @@ class UiTestSuite < Test::Unit::TestCase
 	# setup is called before every test is run, this instatiates the driver and configures waits and other variables needed
 	def setup
 		# disable the 'save your password' prompt
-		opts = {
-				'prefs' => {
-						'credentials_enable_service' => false
-				}
-		}
-		caps = Selenium::WebDriver::Remote::Capabilities.chrome("chromeOptions" => opts)
+		caps = Selenium::WebDriver::Remote::Capabilities.chrome("chromeOptions" => {'prefs' => {'credentials_enable_service' => false}})
+		options = Selenium::WebDriver::Chrome::Options.new
+		options.add_argument('--enable-webgl-draft-extensions')
 		@driver = Selenium::WebDriver::Driver.for :chrome, driver_path: $chromedriver_dir,
-																							switches: ['--enable-webgl-draft-extensions'], desired_capabilities: caps
+																							options: options, desired_capabilities: caps
 		@driver.manage.window.maximize
 		@base_url = $portal_url
 		@accept_next_alert = true
@@ -1289,6 +1286,29 @@ class UiTestSuite < Test::Unit::TestCase
 		save.click
 		wait_until_page_loads(path)
 		close_modal('message_modal')
+
+		puts "Test method: #{self.method_name} successful!"
+	end
+
+	# test unlocking jobs feature - this mainly just tests that the request goes through. it is difficult to test the
+	# entire method as it require the portal to crash while in the middle of a parse, which cannot be reliably automated.
+
+	test 'admin: restart locked jobs' do
+		puts "Test method: #{self.method_name}"
+		path = @base_url + '/admin'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email)
+
+		restart_modal_link = @driver.find_element(:id, 'restart-locked-jobs')
+		restart_modal_link.click
+		wait_for_render(:id, 'message_modal')
+		assert element_visible?(:id, 'message_modal'), 'confirmation message did not appear'
+		close_modal('message_modal')
+
+
+
+		puts "Test method: #{self.method_name} successful!"
 	end
 
 	test 'admin: view study reports' do
@@ -1947,11 +1967,11 @@ class UiTestSuite < Test::Unit::TestCase
 		back_btn = @driver.find_element(:id, 'clear-gene-search')
 		back_btn.click
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
-
+		sleep(1)
 		current_cluster = @driver.find_element(:id, 'cluster')
 		current_annotation = @driver.find_element(:id, 'annotation')
 		assert current_cluster['value'] == cluster_name, "did not load correct cluster after back button; expected #{cluster_name} but loaded #{current_cluster['value']}"
-		assert current_annotation['value'] == annotation_value, "did not load correct annotation after back button; expected #{current_annotation} but loaded #{loaded_annotation['value']}"
+		assert current_annotation['value'] == annotation_value, "did not load correct annotation after back button; expected #{current_annotation} but loaded #{current_annotation['value']}"
 
 		# now search for multiple genes as a heatmap
 		genes = @genes.shuffle.take(rand(2..5))

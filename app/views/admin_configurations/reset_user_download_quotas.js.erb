@@ -1,6 +1,3 @@
-$('#working-modal .spinner-target').data('spinner').stop();
-$('#working-modal .spinner-target').html("<p class='text-center text-success'><strong>All user download quotas successfully reset to 0.</strong></p>");
-
-setTimeout(function() {
-    $("#working-modal").modal("hide");
-}, 3000);
+closeModalSpinner('#working-modal-spinner', '#working-modal', function() {
+    $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {notice: 'All user download quotas successfully reset to 0.'}) %>");
+});

@@ -87,14 +87,18 @@ class SingleCellMailer < ApplicationMailer
 		end
   end
 
+  # generic admin notification email method
   def admin_notification(subject, requester, message)
-    @subject = subject
-    @requester = requester
-    @message = message
-    @admins = User.where(admin: true).map(&:email)
+    # don't deliver if config value is set to true
+    unless Rails.application.config.disable_admin_notifications == true
+      @subject = subject
+      @requester = requester.nil? ? 'no-reply@broadinstitute.org' : requester
+      @message = message
+      @admins = User.where(admin: true).map(&:email)
 
-    mail(to: @admins, reply_to: @requester, subject: "[Single Cell Portal Admin Notification]: #{@subject}") do |format|
-      format.html
+      mail(to: @admins, reply_to: @requester, subject: "[Single Cell Portal Admin Notification]: #{@subject}") do |format|
+        format.html
+      end
     end
   end
 end

@@ -138,11 +138,13 @@ Therefore, you will need to have a minimal portal environment enabled outside of
 To begin the test suite, launch an instance of the portal in development mode and run the following command in another shell
 in the portal root directory:
 
-  ruby test/ui_test_suite.rb -- -e=(email account #1) -s=(email account #2) -p=(email account #1 password) -P=(email account #2 password)
+  ruby test/ui_test_suite.rb -- -e=(email account #1) -s=(email account #2) -p='(email account #1 password)' -P='(email account #2 password)'
 
 Passwords are required as all portal accounts are actual Google accounts, so we pass in passwords at runtime to allow the
 script to authenticate as the specified user.  Passwords are only stored temporarily in-memory and are not persisted to disk
 at any point.
+
+
 
 Paths to the chromedriver binary and your profile download directory can also be configured with the <code>-c</code> and <code>-d</code> flags, respectively.
 
