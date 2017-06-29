@@ -1114,6 +1114,13 @@ class SiteController < ApplicationController
         unless params[:subsample].nil?
           params_key += "_#{params[:subsample]}"
         end
+        params_key += "_#{params[:plot_type]}"
+        unless params[:kernel_type].nil?
+          params_key += "_#{params[:kernel_type]}"
+        end
+        unless params[:band_type].nil?
+          params_key += "_#{params[:band_type]}"
+        end
         render_gene_expression_plots_url(study_name: params[:study_name], gene: params[:gene]) + params_key
       when 'render_gene_set_expression_plots'
         unless params[:subsample].nil?
@@ -1125,6 +1132,13 @@ class SiteController < ApplicationController
           gene_list = params[:search][:genes]
           gene_key = construct_gene_list_hash(gene_list)
           params_key += "_#{gene_key}"
+        end
+        params_key += "_#{params[:plot_type]}"
+        unless params[:kernel_type].nil?
+          params_key += "_#{params[:kernel_type]}"
+        end
+        unless params[:band_type].nil?
+          params_key += "_#{params[:band_type]}"
         end
         render_gene_set_expression_plots_url(study_name: params[:study_name]) + params_key
       when 'expression_query'

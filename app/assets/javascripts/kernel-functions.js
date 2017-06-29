@@ -22,7 +22,7 @@ function kernelDensityEstimator(kernel, X) {
 function nrd0(X){
     var iqr = ss.quantile(X, 0.75) - ss.quantile(X, 0.25);
     var iqrM = iqr /1.34;
-    var std = ss.standardDeviation(X);
+    var std = ss.sampleStandardDeviation(X);
     var min = std < iqrM ? std : iqrM;
     if(min === 0){
         min = std
@@ -164,6 +164,20 @@ function cutOutliers(arr, l, u){
         }
     }
     return [outliers, small_arr]
+}
+
+//Resolution is the number of equally spaced y values that will have their density, x, calculated
+function genRes(length, min, max){
+    //Resolution = larger of 512 or length of data
+    var resolution = length > 512 ? length : 512;
+    //Calculate equal spacing of y Points and push all to array
+    var ratio = (max-min) /(resolution -1.0);
+    var res_points =[];
+
+    for(var i = 0.0; i < resolution; i++){
+        res_points.push((ratio * i) + min);
+    }
+    return res_points
 }
 
 //This is the master function that creates all the plotly traces.
@@ -310,15 +324,7 @@ function createTracesAndLayout(arr, title){
 
         //Resolution is the number of equally spaced y values that will have their density, x, calculated
         //Resolution = larger of 512 or length of data
-        var resolution = pointData.length > 512 ? pointData.length : 512;
-
-        //Calculate equal spacing of y Points and push all to array
-        var ratio = (max-min) /resolution;
-        var res_points =[];
-
-        for(i = 0.0; i < resolution; i++){
-            res_points.push((ratio * i) + min);
-        }
+        var res_points = genRes(pointData.length, min, max);
 
         //Create the Kernel Estimating Function
         var kde = kernelDensityEstimator(current_kernel, res_points);
