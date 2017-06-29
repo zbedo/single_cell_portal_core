@@ -55,7 +55,6 @@
 	<script type="text/javascript">
 
 		$(function() {
-			// check if upload has already happened
 			if (<%= !study_file.upload_file_name.nil? %>) {
 				completeWizardStep('initialize_expression_form_nav');
 				console.log('incrementing status for expression matrix upload');
@@ -65,14 +64,13 @@
 
 			$('#expression_form').fileupload({
 				url: "<%= upload_study_path(@study._id) %>",
-				maxChunkSize: 10000000, // 10 MB
+				maxChunkSize: 10000000,
 				type: 'PATCH',
 				acceptFileTypes: /(\.|\/)(txt|text|txt\.gz|text\.gz)$/i,
 				add: function (e, data) {
 					fileUploading = true;
 					var that = this;
 					var fileName = data.files[0].name.replace(/ /g, '_');
-					// this is the chunked upload callback, will upload 10MB at a time until finished
 					$.getJSON("<%= resume_upload_study_path %>", { file: fileName }, function (result) {
 						var file = result.file;
             if (file == null) {
@@ -84,15 +82,12 @@
             }
 					});
 				},
-				// on each chunk completion, update status
 				chunkdone: function(e, data) {
 					var perc = parseInt(data.loaded / data.total * 100, 10);
 					$(data.context).find('h1').html(perc + "% uploaded");
 				},
-				// file upload is done, now clean up
 				done: function(e, data) {
 					var fileName = data.files[0].name.replace(/ /g, '_');
-					// update upload status
 					$.ajax({
 						url: "<%= update_status_study_path %>",
 						type: "PATCH",
@@ -102,7 +97,6 @@
 					$.post("<%= parse_study_file_study_path(@study._id) %>", {file: fileName, modal_target: '#expression-parse-modal', partial: 'initialize_expression_form', selector: "#expression_form"});
 				},
         fail: function(e, data) {
-				    // check if upload is in progress and abort
 				    if (data.jqXHR != undefined) {
                 data.jqXHR.abort();
             }

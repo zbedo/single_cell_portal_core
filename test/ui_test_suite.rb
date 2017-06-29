@@ -425,8 +425,6 @@ class UiTestSuite < Test::Unit::TestCase
 		close_modal('upload-success-modal')
 
 		# upload a second cluster
-		prev_btn = @driver.find_element(:id, 'prev-btn')
-		prev_btn.click
 		new_cluster = @driver.find_element(:class, 'add-cluster')
 		new_cluster.click
 		scroll_to(:bottom)
@@ -442,6 +440,8 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn_2.click
 		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
+		next_btn = @driver.find_element(:id, 'next-btn')
+		next_btn.click
 
 		# upload fastq
 		wait_for_render(:class, 'initialize_primary_data_form')
@@ -699,10 +699,11 @@ class UiTestSuite < Test::Unit::TestCase
 		# close modal
 		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
-		next_btn = @driver.find_element(:id, 'next-btn')
-		next_btn.click
 
 		# upload bad marker gene list
+		scroll_to(:top)
+		gene_list_tab = @driver.find_element(:id, 'initialize_marker_genes_form_nav')
+		gene_list_tab.click
 		marker_form = @driver.find_element(:class, 'initialize_marker_genes_form')
 		marker_file_name = marker_form.find_element(:id, 'study_file_name')
 		marker_file_name.send_keys('Test Gene List')

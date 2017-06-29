@@ -23,24 +23,4 @@ class ExpressionScore
     end
     sum / cells.size
   end
-
-  def self.generate_searchable_genes
-    records = []
-    counter = 0
-    self.all.each do |exp_score|
-      if exp_score.searchable_gene.nil? || exp_score.searchable_gene.blank?
-        exp_score.searchable_gene = exp_score.gene.downcase
-        records << exp_score
-        counter += 1
-        if records.size % 1000 == 0
-          self.update(records)
-          puts "Updating #{counter} records"
-          records = []
-        end
-      end
-    end
-    self.update(records)
-    puts "Updating #{counter} records"
-    records = []
-  end
 end

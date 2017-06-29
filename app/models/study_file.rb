@@ -37,6 +37,7 @@ class StudyFile
   field :y_axis_max, type: Integer
   field :z_axis_min, type: Integer
   field :z_axis_max, type: Integer
+  field :queued_for_deletion, type: Boolean, default: false
 
   # callbacks
   before_validation   :set_file_name_and_data_dir, on: :create
@@ -170,6 +171,16 @@ class StudyFile
         @cache_key = nil
     end
     @cache_key
+  end
+
+  # delete all queued study file objets
+  def self.delete_queued_files
+    study_files = self.where(queued_for_deletion: true)
+    study_files.each do |file|
+      Rails.logger.info "#{Time.now} deleting queued file #{file.name} in study #{file.study.name}."
+      file.destroy
+      Rails.logger.info "#{Time.now} #{file.name} successfully deleted."
+    end
   end
 
   private

@@ -62,14 +62,13 @@ class SiteController < ApplicationController
     # double check on download availability: first, check if administrator has disabled downloads
     # then check if FireCloud is available and disable download links if either is true
     @allow_downloads = AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
-
+    set_study_default_options
     # load options and annotations
     if @study.initialized?
       @options = load_cluster_group_options
       @cluster_annotations = load_cluster_group_annotations
       # call set_selected_annotation manually
       set_selected_annotation
-      set_study_default_options
     end
   end
 
@@ -89,8 +88,8 @@ class SiteController < ApplicationController
         old_name = @study.previous_changes['url_safe_name'].first
         CacheRemovalJob.new(old_name).delay.perform
       end
+      set_study_default_options
       if @study.initialized?
-        set_study_default_options
         @cluster = @study.default_cluster
         @options = load_cluster_group_options
         @cluster_annotations = load_cluster_group_annotations
@@ -471,7 +470,7 @@ class SiteController < ApplicationController
     @disabled_link = "<button type='button' class='btn btn-danger' disabled>Currently Unavailable</button>".html_safe
     # load study_file fastqs first
     @fastq_files = {data: []}
-    @study.study_files.select {|file| file.file_type == 'Fastq'}.each do |file|
+    @study.study_files.by_type('Fastq').each do |file|
       link = view_context.link_to("<span class='fa fa-download'></span> #{view_context.number_to_human_size(file.upload_file_size, prefix: :si)}".html_safe, file.download_path, class: "btn btn-primary dl-link fastq", download: file.upload_file_name)
       @fastq_files[:data] << [
           file.name,
@@ -507,7 +506,7 @@ class SiteController < ApplicationController
     if selector.nil? || selector.empty?
       @cluster = @study.default_cluster
     else
-      @cluster = @study.cluster_groups.detect {|c| c.name == selector}
+      @cluster = @study.cluster_groups.by_name(selector)
     end
   end
 
