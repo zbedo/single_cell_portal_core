@@ -11,6 +11,9 @@ $('#box-controls, #scatter-plots').on('show.bs.collapse hide.bs.collapse', funct
 
 <%= render partial: @top_plot_plotly %>
 
+$('#expression-plots [data-toggle="tooltip"]').tooltip("destroy");
+$('#expression-plots [data-toggle="tooltip"]').tooltip({container: 'body'});
+
 // clear listeners and reattach
 $( window ).off('resizeEnd');
 
