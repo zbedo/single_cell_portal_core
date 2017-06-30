@@ -196,7 +196,8 @@ function createTracesAndLayout(arr, title){
         font: plotlyLabelFont,
         yaxis: {
             zeroline: true,
-            showline: true
+            showline: true,
+            title: 'Expression'
 
         },
         margin: {

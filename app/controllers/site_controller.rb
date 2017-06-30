@@ -313,7 +313,7 @@ class SiteController < ApplicationController
       if params[:plot_type] == 'box'
         @values_box_type = 'box'
       else
-        @values_box_type = 'Violin Plot'
+        @values_box_type = 'violin'
         @values_kernel_type = params[:kernel_type]
         @values_band_type = params[:band_type]
       end

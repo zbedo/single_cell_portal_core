@@ -123,7 +123,7 @@ var expressionData = [];
     <% end %>
 
     <%= render partial: 'expression_box_layout' %>
-    <% else %>
+<% else %>
     var formatted_array = [];
     var ker = "<%= @values_kernel_type%>";
     var band = "<%= @values_band_type%>";
@@ -133,9 +133,9 @@ var expressionData = [];
       var master_array = [name, data, ker, band]
       formatted_array.push(master_array);
     <% end %>
-      var title = "<%= params[:cluster]%>";
-      var data = createTracesAndLayout(formatted_array, title);
-      expressionData = [].concat.apply([], data[0] );
-      expressionLayout = data[1];
+    var title = "<%= params[:cluster]%>";
+    var data = createTracesAndLayout(formatted_array, title);
+    expressionData = [].concat.apply([], data[0] );
+    expressionLayout = data[1];
 <% end%>
 Plotly.newPlot('box-plot', expressionData, expressionLayout);

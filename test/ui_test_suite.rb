@@ -346,6 +346,26 @@ class UiTestSuite < Test::Unit::TestCase
 		@wait.until {@driver.find_element(:id, target).displayed?}
 	end
 
+	# Given two arrays and an error threshold, compares every element of the arrays to corresponding element.
+	# Returns false if any elements within arrays are not within the margin of error given.
+	# Assumes arrays have same length
+	def compare_within_rounding_error(error, a1, a2)
+		#Loop control variables
+		i = 0
+		cont = true
+		#Loop through every element in both arrays
+		while i < a1.length and cont do
+			# Calculates error bar
+			max = a2[i] * (1 + error)
+			min = a2[i] * (1 - error)
+			# Ends loop and returns false if any elements are not within margin of error
+			if (a1[i] < min) or (a1[i] > max)
+				cont = false
+			end
+			i += 1
+		end
+		cont
+	end
 	##
 	## ADMIN TESTS
 	##
@@ -2076,7 +2096,8 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 
-	test 'front-end: math functions' do
+	# These are unit tests in actuality, but are put in UI test because of docker issues
+	test 'front-end: checking accuracy of kernel density and bandwidth functions' do
 		puts "Test method: #{self.method_name}"
 		#load website
 		path = @base_url
@@ -2106,24 +2127,24 @@ class UiTestSuite < Test::Unit::TestCase
 		outlier_test_array = [-2.6, 2, 3, 4, 5, 9.6]
 
 		#-2.6 should be an outlier
-		isOutlier = @driver.execute_script("return isOutlier(#{outlier_test_array[0]}, ss.quantile(#{outlier_test_array}, [0.25]), ss.quantile(#{outlier_test_array}, 0.75) )")
-		assert isOutlier, 'Outlier incorrectly not identified ' + outlier_test_array[0].to_s
+		is_outlier = @driver.execute_script("return isOutlier(#{outlier_test_array[0]}, ss.quantile(#{outlier_test_array}, [0.25]), ss.quantile(#{outlier_test_array}, 0.75) )")
+		assert is_outlier, 'Outlier incorrectly not identified ' + outlier_test_array[0].to_s
 
 		#9.6 should be an outlier
-		isOutlier = @driver.execute_script("return isOutlier(#{outlier_test_array[5]}, ss.quantile(#{outlier_test_array}, [0.25]), ss.quantile(#{outlier_test_array}, 0.75))")
-		assert isOutlier, 'Outlier incorrectly not identified ' + outlier_test_array[5].to_s
+		is_outlier = @driver.execute_script("return isOutlier(#{outlier_test_array[5]}, ss.quantile(#{outlier_test_array}, [0.25]), ss.quantile(#{outlier_test_array}, 0.75))")
+		assert is_outlier, 'Outlier incorrectly not identified ' + outlier_test_array[5].to_s
 
 		#2 should not be an outlier
-		isOutlier = @driver.execute_script("return isOutlier(#{outlier_test_array[1]}, ss.quantile(#{outlier_test_array}, [0.25]), ss.quantile(#{outlier_test_array}, 0.75) )")
-		assert !isOutlier, 'Outlier incorrectly not identified ' + outlier_test_array[1].to_s
+		is_outlier = @driver.execute_script("return isOutlier(#{outlier_test_array[1]}, ss.quantile(#{outlier_test_array}, [0.25]), ss.quantile(#{outlier_test_array}, 0.75) )")
+		assert !is_outlier, 'Outlier incorrectly not identified ' + outlier_test_array[1].to_s
 
 		#5 should not be and outlier
-		isOutlier = @driver.execute_script("return isOutlier(#{outlier_test_array[4]}, ss.quantile(#{outlier_test_array}, [0.25]), ss.quantile(#{outlier_test_array}, 0.75))")
-		assert !isOutlier, 'Outlier incorrectly not identified ' + outlier_test_array[4].to_s
+		is_outlier = @driver.execute_script("return isOutlier(#{outlier_test_array[4]}, ss.quantile(#{outlier_test_array}, [0.25]), ss.quantile(#{outlier_test_array}, 0.75))")
+		assert !is_outlier, 'Outlier incorrectly not identified ' + outlier_test_array[4].to_s
 
 		#[-2.6,9.6] should be the outliers and the non outliers should be an array of the remaining numbers
-		cutOutliers = @driver.execute_script("return cutOutliers(#{outlier_test_array}, ss.quantile(#{outlier_test_array}, [0.25]), ss.quantile(#{outlier_test_array}, 0.75) )")
-		assert (cutOutliers[1] == outlier_test_array[1..4] and cutOutliers[0] == [outlier_test_array[5], outlier_test_array[0]]), "Cut outlier incorrect: " + cutOutliers.to_s
+		cut_outliers = @driver.execute_script("return cutOutliers(#{outlier_test_array}, ss.quantile(#{outlier_test_array}, [0.25]), ss.quantile(#{outlier_test_array}, 0.75) )")
+		assert (cut_outliers[1] == outlier_test_array[1..4] and cut_outliers[0] == [outlier_test_array[5], outlier_test_array[0]]), "Cut outlier incorrect: " + cut_outliers.to_s
 
 		puts 'Testing highest level math (Kernel Distrbutions)'
 
@@ -2141,8 +2162,8 @@ class UiTestSuite < Test::Unit::TestCase
 		test_epanechnikov = @driver.execute_script("return kernelDensityEstimator(kernelEpanechnikov(5.0), #{kernel_test_array})(#{kernel_test_array})").map{|v| v[1]}
 
 		#Testing if script kernel density scores match 'correct' kernel density scores within 0.1% accuracy
-		assert compareWithinRoundingError(0.01, correct_gaussian, test_gaussian), "Gaussian failure: " + correct_gaussian.to_s + 'Test'+ test_gaussian.to_s
-		assert compareWithinRoundingError(0.02, correct_epanechnikov, test_epanechnikov), "Epanechnikov failure: " + correct_epanechnikov.to_s + "\nTest\n" + test_epanechnikov.to_s
+		assert compare_within_rounding_error(0.01, correct_gaussian, test_gaussian), "Gaussian failure: " + correct_gaussian.to_s + 'Test'+ test_gaussian.to_s
+		assert compare_within_rounding_error(0.02, correct_epanechnikov, test_epanechnikov), "Epanechnikov failure: " + correct_epanechnikov.to_s + "\nTest\n" + test_epanechnikov.to_s
 
 		#Testing if kernel density scores identify as incorrect if compared against known incorrect data within 0.1% accuracy.
 		#Known incorrect data is correct data with first element increased by 0.1
@@ -2150,32 +2171,10 @@ class UiTestSuite < Test::Unit::TestCase
 		incorrect_epanechnikov = correct_epanechnikov.map{|x| x * 1.1}
 
 		#Test if not incorrect
-		assert !compareWithinRoundingError(0.01, incorrect_gaussian, test_gaussian), "Gaussian Incorrect failure: " + incorrect_gaussian.to_s + test_gaussian.to_s
-		assert !compareWithinRoundingError(0.01, incorrect_epanechnikov, test_epanechnikov), "Epanechnikov Incorrect failure: " + incorrect_epanechnikov.to_s + test_epanechnikov.to_s
+		assert !compare_within_rounding_error(0.01, incorrect_gaussian, test_gaussian), "Gaussian Incorrect failure: " + incorrect_gaussian.to_s + test_gaussian.to_s
+		assert !compare_within_rounding_error(0.01, incorrect_epanechnikov, test_epanechnikov), "Epanechnikov Incorrect failure: " + incorrect_epanechnikov.to_s + test_epanechnikov.to_s
 		puts "Test method: #{self.method_name} successful!"
 	end
-
-	#Given two arrays and an error threshold, compares every element of the arrays to corresponding element.
-	#Returns false if any elements within arrays are not within the margin of error given.
-	#Assumes arrays have same length
-	def compareWithinRoundingError(error, a1, a2)
-		#Loop control variables
-		i = 0
-		cont = true
-		#Loop through every element in both arrays
-		while i < a1.length and cont do
-			#Calculates error bar
-			max = a2[i] * (1 + error)
-			min = a2[i] * (1 - error)
-			#Ends loop and returns false if any elements are not within margin of error
-			if (a1[i] < min) or (a1[i] > max)
-				cont = false
-			end
-			i += 1
-		end
-		return cont
-	end
-
 
 	# tests that form values for loaded clusters & annotations are being persisted when switching between different views
 	test 'front-end: load different cluster and annotation then search gene expression' do
