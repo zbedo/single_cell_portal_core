@@ -441,7 +441,7 @@ function createTracesAndLayout(arr, title){
         //Generate overlay text in format 'Cluster X Jitter: Value'
         var jitter_text = [];
         for(i = 0; i < noOutData.length; i++){
-            jitter_text.push(group_name + ' Jitter: ' + noOutData[i])
+            jitter_text.push(group_name + ' ' + noOutData[i].toFixed(3))
         }
 
         var trace3 = {
@@ -481,7 +481,7 @@ function createTracesAndLayout(arr, title){
         //Generate overlay text in format 'Cluster X Outlier: Value'
         var outlier_text = [];
         for(i = 0; i < outliers.length; i++){
-            outlier_text.push(group_name + ' Outlier: ' + outliers[i])
+            outlier_text.push(group_name + ' Outlier: ' + outliers[i].toFixed(3))
         }
 
         var trace7 = {
@@ -542,7 +542,7 @@ function createTracesAndLayout(arr, title){
                 width: 4
             },
             mode: 'lines',
-            text: ['lower-quartile: ' + lower_q.toString(), 'upper-quartile: ' + upper_q.toString()],
+            text: ['lower-quartile: ' +lower_q.toFixed(3), 'upper-quartile: ' + upper_q.toFixed(3)],
             type: 'scatter'
         };
 
@@ -560,7 +560,7 @@ function createTracesAndLayout(arr, title){
                 symbol: 'square'
             },
             mode: 'markers',
-            text: ['median: ' + median_v.toString()],
+            text: ['median: ' + median_v.toFixed(3)],
             type: 'scatter'
         };
 
