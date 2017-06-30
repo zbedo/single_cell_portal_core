@@ -15,7 +15,7 @@ $(wizForm).find('[data-toggle="tooltip"]').tooltip({container: 'body'});
 // reattach click handler for deleting
 $(wizForm).find('.delete-file').click(function() {
   // handler for file deletion clicks
-  if (deleteFileConfirmation()) {
+  if (deleteFileConfirmation('Are you sure?  This file will be deleted and any associated database records removed.  This cannot be undone.')) {
     return true;
   } else {
     return false;
@@ -23,7 +23,7 @@ $(wizForm).find('.delete-file').click(function() {
 });
 
 // go to next step in wizard
-if (getWizardStatus() <= 3) {
+if (getWizardStatus() <= 2) {
 	$('#next-btn').click();
 }
 

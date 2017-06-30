@@ -22,7 +22,11 @@ class ReportsController < ApplicationController
     # study distributions
     today = Date.today
     @private_study_age_dist = {private_label => @private_studies.map {|s| (today - s.created_at.to_date).to_i / 7}}
-    @private_dist_avg = @private_study_age_dist[private_label].reduce(:+) / @private_study_age_dist[private_label].size.to_f
+    if @private_study_age_dist[private_label].empty?
+      @private_dist_avg = 0
+    else
+      @private_dist_avg = @private_study_age_dist[private_label].reduce(:+) / @private_study_age_dist[private_label].size.to_f
+    end
 
     @collab_dist = {all_studies_label => @all_studies.map {|s| s.study_shares.size}}
     @collab_dist_avg = @collab_dist[all_studies_label].reduce(:+) / @collab_dist[all_studies_label].size.to_f
@@ -65,4 +69,18 @@ class ReportsController < ApplicationController
     end
   end
 
+  # send a message to the site administrator requesting a new report plot
+  def report_request
+    @subject = report_request_params[:subject]
+    @requester = report_request_params[:requester]
+    @message = report_request_params[:message]
+
+    SingleCellMailer.admin_notification(@subject, @requestor, @message).deliver_now
+  end
+
+  private
+
+  def report_request_params
+    params.require(:report_request).permit(:subject, :requester, :message)
+  end
 end

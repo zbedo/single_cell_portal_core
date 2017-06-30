@@ -91,4 +91,9 @@ Rails.application.configure do
 
 	# use Deflater in production only to reduce response body size
   config.middleware.use Rack::Deflater
+
+  # CUSTOM CONFIGURATION
+
+  # disable admin notification (like startup email)
+  config.disable_admin_notifications = false
 end

@@ -16,7 +16,7 @@
   <div class="form-group row">
     <div class="col-sm-4">
       <%= f.label :name, 'Folder/Location' %><br />
-      <%= f.text_field :name, class: 'form-control', readonly: true %>
+      <%= f.text_field :name, class: 'form-control', readonly: true, autocomplete: 'off' %>
     </div>
     <div class="col-sm-8">
       <%= f.label :description, 'Description' %><br />

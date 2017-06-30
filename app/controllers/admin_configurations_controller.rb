@@ -112,6 +112,16 @@ class AdminConfigurationsController < ApplicationController
     User.update_all(daily_download_quota: 0)
   end
 
+  # restart all orphaned jobs to allow them to continue
+  def restart_locked_jobs
+    jobs_restarted = AdminConfiguration.restart_locked_jobs
+    if jobs_restarted > 0
+      @message = "All locked jobs have successfully been restarted (#{jobs_restarted} total)."
+    else
+      @message = 'No orphaned jobs were found.'
+    end
+  end
+
   private
   # Use callbacks to share common setup or constraints between actions.
   def set_admin_configuration

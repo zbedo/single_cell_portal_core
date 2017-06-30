@@ -2,12 +2,14 @@ Rails.application.routes.draw do
 	scope 'single_cell' do
 
 		# portal admin actions
-		get 'admin/reset_user_download_quotas', to: 'admin_configurations#reset_user_download_quotas', as: :reset_user_download_quotas
+		post 'admin/reset_user_download_quotas', to: 'admin_configurations#reset_user_download_quotas', as: :reset_user_download_quotas
+		post 'admin/restart_locked_jobs', to: 'admin_configurations#restart_locked_jobs', as: :restart_locked_jobs
 		post 'admin/firecloud_access', to: 'admin_configurations#manage_firecloud_access', as: :manage_firecloud_access
 		resources :admin_configurations, path: 'admin'
 
     # study reporter actions
     get 'reports', to: 'reports#index', as: :reports
+    post 'reports/report_request', to: 'reports#report_request', as: :report_request
 
     # study admin actions
 		mount Ckeditor::Engine => 'ckeditor'

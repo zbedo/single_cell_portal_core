@@ -2,7 +2,7 @@ $('<%= params[:modal_target]%>').modal('hide');
 
 // when uploading a file that can have multiple instances, only call completeWizardStep the first time
 // also update progress bar
-if (<%= %w(initialize_ordinations_form initialize_marker_genes_form initialize_primary_data_form initialize_misc_form).include?(params[:partial]) %> && <%= @study.study_files.select {|sf| sf.file_type == @study_file.file_type}.count %> == 1) {
+<% if %w(initialize_ordinations_form initialize_marker_genes_form initialize_primary_data_form initialize_misc_form).include?(params[:partial]) && @study.study_files.by_type(@study_file.file_type).count == 1 %>
 	var step = '<%= params[:partial] %>';
 	completeWizardStep(step + '_nav');
 	var status = getWizardStatus();
@@ -10,7 +10,7 @@ if (<%= %w(initialize_ordinations_form initialize_marker_genes_form initialize_p
 	console.log('incrementing status for ' + step + ' upload');
 	$('#' + step + '_completed').replaceWith("<%= escape_javascript(render partial: 'step_completed', locals: {id: params[:partial] + '_completed'}) %>");
 	$('#' + step + '_nav_completed').html("<span class='fa fa-check text-success'></span>");
-}
+<% end %>
 
 // re-render form upload to get download button and increment completed status
 $.get("<%= retrieve_wizard_upload_study_path(@study._id) %>", {file: '<%= params[:file] %>', selector: '<%= params[:selector] %>', partial: '<%= params[:partial] %>'});

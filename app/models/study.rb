@@ -23,14 +23,18 @@ class Study
   has_many :study_files, dependent: :delete do
     def by_type(file_type)
       if file_type.is_a?(Array)
-        where(:file_type.in => file_type).to_a
+        where(queued_for_deletion: false, :file_type.in => file_type).to_a
       else
-        where(file_type: file_type).to_a
+        where(queued_for_deletion: false, file_type: file_type).to_a
       end
     end
 
     def non_primary_data
-      not_in(file_type: 'Fastq').to_a
+      where(queued_for_deletion: false).not_in(file_type: 'Fastq').to_a
+    end
+
+    def valid
+      where(queued_for_deletion: false).to_a
     end
   end
 
@@ -56,7 +60,12 @@ class Study
     end
   end
 
-  has_many :cluster_groups, dependent: :delete
+  has_many :cluster_groups, dependent: :delete do
+    def by_name(name)
+      find_by(name: name)
+    end
+  end
+
   has_many :data_arrays, dependent: :delete do
     def by_name_and_type(name, type)
       where(name: name, array_type: type).order_by(&:array_index).to_a
@@ -135,8 +144,8 @@ class Study
     if user.admin?
       self.where(queued_for_deletion: false).to_a
     else
-      studies = self.where(user_id: user._id).to_a
-      shares = StudyShare.where(email: user.email, permission: 'Edit').map(&:study)
+      studies = self.where(queued_for_deletion: false, user_id: user._id).to_a
+      shares = StudyShare.where(email: user.email, permission: 'Edit').map(&:study).select {|s| !s.queued_for_deletion }
       [studies + shares].flatten.uniq
     end
   end
@@ -146,9 +155,9 @@ class Study
     if user.admin?
       self.where(queued_for_deletion: false)
     else
-      public = self.where(public: true).map(&:_id)
-      owned = self.where(user_id: user._id, public: false).map(&:_id)
-      shares = StudyShare.where(email: user.email).map(&:study_id)
+      public = self.where(public: true, queued_for_deletion: false).map(&:_id)
+      owned = self.where(user_id: user._id, public: false, queued_for_deletion: false).map(&:_id)
+      shares = StudyShare.where(email: user.email).map(&:study).select {|s| !s.queued_for_deletion }.map(&:_id)
       intersection = public + owned + shares
       # return Mongoid criterion object to use with pagination
       Study.in(:_id => intersection)
@@ -229,7 +238,7 @@ class Study
   def default_cluster
     default = self.cluster_groups.first
     unless self.default_options[:cluster].nil?
-      new_default = self.cluster_groups.find_by(name: self.default_options[:cluster])
+      new_default = self.cluster_groups.by_name(self.default_options[:cluster])
       unless new_default.nil?
         default = new_default
       end
@@ -358,22 +367,22 @@ class Study
 
   # helper method to access all cluster definitions files
   def cluster_ordinations_files
-    self.study_files.where(file_type: 'Cluster').to_a
+    self.study_files.by_type('Cluster')
   end
 
   # helper method to access cluster definitions file by name
   def cluster_ordinations_file(name)
-    self.study_files.where(file_type: 'Cluster', name: name).first
+    self.study_files.find_by(file_type: 'Cluster', name: name)
   end
 
   # helper method to directly access expression matrix file
   def expression_matrix_file
-    self.study_files.where(file_type:'Expression Matrix').first
+    self.study_files.find_by(file_type:'Expression Matrix')
   end
 
   # helper method to directly access expression matrix file
   def metadata_file
-    self.study_files.where(file_type:'Metadata').first
+    self.study_files.find_by(file_type:'Metadata')
   end
 
   # nightly cron to delete any studies that are 'queued for deletion'

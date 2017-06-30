@@ -54,4 +54,9 @@ Rails.application.configure do
       authentication:       'plain',
       enable_starttls_auto: true
   }
+
+  # CUSTOM CONFIGURATION
+
+  # disable admin notification (like startup email)
+  config.disable_admin_notifications = false
 end

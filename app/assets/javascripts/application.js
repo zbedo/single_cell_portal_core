@@ -175,7 +175,7 @@ function toggleGlyph(el) {
 }
 
 // attach various handlers to bootstrap items and turn on functionality
-$(function() {
+function enableDefaultActions() {
     $('.panel-collapse').on('show.bs.collapse hide.bs.collapse', function() {
         toggleGlyph($(this).prev().find('span.toggle-glyph'));
     });
@@ -215,7 +215,7 @@ $(function() {
             return false;
         }
     });
-});
+}
 
 // generic warning and spinner for deleting files
 function deleteFileConfirmation(confMessage) {
@@ -532,4 +532,27 @@ function loadHistogramAnnotations(plotlyData) {
     });
 
     return annotationsArray;
+}
+
+// validate uniquity of entries for various kinds of forms
+function validateUnique(formId, textFieldClass) {
+    $(formId).find(textFieldClass).change(function() {
+        var textField = $(this);
+        var newName = textField.val().trim();
+        var names = [];
+        $(textFieldClass).each(function(index, name) {
+            var n = $(name).val().trim();
+            if (n !== '') {
+                names.push(n);
+            }
+        });
+        // check if there is more than one instance of the new name, this will mean it is a dupe
+        if (names.filter(function(n) {return n === newName}).length > 1) {
+            alert(newName + ' has already been used.  Please provide a different name.');
+            textField.val('');
+            textField.parent().addClass('has-error');
+        } else {
+            textField.parent().removeClass('has-error');
+        }
+    });
 }

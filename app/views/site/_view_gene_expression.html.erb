@@ -84,6 +84,7 @@
         $('#expression-plots').data('reference-rendered', false);
         var sample = $(this).val();
         $('#search_subsample').val(sample);
+        $('#gene_set_subsample').val(sample);
         // turn off boxpoints over 1000
         if (parseInt(sample) > 1000) {
             $("#boxpoints_select").val('');
@@ -122,9 +123,5 @@
             }
         });
     });
-
-    // reattach tooltips & popovers on render
-    $('[data-toggle="tooltip"]').tooltip({container: 'body'});
-    $('[data-toggle="popover"]').popover();
 
 </script>
