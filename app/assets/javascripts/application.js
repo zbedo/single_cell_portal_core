@@ -237,6 +237,7 @@ function toggleSearch() {
     if ( $('#show-search-options').css('display') === 'none' ) {
         $('#show-search-options').tooltip('hide');
     }
+
     // trigger resizeEnd to re-render Plotly to use available space
     $(window).trigger('resize');
 

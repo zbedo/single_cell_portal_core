@@ -3,5 +3,8 @@ closeModalSpinner('#spinner_target', '#loading-modal', function () {
     $('#title-bar').html("<%= escape_javascript(render partial: 'view_precomputed_gene_expression_heatmap_title_bar') %>");
     $('#study-visualize').html("<%= escape_javascript(render partial: 'view_precomputed_gene_expression_heatmap') %>");
     $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices') %>");
-    $(window).off("resizeEnd");
+
+    // clear any resize listeners
+    $(window).off('resizeEnd');
+
 });
