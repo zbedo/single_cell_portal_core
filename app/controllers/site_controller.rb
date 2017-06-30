@@ -222,6 +222,13 @@ class SiteController < ApplicationController
     # depending on annotation type selection, set up necessary partial names to use in rendering
     if @selected_annotation[:type] == 'group'
       @values = load_expression_boxplot_data_array_scores(@selected_annotation, subsample)
+      if params[:plot_type] == 'box'
+        @values_box_type = 'box'
+      else
+        @values_box_type = 'violin'
+        @values_kernel_type = params[:kernel_type]
+        @values_band_type = params[:band_type]
+      end
       @top_plot_partial = 'expression_plots_view'
       @top_plot_plotly = 'expression_plots_plotly'
       @top_plot_layout = 'expression_box_layout'
@@ -303,6 +310,13 @@ class SiteController < ApplicationController
     # depending on annotation type selection, set up necessary partial names to use in rendering
     if @selected_annotation[:type] == 'group'
       @values = load_gene_set_expression_boxplot_scores(@selected_annotation, params[:consensus], subsample)
+      if params[:plot_type] == 'box'
+        @values_box_type = 'box'
+      else
+        @values_box_type = 'violin'
+        @values_kernel_type = params[:kernel_type]
+        @values_band_type = params[:band_type]
+      end
       @top_plot_partial = 'expression_plots_view'
       @top_plot_plotly = 'expression_plots_plotly'
       @top_plot_layout = 'expression_box_layout'
@@ -912,7 +926,7 @@ class SiteController < ApplicationController
   def initialize_plotly_objects_by_annotation(annotation)
     values = {}
     annotation[:values].each do |value|
-      values["#{value}"] = {y: [], name: "#{annotation[:name]}: #{value}" }
+      values["#{value}"] = {y: [], name: "#{value}" }
     end
     values
   end
@@ -1100,6 +1114,13 @@ class SiteController < ApplicationController
         unless params[:subsample].nil?
           params_key += "_#{params[:subsample]}"
         end
+        params_key += "_#{params[:plot_type]}"
+        unless params[:kernel_type].nil?
+          params_key += "_#{params[:kernel_type]}"
+        end
+        unless params[:band_type].nil?
+          params_key += "_#{params[:band_type]}"
+        end
         render_gene_expression_plots_url(study_name: params[:study_name], gene: params[:gene]) + params_key
       when 'render_gene_set_expression_plots'
         unless params[:subsample].nil?
@@ -1111,6 +1132,13 @@ class SiteController < ApplicationController
           gene_list = params[:search][:genes]
           gene_key = construct_gene_list_hash(gene_list)
           params_key += "_#{gene_key}"
+        end
+        params_key += "_#{params[:plot_type]}"
+        unless params[:kernel_type].nil?
+          params_key += "_#{params[:kernel_type]}"
+        end
+        unless params[:band_type].nil?
+          params_key += "_#{params[:band_type]}"
         end
         render_gene_set_expression_plots_url(study_name: params[:study_name]) + params_key
       when 'expression_query'

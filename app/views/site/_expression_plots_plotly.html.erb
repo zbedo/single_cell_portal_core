@@ -1,34 +1,3 @@
-// load box plot data
-var expressionData = [];
-<% @values.sort_by {|k,v| k}.each_with_index do |(cluster, data), index| %>
-	var cluster_<%= index %>_exp = {
-		y: <%= raw data[:y] %>,
-		name: "<%= data[:name] %>",
-		<% if params[:boxpoints].nil? %>
-			boxpoints: 'all',
-    <% elsif params[:boxpoints].blank? %>
-      boxpoints: false,
-		<% else %>
-			boxpoints: "<%= params[:boxpoints] %>",
-		<% end %>
-		boxmean: true,
-		type: 'box',
-		marker: {
-			color: colorBrewerSet[<%= index %>],
-			line:{
-				color: plotlyDefaultLineColor,
-				width: 0.5
-			}
-		}
-	};
-
-  expressionData.push(cluster_<%= index %>_exp);
-<% end %>
-
-<%= render partial: 'expression_box_layout' %>
-
-Plotly.newPlot('box-plot', expressionData, expressionLayout);
-
 // load expression scatter plot
 var exp = {
   x: <%= raw @expression[:all][:x] %>,
@@ -123,3 +92,50 @@ $("#colorscale").change(function() {
 });
 
 <%= render partial: 'expression_scatter_camera' %>
+
+// load box plot data
+var expressionData = [];
+
+<% if @values_box_type == 'box' %>
+    <% @values.sort_by {|k,v| k}.each_with_index do |(cluster, data), index| %>
+      var cluster_<%= index %>_exp = {
+        y: <%= raw data[:y] %>,
+        name: "<%= data[:name] %>",
+        <% if params[:boxpoints].nil? %>
+            boxpoints: 'all',
+        <% elsif params[:boxpoints].blank? %>
+            boxpoints: false,
+        <% else %>
+            boxpoints: "<%= params[:boxpoints] %>",
+        <% end %>
+        boxmean: true,
+        type: 'box',
+        marker: {
+          color: colorBrewerSet[<%= index %>],
+          line:{
+            color: plotlyDefaultLineColor,
+            width: 0.5
+          }
+        }
+      };
+
+        expressionData.push(cluster_<%= index %>_exp);
+    <% end %>
+
+    <%= render partial: 'expression_box_layout' %>
+<% else %>
+    var formatted_array = [];
+    var ker = "<%= @values_kernel_type%>";
+    var band = "<%= @values_band_type%>";
+    <% @values.sort_by {|k,v| k}.each_with_index do |(cluster, data), index| %>
+      var name = "<%= data[:name] %>";
+      var data = <%= raw data[:y] %>;
+      var master_array = [name, data, ker, band]
+      formatted_array.push(master_array);
+    <% end %>
+    var title = "<%= params[:cluster]%>";
+    var data = createTracesAndLayout(formatted_array, title);
+    expressionData = [].concat.apply([], data[0] );
+    expressionLayout = data[1];
+<% end%>
+Plotly.newPlot('box-plot', expressionData, expressionLayout);

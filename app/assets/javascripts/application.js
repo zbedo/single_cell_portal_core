@@ -48,6 +48,9 @@
 //= require underscore-min
 //= require xlsx.full.min
 //= require morpheus-latest.min
+//= require kernel-functions
+//= require simple-statistics.min
+//= require sheather_jones
 
 var fileUploading = false;
 var PAGE_RENDERED = false;
@@ -143,7 +146,7 @@ function resetWizardStep(step) {
 function getWizardStatus() {
     var done = 0;
     for (var step in completed) {
-        if (completed[step] == true) {
+        if (completed[step] === true) {
             done++;
         }
     }
@@ -217,7 +220,7 @@ $(function() {
 // generic warning and spinner for deleting files
 function deleteFileConfirmation(confMessage) {
     var conf = confirm(confMessage);
-    if ( conf == true) {
+    if ( conf === true) {
         launchModalSpinner('#delete-modal-spinner','#delete-modal');
         return true;
     } else {
@@ -231,11 +234,13 @@ function toggleSearch() {
     $('#render-target').toggleClass('col-md-9 col-md-12');
     $('#search-options-panel').toggleClass('hidden');
     $('#show-search-options').toggleClass('hidden');
-    if ( $('#show-search-options').css('display') == 'none' ) {
+    if ( $('#show-search-options').css('display') === 'none' ) {
         $('#show-search-options').tooltip('hide');
     }
-    // trigger resize event to re-render Plotly to use available space, will be caught be resizeEnd event below
+
+    // trigger resizeEnd to re-render Plotly to use available space
     $(window).trigger('resize');
+
 }
 
 // options for Spin.js
@@ -335,7 +340,7 @@ function clearForm(target) {
 // set error state on blank text boxes or selects
 function setErrorOnBlank(selector) {
     selector.map(function() {
-        if ( $(this).val() == "" ) {
+        if ( $(this).val() === "" ) {
             $(this).parent().addClass('has-error has-feedback');
         } else {
             $(this).parent().removeClass('has-error has-feedback');
@@ -416,7 +421,7 @@ function toggleFastqFields(target) {
     $(fastqField).find('input').attr('disabled', !$(fastqField).find('input').is('[disabled=disabled]'));
     // set human data attr to true
     var humanData = $(fastqField).find('input[type=hidden]');
-    $(humanData).val($(humanData).val() == 'true' ? 'false' : 'true' );
+    $(humanData).val($(humanData).val() === 'true' ? 'false' : 'true' );
     // enable name field & update button to allow saving
     var saveBtn = selector.find('.save-study-file');
     $(saveBtn).attr('disabled', !$(saveBtn).is('[disabled=disabled]'));
@@ -435,7 +440,7 @@ function togglePlotlyTraces(div) {
     var visibility = plotlyData[0].visible;
 
     // if visibility is undefined or true, that means it is visible and we want to set this to 'legendonly'
-    // when visibility == 'legendonly', we can set this back to true to show all traces
+    // when visibility === 'legendonly', we can set this back to true to show all traces
     if( visibility === undefined || visibility === true) {
         visibility = 'legendonly';
     } else {
@@ -447,6 +452,7 @@ function togglePlotlyTraces(div) {
     $('#toggle-traces').children().toggleClass('fa-toggle-on fa-toggle-off');
     console.log('toggle complete in ' + div + '; visibility now ' + visibility);
 }
+
 
 // function to return a plotly histogram data object from an array of input values
 function formatPlotlyHistogramData(valuesHash, offset) {
@@ -510,7 +516,7 @@ function loadHistogramAnnotations(plotlyData) {
     var annotationsArray = [];
     var counts = plotlyData[0]['x'];
     $(counts).each(function(i, c) {
-        var count = counts.filter(function(a){return (a == c)}).length;
+        var count = counts.filter(function(a){return (a === c)}).length;
         var annot = {
             x: c,
             y: count,

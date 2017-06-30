@@ -21,21 +21,27 @@ class CacheManagementTest < ActionDispatch::IntegrationTest
 
     # get various actions subject to caching
     xhr :get, render_cluster_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation)
-    xhr :get, render_gene_expression_plots_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation, gene: gene)
-    xhr :get, render_gene_set_expression_plots_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation, search: {genes: genes.join(' ')} )
+    xhr :get, render_gene_expression_plots_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation, gene: gene, plot_type: 'violin', kernel_type: 'gau', band_type: 'nrd0')
+    xhr :get, render_gene_set_expression_plots_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation, search: {genes: genes.join(' ')}, plot_type: 'violin', kernel_type: 'gau', band_type: 'nrd0' )
+    xhr :get, render_gene_expression_plots_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation, gene: gene, plot_type: 'box')
+    xhr :get, render_gene_set_expression_plots_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation, search: {genes: genes.join(' ')}, plot_type: 'box' )
     xhr :get, expression_query_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation, search: {genes: genes.join(' ')} )
     xhr :get, annotation_query_path(study_name: study.url_safe_name, annotation: annotation, cluster: cluster.name)
 
     # construct various cache keys for direct lookup (cannot lookup via regex)
     cluster_cache_key = "views/localhost/single_cell/study/#{study.url_safe_name}/render_cluster_#{cluster.name.split.join('-')}_#{annotation}.js"
-    expression_cache_key = "views/localhost/single_cell/study/#{study.url_safe_name}/render_gene_expression_plots/#{gene}_#{cluster.name.split.join('-')}_#{annotation}.js"
-    set_expression_cache_key = "views/localhost/single_cell/study/#{study.url_safe_name}/render_gene_set_expression_plots_#{cluster.name.split.join('-')}_#{annotation}_#{genes_hash}.js"
+    v_expression_cache_key = "views/localhost/single_cell/study/#{study.url_safe_name}/render_gene_expression_plots/#{gene}_#{cluster.name.split.join('-')}_#{annotation}_violin_gau_nrd0.js"
+    v_set_expression_cache_key = "views/localhost/single_cell/study/#{study.url_safe_name}/render_gene_set_expression_plots_#{cluster.name.split.join('-')}_#{annotation}_#{genes_hash}_violin_gau_nrd0.js"
+    b_expression_cache_key = "views/localhost/single_cell/study/#{study.url_safe_name}/render_gene_expression_plots/#{gene}_#{cluster.name.split.join('-')}_#{annotation}_box.js"
+    b_set_expression_cache_key = "views/localhost/single_cell/study/#{study.url_safe_name}/render_gene_set_expression_plots_#{cluster.name.split.join('-')}_#{annotation}_#{genes_hash}_box.js"
     exp_query_cache_key = "views/localhost/single_cell/study/#{study.url_safe_name}/expression_query_#{cluster.name.split.join('-')}_#{annotation}__#{genes_hash}.js"
     annot_query_cache_key = "views/localhost/single_cell/study/#{study.url_safe_name}/annotation_query_#{cluster.name.split.join('-')}_#{annotation}.js"
 
     assert Rails.cache.exist?(cluster_cache_key), "Did not find matching cluster cache entry at #{cluster_cache_key}"
-    assert Rails.cache.exist?(expression_cache_key), "Did not find matching gene expression cache entry at #{expression_cache_key}"
-    assert Rails.cache.exist?(set_expression_cache_key), "Did not find matching gene set expression cache entry at #{set_expression_cache_key}"
+    assert Rails.cache.exist?(v_expression_cache_key), "Did not find matching gene expression cache entry at #{v_expression_cache_key}"
+    assert Rails.cache.exist?(v_set_expression_cache_key), "Did not find matching gene set expression cache entry at #{v_set_expression_cache_key}"
+    assert Rails.cache.exist?(b_expression_cache_key), "Did not find matching gene expression cache entry at #{b_expression_cache_key}"
+    assert Rails.cache.exist?(b_set_expression_cache_key), "Did not find matching gene set expression cache entry at #{b_set_expression_cache_key}"
     assert Rails.cache.exist?(exp_query_cache_key), "Did not find matching expression query cache entry at #{exp_query_cache_key}"
     assert Rails.cache.exist?(annot_query_cache_key), "Did not find matching annotation query cache entry at #{annot_query_cache_key}"
 
@@ -47,8 +53,10 @@ class CacheManagementTest < ActionDispatch::IntegrationTest
     CacheRemovalJob.new(cluster_file_cache_key).perform
     assert_not Rails.cache.exist?(cluster_cache_key), "Did not delete matching cluster cache entry at #{cluster_cache_key}"
     CacheRemovalJob.new(expression_file_cache_key).perform
-    assert_not Rails.cache.exist?(expression_cache_key), "Did not delete matching gene expression cache entry at #{expression_cache_key}"
-    assert_not Rails.cache.exist?(set_expression_cache_key), "Did not delete matching gene set expression cache entry at #{set_expression_cache_key}"
+    assert_not Rails.cache.exist?(v_expression_cache_key), "Did not delete matching gene expression cache entry at #{v_expression_cache_key}"
+    assert_not Rails.cache.exist?(v_set_expression_cache_key), "Did not delete matching gene set expression cache entry at #{v_set_expression_cache_key}"
+    assert_not Rails.cache.exist?(b_expression_cache_key), "Did not delete matching gene expression cache entry at #{b_expression_cache_key}"
+    assert_not Rails.cache.exist?(b_set_expression_cache_key), "Did not delete matching gene set expression cache entry at #{b_set_expression_cache_key}"
     assert_not Rails.cache.exist?(exp_query_cache_key), "Did not delete matching expression query cache entry at #{exp_query_cache_key}"
     CacheRemovalJob.new(study.url_safe_name).perform
     assert_not Rails.cache.exist?(annot_query_cache_key), "Did not delete matching annotation query cache entry at #{annot_query_cache_key}"
