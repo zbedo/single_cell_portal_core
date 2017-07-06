@@ -5,7 +5,7 @@
  */
 
 
-//Kernel Density Estimator takes a kernel function and array of 1d data and returns a function that can create an array of density probabilty
+//Kernel Density Estimator takes a kernel function and array of 1d data and returns a function that can create an array of density probability
 function kernelDensityEstimator(kernel, X) {
     return function(V) {
         return X.map(function(x) {
@@ -192,7 +192,7 @@ function createTracesAndLayout(arr, title){
     var layout = {
         hovermode: 'closest',
         title: title,
-        height: 1000,
+        //height: 600,
         font: plotlyLabelFont,
         yaxis: {
             zeroline: true,
@@ -203,7 +203,6 @@ function createTracesAndLayout(arr, title){
         margin: {
             pad: 10,
             b: 100
-
         }
     };
 
@@ -481,7 +480,7 @@ function createTracesAndLayout(arr, title){
         //Generate overlay text in format 'Cluster X Outlier: Value'
         var outlier_text = [];
         for(i = 0; i < outliers.length; i++){
-            outlier_text.push(group_name + ' Outlier: ' + outliers[i].toFixed(3))
+            outlier_text.push(group_name + ' ' + outliers[i].toFixed(3))
         }
 
         var trace7 = {
@@ -495,7 +494,9 @@ function createTracesAndLayout(arr, title){
             marker: {
                 //color: color,
                 color: 'rgb(0,0,0)',
-                symbol: 'x'
+                //re-enable to plot outliers as x's
+                //symbol: 'x'
+                size: 3
             },
             mode: 'markers',
             xaxis: axis,
@@ -612,7 +613,6 @@ function createTracesAndLayout(arr, title){
 
     var x_axis = {
         showticklabels: true,
-
         zeroline: false,
         ticktext: name_array,
         showgrid: false,
