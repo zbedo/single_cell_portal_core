@@ -79,30 +79,44 @@ class SiteController < ApplicationController
 
   # update selected attributes via study settings tab
   def update_study_settings
-    if @study.update(study_params)
-      # invalidate caches as needed
-      if @study.previous_changes.keys.include?('default_options')
-        @study.default_cluster.study_file.invalidate_cache_by_file_type
-      elsif @study.previous_changes.keys.include?('name')
-        # if user renames a study, invalidate all caches
-        old_name = @study.previous_changes['url_safe_name'].first
-        CacheRemovalJob.new(old_name).delay.perform
-      end
+    @spinner_target = '#update-study-settings-spinner'
+    @modal_target = '#update-study-settings-modal'
+    if !user_signed_in?
       set_study_default_options
-      if @study.initialized?
-        @cluster = @study.default_cluster
-        @options = load_cluster_group_options
-        @cluster_annotations = load_cluster_group_annotations
-        set_selected_annotation
-      end
-      @study_files = @study.study_files.non_primary_data.sort_by(&:name)
-      @directories = @study.directory_listings.are_synced
-
-      # double check on download availability: first, check if administrator has disabled downloads
-      # then check if FireCloud is available and disable download links if either is true
-      @allow_downloads = AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
+      @notice = 'Please sign in before continuing.'
+      render action: 'notice'
     else
-      set_study_default_options
+      if @study.can_edit?(current_user)
+        if @study.update(study_params)
+          # invalidate caches as needed
+          if @study.previous_changes.keys.include?('default_options')
+            @study.default_cluster.study_file.invalidate_cache_by_file_type
+          elsif @study.previous_changes.keys.include?('name')
+            # if user renames a study, invalidate all caches
+            old_name = @study.previous_changes['url_safe_name'].first
+            CacheRemovalJob.new(old_name).delay.perform
+          end
+          set_study_default_options
+          if @study.initialized?
+            @cluster = @study.default_cluster
+            @options = load_cluster_group_options
+            @cluster_annotations = load_cluster_group_annotations
+            set_selected_annotation
+          end
+          @study_files = @study.study_files.non_primary_data.sort_by(&:name)
+          @directories = @study.directory_listings.are_synced
+
+          # double check on download availability: first, check if administrator has disabled downloads
+          # then check if FireCloud is available and disable download links if either is true
+          @allow_downloads = AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
+        else
+          set_study_default_options
+        end
+      else
+        set_study_default_options
+        @alert = 'You do not have permission to perform that action.'
+        render action: 'notice'
+      end
     end
   end
 

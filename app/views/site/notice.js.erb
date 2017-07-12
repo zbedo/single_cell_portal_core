@@ -1,0 +1,5 @@
+closeModalSpinner('<%= @spinner_target %>', '<%= @modal_target %>', function() {
+
+    $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {alert: @alert, notice: @notice}) %>");
+    enableDefaultActions();
+});

@@ -1327,8 +1327,6 @@ class UiTestSuite < Test::Unit::TestCase
 		assert element_visible?(:id, 'message_modal'), 'confirmation message did not appear'
 		close_modal('message_modal')
 
-
-
 		puts "Test method: #{self.method_name} successful!"
 	end
 
