@@ -1,0 +1,6 @@
+<%= link_to "Enable Selection <i class='fa fa-toggle-off'></i>".html_safe, 'javascript:;', class: 'btn btn-default btn-sm', id: 'toggle-scatter', data: {toggle: 'tooltip', placement: 'left', trigger: 'hover'}, title: 'Click to enable selection of scatter points, may hurt performance.' %>
+<script>
+    $('#toggle-scatter').click(function() {
+        $('#toggle-scatter').children().toggleClass('fa-toggle-on fa-toggle-off');
+    });
+</script>
