@@ -111,7 +111,7 @@ var expressionData = [];
         boxmean: true,
         type: 'box',
         marker: {
-          color: colorBrewerSet[<%= index %>],
+          color: colorBrewerSet[<%= index %> % 20],
           line:{
             color: plotlyDefaultLineColor,
             width: 0.5
