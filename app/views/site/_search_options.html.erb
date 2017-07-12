@@ -126,7 +126,7 @@
                   <%= hidden_field_tag :gene_set_subsample %>
                   <br />
                   <%= button_tag 'Plot Scatter', {class:'btn btn-success', id:'submit-scatter'} %>
-                  <%= button_tag 'Plot Heatmap', {class:'btn btn-success', id:'submit-heatmap'} %>
+                  <%= button_tag 'Plot Heatmap', {class:'btn btn-primary', id:'submit-heatmap'} %>
                   <hr />
 
                   <script type="text/javascript">
@@ -143,6 +143,11 @@
                         }
                     });
                     $('#gene_set').change(function() {
+                        if ($('#gene_set').val() !== '') {
+                            $('#expression').val($('#gene_set').val());
+                        }
+                    });
+                    $(function()  {
                         if ($('#gene_set').val() !== '') {
                             $('#expression').val($('#gene_set').val());
                         }
