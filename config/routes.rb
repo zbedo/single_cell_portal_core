@@ -63,6 +63,7 @@ Rails.application.routes.draw do
     get 'study/:study_name/render_gene_set_expression_plots', to: 'site#render_gene_set_expression_plots', as: :render_gene_set_expression_plots
 		get 'study/:study_name/expression_query', to: 'site#expression_query', as: :expression_query
 		get 'study/:study_name/annotation_query', to: 'site#annotation_query', as: :annotation_query
+		get 'study/:study_name/annotation_values', to: 'site#annotation_values', as: :annotation_values
     post 'study/:study_name/precomputed_gene_expression', to: 'site#search_precomputed_results', as: :search_precomputed_results
     get 'study/:study_name/precomputed_gene_expression', to: 'site#view_precomputed_gene_expression_heatmap', as: :view_precomputed_gene_expression_heatmap
     get 'study/:study_name/precomputed_results', to: 'site#precomputed_results', as: :precomputed_results
