@@ -17,10 +17,35 @@
               <div class="col-xs-12">
                 <div id="colorscale-target"></div>
                 <div id="toggle-plots"></div>
+                <div>
+                  <%= render partial: 'scattergl_toggle' %>
+                </div>
               </div>
             </div>
-            <div id="cluster-plot"></div>
-            <div id="cluster-figure-legend"></div>
+            <div class="row">
+              <div id="cluster-plot"></div>
+              <div id="cluster-figure-legend"></div>
+            </div>
+            <div class="row">
+              <div class="well" id="table-well">
+                <table id="selected-table" class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th>Cell Name</th>
+                      <th>Cluster</th>
+                    </tr>
+                  </thead>
+                  <tfoot>
+                    <tr>
+                      <th>Cell Name</th>
+                      <th>Cluster</th>
+                    <tr>
+                  </tfoot>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -65,8 +90,83 @@
 
         renderScatter();
     });
+    var target = $('#cluster-plot')[0];
 
-    // listener for cluster nav, specific to study page
+    //hide table on load
+    $('#table-well').css('visibility', 'hidden');
+
+    //toggle scattergl / scatter for selection
+    $("#toggle-scatter").click(function() {
+      //var target = $('#cluster-plot')[0];
+      $(target).on('plotly_afterplot', function() {
+          if($(target).data('spinner') !== undefined){
+              $(target).off('plotly_afterplot');
+              $(target).data('spinner').stop();
+
+
+              if(newType === 'scatter'){
+                  $('#selected-table').DataTable();
+                  $('#table-well').css('visibility', 'visible');
+                  console.log('show');
+              }
+              else{
+                  $('#selected-table').destroy();
+                  $('#table-well').css('visibility', 'hidden');
+                  console.log('hide');
+              }
+              
+              console.log('stopped');
+          }
+      });
+      //launch spinner
+      var spinner = new Spinner(opts).spin(target);
+      $(target).data('spinner', spinner);
+      console.log('started');
+      var newType = data[0].type === 'scattergl' ? 'scatter' : 'scattergl';
+
+      data[0].type = newType;
+      console.log('Changed scatter to: ' + newType);
+      // re-render reference plot if showing numeric annotations
+      for(var i = 0; i < data.length; i ++){
+          data[i].type = newType;
+      }
+      Plotly.newPlot('cluster-plot', data, layout);
+
+      console.log('attaching');
+      console.log($('#cluster-plot')[0]);
+      $('#cluster-plot')[0].on('plotly_selected', function(eventData) {
+          var names = [];
+          var annotations = [];
+
+          var colors = [];
+
+          eventData.points.forEach(function (pt) {
+              names.push(data[pt.curveNumber].cells[pt.pointNumber]);
+              annotations.push(data[pt.curveNumber].annotations[pt.pointNumber]);
+          });
+          console.log('Selected');
+          console.log(names);
+          console.log(annotations);
+
+          var t = $('#selected-table').DataTable();
+
+          for(var g = 0; g < names.length; g++){
+                  t.rows("tr:contains('" + names[g] + "'):contains('" + annotations[g] + "')").remove();
+          }
+          for(var i = 0; i < names.length; i++){
+              t.row.add( [
+                  names[i],
+                  annotations[i]
+              ] ).draw( false );
+          }
+
+      });
+
+
+
+    });
+
+        // listener for cluster nav, specific to study page
     $("#annotation").change(function() {
         $('#cluster-plot').data('rendered', false);
         var an = $(this).val();

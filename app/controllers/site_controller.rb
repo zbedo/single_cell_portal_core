@@ -614,7 +614,9 @@ class SiteController < ApplicationController
       coordinates[:all] = {
           x: x_array,
           y: y_array,
+          annotations: annotation[:scope] == 'cluster' ? annotation_array : annotation_hash[:values],
           text: text_array,
+          cells: cells,
           name: annotation[:name],
           marker: {
               cmax: annotation_array.max,
@@ -636,7 +638,7 @@ class SiteController < ApplicationController
     else
       # assemble containers for each trace
       annotation[:values].each do |value|
-        coordinates[value] = {x: [], y: [], text: [], name: "#{annotation[:name]}: #{value}", marker_size: []}
+        coordinates[value] = {x: [], y: [], text: [], cells: [], annotations: [], name: "#{annotation[:name]}: #{value}", marker_size: []}
         if @cluster.is_3d?
           coordinates[value][:z] = []
         end
@@ -644,6 +646,8 @@ class SiteController < ApplicationController
       if annotation[:scope] == 'cluster'
         annotation_array.each_with_index do |annotation_value, index|
           coordinates[annotation_value][:text] << "<b>#{cells[index]}</b><br>#{annotation[:name]}: #{annotation_value}"
+          coordinates[annotation_value][:annotations] << "#{annotation[:name]}: #{annotation_value}"
+          coordinates[annotation_value][:cells] << cells[index]
           coordinates[annotation_value][:x] << x_array[index]
           coordinates[annotation_value][:y] << y_array[index]
           if @cluster.cluster_type == '3d'
@@ -659,8 +663,10 @@ class SiteController < ApplicationController
           if annotation_hash.has_key?(cell)
             annotation_value = annotation_hash[cell]
             coordinates[annotation_value][:text] << "<b>#{cell}</b><br>#{annotation[:name]}: #{annotation_value}"
+            coordinates[annotation_value][:annotations] << "#{annotation[:name]}: #{annotation_value}"
             coordinates[annotation_value][:x] << x_array[index]
             coordinates[annotation_value][:y] << y_array[index]
+            coordinates[annotation_value][:cells] << cell
             if @cluster.cluster_type == '3d'
               coordinates[annotation_value][:z] << z_array[index]
             end
@@ -690,15 +696,16 @@ class SiteController < ApplicationController
       annotation_hash = @study.study_metadata_values(annotation[:name], annotation[:type])
     end
     values = {}
-    values[:all] = {x: [], y: [], text: [], marker_size: []}
     if annotation[:scope] == 'cluster'
       annotation_array.each_with_index do |annot, index|
         annotation_value = annot
         cell_name = cells[index]
         expression_value = @gene.scores[cell_name].to_f.round(4)
         values[:all][:text] << "<b>#{cell_name}</b><br>#{annotation[:name]}: #{annotation_value}<br>#{@y_axis_title}: #{expression_value}"
+        values[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
         values[:all][:x] << annotation_value
         values[:all][:y] << expression_value
+        values[:all][:cells] << cell_name
         values[:all][:marker_size] << 6
       end
     else
@@ -707,8 +714,10 @@ class SiteController < ApplicationController
           annotation_value = annotation_hash[cell]
           expression_value = @gene.scores[cell].to_f.round(4)
           values[:all][:text] << "<b>#{cell}</b><br>#{annotation[:name]}: #{annotation_value}<br>#{@y_axis_title}: #{expression_value}"
+          values[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
           values[:all][:x] << annotation_value
           values[:all][:y] << expression_value
+          values[:all][:cells] << cell
           values[:all][:marker_size] << 6
         end
       end
@@ -722,7 +731,7 @@ class SiteController < ApplicationController
     # construct annotation key to load subsample data_arrays if needed, will be identical to params[:annotation]
     subsample_annotation = "#{annotation[:name]}--#{annotation[:type]}--#{annotation[:scope]}"
     values = {}
-    values[:all] = {x: [], y: [], text: [], marker_size: []}
+    values[:all] = {x: [], y: [], cells: [], anotations: [], text: [], marker_size: []}
     cells = @cluster.concatenate_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     annotation_array = []
     annotation_hash = {}
@@ -742,8 +751,10 @@ class SiteController < ApplicationController
           expression_value = calculate_mean(@genes, cell)
       end
       values[:all][:text] << "<b>#{cell}</b><br>#{annotation[:name]}: #{annotation_value}<br>#{@y_axis_title}: #{expression_value}"
+      values[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
       values[:all][:x] << annotation_value
       values[:all][:y] << expression_value
+      values[:all][:cells] << cell
       values[:all][:marker_size] << 6
     end
     values
@@ -772,6 +783,7 @@ class SiteController < ApplicationController
         # must check if key exists
         if values.has_key?(val)
           values[annotations[cell]][:y] << @gene.scores[cell].to_f.round(4)
+          values[annotations[cell]][:cells] << cell
         end
       end
       # remove any empty values as annotations may have created keys that don't exist in cluster
@@ -800,7 +812,9 @@ class SiteController < ApplicationController
     expression[:all] = {
         x: x_array,
         y: y_array,
+        annotations: [],
         text: [],
+        cells: cells,
         marker: {cmax: 0, cmin: 0, color: [], size: [], showscale: true, colorbar: {title: @y_axis_title , titleside: 'right'}}
     }
     if @cluster.is_3d?
@@ -811,6 +825,7 @@ class SiteController < ApplicationController
       # load correct annotation value based on scope
       annotation_value = annotation[:scope] == 'cluster' ? annotation_array[index] : annotation_hash[cell]
       text_value = "#{cell} (#{annotation[:name]}: #{annotation_value})<br />#{@y_axis_title}: #{expression_score}"
+      expression[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
       expression[:all][:text] << text_value
       expression[:all][:marker][:color] << expression_score
       expression[:all][:marker][:size] << 6
@@ -836,6 +851,7 @@ class SiteController < ApplicationController
     if annotation[:scope] == 'cluster'
       annotations = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       cells.each_with_index do |cell, index|
+        values[annotation[index]][:annotations] << annotations[index]
         case consensus
           when 'mean'
             values[annotations[index]][:y] << calculate_mean(@genes, cell)
@@ -852,6 +868,7 @@ class SiteController < ApplicationController
         val = annotations[cell]
         # must check if key exists
         if values.has_key?(val)
+          values[annotations[cell]][:cells] << cell
           case consensus
             when 'mean'
               values[annotations[cell]][:y] << calculate_mean(@genes, cell)
@@ -892,6 +909,8 @@ class SiteController < ApplicationController
 				x: x_array,
 				y: y_array,
 				text: [],
+        annotations: [],
+        cells: cells,
 				marker: {cmax: 0, cmin: 0, color: [], size: [], showscale: true, colorbar: {title: @y_axis_title , titleside: 'right'}}
 		}
     if @cluster.is_3d?
@@ -910,7 +929,8 @@ class SiteController < ApplicationController
       # load correct annotation value based on scope
       annotation_value = annotation[:scope] == 'cluster' ? annotation_array[index] : annotation_hash[cell]
       text_value = "#{cell} (#{annotation[:name]}: #{annotation_value})<br />#{@y_axis_title}: #{expression_score}"
-			expression[:all][:text] << text_value
+			expression[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
+      expression[:all][:text] << text_value
 			expression[:all][:marker][:color] << expression_score
 			expression[:all][:marker][:line] = { color: 'rgb(40,40,40)', width: 0.5}
 			expression[:all][:marker][:size] << 6
@@ -925,7 +945,7 @@ class SiteController < ApplicationController
   def initialize_plotly_objects_by_annotation(annotation)
     values = {}
     annotation[:values].each do |value|
-      values["#{value}"] = {y: [], name: "#{value}" }
+      values["#{value}"] = {y: [], cells: [], annotations: [], name: "#{value}" }
     end
     values
   end

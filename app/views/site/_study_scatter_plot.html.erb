@@ -3,6 +3,8 @@ var data = [];
 	var cluster_<%= index %> = {
 		x: <%= raw data[:x] %>,
 		y: <%= raw data[:y] %>,
+    cells: <%= raw data[:cells] %>,
+    annotations: <%= raw data[:annotations] %>,
     <% if @cluster.cluster_type == '3d' %>
       z: <%= raw data[:z] %>,
       textposition: 'bottom right',
@@ -65,3 +67,4 @@ $('#cluster-plot')[0].on('plotly_relayout', function(data) {
     console.log('Update complete, camera data now ' + JSON.stringify($('#cluster-plot').data('camera')));
   }
 });
+

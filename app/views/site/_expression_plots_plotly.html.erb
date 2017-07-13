@@ -2,6 +2,8 @@
 var exp = {
   x: <%= raw @expression[:all][:x] %>,
   y: <%= raw @expression[:all][:y] %>,
+  cells: <%= raw @expression[:all][:cells] %>,
+  annotations: <%= raw @expression[:all][:annotations] %>,
   <% if @cluster.is_3d? %>
     z: <%= raw @expression[:all][:z] %>,
   <% end %>
@@ -49,10 +51,12 @@ var dataRef = [];
     var cluster_<%= index %>_clst = {
       x: <%= raw @coordinates[key][:x] %>,
       y: <%= raw @coordinates[key][:y] %>,
+      cells: <%= raw @coordinates[key][:cells] %>,
+      annotations: <%= raw @coordinates[key][:annotations] %>,
       text: <%= raw @coordinates[key][:text] %>,
       name: "<%= @coordinates[key][:name] %>",
       mode: 'markers',
-      dragmode: 'lasso',
+      dragmode: 'lasso, select',
       type: 'scattergl',
       marker: {
         color: colorBrewerSet[<%= index %>],
@@ -66,19 +70,53 @@ var dataRef = [];
 
     dataRef.push(cluster_<%= index %>_clst);
   <% end %>
-  $("#toggle-scatter").click(function() {
-    var new_type = clusterData[0].type == 'scattergl' ? 'scatter' : 'scattergl';
-    clusterData[0].type = new_type;
-    Plotly.newPlot('scatter-plot', clusterData, scatterLayout);
-    console.log('Changed scatter to: ' + new_type);
-    // re-render reference plot if showing numeric annotations
+    $("#toggle-scatter").click(function() {
+      var target = $('#scatter-plot')[0];
+      $(target).on('plotly_afterplot', function() {
+        if($(target).data('spinner') !== undefined){
+          $(target).off('plotly_afterplot');
+          $(target).data('spinner').stop();
+          console.log('stopped');
+        }
+      });
+      //launch spinner
+      var spinner = new Spinner(opts).spin(target);
+      $(target).data('spinner', spinner);
+      console.log('started');
 
-    for(var i = 0; i < dataRef.length; i ++){
-      dataRef[i].type = new_type;
-    }
-    Plotly.newPlot('reference-plot', dataRef, staticLayout);
+      var new_type = clusterData[0].type === 'scattergl' ? 'scatter' : 'scattergl';
+      clusterData[0].type = new_type;
+      Plotly.newPlot('scatter-plot', clusterData, scatterLayout);
 
-  });
+      $('#scatter-plot')[0].on('plotly_selected', function(eventData) {
+          var names = [];
+          var annotations = [];
+
+          var colors = [];
+          console.log(eventData);
+          eventData.points.forEach(function (pt) {
+              names.push(clusterData[pt.curveNumber].cells[pt.pointNumber]);
+              annotations.push(clusterData[pt.curveNumber].annotations[pt.pointNumber]);
+          });
+
+          console.log('Selected');
+          console.log(names);
+          console.log(annotations);
+      });
+
+
+
+
+      console.log('Changed scatter to: ' + new_type);
+      // re-render reference plot if showing numeric annotations
+      /*
+      for(var i = 0; i < dataRef.length; i ++){
+        dataRef[i].type = new_type;
+      }
+      Plotly.newPlot('reference-plot', dataRef, staticLayout);
+      */
+
+    });
 <% end %>
 
 
