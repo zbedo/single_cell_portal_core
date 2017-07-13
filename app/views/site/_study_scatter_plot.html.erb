@@ -15,7 +15,7 @@ var data = [];
       marker: <%= raw data[:marker].to_json %>
     <% else %>
       marker: {
-        color: colorBrewerSet[<%= index %> % 20],
+        color: colorBrewerSet[<%= index %> % 27],
         size: <%= raw data[:marker_size] %>,
         line: {
           color: plotlyDefaultLineColor,

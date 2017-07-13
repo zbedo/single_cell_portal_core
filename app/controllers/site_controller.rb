@@ -443,6 +443,11 @@ class SiteController < ApplicationController
     send_data @data, type: 'text/plain'
   end
 
+  # return JSON representation of selected annotation
+  def annotation_values
+    render json: @selected_annotation.to_json
+  end
+
   # load precomputed data in gct form to render in Morpheus
   def precomputed_results
     if check_xhr_view_permissions

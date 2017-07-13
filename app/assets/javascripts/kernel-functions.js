@@ -296,7 +296,7 @@ function createTracesAndLayout(arr, title){
 
         //Set the color of the trace to a color brewer constant
         // If there are more than 20 traces the colors start from the beginning again
-        var color = colorBrewerSet[group % 20];
+        var color = colorBrewerSet[group % 27];
 
         //Calculate the median value and sort the data in ascending order
         var median_v = ss.median(pointData);
