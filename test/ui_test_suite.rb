@@ -365,6 +365,14 @@ class UiTestSuite < Test::Unit::TestCase
 		end
 		cont
 	end
+
+	# open a new browser tab, switch to it and navigate to a url
+	def open_new_page(url)
+		@driver.execute_script('window.open()')
+		@driver.switch_to.window(@driver.window_handles.last)
+		@driver.get(url)
+	end
+
 	##
 	## ADMIN TESTS
 	##
@@ -2726,6 +2734,26 @@ class UiTestSuite < Test::Unit::TestCase
 			loaded_color = @driver.find_element(:id, 'colorscale')['value']
 			assert new_color == loaded_color, "default color incorrect, expected #{new_color} but found #{loaded_color}"
 		end
+
+		# now test if auth challenge is working properly using test study
+		@driver.get(study_page)
+		open_new_page(@base_url)
+		profile_nav = @driver.find_element(:id, 'profile-nav')
+		profile_nav.click
+		logout = @driver.find_element(:id, 'logout-nav')
+		logout.click
+
+		# check authentication challenge
+		@driver.switch_to.window(@driver.window_handles.first)
+		open_study_ui_tab('study-settings')
+		public_dropdown = @driver.find_element(:id, 'study_public')
+		public_dropdown.send_keys('Yes')
+		update_btn = @driver.find_element(:id, 'update-study-settings')
+		update_btn.click
+		wait_for_render(:id, 'message_modal')
+		alert_text = @driver.find_element(:id, 'alert-content').text
+		assert alert_text == 'Your session has expired. Please log in again to continue.', "incorrect alert text - expected 'Your session has expired.  Please log in again to continue.' but found #{alert_text}"
+		close_modal('message_modal')
 
 		puts "Test method: #{self.method_name} successful!"
 	end
