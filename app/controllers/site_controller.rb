@@ -507,6 +507,26 @@ class SiteController < ApplicationController
     render json: @fastq_files.to_json
   end
 
+  def create_user_annotations
+    names = params.select {|k,v| k.include?  "name_"}
+    cell_names = params.select {|k,v| k.include?  "hiddenName_"}
+
+    names = names.values
+    cell_names = cell_names
+
+    study_name = params[:study_name]
+
+
+    arr = []
+    i = 0
+
+    names.each do |name|
+      arr.push([name, params[cell_names.keys[i]].split(',')])
+      i += 1
+    end
+
+  end
+
   private
 
   # SETTERS
