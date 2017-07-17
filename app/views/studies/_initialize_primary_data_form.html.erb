@@ -7,7 +7,7 @@
 	<div class="form-group row">
 		<div class="col-sm-4">
 			<%= f.label :name %><br />
-			<%= f.text_field :name, class: 'form-control filename', readonly: true, placeholder: 'Filename is taken from uploaded file...' %>
+			<%= f.text_field :name, class: 'form-control filename', readonly: true, placeholder: 'Filename is taken from uploaded file...', autocomplete: 'off' %>
 		</div>
 		<div class="col-sm-8">
 			<%= f.label :description %><br />
@@ -24,9 +24,13 @@
 			<%= f.select :human_data, options_for_select([['Yes', true],['No', false]], study_file.human_data), {}, class: 'form-control human-data' %>
 		</div>
 		<div class="col-sm-5 upload-field <%= study_file.human_data? ? 'hidden' : nil %>">
-			<%= f.label :upload, 'Upload Data File' %><br />
-			<%= f.file_field :upload, class: 'btn btn-info fileinput-button upload-fastq' %>
-      <%= f.hidden_field :status, value: study_file.new_record? ? 'uploading' : 'uploaded' %>
+      <% if !study_file.upload_file_name.nil? %>
+        <p><label>Link to file </label><br /><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></p>
+      <% else %>
+        <%= f.label :upload, 'Upload Data File' %><br />
+        <%= f.file_field :upload, class: 'btn btn-info fileinput-button upload-fastq' %>
+        <%= f.hidden_field :status, value: study_file.new_record? ? 'uploading' : 'uploaded' %>
+      <% end %>
 		</div>
 		<div class="col-sm-5 fastq-field <%= study_file.human_data? ? nil : 'hidden' %>">
 			<%= f.label :human_fastq_url, 'Link to primary human fastq file' %><br />
@@ -58,57 +62,61 @@
 		$(function() {
 			$('#primary_data_form_<%= study_file._id %>').fileupload({
 				url: "<%= upload_study_path(@study._id) %>",
-				maxChunkSize: 10000000, // 10 MB
+				maxChunkSize: 10000000,
 				type: 'PATCH',
 				acceptFileTypes: /\.(fq|fastq)(\.tar)?\.gz$/i,
-        maxFileSize: 2000000000, // 2 GB
+        maxFileSize: 2000000000,
 				add: function (e, data) {
 					fileUploading = true;
 					var that = this;
 					var fileName = data.files[0].name.replace(/ /g, '_');
-					// this is the chunked upload callback, will upload 10MB at a time until finished
 					$.getJSON("<%= resume_upload_study_path %>", { file: fileName }, function (result) {
 						var file = result.file;
             if (file == null) {
-              $("#study-files-notice-target").html("<%= escape_javascript( render partial: 'studies/study_file_notices', locals: {message: "You have already uploaded this file.  Please select another file."}) %>");
+                fileUploading = false;
+                $("#study-files-notice-target").html("<%= escape_javascript( render partial: 'studies/study_file_notices', locals: {message: "You have already uploaded this file.  Please select another file."}) %>");
             } else {
               data.uploadedBytes = file && file.size;
               $.blueimp.fileupload.prototype.options.add.call(that, e, data);
             }
 					});
 				},
-				// on each chunk completion, update status
 				chunkdone: function(e, data) {
 					var perc = parseInt(data.loaded / data.total * 100, 10);
 					$(data.context).find('h1').html(perc + "%");
 				},
-				// file upload is done, now clean up
 				done: function(e, data) {
 					var fileName = data.files[0].name.replace(/ /g, '_');
-					// update upload status
 					$.ajax({
 						url: "<%= update_status_study_path %>",
 						type: "PATCH",
 						data: { status: 'uploaded', file: fileName}
 					});
 					fileUploading = false;
-					$.get("<%= retrieve_wizard_upload_study_path(@study._id) %>", {file: fileName, selector: '#primary_data_form_<%= study_file._id %>', partial: 'initialize_primary_data_form'});
-					// send to firecloud directly
+            $.ajax({
+                url: "<%= retrieve_wizard_upload_study_path(@study._id) %>",
+                data: {file: fileName, selector: '#primary_data_form_<%= study_file._id %>', partial: 'initialize_primary_data_form'},
+                dataType: 'script',
+                success: function() {
+                    var numCompleted = $('.initialize_primary_data_form').length;
+                    var numNew = $('.new-fastq-form').length;
+                    if ( numCompleted - numNew == 1 ) {
+                        completeWizardStep('initialize_primary_data_form_nav');
+                        setWizardProgress(getWizardStatus());
+                        console.log('incrementing status for primary data upload');
+                        $('#initialize_primary_data_form_completed').replaceWith("<%= escape_javascript(render partial: 'step_completed', locals: {id: 'initialize_primary_data_form_completed'}) %>");
+                        $('#initialize_primary_data_form_nav_completed').html("<span class='fa fa-check text-success'></span>");
+                    }
+                }
+            });
           $.post("<%= send_to_firecloud_study_path %>", {file: fileName});
-					if (<%= @study.study_files.select {|sf| sf.file_type == 'Fastq'}.size == 1 %>) {
-						completeWizardStep('initialize_primary_data_form_nav');
-						setWizardProgress(getWizardStatus());
-						console.log('incrementing status for primary data upload');
-						$('#initialize_primary_data_form_completed').replaceWith("<%= escape_javascript(render partial: 'step_completed', locals: {id: 'initialize_primary_data_form_completed'}) %>");
-						$('#initialize_primary_data_form_nav_completed').html("<span class='fa fa-check text-success'></span>");
-					}
+
 				},
         fail: function(e, data) {
-            // check if upload is in progress and abort
             if (data.jqXHR != undefined) {
                 data.jqXHR.abort();
-                fileUploading = false;
             }
+            fileUploading = false;
             console.log('Aborting upload on study_file: <%= study_file.id %>');
             launchModalSpinner('#delete-modal-spinner','#delete-modal');
             $.ajax({
@@ -121,8 +129,4 @@
 		});
 
 	</script>
-
-	<% if !study_file.upload_file_name.nil? %>
-		<p><label>Link to file </label><br /><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></p>
-	<% end %>
 <% end %>

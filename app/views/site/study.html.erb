@@ -26,13 +26,15 @@
     <div class="tab-pane" id="study-download" role="tabpanel">
       <%= render partial: 'study_download_data' %>
     </div>
-    <div class="tab-pane" id="study-settings" role="tabpanel">
-      <div class="row">
-        <div class="col-xs-12" id="study-settings-form-target">
-          <%= render partial: 'study_settings_form' %>
+    <% if user_signed_in? && @study.can_edit?(current_user) %>
+      <div class="tab-pane" id="study-settings" role="tabpanel">
+        <div class="row">
+          <div class="col-xs-12" id="study-settings-form-target">
+            <%= render partial: 'study_settings_form' %>
+          </div>
         </div>
       </div>
-    </div>
+    <% end %>
   </div>
 </div>
 

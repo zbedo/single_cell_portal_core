@@ -7,7 +7,7 @@
   <div class="form-group row">
     <div class="col-sm-4">
       <%= f.label :name %><br />
-      <%= f.text_field :name, class: 'form-control filename', readonly: !['Cluster', 'Gene List'].include?(study_file.file_type) , placeholder: 'Please provide a name for this entity...' %>
+      <%= f.text_field :name, class: 'form-control filename', readonly: !['Cluster', 'Gene List'].include?(study_file.file_type) , placeholder: 'Please provide a name for this entity...', autocomplete: 'off' %>
     </div>
     <div class="col-sm-8">
       <%= f.label :description, 'Description' %><br />

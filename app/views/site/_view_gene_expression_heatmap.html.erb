@@ -52,7 +52,14 @@
         dataPath += '&cluster=' + cluster + '&request_user_token=' + requestToken;
         var newAnnotPath = '<%= annotation_query_path(study_name: params[:study_name]) %>?cluster=' + cluster + '&annotation=' + selectedAnnot;
 
-        renderMorpheus(dataPath, newAnnotPath, annotName, annotType, '#heatmap-plot', fit, height);
+        // get annotation values to set color values in Morhpeus and draw heatmap in callback
+        $.ajax({
+            url: '<%= annotation_values_path(study_name: @study.url_safe_name) %>?annotation=' + selectedAnnot,
+            dataType: 'JSON',
+            success: function(annotations) {
+                renderMorpheus(dataPath, newAnnotPath, annotName, annotType, '#heatmap-plot', annotations, fit, height);
+            }
+        });
     }
 
 
@@ -159,9 +166,5 @@
         plot.data('fit', fitType);
         drawHeatmap();
     });
-
-    // reattach tooltips & popovers on render
-    $('[data-toggle="tooltip"]').tooltip({container: 'body'});
-    $('[data-toggle="popover"]').popover();
 
 </script>

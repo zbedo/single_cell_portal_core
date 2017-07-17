@@ -170,7 +170,7 @@
 						<th>Name</th>
 						<th>Description</th>
 						<th>File Type</th>
-						<th>Parsed</th>
+						<th>Parse Status</th>
 						<th>Download</th>
 					</tr>
 				</thead>
@@ -180,7 +180,7 @@
 							<td class="study-file-name"><%= study_file.name %></td>
 							<td class="study-file-description"><%= study_file.description %></td>
 							<td class="study-file-file-type"><%= study_file.file_type %></td>
-							<td class="study-file-parsed" data-parsed="<%= study_file.parsed? %>"><%= study_file.parseable? ? get_boolean_label(study_file.parsed?) : get_na_label %></td>
+							<td class="study-file-parsed" data-parsed="<%= study_file.parsed? %>"><%= study_file.parseable? ? get_parse_label(study_file.parse_status) : get_na_label %></td>
 							<td><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></td>
 						</tr>
 					<% end %>
@@ -232,9 +232,9 @@
 				</thead>
 				<tbody>
 				<% @study.study_shares.each do |study_share| %>
-					<tr>
-						<td><%= study_share.email %></td>
-						<td><%= study_share.permission %></td>
+					<tr id="study-share-<%= study_share.email.gsub(/[@.]/, '-') %>">
+						<td class="share-email"><%= study_share.email %></td>
+						<td class="share-permission"><%= study_share.permission %></td>
 						<td><%= study_share.updated_at.to_s(:long) %></td>
 					</tr>
 				<% end %>

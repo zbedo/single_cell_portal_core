@@ -7,7 +7,7 @@
 	<div class="form-group row">
 		<div class="col-sm-4">
 			<%= f.label :name %><br />
-			<%= f.text_field :name, class: 'form-control filename', readonly: true, placeholder: 'Filename is taken from uploaded file...' %>
+			<%= f.text_field :name, class: 'form-control filename', readonly: true, placeholder: 'Filename is taken from uploaded file...', autocomplete: 'off' %>
 		</div>
 		<div class="col-sm-8">
 			<%= f.label :description %><br />
@@ -20,9 +20,13 @@
 			<%= f.text_field :file_type, readonly: true, class: 'form-control' %>
 		</div>
 		<div class="col-sm-5 upload-field">
-			<%= f.label :upload, 'Upload Data File' %><br />
-			<%= f.file_field :upload, class: 'btn btn-info fileinput-button', id: 'upload-metadata' %>
-      <%= f.hidden_field :status, value: study_file.new_record? ? 'uploading' : 'uploaded' %>
+      <% if !study_file.upload_file_name.nil? %>
+        <p><label>Link to file </label><br /><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></p>
+      <% else %>
+        <%= f.label :upload, 'Upload Data File' %><br />
+        <%= f.file_field :upload, class: 'btn btn-info fileinput-button', id: 'upload-metadata' %>
+        <%= f.hidden_field :status, value: study_file.new_record? ? 'uploading' : 'uploaded' %>
+      <% end %>
 		</div>
 		<div class="col-sm-3">
 			<%= f.label :actions %>
@@ -41,14 +45,10 @@
 			<tbody class="files"></tbody>
 		</table>
 	</div>
-	<% if !study_file.upload_file_name.nil? %>
-		<p><label>Link to file </label><br /><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></p>
-	<% end %>
 
 	<script type="text/javascript">
 
 		$(function() {
-			// check if upload has already happened
 			if (<%= !study_file.upload_file_name.nil? %>) {
 				completeWizardStep('initialize_metadata_form_nav');
 				console.log('incrementing status for metadata upload');
@@ -65,26 +65,23 @@
 					fileUploading = true;
 					var that = this;
 					var fileName = data.files[0].name.replace(/ /g, '_');
-					// this is the chunked upload callback, will upload 10MB at a time until finished
 					$.getJSON("<%= resume_upload_study_path %>", { file: fileName }, function (result) {
 						var file = result.file;
             if (file == null) {
-              $("#study-files-notice-target").html("<%= escape_javascript( render partial: 'studies/study_file_notices', locals: {message: "You have already uploaded this file.  Please select another file."}) %>");
+                fileUploading = false;
+                $("#study-files-notice-target").html("<%= escape_javascript( render partial: 'studies/study_file_notices', locals: {message: "You have already uploaded this file.  Please select another file."}) %>");
             } else {
               data.uploadedBytes = file && file.size;
               $.blueimp.fileupload.prototype.options.add.call(that, e, data);
             }
 					});
 				},
-				// on each chunk completion, update status
 				chunkdone: function(e, data) {
 					var perc = parseInt(data.loaded / data.total * 100, 10);
 					$(data.context).find('h1').html(perc + "% uploaded");
 				},
-				// file upload is done, now clean up
 				done: function(e, data) {
 					var fileName = data.files[0].name.replace(/ /g, '_');
-					// update upload status
 					$.ajax({
 						url: "<%= update_status_study_path %>",
 						type: "PATCH",
@@ -94,11 +91,11 @@
 					$.post("<%= parse_study_file_study_path(@study._id) %>", {file: fileName, modal_target: '#metadata-parse-modal', partial: 'initialize_metadata_form', selector: "#metadata_form"});
 				},
         fail: function(e, data) {
-            // check if upload is in progress and abort
             if (data.jqXHR != undefined) {
                 data.jqXHR.abort();
-                fileUploading = false;
             }
+            fileUploading = false;
+
             console.log('Aborting upload on study_file: <%= study_file.id %>');
             launchModalSpinner('#delete-modal-spinner','#delete-modal');
             $.ajax({

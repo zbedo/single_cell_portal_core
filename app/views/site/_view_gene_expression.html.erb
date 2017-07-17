@@ -39,12 +39,15 @@
         var annotation = $('#annotation').val();
         var consensus = $('#search_consensus').val();
         var subsample = $('#subsample').val();
-        var boxpoints = $('#boxpoints_select').val() == undefined ? 'all' : $('#boxpoints_select').val();
+        var plot_type = $('#plot_type').val() === undefined ? 'violin' : $('#plot_type').val();
+        var kernel_type = $('#kernel_type').val() === undefined ? 'gau' : $('#kernel_type').val();
+        var band_type = $('#band_type').val() === undefined ? 'nrd0' : $('#band_type').val();
+        var boxpoints = $('#boxpoints_select').val() === undefined ? 'all' : $('#boxpoints_select').val();
         $("#search_cluster").val(cluster);
         $("#search_annotation").val(''); // clear value first
         $("#search_annotation").val(annotation);
         var delimeter = "<%= params[:gene] ? "?".html_safe : "&".html_safe %>";
-        url += delimeter + 'cluster=' + cluster + '&annotation=' + annotation + '&boxpoints=' + boxpoints + '&consensus=' + consensus + '&subsample=' + subsample
+        url += delimeter + 'cluster=' + cluster + '&annotation=' + annotation + '&boxpoints=' + boxpoints + '&consensus=' + consensus + '&subsample=' + subsample + '&plot_type=' + plot_type + '&kernel_type=' + kernel_type + '&band_type=' + band_type
         $.ajax({
             url: url,
             method: 'GET',
@@ -61,6 +64,7 @@
         }
         renderGeneExpressionPlots();
     });
+
     // listener for annotation nav, specific to expression pages
     $("#annotation").change(function() {
         $('#expression-plots').data('box-rendered', false);
@@ -80,6 +84,7 @@
         $('#expression-plots').data('reference-rendered', false);
         var sample = $(this).val();
         $('#search_subsample').val(sample);
+        $('#gene_set_subsample').val(sample);
         // turn off boxpoints over 1000
         if (parseInt(sample) > 1000) {
             $("#boxpoints_select").val('');
@@ -118,9 +123,5 @@
             }
         });
     });
-
-    // reattach tooltips & popovers on render
-    $('[data-toggle="tooltip"]').tooltip({container: 'body'});
-    $('[data-toggle="popover"]').popover();
 
 </script>

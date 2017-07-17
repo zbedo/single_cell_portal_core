@@ -7,7 +7,7 @@
 	<div class="form-group row">
 		<div class="col-sm-4">
 			<%= f.label :name %><br />
-			<%= f.text_field :name, class: 'form-control filename', placeholder: 'Please provide a name for this group of ordinations...' %>
+			<%= f.text_field :name, class: 'form-control filename cluster-name', placeholder: 'Please provide a name for this group of ordinations...', autocomplete: 'off' %>
 		</div>
 		<div class="col-sm-8">
 			<%= f.label :description, 'Description/Figure Legend (this will be displayed below cluster)' %><br />
@@ -60,9 +60,13 @@
 			<%= f.text_field :file_type, readonly: true, class: 'form-control' %>
 		</div>
 		<div class="col-sm-5 upload-field">
-			<%= f.label :upload, 'Upload Data File' %><br />
-			<%= f.file_field :upload, class: 'btn btn-info fileinput-button cluster-upload upload-clusters' %>
-      <%= f.hidden_field :status, value: study_file.new_record? ? 'uploading' : 'uploaded' %>
+      <% if !study_file.upload_file_name.nil? %>
+        <p><label>Link to file </label><br /><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></p>
+      <% else %>
+        <%= f.label :upload, 'Upload Data File' %><br />
+        <%= f.file_field :upload, class: 'btn btn-info fileinput-button cluster-upload upload-clusters' %>
+        <%= f.hidden_field :status, value: study_file.new_record? ? 'uploading' : 'uploaded' %>
+      <% end %>
 		</div>
 		<div class="col-sm-3">
 			<%= f.label :actions %>
@@ -90,21 +94,24 @@
         }
     });
 
+    // validate uniqueness of names before submit
+    validateUnique("#ordinations_form_<%= study_file._id %>", '.cluster-name');
+
 		$(function() {
 
 			$('#ordinations_form_<%= study_file._id %>').fileupload({
 				url: "<%= upload_study_path(@study._id) %>",
-				maxChunkSize: 10000000, // 10 MB
+				maxChunkSize: 10000000,
 				type: 'PATCH',
 				acceptFileTypes: /(\.|\/)(txt|text)$/i,
 				add: function (e, data) {
 					fileUploading = true;
 					var that = this;
 					var fileName = data.files[0].name.replace(/ /g, '_');
-					// this is the chunked upload callback, will upload 10MB at a time until finished
 					$.getJSON("<%= resume_upload_study_path %>", { file: fileName }, function (result) {
 						var file = result.file;
             if (file == null) {
+              fileUploading = false;
               $("#study-files-notice-target").html("<%= escape_javascript( render partial: 'studies/study_file_notices', locals: {message: "You have already uploaded this file.  Please select another file."}) %>");
             } else {
               data.uploadedBytes = file && file.size;
@@ -112,12 +119,10 @@
             }
 					});
 				},
-				// on each chunk completion, update status
 				chunkdone: function(e, data) {
 					var perc = parseInt(data.loaded / data.total * 100, 10);
 					$(data.context).find('h1').html(perc + "% uploaded");
 				},
-				// file upload is done, now clean up
 				done: function(e, data) {
 					var fileName = data.files[0].name.replace(/ /g, '_');
 					// update upload status
@@ -130,11 +135,10 @@
 					$.post("<%= parse_study_file_study_path(@study._id) %>", {file: fileName, modal_target: '#ordinations-parse-<%= study_file._id %>-modal', partial: 'initialize_ordinations_form', selector: "#ordinations_form_<%= study_file._id %>"});
 				},
           fail: function(e, data) {
-              // check if upload is in progress and abort
               if (data.jqXHR != undefined) {
                   data.jqXHR.abort();
-                  fileUploading = false;
               }
+              fileUploading = false;
               console.log('Aborting upload on study_file: <%= study_file.id %>');
               launchModalSpinner('#delete-modal-spinner','#delete-modal');
               $.ajax({
@@ -147,7 +151,5 @@
 		});
 
 	</script>
-	<% if !study_file.upload_file_name.nil? %>
-		<p><label>Link to file </label><br /><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></p>
-	<% end %>
+
 <% end %>

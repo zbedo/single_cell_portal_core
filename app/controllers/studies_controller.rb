@@ -62,7 +62,7 @@ class StudiesController < ApplicationController
 
   # allow a user to sync files uploaded outside the portal into a workspace bucket with an existing study
   def sync_study
-    @study_files = @study.study_files
+    @study_files = @study.study_files.valid
     @directories = @study.directory_listings.to_a
     # keep a list of what we expect to be
     @files_by_dir = {}
@@ -99,6 +99,15 @@ class StudiesController < ApplicationController
             # permissions are correct, skip
             next
           end
+        end
+      end
+
+      # now check to see if there have been permissions removed in FireCloud that need to be removed on the portal side
+      new_study_permissions = @study.study_shares.to_a
+      new_study_permissions.each do |share|
+        if firecloud_permissions['acl'][share.email].nil?
+          logger.info "#{Time.now}: removing #{share.email} access to #{@study.name} via sync - no longer in FireCloud acl"
+          share.delete
         end
       end
     rescue => e
@@ -214,19 +223,19 @@ class StudiesController < ApplicationController
         end
       end
 
+      # set queued_for_deletion manually - gotcha due to race condition on page reloading and how quickly delayed_job can process jobs
+      @study.update(queued_for_deletion: true)
+
+      # queue jobs to delete study caches & study itself
+      CacheRemovalJob.new(@study.url_safe_name).delay.perform
+      DeleteQueueJob.new(@study).delay.perform
+
       # notify users of deletion before removing shares & owner
       SingleCellMailer.study_delete_notification(@study, current_user).deliver_now
 
       # revoke all study_shares
       @study.study_shares.delete_all
-
-      # queue job to delete study caches
-      CacheRemovalJob.new(@study.url_safe_name).delay.perform
-
-      # mark for deletion, rename study to free up old name for use, and restrict access by removing owner
-      new_name = "DELETE-#{@study.data_dir}"
-      @study.update!(queued_for_deletion: true, public: false, user_id: nil, name: new_name, url_safe_name: new_name)
-      update_message = "Study '#{name}'was successfully destroyed. All#{params[:workspace].nil? ? ' workspace data & ' : ' '}parsed database records have been destroyed."
+      update_message = "Study '#{name}'was successfully destroyed. All #{params[:workspace].nil? ? 'workspace data & ' : nil}parsed database records have been destroyed."
 
       respond_to do |format|
         format.html { redirect_to studies_path, notice: update_message }
@@ -369,25 +378,21 @@ jon        case @study_file.file_type
     @study_file = StudyFile.find(params[:study_file_id])
     @message = ""
     unless @study_file.nil?
+      @study_file.update(queued_for_deletion: true)
+      DeleteQueueJob.new(@study_file).delay.perform
       @file_type = @study_file.file_type
       @message = "'#{@study_file.name}' has been successfully deleted."
       # clean up records before removing file (for memory optimization)
       case @file_type
         when 'Cluster'
-          ClusterGroup.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
-          DataArray.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
           @partial = 'initialize_ordinations_form'
         when 'Expression Matrix'
-          ExpressionScore.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
-          DataArray.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
           @partial = 'initialize_expression_form'
         when 'Metadata'
-          StudyMetadatum.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
           @partial = 'initialize_metadata_form'
         when 'Fastq'
           @partial = 'initialize_primary_data_form'
         when 'Gene List'
-          PrecomputedScore.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
           @partial = 'initialize_marker_genes_form'
         else
           @partial = 'initialize_misc_form'
@@ -407,12 +412,6 @@ jon        case @study_file.file_type
       changes = ["Study file deleted: #{@study_file.upload_file_name}"]
       if @study.study_shares.any?
         SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
-      end
-      @study_file.destroy
-
-      # reset initialized if needed
-      if @study.cluster_ordinations_files.empty? || @study.expression_matrix_file.nil? || @study.metadata_file.nil?
-        @study.update(initialized: false)
       end
     else
       # user most likely aborted upload before it began, so determine file type based on form target
@@ -445,7 +444,7 @@ jon        case @study_file.file_type
     @study_file = @study.build_study_file({file_type: @file_type})
 
     unless @file_type.nil?
-      @reset_status = @study.study_files.select {|sf| sf.file_type == @file_type && !sf.new_record?}.count == 0
+      @reset_status = @study.study_files.valid.select {|sf| sf.file_type == @file_type && !sf.new_record?}.count == 0
     else
       @reset_status = false
     end
@@ -529,43 +528,27 @@ jon        case @study_file.file_type
     @form = "#study-file-#{@study_file.id}"
     @message = ""
     unless @study_file.nil?
-      @file_type = @study_file.file_type
-      @message = "'#{@study_file.name}' has been successfully deleted."
-      # clean up records before removing file (for memory optimization)
-      case @file_type
-        when 'Cluster'
-          ClusterGroup.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
-          DataArray.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
-        when 'Expression Matrix'
-          ExpressionScore.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
-          DataArray.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
-        when 'Metadata'
-          StudyMetadatum.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
-        when 'Gene List'
-          PrecomputedScore.where(study_file_id: @study_file.id, study_id: @study.id).delete_all
-        else
-          nil
-      end
+      begin
+        DeleteQueueJob.new(@study_file).delay.perform
 
-      changes = ["Study file deleted: #{@study_file.upload_file_name}"]
-      if @study.study_shares.any?
-        SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
-      end
+        changes = ["Study file deleted: #{@study_file.upload_file_name}"]
+        if @study.study_shares.any?
+          SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
+        end
 
-      # delete matching caches
-      @study_file.delay.invalidate_cache_by_file_type
-
-      if @study_file.destroy
+        # delete matching caches
+        @study_file.delay.invalidate_cache_by_file_type
         @message = "'#{@study_file.name}' has been successfully deleted."
 
         # reset initialized if needed
         if @study.cluster_ordinations_files.empty? || @study.expression_matrix_file.nil? || @study.metadata_file.nil?
           @study.update(initialized: false)
         end
+
         respond_to do |format|
           format.js {render action: 'sync_action_success'}
         end
-      else
+      rescue => e
         respond_to do |format|
           format.js {render action: 'sync_action_fail'}
         end
@@ -609,7 +592,7 @@ jon        case @study_file.file_type
   def do_upload
     upload = get_upload
     filename = upload.original_filename
-    study_file = @study.study_files.detect {|sf| sf.upload_file_name == filename}
+    study_file = @study.study_files.valid.detect {|sf| sf.upload_file_name == filename}
     # If no file has been uploaded or the uploaded file has a different filename,
     # do a new upload from scratch
     if study_file.nil?
@@ -654,7 +637,7 @@ jon        case @study_file.file_type
 
   # GET /courses/:id/resume_upload.json
   def resume_upload
-    study_file = StudyFile.where(study_id: params[:id], name: params[:file]).first
+    study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
     if study_file.nil?
       render json: { file: { name: "/uploads/default/missing.png",size: nil } } and return
     elsif study_file.status == 'uploaded'
@@ -679,7 +662,6 @@ jon        case @study_file.file_type
     end
   end
 
-  # method to download files if study is private, will create temporary signed_url after checking user quota
   # method to download files if study is private, will create temporary signed_url after checking user quota
   def download_private_file
     @study = Study.find_by(url_safe_name: params[:study_name])
@@ -802,11 +784,10 @@ jon        case @study_file.file_type
   def initialize_wizard_files
     @expression_file = @study.expression_matrix_file
     @metadata_file = @study.metadata_file
-    @cluster_ordinations = @study.study_files.select {|sf| sf.file_type == 'Cluster'}
-    @sub_clusters = @study.study_files.select {|sf| sf.file_type == 'Cluster Coordinates' && sf.cluster_type == 'sub'}
-    @marker_lists = @study.study_files.select {|sf| sf.file_type == 'Gene List'}
-    @fastq_files = @study.study_files.select {|sf| sf.file_type == 'Fastq'}
-    @other_files = @study.study_files.select {|sf| %w(Documentation Other).include?(sf.file_type)}
+    @cluster_ordinations = @study.study_files.by_type('Cluster')
+    @marker_lists = @study.study_files.by_type('Gene List')
+    @fastq_files = @study.study_files.by_type('Fastq')
+    @other_files = @study.study_files.by_type(['Documentation', 'Other'])
 
     # if files don't exist, build them for use later
     if @expression_file.nil?

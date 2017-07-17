@@ -5,8 +5,8 @@ var wizForm = $('.<%= params[:form] %>').slice(-1)[0];
 
 // reattach click listener to download a file when private, will open modal for timed HTML5 download
 $(wizForm).find('.download-btn').click(function() {
-  var url = $(this).data('filepath');
-  $.get(url);
+    var url = $(this).data('filepath');
+    $.get(url);
 });
 
 $(wizForm).find('[data-toggle="tooltip"]').tooltip({container: 'body'});
@@ -14,9 +14,9 @@ $(wizForm).find('[data-toggle="tooltip"]').tooltip({container: 'body'});
 // reattach click handler for deleting
 $(wizForm).find('.delete-file').click(function() {
   // handler for file deletion clicks
-  if (deleteFileConfirmation()) {
-    return true;
-  } else {
-    return false;
-  }
+    if (deleteFileConfirmation('Are you sure?  This file will be deleted and any associated database records removed.  This cannot be undone.')) {
+        return true;
+    } else {
+        return false;
+    }
 });

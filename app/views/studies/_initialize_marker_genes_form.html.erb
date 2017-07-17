@@ -7,7 +7,7 @@
 	<div class="form-group row">
 		<div class="col-sm-4">
 			<%= f.label :name %><br />
-			<%= f.text_field :name, class: 'form-control filename', placeholder: 'Enter name of marker list (for display purposes)' %>
+			<%= f.text_field :name, class: 'form-control filename gene-list-name', placeholder: 'Enter name of marker list (for display purposes)', autocomplete: 'off' %>
 		</div>
 		<div class="col-sm-8">
 			<%= f.label :description %><br />
@@ -20,9 +20,14 @@
 			<%= f.text_field :file_type, readonly: true, class: 'form-control' %>
 		</div>
 		<div class="col-sm-5 upload-field">
-			<%= f.label :upload, 'Upload Data File' %><br />
-			<%= f.file_field :upload, class: 'btn btn-info fileinput-button upload-marker-genes' %>
-      <%= f.hidden_field :status, value: study_file.new_record? ? 'uploading' : 'uploaded' %>
+      <% if !study_file.upload_file_name.nil? %>
+        <p><label>Link to file </label><br /><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></p>
+      <% else %>
+        <%= f.label :upload, 'Upload Data File' %><br />
+        <%= f.file_field :upload, class: 'btn btn-info fileinput-button upload-marker-genes' %>
+        <%= f.hidden_field :status, value: study_file.new_record? ? 'uploading' : 'uploaded' %>
+      <% end %>
+
 		</div>
 		<div class="col-sm-3">
 			<%= f.label :actions %>
@@ -50,17 +55,18 @@
         }
     });
 
+    validateUnique("#marker_genes_form_<%= study_file._id %>", '.gene-list-name');
+
 		$(function() {
 			$('#marker_genes_form_<%= study_file._id %>').fileupload({
 				url: "<%= upload_study_path(@study._id) %>",
-				maxChunkSize: 10000000, // 10 MB
+				maxChunkSize: 10000000,
 				type: 'PATCH',
 				acceptFileTypes: /(\.|\/)(txt|text)$/i,
 				add: function (e, data) {
 					fileUploading = true;
 					var that = this;
 					var fileName = data.files[0].name.replace(/ /g, '_');
-					// this is the chunked upload callback, will upload 10MB at a time until finished
 					$.getJSON("<%= resume_upload_study_path %>", { file: fileName }, function (result) {
 						var file = result.file;
             if (file == null) {
@@ -71,15 +77,12 @@
             }
 					});
 				},
-				// on each chunk completion, update status
 				chunkdone: function(e, data) {
 					var perc = parseInt(data.loaded / data.total * 100, 10);
 					$(data.context).find('h1').html(perc + "% uploaded");
 				},
-				// file upload is done, now clean up
 				done: function(e, data) {
 					var fileName = data.files[0].name.replace(/ /g, '_');
-					// update upload status
 					$.ajax({
 						url: "<%= update_status_study_path %>",
 						type: "PATCH",
@@ -89,7 +92,6 @@
 					$.post("<%= parse_study_file_study_path(@study._id) %>", {file: fileName, modal_target: '#marker-gene-parse-<%= study_file._id %>-modal', partial: 'initialize_marker_genes_form', selector: "#marker_genes_form_<%= study_file._id %>"});
 				},
         fail: function(e, data) {
-            // check if upload is in progress and abort
             if (data.jqXHR != undefined) {
                 data.jqXHR.abort();
                 fileUploading = false;
@@ -106,8 +108,4 @@
 		});
 
 	</script>
-
-	<% if !study_file.upload_file_name.nil? %>
-		<p><label>Link to file </label><br /><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></p>
-	<% end %>
 <% end %>

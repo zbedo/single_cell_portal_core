@@ -15,7 +15,7 @@
         <%= f.text_field :upload_file_name, class: 'form-control filename', readonly: true %>
       <% else %>
         <%= f.label :name %><br />
-        <%= f.text_field :name, class: 'form-control filename', readonly: true %>
+        <%= f.text_field :name, class: 'form-control filename', readonly: true, autocomplete: 'off' %>
       <% end %>
     </div>
     <div class="col-sm-3">

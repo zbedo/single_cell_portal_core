@@ -34,11 +34,18 @@ $('#toggle-traces').click(function() {
     togglePlotlyTraces('cluster-plot');
 });
 
+// attach click event for toggle violin
+$('#toggle-violin').click(function() {
+    toggleViolinPlot();
+});
+
 // stop spinner
 $('#cluster-plot').data('spinner').stop();
 
 // monitor rendering status for tests
 $('#cluster-plot').data('rendered', true);
+
+enableDefaultActions();
 
 // check render status
 console.log('render status at end: ' + $('#cluster-plot').data('rendered'));
