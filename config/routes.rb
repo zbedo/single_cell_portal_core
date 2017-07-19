@@ -6,6 +6,8 @@ Rails.application.routes.draw do
 		post 'admin/restart_locked_jobs', to: 'admin_configurations#restart_locked_jobs', as: :restart_locked_jobs
 		post 'admin/firecloud_access', to: 'admin_configurations#manage_firecloud_access', as: :manage_firecloud_access
 		resources :admin_configurations, path: 'admin'
+    get 'admin/users/:id/edit', to: 'admin_configurations#edit_user', as: :edit_user
+		match 'admin/users/:id', to: 'admin_configurations#update_user', via: [:post, :patch], as: :update_user
 
     # study reporter actions
     get 'reports', to: 'reports#index', as: :reports

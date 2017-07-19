@@ -21,6 +21,7 @@ class AdminConfigurationsController < ApplicationController
         @download_status = false
         @download_status_label = "<span class='label label-danger'><i class='fa fa-times'></i> Disabled</span>".html_safe
     end
+    @users = User.all.to_a
   end
 
   # GET /admin_configurations/1
@@ -122,6 +123,24 @@ class AdminConfigurationsController < ApplicationController
     end
   end
 
+  # edit a user account (to grant permissions)
+  def edit_user
+    @user = User.find(params[:id])
+  end
+
+  # update a user account
+  def update_user
+    @user = User.find(params[:id])
+    respond_to do |format|
+      if @user.update(user_params)
+        format.html { redirect_to admin_configurations_path, notice: "User: '#{@user.email}' was successfully updated." }
+      else
+        format.html { render :edit_user }
+        format.json { render json: @user.errors, status: :unprocessable_entity }
+      end
+    end
+  end
+
   private
   # Use callbacks to share common setup or constraints between actions.
   def set_admin_configuration
@@ -131,5 +150,9 @@ class AdminConfigurationsController < ApplicationController
   # Never trust parameters from the scary internet, only allow the white list through.
   def admin_configuration_params
     params.require(:admin_configuration).permit(:config_type, :value_type, :value, :multiplier)
+  end
+
+  def user_params
+    params.require(:user).permit(:id, :admin, :reporter)
   end
 end

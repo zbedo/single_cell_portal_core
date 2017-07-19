@@ -14,7 +14,7 @@ class ReportTimePoint
   def self.weekly_returning_users
     today = Date.today
     one_week_ago = today - 1.weeks
-    user_count = User.all.select {|user| user.last_sign_in_at >= one_week_ago || user.current_sign_in_at >= one_week_ago }.size
+    user_count = User.all.select {|user| (user.last_sign_in_at >= one_week_ago || user.current_sign_in_at >= one_week_ago) && (user.last_sign_in_at < today || user.current_sign_in_at < today) }.size
     self.create!(name: 'Weekly Returning Users', date: today, value: {count: user_count, description: "Count of returning users from #{one_week_ago} to #{today}"})
   end
 end

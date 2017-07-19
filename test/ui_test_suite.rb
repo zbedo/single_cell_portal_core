@@ -339,7 +339,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# helper to open tabs in front end, allowing time for tab to become visible
-	def open_study_ui_tab(target)
+	def open_ui_tab(target)
 		tab = @driver.find_element(:id, "#{target}-nav")
 		tab.click
 		@wait.until {@driver.find_element(:id, target).displayed?}
@@ -1294,7 +1294,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get(study_path)
 		wait_until_page_loads(study_path)
 
-		open_study_ui_tab('study-download')
+		open_ui_tab('study-download')
 
 		files = @driver.find_elements(:class, 'disabled-download')
 		assert files.size >= 1, 'downloads not properly disabled (did not find any disabled-download links)'
@@ -1403,6 +1403,45 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
+	# update a user's roles (admin or reporter)
+	test "admin: update user roles" do
+		puts "Test method: #{self.method_name}"
+		path = @base_url + '/admin'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email)
+
+		open_ui_tab('users')
+		share_email_id = $share_email.gsub(/[@.]/, '-')
+		share_user_edit = @driver.find_element(:id, share_email_id + '-edit')
+		share_user_edit.click
+		wait_until_page_loads('edit user page')
+		user_reporter = @driver.find_element(:id, 'user_reporter')
+		user_reporter.send_keys('Yes')
+		save_btn = @driver.find_element(:id, 'save-user')
+		save_btn.click
+
+		# assert that reporter access was granted
+		close_modal('message_modal')
+		open_ui_tab('users')
+		assert element_present?(:id, share_email_id + '-reporter'), "did not grant reporter access to #{$share_email}"
+
+		# now remove to reset for future tests
+		share_user_edit = @driver.find_element(:id, share_email_id + '-edit')
+		share_user_edit.click
+		wait_until_page_loads('edit user page')
+		user_reporter = @driver.find_element(:id, 'user_reporter')
+		user_reporter.send_keys('No')
+		save_btn = @driver.find_element(:id, 'save-user')
+		save_btn.click
+
+		# assert that reporter access was removed
+		close_modal('message_modal')
+		open_ui_tab('users')
+		share_roles = @driver.find_element(:id, share_email_id + '-roles')
+		assert share_roles.text == '', "did not remove reporter access from #{$share_email}"
+	end
+
 	##
 	## FRONT END FUNCTIONALITY TESTS
 	##
@@ -1435,7 +1474,7 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(path)
 		wait_until_page_loads(path)
-		open_study_ui_tab('study-visualize')
+		open_ui_tab('study-visualize')
 
 		assert element_present?(:class, 'study-lead'), 'could not find study title'
 		assert element_present?(:id, 'cluster-plot'), 'could not find study cluster plot'
@@ -1467,7 +1506,7 @@ class UiTestSuite < Test::Unit::TestCase
 		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
 		wait_until_page_loads(private_study_path)
-		open_study_ui_tab('study-visualize')
+		open_ui_tab('study-visualize')
 
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 		private_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
@@ -1487,7 +1526,7 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(path)
 		wait_until_page_loads(path)
-		open_study_ui_tab('study-download')
+		open_ui_tab('study-download')
 
 		files = @driver.find_elements(:class, 'dl-link')
 		file_link = files.last
@@ -1508,7 +1547,7 @@ class UiTestSuite < Test::Unit::TestCase
 		private_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get(private_path)
 		wait_until_page_loads(private_path)
-		open_study_ui_tab('study-download')
+		open_ui_tab('study-download')
 
 		private_files = @driver.find_elements(:class, 'dl-link')
 		private_file_link = private_files.first
@@ -1540,7 +1579,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		@driver.get(path)
 		wait_until_page_loads(path)
-		open_study_ui_tab('study-download')
+		open_ui_tab('study-download')
 
 		files = @driver.find_elements(:class, 'dl-link')
 		share_file_link = files.first
@@ -1593,7 +1632,7 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(path)
 		wait_until_page_loads(path)
-		open_study_ui_tab('study-visualize')
+		open_ui_tab('study-visualize')
 
 		# load random gene to search
 		gene = @genes.sample
@@ -1670,7 +1709,7 @@ class UiTestSuite < Test::Unit::TestCase
 		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
 		wait_until_page_loads(private_study_path)
-		open_study_ui_tab('study-visualize')
+		open_ui_tab('study-visualize')
 
 		new_gene = @genes.sample
 		search_box = @driver.find_element(:id, 'search_genes')
@@ -1748,7 +1787,7 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(path)
 		wait_until_page_loads(path)
-		open_study_ui_tab('study-visualize')
+		open_ui_tab('study-visualize')
 
 
 		# load random genes to search, take between 2-5
@@ -1834,7 +1873,7 @@ class UiTestSuite < Test::Unit::TestCase
 		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
 		wait_until_page_loads(private_study_path)
-		open_study_ui_tab('study-visualize')
+		open_ui_tab('study-visualize')
 
 
 		new_genes = @genes.shuffle.take(rand(2..5))
@@ -1920,7 +1959,7 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(path)
 		wait_until_page_loads(path)
-		open_study_ui_tab('study-visualize')
+		open_ui_tab('study-visualize')
 
 
 		# load random genes to search, take between 2-5
@@ -1964,7 +2003,7 @@ class UiTestSuite < Test::Unit::TestCase
 		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
 		wait_until_page_loads(private_study_path)
-		open_study_ui_tab('study-visualize')
+		open_ui_tab('study-visualize')
 
 
 		new_genes = @genes.shuffle.take(rand(2..5))
@@ -1992,7 +2031,7 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(path)
 		wait_until_page_loads(path)
-		open_study_ui_tab('study-visualize')
+		open_ui_tab('study-visualize')
 
 		# upload gene list
 		search_upload = @driver.find_element(:id, 'search_upload')
@@ -2013,7 +2052,7 @@ class UiTestSuite < Test::Unit::TestCase
 		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
 		wait_until_page_loads(private_study_path)
-		open_study_ui_tab('study-visualize')
+		open_ui_tab('study-visualize')
 
 		search_upload = @driver.find_element(:id, 'search_upload')
 		search_upload.send_keys(@test_data_path + 'search_genes.txt')
@@ -2033,7 +2072,7 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(path)
 		wait_until_page_loads(path)
-		open_study_ui_tab('study-visualize')
+		open_ui_tab('study-visualize')
 
 		expression_list = @driver.find_element(:id, 'expression')
 		opts = expression_list.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
@@ -2054,7 +2093,7 @@ class UiTestSuite < Test::Unit::TestCase
 		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
 		wait_until_page_loads(private_study_path)
-		open_study_ui_tab('study-visualize')
+		open_ui_tab('study-visualize')
 
 		private_expression_list = @driver.find_element(:id, 'expression')
 		opts = private_expression_list.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
@@ -2076,7 +2115,7 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(path)
 		wait_until_page_loads(path)
-		open_study_ui_tab('study-visualize')
+		open_ui_tab('study-visualize')
 
 		gene_sets = @driver.find_element(:id, 'gene_set')
 		opts = gene_sets.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
@@ -2146,7 +2185,7 @@ class UiTestSuite < Test::Unit::TestCase
 		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
 		wait_until_page_loads(private_study_path)
-		open_study_ui_tab('study-visualize')
+		open_ui_tab('study-visualize')
 
 		private_gene_sets = @driver.find_element(:id, 'gene_set')
 		opts = private_gene_sets.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
@@ -2298,7 +2337,7 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(path)
 		wait_until_page_loads(path)
-		open_study_ui_tab('study-visualize')
+		open_ui_tab('study-visualize')
 
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 		clusters = @driver.find_element(:id, 'cluster').find_elements(:tag_name, 'option')
@@ -2416,7 +2455,7 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(path)
 		wait_until_page_loads(path)
-		open_study_ui_tab('study-visualize')
+		open_ui_tab('study-visualize')
 
 		assert element_present?(:class, 'study-lead'), 'could not find study title'
 		assert element_present?(:id, 'cluster-plot'), 'could not find study cluster plot'
@@ -2528,7 +2567,7 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(path)
 		wait_until_page_loads(path)
-		open_study_ui_tab('study-visualize')
+		open_ui_tab('study-visualize')
 
 		assert element_present?(:class, 'study-lead'), 'could not find study title'
 		assert element_present?(:id, 'cluster-plot'), 'could not find study cluster plot'
@@ -2556,7 +2595,7 @@ class UiTestSuite < Test::Unit::TestCase
 		path = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get(path)
 		wait_until_page_loads(path)
-		open_study_ui_tab('study-visualize')
+		open_ui_tab('study-visualize')
 
 		assert element_present?(:class, 'study-lead'), 'could not find study title'
 		assert element_present?(:id, 'cluster-plot'), 'could not find study cluster plot'
@@ -2629,7 +2668,7 @@ class UiTestSuite < Test::Unit::TestCase
 		study_page = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get study_page
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
-		open_study_ui_tab('study-visualize')
+		open_ui_tab('study-visualize')
 
 		# assert values have persisted
 		loaded_cluster = @driver.find_element(:id, 'cluster')['value']
@@ -2694,7 +2733,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# update default options
 		close_modal('message_modal')
-		open_study_ui_tab('study-settings')
+		open_ui_tab('study-settings')
 		options_form = @driver.find_element(:id, 'default-study-options-form')
 		cluster_dropdown = options_form.find_element(:id, 'study_default_options_cluster')
 		cluster_opts = cluster_dropdown.find_elements(:tag_name, 'option')
@@ -2729,7 +2768,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 
 		# assert values have persisted
-		open_study_ui_tab('study-visualize')
+		open_ui_tab('study-visualize')
 		loaded_cluster = @driver.find_element(:id, 'cluster')['value']
 		loaded_annotation = @driver.find_element(:id, 'annotation')['value']
 		assert new_cluster == loaded_cluster, "default cluster incorrect, expected #{new_cluster} but found #{loaded_cluster}"
@@ -2749,7 +2788,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# check authentication challenge
 		@driver.switch_to.window(@driver.window_handles.first)
-		open_study_ui_tab('study-settings')
+		open_ui_tab('study-settings')
 		public_dropdown = @driver.find_element(:id, 'study_public')
 		public_dropdown.send_keys('Yes')
 		update_btn = @driver.find_element(:id, 'update-study-settings')
