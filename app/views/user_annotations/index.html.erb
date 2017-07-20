@@ -1,0 +1,84 @@
+<p id="notice"><%= notice %></p>
+
+<h1>My Annotations</h1>
+<div class="row">
+  <div class="col-md-12">
+    <div class="table-responsive">
+      <div class="well">
+        <table class="table table-striped" id="annotations">
+          <thead>
+            <tr>
+              <th>Study</th>
+              <th>Name</th>
+              <th>Annotation Labels</th>
+              <th>Created At</th>
+              <th class="actions">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <% @user_annotations.each do |user_annotation| %>
+              <tr>
+                <td><%= link_to user_annotation.study.name,  view_study_path(user_annotation.study.url_safe_name) %></td>
+                <td><%= user_annotation.name %></td>
+                <td><%= user_annotation.values.join(', ').gsub(', Undefined', '')%></td>
+                <td><%= user_annotation.subsampled_at %></td>
+                <td>
+                  <%= link_to "<span class='fa fa-info-circle'></span> View Annotation".html_safe, user_annotation, class: "btn btn-xs btn-info #{user_annotation.name}-show"  %>
+                  <%= link_to "<span class='fa fa-edit'></span> Edit Data".html_safe, edit_user_annotation_path(user_annotation), class: "btn btn-xs btn-primary #{user_annotation.name}-edit" %>
+                  <% if true #user_annotation.can_delete?(current_user) %>
+                      <%= link_to "<span class='fa fa-trash'></span> Delete".html_safe, user_annotation, class: "btn btn-xs btn-danger delete-btn #{user_annotation.name}-delete", title: 'Delete Annotation' , method: :delete, data: {toggle: 'tooltip', placement: 'top'} %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="sync-modal" role="dialog" aria-labelledby="sync-modal-label" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="text-center">Syncing Files and Permissions... Please Wait.</h4>
+      </div>
+      <div class="modal-body">
+        <div class="spinner-target" id="sync-modal-spinner"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="close" data-dismiss="modal">×</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+
+    $('#annotations').dataTable({
+        pagingType: "full_numbers",
+        order: [[0, 'asc']],
+        language: {
+            search: "Filter Results By: "
+        }
+    });
+
+    // ask user to confirm delete, then show modal
+    // use event delegation to attach to all delete-btn regardless
+    // of whether they are visible yet or not
+    $('#annotations').on('click', '.delete-btn', function(){
+        // get name of study for confirmation
+        var study = $(this).parent().parent().find('.study-name').text();
+        if ( confirm('Are you sure you want to delete \"' + study + '\"? This will remove all associated database records, including the FireCloud workspace and all uploaded files.')) {
+            launchModalSpinner('#delete-modal-spinner','#delete-modal');
+        } else {
+            return false;
+        }
+    });
+
+    $('.sync-button').click(function() {
+        launchModalSpinner('#sync-modal-spinner','#sync-modal');
+    });
+
+</script>

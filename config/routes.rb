@@ -38,7 +38,10 @@ Rails.application.routes.draw do
         get 'load_annotation_options', to: 'studies#load_annotation_options', as: :load_annotation_options
         post 'update_default_options', to: 'studies#update_default_options', as: :update_default_options
 			end
-		end
+    end
+
+    # user annotation actions
+		resources :user_annotations, only: [:index, :show, :edit, :update, :destroy]
 		# public/private file download links (redirect to signed_urls from Google)
 		get 'data/public/:study_name/:filename', to: 'site#download_file', as: :download_file, constraints: {filename: /.*/}
 		get 'data/private/:study_name/:filename', to: 'studies#download_private_file', as: :download_private_file, constraints: {filename: /.*/}
