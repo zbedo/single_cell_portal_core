@@ -36,15 +36,22 @@
             </div>
           </div>
           <h3>Other Tasks</h3>
-          <div class="row">
-            <div class="col-sm-4">
-              <%= link_to "<span class='fa fa-refresh'></span> Reset User Download Quotas".html_safe, 'javascript:;', class: 'btn btn-lg btn-primary', id: 'reset-user-download-quotas' %>
-            </div>
-            <div class="col-sm-4 text-center">
-              <%= link_to "<span class='fa fa-unlock'></span> Unlock Orphaned Jobs".html_safe, 'javascript:;', class: 'btn btn-lg btn-warning', id: 'restart-locked-jobs', title: 'This will restart any parse jobs that were locked and did not complete due to a restart', data: {toggle: 'tooltip'} %>
-            </div>
-            <div class="col-sm-4 text-right">
-              <%= link_to "<span class='fa fa-exclamation-circle'></span> MANAGE FIRECLOUD ACCESS".html_safe, '#', class: 'btn btn-lg btn-danger panic', id: 'show-panic-modal' %>
+          <div class="well well-lg">
+            <div class="form-group row">
+              <div class="col-md-6">
+                <%= select_tag :admin_action, options_for_select(@administrative_tasks), include_blank: 'Please select a task...', class: 'form-control' %>
+                <div id="task-descriptions">
+                  <% @task_descriptions.each do |task_name, description| %>
+                    <span id="<%= task_name.downcase.gsub(/ /, '-') %>" style="display: none;"><%= description %></span>
+                  <% end %>
+                </div>
+              </div>
+              <div class="col-md-2">
+                <%= link_to 'Execute Task', 'javascript:;', id: 'perform-admin-task', class: 'btn btn-default' %>
+              </div>
+              <div class="col-md-4 text-right">
+                <%= link_to "<span class='fa fa-exclamation-circle'></span> MANAGE FIRECLOUD ACCESS".html_safe, '#', class: 'btn btn-danger panic', id: 'show-panic-modal' %>
+              </div>
             </div>
           </div>
         </div>
@@ -59,19 +66,27 @@
             <div class="modal-body">
               <p class="lead text-center">FireCloud Access is currently: <%= @download_status_label %></p>
               <p class="lead text-danger">Clicking 'Disable All Access' will revoke all user permissions to workspaces, thereby preventing any users from uploading/downloading data or running computes.  As a result, access to updating studies will be disabled.</p>
+              <p class="lead text-danger">Clicking 'Disable Local Access' will revoke disable local access to study administrative actions (creating, updating, sharing) and downloading data.  Remote FireCloud permissions will remain unchanged.  This is useful if there is a service outage in the FireCloud API.</p>
               <p class="lead text-danger">Clicking 'Disable Compute Access' will set all user permissions for workspaces to Read Only, thereby preventing any users from uploading data or running computes.  Users can still download data.  Access to updating studies will be still be disabled.</p>
               <p class="lead text-danger text-center"><strong>Are you sure you wish to proceed?</strong></p>
               <div class="row">
                 <%= form_for(:firecloud_access, url: manage_firecloud_access_path, html: {class: 'form', id: 'firecloud-status-form'}) do |f| %>
                   <%= f.hidden_field :status, value: @current_firecloud_status %>
-                  <div class="col-md-4">
-                    <%= link_to "Disable All Access".html_safe, 'javascript:;', class: "btn btn-lg btn-block btn-danger #{@current_firecloud_status == 'off' ? 'disabled' : 'firecloud-status'}", id: 'disable-firecloud-access', method: :post, data: {dismiss: @current_firecloud_status == 'off' ? nil : 'modal', status: 'off'} %>
+                  <div class="form-group row">
+                    <div class="col-md-offset-2 col-md-4">
+                      <%= link_to "Disable All Access".html_safe, 'javascript:;', class: "btn btn-lg btn-block btn-danger #{@current_firecloud_status == 'off' ? 'disabled' : 'firecloud-status'}", id: 'disable-firecloud-access', method: :post, data: {dismiss: @current_firecloud_status == 'off' ? nil : 'modal', status: 'off'} %>
+                    </div>
+                    <div class="col-md-4">
+                      <%= link_to "Disable Local Access".html_safe, 'javascript:;', class: "btn btn-lg btn-block btn-danger #{@current_firecloud_status == 'off' ? 'disabled' : 'firecloud-status'}", id: 'disable-local-firecloud-access', method: :post, data: {dismiss: @current_firecloud_status == 'off' ? nil : 'modal', status: 'local-off'} %>
+                    </div>
                   </div>
-                  <div class="col-md-4">
-                    <%= link_to "Disable Compute Access".html_safe, 'javascript:;', class: "btn btn-lg btn-block btn-warning #{@current_firecloud_status == 'readonly' ? 'disabled' : 'firecloud-status'}", id: 'disable-compute-access', method: :post, data: {dismiss: @current_firecloud_status == 'readonly' ? nil : 'modal', status: 'readonly'} %>
-                  </div>
-                  <div class="col-md-4">
-                    <%= link_to "Enable All Access".html_safe, 'javascript:;', class: "btn btn-lg btn-block btn-success #{@current_firecloud_status == 'on' ? 'disabled' : 'firecloud-status'}", id: 'enable-firecloud-access', method: :post, data: {dismiss: @current_firecloud_status == 'on' ? nil : 'modal', status: 'on'} %>
+                  <div class="form-group row">
+                    <div class="col-md-offset-2 col-md-4">
+                      <%= link_to "Disable Compute Access".html_safe, 'javascript:;', class: "btn btn-lg btn-block btn-warning #{@current_firecloud_status == 'readonly' ? 'disabled' : 'firecloud-status'}", id: 'disable-compute-access', method: :post, data: {dismiss: @current_firecloud_status == 'readonly' ? nil : 'modal', status: 'readonly'} %>
+                    </div>
+                    <div class="col-md-4">
+                      <%= link_to "Enable All Access".html_safe, 'javascript:;', class: "btn btn-lg btn-block btn-success #{@current_firecloud_status == 'on' ? 'disabled' : 'firecloud-status'}", id: 'enable-firecloud-access', method: :post, data: {dismiss: @current_firecloud_status == 'on' ? nil : 'modal', status: 'on'} %>
+                    </div>
                   </div>
                 <% end %>
               </div>
@@ -126,22 +141,28 @@
               $('#panic-modal').modal({show: true, backdrop: 'static'});
           });
 
-          $('#reset-user-download-quotas').click(function(){
-              launchModalSpinner('#working-modal-spinner','#working-modal');
-              $.ajax({
-                  url: "<%= reset_user_download_quotas_path %>",
-                  method: 'POST',
-                  dataType: 'script'
-              });
+          $('#admin_action').change(function() {
+             var selectedAction = $('#admin_action option:selected').text();
+             var actionVal = $(this).val();
+             $('#task-descriptions span').css('display', 'none');
+             if (actionVal !== '') {
+                 var actionId = selectedAction.toLowerCase().replace(/ /g, '-');
+                 $('#' + actionId).css('display', 'block');
+             }
           });
 
-          $('#restart-locked-jobs').click(function(){
-              launchModalSpinner('#working-modal-spinner','#working-modal');
-              $.ajax({
-                  url: "<%= restart_locked_jobs_path %>",
-                  method: 'POST',
-                  dataType: 'script'
-              });
+          $('#perform-admin-task').click(function() {
+             var taskUrl = $('#admin_action').val();
+             if (taskUrl === '') {
+                 alert('You must select an action before continuing.');
+             } else {
+                 launchModalSpinner('#working-modal-spinner','#working-modal');
+                 $.ajax({
+                     url: taskUrl,
+                     method: 'POST',
+                     dataType: 'script'
+                 });
+             }
           });
 
           $('.firecloud-status').click(function() {

@@ -22,6 +22,12 @@ class AdminConfigurationsController < ApplicationController
         @download_status_label = "<span class='label label-danger'><i class='fa fa-times'></i> Disabled</span>".html_safe
     end
     @users = User.all.to_a
+    @administrative_tasks = [['Reset User Download Quotas', reset_user_download_quotas_path],['Unlock Orphaned Jobs', restart_locked_jobs_path],['Refresh API Client', '#']]
+    @task_descriptions = {
+        'Reset User Download Quotas' => 'Rest all user daily download quota back to 0.',
+        'Unlock Orphaned Jobs' => 'Restart any parse jobs that may have been orphaned due to a restart or unexpected crash.',
+        'Refresh API Client' => 'Force the FireCloud API client to regenerate all access tokens (may be needed after service outage).'
+    }
   end
 
   # GET /admin_configurations/1
@@ -86,13 +92,19 @@ class AdminConfigurationsController < ApplicationController
     begin
       case status
         when 'on'
-          AdminConfiguration.enable_firecloud_access
+          # if status was set to local-off, don't bother changing remote workspace acls as they are unchanged
+          unless @config.value == 'local-off'
+            AdminConfiguration.enable_firecloud_access
+          end
           @config.update(value: status)
           redirect_to admin_configurations_path, alert: "FireCloud access setting recorded successfully as 'on'."
         when 'off'
           AdminConfiguration.configure_firecloud_access('off')
           @config.update(value: status)
           redirect_to admin_configurations_path, alert: "FireCloud access setting recorded successfully as 'off'.  Portal study & workspace access is now disabled."
+        when 'local-off'
+          @config.update(value: status)
+          redirect_to admin_configurations_path, alert: "FireCloud access setting recorded successfully as 'local-off' (local acccess disabled).  Portal study & download access is now disabled, but remote FireCloud permissions are unchanged."
         when 'readonly'
           AdminConfiguration.configure_firecloud_access('readonly')
           @config.update(value: status)
@@ -140,6 +152,8 @@ class AdminConfigurationsController < ApplicationController
       end
     end
   end
+
+  # reinitialize the firecloud client object (forces new access tokens)
 
   private
   # Use callbacks to share common setup or constraints between actions.

@@ -13,6 +13,11 @@ class Study
     @@firecloud_client
   end
 
+  # method to renew firecloud client (forces new access tokens for API and storage driver)
+  def self.renew_firecloud_client
+    @@firecloud_client = FireCloudClient.new
+  end
+
   # pagination
   def self.per_page
     5
