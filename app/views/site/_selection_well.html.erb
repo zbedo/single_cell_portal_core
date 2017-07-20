@@ -1,0 +1,207 @@
+<% if user_signed_in? %>
+<div class="row well" id="selection-well">
+  <%= form_for(:user_annotation, url: create_user_annotations_path(study_name: params[:study_name]), id: 'create_annotations', method: :post, data: {remote: true}) do |f|  %>
+      <div class="col-lg-12 text-center">
+        <%= f.text_field :name, class: 'form-control', placeholder: 'Name this group of labels' %>
+        <%= f.hidden_field :user_id, value: current_user.id %>
+        <%= f.hidden_field :cluster_group_id, value: @cluster.id %>
+        <%= f.hidden_field :study_id, value: @study.id %>
+        <% if !params[:subsample].blank? %>
+          <%= f.hidden_field :subsample_annotation, value: params[:annotation] %>
+          <%= f.hidden_field :subsample_threshold, value: params[:subsample] %>
+        <% end %>
+        <%= f.hidden_field :loaded_annotation, value: params[:annotation] %>
+      </div>
+      <div id="selection-table">
+      </div>
+      <div class="row" id="selection-button">
+        <div class="col-lg-12 text-center">
+          <%= f.submit 'Create Annotations', {class:'btn btn-success', id: 'selection-submit'} %>
+        </div>
+      </div>
+  <% end %>
+</div>
+<script type="text/javascript">
+    $('#selection-submit').click(function(){
+        $('#view_options_div').empty();
+        console.log('Emptied View Options');
+        $('#view_options_div').html("<%= escape_javascript(render partial: 'view_options') %>")
+    });
+
+
+    var target = $('#cluster-plot')[0];
+
+    //hide table on load
+    var selectionWell = $('#selection-well');
+    var selectionTable = $('#selection-table');
+    var selectionButton = $('#selection-button');
+    selectionWell.css('visibility', 'hidden');
+
+    function rowIndex(array, item) {
+        for (var i = 0; i < array.length; i++) {
+            // This if statement depends on the format of your array
+            var cont = true;
+            for (var n = 0; n < array[i].length && cont; n++) {
+                if(array[i][n] === item[n]){console.log('cont')}
+                else{cont = false}
+            }
+            if(cont){return i}
+        }
+        return -1;   // Not found
+    }
+
+    var selections = [];
+
+    //toggle scattergl / scatter for selection
+    $("#toggle-scatter").click(function() {
+      //var target = $('#cluster-plot')[0];
+      selections = [];
+
+      $(target).on('plotly_afterplot', function() {
+        if($(target).data('spinner') !== undefined){
+          $(target).off('plotly_afterplot');
+          $(target).data('spinner').stop();
+
+          if(newType === 'scatter'){
+            selectionWell.css('visibility', 'visible');
+            selectionButton.css('visibility', 'visible');
+
+            //Set the initial unselected array
+            var unselected_cell_name = [];
+
+            var plot_data = $('#cluster-plot')[0].data;
+
+            for(var m = 0; m < plot_data.length; m++){
+             unselected_cell_name.push(plot_data[m].cells);
+            }
+
+            unselected_cell_name = [].concat.apply([], unselected_cell_name);
+
+            var unselected = unselected_cell_name;
+
+            selections.push(unselected);
+            createSelection();
+            console.log('show');
+          }
+          else{
+            selectionTable.empty();
+            selectionButton.css('visibility', 'hidden');
+            selectionWell.css('visibility', 'hidden');
+
+            console.log('hide');
+          }
+
+          console.log('stopped');
+        }
+      });
+
+
+      function createSelection(){
+        selectionTable.empty();
+        selectionTable.prepend('<table id=\"well-table\" class=\"table table-striped \"><tbody></tbody></table>');
+
+        for(var m = 0; m < selections.length; m++){
+          var name = 'Selection ' + m.toString();
+          if(m === 0){name = 'Unselected'}
+          var addS = '<tr><td id=\"' + name + '\">'+ name + ': ' +  selections[m].length.toString() + ' Cells</td><td><input type=\"text\" name=\"user_annotation[user_data_arrays_attributes][' + m + '][name]" id=\"user_annotation_user_data_arrays_attributes_' + m + '_name\" class="form-control\" placeholder=\"Set Annotation Value\"><input name=\"user_annotation[user_data_arrays_attributes][' + m + '][values]" id=\"user_annotation_user_data_arrays_attributes_' + m + '_values\" type="hidden" value=\"' + selections[m]+'\" /></td></tr>';
+
+          $('#well-table').prepend(addS);
+        }
+      }
+
+      function updateSelection(){
+        var array = [];
+        $('div', '#well-table > tbody').each(function(){
+            array.push($(this).attr('id'));
+        });
+
+        var name_array = [];
+        $('#well-table tbody tr').each(function(){
+            name_array.push(this.id);
+        });
+
+        for(var g = 0; g < name_array.length; g++){
+            var x = parseInt(name_array[g].replace(/\D/g,''));
+            array[g] = name_array[g].replace(/\D/g,'') !== "" ? x : 0;
+        }
+
+        var reverseArray = name_array.reverse();
+        var reverseNums = array.reverse();
+        for(var n = 0; n < selections.length-1; n++){
+          var m = n;
+          if(m === 0){name = 'Unselected'}
+          else{var name = 'Selection ' + reverseNums[m].toString();}
+
+          var updateDiv = '#Selection' + reverseNums[m];
+          if(m === 0){updateDiv = '#Unselected'}
+          var update = $(updateDiv);
+          var replace = name + ': ' +  selections[n].length.toString() + ' Cells';
+
+          update.html(replace);
+
+          updateDiv = '#user_annotation_user_data_arrays_attributes_' +  reverseNums[m].toString() + '_values';
+          update = $(updateDiv);
+          replace = selections[m];
+
+          update.val(replace);
+        }
+
+        var max = getMaxOfArray(array) + 1;
+
+        var selectionIndex = selections.length-1;
+
+        var addInt = selectionIndex > max ? selectionIndex : max;
+        var id = "Selection" + addInt.toString();
+        name = 'Selection ' + addInt.toString();
+        var deleteUpdateUnselected = 'var m = 0; \n var name = \'Selection \' + m.toString();\n if(m === 0){name = \'Unselected\'}\n var updateDiv = \'#Selection\' +  m.toString();\n if(m === 0){updateDiv = \'#Unselected\'}\nvar update = $(updateDiv);\nvar replace = name + \': \' +  selections[m].length.toString() + \' Cells\';\n update.html(replace);\nupdateDiv = \'#user_annotation_user_data_arrays_attributes_\' +  m.toString() + \'_values\';\nupdate = $(updateDiv);\nreplace = selections[m];\nupdate.val(replace);';
+        var deleteButton = '<td class=\"col-sm-1\"><div class=\"btn btn-sm btn-danger delete-btn\" id=\"' + id +  'Button\"><span class=\"fa fa-times\"></span></div></td><script>$(\'#' + id + 'Button\').click(function(){var currentSelection = $(\'#user_annotation_user_data_arrays_attributes_' + addInt +'_values\').val().split(\',\');\n if(currentSelection[0] !== ""){selections[0] = selections[0].concat(currentSelection)} \n console.log(\'Index: \' + rowIndex(selections, currentSelection).toString());\n selections.splice(rowIndex(selections, currentSelection), 1);\n'+ deleteUpdateUnselected + '\n$(\'#' + id + 'Row\').remove();});<\/script>';
+
+        var addS = '<tr id=\"' + id +  'Row\"><td class=\"col-sm-5\" id=\"' + id + '\">' + name + ': ' +  selections[selectionIndex].length.toString() + ' Cells</td><td class=\"col-sm-6\"><input type=\"text\" name=\"user_annotation[user_data_arrays_attributes][' + addInt + '][name]" id=\"user_annotation_user_data_arrays_attributes_' + addInt + '_name\" class="form-control\" placeholder=\"Set Annotation Value\"><input name=\"user_annotation[user_data_arrays_attributes][' + addInt + '][values]" id=\"user_annotation_user_data_arrays_attributes_' + addInt + '_values\" type="hidden" value=\"' + selections[selectionIndex]+'\" /></td>'+ deleteButton +'</tr>';
+
+        $('#well-table').prepend(addS);
+
+      }
+
+      //launch spinner
+      var spinner = new Spinner(opts).spin(target);
+      $(target).data('spinner', spinner);
+      console.log('started');
+      var newType = data[0].type === 'scattergl' ? 'scatter' : 'scattergl';
+
+      data[0].type = newType;
+      console.log('Changed scatter to: ' + newType);
+      // re-render reference plot if showing numeric annotations
+      for(var i = 0; i < data.length; i ++){
+          data[i].type = newType;
+      }
+      Plotly.newPlot('cluster-plot', data, layout);
+
+      console.log('attaching');
+      console.log($('#cluster-plot')[0]);
+      $('#cluster-plot')[0].on('plotly_selected', function(eventData) {
+          var names = [];
+          var annotations = [];
+
+          var colors = [];
+
+          var selection =[];
+          var selected_cell_name = [];
+
+          eventData.points.forEach(function (pt) {
+            selected_cell_name.push(data[pt.curveNumber].cells[pt.pointNumber]);
+          });
+
+          selection = selected_cell_name;
+
+          for(var t = 0; t < selections.length; t++){
+              selections[t] = _.difference(selections[t], selection);
+          }
+
+          console.log('Selected');
+          selections.push(selection);
+          updateSelection();
+      });
+
+    });
+</script>
+<% end %>

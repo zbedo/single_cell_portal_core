@@ -110,6 +110,7 @@ class SiteController < ApplicationController
   def render_cluster
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
     @coordinates = load_cluster_group_data_array_points(@selected_annotation, subsample)
+
     @plot_type = @cluster.cluster_type == '3d' ? 'scatter3d' : 'scattergl'
     @options = load_cluster_group_options
     @cluster_annotations = load_cluster_group_annotations
@@ -508,22 +509,22 @@ class SiteController < ApplicationController
   end
 
   def create_user_annotations
-    names = params.select {|k,v| k.include?  "name_"}
-    cell_names = params.select {|k,v| k.include?  "hiddenName_"}
+    @data_names = []
 
-    names = names.values
-    cell_names = cell_names
-
-    study_name = params[:study_name]
-
-
-    arr = []
-    i = 0
-
-    names.each do |name|
-      arr.push([name, params[cell_names.keys[i]].split(',')])
-      i += 1
+    user_annotation_params[:user_data_arrays_attributes].keys.each do |key|
+      user_annotation_params[:user_data_arrays_attributes][key][:values] =  user_annotation_params[:user_data_arrays_attributes][key][:values].split(',')
+      @data_names.push(user_annotation_params[:user_data_arrays_attributes][key][:name].strip )
     end
+
+    @annotation = UserAnnotation.new(user_id: user_annotation_params[:user_id], study_id: user_annotation_params[:study_id], cluster_group_id: user_annotation_params[:cluster_group_id], values: @data_names, name: user_annotation_params[:name])
+
+    if @annotation.save
+      @annotation.initialize_user_data_arrays(user_annotation_params[:user_data_arrays_attributes], user_annotation_params[:subsample_annotation],user_annotation_params[:subsample_threshold], user_annotation_params[:loaded_annotation])
+    else
+      logger.info('Error Saving User Annotation')
+    end
+
+    render nothing: true
 
   end
 
@@ -552,6 +553,10 @@ class SiteController < ApplicationController
     if annot_scope == 'cluster'
       @selected_annotation = @cluster.cell_annotations.find {|ca| ca[:name] == annot_name && ca[:type] == annot_type}
       @selected_annotation[:scope] = annot_scope
+    elsif annot_scope == 'user'
+      user_annotation = @cluster.user_annotations.by_name_and_user(annot_name, current_user.id)
+      @selected_annotation = {name: annot_name, type: annot_type, scope: annot_scope}
+      @selected_annotation[:values] = user_annotation.values
     else
       @selected_annotation = {name: annot_name, type: annot_type, scope: annot_scope}
       if annot_type == 'group'
@@ -564,6 +569,11 @@ class SiteController < ApplicationController
   # whitelist parameters for updating studies on study settings tab (smaller list than in studies controller)
   def study_params
     params.require(:study).permit(:name, :description, :public, :embargo, :default_options => [:cluster, :annotation, :color_profile], study_shares_attributes: [:id, :_destroy, :email, :permission])
+  end
+
+  # whitelist parameters for creating custom user annotation
+  def user_annotation_params
+    params.require(:user_annotation).permit(:_id, :name, :study_id, :user_id, :cluster_group_id, :subsample_threshold, :loaded_annotation, :subsample_annotation, user_data_arrays_attributes: [:name, :values])
   end
 
   def check_view_permissions
@@ -609,6 +619,13 @@ class SiteController < ApplicationController
     annotation_hash = {}
     if annotation[:scope] == 'cluster'
       annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
+    elsif annotation[:scope] == 'user'
+      user_annotation = @cluster.user_annotations.by_name_and_user(annotation[:name], current_user.id)
+      annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
+      x_array = user_annotation.concatenate_user_data_arrays('x', 'coordinates', subsample_threshold, subsample_annotation)
+      y_array = user_annotation.concatenate_user_data_arrays('y', 'coordinates', subsample_threshold, subsample_annotation)
+      z_array = user_annotation.concatenate_user_data_arrays('z', 'coordinates', subsample_threshold, subsample_annotation)
+      cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     else
       # for study-wide annotations, load from study_metadata values instead of cluster-specific annotations
       annotation_hash = @study.study_metadata_values(annotation[:name], annotation[:type])
@@ -663,8 +680,10 @@ class SiteController < ApplicationController
           coordinates[value][:z] = []
         end
       end
-      if annotation[:scope] == 'cluster'
+
+      if annotation[:scope] == 'cluster' || annotation[:scope] == 'user'
         annotation_array.each_with_index do |annotation_value, index|
+
           coordinates[annotation_value][:text] << "<b>#{cells[index]}</b><br>#{annotation[:name]}: #{annotation_value}"
           coordinates[annotation_value][:annotations] << "#{annotation[:name]}: #{annotation_value}"
           coordinates[annotation_value][:cells] << cells[index]
@@ -696,10 +715,13 @@ class SiteController < ApplicationController
         coordinates.each do |key, data|
           data[:name] << " (#{data[:x].size} points)"
         end
-        # gotcha to remove entries in case a particular annotation value comes up blank since this is study-wide
-        coordinates.delete_if {|key, data| data[:x].empty?}
+
       end
+
     end
+    # gotcha to remove entries in case a particular annotation value comes up blank since this is study-wide
+    coordinates.delete_if {|key, data| data[:x].empty?}
+    logger.info("coords: #{coordinates}")
     coordinates
   end
 
@@ -1055,6 +1077,12 @@ class SiteController < ApplicationController
         'Cluster-based' => @cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]},
         'Study Wide' => @study.study_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
     }
+    if user_signed_in?
+      user_annotations = UserAnnotation.where(user_id: current_user.id, study_id: @study.id, cluster_group_id: @cluster.id).to_a
+      unless user_annotations.empty?
+        grouped_options['User Annotations'] = user_annotations.map {|annot| ["#{annot.name}", "#{annot.name}--group--user"] }
+      end
+    end
     grouped_options
   end
 
