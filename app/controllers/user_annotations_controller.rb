@@ -21,10 +21,52 @@ class UserAnnotationsController < ApplicationController
   # PATCH/PUT /user_annotations/1
   # PATCH/PUT /user_annotations/1.json
   def update
+    new_labels = user_annotation_params.to_h['values']
+    if @user_annotation.values.include? 'Undefined'
+      new_labels.push('Undefined')
+    end
+    logger.info("new labels: #{new_labels}")
+    old_labels = @user_annotation.values
+
+    annotation_arrays = @user_annotation.user_data_arrays.where(array_type: 'annotations').to_a
+    logger.info("#changed: #{annotation_arrays.length}")
     respond_to do |format|
       if @user_annotation.update(user_annotation_params)
-        format.html { redirect_to @user_annotation, notice: 'User annotation was successfully updated.' }
-        format.json { render :show, status: :ok, location: @user_annotation }
+
+        annotation_arrays.each do |annot|
+          #Get the index of old labels, this is per annotation
+
+          old_values = annot.values
+
+          index_of_values = []
+          old_labels.each_with_index do |old, i|
+            index_array = []
+            old_values.each_with_index do |value, i|
+              if value == old
+                index_array.push(i)
+              end
+            end
+            index_of_values.push(index_array)
+          end
+
+          index_of_values.each_with_index do |old_index, i|
+            logger.info("in loop, old index:  #{old_index}")
+            old_index.each do |index|
+              old_values[index] = new_labels[i]
+            end
+          end
+          logger.info("new old values is: #{old_values}")
+          annot.update(values: old_values, name: user_annotation_params.to_h['name'])
+
+        end
+
+        @user_annotation.user_data_arrays.to_a.each do |a|
+          if !a.subsample_annotation.nil?
+            a.update(subsample_annotation: user_annotation_params.to_h['name'] + '--group--user')
+          end
+        end
+        format.html { redirect_to user_annotations_path, notice: "User Annotation '#{@user_annotation.name}' was successfully updated." }
+        format.json { render :index, status: :ok, location: user_annotations_path }
       else
         format.html { render :edit }
         format.json { render json: @user_annotation.errors, status: :unprocessable_entity }
@@ -35,9 +77,10 @@ class UserAnnotationsController < ApplicationController
   # DELETE /user_annotations/1
   # DELETE /user_annotations/1.json
   def destroy
+    @user_annotation.user_data_arrays.destroy
     @user_annotation.destroy
     respond_to do |format|
-      format.html { redirect_to user_annotations_url, notice: 'User annotation was successfully destroyed.' }
+      format.html { redirect_to user_annotations_path, notice: "User Annotation '#{@user_annotation.name}' was successfully destroyed." }
       format.json { head :no_content }
     end
   end
@@ -51,6 +94,6 @@ class UserAnnotationsController < ApplicationController
   # Never trust parameters from the scary internet, only allow the white list through.
   # whitelist parameters for creating custom user annotation
   def user_annotation_params
-    params.require(:user_annotation).permit(:_id, :name, :study_id, :user_id, :cluster_group_id,  user_data_arrays_attributes: [:name, :values, :subsample_threshold, :subsample_annotation])
+    params.require(:user_annotation).permit(:_id, :name, :study_id, :user_id, :cluster_group_id, values: [])
   end
 end

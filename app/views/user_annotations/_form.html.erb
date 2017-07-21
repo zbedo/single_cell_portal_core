@@ -13,24 +13,40 @@
 
 	<% end %>
   <div class="form-group row">
-    <div class="col-md-12">
-      <%= f.label :name %><br/>
+    <div class="col-sm-3">
+      <%= f.label 'Name:' %>
       <%= f.text_field :name, class: 'form-control', autocomplete: 'off' %>
+    </div>
+    <div class="col-sm-3">
+      <%= f.label 'Cluster:' %>
+      <%= f.text_field :name, value: "#{ClusterGroup.find(@user_annotation.cluster_group_id).name}", class: 'form-control', disabled: 'disabled' %>
+    </div>
+    <div class="col-sm-3">
+      <%= f.label 'Study:' %>
+      <%= f.text_field :name, value: "#{Study.find(@user_annotation.study_id).name}", class: 'form-control', disabled: 'disabled' %>
+    </div>
+    <div class="col-sm-3">
+      <%= f.label 'Created by:' %>
+      <%= f.text_field :name, value: "#{User.find(@user_annotation.user_id).email}", class: 'form-control', disabled: 'disabled' %>
     </div>
   </div>
   <% @user_annotation.values.each_with_index do |value, i| %>
-    <div class="well well-sm">
+    <div class="well well-sm <%= "#{value == 'Undefined'? 'well-red' : ''}"%>">
       <div class="form-group row">
         <div class="col-sm-6">
-          <%= f.label :values %>
-          <br />
-          <%= f.text_field :values, {value: value, class: 'form-control share-email'} %>
+          <%= f.label 'Label Name: ' %>
+          <input value="<%= value %>" class="form-control share-email label-name" type="text" name="user_annotation[values][]" id="user-annotation_values">
+        </div>
+        <div class="col-sm-2">
+          <%= f.label 'Number of Cells:' %>
+          <%= f.text_field :name, value: "#{@user_annotation.user_data_arrays.find_by(array_type: 'annotations').values.count(value)}", class: 'form-control', disabled: 'disabled' %>
         </div>
       </div>
     </div>
+
   <% end %>
 
-  <div class="actions">
-    <%= f.submit %>
+  <div class="form-group">
+    <%= f.submit 'Submit', {class: 'btn btn-lg btn-success', id: 'submit-button'} %>
   </div>
 <% end %>

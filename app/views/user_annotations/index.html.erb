@@ -1,5 +1,3 @@
-<p id="notice"><%= notice %></p>
-
 <h1>My Annotations</h1>
 <div class="row">
   <div class="col-md-12">
@@ -11,7 +9,7 @@
               <th>Study</th>
               <th>Name</th>
               <th>Annotation Labels</th>
-              <th>Created At</th>
+              <th>Source Data</th>
               <th class="actions">Actions</th>
             </tr>
           </thead>
@@ -20,8 +18,8 @@
             <% @user_annotations.each do |user_annotation| %>
               <tr>
                 <td><%= link_to user_annotation.study.name,  view_study_path(user_annotation.study.url_safe_name) %></td>
-                <td><%= user_annotation.name %></td>
-                <td><%= user_annotation.values.join(', ').gsub(', Undefined', '')%></td>
+                <td class="annotation-name"><%= user_annotation.name %></td>
+                <td><%= user_annotation.values.map{|x| "<span class='label label-#{ x == 'Undefined' ? 'warning' : 'default'}'>#{x}</span>"}.join(' ').html_safe %></td>
                 <td><%= user_annotation.subsampled_at %></td>
                 <td>
                   <%= link_to "<span class='fa fa-info-circle'></span> View Annotation".html_safe, user_annotation, class: "btn btn-xs btn-info #{user_annotation.name}-show"  %>
@@ -69,8 +67,9 @@
     // of whether they are visible yet or not
     $('#annotations').on('click', '.delete-btn', function(){
         // get name of study for confirmation
-        var study = $(this).parent().parent().find('.study-name').text();
-        if ( confirm('Are you sure you want to delete \"' + study + '\"? This will remove all associated database records, including the FireCloud workspace and all uploaded files.')) {
+        var annot = $(this).parent().parent().find('.annotation-name').text();
+        console.log(annot);
+        if ( confirm('Are you sure you want to delete \"' + annot + '\"? This will remove all associated database records.')) {
             launchModalSpinner('#delete-modal-spinner','#delete-modal');
         } else {
             return false;
