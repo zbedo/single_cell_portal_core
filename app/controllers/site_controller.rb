@@ -517,10 +517,10 @@ class SiteController < ApplicationController
         @data_names.push(user_annotation_params[:user_data_arrays_attributes][key][:name].strip )
       end
 
-      @annotation = UserAnnotation.new(user_id: user_annotation_params[:user_id], study_id: user_annotation_params[:study_id], cluster_group_id: user_annotation_params[:cluster_group_id], values: @data_names, name: user_annotation_params[:name])
+      @user_annotation = UserAnnotation.new(user_id: user_annotation_params[:user_id], study_id: user_annotation_params[:study_id], cluster_group_id: user_annotation_params[:cluster_group_id], values: @data_names, name: user_annotation_params[:name])
 
-      if @annotation.save
-        @annotation.initialize_user_data_arrays(user_annotation_params[:user_data_arrays_attributes], user_annotation_params[:subsample_annotation],user_annotation_params[:subsample_threshold], user_annotation_params[:loaded_annotation])
+      if @user_annotation.save
+        @user_annotation.initialize_user_data_arrays(user_annotation_params[:user_data_arrays_attributes], user_annotation_params[:subsample_annotation],user_annotation_params[:subsample_threshold], user_annotation_params[:loaded_annotation])
         @cluster_annotations = load_cluster_group_annotations
         @options = load_cluster_group_options
         @alert = nil
@@ -531,7 +531,7 @@ class SiteController < ApplicationController
         @cluster_annotations = load_cluster_group_annotations
         @options = load_cluster_group_options
         @notice = nil
-        @alert = 'The following errors prevented the annotation from being saved: ' + @annotation.errors.full_messages.join(',')
+        @alert = 'The following errors prevented the annotation from being saved: ' + @user_annotation.errors.full_messages.join(',')
         render 'update_user_clusters'
       end
     rescue Mongoid::Errors::InvalidValue => e
@@ -547,6 +547,7 @@ class SiteController < ApplicationController
       @notice = nil
       @alert = 'The following errors prevented the annotation from being saved: ' + e.message
       render 'update_user_clusters'
+
 
     rescue => e
       @cluster_annotations = load_cluster_group_annotations

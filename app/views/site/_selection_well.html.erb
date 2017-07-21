@@ -1,8 +1,8 @@
 <% if user_signed_in? %>
 <div class="row well" id="selection-well">
-  <%= form_for(:user_annotation, url: create_user_annotations_path(study_name: params[:study_name]), id: 'create_annotations', method: :post, data: {remote: true}) do |f|  %>
+  <%= form_for(:user_annotation, url: create_user_annotations_path(study_name: params[:study_name]), html: {id: 'create_annotations', method: :post, data: {remote: true}}) do |f|  %>
       <div class="col-lg-12 text-center">
-        <%= f.text_field :name, class: 'form-control need-text', placeholder: 'Name this group of labels' %>
+        <%= f.text_field :name, class: 'form-control need-text annotation-name', placeholder: 'Name this group of labels' %>
         <%= f.hidden_field :user_id, value: current_user.id %>
         <%= f.hidden_field :cluster_group_id, value: @cluster.id %>
         <%= f.hidden_field :study_id, value: @study.id %>
@@ -16,34 +16,15 @@
       </div>
       <div class="row" id="selection-button">
         <div class="col-lg-12 text-center">
-          <%= f.button 'Create Annotations', {class:'btn btn-success', id: 'selection-submit'} %>
+          <%= f.button 'Create Annotations', {class:'btn btn-success', id: 'selection-submit', type: 'button'} %>
         </div>
       </div>
   <% end %>
 </div>
+<div id="submit_script">
+  <%= render 'selection_submit' %>
+</div>
 <script type="text/javascript">
-    $('#selection-submit').click(function(){
-        var needText = $('.need-text');
-        var numFields = needText.toArray().length;
-        var cont = true;
-        for(i = 0; i < numFields; i++){
-            var text = needText.eq(i).val();
-            if(text === ""){cont = false}
-        }
-        if(numFields < 3){
-            alert('Your annotation must have at least two populations');
-        }
-        else if ( !cont ) {
-            alert('You must provide a value for all labels before saving');
-            setErrorOnBlank(needText);
-        } else {
-            launchModalSpinner('#save-modal-spinner', '#save-modal');
-            var form = $('#create_annotations');
-            form.submit();
-        }
-    });
-
-
     var target = $('#cluster-plot')[0];
 
     //hide table on load
@@ -118,7 +99,7 @@
         for(var m = 0; m < selections.length; m++){
           var name = 'Selection ' + m.toString();
           if(m === 0){name = 'Unselected'}
-          var addS = '<tr><td id=\"' + name + '\">'+ name + ': ' +  selections[m].length.toString() + ' Cells</td><td><input type=\"text\" name=\"user_annotation[user_data_arrays_attributes][' + m + '][name]" id=\"user_annotation_user_data_arrays_attributes_' + m + '_name\" class="form-control need-text\" placeholder=\"Set Annotation Value\"><input name=\"user_annotation[user_data_arrays_attributes][' + m + '][values]" id=\"user_annotation_user_data_arrays_attributes_' + m + '_values\" type="hidden" value=\"' + selections[m]+'\" /></td></tr>';
+          var addS = '<tr><td id=\"' + name + '\">'+ name + ': ' +  selections[m].length.toString() + ' Cells</td><td><input type=\"text\" name=\"user_annotation[user_data_arrays_attributes][' + m + '][name]" id=\"user_annotation_user_data_arrays_attributes_' + m + '_name\" class="form-control annotation-label need-text\" placeholder=\"Set Annotation Value\"><input name=\"user_annotation[user_data_arrays_attributes][' + m + '][values]" id=\"user_annotation_user_data_arrays_attributes_' + m + '_values\" type="hidden" value=\"' + selections[m]+'\" /></td></tr>';
 
           $('#well-table').prepend(addS);
         }
@@ -171,10 +152,10 @@
         var deleteUpdateUnselected = 'var m = 0; \n var name = \'Selection \' + m.toString();\n if(m === 0){name = \'Unselected\'}\n var updateDiv = \'#Selection\' +  m.toString();\n if(m === 0){updateDiv = \'#Unselected\'}\nvar update = $(updateDiv);\nvar replace = name + \': \' +  selections[m].length.toString() + \' Cells\';\n update.html(replace);\nupdateDiv = \'#user_annotation_user_data_arrays_attributes_\' +  m.toString() + \'_values\';\nupdate = $(updateDiv);\nreplace = selections[m];\nupdate.val(replace);';
         var deleteButton = '<td class=\"col-sm-1\"><div class=\"btn btn-sm btn-danger delete-btn\" id=\"' + id +  'Button\"><span class=\"fa fa-times\"></span></div></td><script>$(\'#' + id + 'Button\').click(function(){var currentSelection = $(\'#user_annotation_user_data_arrays_attributes_' + addInt +'_values\').val().split(\',\');\n if(currentSelection[0] !== ""){selections[0] = selections[0].concat(currentSelection)} \n console.log(\'Index: \' + rowIndex(selections, currentSelection).toString());\n selections.splice(rowIndex(selections, currentSelection), 1);\n'+ deleteUpdateUnselected + '\n$(\'#' + id + 'Row\').remove();});<\/script>';
 
-        var addS = '<tr id=\"' + id +  'Row\"><td class=\"col-sm-5\" id=\"' + id + '\">' + name + ': ' +  selections[selectionIndex].length.toString() + ' Cells</td><td class=\"col-sm-6\"><input type=\"text\" name=\"user_annotation[user_data_arrays_attributes][' + addInt + '][name]" id=\"user_annotation_user_data_arrays_attributes_' + addInt + '_name\" class="form-control need-text\" placeholder=\"Set Annotation Value\"><input name=\"user_annotation[user_data_arrays_attributes][' + addInt + '][values]" id=\"user_annotation_user_data_arrays_attributes_' + addInt + '_values\" type="hidden" value=\"' + selections[selectionIndex]+'\" /></td>'+ deleteButton +'</tr>';
+        var addS = '<tr id=\"' + id +  'Row\"><td class=\"col-sm-5\" id=\"' + id + '\">' + name + ': ' +  selections[selectionIndex].length.toString() + ' Cells</td><td class=\"col-sm-6\"><input type=\"text\" name=\"user_annotation[user_data_arrays_attributes][' + addInt + '][name]" id=\"user_annotation_user_data_arrays_attributes_' + addInt + '_name\" class="form-control annotation-label need-text\" placeholder=\"Set Annotation Value\"><input name=\"user_annotation[user_data_arrays_attributes][' + addInt + '][values]" id=\"user_annotation_user_data_arrays_attributes_' + addInt + '_values\" type="hidden" value=\"' + selections[selectionIndex]+'\" /></td>'+ deleteButton +'</tr>';
 
         $('#well-table').prepend(addS);
-
+        validateUnique('#create_annotations', '.annotation-label');
       }
 
       //launch spinner

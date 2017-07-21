@@ -1,4 +1,3 @@
 <div class='form-inline navigation-form' id="colorscale-picker">
 	<%= label_tag :colorscale, 'Color profile' %>&nbsp;<%= select_tag :colorscale, options_for_select(SiteController::COLORSCALE_THEMES, set_colorscale_value(@study, params)), class: 'form-control' %>
-  <%= render 'scattergl_toggle'  %>
 </div>

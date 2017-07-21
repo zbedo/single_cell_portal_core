@@ -1,0 +1,32 @@
+<script type="text/javascript">
+$('#selection-submit').click(function(){
+    var needText = $('.need-text');
+    var numFields = needText.toArray().length;
+    var values = [];
+    var cont = true;
+    for(i = 0; i < numFields; i++){
+        var text = needText.eq(i).val();
+        values.push(text);
+        if(text === ""){cont = false}
+    }
+    var userAnnotationNames = <%= raw UserAnnotation.where(cluster_group_id: @cluster.id, user_id: current_user.id, study_id: @study.id).to_a.map{|x| x.name}%> ;
+    if(numFields < 3){
+        alert('Your annotation must have at least two populations');
+    } else if ( !cont ) {
+        alert('You must provide a value for all labels before saving');
+        setErrorOnBlank(needText);
+    } /*else if (userAnnotationNames.indexOf(values[0] !== -1)) {
+        alert('Name cannot be the same as one of your other annotations');
+        var nameDiv = $('.annotation-name');
+        console.log(userAnnotationNames);
+        console.log(values[0]);
+        setErrorOnBlank(nameDiv);
+    }*/else {
+        launchModalSpinner('#save-modal-spinner', '#save-modal');
+        console.log('submitting');
+        var form = $('#selection-well > form');
+        form.submit();
+    }
+
+});
+</script>
