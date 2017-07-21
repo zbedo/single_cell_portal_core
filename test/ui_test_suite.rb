@@ -1188,6 +1188,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
+	# test the various levels of firecloud access integration (on, read-only, local-off, and off)
 	test 'admin: toggle firecloud access' do
 		puts "Test method: #{self.method_name}"
 		path = @base_url + '/admin'
@@ -1255,6 +1256,37 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get studies_path
 		assert element_present?(:id, 'studies'), 'did not find studies table'
 		assert @driver.current_url == studies_path, 'did not load studies path correctly'
+
+		# finally, check local-only option to block downloads and study access in the portal only
+		@driver.get path
+		panic_modal_link = @driver.find_element(:id, 'show-panic-modal')
+		panic_modal_link.click
+		wait_for_render(:id, 'panic-modal')
+		local_access_button = @driver.find_element(:id, 'disable-local-access')
+		local_access_button.click
+		close_modal('message_modal')
+
+		# assert firecloud projects are still accessible, but studies and downloads are not
+		@driver.get firecloud_url
+		assert element_present?(:class, 'fa-check-circle'), 'did maintain restore access - study workspace does not load'
+		test_study_path = @base_url + "/study/test-study-#{$random_seed}"
+		@driver.get(test_study_path)
+		wait_until_page_loads(test_study_path)
+		open_ui_tab('study-download')
+		disabled_downloads = @driver.find_elements(:class, 'disabled-download')
+		assert disabled_downloads.size > 0, 'did not disable downloads, found 0 disabled-download links'
+		@driver.get studies_path
+		assert element_present?(:id, 'message_modal'), 'did not show alert'
+		assert @driver.current_url == @base_url, 'did not redirect to home page'
+
+		# cleanup by restoring access
+		@driver.get path
+		panic_modal_link = @driver.find_element(:id, 'show-panic-modal')
+		panic_modal_link.click
+		wait_for_render(:id, 'panic-modal')
+		disable_button = @driver.find_element(:id, 'enable-firecloud-access')
+		disable_button.click
+		close_modal('message_modal')
 
 		puts "Test method: #{self.method_name} successful!"
 	end
@@ -1329,15 +1361,64 @@ class UiTestSuite < Test::Unit::TestCase
 		close_modal('message_modal')
 		login($test_email)
 
-		restart_modal_link = @driver.find_element(:id, 'restart-locked-jobs')
-		restart_modal_link.click
+		actions_dropdown = @driver.find_element(:id, 'admin_action')
+		actions_dropdown.send_keys 'Unlock Orphaned Jobs'
+		execute_button = @driver.find_element(:id, 'perform-admin-task')
+		execute_button.click
 		wait_for_render(:id, 'message_modal')
 		assert element_visible?(:id, 'message_modal'), 'confirmation message did not appear'
+		message = @driver.find_element(:id, 'notice-content').text
+		assert message.include?('jobs'), "'confirmation message did not pertain to locked jobs ('jobs' not found)"
 		close_modal('message_modal')
 
 		puts "Test method: #{self.method_name} successful!"
 	end
 
+	# reset user download quotas to 0 bytes
+	test 'admin: reset download quotas to 0' do
+		puts "Test method: #{self.method_name}"
+		path = @base_url + '/admin'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email)
+
+		actions_dropdown = @driver.find_element(:id, 'admin_action')
+		actions_dropdown.send_keys 'Reset User Download Quotas'
+		execute_button = @driver.find_element(:id, 'perform-admin-task')
+		execute_button.click
+		wait_for_render(:id, 'message_modal')
+		assert element_visible?(:id, 'message_modal'), 'confirmation message did not appear'
+		message = @driver.find_element(:id, 'notice-content').text
+		expected_conf = 'All user download quotas successfully reset to 0.'
+		assert message == expected_conf, "correct confirmation did not appear, expected #{expected_conf} but found #{message}"
+		close_modal('message_modal')
+
+		puts "Test method: #{self.method_name} successful!"
+	end
+
+	# test force-refreshing the FireCloud API access tokens and storage driver connections
+	test 'admin: refresh api connections' do
+		puts "Test method: #{self.method_name}"
+		path = @base_url + '/admin'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email)
+
+		actions_dropdown = @driver.find_element(:id, 'admin_action')
+		actions_dropdown.send_keys 'Refresh API Clients'
+		execute_button = @driver.find_element(:id, 'perform-admin-task')
+		execute_button.click
+		wait_for_render(:id, 'message_modal')
+		assert element_visible?(:id, 'message_modal'), 'confirmation message did not appear'
+		message = @driver.find_element(:id, 'notice-content').text
+		expected_conf = 'API Client successfully refreshed.'
+		assert message.start_with?(expected_conf), "correct confirmation did not appear, expected #{expected_conf} but found #{message}"
+		close_modal('message_modal')
+
+		puts "Test method: #{self.method_name} successful!"
+	end
+
+	# test loading plots from reporting controller
 	test 'admin: view study reports' do
 		puts "Test method: #{self.method_name}"
 
@@ -1619,6 +1700,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# try private route
 		@driver.get non_share_private_link
+		wait_for_render(:id, 'message_modal')
 		private_alert_text = @driver.find_element(:id, 'alert-content').text
 		assert private_alert_text == 'You do not have permission to perform that action.',
 					 "did not properly redirect, expected 'You do not have permission to view the requested page.' but got #{private_alert_text}"
@@ -1777,7 +1859,6 @@ class UiTestSuite < Test::Unit::TestCase
 		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
 		assert reference_rendered, "private reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
-
 		puts "Test method: #{self.method_name} successful!"
 	end
 
@@ -1788,7 +1869,6 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get(path)
 		wait_until_page_loads(path)
 		open_ui_tab('study-visualize')
-
 
 		# load random genes to search, take between 2-5
 		genes = @genes.shuffle.take(rand(2..5))

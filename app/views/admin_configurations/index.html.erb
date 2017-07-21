@@ -66,7 +66,7 @@
             <div class="modal-body">
               <p class="lead text-center">FireCloud Access is currently: <%= @download_status_label %></p>
               <p class="lead text-danger">Clicking 'Disable All Access' will revoke all user permissions to workspaces, thereby preventing any users from uploading/downloading data or running computes.  As a result, access to updating studies will be disabled.</p>
-              <p class="lead text-danger">Clicking 'Disable Local Access' will revoke disable local access to study administrative actions (creating, updating, sharing) and downloading data.  Remote FireCloud permissions will remain unchanged.  This is useful if there is a service outage in the FireCloud API.</p>
+              <p class="lead text-danger">Clicking 'Disable Local Access' will revoke disable local access to study administrative actions (creating, updating, sharing) and downloading data.  Remote FireCloud permissions are not changed by this status.  This is useful if there is a service outage in the FireCloud API.</p>
               <p class="lead text-danger">Clicking 'Disable Compute Access' will set all user permissions for workspaces to Read Only, thereby preventing any users from uploading data or running computes.  Users can still download data.  Access to updating studies will be still be disabled.</p>
               <p class="lead text-danger text-center"><strong>Are you sure you wish to proceed?</strong></p>
               <div class="row">
@@ -77,7 +77,7 @@
                       <%= link_to "Disable All Access".html_safe, 'javascript:;', class: "btn btn-lg btn-block btn-danger #{@current_firecloud_status == 'off' ? 'disabled' : 'firecloud-status'}", id: 'disable-firecloud-access', method: :post, data: {dismiss: @current_firecloud_status == 'off' ? nil : 'modal', status: 'off'} %>
                     </div>
                     <div class="col-md-4">
-                      <%= link_to "Disable Local Access".html_safe, 'javascript:;', class: "btn btn-lg btn-block btn-danger #{@current_firecloud_status == 'off' ? 'disabled' : 'firecloud-status'}", id: 'disable-local-firecloud-access', method: :post, data: {dismiss: @current_firecloud_status == 'off' ? nil : 'modal', status: 'local-off'} %>
+                      <%= link_to "Disable Local Access".html_safe, 'javascript:;', class: "btn btn-lg btn-block btn-danger #{@current_firecloud_status == 'off' ? 'disabled' : 'firecloud-status'}", id: 'disable-local-access', method: :post, data: {dismiss: @current_firecloud_status == 'off' ? nil : 'modal', status: 'local-off'} %>
                     </div>
                   </div>
                   <div class="form-group row">

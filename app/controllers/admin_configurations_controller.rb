@@ -22,12 +22,14 @@ class AdminConfigurationsController < ApplicationController
         @download_status_label = "<span class='label label-danger'><i class='fa fa-times'></i> Disabled</span>".html_safe
     end
     @users = User.all.to_a
-    @administrative_tasks = [['Reset User Download Quotas', reset_user_download_quotas_path],['Unlock Orphaned Jobs', restart_locked_jobs_path],['Refresh API Client', '#']]
-    @task_descriptions = {
-        'Reset User Download Quotas' => 'Rest all user daily download quota back to 0.',
-        'Unlock Orphaned Jobs' => 'Restart any parse jobs that may have been orphaned due to a restart or unexpected crash.',
-        'Refresh API Client' => 'Force the FireCloud API client to regenerate all access tokens (may be needed after service outage).'
-    }
+
+    # load actions for UI
+    @administrative_tasks = []
+    @task_descriptions = {}
+    available_admin_actions.each do |action|
+      @administrative_tasks << [action[:name], action[:url]]
+      @task_descriptions[action[:name]] = action[:description]
+    end
   end
 
   # GET /admin_configurations/1
@@ -135,6 +137,19 @@ class AdminConfigurationsController < ApplicationController
     end
   end
 
+  # force the FireCloudClient to reinitialize and get new access tokens & connects to GSC
+  def refresh_api_connections
+    expiration = Study.firecloud_client.expires_at
+    storage_issue_date = Study.firecloud_client.storage_issued_at
+    refresh_status = Study.refresh_firecloud_client
+    if refresh_status == true && (expiration < Study.firecloud_client.expires_at && storage_issue_date <  Study.firecloud_client.storage_issued_at)
+      logger.info "#{Time.now}: Refreshing API client tokens and drivers.  New expiry: #{Study.firecloud_client.expires_at}"
+      @notice = "API Client successfully refreshed.  Tokens are now valid until #{Study.firecloud_client.expires_at.strftime('%D %r')} and will renew automatically."
+    else
+      @alert = "Error refreshing API client: #{refresh_status}."
+    end
+  end
+
   # edit a user account (to grant permissions)
   def edit_user
     @user = User.find(params[:id])
@@ -168,5 +183,26 @@ class AdminConfigurationsController < ApplicationController
 
   def user_params
     params.require(:user).permit(:id, :admin, :reporter)
+  end
+
+  # list of available actions to perform
+  def available_admin_actions
+    [
+        {
+            name: 'Reset User Download Quotas',
+            description: 'Rest all user daily download quota back to 0.',
+            url: reset_user_download_quotas_path
+        },
+        {
+            name: 'Unlock Orphaned Jobs',
+            description: 'Restart any parse jobs that may have been orphaned due to a restart or unexpected crash.',
+            url: restart_locked_jobs_path
+        },
+        {
+            name: 'Refresh API Clients',
+            description: 'Force the FireCloud API client to regenerate all access tokens (may be needed after service outage).',
+            url: refresh_api_connections_path
+        }
+    ]
   end
 end

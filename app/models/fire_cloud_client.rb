@@ -56,7 +56,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 
 	# refresh access_token when expired and stores back in FireCloudClient instance
 	#
-	# return: nil
+	# return: timestamp of new access token expiration
 	def refresh_access_token
 		new_token = FireCloudClient.generate_access_token
 		new_expiry = Time.now + new_token['expires_in']
@@ -69,6 +69,53 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	# return: boolean of token expiration
 	def access_token_expired?
 		Time.now >= self.expires_at
+	end
+
+  ## STORAGE INSTANCE METHODS
+
+  # get instance information about the storage driver
+  #
+  # return: JSON object of storage driver instance attributes
+  def storage_attributes
+		JSON.parse self.storage.to_json
+	end
+
+  # renew the storage driver
+  #
+  # return: new instance of storage driver
+  def refresh_storage_driver
+		new_storage = Google::Cloud::Storage.new(
+				project: PORTAL_NAMESPACE,
+				keyfile: SERVICE_ACCOUNT_KEY,
+				timeout: 3600
+		)
+		self.storage = new_storage
+	end
+
+  # get storage driver access token
+  #
+  # return: access token (string)
+  def storage_access_token
+		attr = self.storage_attributes
+		begin
+			attr['service']['credentials']['client']['access_token']
+		rescue NoMethodError => e
+			Rails.logger.error "#{Time.now}: cannot retrieve GCS storage access token: #{e.message}"
+			nil
+		end
+	end
+
+  # get storage driver issue timestamp
+  #
+  # return: issue timestamp (DateTime)
+  def storage_issued_at
+		attr = self.storage_attributes
+		begin
+			DateTime.parse attr['service']['credentials']['client']['issued_at']
+		rescue NoMethodError => e
+			Rails.logger.error "#{Time.now}: cannot retrieve GCS storage issed_at timestamp: #{e.message}"
+			nil
+		end
 	end
 
 	## FIRECLOUD METHODS

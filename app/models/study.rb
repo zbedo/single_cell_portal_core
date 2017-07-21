@@ -13,9 +13,16 @@ class Study
     @@firecloud_client
   end
 
-  # method to renew firecloud client (forces new access tokens for API and storage driver)
-  def self.renew_firecloud_client
-    @@firecloud_client = FireCloudClient.new
+  # method to renew firecloud client (forces new access token for API and reinitializes storage driver)
+  def self.refresh_firecloud_client
+    begin
+      @@firecloud_client.refresh_access_token
+      @@firecloud_client.refresh_storage_driver
+      true
+    rescue => e
+      Rails.logger.error "#{Time.now}: unable to refresh FireCloud client: #{e.message}"
+      e.message
+    end
   end
 
   # pagination
