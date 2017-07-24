@@ -31,6 +31,11 @@
     <div id="plotly-study-email-domain-dist" class="plotly-report"></div>
   </div>
 </div>
+<div class="row">
+  <div class="col-md-12">
+    <div id="plotly-returning-users-time" class="plotly-report"></div>
+  </div>
+</div>
 <%= render partial: 'contact_modal' %>
 <script type="text/javascript">
 
@@ -240,6 +245,39 @@
             }
         }
     ).then(setRenderStatus('#plotly-study-email-domain-dist', true));
+
+    var returningUsersTime = [{
+        x: <%= raw @returning_users_by_week.keys %>,
+        y: <%= raw @returning_users_by_week.values %>,
+        type: 'bar',
+        marker: {
+            color: colorBrewerSet[7]
+        }
+    }];
+
+    Plotly.newPlot('plotly-returning-users-time', returningUsersTime,
+        {
+            title: 'How many users are active in the portal each week?',
+            font: plotlyLabelFont,
+            titlefont: plotlyTitleFont,
+            bargap: 0,
+            bargroupgap: 0.5,
+            barmode: 'stack',
+            hovermode: 'closest',
+            xaxis: {
+                title: 'Week ending on',
+                tickangle: -45
+            },
+            yaxis: {
+                title: 'Number of returning users'
+            },
+            annotations: loadBarChartAnnotations(returningUsersTime),
+            margin: {
+                b: 150,
+                pad: 5
+            }
+        }
+    ).then(setRenderStatus('#plotly-returning-users-time', true));
 
     $('#toggle-column-annots').click(function() {
         // immediate set render status to false

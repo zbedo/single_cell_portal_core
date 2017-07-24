@@ -52,8 +52,10 @@ class AdminConfiguration
         else
           self.value
         end
-      else
+      when 'Boolean'
         self.value == '1' ? 'Yes' : 'No'
+      else
+        self.value
     end
   end
 
