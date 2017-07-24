@@ -182,11 +182,13 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# wait until plotly chart has finished rendering, will run for 10 seconds and then raise a timeout error
 	def wait_for_plotly_render(plot, data_id)
+		# this is necessary to wait for the render variable to set to false initially
+		sleep(1)
 		i = 1
 		i.upto(10) do
 			done = @driver.execute_script("return $('#{plot}').data('#{data_id}')")
 			if !done
-				puts "Waiting for render of #{plot}; try ##{i}"
+				puts "Waiting for render of #{plot}, currently (#{done}); try ##{i}"
 				i += 1
 				sleep(1)
 				next
@@ -206,7 +208,7 @@ class UiTestSuite < Test::Unit::TestCase
 		i.upto(10) do
 			done = @driver.execute_script("return $('#{plot}').data('#{data_id}').heatmap !== undefined")
 			if !done
-				puts "Waiting for render of #{plot}; try ##{i}"
+				puts "Waiting for render of #{plot}, currently (#{done}); try ##{i}"
 				i += 1
 				sleep(1)
 				next
@@ -2435,6 +2437,7 @@ class UiTestSuite < Test::Unit::TestCase
 		annotation = annotations.sample
 		annotation_value = annotation['value']
 		annotation.click
+		puts "Using annotation #{annotation_value}"
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
 		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
