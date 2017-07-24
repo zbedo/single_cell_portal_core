@@ -21,6 +21,15 @@ class AdminConfigurationsController < ApplicationController
         @download_status = false
         @download_status_label = "<span class='label label-danger'><i class='fa fa-times'></i> Disabled</span>".html_safe
     end
+    @users = User.all.to_a
+
+    # load actions for UI
+    @administrative_tasks = []
+    @task_descriptions = {}
+    available_admin_actions.each do |action|
+      @administrative_tasks << [action[:name], action[:url]]
+      @task_descriptions[action[:name]] = action[:description]
+    end
   end
 
   # GET /admin_configurations/1
@@ -85,13 +94,19 @@ class AdminConfigurationsController < ApplicationController
     begin
       case status
         when 'on'
-          AdminConfiguration.enable_firecloud_access
+          # if status was set to local-off, don't bother changing remote workspace acls as they are unchanged
+          unless @config.value == 'local-off'
+            AdminConfiguration.enable_firecloud_access
+          end
           @config.update(value: status)
           redirect_to admin_configurations_path, alert: "FireCloud access setting recorded successfully as 'on'."
         when 'off'
           AdminConfiguration.configure_firecloud_access('off')
           @config.update(value: status)
           redirect_to admin_configurations_path, alert: "FireCloud access setting recorded successfully as 'off'.  Portal study & workspace access is now disabled."
+        when 'local-off'
+          @config.update(value: status)
+          redirect_to admin_configurations_path, alert: "FireCloud access setting recorded successfully as 'local-off' (local acccess disabled).  Portal study & download access is now disabled, but remote FireCloud permissions are unchanged."
         when 'readonly'
           AdminConfiguration.configure_firecloud_access('readonly')
           @config.update(value: status)
@@ -122,6 +137,39 @@ class AdminConfigurationsController < ApplicationController
     end
   end
 
+  # force the FireCloudClient to reinitialize and get new access tokens & connects to GSC
+  def refresh_api_connections
+    expiration = Study.firecloud_client.expires_at
+    storage_issue_date = Study.firecloud_client.storage_issued_at
+    refresh_status = Study.refresh_firecloud_client
+    if refresh_status == true && (expiration < Study.firecloud_client.expires_at && storage_issue_date <  Study.firecloud_client.storage_issued_at)
+      logger.info "#{Time.now}: Refreshing API client tokens and drivers.  New expiry: #{Study.firecloud_client.expires_at}"
+      @notice = "API Client successfully refreshed.  Tokens are now valid until #{Study.firecloud_client.expires_at.strftime('%D %r')} and will renew automatically."
+    else
+      @alert = "Error refreshing API client: #{refresh_status}."
+    end
+  end
+
+  # edit a user account (to grant permissions)
+  def edit_user
+    @user = User.find(params[:id])
+  end
+
+  # update a user account
+  def update_user
+    @user = User.find(params[:id])
+    respond_to do |format|
+      if @user.update(user_params)
+        format.html { redirect_to admin_configurations_path, notice: "User: '#{@user.email}' was successfully updated." }
+      else
+        format.html { render :edit_user }
+        format.json { render json: @user.errors, status: :unprocessable_entity }
+      end
+    end
+  end
+
+  # reinitialize the firecloud client object (forces new access tokens)
+
   private
   # Use callbacks to share common setup or constraints between actions.
   def set_admin_configuration
@@ -131,5 +179,30 @@ class AdminConfigurationsController < ApplicationController
   # Never trust parameters from the scary internet, only allow the white list through.
   def admin_configuration_params
     params.require(:admin_configuration).permit(:config_type, :value_type, :value, :multiplier)
+  end
+
+  def user_params
+    params.require(:user).permit(:id, :admin, :reporter)
+  end
+
+  # list of available actions to perform
+  def available_admin_actions
+    [
+        {
+            name: 'Reset User Download Quotas',
+            description: 'Rest all user daily download quota back to 0.',
+            url: reset_user_download_quotas_path
+        },
+        {
+            name: 'Unlock Orphaned Jobs',
+            description: 'Restart any parse jobs that may have been orphaned due to a restart or unexpected crash.',
+            url: restart_locked_jobs_path
+        },
+        {
+            name: 'Refresh API Clients',
+            description: 'Force the FireCloud API client to regenerate all access tokens (may be needed after service outage).',
+            url: refresh_api_connections_path
+        }
+    ]
   end
 end

@@ -501,8 +501,8 @@ class SiteController < ApplicationController
   # and extra fastq's that happen to be in the bucket)
   def get_fastq_files
     # check if FireCloud is available first
-    @allow_downloads = Study.firecloud_client.api_available?
-    @disabled_link = "<button type='button' class='btn btn-danger' disabled>Currently Unavailable</button>".html_safe
+    @allow_downloads =  AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
+    @disabled_link = "<button type='button' class='btn btn-danger disabled-download' disabled>Currently Unavailable</button>".html_safe
     # load study_file fastqs first
     @fastq_files = {data: []}
     @study.study_files.by_type('Fastq').each do |file|

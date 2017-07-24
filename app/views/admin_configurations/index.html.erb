@@ -1,151 +1,218 @@
 <h1>Admin Control Panel</h1>
+<div id="tab-root">
+  <ul class="nav nav-tabs" role="tablist" id="study-tabs">
+    <li role="presentation" class="admin-nav active" id="admin-config-nav"><a href="#admin-config" data-toggle="tab">Configuration Options<i class="fa fa-fw fa-cog"></i></a></li>
+    <li role="presentation" class="admin-nav" id="users-nav"><a href="#users" data-toggle="tab">User Roles<i class="fa fa-fw fa-user"></i></a></li>
+  </ul>
+  <div class="tab-content top-pad">
+    <div class="tab-pane active" id="admin-config">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="table-responsive">
+            <div class="well">
+              <table class="table table-striped" id="config">
+                <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Value</th>
+                  <th class="actions">Actions</th>
+                </tr>
+                </thead>
 
-<div class="row">
-  <div class="col-md-12">
-    <div class="table-responsive">
-      <div class="well">
-        <h4><i class="fa fa-cog"></i> Configuration Options</h4>
-        <table class="table table-striped" id="config">
-          <thead>
-            <tr>
-              <th>Type</th>
-              <th>Value</th>
-              <th class="actions">Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            <% @admin_configurations.each do |config| %>
-              <tr>
-                <td class="config-type"><%= config.config_type %></td>
-                <td><%= config.display_value.html_safe %></td>
-                <td>
-                  <%= link_to "<span class='fa fa-edit'></span> Edit".html_safe, edit_admin_configuration_path(config), class: "btn btn-xs btn-primary #{config.url_safe_name}-edit" %>
-                  <%= link_to "<span class='fa fa-trash'></span> Delete".html_safe, config, method: :delete, class: "btn btn-xs btn-danger delete-btn #{config.url_safe_name}-delete" %>
-                </td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-        <p><%= link_to "<span class='fa fa-plus'></span> New Config Option".html_safe, new_admin_configuration_path, class: 'btn btn-success', id: 'create-new-configuration' %>&nbsp;</p>
-      </div>
-    </div>
-    <h3>Other Tasks</h3>
-    <div class="row">
-      <div class="col-sm-4">
-        <%= link_to "<span class='fa fa-refresh'></span> Reset User Download Quotas".html_safe, 'javascript:;', class: 'btn btn-lg btn-primary', id: 'reset-user-download-quotas' %>
-      </div>
-      <div class="col-sm-4 text-center">
-        <%= link_to "<span class='fa fa-unlock'></span> Unlock Orphaned Jobs".html_safe, 'javascript:;', class: 'btn btn-lg btn-warning', id: 'restart-locked-jobs', title: 'This will restart any parse jobs that were locked and did not complete due to a restart', data: {toggle: 'tooltip'} %>
-      </div>
-      <div class="col-sm-4 text-right">
-        <%= link_to "<span class='fa fa-exclamation-circle'></span> MANAGE FIRECLOUD ACCESS".html_safe, '#', class: 'btn btn-lg btn-danger panic', id: 'show-panic-modal' %>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="panic-modal" role="dialog" aria-labelledby="sync-modal-label" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="text-center text-danger">MANAGE FIRECLOUD ACCESS</h4>
-      </div>
-      <div class="modal-body">
-          <p class="lead text-center">FireCloud Access is currently: <%= @download_status_label %></p>
-        <p class="lead text-danger">Clicking 'Disable All Access' will revoke all user permissions to workspaces, thereby preventing any users from uploading/downloading data or running computes.  As a result, access to updating studies will be disabled.</p>
-        <p class="lead text-danger">Clicking 'Disable Compute Access' will set all user permissions for workspaces to Read Only, thereby preventing any users from uploading data or running computes.  Users can still download data.  Access to updating studies will be still be disabled.</p>
-          <p class="lead text-danger text-center"><strong>Are you sure you wish to proceed?</strong></p>
-          <div class="row">
-            <%= form_for(:firecloud_access, url: manage_firecloud_access_path, html: {class: 'form', id: 'firecloud-status-form'}) do |f| %>
-              <%= f.hidden_field :status, value: @current_firecloud_status %>
-              <div class="col-md-4">
-                <%= link_to "Disable All Access".html_safe, 'javascript:;', class: "btn btn-lg btn-block btn-danger #{@current_firecloud_status == 'off' ? 'disabled' : 'firecloud-status'}", id: 'disable-firecloud-access', method: :post, data: {dismiss: @current_firecloud_status == 'off' ? nil : 'modal', status: 'off'} %>
-              </div>
-              <div class="col-md-4">
-                <%= link_to "Disable Compute Access".html_safe, 'javascript:;', class: "btn btn-lg btn-block btn-warning #{@current_firecloud_status == 'readonly' ? 'disabled' : 'firecloud-status'}", id: 'disable-compute-access', method: :post, data: {dismiss: @current_firecloud_status == 'readonly' ? nil : 'modal', status: 'readonly'} %>
-              </div>
-              <div class="col-md-4">
-                <%= link_to "Enable All Access".html_safe, 'javascript:;', class: "btn btn-lg btn-block btn-success #{@current_firecloud_status == 'on' ? 'disabled' : 'firecloud-status'}", id: 'enable-firecloud-access', method: :post, data: {dismiss: @current_firecloud_status == 'on' ? nil : 'modal', status: 'on'} %>
-              </div>
-            <% end %>
+                <tbody>
+                <% @admin_configurations.each do |config| %>
+                  <tr>
+                    <td class="config-type"><%= config.config_type %></td>
+                    <td><%= config.display_value.html_safe %></td>
+                    <td>
+                      <%= link_to "<span class='fa fa-edit'></span> Edit".html_safe, edit_admin_configuration_path(config), class: "btn btn-xs btn-primary #{config.url_safe_name}-edit" %>
+                      <%= link_to "<span class='fa fa-trash'></span> Delete".html_safe, config, method: :delete, class: "btn btn-xs btn-danger delete-btn #{config.url_safe_name}-delete" %>
+                    </td>
+                  </tr>
+                <% end %>
+                </tbody>
+              </table>
+              <p><%= link_to "<span class='fa fa-plus'></span> New Config Option".html_safe, new_admin_configuration_path, class: 'btn btn-success', id: 'create-new-configuration' %>&nbsp;</p>
+            </div>
           </div>
+          <h3>Other Tasks</h3>
+          <div class="well well-lg">
+            <div class="form-group row">
+              <div class="col-md-6">
+                <%= select_tag :admin_action, options_for_select(@administrative_tasks), include_blank: 'Please select a task...', class: 'form-control' %>
+                <div id="task-descriptions">
+                  <% @task_descriptions.each do |task_name, description| %>
+                    <span id="<%= task_name.downcase.gsub(/ /, '-') %>" style="display: none;"><%= description %></span>
+                  <% end %>
+                </div>
+              </div>
+              <div class="col-md-2">
+                <%= link_to 'Execute Task', 'javascript:;', id: 'perform-admin-task', class: 'btn btn-default' %>
+              </div>
+              <div class="col-md-4 text-right">
+                <%= link_to "<span class='fa fa-exclamation-circle'></span> MANAGE FIRECLOUD ACCESS".html_safe, '#', class: 'btn btn-danger panic', id: 'show-panic-modal' %>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="modal-footer">
-        <button class="close" data-dismiss="modal">×</button>
+
+      <div class="modal fade" id="panic-modal" role="dialog" aria-labelledby="sync-modal-label" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="text-center text-danger">MANAGE FIRECLOUD ACCESS</h4>
+            </div>
+            <div class="modal-body">
+              <p class="lead text-center">FireCloud Access is currently: <%= @download_status_label %></p>
+              <p class="lead text-danger">Clicking 'Disable All Access' will revoke all user permissions to workspaces, thereby preventing any users from uploading/downloading data or running computes.  As a result, access to updating studies will be disabled.</p>
+              <p class="lead text-danger">Clicking 'Disable Local Access' will revoke disable local access to study administrative actions (creating, updating, sharing) and downloading data.  Remote FireCloud permissions are not changed by this status.  This is useful if there is a service outage in the FireCloud API.</p>
+              <p class="lead text-danger">Clicking 'Disable Compute Access' will set all user permissions for workspaces to Read Only, thereby preventing any users from uploading data or running computes.  Users can still download data.  Access to updating studies will be still be disabled.</p>
+              <p class="lead text-danger text-center"><strong>Are you sure you wish to proceed?</strong></p>
+              <div class="row">
+                <%= form_for(:firecloud_access, url: manage_firecloud_access_path, html: {class: 'form', id: 'firecloud-status-form'}) do |f| %>
+                  <%= f.hidden_field :status, value: @current_firecloud_status %>
+                  <div class="form-group row">
+                    <div class="col-md-offset-2 col-md-4">
+                      <%= link_to "Disable All Access".html_safe, 'javascript:;', class: "btn btn-lg btn-block btn-danger #{@current_firecloud_status == 'off' ? 'disabled' : 'firecloud-status'}", id: 'disable-firecloud-access', method: :post, data: {dismiss: @current_firecloud_status == 'off' ? nil : 'modal', status: 'off'} %>
+                    </div>
+                    <div class="col-md-4">
+                      <%= link_to "Disable Local Access".html_safe, 'javascript:;', class: "btn btn-lg btn-block btn-danger #{@current_firecloud_status == 'off' ? 'disabled' : 'firecloud-status'}", id: 'disable-local-access', method: :post, data: {dismiss: @current_firecloud_status == 'off' ? nil : 'modal', status: 'local-off'} %>
+                    </div>
+                  </div>
+                  <div class="form-group row">
+                    <div class="col-md-offset-2 col-md-4">
+                      <%= link_to "Disable Compute Access".html_safe, 'javascript:;', class: "btn btn-lg btn-block btn-warning #{@current_firecloud_status == 'readonly' ? 'disabled' : 'firecloud-status'}", id: 'disable-compute-access', method: :post, data: {dismiss: @current_firecloud_status == 'readonly' ? nil : 'modal', status: 'readonly'} %>
+                    </div>
+                    <div class="col-md-4">
+                      <%= link_to "Enable All Access".html_safe, 'javascript:;', class: "btn btn-lg btn-block btn-success #{@current_firecloud_status == 'on' ? 'disabled' : 'firecloud-status'}", id: 'enable-firecloud-access', method: :post, data: {dismiss: @current_firecloud_status == 'on' ? nil : 'modal', status: 'on'} %>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="close" data-dismiss="modal">×</button>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <div class="modal fade" id="working-modal" role="dialog" aria-labelledby="sync-modal-label" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="text-center">Working... Please Wait</h4>
+            </div>
+            <div class="modal-body">
+              <div class="spinner-target" id="working-modal-spinner"></div>
+            </div>
+            <div class="modal-footer">
+              <button class="close" data-dismiss="modal">×</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script type="text/javascript">
+
+          $('#config').dataTable({
+              pagingType: "full_numbers",
+              order: [[0, 'asc']],
+              language: {
+                  search: "Filter Results By: "
+              }
+          });
+
+          // ask user to confirm delete, then show modal
+          // use event delegation to attach to all delete-btn regardless
+          // of whether they are visible yet or not
+          $('#config').on('click', '.delete-btn', function(){
+              // get name of study for confirmation
+              var config = $(this).parent().parent().find('.config-type').text();
+              if ( confirm('Are you sure you want to delete \"' + config + '\"?')) {
+                  launchModalSpinner('#delete-modal-spinner','#delete-modal');
+              } else {
+                  return false;
+              }
+          });
+
+          $('.panic').click(function() {
+              $('#panic-modal').modal({show: true, backdrop: 'static'});
+          });
+
+          $('#admin_action').change(function() {
+             var selectedAction = $('#admin_action option:selected').text();
+             var actionVal = $(this).val();
+             $('#task-descriptions span').css('display', 'none');
+             if (actionVal !== '') {
+                 var actionId = selectedAction.toLowerCase().replace(/ /g, '-');
+                 $('#' + actionId).css('display', 'block');
+             }
+          });
+
+          $('#perform-admin-task').click(function() {
+             var taskUrl = $('#admin_action').val();
+             if (taskUrl === '') {
+                 alert('You must select an action before continuing.');
+             } else {
+                 launchModalSpinner('#working-modal-spinner','#working-modal');
+                 $.ajax({
+                     url: taskUrl,
+                     method: 'POST',
+                     dataType: 'script'
+                 });
+             }
+          });
+
+          $('.firecloud-status').click(function() {
+              var statusSetting = $(this).data('status');
+              var statusForm = $('#firecloud-status-form');
+              $('#panic-modal').on('hidden.bs.modal', function() {
+                  launchModalSpinner('#working-modal-spinner','#working-modal');
+                  statusForm.find('#firecloud_access_status').val(statusSetting);
+                  statusForm.submit();
+              });
+          });
+      </script>
+    </div>
+    <div class="tab-pane" id="users">
+      <div class="table-responsive">
+        <div class="well">
+          <table class="table table-striped" id="user-table">
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Special Roles</th>
+                <th>Edit</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @users.each do |user| %>
+                <tr id="<%= user.email_as_id %>">
+                  <td><%= user.email %></td>
+                  <td id="<%= user.email_as_id %>-roles">
+                    <%= user.admin? ? "<span id='#{user.email_as_id}-admin' class='label label-primary'>admin</span>".html_safe : nil %>
+                    <%= user.reporter ? "<span id='#{user.email_as_id}-reporter' class='label label-success'>reporter</span>".html_safe : nil %>
+                  </td>
+                  <td class="actions">
+                    <%= link_to "<span class='fa fa-edit'></span> Edit".html_safe, edit_user_path(user), class: "btn btn-xs btn-primary", id: "#{user.email_as_id}-edit" %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <script type="text/javascript">
+          $('#user-table').dataTable({
+              pagingType: "full_numbers",
+              order: [[0, 'asc']],
+              language: {
+                  search: "Filter Results By: "
+              }
+          });
+      </script>
     </div>
   </div>
 </div>
-
-<div class="modal fade" id="working-modal" role="dialog" aria-labelledby="sync-modal-label" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="text-center">Working... Please Wait</h4>
-      </div>
-      <div class="modal-body">
-        <div class="spinner-target" id="working-modal-spinner"></div>
-      </div>
-      <div class="modal-footer">
-        <button class="close" data-dismiss="modal">×</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script type="text/javascript">
-
-    $('#config').dataTable({
-        pagingType: "full_numbers",
-        order: [[0, 'asc']],
-        language: {
-            search: "Filter Results By: "
-        }
-    });
-
-    // ask user to confirm delete, then show modal
-    // use event delegation to attach to all delete-btn regardless
-    // of whether they are visible yet or not
-    $('#config').on('click', '.delete-btn', function(){
-        // get name of study for confirmation
-        var config = $(this).parent().parent().find('.config-type').text();
-        if ( confirm('Are you sure you want to delete \"' + config + '\"?')) {
-            launchModalSpinner('#delete-modal-spinner','#delete-modal');
-        } else {
-            return false;
-        }
-    });
-
-    $('.panic').click(function() {
-       $('#panic-modal').modal({show: true, backdrop: 'static'});
-    });
-
-    $('#reset-user-download-quotas').click(function(){
-        launchModalSpinner('#working-modal-spinner','#working-modal');
-        $.ajax({
-            url: "<%= reset_user_download_quotas_path %>",
-            method: 'POST',
-            dataType: 'script'
-        });
-    });
-
-    $('#restart-locked-jobs').click(function(){
-        launchModalSpinner('#working-modal-spinner','#working-modal');
-        $.ajax({
-            url: "<%= restart_locked_jobs_path %>",
-            method: 'POST',
-            dataType: 'script'
-        });
-    });
-
-    $('.firecloud-status').click(function() {
-        var statusSetting = $(this).data('status');
-        var statusForm = $('#firecloud-status-form');
-        $('#panic-modal').on('hidden.bs.modal', function() {
-            launchModalSpinner('#working-modal-spinner','#working-modal');
-            statusForm.find('#firecloud_access_status').val(statusSetting);
-            statusForm.submit();
-        });
-    });
-</script>
