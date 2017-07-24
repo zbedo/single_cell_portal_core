@@ -1,10 +1,11 @@
 class UserAnnotationsController < ApplicationController
   before_action :set_user_annotation, only: [:show, :edit, :update, :destroy]
-
+  before_filter :authenticate_user!
+  before_action :check_permission, except: :index
   # GET /user_annotations
   # GET /user_annotations.json
   def index
-    @user_annotations = UserAnnotation.all
+    @user_annotations = current_user.user_annotations.owned_by(current_user)
   end
 
   # GET /user_annotations/1
@@ -95,5 +96,12 @@ class UserAnnotationsController < ApplicationController
   # whitelist parameters for creating custom user annotation
   def user_annotation_params
     params.require(:user_annotation).permit(:_id, :name, :study_id, :user_id, :cluster_group_id, values: [])
+  end
+
+  # checks that current user id is the same as annotation being edited or destroyed
+  def check_permission
+    if @user_annotation.user_id != current_user.id
+      redirect_to user_annotations_path, alert: 'You don\'t have permission to perform that action'
+    end
   end
 end

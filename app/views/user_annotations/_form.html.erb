@@ -1,8 +1,7 @@
 <%= form_for(@user_annotation) do |f| %>
   <% if @user_annotation.errors.any? %>
 		<div class="bs-callout bs-callout-danger">
-			<h4><%= pluralize(@study.errors.count, "error") %> prohibited this study from being saved:</h4>
-
+			<h4><%= pluralize(@user_annotation.errors.count, 'error') %> prohibited this study from being saved:</h4>
 			<ul>
 				<% @user_annotation.errors.full_messages.each do |message| %>
 					<li><%= message %></li>
@@ -19,15 +18,15 @@
     </div>
     <div class="col-sm-3">
       <%= f.label 'Cluster:' %>
-      <%= f.text_field :name, value: "#{ClusterGroup.find(@user_annotation.cluster_group_id).name}", class: 'form-control', disabled: 'disabled' %>
+      <%= f.text_field :cluster_group_id, value: "#{@user_annotation.cluster_group.name}", class: 'form-control', disabled: 'disabled' %>
     </div>
     <div class="col-sm-3">
       <%= f.label 'Study:' %>
-      <%= f.text_field :name, value: "#{Study.find(@user_annotation.study_id).name}", class: 'form-control', disabled: 'disabled' %>
+      <%= f.text_field :study_id, value: "#{@user_annotation.study.name}", class: 'form-control', disabled: 'disabled' %>
     </div>
     <div class="col-sm-3">
       <%= f.label 'Created by:' %>
-      <%= f.text_field :name, value: "#{User.find(@user_annotation.user_id).email}", class: 'form-control', disabled: 'disabled' %>
+      <%= f.text_field :user_id, value: "#{@user_annotation.user.email}", class: 'form-control', disabled: 'disabled' %>
     </div>
   </div>
   <% @user_annotation.values.each_with_index do |value, i| %>
@@ -35,11 +34,11 @@
       <div class="form-group row">
         <div class="col-sm-6">
           <%= f.label 'Label Name: ' %>
-          <input value="<%= value %>" class="form-control need-text share-email label-name" type="text" name="user_annotation[values][]" id="user-annotation_values">
+          <input value="<%= value %>" class="form-control need-text label-name" type="text" name="user_annotation[values][]" id="user-annotation_values">
         </div>
         <div class="col-sm-2">
           <%= f.label 'Number of Cells:' %>
-          <%= f.text_field :name, value: "#{@user_annotation.user_data_arrays.find_by(array_type: 'annotations').values.count(value)}", class: 'form-control', disabled: 'disabled' %>
+          <input value="<%= raw "#{@user_annotation.user_data_arrays.find_by(array_type: 'annotations').values.count(value)}"%>" class='form-control' disabled='disabled' %>
         </div>
       </div>
     </div>

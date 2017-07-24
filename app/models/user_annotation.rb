@@ -236,4 +236,8 @@ class UserAnnotation
     created_at
   end
 
+  def formatted_annotation_name
+    self.name + '--group--user'
+  end
+
 end

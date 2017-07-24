@@ -89,6 +89,10 @@ class Study
     end
   end
 
+  has_many :user_annotations, dependent: :delete
+
+  has_many :user_data_arrays, dependent: :delete
+
   # field definitions
   field :name, type: String
   field :embargo, type: Date

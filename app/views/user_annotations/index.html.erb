@@ -19,10 +19,10 @@
               <tr>
                 <td><%= link_to user_annotation.study.name,  view_study_path(user_annotation.study.url_safe_name) %></td>
                 <td class="annotation-name"><%= user_annotation.name %></td>
-                <td><%= user_annotation.values.map{|x| "<span class='label label-#{ x == 'Undefined' ? 'warning' : 'default'}'>#{x}</span>"}.join(' ').html_safe %></td>
+                <td><%= user_annotation.values.map{|x| "<span class='label label-#{ x == 'Undefined' ? 'warning' : 'default'} #{user_annotation.name}'>#{x}</span>"}.join(' ').html_safe %></td>
                 <td><%= user_annotation.subsampled_at %></td>
                 <td>
-                  <%= link_to "<span class='fa fa-info-circle'></span> View Annotation".html_safe, user_annotation, class: "btn btn-xs btn-info #{user_annotation.name}-show"  %>
+                  <%= link_to "<span class='fa fa-info-circle'></span> View Annotation".html_safe, view_study_path(user_annotation.study.url_safe_name, cluster: user_annotation.cluster_group.name, annotation: user_annotation.formatted_annotation_name) + '#study-visualize', class: "btn btn-xs btn-info #{user_annotation.name}-show"  %>
                   <%= link_to "<span class='fa fa-edit'></span> Edit Data".html_safe, edit_user_annotation_path(user_annotation), class: "btn btn-xs btn-primary #{user_annotation.name}-edit" %>
                   <% if true #user_annotation.can_delete?(current_user) %>
                       <%= link_to "<span class='fa fa-trash'></span> Delete".html_safe, user_annotation, class: "btn btn-xs btn-danger delete-btn #{user_annotation.name}-delete", title: 'Delete Annotation' , method: :delete, data: {toggle: 'tooltip', placement: 'top'} %>

@@ -663,6 +663,7 @@ class SiteController < ApplicationController
     end
     coordinates = {}
     if annotation[:type] == 'numeric'
+
       text_array = []
       color_array = []
       # load text & color value from correct object depending on annotation scope
@@ -675,6 +676,7 @@ class SiteController < ApplicationController
           text_array <<  "#{cell}: (#{val})"
           color_array << val
         end
+
       end
       # if we didn't assign anything to the color array, we know the annotation_array is good to use
       color_array.empty? ? color_array = annotation_array : nil

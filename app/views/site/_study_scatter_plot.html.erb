@@ -4,7 +4,9 @@ var data = [];
 		x: <%= raw data[:x] %>,
 		y: <%= raw data[:y] %>,
     cells: <%= raw data[:cells] %>,
-    annotations: <%= raw data[:annotations] %>,
+    <% if !data[:annotations].nil? %>
+      annotations: <%= raw data[:annotations] %>,
+    <% end %>
     <% if @cluster.cluster_type == '3d' %>
       z: <%= raw data[:z] %>,
       textposition: 'bottom right',

@@ -81,6 +81,7 @@ module ApplicationHelper
 			parameters[:gene_set_cluster]
 		elsif !parameters[:cluster].nil?
 			parameters[:cluster]
+			logger.info('Here!')
 		else
 			selected_study.default_cluster.name
 		end

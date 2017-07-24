@@ -10,8 +10,10 @@ if (<%= @selected_annotation[:type] == 'numeric' %>) {
     $('#toggle-traces').tooltip({container: 'body', placement: 'left', trigger: 'hover'});
 }
 
-$('#scattergl_div').html("<%= escape_javascript(render partial: 'scattergl_toggle') %>");
-$('#selection_div').html("<%= escape_javascript(render partial: 'selection_well') %>");
+<% if !@cluster.is_3d? %>
+  $('#scattergl_div').html("<%= escape_javascript(render partial: 'scattergl_toggle') %>");
+  $('#selection_div').html("<%= escape_javascript(render partial: 'selection_well') %>");
+<% end %>
 
 <%= render partial: 'study_scatter_plot' %>
 
