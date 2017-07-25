@@ -20,6 +20,9 @@ class AdminConfigurationsController < ApplicationController
       when 'off'
         @download_status = false
         @download_status_label = "<span class='label label-danger'><i class='fa fa-times'></i> Disabled</span>".html_safe
+      when 'local-off'
+        @download_status = false
+        @download_status_label = "<span class='label label-danger'><i class='fa fa-times'></i> Disabled Locally</span>".html_safe
     end
     @users = User.all.to_a
 
@@ -94,12 +97,19 @@ class AdminConfigurationsController < ApplicationController
     begin
       case status
         when 'on'
+          message = "FireCloud access setting recorded successfully as 'on'."
           # if status was set to local-off, don't bother changing remote workspace acls as they are unchanged
           unless @config.value == 'local-off'
             AdminConfiguration.enable_firecloud_access
           end
+          # turn notifications of API outages back on by default
+          notifier_config = AdminConfiguration.find_or_create_by(config_type: AdminConfiguration::API_NOTIFIER_NAME, value_type: 'Boolean')
+          if notifier_config.value != '1'
+            notifier_config.update(value: '1')
+            message += ' Notifications for API outages were also re-enabled.'
+          end
           @config.update(value: status)
-          redirect_to admin_configurations_path, alert: "FireCloud access setting recorded successfully as 'on'."
+          redirect_to admin_configurations_path, alert: message
         when 'off'
           AdminConfiguration.configure_firecloud_access('off')
           @config.update(value: status)

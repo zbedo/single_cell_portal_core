@@ -62,7 +62,10 @@
             $('#subsample').val(10000);
             $('#search_subsample').val(10000);
         }
-
+        if (window.location.href.split('#')[1] !== '') {
+            var tab = window.location.href.split('#')[1];
+            $('#study-tabs a[href="#' + tab + '"]').tab('show');
+        }
         renderScatter();
     });
 

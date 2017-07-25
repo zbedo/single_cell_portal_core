@@ -19,11 +19,14 @@
       </div>
       <div class="col-sm-3">
         <%= f.label :value_type, 'Type of Value' %><br>
-        <%= f.select :value_type, options_for_select(AdminConfiguration.value_types, f.object.value_type), {}, class: 'form-control' %>
+        <%= f.select :value_type, options_for_select(AdminConfiguration.value_types, f.object.value_type), {}, class: 'form-control', disabled: !@admin_configuration.new_record? %>
       </div>
       <div class="col-sm-2" id="value-options">
-        <%= f.label :value %><br>
-        <%= f.text_field :value, class: 'form-control' %>
+        <% if @admin_configuration.value_type == 'Boolean' %>
+            <%= render partial: 'config_value_select', locals: {f: f} %>
+          <% else %>
+            <%= render partial: 'config_value_text', locals: {f: f} %>
+          <% end %>
       </div>
       <div class="col-sm-2" id="extra-info" style="display: <%= @admin_configuration.value_type == 'Numeric' || @admin_configuration.value_type.nil? ? 'block' : 'none' %>;">
         <%= f.label :multiplier, "Byte Operator <i class='fa fa-question-circle'></i>".html_safe, title: 'Convert a numeric value into a byte value using this multiplier', data: {toggle: 'tooltip'} %><br/>
