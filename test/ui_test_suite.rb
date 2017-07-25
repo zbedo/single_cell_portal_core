@@ -543,6 +543,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
+	#create a 2d scatter study for use in user annotation testing
 	test 'admin: create a 2d scatter study' do
 		puts "Test method: #{self.method_name}"
 

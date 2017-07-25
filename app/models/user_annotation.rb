@@ -8,8 +8,8 @@ class UserAnnotation
   belongs_to :study
 
   has_many :user_data_arrays do
-    def by_name_and_type(name, type, subsample_threshold=nil)
-      where(name: name, array_type: type, subsample_threshold: subsample_threshold).order_by(&:array_index).to_a
+    def by_name_and_type(name, type, subsample_threshold=nil, subsample_annotation=nil)
+      where(name: name, array_type: type, subsample_threshold: subsample_threshold, subsample_annotation: subsample_annotation).order_by(&:array_index).to_a
     end
   end
 
@@ -22,43 +22,39 @@ class UserAnnotation
 
   def initialize_user_data_arrays(user_data_arrays_attributes, annotation, threshold, loaded_annotation)
     #Assemble hash of cell names and annotations
-    logger.info("loaded annot: #{loaded_annotation}")
     cluster = self.cluster_group
     max_length = cluster.points
 
     case threshold
       when 1000
         extrapolate(user_data_arrays_attributes, [10000, 20000], max_length, cluster, annotation)
+        create_array(cluster, 1000, annotation, user_data_arrays_attributes)
       when 10000
         extrapolate(user_data_arrays_attributes, [20000], max_length, cluster, annotation)
         subsample(user_data_arrays_attributes, [1000],cluster, annotation, max_length)
+        create_array(cluster, 10000, annotation, user_data_arrays_attributes)
       when 20000
         extrapolate(user_data_arrays_attributes, [], max_length, cluster, annotation)
         subsample(user_data_arrays_attributes, [10000, 1000],cluster, annotation, max_length)
+        create_array(cluster, 20000, annotation, user_data_arrays_attributes)
       else
         extrapolate(user_data_arrays_attributes, [], max_length, cluster, annotation)
-        subsample(user_data_arrays_attributes, [20000, 10000, 1000],cluster, loaded_annotation, max_length )
+        subsample(user_data_arrays_attributes, [20000, 10000, 1000], cluster, loaded_annotation, max_length )
     end
   end
 
   def concatenate_user_data_arrays(array_name, array_type, subsample_threshold=nil, subsample_annotation=nil)
-    if subsample_threshold.nil?
-      user_data_arrays = self.user_data_arrays.by_name_and_type(array_name, array_type)
+    if subsample_threshold.blank?
+      subsample_threshold = nil
+      subsample_annotation = nil
+    end
+      user_data_arrays = self.user_data_arrays.by_name_and_type(array_name, array_type, subsample_threshold, subsample_annotation)
       all_values = []
       user_data_arrays.each do |array|
         all_values += array.values
       end
       return all_values
-    else
-      user_data_array = self.user_data_arrays.find_by(name: array_name, array_type: array_type,
-                                            subsample_threshold: subsample_threshold,
-                                            subsample_annotation: subsample_annotation)
-      if user_data_array.nil?
-        return []
-      else
-        return user_data_array.values
-      end
-    end
+
   end
 
   def create_array(cluster, threshold, annotation, user_data_arrays_attributes)
@@ -102,12 +98,12 @@ class UserAnnotation
 
     #Create subsample annotation
     sub_an = self.name + '--group--user'
-    x_arrays = x_array.each_slice(DataArray::MAX_ENTRIES).to_a
-    y_arrays = y_array.each_slice(DataArray::MAX_ENTRIES).to_a
-    cell_name_arrays = cell_name_array.each_slice(DataArray::MAX_ENTRIES).to_a
+    x_arrays = x_array.each_slice(UserDataArray::MAX_ENTRIES).to_a
+    y_arrays = y_array.each_slice(UserDataArray::MAX_ENTRIES).to_a
+    cell_name_arrays = cell_name_array.each_slice(UserDataArray::MAX_ENTRIES).to_a
 
 
-    annotation_array.each_slice(DataArray::MAX_ENTRIES).each_with_index do |val, i|
+    annotation_array.each_slice(UserDataArray::MAX_ENTRIES).each_with_index do |val, i|
       if !threshold.nil?
         #Create annotation array
         UserDataArray.create(name: name, array_type: 'annotations', values: val, cluster_name: cluster.name, array_index: i+1, subsample_threshold: threshold, subsample_annotation: sub_an, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id)

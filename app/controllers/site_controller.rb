@@ -773,11 +773,13 @@ class SiteController < ApplicationController
       annotation_hash = @study.study_metadata_values(annotation[:name], annotation[:type])
     end
     values = {}
+    values[:all] = {x: [], y: [], cells: [], annotations: [], text: [], marker_size: []}
     if annotation[:scope] == 'cluster' || annotation[:scope] == 'user'
       annotation_array.each_with_index do |annot, index|
         annotation_value = annot
         cell_name = cells[index]
         expression_value = @gene.scores[cell_name].to_f.round(4)
+
         values[:all][:text] << "<b>#{cell_name}</b><br>#{annotation[:name]}: #{annotation_value}<br>#{@y_axis_title}: #{expression_value}"
         values[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
         values[:all][:x] << annotation_value
@@ -808,7 +810,7 @@ class SiteController < ApplicationController
     # construct annotation key to load subsample data_arrays if needed, will be identical to params[:annotation]
     subsample_annotation = "#{annotation[:name]}--#{annotation[:type]}--#{annotation[:scope]}"
     values = {}
-    values[:all] = {x: [], y: [], cells: [], anotations: [], text: [], marker_size: []}
+    values[:all] = {x: [], y: [], cells: [], annotations: [], text: [], marker_size: []}
     cells = @cluster.concatenate_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     annotation_array = []
     annotation_hash = {}

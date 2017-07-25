@@ -27,4 +27,5 @@ class UserDataArray
 
   # maximum number of entries for values array (to avoid MongoDB max document size problems)
   MAX_ENTRIES = 100000
+
 end
