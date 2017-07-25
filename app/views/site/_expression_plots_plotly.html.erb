@@ -76,38 +76,11 @@ var dataRef = [];
         if($(target).data('spinner') !== undefined){
           $(target).off('plotly_afterplot');
           $(target).data('spinner').stop();
-          console.log('stopped');
         }
       });
-      //launch spinner
-      var spinner = new Spinner(opts).spin(target);
-      $(target).data('spinner', spinner);
-      console.log('started');
 
-      var new_type = clusterData[0].type === 'scattergl' ? 'scatter' : 'scattergl';
-      clusterData[0].type = new_type;
       Plotly.newPlot('scatter-plot', clusterData, scatterLayout);
 
-      $('#scatter-plot')[0].on('plotly_selected', function(eventData) {
-          var names = [];
-          var annotations = [];
-
-          var colors = [];
-          console.log(eventData);
-          eventData.points.forEach(function (pt) {
-              names.push(clusterData[pt.curveNumber].cells[pt.pointNumber]);
-              annotations.push(clusterData[pt.curveNumber].annotations[pt.pointNumber]);
-          });
-
-          console.log('Selected');
-          console.log(names);
-          console.log(annotations);
-      });
-
-
-
-
-      console.log('Changed scatter to: ' + new_type);
       // re-render reference plot if showing numeric annotations
       /*
       for(var i = 0; i < dataRef.length; i ++){

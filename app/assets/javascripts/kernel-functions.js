@@ -295,7 +295,7 @@ function createTracesAndLayout(arr, title){
         var pointData = fullData[1];
 
         //Set the color of the trace to a color brewer constant
-        // If there are more than 20 traces the colors start from the beginning again
+        // If there are more than 27 traces the colors start from the beginning again
         var color = colorBrewerSet[group % 27];
 
         //Calculate the median value and sort the data in ascending order

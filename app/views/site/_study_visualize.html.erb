@@ -63,6 +63,7 @@
     }
 
     $(document).ready(function() {
+      //if tab position was specified in url, show the current tab
       if (window.location.href.split('#')[1] !== '') {
           var tab = window.location.href.split('#')[1];
           $('#study-tabs a[href="#' + tab + '"]').tab('show');
@@ -77,9 +78,7 @@
       renderScatter();
     });
 
-
-
-        // listener for cluster nav, specific to study page
+    // listener for cluster nav, specific to study page
     $("#annotation").change(function() {
         $('#cluster-plot').data('rendered', false);
         var an = $(this).val();

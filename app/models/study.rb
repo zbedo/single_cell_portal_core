@@ -89,8 +89,8 @@ class Study
     end
   end
 
+  #User annotations are per study
   has_many :user_annotations, dependent: :delete
-
   has_many :user_data_arrays, dependent: :delete
 
   # field definitions

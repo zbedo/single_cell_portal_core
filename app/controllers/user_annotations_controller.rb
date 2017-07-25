@@ -1,10 +1,12 @@
 class UserAnnotationsController < ApplicationController
   before_action :set_user_annotation, only: [:show, :edit, :update, :destroy]
+  #Check that use is logged in in order to do anything
   before_filter :authenticate_user!
   before_action :check_permission, except: :index
   # GET /user_annotations
   # GET /user_annotations.json
   def index
+    #get all this user's annotations
     @user_annotations = current_user.user_annotations.owned_by(current_user)
   end
 
@@ -22,23 +24,28 @@ class UserAnnotationsController < ApplicationController
   # PATCH/PUT /user_annotations/1
   # PATCH/PUT /user_annotations/1.json
   def update
+    #update the annotation's defined labels
     new_labels = user_annotation_params.to_h['values']
+    #If the labels sued to include undefined, make sure they do again
     if @user_annotation.values.include? 'Undefined'
       new_labels.push('Undefined')
     end
-    logger.info("new labels: #{new_labels}")
+
+    #Remeber the old values
     old_labels = @user_annotation.values
 
+    #Remeber the old annotations
     annotation_arrays = @user_annotation.user_data_arrays.where(array_type: 'annotations').to_a
-    logger.info("#changed: #{annotation_arrays.length}")
+
     respond_to do |format|
+      #if a successful update, uodat data arrays
       if @user_annotation.update(user_annotation_params)
-
+        #this is per annotation array-- each annotation array is a different subsampling level
         annotation_arrays.each do |annot|
-          #Get the index of old labels, this is per annotation
-
+          #remember the index of old labels, this is per annotation
           old_values = annot.values
 
+          #remeber all the old indices and their labels
           index_of_values = []
           old_labels.each_with_index do |old, i|
             index_array = []
@@ -50,25 +57,31 @@ class UserAnnotationsController < ApplicationController
             index_of_values.push(index_array)
           end
 
+          #index of values remembers what the order of the old annotations was
+
           index_of_values.each_with_index do |old_index, i|
             logger.info("in loop, old index:  #{old_index}")
             old_index.each do |index|
               old_values[index] = new_labels[i]
             end
           end
-          logger.info("new old values is: #{old_values}")
+
+          #update the annotations with new values
           annot.update(values: old_values, name: user_annotation_params.to_h['name'])
 
         end
 
-        @user_annotation.user_data_arrays.to_a.each do |a|
-          if !a.subsample_annotation.nil?
-            a.update(subsample_annotation: user_annotation_params.to_h['name'] + '--group--user')
+        #Update the names of the user data arrays
+        @user_annotation.user_data_arrays.to_a.each do |annot|
+          if !annot.subsample_annotation.nil?
+            annot.update(subsample_annotation: user_annotation_params.to_h['name'] + '--group--user')
           end
         end
+        #If successful, redirect back and say success
         format.html { redirect_to user_annotations_path, notice: "User Annotation '#{@user_annotation.name}' was successfully updated." }
         format.json { render :index, status: :ok, location: user_annotations_path }
       else
+        #If an error, show it
         format.html { render :edit }
         format.json { render json: @user_annotation.errors, status: :unprocessable_entity }
       end
@@ -78,9 +91,11 @@ class UserAnnotationsController < ApplicationController
   # DELETE /user_annotations/1
   # DELETE /user_annotations/1.json
   def destroy
+    #delete data arrays when deleting an annotation
     @user_annotation.user_data_arrays.destroy
     @user_annotation.destroy
     respond_to do |format|
+      #redirect back to page when destroy finishes
       format.html { redirect_to user_annotations_path, notice: "User Annotation '#{@user_annotation.name}' was successfully destroyed." }
       format.json { head :no_content }
     end

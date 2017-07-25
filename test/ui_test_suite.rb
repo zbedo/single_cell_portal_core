@@ -2862,53 +2862,62 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'front-end: check user annotation creation' do
 		puts "Test method: #{self.method_name}"
 
-		# test private study
+		# log in
 		login_path = @base_url + '/users/sign_in'
 		@driver.get login_path
 		wait_until_page_loads(login_path)
 		login($test_email)
+
+		# go to the 2d scatter plot study
 		two_d_study_path = @base_url + "/study/twod-study-#{$random_seed}"
 		@driver.get two_d_study_path
 		wait_until_page_loads(two_d_study_path)
 		open_study_ui_tab('study-visualize')
 
 		#Enable Selection
-		select_button = @driver.find_element(:id, 'toggle-scatter')
-		select_button.click
+		enable_select_button = @driver.find_element(:id, 'toggle-scatter')
+		enable_select_button.click
 
+		# click box select button
 		select_button = @driver.find_element(:xpath, "//a[@data-val='select']")
 		select_button.click
 
+		# get the points in the plotly trace
 		points = @driver.find_elements(:class, 'point')
 		el1 = points[0]
 
+		# click on the first point
 		@driver.action.click_and_hold(el1).perform
 
+		# wait for web driver
 		sleep 0.5
 
+		#drage the cursor to another point and release it
 		el2 = points[-1]
-
 		@driver.action.move_to(el2).release.perform
 
+		#wait for plotly and webdriver
 		sleep 1.0
 
+		#send the keys for the name of the annotation
 		annotation_name = @driver.find_element(:class, 'annotation-name')
 		name = "user-#{$random_seed}"
 		annotation_name.send_keys(name)
-
+		# send keys to the labels of the annotation
 		annotation_labels = @driver.find_elements(:class, 'annotation-label')
-
 		annotation_labels.each_with_index do |annot, i|
 			annot.send_keys("group#{i}")
 		end
 
 		sleep 0.5
 
+		#create the annotation
 		submit_button = @driver.find_element(:id, 'selection-submit')
 		submit_button.click
 
 		sleep 0.5
 
+		#reload the page and go to explore tab
 		@driver.get two_d_study_path
 		wait_until_page_loads(two_d_study_path)
 		open_study_ui_tab('study-visualize')
@@ -2918,6 +2927,8 @@ class UiTestSuite < Test::Unit::TestCase
 		annotation_dropdown = @driver.find_element(:id, 'annotation')
 		annotation_dropdown.send_keys("user-#{$random_seed}")
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+
+		#make sure the new annotation still renders a plot for plotly
 		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
 		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
 
@@ -2929,6 +2940,8 @@ class UiTestSuite < Test::Unit::TestCase
 		search_box.send_key(gene)
 		search_genes = @driver.find_element(:id, 'perform-gene-search')
 		search_genes.click
+
+		#make sure the new annotation still renders plots for plotly
 		assert element_present?(:id, 'box-controls'), 'could not find expression violin plot'
 		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
 
@@ -2979,11 +2992,11 @@ class UiTestSuite < Test::Unit::TestCase
 		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
 		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
-
 		puts "Test method: #{self.method_name} successful!"
 
 	end
 
+	# make sure editing the annotation works
 	test 'front-end: user annotation editing' do
 		puts "Test method: #{self.method_name}"
 
@@ -3000,9 +3013,11 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.find_element(:class, "user-#{$random_seed}-edit").click
 		wait_until_page_loads('edit user annotation path')
 
+		#add 'new' to the name of annotation
 		name = @driver.find_element(:id, 'user_annotation_name')
 		name.send_key("new")
 
+		#add 'new' to the labels
 		annotation_labels = @driver.find_elements(:id, 'user-annotation_values')
 
 		annotation_labels.each_with_index do |annot, i|
@@ -3010,11 +3025,13 @@ class UiTestSuite < Test::Unit::TestCase
 			annot.send_keys("group#{i}new")
 		end
 
+		#update the annotation
 		submit = @driver.find_element(:id, 'submit-button')
 		submit.click
 
 		wait_until_page_loads('user annotation path')
 
+		#check names and labels
 		new_names = @driver.find_elements(:class, 'annotation-name').map{|x| x.text }
 		new_labels = @driver.find_elements(:class, "user-#{$random_seed}new").map{|x| x.text }
 
@@ -3039,15 +3056,17 @@ class UiTestSuite < Test::Unit::TestCase
 		plot_labels = @driver.find_elements(:class, "user-select-none").map{|x| x.attribute('data-unformatted') }
 		assert (plot_labels.include? "user-#{$random_seed}new: group0new (3 points)"), "labels are incorrect: '#{plot_labels}' should include 'user-#{$random_seed}new: group0new'"
 
+		#revert the annotation to old name and labels
 		@driver.get annot_path
 		@driver.find_element(:class, "user-#{$random_seed}new-edit").click
 		wait_until_page_loads('edit user annotation path')
 
+		#revert name
 		name = @driver.find_element(:id, 'user_annotation_name')
 		name.clear
 		name.send_key("user-#{$random_seed}")
 
-
+		#revert labels
 		annotation_labels = @driver.find_elements(:id, 'user-annotation_values')
 
 		annotation_labels.each_with_index do |annot, i|
@@ -3055,11 +3074,13 @@ class UiTestSuite < Test::Unit::TestCase
 			annot.send_keys("group#{i}")
 		end
 
+		#update annotation
 		submit = @driver.find_element(:id, 'submit-button')
 		submit.click
 
 		wait_until_page_loads('user annotation path')
 
+		#check new names and labels
 		new_names = @driver.find_elements(:class, 'annotation-name').map{|x| x.text }
 		new_labels = @driver.find_elements(:class, "user-#{$random_seed}").map{|x| x.text }
 
@@ -3071,6 +3092,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
+
 		#View the annotation
 		@driver.find_element(:class, "user-#{$random_seed}-show").click
 		wait_until_page_loads('view user annotation path')
@@ -3083,11 +3105,9 @@ class UiTestSuite < Test::Unit::TestCase
 		#assert labels are correct
 		plot_labels = @driver.find_elements(:class, "user-select-none").map{|x| x.attribute('data-unformatted') }
 		assert (plot_labels.include? "user-#{$random_seed}: group0 (3 points)"), "labels are incorrect: '#{plot_labels}' should include 'user-#{$random_seed}: group0'"
-
-
 	end
 
-
+	#check user annotation deletion
 	test 'front-end: user annotation deletion' do
 		puts "Test method: #{self.method_name}"
 
@@ -3105,7 +3125,6 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.switch_to.alert.accept
 		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
-		sleep 1.0
 	end
 
 

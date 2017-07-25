@@ -508,53 +508,70 @@ class SiteController < ApplicationController
     render json: @fastq_files.to_json
   end
 
+  #Method to create user annotations from box or lasso selection
   def create_user_annotations
+    #Data name is an array of the values of labels
     @data_names = []
 
+    #Error handling block to create annotation
     begin
+      #Get the label values and push to data names
       user_annotation_params[:user_data_arrays_attributes].keys.each do |key|
         user_annotation_params[:user_data_arrays_attributes][key][:values] =  user_annotation_params[:user_data_arrays_attributes][key][:values].split(',')
         @data_names.push(user_annotation_params[:user_data_arrays_attributes][key][:name].strip )
       end
 
+      #Create the annotation
       @user_annotation = UserAnnotation.new(user_id: user_annotation_params[:user_id], study_id: user_annotation_params[:study_id], cluster_group_id: user_annotation_params[:cluster_group_id], values: @data_names, name: user_annotation_params[:name])
 
+      #Error handling, save the annotation and handle exceptions
       if @user_annotation.save
+        #Method call to create the user data arrays for this annotation
         @user_annotation.initialize_user_data_arrays(user_annotation_params[:user_data_arrays_attributes], user_annotation_params[:subsample_annotation],user_annotation_params[:subsample_threshold], user_annotation_params[:loaded_annotation])
+
+        #Reset the annotations in the dropdowns to include this new annotation
         @cluster_annotations = load_cluster_group_annotations
         @options = load_cluster_group_options
+
+        #No need for an alert, only a message saying succesfully created
         @alert = nil
         @notice = 'User Annotation successfully saved. You may now view this annotation via the annotations dropdown.'
-        render 'update_user_clusters'
+
+        #Update the dropdown partial
+        render 'update_user_annotations'
       else
-        logger.info('Error Saving User Annotation')
+        #If there was an error saving, reload and alert the use something broke
         @cluster_annotations = load_cluster_group_annotations
         @options = load_cluster_group_options
         @notice = nil
         @alert = 'The following errors prevented the annotation from being saved: ' + @user_annotation.errors.full_messages.join(',')
-        render 'update_user_clusters'
+        render 'update_user_annotations'
       end
+    #More error handling, this is if can't save user annotation
     rescue Mongoid::Errors::InvalidValue => e
+      #If an invalid value was somehow passed through the form, and couldn't save the annotation
       @cluster_annotations = load_cluster_group_annotations
       @options = load_cluster_group_options
       @notice = nil
       @alert = 'The following errors prevented the annotation from being saved: ' + 'Invalid data type submitted. (' + e.problem + '. ' + e.resolution + ')'
-      render 'update_user_clusters'
+      render 'update_user_annotations'
 
     rescue NoMethodError => e
+      #If something is nil and can't have a method called on it, respond with an alert
       @cluster_annotations = load_cluster_group_annotations
       @options = load_cluster_group_options
       @notice = nil
       @alert = 'The following errors prevented the annotation from being saved: ' + e.message
-      render 'update_user_clusters'
+      render 'update_user_annotations'
 
 
     rescue => e
+      #If a generic unexpected error occured and couldn't save the annotation
       @cluster_annotations = load_cluster_group_annotations
       @options = load_cluster_group_options
       @notice = nil
       @alert = 'An unexpected error prevented the annotation from being saved: ' + e.message
-      render 'update_user_clusters'
+      render 'update_user_annotations'
     end
   end
 
@@ -647,6 +664,7 @@ class SiteController < ApplicationController
     cells = @cluster.concatenate_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     annotation_array = []
     annotation_hash = {}
+    #Construct the arrays based on scope
     if annotation[:scope] == 'cluster'
       annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
     elsif annotation[:scope] == 'user'
@@ -663,7 +681,6 @@ class SiteController < ApplicationController
     end
     coordinates = {}
     if annotation[:type] == 'numeric'
-
       text_array = []
       color_array = []
       # load text & color value from correct object depending on annotation scope
@@ -676,7 +693,6 @@ class SiteController < ApplicationController
           text_array <<  "#{cell}: (#{val})"
           color_array << val
         end
-
       end
       # if we didn't assign anything to the color array, we know the annotation_array is good to use
       color_array.empty? ? color_array = annotation_array : nil
@@ -939,7 +955,6 @@ class SiteController < ApplicationController
 		values = initialize_plotly_objects_by_annotation(annotation)
     # construct annotation key to load subsample data_arrays if needed, will be identical to params[:annotation]
     subsample_annotation = "#{annotation[:name]}--#{annotation[:type]}--#{annotation[:scope]}"
-    logger.info('LOOK!')
     # grab all cells present in the cluster, and use as keys to load expression scores
     # if a cell is not present for the gene, score gets set as 0.0
     # will check if there are more than SUBSAMPLE_THRESHOLD cells present in the cluster, and subsample accordingly
@@ -1156,6 +1171,7 @@ class SiteController < ApplicationController
         'Cluster-based' => @cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]},
         'Study Wide' => @study.study_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
     }
+    #load a user's user annotations if user is signed in and has any
     if user_signed_in?
       user_annotations = UserAnnotation.where(user_id: current_user.id, study_id: @study.id, cluster_group_id: @cluster.id).to_a
       unless user_annotations.empty?

@@ -45,12 +45,11 @@
         }
         return -1;   // Not found
     }
-
+    //array of arrays of cell names, aka selections
     var selections = [];
 
     //toggle scattergl / scatter for selection
     $("#toggle-scatter").click(function() {
-      //var target = $('#cluster-plot')[0];
       selections = [];
 
       $(target).on('plotly_afterplot', function() {
@@ -58,44 +57,48 @@
           $(target).off('plotly_afterplot');
           $(target).data('spinner').stop();
 
+          //scatter instead of scattergl means selection is enabled
           if(newType === 'scatter'){
+            //show the selection well and submit button
             selectionWell.css('visibility', 'visible');
             selectionButton.css('visibility', 'visible');
 
             //Set the initial unselected array
             var unselected_cell_name = [];
 
+            //plot data is used for unselected array
             var plot_data = $('#cluster-plot')[0].data;
 
+            //set initial unselected
             for(var m = 0; m < plot_data.length; m++){
              unselected_cell_name.push(plot_data[m].cells);
             }
 
+            //flatten array
             unselected_cell_name = [].concat.apply([], unselected_cell_name);
 
             var unselected = unselected_cell_name;
-
             selections.push(unselected);
+            //create selection creates the first row in the table
             createSelection();
-            console.log('show');
           }
           else{
+              //if new type is scatter gl blow everything up and empty it
             selectionTable.empty();
             selectionButton.css('visibility', 'hidden');
             selectionWell.css('visibility', 'hidden');
-
-            console.log('hide');
           }
-
-          console.log('stopped');
         }
       });
 
-
+      //create selection creates the first row, unselected. only called at creation of selection well
       function createSelection(){
+        //make sure table is empty
         selectionTable.empty();
+        //add a well and table to div
         selectionTable.prepend('<table id=\"well-table\" class=\"table table-striped \"><tbody></tbody></table>');
 
+        //add the first row, unselected
         for(var m = 0; m < selections.length; m++){
           var name = 'Selection ' + m.toString();
           if(m === 0){name = 'Unselected'}
@@ -105,65 +108,79 @@
         }
       }
 
+      //add rows to the table and update all the other rows
       function updateSelection(){
+        //get all the ids of rows to update
         var array = [];
         $('div', '#well-table > tbody').each(function(){
             array.push($(this).attr('id'));
         });
 
+        //get all the names of rows to update
         var name_array = [];
         $('#well-table tbody tr').each(function(){
             name_array.push(this.id);
         });
 
+        //get the numbers of rows to update
         for(var g = 0; g < name_array.length; g++){
             var x = parseInt(name_array[g].replace(/\D/g,''));
             array[g] = name_array[g].replace(/\D/g,'') !== "" ? x : 0;
         }
 
+        //reverse name and nums array to become ascending instead of descending
         var reverseArray = name_array.reverse();
         var reverseNums = array.reverse();
+        //iterate through the rows to update them
         for(var n = 0; n < selections.length-1; n++){
-          var m = n;
-          if(m === 0){name = 'Unselected'}
-          else{var name = 'Selection ' + reverseNums[m].toString();}
-
-          var updateDiv = '#Selection' + reverseNums[m];
-          if(m === 0){updateDiv = '#Unselected'}
+          //for unselected row, when n == 0
+          if(n === 0){name = 'Unselected'}
+          else{var name = 'Selection ' + reverseNums[n].toString();}
+          //select the div of the row to update
+          var updateDiv = '#Selection' + reverseNums[n];
+          if(n === 0){updateDiv = '#Unselected'}
+          //select the update div
           var update = $(updateDiv);
           var replace = name + ': ' +  selections[n].length.toString() + ' Cells';
 
+          //update the text of the s
           update.html(replace);
 
-          updateDiv = '#user_annotation_user_data_arrays_attributes_' +  reverseNums[m].toString() + '_values';
+          //update the text of the select row
+          updateDiv = '#user_annotation_user_data_arrays_attributes_' +  reverseNums[n].toString() + '_values';
           update = $(updateDiv);
-          replace = selections[m];
-
+          replace = selections[n];
           update.val(replace);
         }
-
+        //get the maximum number of rows, aka the next row number
         var max = getMaxOfArray(array) + 1;
 
+        //get the current selection number, maybe less than max, but ultimately max needs to be used for div naming, so we never add a row with a selection number
+        //smaller than the largest selection number
         var selectionIndex = selections.length-1;
-
-        var addInt = selectionIndex > max ? selectionIndex : max;
-        var id = "Selection" + addInt.toString();
-        name = 'Selection ' + addInt.toString();
+        //row index is the larger of max or selectionIndex
+        var rowIndex = selectionIndex > max ? selectionIndex : max;
+        //get id of row to replace
+        var id = "Selection" + rowIndex.toString();
+        //get name of row to replace
+        name = 'Selection ' + rowIndex.toString();
+        //create delete button script to update unselected on row delete press
         var deleteUpdateUnselected = 'var m = 0; \n var name = \'Selection \' + m.toString();\n if(m === 0){name = \'Unselected\'}\n var updateDiv = \'#Selection\' +  m.toString();\n if(m === 0){updateDiv = \'#Unselected\'}\nvar update = $(updateDiv);\nvar replace = name + \': \' +  selections[m].length.toString() + \' Cells\';\n update.html(replace);\nupdateDiv = \'#user_annotation_user_data_arrays_attributes_\' +  m.toString() + \'_values\';\nupdate = $(updateDiv);\nreplace = selections[m];\nupdate.val(replace);';
-        var deleteButton = '<td class=\"col-sm-1\"><div class=\"btn btn-sm btn-danger delete-btn\" id=\"' + id +  'Button\"><span class=\"fa fa-times\"></span></div></td><script>$(\'#' + id + 'Button\').click(function(){var currentSelection = $(\'#user_annotation_user_data_arrays_attributes_' + addInt +'_values\').val().split(\',\');\n if(currentSelection[0] !== ""){selections[0] = selections[0].concat(currentSelection)} \n console.log(\'Index: \' + rowIndex(selections, currentSelection).toString());\n selections.splice(rowIndex(selections, currentSelection), 1);\n'+ deleteUpdateUnselected + '\n$(\'#' + id + 'Row\').remove();});<\/script>';
+        //create delete button and listener, attach listener to update unselected
+        var deleteButton = '<td class=\"col-sm-1\"><div class=\"btn btn-sm btn-danger delete-btn\" id=\"' + id +  'Button\"><span class=\"fa fa-times\"></span></div></td><script>$(\'#' + id + 'Button\').click(function(){var currentSelection = $(\'#user_annotation_user_data_arrays_attributes_' + rowIndex +'_values\').val().split(\',\');\n if(currentSelection[0] !== ""){selections[0] = selections[0].concat(currentSelection)} \n console.log(\'Index: \' + rowIndex(selections, currentSelection).toString());\n selections.splice(rowIndex(selections, currentSelection), 1);\n'+ deleteUpdateUnselected + '\n$(\'#' + id + 'Row\').remove();});<\/script>';
+        //rowString is the string to add, that contains all the row information
+        var rowString = '<tr id=\"' + id +  'Row\"><td class=\"col-sm-5\" id=\"' + id + '\">' + name + ': ' +  selections[selectionIndex].length.toString() + ' Cells</td><td class=\"col-sm-6\"><input type=\"text\" name=\"user_annotation[user_data_arrays_attributes][' + rowIndex + '][name]" id=\"user_annotation_user_data_arrays_attributes_' + rowIndex + '_name\" class="form-control annotation-label need-text\" placeholder=\"Set Annotation Value\"><input name=\"user_annotation[user_data_arrays_attributes][' + rowIndex + '][values]" id=\"user_annotation_user_data_arrays_attributes_' + rowIndex + '_values\" type="hidden" value=\"' + selections[selectionIndex]+'\" /></td>'+ deleteButton +'</tr>';
 
-        var addS = '<tr id=\"' + id +  'Row\"><td class=\"col-sm-5\" id=\"' + id + '\">' + name + ': ' +  selections[selectionIndex].length.toString() + ' Cells</td><td class=\"col-sm-6\"><input type=\"text\" name=\"user_annotation[user_data_arrays_attributes][' + addInt + '][name]" id=\"user_annotation_user_data_arrays_attributes_' + addInt + '_name\" class="form-control annotation-label need-text\" placeholder=\"Set Annotation Value\"><input name=\"user_annotation[user_data_arrays_attributes][' + addInt + '][values]" id=\"user_annotation_user_data_arrays_attributes_' + addInt + '_values\" type="hidden" value=\"' + selections[selectionIndex]+'\" /></td>'+ deleteButton +'</tr>';
-
-        $('#well-table').prepend(addS);
+        $('#well-table').prepend(rowString);
+        //attach listener to make sure all annotation labels are unique
         validateUnique('#create_annotations', '.annotation-label');
       }
 
       //launch spinner
       var spinner = new Spinner(opts).spin(target);
       $(target).data('spinner', spinner);
-      console.log('started');
       var newType = data[0].type === 'scattergl' ? 'scatter' : 'scattergl';
-
+      //set new type
       data[0].type = newType;
       console.log('Changed scatter to: ' + newType);
       // re-render reference plot if showing numeric annotations
@@ -171,30 +188,27 @@
           data[i].type = newType;
       }
       Plotly.newPlot('cluster-plot', data, layout);
-
-      console.log('attaching');
-      console.log($('#cluster-plot')[0]);
+      //attach selection listener
       $('#cluster-plot')[0].on('plotly_selected', function(eventData) {
           var names = [];
           var annotations = [];
-
           var colors = [];
-
           var selection =[];
-          var selected_cell_name = [];
 
+          //get selected cells curve number and point number
+          //plotly only giver x and y values per point, so we have to use point id to get annotation and cell name
           eventData.points.forEach(function (pt) {
-            selected_cell_name.push(data[pt.curveNumber].cells[pt.pointNumber]);
+            selection.push(data[pt.curveNumber].cells[pt.pointNumber]);
           });
 
-          selection = selected_cell_name;
-
+          //update previous selections to make sure they don't include duplicate cell names
           for(var t = 0; t < selections.length; t++){
               selections[t] = _.difference(selections[t], selection);
           }
 
-          console.log('Selected');
+          //add this selection to all the others
           selections.push(selection);
+          //after selection, update rows
           updateSelection();
       });
 

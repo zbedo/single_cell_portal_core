@@ -15,15 +15,8 @@ $('#selection-submit').click(function(){
     } else if ( !cont ) {
         alert('You must provide a value for all labels before saving');
         setErrorOnBlank(needText);
-    } /*else if (userAnnotationNames.indexOf(values[0] !== -1)) {
-        alert('Name cannot be the same as one of your other annotations');
-        var nameDiv = $('.annotation-name');
-        console.log(userAnnotationNames);
-        console.log(values[0]);
-        setErrorOnBlank(nameDiv);
-    }*/else {
+    } else {
         launchModalSpinner('#save-modal-spinner', '#save-modal');
-        console.log('submitting');
         var form = $('#selection-well > form');
         form.submit();
     }

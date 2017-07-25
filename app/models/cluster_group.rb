@@ -11,6 +11,8 @@ class ClusterGroup
 
   belongs_to :study
   belongs_to :study_file
+
+  #user annotations are created for a cluster group. search for them
   has_many :user_annotations do
     def by_name_and_user(name, user_id)
       where(name: name, user_id: user_id).first
