@@ -557,6 +557,8 @@ class SiteController < ApplicationController
       @selected_annotation = {name: annot_name, type: annot_type, scope: annot_scope}
       if annot_type == 'group'
         @selected_annotation[:values] = @study.study_metadata_keys(annot_name, annot_type)
+      else
+        @selected_annotation[:values] = []
       end
     end
     @selected_annotation

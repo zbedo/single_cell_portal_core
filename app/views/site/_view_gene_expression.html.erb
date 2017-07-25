@@ -17,6 +17,10 @@
         "eye":{"x":1.25,"y":1.25,"z":1.25}
     };
 
+    $('#expression-plots').data('box-rendered', false);
+    $('#expression-plots').data('scatter-rendered', false);
+    $('#expression-plots').data('reference-rendered', false);
+
     function renderGeneExpressionPlots() {
 
         <% if !params[:gene].nil? %>
