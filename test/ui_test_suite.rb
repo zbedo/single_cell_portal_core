@@ -167,6 +167,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# method to close a bootstrap modal by id
 	def close_modal(id)
+		sleep (0.5)
 		@wait.until {@driver.find_element(:id, id).displayed?}
 		modal = @driver.find_element(:id, id)
 		dismiss = modal.find_element(:class, 'close')
@@ -1261,6 +1262,7 @@ class UiTestSuite < Test::Unit::TestCase
 		remove_share = @driver.find_element(:class, 'remove_nested_fields')
 		remove_share.click
 		@driver.switch_to.alert.accept
+		sleep (0.25)
 		save_study = @driver.find_element(:id, 'save-study')
 		save_study.click
 		wait_for_render(:id, 'message_modal')
@@ -1537,11 +1539,11 @@ class UiTestSuite < Test::Unit::TestCase
 
 		@driver.get(@base_url)
 		search_box = @driver.find_element(:id, 'search_terms')
-		search_box.send_keys('Test Study')
+		search_box.send_keys("#{$random_seed}")
 		submit = @driver.find_element(:id, 'submit-search')
 		submit.click
 		studies = @driver.find_elements(:class, 'study-panel').size
-		assert studies == 1, 'incorrect number of studies found. expected one but found ' + studies.to_s
+		assert studies >= 3, 'incorrect number of studies found. expected more than or equal to three but found ' + studies.to_s
 		puts "Test method: #{self.method_name} successful!"
 	end
 
