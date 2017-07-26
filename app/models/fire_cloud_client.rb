@@ -1,4 +1,4 @@
-class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_at)
+class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :storage, :expires_at)
 
 	# Class that wraps API calls to both FireCloud and Google Cloud Storage to manage the CRUDing of both FireCloud workspaces
 	# and files inside the associated GCP storage buckets
@@ -13,7 +13,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	GOOGLE_SCOPES = %w(https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email)
 	# constant used for retry loops in process_request
 	MAX_RETRY_COUNT = 3
-	# namespace used for all FireCloud project workspaces
+	# namespace used for all FireCloud project workspaces owned by the 'portal'
 	PORTAL_NAMESPACE = 'single-cell-portal'
 	# location of Google service account JSON (must be absolute path to file)
 	SERVICE_ACCOUNT_KEY = File.absolute_path(ENV['SERVICE_ACCOUNT_KEY'])
@@ -26,19 +26,38 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	# will set the access token, FireCloud api url root and GCP storage driver instance
 	#
 	# return: FireCloudClient object
-	def initialize
-		self.access_token = FireCloudClient.generate_access_token
+	def initialize(user=nil, project=nil)
+		# when initializing without a user, default to base configuration
+		if user.nil?
+			self.access_token = FireCloudClient.generate_access_token
+
+			# instantiate Google Cloud Storage driver to work with files in workspace buckets
+			self.storage = Google::Cloud::Storage.new(
+					project: PORTAL_NAMESPACE,
+					keyfile: SERVICE_ACCOUNT_KEY,
+					timeout: 3600
+			)
+			# set expiration date of token
+			self.expires_at = Time.now + self.access_token['expires_in']
+
+
+		else
+			self.user = user
+			self.project = project
+			# when initializing with a user, pull access token from user object and set desired project
+			self.access_token = user.valid_access_token
+			self.expires_at = self.access_token['expires_at']
+
+			# use user-defined project instead of portal default
+			self.storage = Google::Cloud::Storage.new(
+					project: project,
+					keyfile: SERVICE_ACCOUNT_KEY,
+					timeout: 3600
+			)
+		end
+
+		# set FireCloud API base url
 		self.api_root = BASE_URL
-
-		# instantiate Google Cloud Storage driver to work with files in workspace buckets
-		self.storage = Google::Cloud::Storage.new(
-				project: PORTAL_NAMESPACE,
-				keyfile: SERVICE_ACCOUNT_KEY,
-				timeout: 3600
-		)
-
-		# set expiration date of token
-		self.expires_at = Time.now + self.access_token['expires_in']
 	end
 
 	## TOKEN METHODS
@@ -58,10 +77,17 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	#
 	# return: timestamp of new access token expiration
 	def refresh_access_token
-		new_token = FireCloudClient.generate_access_token
-		new_expiry = Time.now + new_token['expires_in']
-		self.access_token = new_token
-		self.expires_at = new_expiry
+		if user.nil?
+			new_token = FireCloudClient.generate_access_token
+			new_expiry = Time.now + new_token['expires_in']
+			self.access_token = new_token
+			self.expires_at = new_expiry
+		else
+			new_token = self.user.generate_access_token
+			self.access_token = new_token
+			self.expires_at = new_token['expires_at']
+		end
+		self.expires_at
 	end
 
 	# check if an access_token is expired
@@ -81,11 +107,12 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	end
 
   # renew the storage driver
+  # default project is value of PORTAL_NAMESPACE
   #
   # return: new instance of storage driver
-  def refresh_storage_driver
+  def refresh_storage_driver(project_name=PORTAL_NAMESPACE)
 		new_storage = Google::Cloud::Storage.new(
-				project: PORTAL_NAMESPACE,
+				project: project_name,
 				keyfile: SERVICE_ACCOUNT_KEY,
 				timeout: 3600
 		)
