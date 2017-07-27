@@ -760,7 +760,7 @@ class SiteController < ApplicationController
     else
       annotation_hash = @study.study_metadata_values(annotation[:name], annotation[:type])
     end
-    cells.each_with_index do |cell|
+    cells.each_with_index do |cell, index|
       annotation_value = annotation[:scope] == 'cluster' ? annotation_array[index] : annotation_hash[cell]
       case consensus
         when 'mean'
