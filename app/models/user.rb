@@ -110,7 +110,7 @@ class User
 
   # check timestamp on user access token expiry
   def access_token_expired?
-    Time.at(self.access_token[:expires_at]) < Time.now # expired token, so we should quickly return
+    self.access_token.nil? ? true : Time.at(self.access_token[:expires_at]) < Time.now
   end
 
   # return an valid access token (will renew if expired)
