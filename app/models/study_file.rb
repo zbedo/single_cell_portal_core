@@ -181,6 +181,7 @@ class StudyFile
       file.destroy
       Rails.logger.info "#{Time.now} #{file.name} successfully deleted."
     end
+    true
   end
 
   private

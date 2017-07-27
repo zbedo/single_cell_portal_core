@@ -602,7 +602,12 @@ class Study
       if !self.cluster_ordinations_files.empty? && !self.metadata_file.nil? && !self.initialized?
         self.update(initialized: true)
       end
-      SingleCellMailer.notify_user_parse_complete(user.email, "Expression file: '#{expression_file.name}' has completed parsing", @message).deliver_now
+
+      begin
+        SingleCellMailer.notify_user_parse_complete(user.email, "Expression file: '#{expression_file.name}' has completed parsing", @message).deliver_now
+      rescue => e
+        Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
+      end
 
       # update study cell count
       self.set_cell_count(expression_file.file_type)
@@ -898,7 +903,11 @@ class Study
         end
       end
 
-      SingleCellMailer.notify_user_parse_complete(user.email, "Cluster file: '#{ordinations_file.upload_file_name}' has completed parsing", @message).deliver_now
+      begin
+        SingleCellMailer.notify_user_parse_complete(user.email, "Cluster file: '#{ordinations_file.upload_file_name}' has completed parsing", @message).deliver_now
+      rescue => e
+        Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
+      end
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       if opts[:local]
@@ -1103,7 +1112,11 @@ class Study
       end
 
       # send email on completion
-      SingleCellMailer.notify_user_parse_complete(user.email, "Metadata file: '#{metadata_file.upload_file_name}' has completed parsing", @message).deliver_now
+      begin
+        SingleCellMailer.notify_user_parse_complete(user.email, "Metadata file: '#{metadata_file.upload_file_name}' has completed parsing", @message).deliver_now
+      rescue => e
+        Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
+      end
 
       # set the cell count
       self.set_cell_count(metadata_file.file_type)
@@ -1245,8 +1258,13 @@ class Study
       @message << "Total gene list entries created: #{@count}"
       @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
       Rails.logger.info @message.join("\n")
+
       # send email
-      SingleCellMailer.notify_user_parse_complete(user.email, "Gene list file: '#{marker_file.name}' has completed parsing", @message).deliver_now
+      begin
+        SingleCellMailer.notify_user_parse_complete(user.email, "Gene list file: '#{marker_file.name}' has completed parsing", @message).deliver_now
+      rescue => e
+        Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
+      end
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       if opts[:local]

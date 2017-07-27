@@ -167,12 +167,25 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# method to close a bootstrap modal by id
 	def close_modal(id)
-		@wait.until {@driver.find_element(:id, id).displayed?}
-		modal = @driver.find_element(:id, id)
-		dismiss = modal.find_element(:class, 'close')
-		dismiss.click
-		@wait.until {@driver.find_element(:id, id).displayed? == false}
-		sleep(1)
+		# need to wait until modal is in the page and visible
+		@wait.until {element_present?(:id, id)}
+		@wait.until {element_visible?(:id, id)}
+		# uses the jQuery method rather than clicking the close button as this is more robust and race-condition proof
+		@driver.execute_script("$('##{id}').modal('hide')")
+		# let modal animation complete
+		sleep 1
+		# wait for modal-open class to be removed from body
+		body_class = @driver.find_element(:tag_name, 'body')['class']
+		i = 0
+		while body_class == 'modal-open'
+			if i >= 10
+				raise Selenium::WebDriver::Error::TimeOutError, "Timing out on closing modal: #{id}"
+			end
+			puts "waiting for #{id} to close; try #{i}"
+			body_class = @driver.find_element(:tag_name, 'body')['class']
+			sleep 1
+			i += 1
+		end
 	end
 
 	# wait until element is rendered and visible
@@ -418,7 +431,6 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
 		# close success modal
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		# upload metadata
@@ -428,7 +440,6 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		# upload cluster
@@ -451,7 +462,6 @@ class UiTestSuite < Test::Unit::TestCase
 		# perform upload
 		upload_btn = cluster_form_1.find_element(:id, 'start-file-upload')
 		upload_btn.click
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		# upload a second cluster
@@ -468,7 +478,6 @@ class UiTestSuite < Test::Unit::TestCase
 		scroll_to(:bottom)
 		upload_btn_2 = cluster_form_2.find_element(:id, 'start-file-upload')
 		upload_btn_2.click
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 		next_btn = @driver.find_element(:id, 'next-btn')
 		next_btn.click
@@ -481,7 +490,6 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
 		wait_for_render(:class, 'fastq-file')
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 		next_btn = @driver.find_element(:id, 'next-btn')
 		next_btn.click
@@ -496,7 +504,6 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = marker_form.find_element(:id, 'start-file-upload')
 		upload_btn.click
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 		next_btn = @driver.find_element(:id, 'next-btn')
 		next_btn.click
@@ -510,7 +517,6 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn.click
 		wait_for_render(:class, 'documentation-file')
 		# close success modal
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		# change attributes on file to validate update function
@@ -610,7 +616,6 @@ class UiTestSuite < Test::Unit::TestCase
 		cancel = @driver.find_element(:class, 'cancel')
 		cancel.click
 		sleep(3)
-		wait_for_render(:id, 'study-file-notices')
 		close_modal('study-file-notices')
 
 		# delete file from test study
@@ -620,7 +625,6 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.switch_to.alert.accept
 
 		# wait a few seconds to allow delete call to propogate all the way to FireCloud after confirmation modal
-		wait_for_render(:id, 'study-file-notices')
 		close_modal('study-file-notices')
 		sleep(3)
 
@@ -666,7 +670,6 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
 		# close modal
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		# verify parse completed
@@ -706,7 +709,6 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
 		# close modal
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		# upload bad metadata assignments
@@ -717,7 +719,6 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
 		# close modal
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		# upload bad cluster coordinates
@@ -727,7 +728,6 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
 		# close modal
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		# upload bad marker gene list
@@ -743,7 +743,6 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
 		# close modal
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 		# wait for a few seconds to allow parses to fail fully
 		sleep(3)
@@ -755,7 +754,6 @@ class UiTestSuite < Test::Unit::TestCase
 		assert study_file_count.text == '0', "found incorrect number of study files; expected 0 and found #{study_file_count.text}"
 		@driver.find_element(:class, "error-messaging-test-study-#{$random_seed}-delete").click
 		@driver.switch_to.alert.accept
-		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
 		puts "Test method: #{self.method_name} successful!"
 	end
@@ -788,7 +786,6 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
 		# close success modal
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		# upload metadata
@@ -798,7 +795,6 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		# upload cluster
@@ -810,7 +806,6 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		# upload marker gene list
@@ -825,7 +820,6 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = marker_form.find_element(:id, 'start-file-upload')
 		upload_btn.click
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 		next_btn = @driver.find_element(:id, 'next-btn')
 		next_btn.click
@@ -840,7 +834,6 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
 		# close modal
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		puts "Test method: #{self.method_name} successful!"
@@ -928,7 +921,6 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_doc.send_keys(@test_data_path + 'README.txt')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		# verify upload has completed and is in FireCloud bucket
@@ -996,7 +988,6 @@ class UiTestSuite < Test::Unit::TestCase
 			end
 			sync_button = form.find_element(:class, 'save-study-file')
 			sync_button.click
-			wait_for_render(:id, 'sync-notice-modal')
 			close_modal('sync-notice-modal')
 		end
 
@@ -1008,7 +999,6 @@ class UiTestSuite < Test::Unit::TestCase
 			num_files += files_found
 			sync_button = form.find_element(:class, 'save-directory-listing')
 			sync_button.click
-			wait_for_render(:id, 'sync-notice-modal')
 			close_modal('sync-notice-modal')
 		end
 
@@ -1122,14 +1112,12 @@ class UiTestSuite < Test::Unit::TestCase
 		delete_file_btn = file_to_delete.find_element(:class, 'delete-study-file')
 		delete_file_btn.click
 		@driver.switch_to.alert.accept
-		wait_for_render(:id, 'sync-notice-modal')
 		close_modal('sync-notice-modal')
 
 		# delete directory listing
 		delete_dir_btn = synced_directory_listing.find_element(:class, 'delete-directory-listing')
 		delete_dir_btn.click
 		@driver.switch_to.alert.accept
-		wait_for_render(:id, 'sync-notice-modal')
 		close_modal('sync-notice-modal')
 
 		# confirm files were removed
@@ -1147,7 +1135,6 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.switch_to.alert.accept
 		save_study = @driver.find_element(:id, 'save-study')
 		save_study.click
-		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
 		sync_button = @driver.find_element(:class, "sync-test-#{uuid}-sync")
 		sync_button.click
@@ -1184,7 +1171,6 @@ class UiTestSuite < Test::Unit::TestCase
 		delete_local_link = @driver.find_element(:class, "sync-test-#{uuid}-delete-local")
 		delete_local_link.click
 		@driver.switch_to.alert.accept
-		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
 
 		puts "Test method: #{self.method_name} successful!"
@@ -1358,10 +1344,10 @@ class UiTestSuite < Test::Unit::TestCase
 
 	test 'admin: restart locked jobs' do
 		puts "Test method: #{self.method_name}"
-		path = @base_url + '/admin'
+		path = @base_url + '/users/sign_in'
 		@driver.get path
-		close_modal('message_modal')
 		login($test_email)
+		@driver.get @base_url + '/admin'
 
 		actions_dropdown = @driver.find_element(:id, 'admin_action')
 		actions_dropdown.send_keys 'Unlock Orphaned Jobs'
@@ -1379,10 +1365,10 @@ class UiTestSuite < Test::Unit::TestCase
 	# reset user download quotas to 0 bytes
 	test 'admin: reset download quotas to 0' do
 		puts "Test method: #{self.method_name}"
-		path = @base_url + '/admin'
+		path = @base_url + '/users/sign_in'
 		@driver.get path
-		close_modal('message_modal')
 		login($test_email)
+		@driver.get @base_url + '/admin'
 
 		actions_dropdown = @driver.find_element(:id, 'admin_action')
 		actions_dropdown.send_keys 'Reset User Download Quotas'
@@ -1523,6 +1509,8 @@ class UiTestSuite < Test::Unit::TestCase
 		open_ui_tab('users')
 		share_roles = @driver.find_element(:id, share_email_id + '-roles')
 		assert share_roles.text == '', "did not remove reporter access from #{$share_email}"
+
+		puts "Test method: #{self.method_name} successful!"
 	end
 
 	##
@@ -2902,19 +2890,16 @@ class UiTestSuite < Test::Unit::TestCase
 		# delete test
 		@driver.find_element(:class, "test-study-#{$random_seed}-delete").click
 		@driver.switch_to.alert.accept
-		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
 
 		# delete private
 		@driver.find_element(:class, "private-study-#{$random_seed}-delete").click
 		@driver.switch_to.alert.accept
-		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
 
 		# delete gzip parse
 		@driver.find_element(:class, "gzip-parse-#{$random_seed}-delete").click
 		@driver.switch_to.alert.accept
-		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
 
 		puts "Test method: #{self.method_name} successful!"
