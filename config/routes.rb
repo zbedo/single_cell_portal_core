@@ -42,6 +42,8 @@ Rails.application.routes.draw do
 
     # user annotation actions
 		resources :user_annotations, only: [:index, :show, :edit, :update, :destroy]
+    get 'download_user_annotation/:id', to: 'user_annotations#download_user_annotation', as: :download_user_annotation
+
 		# public/private file download links (redirect to signed_urls from Google)
 		get 'data/public/:study_name/:filename', to: 'site#download_file', as: :download_file, constraints: {filename: /.*/}
 		get 'data/private/:study_name/:filename', to: 'studies#download_private_file', as: :download_private_file, constraints: {filename: /.*/}

@@ -32,7 +32,10 @@
       <div class="form-group row">
         <div class="col-sm-6">
           <%= f.label 'Label Name: ' %>
-          <input value="<%= value %>" class="form-control need-text label-name" type="text" name="user_annotation[values][]" id="user-annotation_values">
+          <input value="<%= value %>" class="form-control need-text label-name" <%= value == 'Undefined' ? 'disabled=\"disabled\"' : 'enabled'%> type="text" name="user_annotation[values][]" id="user-annotation_values">
+          <% if value == 'Undefined' %>
+              <input value="<%= value %>" class="form-control need-text label-name" type="hidden" name="user_annotation[values][]" id="user-annotation_values">
+          <% end %>
         </div>
         <div class="col-sm-2">
           <%= f.label 'Number of Cells:' %>

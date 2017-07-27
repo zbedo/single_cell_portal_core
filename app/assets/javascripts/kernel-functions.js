@@ -15,9 +15,9 @@ function kernelDensityEstimator(kernel, X) {
 }
 
 /* Advanced Rule of thumb bandwidth selector from :
-*  https://en.wikipedia.org/wiki/Kernel_density_estimation#Bandwidth_selection
-*  and https://stat.ethz.ch/R-manual/R-devel/library/stats/html/bandwidth.html
-*/
+ *  https://en.wikipedia.org/wiki/Kernel_density_estimation#Bandwidth_selection
+ *  and https://stat.ethz.ch/R-manual/R-devel/library/stats/html/bandwidth.html
+ */
 
 function nrd0(X){
     var iqr = ss.quantile(X, 0.75) - ss.quantile(X, 0.25);
@@ -37,9 +37,9 @@ function nrd0(X){
 }
 
 /* Kernels are functions that transform a data point, used in Kernel Density Estimator
-*  Kernel Formulas from https://github.com/jasondavies/science.js
-*  Kernel formulas from https://gist.github.com/mbostock/4341954
-*/
+ *  Kernel Formulas from https://github.com/jasondavies/science.js
+ *  Kernel formulas from https://gist.github.com/mbostock/4341954
+ */
 
 function kernelEpanechnikov(k) {
     return function(v) {
@@ -143,10 +143,10 @@ function getMinOfArray(numArray) {
 }
 
 /* This function checks if a number is an outlier based on the simple definition of an outlier found at:
-*  http://www.itl.nist.gov/div898/handbook/prc/section1/prc16.htm
-*  lower inner fence: Q1 - 1.5*IQ
-*  upper inner fence: Q3 + 1.5*IQ
-*/
+ *  http://www.itl.nist.gov/div898/handbook/prc/section1/prc16.htm
+ *  lower inner fence: Q1 - 1.5*IQ
+ *  upper inner fence: Q3 + 1.5*IQ
+ */
 function isOutlier(x, l, u){
     var con = (u-l) * 1.5;
     return x >= u ? ((x - con) > u) : ((x + con) < l);
@@ -223,392 +223,417 @@ function createTracesAndLayout(arr, title){
     //Iterate through every violin plot
     //fullData is the array of information about one violin plot in format [name, array of data points, kernel type, bandwidth]
     arr.forEach(function(fullData) {
+
         //Set the name of the group of traces (Violin Plot), is the cluster name
 
         var group_name = fullData[0];
         name_array.push(group_name);
+        if (fullData[1].length > 1 ) {
+            //Set the bandwidth
+            var bandwidth_type = fullData[3];
+            switch (bandwidth_type) {
+                case "nrd0":
+                    var bandwidth = nrd0(fullData[1]);
+                    var modifiers = true;
+                    break;
+                case "sjste":
+                    var bandwidth = hsj(fullData[1]);
+                    break;
+                default:
+                    //Gaussian is the best kernel
+                    var bandwidth = nrd0(fullData[1]);
+            }
 
-        //Set the bandwidth
-        var bandwidth_type = fullData[3];
-        switch (bandwidth_type) {
-            case "nrd0":
-                var bandwidth = nrd0(fullData[1]);
-                var modifiers = true;
-                break;
-            case "sjste":
-                var bandwidth = hsj(fullData[1]);
-                break;
-            default:
-                //Gaussian is the best kernel
-                var bandwidth = nrd0(fullData[1]);
+            //Set the Kernel based on passed parameters. Only kernels currently in use are epa and gau, which is default
+            //Potential Kernel Options: "sil", "sig", "log","uni", "gau", "tri","triw", "qua", "tric","cos", "epa"
+
+            var kernel_name = fullData[2];
+            switch (kernel_name) {
+                case "sil":
+                    var current_kernel = kernelSilverman(bandwidth);
+                    break;
+                case "sig":
+                    var current_kernel = kernelSigmoid(bandwidth);
+                    break;
+                case "log":
+                    var current_kernel = kernelLogistic(bandwidth);
+                    break;
+                case "uni":
+                    bandwidth = bandwidth * Math.sqrt(3.0);
+                    var current_kernel = kernelUniform(bandwidth);
+                    break;
+                case "gau":
+                    var current_kernel = kernelGaussian(bandwidth);
+                    break;
+                case "tri":
+                    bandwidth = bandwidth * Math.sqrt(6.0);
+                    var current_kernel = kernelTriangular(bandwidth);
+                    break;
+                case "triw":
+                    var current_kernel = kernelTriweight(bandwidth);
+                    break;
+                case "qua":
+                    bandwidth = bandwidth * Math.sqrt(7.0);
+                    var current_kernel = kernelQuartic(bandwidth);
+                    break;
+                case "tric":
+                    var current_kernel = kernelTricube(bandwidth);
+                    break;
+                case "cos":
+                    bandwidth = bandwidth/(Math.sqrt((1.0/3.0) - (2/(Math.PI * Math.PI))));
+                    var current_kernel = kernelCosine(bandwidth);
+                    break;
+                case "epa":
+                    bandwidth = bandwidth * Math.sqrt(5.0);
+                    var current_kernel = kernelEpanechnikov(bandwidth);
+                    break;
+                default:
+                    //Gaussian is the best kernel
+                    var current_kernel = kernelGaussian(bandwidth);
+            }
+
+            //We only need the array of points now
+            var pointData = fullData[1];
+
+            //Set the color of the trace to a color brewer constant
+            // If there are more than 20 traces the colors start from the beginning again
+            var color = colorBrewerSet[group % 27];
+
+            //Calculate the median value and sort the data in ascending order
+            var median_v = ss.median(pointData);
+            pointData.sort( function(a,b) {return a - b;} );
+
+            //Calculate the upper and lower Quartiles
+            var lower_q = ss.quantile(pointData, 0.25);
+            var upper_q = ss.quantile(pointData, 0.75);
+
+            var axis = 'x';
+            /*Separate outliers from the data
+             * This is not desired behavior but I'm leaving it in in case it is wanted in future
+             * No outlier data is actually useful, as it is used for jitter points
+             */
+            var out_array = cutOutliers(pointData.slice(), lower_q, upper_q);
+
+            //Set new arrays to the outliers and normal data-- normal data is supposed to include outliers
+            //so it goes back to original full point data
+            var noOutData = out_array[1];
+            var outliers = out_array[0];
+
+            //Get the array of density values
+            var min = getMinOfArray(pointData);
+            var max = getMaxOfArray(pointData);
+
+            //Resolution is the number of equally spaced y values that will have their density, x, calculated
+            //Resolution = larger of 512 or length of data
+            var res_points = genRes(pointData.length, min, max);
+
+            //Create the Kernel Estimating Function
+            var kde = kernelDensityEstimator(current_kernel, res_points);
+            var kde_array = kde(pointData);
+
+            //Format the Array for use in traces, and mirror it to mirror half of violin plot across Y axis
+            var x_vals = [];
+            var y_vals = [];
+            var mir_x_vals = [];
+
+            kde_array.forEach(function(element) {
+                //right x values
+                x_val = element[1];
+                //Left side of traces = -1 * right side x values
+                mir_x_val = - element[1];
+                //kde conveniently gives us the y values again, although its the same as res points its best to double check
+                //by returning the same values
+                y_val = element[0];
+
+                //push to arrays
+                x_vals.push(x_val);
+                y_vals.push(y_val);
+                mir_x_vals.push(mir_x_val);
+            });
+
+            //Get the max value of x for ranging the horizontal size of plot. Some kernels give negative numbers for unknown reason.
+            //Therefore, getting the largest abs value number and setting it to max
+            var x_vals_max = getMaxOfArray(x_vals);
+            var x_vals_min = getMinOfArray(x_vals);
+            x_vals_max = Math.abs(x_vals_max) > Math.abs(x_vals_min) ? x_vals_max : x_vals_min;
+
+            //scaling all violin plots. Scale factor means max width = scale_max
+            var scale_factor = scale_max / x_vals_max ;
+
+            //Reset maximum
+            x_vals_max = x_vals_max * scale_factor;
+
+            //If heavy zero data, scale factor may be 1/0 or infinity, so reduce it to irrelevant
+            if(scale_factor === Infinity){
+                scale_factor = scale_max;
+            }
+
+            //Reduce x's and mirrored x's to max width scaled
+            x_vals = x_vals.map(function(x) {return x * scale_factor});
+            mir_x_vals = mir_x_vals.map(function(x) {return x * scale_factor});
+            //offset x values.
+            //The offset value each time is equal to the maximum width of the plot + a constant 1.
+            //The offset tells you where the left side (mirror trace) should extend to maximally
+            x_vals = x_vals.map(function(x) {return x + x_offset + x_vals_max});
+
+            //offset mirrored x vals
+            mir_x_vals = mir_x_vals.map(function(x) {return x + x_offset + x_vals_max});
+
+            //Trace1 is the right hand (positive value) Violin Plot
+            var trace1 = {
+                x: x_vals,
+                y: y_vals,
+                //color brewer color
+                fillcolor: color,
+                //Slave the plot to Trace2 and hide it from the legend
+                legendgroup: 'Group: ' + group.toString(),
+                showlegend: false,
+                //Edge of Violin Line
+                line: {
+                    color: 'rgb(0,0,0)',
+                    shape: 'spline',
+                    width: 1
+                },
+                mode: 'lines',
+                //Set plot name
+                name: group_name,
+                hoverinfo: 'none',
+                xaxis: axis
+                //opacity: 0.05
+            };
+
+            //Trace2 is the mirrored version of Trace1 across the Y axis
+            var trace2 = {
+                x: mir_x_vals,
+                y: y_vals,
+                fill: 'tonextx',
+                fillcolor: color,
+                name: group_name,
+                //Identify the plot as master to all other plots in the legend
+                legendgroup: 'Group: ' + group.toString(),
+
+                //Edge of Violin Line
+                line: {
+                    color: 'rgb(0,0,0)',
+                    shape: 'spline',
+                    width: 1
+                },
+                mode: 'lines',
+                hoverinfo: 'none',
+                xaxis: axis
+            };
+
+            //This code is for generating random x values for the jitter scatter plot trace
+            var x_array_random = [];
+
+            //Generate unconstrained random x values
+            for (i=0; i < noOutData.length; i++) {
+                //The values are actually constrained to the domain of the trace
+                c = scale_max;
+                //Calling random sign means that the jitter points will appear on either side of the Y axis, randomly
+                d = randomSign();
+                //The reason for this math is to place the dot randomly within the bounds of the violin plot but offset it away from the
+                //center line as to not obscure the median or quartiles
+                x_array_random.push((d * c * Math.random() * 0.75 ) + (d * 0.1 * c) + x_offset + scale_max)
+            }
+
+            //Trace3 is the jitter scatter plot. X values are generated randomly, and Y values represent non outlier points
+            //Generate overlay text in format 'Cluster X Jitter: Value'
+            var jitter_text = [];
+            for(i = 0; i < noOutData.length; i++){
+                jitter_text.push(group_name + ' ' + noOutData[i].toFixed(3))
+            }
+
+            var trace3 = {
+                //Y values are data minus outliers
+                y: noOutData,
+                //X values have no significance, so are random
+                x: x_array_random,
+                type: 'scatter',
+                //Slave the plot to Trace2 and hide it from the legend
+                legendgroup: 'Group: ' + group.toString(),
+                showlegend: false,
+                marker: {
+                    color: 'rgb(0, 0, 0)',
+                    size: 3
+                },
+                mode: 'markers',
+                xaxis: axis,
+                hoverinfo: 'text',
+                text: jitter_text
+            };
+
+            //Create random X values for outlier points
+            var outliers_x = [];
+            for (var i=0; i< outliers.length; i++) {
+                //The values are actually constrained to the domain of the graph
+                c = scale_max;
+                //Calling random sign means that the outlier points will appear on either side of the Y axis
+                d = randomSign();
+                /*The reason for this math is to place the dot randomly within the bounds of the violin plot but offset it away from the
+                 * center line as to not obscure the median or quartiles
+                 * The range of X values for outliers is much smaller than non outliers
+                 */
+                outliers_x.push((d * c * Math.random() * 0.1 ) + x_offset + scale_max)
+            }
+
+            //Trace 7 is the outliers scatter plot, plots outliers as 'X's
+            //Generate overlay text in format 'Cluster X Outlier: Value'
+            var outlier_text = [];
+            for(i = 0; i < outliers.length; i++){
+                outlier_text.push(group_name + ' ' + outliers[i].toFixed(3))
+            }
+
+            var trace7 = {
+                y: outliers,
+                x: outliers_x,
+                type: 'scatter',
+                text: outlier_text,
+                //Slave the plot to Trace2 and hide it from the legend
+                legendgroup: 'Group: ' + group.toString(),
+                showlegend: false,
+                marker: {
+                    //color: color,
+                    color: 'rgb(0,0,0)',
+                    //re-enable to plot outliers as x's
+                    //symbol: 'x'
+                    size: 3
+                },
+                mode: 'markers',
+                xaxis: axis,
+                hoverinfo: 'text'
+            };
+
+            //Shape Traces
+            //Trace 4 is the center line of the violin plot
+            var trace4 = {
+                /*Center the line in the middle of the plot
+                 * because x offset tells you where the leftmost boundary of the trace should be, you must add the maximum value,
+                 * aka the width of the mirrored left trace to it to get the cent of the trace
+                 */
+                x: [x_offset + x_vals_max, x_offset + x_vals_max],
+                //Y values are set to the minimum and maximum of the y data, to draw a line between the top and bottom of the violin
+                y: [getMinOfArray(pointData), getMaxOfArray(pointData)],
+                //Slave the plot to Trace2 and hide it from the legend
+                legendgroup: 'Group: ' + group.toString(),
+                showlegend: false,
+                line: {
+                    color: 'rgb(200, 200, 200)',
+                    width: 1
+                },
+                mode: 'lines',
+                name: 'Center ' + group_name,
+                type: 'scatter',
+                xaxis: axis
+
+            };
+            //record middle of trace for labels
+            center_lines.push(x_offset + scale_max);
+
+            //Trace5 is the quartile line
+            var trace5 = {
+                x: [x_offset + x_vals_max, x_offset + x_vals_max],
+                xaxis: axis,
+                y: [lower_q, upper_q],
+                //Slave the plot to Trace2 and hide it from the legend
+                legendgroup: 'Group: ' + group.toString(),
+                showlegend: false,
+                hoverinfo: 'text',
+                line: {
+                    color: 'rgb(0,0,0)',
+                    width: 4
+                },
+                mode: 'lines',
+                text: ['lower-quartile: ' +lower_q.toFixed(3), 'upper-quartile: ' + upper_q.toFixed(3)],
+                type: 'scatter'
+            };
+
+            //Trace6 is the median white square
+            var trace6 = {
+                x: [x_offset + x_vals_max],
+                xaxis: axis,
+                y: [median_v],
+                hoverinfo: 'text',
+                showlegend: false,
+                //Slave the plot to Trace2 and hide it from the legend
+                legendgroup: 'Group: ' + group.toString(),
+                marker: {
+                    color: 'rgb(255,255,255)',
+                    symbol: 'square'
+                },
+                mode: 'markers',
+                text: ['median: ' + median_v.toFixed(3)],
+                type: 'scatter'
+            };
+
+            //Trace 8 is the capping line on top of violin plot
+            var trace8 = {
+                x: [mir_x_vals[x_vals.length-1], x_vals[x_vals.length-1]],
+                xaxis: axis,
+                y: [y_vals[x_vals.length-1], y_vals[x_vals.length-1] ],
+                showlegend: false,
+                //Slave the plot to Trace2 and hide it from the legend
+                legendgroup: 'Group: ' + group.toString(),
+                line: {
+                    color: 'rgb(0,0,0)',
+                    width: 1
+                },
+                mode: 'lines',
+                hoverinfo: 'none'
+            };
+
+            //Trace9 is the capping line on the bottom of the violin plot
+            var trace9 = {
+                x: [mir_x_vals[0], x_vals[0]],
+                xaxis: axis,
+                y: [y_vals[0], y_vals[0] ],
+                showlegend: false,
+                //Slave the plot to Trace2 and hide it from the legend
+                legendgroup: 'Group: ' + group.toString(),
+                line: {
+                    color: 'rgb(0,0,0)',
+                    width: 1
+                },
+                mode: 'lines',
+                hoverinfo: 'none'
+            };
+
+            /* Append the traces to the larger group of traces
+             * Alternate order is for overlaing
+             * Order is [right violin, left violin, jitter points, center line, quartile line, median white square, top capping line, bottom capping line, outliers]
+             */
+            dataA.push([trace1, trace2, trace3, trace4, trace5, trace6, trace8, trace9, trace7]);
+
+            //Increment group number and record maximum horizontal value for offset
+            group++;
+            x_vals_maxs.push(x_vals_max);
+            //The offset value each time is equal to the maximum width of the plot + a constant 1. The offset tells you where the left side (mirror trace) should extend to maximally
+
+            x_offset = x_offset + (2.2 * scale_max);
+        } else {
+            // we have a data array with a single point, therefore draw a line at that value
+            //Trace6 is the median white square
+            x_offset = x_offset + 0.5;
+            dataA.push({
+                x: [x_offset],
+                y: fullData[1],
+                hoverinfo: 'text',
+                marker: {
+                    symbol: 'square',
+                    color: colorBrewerSet[group % 27]
+                },
+                name: group_name,
+                mode: 'markers',
+                text: [group_name + ': ' + fullData[1][0]],
+                type: 'scatter'
+            });
+
+            // increment values so that subsequent traces still line up and have the right colors
+            group++;
+            x_vals_maxs.push(x_offset);
+            center_lines.push(x_offset);
+            x_offset = x_offset + 0.5;
         }
-
-        //Set the Kernel based on passed parameters. Only kernels currently in use are epa and gau, which is default
-        //Potential Kernel Options: "sil", "sig", "log","uni", "gau", "tri","triw", "qua", "tric","cos", "epa"
-
-        var kernel_name = fullData[2];
-        switch (kernel_name) {
-            case "sil":
-                var current_kernel = kernelSilverman(bandwidth);
-                break;
-            case "sig":
-                var current_kernel = kernelSigmoid(bandwidth);
-                break;
-            case "log":
-                var current_kernel = kernelLogistic(bandwidth);
-                break;
-            case "uni":
-                bandwidth = bandwidth * Math.sqrt(3.0);
-                var current_kernel = kernelUniform(bandwidth);
-                break;
-            case "gau":
-                var current_kernel = kernelGaussian(bandwidth);
-                break;
-            case "tri":
-                bandwidth = bandwidth * Math.sqrt(6.0);
-                var current_kernel = kernelTriangular(bandwidth);
-                break;
-            case "triw":
-                var current_kernel = kernelTriweight(bandwidth);
-                break;
-            case "qua":
-                bandwidth = bandwidth * Math.sqrt(7.0);
-                var current_kernel = kernelQuartic(bandwidth);
-                break;
-            case "tric":
-                var current_kernel = kernelTricube(bandwidth);
-                break;
-            case "cos":
-                bandwidth = bandwidth/(Math.sqrt((1.0/3.0) - (2/(Math.PI * Math.PI))));
-                var current_kernel = kernelCosine(bandwidth);
-                break;
-            case "epa":
-                bandwidth = bandwidth * Math.sqrt(5.0);
-                var current_kernel = kernelEpanechnikov(bandwidth);
-                break;
-            default:
-                //Gaussian is the best kernel
-                var current_kernel = kernelGaussian(bandwidth);
-        }
-
-        //We only need the array of points now
-        var pointData = fullData[1];
-
-        //Set the color of the trace to a color brewer constant
-        // If there are more than 27 traces the colors start from the beginning again
-        var color = colorBrewerSet[group % 27];
-
-        //Calculate the median value and sort the data in ascending order
-        var median_v = ss.median(pointData);
-        pointData.sort( function(a,b) {return a - b;} );
-
-        //Calculate the upper and lower Quartiles
-        var lower_q = ss.quantile(pointData, 0.25);
-        var upper_q = ss.quantile(pointData, 0.75);
-
-        var axis = 'x';
-        /*Separate outliers from the data
-        * This is not desired behavior but I'm leaving it in in case it is wanted in future
-        * No outlier data is actually useful, as it is used for jitter points
-        */
-        var out_array = cutOutliers(pointData.slice(), lower_q, upper_q);
-
-        //Set new arrays to the outliers and normal data-- normal data is supposed to include outliers
-        //so it goes back to original full point data
-        var noOutData = out_array[1];
-        var outliers = out_array[0];
-
-        //Get the array of density values
-        var min = getMinOfArray(pointData);
-        var max = getMaxOfArray(pointData);
-
-        //Resolution is the number of equally spaced y values that will have their density, x, calculated
-        //Resolution = larger of 512 or length of data
-        var res_points = genRes(pointData.length, min, max);
-
-        //Create the Kernel Estimating Function
-        var kde = kernelDensityEstimator(current_kernel, res_points);
-        var kde_array = kde(pointData);
-
-        //Format the Array for use in traces, and mirror it to mirror half of violin plot across Y axis
-        var x_vals = [];
-        var y_vals = [];
-        var mir_x_vals = [];
-
-        kde_array.forEach(function(element) {
-            //right x values
-            x_val = element[1];
-            //Left side of traces = -1 * right side x values
-            mir_x_val = - element[1];
-            //kde conveniently gives us the y values again, although its the same as res points its best to double check
-            //by returning the same values
-            y_val = element[0];
-
-            //push to arrays
-            x_vals.push(x_val);
-            y_vals.push(y_val);
-            mir_x_vals.push(mir_x_val);
-        });
-
-        //Get the max value of x for ranging the horizontal size of plot. Some kernels give negative numbers for unknown reason.
-        //Therefore, getting the largest abs value number and setting it to max
-        var x_vals_max = getMaxOfArray(x_vals);
-        var x_vals_min = getMinOfArray(x_vals);
-        x_vals_max = Math.abs(x_vals_max) > Math.abs(x_vals_min) ? x_vals_max : x_vals_min;
-
-        //scaling all violin plots. Scale factor means max width = scale_max
-        var scale_factor = scale_max / x_vals_max ;
-
-        //Reset maximum
-        x_vals_max = x_vals_max * scale_factor;
-
-        //If heavy zero data, scale factor may be 1/0 or infinity, so reduce it to irrelevant
-        if(scale_factor === Infinity){
-            scale_factor = scale_max;
-        }
-
-        //Reduce x's and mirrored x's to max width scaled
-        x_vals = x_vals.map(function(x) {return x * scale_factor});
-        mir_x_vals = mir_x_vals.map(function(x) {return x * scale_factor});
-        //offset x values.
-        //The offset value each time is equal to the maximum width of the plot + a constant 1.
-        //The offset tells you where the left side (mirror trace) should extend to maximally
-        x_vals = x_vals.map(function(x) {return x + x_offset + x_vals_max});
-
-        //offset mirrored x vals
-        mir_x_vals = mir_x_vals.map(function(x) {return x + x_offset + x_vals_max});
-
-        //Trace1 is the right hand (positive value) Violin Plot
-        var trace1 = {
-            x: x_vals,
-            y: y_vals,
-            //color brewer color
-            fillcolor: color,
-            //Slave the plot to Trace2 and hide it from the legend
-            legendgroup: 'Group: ' + group.toString(),
-            showlegend: false,
-            //Edge of Violin Line
-            line: {
-                color: 'rgb(0,0,0)',
-                shape: 'spline',
-                width: 1
-            },
-            mode: 'lines',
-            //Set plot name
-            name: group_name,
-            hoverinfo: 'none',
-            xaxis: axis
-            //opacity: 0.05
-        };
-
-        //Trace2 is the mirrored version of Trace1 across the Y axis
-        var trace2 = {
-            x: mir_x_vals,
-            y: y_vals,
-            fill: 'tonextx',
-            fillcolor: color,
-            name: group_name,
-            //Identify the plot as master to all other plots in the legend
-            legendgroup: 'Group: ' + group.toString(),
-
-            //Edge of Violin Line
-            line: {
-                color: 'rgb(0,0,0)',
-                shape: 'spline',
-                width: 1
-            },
-            mode: 'lines',
-            hoverinfo: 'none',
-            xaxis: axis
-        };
-
-        //This code is for generating random x values for the jitter scatter plot trace
-        var x_array_random = [];
-
-        //Generate unconstrained random x values
-        for (i=0; i < noOutData.length; i++) {
-            //The values are actually constrained to the domain of the trace
-            c = scale_max;
-            //Calling random sign means that the jitter points will appear on either side of the Y axis, randomly
-            d = randomSign();
-            //The reason for this math is to place the dot randomly within the bounds of the violin plot but offset it away from the
-            //center line as to not obscure the median or quartiles
-            x_array_random.push((d * c * Math.random() * 0.75 ) + (d * 0.1 * c) + x_offset + scale_max)
-        }
-
-        //Trace3 is the jitter scatter plot. X values are generated randomly, and Y values represent non outlier points
-        //Generate overlay text in format 'Cluster X Jitter: Value'
-        var jitter_text = [];
-        for(i = 0; i < noOutData.length; i++){
-            jitter_text.push(group_name + ' ' + noOutData[i].toFixed(3))
-        }
-
-        var trace3 = {
-            //Y values are data minus outliers
-            y: noOutData,
-            //X values have no significance, so are random
-            x: x_array_random,
-            type: 'scatter',
-            //Slave the plot to Trace2 and hide it from the legend
-            legendgroup: 'Group: ' + group.toString(),
-            showlegend: false,
-            marker: {
-                color: 'rgb(0, 0, 0)',
-                size: 3
-            },
-            mode: 'markers',
-            xaxis: axis,
-            hoverinfo: 'text',
-            text: jitter_text
-        };
-
-        //Create random X values for outlier points
-        var outliers_x = [];
-        for (var i=0; i< outliers.length; i++) {
-            //The values are actually constrained to the domain of the graph
-            c = scale_max;
-            //Calling random sign means that the outlier points will appear on either side of the Y axis
-            d = randomSign();
-            /*The reason for this math is to place the dot randomly within the bounds of the violin plot but offset it away from the
-            * center line as to not obscure the median or quartiles
-            * The range of X values for outliers is much smaller than non outliers
-            */
-            outliers_x.push((d * c * Math.random() * 0.1 ) + x_offset + scale_max)
-        }
-
-        //Trace 7 is the outliers scatter plot, plots outliers as 'X's
-        //Generate overlay text in format 'Cluster X Outlier: Value'
-        var outlier_text = [];
-        for(i = 0; i < outliers.length; i++){
-            outlier_text.push(group_name + ' ' + outliers[i].toFixed(3))
-        }
-
-        var trace7 = {
-            y: outliers,
-            x: outliers_x,
-            type: 'scatter',
-            text: outlier_text,
-            //Slave the plot to Trace2 and hide it from the legend
-            legendgroup: 'Group: ' + group.toString(),
-            showlegend: false,
-            marker: {
-                //color: color,
-                color: 'rgb(0,0,0)',
-                //re-enable to plot outliers as x's
-                //symbol: 'x'
-                size: 3
-            },
-            mode: 'markers',
-            xaxis: axis,
-            hoverinfo: 'text'
-        };
-
-        //Shape Traces
-        //Trace 4 is the center line of the violin plot
-        var trace4 = {
-            /*Center the line in the middle of the plot
-            * because x offset tells you where the leftmost boundary of the trace should be, you must add the maximum value,
-            * aka the width of the mirrored left trace to it to get the cent of the trace
-            */
-            x: [x_offset + x_vals_max, x_offset + x_vals_max],
-            //Y values are set to the minimum and maximum of the y data, to draw a line between the top and bottom of the violin
-            y: [getMinOfArray(pointData), getMaxOfArray(pointData)],
-            //Slave the plot to Trace2 and hide it from the legend
-            legendgroup: 'Group: ' + group.toString(),
-            showlegend: false,
-            line: {
-                color: 'rgb(200, 200, 200)',
-                width: 1
-            },
-            mode: 'lines',
-            name: 'Center ' + group_name,
-            type: 'scatter',
-            xaxis: axis
-
-        };
-        //record middle of trace for labels
-        center_lines.push(x_offset + scale_max);
-
-        //Trace5 is the quartile line
-        var trace5 = {
-            x: [x_offset + x_vals_max, x_offset + x_vals_max],
-            xaxis: axis,
-            y: [lower_q, upper_q],
-            //Slave the plot to Trace2 and hide it from the legend
-            legendgroup: 'Group: ' + group.toString(),
-            showlegend: false,
-            hoverinfo: 'text',
-            line: {
-                color: 'rgb(0,0,0)',
-                width: 4
-            },
-            mode: 'lines',
-            text: ['lower-quartile: ' +lower_q.toFixed(3), 'upper-quartile: ' + upper_q.toFixed(3)],
-            type: 'scatter'
-        };
-
-        //Trace6 is the median white square
-        var trace6 = {
-            x: [x_offset + x_vals_max],
-            xaxis: axis,
-            y: [median_v],
-            hoverinfo: 'text',
-            showlegend: false,
-            //Slave the plot to Trace2 and hide it from the legend
-            legendgroup: 'Group: ' + group.toString(),
-            marker: {
-                color: 'rgb(255,255,255)',
-                symbol: 'square'
-            },
-            mode: 'markers',
-            text: ['median: ' + median_v.toFixed(3)],
-            type: 'scatter'
-        };
-
-        //Trace 8 is the capping line on top of violin plot
-        var trace8 = {
-            x: [mir_x_vals[x_vals.length-1], x_vals[x_vals.length-1]],
-            xaxis: axis,
-            y: [y_vals[x_vals.length-1], y_vals[x_vals.length-1] ],
-            showlegend: false,
-            //Slave the plot to Trace2 and hide it from the legend
-            legendgroup: 'Group: ' + group.toString(),
-            line: {
-                color: 'rgb(0,0,0)',
-                width: 1
-            },
-            mode: 'lines',
-            hoverinfo: 'none'
-        };
-
-        //Trace9 is the capping line on the bottom of the violin plot
-        var trace9 = {
-            x: [mir_x_vals[0], x_vals[0]],
-            xaxis: axis,
-            y: [y_vals[0], y_vals[0] ],
-            showlegend: false,
-            //Slave the plot to Trace2 and hide it from the legend
-            legendgroup: 'Group: ' + group.toString(),
-            line: {
-                color: 'rgb(0,0,0)',
-                width: 1
-            },
-            mode: 'lines',
-            hoverinfo: 'none'
-        };
-
-        /* Append the traces to the larger group of traces
-        * Alternate order is for overlaing
-        * Order is [right violin, left violin, jitter points, center line, quartile line, median white square, top capping line, bottom capping line, outliers]
-        */
-        dataA.push([trace1, trace2, trace3, trace4, trace5, trace6, trace8, trace9, trace7]);
-
-        //Increment group number and record maximum horizontal value for offset
-        group++;
-        x_vals_maxs.push(x_vals_max);
-        //The offset value each time is equal to the maximum width of the plot + a constant 1. The offset tells you where the left side (mirror trace) should extend to maximally
-
-        x_offset = x_offset + (2.2 * scale_max);
     });
 
     var x_axis = {

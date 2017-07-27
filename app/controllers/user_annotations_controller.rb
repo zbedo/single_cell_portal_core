@@ -101,6 +101,35 @@ class UserAnnotationsController < ApplicationController
     end
   end
 
+  def download_user_annotation
+    cluster_name = @user_annotation.cluster_group.name
+    filename = (cluster_name + '_' + @user_annotation.name + '.txt').gsub(/ /, '_')
+    headers = ['NAME', 'X', 'Y', @user_annotation.name]
+    types = ['TYPE', 'numeric', 'numeric', 'group']
+    rows = []
+
+    annotation_array = @user_annotation.user_data_arrays.where(array_type: 'annotations').first.values
+    x_array = @user_annotation.user_data_arrays.where(array_type: 'coordinates', name: 'x').first.values
+    y_array = @user_annotation.user_data_arrays.where(array_type: 'coordinates', name: 'y').first.values
+    cell_name_array = @user_annotation.user_data_arrays.where(array_type: 'cells').first.values
+
+    annotation_array.each_with_index do |annot, index|
+      if annot != 'Undefined'
+        row = []
+        row << cell_name_array[index]
+        row << x_array[index]
+        row << y_array[index]
+        row << annot
+        rows << row.join("\t")
+      end
+
+    end
+    logger.info(rows)
+    @data = [headers.join("\t"), types.join("\t"), rows].join"\n"
+
+    send_data @data, type: 'text/plain', filename: filename, disposition: 'attachment'
+  end
+
   private
   # Use callbacks to share common setup or constraints between actions.
   def set_user_annotation
@@ -115,6 +144,9 @@ class UserAnnotationsController < ApplicationController
 
   # checks that current user id is the same as annotation being edited or destroyed
   def check_permission
+    if @user_annotation.nil?
+      @user_annotation = UserAnnotation.find(params[:id])
+    end
     if @user_annotation.user_id != current_user.id
       redirect_to user_annotations_path, alert: 'You don\'t have permission to perform that action'
     end
