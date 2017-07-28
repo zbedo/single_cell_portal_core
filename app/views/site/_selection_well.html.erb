@@ -1,13 +1,4 @@
 <% if user_signed_in? %>
-    <script type="text/javascript">
-      <% if params[:gene_set].nil? and params[:gene].nil?%>
-          var targetPlotString = 'cluster-plot';
-      <% else %>
-        var targetPlotString = 'scatter-plot';
-        var layout = scatterLayout;
-        var data = clusterData;
-      <% end %>
-    </script>
   <div class="row no-bottom-margin form-group" id="selection-well">
     <%= form_for(:user_annotation, url: create_user_annotations_path(study_name: params[:study_name]), html: {id: 'create_annotations', method: :post, data: {remote: true}}) do |f|  %>
         <div class="col-sm-12 form-group">
@@ -34,6 +25,14 @@
     <%= render 'selection_submit' %>
   </div>
   <script type="text/javascript">
+      <% if params[:gene_set].nil? and params[:gene].nil?%>
+        var targetPlotString = 'cluster-plot';
+      <% else %>
+        var targetPlotString = 'scatter-plot';
+        var layout = scatterLayout;
+        var data = clusterData;
+      <% end %>
+
       var target = $(('#' + targetPlotString))[0];
 
       //hide table on load

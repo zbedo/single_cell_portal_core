@@ -61,7 +61,7 @@ class CacheManagementTest < ActionDispatch::IntegrationTest
       assert_not Rails.cache.exist?(exp_query_cache_key), "Did not delete matching expression query cache entry at #{exp_query_cache_key}"
       CacheRemovalJob.new(study.url_safe_name).perform
       assert_not Rails.cache.exist?(annot_query_cache_key), "Did not delete matching annotation query cache entry at #{annot_query_cache_key}"
-      puts "#{annotation} test pass!"
+      puts "#{annotation} tests pass!"
     end
 
     puts "Test method: #{self.method_name} successful!"

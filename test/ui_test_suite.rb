@@ -3035,15 +3035,10 @@ class UiTestSuite < Test::Unit::TestCase
 		submit_button = @driver.find_element(:id, 'selection-submit')
 		submit_button.click
 
-		sleep 0.5
-
-		#reload the page and go to explore tab
-		@driver.get two_d_study_path
-		wait_until_page_loads(two_d_study_path)
-		open_ui_tab('study-visualize')
+		wait_for_render(:id, 'message_modal')
+		close_modal('message_modal')
 
 		# choose the user annotation
-		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 		annotation_dropdown = @driver.find_element(:id, 'annotation')
 		annotation_dropdown.send_keys("user-#{$random_seed}")
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
@@ -3052,7 +3047,8 @@ class UiTestSuite < Test::Unit::TestCase
 		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
 		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
 
-		sleep 0.5
+		@driver.find_element(:id, 'search-genes-link').click
+		wait_for_render(:id, 'panel-genes-search')
 
 		# load random gene to search
 		gene = @genes.sample
@@ -3064,8 +3060,6 @@ class UiTestSuite < Test::Unit::TestCase
 		#make sure the new annotation still renders plots for plotly
 		assert element_present?(:id, 'box-controls'), 'could not find expression violin plot'
 		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
-
-		sleep 0.50
 
 		# confirm queried gene is the one returned
 		queried_gene = @driver.find_element(:class, 'queried-gene')
@@ -3095,8 +3089,6 @@ class UiTestSuite < Test::Unit::TestCase
 		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
 		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
-		sleep 0.5
-
 		gene_sets = @driver.find_element(:id, 'gene_set')
 		opts = gene_sets.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
 		list = opts.sample
@@ -3113,13 +3105,12 @@ class UiTestSuite < Test::Unit::TestCase
 		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
 		#Create an annotation from the gene page
+		#The plotly plots render before the loading modal closes-- this means that everything gets unclickable, therefore this sleep is needed
+		sleep 1.0
 		scroll_to(:bottom)
-		sleep( 1.0 )
-		#Click selection tab
+		#Click selection tabs
 		select_dropdown = @driver.find_element(:id, 'create_annotations_panel')
 		select_dropdown.click
-		scroll_to(:top)
-		sleep( 0.2 )
 		#Enable Selection
 		wait_for_render(:id, 'toggle-scatter')
 		enable_select_button = @driver.find_element(:id, 'toggle-scatter')
@@ -3129,13 +3120,10 @@ class UiTestSuite < Test::Unit::TestCase
 		plot = @driver.find_element(:id, 'scatter-plot')
 
 		# click box select button
-		sleep(0.8)
 		scroll_to(:bottom)
-		sleep( 1.0 )
+		@wait.until {wait_for_plotly_render('#expression-plots', 'scatter-rendered')}
 		select_button = @driver.find_elements(:xpath, "//a[@data-val='select']")[-1]
-		sleep(3)
 		select_button.click
-
 
 		# get the points in the plotly trace
 
@@ -3171,9 +3159,9 @@ class UiTestSuite < Test::Unit::TestCase
 		submit_button = @driver.find_element(:id, 'selection-submit')
 		submit_button.click
 
-		sleep 0.5
+		wait_for_render(:id, 'message_modal')
+		close_modal('message_modal')
 
-		#reload the page and go to explore tab
 		@driver.get two_d_study_path
 		wait_until_page_loads(two_d_study_path)
 		open_ui_tab('study-visualize')
@@ -3188,12 +3176,11 @@ class UiTestSuite < Test::Unit::TestCase
 		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
 		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
 
-		sleep 0.5
-
 		# load random gene to search
 		gene = @genes.sample
 		search_box = @driver.find_element(:id, 'search_genes')
 		search_box.send_key(gene)
+		wait_for_render(:id, 'perform-gene-search')
 		search_genes = @driver.find_element(:id, 'perform-gene-search')
 		search_genes.click
 
@@ -3411,11 +3398,23 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.switch_to.alert.accept
 		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
+		#check new names
+		new_names = @driver.find_elements(:class, 'annotation-name').map{|x| x.text }
+
+		#assert new name saved correctly
+		assert !(new_names.include? "user-#{$random_seed}"), "Deletion failed, expected no 'user-#{$random_seed}' but found it"
 
 		@driver.find_element(:class, "user-#{$random_seed}-exp-delete").click
 		@driver.switch_to.alert.accept
 		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
+
+		#check new names
+		new_names = @driver.find_elements(:class, 'annotation-name').map{|x| x.text }
+		#assert new name saved correctly
+		assert !(new_names.include? "user-#{$random_seed}-exp"), "Deletion failed, expected no 'user-#{$random_seed}-exp' but found it"
+
+
 	end
 
 

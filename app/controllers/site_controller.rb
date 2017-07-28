@@ -1006,9 +1006,8 @@ class SiteController < ApplicationController
           end
         end
       end
-      # remove any empty values as annotations may have created keys that don't exist in cluster
-      logger.info("Look: #{annotation[:scope]}")
     end
+    # remove any empty values as annotations may have created keys that don't exist in cluster
     values.delete_if {|key, data| data[:y].empty?}
     values
   end
@@ -1082,7 +1081,6 @@ class SiteController < ApplicationController
     annotation[:values].each do |value|
       values["#{value}"] = {y: [], cells: [], annotations: [], name: "#{value}" }
     end
-    logger.info("Values: #{values}")
     values
   end
 

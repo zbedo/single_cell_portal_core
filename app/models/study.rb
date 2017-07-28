@@ -403,6 +403,8 @@ class Study
       ClusterGroup.where(study_id: study.id).delete_all
       StudyFile.where(study_id: study.id).delete_all
       DirectoryListing.where(study_id: study.id).delete_all
+      UserAnnotation.where(study_id: study.id).delete_all
+      UserDataArray.where(study_id: study.id).delete_all
       # now destroy study to ensure everything is removed
       study.destroy
       Rails.logger.info "#{Time.now}: delete of #{study.name} completed"

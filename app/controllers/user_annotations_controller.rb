@@ -1,5 +1,5 @@
 class UserAnnotationsController < ApplicationController
-  before_action :set_user_annotation, only: [:show, :edit, :update, :destroy]
+  before_action :set_user_annotation, only: [:edit, :update, :destroy]
   #Check that use is logged in in order to do anything
   before_filter :authenticate_user!
   before_action :check_permission, except: :index
@@ -9,12 +9,6 @@ class UserAnnotationsController < ApplicationController
     #get all this user's annotations
     @user_annotations = current_user.user_annotations.owned_by(current_user)
   end
-
-  # GET /user_annotations/1
-  # GET /user_annotations/1.json
-  def show
-  end
-
 
   # GET /user_annotations/1/edit
   def edit
@@ -35,7 +29,7 @@ class UserAnnotationsController < ApplicationController
     old_labels = @user_annotation.values
 
     #Remeber the old annotations
-    annotation_arrays = @user_annotation.user_data_arrays.where(array_type: 'annotations').to_a
+    annotation_arrays = @user_annotation.user_data_arrays.by_name_and_type(@user_annotation.name,'annotations')
 
     respond_to do |format|
       #if a successful update, uodat data arrays

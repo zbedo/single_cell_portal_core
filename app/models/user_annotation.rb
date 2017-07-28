@@ -129,34 +129,27 @@ class UserAnnotation
     annotation_array.each_slice(UserDataArray::MAX_ENTRIES).each_with_index do |val, i|
       #if threshold exists then the subsample annotation and threshold need to be set on the created data array
       if !threshold.nil?
+        Rails.logger.info "#{Time.now}: Creating user annotation user data arrays without threshold for name: #{name}"
         #Create annotation array
         UserDataArray.create(name: name, array_type: 'annotations', values: val, cluster_name: cluster.name, array_index: i+1, subsample_threshold: threshold, subsample_annotation: sub_an, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id)
-        logger.info('created annotation')
         #Create X
         UserDataArray.create(name: 'x', array_type: 'coordinates', values: x_arrays[i], cluster_name: cluster.name, array_index: i+1, subsample_threshold: threshold, subsample_annotation: sub_an, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id )
-        logger.info('created x')
         #Create Y
         UserDataArray.create(name: 'y', array_type: 'coordinates', values: y_arrays[i], cluster_name: cluster.name, array_index: i+1, subsample_threshold: threshold, subsample_annotation: sub_an, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id)
-        logger.info('created y')
         #Create Cell Array
         UserDataArray.create(name: 'text', array_type: 'cells', values: cell_name_arrays[i], cluster_name: cluster.name, array_index: i+1, subsample_threshold: threshold, subsample_annotation: sub_an, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id)
-        logger.info('created cells')
 
       #Otherwise, if no threshold or annotation, then no threshold or annotation need to be set
       else
         #Create annotation array
+        Rails.logger.info "#{Time.now}: Creating user annotation user data arrays with threshold: #{threshold} for name: #{name}"
         UserDataArray.create(name: name, array_type: 'annotations', values: val, cluster_name: cluster.name, array_index: i+1, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id)
-        logger.info('created annotations in else')
         #Create X
-        x = UserDataArray.new(name: 'x', array_type: 'coordinates', values: x_arrays[i], cluster_name: cluster.name, array_index: i+1, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id )
-        logger.info("created x in else: #{x}")
-        x.save!
+        UserDataArray.create(name: 'x', array_type: 'coordinates', values: x_arrays[i], cluster_name: cluster.name, array_index: i+1, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id )
         #Create Y
         UserDataArray.create(name: 'y', array_type: 'coordinates', values: y_arrays[i], cluster_name: cluster.name, array_index: i+1, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id)
-        logger.info('created y in else')
         #Create Cell Array
         UserDataArray.create(name: 'text', array_type: 'cells', values: cell_name_arrays[i], cluster_name: cluster.name, array_index: i+1, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id)
-        logger.info('created cells in else')
       end
     end
 
@@ -212,7 +205,7 @@ class UserAnnotation
     annotations = user_data_arrays.find_by(array_type: 'annotations').to_a
 
     #get the labels of this annotation
-    vals = values
+    vals = self.values
     #default created_at is nothing. created_at is the return string
     created_at = ''
 
@@ -236,13 +229,13 @@ class UserAnnotation
     if max_length > 10000
       #because max_length > 10k, it's possible that undefined exists
       #check if the annotation array has undefined
-      undefined_exists_at_10k = user_data_arrays.find_by(array_type: 'annotations', subsample_threshold: 10000).values.include? 'Undefined'
+      undefined_exists_at_10k = self.user_data_arrays.find_by(array_type: 'annotations', subsample_threshold: 10000).values.include? 'Undefined'
     end
 
     if max_length > 20000
       #because max_length > 20k, it's possible that undefined exists
       #check if the annotation array has undefined
-      undefined_exists_at_20k = user_data_arrays.find_by(array_type: 'annotations', subsample_threshold: 20000).values.include? 'Undefined'
+      undefined_exists_at_20k = self.user_data_arrays.find_by(array_type: 'annotations', subsample_threshold: 20000).values.include? 'Undefined'
     end
 
     #check if undefined exists at any level, including at full data
@@ -273,7 +266,6 @@ class UserAnnotation
         end
       elsif max_length < 10000 and max_length > 1000
         #max length is less than 10k. Max length > 1k. Undefined exists, so must be created at 1k.
-        logger.info("Here: #{undefined_exists}")
         created_at = 'Created at a subsample of 1,000 Cells'
     end
     else

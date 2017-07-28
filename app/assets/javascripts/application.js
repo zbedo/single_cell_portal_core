@@ -51,6 +51,7 @@
 //= require kernel-functions
 //= require simple-statistics.min
 //= require sheather_jones
+//= require jquery.stickyPanel
 
 var fileUploading = false;
 var PAGE_RENDERED = false;
@@ -240,7 +241,14 @@ function toggleSearch() {
 
     // trigger resizeEnd to re-render Plotly to use available space
     $(window).trigger('resize');
-
+    if($('#search-target').is(":visible")){
+        var stickyOptions = {
+            topPadding: 60
+        };
+        $('#search-parent').stickyPanel(stickyOptions)
+    } else{
+        $('#search-parent').stickyPanel('unstick')
+    }
 }
 
 // options for Spin.js

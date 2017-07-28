@@ -58,18 +58,16 @@
     }
 
     $(document).ready(function() {
-      //if tab position was specified in url, show the current tab
-      if (window.location.href.split('#')[1] !== '') {
-          var tab = window.location.href.split('#')[1];
-          $('#study-tabs a[href="#' + tab + '"]').tab('show');
-      }
       $('#cluster-plot').data('camera', baseCamera);
       // set default subsample option of 10K or all cells
       if (<%= @cluster.points > 10000 %>) {
           $('#subsample').val(10000);
           $('#search_subsample').val(10000);
       }
-
+      if (window.location.href.split('#')[1] !== '') {
+          var tab = window.location.href.split('#')[1];
+          $('#study-tabs a[href="#' + tab + '"]').tab('show');
+      }
       renderScatter();
     });
 
