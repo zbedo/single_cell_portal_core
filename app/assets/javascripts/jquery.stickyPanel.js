@@ -71,98 +71,104 @@
         },
         scroll: function (event) {
             var node = event.data.selected;
-            var o = node.data("stickyPanel.state").options//event.data.options;
+            //Modification to source code made by Yanay on 7/31/2017--
+            //Added try/catch rule to scroll method
+            try {
+                var o = node.data("stickyPanel.state").options//event.data.options;
 
-            var parentContainer = node.data("stickyPanel.state").parentContainer;
-            var parentHeight = parentContainer.height();
-            var nodeHeight = node.outerHeight(true);
-            var scrollTop = o.parentSelector ? parentContainer.scrollTop() : $(document).scrollTop();
-            var docHeight = o.parentSelector ? parentContainer.height() : $(document).height();
-            var HeightDiff = o.parentSelector ? parentHeight : (docHeight - parentHeight);
+                var parentContainer = node.data("stickyPanel.state").parentContainer;
+                var parentHeight = parentContainer.height();
+                var nodeHeight = node.outerHeight(true);
+                var scrollTop = o.parentSelector ? parentContainer.scrollTop() : $(document).scrollTop();
+                var docHeight = o.parentSelector ? parentContainer.height() : $(document).height();
+                var HeightDiff = o.parentSelector ? parentHeight : (docHeight - parentHeight);
 
-            var top = o.parentSelector ? node.position().top : node.offset().top;
-            var topdiff = top - o.topPadding;
-            var TopDiff = topdiff < 0 ? 0 : topdiff;
+                var top = o.parentSelector ? node.position().top : node.offset().top;
+                var topdiff = top - o.topPadding;
+                var TopDiff = topdiff < 0 ? 0 : topdiff;
 
-            // ** DEBUG **
-            //console.log("scrollTop: " + scrollTop);
-            //console.log("height: " + HeightDiff);
-            //console.log("TopDiff: " + TopDiff);
+                // ** DEBUG **
+                //console.log("scrollTop: " + scrollTop);
+                //console.log("height: " + HeightDiff);
+                //console.log("TopDiff: " + TopDiff);
 
-            var isDetached = node.data("stickyPanel.state").isDetached;
+                var isDetached = node.data("stickyPanel.state").isDetached;
 
-            // when top of parent reaches the top of the panel detach
-            if (scrollTop <= HeightDiff && // Fix for rubberband scrolling in Safari on Lion
-        	    scrollTop > TopDiff &&
-                !isDetached) {
+                // when top of parent reaches the top of the panel detach
+                if (scrollTop <= HeightDiff && // Fix for rubberband scrolling in Safari on Lion
+                    scrollTop > TopDiff &&
+                    !isDetached) {
 
-                node.data("stickyPanel.state").isDetached = true;
+                    node.data("stickyPanel.state").isDetached = true;
 
-                // topPadding
-                var newNodeTop = 0;
-                if (o.topPadding != "undefined") {
-                    newNodeTop = newNodeTop + o.topPadding;
+                    // topPadding
+                    var newNodeTop = 0;
+                    if (o.topPadding != "undefined") {
+                        newNodeTop = newNodeTop + o.topPadding;
+                    }
+
+                    // get top & left before adding spacer
+                    var nodeLeft = o.parentSelector ? node.position().left : node.offset().left;
+                    var nodeTop = o.parentSelector ? node.position().top : node.offset().top;
+
+
+                    // save panels top
+                    node.data("PanelsTop", nodeTop - newNodeTop);
+
+                    // MOVED: savePanelSpace before afterDetachCSSClass to handle afterDetachCSSClass changing size of node
+                    // savePanelSpace
+                    var PanelSpacer = null;
+                    if (o.savePanelSpace == true) {
+                        var nodeWidth = node.outerWidth(true);
+                        var nodeCssfloat = node.css("float");
+                        var nodeCssdisplay = node.css("display");
+                        var randomNum = Math.ceil(Math.random() * 9999); /* Pick random number between 1 and 9999 */
+                        node.data("stickyPanel.PanelSpaceID", "stickyPanelSpace" + randomNum);
+                        PanelSpacer = $("<div id='" + node.data("stickyPanel.PanelSpaceID") + "' style='width:" +nodeWidth + "px;height:" + nodeHeight + "px;float:" + nodeCssfloat + ";display:" + nodeCssdisplay + ";'>&#20;</div>");
+                        node.before(PanelSpacer);
+                    }
+
+                    // afterDetachCSSClass
+                    if (o.afterDetachCSSClass != "") {
+                        node.addClass(o.afterDetachCSSClass);
+                    }
+
+                    // save inline css
+                    node.data("Original_Inline_CSS", (!node.attr("style") ? "" : node.attr("style")));
+
+                    // detach panel
+                    node.css({
+                        "margin": 0,
+                        "left": nodeLeft,
+                        "top": newNodeTop,
+                        "position": o.parentSelector ? "absolute" : "fixed",
+                        "width": node.outerWidth(false)
+                    });
+
+                    // fire detach event
+                    if (o.onDetached)
+                        o.onDetached(node, PanelSpacer);
+
                 }
 
-                // get top & left before adding spacer
-                var nodeLeft = o.parentSelector ? node.position().left : node.offset().left;
-                var nodeTop = o.parentSelector ? node.position().top : node.offset().top;
 
-
-                // save panels top
-                node.data("PanelsTop", nodeTop - newNodeTop);
-
-                // MOVED: savePanelSpace before afterDetachCSSClass to handle afterDetachCSSClass changing size of node
-                // savePanelSpace
-                var PanelSpacer = null;
-                if (o.savePanelSpace == true) {
-                    var nodeWidth = node.outerWidth(true);
-                    var nodeCssfloat = node.css("float");
-                    var nodeCssdisplay = node.css("display");
-                    var randomNum = Math.ceil(Math.random() * 9999); /* Pick random number between 1 and 9999 */
-                    node.data("stickyPanel.PanelSpaceID", "stickyPanelSpace" + randomNum);
-                    PanelSpacer = $("<div id='" + node.data("stickyPanel.PanelSpaceID") + "' style='width:" +nodeWidth + "px;height:" + nodeHeight + "px;float:" + nodeCssfloat + ";display:" + nodeCssdisplay + ";'>&#20;</div>");
-                    node.before(PanelSpacer);
+                // Update top for div scrolling
+                if (o.parentSelector && isDetached) {
+                    node.css({
+                        "top": o.topPadding ? (scrollTop + o.topPadding) : scrollTop
+                    });
                 }
 
-                // afterDetachCSSClass
-                if (o.afterDetachCSSClass != "") {
-                    node.addClass(o.afterDetachCSSClass);
+                // ADDED: css top check to avoid continuous reattachment
+                if (scrollTop <= node.data("PanelsTop") &&
+                    node.css("top") != "auto" &&
+                    isDetached) {
+
+                    methods.unstick(node);
                 }
-
-                // save inline css
-                node.data("Original_Inline_CSS", (!node.attr("style") ? "" : node.attr("style")));
-
-                // detach panel
-                node.css({
-                    "margin": 0,
-                    "left": nodeLeft,
-                    "top": newNodeTop,
-                    "position": o.parentSelector ? "absolute" : "fixed",
-					"width": node.outerWidth(false)
-                });
-
-                // fire detach event
-                if (o.onDetached)
-                    o.onDetached(node, PanelSpacer);
-
+            } catch(err) {
             }
 
-
-            // Update top for div scrolling
-            if (o.parentSelector && isDetached) {
-                node.css({
-                    "top": o.topPadding ? (scrollTop + o.topPadding) : scrollTop
-                });
-            }
-
-            // ADDED: css top check to avoid continuous reattachment
-            if (scrollTop <= node.data("PanelsTop") &&
-                node.css("top") != "auto" &&
-                isDetached) {
-
-                methods.unstick(node);
-            }
         },
         unstick: function (nodeRef) {
             var node = nodeRef ? nodeRef : this; ;
