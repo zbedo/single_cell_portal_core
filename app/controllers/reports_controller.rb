@@ -11,6 +11,8 @@ class ReportsController < ApplicationController
     @all_studies = Study.where(queued_for_deletion: false).to_a
     @public_studies = @all_studies.select {|s| s.public}
     @private_studies = @all_studies.select {|s| !s.public}
+    now = Time.now
+    one_week_ago = now - 1.weeks
 
     # set up local collections and labels
     users = User.all.to_a
@@ -57,6 +59,19 @@ class ReportsController < ApplicationController
     end
     @user_study_avg = @user_study_dist[all_studies_label].reduce(:+) / @user_study_dist[all_studies_label].size.to_f
     @email_domain_avg = totals_by_domain.values.reduce(:+) / totals_by_domain.values.size
+
+    # compute time-based breakdown of returning user counts
+    @returning_users_by_week = {}
+    user_timepoints = ReportTimePoint.where(name: 'Weekly Returning Users').select {|tp| tp.date <= today}
+    user_timepoints.each do |timepoint|
+      @returning_users_by_week[timepoint.date.to_s] = timepoint.value[:count]
+    end
+    # now figure out returning users since last report
+    latest_date = user_timepoints.sort_by {|tp| tp.date}.last.date
+    if latest_date < today
+      next_period = latest_date + 1.week
+      @returning_users_by_week[next_period.to_s] = users.select {|user| user.last_sign_in_at >= latest_date || user.current_sign_in_at >= latest_date }.size
+    end
 
     # sort domain breakdowns by totals to order plot
     sorted_domains = totals_by_domain.sort_by {|k,v| v}.reverse.map(&:first)

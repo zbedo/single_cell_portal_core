@@ -5,7 +5,10 @@ Rails.application.routes.draw do
 		post 'admin/reset_user_download_quotas', to: 'admin_configurations#reset_user_download_quotas', as: :reset_user_download_quotas
 		post 'admin/restart_locked_jobs', to: 'admin_configurations#restart_locked_jobs', as: :restart_locked_jobs
 		post 'admin/firecloud_access', to: 'admin_configurations#manage_firecloud_access', as: :manage_firecloud_access
+		post 'admin/refresh_api_connections', to: 'admin_configurations#refresh_api_connections', as: :refresh_api_connections
 		resources :admin_configurations, path: 'admin'
+    get 'admin/users/:id/edit', to: 'admin_configurations#edit_user', as: :edit_user
+		match 'admin/users/:id', to: 'admin_configurations#update_user', via: [:post, :patch], as: :update_user
 
     # study reporter actions
     get 'reports', to: 'reports#index', as: :reports
@@ -68,6 +71,7 @@ Rails.application.routes.draw do
     get 'study/:study_name/render_gene_set_expression_plots', to: 'site#render_gene_set_expression_plots', as: :render_gene_set_expression_plots
 		get 'study/:study_name/expression_query', to: 'site#expression_query', as: :expression_query
 		get 'study/:study_name/annotation_query', to: 'site#annotation_query', as: :annotation_query
+		get 'study/:study_name/annotation_values', to: 'site#annotation_values', as: :annotation_values
     post 'study/:study_name/precomputed_gene_expression', to: 'site#search_precomputed_results', as: :search_precomputed_results
     get 'study/:study_name/precomputed_gene_expression', to: 'site#view_precomputed_gene_expression_heatmap', as: :view_precomputed_gene_expression_heatmap
     get 'study/:study_name/precomputed_results', to: 'site#precomputed_results', as: :precomputed_results

@@ -15,6 +15,8 @@ class SiteController < ApplicationController
 
   COLORSCALE_THEMES = %w(Blackbody Bluered Blues Earth Electric Greens Hot Jet Picnic Portland Rainbow RdBu Reds Viridis YlGnBu YlOrRd)
 
+  rescue_from ActionController::InvalidAuthenticityToken, with: :session_expired
+
   # view study overviews and downloads
   def index
     # set study order
@@ -79,30 +81,44 @@ class SiteController < ApplicationController
 
   # update selected attributes via study settings tab
   def update_study_settings
-    if @study.update(study_params)
-      # invalidate caches as needed
-      if @study.previous_changes.keys.include?('default_options')
-        @study.default_cluster.study_file.invalidate_cache_by_file_type
-      elsif @study.previous_changes.keys.include?('name')
-        # if user renames a study, invalidate all caches
-        old_name = @study.previous_changes['url_safe_name'].first
-        CacheRemovalJob.new(old_name).delay.perform
-      end
+    @spinner_target = '#update-study-settings-spinner'
+    @modal_target = '#update-study-settings-modal'
+    if !user_signed_in?
       set_study_default_options
-      if @study.initialized?
-        @cluster = @study.default_cluster
-        @options = load_cluster_group_options
-        @cluster_annotations = load_cluster_group_annotations
-        set_selected_annotation
-      end
-      @study_files = @study.study_files.non_primary_data.sort_by(&:name)
-      @directories = @study.directory_listings.are_synced
-
-      # double check on download availability: first, check if administrator has disabled downloads
-      # then check if FireCloud is available and disable download links if either is true
-      @allow_downloads = AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
+      @notice = 'Please sign in before continuing.'
+      render action: 'notice'
     else
-      set_study_default_options
+      if @study.can_edit?(current_user)
+        if @study.update(study_params)
+          # invalidate caches as needed
+          if @study.previous_changes.keys.include?('default_options')
+            @study.default_cluster.study_file.invalidate_cache_by_file_type
+          elsif @study.previous_changes.keys.include?('name')
+            # if user renames a study, invalidate all caches
+            old_name = @study.previous_changes['url_safe_name'].first
+            CacheRemovalJob.new(old_name).delay.perform
+          end
+          set_study_default_options
+          if @study.initialized?
+            @cluster = @study.default_cluster
+            @options = load_cluster_group_options
+            @cluster_annotations = load_cluster_group_annotations
+            set_selected_annotation
+          end
+          @study_files = @study.study_files.non_primary_data.sort_by(&:name)
+          @directories = @study.directory_listings.are_synced
+
+          # double check on download availability: first, check if administrator has disabled downloads
+          # then check if FireCloud is available and disable download links if either is true
+          @allow_downloads = AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
+        else
+          set_study_default_options
+        end
+      else
+        set_study_default_options
+        @alert = 'You do not have permission to perform that action.'
+        render action: 'notice'
+      end
     end
   end
 
@@ -430,6 +446,11 @@ class SiteController < ApplicationController
     send_data @data, type: 'text/plain'
   end
 
+  # return JSON representation of selected annotation
+  def annotation_values
+    render json: @selected_annotation.to_json
+  end
+
   # load precomputed data in gct form to render in Morpheus
   def precomputed_results
     if check_xhr_view_permissions
@@ -481,8 +502,8 @@ class SiteController < ApplicationController
   # and extra fastq's that happen to be in the bucket)
   def get_fastq_files
     # check if FireCloud is available first
-    @allow_downloads = Study.firecloud_client.api_available?
-    @disabled_link = "<button type='button' class='btn btn-danger' disabled>Currently Unavailable</button>".html_safe
+    @allow_downloads =  AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
+    @disabled_link = "<button type='button' class='btn btn-danger disabled-download' disabled>Currently Unavailable</button>".html_safe
     # load study_file fastqs first
     @fastq_files = {data: []}
     @study.study_files.by_type('Fastq').each do |file|
@@ -608,6 +629,8 @@ class SiteController < ApplicationController
       @selected_annotation = {name: annot_name, type: annot_type, scope: annot_scope}
       if annot_type == 'group'
         @selected_annotation[:values] = @study.study_metadata_keys(annot_name, annot_type)
+      else
+        @selected_annotation[:values] = []
       end
     end
     @selected_annotation
@@ -647,6 +670,12 @@ class SiteController < ApplicationController
     else
       return true
     end
+  end
+
+  # rescue from an invalid csrf token (if user logged out in another window)
+  def session_expired
+    @alert = 'Your session has expired.  Please log in again to continue.'
+    render action: :notice
   end
 
 	# SUB METHODS

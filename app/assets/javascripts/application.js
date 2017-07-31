@@ -366,7 +366,7 @@ $(window).resize(function() {
 });
 
 // generic function to render Morpheus
-function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, target, fitType, heatmapHeight) {
+function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, target, annotations, fitType, heatmapHeight) {
     console.log('render status of ' + target + ' at start: ' + $(target).data('rendered'));
     $(target).empty();
     var config = {dataset: dataPath, el: $(target), menu: null};
@@ -406,6 +406,16 @@ function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, t
             {field:'id', display:'text'},
             {field: selectedAnnot, display: selectedAnnotType === 'group' ? 'color' : 'bar'}
         ];
+        // create mapping of selected annotations to colorBrewer colors
+        var annotColorModel = {};
+        annotColorModel[selectedAnnot] = {};
+        var sortedAnnots = annotations['values'].sort();
+
+        // calling % 27 will always return to the beginning of colorBrewerSet once we use all 27 values
+        $(sortedAnnots).each(function(index, annot) {
+            annotColorModel[selectedAnnot][annot] = colorBrewerSet[index % 27];
+        });
+        config.columnColorModel = annotColorModel;
     }
 
     // instantiate heatmap and embed in DOM element

@@ -59,7 +59,7 @@ var dataRef = [];
       dragmode: 'lasso, select',
       type: 'scattergl',
       marker: {
-        color: colorBrewerSet[<%= index %>],
+        color: colorBrewerSet[<%= index %> % 27],
         size: <%= raw @coordinates[key][:marker_size] %>,
         line:{
           color: plotlyDefaultLineColor,
@@ -137,7 +137,7 @@ var expressionData = [];
         boxmean: true,
         type: 'box',
         marker: {
-          color: colorBrewerSet[<%= index %>],
+          color: colorBrewerSet[<%= index %> % 27],
           line:{
             color: plotlyDefaultLineColor,
             width: 0.5

@@ -114,6 +114,11 @@ class User
     self.admin? || self.reporter?
   end
 
+  # user email address as a DOM id
+  def email_as_id
+    self.email.gsub(/[@\.]/, '-')
+  end
+
   # helper method to migrate study ownership & shares from old email to new email
   def self.migrate_studies_and_shares(existing_email, new_email)
     existing_user = self.find_by(email: existing_email)

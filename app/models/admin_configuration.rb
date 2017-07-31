@@ -10,6 +10,7 @@ class AdminConfiguration
   validate :validate_value_by_type
 
   FIRECLOUD_ACCESS_NAME = 'FireCloud Access'
+  API_NOTIFIER_NAME = 'API Health Check Notifier'
   NUMERIC_VALS = %w(byte kilobyte megabyte terabyte petabyte exabyte)
 
   # really only used for IDs in the table...
@@ -18,7 +19,7 @@ class AdminConfiguration
   end
 
   def self.config_types
-    ['Daily User Download Quota']
+    ['Daily User Download Quota', API_NOTIFIER_NAME]
   end
 
   def self.value_types
@@ -52,8 +53,10 @@ class AdminConfiguration
         else
           self.value
         end
-      else
+      when 'Boolean'
         self.value == '1' ? 'Yes' : 'No'
+      else
+        self.value
     end
   end
 
@@ -170,6 +173,27 @@ class AdminConfiguration
       end
     end
     job_count
+  end
+
+  # method to be called from cron to check the health status of the FireCloud API and set access if an outage is detected
+  def self.check_api_health
+    notifier_config = self.find_or_create_by(config_type: AdminConfiguration::API_NOTIFIER_NAME, value_type: 'Boolean')
+    firecloud_access = AdminConfiguration.find_or_create_by(config_type: AdminConfiguration::FIRECLOUD_ACCESS_NAME)
+    api_available = Study.firecloud_client.api_available?
+
+    # if api is down...
+    if !api_available
+      # if access is still enabled, set to local-off and send notification to admins (if enabled)
+      if firecloud_access.value == 'on'
+        Rails.logger.error "#{Time.now}: ALERT: FIRECLOUD API UNAVAILABLE -- setting FireCloud access to 'local-off'"
+        firecloud_access.update(value: 'local-off')
+        if notifier_config.value == '1'
+          current_time = Time.now.strftime('%D %r')
+          SingleCellMailer.admin_notification('ALERT: FIRECLOUD API UNAVAILABLE', nil, "<p>The FireCloud API was found to be unavailable at #{current_time}.  Access has been disabled locally until API access is manually turned back on.").deliver_now
+          notifier_config.update(value: '0')
+        end
+      end
+    end
   end
 
   private
