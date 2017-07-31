@@ -167,11 +167,12 @@
                     methods.unstick(node);
                 }
             } catch(err) {
+                $(document).off('scroll', node);
             }
 
         },
         unstick: function (nodeRef) {
-            var node = nodeRef ? nodeRef : this; ;
+            var node = nodeRef ? nodeRef : this;
             node.data("stickyPanel.state").isDetached = false;
 
             var o = node.data("stickyPanel.state").options;

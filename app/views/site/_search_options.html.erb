@@ -186,11 +186,8 @@
     </div>
   <% end %>
 </div>
-
 <script type="text/javascript">
   //Stick the search for selection facilitation in expression pages
-  var stickyOptions = {
-      topPadding: 75
-  };
+  $(document).off('scroll', '#search-parent');
   $('#search-parent').stickyPanel(stickyOptions);
 </script>
