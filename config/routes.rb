@@ -41,7 +41,12 @@ Rails.application.routes.draw do
         get 'load_annotation_options', to: 'studies#load_annotation_options', as: :load_annotation_options
         post 'update_default_options', to: 'studies#update_default_options', as: :update_default_options
 			end
-		end
+    end
+
+    # user annotation actions
+		resources :user_annotations, only: [:index, :edit, :update, :destroy]
+    get 'download_user_annotation/:id', to: 'user_annotations#download_user_annotation', as: :download_user_annotation
+
 		# public/private file download links (redirect to signed_urls from Google)
 		get 'data/public/:study_name/:filename', to: 'site#download_file', as: :download_file, constraints: {filename: /.*/}
 		get 'data/private/:study_name/:filename', to: 'studies#download_private_file', as: :download_private_file, constraints: {filename: /.*/}
@@ -70,7 +75,8 @@ Rails.application.routes.draw do
     post 'study/:study_name/precomputed_gene_expression', to: 'site#search_precomputed_results', as: :search_precomputed_results
     get 'study/:study_name/precomputed_gene_expression', to: 'site#view_precomputed_gene_expression_heatmap', as: :view_precomputed_gene_expression_heatmap
     get 'study/:study_name/precomputed_results', to: 'site#precomputed_results', as: :precomputed_results
-		get 'search', to: 'site#search', as: :search
+		post 'study/:study_name/create_user_annotations', to: 'site#create_user_annotations', as: :create_user_annotations
+    get 'search', to: 'site#search', as: :search
     get '/', to: 'site#index', as: :site
     root to: 'site#index'
   end

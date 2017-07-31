@@ -51,6 +51,7 @@
 //= require kernel-functions
 //= require simple-statistics.min
 //= require sheather_jones
+//= require jquery.stickyPanel
 
 var fileUploading = false;
 var PAGE_RENDERED = false;
@@ -228,6 +229,9 @@ function deleteFileConfirmation(confMessage) {
     }
 }
 
+var stickyOptions = {
+    topPadding: 85
+};
 // toggle the Search/View options panel
 function toggleSearch() {
     $('#search-target').toggleClass('col-md-3 hidden');
@@ -240,7 +244,11 @@ function toggleSearch() {
 
     // trigger resizeEnd to re-render Plotly to use available space
     $(window).trigger('resize');
-
+    if($('#search-target').is(":visible")){
+        $('#search-parent').stickyPanel(stickyOptions)
+    } else{
+        $('#search-parent').stickyPanel('unstick')
+    }
 }
 
 // options for Spin.js

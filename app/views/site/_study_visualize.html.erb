@@ -3,7 +3,7 @@
     <%= render partial: 'search_options' %>
   </div>
   <div class="col-md-9" id="render-target">
-    <%= render partial: 'view_options' %>
+    <div id="view_options_div"><%= render partial: 'view_options' %></div>
     <div class="panel panel-default">
       <div class="panel-heading">
         <div class="panel-title">
@@ -19,8 +19,10 @@
                 <div id="toggle-plots"></div>
               </div>
             </div>
-            <div id="cluster-plot"></div>
-            <div id="cluster-figure-legend"></div>
+            <div class="row">
+              <div id="cluster-plot"></div>
+              <div id="cluster-figure-legend"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -56,17 +58,19 @@
     }
 
     $(document).ready(function() {
-        $('#cluster-plot').data('camera', baseCamera);
-        // set default subsample option of 10K or all cells
-        if (<%= @cluster.points > 10000 %>) {
-            $('#subsample').val(10000);
-            $('#search_subsample').val(10000);
-        }
-        if (window.location.href.split('#')[1] !== '') {
-            var tab = window.location.href.split('#')[1];
-            $('#study-tabs a[href="#' + tab + '"]').tab('show');
-        }
-        renderScatter();
+      //if tab position was specified in url, show the current tab
+      if (window.location.href.split('#')[1] !== '') {
+          var tab = window.location.href.split('#')[1];
+          $('#study-tabs a[href="#' + tab + '"]').tab('show');
+      }
+      $('#cluster-plot').data('camera', baseCamera);
+      // set default subsample option of 10K or all cells
+      if (<%= @cluster.points > 10000 %>) {
+          $('#subsample').val(10000);
+          $('#search_subsample').val(10000);
+      }
+
+      renderScatter();
     });
 
     // listener for cluster nav, specific to study page

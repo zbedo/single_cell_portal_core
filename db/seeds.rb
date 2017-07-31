@@ -10,7 +10,7 @@ study = Study.create!(name: 'Testing Study', description: '<p>This is the test s
 expression_file = StudyFile.create!(name: 'expression_matrix.txt', upload_file_name: 'expression_matrix.txt', study_id: study.id, file_type: 'Expression Matrix', y_axis_label: 'Expression Scores')
 cluster_file = StudyFile.create!(name: 'Test Cluster', upload_file_name: 'coordinates.txt', study_id: study.id, file_type: 'Cluster', x_axis_label: 'X', y_axis_label: 'Y', z_axis_label: 'Z')
 
-cluster = ClusterGroup.create(name: 'Test Cluster', study_id: study.id, study_file_id: cluster_file.id, cluster_type: '3d', cell_annotations: [
+cluster = ClusterGroup.create!(name: 'Test Cluster', study_id: study.id, study_file_id: cluster_file.id, cluster_type: '3d', cell_annotations: [
     {
         name: 'Category',
         type: 'group',
@@ -48,3 +48,4 @@ StudyMetadatum.create!(name: 'Label', annotation_type: 'group', study_id: study.
 StudyMetadatum.create!(name: 'Score', annotation_type: 'numeric', study_id: study.id, cell_annotations: score_hash)
 ExpressionScore.create!(gene: 'Gene_1', searchable_gene: 'gene_1', study_id: study.id, study_file_id: expression_file.id, scores: score_hash)
 ExpressionScore.create!(gene: 'Gene_2', searchable_gene: 'gene_2', study_id: study.id, study_file_id: expression_file.id, scores: score_hash)
+User.create!(email:'fake@fake.gov', password:'password')

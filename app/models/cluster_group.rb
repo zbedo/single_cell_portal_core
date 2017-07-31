@@ -11,6 +11,14 @@ class ClusterGroup
 
   belongs_to :study
   belongs_to :study_file
+
+  #user annotations are created for a cluster group. search for them
+  has_many :user_annotations do
+    def by_name_and_user(name, user_id)
+      where(name: name, user_id: user_id).first
+    end
+  end
+
   has_many :data_arrays do
     def by_name_and_type(name, type, subsample_threshold=nil)
       where(name: name, array_type: type, subsample_threshold: subsample_threshold).order_by(&:array_index).to_a

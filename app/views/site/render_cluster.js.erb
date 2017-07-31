@@ -10,6 +10,13 @@ if (<%= @selected_annotation[:type] == 'numeric' %>) {
     $('#toggle-traces').tooltip({container: 'body', placement: 'left', trigger: 'hover'});
 }
 
+//for 2d clusters, enable selection button and collapse the selection div
+<% if !@cluster.is_3d? && user_signed_in? %>
+  $('#scattergl_div').html("<%= escape_javascript(render partial: 'scattergl_toggle') %>");
+  $('#selection_div').html("<%= escape_javascript(render partial: 'selection_well') %>");
+  $('#selection_div').addClass('collapse')
+<% end %>
+
 <%= render partial: 'study_scatter_plot' %>
 
 // set the cluster field in the search box to scope search correctly

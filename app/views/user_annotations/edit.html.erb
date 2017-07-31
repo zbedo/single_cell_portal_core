@@ -1,0 +1,6 @@
+<h1>Editing '<em><%= @user_annotation.name %></em>'</h1>
+<em><h4><%= @user_annotation.subsampled_at %></h4></em>
+
+<%= render 'form' %>
+
+<p><%= link_to "<span class=\"fa fa-chevron-left\"></span>Back".html_safe, user_annotations_path, {class: 'btn btn-warning'} %></p>

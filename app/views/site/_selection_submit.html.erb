@@ -1,0 +1,25 @@
+<script type="text/javascript">
+$('#selection-submit').click(function(){
+    var needText = $('.need-text');
+    var numFields = needText.toArray().length;
+    var values = [];
+    var cont = true;
+    for(i = 0; i < numFields; i++){
+        var text = needText.eq(i).val();
+        values.push(text);
+        if(text === ""){cont = false}
+    }
+
+    if(numFields < 3){
+        alert('Your annotation must have at least two populations');
+    } else if ( !cont ) {
+        alert('You must provide a value for all labels before saving');
+        setErrorOnBlank(needText);
+    } else {
+        launchModalSpinner('#save-modal-spinner', '#save-modal');
+        var form = $('#selection-well > form');
+        form.submit();
+    }
+
+});
+</script>
