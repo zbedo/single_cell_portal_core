@@ -3266,6 +3266,7 @@ class UiTestSuite < Test::Unit::TestCase
 		#Enable Selection
 		wait_for_render(:id, 'toggle-scatter')
 		enable_select_button = @driver.find_element(:id, 'toggle-scatter')
+		sleep 0.25
 		enable_select_button.click
 
 		# select the scatter plot
