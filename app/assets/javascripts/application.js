@@ -243,7 +243,7 @@ function toggleSearch() {
     $(window).trigger('resize');
     if($('#search-target').is(":visible")){
         var stickyOptions = {
-            topPadding: 60
+            topPadding: 75
         };
         $('#search-parent').stickyPanel(stickyOptions)
     } else{
