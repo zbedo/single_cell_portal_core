@@ -2306,14 +2306,13 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(private_study_path)
 		open_ui_tab('study-visualize')
 
-
 		new_genes = @genes.shuffle.take(rand(2..5))
 		search_box = @driver.find_element(:id, 'search_genes')
 		search_box.send_keys(new_genes.join(' '))
 		search_genes = @driver.find_element(:id, 'perform-gene-search')
 		search_genes.click
 		assert element_present?(:id, 'plots'), 'could not find expression heatmap'
-		@wait.until {wait_for_plotly_render('#heatmap-plot', 'rendered')}
+		@wait.until {wait_for_morpheus_render('#heatmap-plot', 'rendered')}
 		private_rendered = @driver.execute_script("return $('#heatmap-plot').data('rendered')")
 		assert private_rendered, "private heatmap plot did not finish rendering, expected true but found #{private_rendered}"
 		private_heatmap_drawn = @driver.execute_script("return $('#heatmap-plot').data('morpheus').heatmap !== undefined;")
@@ -3136,7 +3135,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# Create a user annotation
-	test 'front-end: check user annotation creation' do
+	test 'front-end: user annotation creation' do
 		puts "Test method: #{self.method_name}"
 
 		# log in
@@ -3803,11 +3802,14 @@ class UiTestSuite < Test::Unit::TestCase
 		close_modal('message_modal')
 
 		#check new names
-		new_names = @driver.find_elements(:class, 'annotation-name').map{|x| x.text }
-		#assert new name saved correctly
-		assert !(new_names.include? "user-#{$random_seed}-exp"), "Deletion failed, expected no 'user-#{$random_seed}-exp' but found it"
 
-
+		first_row = @driver.find_element(:id, 'annotations').find_element(:tag_name, 'tbody').find_element(:tag_name, 'tr').find_element(:tag_name, 'td')
+		unless first_row['class'] == 'dataTables_empty'
+			#If you dont't have any annotations, they were all deleted
+			new_names = @driver.find_elements(:class, 'annotation-name').map{|x| x.text }
+			#assert new name saved correctly
+			assert !(new_names.include? "user-#{$random_seed}-exp"), "Deletion failed, expected no 'user-#{$random_seed}-exp' but found it"
+		end
 	end
 
 

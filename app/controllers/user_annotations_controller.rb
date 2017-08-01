@@ -8,7 +8,6 @@ class UserAnnotationsController < ApplicationController
   def index
     #get all this user's annotations
     @user_annotations = current_user.user_annotations.owned_by(current_user)
-    logger.info("Look: #{@user_annotations}")
     views = UserAnnotation.viewable(current_user)
     edits = UserAnnotation.editable(current_user)
     @user_annotations.concat(views).concat(edits).uniq!
@@ -33,7 +32,6 @@ class UserAnnotationsController < ApplicationController
     else
       @share_changes = false
     end
-    logger.info("Params: #{user_annotation_params}")
     #update the annotation's defined labels
     new_labels = user_annotation_params.to_h['values']
     #If the labels sued to include undefined, make sure they do again
@@ -52,7 +50,7 @@ class UserAnnotationsController < ApplicationController
       if @user_annotation.update(user_annotation_params)
         changes = []
         if @share_changes
-          changes << 'Study shares'
+          changes << 'Annotation shares'
         end
         if @user_annotation.user_annotation_shares.any?
           SingleCellMailer.annot_share_update_notification(@user_annotation, changes, current_user).deliver_now
@@ -75,7 +73,6 @@ class UserAnnotationsController < ApplicationController
           end
 
           #index of values remembers what the order of the old annotations was
-
           index_of_values.each_with_index do |old_index, i|
             old_index.each do |index|
               old_values[index] = new_labels[i]
@@ -140,7 +137,6 @@ class UserAnnotationsController < ApplicationController
       end
 
     end
-    logger.info(rows)
     @data = [headers.join("\t"), types.join("\t"), rows].join"\n"
 
     send_data @data, type: 'text/plain', filename: filename, disposition: 'attachment'

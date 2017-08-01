@@ -8,7 +8,7 @@ class UserAnnotation
   belongs_to :cluster_group
   belongs_to :study
 
-  #user data arrays belong to user annotations
+  # user data arrays belong to user annotations
   has_many :user_data_arrays do
     def by_name_and_type(name, type, subsample_threshold=nil, subsample_annotation=nil)
       where(name: name, array_type: type, subsample_threshold: subsample_threshold, subsample_annotation: subsample_annotation).order_by(&:array_index).to_a
@@ -164,8 +164,8 @@ class UserAnnotation
 
       #Otherwise, if no threshold or annotation, then no threshold or annotation need to be set
       else
-        #Create annotation array
         Rails.logger.info "#{Time.now}: Creating user annotation user data arrays with threshold: #{threshold} for name: #{name}"
+        #Create annotation array
         UserDataArray.create(name: name, array_type: 'annotations', values: val, cluster_name: cluster.name, array_index: i+1, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id)
         #Create X
         UserDataArray.create(name: 'x', array_type: 'coordinates', values: x_arrays[i], cluster_name: cluster.name, array_index: i+1, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id )

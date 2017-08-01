@@ -566,6 +566,7 @@ class SiteController < ApplicationController
         @options = load_cluster_group_options
         @notice = nil
         @alert = 'The following errors prevented the annotation from being saved: ' + @user_annotation.errors.full_messages.join(',')
+        logger.error "#{Time.now}: Creating user annotation of params: #{user_annotation_params}, unable to save user annotation #{e.message}"
         render 'update_user_annotations'
       end
     #More error handling, this is if can't save user annotation
@@ -575,6 +576,7 @@ class SiteController < ApplicationController
       @options = load_cluster_group_options
       @notice = nil
       @alert = 'The following errors prevented the annotation from being saved: ' + 'Invalid data type submitted. (' + e.problem + '. ' + e.resolution + ')'
+      logger.error "#{Time.now}: Creating user annotation of params: #{user_annotation_params}, invalid value of #{e.message}"
       render 'update_user_annotations'
 
     rescue NoMethodError => e
@@ -583,15 +585,16 @@ class SiteController < ApplicationController
       @options = load_cluster_group_options
       @notice = nil
       @alert = 'The following errors prevented the annotation from being saved: ' + e.message
+      logger.error "#{Time.now}: Creating user annotation of params: #{user_annotation_params}, no method error #{e.message}"
       render 'update_user_annotations'
 
-
     rescue => e
-      #If a generic unexpected error occured and couldn't save the annotation
+      #If a generic unexpected error occurred and couldn't save the annotation
       @cluster_annotations = load_cluster_group_annotations
       @options = load_cluster_group_options
       @notice = nil
       @alert = 'An unexpected error prevented the annotation from being saved: ' + e.message
+      logger.error "#{Time.now}: Creating user annotation of params: #{user_annotation_params}, unexpected error #{e.message}"
       render 'update_user_annotations'
     end
   end
@@ -759,7 +762,6 @@ class SiteController < ApplicationController
       end
 
       if annotation[:scope] == 'cluster' || annotation[:scope] == 'user'
-        logger.info("coord array: #{coordinates}")
         annotation_array.each_with_index do |annotation_value, index|
           coordinates[annotation_value][:text] << "<b>#{cells[index]}</b><br>#{annotation[:name]}: #{annotation_value}"
           coordinates[annotation_value][:annotations] << "#{annotation[:name]}: #{annotation_value}"
@@ -1203,7 +1205,6 @@ class SiteController < ApplicationController
       user_annotations = UserAnnotation.where(user_id: current_user.id, study_id: @study.id, cluster_group_id: @cluster.id).to_a
       shared_annotations = UserAnnotationShare.where(email: current_user.email).map(&:user_annotation).select {|a| !a.queued_for_deletion && a.study_id == @study.id && a.cluster_group_id == @cluster.id}
       user_annotations.concat(shared_annotations)
-      logger.info("Here: #{user_annotations}")
       unless user_annotations.empty?
         grouped_options['User Annotations'] = user_annotations.map {|annot| ["#{annot.name}", "#{annot.name}--group--user"] }
       end
