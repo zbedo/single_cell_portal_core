@@ -3,10 +3,10 @@ class SiteController < ApplicationController
   respond_to :html, :js, :json
 
   before_action :set_study, except: [:index, :search]
-  before_action :load_precomputed_options, except: [:index, :search, :edit_study_description, :annotation_query, :download_file, :get_fastq_files]
-  before_action :set_cluster_group, except: [:index, :search, :update_study_settings, :edit_study_description, :precomputed_results, :download_file, :get_fastq_files]
-  before_action :set_selected_annotation, except: [:index, :search, :study, :update_study_settings, :edit_study_description, :precomputed_results, :expression_query, :get_new_annotations, :download_file, :get_fastq_files]
-  before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query]
+  before_action :load_precomputed_options, except: [:index, :search, :edit_study_description, :annotation_query, :download_file, :get_fastq_files, :log_action]
+  before_action :set_cluster_group, except: [:index, :search, :update_study_settings, :edit_study_description, :precomputed_results, :download_file, :get_fastq_files, :log_action]
+  before_action :set_selected_annotation, except: [:index, :search, :study, :update_study_settings, :edit_study_description, :precomputed_results, :expression_query, :get_new_annotations, :download_file, :get_fastq_files, :log_action]
+  before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query, :log_action]
 
   # caching
   caches_action :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots,
@@ -526,6 +526,11 @@ class SiteController < ApplicationController
       end
     end
     render json: @fastq_files.to_json
+  end
+
+  # route that is used to log actions in Google Analytics that would otherwise be ignored due to redirects or response types
+  def log_action
+    @action_to_log = params[:url_string]
   end
 
   private
