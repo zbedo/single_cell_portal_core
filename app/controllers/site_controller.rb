@@ -622,7 +622,7 @@ class SiteController < ApplicationController
       @selected_annotation = @cluster.cell_annotations.find {|ca| ca[:name] == annot_name && ca[:type] == annot_type}
       @selected_annotation[:scope] = annot_scope
     elsif annot_scope == 'user'
-      user_annotation = @cluster.user_annotations.by_name_and_user(annot_name, current_user.id)
+      user_annotation = @cluster.viewable_user_annotations(current_user, annot_name)
       @selected_annotation = {name: annot_name, type: annot_type, scope: annot_scope}
       @selected_annotation[:values] = user_annotation.values
     else
@@ -697,7 +697,7 @@ class SiteController < ApplicationController
     if annotation[:scope] == 'cluster'
       annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
     elsif annotation[:scope] == 'user'
-      user_annotation = @cluster.user_annotations.by_name_and_user(annotation[:name], current_user.id)
+      user_annotation = @cluster.viewable_user_annotations(current_user, annotation[:name])
       annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       x_array = user_annotation.concatenate_user_data_arrays('x', 'coordinates', subsample_threshold, subsample_annotation)
       y_array = user_annotation.concatenate_user_data_arrays('y', 'coordinates', subsample_threshold, subsample_annotation)
@@ -811,7 +811,7 @@ class SiteController < ApplicationController
     if annotation[:scope] == 'cluster'
       annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
     elsif annotation[:scope] == 'user'
-      user_annotation = @cluster.user_annotations.by_name_and_user(annotation[:name], current_user.id)
+      user_annotation = @cluster.viewable_user_annotations(current_user, annotation[:name])
       annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     else
@@ -862,7 +862,7 @@ class SiteController < ApplicationController
     if annotation[:scope] == 'cluster'
       annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
     elsif annotation[:scope] == 'user'
-      user_annotation = @cluster.user_annotations.by_name_and_user(annotation[:name], current_user.id)
+      user_annotation = @cluster.viewable_user_annotations(current_user, annotation[:name])
       annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     else
@@ -904,7 +904,7 @@ class SiteController < ApplicationController
         values[annotations[index]][:y] << @gene.scores[cell].to_f.round(4)
       end
     elsif annotation[:scope] == 'user'
-      user_annotation = @cluster.user_annotations.by_name_and_user(annotation[:name], current_user.id)
+      user_annotation = @cluster.viewable_user_annotations(current_user, annotation[:name])
       annotations = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
       cells.each_with_index do |cell, index|
@@ -940,7 +940,7 @@ class SiteController < ApplicationController
     if annotation[:scope] == 'cluster'
       annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold)
     elsif annotation[:scope] == 'user'
-      user_annotation = @cluster.user_annotations.by_name_and_user(annotation[:name], current_user.id)
+      user_annotation = @cluster.viewable_user_annotations(current_user, annotation[:name])
       annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       x_array = user_annotation.concatenate_user_data_arrays('x', 'coordinates', subsample_threshold, subsample_annotation)
       y_array = user_annotation.concatenate_user_data_arrays('y', 'coordinates', subsample_threshold, subsample_annotation)
@@ -1003,7 +1003,7 @@ class SiteController < ApplicationController
         end
       end
     elsif annotation[:scope] == 'user'
-      user_annotation = @cluster.user_annotations.by_name_and_user(annotation[:name], current_user.id)
+      user_annotation = @cluster.viewable_user_annotations(current_user, annotation[:name])
       annotations = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
       cells.each_with_index do |cell, index|
@@ -1057,7 +1057,7 @@ class SiteController < ApplicationController
     if annotation[:scope] == 'cluster'
       annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
     elsif annotation[:scope] == 'user'
-      user_annotation = @cluster.user_annotations.by_name_and_user(annotation[:name], current_user.id)
+      user_annotation = @cluster.viewable_user_annotations(current_user, annotation[:name])
       annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       x_array = user_annotation.concatenate_user_data_arrays('x', 'coordinates', subsample_threshold, subsample_annotation)
       y_array = user_annotation.concatenate_user_data_arrays('y', 'coordinates', subsample_threshold, subsample_annotation)
@@ -1201,6 +1201,9 @@ class SiteController < ApplicationController
     #load a user's user annotations if user is signed in and has any
     if user_signed_in?
       user_annotations = UserAnnotation.where(user_id: current_user.id, study_id: @study.id, cluster_group_id: @cluster.id).to_a
+      shared_annotations = UserAnnotationShare.where(email: current_user.email).map(&:user_annotation).select {|a| !a.queued_for_deletion && a.study_id == @study.id && a.cluster_group_id == @cluster.id}
+      user_annotations.concat(shared_annotations)
+      logger.info("Here: #{user_annotations}")
       unless user_annotations.empty?
         grouped_options['User Annotations'] = user_annotations.map {|annot| ["#{annot.name}", "#{annot.name}--group--user"] }
       end

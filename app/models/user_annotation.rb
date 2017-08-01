@@ -2,6 +2,7 @@ class UserAnnotation
   include Mongoid::Document
   field :name, type: String
   field :values, type: Array
+  field :queued_for_deletion, type: Boolean, default: false
 
   belongs_to :user
   belongs_to :cluster_group
@@ -14,11 +15,33 @@ class UserAnnotation
     end
   end
 
+  has_many :user_annotation_shares, dependent: :delete do
+    def can_edit
+      where(permission: 'Edit').map(&:email)
+    end
+
+    def can_view
+      all.to_a.map(&:email)
+    end
+  end
+
+  accepts_nested_attributes_for :user_annotation_shares, allow_destroy: true, reject_if: proc { |attributes| attributes['email'].blank? }
+
   index({ user_id: 1, study_id: 1, cluster_group_id: 1, name: 1}, { unique: true })
   #must have a name and values
   validates_presence_of :name, :values
   #unique values are name per user, study and cluster
   validates_uniqueness_of :name, scope: [:user_id, :study_id, :cluster_group_id]
+
+  # populate specific errors for user annotation shares since they share the same form
+  validate do |user_annotation|
+    user_annotation.user_annotation_shares.each do |user_annotation_share|
+      next if user_annotation_share.valid?
+      user_annotation_share.errors.full_messages.each do |msg|
+        errors.add(:base, "Share Error - #{msg}")
+      end
+    end
+  end
 
   #create an annotations user data arrays
   def initialize_user_data_arrays(user_data_arrays_attributes, annotation, threshold, loaded_annotation)
@@ -280,4 +303,56 @@ class UserAnnotation
     self.name + '--group--user'
   end
 
+  # return all studies that are editable by a given user
+  def self.editable(user)
+    if user.admin?
+      self.where(queued_for_deletion: false).to_a
+    else
+      annotations = self.where(queued_for_deletion: false, user_id: user._id).to_a
+      shares = UserAnnotationShare.where(email: user.email, permission: 'Edit').map(&:user_annotation).select {|a| !a.queued_for_deletion }
+      [annotations + shares].flatten.uniq
+    end
+  end
+
+  # return all studies that are viewable by a given user
+  def self.viewable(user)
+    if user.admin?
+      self.where(queued_for_deletion: false).to_a
+    else
+      annotations = self.where(queued_for_deletion: false, user_id: user._id).to_a
+      shares = UserAnnotationShare.where(email: user.email).map(&:user_annotation).select {|a| !a.queued_for_deletion }
+      [annotations + shares].flatten.uniq
+    end
+  end
+
+  #Share Methods
+
+  # check if a give use can edit study
+  def can_edit?(user)
+    self.admins.include?(user.email)
+  end
+
+  # check if a given user can view study by share (does not take public into account - use Study.viewable(user) instead)
+  def can_view?(user)
+    self.can_edit?(user) || self.user_annotation_shares.can_view.include?(user.email)
+  end
+
+  # check if user can delete a study - only owners can
+  def can_delete?(user)
+    if self.user_id == user.id || user.admin?
+      true
+    else
+      share = self.user_annotation_shares.detect {|s| s.email == user.email}
+      if !share.nil? && share.permission == 'Owner'
+        true
+      else
+        false
+      end
+    end
+  end
+
+  # list of emails for accounts that can edit this study
+  def admins
+    [self.user.email, self.user_annotation_shares.can_edit, User.where(admin: true).pluck(:email)].flatten.uniq
+  end
 end

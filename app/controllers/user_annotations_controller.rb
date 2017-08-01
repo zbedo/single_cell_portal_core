@@ -8,6 +8,10 @@ class UserAnnotationsController < ApplicationController
   def index
     #get all this user's annotations
     @user_annotations = current_user.user_annotations.owned_by(current_user)
+    logger.info("Look: #{@user_annotations}")
+    views = UserAnnotation.viewable(current_user)
+    edits = UserAnnotation.editable(current_user)
+    @user_annotations.concat(views).concat(edits).uniq!
   end
 
   # GET /user_annotations/1/edit
@@ -18,6 +22,18 @@ class UserAnnotationsController < ApplicationController
   # PATCH/PUT /user_annotations/1
   # PATCH/PUT /user_annotations/1.json
   def update
+    # check if any changes were made to sharing for notifications
+    if !user_annotation_params[:user_annotation_shares_attributes].nil?
+      @share_changes = @user_annotation.user_annotation_shares.count != user_annotation_params[:user_annotation_shares_attributes].keys.size
+      user_annotation_params[:user_annotation_shares_attributes].values.each do |share|
+        if share["_destroy"] == "1"
+          @share_changes = true
+        end
+      end
+    else
+      @share_changes = false
+    end
+    logger.info("Params: #{user_annotation_params}")
     #update the annotation's defined labels
     new_labels = user_annotation_params.to_h['values']
     #If the labels sued to include undefined, make sure they do again
@@ -32,8 +48,15 @@ class UserAnnotationsController < ApplicationController
     annotation_arrays = @user_annotation.user_data_arrays.by_name_and_type(@user_annotation.name,'annotations')
 
     respond_to do |format|
-      #if a successful update, uodat data arrays
+      #if a successful update, update data arrays
       if @user_annotation.update(user_annotation_params)
+        changes = []
+        if @share_changes
+          changes << 'Study shares'
+        end
+        if @user_annotation.user_annotation_shares.any?
+          SingleCellMailer.annot_share_update_notification(@user_annotation, changes, current_user).deliver_now
+        end
         #this is per annotation array-- each annotation array is a different subsampling level
         annotation_arrays.each do |annot|
           #remember the index of old labels, this is per annotation
@@ -54,7 +77,6 @@ class UserAnnotationsController < ApplicationController
           #index of values remembers what the order of the old annotations was
 
           index_of_values.each_with_index do |old_index, i|
-            logger.info("in loop, old index:  #{old_index}")
             old_index.each do |index|
               old_values[index] = new_labels[i]
             end
@@ -133,7 +155,7 @@ class UserAnnotationsController < ApplicationController
   # Never trust parameters from the scary internet, only allow the white list through.
   # whitelist parameters for creating custom user annotation
   def user_annotation_params
-    params.require(:user_annotation).permit(:_id, :name, :study_id, :user_id, :cluster_group_id, values: [])
+    params.require(:user_annotation).permit(:_id, :name, :study_id, :user_id, :cluster_group_id, values: [], user_annotation_shares_attributes: [:id, :_destroy, :email, :permission])
   end
 
   # checks that current user id is the same as annotation being edited or destroyed
@@ -141,7 +163,7 @@ class UserAnnotationsController < ApplicationController
     if @user_annotation.nil?
       @user_annotation = UserAnnotation.find(params[:id])
     end
-    if @user_annotation.user_id != current_user.id
+    if !@user_annotation.can_edit?(current_user)
       redirect_to user_annotations_path, alert: 'You don\'t have permission to perform that action'
     end
   end
