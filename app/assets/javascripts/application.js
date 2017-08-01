@@ -57,6 +57,16 @@ var fileUploading = false;
 var PAGE_RENDERED = false;
 var OPEN_MODAL = '';
 
+$(document).on('shown.bs.modal', function(e) {
+    console.log("modal " + $(e.target).attr('id') + ' opened');
+    OPEN_MODAL = $(e.target).attr('id');
+});
+
+$(document).on('hidden.bs.modal', function(e) {
+    console.log("modal " + $(e.target).attr('id') + ' closed');
+    OPEN_MODAL = '';
+});
+
 jQuery.railsAutocomplete.options.noMatchesLabel = "No matches in this study";
 
 // used for calculating size of plotly graphs to maintain square aspect ratio
@@ -216,16 +226,6 @@ function enableDefaultActions() {
         } else {
             return false;
         }
-    });
-
-    $(document).on('shown.bs.modal', function(e) {
-        console.log("modal " + $(e.target).attr('id') + ' opened');
-        OPEN_MODAL = $(e.target).attr('id');
-    });
-
-    $(document).on('hidden.bs.modal', function(e) {
-        console.log("modal " + $(e.target).attr('id') + ' closed');
-        OPEN_MODAL = '';
     });
 }
 

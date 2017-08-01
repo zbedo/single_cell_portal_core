@@ -169,23 +169,11 @@ class UiTestSuite < Test::Unit::TestCase
 	def close_modal(id)
 		# need to wait until modal is in the page and visible
 		@wait.until {element_present?(:id, id)}
-		@wait.until {element_visible?(:id, id)}
+		@wait.until {@driver.execute_script("return OPEN_MODAL") == id}
 		# uses the jQuery method rather than clicking the close button as this is more robust and race-condition proof
 		@driver.execute_script("$('##{id}').modal('hide')")
-		# let modal animation complete
-		sleep 1
-		# wait for modal-open class to be removed from body
-		body_class = @driver.find_element(:tag_name, 'body')['class']
-		i = 0
-		while body_class == 'modal-open'
-			if i >= 10
-				raise Selenium::WebDriver::Error::TimeOutError, "Timing out on closing modal: #{id}"
-			end
-			puts "waiting for #{id} to close; try #{i}"
-			body_class = @driver.find_element(:tag_name, 'body')['class']
-			sleep 1
-			i += 1
-		end
+		# wait until OPEN_MODAL has been cleared (will reset on hidden.bs.modal event)
+		@wait.until {@driver.execute_script("return OPEN_MODAL") == ''}
 	end
 
 	# wait until element is rendered and visible
