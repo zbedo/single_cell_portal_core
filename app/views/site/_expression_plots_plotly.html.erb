@@ -2,6 +2,8 @@
 var exp = {
   x: <%= raw @expression[:all][:x] %>,
   y: <%= raw @expression[:all][:y] %>,
+  cells: <%= raw @expression[:all][:cells] %>,
+  annotations: <%= raw @expression[:all][:annotations] %>,
   <% if @cluster.is_3d? %>
     z: <%= raw @expression[:all][:z] %>,
   <% end %>
@@ -19,7 +21,7 @@ var clusterData = [exp];
 Plotly.newPlot('scatter-plot', clusterData, scatterLayout);
 
 // load static cluster scatter for reference
-var data = [];
+var dataRef = [];
 <% if @cluster.is_3d? %>
   <% @coordinates.each_key.sort.each_with_index do |key, index| %>
     var cluster_<%= index %>_clst = {
@@ -41,16 +43,20 @@ var data = [];
       }
     };
 
-    data.push(cluster_<%= index %>_clst);
+    dataRef.push(cluster_<%= index %>_clst);
   <% end %>
 <% else %>
+
   <% @coordinates.each_key.sort.each_with_index do |key, index| %>
     var cluster_<%= index %>_clst = {
       x: <%= raw @coordinates[key][:x] %>,
       y: <%= raw @coordinates[key][:y] %>,
+      cells: <%= raw @coordinates[key][:cells] %>,
+      annotations: <%= raw @coordinates[key][:annotations] %>,
       text: <%= raw @coordinates[key][:text] %>,
       name: "<%= @coordinates[key][:name] %>",
       mode: 'markers',
+      dragmode: 'lasso, select',
       type: 'scattergl',
       marker: {
         color: colorBrewerSet[<%= index %> % 27],
@@ -62,14 +68,34 @@ var data = [];
       }
     };
 
-    data.push(cluster_<%= index %>_clst);
+    dataRef.push(cluster_<%= index %>_clst);
   <% end %>
+    $("#toggle-scatter").click(function() {
+      var target = $('#scatter-plot')[0];
+      $(target).on('plotly_afterplot', function() {
+        if($(target).data('spinner') !== undefined){
+          $(target).off('plotly_afterplot');
+          $(target).data('spinner').stop();
+        }
+      });
+
+      Plotly.newPlot('scatter-plot', clusterData, scatterLayout);
+
+      // re-render reference plot if showing numeric annotations
+      /*
+      for(var i = 0; i < dataRef.length; i ++){
+        dataRef[i].type = new_type;
+      }
+      Plotly.newPlot('reference-plot', dataRef, staticLayout);
+      */
+
+    });
 <% end %>
 
 
 <%= render partial: 'static_scatter_layout' %>
 
-Plotly.newPlot('reference-plot', data, staticLayout);
+Plotly.newPlot('reference-plot', dataRef, staticLayout);
 
 $('#cluster-figure-legend').html("<p class='text-center help-block'><%= escape_javascript(render text: @cluster.study_file.description) %></p>");
 
@@ -86,8 +112,8 @@ $("#colorscale").change(function() {
     // re-render reference plot if showing numeric annotations
     if (<%= @selected_annotation[:type] == 'numeric' %>) {
         <%= render partial: 'static_scatter_layout' %>
-        data[0].marker.colorscale = theme;
-        Plotly.newPlot('reference-plot', data, staticLayout);
+        dataRef[0].marker.colorscale = theme;
+        Plotly.newPlot('reference-plot', dataRef, staticLayout);
     }
 });
 

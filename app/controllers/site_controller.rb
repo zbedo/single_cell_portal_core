@@ -126,6 +126,7 @@ class SiteController < ApplicationController
   def render_cluster
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
     @coordinates = load_cluster_group_data_array_points(@selected_annotation, subsample)
+
     @plot_type = @cluster.cluster_type == '3d' ? 'scatter3d' : 'scattergl'
     @options = load_cluster_group_options
     @cluster_annotations = load_cluster_group_annotations
@@ -528,6 +529,73 @@ class SiteController < ApplicationController
     render json: @fastq_files.to_json
   end
 
+  #Method to create user annotations from box or lasso selection
+  def create_user_annotations
+    #Data name is an array of the values of labels
+    @data_names = []
+
+    #Error handling block to create annotation
+    begin
+      #Get the label values and push to data names
+      user_annotation_params[:user_data_arrays_attributes].keys.each do |key|
+        user_annotation_params[:user_data_arrays_attributes][key][:values] =  user_annotation_params[:user_data_arrays_attributes][key][:values].split(',')
+        @data_names.push(user_annotation_params[:user_data_arrays_attributes][key][:name].strip )
+      end
+
+      #Create the annotation
+      @user_annotation = UserAnnotation.new(user_id: user_annotation_params[:user_id], study_id: user_annotation_params[:study_id], cluster_group_id: user_annotation_params[:cluster_group_id], values: @data_names, name: user_annotation_params[:name])
+
+      #Error handling, save the annotation and handle exceptions
+      if @user_annotation.save
+        #Method call to create the user data arrays for this annotation
+        @user_annotation.initialize_user_data_arrays(user_annotation_params[:user_data_arrays_attributes], user_annotation_params[:subsample_annotation],user_annotation_params[:subsample_threshold], user_annotation_params[:loaded_annotation])
+
+        #Reset the annotations in the dropdowns to include this new annotation
+        @cluster_annotations = load_cluster_group_annotations
+        @options = load_cluster_group_options
+
+        #No need for an alert, only a message saying succesfully created
+        @alert = nil
+        @notice = 'User Annotation successfully saved. You may now view this annotation via the annotations dropdown.'
+
+        #Update the dropdown partial
+        render 'update_user_annotations'
+      else
+        #If there was an error saving, reload and alert the use something broke
+        @cluster_annotations = load_cluster_group_annotations
+        @options = load_cluster_group_options
+        @notice = nil
+        @alert = 'The following errors prevented the annotation from being saved: ' + @user_annotation.errors.full_messages.join(',')
+        render 'update_user_annotations'
+      end
+    #More error handling, this is if can't save user annotation
+    rescue Mongoid::Errors::InvalidValue => e
+      #If an invalid value was somehow passed through the form, and couldn't save the annotation
+      @cluster_annotations = load_cluster_group_annotations
+      @options = load_cluster_group_options
+      @notice = nil
+      @alert = 'The following errors prevented the annotation from being saved: ' + 'Invalid data type submitted. (' + e.problem + '. ' + e.resolution + ')'
+      render 'update_user_annotations'
+
+    rescue NoMethodError => e
+      #If something is nil and can't have a method called on it, respond with an alert
+      @cluster_annotations = load_cluster_group_annotations
+      @options = load_cluster_group_options
+      @notice = nil
+      @alert = 'The following errors prevented the annotation from being saved: ' + e.message
+      render 'update_user_annotations'
+
+
+    rescue => e
+      #If a generic unexpected error occured and couldn't save the annotation
+      @cluster_annotations = load_cluster_group_annotations
+      @options = load_cluster_group_options
+      @notice = nil
+      @alert = 'An unexpected error prevented the annotation from being saved: ' + e.message
+      render 'update_user_annotations'
+    end
+  end
+
   # route that is used to log actions in Google Analytics that would otherwise be ignored due to redirects or response types
   def log_action
     @action_to_log = params[:url_string]
@@ -558,6 +626,10 @@ class SiteController < ApplicationController
     if annot_scope == 'cluster'
       @selected_annotation = @cluster.cell_annotations.find {|ca| ca[:name] == annot_name && ca[:type] == annot_type}
       @selected_annotation[:scope] = annot_scope
+    elsif annot_scope == 'user'
+      user_annotation = @cluster.user_annotations.by_name_and_user(annot_name, current_user.id)
+      @selected_annotation = {name: annot_name, type: annot_type, scope: annot_scope}
+      @selected_annotation[:values] = user_annotation.values
     else
       @selected_annotation = {name: annot_name, type: annot_type, scope: annot_scope}
       if annot_type == 'group'
@@ -572,6 +644,11 @@ class SiteController < ApplicationController
   # whitelist parameters for updating studies on study settings tab (smaller list than in studies controller)
   def study_params
     params.require(:study).permit(:name, :description, :public, :embargo, :default_options => [:cluster, :annotation, :color_profile], study_shares_attributes: [:id, :_destroy, :email, :permission])
+  end
+
+  # whitelist parameters for creating custom user annotation
+  def user_annotation_params
+    params.require(:user_annotation).permit(:_id, :name, :study_id, :user_id, :cluster_group_id, :subsample_threshold, :loaded_annotation, :subsample_annotation, user_data_arrays_attributes: [:name, :values])
   end
 
   def check_view_permissions
@@ -621,8 +698,16 @@ class SiteController < ApplicationController
     cells = @cluster.concatenate_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     annotation_array = []
     annotation_hash = {}
+    #Construct the arrays based on scope
     if annotation[:scope] == 'cluster'
       annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
+    elsif annotation[:scope] == 'user'
+      user_annotation = @cluster.user_annotations.by_name_and_user(annotation[:name], current_user.id)
+      annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
+      x_array = user_annotation.concatenate_user_data_arrays('x', 'coordinates', subsample_threshold, subsample_annotation)
+      y_array = user_annotation.concatenate_user_data_arrays('y', 'coordinates', subsample_threshold, subsample_annotation)
+      z_array = user_annotation.concatenate_user_data_arrays('z', 'coordinates', subsample_threshold, subsample_annotation)
+      cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     else
       # for study-wide annotations, load from study_metadata values instead of cluster-specific annotations
       annotation_hash = @study.study_metadata_values(annotation[:name], annotation[:type])
@@ -648,7 +733,9 @@ class SiteController < ApplicationController
       coordinates[:all] = {
           x: x_array,
           y: y_array,
+          annotations: annotation[:scope] == 'cluster' ? annotation_array : annotation_hash[:values],
           text: text_array,
+          cells: cells,
           name: annotation[:name],
           marker: {
               cmax: annotation_array.max,
@@ -670,14 +757,18 @@ class SiteController < ApplicationController
     else
       # assemble containers for each trace
       annotation[:values].each do |value|
-        coordinates[value] = {x: [], y: [], text: [], name: "#{annotation[:name]}: #{value}", marker_size: []}
+        coordinates[value] = {x: [], y: [], text: [], cells: [], annotations: [], name: "#{annotation[:name]}: #{value}", marker_size: []}
         if @cluster.is_3d?
           coordinates[value][:z] = []
         end
       end
-      if annotation[:scope] == 'cluster'
+
+      if annotation[:scope] == 'cluster' || annotation[:scope] == 'user'
+        logger.info("coord array: #{coordinates}")
         annotation_array.each_with_index do |annotation_value, index|
           coordinates[annotation_value][:text] << "<b>#{cells[index]}</b><br>#{annotation[:name]}: #{annotation_value}"
+          coordinates[annotation_value][:annotations] << "#{annotation[:name]}: #{annotation_value}"
+          coordinates[annotation_value][:cells] << cells[index]
           coordinates[annotation_value][:x] << x_array[index]
           coordinates[annotation_value][:y] << y_array[index]
           if @cluster.cluster_type == '3d'
@@ -693,8 +784,10 @@ class SiteController < ApplicationController
           if annotation_hash.has_key?(cell)
             annotation_value = annotation_hash[cell]
             coordinates[annotation_value][:text] << "<b>#{cell}</b><br>#{annotation[:name]}: #{annotation_value}"
+            coordinates[annotation_value][:annotations] << "#{annotation[:name]}: #{annotation_value}"
             coordinates[annotation_value][:x] << x_array[index]
             coordinates[annotation_value][:y] << y_array[index]
+            coordinates[annotation_value][:cells] << cell
             if @cluster.cluster_type == '3d'
               coordinates[annotation_value][:z] << z_array[index]
             end
@@ -704,10 +797,12 @@ class SiteController < ApplicationController
         coordinates.each do |key, data|
           data[:name] << " (#{data[:x].size} points)"
         end
-        # gotcha to remove entries in case a particular annotation value comes up blank since this is study-wide
-        coordinates.delete_if {|key, data| data[:x].empty?}
+
       end
+
     end
+    # gotcha to remove entries in case a particular annotation value comes up blank since this is study-wide
+    coordinates.delete_if {|key, data| data[:x].empty?}
     coordinates
   end
 
@@ -720,19 +815,26 @@ class SiteController < ApplicationController
     annotation_hash = {}
     if annotation[:scope] == 'cluster'
       annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
+    elsif annotation[:scope] == 'user'
+      user_annotation = @cluster.user_annotations.by_name_and_user(annotation[:name], current_user.id)
+      annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
+      cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     else
       annotation_hash = @study.study_metadata_values(annotation[:name], annotation[:type])
     end
     values = {}
-    values[:all] = {x: [], y: [], text: [], marker_size: []}
-    if annotation[:scope] == 'cluster'
+    values[:all] = {x: [], y: [], cells: [], annotations: [], text: [], marker_size: []}
+    if annotation[:scope] == 'cluster' || annotation[:scope] == 'user'
       annotation_array.each_with_index do |annot, index|
         annotation_value = annot
         cell_name = cells[index]
         expression_value = @gene.scores[cell_name].to_f.round(4)
+
         values[:all][:text] << "<b>#{cell_name}</b><br>#{annotation[:name]}: #{annotation_value}<br>#{@y_axis_title}: #{expression_value}"
+        values[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
         values[:all][:x] << annotation_value
         values[:all][:y] << expression_value
+        values[:all][:cells] << cell_name
         values[:all][:marker_size] << 6
       end
     else
@@ -741,8 +843,10 @@ class SiteController < ApplicationController
           annotation_value = annotation_hash[cell]
           expression_value = @gene.scores[cell].to_f.round(4)
           values[:all][:text] << "<b>#{cell}</b><br>#{annotation[:name]}: #{annotation_value}<br>#{@y_axis_title}: #{expression_value}"
+          values[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
           values[:all][:x] << annotation_value
           values[:all][:y] << expression_value
+          values[:all][:cells] << cell
           values[:all][:marker_size] << 6
         end
       end
@@ -756,12 +860,16 @@ class SiteController < ApplicationController
     # construct annotation key to load subsample data_arrays if needed, will be identical to params[:annotation]
     subsample_annotation = "#{annotation[:name]}--#{annotation[:type]}--#{annotation[:scope]}"
     values = {}
-    values[:all] = {x: [], y: [], text: [], marker_size: []}
+    values[:all] = {x: [], y: [], cells: [], annotations: [], text: [], marker_size: []}
     cells = @cluster.concatenate_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     annotation_array = []
     annotation_hash = {}
     if annotation[:scope] == 'cluster'
       annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
+    elsif annotation[:scope] == 'user'
+      user_annotation = @cluster.user_annotations.by_name_and_user(annotation[:name], current_user.id)
+      annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
+      cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     else
       annotation_hash = @study.study_metadata_values(annotation[:name], annotation[:type])
     end
@@ -776,8 +884,10 @@ class SiteController < ApplicationController
           expression_value = calculate_mean(@genes, cell)
       end
       values[:all][:text] << "<b>#{cell}</b><br>#{annotation[:name]}: #{annotation_value}<br>#{@y_axis_title}: #{expression_value}"
+      values[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
       values[:all][:x] << annotation_value
       values[:all][:y] << expression_value
+      values[:all][:cells] << cell
       values[:all][:marker_size] << 6
     end
     values
@@ -798,6 +908,13 @@ class SiteController < ApplicationController
       cells.each_with_index do |cell, index|
         values[annotations[index]][:y] << @gene.scores[cell].to_f.round(4)
       end
+    elsif annotation[:scope] == 'user'
+      user_annotation = @cluster.user_annotations.by_name_and_user(annotation[:name], current_user.id)
+      annotations = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
+      cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
+      cells.each_with_index do |cell, index|
+        values[annotations[index]][:y] << @gene.scores[cell].to_f.round(4)
+      end
     else
       # since annotations are in a hash format, subsampling isn't necessary as we're going to retrieve values by key lookup
       annotations =  @study.study_metadata_values(annotation[:name], annotation[:type])
@@ -806,11 +923,12 @@ class SiteController < ApplicationController
         # must check if key exists
         if values.has_key?(val)
           values[annotations[cell]][:y] << @gene.scores[cell].to_f.round(4)
+          values[annotations[cell]][:cells] << cell
         end
       end
-      # remove any empty values as annotations may have created keys that don't exist in cluster
-      values.delete_if {|key, data| data[:y].empty?}
     end
+    # remove any empty values as annotations may have created keys that don't exist in cluster
+    values.delete_if {|key, data| data[:y].empty?}
     values
   end
 
@@ -826,6 +944,13 @@ class SiteController < ApplicationController
     annotation_hash = {}
     if annotation[:scope] == 'cluster'
       annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold)
+    elsif annotation[:scope] == 'user'
+      user_annotation = @cluster.user_annotations.by_name_and_user(annotation[:name], current_user.id)
+      annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
+      x_array = user_annotation.concatenate_user_data_arrays('x', 'coordinates', subsample_threshold, subsample_annotation)
+      y_array = user_annotation.concatenate_user_data_arrays('y', 'coordinates', subsample_threshold, subsample_annotation)
+      z_array = user_annotation.concatenate_user_data_arrays('z', 'coordinates', subsample_threshold, subsample_annotation)
+      cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     else
       # for study-wide annotations, load from study_metadata values instead of cluster-specific annotations
       annotation_hash = @study.study_metadata_values(annotation[:name], annotation[:type])
@@ -834,7 +959,9 @@ class SiteController < ApplicationController
     expression[:all] = {
         x: x_array,
         y: y_array,
+        annotations: [],
         text: [],
+        cells: cells,
         marker: {cmax: 0, cmin: 0, color: [], size: [], showscale: true, colorbar: {title: @y_axis_title , titleside: 'right'}}
     }
     if @cluster.is_3d?
@@ -845,6 +972,7 @@ class SiteController < ApplicationController
       # load correct annotation value based on scope
       annotation_value = annotation[:scope] == 'cluster' ? annotation_array[index] : annotation_hash[cell]
       text_value = "#{cell} (#{annotation[:name]}: #{annotation_value})<br />#{@y_axis_title}: #{expression_score}"
+      expression[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
       expression[:all][:text] << text_value
       expression[:all][:marker][:color] << expression_score
       expression[:all][:marker][:size] << 6
@@ -861,7 +989,6 @@ class SiteController < ApplicationController
 		values = initialize_plotly_objects_by_annotation(annotation)
     # construct annotation key to load subsample data_arrays if needed, will be identical to params[:annotation]
     subsample_annotation = "#{annotation[:name]}--#{annotation[:type]}--#{annotation[:scope]}"
-
     # grab all cells present in the cluster, and use as keys to load expression scores
     # if a cell is not present for the gene, score gets set as 0.0
     # will check if there are more than SUBSAMPLE_THRESHOLD cells present in the cluster, and subsample accordingly
@@ -870,6 +997,22 @@ class SiteController < ApplicationController
     if annotation[:scope] == 'cluster'
       annotations = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       cells.each_with_index do |cell, index|
+        values[annotations[index]][:annotations] << annotations[index]
+        case consensus
+          when 'mean'
+            values[annotations[index]][:y] << calculate_mean(@genes, cell)
+          when 'median'
+            values[annotations[index]][:y] << calculate_median(@genes, cell)
+          else
+            values[annotations[index]][:y] << calculate_mean(@genes, cell)
+        end
+      end
+    elsif annotation[:scope] == 'user'
+      user_annotation = @cluster.user_annotations.by_name_and_user(annotation[:name], current_user.id)
+      annotations = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
+      cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
+      cells.each_with_index do |cell, index|
+        values[annotations[index]][:annotations] << annotations[index]
         case consensus
           when 'mean'
             values[annotations[index]][:y] << calculate_mean(@genes, cell)
@@ -886,6 +1029,7 @@ class SiteController < ApplicationController
         val = annotations[cell]
         # must check if key exists
         if values.has_key?(val)
+          values[annotations[cell]][:cells] << cell
           case consensus
             when 'mean'
               values[annotations[cell]][:y] << calculate_mean(@genes, cell)
@@ -896,9 +1040,9 @@ class SiteController < ApplicationController
           end
         end
       end
-      # remove any empty values as annotations may have created keys that don't exist in cluster
-      values.delete_if {|key, data| data[:y].empty?}
     end
+    # remove any empty values as annotations may have created keys that don't exist in cluster
+    values.delete_if {|key, data| data[:y].empty?}
     values
   end
 
@@ -917,6 +1061,13 @@ class SiteController < ApplicationController
     annotation_hash = {}
     if annotation[:scope] == 'cluster'
       annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
+    elsif annotation[:scope] == 'user'
+      user_annotation = @cluster.user_annotations.by_name_and_user(annotation[:name], current_user.id)
+      annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
+      x_array = user_annotation.concatenate_user_data_arrays('x', 'coordinates', subsample_threshold, subsample_annotation)
+      y_array = user_annotation.concatenate_user_data_arrays('y', 'coordinates', subsample_threshold, subsample_annotation)
+      z_array = user_annotation.concatenate_user_data_arrays('z', 'coordinates', subsample_threshold, subsample_annotation)
+      cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     else
       # for study-wide annotations, load from study_metadata values instead of cluster-specific annotations
       annotation_hash = @study.study_metadata_values(annotation[:name], annotation[:type])
@@ -926,6 +1077,8 @@ class SiteController < ApplicationController
 				x: x_array,
 				y: y_array,
 				text: [],
+        annotations: [],
+        cells: cells,
 				marker: {cmax: 0, cmin: 0, color: [], size: [], showscale: true, colorbar: {title: @y_axis_title , titleside: 'right'}}
 		}
     if @cluster.is_3d?
@@ -944,7 +1097,8 @@ class SiteController < ApplicationController
       # load correct annotation value based on scope
       annotation_value = annotation[:scope] == 'cluster' ? annotation_array[index] : annotation_hash[cell]
       text_value = "#{cell} (#{annotation[:name]}: #{annotation_value})<br />#{@y_axis_title}: #{expression_score}"
-			expression[:all][:text] << text_value
+			expression[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
+      expression[:all][:text] << text_value
 			expression[:all][:marker][:color] << expression_score
 			expression[:all][:marker][:line] = { color: 'rgb(40,40,40)', width: 0.5}
 			expression[:all][:marker][:size] << 6
@@ -959,7 +1113,7 @@ class SiteController < ApplicationController
   def initialize_plotly_objects_by_annotation(annotation)
     values = {}
     annotation[:values].each do |value|
-      values["#{value}"] = {y: [], name: "#{value}" }
+      values["#{value}"] = {y: [], cells: [], annotations: [], name: "#{value}" }
     end
     values
   end
@@ -1049,6 +1203,13 @@ class SiteController < ApplicationController
         'Cluster-based' => @cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]},
         'Study Wide' => @study.study_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
     }
+    #load a user's user annotations if user is signed in and has any
+    if user_signed_in?
+      user_annotations = UserAnnotation.where(user_id: current_user.id, study_id: @study.id, cluster_group_id: @cluster.id).to_a
+      unless user_annotations.empty?
+        grouped_options['User Annotations'] = user_annotations.map {|annot| ["#{annot.name}", "#{annot.name}--group--user"] }
+      end
+    end
     grouped_options
   end
 

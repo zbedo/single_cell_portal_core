@@ -101,6 +101,10 @@ class Study
     end
   end
 
+  #User annotations are per study
+  has_many :user_annotations, dependent: :delete
+  has_many :user_data_arrays, dependent: :delete
+
   # field definitions
   field :name, type: String
   field :embargo, type: Date
@@ -411,6 +415,8 @@ class Study
       ClusterGroup.where(study_id: study.id).delete_all
       StudyFile.where(study_id: study.id).delete_all
       DirectoryListing.where(study_id: study.id).delete_all
+      UserAnnotation.where(study_id: study.id).delete_all
+      UserDataArray.where(study_id: study.id).delete_all
       # now destroy study to ensure everything is removed
       study.destroy
       Rails.logger.info "#{Time.now}: delete of #{study.name} completed"

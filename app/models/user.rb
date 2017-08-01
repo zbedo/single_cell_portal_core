@@ -5,6 +5,13 @@ class User
   include Mongoid::Timestamps
 
   has_many :studies
+  #User annotations are owned by a user
+  has_many :user_annotations do
+    def owned_by(user)
+      where(user_id: user.id).to_a
+    end
+  end
+
 
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable and :omniauthable

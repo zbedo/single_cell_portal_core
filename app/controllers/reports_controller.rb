@@ -67,10 +67,15 @@ class ReportsController < ApplicationController
       @returning_users_by_week[timepoint.date.to_s] = timepoint.value[:count]
     end
     # now figure out returning users since last report
-    latest_date = user_timepoints.sort_by {|tp| tp.date}.last.date
-    if latest_date < today
-      next_period = latest_date + 1.week
-      @returning_users_by_week[next_period.to_s] = users.select {|user| user.last_sign_in_at >= latest_date || user.current_sign_in_at >= latest_date }.size
+    if user_timepoints.any?
+      latest_date = user_timepoints.sort_by {|tp| tp.date}.last.date
+      if latest_date < today
+        next_period = latest_date + 1.week
+        @returning_users_by_week[next_period.to_s] = users.select {|user| user.last_sign_in_at >= latest_date || user.current_sign_in_at >= latest_date }.size
+      end
+    else
+      latest_date = today - 1.week
+      @returning_users_by_week[today.to_s] = users.select {|user| user.last_sign_in_at >= latest_date || user.current_sign_in_at >= latest_date }.size
     end
 
     # sort domain breakdowns by totals to order plot
