@@ -252,7 +252,6 @@ class UiTestSuite < Test::Unit::TestCase
 		# determine which password to use
 		password = email == $test_email ? $test_email_password : $share_email_password
 		google_auth = @driver.find_element(:id, 'google-auth')
-		sleep(1.5)
 		google_auth.click
 		puts 'logging in as ' + email
 		email_field = @driver.find_element(:id, 'identifierId')
@@ -2288,7 +2287,7 @@ class UiTestSuite < Test::Unit::TestCase
 		search_genes = @driver.find_element(:id, 'perform-gene-search')
 		search_genes.click
 		assert element_present?(:id, 'plots'), 'could not find expression heatmap'
-		@wait.until {wait_for_plotly_render('#heatmap-plot', 'rendered')}
+		@wait.until {wait_for_morpheus_render('#heatmap-plot', 'morpheus')}
 		private_rendered = @driver.execute_script("return $('#heatmap-plot').data('rendered')")
 		assert private_rendered, "private heatmap plot did not finish rendering, expected true but found #{private_rendered}"
 		private_heatmap_drawn = @driver.execute_script("return $('#heatmap-plot').data('morpheus').heatmap !== undefined;")
@@ -3253,7 +3252,7 @@ class UiTestSuite < Test::Unit::TestCase
 		#Enable Selection
 		wait_for_render(:id, 'toggle-scatter')
 		enable_select_button = @driver.find_element(:id, 'toggle-scatter')
-		sleep 0.25
+		sleep 0.5
 		enable_select_button.click
 
 		# select the scatter plot
@@ -3536,7 +3535,6 @@ class UiTestSuite < Test::Unit::TestCase
 
 		@driver.find_element(:class, "user-#{$random_seed}-delete").click
 		@driver.switch_to.alert.accept
-		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
 		#check new names
 		new_names = @driver.find_elements(:class, 'annotation-name').map{|x| x.text }
@@ -3546,15 +3544,12 @@ class UiTestSuite < Test::Unit::TestCase
 
 		@driver.find_element(:class, "user-#{$random_seed}-exp-delete").click
 		@driver.switch_to.alert.accept
-		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
 
 		#check new names
 		new_names = @driver.find_elements(:class, 'annotation-name').map{|x| x.text }
 		#assert new name saved correctly
 		assert !(new_names.include? "user-#{$random_seed}-exp"), "Deletion failed, expected no 'user-#{$random_seed}-exp' but found it"
-
-
 	end
 
 
@@ -3592,8 +3587,6 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.find_element(:class, "gzip-parse-#{$random_seed}-delete").click
 		@driver.switch_to.alert.accept
 		close_modal('message_modal')
-
-
 
 		puts "Test method: #{self.method_name} successful!"
 	end

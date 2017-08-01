@@ -764,7 +764,6 @@ class SiteController < ApplicationController
       end
 
       if annotation[:scope] == 'cluster' || annotation[:scope] == 'user'
-        logger.info("coord array: #{coordinates}")
         annotation_array.each_with_index do |annotation_value, index|
           coordinates[annotation_value][:text] << "<b>#{cells[index]}</b><br>#{annotation[:name]}: #{annotation_value}"
           coordinates[annotation_value][:annotations] << "#{annotation[:name]}: #{annotation_value}"
