@@ -690,9 +690,9 @@ class UiTestSuite < Test::Unit::TestCase
 		firecloud_url = "https://portal.firecloud.org/#workspaces/single-cell-portal/development-test-study-#{$random_seed}"
 		firecloud_link.click
 		@driver.switch_to.window(@driver.window_handles.last)
-		assert @driver.current_url == firecloud_url, 'did not open firecloud workspace'
 		completed = @driver.find_elements(:class, 'fa-check-circle')
 		assert completed.size >= 1, 'did not provision workspace properly'
+		assert @driver.current_url == firecloud_url, 'did not open firecloud workspace'
 
 		# verify gcs bucket and uploads
 		@driver.switch_to.window(@driver.window_handles.first)
