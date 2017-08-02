@@ -7,7 +7,7 @@ class UserAnnotationsController < ApplicationController
   # GET /user_annotations.json
   def index
     #get all this user's annotations
-    @user_annotations = UserAnnotation.where(user_id: current_user.id, queued_for_deletion: false).to_a
+    @user_annotations = current_user.user_annotations.owned_by(current_user)
     views = UserAnnotation.viewable(current_user)
     @user_annotations.concat(views).uniq!
   end
