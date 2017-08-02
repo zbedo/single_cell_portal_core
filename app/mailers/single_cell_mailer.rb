@@ -51,7 +51,17 @@ class SingleCellMailer < ApplicationMailer
     end
 	end
 
-	def share_update_notification(study, changes, update_user)
+  def share_annotation_notification(user, share)
+    @share = share
+    @user_annotation = @share.user_annotation
+    @user = user
+
+    mail(to: @share.email, cc: user.email, subject: "[Single Cell Portal Notifier] Annotation: #{@user_annotation.name} has been shared") do |format|
+      format.html
+    end
+  end
+
+  def share_update_notification(study, changes, update_user)
 		@study = study
 		@changes = changes
 		@notify = @study.study_shares.map(&:email)
@@ -62,7 +72,20 @@ class SingleCellMailer < ApplicationMailer
 		mail(to: @notify, subject: "[Single Cell Portal Notifier] Study: #{@study.name} has been updated") do |format|
 			format.html
 		end
-	end
+  end
+
+  def annot_share_update_notification(annot, changes, update_user)
+    @user_annotation = annot
+    @changes = changes
+    @notify = @user_annotation.user_annotation_shares.map(&:email)
+    @notify << @user_annotation.user.email
+
+    # remove user performing action from notification
+    @notify.delete(update_user.email)
+    mail(to: @notify, subject: "[Single Cell Portal Notifier] Annotation: #{@user_annotation.name} has been updated") do |format|
+      format.html
+    end
+  end
 
 	def share_delete_fail(study, share)
 		@study = study
@@ -85,6 +108,19 @@ class SingleCellMailer < ApplicationMailer
 		mail(to: @notify, subject: "[Single Cell Portal Notifier] Study: #{@study.name} has been deleted") do |format|
 			format.html {render html: "<p>The study #{@study.name} has been deleted by #{@user}</p>".html_safe}
 		end
+  end
+
+  def annotation_delete_notification(annot, user)
+    @user_annotation = annot
+    @user = user.email
+
+    @notify = @user_annotation.user_annotation_shares.map(&:email)
+    @notify << @user_annotation.user.email
+    @notify.delete_if(&:blank?)
+
+    mail(to: @notify, subject: "[Single Cell Portal Notifier] User Annotation: #{@user_annotation.name} has been deleted") do |format|
+      format.html {render html: "<p>The study #{@user_annotation.name} has been deleted by #{@user}</p>".html_safe}
+    end
   end
 
   # generic admin notification email method

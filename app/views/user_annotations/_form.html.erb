@@ -1,4 +1,4 @@
-<%= form_for(@user_annotation) do |f| %>
+<%= nested_form_for(@user_annotation, html: {multipart: true}) do |f| %>
   <% if @user_annotation.errors.any? %>
 		<div class="bs-callout bs-callout-danger">
 			<h4><%= pluralize(@user_annotation.errors.count, 'error') %> prohibited this study from being saved:</h4>
@@ -46,7 +46,11 @@
     </div>
 
   <% end %>
-
+  <div class="form-group">
+    <h3>Sharing</h3>
+    <%= f.fields_for :user_annotation_shares %>
+    <%= f.link_to_add "<span class='fa fa-plus'></span> Share Study".html_safe, :user_annotation_shares, class: 'btn btn-primary', id: 'add-user-annotation-share' %>
+  </div>
   <div class="form-group">
     <%= f.button 'Submit', {class: 'btn btn-lg btn-success', id: 'submit-button', type: 'button'} %>
     <script>
@@ -77,4 +81,5 @@
       });
     </script>
   </div>
+
 <% end %>

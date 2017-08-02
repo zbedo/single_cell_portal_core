@@ -8,6 +8,8 @@ class UserAnnotationsController < ApplicationController
   def index
     #get all this user's annotations
     @user_annotations = current_user.user_annotations.owned_by(current_user)
+    views = UserAnnotation.viewable(current_user)
+    @user_annotations.concat(views).uniq!
   end
 
   # GET /user_annotations/1/edit
@@ -18,6 +20,17 @@ class UserAnnotationsController < ApplicationController
   # PATCH/PUT /user_annotations/1
   # PATCH/PUT /user_annotations/1.json
   def update
+    # check if any changes were made to sharing for notifications
+    if !user_annotation_params[:user_annotation_shares_attributes].nil?
+      @share_changes = @user_annotation.user_annotation_shares.count != user_annotation_params[:user_annotation_shares_attributes].keys.size
+      user_annotation_params[:user_annotation_shares_attributes].values.each do |share|
+        if share["_destroy"] == "1"
+          @share_changes = true
+        end
+      end
+    else
+      @share_changes = false
+    end
     #update the annotation's defined labels
     new_labels = user_annotation_params.to_h['values']
     #If the labels sued to include undefined, make sure they do again
@@ -32,8 +45,15 @@ class UserAnnotationsController < ApplicationController
     annotation_arrays = @user_annotation.user_data_arrays.by_name_and_type(@user_annotation.name,'annotations')
 
     respond_to do |format|
-      #if a successful update, uodat data arrays
+      #if a successful update, update data arrays
       if @user_annotation.update(user_annotation_params)
+        changes = []
+        if @share_changes
+          changes << 'Annotation shares'
+        end
+        if @user_annotation.user_annotation_shares.any?
+          SingleCellMailer.annot_share_update_notification(@user_annotation, changes, current_user).deliver_now
+        end
         #this is per annotation array-- each annotation array is a different subsampling level
         annotation_arrays.each do |annot|
           #remember the index of old labels, this is per annotation
@@ -52,9 +72,7 @@ class UserAnnotationsController < ApplicationController
           end
 
           #index of values remembers what the order of the old annotations was
-
           index_of_values.each_with_index do |old_index, i|
-            logger.info("in loop, old index:  #{old_index}")
             old_index.each do |index|
               old_values[index] = new_labels[i]
             end
@@ -85,9 +103,20 @@ class UserAnnotationsController < ApplicationController
   # DELETE /user_annotations/1
   # DELETE /user_annotations/1.json
   def destroy
-    #delete data arrays when deleting an annotation
-    @user_annotation.user_data_arrays.destroy
-    @user_annotation.destroy
+    # set queued_for_deletion manually - gotcha due to race condition on page reloading and how quickly delayed_job can process jobs
+    @user_annotation.update(queued_for_deletion: true)
+
+    # queue jobs to delete annotation caches & annotation itself
+    cache_key = "#{@user_annotation.study.url_safe_name}.*#{@user_annotation.cluster_group.name.split.join('-')}_#{@user_annotation.name}--user--group.*"
+    CacheRemovalJob.new(cache_key).delay.perform
+    DeleteQueueJob.new(@user_annotation).delay.perform
+
+    # notify users of deletion before removing shares & owner
+    SingleCellMailer.annotation_delete_notification(@user_annotation, current_user).deliver_now
+
+    # revoke all user annotation shares
+    @user_annotation.user_annotation_shares.delete_all
+    update_message = "User Annotation '#{@user_annotation.name}'was successfully destroyed. All parsed database records have been destroyed."
     respond_to do |format|
       #redirect back to page when destroy finishes
       format.html { redirect_to user_annotations_path, notice: "User Annotation '#{@user_annotation.name}' was successfully destroyed." }
@@ -118,7 +147,6 @@ class UserAnnotationsController < ApplicationController
       end
 
     end
-    logger.info(rows)
     @data = [headers.join("\t"), types.join("\t"), rows].join"\n"
 
     send_data @data, type: 'text/plain', filename: filename, disposition: 'attachment'
@@ -133,7 +161,7 @@ class UserAnnotationsController < ApplicationController
   # Never trust parameters from the scary internet, only allow the white list through.
   # whitelist parameters for creating custom user annotation
   def user_annotation_params
-    params.require(:user_annotation).permit(:_id, :name, :study_id, :user_id, :cluster_group_id, values: [])
+    params.require(:user_annotation).permit(:_id, :name, :study_id, :user_id, :cluster_group_id, values: [], user_annotation_shares_attributes: [:id, :_destroy, :email, :permission])
   end
 
   # checks that current user id is the same as annotation being edited or destroyed
@@ -141,7 +169,7 @@ class UserAnnotationsController < ApplicationController
     if @user_annotation.nil?
       @user_annotation = UserAnnotation.find(params[:id])
     end
-    if @user_annotation.user_id != current_user.id
+    if !@user_annotation.can_edit?(current_user)
       redirect_to user_annotations_path, alert: 'You don\'t have permission to perform that action'
     end
   end
