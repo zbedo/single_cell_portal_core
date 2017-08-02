@@ -163,10 +163,10 @@
     </div>
   </div>
   <% if action_name !~ /heatmap/ %>
-    <div class="panel panel-info" id="search-options-panel">
+    <div class="panel panel-<%= user_signed_in? ? 'info' : 'default' %>" id="search-options-panel">
       <div class="panel-heading">
         <div class="panel-title">
-          <h4><a href="#panel-selection" data-toggle="collapse" data-parent="#search-parent" id="create_annotations_panel">Create Annotations <span class='fa fa-tags'></span></a></h4>
+          <h4><a href="#panel-selection" data-toggle="<%= user_signed_in? ? 'collapse' : 'tooltip'%>" data-parent="#search-parent" id="create_annotations_panel" title="<%= user_signed_in? ? '' : 'Sign in to create custom annotations.'%>">Create Annotations <span class='fa fa-tags'></span></a></h4>
         </div>
       </div>
       <div class="panel-body collapse" id="panel-selection">
@@ -193,17 +193,18 @@
       <% else %>
         var targetPlotString = 'scatter-plot';
       <% end %>
-    <% end %>
 
     //Stick the search for selection facilitation in expression pages if selecting annotation
-  $('#panel-selection').on('show.bs.collapse', function () {
-      $(document).off('scroll', '#search-parent');
-      $('#search-parent').stickyPanel(stickyOptions);
-      window.scrollTo(0,$(('#' + targetPlotString)).offset().top -175)
-  });
+    $('#panel-selection').on('show.bs.collapse', function () {
+        $(document).off('scroll', '#search-parent');
+        $('#search-parent').stickyPanel(stickyOptions);
+        window.scrollTo(0,$(('#' + targetPlotString)).offset().top -175)
+    });
 
-  $('#panel-genes-search').on('show.bs.collapse', function () {
-      $('#search-parent').stickyPanel('unstick');
-  });
+    $('#panel-genes-search').on('show.bs.collapse', function () {
+        $('#search-parent').stickyPanel('unstick');
+    });
+    <% end %>
+
 
 </script>

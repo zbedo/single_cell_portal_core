@@ -110,6 +110,19 @@ class SingleCellMailer < ApplicationMailer
 		end
   end
 
+  def annotation_delete_notification(annot, user)
+    @user_annotation = annot
+    @user = user.email
+
+    @notify = @user_annotation.user_annotation_shares.map(&:email)
+    @notify << @user_annotation.user.email
+    @notify.delete_if(&:blank?)
+
+    mail(to: @notify, subject: "[Single Cell Portal Notifier] User Annotation: #{@user_annotation.name} has been deleted") do |format|
+      format.html {render html: "<p>The study #{@user_annotation.name} has been deleted by #{@user}</p>".html_safe}
+    end
+  end
+
   # generic admin notification email method
   def admin_notification(subject, requester, message)
     # don't deliver if config value is set to true

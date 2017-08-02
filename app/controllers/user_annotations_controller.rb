@@ -7,10 +7,9 @@ class UserAnnotationsController < ApplicationController
   # GET /user_annotations.json
   def index
     #get all this user's annotations
-    @user_annotations = current_user.user_annotations.owned_by(current_user)
+    @user_annotations = UserAnnotation.where(user_id: current_user.id, queued_for_deletion: false).to_a
     views = UserAnnotation.viewable(current_user)
-    edits = UserAnnotation.editable(current_user)
-    @user_annotations.concat(views).concat(edits).uniq!
+    @user_annotations.concat(views).uniq!
   end
 
   # GET /user_annotations/1/edit
@@ -104,9 +103,20 @@ class UserAnnotationsController < ApplicationController
   # DELETE /user_annotations/1
   # DELETE /user_annotations/1.json
   def destroy
-    #delete data arrays when deleting an annotation
-    @user_annotation.user_data_arrays.destroy
-    @user_annotation.destroy
+    # set queued_for_deletion manually - gotcha due to race condition on page reloading and how quickly delayed_job can process jobs
+    @user_annotation.update(queued_for_deletion: true)
+
+    # queue jobs to delete annotation caches & annotation itself
+    cache_key = "#{@user_annotation.study.url_safe_name}.*#{@user_annotation.cluster_group.name.split.join('-')}_#{@user_annotation.name}--user--group.*"
+    CacheRemovalJob.new(cache_key).delay.perform
+    DeleteQueueJob.new(@user_annotation).delay.perform
+
+    # notify users of deletion before removing shares & owner
+    SingleCellMailer.annotation_delete_notification(@user_annotation, current_user).deliver_now
+
+    # revoke all user annotation shares
+    @user_annotation.user_annotation_shares.delete_all
+    update_message = "User Annotation '#{@user_annotation.name}'was successfully destroyed. All parsed database records have been destroyed."
     respond_to do |format|
       #redirect back to page when destroy finishes
       format.html { redirect_to user_annotations_path, notice: "User Annotation '#{@user_annotation.name}' was successfully destroyed." }

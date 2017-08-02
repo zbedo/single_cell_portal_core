@@ -3549,7 +3549,6 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads('user annotation path')
 
 		# logout
-		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
 		profile = @driver.find_element(:id, 'profile-nav')
 		profile.click
@@ -3586,8 +3585,7 @@ class UiTestSuite < Test::Unit::TestCase
 		assert element_present?(:id, 'box-controls'), 'could not find expression violin plot'
 		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
 
-		sleep 0.50
-
+		wait_for_render(:class, 'queried-gene')
 		# confirm queried gene is the one returned
 		queried_gene = @driver.find_element(:class, 'queried-gene')
 		assert queried_gene.text == gene, "did not load the correct gene, expected #{gene} but found #{queried_gene.text}"
@@ -3712,7 +3710,6 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads('user annotation path')
 
 		# logout
-		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
 		profile = @driver.find_element(:id, 'profile-nav')
 		profile.click

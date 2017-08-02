@@ -355,4 +355,15 @@ class UserAnnotation
   def admins
     [self.user.email, self.user_annotation_shares.can_edit, User.where(admin: true).pluck(:email)].flatten.uniq
   end
+
+  # delete all queued study file objects
+  def self.delete_queued_annotations
+    annotations = self.where(queued_for_deletion: true)
+    annotations.each do |annot|
+      Rails.logger.info "#{Time.now} deleting queued annotation #{annot.name} in study #{annot.study.name}."
+      annot.destroy
+      Rails.logger.info "#{Time.now} #{annot.name} successfully deleted."
+    end
+  end
+
 end
