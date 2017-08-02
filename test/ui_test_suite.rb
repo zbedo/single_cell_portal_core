@@ -1472,7 +1472,6 @@ class UiTestSuite < Test::Unit::TestCase
 		assert element_visible?(:id, 'message_modal'), 'confirmation message did not appear'
 		message = @driver.find_element(:id, 'notice-content').text
 		assert message.include?('jobs'), "'confirmation message did not pertain to locked jobs ('jobs' not found)"
-		close_modal('message_modal')
 
 		puts "Test method: #{self.method_name} successful!"
 	end
@@ -1494,7 +1493,6 @@ class UiTestSuite < Test::Unit::TestCase
 		message = @driver.find_element(:id, 'notice-content').text
 		expected_conf = 'All user download quotas successfully reset to 0.'
 		assert message == expected_conf, "correct confirmation did not appear, expected #{expected_conf} but found #{message}"
-		close_modal('message_modal')
 
 		puts "Test method: #{self.method_name} successful!"
 	end
@@ -1516,7 +1514,6 @@ class UiTestSuite < Test::Unit::TestCase
 		message = @driver.find_element(:id, 'notice-content').text
 		expected_conf = 'API Client successfully refreshed.'
 		assert message.start_with?(expected_conf), "correct confirmation did not appear, expected #{expected_conf} but found #{message}"
-		close_modal('message_modal')
 
 		puts "Test method: #{self.method_name} successful!"
 	end
