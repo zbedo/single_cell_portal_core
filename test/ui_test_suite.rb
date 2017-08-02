@@ -2312,7 +2312,7 @@ class UiTestSuite < Test::Unit::TestCase
 		search_genes = @driver.find_element(:id, 'perform-gene-search')
 		search_genes.click
 		assert element_present?(:id, 'plots'), 'could not find expression heatmap'
-		@wait.until {wait_for_morpheus_render('#heatmap-plot', 'rendered')}
+		@wait.until {wait_for_morpheus_render('#heatmap-plot', 'morpheus')}
 		private_rendered = @driver.execute_script("return $('#heatmap-plot').data('rendered')")
 		assert private_rendered, "private heatmap plot did not finish rendering, expected true but found #{private_rendered}"
 		private_heatmap_drawn = @driver.execute_script("return $('#heatmap-plot').data('morpheus').heatmap !== undefined;")
@@ -3850,8 +3850,6 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.switch_to.alert.accept
 		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
-
-
 
 		puts "Test method: #{self.method_name} successful!"
 	end
