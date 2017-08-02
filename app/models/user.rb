@@ -8,7 +8,7 @@ class User
   #User annotations are owned by a user
   has_many :user_annotations do
     def owned_by(user)
-      where(user_id: user.id).to_a
+      where(user_id: user.id, queued_for_deletion: false).to_a
     end
   end
 

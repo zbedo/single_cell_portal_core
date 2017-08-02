@@ -7,7 +7,7 @@ class DeleteQueueJob < Struct.new(:object)
       when 'Study'
         # mark for deletion, rename study to free up old name for use, and restrict access by removing owner
         new_name = "DELETE-#{object.data_dir}"
-        object.update!(queued_for_deletion: true, public: false, user_id: nil, name: new_name, url_safe_name: new_name)
+        object.update!(public: false, user_id: nil, name: new_name, url_safe_name: new_name)
       when 'StudyFile'
         file_type = object.file_type
         study = object.study
@@ -43,6 +43,14 @@ class DeleteQueueJob < Struct.new(:object)
         # queue study file object for deletion
         new_name = "DELETE-#{SecureRandom.uuid}"
         object.update!(queued_for_deletion: true, upload_file_name: new_name, name: new_name, file_type: nil)
+      when 'UserAnnotation'
+        # set queued for deletion to true and set user annotation name
+        new_name = "DELETE-#{SecureRandom.uuid}"
+        object.update!(name: new_name)
+
+        # delete data arrays right away
+        object.user_data_arrays.delete_all
+
     end
   end
 end

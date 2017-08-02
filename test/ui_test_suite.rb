@@ -167,13 +167,25 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# method to close a bootstrap modal by id
 	def close_modal(id)
-		sleep (0.5)
-		@wait.until {@driver.find_element(:id, id).displayed?}
-		modal = @driver.find_element(:id, id)
-		dismiss = modal.find_element(:class, 'close')
-		dismiss.click
-		@wait.until {@driver.find_element(:id, id).displayed? == false}
-		sleep(1)
+		# need to wait until modal is in the page and visible
+		@wait.until {element_present?(:id, id)}
+		@wait.until {element_visible?(:id, id)}
+		# uses the jQuery method rather than clicking the close button as this is more robust and race-condition proof
+		@driver.execute_script("$('##{id}').modal('hide')")
+		# let modal animation complete
+		sleep 1
+		# wait for modal-open class to be removed from body
+		body_class = @driver.find_element(:tag_name, 'body')['class']
+		i = 0
+		while body_class == 'modal-open'
+			if i >= 10
+				raise Selenium::WebDriver::Error::TimeOutError, "Timing out on closing modal: #{id}"
+			end
+			puts "waiting for #{id} to close; try #{i}"
+			body_class = @driver.find_element(:tag_name, 'body')['class']
+			sleep 1
+			i += 1
+		end
 	end
 
 	# wait until element is rendered and visible
@@ -2294,14 +2306,13 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(private_study_path)
 		open_ui_tab('study-visualize')
 
-
 		new_genes = @genes.shuffle.take(rand(2..5))
 		search_box = @driver.find_element(:id, 'search_genes')
 		search_box.send_keys(new_genes.join(' '))
 		search_genes = @driver.find_element(:id, 'perform-gene-search')
 		search_genes.click
 		assert element_present?(:id, 'plots'), 'could not find expression heatmap'
-		@wait.until {wait_for_plotly_render('#heatmap-plot', 'rendered')}
+		@wait.until {wait_for_morpheus_render('#heatmap-plot', 'morpheus')}
 		private_rendered = @driver.execute_script("return $('#heatmap-plot').data('rendered')")
 		assert private_rendered, "private heatmap plot did not finish rendering, expected true but found #{private_rendered}"
 		private_heatmap_drawn = @driver.execute_script("return $('#heatmap-plot').data('morpheus').heatmap !== undefined;")
@@ -3124,7 +3135,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# Create a user annotation
-	test 'front-end: check user annotation creation' do
+	test 'front-end: user annotation creation' do
 		puts "Test method: #{self.method_name}"
 
 		# log in
@@ -3504,6 +3515,231 @@ class UiTestSuite < Test::Unit::TestCase
 		assert (plot_labels.include? "user-#{$random_seed}: group0 (3 points)"), "labels are incorrect: '#{plot_labels}' should include 'user-#{$random_seed}: group0'"
 	end
 
+	# make sure sharing the annotation works
+	test 'front-end: user annotation sharing' do
+		puts "Test method: #{self.method_name}"
+
+		# login
+		login_path = @base_url + '/users/sign_in'
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login($test_email)
+
+		# load annotation panel
+		annot_path = @base_url + '/user_annotations'
+		@driver.get annot_path
+
+		@driver.find_element(:class, "user-#{$random_seed}-exp-edit").click
+		wait_until_page_loads('edit user annotation path')
+
+		# click the share button
+		share_button = @driver.find_element(:id, 'add-user-annotation-share')
+		share_button.click
+
+		share_email = @driver.find_element(:class, 'share-email')
+		share_email.send_keys($share_email)
+
+		share_permission = @driver.find_element(:class, 'share-permission')
+		share_permission.send_keys('Edit')
+
+		#update the annotation
+		submit = @driver.find_element(:id, 'submit-button')
+		submit.click
+
+		wait_until_page_loads('user annotation path')
+
+		# logout
+		close_modal('message_modal')
+		profile = @driver.find_element(:id, 'profile-nav')
+		profile.click
+		logout = @driver.find_element(:id, 'logout-nav')
+		logout.click
+		wait_until_page_loads(@base_url)
+		close_modal('message_modal')
+
+		# login
+		login_as_other($test_email)
+		# load annotation panel
+		annot_path = @base_url + '/user_annotations'
+		@driver.get annot_path
+
+		#View the annotation
+		wait_until_page_loads('view user annotation index')
+		@driver.find_element(:class, "user-#{$random_seed}-exp-show").click
+		wait_until_page_loads('view user annotation path')
+
+		#make sure the new annotation still renders a plot for plotly
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
+		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
+
+		# load random gene to search
+		gene = @genes.sample
+		search_box = @driver.find_element(:id, 'search_genes')
+		search_box.send_key(gene)
+		wait_for_render(:id, 'perform-gene-search')
+		search_genes = @driver.find_element(:id, 'perform-gene-search')
+		search_genes.click
+
+		#make sure the new annotation still renders plots for plotly
+		assert element_present?(:id, 'box-controls'), 'could not find expression violin plot'
+		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
+
+		wait_for_render(:class, 'queried-gene')
+		# confirm queried gene is the one returned
+		queried_gene = @driver.find_element(:class, 'queried-gene')
+		assert queried_gene.text == gene, "did not load the correct gene, expected #{gene} but found #{queried_gene.text}"
+
+		# wait until violin plot renders, at this point all 3 should be done
+		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+		assert violin_rendered, "violin plot did not finish rendering, expected true but found #{violin_rendered}"
+		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+
+		# change to box plot
+		plot_dropdown = @driver.find_element(:id, 'plot_type')
+		plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
+		new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
+		plot_dropdown.send_key(new_plot)
+
+		# wait until box plot renders, at this point all 3 should be done
+		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		box_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+		assert box_rendered, "box plot did not finish rendering, expected true but found #{box_rendered}"
+		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+
+		sleep 0.5
+
+		gene_sets = @driver.find_element(:id, 'gene_set')
+		opts = gene_sets.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
+		list = opts.sample
+		list.click
+		assert element_present?(:id, 'expression-plots'), 'could not find box/scatter divs'
+
+		# wait until violin plot renders, at this point all 3 should be done
+		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+		assert violin_rendered, "violin plot did not finish rendering, expected true but found #{violin_rendered}"
+		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+
+		#revert the annotation to old name and labels
+		@driver.get annot_path
+		@driver.find_element(:class, "user-#{$random_seed}-exp-edit").click
+		wait_until_page_loads('edit user annotation path')
+
+		#change name
+		name = @driver.find_element(:id, 'user_annotation_name')
+		name.clear
+		name.send_key("user-#{$random_seed}-exp-Share")
+
+		#update annotation
+		submit = @driver.find_element(:id, 'submit-button')
+		submit.click
+
+		wait_until_page_loads('user annotation path')
+
+		#check new names and labels
+		new_names = @driver.find_elements(:class, 'annotation-name').map{|x| x.text }
+		new_labels = @driver.find_elements(:class, "user-#{$random_seed}-exp-Share").map{|x| x.text }
+
+		#assert new name saved correctly
+		assert (new_names.include? "user-#{$random_seed}-exp-Share"), "Name edit failed, expected 'user-#{$random_seed}-exp-Share' but got '#{new_names}'"
+
+		wait_for_render(:id, 'message_modal')
+		close_modal('message_modal')
+
+		#View the annotation
+		@driver.find_element(:class, "user-#{$random_seed}-exp-Share-show").click
+		wait_until_page_loads('view user annotation path')
+
+		#assert the plot still renders
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
+		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
+
+		#assert labels are correct
+		plot_labels = @driver.find_elements(:class, "user-select-none").map{|x| x.attribute('data-unformatted') }
+		assert (plot_labels.include? "user-#{$random_seed}-exp-Share: group0 (3 points)"), "labels are incorrect: '#{plot_labels}' should include 'user-#{$random_seed}-exp-Share: group0'"
+
+		# logout
+		profile = @driver.find_element(:id, 'profile-nav')
+		profile.click
+		logout = @driver.find_element(:id, 'logout-nav')
+		logout.click
+		wait_until_page_loads(@base_url)
+		close_modal('message_modal')
+
+		# login
+		login_as_other($test_email)
+
+		# load annotation panel
+		annot_path = @base_url + '/user_annotations'
+		@driver.get annot_path
+
+		@driver.find_element(:class, "user-#{$random_seed}-exp-Share-edit").click
+		wait_until_page_loads('edit user annotation path')
+
+		# click the share button
+		share_button = @driver.find_element(:id, 'add-user-annotation-share')
+		share_button.click
+
+		share_email = @driver.find_element(:class, 'share-email')
+		share_email.send_keys($share_email)
+
+		share_permission = @driver.find_element(:class, 'share-permission')
+		share_permission.send_keys('View')
+
+		#change name
+		name = @driver.find_element(:id, 'user_annotation_name')
+		name.clear
+		name.send_key("user-#{$random_seed}-exp")
+
+		#update the annotation
+		submit = @driver.find_element(:id, 'submit-button')
+		submit.click
+
+		wait_until_page_loads('user annotation path')
+
+		# logout
+		close_modal('message_modal')
+		profile = @driver.find_element(:id, 'profile-nav')
+		profile.click
+		logout = @driver.find_element(:id, 'logout-nav')
+		logout.click
+		wait_until_page_loads(@base_url)
+		close_modal('message_modal')
+
+		# login
+		login_as_other($share_email)
+
+		# load annotation panel
+		annot_path = @base_url + '/user_annotations'
+		@driver.get annot_path
+
+		#make sure can't edit
+		editable = element_present?(:class, "user-#{$random_seed}-exp-edit")
+		assert !editable, 'Edit button found'
+
+		#View the annotation
+		@driver.find_element(:class, "user-#{$random_seed}-exp-show").click
+		wait_until_page_loads('view user annotation path')
+
+		#assert the plot still renders
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
+		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
+
+	end
+
 	test 'front-end: download annotation cluster file' do
 		puts "Test method: #{self.method_name}"
 		login_path = @base_url + '/users/sign_in'
@@ -3563,11 +3799,14 @@ class UiTestSuite < Test::Unit::TestCase
 		close_modal('message_modal')
 
 		#check new names
-		new_names = @driver.find_elements(:class, 'annotation-name').map{|x| x.text }
-		#assert new name saved correctly
-		assert !(new_names.include? "user-#{$random_seed}-exp"), "Deletion failed, expected no 'user-#{$random_seed}-exp' but found it"
 
-
+		first_row = @driver.find_element(:id, 'annotations').find_element(:tag_name, 'tbody').find_element(:tag_name, 'tr').find_element(:tag_name, 'td')
+		unless first_row['class'] == 'dataTables_empty'
+			#If you dont't have any annotations, they were all deleted
+			new_names = @driver.find_elements(:class, 'annotation-name').map{|x| x.text }
+			#assert new name saved correctly
+			assert !(new_names.include? "user-#{$random_seed}-exp"), "Deletion failed, expected no 'user-#{$random_seed}-exp' but found it"
+		end
 	end
 
 
@@ -3608,8 +3847,6 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.switch_to.alert.accept
 		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
-
-
 
 		puts "Test method: #{self.method_name} successful!"
 	end
