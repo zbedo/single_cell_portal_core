@@ -168,7 +168,7 @@ function getWizardStatus() {
 function setWizardProgress(stepsDone) {
     var steps = parseInt(stepsDone);
     var totalSteps = $('li.wizard-nav').length;
-    var totalCompletion = Math.round((stepsDone/totalSteps) * 100);
+    var totalCompletion = Math.round((steps/totalSteps) * 100);
     $('#bar').find('.progress-bar').css({width:totalCompletion+'%'});
     $('#progress-count').html(totalCompletion+'% Completed');
 }
@@ -188,6 +188,9 @@ function toggleGlyph(el) {
 
 // attach various handlers to bootstrap items and turn on functionality
 function enableDefaultActions() {
+    // need to clear previous listener to prevent conflict
+    $('.panel-collapse').off('show.bs.collapse hide.bs.collapse');
+
     $('.panel-collapse').on('show.bs.collapse hide.bs.collapse', function() {
         toggleGlyph($(this).prev().find('span.toggle-glyph'));
     });
@@ -255,10 +258,12 @@ function toggleSearch() {
 
     // trigger resizeEnd to re-render Plotly to use available space
     $(window).trigger('resize');
-    if($('#search-target').is(":visible")){
-        $('#search-parent').stickyPanel(stickyOptions)
-    } else{
-        $('#search-parent').stickyPanel('unstick')
+    if ($('#create_annotations_panel').length > 0) {
+        if($('#search-target').is(":visible")){
+            $('#search-parent').stickyPanel(stickyOptions)
+        } else{
+            $('#search-parent').stickyPanel('unstick')
+        }
     }
 }
 
