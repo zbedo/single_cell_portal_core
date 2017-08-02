@@ -55,6 +55,17 @@
 
 var fileUploading = false;
 var PAGE_RENDERED = false;
+var OPEN_MODAL = '';
+
+$(document).on('shown.bs.modal', function(e) {
+    console.log("modal " + $(e.target).attr('id') + ' opened');
+    OPEN_MODAL = $(e.target).attr('id');
+});
+
+$(document).on('hidden.bs.modal', function(e) {
+    console.log("modal " + $(e.target).attr('id') + ' closed');
+    OPEN_MODAL = '';
+});
 
 jQuery.railsAutocomplete.options.noMatchesLabel = "No matches in this study";
 
@@ -157,7 +168,7 @@ function getWizardStatus() {
 function setWizardProgress(stepsDone) {
     var steps = parseInt(stepsDone);
     var totalSteps = $('li.wizard-nav').length;
-    var totalCompletion = Math.round((stepsDone/totalSteps) * 100);
+    var totalCompletion = Math.round((steps/totalSteps) * 100);
     $('#bar').find('.progress-bar').css({width:totalCompletion+'%'});
     $('#progress-count').html(totalCompletion+'% Completed');
 }
@@ -177,6 +188,9 @@ function toggleGlyph(el) {
 
 // attach various handlers to bootstrap items and turn on functionality
 function enableDefaultActions() {
+    // need to clear previous listener to prevent conflict
+    $('.panel-collapse').off('show.bs.collapse hide.bs.collapse');
+
     $('.panel-collapse').on('show.bs.collapse hide.bs.collapse', function() {
         toggleGlyph($(this).prev().find('span.toggle-glyph'));
     });
@@ -244,10 +258,12 @@ function toggleSearch() {
 
     // trigger resizeEnd to re-render Plotly to use available space
     $(window).trigger('resize');
-    if($('#search-target').is(":visible")){
-        $('#search-parent').stickyPanel(stickyOptions)
-    } else{
-        $('#search-parent').stickyPanel('unstick')
+    if ($('#create_annotations_panel').length > 0) {
+        if($('#search-target').is(":visible")){
+            $('#search-parent').stickyPanel(stickyOptions)
+        } else{
+            $('#search-parent').stickyPanel('unstick')
+        }
     }
 }
 
@@ -573,4 +589,23 @@ function validateUnique(formId, textFieldClass) {
             textField.parent().removeClass('has-error');
         }
     });
+}
+
+// function to call Google Analytics whenever AJAX call is made
+// must be called manually from every AJAX success or js page render
+function gaTracker(id){
+    $.getScript('https://www.google-analytics.com/analytics.js'); // jQuery shortcut
+    window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+    ga('create', id, 'auto');
+    ga('send', 'pageview');
+}
+
+function gaTrack(path, title) {
+    ga('set', { page: path, title: title });
+    ga('send', 'pageview');
+}
+
+// decode an HTML-encoded string
+function unescapeHTML(encodedStr) {
+    return $("<div/>").html(encodedStr).text();
 }

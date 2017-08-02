@@ -47,3 +47,6 @@ enableDefaultActions();
 console.log('render status of box plot at end: ' + $('#expression-plots').data('box-rendered'));
 console.log('render status of scatter plot at end: ' + $('#expression-plots').data('scatter-rendered'));
 console.log('render status of reference plot at end: ' + $('#expression-plots').data('reference-rendered'));
+
+var requestUrl = unescapeHTML('<%= request.fullpath %>');
+gaTrack(requestUrl, 'Single Cell Portal');

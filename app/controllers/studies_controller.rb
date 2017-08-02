@@ -348,7 +348,7 @@ class StudiesController < ApplicationController
       if @study_file.parseable? && params[:reparse] == 'Yes'
         logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
         @message += " You will receive and email at #{current_user.email} when the parse has completed."
-       case @study_file.file_type
+        case @study_file.file_type
           when 'Cluster'
             @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false, reparse: true})
           when 'Expression Matrix'

@@ -4,4 +4,6 @@ closeModalSpinner('#spinner_target', '#loading-modal', function () {
     $('#study-visualize').html("<%= escape_javascript(render partial: 'view_gene_expression') %>");
     $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices') %>");
     enableDefaultActions();
+    var requestUrl = unescapeHTML('<%= request.fullpath %>');
+    gaTrack(requestUrl, 'Single Cell Portal');
 });
