@@ -146,6 +146,19 @@ class UiTestSuite < Test::Unit::TestCase
 		false
 	end
 
+	# try to click on an element
+	def try_to_click(what, num = 0)
+		if num < 10
+			sleep 0.25
+			begin
+				what.click
+			rescue
+				try_to_click(what, num + 1)
+			end
+		end
+
+	end
+
 	# return true/false if an element is displayed
 	# will handle if element doesn't exist or if reference is stale due to race condition
 	def element_visible?(how, what)
@@ -567,7 +580,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	#create a 2d scatter study for use in user annotation testing
-	test 'admin: create a 2d scatter study' do
+	test 'admin: create a user annotation study study' do
 		puts "Test method: #{self.method_name}"
 
 		# log in first
@@ -3278,7 +3291,7 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_for_render(:id, 'toggle-scatter')
 		enable_select_button = @driver.find_element(:id, 'toggle-scatter')
 		sleep 0.25
-		enable_select_button.click
+		try_to_click(enable_select_button)
 
 		# select the scatter plot
 		plot = @driver.find_element(:id, 'scatter-plot')
