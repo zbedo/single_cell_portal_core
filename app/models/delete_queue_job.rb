@@ -27,8 +27,16 @@ class DeleteQueueJob < Struct.new(:object)
               study.save
             end
 
-            ClusterGroup.where(study_file_id: object.id, study_id: study.id).delete_all
+            clusters = ClusterGroup.where(study_file_id: object.id, study_id: study.id)
+            cluster_group_id = clusters.first.id
+            clusters.delete_all
             DataArray.where(study_file_id: object.id, study_id: study.id).delete_all
+            user_annotations = UserAnnotation.where(study_id: study.id, cluster_group_id: cluster_group_id )
+            user_annotations.each do |annot|
+              annot.user_data_arrays.delete_all
+              annot.user_annotation_shares.delete_all
+            end
+            user_annotations.delete_all
           when 'Expression Matrix'
             ExpressionScore.where(study_file_id: object.id, study_id: study.id).delete_all
             DataArray.where(study_file_id: object.id, study_id: study.id).delete_all
