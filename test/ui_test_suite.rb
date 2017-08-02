@@ -167,11 +167,12 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# method to close a bootstrap modal by id
 	def close_modal(id)
-		# need to wait until modal is in the page and visible
+		# need to wait until modal is in the page and has completed opening
 		@wait.until {element_present?(:id, id)}
 		@wait.until {@driver.execute_script("return OPEN_MODAL") == id}
-		# uses the jQuery method rather than clicking the close button as this is more robust and race-condition proof
-		@driver.execute_script("$('##{id}').modal('hide')")
+		modal = @driver.find_element(:id, id)
+		close_button = modal.find_element(:class, 'close')
+		close_button.click
 		# wait until OPEN_MODAL has been cleared (will reset on hidden.bs.modal event)
 		@wait.until {@driver.execute_script("return OPEN_MODAL") == ''}
 	end
@@ -3539,8 +3540,7 @@ class UiTestSuite < Test::Unit::TestCase
 		#assert new name saved correctly
 		assert !(new_names.include? "user-#{$random_seed}-exp"), "Deletion failed, expected no 'user-#{$random_seed}-exp' but found it"
 	end
-
-
+	
 	##
 	## CLEANUP
 	##
