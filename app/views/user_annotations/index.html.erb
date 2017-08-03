@@ -27,7 +27,7 @@
                 <td>
                   <%= link_to "<span class='fa fa-info-circle'></span> View Annotation".html_safe, view_study_path(user_annotation.study.url_safe_name, cluster: user_annotation.cluster_group.name, annotation: user_annotation.formatted_annotation_name) + '#study-visualize', class: "btn btn-xs btn-info #{user_annotation.name}-show"  %>
                   <% if user_annotation.can_edit?(current_user) %>
-                    <%= link_to "<span class='fa fa-edit'></span> Edit Data".html_safe, edit_user_annotation_path(user_annotation), class: "btn btn-xs btn-primary #{user_annotation.name}-edit" %>
+                    <%= link_to "<span class='fa fa-edit'></span> Edit".html_safe, edit_user_annotation_path(user_annotation), class: "btn btn-xs btn-primary #{user_annotation.name}-edit" %>
                   <% end %>
                   <%= link_to "<span class='fa fa-download'></span> Download".html_safe, download_user_annotation_path(user_annotation), class: "btn btn-xs btn-success #{user_annotation.name}-download" %>
                   <% if user_annotation.study.can_edit?(current_user) %>
@@ -88,7 +88,7 @@
         // get name of study for confirmation
         var annot = $(this).parent().parent().find('.annotation-name').text();
         if ( confirm('Are you sure you want to persist \"' + annot + '\" to this study?')) {
-            launchModalSpinner('#loading-modal-spinner','#loading-modal');
+            launchModalSpinner('#save-modal-spinner','#save-modal');
         } else {
             return false;
         }

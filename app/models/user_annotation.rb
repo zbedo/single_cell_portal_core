@@ -366,4 +366,116 @@ class UserAnnotation
     end
   end
 
+  def persist_to_study(current_user)
+    begin
+      #load original cluster group data arrays
+      cluster = self.cluster_group
+      annot_name = self.name
+
+      cell_name_array = cluster.concatenate_data_arrays('text', 'cells')
+      x_array = cluster.concatenate_data_arrays('x', 'coordinates')
+      y_array = cluster.concatenate_data_arrays('y', 'coordinates')
+      user_annotation_array = self.concatenate_user_data_arrays(annot_name,'annotations')
+
+      # create new annotation data arrays and add them
+      user_annotation_data_arrays = self.user_data_arrays.where(array_type: 'annotations').to_a
+      x_arrays = self.user_data_arrays.where(array_type: 'coordinates', name: 'x').to_a
+      y_arrays = self.user_data_arrays.where(array_type: 'coordinates', name: 'y').to_a
+      text_arrays = self.user_data_arrays.where(array_type: 'cells').to_a
+      user_annotation_data_arrays.concat(x_arrays).concat(y_arrays).concat( text_arrays)
+
+      user_annotation_data_arrays.each do |data_array|
+        if !data_array.subsample_annotation.nil?
+          data_array.subsample_annotation = annot_name + '--group--cluster'
+          json_array = data_array.as_json.except('user_annotation_id', 'user_id')
+          entry = DataArray.new(json_array)
+          entry.save!
+
+        else
+          if data_array.array_type == 'annotations'
+            json_array = data_array.as_json.except('user_annotation_id', 'user_id')
+            entry = DataArray.new(json_array)
+            entry.save!
+          end
+        end
+
+      end
+      # get current annotations
+      cluster_annotations = cluster.cell_annotations
+      cluster_annotations_array = []
+
+      headers = ['NAME', 'X', 'Y',]
+      types = ['TYPE', 'numeric', 'numeric']
+      cluster_annotations.each do |annot|
+        name = annot['name']
+        types << annot['type']
+        headers << name
+        cluster_annotations_array << cluster.concatenate_data_arrays(name, 'annotations')
+      end
+
+
+      headers <<  annot_name
+      types << 'group'
+
+      # update cluster group cell annotation attribute with new user annotation
+      annot_hash = {'name'=>annot_name, 'type'=>'group','values'=>self.values, 'header_index'=>(types.length-1)}
+      cluster_annotations << annot_hash
+      if cluster.update(cell_annotations: cluster_annotations)
+        # regenerate study file for cluster with same name
+
+        # Create new file
+        study_file = cluster.study_file
+        new_file = File.new(study_file.upload.path, 'w+')
+
+        # Write headers and types
+        new_file.write(headers.join("\t")+"\n")
+        new_file.write(types.join("\t") + "\n")
+
+        # Write each row
+        user_annotation_array.each_with_index do |annot, index|
+          row = []
+          row << cell_name_array[index]
+          row << x_array[index]
+          row << y_array[index]
+          cluster_annotations_array.each do |cluster_annot|
+            row << cluster_annot[index]
+          end
+          row << annot
+          new_file.write(row.join("\t") +"\n")
+        end
+        new_file.close
+
+        # push to FC
+        study = self.study
+        study.send_to_firecloud(study_file)
+
+        # delete user annotation
+        # set queued_for_deletion manually - gotcha due to race condition on page reloading and how quickly delayed_job can process jobs
+        self.update(queued_for_deletion: true)
+
+        # queue jobs to delete annotation caches & annotation itself
+        cache_key = "#{study.url_safe_name}.*#{cluster.name.split.join('-')}_#{self.name}--user--group.*"
+        CacheRemovalJob.new(cache_key).delay.perform
+        DeleteQueueJob.new(self).delay.perform
+
+        # revoke all user annotation shares
+        self.user_annotation_shares.delete_all
+
+        changes = ["User #{current_user.email} added user annotation #{annot_name} to the study #{study.name}"]
+
+        if study.study_shares.any?
+          SingleCellMailer.share_update_notification(study, changes, current_user).deliver_now
+        end
+
+      else
+        Rails.logger.error("Failed to set cell annotations for persisting user annotation #{annot_name}")
+      end
+    rescue => e
+      changes = ["User #{current_user.email} failed to add user annotation #{self.name} to the study #{self.study.name} with exception: #{e}"]
+      SingleCellMailer.share_update_notification(self.study, changes, current_user).deliver_now
+      Rails.logger.error("Failed to persist user annotations: #{self.name} in study: #{self.study.name} with error: #{e}")
+    end
+
+  end
+
 end
