@@ -250,7 +250,6 @@ function toggleSearch() {
         if($('#search-target').is(":visible")){
             $('#search-parent').stickyPanel(stickyOptions)
         } else{
-
             $('#search-parent').stickyPanel('unstick')
         }
     }
