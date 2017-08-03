@@ -3888,15 +3888,16 @@ class UiTestSuite < Test::Unit::TestCase
 		sleep(5)
 		filename = 'cluster_2d_example.txt'
 		# make sure file was actually downloaded
-		file_exists = Dir.entries($download_dir).select {|f| f =~ /#{basename}/}.size >= 1 || File.exists?(File.join($download_dir, filename))
+		file_exists = Dir.entries($download_dir).select {|f| f =~ /#{'cluster_2d_example'}/}.size >= 1 || File.exists?(File.join($download_dir, filename))
 		assert file_exists, "did not find downloaded file: #{filename} in #{Dir.entries($download_dir).join(', ')}"
 
 		# open the file
 		file = File.open(File.join($download_dir, filename))
-		first_line = file.readline.split("\t").map(:strip)
-
-		assert first_line.include? %w[NAME X Y Sub-Group], "Original cluster's rows are absent, rows: #{first_line}"
-		assert first_line.include? "user-#{$random_seed}", "New annotation's rows are absent, rows: #{first_line}"
+		first_line = file.readline.split("\t").map(&:strip)
+		%w[NAME X Y Sub-Group].each do |header|
+			assert (first_line.include?header), "Original cluster's rows are absent, rows: #{first_line}, is missing #{header}"
+		end
+		assert (first_line.include?"user-#{$random_seed}"), "New annotation's rows are absent, rows: #{first_line}, missing: user-#{$random_seed}"
 
 		# delete file
 		File.delete(File.join($download_dir, filename))
