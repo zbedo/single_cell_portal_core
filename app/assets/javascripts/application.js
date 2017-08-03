@@ -247,12 +247,12 @@ function toggleSearch() {
     $(window).trigger('resize');
 
     if ($('#create_annotations_panel').length > 0){
-    if($('#search-target').is(":visible")){
-        $('#search-parent').stickyPanel(stickyOptions)
-    } else{
+        if($('#search-target').is(":visible")){
+            $('#search-parent').stickyPanel(stickyOptions)
+        } else{
 
-        $('#search-parent').stickyPanel('unstick')
-    }
+            $('#search-parent').stickyPanel('unstick')
+        }
     }
 }
 
