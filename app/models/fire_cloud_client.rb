@@ -146,7 +146,9 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		end
 	end
 
+  ##
 	## FIRECLOUD METHODS
+	##
 
 	# generic handler to execute http calls, process returned JSON and handle exceptions
 	#
@@ -305,6 +307,105 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		end
 	end
 
+  # get list of available FireCloud methods
+  #
+  # param: opts (hash) => hash of query parameter key/value pairs, see https://api.firecloud.org/#!/Method_Repository/listMethodRepositoryMethods for complete list
+  #
+  # return: array of methods
+  def get_methods(opts={})
+		query_params = self.merge_query_options(opts)
+		path = self.api_root + "/api/methods#{query_params}"
+		process_firecloud_request(:get, path)
+	end
+
+	# get a FireCloud method object
+	#
+	# param: namespace (string) => namespace of method
+	# param: name (string) => name of method
+	# param: snapshot_id (integer) => snapshot ID of method
+	# param: only_payload (boolean) => boolean of whether or not to return only the payload object
+  #
+	# return: array of methods
+	def get_method(namespace, method_name, snapshot_id, only_payload=false)
+		path = self.api_root + "/api/methods/#{namespace}/#{method_name}/#{snapshot_id}?onlyPayload=#{only_payload}"
+		process_firecloud_request(:get, path)
+	end
+
+	# get list of available configurations
+	#
+	# param: opts (hash) => hash of query parameter key/value pairs, see https://api.firecloud.org/#!/Method_Repository/listMethodRepositoryConfigurations for complete list
+	#
+	# return: array of configurations
+	def get_configurations(opts={})
+		query_params = self.merge_query_options(opts)
+		path = self.api_root + "/api/configurations#{query_params}"
+		process_firecloud_request(:get, path)
+	end
+
+	# get a FireCloud method configuration
+	#
+	# param: namespace (string) => namespace of method
+	# param: name (string) => name of method
+	# param: snapshot_id (integer) => snapshot ID of method
+	#
+	# return: array of methods
+	def get_configuration(namespace, method_name, snapshot_id)
+		path = self.api_root + "/api/configurations/#{namespace}/#{method_name}/#{snapshot_id}"
+		process_firecloud_request(:get, path)
+	end
+
+  # get submission queue status
+  #
+  # return: JSON object of current submission queue status
+	def get_submission_queue_status
+		path = self.api_root + '/api/submissions/queueStatus'
+		process_firecloud_request(:get, path)
+	end
+
+  # get a list of workspace workflow queue submissions
+  #
+	# param: workspace_name (string) => name of requested workspace
+  #
+  # return: array of workflow submissions
+  def get_workspace_submissions(workspace_name)
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/submissions"
+		process_firecloud_request(:get, path)
+	end
+
+	# create a workflow queue submissions
+	#
+	# param: workspace_name (string) => name of requested workspace
+	# param: submission (hash) => hash of submission parameters
+	#
+	# return: array of workflow submissions
+	def create_workspace_submission(workspace_name, submission)
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/submissions"
+		process_firecloud_request(:post, path, submission.to_json)
+	end
+
+	# monitor a workflow queue submission status
+	#
+	# param: workspace_name (string) => name of requested workspace
+	# param: submission_id (integer) => ID of workflow submission
+	#
+	# return: array of workflow submissions
+	def monitor_workspace_submission(workspace_name, submission_id)
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/submissions/#{submission_id}"
+		process_firecloud_request(:get, path)
+	end
+
+	# abort a workflow queue submission
+	#
+	# param: workspace_name (string) => name of requested workspace
+	# param: submission_id (integer) => ID of workflow submission
+	#
+	# return: array of workflow submissions
+	def abort_workspace_submission(workspace_name, submission_id)
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/submissions/#{submission_id}"
+		process_firecloud_request(:delete, path)
+	end
+
+	##
 	## GOOGLE CLOUD STORAGE METHODS
 	##
 	## All methods are convenience wrappers around google-cloud-storage methods
@@ -485,6 +586,9 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		count
 	end
 
+  ###
+  # UTILITY METHODS
+
 	# check if OK response code was found
 	#
 	# param: code (integer) => integer HTTP response code
@@ -492,5 +596,15 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	# return: boolean of whether or not response is a known 'OK' response
 	def ok?(code)
 		[200, 201, 202, 206].include?(code)
+	end
+
+  # merge hash of options into single URL query string
+  #
+	# param: opts (hash) => hash of query parameter key/value pairs
+  #
+  # return: string of concatenated query params
+  def merge_query_options(opts)
+		# return nil if opts is empty, else concat
+		opts.blank? ? nil : '?' + opts.to_a.map {|k,v| "#{k}=#{v}"}.join("&")
 	end
 end

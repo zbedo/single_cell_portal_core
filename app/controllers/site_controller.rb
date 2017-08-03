@@ -2,11 +2,11 @@ class SiteController < ApplicationController
 
   respond_to :html, :js, :json
 
-  before_action :set_study, except: [:index, :search]
-  before_action :load_precomputed_options, except: [:index, :search, :edit_study_description, :annotation_query, :download_file, :get_fastq_files, :log_action]
-  before_action :set_cluster_group, except: [:index, :search, :update_study_settings, :edit_study_description, :precomputed_results, :download_file, :get_fastq_files, :log_action]
-  before_action :set_selected_annotation, except: [:index, :search, :study, :update_study_settings, :edit_study_description, :precomputed_results, :expression_query, :get_new_annotations, :download_file, :get_fastq_files, :log_action]
-  before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query, :log_action]
+  before_action :set_study, except: [:index, :search, :view_workflow_wdl]
+  before_action :load_precomputed_options, except: [:index, :search, :edit_study_description, :annotation_query, :download_file, :get_fastq_files, :log_action, :view_workflow_wdl]
+  before_action :set_cluster_group, except: [:index, :search, :update_study_settings, :edit_study_description, :precomputed_results, :download_file, :get_fastq_files, :log_action, :view_workflow_wdl]
+  before_action :set_selected_annotation, except: [:index, :search, :study, :update_study_settings, :edit_study_description, :precomputed_results, :expression_query, :get_new_annotations, :download_file, :get_fastq_files, :log_action, :view_workflow_wdl]
+  before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query, :log_action, :view_workflow_wdl]
 
   # caching
   caches_action :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots,
@@ -71,6 +71,15 @@ class SiteController < ApplicationController
       @cluster_annotations = load_cluster_group_annotations
       # call set_selected_annotation manually
       set_selected_annotation
+    end
+
+    # if user has permission to run workflows, load available workflows and current submissions
+    if user_signed_in? && @study.can_compute?(current_user)
+      @submissions = Study.firecloud_client.get_workspace_submissions(@study.firecloud_workspace)
+      @workflows = Study.firecloud_client.get_methods(namespace: 'broadinstitute').map {|w| ["#{w['name']} (#{w['synopsis']})", "#{w['namespace']}--#{w['name']}--#{w['snapshotId']}"]}
+      (rand(20) + 10).times do
+        @submissions << {'submissionId' => SecureRandom.uuid, 'submittedOn' => (Time.now - rand(48).hours).strftime('%D %r'), 'methodName' => @workflows.sample.first.split.first, 'status' => %w(Queued Running Completed Error).sample}
+      end
     end
   end
 
@@ -596,6 +605,20 @@ class SiteController < ApplicationController
       @alert = 'An unexpected error prevented the annotation from being saved: ' + e.message
       logger.error "#{Time.now}: Creating user annotation of params: #{user_annotation_params}, unexpected error #{e.message}"
       render 'update_user_annotations'
+    end
+  end
+
+  # view the wdl of a specified workflow
+  def view_workflow_wdl
+    @workflow_name = params[:workflow]
+    @workflow_namespace = params[:namespace]
+    @workflow_snapshot = params[:snapshot]
+    begin
+      # load workflow payload object
+      @workflow_wdl = Study.firecloud_client.get_method(@workflow_namespace, @workflow_name, @workflow_snapshot, true)
+    rescue => e
+      @workflow_wdl = "We're sorry, but we could not load the requested workflow object.  Please try again later.\n\n#{e.message}"
+      logger.error "#{Time.now}: unable to load WDL for #{@workflow_namespace}:#{@workflow_name}:#{@workflow_snapshot}; #{e.message}"
     end
   end
 

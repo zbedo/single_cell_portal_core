@@ -1,0 +1,110 @@
+<div class="row">
+  <div class="col-md-12">
+    <h2>Current Submissions <span class="badge"><%= @submissions.size %></span></h2>
+      <div class="table-responsive">
+        <div class="well">
+          <table class="table table-striped" id="submissions-table">
+            <thead>
+            <tr>
+              <th>Submitted On</th>
+              <th>Submission ID</th>
+              <th>Workflow Name</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <% @submissions.each do |submission| %>
+              <tr id="submission-<%= submission['submissionId'] %>">
+                <td id="submission-<%= submission['submissionId'] %>-date"><%= submission['submittedOn'] %></td>
+                <td id="submission-<%= submission['submissionId'] %>-id"><%= submission['submissionId'] %></td>
+                <td id="submission-<%= submission['submissionId'] %>-name"><%= submission['methodName'] %></td>
+                <td id="submission-<%= submission['submissionId'] %>-status"><%= workflow_status_label(submission['status']) %></td>
+                <td class="actions">
+                  <% if !%w(Completed Error).include?(submission['status']) %>
+                    <%= link_to "<i class='fa fa-times'></i> Abort".html_safe, '#', class: 'btn btn-xs btn-danger abort-submission', title: 'Stop execution of this workflow', data: {toggle: 'tooltip', id: submission['submissionId']} %>
+                  <% else %>
+                    <%= link_to "<i class='fa fa-files-o'></i> Outputs".html_safe, '#', class: 'btn btn-xs btn-primary', title: 'View outputs from this run', data: {toggle: 'tooltip'} %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
+    <h2>Submit a Workflow</h2>
+    <%= form_for(:workflow, url: '#', html: {class: 'form', id: 'workflow-submission'}) do |f| %>
+      <p class="help-block">Use this form to configure and submit a workflow using the data from this study.
+          You will be able to check the status of this workflow in the table above.</p>
+      <div class="form-group row">
+        <div class="col-sm-9">
+          <%= f.label :identifier, 'Workflow' %><br />
+          <%= f.select :identifier, options_for_select(@workflows), {include_blank: 'Please select a workflow...'}, {class: 'form-control'} %>
+        </div>
+        <div class="col-sm-3">
+          <label>View Workflow</label><br />
+          <%= link_to 'View Selected WDL', 'javascript:;', class: 'btn btn-default', id: 'view-selected-wdl', 'data-loading-text' => 'Loading... Please wait' %>
+        </div>
+      </div>
+      <div id="wdl-content-target"></div>
+      <div class="form-group row">
+        <div class="col-sm-6">
+          <%= f.label :samples %><br />
+          <%= f.text_area :samples, class: 'form-control', rows: 10 %>
+        </div>
+        <div class="col-sm-6">
+          <%= f.label :files %><br />
+          <%= f.text_area :files, class: 'form-control', rows: 10 %>
+        </div>
+      </div>
+      <div class="form-group row">
+        <div class="col-sm-12">
+          <%= f.submit 'Submit Workflow', class: 'btn btn-lg btn-success' %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<script type="text/javascript">
+    $('#submissions-table').dataTable({
+        pagingType: "full_numbers",
+        order: [[0, 'asc']],
+        language: {
+            search: "Filter Results By: "
+        }
+    });
+
+    // display a confirmation when a user tries to abort a submission
+    $('#submissions-table').on('click', '.abort-submission', function () {
+        var submissionId = $(this).data('id');
+        var submissionName = $('#submission-' + submissionId + '-name').text();
+        var submissionDate = $('#submission-' + submissionId + '-date').text();
+        if (confirm('Are you sure you want to abort this submission of ' + submissionName + ' (' + submissionId + ', submitted on ' + submissionDate + ')?  This cannot be undone.')) {
+            alert('Aborted');
+        } else {
+            alert('Did not abort');
+        }
+    });
+
+    $('#view-selected-wdl').click(function () {
+        var selectedWdl = $('#workflow_identifier').val();
+        if (selectedWdl === '') {
+            alert('You must select a workflow first.')
+        } else {
+            $(this).button('loading');
+            var workflowNameSpace, workflowName, workflowSnapshotId;
+            [workflowNameSpace, workflowName, workflowSnapshotId] = selectedWdl.split('--');
+            $.ajax({
+                url: '<%= view_workflow_wdl_path %>?namespace=' + workflowNameSpace + '&workflow=' + workflowName + '&snapshot=' + workflowSnapshotId,
+                dataType: 'script'
+            });
+        }
+    })
+
+</script>

@@ -126,4 +126,21 @@ module ApplicationHelper
 	def subsampling_options(max_cells)
 		ClusterGroup::SUBSAMPLE_THRESHOLDS.select {|sample| sample < max_cells}
 	end
+
+	# get a label for a workflow status code
+	def workflow_status_label(status)
+		case status
+			when 'Queued'
+				label_class = 'info'
+			when 'Running'
+				label_class = 'primary'
+			when 'Completed'
+				label_class = 'success'
+			when 'Error'
+				label_class = 'danger'
+			else
+				label_class = 'default'
+		end
+		"<big><span class='label label-#{label_class}'>#{status}</span></big>".html_safe
+	end
 end

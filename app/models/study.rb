@@ -204,6 +204,11 @@ class Study
     end
   end
 
+  # check if a user can run workflows on the given study, currently only the study owner
+  def can_compute?(user)
+    self.user_id == user.id
+  end
+
   # list of emails for accounts that can edit this study
   def admins
     [self.user.email, self.study_shares.can_edit, User.where(admin: true).pluck(:email)].flatten.uniq
