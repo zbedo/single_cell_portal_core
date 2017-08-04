@@ -184,27 +184,25 @@
         </div>
       </div>
     </div>
+    <script type="text/javascript">
+        <% if user_signed_in? %>
+        <% if params[:gene_set].nil? && params[:gene].nil?%>
+        var targetPlotString = 'cluster-plot';
+        <% else %>
+        var targetPlotString = 'scatter-plot';
+        <% end %>
+
+        //Stick the search for selection facilitation in expression pages if selecting annotation
+        $('#panel-selection').on('show.bs.collapse', function () {
+            $(document).off('scroll', '#search-parent');
+            $('#search-parent').stickyPanel(stickyOptions);
+            window.scrollTo(0,$(('#' + targetPlotString)).offset().top -175)
+        });
+
+        $('#panel-genes-search').on('show.bs.collapse', function () {
+            $('#search-parent').stickyPanel('unstick');
+        });
+        <% end %>
+    </script>
   <% end %>
 </div>
-<script type="text/javascript">
-    <% if user_signed_in? %>
-      <% if params[:gene_set].nil? and params[:gene].nil?%>
-        var targetPlotString = 'cluster-plot';
-      <% else %>
-        var targetPlotString = 'scatter-plot';
-      <% end %>
-
-    //Stick the search for selection facilitation in expression pages if selecting annotation
-    $('#panel-selection').on('show.bs.collapse', function () {
-        $(document).off('scroll', '#search-parent');
-        $('#search-parent').stickyPanel(stickyOptions);
-        window.scrollTo(0,$(('#' + targetPlotString)).offset().top -175)
-    });
-
-    $('#panel-genes-search').on('show.bs.collapse', function () {
-        $('#search-parent').stickyPanel('unstick');
-    });
-    <% end %>
-
-
-</script>

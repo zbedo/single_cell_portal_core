@@ -1,6 +1,6 @@
 class UserAnnotationsController < ApplicationController
   before_action :set_user_annotation, only: [:edit, :update, :destroy]
-  #Check that use is logged in in order to do anything
+  #Check that user is logged in in order to do anything
   before_filter :authenticate_user!
   before_action :check_permission, except: :index
   # GET /user_annotations
@@ -131,10 +131,10 @@ class UserAnnotationsController < ApplicationController
     types = ['TYPE', 'numeric', 'numeric', 'group']
     rows = []
 
-    annotation_array = @user_annotation.user_data_arrays.where(array_type: 'annotations').first.values
-    x_array = @user_annotation.user_data_arrays.where(array_type: 'coordinates', name: 'x').first.values
-    y_array = @user_annotation.user_data_arrays.where(array_type: 'coordinates', name: 'y').first.values
-    cell_name_array = @user_annotation.user_data_arrays.where(array_type: 'cells').first.values
+    annotation_array = @user_annotation.concatenate_user_data_arrays(@user_annotation.name ,'annotations')
+    x_array = @user_annotation.concatenate_user_data_arrays('x', 'coordinates')
+    y_array = @user_annotation.concatenate_user_data_arrays('y', 'coordinates')
+    cell_name_array = @user_annotation.concatenate_user_data_arrays('text', 'cells')
 
     annotation_array.each_with_index do |annot, index|
       if annot != 'Undefined'
@@ -150,6 +150,15 @@ class UserAnnotationsController < ApplicationController
     @data = [headers.join("\t"), types.join("\t"), rows].join"\n"
 
     send_data @data, type: 'text/plain', filename: filename, disposition: 'attachment'
+  end
+
+  def persist_to_study
+    respond_to do |format|
+      # redirect back and say success
+      format.html { redirect_to user_annotations_path, notice: "User Annotation '#{@user_annotation.name}' will be added to the study. You will receive an email upon completion or error. If succesful, this annotation will be removed from your list of annotations." }
+      format.json { render :index, status: :ok, location: user_annotations_path }
+      @user_annotation.delay.persist_to_study(current_user)
+    end
   end
 
   private

@@ -256,14 +256,13 @@ function toggleSearch() {
         $('#show-search-options').tooltip('hide');
     }
 
+
     // trigger resizeEnd to re-render Plotly to use available space
     $(window).trigger('resize');
-    if ($('#create_annotations_panel').length > 0) {
-        if($('#search-target').is(":visible")){
-            $('#search-parent').stickyPanel(stickyOptions)
-        } else{
-            $('#search-parent').stickyPanel('unstick')
-        }
+    if ($('#create_annotations_panel').length > 0) {if($('#search-target').is(":visible")){
+        $('#search-parent').stickyPanel(stickyOptions)
+    } else{
+        $('#search-parent').stickyPanel('unstick')}
     }
 }
 
