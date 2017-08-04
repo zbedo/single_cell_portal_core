@@ -3141,7 +3141,7 @@ class UiTestSuite < Test::Unit::TestCase
 		#Enable Selection
 		wait_for_render(:id, 'toggle-scatter')
 		enable_select_button = @driver.find_element(:id, 'toggle-scatter')
-		enable_select_button.click
+		try_to_click(enable_select_button)
 
 		# click box select button
 		select_button = @driver.find_element(:xpath, "//a[@data-val='select']")
