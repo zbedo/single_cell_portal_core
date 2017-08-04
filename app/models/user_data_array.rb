@@ -16,7 +16,7 @@ class UserDataArray
 
   index({ name: 1, user_annotation_id: 1, user_id: 1, study_id: 1, cluster_group_id: 1, cluster_name: 1,
           array_type: 1, array_index: 1, subsample_threshold: 1, subsample_annotation: 1 },
-        { unique: true, name: 'unique_data_arrays_index' })
+        { unique: true, name: 'unique_user_data_arrays_index' })
 
   index({ user_id: 1 }, { unique: false })
   index({ study_id: 1, user_id: 1}, { unique: false })
