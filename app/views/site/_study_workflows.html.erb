@@ -160,10 +160,12 @@
             $('#workflow_files').empty();
             results = file.split(/[\n]/);
             $(results).each(function(i, line) {
-                var sample,file;
-                [sample,file] = line.split(/[,\t]/);
-                $('#workflow_samples').append(sample + '\n');
-                $('#workflow_files').append(file + '\n');
+                if (line.trim() !== '') {
+                    var sample,file;
+                    [sample,file] = line.split(/[,\t]/);
+                    $('#workflow_samples').append(sample + '\n');
+                    $('#workflow_files').append(file + '\n');
+                }
             });
             createSampleInfo();
         }
@@ -179,6 +181,7 @@
             alert('You must select a file first before proceeding.');
             $('#workflow_sample_info').parent().addClass('has-error');
         }
+        $(this).tooltip('hide');
     });
 
     $('#clear-sample-info').click(function () {
@@ -198,10 +201,15 @@
             fileContents += line;
         });
         $('#export-sample-info').attr('href', 'data:text/plain;base64,' + btoa(fileContents));
-    };
+    }
 
     $('.sample-info').change(function () {
-        createSampleInfo()
+        createSampleInfo();
+    });
+
+    $('#workflow_samples').scroll(function(e){;
+        var length = $(this).scrollTop();
+        $('#workflow_files').scrollTop(length);
     });
 
 </script>
