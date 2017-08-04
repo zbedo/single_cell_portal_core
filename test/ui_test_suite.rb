@@ -122,16 +122,11 @@ class UiTestSuite < Test::Unit::TestCase
 		options = Selenium::WebDriver::Chrome::Options.new
 		options.add_argument('--enable-webgl-draft-extensions')
 		if $headless == 'true'
-			@headless = Headless.new
-			@headless.start
 			options.add_argument('headless')
-			@driver = Selenium::WebDriver::Driver.for :chrome, driver_path: $chromedriver_dir, options: options, desired_capabilities: caps
-			@driver.manage.window.maximize
-		else
-			@driver = Selenium::WebDriver::Driver.for :chrome, driver_path: $chromedriver_dir,
-																								options: options, desired_capabilities: caps
-			@driver.manage.window.maximize
 		end
+		
+		@driver = Selenium::WebDriver::Driver.for :chrome, driver_path: $chromedriver_dir, options: options, desired_capabilities: caps
+		@driver.manage.window.maximize
 		@base_url = $portal_url
 		@accept_next_alert = true
 		@driver.manage.timeouts.implicit_wait = 15
