@@ -44,22 +44,56 @@
       <div class="form-group row">
         <div class="col-sm-9">
           <%= f.label :identifier, 'Workflow' %><br />
-          <%= f.select :identifier, options_for_select(@workflows), {include_blank: 'Please select a workflow...'}, {class: 'form-control'} %>
+          <%= f.select :identifier, options_for_select(@workflows_list), {include_blank: 'Please select a workflow...'}, {class: 'form-control'} %>
         </div>
         <div class="col-sm-3">
           <label>View Workflow</label><br />
           <%= link_to 'View Selected WDL', 'javascript:;', class: 'btn btn-default', id: 'view-selected-wdl', 'data-loading-text' => 'Loading... Please wait' %>
         </div>
       </div>
-      <div id="wdl-content-target"></div>
+      <div id="wdl-content-target">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <div class="panel-title">
+              <h4></h4>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group row">
+        <div class="col-sm-12">
+          <%= f.label :study_data, 'Please choose study primary data directories to populate samples & files (select all that apply)' %><br />
+          <%= f.select :study_data, options_for_select(@primary_data), {}, multiple: true, class: 'form-control', size: @primary_data.size > 15 ? 15 : @primary_data.size %>
+        </div>
+      </div>
       <div class="form-group row">
         <div class="col-sm-6">
           <%= f.label :samples %><br />
-          <%= f.text_area :samples, class: 'form-control', rows: 10 %>
+          <%= f.text_area :samples, class: 'form-control sample-info', rows: 10 %>
         </div>
         <div class="col-sm-6">
-          <%= f.label :files %><br />
-          <%= f.text_area :files, class: 'form-control', rows: 10 %>
+          <%= f.label :files, 'Primary Data Files' %><br />
+          <%= f.text_area :files, class: 'form-control sample-info', rows: 10 %>
+        </div>
+      </div>
+      <div class="form-group row">
+        <div class="col-sm-3">
+          <%= link_to "<i class='fa fa-upload'></i> Upload Sample & File Parings".html_safe,
+                      'javascript:;', class: 'btn btn-default', id: 'upload-sample-info',
+                      data: {toggle: 'tooltip'}, title: 'Upload a two-column tab- or comma-delimited file of sample & primary data file pairings.' %>
+        </div>
+        <div class="col-sm-3">
+          <%= f.file_field :sample_info, class: 'form-control' %>
+        </div>
+        <div class="col-sm-3">
+          <%= link_to "<i class='fa fa-download'></i> Export Sample & File Parings".html_safe,
+                      'data:text/plain;base64,', class: 'btn btn-default', id: 'export-sample-info',
+                      data: {toggle: 'tooltip'}, title: 'Export the current sample & primary data file pairings as a text file.',
+                      download: 'sample_info.txt' %>
+        </div>
+        <div class="col-sm-3">
+          <%= link_to "<i class='fa fa-eraser'></i> Clear Samples & Files".html_safe,
+                      'javascript:;', class: 'btn btn-default', id: 'clear-sample-info' %>
         </div>
       </div>
       <div class="form-group row">
@@ -105,6 +139,69 @@
                 dataType: 'script'
             });
         }
-    })
+    });
+
+    $('#workflow_study_data').change(function () {
+        var selected = $(this).val();
+        $.ajax({
+            url: '<%= get_fastq_files_path(study_name: @study.url_safe_name, mode: 'workflow') %>&selected_entries=' + selected,
+            dataType: 'script'
+        });
+    });
+
+    var sampleInfoInput = $('#workflow_sample_info')[0];
+    var reader = new FileReader();
+    $(reader).on('load', function (e) {
+        var file = e.target.result,
+            results;
+        if (file && file.length) {
+            // clear out current contents
+            $('#workflow_samples').empty();
+            $('#workflow_files').empty();
+            results = file.split(/[\n]/);
+            $(results).each(function(i, line) {
+                var sample,file;
+                [sample,file] = line.split(/[,\t]/);
+                $('#workflow_samples').append(sample + '\n');
+                $('#workflow_files').append(file + '\n');
+            });
+            createSampleInfo();
+        }
+    });
+
+    $('#upload-sample-info').click(function () {
+
+        if (sampleInfoInput.files.length) {
+            var upload = sampleInfoInput.files[0];
+            reader.readAsText(upload);
+            $(sampleInfoInput).val('');
+        } else {
+            alert('You must select a file first before proceeding.');
+            $('#workflow_sample_info').parent().addClass('has-error');
+        }
+    });
+
+    $('#clear-sample-info').click(function () {
+        $('#workflow_files').empty();
+        $('#workflow_samples').empty();
+        $('#workflow_study_data').val('');
+        createSampleInfo();
+    });
+
+    // base64 encode form data for export via HTML5 download
+    function createSampleInfo() {
+        var samples = $('#workflow_samples').val().split(/\n/);
+        var files = $('#workflow_files').val().split(/\n/);
+        var fileContents = '';
+        $(samples).each(function(i, sample) {
+            var line = sample + '\t' + files[i] + '\n'
+            fileContents += line;
+        });
+        $('#export-sample-info').attr('href', 'data:text/plain;base64,' + btoa(fileContents));
+    };
+
+    $('.sample-info').change(function () {
+        createSampleInfo()
+    });
 
 </script>

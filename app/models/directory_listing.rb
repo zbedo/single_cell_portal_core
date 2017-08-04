@@ -36,4 +36,9 @@ class DirectoryListing
 			'/' + self.name + '/'
 		end
 	end
+
+  # guess at a possible sample name based on filename
+  def possible_sample_name(filename)
+		filename.split('/').last.split('.').first
+	end
 end

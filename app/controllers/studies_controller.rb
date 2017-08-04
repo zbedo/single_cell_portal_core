@@ -813,7 +813,7 @@ class StudiesController < ApplicationController
   # sub-method to iterate through list of GCP bucket files and build up necessary sync list objects
   def process_workspace_bucket_files(files)
     files.each do |file|
-      if !%w(.fastq. .fq.).any? {|str| file.name.include?(str)}
+      if !file.name.end_with?(*StudyFile::PRIMARY_DATA_EXTENTIONS)
         # make sure filename and generation are identical, otherwise we have an unknown file
         study_match = @study_files.detect {|f| (f.upload_file_name == file.name || f.name == file.name) && f.generation == file.generation }
         # make sure file is not acutally a folder by checking its size and name

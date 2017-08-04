@@ -1,0 +1,3 @@
+$('#workflow_files').html("<%= escape_javascript(@files.join("\n")) %>");
+$('#workflow_samples').html("<%= escape_javascript(@samples.join("\n")) %>");
+createSampleInfo();
