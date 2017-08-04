@@ -389,8 +389,9 @@ class UserAnnotation
           data_array.subsample_annotation = annot_name + '--group--cluster'
           json_array = data_array.as_json.except('user_annotation_id', 'user_id')
           entry = DataArray.new(json_array)
+          Rails.logger.info("Creating data array for #{annot_name} in study: #{data_array.study.name}")
           entry.save!
-
+          Rails.logger.info("Data Array for #{annot_name} created in study: #{data_array.study.name}")
         else
           if data_array.array_type == 'annotations'
             json_array = data_array.as_json.except('user_annotation_id', 'user_id')
@@ -419,10 +420,10 @@ class UserAnnotation
 
       # update cluster group cell annotation attribute with new user annotation
       annot_hash = {'name'=>annot_name, 'type'=>'group','values'=>self.values, 'header_index'=>(types.length-1)}
+      Rails.logger.info("Updating annotations cluster #{cluster.name} for #{annot_name} in study: #{cluster.study.name}")
       cluster_annotations << annot_hash
       if cluster.update(cell_annotations: cluster_annotations)
-        # regenerate study file for cluster with same name
-
+        Rails.logger.info("Updating annotations cluster #{cluster.name} for #{annot_name} in study: #{cluster.study.name}")
         # Create new file
         study_file = cluster.study_file
         new_file = File.new(study_file.upload.path, 'w+')

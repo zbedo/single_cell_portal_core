@@ -186,7 +186,7 @@
     </div>
     <script type="text/javascript">
         <% if user_signed_in? %>
-        <% if params[:gene_set].nil? and params[:gene].nil?%>
+        <% if params[:gene_set].nil? && params[:gene].nil?%>
         var targetPlotString = 'cluster-plot';
         <% else %>
         var targetPlotString = 'scatter-plot';

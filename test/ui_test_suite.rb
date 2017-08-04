@@ -48,7 +48,7 @@ require 'selenium-webdriver'
 # DEFAULTS
 $user = `whoami`.strip
 $chromedriver_path = '/usr/local/bin/chromedriver'
-$usage = "ruby test/ui_test_suite.rb -- -c=/path/to/chromedriver -e=testing.email@gmail.com -p='testing_email_password' -s=sharing.email@gmail.com -P='sharing_email_password' -o=order -d=/path/to/downloads -u=portal_url -r=random_seed"
+$usage = "ruby test/ui_test_suite.rb -- -c=/path/to/chromedriver -e=testing.email@gmail.com -p='testing_email_password' -s=sharing.email@gmail.com -P='sharing_email_password' -o=order -d=/path/to/downloads -u=portal_url -r=random_seed -H=false"
 $test_email = ''
 $share_email = ''
 $test_email_password = ''
@@ -59,6 +59,9 @@ $portal_url = 'https://localhost/single_cell'
 
 # generate a global random seed to use with study name creation to prevent naming conflicts
 $random_seed = SecureRandom.uuid
+
+# Headless testing
+$headless = 'false'
 
 # parse arguments
 ARGV.each do |arg|
@@ -80,6 +83,8 @@ ARGV.each do |arg|
     $portal_url = arg.gsub(/\-u\=/, "")
   elsif arg =~ /\-r\=/
     $random_seed = arg.gsub(/\-r\=/, "")
+	elsif arg =~ /\-H\=/
+		$headless = arg.gsub(/\-H\=/, "")
   end
 end
 
@@ -90,6 +95,7 @@ puts "Sharing email: #{$share_email}"
 puts "Download directory: #{$download_dir}"
 puts "Portal URL: #{$portal_url}"
 puts "Random Seed: #{$random_seed}"
+puts "Headless?: #{$headless}"
 
 # make sure download & chromedriver paths exist and portal url is valid, otherwise kill tests before running and print usage
 if !File.exists?($chromedriver_path)
@@ -115,9 +121,17 @@ class UiTestSuite < Test::Unit::TestCase
 		caps = Selenium::WebDriver::Remote::Capabilities.chrome("chromeOptions" => {'prefs' => {'credentials_enable_service' => false}})
 		options = Selenium::WebDriver::Chrome::Options.new
 		options.add_argument('--enable-webgl-draft-extensions')
-		@driver = Selenium::WebDriver::Driver.for :chrome, driver_path: $chromedriver_dir,
-																							options: options, desired_capabilities: caps
-		@driver.manage.window.maximize
+		if $headless == 'true'
+			@headless = Headless.new
+			@headless.start
+			options.add_argument('headless')
+			@driver = Selenium::WebDriver::Driver.for :chrome, driver_path: $chromedriver_dir, options: options, desired_capabilities: caps
+			@driver.manage.window.maximize
+		else
+			@driver = Selenium::WebDriver::Driver.for :chrome, driver_path: $chromedriver_dir,
+																								options: options, desired_capabilities: caps
+			@driver.manage.window.maximize
+		end
 		@base_url = $portal_url
 		@accept_next_alert = true
 		@driver.manage.timeouts.implicit_wait = 15
@@ -580,7 +594,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	#create a 2d scatter study for use in user annotation testing
-	test 'user_annotation: create a 2d study ' do
+	test 'admin: user_annotation: create a 2d study ' do
 		puts "Test method: #{self.method_name}"
 
 		# log in first
@@ -1524,7 +1538,6 @@ class UiTestSuite < Test::Unit::TestCase
 		assert element_visible?(:id, 'message_modal'), 'confirmation message did not appear'
 		message = @driver.find_element(:id, 'notice-content').text
 		assert message.include?('jobs'), "'confirmation message did not pertain to locked jobs ('jobs' not found)"
-		close_modal('message_modal')
 
 		puts "Test method: #{self.method_name} successful!"
 	end
@@ -1546,7 +1559,6 @@ class UiTestSuite < Test::Unit::TestCase
 		message = @driver.find_element(:id, 'notice-content').text
 		expected_conf = 'All user download quotas successfully reset to 0.'
 		assert message == expected_conf, "correct confirmation did not appear, expected #{expected_conf} but found #{message}"
-		close_modal('message_modal')
 
 		puts "Test method: #{self.method_name} successful!"
 	end
@@ -3148,7 +3160,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# Create a user annotation
-	test 'user_annotation: annotation creation' do
+	test 'front-end: user_annotation: annotation creation' do
 		puts "Test method: #{self.method_name}"
 
 		# log in
@@ -3418,7 +3430,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# make sure editing the annotation works
-	test 'user_annotation: annotation editing' do
+	test 'front-end: user_annotation: annotation editing' do
 		puts "Test method: #{self.method_name}"
 
 		# login
@@ -3529,7 +3541,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# make sure sharing the annotation works
-	test 'user_annotation: annotation sharing' do
+	test 'front-end: user_annotation: annotation sharing' do
 		puts "Test method: #{self.method_name}"
 
 		# login
@@ -3753,7 +3765,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 	end
 
-	test 'user_annotation: download annotation cluster file' do
+	test 'front-end: user_annotation: download annotation cluster file' do
 		puts "Test method: #{self.method_name}"
 		login_path = @base_url + '/users/sign_in'
 		# downloads require login now
@@ -3783,7 +3795,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	#check user annotation persistence
-	test 'user_annotation: study persistence' do
+	test 'front-end: user_annotation: study persistence' do
 		puts "Test method: #{self.method_name}"
 
 		# login
@@ -3796,10 +3808,25 @@ class UiTestSuite < Test::Unit::TestCase
 		annot_path = @base_url + '/user_annotations'
 		@driver.get annot_path
 
+		num_annotations = @driver.find_elements(:class, 'annotation-name').length
+
 		@driver.find_element(:class, "user-#{$random_seed}-persist").click
 		@driver.switch_to.alert.accept
 		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
+
+		new_num_annotations = num_annotations
+		i = 0
+		while new_num_annotations >= num_annotations
+			if i == 5
+				assert false, "Reloaded the page five times but found #{new_num_annotations} rows instead of #{num_annotations-1} rows, indicating that the annotation was not deleted."
+			end
+			sleep 1.0
+			@driver.get annot_path
+			new_num_annotations = @driver.find_elements(:class, 'annotation-name').length
+			i+=1
+		end
+
 		#check new names
 		new_names = @driver.find_elements(:class, 'annotation-name').map{|x| x.text }
 
@@ -3906,7 +3933,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	#check user annotation deletion
-	test 'user_annotation: user annotation deletion' do
+	test 'front-end: user_annotation: user annotation deletion' do
 		puts "Test method: #{self.method_name}"
 
 		# login
