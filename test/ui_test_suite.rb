@@ -3907,13 +3907,13 @@ class UiTestSuite < Test::Unit::TestCase
 		close_modal('message_modal')
 
 		#check new names
-first_row = @driver.find_element(:id, 'annotations').find_element(:tag_name, 'tbody').find_element(:tag_name, 'tr').find_element(:tag_name, 'td')
+		first_row = @driver.find_element(:id, 'annotations').find_element(:tag_name, 'tbody').find_element(:tag_name, 'tr').find_element(:tag_name, 'td')
 		unless first_row['class'] == 'dataTables_empty'
-			#If you dont't have any annotations, they were all deleted		new_names = @driver.find_elements(:class, 'annotation-name').map{|x| x.text }
-		#assert new name saved correctly
-		assert !(new_names.include? "user-#{$random_seed}-exp"), "Deletion failed, expected no 'user-#{$random_seed}-exp' but found it"
-
-end
+			#If you dont't have any annotations, they were all deleted
+			new_names = @driver.find_elements(:class, 'annotation-name').map{|x| x.text }
+			#assert new name saved correctly
+			assert !(new_names.include? "user-#{$random_seed}-exp"), "Deletion failed, expected no 'user-#{$random_seed}-exp' but found it"
+		end
 
 		# log in first
 		path = @base_url + '/studies'
