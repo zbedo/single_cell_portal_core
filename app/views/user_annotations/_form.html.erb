@@ -33,7 +33,7 @@
       <div class="form-group row">
         <div class="col-sm-6">
           <%= f.label 'Label Name: ' %>
-          <input value="<%= value %>" class="form-control need-text label-name" <%= value == 'Undefined' ? 'disabled=\"disabled\"' : 'enabled'%> type="text" name="user_annotation[values][]" id="user-annotation_values">
+          <input value="<%= value %>" class="form-control need-text label-name <%= value == 'Undefined' ? '' : 'defined'%>" <%= value == 'Undefined' ? 'disabled=\"disabled\"' : 'enabled'%> type="text" name="user_annotation[values][]" id="user-annotation_values">
           <% if value == 'Undefined' %>
               <input value="<%= value %>" class="form-control need-text label-name" type="hidden" name="user_annotation[values][]" id="user-annotation_values">
           <% end %>
@@ -68,9 +68,19 @@
                   cont = false
               }
           }
+          var defined = $('.defined');
+          var numDefFields = defined.toArray().length;
+          var defValues = [];
+          for (i = 0; i < numDefFields; i++) {
+              var text = defined.eq(i).val();
+              defValues.push(text);
+          }
           if (numFields < 3) {
               alert('Your annotation must have at least two populations');
-          } else if (!cont) {
+          } else if (defValues.includes('Undefined')){
+              alert('Undefined is a reserved term. Select a different name for this label.');
+              setErrorOnBlank(defined);
+          }else if (!cont) {
               alert('You must provide a value for all labels before saving');
               setErrorOnBlank(needText);
           }

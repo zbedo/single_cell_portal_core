@@ -15,6 +15,9 @@ $('#selection-submit').click(function(){
     } else if ( !cont ) {
         alert('You must provide a value for all labels before saving');
         setErrorOnBlank(needText);
+    } else if (values.includes('Undefined')){
+        alert('Undefined is a reserved term. Select a different name for this label.');
+        setErrorOnBlank(needText);
     } else {
         launchModalSpinner('#save-modal-spinner', '#save-modal');
         var form = $('#selection-well > form');

@@ -366,7 +366,7 @@ class UserAnnotation
     end
   end
 
-  def persist_to_study(current_user)
+  def publish_to_study(current_user)
     begin
       #load original cluster group data arrays
       cluster = self.cluster_group
