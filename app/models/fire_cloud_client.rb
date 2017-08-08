@@ -237,7 +237,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		payload = {
 				namespace: self.project,
 				name: workspace_name,
-				attributes: {}
+				attributes: {},
+				authorizationDomain: []
 		}.to_json
 		process_firecloud_request(:post, path, payload)
 	end
