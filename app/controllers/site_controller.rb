@@ -565,7 +565,7 @@ class SiteController < ApplicationController
         @options = load_cluster_group_options
         @notice = nil
         @alert = 'The following errors prevented the annotation from being saved: ' + @user_annotation.errors.full_messages.join(',')
-        logger.error "#{Time.now}: Creating user annotation of params: #{user_annotation_params}, unable to save user annotation with errors #{@user_annotation.errors}"
+        logger.error "#{Time.now}: Creating user annotation of params: #{user_annotation_params}, unable to save user annotation with errors #{@user_annotation.errors.full_messages.join(', ')}"
         render 'update_user_annotations'
       end
     #More error handling, this is if can't save user annotation
