@@ -1545,8 +1545,13 @@ class Study
         rescue => e
           # delete workspace on any fail as this amounts to a validation fail
           Rails.logger.info "#{Time.now}: Error creating workspace: #{e.message}"
-          Study.firecloud_client.delete_workspace(self.firecloud_workspace)
+          begin
+            Study.firecloud_client.delete_workspace(self.firecloud_workspace)
+          rescue => err
+            Rails.logger.info "#{Time.now}: Unable to remove workspace due to: #{err.message}"
+          end
           errors.add(:firecloud_workspace, " creation failed: #{e.message}; Please try again later.")
+          self.firecloud_workspace = nil
           return false
         end
       end

@@ -2,7 +2,7 @@
   <div class="col-md-12">
     <h2>Current Submissions <span class="badge"><%= @submissions.size %></span></h2>
       <div class="table-responsive">
-        <div class="well">
+        <div class="well well-sm">
           <table class="table table-striped" id="submissions-table">
             <thead>
             <tr>
@@ -67,13 +67,22 @@
         </div>
       </div>
       <div class="form-group row">
-        <div class="col-sm-6">
-          <%= f.label :samples %><br />
-          <%= f.text_area :samples, class: 'form-control sample-info', rows: 10 %>
-        </div>
-        <div class="col-sm-6">
-          <%= f.label :files, 'Primary Data Files' %><br />
-          <%= f.text_area :files, class: 'form-control sample-info', rows: 10 %>
+        <div class="col-sm-12">
+          <label>Samples & Files</label><br />
+          <div class="well well-sm">
+            <div class="table-responsive">
+              <table class="table table-striped tabled-condensed" id="samples-table">
+                <thead>
+                <tr>
+                  <th class="col-sm-4">Sample</th>
+                  <th class="col-sm-4">Fastq File</th>
+                  <th class="col-sm-4">Paired Fastq File</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
       <div class="form-group row">
@@ -141,36 +150,56 @@
         }
     });
 
+    var samplesTable = $('#samples-table').DataTable({
+        pagingType: 'full_numbers',
+        order: [[0, 'asc']],
+        autoWidth: false,
+        columnDefs: [
+            { type: 'natural', targets: '_all' }
+        ]
+    });
+
+    // redraw datatable with new rows
+    function updateSampleTable(rows) {
+        console.log('adding ' + rows.length + ' rows to samples table');
+        samplesTable.clear();
+        samplesTable.rows.add(rows);
+        samplesTable.draw();
+        console.log('samples table update complete');
+        createSampleInfo();
+    }
+
+    // update samples & files table with entries from study fastq entries
     $('#workflow_study_data').change(function () {
         var selected = $(this).val();
         $.ajax({
             url: '<%= get_fastq_files_path(study_name: @study.url_safe_name, mode: 'workflow') %>&selected_entries=' + selected,
-            dataType: 'script'
+            dataType: 'json',
+            success: function(data) {
+                updateSampleTable(data.data);
+            }
         });
     });
 
+    // read uploaded file as text and
     var sampleInfoInput = $('#workflow_sample_info')[0];
     var reader = new FileReader();
     $(reader).on('load', function (e) {
         var file = e.target.result,
             results;
         if (file && file.length) {
-            // clear out current contents
-            $('#workflow_samples').empty();
-            $('#workflow_files').empty();
             results = file.split(/[\n]/);
+            var rows = [];
             $(results).each(function(i, line) {
                 if (line.trim() !== '') {
-                    var sample,file;
-                    [sample,file] = line.split(/[,\t]/);
-                    $('#workflow_samples').append(sample + '\n');
-                    $('#workflow_files').append(file + '\n');
+                    rows.push(line.split(/[,\t]/));
                 }
             });
-            createSampleInfo();
+            updateSampleTable(rows);
         }
     });
 
+    // upload a tab-delimited sample info file to use as inputs
     $('#upload-sample-info').click(function () {
 
         if (sampleInfoInput.files.length) {
@@ -185,31 +214,17 @@
     });
 
     $('#clear-sample-info').click(function () {
-        $('#workflow_files').empty();
-        $('#workflow_samples').empty();
-        $('#workflow_study_data').val('');
-        createSampleInfo();
+        updateSampleTable([])
     });
 
     // base64 encode form data for export via HTML5 download
     function createSampleInfo() {
-        var samples = $('#workflow_samples').val().split(/\n/);
-        var files = $('#workflow_files').val().split(/\n/);
+        var rows = samplesTable.rows().data();
         var fileContents = '';
-        $(samples).each(function(i, sample) {
-            var line = sample + '\t' + files[i] + '\n'
-            fileContents += line;
+        $(rows).each(function(i, row) {
+            fileContents += row.join("\t") + "\n";
         });
         $('#export-sample-info').attr('href', 'data:text/plain;base64,' + btoa(fileContents));
     }
-
-    $('.sample-info').change(function () {
-        createSampleInfo();
-    });
-
-    $('#workflow_samples').scroll(function(e){;
-        var length = $(this).scrollTop();
-        $('#workflow_files').scrollTop(length);
-    });
 
 </script>

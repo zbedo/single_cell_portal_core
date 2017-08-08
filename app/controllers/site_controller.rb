@@ -516,13 +516,13 @@ class SiteController < ApplicationController
   # method to populate an array with entries corresponding to all fastq files for a study (both owner defined as study_files
   # and extra fastq's that happen to be in the bucket)
   def get_fastq_files
+    @fastq_files = {data: []}
     case params[:mode]
       when 'datatable'
         # check if FireCloud is available first
         @allow_downloads =  AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
         @disabled_link = "<button type='button' class='btn btn-danger disabled-download' disabled>Currently Unavailable</button>".html_safe
         # load study_file fastqs first
-        @fastq_files = {data: []}
         @study.study_files.by_type('Fastq').each do |file|
           link = view_context.link_to("<span class='fa fa-download'></span> #{view_context.number_to_human_size(file.upload_file_size, prefix: :si)}".html_safe, file.download_path, class: "btn btn-primary dl-link fastq", download: file.upload_file_name)
           @fastq_files[:data] << [
@@ -543,10 +543,9 @@ class SiteController < ApplicationController
             ]
           end
         end
-        render json: @fastq_files.to_json
+
       when 'workflow'
-        @files = []
-        @samples = []
+        @fastq_files = {data: []}
         selected_entries = params[:selected_entries].split(',').map(&:strip)
         selected_entries.each do |entry|
           class_name, entry_name = entry.split('--')
@@ -554,21 +553,27 @@ class SiteController < ApplicationController
             when 'directorylisting'
               dl = @study.directory_listings.are_synced.detect {|d| d.name == entry_name}
               dl.files.each do |file|
-                @files << file['name']
-                @samples << dl.possible_sample_name(file['name'])
+                @fastq_files[:data] << [
+                    dl.possible_sample_name(file['name']),
+                    file['name'],
+                    file['name']
+                ]
               end
             when 'studyfile'
               study_file = @study.study_files.by_type('Fastq').detect {|f| f.name == entry_name}
-              @files << study_file.upload_file_name
-              @samples << study_file.upload_file_name.split('.').first
+              @fastq_files[:data] << [
+                  study_file.upload_file_name.split('.').first,
+                  study_file.upload_file_name,
+                  study_file.upload_file_name
+              ]
             else
               nil # this is called when selection is cleared out
           end
         end
-        render action: 'update_workflow_files'
       else
-        []
+        nil
     end
+    render json: @fastq_files.to_json
   end
 
   #Method to create user annotations from box or lasso selection

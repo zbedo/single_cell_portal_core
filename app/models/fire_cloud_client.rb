@@ -40,8 +40,6 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 			)
 			# set expiration date of token
 			self.expires_at = Time.now + self.access_token['expires_in']
-
-
 		else
 			self.user = user
 			self.project = project
@@ -141,7 +139,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		begin
 			DateTime.parse attr['service']['credentials']['client']['issued_at']
 		rescue NoMethodError => e
-			Rails.logger.error "#{Time.now}: cannot retrieve GCS storage issed_at timestamp: #{e.message}"
+			Rails.logger.error "#{Time.now}: cannot retrieve GCS storage issued_at timestamp: #{e.message}"
 			nil
 		end
 	end
