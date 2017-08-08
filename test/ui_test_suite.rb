@@ -3751,8 +3751,8 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	#check user annotation persistence
-	test 'front-end: user_annotation: study persistence' do
+	#check user annotation publishing
+	test 'front-end: user_annotation: study publishing' do
 		puts "Test method: #{self.method_name}"
 
 		# login
@@ -3767,7 +3767,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		num_annotations = @driver.find_elements(:class, 'annotation-name').length
 
-		@driver.find_element(:class, "user-#{$random_seed}-persist").click
+		@driver.find_element(:class, "user-#{$random_seed}-publish").click
 		@driver.switch_to.alert.accept
 		close_modal('message_modal')
 

@@ -46,7 +46,7 @@ Rails.application.routes.draw do
     # user annotation actions
 		resources :user_annotations, only: [:index, :edit, :update, :destroy]
     get 'download_user_annotation/:id', to: 'user_annotations#download_user_annotation', as: :download_user_annotation
-		get 'persist_to_study/:id', to: 'user_annotations#persist_to_study', as: :persist_to_study
+		get 'publish_to_study/:id', to: 'user_annotations#publish_to_study', as: :publish_to_study
 
 		# public/private file download links (redirect to signed_urls from Google)
 		get 'data/public/:study_name/:filename', to: 'site#download_file', as: :download_file, constraints: {filename: /.*/}

@@ -25,13 +25,13 @@
                 <td><%= user_annotation.subsampled_at %></td>
                 <td><%= user_annotation.user.email %></td>
                 <td>
-                  <%= link_to "<span class='fa fa-info-circle'></span> View Annotation".html_safe, view_study_path(user_annotation.study.url_safe_name, cluster: user_annotation.cluster_group.name, annotation: user_annotation.formatted_annotation_name) + '#study-visualize', class: "btn btn-xs btn-info #{user_annotation.name}-show"  %>
+                  <%= link_to "<span class='fa fa-bar-chart'></span> Plot Annotation".html_safe, view_study_path(user_annotation.study.url_safe_name, cluster: user_annotation.cluster_group.name, annotation: user_annotation.formatted_annotation_name) + '#study-visualize', class: "btn btn-xs btn-info #{user_annotation.name}-show"  %>
                   <% if user_annotation.can_edit?(current_user) %>
                     <%= link_to "<span class='fa fa-edit'></span> Edit".html_safe, edit_user_annotation_path(user_annotation), class: "btn btn-xs btn-primary #{user_annotation.name}-edit" %>
                   <% end %>
                   <%= link_to "<span class='fa fa-download'></span> Download".html_safe, download_user_annotation_path(user_annotation), class: "btn btn-xs btn-success #{user_annotation.name}-download" %>
                   <% if user_annotation.study.can_edit?(current_user) %>
-                      <%= link_to "<span class='fa fa-database'></span> Persist to Study".html_safe, persist_to_study_path(user_annotation), class: "btn btn-xs btn-warning persist-btn #{user_annotation.name}-persist"%>
+                      <%= link_to "<span class='fa fa-book'></span> Publish to Study".html_safe, publish_to_study_path(user_annotation), class: "btn btn-xs btn-warning publish-btn #{user_annotation.name}-publish"%>
                   <% end %>
                   <% if user_annotation.can_delete?(current_user) %>
                       <%= link_to "<span class='fa fa-trash'></span> Delete".html_safe, user_annotation, class: "btn btn-xs btn-danger delete-btn #{user_annotation.name}-delete", title: 'Delete Annotation' , method: :delete, data: {toggle: 'tooltip', placement: 'top'} %>
@@ -84,10 +84,10 @@
     // ask user to confirm delete, then show modal
     // use event delegation to attach to all delete-btn regardless
     // of whether they are visible yet or not
-    $('#annotations').on('click', '.persist-btn', function(){
+    $('#annotations').on('click', '.publish-btn', function(){
         // get name of study for confirmation
         var annot = $(this).parent().parent().find('.annotation-name').text();
-        if ( confirm('Are you sure you want to persist \"' + annot + '\" to this study?')) {
+        if ( confirm('Are you sure you want to publish \"' + annot + '\" to this study?')) {
             launchModalSpinner('#save-modal-spinner','#save-modal');
         } else {
             return false;
