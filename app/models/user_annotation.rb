@@ -31,7 +31,7 @@ class UserAnnotation
   #must have a name and values
   validates_presence_of :name, :values
   #unique values are name per user, study and cluster
-  validates_uniqueness_of :name, scope: [:user_id, :study_id, :cluster_group_id]
+  validates_uniqueness_of :name, scope: [:user_id, :study_id, :cluster_group_id], message: '- \'%{value}\' has already been taken'
 
   # populate specific errors for user annotation shares since they share the same form
   validate do |user_annotation|
