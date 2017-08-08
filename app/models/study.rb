@@ -339,12 +339,7 @@ class Study
 
   # return an array of all single cell names in study
   def all_cells
-    cell_arrays = self.data_arrays.where(name: 'All Cells').order('array_index asc').to_a
-    all_values = []
-    cell_arrays.each do |array|
-      all_values += array.values
-    end
-    all_values
+    self.study_metadata.first.cell_annotations.keys
   end
 
   # return a hash keyed by cell name of the requested study_metadata values

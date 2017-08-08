@@ -552,19 +552,14 @@ class SiteController < ApplicationController
           case class_name
             when 'directorylisting'
               dl = @study.directory_listings.are_synced.detect {|d| d.name == entry_name}
-              dl.files.each do |file|
-                @fastq_files[:data] << [
-                    dl.possible_sample_name(file['name']),
-                    file['name'],
-                    file['name']
-                ]
-              end
+              determine_read_pairs(@fastq_files, dl)
+
             when 'studyfile'
               study_file = @study.study_files.by_type('Fastq').detect {|f| f.name == entry_name}
               @fastq_files[:data] << [
                   study_file.upload_file_name.split('.').first,
                   study_file.upload_file_name,
-                  study_file.upload_file_name
+                  ''
               ]
             else
               nil # this is called when selection is cleared out
@@ -655,7 +650,7 @@ class SiteController < ApplicationController
       # load workflow payload object
       @workflow_wdl = Study.firecloud_client.get_method(@workflow_namespace, @workflow_name, @workflow_snapshot, true)
     rescue => e
-      @workflow_wdl = "We're sorry, but we could not load the requested workflow object.  Please try again later.\n\n#{e.message}"
+      @workflow_wdl = "We're sorry, but we could not load the requested workflow object.  Please try again later.\n\nError: #{e.message}"
       logger.error "#{Time.now}: unable to load WDL for #{@workflow_namespace}:#{@workflow_name}:#{@workflow_snapshot}; #{e.message}"
     end
   end
@@ -1356,6 +1351,27 @@ class SiteController < ApplicationController
   def construct_gene_list_hash(query_list)
     genes = query_list.split.map(&:strip).sort.join
     Digest::SHA256.hexdigest genes
+  end
+
+  def determine_read_pairs(existing_list, directory)
+    # re-create hash of samples => reads
+    sample_map = {}
+    existing_list.each do |entry|
+      key = entry.slice!(0)
+      sample_map[key] = entry
+    end
+
+    directory.files.each do |file|
+      sample_name = directory.possible_sample_name(file['name'])
+      if !sample_map.has_key?(sample_name)
+        sample_map[sample_name] = [file['name']]
+        existing_list[:data] << [
+            sample_name,
+            file['name'],
+            file['name']
+        ]
+      end
+    end
   end
 
   protected

@@ -62,13 +62,18 @@
       </div>
       <div class="form-group row">
         <div class="col-sm-12">
-          <%= f.label :study_data, 'Please choose study primary data directories to populate samples & files (select all that apply)' %><br />
-          <%= f.select :study_data, options_for_select(@primary_data), {}, multiple: true, class: 'form-control', size: @primary_data.size > 15 ? 15 : @primary_data.size %>
-        </div>
-      </div>
-      <div class="form-group row">
-        <div class="col-sm-12">
-          <label>Samples & Files</label><br />
+          <div class="bs-callout bs-callout-info">
+            <h4>Samples & Primary Data Files</h4>
+            <p class="help-block">Use the multi-select below to choose which primary data directories from this study to use as inputs for this workflow.
+              Samples & paired reads will be determined by the names of the primary data files.  If you wish to edit the list of sample & file pairings, you can export it via the
+              <strong>Export Sample & File Parings</strong> button, make any desired changes, and import the new list using the <strong>Upload Sample & File Parings</strong> button.</p>
+          </div>
+          <div class="form-group row">
+            <div class="col-sm-12">
+              <%= f.label :study_data, 'Please choose primary data directories (select all that apply)' %><br />
+              <%= f.select :study_data, options_for_select(@primary_data), {}, multiple: true, class: 'form-control', size: @primary_data.size > 15 ? 15 : @primary_data.size %>
+            </div>
+          </div>
           <div class="well well-sm">
             <div class="table-responsive">
               <table class="table table-striped tabled-condensed" id="samples-table">
@@ -76,7 +81,7 @@
                 <tr>
                   <th class="col-sm-4">Sample</th>
                   <th class="col-sm-4">Fastq File</th>
-                  <th class="col-sm-4">Paired Fastq File</th>
+                  <th class="col-sm-4">(Optional) Paired Fastq File</th>
                 </tr>
                 </thead>
                 <tbody></tbody>
@@ -87,12 +92,12 @@
       </div>
       <div class="form-group row">
         <div class="col-sm-3">
-          <%= link_to "<i class='fa fa-upload'></i> Upload Sample & File Parings".html_safe,
-                      'javascript:;', class: 'btn btn-default', id: 'upload-sample-info',
-                      data: {toggle: 'tooltip'}, title: 'Upload a two-column tab- or comma-delimited file of sample & primary data file pairings.' %>
+          <%= f.file_field :sample_info, class: 'form-control' %>
         </div>
         <div class="col-sm-3">
-          <%= f.file_field :sample_info, class: 'form-control' %>
+          <%= link_to "<i class='fa fa-upload'></i> Upload Sample & File Parings".html_safe,
+                      'javascript:;', class: 'btn btn-default', id: 'upload-sample-info',
+                      data: {toggle: 'tooltip'}, title: 'Upload a three-column tab- or comma-delimited file of sample names, primary data files, and optional paired reads.' %>
         </div>
         <div class="col-sm-3">
           <%= link_to "<i class='fa fa-download'></i> Export Sample & File Parings".html_safe,
@@ -214,6 +219,7 @@
     });
 
     $('#clear-sample-info').click(function () {
+        $('#workflow_study_data').val('');
         updateSampleTable([])
     });
 
