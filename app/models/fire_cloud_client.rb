@@ -237,7 +237,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		payload = {
 				namespace: self.project,
 				name: workspace_name,
-				attributes: {}
+				attributes: {},
+				authorizationDomain: []
 		}.to_json
 		process_firecloud_request(:post, path, payload)
 	end
@@ -384,7 +385,12 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	# return: true on file deletion
 	def delete_workspace_file(workspace_name, filename)
 		file = self.get_workspace_file(workspace_name, filename)
-		file.delete
+		begin
+			file.delete
+		rescue => e
+			logger.info("failed to delete workspace file #{filename} with error #{e}")
+		end
+
 	end
 
 	# retrieve single file in a GCP bucket of a workspace and download locally to portal (likely for parsing)

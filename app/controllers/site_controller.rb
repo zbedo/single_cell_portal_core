@@ -1287,7 +1287,7 @@ class SiteController < ApplicationController
   end
 
   def load_expression_axis_title
-    @study.expression_matrix_file.y_axis_label.empty? ? 'Expression' : @study.expression_matrix_file.y_axis_label
+    @study.expression_matrix_files.y_axis_label.empty? ? 'Expression' : @study.expression_matrix_files.y_axis_label
   end
 
   # create a unique hex digest of a list of genes for use in set_cache_path

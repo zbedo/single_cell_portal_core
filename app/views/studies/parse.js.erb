@@ -2,7 +2,7 @@ $('<%= params[:modal_target]%>').modal('hide');
 
 // when uploading a file that can have multiple instances, only call completeWizardStep the first time
 // also update progress bar
-<% if %w(initialize_ordinations_form initialize_marker_genes_form initialize_primary_data_form initialize_misc_form).include?(params[:partial]) && @study.study_files.by_type(@study_file.file_type).count == 1 %>
+<% if %w(initialize_ordinations_form initialize_marker_genes_form initialize_primary_data_form initialize_misc_form initialize_expression_form).include?(params[:partial]) && @study.study_files.by_type(@study_file.file_type).count == 1 %>
 	var step = '<%= params[:partial] %>';
 	completeWizardStep(step + '_nav');
 	var status = getWizardStatus();
