@@ -57,12 +57,17 @@ class Study
         files = self.first.study.study_files.by_type('Expression Matrix')
         files.each do |file|
 
-          scores << (any_of({gene: gene, study_file_id: file.id}, {searchable_gene: gene.downcase, study_file_id: file.id}).to_a)
+          scores << (any_of({gene: gene, study_file_id: file.id}, {searchable_gene: gene.downcase, study_file_id: file.id}).first)
         end
         if scores.uniq != nil
           scores.uniq!
         end
-        scores
+        uber_score = {}
+        uber_score['searchable_gene'] = gene.downcase
+        uber_score['gene'] = gene
+        uber_score['scores'] = scores.map{|score| score.scores}.reduce({}, :merge)
+        logger.info("Uber: #{uber_score}")
+        return [uber_score]
       else
         any_of({gene: gene, study_file_id: study_file_id}, {searchable_gene: gene.downcase, study_file_id: study_file_id}).to_a
       end
@@ -589,6 +594,7 @@ class Study
         end
       end
       Rails.logger.info "#{Time.now}: Creating last #{@records.size} expression scores from #{expression_file.name} for #{self.name}"
+      logger.info(@records)
       ExpressionScore.create!(@records)
       # create array of all cells for study
       @cell_data_array = self.data_arrays.build(name: 'All Cells', cluster_name: expression_file.name, array_type: 'cells', array_index: 1, study_file_id: expression_file._id)
