@@ -1,7 +1,9 @@
 <% if params[:gene] %>
 	<em><%= link_to params[:gene], "http://www.ncbi.nlm.nih.gov/gene/?term=#{params[:gene]}[sym]", 'data-toggle' => 'tooltip', title: "Search Entrez for '#{params[:gene]}'", 'data-placement' => 'right', target: :_blank, class: 'queried-gene' %></em>
 <% elsif @main_genes.nil? %>
-	<em><%= @genes.map {|g| link_to g.gene, "http://www.ncbi.nlm.nih.gov/gene/?term=#{g.gene}[sym]", 'data-toggle' => 'tooltip', title: "Search Entrez for '#{g.gene}'", 'data-placement' => 'right', target: :_blank, class: 'queried-gene'}.join(', ').html_safe %></em>
+    <% @genes = !@genes.uniq ? @genes.uniq! : @genes %>
+    <em><%= @genes.map {|g| link_to g.gene, "http://www.ncbi.nlm.nih.gov/gene/?term=#{g.gene}[sym]", 'data-toggle' => 'tooltip', title: "Search Entrez for '#{g.gene}'", 'data-placement' => 'right', target: :_blank, class: 'queried-gene'}.join(', ').html_safe %></em>
 <% else %>
+  <% @main_genes = !@main_genes.uniq ? @main_genes.uniq! : @main_genes %>
 	<em><%= @main_genes.map {|g| link_to g.gene, "http://www.ncbi.nlm.nih.gov/gene/?term=#{g.gene}[sym]", 'data-toggle' => 'tooltip', title: "Search Entrez for '#{g.gene}'", 'data-placement' => 'right', target: :_blank, class: 'queried-gene'}.join(', ').html_safe %></em>... <%= link_to "#{@other_genes.size} more", '#', 'data-toggle' => 'popover', 'data-trigger' => 'focus', 'data-content' => "#{@other_genes.map {|g| link_to g.gene, "http://www.ncbi.nlm.nih.gov/gene/?term=#{g.gene}[sym]", target: :_blank}.join(', ') }", 'data-html' => true, class: 'btn btn-primary more-genes' %>
 <% end %>

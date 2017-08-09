@@ -8,7 +8,7 @@ class ExpressionScore
   field :searchable_gene, type: String
   field :scores, type: Hash
 
-  index({ gene: 1, study_id: 1 }, { unique: true })
+  index({ gene: 1, study_id: 1, study_file_id: 1 }, { unique: true })
   index({ searchable_gene: 1, study_id: 1 }, { unique: false })
   index({ study_id: 1 }, { unique: false })
   index({ study_id: 1, study_file_id: 1} , { unique: false })

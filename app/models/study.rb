@@ -51,8 +51,21 @@ class Study
   end
 
   has_many :expression_scores, dependent: :delete do
-    def by_gene(gene)
-      any_of({gene: gene}, {searchable_gene: gene.downcase}).to_a
+    def by_gene(gene, study_file_id='All')
+      if study_file_id == 'All'
+        scores = []
+        files = self.first.study.study_files.by_type('Expression Matrix')
+        files.each do |file|
+
+          scores << (any_of({gene: gene, study_file_id: file.id}, {searchable_gene: gene.downcase, study_file_id: file.id}).to_a)
+        end
+        if scores.uniq != nil
+          scores.uniq!
+        end
+        scores
+      else
+        any_of({gene: gene, study_file_id: study_file_id}, {searchable_gene: gene.downcase, study_file_id: study_file_id}).to_a
+      end
     end
   end
 
@@ -302,16 +315,6 @@ class Study
   def set_cell_count(file_type)
     @cell_count = 0
     case file_type
-      when 'Expression Matrix'
-        if self.expression_matrix_files.upload_content_type == 'application/gzip'
-          @file = Zlib::GzipReader.open(self.expression_matrix_files.upload.path)
-        else
-          @file = File.open(self.expression_matrix_files.upload.path)
-        end
-        cells = @file.readline.split(/[\t,]/)
-        @file.close
-        cells.shift
-        @cell_count = cells.size
       when 'Metadata'
         metadata_name, metadata_type = StudyMetadatum.where(study_id: self.id).pluck(:name, :annotation_type).flatten
         @cell_count = self.study_metadata_values(metadata_name, metadata_type).keys.size

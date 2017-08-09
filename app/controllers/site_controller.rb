@@ -203,16 +203,30 @@ class SiteController < ApplicationController
     # check if one gene was searched for, but more than one found
     # we can assume that in this case there is an exact match possible
     # cast as an array so block after still works properly
-    if @genes.size > 1 && terms.size == 1
-      @genes = [load_best_gene_match(@genes, terms.first)]
+    if @genes.first.size > 1 && terms.size == 1
+      @genes = load_best_gene_match(@genes, terms.first)
     end
+
+    if !@genes.empty?
+      genes = []
+      @genes.each do |score|
+        genes << score.searchable_gene
+      end
+      if genes.uniq != nil
+        genes.uniq!
+      end
+
+      number_of_genes = genes.size
+    end
+
+    logger.info(number_of_genes)
 
     # determine which view to load
     if @genes.empty?
       redirect_to request.referrer, alert: "No matches found for: #{terms.join(', ')}."
-    elsif @genes.size > 1 && !consensus.blank?
+    elsif number_of_genes > 1 && !consensus.blank?
       redirect_to view_gene_set_expression_path(study_name: params[:study_name], search: {genes: terms.join(' ')} , cluster: cluster, annotation: annotation, consensus: consensus, subsample: subsample)
-    elsif @genes.size > 1 && consensus.blank?
+    elsif number_of_genes > 1 && consensus.blank?
       redirect_to view_gene_expression_heatmap_path(search: {genes: terms.join(' ')}, cluster: cluster, annotation: annotation)
     else
       gene = @genes.first
@@ -829,7 +843,7 @@ class SiteController < ApplicationController
       annotation_array.each_with_index do |annot, index|
         annotation_value = annot
         cell_name = cells[index]
-        expression_value = @gene.scores[cell_name].to_f.round(4)
+        expression_value = expression_array_scores_by_cell(@gene,cell_name).to_f.round(4)
 
         values[:all][:text] << "<b>#{cell_name}</b><br>#{annotation[:name]}: #{annotation_value}<br>#{@y_axis_title}: #{expression_value}"
         values[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
@@ -907,14 +921,14 @@ class SiteController < ApplicationController
       # we can take a subsample of the same size for the annotations since the sort order is non-stochastic (i.e. the indices chosen are the same every time for all arrays)
       annotations = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       cells.each_with_index do |cell, index|
-        values[annotations[index]][:y] << @gene.scores[cell].to_f.round(4)
+        values[annotations[index]][:y] << expression_array_scores_by_cell(@gene,cell).to_f.round(4)
       end
     elsif annotation[:scope] == 'user'
       user_annotation = @cluster.viewable_user_annotations(current_user, annotation[:name])
       annotations = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
       cells.each_with_index do |cell, index|
-        values[annotations[index]][:y] << @gene.scores[cell].to_f.round(4)
+        values[annotations[index]][:y] << expression_array_scores_by_cell(@gene, cell).to_f.round(4)
       end
     else
       # since annotations are in a hash format, subsampling isn't necessary as we're going to retrieve values by key lookup
@@ -923,7 +937,8 @@ class SiteController < ApplicationController
         val = annotations[cell]
         # must check if key exists
         if values.has_key?(val)
-          values[annotations[cell]][:y] << @gene.scores[cell].to_f.round(4)
+          logger.info("Here #{expression_array_scores_by_cell(@gene, cell)}")
+          values[annotations[cell]][:y] << expression_array_scores_by_cell(@gene, cell).to_f.round(4)
           values[annotations[cell]][:cells] << cell
         end
       end
@@ -969,7 +984,7 @@ class SiteController < ApplicationController
       expression[:all][:z] = z_array
     end
     cells.each_with_index do |cell, index|
-      expression_score = @gene.scores[cell].to_f.round(4)
+      expression_score = expression_array_scores_by_cell(@gene, cell).to_f.round(4)
       # load correct annotation value based on scope
       annotation_value = annotation[:scope] == 'cluster' ? annotation_array[index] : annotation_hash[cell]
       text_value = "#{cell} (#{annotation[:name]}: #{annotation_value})<br />#{@y_axis_title}: #{expression_score}"
@@ -1179,18 +1194,19 @@ class SiteController < ApplicationController
   # load best-matching gene (if possible)
   def load_best_gene_match(matches, search_term)
     # iterate through all matches to see if there is an exact match
-    matches.each do |match|
-      if match.gene == search_term
-        return match
+    score_array = []
+    matches.each do |score|
+      score.each do |match|
+        if match.gene == search_term
+          score_array << match
+        # go through a second time to see if there is a case-insensitive match by looking at searchable_gene
+        # this is done after a complete iteration to ensure that there wasn't an exact match available
+        elsif match.searchable_gene == search_term.downcase
+          score_array << match
+        end
       end
     end
-    # go through a second time to see if there is a case-insensitive match by looking at searchable_gene
-    # this is done after a complete iteration to ensure that there wasn't an exact match available
-    matches.each do |match|
-      if match.searchable_gene == search_term.downcase
-        return match
-      end
-    end
+    score_array
   end
 
   # helper method to load all possible cluster groups for a study
@@ -1294,6 +1310,21 @@ class SiteController < ApplicationController
   def construct_gene_list_hash(query_list)
     genes = query_list.split.map(&:strip).sort.join
     Digest::SHA256.hexdigest genes
+  end
+
+  # Search gene array by cell name
+  def expression_array_scores_by_cell(expr_arr, cell_name)
+    i = 0
+    expr_arr.each do |expr|
+      if !expr.scores[cell_name].nil?
+        return expr.scores[cell_name]
+      else
+
+      end
+      i += 1
+    end
+    logger.info("Couldn't find #{cell_name}")
+    return 0
   end
 
   protected
