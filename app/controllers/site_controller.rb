@@ -340,6 +340,7 @@ class SiteController < ApplicationController
       @top_plot_partial = 'expression_annotation_plots_view'
       @top_plot_plotly = 'expression_annotation_plots_plotly'
       @top_plot_layout = 'expression_annotation_scatter_layout'
+      logger.info("Values: #{@values}")
       @annotation_scatter_range = set_range(@values.values)
     end
     # load expression scatter using main gene expression values
