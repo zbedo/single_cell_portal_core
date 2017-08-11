@@ -20,8 +20,8 @@
               <tr>
                 <td class="annotation-name"><%= user_annotation.name %></td>
                 <td><%= user_annotation.values.map{|x| "<span class='label label-#{ x == 'Undefined' ? 'warning' : 'default'} #{user_annotation.name}'>#{x}</span>"}.join(' ').html_safe %></td>
-                <td><%= link_to user_annotation.study.name,  view_study_path(user_annotation.study.url_safe_name) %></td>
-                <td class="<%= user_annotation.name + '_cluster'%>"><%= user_annotation.cluster_group.name %></td>
+                <td class="annotation-study"><%= link_to user_annotation.study.name,  view_study_path(user_annotation.study.url_safe_name) %></td>
+                <td class="annotation-cluster"><%= user_annotation.cluster_group.name %></td>
                 <td><%= user_annotation.subsampled_at %></td>
                 <td><%= user_annotation.user.email %></td>
                 <td>
@@ -31,10 +31,10 @@
                   <% end %>
                   <%= link_to "<span class='fa fa-download'></span> Download".html_safe, download_user_annotation_path(user_annotation), class: "btn btn-xs btn-success #{user_annotation.name}-download" %>
                   <% if user_annotation.study.can_edit?(current_user) %>
-                      <%= link_to "<span class='fa fa-book'></span> Publish to Study".html_safe, publish_to_study_path(user_annotation), class: "btn btn-xs btn-warning publish-btn #{user_annotation.name}-publish"%>
+                      <%= link_to "<span class='fa fa-book'></span> Publish to Study".html_safe, publish_to_study_path(user_annotation), class: "btn btn-xs btn-warning publish-btn #{user_annotation.name}-publish", data: {toggle: 'tooltip', placement: 'top'}, title: 'Publish annotation to study (will this annotation remove from your list)' %>
                   <% end %>
                   <% if user_annotation.can_delete?(current_user) %>
-                      <%= link_to "<span class='fa fa-trash'></span> Delete".html_safe, user_annotation, class: "btn btn-xs btn-danger delete-btn #{user_annotation.name}-delete", title: 'Delete Annotation' , method: :delete, data: {toggle: 'tooltip', placement: 'top'} %>
+                      <%= link_to "<span class='fa fa-trash'></span> Delete".html_safe, user_annotation, class: "btn btn-xs btn-danger delete-btn #{user_annotation.name}-delete", method: :delete %>
                   <% end %>
                 </td>
               </tr>
@@ -87,7 +87,8 @@
     $('#annotations').on('click', '.publish-btn', function(){
         // get name of study for confirmation
         var annot = $(this).parent().parent().find('.annotation-name').text();
-        if ( confirm('Are you sure you want to publish \"' + annot + '\" to this study?')) {
+        var study = $(this).parent().parent().find('.annotation-study').text();
+        if ( confirm('Are you sure you want to publish \"' + annot + '\" to the study \"' + study + ' \"? This will remove this annotation from your list and add it to the source study data from which it was created.  It will be viewable to anyone who has access to that study.')) {
             launchModalSpinner('#save-modal-spinner','#save-modal');
         } else {
             return false;
