@@ -7,13 +7,13 @@ class DeleteQueueJob < Struct.new(:object)
       when 'Study'
         # mark for deletion, rename study to free up old name for use, and restrict access by removing owner
         new_name = "DELETE-#{object.data_dir}"
-        object.update!(queued_for_deletion: true, public: false, user_id: nil, name: new_name, url_safe_name: new_name)
+        object.update!(public: false, user_id: nil, name: new_name, url_safe_name: new_name)
       when 'StudyFile'
         file_type = object.file_type
         study = object.study
 
         # reset initialized if needed
-        if study.cluster_ordinations_files.empty? || study.expression_matrix_file.nil? || study.metadata_file.nil?
+        if study.cluster_ordinations_files.empty? || study.expression_matrix_files.empty? || study.metadata_file.nil?
           study.update!(initialized: false)
         end
 
@@ -27,8 +27,16 @@ class DeleteQueueJob < Struct.new(:object)
               study.save
             end
 
-            ClusterGroup.where(study_file_id: object.id, study_id: study.id).delete_all
+            clusters = ClusterGroup.where(study_file_id: object.id, study_id: study.id)
+            cluster_group_id = clusters.first.id
+            clusters.delete_all
             DataArray.where(study_file_id: object.id, study_id: study.id).delete_all
+            user_annotations = UserAnnotation.where(study_id: study.id, cluster_group_id: cluster_group_id )
+            user_annotations.each do |annot|
+              annot.user_data_arrays.delete_all
+              annot.user_annotation_shares.delete_all
+            end
+            user_annotations.delete_all
           when 'Expression Matrix'
             ExpressionScore.where(study_file_id: object.id, study_id: study.id).delete_all
             DataArray.where(study_file_id: object.id, study_id: study.id).delete_all
@@ -43,6 +51,14 @@ class DeleteQueueJob < Struct.new(:object)
         # queue study file object for deletion
         new_name = "DELETE-#{SecureRandom.uuid}"
         object.update!(queued_for_deletion: true, upload_file_name: new_name, name: new_name, file_type: nil)
+      when 'UserAnnotation'
+        # set queued for deletion to true and set user annotation name
+        new_name = "DELETE-#{SecureRandom.uuid}"
+        object.update!(name: new_name)
+
+        # delete data arrays right away
+        object.user_data_arrays.delete_all
+
     end
   end
 end

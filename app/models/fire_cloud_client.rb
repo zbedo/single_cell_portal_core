@@ -1,4 +1,4 @@
-class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_at)
+class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :storage, :expires_at)
 
 	# Class that wraps API calls to both FireCloud and Google Cloud Storage to manage the CRUDing of both FireCloud workspaces
 	# and files inside the associated GCP storage buckets
@@ -13,7 +13,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	GOOGLE_SCOPES = %w(https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email)
 	# constant used for retry loops in process_request
 	MAX_RETRY_COUNT = 3
-	# namespace used for all FireCloud project workspaces
+	# default namespace used for all FireCloud project workspaces owned by the 'portal'
 	PORTAL_NAMESPACE = 'single-cell-portal'
 	# location of Google service account JSON (must be absolute path to file)
 	SERVICE_ACCOUNT_KEY = File.absolute_path(ENV['SERVICE_ACCOUNT_KEY'])
@@ -26,19 +26,39 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	# will set the access token, FireCloud api url root and GCP storage driver instance
 	#
 	# return: FireCloudClient object
-	def initialize
-		self.access_token = FireCloudClient.generate_access_token
+	def initialize(user=nil, project=nil)
+		# when initializing without a user, default to base configuration
+		if user.nil?
+			self.access_token = FireCloudClient.generate_access_token
+			self.project = PORTAL_NAMESPACE
+
+			# instantiate Google Cloud Storage driver to work with files in workspace buckets
+			self.storage = Google::Cloud::Storage.new(
+					project: PORTAL_NAMESPACE,
+					keyfile: SERVICE_ACCOUNT_KEY,
+					timeout: 3600
+			)
+			# set expiration date of token
+			self.expires_at = Time.now + self.access_token['expires_in']
+
+
+		else
+			self.user = user
+			self.project = project
+			# when initializing with a user, pull access token from user object and set desired project
+			self.access_token = user.valid_access_token
+			self.expires_at = self.access_token['expires_at']
+
+			# use user-defined project instead of portal default
+			self.storage = Google::Cloud::Storage.new(
+					project: project,
+					keyfile: SERVICE_ACCOUNT_KEY,
+					timeout: 3600
+			)
+		end
+
+		# set FireCloud API base url
 		self.api_root = BASE_URL
-
-		# instantiate Google Cloud Storage driver to work with files in workspace buckets
-		self.storage = Google::Cloud::Storage.new(
-				project: PORTAL_NAMESPACE,
-				keyfile: SERVICE_ACCOUNT_KEY,
-				timeout: 3600
-		)
-
-		# set expiration date of token
-		self.expires_at = Time.now + self.access_token['expires_in']
 	end
 
 	## TOKEN METHODS
@@ -58,10 +78,17 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	#
 	# return: timestamp of new access token expiration
 	def refresh_access_token
-		new_token = FireCloudClient.generate_access_token
-		new_expiry = Time.now + new_token['expires_in']
-		self.access_token = new_token
-		self.expires_at = new_expiry
+		if self.user.nil?
+			new_token = FireCloudClient.generate_access_token
+			new_expiry = Time.now + new_token['expires_in']
+			self.access_token = new_token
+			self.expires_at = new_expiry
+		else
+			new_token = self.user.generate_access_token
+			self.access_token = new_token
+			self.expires_at = new_token['expires_at']
+		end
+		self.expires_at
 	end
 
 	# check if an access_token is expired
@@ -81,11 +108,12 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	end
 
   # renew the storage driver
+  # default project is value of PORTAL_NAMESPACE
   #
   # return: new instance of storage driver
-  def refresh_storage_driver
+  def refresh_storage_driver(project_name=PORTAL_NAMESPACE)
 		new_storage = Google::Cloud::Storage.new(
-				project: PORTAL_NAMESPACE,
+				project: project_name,
 				keyfile: SERVICE_ACCOUNT_KEY,
 				timeout: 3600
 		)
@@ -195,7 +223,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	def workspaces
 		path = self.api_root + '/api/workspaces'
 		workspaces = process_firecloud_request(:get, path)
-		workspaces.keep_if {|ws| ws['workspace']['namespace'] == PORTAL_NAMESPACE}
+		workspaces.keep_if {|ws| ws['workspace']['namespace'] == self.project}
 	end
 
 	# create a workspace, prepending WORKSPACE_NAME_PREFIX as necessary
@@ -207,7 +235,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 		path = self.api_root + '/api/workspaces'
 		# construct payload for POST
 		payload = {
-				namespace: PORTAL_NAMESPACE,
+				namespace: self.project,
 				name: workspace_name,
 				attributes: {},
 				authorizationDomain: []
@@ -221,7 +249,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	#
 	# return: JSON object of workspace instance
 	def get_workspace(workspace_name)
-		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{workspace_name}"
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}"
 		process_firecloud_request(:get, path)
 	end
 
@@ -231,7 +259,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	#
 	# return: JSON message of status of workspace deletion
 	def delete_workspace(workspace_name)
-		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{workspace_name}"
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}"
 		process_firecloud_request(:delete, path)
 	end
 
@@ -241,7 +269,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	#
 	# return: JSON object of workspace ACL instance
 	def get_workspace_acl(workspace_name)
-		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{workspace_name}/acl"
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/acl"
 		process_firecloud_request(:get, path)
 	end
 
@@ -253,7 +281,7 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	#
 	# return: JSON response of ACL update
 	def update_workspace_acl(workspace_name, acl)
-		path = self.api_root + "/api/workspaces/#{PORTAL_NAMESPACE}/#{workspace_name}/acl?inviteUsersNotFound=true"
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/acl?inviteUsersNotFound=true"
 		process_firecloud_request(:patch, path, acl)
 	end
 
@@ -357,7 +385,11 @@ class FireCloudClient < Struct.new(:access_token, :api_root, :storage, :expires_
 	# return: true on file deletion
 	def delete_workspace_file(workspace_name, filename)
 		file = self.get_workspace_file(workspace_name, filename)
-		file.delete
+		begin
+			file.delete
+		rescue => e
+			logger.info("#{Time.now}: failed to delete workspace file #{filename} with error #{e.message}")
+		end
 	end
 
 	# retrieve single file in a GCP bucket of a workspace and download locally to portal (likely for parsing)

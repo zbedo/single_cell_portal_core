@@ -1,0 +1,95 @@
+<%= nested_form_for(@user_annotation, html: {multipart: true}) do |f| %>
+  <% if @user_annotation.errors.any? %>
+		<div class="bs-callout bs-callout-danger">
+			<h4><%= pluralize(@user_annotation.errors.count, 'error') %> prohibited this study from being saved:</h4>
+			<ul>
+				<% @user_annotation.errors.full_messages.each do |message| %>
+					<li><%= message %></li>
+				<% end %>
+			</ul>
+		</div>
+	<% end %>
+  <div class="form-group row">
+    <div class="col-sm-3">
+      <%= f.label 'Name:' %>
+      <%= f.text_field :name, class: 'form-control need-text', autocomplete: 'off' %>
+    </div>
+    <div class="col-sm-3">
+      <%= f.label 'Cluster:' %>
+      <input value="<%= @user_annotation.cluster_group.name %>" class="form-control" disabled="disabled">
+      <%= f.hidden_field :cluster_group_id, value: "#{@user_annotation.cluster_group}", class: 'form-control', disabled: 'disabled' %>
+    </div>
+    <div class="col-sm-3">
+      <%= f.label 'Study:' %>
+      <%= f.text_field :study_id, value: "#{@user_annotation.study.name}", class: 'form-control', disabled: 'disabled' %>
+    </div>
+    <div class="col-sm-3">
+      <%= f.label 'Created by:' %>
+      <%= f.text_field :user_id, value: "#{@user_annotation.user.email}", class: 'form-control', disabled: 'disabled' %>
+    </div>
+  </div>
+  <% @user_annotation.values.each_with_index do |value, i| %>
+    <div class="well well-sm <%= "#{value == 'Undefined'? 'well-red' : ''}"%>">
+      <div class="form-group row">
+        <div class="col-sm-6">
+          <%= f.label 'Label Name: ' %>
+          <input value="<%= value %>" class="form-control need-text label-name <%= value == 'Undefined' ? '' : 'defined'%>" <%= value == 'Undefined' ? 'disabled=\"disabled\"' : 'enabled'%> type="text" name="user_annotation[values][]" id="user-annotation_values">
+          <% if value == 'Undefined' %>
+              <input value="<%= value %>" class="form-control need-text label-name" type="hidden" name="user_annotation[values][]" id="user-annotation_values">
+          <% end %>
+        </div>
+        <div class="col-sm-2">
+          <%= f.label 'Number of Cells:' %>
+          <input value="<%= raw "#{@user_annotation.user_data_arrays.find_by(array_type: 'annotations').values.count(value)}"%>" class='form-control' disabled='disabled' %>
+        </div>
+      </div>
+    </div>
+
+  <% end %>
+  <div class="form-group">
+    <h3>Sharing</h3>
+    <%= f.fields_for :user_annotation_shares %>
+    <%= f.link_to_add "<span class='fa fa-plus'></span> Share Study".html_safe, :user_annotation_shares, class: 'btn btn-primary', id: 'add-user-annotation-share' %>
+  </div>
+  <div class="form-group">
+    <%= f.button 'Submit', {class: 'btn btn-lg btn-success', id: 'submit-button', type: 'button'} %>
+    <script>
+      var form_id = '#edit_user_annotation_' + "<%= raw @user_annotation.id.to_s %>";
+      validateUnique(form_id, '.label-name');
+      $('#submit-button').click(function() {
+          var needText = $('.need-text');
+          var numFields = needText.toArray().length;
+          var values = [];
+          var cont = true;
+          for (i = 0; i < numFields; i++) {
+              var text = needText.eq(i).val();
+              values.push(text);
+              if (text === "") {
+                  cont = false
+              }
+          }
+          var defined = $('.defined');
+          var numDefFields = defined.toArray().length;
+          var defValues = [];
+          for (i = 0; i < numDefFields; i++) {
+              var text = defined.eq(i).val();
+              defValues.push(text);
+          }
+          if (numFields < 3) {
+              alert('Your annotation must have at least two populations');
+          } else if (defValues.includes('Undefined')){
+              alert('Undefined is a reserved term. Select a different name for this label.');
+              setErrorOnBlank(defined);
+          }else if (!cont) {
+              alert('You must provide a value for all labels before saving');
+              setErrorOnBlank(needText);
+          }
+          else {
+              var form = $('.edit_user_annotation');
+              form.submit();
+          }
+      });
+    </script>
+  </div>
+
+<% end %>

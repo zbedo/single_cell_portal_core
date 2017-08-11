@@ -15,9 +15,9 @@ function kernelDensityEstimator(kernel, X) {
 }
 
 /* Advanced Rule of thumb bandwidth selector from :
-*  https://en.wikipedia.org/wiki/Kernel_density_estimation#Bandwidth_selection
-*  and https://stat.ethz.ch/R-manual/R-devel/library/stats/html/bandwidth.html
-*/
+ *  https://en.wikipedia.org/wiki/Kernel_density_estimation#Bandwidth_selection
+ *  and https://stat.ethz.ch/R-manual/R-devel/library/stats/html/bandwidth.html
+ */
 
 function nrd0(X){
     var iqr = ss.quantile(X, 0.75) - ss.quantile(X, 0.25);
@@ -37,9 +37,9 @@ function nrd0(X){
 }
 
 /* Kernels are functions that transform a data point, used in Kernel Density Estimator
-*  Kernel Formulas from https://github.com/jasondavies/science.js
-*  Kernel formulas from https://gist.github.com/mbostock/4341954
-*/
+ *  Kernel Formulas from https://github.com/jasondavies/science.js
+ *  Kernel formulas from https://gist.github.com/mbostock/4341954
+ */
 
 function kernelEpanechnikov(k) {
     return function(v) {
@@ -143,10 +143,10 @@ function getMinOfArray(numArray) {
 }
 
 /* This function checks if a number is an outlier based on the simple definition of an outlier found at:
-*  http://www.itl.nist.gov/div898/handbook/prc/section1/prc16.htm
-*  lower inner fence: Q1 - 1.5*IQ
-*  upper inner fence: Q3 + 1.5*IQ
-*/
+ *  http://www.itl.nist.gov/div898/handbook/prc/section1/prc16.htm
+ *  lower inner fence: Q1 - 1.5*IQ
+ *  upper inner fence: Q3 + 1.5*IQ
+ */
 function isOutlier(x, l, u){
     var con = (u-l) * 1.5;
     return x >= u ? ((x - con) > u) : ((x + con) < l);

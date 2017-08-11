@@ -5,6 +5,13 @@ class User
   include Mongoid::Timestamps
 
   has_many :studies
+  #User annotations are owned by a user
+  has_many :user_annotations do
+    def owned_by(user)
+      where(user_id: user.id, queued_for_deletion: false).to_a
+    end
+  end
+
 
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable and :omniauthable
@@ -41,6 +48,7 @@ class User
 
   # Google OAuth refresh token fields
   field :refresh_token, type: String
+  field :access_token, type: Hash
 
   ## Confirmable
   # field :confirmation_token,   type: String
@@ -83,7 +91,7 @@ class User
   end
 
   # generate an access token based on user's refresh token
-  def access_token
+  def generate_access_token
     unless self.refresh_token.nil?
       begin
         response = RestClient.post 'https://accounts.google.com/o/oauth2/token',
@@ -92,14 +100,29 @@ class User
                                    :client_id => ENV['OAUTH_CLIENT_ID'],
                                    :client_secret => ENV['OAUTH_CLIENT_SECRET']
         token_vals = JSON.parse(response.body)
-        token_vals['access_token']
+        expires_at = DateTime.now + token_vals['expires_in'].to_i.seconds
+        user_access_token = {'access_token' => token_vals['access_token'], 'expires_in' => token_vals['expires_in'], 'expires_at' => expires_at}
+        self.update!(access_token: user_access_token)
+        user_access_token
       rescue RestClient::BadRequest => e
-        Rails.logger.info "#{Time.now}: Unable to generate access token for user #{self.email}; refresh token is invalid."
+        Rails.logger.error "#{Time.now}: Unable to generate access token for user #{self.email}; refresh token is invalid."
         nil
+      rescue => e
+        Rails.logger.error "#{Time.now}: Unable to generate access token for user #{self.email} due to unknown error; #{e.message}"
       end
     else
       nil
     end
+  end
+
+  # check timestamp on user access token expiry
+  def access_token_expired?
+    self.access_token.nil? ? true : Time.at(self.access_token[:expires_at]) < Time.now
+  end
+
+  # return an valid access token (will renew if expired)
+  def valid_access_token
+    self.access_token_expired? ? self.generate_access_token : self.access_token
   end
 
   # determine if user has access to reports functionality

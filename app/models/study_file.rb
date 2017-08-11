@@ -173,7 +173,7 @@ class StudyFile
     @cache_key
   end
 
-  # delete all queued study file objets
+  # delete all queued study file objects
   def self.delete_queued_files
     study_files = self.where(queued_for_deletion: true)
     study_files.each do |file|
@@ -181,6 +181,7 @@ class StudyFile
       file.destroy
       Rails.logger.info "#{Time.now} #{file.name} successfully deleted."
     end
+    true
   end
 
   private

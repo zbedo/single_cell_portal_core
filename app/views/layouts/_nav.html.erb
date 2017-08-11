@@ -28,6 +28,7 @@
               <li><%= link_to "<span class='fa fa-bar-chart fa-fw'></span> Reports".html_safe, reports_path, class: 'check-upload', id: 'reports-nav' %></li>
               <li role="separator" class="divider"></li>
             <% end %>
+            <li><%= link_to "<span class='fa fa-tags fa-fw'></span> My Annotations".html_safe, user_annotations_path, class: 'check-upload', id: 'my-annotations' %>
 						<li><%= link_to "<span class='fa fa-book fa-fw'></span> My Studies".html_safe, studies_path, class: 'check-upload', id: 'my-studies' %>
 						<li><%= link_to "<span class='fa fa-plus fa-fw'></span> Add a Study".html_safe, new_study_path, class: 'check-upload' %></li>
             <li role="separator" class="divider"></li>

@@ -1,0 +1,3 @@
+// call Google Analytics to log action
+var requestUrl = unescapeHTML('<%= @action_to_log %>');
+gaTrack(requestUrl, 'Single Cell Portal');

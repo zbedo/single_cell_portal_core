@@ -52,6 +52,14 @@
         dataPath += '&cluster=' + cluster + '&request_user_token=' + requestToken;
         var newAnnotPath = '<%= annotation_query_path(study_name: params[:study_name]) %>?cluster=' + cluster + '&annotation=' + selectedAnnot;
 
+        // log action of rendering Morpheus
+        var logUrl = '<%= javascript_safe_url(expression_query_path(study_name: params[:study_name], search: {genes: @gene_list })) %>';
+        logUrl += '--cluster=' + cluster + '--annotation=' + annotName;
+        $.ajax({
+            url: '<%= log_action_path %>?url_string=' + logUrl,
+            dataType: 'script'
+        });
+
         // get annotation values to set color values in Morhpeus and draw heatmap in callback
         $.ajax({
             url: '<%= annotation_values_path(study_name: @study.url_safe_name) %>?cluster=' + cluster + '&annotation=' + selectedAnnot,

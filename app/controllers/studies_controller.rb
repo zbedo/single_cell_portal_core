@@ -44,6 +44,7 @@ class StudiesController < ApplicationController
         format.html { redirect_to path, notice: "Your study '#{@study.name}' was successfully created." }
         format.json { render :show, status: :ok, location: @study }
       else
+        logger.info(@study.errors)
         format.html { render :new }
         format.json { render json: @study.errors, status: :unprocessable_entity }
       end
@@ -55,7 +56,7 @@ class StudiesController < ApplicationController
     # load any existing files if user restarted for some reason (unlikely)
     initialize_wizard_files
     # check if study has been properly initialized yet, set to true if not
-    if !@cluster_ordinations.last.new_record? && !@expression_file.new_record? && !@metadata_file.new_record? && !@study.initialized?
+    if !@cluster_ordinations.last.new_record? && !@expression_files.last.new_record? && !@metadata_file.new_record? && !@study.initialized?
       @study.update_attributes(initialized: true)
     end
   end
@@ -541,7 +542,7 @@ class StudiesController < ApplicationController
         @message = "'#{@study_file.name}' has been successfully deleted."
 
         # reset initialized if needed
-        if @study.cluster_ordinations_files.empty? || @study.expression_matrix_file.nil? || @study.metadata_file.nil?
+        if @study.cluster_ordinations_files.empty? || @study.expression_matrix_files.nil? || @study.metadata_file.nil?
           @study.update(initialized: false)
         end
 
@@ -782,7 +783,7 @@ class StudiesController < ApplicationController
 
   # set up variables for wizard
   def initialize_wizard_files
-    @expression_file = @study.expression_matrix_file
+    @expression_files = @study.study_files.by_type('Expression Matrix')
     @metadata_file = @study.metadata_file
     @cluster_ordinations = @study.study_files.by_type('Cluster')
     @marker_lists = @study.study_files.by_type('Gene List')
@@ -790,8 +791,8 @@ class StudiesController < ApplicationController
     @other_files = @study.study_files.by_type(['Documentation', 'Other'])
 
     # if files don't exist, build them for use later
-    if @expression_file.nil?
-      @expression_file = @study.build_study_file({file_type: 'Expression Matrix'})
+    if @expression_files.empty?
+      @expression_files << @study.build_study_file({file_type: 'Expression Matrix'})
     end
     if @metadata_file.nil?
       @metadata_file = @study.build_study_file({file_type: 'Metadata'})

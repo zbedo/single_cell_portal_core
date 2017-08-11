@@ -1,0 +1,18 @@
+//reload the menu after saving a user annotaion
+closeModalSpinner('#save-modal-spinner', '#save-modal', function () {
+    $("#annotation").html("<%= escape_javascript(select_tag :annotation, grouped_options_for_select(@cluster_annotations, params[:annotation]), class: 'form-control' )%>");
+    $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {notice: @notice, alert: @alert}) %>");
+    <% if @user_annotation.errors.any? %>
+      <% @user_annotation.errors.keys.each do |key| %>
+          <% if key == 'name' %>
+           $('.annotation-name').parent().addClass('has-error')
+          <% elsif key == 'values' %>
+            $('.label-name').parent().addClass('has-error')
+          <% else %>
+
+          <% end %>
+      <% end %>
+    <% end %>
+
+});
+

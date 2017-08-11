@@ -11,6 +11,14 @@ class ClusterGroup
 
   belongs_to :study
   belongs_to :study_file
+
+  #user annotations are created for a cluster group. search for them
+  has_many :user_annotations do
+    def by_name_and_user(name, user_id)
+      where(name: name, user_id: user_id).first
+    end
+  end
+
   has_many :data_arrays do
     def by_name_and_type(name, type, subsample_threshold=nil)
       where(name: name, array_type: type, subsample_threshold: subsample_threshold).order_by(&:array_index).to_a
@@ -43,6 +51,22 @@ class ClusterGroup
         return []
       else
         return data_array.values
+      end
+    end
+  end
+
+  def viewable_user_annotations(user, annotation_name)
+    owned = self.user_annotations.by_name_and_user(annotation_name, user.id)
+    if !owned.nil?
+      return owned
+    else
+      #get all user shares, find ones with matching name then with matching name find one that corresponds to this cluster
+      self.user_annotations.where(name: annotation_name).each do |annot|
+        annot.user_annotation_shares.each do |share|
+          if share.email == user.email
+            return annot
+          end
+        end
       end
     end
   end

@@ -48,7 +48,7 @@ require 'selenium-webdriver'
 # DEFAULTS
 $user = `whoami`.strip
 $chromedriver_path = '/usr/local/bin/chromedriver'
-$usage = "ruby test/ui_test_suite.rb -- -c=/path/to/chromedriver -e=testing.email@gmail.com -p='testing_email_password' -s=sharing.email@gmail.com -P='sharing_email_password' -o=order -d=/path/to/downloads -u=portal_url -r=random_seed"
+$usage = "ruby test/ui_test_suite.rb -- -c=/path/to/chromedriver -e=testing.email@gmail.com -p='testing_email_password' -s=sharing.email@gmail.com -P='sharing_email_password' -o=order -d=/path/to/downloads -u=portal_url -r=random_seed -H=false"
 $test_email = ''
 $share_email = ''
 $test_email_password = ''
@@ -59,6 +59,9 @@ $portal_url = 'https://localhost/single_cell'
 
 # generate a global random seed to use with study name creation to prevent naming conflicts
 $random_seed = SecureRandom.uuid
+
+# Headless testing
+$headless = 'false'
 
 # parse arguments
 ARGV.each do |arg|
@@ -80,6 +83,8 @@ ARGV.each do |arg|
     $portal_url = arg.gsub(/\-u\=/, "")
   elsif arg =~ /\-r\=/
     $random_seed = arg.gsub(/\-r\=/, "")
+	elsif arg =~ /\-H\=/
+		$headless = arg.gsub(/\-H\=/, "")
   end
 end
 
@@ -90,6 +95,7 @@ puts "Sharing email: #{$share_email}"
 puts "Download directory: #{$download_dir}"
 puts "Portal URL: #{$portal_url}"
 puts "Random Seed: #{$random_seed}"
+puts "Headless: #{$headless}"
 
 # make sure download & chromedriver paths exist and portal url is valid, otherwise kill tests before running and print usage
 if !File.exists?($chromedriver_path)
@@ -115,8 +121,11 @@ class UiTestSuite < Test::Unit::TestCase
 		caps = Selenium::WebDriver::Remote::Capabilities.chrome("chromeOptions" => {'prefs' => {'credentials_enable_service' => false}})
 		options = Selenium::WebDriver::Chrome::Options.new
 		options.add_argument('--enable-webgl-draft-extensions')
-		@driver = Selenium::WebDriver::Driver.for :chrome, driver_path: $chromedriver_dir,
-																							options: options, desired_capabilities: caps
+		if $headless == 'true'
+			options.add_argument('headless')
+		end
+
+		@driver = Selenium::WebDriver::Driver.for :chrome, driver_path: $chromedriver_dir, options: options, desired_capabilities: caps
 		@driver.manage.window.maximize
 		@base_url = $portal_url
 		@accept_next_alert = true
@@ -146,6 +155,19 @@ class UiTestSuite < Test::Unit::TestCase
 		false
 	end
 
+	# try to click on an element
+	def try_to_click(what, num = 0)
+		if num < 10
+			sleep 0.25
+			begin
+				what.click
+			rescue
+				try_to_click(what, num + 1)
+			end
+		end
+
+	end
+
 	# return true/false if an element is displayed
 	# will handle if element doesn't exist or if reference is stale due to race condition
 	def element_visible?(how, what)
@@ -167,12 +189,14 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# method to close a bootstrap modal by id
 	def close_modal(id)
-		@wait.until {@driver.find_element(:id, id).displayed?}
+		# need to wait until modal is in the page and has completed opening
+		@wait.until {element_present?(:id, id)}
+		@wait.until {@driver.execute_script("return OPEN_MODAL") == id}
 		modal = @driver.find_element(:id, id)
-		dismiss = modal.find_element(:class, 'close')
-		dismiss.click
-		@wait.until {@driver.find_element(:id, id).displayed? == false}
-		sleep(1)
+		close_button = modal.find_element(:class, 'close')
+		close_button.click
+		# wait until OPEN_MODAL has been cleared (will reset on hidden.bs.modal event)
+		@wait.until {@driver.execute_script("return OPEN_MODAL") == ''}
 	end
 
 	# wait until element is rendered and visible
@@ -239,7 +263,6 @@ class UiTestSuite < Test::Unit::TestCase
 		# determine which password to use
 		password = email == $test_email ? $test_email_password : $share_email_password
 		google_auth = @driver.find_element(:id, 'google-auth')
-		sleep(1.5)
 		google_auth.click
 		puts 'logging in as ' + email
 		email_field = @driver.find_element(:id, 'identifierId')
@@ -382,7 +405,7 @@ class UiTestSuite < Test::Unit::TestCase
 	# admin backend tests of entire study creation process including negative/error tests
 	# uses example data in test directory as inputs (based off of https://github.com/broadinstitute/single_cell_portal/tree/master/demo_data)
 	# these tests run first to create test studies to use in front-end tests later
-	test 'admin: create a study' do
+	test 'admin: create-study: public' do
 		puts "Test method: #{self.method_name}"
 
 		# log in first
@@ -395,6 +418,187 @@ class UiTestSuite < Test::Unit::TestCase
 		# fill out study form
 		study_form = @driver.find_element(:id, 'new_study')
 		study_form.find_element(:id, 'study_name').send_keys("Test Study #{$random_seed}")
+		study_form.find_element(:id, 'study_embargo').send_keys('2016-12-31')
+		public = study_form.find_element(:id, 'study_public')
+		public.send_keys('Yes')
+		# add a share
+		share = @driver.find_element(:id, 'add-study-share')
+		@wait.until {share.displayed?}
+		share.click
+		share_email = study_form.find_element(:class, 'share-email')
+		share_email.send_keys($share_email)
+		share_permission = study_form.find_element(:class, 'share-permission')
+		share_permission.send_keys('Edit')
+		# save study
+		save_study = @driver.find_element(:id, 'save-study')
+		save_study.click
+
+		# upload expression matrix
+		close_modal('message_modal')
+		upload_expression = @driver.find_element(:id, 'upload-expression')
+		upload_expression.send_keys(@test_data_path + 'expression_matrix_example.txt')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		# close success modal
+		close_modal('upload-success-modal')
+
+		scroll_to(:bottom)
+		back_btn = @driver.find_element(:id, 'prev-btn')
+		back_btn.click
+
+		# upload a second expression file
+		new_expression = @driver.find_element(:class, 'add-expression')
+		new_expression.click
+		scroll_to(:bottom)
+		upload_expression_2 = @driver.find_element(:id, 'upload-expression')
+		upload_expression_2.send_keys(@test_data_path + 'expression_matrix_example_2.txt')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		# close success modal
+		close_modal('upload-success-modal')
+
+		# upload metadata
+		wait_for_render(:id, 'metadata_form')
+		upload_metadata = @driver.find_element(:id, 'upload-metadata')
+		upload_metadata.send_keys(@test_data_path + 'metadata_example2.txt')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		close_modal('upload-success-modal')
+
+		# upload cluster
+		cluster_form_1 = @driver.find_element(:class, 'initialize_ordinations_form')
+		cluster_name = cluster_form_1.find_element(:class, 'filename')
+		cluster_name.send_keys('Test Cluster 1')
+		upload_cluster = cluster_form_1.find_element(:class, 'upload-clusters')
+		upload_cluster.send_keys(@test_data_path + 'cluster_example_2.txt')
+		wait_for_render(:id, 'start-file-upload')
+		# add labels and axis ranges
+		cluster_form_1.find_element(:id, :study_file_x_axis_min).send_key(-100)
+		cluster_form_1.find_element(:id, :study_file_x_axis_max).send_key(100)
+		cluster_form_1.find_element(:id, :study_file_y_axis_min).send_key(-75)
+		cluster_form_1.find_element(:id, :study_file_y_axis_max).send_key(75)
+		cluster_form_1.find_element(:id, :study_file_z_axis_min).send_key(-125)
+		cluster_form_1.find_element(:id, :study_file_z_axis_max).send_key(125)
+		cluster_form_1.find_element(:id, :study_file_x_axis_label).send_key('X Axis')
+		cluster_form_1.find_element(:id, :study_file_y_axis_label).send_key('Y Axis')
+		cluster_form_1.find_element(:id, :study_file_z_axis_label).send_key('Z Axis')
+		# perform upload
+		upload_btn = cluster_form_1.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		close_modal('upload-success-modal')
+
+		# upload a second cluster
+		new_cluster = @driver.find_element(:class, 'add-cluster')
+		new_cluster.click
+		scroll_to(:bottom)
+		# will be second instance since there are two forms
+		cluster_form_2 = @driver.find_element(:class, 'new-cluster-form')
+		cluster_name_2 = cluster_form_2.find_element(:class, 'filename')
+		cluster_name_2.send_keys('Test Cluster 2')
+		upload_cluster_2 = cluster_form_2.find_element(:class, 'upload-clusters')
+		upload_cluster_2.send_keys(@test_data_path + 'cluster_2_example_2.txt')
+		wait_for_render(:id, 'start-file-upload')
+		scroll_to(:bottom)
+		upload_btn_2 = cluster_form_2.find_element(:id, 'start-file-upload')
+		upload_btn_2.click
+		close_modal('upload-success-modal')
+		next_btn = @driver.find_element(:id, 'next-btn')
+		next_btn.click
+
+		# upload fastq
+		wait_for_render(:class, 'initialize_primary_data_form')
+		upload_fastq = @driver.find_element(:class, 'upload-fastq')
+		upload_fastq.send_keys(@test_data_path + 'cell_1_L1.fastq.gz')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		wait_for_render(:class, 'fastq-file')
+		close_modal('upload-success-modal')
+		next_btn = @driver.find_element(:id, 'next-btn')
+		next_btn.click
+
+		# upload marker gene list
+		wait_for_render(:class, 'initialize_marker_genes_form')
+		marker_form = @driver.find_element(:class, 'initialize_marker_genes_form')
+		marker_file_name = marker_form.find_element(:id, 'study_file_name')
+		marker_file_name.send_keys('Test Gene List')
+		upload_markers = marker_form.find_element(:class, 'upload-marker-genes')
+		upload_markers.send_keys(@test_data_path + 'marker_1_gene_list.txt')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = marker_form.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		close_modal('upload-success-modal')
+		next_btn = @driver.find_element(:id, 'next-btn')
+		next_btn.click
+
+		# upload doc file
+		wait_for_render(:class, 'initialize_misc_form')
+		upload_doc = @driver.find_element(:class, 'upload-misc')
+		upload_doc.send_keys(@test_data_path + 'table_1.xlsx')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		wait_for_render(:class, 'documentation-file')
+		# close success modal
+		close_modal('upload-success-modal')
+
+		# change attributes on file to validate update function
+		misc_form = @driver.find_element(:class, 'initialize_misc_form')
+		desc_field = misc_form.find_element(:id, 'study_file_description')
+		desc_field.send_keys('Supplementary table')
+		save_btn = misc_form.find_element(:class, 'save-study-file')
+		save_btn.click
+		wait_for_render(:id, 'study-file-notices')
+		close_modal('study-file-notices')
+
+		# now check newly created study info page
+		studies_path = @base_url + '/studies'
+		@driver.get studies_path
+
+		show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
+		show_study.click
+
+		# verify that counts are correct, this will ensure that everything uploaded & parsed correctly
+		cell_count = @driver.find_element(:id, 'cell-count').text.to_i
+		gene_count = @driver.find_element(:id, 'gene-count').text.to_i
+		cluster_count = @driver.find_element(:id, 'cluster-count').text.to_i
+		gene_list_count = @driver.find_element(:id, 'precomputed-count').text.to_i
+		metadata_count = @driver.find_element(:id, 'metadata-count').text.to_i
+		cluster_annot_count = @driver.find_element(:id, 'cluster-annotation-count').text.to_i
+		study_file_count = @driver.find_element(:id, 'study-file-count').text.to_i
+		primary_data_count = @driver.find_element(:id, 'primary-data-count').text.to_i
+		share_count = @driver.find_element(:id, 'share-count').text.to_i
+
+		assert cell_count == 30, "did not find correct number of cells, expected 30 but found #{cell_count}"
+		assert gene_count == 19, "did not find correct number of genes, expected 19 but found #{gene_count}"
+		assert cluster_count == 2, "did not find correct number of clusters, expected 2 but found #{cluster_count}"
+		assert gene_list_count == 1, "did not find correct number of gene lists, expected 1 but found #{gene_list_count}"
+		assert metadata_count == 3, "did not find correct number of metadata objects, expected 3 but found #{metadata_count}"
+		assert cluster_annot_count == 3, "did not find correct number of cluster annotations, expected 2 but found #{cluster_annot_count}"
+		assert study_file_count == 7, "did not find correct number of study files, expected 7 but found #{study_file_count}"
+		assert primary_data_count == 1, "did not find correct number of primary data files, expected 1 but found #{primary_data_count}"
+		assert share_count == 1, "did not find correct number of study shares, expected 1 but found #{share_count}"
+
+		puts "Test method: #{self.method_name} successful!"
+	end
+
+	#create a 2d scatter study for use in user annotation testing
+	test 'admin: create-study: user-annotation: 2d' do
+		puts "Test method: #{self.method_name}"
+
+		# log in first
+		path = @base_url + '/studies/new'
+		@driver.get path
+		close_modal('message_modal')
+		# log in as user #1
+		login($test_email)
+
+		# fill out study form
+		study_form = @driver.find_element(:id, 'new_study')
+		study_form.find_element(:id, 'study_name').send_keys("twod Study #{$random_seed}")
 		study_form.find_element(:id, 'study_embargo').send_keys('2016-12-31')
 		public = study_form.find_element(:id, 'study_public')
 		public.send_keys('Yes')
@@ -436,38 +640,12 @@ class UiTestSuite < Test::Unit::TestCase
 		cluster_name = cluster_form_1.find_element(:class, 'filename')
 		cluster_name.send_keys('Test Cluster 1')
 		upload_cluster = cluster_form_1.find_element(:class, 'upload-clusters')
-		upload_cluster.send_keys(@test_data_path + 'cluster_example.txt')
+		upload_cluster.send_keys(@test_data_path + 'cluster_2d_example.txt')
 		wait_for_render(:id, 'start-file-upload')
-		# add labels and axis ranges
-		cluster_form_1.find_element(:id, :study_file_x_axis_min).send_key(-100)
-		cluster_form_1.find_element(:id, :study_file_x_axis_max).send_key(100)
-		cluster_form_1.find_element(:id, :study_file_y_axis_min).send_key(-75)
-		cluster_form_1.find_element(:id, :study_file_y_axis_max).send_key(75)
-		cluster_form_1.find_element(:id, :study_file_z_axis_min).send_key(-125)
-		cluster_form_1.find_element(:id, :study_file_z_axis_max).send_key(125)
-		cluster_form_1.find_element(:id, :study_file_x_axis_label).send_key('X Axis')
-		cluster_form_1.find_element(:id, :study_file_y_axis_label).send_key('Y Axis')
-		cluster_form_1.find_element(:id, :study_file_z_axis_label).send_key('Z Axis')
+
 		# perform upload
 		upload_btn = cluster_form_1.find_element(:id, 'start-file-upload')
 		upload_btn.click
-		wait_for_render(:id, 'upload-success-modal')
-		close_modal('upload-success-modal')
-
-		# upload a second cluster
-		new_cluster = @driver.find_element(:class, 'add-cluster')
-		new_cluster.click
-		scroll_to(:bottom)
-		# will be second instance since there are two forms
-		cluster_form_2 = @driver.find_element(:class, 'new-cluster-form')
-		cluster_name_2 = cluster_form_2.find_element(:class, 'filename')
-		cluster_name_2.send_keys('Test Cluster 2')
-		upload_cluster_2 = cluster_form_2.find_element(:class, 'upload-clusters')
-		upload_cluster_2.send_keys(@test_data_path + 'cluster_2_example.txt')
-		wait_for_render(:id, 'start-file-upload')
-		scroll_to(:bottom)
-		upload_btn_2 = cluster_form_2.find_element(:id, 'start-file-upload')
-		upload_btn_2.click
 		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 		next_btn = @driver.find_element(:id, 'next-btn')
@@ -483,6 +661,7 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_for_render(:class, 'fastq-file')
 		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
+
 		next_btn = @driver.find_element(:id, 'next-btn')
 		next_btn.click
 
@@ -526,35 +705,14 @@ class UiTestSuite < Test::Unit::TestCase
 		studies_path = @base_url + '/studies'
 		@driver.get studies_path
 
-		show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
+		show_study = @driver.find_element(:class, "twod-study-#{$random_seed}-show")
 		show_study.click
-
-		# verify that counts are correct, this will ensure that everything uploaded & parsed correctly
-		cell_count = @driver.find_element(:id, 'cell-count').text.to_i
-		gene_count = @driver.find_element(:id, 'gene-count').text.to_i
-		cluster_count = @driver.find_element(:id, 'cluster-count').text.to_i
-		gene_list_count = @driver.find_element(:id, 'precomputed-count').text.to_i
-		metadata_count = @driver.find_element(:id, 'metadata-count').text.to_i
-		cluster_annot_count = @driver.find_element(:id, 'cluster-annotation-count').text.to_i
-		study_file_count = @driver.find_element(:id, 'study-file-count').text.to_i
-		primary_data_count = @driver.find_element(:id, 'primary-data-count').text.to_i
-		share_count = @driver.find_element(:id, 'share-count').text.to_i
-
-		assert cell_count == 15, "did not find correct number of cells, expected 15 but found #{cell_count}"
-		assert gene_count == 19, "did not find correct number of genes, expected 19 but found #{gene_count}"
-		assert cluster_count == 2, "did not find correct number of clusters, expected 2 but found #{cluster_count}"
-		assert gene_list_count == 1, "did not find correct number of gene lists, expected 1 but found #{gene_list_count}"
-		assert metadata_count == 3, "did not find correct number of metadata objects, expected 3 but found #{metadata_count}"
-		assert cluster_annot_count == 3, "did not find correct number of cluster annotations, expected 2 but found #{cluster_annot_count}"
-		assert study_file_count == 6, "did not find correct number of study files, expected 6 but found #{study_file_count}"
-		assert primary_data_count == 1, "did not find correct number of primary data files, expected 1 but found #{primary_data_count}"
-		assert share_count == 1, "did not find correct number of study shares, expected 1 but found #{share_count}"
 
 		puts "Test method: #{self.method_name} successful!"
 	end
 
 	# verify that recently created study uploaded to firecloud
-	test 'admin: verify firecloud workspace' do
+	test 'admin: create-study: verify firecloud workspace' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + '/studies'
@@ -570,9 +728,9 @@ class UiTestSuite < Test::Unit::TestCase
 		firecloud_url = "https://portal.firecloud.org/#workspaces/single-cell-portal/development-test-study-#{$random_seed}"
 		firecloud_link.click
 		@driver.switch_to.window(@driver.window_handles.last)
-		assert @driver.current_url == firecloud_url, 'did not open firecloud workspace'
 		completed = @driver.find_elements(:class, 'fa-check-circle')
 		assert completed.size >= 1, 'did not provision workspace properly'
+		assert @driver.current_url == firecloud_url, 'did not open firecloud workspace'
 
 		# verify gcs bucket and uploads
 		@driver.switch_to.window(@driver.window_handles.first)
@@ -582,7 +740,7 @@ class UiTestSuite < Test::Unit::TestCase
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
-		assert files.size == 7, "did not find correct number of files, expected 7 but found #{files.size}"
+		assert files.size == 8, "did not find correct number of files, expected 8 but found #{files.size}"
 		puts "Test method: #{self.method_name} successful!"
 	end
 
@@ -610,7 +768,6 @@ class UiTestSuite < Test::Unit::TestCase
 		cancel = @driver.find_element(:class, 'cancel')
 		cancel.click
 		sleep(3)
-		wait_for_render(:id, 'study-file-notices')
 		close_modal('study-file-notices')
 
 		# delete file from test study
@@ -620,13 +777,12 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.switch_to.alert.accept
 
 		# wait a few seconds to allow delete call to propogate all the way to FireCloud after confirmation modal
-		wait_for_render(:id, 'study-file-notices')
 		close_modal('study-file-notices')
 		sleep(3)
 
 		@driver.get path
 		files = @driver.find_element(:id, "test-study-#{$random_seed}-study-file-count")
-		assert files.text == '6', "did not find correct number of files, expected 6 but found #{files.text}"
+		assert files.text == '7', "did not find correct number of files, expected 7 but found #{files.text}"
 
 		# verify deletion in google
 		show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
@@ -637,12 +793,12 @@ class UiTestSuite < Test::Unit::TestCase
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
-		assert files.size == 6, "did not find correct number of files, expected 6 but found #{files.size}"
+		assert files.size == 7, "did not find correct number of files, expected 7 but found #{files.size}"
 		puts "Test method: #{self.method_name} successful!"
 	end
 
 	# text gzip parsing of expression matrices
-	test 'admin: parse gzip expression matrix' do
+	test 'admin: create-study: gzip expression matrix' do
 		puts "Test method: #{self.method_name}"
 
 		# log in first
@@ -666,7 +822,6 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
 		# close modal
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		# verify parse completed
@@ -682,7 +837,7 @@ class UiTestSuite < Test::Unit::TestCase
 	# since parsing happens in background, all messaging is handled through emails
 	# this test just makes sure that parsing fails and removed entries appropriately
 	# your test email account should receive emails notifying of failure
-	test 'admin: parse failure check' do
+	test 'admin: create-study: file validations' do
 		puts "Test method: #{self.method_name}"
 
 		# log in first
@@ -706,7 +861,6 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
 		# close modal
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		# upload bad metadata assignments
@@ -717,7 +871,6 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
 		# close modal
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		# upload bad cluster coordinates
@@ -727,7 +880,6 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
 		# close modal
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		# upload bad marker gene list
@@ -743,7 +895,6 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
 		# close modal
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 		# wait for a few seconds to allow parses to fail fully
 		sleep(3)
@@ -755,14 +906,13 @@ class UiTestSuite < Test::Unit::TestCase
 		assert study_file_count.text == '0', "found incorrect number of study files; expected 0 and found #{study_file_count.text}"
 		@driver.find_element(:class, "error-messaging-test-study-#{$random_seed}-delete").click
 		@driver.switch_to.alert.accept
-		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
 		puts "Test method: #{self.method_name} successful!"
 	end
 
 	# create private study for testing visibility/edit restrictions
 	# must be run before other tests, so numbered accordingly
-	test 'admin: create private study' do
+	test 'admin: create-study: private' do
 		puts "Test method: #{self.method_name}"
 
 		# log in first
@@ -788,7 +938,6 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
 		# close success modal
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		# upload metadata
@@ -798,7 +947,6 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		# upload cluster
@@ -810,7 +958,6 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		# upload marker gene list
@@ -825,7 +972,6 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = marker_form.find_element(:id, 'start-file-upload')
 		upload_btn.click
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 		next_btn = @driver.find_element(:id, 'next-btn')
 		next_btn.click
@@ -840,7 +986,6 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
 		# close modal
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		puts "Test method: #{self.method_name} successful!"
@@ -848,7 +993,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# check visibility & edit restrictions as well as share access
 	# will also verify FireCloud ACL settings on shares
-	test 'admin: create share and check view and edit' do
+	test 'admin: sharing: view and edit permission' do
 		puts "Test method: #{self.method_name}"
 
 		# check view visibility for unauthenticated users
@@ -928,13 +1073,12 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_doc.send_keys(@test_data_path + 'README.txt')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		# verify upload has completed and is in FireCloud bucket
 		@driver.get @base_url + '/studies/'
 		file_count = @driver.find_element(:id, "test-study-#{$random_seed}-study-file-count")
-		assert file_count.text == '7', "did not find correct number of files, expected 7 but found #{file_count.text}"
+		assert file_count.text == '8', "did not find correct number of files, expected 8 but found #{file_count.text}"
 		show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
 		show_study.click
 		gcs_link = @driver.find_element(:id, 'gcs-link')
@@ -943,7 +1087,7 @@ class UiTestSuite < Test::Unit::TestCase
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
-		assert files.size == 7, "did not find correct number of files, expected 7 but found #{files.size}"
+		assert files.size == 8, "did not find correct number of files, expected 8 but found #{files.size}"
 		puts "Test method: #{self.method_name} successful!"
 	end
 
@@ -996,7 +1140,6 @@ class UiTestSuite < Test::Unit::TestCase
 			end
 			sync_button = form.find_element(:class, 'save-study-file')
 			sync_button.click
-			wait_for_render(:id, 'sync-notice-modal')
 			close_modal('sync-notice-modal')
 		end
 
@@ -1008,7 +1151,6 @@ class UiTestSuite < Test::Unit::TestCase
 			num_files += files_found
 			sync_button = form.find_element(:class, 'save-directory-listing')
 			sync_button.click
-			wait_for_render(:id, 'sync-notice-modal')
 			close_modal('sync-notice-modal')
 		end
 
@@ -1122,14 +1264,12 @@ class UiTestSuite < Test::Unit::TestCase
 		delete_file_btn = file_to_delete.find_element(:class, 'delete-study-file')
 		delete_file_btn.click
 		@driver.switch_to.alert.accept
-		wait_for_render(:id, 'sync-notice-modal')
 		close_modal('sync-notice-modal')
 
 		# delete directory listing
 		delete_dir_btn = synced_directory_listing.find_element(:class, 'delete-directory-listing')
 		delete_dir_btn.click
 		@driver.switch_to.alert.accept
-		wait_for_render(:id, 'sync-notice-modal')
 		close_modal('sync-notice-modal')
 
 		# confirm files were removed
@@ -1145,9 +1285,9 @@ class UiTestSuite < Test::Unit::TestCase
 		remove_share = @driver.find_element(:class, 'remove_nested_fields')
 		remove_share.click
 		@driver.switch_to.alert.accept
+		sleep (0.25)
 		save_study = @driver.find_element(:id, 'save-study')
 		save_study.click
-		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
 		sync_button = @driver.find_element(:class, "sync-test-#{uuid}-sync")
 		sync_button.click
@@ -1184,14 +1324,13 @@ class UiTestSuite < Test::Unit::TestCase
 		delete_local_link = @driver.find_element(:class, "sync-test-#{uuid}-delete-local")
 		delete_local_link.click
 		@driver.switch_to.alert.accept
-		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
 
 		puts "Test method: #{self.method_name} successful!"
 	end
 
 	# test the various levels of firecloud access integration (on, read-only, local-off, and off)
-	test 'admin: toggle firecloud access' do
+	test 'admin: configurations: firecloud access' do
 		puts "Test method: #{self.method_name}"
 		path = @base_url + '/admin'
 		@driver.get path
@@ -1293,7 +1432,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'admin: configure download quota and test redirect' do
+	test 'admin: configurations: download-quota: enforcement' do
 		puts "Test method: #{self.method_name}"
 		path = @base_url + '/admin'
 		@driver.get path
@@ -1356,12 +1495,12 @@ class UiTestSuite < Test::Unit::TestCase
 	# test unlocking jobs feature - this mainly just tests that the request goes through. it is difficult to test the
 	# entire method as it require the portal to crash while in the middle of a parse, which cannot be reliably automated.
 
-	test 'admin: restart locked jobs' do
+	test 'admin: configurations: restart locked jobs' do
 		puts "Test method: #{self.method_name}"
-		path = @base_url + '/admin'
+		path = @base_url + '/users/sign_in'
 		@driver.get path
-		close_modal('message_modal')
 		login($test_email)
+		@driver.get @base_url + '/admin'
 
 		actions_dropdown = @driver.find_element(:id, 'admin_action')
 		actions_dropdown.send_keys 'Unlock Orphaned Jobs'
@@ -1371,18 +1510,17 @@ class UiTestSuite < Test::Unit::TestCase
 		assert element_visible?(:id, 'message_modal'), 'confirmation message did not appear'
 		message = @driver.find_element(:id, 'notice-content').text
 		assert message.include?('jobs'), "'confirmation message did not pertain to locked jobs ('jobs' not found)"
-		close_modal('message_modal')
 
 		puts "Test method: #{self.method_name} successful!"
 	end
 
 	# reset user download quotas to 0 bytes
-	test 'admin: reset download quotas to 0' do
+	test 'admin: configurations: download-quota: reset' do
 		puts "Test method: #{self.method_name}"
-		path = @base_url + '/admin'
+		path = @base_url + '/users/sign_in'
 		@driver.get path
-		close_modal('message_modal')
 		login($test_email)
+		@driver.get @base_url + '/admin'
 
 		actions_dropdown = @driver.find_element(:id, 'admin_action')
 		actions_dropdown.send_keys 'Reset User Download Quotas'
@@ -1393,13 +1531,12 @@ class UiTestSuite < Test::Unit::TestCase
 		message = @driver.find_element(:id, 'notice-content').text
 		expected_conf = 'All user download quotas successfully reset to 0.'
 		assert message == expected_conf, "correct confirmation did not appear, expected #{expected_conf} but found #{message}"
-		close_modal('message_modal')
 
 		puts "Test method: #{self.method_name} successful!"
 	end
 
 	# test force-refreshing the FireCloud API access tokens and storage driver connections
-	test 'admin: refresh api connections' do
+	test 'admin: configurations: refresh api connections' do
 		puts "Test method: #{self.method_name}"
 		path = @base_url + '/admin'
 		@driver.get path
@@ -1415,13 +1552,12 @@ class UiTestSuite < Test::Unit::TestCase
 		message = @driver.find_element(:id, 'notice-content').text
 		expected_conf = 'API Client successfully refreshed.'
 		assert message.start_with?(expected_conf), "correct confirmation did not appear, expected #{expected_conf} but found #{message}"
-		close_modal('message_modal')
 
 		puts "Test method: #{self.method_name} successful!"
 	end
 
 	# test loading plots from reporting controller
-	test 'admin: view study reports' do
+	test 'admin: reports: view' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + '/reports'
@@ -1457,7 +1593,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# send a request to site admins for a new report plot
-	test 'admin: request a new report' do
+	test 'admin: reports: request new' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + '/reports'
@@ -1487,7 +1623,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# update a user's roles (admin or reporter)
-	test "admin: update user roles" do
+	test 'admin: configurations: update user roles' do
 		puts "Test method: #{self.method_name}"
 		path = @base_url + '/admin'
 		@driver.get path
@@ -1523,13 +1659,15 @@ class UiTestSuite < Test::Unit::TestCase
 		open_ui_tab('users')
 		share_roles = @driver.find_element(:id, share_email_id + '-roles')
 		assert share_roles.text == '', "did not remove reporter access from #{$share_email}"
+
+		puts "Test method: #{self.method_name} successful!"
 	end
 
 	##
 	## FRONT END FUNCTIONALITY TESTS
 	##
 
-	test 'front-end: get home page' do
+	test 'front-end: view: home page' do
 		puts "Test method: #{self.method_name}"
 
 		@driver.get(@base_url)
@@ -1538,20 +1676,20 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'front-end: perform search' do
+	test 'front-end: search' do
 		puts "Test method: #{self.method_name}"
 
 		@driver.get(@base_url)
 		search_box = @driver.find_element(:id, 'search_terms')
-		search_box.send_keys('Test Study')
+		search_box.send_keys("#{$random_seed}")
 		submit = @driver.find_element(:id, 'submit-search')
 		submit.click
 		studies = @driver.find_elements(:class, 'study-panel').size
-		assert studies == 1, 'incorrect number of studies found. expected one but found ' + studies.to_s
+		assert studies >= 3, 'incorrect number of studies found. expected more than or equal to three but found ' + studies.to_s
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'front-end: load study page' do
+	test 'front-end: view: study' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + "/study/test-study-#{$random_seed}"
@@ -1581,6 +1719,15 @@ class UiTestSuite < Test::Unit::TestCase
 		legend = @driver.find_elements(:class, 'traces').size
 		assert legend == 6, "incorrect number of traces found in Sub-Cluster, expected 6 - found #{legend}"
 
+		# testing loading all annotation types
+		annotations_values = annotations.map{|x| x['value']}
+		annotations_values.each do |annotation|
+			@driver.find_element(:id, 'annotation').send_key annotation
+			@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+			cluster_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
+			assert cluster_rendered, "cluster plot did not finish rendering on change, expected true but found #{cluster_rendered}"
+		end
+
 		# now test private study
 		login_path = @base_url + '/users/sign_in'
 		@driver.get login_path
@@ -1598,7 +1745,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'front-end: download study data file' do
+	test 'front-end: download: study file' do
 		puts "Test method: #{self.method_name}"
 		login_path = @base_url + '/users/sign_in'
 		# downloads require login now
@@ -1682,7 +1829,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'front-end: check privacy restrictions on file download' do
+	test 'front-end: download: privacy restriction' do
 		puts "Test method: #{self.method_name}"
 
 		login_path = @base_url + '/users/sign_in'
@@ -1710,7 +1857,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'front-end: search for single gene' do
+	test 'front-end: search-genes: single' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + "/study/test-study-#{$random_seed}"
@@ -1731,60 +1878,91 @@ class UiTestSuite < Test::Unit::TestCase
 		queried_gene = @driver.find_element(:class, 'queried-gene')
 		assert queried_gene.text == gene, "did not load the correct gene, expected #{gene} but found #{queried_gene.text}"
 
-		# wait until violin plot renders, at this point all 3 should be done
+		# testing loading all annotation types
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
-		violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
-		assert violin_rendered, "violin plot did not finish rendering, expected true but found #{violin_rendered}"
-		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
-		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
-		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
-		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+		annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
+		annotations_values = annotations.map{|x| x['value']}
+		annotations_values.each do |annotation|
+			@driver.find_element(:id, 'annotation').send_key annotation
+			type = annotation.split('--')[1]
+			puts "loading annotation: #{annotation}"
+			if type == 'group'
+				# if looking at box, switch back to violin
+				@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+				plot_dropdown = @driver.find_element(:id, 'plot_type')
+				plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
 
-		# select new kernel
-		kernel_dropdown = @driver.find_element(:id, 'kernel_type')
-		kernel_ops = kernel_dropdown.find_elements(:tag_name, 'option')
-		new_kernel = kernel_ops.select {|opt| !opt.selected?}.sample.text
-		kernel_dropdown.send_key(new_kernel)
+				is_box_plot = plot_ops.select {|opt| opt.selected?}.sample.text == 'Box Plot'
+				if is_box_plot
+					new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
+					plot_dropdown.send_key(new_plot)
+				end
+				# wait until violin plot renders, at this point all 3 should be done
 
-		# wait until violin plot renders, at this point all 3 should be done
-		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
-		violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
-		assert violin_rendered, "violin plot kernel did not finish rendering, expected true but found #{violin_rendered}"
-		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
-		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
-		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
-		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+				@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+				violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+				assert violin_rendered, "violin plot did not finish rendering, expected true but found #{violin_rendered}"
+				scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+				assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+				reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+				assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
-		# select new bandwidth
-		bandwidth_dropdown = @driver.find_element(:id, 'band_type')
-		band_ops = bandwidth_dropdown.find_elements(:tag_name, 'option')
-		new_band = band_ops.select {|opt| !opt.selected?}.sample.text
-		bandwidth_dropdown.send_key(new_band)
+				# select new kernel
+				kernel_dropdown = @driver.find_element(:id, 'kernel_type')
+				kernel_ops = kernel_dropdown.find_elements(:tag_name, 'option')
+				new_kernel = kernel_ops.select {|opt| !opt.selected?}.sample.text
+				kernel_dropdown.send_key(new_kernel)
 
-		# wait until violin plot renders, at this point all 3 should be done
-		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
-		violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
-		assert violin_rendered, "violin plot bandwidth did not finish rendering, expected true but found #{violin_rendered}"
-		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
-		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
-		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
-		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+				# wait until violin plot renders, at this point all 3 should be done
+				@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+				violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+				assert violin_rendered, "violin plot kernel did not finish rendering, expected true but found #{violin_rendered}"
+				scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+				assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+				reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+				assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
-		# change to box plot
-		plot_dropdown = @driver.find_element(:id, 'plot_type')
-		plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
-		new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
-		plot_dropdown.send_key(new_plot)
+				# select new bandwidth
+				bandwidth_dropdown = @driver.find_element(:id, 'band_type')
+				band_ops = bandwidth_dropdown.find_elements(:tag_name, 'option')
+				new_band = band_ops.select {|opt| !opt.selected?}.sample.text
+				bandwidth_dropdown.send_key(new_band)
 
-		# wait until box plot renders, at this point all 3 should be done
-		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
-		box_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
-		assert box_rendered, "box plot did not finish rendering, expected true but found #{box_rendered}"
-		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
-		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
-		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
-		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+				# wait until violin plot renders, at this point all 3 should be done
+				@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+				violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+				assert violin_rendered, "violin plot bandwidth did not finish rendering, expected true but found #{violin_rendered}"
+				scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+				assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+				reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+				assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
+				# change to box plot
+				plot_dropdown = @driver.find_element(:id, 'plot_type')
+				plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
+				new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
+				plot_dropdown.send_key(new_plot)
+
+				# wait until box plot renders, at this point all 3 should be done
+				@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+				box_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+				assert box_rendered, "box plot did not finish rendering, expected true but found #{box_rendered}"
+				scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+				assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+				reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+				assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+
+			else
+				@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+				box_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+				assert box_rendered, "box plot did not finish rendering, expected true but found #{box_rendered}"
+				scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+				assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+				reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+				assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+			end
+
+		end
 		# now test private study
 		login_path = @base_url + '/users/sign_in'
 		@driver.get login_path
@@ -1825,7 +2003,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# wait until violin plot renders, at this point all 3 should be done
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
 		private_violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
-		assert private_violin_rendered, "private violin plot kernel did not finish rendering, expected true but found #{violin_rendered}"
+		assert private_violin_rendered, "private violin plot kernel did not finish rendering, expected true but found #{private_violin_rendered}"
 		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
 		assert scatter_rendered, "private scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
 		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
@@ -1840,7 +2018,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# wait until violin plot renders, at this point all 3 should be done
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
 		private_violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
-		assert private_violin_rendered, "private violin plot bandwidth did not finish rendering, expected true but found #{violin_rendered}"
+		assert private_violin_rendered, "private violin plot bandwidth did not finish rendering, expected true but found #{private_violin_rendered}"
 		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
 		assert scatter_rendered, "private scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
 		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
@@ -1855,7 +2033,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# wait until box plot renders, at this point all 3 should be done
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
 		private_box_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
-		assert private_box_rendered, "private box plot did not finish rendering, expected true but found #{box_rendered}"
+		assert private_box_rendered, "private box plot did not finish rendering, expected true but found #{private_box_rendered}"
 		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
 		assert scatter_rendered, "private scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
 		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
@@ -1864,7 +2042,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'front-end: search for multiple genes as consensus' do
+	test 'front-end: search-genes: multiple consensus' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + "/study/test-study-#{$random_seed}"
@@ -1893,60 +2071,91 @@ class UiTestSuite < Test::Unit::TestCase
 		queried_consensus = @driver.find_element(:id, 'selected-consensus')
 		assert selected_consensus_value == queried_consensus.text, "did not load correct consensus metric, expected #{selected_consensus_value} but found #{queried_consensus.text}"
 
-		# wait until violin plot renders, at this point all 3 should be done
+		# testing loading all annotation types
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
-		violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
-		assert violin_rendered, "violin plot did not finish rendering, expected true but found #{violin_rendered}"
-		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
-		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
-		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
-		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+		annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
+		annotations_values = annotations.map{|x| x['value']}
+		annotations_values.each do |annotation|
+			@driver.find_element(:id, 'annotation').send_key annotation
+			type = annotation.split('--')[1]
+			puts "loading annotation: #{annotation}"
+			if type == 'group'
+				# if looking at box, switch back to violin
+				@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+				plot_dropdown = @driver.find_element(:id, 'plot_type')
+				plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
 
-		# select new kernel
-		kernel_dropdown = @driver.find_element(:id, 'kernel_type')
-		kernel_ops = kernel_dropdown.find_elements(:tag_name, 'option')
-		new_kernel = kernel_ops.select {|opt| !opt.selected?}.sample.text
-		kernel_dropdown.send_key(new_kernel)
+				is_box_plot = plot_ops.select {|opt| opt.selected?}.sample.text == 'Box Plot'
+				if is_box_plot
+					new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
+					plot_dropdown.send_key(new_plot)
+				end
+				# wait until violin plot renders, at this point all 3 should be done
 
-		# wait until violin plot renders, at this point all 3 should be done
-		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
-		violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
-		assert violin_rendered, "violin plot kernel did not finish rendering, expected true but found #{violin_rendered}"
-		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
-		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
-		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
-		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+				@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+				violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+				assert violin_rendered, "violin plot did not finish rendering, expected true but found #{violin_rendered}"
+				scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+				assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+				reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+				assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
-		# select new bandwidth
-		bandwidth_dropdown = @driver.find_element(:id, 'band_type')
-		band_ops = bandwidth_dropdown.find_elements(:tag_name, 'option')
-		new_band = band_ops.select {|opt| !opt.selected?}.sample.text
-		bandwidth_dropdown.send_key(new_band)
+				# select new kernel
+				kernel_dropdown = @driver.find_element(:id, 'kernel_type')
+				kernel_ops = kernel_dropdown.find_elements(:tag_name, 'option')
+				new_kernel = kernel_ops.select {|opt| !opt.selected?}.sample.text
+				kernel_dropdown.send_key(new_kernel)
 
-		# wait until violin plot renders, at this point all 3 should be done
-		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
-		violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
-		assert violin_rendered, "violin plot bandwidth did not finish rendering, expected true but found #{violin_rendered}"
-		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
-		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
-		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
-		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+				# wait until violin plot renders, at this point all 3 should be done
+				@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+				violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+				assert violin_rendered, "violin plot kernel did not finish rendering, expected true but found #{violin_rendered}"
+				scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+				assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+				reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+				assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
-		# change to box plot
-		plot_dropdown = @driver.find_element(:id, 'plot_type')
-		plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
-		new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
-		plot_dropdown.send_key(new_plot)
+				# select new bandwidth
+				bandwidth_dropdown = @driver.find_element(:id, 'band_type')
+				band_ops = bandwidth_dropdown.find_elements(:tag_name, 'option')
+				new_band = band_ops.select {|opt| !opt.selected?}.sample.text
+				bandwidth_dropdown.send_key(new_band)
 
-		# wait until box plot renders, at this point all 3 should be done
-		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
-		box_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
-		assert box_rendered, "box plot did not finish rendering, expected true but found #{box_rendered}"
-		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
-		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
-		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
-		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+				# wait until violin plot renders, at this point all 3 should be done
+				@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+				violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+				assert violin_rendered, "violin plot bandwidth did not finish rendering, expected true but found #{violin_rendered}"
+				scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+				assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+				reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+				assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
+				# change to box plot
+				plot_dropdown = @driver.find_element(:id, 'plot_type')
+				plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
+				new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
+				plot_dropdown.send_key(new_plot)
+
+				# wait until box plot renders, at this point all 3 should be done
+				@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+				box_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+				assert box_rendered, "box plot did not finish rendering, expected true but found #{box_rendered}"
+				scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+				assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+				reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+				assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+
+			else
+				@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+				box_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+				assert box_rendered, "box plot did not finish rendering, expected true but found #{box_rendered}"
+				scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+				assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+				reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+				assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+			end
+
+		end
 		# now test private study
 		login_path = @base_url + '/users/sign_in'
 		@driver.get login_path
@@ -1996,7 +2205,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# wait until violin plot renders, at this point all 3 should be done
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
 		private_violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
-		assert private_violin_rendered, "private violin plot kernel did not finish rendering, expected true but found #{violin_rendered}"
+		assert private_violin_rendered, "private violin plot kernel did not finish rendering, expected true but found #{private_violin_rendered}"
 		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
 		assert scatter_rendered, "private scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
 		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
@@ -2011,7 +2220,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# wait until violin plot renders, at this point all 3 should be done
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
 		private_violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
-		assert private_violin_rendered, "private violin plot bandwidth did not finish rendering, expected true but found #{violin_rendered}"
+		assert private_violin_rendered, "private violin plot bandwidth did not finish rendering, expected true but found #{private_violin_rendered}"
 		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
 		assert scatter_rendered, "private scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
 		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
@@ -2026,7 +2235,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# wait until box plot renders, at this point all 3 should be done
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
 		private_box_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
-		assert private_box_rendered, "private box plot did not finish rendering, expected true but found #{box_rendered}"
+		assert private_box_rendered, "private box plot did not finish rendering, expected true but found #{private_box_rendered}"
 		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
 		assert scatter_rendered, "private scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
 		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
@@ -2035,7 +2244,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'front-end: search for multiple genes as heatmap' do
+	test 'front-end: search-genes: multiple heatmap' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + "/study/test-study-#{$random_seed}"
@@ -2043,15 +2252,23 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(path)
 		open_ui_tab('study-visualize')
 
-
 		# load random genes to search, take between 2-5
 		genes = @genes.shuffle.take(rand(2..5))
 		search_box = @driver.find_element(:id, 'search_genes')
 		search_box.send_keys(genes.join(' '))
 		search_genes = @driver.find_element(:id, 'perform-gene-search')
 		search_genes.click
+
 		assert element_present?(:id, 'plots'), 'could not find expression heatmap'
-		@wait.until {wait_for_morpheus_render('#heatmap-plot', 'morpheus')}
+
+		annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
+		annotations_values = annotations.map{|x| x['value']}
+		annotations_values.each do |annotation|
+			@driver.find_element(:id, 'annotation').send_key annotation
+			@wait.until {wait_for_morpheus_render('#heatmap-plot', 'morpheus')}
+			heatmap_drawn = @driver.execute_script("return $('#heatmap-plot').data('morpheus').heatmap !== undefined;")
+			assert heatmap_drawn, "heatmap plot encountered error, expected true but found #{heatmap_drawn}"
+		end
 
 		heatmap_drawn = @driver.execute_script("return $('#heatmap-plot').data('morpheus').heatmap !== undefined;")
 		assert heatmap_drawn, "heatmap plot encountered error, expected true but found #{heatmap_drawn}"
@@ -2087,14 +2304,13 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(private_study_path)
 		open_ui_tab('study-visualize')
 
-
 		new_genes = @genes.shuffle.take(rand(2..5))
 		search_box = @driver.find_element(:id, 'search_genes')
 		search_box.send_keys(new_genes.join(' '))
 		search_genes = @driver.find_element(:id, 'perform-gene-search')
 		search_genes.click
 		assert element_present?(:id, 'plots'), 'could not find expression heatmap'
-		@wait.until {wait_for_plotly_render('#heatmap-plot', 'rendered')}
+		@wait.until {wait_for_morpheus_render('#heatmap-plot', 'morpheus')}
 		private_rendered = @driver.execute_script("return $('#heatmap-plot').data('rendered')")
 		assert private_rendered, "private heatmap plot did not finish rendering, expected true but found #{private_rendered}"
 		private_heatmap_drawn = @driver.execute_script("return $('#heatmap-plot').data('morpheus').heatmap !== undefined;")
@@ -2107,7 +2323,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'front-end: search for genes by uploading gene list' do
+	test 'front-end: search-genes: multiple upload file' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + "/study/test-study-#{$random_seed}"
@@ -2148,7 +2364,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'front-end: load marker gene heatmap' do
+	test 'front-end: marker-gene: heatmap' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + "/study/test-study-#{$random_seed}"
@@ -2191,7 +2407,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'front-end: load marker gene box/scatter' do
+	test 'front-end: marker-gene: box/scatter' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + "/study/test-study-#{$random_seed}"
@@ -2205,59 +2421,91 @@ class UiTestSuite < Test::Unit::TestCase
 		list.click
 		assert element_present?(:id, 'expression-plots'), 'could not find box/scatter divs'
 
-		# wait until violin plot renders, at this point all 3 should be done
+		# testing loading all annotation types
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
-		violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
-		assert violin_rendered, "violin plot did not finish rendering, expected true but found #{violin_rendered}"
-		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
-		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
-		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
-		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+		annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
+		annotations_values = annotations.map{|x| x['value']}
+		annotations_values.each do |annotation|
+			@driver.find_element(:id, 'annotation').send_key annotation
+			type = annotation.split('--')[1]
+			puts "loading annotation: #{annotation}"
+			if type == 'group'
+				# if looking at box, switch back to violin
+				@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+				plot_dropdown = @driver.find_element(:id, 'plot_type')
+				plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
 
-		# select new kernel
-		kernel_dropdown = @driver.find_element(:id, 'kernel_type')
-		kernel_ops = kernel_dropdown.find_elements(:tag_name, 'option')
-		new_kernel = kernel_ops.select {|opt| !opt.selected?}.sample.text
-		kernel_dropdown.send_key(new_kernel)
+				is_box_plot = plot_ops.select {|opt| opt.selected?}.sample.text == 'Box Plot'
+				if is_box_plot
+					new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
+					plot_dropdown.send_key(new_plot)
+				end
+				# wait until violin plot renders, at this point all 3 should be done
 
-		# wait until violin plot renders, at this point all 3 should be done
-		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
-		violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
-		assert violin_rendered, "violin plot kernel did not finish rendering, expected true but found #{violin_rendered}"
-		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
-		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
-		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
-		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+				@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+				violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+				assert violin_rendered, "violin plot did not finish rendering, expected true but found #{violin_rendered}"
+				scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+				assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+				reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+				assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
-		# select new bandwidth
-		bandwidth_dropdown = @driver.find_element(:id, 'band_type')
-		band_ops = bandwidth_dropdown.find_elements(:tag_name, 'option')
-		new_band = band_ops.select {|opt| !opt.selected?}.sample.text
-		bandwidth_dropdown.send_key(new_band)
+				# select new kernel
+				kernel_dropdown = @driver.find_element(:id, 'kernel_type')
+				kernel_ops = kernel_dropdown.find_elements(:tag_name, 'option')
+				new_kernel = kernel_ops.select {|opt| !opt.selected?}.sample.text
+				kernel_dropdown.send_key(new_kernel)
 
-		# wait until violin plot renders, at this point all 3 should be done
-		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
-		violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
-		assert violin_rendered, "violin plot bandwidth did not finish rendering, expected true but found #{violin_rendered}"
-		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
-		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
-		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
-		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+				# wait until violin plot renders, at this point all 3 should be done
+				@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+				violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+				assert violin_rendered, "violin plot kernel did not finish rendering, expected true but found #{violin_rendered}"
+				scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+				assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+				reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+				assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
-		# change to box plot
-		plot_dropdown = @driver.find_element(:id, 'plot_type')
-		plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
-		new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
-		plot_dropdown.send_key(new_plot)
+				# select new bandwidth
+				bandwidth_dropdown = @driver.find_element(:id, 'band_type')
+				band_ops = bandwidth_dropdown.find_elements(:tag_name, 'option')
+				new_band = band_ops.select {|opt| !opt.selected?}.sample.text
+				bandwidth_dropdown.send_key(new_band)
 
-		# wait until box plot renders, at this point all 3 should be done
-		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
-		box_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
-		assert box_rendered, "box plot did not finish rendering, expected true but found #{box_rendered}"
-		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
-		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
-		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
-		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+				# wait until violin plot renders, at this point all 3 should be done
+				@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+				violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+				assert violin_rendered, "violin plot bandwidth did not finish rendering, expected true but found #{violin_rendered}"
+				scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+				assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+				reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+				assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+
+				# change to box plot
+				plot_dropdown = @driver.find_element(:id, 'plot_type')
+				plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
+				new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
+				plot_dropdown.send_key(new_plot)
+
+				# wait until box plot renders, at this point all 3 should be done
+				@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+				box_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+				assert box_rendered, "box plot did not finish rendering, expected true but found #{box_rendered}"
+				scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+				assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+				reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+				assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+
+			else
+				@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+				box_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+				assert box_rendered, "box plot did not finish rendering, expected true but found #{box_rendered}"
+				scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+				assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+				reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+				assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+			end
+
+		end
 
 		# now test private study
 		login_path = @base_url + '/users/sign_in'
@@ -2293,7 +2541,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# wait until violin plot renders, at this point all 3 should be done
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
 		private_violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
-		assert private_violin_rendered, "private violin plot kernel did not finish rendering, expected true but found #{violin_rendered}"
+		assert private_violin_rendered, "private violin plot kernel did not finish rendering, expected true but found #{private_violin_rendered}"
 		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
 		assert scatter_rendered, "private scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
 		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
@@ -2308,7 +2556,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# wait until violin plot renders, at this point all 3 should be done
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
 		private_violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
-		assert private_violin_rendered, "private violin plot bandwidth did not finish rendering, expected true but found #{violin_rendered}"
+		assert private_violin_rendered, "private violin plot bandwidth did not finish rendering, expected true but found #{private_violin_rendered}"
 		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
 		assert scatter_rendered, "private scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
 		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
@@ -2323,7 +2571,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# wait until box plot renders, at this point all 3 should be done
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
 		private_box_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
-		assert private_box_rendered, "private box plot did not finish rendering, expected true but found #{box_rendered}"
+		assert private_box_rendered, "private box plot did not finish rendering, expected true but found #{private_box_rendered}"
 		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
 		assert scatter_rendered, "private scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
 		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
@@ -2333,7 +2581,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# These are unit tests in actuality, but are put in UI test because of docker issues
-	test 'front-end: checking accuracy of kernel density and bandwidth functions' do
+	test 'front-end: validation: kernel density and bandwidth functions' do
 		puts "Test method: #{self.method_name}"
 		#load website
 		path = @base_url
@@ -2413,7 +2661,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
   # tests that form values for loaded clusters & annotations are being persisted when switching between different views and using 'back' button in search box
-  test 'front-end: check cluster and annotation persistence' do
+  test 'front-end: validation: cluster and annotation persistence' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + "/study/test-study-#{$random_seed}"
@@ -2517,7 +2765,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# test whether or not maintenance mode functions properly
-	test 'front-end: enable maintenance mode' do
+	test 'front-end: maintenance mode' do
 		puts "Test method: #{self.method_name}"
 
 		# enable maintenance mode
@@ -2532,7 +2780,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# test that camera position is being preserved on cluster/annotation select & rotation
-	test 'front-end: check camera position on change' do
+	test 'front-end: validation: camera position on change' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + "/study/test-study-#{$random_seed}"
@@ -2644,7 +2892,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# test that axes are rendering custom domains and labels properly
-	test 'front-end: check axis domains and labels' do
+	test 'front-end: validation: axis domains and labels' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + "/study/test-study-#{$random_seed}"
@@ -2672,7 +2920,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# test that toggle traces button works
-	test 'front-end: check toggle traces button' do
+	test 'front-end: validation: toggle traces button' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + "/study/test-study-#{$random_seed}"
@@ -2707,7 +2955,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# change the default study options and verify they are being preserved across views
 	# this is a blend of admin and front-end tests and is run last as has the potential to break previous tests
-	test 'front-end: check study default options' do
+	test 'front-end: validation: study default options' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + '/studies'
@@ -2784,7 +3032,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# update a study via the study settings panel
-	test 'front-end: edit study settings' do
+	test 'front-end: validation: edit study settings' do
 		puts "Test method: #{self.method_name}"
 
 		login_path = @base_url + '/users/sign_in'
@@ -2884,6 +3132,816 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
+	# Create a user annotation
+	test 'front-end: user-annotation: creation' do
+		puts "Test method: #{self.method_name}"
+
+		# log in
+		login_path = @base_url + '/users/sign_in'
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login($test_email)
+
+		# go to the 2d scatter plot study
+		two_d_study_path = @base_url + "/study/twod-study-#{$random_seed}"
+		@driver.get two_d_study_path
+		wait_until_page_loads(two_d_study_path)
+		open_ui_tab('study-visualize')
+
+		#Create an annotation from the study page
+
+		#Click selection tab
+		select_dropdown = @driver.find_element(:id, 'create_annotations_panel')
+		select_dropdown.click
+
+		#Enable Selection
+		wait_for_render(:id, 'toggle-scatter')
+		enable_select_button = @driver.find_element(:id, 'toggle-scatter')
+		try_to_click(enable_select_button)
+
+		# click box select button
+		select_button = @driver.find_element(:xpath, "//a[@data-val='select']")
+		select_button.click
+
+		# get the points in the plotly trace
+		points = @driver.find_elements(:class, 'point')
+		el1 = points[0]
+
+		# click on the first point
+		@driver.action.click_and_hold(el1).perform
+
+		# wait for web driver
+		sleep 0.5
+
+		#drage the cursor to another point and release it
+		el2 = points[-1]
+		@driver.action.move_to(el2).release.perform
+
+		#wait for plotly and webdriver
+		sleep 1.0
+
+		#send the keys for the name of the annotation
+		annotation_name = @driver.find_element(:class, 'annotation-name')
+		name = "user-#{$random_seed}"
+		annotation_name.send_keys(name)
+		# send keys to the labels of the annotation
+		annotation_labels = @driver.find_elements(:class, 'annotation-label')
+		annotation_labels.each_with_index do |annot, i|
+			annot.send_keys("group#{i}")
+		end
+
+		sleep 0.5
+
+		#create the annotation
+		submit_button = @driver.find_element(:id, 'selection-submit')
+		submit_button.click
+
+		wait_for_render(:id, 'message_modal')
+		close_modal('message_modal')
+
+		# choose the user annotation
+		annotation_dropdown = @driver.find_element(:id, 'annotation')
+		annotation_dropdown.send_keys("user-#{$random_seed}")
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+
+		#make sure the new annotation still renders a plot for plotly
+		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
+		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
+
+		@driver.find_element(:id, 'search-genes-link').click
+		wait_for_render(:id, 'panel-genes-search')
+
+		# load random gene to search
+		gene = @genes.sample
+		search_box = @driver.find_element(:id, 'search_genes')
+		search_box.send_key(gene)
+		search_genes = @driver.find_element(:id, 'perform-gene-search')
+		search_genes.click
+
+		#make sure the new annotation still renders plots for plotly
+		assert element_present?(:id, 'box-controls'), 'could not find expression violin plot'
+		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
+
+		# confirm queried gene is the one returned
+		queried_gene = @driver.find_element(:class, 'queried-gene')
+		assert queried_gene.text == gene, "did not load the correct gene, expected #{gene} but found #{queried_gene.text}"
+
+		# wait until violin plot renders, at this point all 3 should be done
+		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+		assert violin_rendered, "violin plot did not finish rendering, expected true but found #{violin_rendered}"
+		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+
+		# change to box plot
+		plot_dropdown = @driver.find_element(:id, 'plot_type')
+		plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
+		new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
+		plot_dropdown.send_key(new_plot)
+
+		# wait until box plot renders, at this point all 3 should be done
+		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		box_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+		assert box_rendered, "box plot did not finish rendering, expected true but found #{box_rendered}"
+		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+
+		gene_sets = @driver.find_element(:id, 'gene_set')
+		opts = gene_sets.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
+		list = opts.sample
+		list.click
+		assert element_present?(:id, 'expression-plots'), 'could not find box/scatter divs'
+
+		# wait until violin plot renders, at this point all 3 should be done
+		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+		assert violin_rendered, "violin plot did not finish rendering, expected true but found #{violin_rendered}"
+		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+
+		#Create an annotation from the gene page
+		#The plotly plots render before the loading modal closes-- this means that everything gets unclickable, therefore this sleep is needed
+		sleep 1.0
+		scroll_to(:bottom)
+		#Click selection tabs
+		select_dropdown = @driver.find_element(:id, 'create_annotations_panel')
+		select_dropdown.click
+		#Enable Selection
+		wait_for_render(:id, 'toggle-scatter')
+		enable_select_button = @driver.find_element(:id, 'toggle-scatter')
+		sleep 0.5
+		try_to_click(enable_select_button)
+
+		# select the scatter plot
+		plot = @driver.find_element(:id, 'scatter-plot')
+
+		# click box select button
+		scroll_to(:bottom)
+		@wait.until {wait_for_plotly_render('#expression-plots', 'scatter-rendered')}
+		select_button = @driver.find_elements(:xpath, "//a[@data-val='select']")[-1]
+		select_button.click
+
+		# get the points in the plotly trace
+
+		points = plot.find_elements(:class, 'point')
+		el1 = points[0]
+
+		# click on the first point
+		@driver.action.click_and_hold(el1).perform
+
+		# wait for web driver
+		sleep 0.5
+
+		#drag the cursor to another point and release it
+		el2 = points[-1]
+		@driver.action.move_to(el2).release.perform
+
+		#wait for plotly and webdriver
+		sleep 1.0
+
+		#send the keys for the name of the annotation
+		annotation_name = @driver.find_element(:class, 'annotation-name')
+		name = "user-#{$random_seed}-exp"
+		annotation_name.send_keys(name)
+		# send keys to the labels of the annotation
+		annotation_labels = @driver.find_elements(:class, 'annotation-label')
+		annotation_labels.each_with_index do |annot, i|
+			annot.send_keys("group#{i}")
+		end
+
+		sleep 0.5
+
+		#create the annotation
+		submit_button = @driver.find_element(:id, 'selection-submit')
+		submit_button.click
+
+		wait_for_render(:id, 'message_modal')
+		close_modal('message_modal')
+
+		@driver.get two_d_study_path
+		wait_until_page_loads(two_d_study_path)
+		open_ui_tab('study-visualize')
+
+		# choose the user annotation
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		annotation_dropdown = @driver.find_element(:id, 'annotation')
+		annotation_dropdown.send_keys("user-#{$random_seed}-exp")
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+
+		#make sure the new annotation still renders a plot for plotly
+		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
+		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
+
+		# load random gene to search
+		gene = @genes.sample
+		search_box = @driver.find_element(:id, 'search_genes')
+		search_box.send_key(gene)
+		wait_for_render(:id, 'perform-gene-search')
+		search_genes = @driver.find_element(:id, 'perform-gene-search')
+		search_genes.click
+
+		#make sure the new annotation still renders plots for plotly
+		assert element_present?(:id, 'box-controls'), 'could not find expression violin plot'
+		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
+
+		sleep 0.50
+
+		# confirm queried gene is the one returned
+		queried_gene = @driver.find_element(:class, 'queried-gene')
+		assert queried_gene.text == gene, "did not load the correct gene, expected #{gene} but found #{queried_gene.text}"
+
+		# wait until violin plot renders, at this point all 3 should be done
+		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+		assert violin_rendered, "violin plot did not finish rendering, expected true but found #{violin_rendered}"
+		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+
+		# change to box plot
+		plot_dropdown = @driver.find_element(:id, 'plot_type')
+		plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
+		new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
+		plot_dropdown.send_key(new_plot)
+
+		# wait until box plot renders, at this point all 3 should be done
+		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		box_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+		assert box_rendered, "box plot did not finish rendering, expected true but found #{box_rendered}"
+		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+
+		sleep 0.5
+
+		gene_sets = @driver.find_element(:id, 'gene_set')
+		opts = gene_sets.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
+		list = opts.sample
+		list.click
+		assert element_present?(:id, 'expression-plots'), 'could not find box/scatter divs'
+
+		# wait until violin plot renders, at this point all 3 should be done
+		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+		assert violin_rendered, "violin plot did not finish rendering, expected true but found #{violin_rendered}"
+		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+
+
+		puts "Test method: #{self.method_name} successful!"
+
+	end
+
+	# make sure editing the annotation works
+	test 'front-end: user-annotation: editing' do
+		puts "Test method: #{self.method_name}"
+
+		# login
+		login_path = @base_url + '/users/sign_in'
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login($test_email)
+
+		# load annotation panel
+		annot_path = @base_url + '/user_annotations'
+		@driver.get annot_path
+
+		@driver.find_element(:class, "user-#{$random_seed}-edit").click
+		wait_until_page_loads('edit user annotation path')
+
+		#add 'new' to the name of annotation
+		name = @driver.find_element(:id, 'user_annotation_name')
+		name.send_key("new")
+
+		#add 'new' to the labels
+		annotation_labels = @driver.find_elements(:id, 'user-annotation_values')
+
+		annotation_labels.each_with_index do |annot, i|
+			annot.clear
+			annot.send_keys("group#{i}new")
+		end
+
+		#update the annotation
+		submit = @driver.find_element(:id, 'submit-button')
+		submit.click
+
+		wait_until_page_loads('user annotation path')
+
+		#check names and labels
+		new_names = @driver.find_elements(:class, 'annotation-name').map{|x| x.text }
+		new_labels = @driver.find_elements(:class, "user-#{$random_seed}new").map{|x| x.text }
+
+		#assert new name saved correctly
+		assert (new_names.include? "user-#{$random_seed}new"), "Name edit failed, expected 'user-#{$random_seed}new' but got '#{new_names}'"
+
+		#assert labels saved correctly
+		assert (new_labels.include? "group0new"), "Name edit failed, expected 'new in group' but got '#{new_labels}'"
+		wait_for_render(:id, 'message_modal')
+		close_modal('message_modal')
+
+		#View the annotation
+		@driver.find_element(:class, "user-#{$random_seed}new-show").click
+		wait_until_page_loads('view user annotation path')
+
+		#assert the plot still renders
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
+		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
+
+		#assert labels are correct
+		plot_labels = @driver.find_elements(:class, "user-select-none").map{|x| x.attribute('data-unformatted') }
+		assert (plot_labels.include? "user-#{$random_seed}new: group0new (3 points)"), "labels are incorrect: '#{plot_labels}' should include 'user-#{$random_seed}new: group0new'"
+
+		#revert the annotation to old name and labels
+		@driver.get annot_path
+		@driver.find_element(:class, "user-#{$random_seed}new-edit").click
+		wait_until_page_loads('edit user annotation path')
+
+		#revert name
+		name = @driver.find_element(:id, 'user_annotation_name')
+		name.clear
+		name.send_key("user-#{$random_seed}")
+
+		#revert labels
+		annotation_labels = @driver.find_elements(:id, 'user-annotation_values')
+
+		annotation_labels.each_with_index do |annot, i|
+			annot.clear
+			annot.send_keys("group#{i}")
+		end
+
+		#update annotation
+		submit = @driver.find_element(:id, 'submit-button')
+		submit.click
+
+		wait_until_page_loads('user annotation path')
+
+		#check new names and labels
+		new_names = @driver.find_elements(:class, 'annotation-name').map{|x| x.text }
+		new_labels = @driver.find_elements(:class, "user-#{$random_seed}").map{|x| x.text }
+
+		#assert new name saved correctly
+		assert !(new_names.include? "user-#{$random_seed}new"), "Name edit failed, expected 'user-#{$random_seed}' but got '#{new_names}'"
+
+		#assert labels saved correctly
+		assert !(new_labels.include? "group0new"), "Name edit failed, did not expect 'new in group' but got '#{new_labels}'"
+
+		wait_for_render(:id, 'message_modal')
+		close_modal('message_modal')
+
+		#View the annotation
+		@driver.find_element(:class, "user-#{$random_seed}-show").click
+		wait_until_page_loads('view user annotation path')
+
+		#assert the plot still renders
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
+		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
+
+		#assert labels are correct
+		plot_labels = @driver.find_elements(:class, "user-select-none").map{|x| x.attribute('data-unformatted') }
+		assert (plot_labels.include? "user-#{$random_seed}: group0 (3 points)"), "labels are incorrect: '#{plot_labels}' should include 'user-#{$random_seed}: group0'"
+	end
+
+	# make sure sharing the annotation works
+	test 'front-end: user-annotation: sharing' do
+		puts "Test method: #{self.method_name}"
+
+		# login
+		login_path = @base_url + '/users/sign_in'
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login($test_email)
+
+		# load annotation panel
+		annot_path = @base_url + '/user_annotations'
+		@driver.get annot_path
+
+		@driver.find_element(:class, "user-#{$random_seed}-exp-edit").click
+		wait_until_page_loads('edit user annotation path')
+
+		# click the share button
+		share_button = @driver.find_element(:id, 'add-user-annotation-share')
+		share_button.click
+
+		share_email = @driver.find_element(:class, 'share-email')
+		share_email.send_keys($share_email)
+
+		share_permission = @driver.find_element(:class, 'share-permission')
+		share_permission.send_keys('Edit')
+
+		#update the annotation
+		submit = @driver.find_element(:id, 'submit-button')
+		submit.click
+
+		wait_until_page_loads('user annotation path')
+
+		# logout
+		close_modal('message_modal')
+		profile = @driver.find_element(:id, 'profile-nav')
+		profile.click
+		logout = @driver.find_element(:id, 'logout-nav')
+		logout.click
+		wait_until_page_loads(@base_url)
+		close_modal('message_modal')
+
+		# login
+		login_as_other($test_email)
+		# load annotation panel
+		annot_path = @base_url + '/user_annotations'
+		@driver.get annot_path
+
+		#View the annotation
+		wait_until_page_loads('view user annotation index')
+		@driver.find_element(:class, "user-#{$random_seed}-exp-show").click
+		wait_until_page_loads('view user annotation path')
+
+		#make sure the new annotation still renders a plot for plotly
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
+		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
+
+		# load random gene to search
+		gene = @genes.sample
+		search_box = @driver.find_element(:id, 'search_genes')
+		search_box.send_key(gene)
+		wait_for_render(:id, 'perform-gene-search')
+		search_genes = @driver.find_element(:id, 'perform-gene-search')
+		search_genes.click
+
+		#make sure the new annotation still renders plots for plotly
+		assert element_present?(:id, 'box-controls'), 'could not find expression violin plot'
+		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
+
+		wait_for_render(:class, 'queried-gene')
+		# confirm queried gene is the one returned
+		queried_gene = @driver.find_element(:class, 'queried-gene')
+		assert queried_gene.text == gene, "did not load the correct gene, expected #{gene} but found #{queried_gene.text}"
+
+		# wait until violin plot renders, at this point all 3 should be done
+		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+		assert violin_rendered, "violin plot did not finish rendering, expected true but found #{violin_rendered}"
+		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+
+		# change to box plot
+		plot_dropdown = @driver.find_element(:id, 'plot_type')
+		plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
+		new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
+		plot_dropdown.send_key(new_plot)
+
+		# wait until box plot renders, at this point all 3 should be done
+		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		box_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+		assert box_rendered, "box plot did not finish rendering, expected true but found #{box_rendered}"
+		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+
+		sleep 0.5
+
+		gene_sets = @driver.find_element(:id, 'gene_set')
+		opts = gene_sets.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
+		list = opts.sample
+		list.click
+		assert element_present?(:id, 'expression-plots'), 'could not find box/scatter divs'
+
+		# wait until violin plot renders, at this point all 3 should be done
+		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+		assert violin_rendered, "violin plot did not finish rendering, expected true but found #{violin_rendered}"
+		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+
+		#revert the annotation to old name and labels
+		@driver.get annot_path
+		@driver.find_element(:class, "user-#{$random_seed}-exp-edit").click
+		wait_until_page_loads('edit user annotation path')
+
+		#change name
+		name = @driver.find_element(:id, 'user_annotation_name')
+		name.clear
+		name.send_key("user-#{$random_seed}-exp-Share")
+
+		#update annotation
+		submit = @driver.find_element(:id, 'submit-button')
+		submit.click
+
+		wait_until_page_loads('user annotation path')
+
+		#check new names and labels
+		new_names = @driver.find_elements(:class, 'annotation-name').map{|x| x.text }
+		new_labels = @driver.find_elements(:class, "user-#{$random_seed}-exp-Share").map{|x| x.text }
+
+		#assert new name saved correctly
+		assert (new_names.include? "user-#{$random_seed}-exp-Share"), "Name edit failed, expected 'user-#{$random_seed}-exp-Share' but got '#{new_names}'"
+
+		wait_for_render(:id, 'message_modal')
+		close_modal('message_modal')
+
+		#View the annotation
+		@driver.find_element(:class, "user-#{$random_seed}-exp-Share-show").click
+		wait_until_page_loads('view user annotation path')
+
+		#assert the plot still renders
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
+		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
+
+		#assert labels are correct
+		plot_labels = @driver.find_elements(:class, "user-select-none").map{|x| x.attribute('data-unformatted') }
+		assert (plot_labels.include? "user-#{$random_seed}-exp-Share: group0 (3 points)"), "labels are incorrect: '#{plot_labels}' should include 'user-#{$random_seed}-exp-Share: group0'"
+
+		# logout
+		profile = @driver.find_element(:id, 'profile-nav')
+		profile.click
+		logout = @driver.find_element(:id, 'logout-nav')
+		logout.click
+		wait_until_page_loads(@base_url)
+		close_modal('message_modal')
+
+		# login
+		login_as_other($test_email)
+
+		# load annotation panel
+		annot_path = @base_url + '/user_annotations'
+		@driver.get annot_path
+
+		@driver.find_element(:class, "user-#{$random_seed}-exp-Share-edit").click
+		wait_until_page_loads('edit user annotation path')
+
+		# click the share button
+		share_button = @driver.find_element(:id, 'add-user-annotation-share')
+		share_button.click
+
+		share_email = @driver.find_element(:class, 'share-email')
+		share_email.send_keys($share_email)
+
+		share_permission = @driver.find_element(:class, 'share-permission')
+		share_permission.send_keys('View')
+
+		#change name
+		name = @driver.find_element(:id, 'user_annotation_name')
+		name.clear
+		name.send_key("user-#{$random_seed}-exp")
+
+		#update the annotation
+		submit = @driver.find_element(:id, 'submit-button')
+		submit.click
+
+		wait_until_page_loads('user annotation path')
+
+		# logout
+		close_modal('message_modal')
+		profile = @driver.find_element(:id, 'profile-nav')
+		profile.click
+		logout = @driver.find_element(:id, 'logout-nav')
+		logout.click
+		wait_until_page_loads(@base_url)
+		close_modal('message_modal')
+
+		# login
+		login_as_other($share_email)
+
+		# load annotation panel
+		annot_path = @base_url + '/user_annotations'
+		@driver.get annot_path
+
+		#make sure can't edit
+		editable = element_present?(:class, "user-#{$random_seed}-exp-edit")
+		assert !editable, 'Edit button found'
+
+		#View the annotation
+		@driver.find_element(:class, "user-#{$random_seed}-exp-show").click
+		wait_until_page_loads('view user annotation path')
+
+		#assert the plot still renders
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
+		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
+
+	end
+
+	test 'front-end: user-annotation: download annotation cluster file' do
+		puts "Test method: #{self.method_name}"
+		login_path = @base_url + '/users/sign_in'
+		# downloads require login now
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login($test_email)
+
+		# load annotation panel
+		annot_path = @base_url + '/user_annotations'
+		@driver.get annot_path
+
+		#Click download and get filenames
+		filename = (@driver.find_element(:class, "user-#{$random_seed}_cluster").attribute('innerHTML') + "_user-#{$random_seed}.txt").gsub(/ /, '_')
+		basename = filename.split('.').first
+
+		@driver.find_element(:class, "user-#{$random_seed}-download").click
+		# give browser 5 seconds to initiate download
+		sleep(5)
+		# make sure file was actually downloaded
+		file_exists = Dir.entries($download_dir).select {|f| f =~ /#{basename}/}.size >= 1 || File.exists?(File.join($download_dir, filename))
+		assert file_exists, "did not find downloaded file: #{filename} in #{Dir.entries($download_dir).join(', ')}"
+
+		# delete file
+		File.delete(File.join($download_dir, filename))
+
+		puts "Test method: #{self.method_name} successful!"
+	end
+
+	#check user annotation publishing
+	test 'front-end: user-annotation: publishing' do
+		puts "Test method: #{self.method_name}"
+
+		# login
+		login_path = @base_url + '/users/sign_in'
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login($test_email)
+
+		# load annotation panel
+		annot_path = @base_url + '/user_annotations'
+		@driver.get annot_path
+
+		num_annotations = @driver.find_elements(:class, 'annotation-name').length
+
+		@driver.find_element(:class, "user-#{$random_seed}-publish").click
+		@driver.switch_to.alert.accept
+		close_modal('message_modal')
+
+		new_num_annotations = num_annotations
+		i = 0
+		while new_num_annotations >= num_annotations
+			if i == 5
+				assert false, "Reloaded the page five times but found #{new_num_annotations} rows instead of #{num_annotations-1} rows, indicating that the annotation was not deleted."
+			end
+			sleep 1.0
+			@driver.get annot_path
+			new_num_annotations = @driver.find_elements(:class, 'annotation-name').length
+			i+=1
+		end
+
+		#check new names
+		new_names = @driver.find_elements(:class, 'annotation-name').map{|x| x.text }
+
+		#assert new name saved correctly
+		assert !(new_names.include? "user-#{$random_seed}"), "Persist failed, expected no 'user-#{$random_seed}' but found it"
+
+		#Wait for the annotation to persist
+		sleep 3.0
+
+		# go to study and make sure this annotation is saved
+		two_d_study_path = @base_url + "/study/twod-study-#{$random_seed}"
+		@driver.get two_d_study_path
+		wait_until_page_loads(two_d_study_path)
+		open_ui_tab('study-visualize')
+
+		# choose the newly persisted annotation
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		annotation_dropdown = @driver.find_element(:id, 'annotation')
+		annotation_dropdown.send_keys("user-#{$random_seed}")
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+
+		#make sure the new annotation still renders a plot for plotly
+		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
+		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
+
+		# load random gene to search
+		gene = @genes.sample
+		search_box = @driver.find_element(:id, 'search_genes')
+		search_box.send_key(gene)
+		search_genes = @driver.find_element(:id, 'perform-gene-search')
+		try_to_click(search_genes)
+
+		#make sure the new annotation still renders plots for plotly
+		assert element_present?(:id, 'box-controls'), 'could not find expression violin plot'
+		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
+
+		# confirm queried gene is the one returned
+		queried_gene = @driver.find_element(:class, 'queried-gene')
+		assert queried_gene.text == gene, "did not load the correct gene, expected #{gene} but found #{queried_gene.text}"
+
+		# wait until violin plot renders, at this point all 3 should be done
+		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+		assert violin_rendered, "violin plot did not finish rendering, expected true but found #{violin_rendered}"
+		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+
+		# change to box plot
+		plot_dropdown = @driver.find_element(:id, 'plot_type')
+		plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
+		new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
+		plot_dropdown.send_key(new_plot)
+
+		# wait until box plot renders, at this point all 3 should be done
+		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		box_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+		assert box_rendered, "box plot did not finish rendering, expected true but found #{box_rendered}"
+		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+
+		gene_sets = @driver.find_element(:id, 'gene_set')
+		opts = gene_sets.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
+		list = opts.sample
+		list.click
+		assert element_present?(:id, 'expression-plots'), 'could not find box/scatter divs'
+
+		# wait until violin plot renders, at this point all 3 should be done
+		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+		assert violin_rendered, "violin plot did not finish rendering, expected true but found #{violin_rendered}"
+		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+
+		scroll_to(:top)
+		open_ui_tab('study-download')
+
+		download_button = @driver.find_element(:class, 'cluster-file')
+		try_to_click(download_button)
+
+		sleep(5)
+		filename = 'cluster_2d_example.txt'
+		# make sure file was actually downloaded
+		file_exists = Dir.entries($download_dir).select {|f| f =~ /#{'cluster_2d_example'}/}.size >= 1 || File.exists?(File.join($download_dir, filename))
+		assert file_exists, "did not find downloaded file: #{filename} in #{Dir.entries($download_dir).join(', ')}"
+
+		# open the file
+		file = File.open(File.join($download_dir, filename))
+		first_line = file.readline.split("\t").map(&:strip)
+		%w[NAME X Y Sub-Group].each do |header|
+			assert (first_line.include?header), "Original cluster's rows are absent, rows: #{first_line}, is missing #{header}"
+		end
+		assert (first_line.include?"user-#{$random_seed}"), "New annotation's rows are absent, rows: #{first_line}, missing: user-#{$random_seed}"
+
+		# delete file
+		File.delete(File.join($download_dir, filename))
+
+		puts "Test method: #{self.method_name} successful!"
+	end
+
+	#check user annotation deletion
+	test 'front-end: user-annotation: deletion' do
+		puts "Test method: #{self.method_name}"
+
+		# login
+		login_path = @base_url + '/users/sign_in'
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login($test_email)
+
+		# load annotation panel
+		annot_path = @base_url + '/user_annotations'
+		@driver.get annot_path
+
+		@driver.find_element(:class, "user-#{$random_seed}-exp-delete").click
+		@driver.switch_to.alert.accept
+		close_modal('message_modal')
+
+		#check new names
+		first_row = @driver.find_element(:id, 'annotations').find_element(:tag_name, 'tbody').find_element(:tag_name, 'tr').find_element(:tag_name, 'td')
+		unless first_row['class'] == 'dataTables_empty'
+			#If you dont't have any annotations, they were all deleted
+			new_names = @driver.find_elements(:class, 'annotation-name').map{|x| x.text }
+			#assert new name saved correctly
+			assert !(new_names.include? "user-#{$random_seed}-exp"), "Deletion failed, expected no 'user-#{$random_seed}-exp' but found it"
+		end
+
+		# log in first
+		path = @base_url + '/studies'
+		@driver.get path
+
+		# delete 2d test
+		@driver.find_element(:class, "twod-study-#{$random_seed}-delete").click
+		@driver.switch_to.alert.accept
+		wait_for_render(:id, 'message_modal')
+		close_modal('message_modal')
+	end
+
 	##
 	## CLEANUP
 	##
@@ -2902,19 +3960,16 @@ class UiTestSuite < Test::Unit::TestCase
 		# delete test
 		@driver.find_element(:class, "test-study-#{$random_seed}-delete").click
 		@driver.switch_to.alert.accept
-		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
 
 		# delete private
 		@driver.find_element(:class, "private-study-#{$random_seed}-delete").click
 		@driver.switch_to.alert.accept
-		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
 
 		# delete gzip parse
 		@driver.find_element(:class, "gzip-parse-#{$random_seed}-delete").click
 		@driver.switch_to.alert.accept
-		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
 
 		puts "Test method: #{self.method_name} successful!"
