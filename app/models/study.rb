@@ -51,8 +51,25 @@ class Study
   end
 
   has_many :expression_scores, dependent: :delete do
-    def by_gene(gene)
-      any_of({gene: gene}, {searchable_gene: gene.downcase}).to_a
+    def by_gene(gene, study_file_id='All')
+      if study_file_id == 'All'
+        scores = []
+        files = self.first.study.study_files.by_type('Expression Matrix')
+        files.each do |file|
+
+          scores << (any_of({gene: gene, study_file_id: file.id}, {searchable_gene: gene.downcase, study_file_id: file.id}).first)
+        end
+        if scores.uniq != nil
+          scores.uniq!
+        end
+        uber_score = {}
+        uber_score['searchable_gene'] = gene.downcase
+        uber_score['gene'] = gene
+        uber_score['scores'] = scores.map{|score| score.scores}.reduce({}, :merge)
+        return [uber_score]
+      else
+        any_of({gene: gene, study_file_id: study_file_id}, {searchable_gene: gene.downcase, study_file_id: study_file_id}).to_a
+      end
     end
   end
 
@@ -302,16 +319,6 @@ class Study
   def set_cell_count(file_type)
     @cell_count = 0
     case file_type
-      when 'Expression Matrix'
-        if self.expression_matrix_file.upload_content_type == 'application/gzip'
-          @file = Zlib::GzipReader.open(self.expression_matrix_file.upload.path)
-        else
-          @file = File.open(self.expression_matrix_file.upload.path)
-        end
-        cells = @file.readline.split(/[\t,]/)
-        @file.close
-        cells.shift
-        @cell_count = cells.size
       when 'Metadata'
         metadata_name, metadata_type = StudyMetadatum.where(study_id: self.id).pluck(:name, :annotation_type).flatten
         @cell_count = self.study_metadata_values(metadata_name, metadata_type).keys.size
@@ -392,10 +399,14 @@ class Study
   end
 
   # helper method to directly access expression matrix file
-  def expression_matrix_file
+  def expression_matrix_files
     self.study_files.find_by(file_type:'Expression Matrix')
   end
 
+  # helper method to directly access expression matrix file
+  def expression_matrix_file(name)
+    self.study_files.find_by(file_type:'Expression Matrix', name: name)
+  end
   # helper method to directly access expression matrix file
   def metadata_file
     self.study_files.find_by(file_type:'Metadata')
@@ -615,9 +626,6 @@ class Study
         Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
       end
 
-      # update study cell count
-      self.set_cell_count(expression_file.file_type)
-
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       if opts[:local]
         begin
@@ -627,7 +635,7 @@ class Study
             SingleCellMailer.notify_admin_upload_fail(expression_file, 'FireCloud API unavailable').deliver_now
           end
         rescue => e
-          Rails.logger.info "#{Time.now}: Metadata file: '#{expression_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
+          Rails.logger.info "#{Time.now}: Expression file: '#{expression_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
           SingleCellMailer.notify_admin_upload_fail(expression_file, e.message).deliver_now
         end
       else
@@ -857,7 +865,7 @@ class Study
       @message << "Total points in cluster: #{@point_count}"
       @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
       # set initialized to true if possible
-      if !self.expression_matrix_file.nil? && !self.metadata_file.nil? && !self.initialized?
+      if !self.expression_matrix_files.nil? && !self.metadata_file.nil? && !self.initialized?
         self.update(initialized: true)
       end
 
@@ -1067,7 +1075,7 @@ class Study
       metadata_file.update(parse_status: 'parsed')
 
       # set initialized to true if possible
-      if !self.expression_matrix_file.nil? && !self.cluster_ordinations_files.empty? && !self.initialized?
+      if !self.expression_matrix_files.nil? && !self.cluster_ordinations_files.empty? && !self.initialized?
         self.update(initialized: true)
       end
 

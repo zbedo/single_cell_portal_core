@@ -15,12 +15,25 @@
 	</div>
 	<div class="tab-content">
     <div class="tab-pane" id="expression">
-      <div class="well well-sm">
-        <h2>Step 1. Upload Expression Matrix File <small class="initialize-label" id="initialize_expression_form_completed"><span class="label label-danger">Required</span></small></h2>
-        <p class="lead">Upload a tab- or comma-delimited text file containing all of your gene expression scores for all genes and single cells.  The file must be a plain text (.txt) or <%= link_to 'gzipped', 'http://www.gnu.org/software/gzip/manual/gzip.html' %> (.txt.gz) file with with a header row containing the value '<strong>GENE</strong>' in the first column, and single cell names in each successive column.</p>
-        <p><%= link_to "Example Expression Matrix <span class='fa fa-download'></span>".html_safe, 'https://raw.githubusercontent.com/broadinstitute/single_cell_portal/master/demo_data/expression_example.txt', class: 'btn btn-default', download: 'expression_matrix_example.txt' %></p>
+      <div id="expressions-target">
+        <div class="well well-sm">
+          <h2>Step 1. Upload Expression Matrix File <small class="initialize-label" id="initialize_expression_form_completed"><span class="label label-danger">Required</span></small></h2>
+          <p class="lead">Upload a tab- or comma-delimited text file containing all of your gene expression scores for all genes and single cells.  The file must be a plain text (.txt) or <%= link_to 'gzipped', 'http://www.gnu.org/software/gzip/manual/gzip.html' %> (.txt.gz) file with with a header row containing the value '<strong>GENE</strong>' in the first column, and single cell names in each successive column.</p>
+          <p><%= link_to "Example Expression Matrix <span class='fa fa-download'></span>".html_safe, 'https://raw.githubusercontent.com/broadinstitute/single_cell_portal/master/demo_data/expression_example.txt', class: 'btn btn-default', download: 'expression_matrix_example.txt' %></p>
+        </div>
+        <% @expression_files.each do |study_file| %>
+          <%= render partial: 'initialize_expression_form', locals: {study_file: study_file} %>
+        <% end %>
+        <script type="text/javascript">
+            if (<%= !@expression_files.first.new_record? %>) {
+                completeWizardStep('initialize_expression_form_nav');
+                console.log('incrementing status for expression files upload');
+                $('#initialize_expression_form_completed').replaceWith("<%= escape_javascript(render partial: 'step_completed', locals: {id: 'initialize_expression_form_completed'}) %>");
+                $('#initialize_expression_form_nav_completed').html("<span class='fa fa-check text-success'></span>");
+            }
+        </script>
       </div>
-      <%= render partial: 'initialize_expression_form', locals: {study_file: @expression_file} %>
+      <p><%= link_to "<span class='fa fa-plus'></span> Add an Expression Matrix File".html_safe, new_study_file_study_path(@study._id, file_type: 'Expression Matrix', target: '#expressions-target', form: 'initialize_expression_form'), class: 'btn btn-sm btn-primary add-expression', 'data-remote' => true %></p>
     </div>
     <div class="tab-pane" id="metadata">
       <div class="well well-sm">
