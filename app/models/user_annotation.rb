@@ -479,4 +479,9 @@ class UserAnnotation
 
   end
 
+  # user email address as a DOM id
+  def name_as_id
+    self.name.downcase.gsub(/\S/, '-')
+  end
+
 end
