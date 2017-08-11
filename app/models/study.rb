@@ -56,7 +56,6 @@ class Study
         scores = []
         files = self.first.study.study_files.by_type('Expression Matrix')
         files.each do |file|
-
           scores << (any_of({gene: gene, study_file_id: file.id}, {searchable_gene: gene.downcase, study_file_id: file.id}).first)
         end
         if scores.uniq != nil
@@ -398,18 +397,18 @@ class Study
     self.study_files.find_by(file_type: 'Cluster', name: name)
   end
 
-  # helper method to directly access expression matrix file
+  # helper method to directly access expression matrix files
   def expression_matrix_files
-    self.study_files.find_by(file_type:'Expression Matrix')
+    self.study_files.by_type('Expression Matrix')
   end
 
-  # helper method to directly access expression matrix file
+  # helper method to directly access expression matrix file file by name
   def expression_matrix_file(name)
     self.study_files.find_by(file_type:'Expression Matrix', name: name)
   end
-  # helper method to directly access expression matrix file
+  # helper method to directly access metadata file
   def metadata_file
-    self.study_files.find_by(file_type:'Metadata')
+    self.study_files.by_type('Metadata').first
   end
 
   # nightly cron to delete any studies that are 'queued for deletion'
@@ -548,9 +547,18 @@ class Study
         expression_data = File.open(expression_file.upload.path)
       end
       cells = expression_data.readline.strip.split(/[\t,]/)
-      @last_line = "#{expression_file.name}, line 1: #{cells.join("\t")}"
+      @last_line = "#{expression_file.name}, line 1"
 
       cells.shift
+
+      # validate that new expression matrix does not have repeated cells, raise error if repeats found
+      existing_cells = self.data_arrays.by_name_and_type('All Cells', 'cells').map(&:values).flatten
+      uniques = cells - existing_cells
+      unless uniques.size == cells.size
+        repeats = cells - uniques
+        raise StandardError, "cell names validation failed; repeated cells were found: #{repeats.join(', ')}"
+      end
+
       # store study id for later to save memory
       study_id = self._id
       @records = []

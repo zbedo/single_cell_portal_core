@@ -12,7 +12,7 @@ class CacheManagementTest < ActionDispatch::IntegrationTest
     study = Study.first
     cluster = ClusterGroup.first
     cluster_file = study.cluster_ordinations_files.first
-    expression_file = study.expression_matrix_files
+    expression_file = study.expression_matrix_file('expression_matrix.txt')
     genes = ExpressionScore.all.map(&:gene)
     gene = genes.sample
     genes_hash = Digest::SHA256.hexdigest genes.sort.join

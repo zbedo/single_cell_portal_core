@@ -13,7 +13,7 @@ class DeleteQueueJob < Struct.new(:object)
         study = object.study
 
         # reset initialized if needed
-        if study.cluster_ordinations_files.empty? || study.expression_matrix_files.nil? || study.metadata_file.nil?
+        if study.cluster_ordinations_files.empty? || study.expression_matrix_files.empty? || study.metadata_file.nil?
           study.update!(initialized: false)
         end
 

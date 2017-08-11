@@ -388,9 +388,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		begin
 			file.delete
 		rescue => e
-			logger.info("failed to delete workspace file #{filename} with error #{e}")
+			logger.info("#{Time.now}: failed to delete workspace file #{filename} with error #{e.message}")
 		end
-
 	end
 
 	# retrieve single file in a GCP bucket of a workspace and download locally to portal (likely for parsing)

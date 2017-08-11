@@ -95,7 +95,7 @@ puts "Sharing email: #{$share_email}"
 puts "Download directory: #{$download_dir}"
 puts "Portal URL: #{$portal_url}"
 puts "Random Seed: #{$random_seed}"
-puts "Headless?: #{$headless}"
+puts "Headless: #{$headless}"
 
 # make sure download & chromedriver paths exist and portal url is valid, otherwise kill tests before running and print usage
 if !File.exists?($chromedriver_path)
@@ -405,7 +405,7 @@ class UiTestSuite < Test::Unit::TestCase
 	# admin backend tests of entire study creation process including negative/error tests
 	# uses example data in test directory as inputs (based off of https://github.com/broadinstitute/single_cell_portal/tree/master/demo_data)
 	# these tests run first to create test studies to use in front-end tests later
-	test 'admin: create a study' do
+	test 'admin: create-study: public' do
 		puts "Test method: #{self.method_name}"
 
 		# log in first
@@ -586,7 +586,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	#create a 2d scatter study for use in user annotation testing
-	test 'admin: user_annotation: create a 2d study ' do
+	test 'admin: create-study: user-annotation: 2d' do
 		puts "Test method: #{self.method_name}"
 
 		# log in first
@@ -712,7 +712,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# verify that recently created study uploaded to firecloud
-	test 'admin: verify firecloud workspace' do
+	test 'admin: create-study: verify firecloud workspace' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + '/studies'
@@ -798,7 +798,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# text gzip parsing of expression matrices
-	test 'admin: parse gzip expression matrix' do
+	test 'admin: create-study: gzip expression matrix' do
 		puts "Test method: #{self.method_name}"
 
 		# log in first
@@ -837,7 +837,7 @@ class UiTestSuite < Test::Unit::TestCase
 	# since parsing happens in background, all messaging is handled through emails
 	# this test just makes sure that parsing fails and removed entries appropriately
 	# your test email account should receive emails notifying of failure
-	test 'admin: parse failure check' do
+	test 'admin: create-study: file validations' do
 		puts "Test method: #{self.method_name}"
 
 		# log in first
@@ -912,7 +912,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# create private study for testing visibility/edit restrictions
 	# must be run before other tests, so numbered accordingly
-	test 'admin: create private study' do
+	test 'admin: create-study: private' do
 		puts "Test method: #{self.method_name}"
 
 		# log in first
@@ -993,7 +993,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# check visibility & edit restrictions as well as share access
 	# will also verify FireCloud ACL settings on shares
-	test 'admin: create share and check view and edit' do
+	test 'admin: sharing: view and edit permission' do
 		puts "Test method: #{self.method_name}"
 
 		# check view visibility for unauthenticated users
@@ -1330,7 +1330,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# test the various levels of firecloud access integration (on, read-only, local-off, and off)
-	test 'admin: toggle firecloud access' do
+	test 'admin: configurations: firecloud access' do
 		puts "Test method: #{self.method_name}"
 		path = @base_url + '/admin'
 		@driver.get path
@@ -1432,7 +1432,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'admin: configure download quota and test redirect' do
+	test 'admin: configurations: download-quota: enforcement' do
 		puts "Test method: #{self.method_name}"
 		path = @base_url + '/admin'
 		@driver.get path
@@ -1495,7 +1495,7 @@ class UiTestSuite < Test::Unit::TestCase
 	# test unlocking jobs feature - this mainly just tests that the request goes through. it is difficult to test the
 	# entire method as it require the portal to crash while in the middle of a parse, which cannot be reliably automated.
 
-	test 'admin: restart locked jobs' do
+	test 'admin: configurations: restart locked jobs' do
 		puts "Test method: #{self.method_name}"
 		path = @base_url + '/users/sign_in'
 		@driver.get path
@@ -1515,7 +1515,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# reset user download quotas to 0 bytes
-	test 'admin: reset download quotas to 0' do
+	test 'admin: configurations: download-quota: reset' do
 		puts "Test method: #{self.method_name}"
 		path = @base_url + '/users/sign_in'
 		@driver.get path
@@ -1536,7 +1536,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# test force-refreshing the FireCloud API access tokens and storage driver connections
-	test 'admin: refresh api connections' do
+	test 'admin: configurations: refresh api connections' do
 		puts "Test method: #{self.method_name}"
 		path = @base_url + '/admin'
 		@driver.get path
@@ -1557,7 +1557,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# test loading plots from reporting controller
-	test 'admin: view study reports' do
+	test 'admin: reports: view' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + '/reports'
@@ -1593,7 +1593,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# send a request to site admins for a new report plot
-	test 'admin: request a new report' do
+	test 'admin: reports: request new' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + '/reports'
@@ -1623,7 +1623,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# update a user's roles (admin or reporter)
-	test "admin: update user roles" do
+	test 'admin: configurations: update user roles' do
 		puts "Test method: #{self.method_name}"
 		path = @base_url + '/admin'
 		@driver.get path
@@ -1667,7 +1667,7 @@ class UiTestSuite < Test::Unit::TestCase
 	## FRONT END FUNCTIONALITY TESTS
 	##
 
-	test 'front-end: get home page' do
+	test 'front-end: view: home page' do
 		puts "Test method: #{self.method_name}"
 
 		@driver.get(@base_url)
@@ -1676,7 +1676,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'front-end: perform search' do
+	test 'front-end: search' do
 		puts "Test method: #{self.method_name}"
 
 		@driver.get(@base_url)
@@ -1689,7 +1689,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'front-end: load study page' do
+	test 'front-end: view: study' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + "/study/test-study-#{$random_seed}"
@@ -1745,7 +1745,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'front-end: download study data file' do
+	test 'front-end: download: study file' do
 		puts "Test method: #{self.method_name}"
 		login_path = @base_url + '/users/sign_in'
 		# downloads require login now
@@ -1829,7 +1829,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'front-end: check privacy restrictions on file download' do
+	test 'front-end: download: privacy restriction' do
 		puts "Test method: #{self.method_name}"
 
 		login_path = @base_url + '/users/sign_in'
@@ -1857,7 +1857,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'front-end: search for single gene' do
+	test 'front-end: search-genes: single' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + "/study/test-study-#{$random_seed}"
@@ -2042,7 +2042,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'front-end: search for multiple genes as consensus' do
+	test 'front-end: search-genes: multiple consensus' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + "/study/test-study-#{$random_seed}"
@@ -2244,7 +2244,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'front-end: search for multiple genes as heatmap' do
+	test 'front-end: search-genes: multiple heatmap' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + "/study/test-study-#{$random_seed}"
@@ -2323,7 +2323,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'front-end: search for genes by uploading gene list' do
+	test 'front-end: search-genes: multiple upload file' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + "/study/test-study-#{$random_seed}"
@@ -2364,7 +2364,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'front-end: load marker gene heatmap' do
+	test 'front-end: marker-gene: heatmap' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + "/study/test-study-#{$random_seed}"
@@ -2407,7 +2407,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	test 'front-end: load marker gene box/scatter' do
+	test 'front-end: marker-gene: box/scatter' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + "/study/test-study-#{$random_seed}"
@@ -2581,7 +2581,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# These are unit tests in actuality, but are put in UI test because of docker issues
-	test 'front-end: checking accuracy of kernel density and bandwidth functions' do
+	test 'front-end: validation: kernel density and bandwidth functions' do
 		puts "Test method: #{self.method_name}"
 		#load website
 		path = @base_url
@@ -2661,7 +2661,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
   # tests that form values for loaded clusters & annotations are being persisted when switching between different views and using 'back' button in search box
-  test 'front-end: check cluster and annotation persistence' do
+  test 'front-end: validation: cluster and annotation persistence' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + "/study/test-study-#{$random_seed}"
@@ -2765,7 +2765,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# test whether or not maintenance mode functions properly
-	test 'front-end: enable maintenance mode' do
+	test 'front-end: maintenance mode' do
 		puts "Test method: #{self.method_name}"
 
 		# enable maintenance mode
@@ -2780,7 +2780,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# test that camera position is being preserved on cluster/annotation select & rotation
-	test 'front-end: check camera position on change' do
+	test 'front-end: validation: camera position on change' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + "/study/test-study-#{$random_seed}"
@@ -2892,7 +2892,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# test that axes are rendering custom domains and labels properly
-	test 'front-end: check axis domains and labels' do
+	test 'front-end: validation: axis domains and labels' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + "/study/test-study-#{$random_seed}"
@@ -2920,7 +2920,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# test that toggle traces button works
-	test 'front-end: check toggle traces button' do
+	test 'front-end: validation: toggle traces button' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + "/study/test-study-#{$random_seed}"
@@ -2955,7 +2955,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# change the default study options and verify they are being preserved across views
 	# this is a blend of admin and front-end tests and is run last as has the potential to break previous tests
-	test 'front-end: check study default options' do
+	test 'front-end: validation: study default options' do
 		puts "Test method: #{self.method_name}"
 
 		path = @base_url + '/studies'
@@ -3032,7 +3032,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# update a study via the study settings panel
-	test 'front-end: edit study settings' do
+	test 'front-end: validation: edit study settings' do
 		puts "Test method: #{self.method_name}"
 
 		login_path = @base_url + '/users/sign_in'
@@ -3133,7 +3133,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# Create a user annotation
-	test 'front-end: user_annotation: annotation creation' do
+	test 'front-end: user-annotation: creation' do
 		puts "Test method: #{self.method_name}"
 
 		# log in
@@ -3403,7 +3403,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# make sure editing the annotation works
-	test 'front-end: user_annotation: annotation editing' do
+	test 'front-end: user-annotation: editing' do
 		puts "Test method: #{self.method_name}"
 
 		# login
@@ -3514,7 +3514,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# make sure sharing the annotation works
-	test 'front-end: user_annotation: annotation sharing' do
+	test 'front-end: user-annotation: sharing' do
 		puts "Test method: #{self.method_name}"
 
 		# login
@@ -3738,7 +3738,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 	end
 
-	test 'front-end: user_annotation: download annotation cluster file' do
+	test 'front-end: user-annotation: download annotation cluster file' do
 		puts "Test method: #{self.method_name}"
 		login_path = @base_url + '/users/sign_in'
 		# downloads require login now
@@ -3768,7 +3768,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	#check user annotation publishing
-	test 'front-end: user_annotation: study publishing' do
+	test 'front-end: user-annotation: publishing' do
 		puts "Test method: #{self.method_name}"
 
 		# login
@@ -3905,7 +3905,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	#check user annotation deletion
-	test 'front-end: user_annotation: user annotation deletion' do
+	test 'front-end: user-annotation: deletion' do
 		puts "Test method: #{self.method_name}"
 
 		# login
