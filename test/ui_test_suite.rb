@@ -443,10 +443,26 @@ class UiTestSuite < Test::Unit::TestCase
 		# close success modal
 		close_modal('upload-success-modal')
 
+		scroll_to(:bottom)
+		back_btn = @driver.find_element(:id, 'prev-btn')
+		back_btn.click
+
+		# upload a second expression file
+		new_expression = @driver.find_element(:class, 'add-expression')
+		new_expression.click
+		scroll_to(:bottom)
+		upload_expression_2 = @driver.find_element(:id, 'upload-expression')
+		upload_expression_2.send_keys(@test_data_path + 'expression_matrix_example_2.txt')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		# close success modal
+		close_modal('upload-success-modal')
+
 		# upload metadata
 		wait_for_render(:id, 'metadata_form')
 		upload_metadata = @driver.find_element(:id, 'upload-metadata')
-		upload_metadata.send_keys(@test_data_path + 'metadata_example.txt')
+		upload_metadata.send_keys(@test_data_path + 'metadata_example2.txt')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
@@ -457,7 +473,7 @@ class UiTestSuite < Test::Unit::TestCase
 		cluster_name = cluster_form_1.find_element(:class, 'filename')
 		cluster_name.send_keys('Test Cluster 1')
 		upload_cluster = cluster_form_1.find_element(:class, 'upload-clusters')
-		upload_cluster.send_keys(@test_data_path + 'cluster_example.txt')
+		upload_cluster.send_keys(@test_data_path + 'cluster_example_2.txt')
 		wait_for_render(:id, 'start-file-upload')
 		# add labels and axis ranges
 		cluster_form_1.find_element(:id, :study_file_x_axis_min).send_key(-100)
@@ -483,7 +499,7 @@ class UiTestSuite < Test::Unit::TestCase
 		cluster_name_2 = cluster_form_2.find_element(:class, 'filename')
 		cluster_name_2.send_keys('Test Cluster 2')
 		upload_cluster_2 = cluster_form_2.find_element(:class, 'upload-clusters')
-		upload_cluster_2.send_keys(@test_data_path + 'cluster_2_example.txt')
+		upload_cluster_2.send_keys(@test_data_path + 'cluster_2_example_2.txt')
 		wait_for_render(:id, 'start-file-upload')
 		scroll_to(:bottom)
 		upload_btn_2 = cluster_form_2.find_element(:id, 'start-file-upload')
@@ -556,13 +572,13 @@ class UiTestSuite < Test::Unit::TestCase
 		primary_data_count = @driver.find_element(:id, 'primary-data-count').text.to_i
 		share_count = @driver.find_element(:id, 'share-count').text.to_i
 
-		assert cell_count == 15, "did not find correct number of cells, expected 15 but found #{cell_count}"
+		assert cell_count == 30, "did not find correct number of cells, expected 30 but found #{cell_count}"
 		assert gene_count == 19, "did not find correct number of genes, expected 19 but found #{gene_count}"
 		assert cluster_count == 2, "did not find correct number of clusters, expected 2 but found #{cluster_count}"
 		assert gene_list_count == 1, "did not find correct number of gene lists, expected 1 but found #{gene_list_count}"
 		assert metadata_count == 3, "did not find correct number of metadata objects, expected 3 but found #{metadata_count}"
 		assert cluster_annot_count == 3, "did not find correct number of cluster annotations, expected 2 but found #{cluster_annot_count}"
-		assert study_file_count == 6, "did not find correct number of study files, expected 6 but found #{study_file_count}"
+		assert study_file_count == 7, "did not find correct number of study files, expected 7 but found #{study_file_count}"
 		assert primary_data_count == 1, "did not find correct number of primary data files, expected 1 but found #{primary_data_count}"
 		assert share_count == 1, "did not find correct number of study shares, expected 1 but found #{share_count}"
 
@@ -724,7 +740,7 @@ class UiTestSuite < Test::Unit::TestCase
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
-		assert files.size == 7, "did not find correct number of files, expected 7 but found #{files.size}"
+		assert files.size == 8, "did not find correct number of files, expected 8 but found #{files.size}"
 		puts "Test method: #{self.method_name} successful!"
 	end
 
@@ -766,7 +782,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		@driver.get path
 		files = @driver.find_element(:id, "test-study-#{$random_seed}-study-file-count")
-		assert files.text == '6', "did not find correct number of files, expected 6 but found #{files.text}"
+		assert files.text == '7', "did not find correct number of files, expected 7 but found #{files.text}"
 
 		# verify deletion in google
 		show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
@@ -777,7 +793,7 @@ class UiTestSuite < Test::Unit::TestCase
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
-		assert files.size == 6, "did not find correct number of files, expected 6 but found #{files.size}"
+		assert files.size == 7, "did not find correct number of files, expected 7 but found #{files.size}"
 		puts "Test method: #{self.method_name} successful!"
 	end
 
@@ -1062,7 +1078,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# verify upload has completed and is in FireCloud bucket
 		@driver.get @base_url + '/studies/'
 		file_count = @driver.find_element(:id, "test-study-#{$random_seed}-study-file-count")
-		assert file_count.text == '7', "did not find correct number of files, expected 7 but found #{file_count.text}"
+		assert file_count.text == '8', "did not find correct number of files, expected 8 but found #{file_count.text}"
 		show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
 		show_study.click
 		gcs_link = @driver.find_element(:id, 'gcs-link')
@@ -1071,7 +1087,7 @@ class UiTestSuite < Test::Unit::TestCase
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
-		assert files.size == 7, "did not find correct number of files, expected 7 but found #{files.size}"
+		assert files.size == 8, "did not find correct number of files, expected 8 but found #{files.size}"
 		puts "Test method: #{self.method_name} successful!"
 	end
 

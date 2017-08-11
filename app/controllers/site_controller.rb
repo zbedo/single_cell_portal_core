@@ -340,7 +340,6 @@ class SiteController < ApplicationController
       @top_plot_partial = 'expression_annotation_plots_view'
       @top_plot_plotly = 'expression_annotation_plots_plotly'
       @top_plot_layout = 'expression_annotation_scatter_layout'
-      logger.info("Values: #{@values}")
       @annotation_scatter_range = set_range(@values.values)
     end
     # load expression scatter using main gene expression values
@@ -877,20 +876,22 @@ class SiteController < ApplicationController
     end
     cells.each_with_index do |cell, index|
       annotation_value = annotation[:scope] == 'cluster' ? annotation_array[index] : annotation_hash[cell]
-      case consensus
-        when 'mean'
-          expression_value = calculate_mean(@genes, cell)
-        when 'median'
-          expression_value = calculate_median(@genes, cell)
-        else
-          expression_value = calculate_mean(@genes, cell)
-      end
-      values[:all][:text] << "<b>#{cell}</b><br>#{annotation[:name]}: #{annotation_value}<br>#{@y_axis_title}: #{expression_value}"
-      values[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
-      values[:all][:x] << annotation_value
-      values[:all][:y] << expression_value
-      values[:all][:cells] << cell
-      values[:all][:marker_size] << 6
+      if !annotation_value.nil?
+        case consensus
+          when 'mean'
+            expression_value = calculate_mean(@genes, cell)
+          when 'median'
+            expression_value = calculate_median(@genes, cell)
+          else
+            expression_value = calculate_mean(@genes, cell)
+        end
+        values[:all][:text] << "<b>#{cell}</b><br>#{annotation[:name]}: #{annotation_value}<br>#{@y_axis_title}: #{expression_value}"
+        values[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
+        values[:all][:x] << annotation_value
+        values[:all][:y] << expression_value
+        values[:all][:cells] << cell
+        values[:all][:marker_size] << 6
+        end
     end
     values
   end
@@ -1180,7 +1181,6 @@ class SiteController < ApplicationController
   # load best-matching gene (if possible)
   def load_best_gene_match(matches, search_term)
     # iterate through all matches to see if there is an exact match
-    logger.info("Matches: #{matches}")
     matches.each do |match|
       if match['gene'] == search_term
         return match
