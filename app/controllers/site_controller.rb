@@ -76,7 +76,7 @@ class SiteController < ApplicationController
     # if user has permission to run workflows, load available workflows and current submissions
     if user_signed_in? && @study.can_compute?(current_user)
       @submissions = Study.firecloud_client.get_workspace_submissions(@study.firecloud_workspace)
-      @workflows = Study.firecloud_client.get_methods(namespace: 'broadinstitute_cga')
+      @workflows = Study.firecloud_client.get_methods(namespace: 'single-cell-portal')
       @workflows_list = @workflows.sort_by {|w| [w['name'], w['snapshotId'].to_i]}.map {|w| ["#{w['name']} (#{w['snapshotId']})#{w['synopsis'].blank? ? nil : " -- #{w['synopsis']}"}", "#{w['namespace']}--#{w['name']}--#{w['snapshotId']}"]}
       (rand(20) + 10).times do
         @submissions << {'submissionId' => SecureRandom.uuid, 'submittedOn' => (Time.now - rand(48).hours).strftime('%D %r'), 'methodName' => @workflows_list.sample.first.split.first, 'status' => %w(Queued Running Completed Error).sample}
@@ -1366,9 +1366,10 @@ class SiteController < ApplicationController
       if !sample_map.has_key?(sample_name)
         sample_map[sample_name] = [file['name']]
         existing_list[:data] << [
-            sample_name,
-            file['name'],
-            file['name']
+          sample_name,
+          file['name'],
+          file['name'],
+          file['name']
         ]
       end
     end

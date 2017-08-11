@@ -59,7 +59,9 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		self.api_root = BASE_URL
 	end
 
+	##
 	## TOKEN METHODS
+	##
 
 	# generate an access token to use for all requests
 	#
@@ -96,7 +98,9 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		Time.now >= self.expires_at
 	end
 
-  ## STORAGE INSTANCE METHODS
+	##
+	## STORAGE INSTANCE METHODS
+	##
 
   # get instance information about the storage driver
   #
@@ -144,9 +148,11 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		end
 	end
 
-  ##
+	######
+	##
 	## FIRECLOUD METHODS
 	##
+	######
 
 	# generic handler to execute http calls, process returned JSON and handle exceptions
 	#
@@ -192,7 +198,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 				context = " encountered when requesting '#{path}'"
 				log_message = "#{Time.now}: " + e.message + context
 				Rails.logger.error log_message
-				@error = e.message
+				@error = e.http_body
 				process_firecloud_request(http_method, path, payload)
 			end
 		else
@@ -201,6 +207,10 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 			raise RuntimeError.new(@error)
 		end
 	end
+
+	##
+	## API STATUS
+	##
 
 	# determine if FireCloud api is currently up/available
 	#
@@ -216,6 +226,29 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 			false
 		end
 	end
+
+	# get more detailed status information about FireCloud api
+	#
+	# return: JSON object with health status information for various FireCloud services
+	def api_status
+		path = self.api_root + '/status'
+		headers = {
+				'Authorization' => "Bearer #{self.access_token['access_token']}",
+				'Content-Type' => 'application/json',
+				'Accept' => 'application/json'
+		}
+		begin
+			response = RestClient::Request.execute(method: :get, url: path, headers: headers)
+			JSON.parse(response.body)
+		rescue RestClient::ExceptionWithResponse => e
+			Rails.logger.error "#{Time.now}: FireCloud status error: #{e.message}"
+			e.response
+		end
+	end
+
+	##
+	## WORKSPACE METHODS
+	##
 
 	# return a list of all workspaces in the portal namespace
 	#
@@ -305,6 +338,10 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 			raise RuntimeError.new("Invalid FireCloud ACL permission setting: #{permission}")
 		end
 	end
+
+  ##
+  ## WORKFLOW SUBMISSION METHODS
+	##
 
   # get list of available FireCloud methods
   #
@@ -403,14 +440,128 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/submissions/#{submission_id}"
 		process_firecloud_request(:delete, path)
 	end
+	##
+	## METADATA ENTITY METHODS
+	##
 
+	# list workspace metadata entities with type and attribute information
+	#
+	# param: workspace_name (string) => name of requested workspace
+	#
+	# return: array of workspace metadata entities with type and attribute information
+	def get_workspace_entities(workspace_name)
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/entities_with_type"
+		process_firecloud_request(:get, path)
+	end
+
+	# list workspace metadata entity types
+	#
+	# param: workspace_name (string) => name of requested workspace
+	#
+	# return: array of workspace metadata entities
+	def get_workspace_entity_types(workspace_name)
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/entities"
+		process_firecloud_request(:get, path)
+	end
+
+	# get a list workspace metadata entities of requested type
+	#
+	# param: workspace_name (string) => name of requested workspace
+	# param: entity_type (string) => type of requested entity
+	#
+	# return: array of workspace metadata entities with type and attribute information
+	def get_workspace_entities_by_type(workspace_name, entity_type)
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/entities/#{entity_type}"
+		process_firecloud_request(:get, path)
+	end
+
+	# get an individual workspace metadata entity
+	#
+	# param: workspace_name (string) => name of requested workspace
+	# param: entity_type (string) => type of requested entity
+	# param: entity_name (string) => name of requested entity
+	#
+	# return: array of workspace metadata entities with type and attribute information
+	def get_workspace_entity(workspace_name, entity_type, entity_name)
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/entities/#{entity_type}/#{entity_name}"
+		process_firecloud_request(:get, path)
+	end
+
+	# update an individual workspace metadata entity
+	#
+	# param: workspace_name (string) => name of requested workspace
+	# param: entity_type (string) => type of requested entity
+	# param: entity_name (string) => name of requested entity
+	# param: operation_type (string) => type of operation requested (add/update)
+	# param: attribute_name (string) => name of attribute being changed
+  # param: attribute_value (string) => value of attribute being changed
+	#
+	# return: array of workspace metadata entities with type and attribute information
+	def update_workspace_entity(workspace_name, entity_type, entity_name, operation_type, attribute_name, attribute_value)
+		update = {
+				op: operation_type,
+				attributeName: attribute_name,
+				addUpdateAttribute: attribute_value
+		}.to_json
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/entities/#{entity_type}/#{entity_name}"
+		process_firecloud_request(:patch, path, update)
+	end
+
+	# get a tsv file of requested workspace metadata entities of requested type
+	#
+	# param: workspace_name (string) => name of requested workspace
+	# param: entity_type (string) => type of requested entity
+  # param: entity_names (string) => list of requested entities to include in file (provide each as a separate parameter)
+	#
+	# return: array of workspace metadata entities with type and attribute information
+	def get_workspace_entities_as_tsv(workspace_name, entity_type, *entity_names)
+		entity_list = entity_names.join(',')
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/entities/#{entity_type}#{entity_list.blank? ? nil : '?attributeNames=' + entity_list}"
+		process_firecloud_request(:get, path)
+	end
+
+	# get a tsv file of requested workspace metadata entities of requested type
+	#
+	# param: workspace_name (string) => name of requested workspace
+	# param: entities_file (file) => valid TSV import file of metadata entities (must be an open File handler)
+	#
+	# return: array of workspace metadata entities with type and attribute information
+	def import_workspace_entities_file(workspace_name, entities_file)
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/importEntities"
+		entities_upload = {
+				entities: entities_file
+		}.to_json
+		process_firecloud_request(:post, path, entities_upload)
+	end
+
+	# bulk delete workspace metadata entities
+	#
+	# param: workspace_name (string) => name of requested workspace
+  # param: workspace_entities (array of objects) => array of hashes mapping to workspace metadata entities
+	#
+	# return: array of workspace metadata entities
+	def delete_workspace_entities(workspace_name, workspace_entities)
+		# validate entities first before making delete call
+		valid_workspace_entities = []
+		workspace_entities.each do |entity|
+			if entity.keys.sort.map(&:to_s) == %w(entityName entityType) && entity.values.size == 2
+				valid_workspace_entities << entity
+			end
+		end
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/entities/delete"
+		process_firecloud_request(:get, path,  valid_workspace_entities.to_json)
+	end
+
+	#######
 	##
 	## GOOGLE CLOUD STORAGE METHODS
 	##
 	## All methods are convenience wrappers around google-cloud-storage methods
 	## see https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2 for more detail
+	##
+	#######
 
-	# generic handler to process
+	# generic handler to process GCS method with retries and error handling
 	def execute_gcloud_method(method_name, *params)
 		@retries ||= 0
 		if @retries < MAX_RETRY_COUNT
@@ -585,8 +736,11 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		count
 	end
 
-  ###
-  # UTILITY METHODS
+  #######
+  ##
+  ## UTILITY METHODS
+	##
+  #######
 
 	# check if OK response code was found
 	#
@@ -606,4 +760,6 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		# return nil if opts is empty, else concat
 		opts.blank? ? nil : '?' + opts.to_a.map {|k,v| "#{k}=#{v}"}.join("&")
 	end
+
+  # validate the structure of a workspace entity object ()
 end
