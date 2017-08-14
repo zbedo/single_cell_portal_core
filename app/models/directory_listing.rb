@@ -36,4 +36,19 @@ class DirectoryListing
 			'/' + self.name + '/'
 		end
 	end
+
+  # create a mapping of file extensions and counts based on a list of input files from a google bucket
+  def self.create_extension_map(files)
+		map = {}
+		files.map(&:name).each do |name|
+			# don't use directories in extension map
+			unless name.end_with?('/')
+				parts = name.split('.')
+				# grab everything after first period as file extension
+				ext = parts.size > 2 ? parts[1..parts.size - 1].join('.') : parts.last
+				map[ext].nil? ? map[ext] = 1 : map[ext] += 1
+			end
+		end
+		map
+	end
 end
