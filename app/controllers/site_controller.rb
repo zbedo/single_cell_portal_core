@@ -3,8 +3,8 @@ class SiteController < ApplicationController
   respond_to :html, :js, :json
 
   before_action :set_study, except: [:index, :search]
-  before_action :load_precomputed_options, except: [:index, :search, :edit_study_description, :annotation_query, :download_file, :get_fastq_files, :log_action]
-  before_action :set_cluster_group, except: [:index, :search, :update_study_settings, :edit_study_description, :precomputed_results, :download_file, :get_fastq_files, :log_action]
+  before_action :load_precomputed_options, except: [:index, :search, :edit_study_description, :annotation_query, :download_file, :get_fastq_files, :log_action, :show_user_annotations_form]
+  before_action :set_cluster_group, except: [:index, :search, :update_study_settings, :edit_study_description, :precomputed_results, :download_file, :get_fastq_files, :log_action, :create_user_annotations]
   before_action :set_selected_annotation, except: [:index, :search, :study, :update_study_settings, :edit_study_description, :precomputed_results, :expression_query, :get_new_annotations, :download_file, :get_fastq_files, :log_action]
   before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query, :log_action]
 
@@ -230,7 +230,7 @@ class SiteController < ApplicationController
 
   # re-renders plots when changing cluster selection
   def render_gene_expression_plots
-    matches = @study.expression_scores.by_gene(params[:gene])
+    matches = @study.expression_scores.by_gene(params[:gene], @study.expression_matrix_files.map(&:id))
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
     @gene = load_best_gene_match(matches, params[:gene])
     @y_axis_title = load_expression_axis_title
@@ -284,7 +284,7 @@ class SiteController < ApplicationController
       precomputed = @study.precomputed_scores.by_name(params[:gene_set])
       @genes = []
       precomputed.gene_list.each do |gene|
-        matches = @study.expression_scores.by_gene(gene)
+        matches = @study.expression_scores.by_gene(gene, @study.expression_matrix_files.map(&:id))
         matches.map {|gene| @genes << gene}
       end
     end
@@ -314,7 +314,7 @@ class SiteController < ApplicationController
       precomputed = @study.precomputed_scores.by_name(params[:gene_set])
       @genes = []
       precomputed.gene_list.each do |gene|
-        matches = @study.expression_scores.by_gene(gene)
+        matches = @study.expression_scores.by_gene(gene, @study.expression_matrix_files.map(&:id))
         matches.map {|gene| @genes << gene}
       end
     end
@@ -528,39 +528,48 @@ class SiteController < ApplicationController
     render json: @fastq_files.to_json
   end
 
-  #Method to create user annotations from box or lasso selection
+  # render the 'Create Annotations' form (must be done via ajax to get around page caching issues)
+  def show_user_annotations_form
+
+  end
+
+  # Method to create user annotations from box or lasso selection
   def create_user_annotations
-    #Data name is an array of the values of labels
+
+    # Data name is an array of the values of labels
     @data_names = []
 
     #Error handling block to create annotation
     begin
-      #Get the label values and push to data names
+      # Get the label values and push to data names
       user_annotation_params[:user_data_arrays_attributes].keys.each do |key|
         user_annotation_params[:user_data_arrays_attributes][key][:values] =  user_annotation_params[:user_data_arrays_attributes][key][:values].split(',')
         @data_names.push(user_annotation_params[:user_data_arrays_attributes][key][:name].strip )
       end
 
-      #Create the annotation
+      # Create the annotation
       @user_annotation = UserAnnotation.new(user_id: user_annotation_params[:user_id], study_id: user_annotation_params[:study_id], cluster_group_id: user_annotation_params[:cluster_group_id], values: @data_names, name: user_annotation_params[:name])
 
-      #Error handling, save the annotation and handle exceptions
+      # override cluster setter to use the current selected cluster, needed for reloading
+      @cluster = @user_annotation.cluster_group
+
+      # Error handling, save the annotation and handle exceptions
       if @user_annotation.save
-        #Method call to create the user data arrays for this annotation
+        # Method call to create the user data arrays for this annotation
         @user_annotation.initialize_user_data_arrays(user_annotation_params[:user_data_arrays_attributes], user_annotation_params[:subsample_annotation],user_annotation_params[:subsample_threshold], user_annotation_params[:loaded_annotation])
 
-        #Reset the annotations in the dropdowns to include this new annotation
+        # Reset the annotations in the dropdowns to include this new annotation
         @cluster_annotations = load_cluster_group_annotations
         @options = load_cluster_group_options
 
-        #No need for an alert, only a message saying successfully created
+        # No need for an alert, only a message saying successfully created
         @alert = nil
-        @notice = 'User Annotation successfully saved. You may now view this annotation via the annotations dropdown.'
+        @notice = "User Annotation: '#{@user_annotation.name}' successfully saved. You may now view this annotation via the annotations dropdown."
 
-        #Update the dropdown partial
+        # Update the dropdown partial
         render 'update_user_annotations'
       else
-        #If there was an error saving, reload and alert the use something broke
+        # If there was an error saving, reload and alert the use something broke
         @cluster_annotations = load_cluster_group_annotations
         @options = load_cluster_group_options
         @notice = nil
@@ -568,9 +577,9 @@ class SiteController < ApplicationController
         logger.error "#{Time.now}: Creating user annotation of params: #{user_annotation_params}, unable to save user annotation with errors #{@user_annotation.errors.full_messages.join(', ')}"
         render 'update_user_annotations'
       end
-        #More error handling, this is if can't save user annotation
+        # More error handling, this is if can't save user annotation
     rescue Mongoid::Errors::InvalidValue => e
-      #If an invalid value was somehow passed through the form, and couldn't save the annotation
+      # If an invalid value was somehow passed through the form, and couldn't save the annotation
       @cluster_annotations = load_cluster_group_annotations
       @options = load_cluster_group_options
       @notice = nil
@@ -579,7 +588,7 @@ class SiteController < ApplicationController
       render 'update_user_annotations'
 
     rescue NoMethodError => e
-      #If something is nil and can't have a method called on it, respond with an alert
+      # If something is nil and can't have a method called on it, respond with an alert
       @cluster_annotations = load_cluster_group_annotations
       @options = load_cluster_group_options
       @notice = nil
@@ -588,7 +597,7 @@ class SiteController < ApplicationController
       render 'update_user_annotations'
 
     rescue => e
-      #If a generic unexpected error occurred and couldn't save the annotation
+      # If a generic unexpected error occurred and couldn't save the annotation
       @cluster_annotations = load_cluster_group_annotations
       @options = load_cluster_group_options
       @notice = nil
@@ -629,8 +638,9 @@ class SiteController < ApplicationController
       @selected_annotation = @cluster.cell_annotations.find {|ca| ca[:name] == annot_name && ca[:type] == annot_type}
       @selected_annotation[:scope] = annot_scope
     elsif annot_scope == 'user'
-      user_annotation = @cluster.viewable_user_annotations(current_user, annot_name)
-      @selected_annotation = {name: annot_name, type: annot_type, scope: annot_scope}
+      # in the case of user annotations, the 'name' value that gets passed is actually the ID
+      user_annotation = UserAnnotation.find(annot_name)
+      @selected_annotation = {name: user_annotation.name, type: annot_type, scope: annot_scope, id: annot_name}
       @selected_annotation[:values] = user_annotation.values
     else
       @selected_annotation = {name: annot_name, type: annot_type, scope: annot_scope}
@@ -700,11 +710,13 @@ class SiteController < ApplicationController
     cells = @cluster.concatenate_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     annotation_array = []
     annotation_hash = {}
-    #Construct the arrays based on scope
+    # Construct the arrays based on scope
     if annotation[:scope] == 'cluster'
       annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
     elsif annotation[:scope] == 'user'
-      user_annotation = @cluster.viewable_user_annotations(current_user, annotation[:name])
+      # for user annotations, we have to load by id as names may not be unique to clusters
+      user_annotation = UserAnnotation.find(annotation[:id])
+      subsample_annotation = user_annotation.formatted_annotation_identifier
       annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       x_array = user_annotation.concatenate_user_data_arrays('x', 'coordinates', subsample_threshold, subsample_annotation)
       y_array = user_annotation.concatenate_user_data_arrays('y', 'coordinates', subsample_threshold, subsample_annotation)
@@ -817,7 +829,9 @@ class SiteController < ApplicationController
     if annotation[:scope] == 'cluster'
       annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
     elsif annotation[:scope] == 'user'
-      user_annotation = @cluster.viewable_user_annotations(current_user, annotation[:name])
+      # for user annotations, we have to load by id as names may not be unique to clusters
+      user_annotation = UserAnnotation.find(annotation[:id])
+      subsample_annotation = user_annotation.formatted_annotation_identifier
       annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     else
@@ -868,7 +882,9 @@ class SiteController < ApplicationController
     if annotation[:scope] == 'cluster'
       annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
     elsif annotation[:scope] == 'user'
-      user_annotation = @cluster.viewable_user_annotations(current_user, annotation[:name])
+      # for user annotations, we have to load by id as names may not be unique to clusters
+      user_annotation = UserAnnotation.find(annotation[:id])
+      subsample_annotation = user_annotation.formatted_annotation_identifier
       annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     else
@@ -912,7 +928,9 @@ class SiteController < ApplicationController
         values[annotations[index]][:y] << @gene['scores'][cell].to_f.round(4)
       end
     elsif annotation[:scope] == 'user'
-      user_annotation = @cluster.viewable_user_annotations(current_user, annotation[:name])
+      # for user annotations, we have to load by id as names may not be unique to clusters
+      user_annotation = UserAnnotation.find(annotation[:id])
+      subsample_annotation = user_annotation.formatted_annotation_identifier
       annotations = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
       cells.each_with_index do |cell, index|
@@ -948,7 +966,9 @@ class SiteController < ApplicationController
     if annotation[:scope] == 'cluster'
       annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold)
     elsif annotation[:scope] == 'user'
-      user_annotation = @cluster.viewable_user_annotations(current_user, annotation[:name])
+      # for user annotations, we have to load by id as names may not be unique to clusters
+      user_annotation = UserAnnotation.find(annotation[:id])
+      subsample_annotation = user_annotation.formatted_annotation_identifier
       annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       x_array = user_annotation.concatenate_user_data_arrays('x', 'coordinates', subsample_threshold, subsample_annotation)
       y_array = user_annotation.concatenate_user_data_arrays('y', 'coordinates', subsample_threshold, subsample_annotation)
@@ -1011,7 +1031,9 @@ class SiteController < ApplicationController
         end
       end
     elsif annotation[:scope] == 'user'
-      user_annotation = @cluster.viewable_user_annotations(current_user, annotation[:name])
+      # for user annotations, we have to load by id as names may not be unique to clusters
+      user_annotation = UserAnnotation.find(annotation[:id])
+      subsample_annotation = user_annotation.formatted_annotation_identifier
       annotations = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
       cells.each_with_index do |cell, index|
@@ -1065,7 +1087,9 @@ class SiteController < ApplicationController
     if annotation[:scope] == 'cluster'
       annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
     elsif annotation[:scope] == 'user'
-      user_annotation = @cluster.viewable_user_annotations(current_user, annotation[:name])
+      # for user annotations, we have to load by id as names may not be unique to clusters
+      user_annotation = UserAnnotation.find(annotation[:id])
+      subsample_annotation = user_annotation.formatted_annotation_identifier
       annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       x_array = user_annotation.concatenate_user_data_arrays('x', 'coordinates', subsample_threshold, subsample_annotation)
       y_array = user_annotation.concatenate_user_data_arrays('y', 'coordinates', subsample_threshold, subsample_annotation)
@@ -1155,7 +1179,7 @@ class SiteController < ApplicationController
   def load_expression_scores(terms)
     genes = []
     terms.each do |term|
-      matches = @study.expression_scores.by_gene(term)
+      matches = @study.expression_scores.by_gene(term, @study.expression_matrix_files.map(&:id))
       unless matches.empty?
         genes << load_best_gene_match(matches, term)
       end
@@ -1168,7 +1192,7 @@ class SiteController < ApplicationController
     genes = []
     not_found = []
     terms.each do |term|
-      matches = @study.expression_scores.by_gene(term)
+      matches = @study.expression_scores.by_gene(term, @study.expression_matrix_files.map(&:id))
       unless matches.empty?
         genes << load_best_gene_match(matches, term)
       else
@@ -1212,7 +1236,7 @@ class SiteController < ApplicationController
       shared_annotations = UserAnnotationShare.where(email: current_user.email).map(&:user_annotation).select {|a| !a.queued_for_deletion && a.study_id == @study.id && a.cluster_group_id == @cluster.id}
       user_annotations.concat(shared_annotations)
       unless user_annotations.empty?
-        grouped_options['User Annotations'] = user_annotations.map {|annot| ["#{annot.name}", "#{annot.name}--group--user"] }
+        grouped_options['User Annotations'] = user_annotations.map {|annot| ["#{annot.name}", "#{annot.id}--group--user"] }
       end
     end
     grouped_options

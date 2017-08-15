@@ -31,7 +31,8 @@ class UserAnnotation
   #must have a name and values
   validates_presence_of :name, :values
   #unique values are name per user, study and cluster
-  validates_uniqueness_of :name, scope: [:user_id, :study_id, :cluster_group_id], message: '- \'%{value}\' has already been taken'
+  validates_uniqueness_of :name, scope: [:user_id, :study_id, :cluster_group_id], message: '- \'%{value}\' has already been taken.'
+  validate :check_source_cluster_annotations
 
   # populate specific errors for user annotation shares since they share the same form
   validate do |user_annotation|
@@ -43,52 +44,51 @@ class UserAnnotation
     end
   end
 
-  #create an annotations user data arrays
+  # create an annotations user data arrays
   def initialize_user_data_arrays(user_data_arrays_attributes, annotation, threshold, loaded_annotation)
-    #set cluster and max length of data array
-    #max length is the actual length of the annotation when not subsampled
+    # set cluster and max length of data array
+    # max length is the actual length of the annotation when not subsampled
     cluster = self.cluster_group
     max_length = cluster.points
 
-    #handle different cases when creating annotations when different subsampling levels were selected, for creating data arrays
+    # handle different cases when creating annotations when different subsampling levels were selected, for creating data arrays
     case threshold
       when 1000
-        #when created at a level of 1000, you have to:
-        #extrapolate to a level of 10k, 20k and full data
+        # when created at a level of 1000, you have to:
+        # extrapolate to a level of 10k, 20k and full data
         extrapolate(user_data_arrays_attributes, [10000, 20000], max_length, cluster, annotation)
         #and create at 1k
         create_array(cluster, 1000, annotation, user_data_arrays_attributes)
       when 10000
-        #when created at a level of 10k, you have to:
-        #extrapolate to a level of 20k and full data
+        # when created at a level of 10k, you have to:
+        # extrapolate to a level of 20k and full data
         extrapolate(user_data_arrays_attributes, [20000], max_length, cluster, annotation)
-        #create at 1000
-        subsample(user_data_arrays_attributes, [1000],cluster, annotation, max_length)
-        #and create at 10k
+        # create at 1000
+        subsample(user_data_arrays_attributes, [1000], cluster, annotation, max_length)
+        # and create at 10k
         create_array(cluster, 10000, annotation, user_data_arrays_attributes)
       when 20000
-        #when created at a level of 20k, you have to:
-        #extrapolate to a level of full data
+        # when created at a level of 20k, you have to:
+        # extrapolate to a level of full data
         extrapolate(user_data_arrays_attributes, [], max_length, cluster, annotation)
-        #subsample at 10k and 1k
+        # subsample at 10k and 1k
         subsample(user_data_arrays_attributes, [10000, 1000],cluster, annotation, max_length)
-        #and create at 20k
+        # and create at 20k
         create_array(cluster, 20000, annotation, user_data_arrays_attributes)
       else
-        #when created at full data, aka no threshold, you have to extrapolate to full data, aka create at full data, and subsample at 20k, 10k, and 1k
+        # when created at full data, aka no threshold, you have to extrapolate to full data, aka create at full data, and subsample at 20k, 10k, and 1k
         extrapolate(user_data_arrays_attributes, [], max_length, cluster, annotation)
         subsample(user_data_arrays_attributes, [20000, 10000, 1000], cluster, loaded_annotation, max_length )
     end
   end
 
-  #combine split data arrays when they were longer than 100k values each.
+  # combine split data arrays when they were longer than 100k values each.
   def concatenate_user_data_arrays(array_name, array_type, subsample_threshold=nil, subsample_annotation=nil)
-    #neccessary but uncertain why needed
     if subsample_threshold.blank?
       subsample_threshold = nil
       subsample_annotation = nil
     end
-    #get all of the data arrays and combine them
+    # get all of the data arrays and combine them
       user_data_arrays = self.user_data_arrays.by_name_and_type(array_name, array_type, subsample_threshold, subsample_annotation)
       all_values = []
       user_data_arrays.each do |array|
@@ -97,12 +97,12 @@ class UserAnnotation
       return all_values
   end
 
-  #create a data array-- user data arrays attributes is from params follows form:
+  # create a data array-- user data arrays attributes is from params follows form:
   # {label:{name=>'label' values=>'Cell1, Cell2...' } label2=>...}
-  #cluster is current cluster
+  # cluster is current cluster
   def create_array(cluster, threshold, annotation, user_data_arrays_attributes)
-    #create a hash of cell names of format
-    #{cell_name1=>'its label', cell_name_2=>'its label'}
+    # create a hash of cell names of format
+    # {cell_name1=>'its label', cell_name_2=>'its label'}
     user_annotation_map = {}
     user_data_arrays_attributes.keys.each do |key|
       name = user_data_arrays_attributes[key][:name]
@@ -111,15 +111,17 @@ class UserAnnotation
       end
     end
 
-    #get the cell names, x values and y values this selection was created on
+    # get the cell names, x values and y values this selection was created on
     cell_name_array = cluster.concatenate_data_arrays('text', 'cells', threshold, annotation)
     x_array = cluster.concatenate_data_arrays('x', 'coordinates', threshold, annotation)
     y_array = cluster.concatenate_data_arrays('y', 'coordinates', threshold, annotation)
 
-    #user data arrays are different than normal data arrays, so if you created a selection from a user selection this:
-    #gets the cell names, x values and y values this selection was created on
-    if !annotation.nil? and annotation.include? 'user'
-      user_annot = UserAnnotation.where(name: annotation.gsub('--group--user','')).first
+    # user data arrays are different than normal data arrays, so if you created a selection from a user selection this:
+    # gets the cell names, x values and y values this selection was created on
+    if !annotation.nil? && annotation.include?('user')
+      # since user annotations can have the same name in the same cluster for different users, the lookup key is actually the ID
+      user_annot_id = annotation.split('--').first
+      user_annot = UserAnnotation.find(user_annot_id)
       cell_name_array = user_annot.concatenate_user_data_arrays('text', 'cells', threshold, annotation)
       x_array = user_annot.concatenate_user_data_arrays('x', 'coordinates', threshold, annotation)
       y_array = user_annot.concatenate_user_data_arrays('y', 'coordinates', threshold, annotation)
@@ -140,8 +142,8 @@ class UserAnnotation
     end
 
 
-    #Create the name of the subsample annotation
-    sub_an = self.name + '--group--user'
+    # Create the name of the subsample annotation
+    sub_an = self.formatted_annotation_identifier
 
     #Slice the arrays if into segments smaller than the maximum size (100k)
     x_arrays = x_array.each_slice(UserDataArray::MAX_ENTRIES).to_a
@@ -188,8 +190,8 @@ class UserAnnotation
 
   end
 
-  #If you created a selection at a lower level, and need to view it at higher levels, you must extrapolate that selection to those levels
-  #Extrapolating labels cells that were labeled at the lower level the same, and cells that weren't present in the lower level as 'Undefined'
+  # If you created a selection at a lower level, and need to view it at higher levels, you must extrapolate that selection to those levels
+  # Extrapolating labels cells that were labeled at the lower level the same, and cells that weren't present in the lower level as 'Undefined'
   def extrapolate(data, thresholds, max_length, cluster, annotation)
     #full_thresh is the array of thresholds that data arrays have to be created at
     #when threshold is nil, a data array at full data is created
@@ -210,10 +212,10 @@ class UserAnnotation
 
   end
 
-  #If you created a selection at a higher level, and need to view it at lower levels, you must subsample that selection to those levels
-  #Subsampling labels cells that were labeled at the higher level the same in the lower level
+  # If you created a selection at a higher level, and need to view it at lower levels, you must subsample that selection to those levels
+  # Subsampling labels cells that were labeled at the higher level the same in the lower level
   def subsample(data, thresholds, cluster, annotation, max_length)
-    #create data arrays at this threshold as long as the threshold isn't bigger than the size of full data, because that would be impossible
+    # create data arrays at this threshold as long as the threshold isn't bigger than the size of full data, because that would be impossible
     thresholds.each do |threshold|
       if threshold < max_length
         create_array(cluster, threshold, annotation, data)
@@ -221,8 +223,8 @@ class UserAnnotation
     end
   end
 
-  #figure out what level this annotation was created at
-  #if you update an annotation's 'Undefined' level, than it will be registered as created at full data
+  # figure out what level this annotation was created at
+  # if you update an annotation's 'Undefined' level, than it will be registered as created at full data
   def subsampled_at
     #get all the annotation arrays
     annotations = user_data_arrays.find_by(array_type: 'annotations').to_a
@@ -298,9 +300,9 @@ class UserAnnotation
     created_at
   end
 
-  #get the annotation's formtted name
-  def formatted_annotation_name
-    self.name + '--group--user'
+  # get the annotation's formatted identifier (used to uniquely identify annotation when rendering/subsampling/clearing caches)
+  def formatted_annotation_identifier
+    "#{self.id}--group--user"
   end
 
   # return all studies that are editable by a given user
@@ -327,17 +329,17 @@ class UserAnnotation
 
   #Share Methods
 
-  # check if a give use can edit study
+  # check if a given use can edit this annotation
   def can_edit?(user)
     self.admins.include?(user.email)
   end
 
-  # check if a given user can view study by share (does not take public into account - use Study.viewable(user) instead)
+  # check if a given user can view annotation by share
   def can_view?(user)
     self.can_edit?(user) || self.user_annotation_shares.can_view.include?(user.email)
   end
 
-  # check if user can delete a study - only owners can
+  # check if user can delete an annotation - only owners can
   def can_delete?(user)
     if self.user_id == user.id || user.admin?
       true
@@ -351,12 +353,27 @@ class UserAnnotation
     end
   end
 
-  # list of emails for accounts that can edit this study
+  # check if user can edit the study this annotation is mapped to (will check first if study has been deleted)
+  def can_edit_study?(user)
+    if self.study.nil?
+      return false
+    else
+      return self.study.can_edit?(user)
+    end
+  end
+
+
+  # list of emails for accounts that can edit this annotation
   def admins
     [self.user.email, self.user_annotation_shares.can_edit, User.where(admin: true).pluck(:email)].flatten.uniq
   end
 
-  # delete all queued study file objects
+  # cache lookup key used when clearing entries on updates/deletes
+  def cache_removal_key
+    "#{self.study.url_safe_name}.*#{self.cluster_group.name.split.join('-')}_#{self.formatted_annotation_identifier}"
+  end
+
+  # delete all queued annotation objects
   def self.delete_queued_annotations
     annotations = self.where(queued_for_deletion: true)
     annotations.each do |annot|
@@ -368,10 +385,9 @@ class UserAnnotation
 
   def publish_to_study(current_user)
     begin
-      #load original cluster group data arrays
+      # load original cluster group data arrays
       cluster = self.cluster_group
       annot_name = self.name
-
       cell_name_array = cluster.concatenate_data_arrays('text', 'cells')
       x_array = cluster.concatenate_data_arrays('x', 'coordinates')
       y_array = cluster.concatenate_data_arrays('y', 'coordinates')
@@ -383,23 +399,36 @@ class UserAnnotation
       y_arrays = self.user_data_arrays.where(array_type: 'coordinates', name: 'y').to_a
       text_arrays = self.user_data_arrays.where(array_type: 'cells').to_a
       user_annotation_data_arrays.concat(x_arrays).concat(y_arrays).concat( text_arrays)
-
       user_annotation_data_arrays.each do |data_array|
         if !data_array.subsample_annotation.nil?
-          data_array.subsample_annotation = annot_name + '--group--cluster'
-          json_array = data_array.as_json.except('user_annotation_id', 'user_id')
-          entry = DataArray.new(json_array)
-          Rails.logger.info("#{Time.now}: Creating data array for #{annot_name} in study: #{data_array.study.name}")
-          entry.save!
-          Rails.logger.info("#{Time.now}: Data Array for #{annot_name} created in study: #{data_array.study.name}")
+          Rails.logger.info "#{Time.now}: Creating new data array for #{annot_name} in study: #{data_array.study.name}, cluster: #{cluster.name} at subsample_threshold #{data_array.subsample_threshold}"
+          subsample_annotation = annot_name + '--group--cluster'
+          new_data_array = cluster.data_arrays.build(
+              name: data_array.name, cluster_name: cluster.name, array_type: data_array.array_type,
+              array_index: data_array.array_index, values: data_array.values,
+              subsample_annotation: subsample_annotation, subsample_threshold: data_array.subsample_threshold,
+              study_id: cluster.study_id, study_file_id: cluster.study_file_id
+          )
+          if new_data_array.save
+            Rails.logger.info "#{Time.now}: Data Array for #{annot_name} created in study: #{data_array.study.name}, cluster: #{cluster.name}"
+          else
+            Rails.logger.info "#{Time.now}: Data Array for #{annot_name} in study: #{data_array.study.name}, cluster: #{cluster.name} failed to save: #{new_data_array.errors.full_messages.join('; ')}"
+          end
         else
           if data_array.array_type == 'annotations'
-            json_array = data_array.as_json.except('user_annotation_id', 'user_id')
-            entry = DataArray.new(json_array)
-            entry.save!
+            Rails.logger.info "#{Time.now}: Creating data array for #{annot_name} in study: #{data_array.study.name}, cluster: #{cluster.name}"
+            new_data_array = cluster.data_arrays.build(
+                name: data_array.name, cluster_name: cluster.name, array_type: data_array.array_type,
+                array_index: data_array.array_index, values: data_array.values,
+                study_id: cluster.study_id, study_file_id: cluster.study_file_id
+            )
+            if new_data_array.save
+              Rails.logger.info "#{Time.now}: Data Array for #{annot_name} created in study: #{data_array.study.name}, cluster: #{cluster.name}"
+            else
+              Rails.logger.info "#{Time.now}: Data Array for #{annot_name} in study: #{data_array.study.name}, cluster: failed to save: #{new_data_array.errors.full_messages.join('; ')}"
+            end
           end
         end
-
       end
       # get current annotations
       cluster_annotations = cluster.cell_annotations
@@ -419,10 +448,17 @@ class UserAnnotation
 
       # update cluster group cell annotation attribute with new user annotation
       annot_hash = {'name'=>annot_name, 'type'=>'group','values'=>self.values, 'header_index'=>(types.length-1)}
-      Rails.logger.info("#{Time.now}: Updating annotations cluster #{cluster.name} for #{annot_name} in study: #{cluster.study.name}")
+      Rails.logger.info "#{Time.now}: Updating annotations cluster #{cluster.name} for #{annot_name} in study: #{cluster.study.name}"
+
+      # gotcha as we must set queued for deletion to true now, otherwise the cluster_group validation will fail as it
+      # will see duplicate annotation names for between cluster_group.cell_annotations & this annotation name
+      # setting queued_for_deletion to true bypasses this validation
+
+      self.update(queued_for_deletion: true)
       cluster_annotations << annot_hash
+
       if cluster.update(cell_annotations: cluster_annotations)
-        Rails.logger.info("#{Time.now}: Updating annotations cluster #{cluster.name} for #{annot_name} in study: #{cluster.study.name}")
+        Rails.logger.info "#{Time.now}: #{cluster.name} in study: #{cluster.study.name} successfully updated, creating new source file"
         # Create new file
         study_file = cluster.study_file
         new_file = File.new(study_file.upload.path, 'w+')
@@ -449,12 +485,8 @@ class UserAnnotation
         study = self.study
         study.send_to_firecloud(study_file)
 
-        # delete user annotation
-        # set queued_for_deletion manually - gotcha due to race condition on page reloading and how quickly delayed_job can process jobs
-        self.update(queued_for_deletion: true)
-
         # queue jobs to delete annotation caches & annotation itself
-        cache_key = "#{study.url_safe_name}.*#{cluster.name.split.join('-')}_#{self.name}--user--group.*"
+        cache_key = self.cache_removal_key
         CacheRemovalJob.new(cache_key).delay.perform
         DeleteQueueJob.new(self).delay.perform
 
@@ -468,19 +500,42 @@ class UserAnnotation
         end
 
       else
-        Rails.logger.error("#{Time.now}: Failed to set cell annotations for persisting user annotation #{annot_name}")
+        # save failed, so roll back
+        self.update(queued_for_deletion: false)
+
+        # clean up any records that may be orphaned
+        DataArray.where(name: self.name, cluster_group_id: self.cluster_group_id, array_type: 'annotations').delete_all
+        Rails.logger.error("#{Time.now}: Failed to update cluster cell_annotations: #{cluster.errors.full_messages.join(', ')}")
+
+        # send notification email
+        SingleCellMailer.annotation_publish_fail(self, self.user, cluster.errors.full_messages.join(', '))
       end
     rescue => e
-      changes = ["User #{current_user.email} failed to add user annotation #{self.name} to the study #{self.study.name} with exception: #{e}"]
-      SingleCellMailer.share_update_notification(self.study, changes, current_user).deliver_now
-      Rails.logger.error("#{Time.now}: Failed to persist user annotations: #{self.name} in study: #{self.study.name} with error: #{e}")
-    end
+      # error occured, so roll back
+      self.update(queued_for_deletion: false)
 
+      # clean up any records that may be orphaned
+      DataArray.where(name: self.name, cluster_group_id: self.cluster_group_id, array_type: 'annotations').delete_all
+
+      # send notification email
+      Rails.logger.error("#{Time.now}: Failed to persist user annotations: #{self.name} in study: #{self.study.name} with error: #{e.message}")
+      SingleCellMailer.annotation_publish_fail(self, self.user, e.message)
+    end
   end
 
   # annotation name as a DOM id
   def name_as_id
     self.name.downcase.gsub(/\s/, '-')
+  end
+
+  private
+
+  # validate that the source cluster for this user annotation doesn't already have a cluster-based annotation of the same name
+  def check_source_cluster_annotations
+    existing_annotations = self.cluster_group.cell_annotations.map {|a| a['name']}
+    if existing_annotations.include?(self.name) && !self.queued_for_deletion
+      errors.add(:name, "- '#{self.name}' already exists as an annotation in the selected cluster.  Please choose a different name.")
+    end
   end
 
 end

@@ -51,23 +51,17 @@ class Study
   end
 
   has_many :expression_scores, dependent: :delete do
-    def by_gene(gene, study_file_id='All')
-      if study_file_id == 'All'
-        scores = []
-        files = self.first.study.study_files.by_type('Expression Matrix')
-        files.each do |file|
-          scores << (any_of({gene: gene, study_file_id: file.id}, {searchable_gene: gene.downcase, study_file_id: file.id}).first)
-        end
-        if scores.uniq != nil
-          scores.uniq!
-        end
-        uber_score = {}
-        uber_score['searchable_gene'] = gene.downcase
-        uber_score['gene'] = gene
-        uber_score['scores'] = scores.map{|score| score.scores}.reduce({}, :merge)
-        return [uber_score]
+    def by_gene(gene, study_file_ids)
+      found_scores = any_of({gene: gene, :study_file_id.in => study_file_ids}, {searchable_gene: gene.downcase, :study_file_id.in => study_file_ids}).to_a
+      if found_scores.empty?
+        return []
       else
-        any_of({gene: gene, study_file_id: study_file_id}, {searchable_gene: gene.downcase, study_file_id: study_file_id}).to_a
+        # since we can have duplicate genes but not cells, merge into one object for rendering
+        merged_scores = {'searchable_gene' => gene.downcase, 'gene' => gene, 'scores' => {}}
+        found_scores.each do |score|
+          merged_scores['scores'].merge!(score.scores)
+        end
+        return [merged_scores]
       end
     end
   end

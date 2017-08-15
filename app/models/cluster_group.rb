@@ -55,22 +55,6 @@ class ClusterGroup
     end
   end
 
-  def viewable_user_annotations(user, annotation_name)
-    owned = self.user_annotations.by_name_and_user(annotation_name, user.id)
-    if !owned.nil?
-      return owned
-    else
-      #get all user shares, find ones with matching name then with matching name find one that corresponds to this cluster
-      self.user_annotations.where(name: annotation_name).each do |annot|
-        annot.user_annotation_shares.each do |share|
-          if share.email == user.email
-            return annot
-          end
-        end
-      end
-    end
-  end
-
   # return number of points in cluster_group, use x axis as all cluster_groups must have either x or y
   def points
     self.concatenate_data_arrays('x', 'coordinates').count

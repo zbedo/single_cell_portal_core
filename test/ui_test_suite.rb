@@ -648,25 +648,11 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn.click
 		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
-		next_btn = @driver.find_element(:id, 'next-btn')
-		next_btn.click
-
-		# upload fastq
-		wait_for_render(:class, 'initialize_primary_data_form')
-		upload_fastq = @driver.find_element(:class, 'upload-fastq')
-		upload_fastq.send_keys(@test_data_path + 'cell_1_L1.fastq.gz')
-		wait_for_render(:id, 'start-file-upload')
-		upload_btn = @driver.find_element(:id, 'start-file-upload')
-		upload_btn.click
-		wait_for_render(:class, 'fastq-file')
-		wait_for_render(:id, 'upload-success-modal')
-		close_modal('upload-success-modal')
-
-		next_btn = @driver.find_element(:id, 'next-btn')
-		next_btn.click
 
 		# upload marker gene list
-		wait_for_render(:class, 'initialize_marker_genes_form')
+		scroll_to(:top)
+		gene_list_tab = @driver.find_element(:id, 'initialize_marker_genes_form_nav')
+		gene_list_tab.click
 		marker_form = @driver.find_element(:class, 'initialize_marker_genes_form')
 		marker_file_name = marker_form.find_element(:id, 'study_file_name')
 		marker_file_name.send_keys('Test Gene List')
@@ -677,36 +663,6 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn.click
 		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
-		next_btn = @driver.find_element(:id, 'next-btn')
-		next_btn.click
-
-		# upload doc file
-		wait_for_render(:class, 'initialize_misc_form')
-		upload_doc = @driver.find_element(:class, 'upload-misc')
-		upload_doc.send_keys(@test_data_path + 'table_1.xlsx')
-		wait_for_render(:id, 'start-file-upload')
-		upload_btn = @driver.find_element(:id, 'start-file-upload')
-		upload_btn.click
-		wait_for_render(:class, 'documentation-file')
-		# close success modal
-		wait_for_render(:id, 'upload-success-modal')
-		close_modal('upload-success-modal')
-
-		# change attributes on file to validate update function
-		misc_form = @driver.find_element(:class, 'initialize_misc_form')
-		desc_field = misc_form.find_element(:id, 'study_file_description')
-		desc_field.send_keys('Supplementary table')
-		save_btn = misc_form.find_element(:class, 'save-study-file')
-		save_btn.click
-		wait_for_render(:id, 'study-file-notices')
-		close_modal('study-file-notices')
-
-		# now check newly created study info page
-		studies_path = @base_url + '/studies'
-		@driver.get studies_path
-
-		show_study = @driver.find_element(:class, "twod-study-#{$random_seed}-show")
-		show_study.click
 
 		puts "Test method: #{self.method_name} successful!"
 	end
@@ -3148,16 +3104,18 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(two_d_study_path)
 		open_ui_tab('study-visualize')
 
-		#Create an annotation from the study page
+		# Create an annotation from the study page
 
-		#Click selection tab
+		# Click selection tab
 		select_dropdown = @driver.find_element(:id, 'create_annotations_panel')
 		select_dropdown.click
+		# let collapse animation complete
+		sleep(2)
 
-		#Enable Selection
+		# Enable Selection
 		wait_for_render(:id, 'toggle-scatter')
 		enable_select_button = @driver.find_element(:id, 'toggle-scatter')
-		try_to_click(enable_select_button)
+		enable_select_button.click
 
 		# click box select button
 		select_button = @driver.find_element(:xpath, "//a[@data-val='select']")
@@ -3173,14 +3131,14 @@ class UiTestSuite < Test::Unit::TestCase
 		# wait for web driver
 		sleep 0.5
 
-		#drage the cursor to another point and release it
+		# drag the cursor to another point and release it
 		el2 = points[-1]
 		@driver.action.move_to(el2).release.perform
 
-		#wait for plotly and webdriver
+		# wait for plotly and webdriver
 		sleep 1.0
 
-		#send the keys for the name of the annotation
+		# send the keys for the name of the annotation
 		annotation_name = @driver.find_element(:class, 'annotation-name')
 		name = "user-#{$random_seed}"
 		annotation_name.send_keys(name)
@@ -3196,7 +3154,6 @@ class UiTestSuite < Test::Unit::TestCase
 		submit_button = @driver.find_element(:id, 'selection-submit')
 		submit_button.click
 
-		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
 
 		# choose the user annotation
@@ -3204,7 +3161,7 @@ class UiTestSuite < Test::Unit::TestCase
 		annotation_dropdown.send_keys("user-#{$random_seed}")
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 
-		#make sure the new annotation still renders a plot for plotly
+		# make sure the new annotation still renders a plot for plotly
 		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
 		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
 
@@ -3265,18 +3222,18 @@ class UiTestSuite < Test::Unit::TestCase
 		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
 		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
-		#Create an annotation from the gene page
-		#The plotly plots render before the loading modal closes-- this means that everything gets unclickable, therefore this sleep is needed
-		sleep 1.0
+		# Create an annotation from the gene page
+		close_modal('loading-modal')
 		scroll_to(:bottom)
-		#Click selection tabs
+		# Click selection tabs
 		select_dropdown = @driver.find_element(:id, 'create_annotations_panel')
 		select_dropdown.click
-		#Enable Selection
+		# let collapse animation complete
+		sleep(2)
+		# Enable Selection
 		wait_for_render(:id, 'toggle-scatter')
 		enable_select_button = @driver.find_element(:id, 'toggle-scatter')
-		sleep 0.5
-		try_to_click(enable_select_button)
+		enable_select_button.click
 
 		# select the scatter plot
 		plot = @driver.find_element(:id, 'scatter-plot')
@@ -3397,9 +3354,7 @@ class UiTestSuite < Test::Unit::TestCase
 		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
 		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
-
 		puts "Test method: #{self.method_name} successful!"
-
 	end
 
 	# make sure editing the annotation works
@@ -3511,6 +3466,8 @@ class UiTestSuite < Test::Unit::TestCase
 		#assert labels are correct
 		plot_labels = @driver.find_elements(:class, "user-select-none").map{|x| x.attribute('data-unformatted') }
 		assert (plot_labels.include? "user-#{$random_seed}: group0 (3 points)"), "labels are incorrect: '#{plot_labels}' should include 'user-#{$random_seed}: group0'"
+
+		puts "Test method: #{self.method_name} successful!"
 	end
 
 	# make sure sharing the annotation works
@@ -3736,6 +3693,7 @@ class UiTestSuite < Test::Unit::TestCase
 		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
 		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
 
+		puts "Test method: #{self.method_name} successful!"
 	end
 
 	test 'front-end: user-annotation: download annotation cluster file' do
@@ -3829,7 +3787,7 @@ class UiTestSuite < Test::Unit::TestCase
 		search_box = @driver.find_element(:id, 'search_genes')
 		search_box.send_key(gene)
 		search_genes = @driver.find_element(:id, 'perform-gene-search')
-		try_to_click(search_genes)
+		search_genes.click
 
 		#make sure the new annotation still renders plots for plotly
 		assert element_present?(:id, 'box-controls'), 'could not find expression violin plot'
@@ -3882,7 +3840,7 @@ class UiTestSuite < Test::Unit::TestCase
 		open_ui_tab('study-download')
 
 		download_button = @driver.find_element(:class, 'cluster-file')
-		try_to_click(download_button)
+		download_button.click
 
 		sleep(5)
 		filename = 'cluster_2d_example.txt'
@@ -3940,6 +3898,8 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.switch_to.alert.accept
 		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
+
+		puts "Test method: #{self.method_name} successful!"
 	end
 
 	##

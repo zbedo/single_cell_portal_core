@@ -286,13 +286,12 @@ class StudiesController < ApplicationController
     @selector = params[:selector]
     @partial = params[:partial]
 
-    # do a test assignment and check for validity; if valid and either Cluster or Gene List, invalidate caches
-    @study_file.assign_attributes(study_file_params)
-    if ['Cluster', 'Gene List'].include?(@study_file.file_type) && @study_file.valid?
+    # invalidate caches (even if transaction rolls back, the user wants to update so clearing is safe)
+    if ['Cluster', 'Gene List'].include?(@study_file.file_type)
       @study_file.invalidate_cache_by_file_type
     end
 
-    if @study_file.save
+    if @study_file.update(study_file_params)
       # if a gene list or cluster got updated, we need to update the associated records
       if study_file_params[:file_type] == 'Gene List'
         @precomputed_entry = PrecomputedScore.find_by(study_file_id: study_file_params[:_id])

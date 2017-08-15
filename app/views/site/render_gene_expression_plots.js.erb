@@ -37,12 +37,8 @@ $('#expression-plots').data('scatter-rendered', true);
 $('#expression-plots').data('reference-rendered', true);
 
 enableDefaultActions();
+closeUserAnnotationsForm();
 
-<% if user_signed_in? %>
-  $('#scattergl_div').html("<%= escape_javascript(render partial: 'scattergl_toggle') %>");
-  $('#selection_div').html("<%= escape_javascript(render partial: 'selection_well') %>");
-  $('#selection_div').addClass('collapse')
-<% end %>
 // check render status
 console.log('render status of box plot at end: ' + $('#expression-plots').data('box-rendered'));
 console.log('render status of scatter plot at end: ' + $('#expression-plots').data('scatter-rendered'));
