@@ -1071,7 +1071,7 @@ class UiTestSuite < Test::Unit::TestCase
 		study_form = @driver.find_element(:id, 'new_study')
 		study_form.find_element(:id, 'study_name').send_keys(random_name)
 		study_form.find_element(:id, 'study_use_existing_workspace').send_keys('Yes')
-		study_form.find_element(:id, 'study_firecloud_workspace').send_keys("#{$env}-sync-test-study")
+		study_form.find_element(:id, 'study_firecloud_workspace').send_keys("development-sync-test-study")
 		share = @driver.find_element(:id, 'add-study-share')
 		@wait.until {share.displayed?}
 		share.click
