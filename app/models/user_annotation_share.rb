@@ -18,7 +18,20 @@ class UserAnnotationShare
 	after_create				:send_notification
 	after_update				:check_updated_permissions
 
+  # return all valid user annotations that are shared with a given user for a given cluster
+  def self.scoped_user_annotations(user, cluster)
+		shares = self.where(email: user.email).select {|a| a.cluster_group_id == cluster.id}
+		shares.map(&:user_annotation).flatten.select {|ua| ua.valid_annotation?}
+	end
+
+  # return all valid user annotations for a given user (either all shares or scoped to a specific permission)
+  def self.valid_user_annotations(user, permission=nil)
+		shares = permission.nil? ? self.where(email: user.email) : self.where(email: user.email, permission: permission)
+		shares.map(&:user_annotation).flatten.select {|ua| ua.valid_annotation?}
+	end
+
 	private
+
   def clean_email
 		self.email = self.email.strip
 	end

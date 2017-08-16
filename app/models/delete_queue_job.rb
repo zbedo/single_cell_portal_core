@@ -56,9 +56,9 @@ class DeleteQueueJob < Struct.new(:object)
         new_name = "DELETE-#{SecureRandom.uuid}"
         object.update!(name: new_name)
 
-        # delete data arrays right away
+        # delete data arrays and shares right away
         object.user_data_arrays.delete_all
-
+        object.user_annotation_shares.delete_all
     end
   end
 end
