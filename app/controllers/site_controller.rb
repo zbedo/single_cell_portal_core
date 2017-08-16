@@ -1230,11 +1230,9 @@ class SiteController < ApplicationController
         'Cluster-based' => @cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]},
         'Study Wide' => @study.study_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
     }
-    #load a user's user annotations if user is signed in and has any
+    # load available user annotations (if any)
     if user_signed_in?
-      user_annotations = UserAnnotation.where(user_id: current_user.id, study_id: @study.id, cluster_group_id: @cluster.id, queued_for_deletion: false).to_a
-      shared_annotations = UserAnnotationShare.where(email: current_user.email).map(&:user_annotation).select {|a| !a.queued_for_deletion && a.study_id == @study.id && a.cluster_group_id == @cluster.id}
-      user_annotations.concat(shared_annotations)
+      user_annotations = UserAnnotation.viewable_by_cluster(current_user, @cluster)
       unless user_annotations.empty?
         grouped_options['User Annotations'] = user_annotations.map {|annot| ["#{annot.name}", "#{annot.id}--group--user"] }
       end

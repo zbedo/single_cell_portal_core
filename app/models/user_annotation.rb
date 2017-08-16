@@ -28,9 +28,9 @@ class UserAnnotation
   accepts_nested_attributes_for :user_annotation_shares, allow_destroy: true, reject_if: proc { |attributes| attributes['email'].blank? }
 
   index({ user_id: 1, study_id: 1, cluster_group_id: 1, name: 1}, { unique: true })
-  #must have a name and values
+  # must have a name and values
   validates_presence_of :name, :values
-  #unique values are name per user, study and cluster
+  # unique values are name per user, study and cluster
   validates_uniqueness_of :name, scope: [:user_id, :study_id, :cluster_group_id], message: '- \'%{value}\' has already been taken.'
   validate :check_source_cluster_annotations
 
@@ -127,9 +127,9 @@ class UserAnnotation
       y_array = user_annot.concatenate_user_data_arrays('y', 'coordinates', threshold, annotation)
     end
 
-    #get an ordered array of labels
+    # get an ordered array of labels
     annotation_array = []
-    #check if any of the values are undefined, aka this data array is being extrapolated
+    # check if any of the values are undefined, aka this data array is being extrapolated
     undefined_happened = false
 
     cell_name_array.each do |name|
@@ -145,43 +145,43 @@ class UserAnnotation
     # Create the name of the subsample annotation
     sub_an = self.formatted_annotation_identifier
 
-    #Slice the arrays if into segments smaller than the maximum size (100k)
+    # Slice the arrays if into segments smaller than the maximum size (100k)
     x_arrays = x_array.each_slice(UserDataArray::MAX_ENTRIES).to_a
     y_arrays = y_array.each_slice(UserDataArray::MAX_ENTRIES).to_a
     cell_name_arrays = cell_name_array.each_slice(UserDataArray::MAX_ENTRIES).to_a
 
-    #create each data array
+    # create each data array
     annotation_array.each_slice(UserDataArray::MAX_ENTRIES).each_with_index do |val, i|
-      #if threshold exists then the subsample annotation and threshold need to be set on the created data array
+      # if threshold exists then the subsample annotation and threshold need to be set on the created data array
       if !threshold.nil?
         Rails.logger.info "#{Time.now}: Creating user annotation user data arrays without threshold for name: #{name}"
-        #Create annotation array
+        # Create annotation array
         UserDataArray.create(name: name, array_type: 'annotations', values: val, cluster_name: cluster.name, array_index: i+1, subsample_threshold: threshold, subsample_annotation: sub_an, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id)
-        #Create X
+        # Create X
         UserDataArray.create(name: 'x', array_type: 'coordinates', values: x_arrays[i], cluster_name: cluster.name, array_index: i+1, subsample_threshold: threshold, subsample_annotation: sub_an, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id )
-        #Create Y
+        # Create Y
         UserDataArray.create(name: 'y', array_type: 'coordinates', values: y_arrays[i], cluster_name: cluster.name, array_index: i+1, subsample_threshold: threshold, subsample_annotation: sub_an, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id)
-        #Create Cell Array
+        # Create Cell Array
         UserDataArray.create(name: 'text', array_type: 'cells', values: cell_name_arrays[i], cluster_name: cluster.name, array_index: i+1, subsample_threshold: threshold, subsample_annotation: sub_an, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id)
 
-      #Otherwise, if no threshold or annotation, then no threshold or annotation need to be set
+      # Otherwise, if no threshold or annotation, then no threshold or annotation need to be set
       else
         Rails.logger.info "#{Time.now}: Creating user annotation user data arrays with threshold: #{threshold} for name: #{name}"
-        #Create annotation array
+        # Create annotation array
         UserDataArray.create(name: name, array_type: 'annotations', values: val, cluster_name: cluster.name, array_index: i+1, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id)
-        #Create X
+        # Create X
         UserDataArray.create(name: 'x', array_type: 'coordinates', values: x_arrays[i], cluster_name: cluster.name, array_index: i+1, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id )
-        #Create Y
+        # Create Y
         UserDataArray.create(name: 'y', array_type: 'coordinates', values: y_arrays[i], cluster_name: cluster.name, array_index: i+1, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id)
-        #Create Cell Array
+        # Create Cell Array
         UserDataArray.create(name: 'text', array_type: 'cells', values: cell_name_arrays[i], cluster_name: cluster.name, array_index: i+1, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id)
       end
     end
 
-    #If undefined happened then the annotation these data arrays belong to needs to have undefined in its values field
+    # If undefined happened then the annotation these data arrays belong to needs to have undefined in its values field
     if undefined_happened
       new_values = self.values
-      #Make sure not to duplicate undefined, but add it to the field values
+      # Make sure not to duplicate undefined, but add it to the field values
       if !new_values.include? 'Undefined'
         new_values << 'Undefined'
         self.update(values: values)
@@ -193,19 +193,19 @@ class UserAnnotation
   # If you created a selection at a lower level, and need to view it at higher levels, you must extrapolate that selection to those levels
   # Extrapolating labels cells that were labeled at the lower level the same, and cells that weren't present in the lower level as 'Undefined'
   def extrapolate(data, thresholds, max_length, cluster, annotation)
-    #full_thresh is the array of thresholds that data arrays have to be created at
-    #when threshold is nil, a data array at full data is created
-    #therefore, full thresh has nil by default to always create data arrays at no subsampling level
+    # full_thresh is the array of thresholds that data arrays have to be created at
+    # when threshold is nil, a data array at full data is created
+    # therefore, full thresh has nil by default to always create data arrays at no subsampling level
     full_thresh = [nil]
 
-    #add thresholds to be created at, as long as the threshold isn't bigger than the size of full data, because that would be impossible
+    # add thresholds to be created at, as long as the threshold isn't bigger than the size of full data, because that would be impossible
     thresholds.each do |th|
        if max_length > th
          full_thresh << th
        end
     end
 
-    #create a data array at each threshold
+    # create a data array at each threshold
     full_thresh.each do |threshold|
       create_array(cluster, threshold, annotation, data)
     end
@@ -226,18 +226,18 @@ class UserAnnotation
   # figure out what level this annotation was created at
   # if you update an annotation's 'Undefined' level, than it will be registered as created at full data
   def subsampled_at
-    #get all the annotation arrays
+    # get all the annotation arrays
     annotations = user_data_arrays.find_by(array_type: 'annotations').to_a
 
-    #get the labels of this annotation
+    # get the labels of this annotation
     vals = self.values
-    #default created_at is nothing. created_at is the return string
+    # default created_at is nothing. created_at is the return string
     created_at = ''
 
-    #max_length is the maximum size of the data, aka the length at no subsampling
+    # max_length is the maximum size of the data, aka the length at no subsampling
     max_length = 0
 
-    #find max_length
+    # find max_length
     annotations.each do |annot|
       length = annot.values.length
       if length > max_length
@@ -245,56 +245,56 @@ class UserAnnotation
       end
     end
 
-    #so far we don't think undefined exists at these subsamplings
-    #undefined can never exist at a subsampling level of 1k, because it is the smallest level possible
+    # so far we don't think undefined exists at these subsamplings
+    # undefined can never exist at a subsampling level of 1k, because it is the smallest level possible
     undefined_exists_at_10k = false
     undefined_exists_at_20k = false
 
-    #check were iundefined exists
+    # check were iundefined exists
     if max_length > 10000
-      #because max_length > 10k, it's possible that undefined exists
-      #check if the annotation array has undefined
+      # because max_length > 10k, it's possible that undefined exists
+      # check if the annotation array has undefined
       undefined_exists_at_10k = self.user_data_arrays.find_by(array_type: 'annotations', subsample_threshold: 10000).values.include? 'Undefined'
     end
 
     if max_length > 20000
-      #because max_length > 20k, it's possible that undefined exists
-      #check if the annotation array has undefined
+      # because max_length > 20k, it's possible that undefined exists
+      # check if the annotation array has undefined
       undefined_exists_at_20k = self.user_data_arrays.find_by(array_type: 'annotations', subsample_threshold: 20000).values.include? 'Undefined'
     end
 
-    #check if undefined exists at any level, including at full data
+    # check if undefined exists at any level, including at full data
     undefined_exists = vals.include? 'Undefined'
 
-    #if undefined exists
+    # if undefined exists
     if undefined_exists
       if max_length > 20000
         if undefined_exists_at_20k
           if undefined_exists_at_10k
-            #undefined exists at 10k and 20k, so must have been at 1k
+            # undefined exists at 10k and 20k, so must have been at 1k
             created_at = 'Created at a subsample of 1,000 Cells'
           else
-            #undefined exists at 20k but not 10k, so was created at 10k
+            # undefined exists at 20k but not 10k, so was created at 10k
             created_at = 'Created at a subsample of 10,000 Cells'
           end
         else
-          #max length > 20k but undefined doesn't exist at 20k so was created at 20k
+          # max length > 20k but undefined doesn't exist at 20k so was created at 20k
           created_at = 'Created at a subsample of 20,000 Cells'
         end
       elsif max_length < 20000 and max_length > 10000
         if undefined_exists_at_10k
-          #undefined exists at 10k and 20k, so must have been created at 1k
+          # undefined exists at 10k and 20k, so must have been created at 1k
           created_at = 'Created at a subsample of 1,000 Cells'
         else
-          #undefined exists at 20k but not 10k, so was created at 10k
+          # undefined exists at 20k but not 10k, so was created at 10k
           created_at = 'Created at a subsample of 10,000 Cells'
         end
       elsif max_length < 10000 and max_length > 1000
-        #max length is less than 10k. Max length > 1k. Undefined exists, so must be created at 1k.
+        # max length is less than 10k. Max length > 1k. Undefined exists, so must be created at 1k.
         created_at = 'Created at a subsample of 1,000 Cells'
     end
     else
-      #No undefined means the annotation was created at full data
+      # No undefined means the annotation was created at full data
       created_at = 'Created at Full Data'
     end
     created_at
@@ -308,26 +308,31 @@ class UserAnnotation
   # return all studies that are editable by a given user
   def self.editable(user)
     if user.admin?
-      self.where(queued_for_deletion: false).to_a
+      self.all.select {|ua| ua.valid_annotation?}
     else
-      annotations = self.where(queued_for_deletion: false, user_id: user._id).to_a
-      shares = UserAnnotationShare.where(email: user.email, permission: 'Edit').map(&:user_annotation).select {|a| !a.queued_for_deletion }
+      annotations = self.where(user_id: user.id).to_a.select {|ua| ua.valid_annotation?}
+      shares = UserAnnotationShare.valid_user_annotations(user, 'Edit')
       [annotations + shares].flatten.uniq
     end
   end
 
-  # return all studies that are viewable by a given user
+  # return all annotations that are viewable by a given user
   def self.viewable(user)
     if user.admin?
-      self.where(queued_for_deletion: false).to_a
+      self.all.select {|ua| ua.valid_annotation?}
     else
-      annotations = self.where(queued_for_deletion: false, user_id: user._id).to_a
-      shares = UserAnnotationShare.where(email: user.email).map(&:user_annotation).select {|a| !a.queued_for_deletion }
+      annotations = self.where(user_id: user.id).to_a.select {|ua| ua.valid_annotation?}
+      shares = UserAnnotationShare.valid_user_annotations(user)
       [annotations + shares].flatten.uniq
     end
   end
 
-  #Share Methods
+  # return all annotations that are viewable to a given user for a given cluster
+  def self.viewable_by_cluster(user, cluster)
+    self.viewable(user).select {|ua| ua.cluster_group_id == cluster.id}
+  end
+
+  # Share Methods
 
   # check if a given use can edit this annotation
   def can_edit?(user)
@@ -353,15 +358,19 @@ class UserAnnotation
     end
   end
 
+  # check if an annotation is still valid (i.e. neither it nor its parent study is queued for deletion)
+  def valid_annotation?
+    !(self.queued_for_deletion || self.study.queued_for_deletion)
+  end
+
   # check if user can edit the study this annotation is mapped to (will check first if study has been deleted)
   def can_edit_study?(user)
-    if self.study.nil?
+    if self.study.queued_for_deletion?
       return false
     else
       return self.study.can_edit?(user)
     end
   end
-
 
   # list of emails for accounts that can edit this annotation
   def admins

@@ -6,10 +6,8 @@ class UserAnnotationsController < ApplicationController
   # GET /user_annotations
   # GET /user_annotations.json
   def index
-    #get all this user's annotations
-    @user_annotations = current_user.user_annotations.owned_by(current_user)
-    views = UserAnnotation.viewable(current_user)
-    @user_annotations.concat(views).uniq!
+    # get all this user's annotations
+    @user_annotations = UserAnnotation.viewable(current_user)
   end
 
   # GET /user_annotations/1/edit

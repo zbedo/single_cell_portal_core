@@ -16,8 +16,7 @@ class Study
   # method to renew firecloud client (forces new access token for API and reinitializes storage driver)
   def self.refresh_firecloud_client
     begin
-      @@firecloud_client.refresh_access_token
-      @@firecloud_client.refresh_storage_driver
+      @@firecloud_client = FireCloudClient.new
       true
     rescue => e
       Rails.logger.error "#{Time.now}: unable to refresh FireCloud client: #{e.message}"
@@ -420,6 +419,7 @@ class Study
       StudyFile.where(study_id: study.id).delete_all
       DirectoryListing.where(study_id: study.id).delete_all
       UserAnnotation.where(study_id: study.id).delete_all
+      UserAnnotationShare.where(study_id: study.id).delete_all
       UserDataArray.where(study_id: study.id).delete_all
       # now destroy study to ensure everything is removed
       study.destroy
