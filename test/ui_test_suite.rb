@@ -27,7 +27,7 @@ require 'selenium-webdriver'
 # 6. test order (passed with -o=); defaults to defined order (can be alphabetic or random, but random will most likely fail horribly
 # 7. download directory (passed with -d=); place where files are downloaded on your OS, defaults to standard OSX location (/Users/`whoami`/Downloads)
 # 8. portal url (passed with -u=); url to point tests at, defaults to https://localhost/single_cell
-# 9. environtment (passed with -e=); Rails environment that the target instance is running in.  Needed for constructing certain URLs
+# 9. environment (passed with -E=); Rails environment that the target instance is running in.  Needed for constructing certain URLs
 # 10. random seed (passed with -r=); random seed to use when running tests (will be needed if you're running front end tests against previously
 # 	 created studies from test suite)
 # these must be passed with ruby test/ui_test_suite.rb -- -c=[/path/to/chromedriver] -e=[test_email] -p=[test_email_password] \
@@ -49,7 +49,7 @@ require 'selenium-webdriver'
 # DEFAULTS
 $user = `whoami`.strip
 $chromedriver_path = '/usr/local/bin/chromedriver'
-$usage = "ruby test/ui_test_suite.rb -- -c=/path/to/chromedriver -e=testing.email@gmail.com -p='testing_email_password' -s=sharing.email@gmail.com -P='sharing_email_password' -o=order -d=/path/to/downloads -u=portal_url -e=environment -r=random_seed -H=false"
+$usage = "ruby test/ui_test_suite.rb -- -c=/path/to/chromedriver -e=testing.email@gmail.com -p='testing_email_password' -s=sharing.email@gmail.com -P='sharing_email_password' -o=order -d=/path/to/downloads -u=portal_url -E=environment -r=random_seed -H=false"
 $test_email = ''
 $share_email = ''
 $test_email_password = ''
@@ -83,8 +83,8 @@ ARGV.each do |arg|
 		$download_dir = arg.gsub(/\-d\=/, "")
   elsif arg =~ /\-u\=/
     $portal_url = arg.gsub(/\-u\=/, "")
-	elsif arg =~ /\-e\=/
-		$env = arg.gsub(/\-e\=/, "")
+	elsif arg =~ /\-E\=/
+		$env = arg.gsub(/\-E\=/, "")
   elsif arg =~ /\-r\=/
     $random_seed = arg.gsub(/\-r\=/, "")
 	elsif arg =~ /\-H\=/
@@ -98,6 +98,7 @@ puts "Testing email: #{$test_email}"
 puts "Sharing email: #{$share_email}"
 puts "Download directory: #{$download_dir}"
 puts "Portal URL: #{$portal_url}"
+puts "Environment: #{$env}"
 puts "Random Seed: #{$random_seed}"
 puts "Headless: #{$headless}"
 
