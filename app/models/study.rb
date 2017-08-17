@@ -16,8 +16,7 @@ class Study
   # method to renew firecloud client (forces new access token for API and reinitializes storage driver)
   def self.refresh_firecloud_client
     begin
-      @@firecloud_client.refresh_access_token
-      @@firecloud_client.refresh_storage_driver
+      @@firecloud_client = FireCloudClient.new
       true
     rescue => e
       Rails.logger.error "#{Time.now}: unable to refresh FireCloud client: #{e.message}"
@@ -51,23 +50,17 @@ class Study
   end
 
   has_many :expression_scores, dependent: :delete do
-    def by_gene(gene, study_file_id='All')
-      if study_file_id == 'All'
-        scores = []
-        files = self.first.study.study_files.by_type('Expression Matrix')
-        files.each do |file|
-          scores << (any_of({gene: gene, study_file_id: file.id}, {searchable_gene: gene.downcase, study_file_id: file.id}).first)
-        end
-        if scores.uniq != nil
-          scores.uniq!
-        end
-        uber_score = {}
-        uber_score['searchable_gene'] = gene.downcase
-        uber_score['gene'] = gene
-        uber_score['scores'] = scores.map{|score| score.scores}.reduce({}, :merge)
-        return [uber_score]
+    def by_gene(gene, study_file_ids)
+      found_scores = any_of({gene: gene, :study_file_id.in => study_file_ids}, {searchable_gene: gene.downcase, :study_file_id.in => study_file_ids}).to_a
+      if found_scores.empty?
+        return []
       else
-        any_of({gene: gene, study_file_id: study_file_id}, {searchable_gene: gene.downcase, study_file_id: study_file_id}).to_a
+        # since we can have duplicate genes but not cells, merge into one object for rendering
+        merged_scores = {'searchable_gene' => gene.downcase, 'gene' => gene, 'scores' => {}}
+        found_scores.each do |score|
+          merged_scores['scores'].merge!(score.scores)
+        end
+        return [merged_scores]
       end
     end
   end
@@ -426,6 +419,7 @@ class Study
       StudyFile.where(study_id: study.id).delete_all
       DirectoryListing.where(study_id: study.id).delete_all
       UserAnnotation.where(study_id: study.id).delete_all
+      UserAnnotationShare.where(study_id: study.id).delete_all
       UserDataArray.where(study_id: study.id).delete_all
       # now destroy study to ensure everything is removed
       study.destroy

@@ -110,6 +110,16 @@ class SingleCellMailer < ApplicationMailer
 		end
   end
 
+  def annotation_publish_fail(annot, user, error)
+    @user_annotation = annot
+    @user = user.email
+    @error = error
+
+    mail(@user, subject:  "[Single Cell Portal Notifier] User Annotation: #{@user_annotation.name} failed to publish") do |format|
+      format.html
+    end
+  end
+
   def annotation_delete_notification(annot, user)
     @user_annotation = annot
     @user = user.email

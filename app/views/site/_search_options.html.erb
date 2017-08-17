@@ -173,36 +173,53 @@
         <div class="row form-group">
           <div class="col-sm-12">
             <div id="scattergl_div" class="text-center">
+              <% if user_signed_in? %>
+                <%= link_to "Select Cells <i class='fa fa-toggle-off'></i>".html_safe, 'javascript:;', class: 'btn btn-default btn-sm', id: 'toggle-scatter', data: {toggle: 'tooltip', placement: 'right', trigger: 'hover'}, title: 'Click to enable selection of scatter points, may hurt performance.' %>
+                <script type="text/javascript">
+                    $('#toggle-scatter').click(function() {
+                        $('#toggle-scatter').children().toggleClass('fa-toggle-on fa-toggle-off');
+                        $('#selection_div').toggleClass('collapse');
+                        var loadedCluster = $('#cluster').val();
+                        var loadedAnnotation = $('#annotation').val();
+                        var loadedSubsample = $('#subsample').val();
+                        $.ajax({
+                            url: '<%= show_user_annotations_form_path(@study.url_safe_name) %>?cluster=' + loadedCluster + '&annotation=' + loadedAnnotation + '&subsample=' + loadedSubsample,
+                            dataType: 'script'
+                        })
+                    });
+                </script>
+
+              <% else %>
+                <%= link_to "Select Cells <i class='fa fa-toggle-off '></i>".html_safe, 'javascript:;', class: 'btn btn-default btn-disabled btn-sm', id: 'disabled', data: {toggle: 'tooltip', placement: 'right', trigger: 'hover'}, title: 'Log in to enable cell selection.' %>
+              <% end %>
             </div>
           </div>
         </div>
         <div class="row">
           <div class="col-sm-12">
-            <div id="selection_div" class="collapse">
-            </div>
+            <div id="selection_div" class="collapse"></div>
           </div>
         </div>
       </div>
     </div>
     <script type="text/javascript">
-        <% if user_signed_in? %>
-          <% if params[:gene_set].nil? && params[:gene].nil?%>
-            var targetPlotString = 'cluster-plot';
-          <% else %>
-            var targetPlotString = 'scatter-plot';
-          <% end %>
+      <% if user_signed_in? %>
 
-          //Stick the search for selection facilitation in expression pages if selecting annotation
-          $('#panel-selection').on('show.bs.collapse', function () {
-              $(document).off('scroll', '#search-parent');
-              $('#search-parent').stickyPanel(stickyOptions);
-              window.scrollTo(0,$(('#' + targetPlotString)).offset().top -175)
-          });
+        var targetPlotString = '<%= params[:gene_set].nil? && params[:gene].nil? ? 'cluster-plot' : 'scatter-plot' %>';
 
-          $('#panel-genes-search').on('show.bs.collapse', function () {
-              $('#search-parent').stickyPanel('unstick');
-          });
-        <% end %>
+        // Stick the search for selection facilitation in expression pages if selecting annotation
+        $('#panel-selection').on('show.bs.collapse', function () {
+            $(document).off('scroll', '#search-parent');
+            $('#search-parent').stickyPanel(stickyOptions);
+            window.scrollTo(0,$(('#' + targetPlotString)).offset().top -175);
+            var boxSelectBtn = $("a[data-title='Box Select]");
+            boxSelectBtn.click();
+        });
+
+        $('#panel-genes-search').on('show.bs.collapse', function () {
+            $('#search-parent').stickyPanel('unstick');
+        });
+      <% end %>
     </script>
   <% end %>
 </div>

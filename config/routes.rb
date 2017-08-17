@@ -77,6 +77,7 @@ Rails.application.routes.draw do
     get 'study/:study_name/precomputed_gene_expression', to: 'site#view_precomputed_gene_expression_heatmap', as: :view_precomputed_gene_expression_heatmap
     get 'study/:study_name/precomputed_results', to: 'site#precomputed_results', as: :precomputed_results
 		post 'study/:study_name/create_user_annotations', to: 'site#create_user_annotations', as: :create_user_annotations
+    get 'study/:study_name/show_user_annotations_form', to: 'site#show_user_annotations_form', as: :show_user_annotations_form
     get 'search', to: 'site#search', as: :search
     get 'log_action', to: 'site#log_action', as: :log_action
     get '/', to: 'site#index', as: :site
