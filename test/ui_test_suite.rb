@@ -627,7 +627,6 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
 		# close success modal
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		# upload metadata
@@ -637,7 +636,6 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		# upload cluster
@@ -651,7 +649,6 @@ class UiTestSuite < Test::Unit::TestCase
 		# perform upload
 		upload_btn = cluster_form_1.find_element(:id, 'start-file-upload')
 		upload_btn.click
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
 
 		# upload marker gene list
@@ -666,8 +663,14 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = marker_form.find_element(:id, 'start-file-upload')
 		upload_btn.click
-		wait_for_render(:id, 'upload-success-modal')
 		close_modal('upload-success-modal')
+
+		# confirm all files uploaded
+		studies_path = @base_url + '/studies'
+		@driver.get studies_path
+
+		study_file_count = @driver.find_element(:id, "twod-study-#{$random_seed}-study-file-count").text.to_i
+		assert study_file_count == 4, "did not find correct number of files, expected 4 but found #{study_file_count}"
 
 		puts "Test method: #{self.method_name} successful!"
 	end
@@ -2741,15 +2744,21 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'front-end: maintenance mode' do
 		puts "Test method: #{self.method_name}"
 
-		# enable maintenance mode
-		system("#{@base_path}/bin/enable_maintenance.sh on")
-		@driver.get @base_url
-		assert element_present?(:id, 'maintenance-notice'), 'could not load maintenance page'
-		# disable maintenance mode
-		system("#{@base_path}/bin/enable_maintenance.sh off")
-		@driver.get @base_url
-		assert element_present?(:id, 'main-banner'), 'could not load home page'
-		puts "Test method: #{self.method_name} successful!"
+		# only execute this test when testing locally - when using a remote host it will fail as the shell script being executed
+		# is on the wrong host
+		unless $portal_url.include?('localhost')
+			# enable maintenance mode
+			system("#{@base_path}/bin/enable_maintenance.sh on")
+			@driver.get @base_url
+			assert element_present?(:id, 'maintenance-notice'), 'could not load maintenance page'
+			# disable maintenance mode
+			system("#{@base_path}/bin/enable_maintenance.sh off")
+			@driver.get @base_url
+			assert element_present?(:id, 'main-banner'), 'could not load home page'
+			puts "Test method: #{self.method_name} successful!"
+		else
+			skip "Skipping #{self.method_name} -- cannot execute on remote host"
+		end
 	end
 
 	# test that camera position is being preserved on cluster/annotation select & rotation
@@ -3133,6 +3142,8 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_for_render(:id, 'toggle-scatter')
 		enable_select_button = @driver.find_element(:id, 'toggle-scatter')
 		enable_select_button.click
+		# let plot redraw
+		sleep(1)
 
 		# click box select button
 		select_button = @driver.find_element(:xpath, "//a[@data-val='select']")
@@ -3229,7 +3240,6 @@ class UiTestSuite < Test::Unit::TestCase
 		list = opts.sample
 		list.click
 		assert element_present?(:id, 'expression-plots'), 'could not find box/scatter divs'
-		close_modal('loading-modal')
 
 		# wait until violin plot renders, at this point all 3 should be done
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
@@ -3252,9 +3262,10 @@ class UiTestSuite < Test::Unit::TestCase
 		# let collapse animation complete
 		sleep(2)
 		# Enable Selection
-		wait_for_render(:id, 'toggle-scatter')
 		enable_select_button = @driver.find_element(:id, 'toggle-scatter')
 		enable_select_button.click
+		# let plot redraw
+		sleep(1)
 
 		# select the scatter plot
 		plot = @driver.find_element(:id, 'scatter-plot')
