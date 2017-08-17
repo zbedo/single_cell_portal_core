@@ -3,16 +3,19 @@ class DirectoryListing
 	include Mongoid::Timestamps
 	include Rails.application.routes.url_helpers # for accessing download_file_path and download_private_file_path
 
+  PRIMARY_DATA_EXTENSIONS = %w(.fq .fastq .fastq. .fq.)
+
 	belongs_to :study
 
 	field :name, type: String
 	field :description, type: String
+  field :file_type, type: String
 	field :files, type: Array
 	field :sync_status, type: Boolean, default: false
 
-	validates_uniqueness_of :name, scope: :study_id
+	validates_uniqueness_of :name, scope: [:study_id, :file_type]
 
-	index({ name: 1, study_id: 1 }, { unique: true })
+	index({ name: 1, study_id: 1, file_type: 1 }, { unique: true })
 
 	# check if a directory_listing has a file
 	def has_file?(filename)
@@ -42,12 +45,24 @@ class DirectoryListing
 		files.map(&:name).each do |name|
 			# don't use directories in extension map
 			unless name.end_with?('/')
-				parts = name.split('.')
-				# grab everything after first period as file extension
-				ext = parts.size > 2 ? parts[1..parts.size - 1].join('.') : parts.last
-				map[ext].nil? ? map[ext] = 1 : map[ext] += 1
+				ext = self.file_extension(name)
+				# don't store primary data filetypes in map as these are handled separately
+				if !DirectoryListing::PRIMARY_DATA_EXTENSIONS.any? {|e| ext.include?(e)}
+					map[ext].nil? ? map[ext] = 1 : map[ext] += 1
+				end
 			end
 		end
 		map
+	end
+
+	# helper to return file extension for a given filename
+	def self.file_extension(filename)
+		parts = filename.split('.')
+		if parts.size > 2
+			# grab everything after first period as file extension
+			parts[1..parts.size - 1].join('.')
+		else
+			parts.last
+		end
 	end
 end
