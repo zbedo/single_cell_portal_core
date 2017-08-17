@@ -38,8 +38,7 @@ class DirectoryListing
 	end
 
   # create a mapping of file extensions and counts based on a list of input files from a google bucket
-  def self.create_extension_map(files)
-		map = {}
+  def self.create_extension_map(files, map={})
 		files.map(&:name).each do |name|
 			# don't use directories in extension map
 			unless name.end_with?('/')
