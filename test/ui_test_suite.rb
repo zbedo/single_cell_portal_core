@@ -410,7 +410,7 @@ class UiTestSuite < Test::Unit::TestCase
 	# admin backend tests of entire study creation process including negative/error tests
 	# uses example data in test directory as inputs (based off of https://github.com/broadinstitute/single_cell_portal/tree/master/demo_data)
 	# these tests run first to create test studies to use in front-end tests later
-	test 'admin: create-study: public' do
+	test 'admin: create-study: user-annotation: public' do
 		puts "Test method: #{self.method_name}"
 
 		# log in first
@@ -3123,6 +3123,24 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get login_path
 		wait_until_page_loads(login_path)
 		login($test_email)
+
+		# first confirm that you cannot create an annotation on a 3d study
+		test_study_path = @base_url + "/study/test-study-#{$random_seed}"
+		@driver.get test_study_path
+		wait_until_page_loads(test_study_path)
+		open_ui_tab('study-visualize')
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		select_dropdown = @driver.find_element(:id, 'create_annotations_panel')
+		select_dropdown.click
+		# let collapse animation complete
+		sleep(2)
+		enable_select_button = @driver.find_element(:id, 'toggle-scatter')
+		enable_select_button.click
+		alert = @driver.switch_to.alert
+		alert_text = alert.text
+		assert alert_text == 'You may not create annotations on 3d data.  Please select a different cluster before continuing.',
+					 "did not find correct alert, expected 'You may not create annotations on 3d data.  Please select a different cluster before continuing.' but found '#{}'"
+		alert.accept
 
 		# go to the 2d scatter plot study
 		two_d_study_path = @base_url + "/study/twod-study-#{$random_seed}"
