@@ -5,7 +5,7 @@ class SiteController < ApplicationController
   before_action :set_study, except: [:index, :search]
   before_action :load_precomputed_options, except: [:index, :search, :edit_study_description, :annotation_query, :download_file, :get_fastq_files, :log_action, :show_user_annotations_form]
   before_action :set_cluster_group, except: [:index, :search, :update_study_settings, :edit_study_description, :precomputed_results, :download_file, :get_fastq_files, :log_action, :create_user_annotations]
-  before_action :set_selected_annotation, except: [:index, :search, :study, :update_study_settings, :edit_study_description, :precomputed_results, :expression_query, :get_new_annotations, :download_file, :get_fastq_files, :log_action]
+  before_action :set_selected_annotation, except: [:index, :search, :study, :update_study_settings, :edit_study_description, :precomputed_results, :expression_query, :get_new_annotations, :download_file, :get_fastq_files, :log_action, :create_user_annotations]
   before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query, :log_action]
 
   # caching
