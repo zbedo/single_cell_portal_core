@@ -3928,7 +3928,8 @@ class UiTestSuite < Test::Unit::TestCase
 		annot_path = @base_url + '/user_annotations'
 		@driver.get annot_path
 
-		@driver.find_element(:class, "user-#{$random_seed}-exp-delete").click
+		delete_btn = @driver.find_element(:class, "user-#{$random_seed}-exp-delete")
+		delete_btn.click
 		@driver.switch_to.alert.accept
 		close_modal('message_modal')
 
