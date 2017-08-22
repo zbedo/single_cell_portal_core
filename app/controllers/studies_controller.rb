@@ -830,7 +830,7 @@ class StudiesController < ApplicationController
           process_directory_listing_file(file, 'fastq')
         else
           # make sure filename and generation are identical, otherwise we have an unknown file
-          study_match = @study_files.detect {|f| (f.upload_file_name == file.name || f.name == file.name) && f.generation == file.generation }
+          study_match = @study_files.detect {|f| f.generation == file.generation }
           # make sure file is not acutally a folder by checking its size and name
           if study_match.nil? && file.size > 0
             # create a new entry and default to cluster file (user can change via dropdown)
@@ -855,7 +855,7 @@ class StudiesController < ApplicationController
     if existing_dir.nil?
       dir = @study.directory_listings.build(name: directory, file_type: file_type, files: [{name: file.name, size: file.size, generation: file.generation}], sync_status: false)
       @unsynced_directories << dir
-    elsif existing_dir.files.find {|f| f[:name] == file.name && f[:generation] == file.generation }.nil?
+    elsif existing_dir.files.find {|f| f[:generation] == file.generation }.nil?
       existing_dir.files << {name: file.name, size: file.size, generation: file.generation}
       existing_dir.sync_status = false
       if @unsynced_directories.map(&:name).include?(existing_dir.name)
