@@ -56,6 +56,7 @@
 var fileUploading = false;
 var PAGE_RENDERED = false;
 var OPEN_MODAL = '';
+var CLUSTER_TYPE = '3d';
 
 $(document).on('shown.bs.modal', function(e) {
     console.log("modal " + $(e.target).attr('id') + ' opened');

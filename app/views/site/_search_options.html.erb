@@ -162,7 +162,7 @@
       </div>
     </div>
   </div>
-  <% if action_name !~ /heatmap/ && !@cluster.is_3d? %>
+  <% if action_name !~ /heatmap/ %>
     <div class="panel panel-<%= user_signed_in? ? 'info' : 'default' %>" id="search-options-panel">
       <div class="panel-heading">
         <div class="panel-title">
@@ -174,18 +174,23 @@
           <div class="col-sm-12">
             <div id="scattergl_div" class="text-center">
               <% if user_signed_in? %>
-                <%= link_to "Select Cells <i class='fa fa-toggle-off'></i>".html_safe, 'javascript:;', class: 'btn btn-default btn-sm', id: 'toggle-scatter', data: {toggle: 'tooltip', placement: 'right', trigger: 'hover'}, title: 'Click to enable selection of scatter points, may hurt performance.' %>
+                <%= link_to "Select Cells <i class='fa fa-toggle-off'></i>".html_safe, 'javascript:;', class: 'btn btn-default btn-sm', id: 'toggle-scatter', data: {toggle: 'tooltip', placement: 'right', trigger: 'hover'}, title: 'Enable cell selection for creating custom annotations (may hurt performance on large clusters).  Only available on 2d data.' %>
                 <script type="text/javascript">
                     $('#toggle-scatter').click(function() {
-                        $('#toggle-scatter').children().toggleClass('fa-toggle-on fa-toggle-off');
-                        $('#selection_div').toggleClass('collapse');
-                        var loadedCluster = $('#cluster').val();
-                        var loadedAnnotation = $('#annotation').val();
-                        var loadedSubsample = $('#subsample').val();
-                        $.ajax({
-                            url: '<%= show_user_annotations_form_path(@study.url_safe_name) %>?cluster=' + loadedCluster + '&annotation=' + loadedAnnotation + '&subsample=' + loadedSubsample,
-                            dataType: 'script'
-                        })
+                        if (CLUSTER_TYPE === '2d') {
+                            $('#toggle-scatter').children().toggleClass('fa-toggle-on fa-toggle-off');
+                            $('#selection_div').toggleClass('collapse');
+                            var loadedCluster = $('#cluster').val();
+                            var loadedAnnotation = $('#annotation').val();
+                            var loadedSubsample = $('#subsample').val();
+                            $.ajax({
+                                url: '<%= show_user_annotations_form_path(@study.url_safe_name) %>?cluster=' + loadedCluster + '&annotation=' + loadedAnnotation + '&subsample=' + loadedSubsample,
+                                dataType: 'script'
+                            });
+                        } else {
+                            alert('You may not create annotations on 3d data.  Please select a different cluster before continuing.');
+                            return false;
+                        }
                     });
                 </script>
 
