@@ -20,6 +20,8 @@ class StudiesController < ApplicationController
   def show
     @study_fastq_files = @study.study_files.by_type('Fastq')
     @directories = @study.directory_listings.are_synced
+    @primary_data = @study.directory_listings.primary_data
+    @other_data = @study.directory_listings.non_primary_data
     # load study default options
     set_study_default_options
   end
