@@ -129,7 +129,7 @@ class SingleCellMailer < ApplicationMailer
     @notify.delete_if(&:blank?)
 
     mail(to: @notify, subject: "[Single Cell Portal Notifier] User Annotation: #{@user_annotation.name} has been deleted") do |format|
-      format.html {render html: "<p>The study #{@user_annotation.name} has been deleted by #{@user}</p>".html_safe}
+      format.html {render html: "<p>The annotation #{@user_annotation.name} has been deleted by #{@user}</p>".html_safe}
     end
   end
 
