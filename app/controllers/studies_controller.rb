@@ -158,6 +158,10 @@ class StudiesController < ApplicationController
       directory.save
     end
 
+    # split directories into primary data types and 'others'
+    @unsynced_primary_data_dirs = @unsynced_directories.select {|dir| dir.file_type == 'fastq'}
+    @unsynced_other_dirs = @unsynced_directories.select {|dir| dir.file_type != 'fastq'}
+
     # now determine if we have study_files that have been 'orphaned' (cannot find a corresponding bucket file)
     @orphaned_study_files = @study_files - @synced_study_files
     @available_files = @unsynced_files.map {|f| {name: f.name, generation: f.generation, size: f.upload_file_size}}
@@ -747,7 +751,7 @@ class StudiesController < ApplicationController
   end
 
   def directory_listing_params
-    params.require(:directory_listing).permit(:_id, :name, :description, :sync_status)
+    params.require(:directory_listing).permit(:_id, :name, :description, :sync_status, :file_type)
   end
 
   def default_options_params

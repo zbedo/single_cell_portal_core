@@ -4,6 +4,7 @@ class DirectoryListing
 	include Rails.application.routes.url_helpers # for accessing download_file_path and download_private_file_path
 
   PRIMARY_DATA_EXTENSIONS = %w(.fq .fastq .fastq. .fq.)
+  PRIMARY_DATA_TYPES = PRIMARY_DATA_EXTENSIONS.map {|ext| ext.gsub(/\./, '')}.uniq
 
 	belongs_to :study
 

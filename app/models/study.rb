@@ -104,9 +104,24 @@ class Study
       where(sync_status: false).to_a
     end
 
-    # can't used 'synced' as this is a built-in ruby method
+    # all synced directories, regardless of type
     def are_synced
       where(sync_status: true).to_a
+    end
+
+    # synced directories of a specific type
+    def synced_by_type(file_type)
+      where(sync_status: true, file_type: file_type).to_a
+    end
+
+    # primary data directories
+    def primary_data
+      where(sync_status: true, :file_type.in => DirectoryListing::PRIMARY_DATA_TYPES).to_a
+    end
+
+    # non-primary data directories
+    def non_primary_data
+      where(sync_status: true, :file_type.nin => DirectoryListing::PRIMARY_DATA_TYPES).to_a
     end
   end
 
@@ -197,6 +212,11 @@ class Study
   # check if a given user can view study by share (does not take public into account - use Study.viewable(user) instead)
   def can_view?(user)
     self.can_edit?(user) || self.study_shares.can_view.include?(user.email)
+  end
+
+  # check if a user can download data directly from the bucket
+  def can_direct_download?(user)
+    self.user.email == user.email || self.study_shares.can_view.include?(user.email)
   end
 
   # check if user can delete a study - only owners can
@@ -322,13 +342,18 @@ class Study
   # return a count of the number of fastq files both uploaded and referenced via directory_listings for a study
   def primary_data_file_count
     study_file_count = self.study_files.by_type('Fastq').size
-    directory_listing_count = self.directory_listings.where(sync_status: true).map {|d| d.files.size}.reduce(:+)
-    [study_file_count, directory_listing_count].compact.reduce(:+)
+    directory_listing_count = self.directory_listings.primary_data.map {|d| d.files.size}.reduce(0, :+)
+    study_file_count + directory_listing_count
+  end
+
+  # return a count of the number of miscella files both uploaded and referenced via directory_listings for a study
+  def misc_directory_file_count
+    self.directory_listings.non_primary_data.map {|d| d.files.size}.reduce(0, :+)
   end
 
   # count the number of cluster-based annotations in a study
   def cluster_annotation_count
-    self.cluster_groups.map {|c| c.cell_annotations.size}.reduce(:+)
+    self.cluster_groups.map {|c| c.cell_annotations.size}.reduce(0, :+)
   end
 
   # return an array of all single cell names in study

@@ -78,7 +78,7 @@
 
     var cellCounts = [{
         x: ['Public', 'Private'],
-        y: [<%= @public_studies.map(&:cell_count).reduce(:+) %>, <%= @private_studies.map(&:cell_count).reduce(:+) %>],
+        y: [<%= @public_studies.map(&:cell_count).reduce(0, :+) %>, <%= @private_studies.map(&:cell_count).reduce(0, :+) %>],
         type: 'bar',
         marker: {
             color: [colorBrewerSet[3], colorBrewerSet[4]]
@@ -87,7 +87,7 @@
 
     Plotly.newPlot('plotly-cell-count', cellCounts,
         {
-            title: 'How many cells total are in private or public studies?<br><b>Total number of cells in portal: ' + <%= @all_studies.map(&:cell_count).reduce(:+) %> + '</b>',
+            title: 'How many cells total are in private or public studies?<br><b>Total number of cells in portal: ' + <%= @all_studies.map(&:cell_count).reduce(0, :+) %> + '</b>',
             titlefont: plotlyTitleFont,
             font: plotlyLabelFont,
             bargap: 0,
