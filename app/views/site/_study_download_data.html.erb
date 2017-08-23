@@ -75,69 +75,73 @@
     <% end %>
     </tbody>
   </table>
-  <div class="well well-sm">
-    <h2>Primary Data <span class="badge"><%= @study.primary_data_file_count %></span> </h2>
-    <table class="table table-striped tabled-condensed study-data-table" id="fastq-table">
-      <thead>
-      <tr>
-        <th class="col-sm-5">Filename</th>
-        <th class="col-sm-6">Description</th>
-        <th class="col-sm-1">Download</th>
-      </tr>
-      </thead>
-      <tbody id="fastq-files-target">
-        <% @primary_study_files.each do |file| %>
-          <tr>
-            <td><%= file.name %></td>
-            <td><%= file.description %></td>
-            <td>
-              <% if @allow_downloads %>
-                <%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %>
-              <% else %>
-                <%= button_to 'Currently Unavailable', 'javascript:;', class: 'btn btn-danger disabled-download', disabled: true %>
-              <% end %>
-            </td>
-          </tr>
-        <% end %>
-        <% @primary_data.each do |directory| %>
+  <% if @primary_study_files.any? || @primary_data.any? %>
+    <div class="well well-sm">
+      <h2>Primary Data <span class="badge"><%= @study.primary_data_file_count %></span> </h2>
+      <table class="table table-striped tabled-condensed study-data-table" id="fastq-table">
+        <thead>
+        <tr>
+          <th class="col-sm-5">Filename</th>
+          <th class="col-sm-6">Description</th>
+          <th class="col-sm-1">Download</th>
+        </tr>
+        </thead>
+        <tbody id="fastq-files-target">
+          <% @primary_study_files.each do |file| %>
+            <tr>
+              <td><%= file.name %></td>
+              <td><%= file.description %></td>
+              <td>
+                <% if @allow_downloads %>
+                  <%= render partial: '/layouts/download_link', locals: {study: @study, study_file: file} %>
+                <% else %>
+                  <%= button_to 'Currently Unavailable', 'javascript:;', class: 'btn btn-danger disabled-download', disabled: true %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+          <% @primary_data.each do |directory| %>
+            <% directory.files.each do |file| %>
+              <% basename = file[:name].split('/').last %>
+              <tr>
+                <td><%= basename %></td>
+                <td><%= directory.description %></td>
+                <td><%= link_to("<span class='fa fa-download'></span> #{number_to_human_size(file[:size], prefix: :si)}".html_safe, directory.download_path(file[:name]), class: "btn btn-primary dl-link fastq", download: basename) %></td>
+              </tr>
+            <% end %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+  <% if @other_data.any? %>
+    <div class="well well-sm">
+      <h2>Other Data <span class="badge"><%= @study.misc_directory_file_count %></span> </h2>
+      <table class="table table-striped tabled-condensed study-data-table" id="other-data-table">
+        <thead>
+        <tr>
+          <th class="col-sm-3">Filename</th>
+          <th class="col-sm-2">Type</th>
+          <th class="col-sm-5">Description</th>
+          <th class="col-sm-1">Download</th>
+        </tr>
+        </thead>
+        <tbody>
+        <% @other_data.each do |directory| %>
           <% directory.files.each do |file| %>
             <% basename = file[:name].split('/').last %>
             <tr>
               <td><%= basename %></td>
+              <td><%= directory.file_type %></td>
               <td><%= directory.description %></td>
               <td><%= link_to("<span class='fa fa-download'></span> #{number_to_human_size(file[:size], prefix: :si)}".html_safe, directory.download_path(file[:name]), class: "btn btn-primary dl-link fastq", download: basename) %></td>
             </tr>
           <% end %>
         <% end %>
-      </tbody>
-    </table>
-  </div>
-  <div class="well well-sm">
-    <h2>Other Data <span class="badge"><%= @study.misc_directory_file_count %></span> </h2>
-    <table class="table table-striped tabled-condensed study-data-table" id="other-data-table">
-      <thead>
-      <tr>
-        <th class="col-sm-3">Filename</th>
-        <th class="col-sm-2">Type</th>
-        <th class="col-sm-5">Description</th>
-        <th class="col-sm-1">Download</th>
-      </tr>
-      </thead>
-      <tbody>
-      <% @other_data.each do |directory| %>
-        <% directory.files.each do |file| %>
-          <% basename = file[:name].split('/').last %>
-          <tr>
-            <td><%= basename %></td>
-            <td><%= directory.file_type %></td>
-            <td><%= directory.description %></td>
-            <td><%= link_to("<span class='fa fa-download'></span> #{number_to_human_size(file[:size], prefix: :si)}".html_safe, directory.download_path(file[:name]), class: "btn btn-primary dl-link fastq", download: basename) %></td>
-          </tr>
-        <% end %>
-      <% end %>
-      </tbody>
-    </table>
-  </div>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
 </div>
 
 <script type="text/javascript">

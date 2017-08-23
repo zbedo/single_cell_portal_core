@@ -109,7 +109,10 @@ class SiteController < ApplicationController
             set_selected_annotation
           end
           @study_files = @study.study_files.non_primary_data.sort_by(&:name)
+          @primary_study_files = @study.study_files.by_type('Fastq')
           @directories = @study.directory_listings.are_synced
+          @primary_data = @study.directory_listings.primary_data
+          @other_data = @study.directory_listings.non_primary_data
 
           # double check on download availability: first, check if administrator has disabled downloads
           # then check if FireCloud is available and disable download links if either is true

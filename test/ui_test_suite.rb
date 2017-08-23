@@ -2766,10 +2766,9 @@ class UiTestSuite < Test::Unit::TestCase
 	# test whether or not maintenance mode functions properly
 	test 'front-end: maintenance mode' do
 		puts "Test method: #{self.method_name}"
-
 		# only execute this test when testing locally - when using a remote host it will fail as the shell script being executed
 		# is on the wrong host
-		unless $portal_url.include?('localhost')
+		omit_if !$portal_url.include?('localhost'), 'cannot enable maintenance mode on remote host' do
 			# enable maintenance mode
 			system("#{@base_path}/bin/enable_maintenance.sh on")
 			@driver.get @base_url
@@ -2779,8 +2778,6 @@ class UiTestSuite < Test::Unit::TestCase
 			@driver.get @base_url
 			assert element_present?(:id, 'main-banner'), 'could not load home page'
 			puts "Test method: #{self.method_name} successful!"
-		else
-			skip "Skipping #{self.method_name} -- cannot execute on remote host"
 		end
 	end
 

@@ -42,14 +42,23 @@ class DirectoryListing
 	end
 
   # create a mapping of file extensions and counts based on a list of input files from a google bucket
+  # keys to map are the path at which groups of files are found, and values are key/value pairs of file
+  # extensions and counts
   def self.create_extension_map(files, map={})
 		files.map(&:name).each do |name|
 			# don't use directories in extension map
 			unless name.end_with?('/')
+				path = self.get_folder_name(name)
 				ext = self.file_extension(name)
 				# don't store primary data filetypes in map as these are handled separately
 				if !DirectoryListing::PRIMARY_DATA_EXTENSIONS.any? {|e| ext.include?(e)}
-					map[ext].nil? ? map[ext] = 1 : map[ext] += 1
+					if map[path].nil?
+						map[path] = {"#{ext}" => 1}
+					elsif map[path][ext].nil?
+						map[path][ext] = 1
+					else
+						map[path][ext] += 1
+					end
 				end
 			end
 		end
@@ -65,5 +74,10 @@ class DirectoryListing
 		else
 			parts.last
 		end
+	end
+
+  # get the 'folder' of a file in a bucket based on its pathname
+  def self.get_folder_name(filepath)
+		filepath.include?('/') ? filepath.split('/').first : '/'
 	end
 end
