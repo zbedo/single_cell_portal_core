@@ -118,11 +118,11 @@ class StudiesController < ApplicationController
       redirect_to studies_path, alert: "We were unable to sync with your workspace bucket due to an error: #{e.message}" and return
     end
 
-    # begin determining sync status with study_files and fastq data
+    # begin determining sync status with study_files and primary or other data
     begin
       # create a map of file extension to use for creating directory_listings of groups of 10+ files of the same type
       @file_extension_map = {}
-      workspace_files = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, @study.firecloud_workspace, max: 10)
+      workspace_files = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, @study.firecloud_workspace)
       # see process_workspace_bucket_files in private methods for more details on syncing
       process_workspace_bucket_files(workspace_files)
       while workspace_files.next?
