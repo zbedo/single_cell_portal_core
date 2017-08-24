@@ -3,6 +3,7 @@ class UserAnnotation
   field :name, type: String
   field :values, type: Array
   field :queued_for_deletion, type: Boolean, default: false
+  field :publishing, type: Boolean, default: false
 
   belongs_to :user
   belongs_to :cluster_group
@@ -360,7 +361,7 @@ class UserAnnotation
 
   # check if an annotation is still valid (i.e. neither it nor its parent study is queued for deletion)
   def valid_annotation?
-    !(self.queued_for_deletion || self.study.queued_for_deletion)
+    !(self.queued_for_deletion || self.study.queued_for_deletion || self.publishing)
   end
 
   # check if user can edit the study this annotation is mapped to (will check first if study has been deleted)
@@ -510,7 +511,7 @@ class UserAnnotation
 
       else
         # save failed, so roll back
-        self.update(queued_for_deletion: false)
+        self.update(queued_for_deletion: false, publishing: false)
 
         # clean up any records that may be orphaned
         DataArray.where(name: self.name, cluster_group_id: self.cluster_group_id, array_type: 'annotations').delete_all
@@ -521,7 +522,7 @@ class UserAnnotation
       end
     rescue => e
       # error occured, so roll back
-      self.update(queued_for_deletion: false)
+      self.update(queued_for_deletion: false, publishing: false)
 
       # clean up any records that may be orphaned
       DataArray.where(name: self.name, cluster_group_id: self.cluster_group_id, array_type: 'annotations').delete_all

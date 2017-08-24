@@ -2994,6 +2994,11 @@ class UiTestSuite < Test::Unit::TestCase
 			color_dropdown.send_key(new_color)
 		end
 
+		# change expression axis label
+		expression_label = options_form.find_element(:id, 'study_default_options_expression_label')
+		new_exp_label = 'Gene Expression Scores'
+		expression_label.send_keys(new_exp_label)
+
 		# save options
 		options_form.submit
 		close_modal('study-file-notices')
@@ -3023,8 +3028,10 @@ class UiTestSuite < Test::Unit::TestCase
 
 		exp_loaded_cluster = @driver.find_element(:id, 'cluster')['value']
 		exp_loaded_annotation = @driver.find_element(:id, 'annotation')['value']
+		exp_loaded_label = @driver.find_element(:class, 'cbtitle').text
 		assert new_cluster == exp_loaded_cluster, "default cluster incorrect, expected #{new_cluster} but found #{exp_loaded_cluster}"
 		assert new_annot == exp_loaded_annotation, "default annotation incorrect, expected #{new_annot} but found #{exp_loaded_annotation}"
+		assert exp_loaded_label == new_exp_label, "default expression label incorrect, expected #{new_exp_label} but found #{exp_loaded_label}"
 		unless new_color.empty?
 			exp_loaded_color = @driver.find_element(:id, 'colorscale')['value']
 			assert new_color == exp_loaded_color, "default color incorrect, expected #{new_color} but found #{exp_loaded_color}"

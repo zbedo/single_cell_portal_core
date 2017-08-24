@@ -153,6 +153,8 @@ class UserAnnotationsController < ApplicationController
 
   def publish_to_study
     respond_to do |format|
+      # set publishing status to true so that the annotation will not show up in the list of annotations
+      @user_annotation.update(publishing: true)
       # redirect back and say success
       format.html { redirect_to user_annotations_path, notice: "User Annotation '#{@user_annotation.name}' will be added to the study. You will receive an email upon completion or error. If succesful, this annotation will be removed from your list of annotations." }
       format.json { render :index, status: :ok, location: user_annotations_path }
