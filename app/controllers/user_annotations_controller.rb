@@ -1,15 +1,13 @@
 class UserAnnotationsController < ApplicationController
   before_action :set_user_annotation, only: [:edit, :update, :destroy]
-  #Check that use is logged in in order to do anything
+  #Check that user is logged in in order to do anything
   before_filter :authenticate_user!
   before_action :check_permission, except: :index
   # GET /user_annotations
   # GET /user_annotations.json
   def index
-    #get all this user's annotations
-    @user_annotations = current_user.user_annotations.owned_by(current_user)
-    views = UserAnnotation.viewable(current_user)
-    @user_annotations.concat(views).uniq!
+    # get all this user's annotations
+    @user_annotations = UserAnnotation.viewable(current_user)
   end
 
   # GET /user_annotations/1/edit
@@ -47,6 +45,8 @@ class UserAnnotationsController < ApplicationController
     respond_to do |format|
       #if a successful update, update data arrays
       if @user_annotation.update(user_annotation_params)
+        # first, invalidate matching caches
+        CacheRemovalJob.new(@user_annotation.cache_removal_key).delay.perform
         changes = []
         if @share_changes
           changes << 'Annotation shares'
@@ -107,8 +107,7 @@ class UserAnnotationsController < ApplicationController
     @user_annotation.update(queued_for_deletion: true)
 
     # queue jobs to delete annotation caches & annotation itself
-    cache_key = "#{@user_annotation.study.url_safe_name}.*#{@user_annotation.cluster_group.name.split.join('-')}_#{@user_annotation.name}--user--group.*"
-    CacheRemovalJob.new(cache_key).delay.perform
+    CacheRemovalJob.new(@user_annotation.cache_removal_key).delay.perform
     DeleteQueueJob.new(@user_annotation).delay.perform
 
     # notify users of deletion before removing shares & owner
@@ -119,7 +118,7 @@ class UserAnnotationsController < ApplicationController
     update_message = "User Annotation '#{@user_annotation.name}'was successfully destroyed. All parsed database records have been destroyed."
     respond_to do |format|
       #redirect back to page when destroy finishes
-      format.html { redirect_to user_annotations_path, notice: "User Annotation '#{@user_annotation.name}' was successfully destroyed." }
+      format.html { redirect_to user_annotations_path, notice: update_message }
       format.json { head :no_content }
     end
   end
@@ -131,10 +130,10 @@ class UserAnnotationsController < ApplicationController
     types = ['TYPE', 'numeric', 'numeric', 'group']
     rows = []
 
-    annotation_array = @user_annotation.user_data_arrays.where(array_type: 'annotations').first.values
-    x_array = @user_annotation.user_data_arrays.where(array_type: 'coordinates', name: 'x').first.values
-    y_array = @user_annotation.user_data_arrays.where(array_type: 'coordinates', name: 'y').first.values
-    cell_name_array = @user_annotation.user_data_arrays.where(array_type: 'cells').first.values
+    annotation_array = @user_annotation.concatenate_user_data_arrays(@user_annotation.name ,'annotations')
+    x_array = @user_annotation.concatenate_user_data_arrays('x', 'coordinates')
+    y_array = @user_annotation.concatenate_user_data_arrays('y', 'coordinates')
+    cell_name_array = @user_annotation.concatenate_user_data_arrays('text', 'cells')
 
     annotation_array.each_with_index do |annot, index|
       if annot != 'Undefined'
@@ -150,6 +149,15 @@ class UserAnnotationsController < ApplicationController
     @data = [headers.join("\t"), types.join("\t"), rows].join"\n"
 
     send_data @data, type: 'text/plain', filename: filename, disposition: 'attachment'
+  end
+
+  def publish_to_study
+    respond_to do |format|
+      # redirect back and say success
+      format.html { redirect_to user_annotations_path, notice: "User Annotation '#{@user_annotation.name}' will be added to the study. You will receive an email upon completion or error. If succesful, this annotation will be removed from your list of annotations." }
+      format.json { render :index, status: :ok, location: user_annotations_path }
+      @user_annotation.delay.publish_to_study(current_user)
+    end
   end
 
   private

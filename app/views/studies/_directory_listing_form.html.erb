@@ -1,4 +1,4 @@
-<%= form_for(directory, url: sync_directory_listing_study_path(@study.id), html: {class: "bs-callout bs-callout-warning #{directory.sync_status == true ? 'synced' : 'unsynced'}-directory-listing", id: "directory-listing-#{directory.id}"}, data: {remote: true}) do |f| %>
+<%= form_for(directory, url: sync_directory_listing_study_path(@study.id), html: {class: "bs-callout bs-callout-#{directory.file_type == 'fastq' ? 'warning' : 'default'} #{directory.sync_status == true ? 'synced' : 'unsynced'}-directory-listing", id: "directory-listing-#{directory.id}"}, data: {remote: true}) do |f| %>
   <%= f.hidden_field :_id, value: directory.id %>
   <%= f.hidden_field :study_id, value: params[:id] %>
   <%= f.hidden_field :sync_status, value: 1 %>
@@ -24,7 +24,11 @@
     </div>
   </div>
   <div class="form-group row">
-    <div class="col-sm-6">
+    <div class="col-sm-4">
+      <%= f.label :file_type, 'File Type' %><br/>
+      <%= f.text_field :file_type, class: 'form-control', readonly: true %>
+    </div>
+    <div class="col-sm-2">
       <%= f.label :files, 'Files found' %> <span class="badge directory-files-found"> <%= directory.files.size %></span>
     </div>
     <div class="col-sm-6">

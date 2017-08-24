@@ -26,9 +26,11 @@
         <%= render partial: 'study_visualize' %>
       <% end %>
     </div>
-    <div class="tab-pane" id="study-download" role="tabpanel">
-      <%= render partial: 'study_download_data' %>
-    </div>
+    <% if user_signed_in? %>
+      <div class="tab-pane" id="study-download" role="tabpanel">
+        <%= render partial: 'study_download_data' %>
+      </div>
+    <% end %>
     <% if user_signed_in? && @study.can_compute?(current_user) %>
       <div class="tab-pane" id="study-workflows" role="tabpanel">
         <%= render partial: 'study_workflows' %>

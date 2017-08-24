@@ -39,18 +39,39 @@
   </div>
 <% end %>
 
-<% if @unsynced_directories.any? %>
+<% if @unsynced_primary_data_dirs.any? %>
   <div class="panel panel-warning">
     <div class="panel-heading">
       <div class="panel-title">
-        <h4><%= link_to "<i class='fa fa-question'></i>  Unsynced Primary Data Directories <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#unsynced-directories', 'data-toggle' => 'collapse' %></h4>
+        <h4><%= link_to "<i class='fa fa-question'></i> Unsynced Primary Data Directories <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#unsynced-directories', 'data-toggle' => 'collapse' %></h4>
       </div>
     </div>
     <div id="unsynced-directories" class="panel-collapse collapse in unsynced">
       <div class="panel-body">
         <p class="help-block">These are directories containing new or updated primary data (fastq) for which you can supply a block description.</p>
-        <div id="unsynced-directories-forms" class="unsynced-content">
-          <% @unsynced_directories.each do |directory| %>
+        <div id="unsynced-primary-dirs-forms" class="unsynced-content">
+          <% @unsynced_primary_data_dirs.each do |directory| %>
+            <%= render partial: 'directory_listing_form', locals: {directory: directory} %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<% end %>
+
+<% if @unsynced_other_dirs.any? %>
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <div class="panel-title">
+        <h4><%= link_to "<i class='fa fa-question'></i> Unsynced Miscellaneous Data Directories <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#unsynced-directories', 'data-toggle' => 'collapse' %></h4>
+      </div>
+    </div>
+    <div id="unsynced-directories" class="panel-collapse collapse in unsynced">
+      <div class="panel-body">
+        <p class="help-block">These are directories containing groups of 10 or more files of the same extension (20+ for text files) for which you can supply a block description.</p>
+        <div id="unsynced-misc-dirs-forms" class="unsynced-content">
+          <% @unsynced_other_dirs.each do |directory| %>
             <%= render partial: 'directory_listing_form', locals: {directory: directory} %>
           <% end %>
         </div>
@@ -61,7 +82,7 @@
 <% end %>
 
 <hr class="divider" />
-<div class="panel panel-default">
+<div class="panel panel-success">
   <div class="panel-heading">
     <div class="panel-title">
       <h4><%= link_to "<i class='fa fa-check'></i> Synced Data <span class='fa fa-chevron-right toggle-glyph'></span>".html_safe, '#synced-data', 'data-toggle' => 'collapse', id: 'synced-data-panel-toggle' %></h4>
@@ -75,7 +96,7 @@
           <%= render partial: 'synced_study_file_form', locals: {study_file: sf} %>
         <% end %>
       </div>
-      <h4>Primary Data Directories</h4>
+      <h4>Primary Data & Miscellaneous Directories</h4>
       <div id="synced-directory-listings">
         <% @synced_directories.each do |dir| %>
           <%= render partial: 'directory_listing_form', locals: {directory: dir} %>

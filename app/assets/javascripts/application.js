@@ -56,6 +56,7 @@
 var fileUploading = false;
 var PAGE_RENDERED = false;
 var OPEN_MODAL = '';
+var CLUSTER_TYPE = '3d';
 
 $(document).on('shown.bs.modal', function(e) {
     console.log("modal " + $(e.target).attr('id') + ' opened');
@@ -258,12 +259,10 @@ function toggleSearch() {
 
     // trigger resizeEnd to re-render Plotly to use available space
     $(window).trigger('resize');
-    if ($('#create_annotations_panel').length > 0) {
-        if($('#search-target').is(":visible")){
-            $('#search-parent').stickyPanel(stickyOptions)
-        } else{
-            $('#search-parent').stickyPanel('unstick')
-        }
+    if ($('#create_annotations_panel').length > 0) {if($('#search-target').is(":visible")){
+        $('#search-parent').stickyPanel(stickyOptions)
+    } else{
+        $('#search-parent').stickyPanel('unstick')}
     }
 }
 
@@ -603,4 +602,20 @@ function gaTracker(id){
 function gaTrack(path, title) {
     ga('set', { page: path, title: title });
     ga('send', 'pageview');
+}
+
+// decode an HTML-encoded string
+function unescapeHTML(encodedStr) {
+    return $("<div/>").html(encodedStr).text();
+}
+
+// close the user annotations panel if open when rendering clusters
+function closeUserAnnotationsForm() {
+    if ( $('#selection_div').attr('class') === '' ) {
+        console.log('closing user annotations form');
+        // menu is open, so empty forms and reset button state
+        $('#selection_div').html('');
+        $('#selection_div').toggleClass('collapse');
+        $('#toggle-scatter').children().toggleClass('fa-toggle-on fa-toggle-off');
+    }
 }

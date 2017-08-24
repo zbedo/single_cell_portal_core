@@ -3,10 +3,10 @@ class SiteController < ApplicationController
   respond_to :html, :js, :json
 
   before_action :set_study, except: [:index, :search, :view_workflow_wdl]
-  before_action :load_precomputed_options, except: [:index, :search, :edit_study_description, :annotation_query, :download_file, :get_fastq_files, :log_action, :view_workflow_wdl]
-  before_action :set_cluster_group, except: [:index, :search, :update_study_settings, :edit_study_description, :precomputed_results, :download_file, :get_fastq_files, :log_action, :view_workflow_wdl]
-  before_action :set_selected_annotation, except: [:index, :search, :study, :update_study_settings, :edit_study_description, :precomputed_results, :expression_query, :get_new_annotations, :download_file, :get_fastq_files, :log_action, :view_workflow_wdl]
-  before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query, :log_action, :view_workflow_wdl]
+  before_action :load_precomputed_options, except: [:index, :search, :edit_study_description, :annotation_query, :download_file, :get_fastq_files, :log_action, :show_user_annotations_form, :view_workflow_wdl]
+  before_action :set_cluster_group, except: [:index, :search, :update_study_settings, :edit_study_description, :precomputed_results, :download_file, :get_fastq_files, :log_action, :create_user_annotations, :view_workflow_wdl]
+  before_action :set_selected_annotation, except: [:index, :search, :study, :update_study_settings, :edit_study_description, :precomputed_results, :expression_query, :get_new_annotations, :download_file, :get_fastq_files, :log_action, :create_user_annotations,  :view_workflow_wdl]
+  before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query, :log_action]
 
   # caching
   caches_action :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots,
@@ -59,7 +59,10 @@ class SiteController < ApplicationController
   def study
     @study.update(view_count: @study.view_count + 1)
     @study_files = @study.study_files.non_primary_data.sort_by(&:name)
+    @primary_study_files = @study.study_files.by_type('Fastq')
     @directories = @study.directory_listings.are_synced
+    @primary_data = @study.directory_listings.primary_data
+    @other_data = @study.directory_listings.non_primary_data
 
     # double check on download availability: first, check if administrator has disabled downloads
     # then check if FireCloud is available and disable download links if either is true
@@ -121,7 +124,10 @@ class SiteController < ApplicationController
             set_selected_annotation
           end
           @study_files = @study.study_files.non_primary_data.sort_by(&:name)
+          @primary_study_files = @study.study_files.by_type('Fastq')
           @directories = @study.directory_listings.are_synced
+          @primary_data = @study.directory_listings.primary_data
+          @other_data = @study.directory_listings.non_primary_data
 
           # double check on download availability: first, check if administrator has disabled downloads
           # then check if FireCloud is available and disable download links if either is true
@@ -141,7 +147,6 @@ class SiteController < ApplicationController
   def render_cluster
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
     @coordinates = load_cluster_group_data_array_points(@selected_annotation, subsample)
-
     @plot_type = @cluster.cluster_type == '3d' ? 'scatter3d' : 'scattergl'
     @options = load_cluster_group_options
     @cluster_annotations = load_cluster_group_annotations
@@ -232,7 +237,7 @@ class SiteController < ApplicationController
       redirect_to view_gene_expression_heatmap_path(search: {genes: terms.join(' ')}, cluster: cluster, annotation: annotation)
     else
       gene = @genes.first
-      redirect_to view_gene_expression_path(study_name: params[:study_name], gene: gene.gene, cluster: cluster, boxpoints: boxpoints, annotation: annotation, consensus: consensus, subsample: subsample)
+      redirect_to view_gene_expression_path(study_name: params[:study_name], gene: gene['gene'], cluster: cluster, boxpoints: boxpoints, annotation: annotation, consensus: consensus, subsample: subsample)
     end
   end
 
@@ -246,7 +251,7 @@ class SiteController < ApplicationController
 
   # re-renders plots when changing cluster selection
   def render_gene_expression_plots
-    matches = @study.expression_scores.by_gene(params[:gene])
+    matches = @study.expression_scores.by_gene(params[:gene], @study.expression_matrix_files.map(&:id))
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
     @gene = load_best_gene_match(matches, params[:gene])
     @y_axis_title = load_expression_axis_title
@@ -300,17 +305,17 @@ class SiteController < ApplicationController
       precomputed = @study.precomputed_scores.by_name(params[:gene_set])
       @genes = []
       precomputed.gene_list.each do |gene|
-        matches = @study.expression_scores.by_gene(gene)
+        matches = @study.expression_scores.by_gene(gene, @study.expression_matrix_files.map(&:id))
         matches.map {|gene| @genes << gene}
       end
     end
     consensus = params[:consensus].nil? ? 'Mean ' : params[:consensus].capitalize + ' '
-    @gene_list = @genes.map(&:gene).join(' ')
+    @gene_list = @genes.map{|gene| gene['gene']}.join(' ')
     @y_axis_title = consensus + ' ' + load_expression_axis_title
     # depending on annotation type selection, set up necessary partial names to use in rendering
-		@options = load_cluster_group_options
-		@cluster_annotations = load_cluster_group_annotations
-		@top_plot_partial = @selected_annotation[:type] == 'group' ? 'expression_plots_view' : 'expression_annotation_plots_view'
+    @options = load_cluster_group_options
+    @cluster_annotations = load_cluster_group_annotations
+    @top_plot_partial = @selected_annotation[:type] == 'group' ? 'expression_plots_view' : 'expression_annotation_plots_view'
 
     if @genes.size > 5
       @main_genes, @other_genes = divide_genes_for_header
@@ -330,13 +335,13 @@ class SiteController < ApplicationController
       precomputed = @study.precomputed_scores.by_name(params[:gene_set])
       @genes = []
       precomputed.gene_list.each do |gene|
-        matches = @study.expression_scores.by_gene(gene)
+        matches = @study.expression_scores.by_gene(gene, @study.expression_matrix_files.map(&:id))
         matches.map {|gene| @genes << gene}
       end
     end
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
     consensus = params[:consensus].nil? ? 'Mean ' : params[:consensus].capitalize + ' '
-    @gene_list = @genes.map(&:gene).join(' ')
+    @gene_list = @genes.map{|gene| gene['gene']}.join(' ')
     @y_axis_title = consensus + ' ' + load_expression_axis_title
     # depending on annotation type selection, set up necessary partial names to use in rendering
     if @selected_annotation[:type] == 'group'
@@ -395,7 +400,7 @@ class SiteController < ApplicationController
     # parse and divide up genes
     terms = parse_search_terms(:genes)
     @genes, @not_found = search_expression_scores(terms)
-    @gene_list = @genes.map(&:gene).join(' ')
+    @gene_list = @genes.map{|gene| gene['gene']}.join(' ')
     # load dropdown options
     @options = load_cluster_group_options
     @cluster_annotations = load_cluster_group_annotations
@@ -419,14 +424,14 @@ class SiteController < ApplicationController
 
       @rows = []
       @genes.each do |gene|
-        row = [gene.gene, ""]
+        row = [gene['gene'], ""]
         # calculate mean to perform row centering if requested
         mean = 0.0
         if params[:row_centered] == '1'
           mean = gene.mean(@cells)
         end
         @cells.each do |cell|
-          row << gene.scores[cell].to_f - mean
+          row << gene['scores'][cell].to_f - mean
         end
 
         @rows << row.join("\t")
@@ -571,49 +576,58 @@ class SiteController < ApplicationController
     render json: @fastq_files.to_json
   end
 
-  #Method to create user annotations from box or lasso selection
+  # render the 'Create Annotations' form (must be done via ajax to get around page caching issues)
+  def show_user_annotations_form
+
+  end
+
+  # Method to create user annotations from box or lasso selection
   def create_user_annotations
-    #Data name is an array of the values of labels
+
+    # Data name is an array of the values of labels
     @data_names = []
 
     #Error handling block to create annotation
     begin
-      #Get the label values and push to data names
+      # Get the label values and push to data names
       user_annotation_params[:user_data_arrays_attributes].keys.each do |key|
         user_annotation_params[:user_data_arrays_attributes][key][:values] =  user_annotation_params[:user_data_arrays_attributes][key][:values].split(',')
         @data_names.push(user_annotation_params[:user_data_arrays_attributes][key][:name].strip )
       end
 
-      #Create the annotation
+      # Create the annotation
       @user_annotation = UserAnnotation.new(user_id: user_annotation_params[:user_id], study_id: user_annotation_params[:study_id], cluster_group_id: user_annotation_params[:cluster_group_id], values: @data_names, name: user_annotation_params[:name])
 
-      #Error handling, save the annotation and handle exceptions
+      # override cluster setter to use the current selected cluster, needed for reloading
+      @cluster = @user_annotation.cluster_group
+
+      # Error handling, save the annotation and handle exceptions
       if @user_annotation.save
-        #Method call to create the user data arrays for this annotation
+        # Method call to create the user data arrays for this annotation
         @user_annotation.initialize_user_data_arrays(user_annotation_params[:user_data_arrays_attributes], user_annotation_params[:subsample_annotation],user_annotation_params[:subsample_threshold], user_annotation_params[:loaded_annotation])
 
-        #Reset the annotations in the dropdowns to include this new annotation
+        # Reset the annotations in the dropdowns to include this new annotation
         @cluster_annotations = load_cluster_group_annotations
         @options = load_cluster_group_options
 
-        #No need for an alert, only a message saying succesfully created
+        # No need for an alert, only a message saying successfully created
         @alert = nil
-        @notice = 'User Annotation successfully saved. You may now view this annotation via the annotations dropdown.'
+        @notice = "User Annotation: '#{@user_annotation.name}' successfully saved. You may now view this annotation via the annotations dropdown."
 
-        #Update the dropdown partial
+        # Update the dropdown partial
         render 'update_user_annotations'
       else
-        #If there was an error saving, reload and alert the use something broke
+        # If there was an error saving, reload and alert the use something broke
         @cluster_annotations = load_cluster_group_annotations
         @options = load_cluster_group_options
         @notice = nil
         @alert = 'The following errors prevented the annotation from being saved: ' + @user_annotation.errors.full_messages.join(',')
-        logger.error "#{Time.now}: Creating user annotation of params: #{user_annotation_params}, unable to save user annotation #{e.message}"
+        logger.error "#{Time.now}: Creating user annotation of params: #{user_annotation_params}, unable to save user annotation with errors #{@user_annotation.errors.full_messages.join(', ')}"
         render 'update_user_annotations'
       end
-    #More error handling, this is if can't save user annotation
+        # More error handling, this is if can't save user annotation
     rescue Mongoid::Errors::InvalidValue => e
-      #If an invalid value was somehow passed through the form, and couldn't save the annotation
+      # If an invalid value was somehow passed through the form, and couldn't save the annotation
       @cluster_annotations = load_cluster_group_annotations
       @options = load_cluster_group_options
       @notice = nil
@@ -622,7 +636,7 @@ class SiteController < ApplicationController
       render 'update_user_annotations'
 
     rescue NoMethodError => e
-      #If something is nil and can't have a method called on it, respond with an alert
+      # If something is nil and can't have a method called on it, respond with an alert
       @cluster_annotations = load_cluster_group_annotations
       @options = load_cluster_group_options
       @notice = nil
@@ -631,7 +645,7 @@ class SiteController < ApplicationController
       render 'update_user_annotations'
 
     rescue => e
-      #If a generic unexpected error occurred and couldn't save the annotation
+      # If a generic unexpected error occurred and couldn't save the annotation
       @cluster_annotations = load_cluster_group_annotations
       @options = load_cluster_group_options
       @notice = nil
@@ -686,8 +700,9 @@ class SiteController < ApplicationController
       @selected_annotation = @cluster.cell_annotations.find {|ca| ca[:name] == annot_name && ca[:type] == annot_type}
       @selected_annotation[:scope] = annot_scope
     elsif annot_scope == 'user'
-      user_annotation = @cluster.viewable_user_annotations(current_user, annot_name)
-      @selected_annotation = {name: annot_name, type: annot_type, scope: annot_scope}
+      # in the case of user annotations, the 'name' value that gets passed is actually the ID
+      user_annotation = UserAnnotation.find(annot_name)
+      @selected_annotation = {name: user_annotation.name, type: annot_type, scope: annot_scope, id: annot_name}
       @selected_annotation[:values] = user_annotation.values
     else
       @selected_annotation = {name: annot_name, type: annot_type, scope: annot_scope}
@@ -742,7 +757,7 @@ class SiteController < ApplicationController
     render action: :notice
   end
 
-	# SUB METHODS
+  # SUB METHODS
 
   # generic method to populate data structure to render a cluster scatter plot
   # uses cluster_group model and loads annotation for both group & numeric plots
@@ -757,11 +772,13 @@ class SiteController < ApplicationController
     cells = @cluster.concatenate_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     annotation_array = []
     annotation_hash = {}
-    #Construct the arrays based on scope
+    # Construct the arrays based on scope
     if annotation[:scope] == 'cluster'
       annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
     elsif annotation[:scope] == 'user'
-      user_annotation = @cluster.viewable_user_annotations(current_user, annotation[:name])
+      # for user annotations, we have to load by id as names may not be unique to clusters
+      user_annotation = UserAnnotation.find(annotation[:id])
+      subsample_annotation = user_annotation.formatted_annotation_identifier
       annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       x_array = user_annotation.concatenate_user_data_arrays('x', 'coordinates', subsample_threshold, subsample_annotation)
       y_array = user_annotation.concatenate_user_data_arrays('y', 'coordinates', subsample_threshold, subsample_annotation)
@@ -874,7 +891,9 @@ class SiteController < ApplicationController
     if annotation[:scope] == 'cluster'
       annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
     elsif annotation[:scope] == 'user'
-      user_annotation = @cluster.viewable_user_annotations(current_user, annotation[:name])
+      # for user annotations, we have to load by id as names may not be unique to clusters
+      user_annotation = UserAnnotation.find(annotation[:id])
+      subsample_annotation = user_annotation.formatted_annotation_identifier
       annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     else
@@ -886,7 +905,7 @@ class SiteController < ApplicationController
       annotation_array.each_with_index do |annot, index|
         annotation_value = annot
         cell_name = cells[index]
-        expression_value = @gene.scores[cell_name].to_f.round(4)
+        expression_value = @gene['scores'][cell_name].to_f.round(4)
 
         values[:all][:text] << "<b>#{cell_name}</b><br>#{annotation[:name]}: #{annotation_value}<br>#{@y_axis_title}: #{expression_value}"
         values[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
@@ -899,7 +918,7 @@ class SiteController < ApplicationController
       cells.each do |cell|
         if annotation_hash.has_key?(cell)
           annotation_value = annotation_hash[cell]
-          expression_value = @gene.scores[cell].to_f.round(4)
+          expression_value = @gene['scores'][cell].to_f.round(4)
           values[:all][:text] << "<b>#{cell}</b><br>#{annotation[:name]}: #{annotation_value}<br>#{@y_axis_title}: #{expression_value}"
           values[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
           values[:all][:x] << annotation_value
@@ -925,7 +944,9 @@ class SiteController < ApplicationController
     if annotation[:scope] == 'cluster'
       annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
     elsif annotation[:scope] == 'user'
-      user_annotation = @cluster.viewable_user_annotations(current_user, annotation[:name])
+      # for user annotations, we have to load by id as names may not be unique to clusters
+      user_annotation = UserAnnotation.find(annotation[:id])
+      subsample_annotation = user_annotation.formatted_annotation_identifier
       annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     else
@@ -933,20 +954,22 @@ class SiteController < ApplicationController
     end
     cells.each_with_index do |cell, index|
       annotation_value = annotation[:scope] == 'cluster' ? annotation_array[index] : annotation_hash[cell]
-      case consensus
-        when 'mean'
-          expression_value = calculate_mean(@genes, cell)
-        when 'median'
-          expression_value = calculate_median(@genes, cell)
-        else
-          expression_value = calculate_mean(@genes, cell)
-      end
-      values[:all][:text] << "<b>#{cell}</b><br>#{annotation[:name]}: #{annotation_value}<br>#{@y_axis_title}: #{expression_value}"
-      values[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
-      values[:all][:x] << annotation_value
-      values[:all][:y] << expression_value
-      values[:all][:cells] << cell
-      values[:all][:marker_size] << 6
+      if !annotation_value.nil?
+        case consensus
+          when 'mean'
+            expression_value = calculate_mean(@genes, cell)
+          when 'median'
+            expression_value = calculate_median(@genes, cell)
+          else
+            expression_value = calculate_mean(@genes, cell)
+        end
+        values[:all][:text] << "<b>#{cell}</b><br>#{annotation[:name]}: #{annotation_value}<br>#{@y_axis_title}: #{expression_value}"
+        values[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
+        values[:all][:x] << annotation_value
+        values[:all][:y] << expression_value
+        values[:all][:cells] << cell
+        values[:all][:marker_size] << 6
+        end
     end
     values
   end
@@ -964,14 +987,16 @@ class SiteController < ApplicationController
       # we can take a subsample of the same size for the annotations since the sort order is non-stochastic (i.e. the indices chosen are the same every time for all arrays)
       annotations = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       cells.each_with_index do |cell, index|
-        values[annotations[index]][:y] << @gene.scores[cell].to_f.round(4)
+        values[annotations[index]][:y] << @gene['scores'][cell].to_f.round(4)
       end
     elsif annotation[:scope] == 'user'
-      user_annotation = @cluster.viewable_user_annotations(current_user, annotation[:name])
+      # for user annotations, we have to load by id as names may not be unique to clusters
+      user_annotation = UserAnnotation.find(annotation[:id])
+      subsample_annotation = user_annotation.formatted_annotation_identifier
       annotations = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
       cells.each_with_index do |cell, index|
-        values[annotations[index]][:y] << @gene.scores[cell].to_f.round(4)
+        values[annotations[index]][:y] << @gene['scores'][cell].to_f.round(4)
       end
     else
       # since annotations are in a hash format, subsampling isn't necessary as we're going to retrieve values by key lookup
@@ -980,7 +1005,7 @@ class SiteController < ApplicationController
         val = annotations[cell]
         # must check if key exists
         if values.has_key?(val)
-          values[annotations[cell]][:y] << @gene.scores[cell].to_f.round(4)
+          values[annotations[cell]][:y] << @gene['scores'][cell].to_f.round(4)
           values[annotations[cell]][:cells] << cell
         end
       end
@@ -1003,7 +1028,9 @@ class SiteController < ApplicationController
     if annotation[:scope] == 'cluster'
       annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold)
     elsif annotation[:scope] == 'user'
-      user_annotation = @cluster.viewable_user_annotations(current_user, annotation[:name])
+      # for user annotations, we have to load by id as names may not be unique to clusters
+      user_annotation = UserAnnotation.find(annotation[:id])
+      subsample_annotation = user_annotation.formatted_annotation_identifier
       annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       x_array = user_annotation.concatenate_user_data_arrays('x', 'coordinates', subsample_threshold, subsample_annotation)
       y_array = user_annotation.concatenate_user_data_arrays('y', 'coordinates', subsample_threshold, subsample_annotation)
@@ -1026,7 +1053,7 @@ class SiteController < ApplicationController
       expression[:all][:z] = z_array
     end
     cells.each_with_index do |cell, index|
-      expression_score = @gene.scores[cell].to_f.round(4)
+      expression_score = @gene['scores'][cell].to_f.round(4)
       # load correct annotation value based on scope
       annotation_value = annotation[:scope] == 'cluster' ? annotation_array[index] : annotation_hash[cell]
       text_value = "#{cell} (#{annotation[:name]}: #{annotation_value})<br />#{@y_axis_title}: #{expression_score}"
@@ -1044,7 +1071,7 @@ class SiteController < ApplicationController
   # load boxplot expression scores vs. scores across each gene for all cells
   # will support a variety of consensus modes (default is mean)
   def load_gene_set_expression_boxplot_scores(annotation, consensus, subsample_threshold=nil)
-		values = initialize_plotly_objects_by_annotation(annotation)
+    values = initialize_plotly_objects_by_annotation(annotation)
     # construct annotation key to load subsample data_arrays if needed, will be identical to params[:annotation]
     subsample_annotation = "#{annotation[:name]}--#{annotation[:type]}--#{annotation[:scope]}"
     # grab all cells present in the cluster, and use as keys to load expression scores
@@ -1066,7 +1093,9 @@ class SiteController < ApplicationController
         end
       end
     elsif annotation[:scope] == 'user'
-      user_annotation = @cluster.viewable_user_annotations(current_user, annotation[:name])
+      # for user annotations, we have to load by id as names may not be unique to clusters
+      user_annotation = UserAnnotation.find(annotation[:id])
+      subsample_annotation = user_annotation.formatted_annotation_identifier
       annotations = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
       cells.each_with_index do |cell, index|
@@ -1105,9 +1134,9 @@ class SiteController < ApplicationController
   end
 
   # load scatter expression scores with average of scores across each gene for all cells
-	# uses data_array as source for each axis
+  # uses data_array as source for each axis
   # will support a variety of consensus modes (default is mean)
-	def load_gene_set_expression_data_arrays(annotation, consensus, subsample_threshold=nil)
+  def load_gene_set_expression_data_arrays(annotation, consensus, subsample_threshold=nil)
     # construct annotation key to load subsample data_arrays if needed, will be identical to params[:annotation]
     subsample_annotation = "#{annotation[:name]}--#{annotation[:type]}--#{annotation[:scope]}"
 
@@ -1120,7 +1149,9 @@ class SiteController < ApplicationController
     if annotation[:scope] == 'cluster'
       annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
     elsif annotation[:scope] == 'user'
-      user_annotation = @cluster.viewable_user_annotations(current_user, annotation[:name])
+      # for user annotations, we have to load by id as names may not be unique to clusters
+      user_annotation = UserAnnotation.find(annotation[:id])
+      subsample_annotation = user_annotation.formatted_annotation_identifier
       annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       x_array = user_annotation.concatenate_user_data_arrays('x', 'coordinates', subsample_threshold, subsample_annotation)
       y_array = user_annotation.concatenate_user_data_arrays('y', 'coordinates', subsample_threshold, subsample_annotation)
@@ -1130,19 +1161,19 @@ class SiteController < ApplicationController
       # for study-wide annotations, load from study_metadata values instead of cluster-specific annotations
       annotation_hash = @study.study_metadata_values(annotation[:name], annotation[:type])
     end
-		expression = {}
-		expression[:all] = {
-				x: x_array,
-				y: y_array,
-				text: [],
+    expression = {}
+    expression[:all] = {
+        x: x_array,
+        y: y_array,
+        text: [],
         annotations: [],
         cells: cells,
-				marker: {cmax: 0, cmin: 0, color: [], size: [], showscale: true, colorbar: {title: @y_axis_title , titleside: 'right'}}
-		}
+        marker: {cmax: 0, cmin: 0, color: [], size: [], showscale: true, colorbar: {title: @y_axis_title , titleside: 'right'}}
+    }
     if @cluster.is_3d?
       expression[:all][:z] = z_array
     end
-		cells.each_with_index do |cell, index|
+    cells.each_with_index do |cell, index|
       case consensus
         when 'mean'
           expression_score = calculate_mean(@genes, cell)
@@ -1155,17 +1186,17 @@ class SiteController < ApplicationController
       # load correct annotation value based on scope
       annotation_value = annotation[:scope] == 'cluster' ? annotation_array[index] : annotation_hash[cell]
       text_value = "#{cell} (#{annotation[:name]}: #{annotation_value})<br />#{@y_axis_title}: #{expression_score}"
-			expression[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
+      expression[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
       expression[:all][:text] << text_value
-			expression[:all][:marker][:color] << expression_score
-			expression[:all][:marker][:line] = { color: 'rgb(40,40,40)', width: 0.5}
-			expression[:all][:marker][:size] << 6
-		end
-		color_minmax =  expression[:all][:marker][:color].minmax
-		expression[:all][:marker][:cmin], expression[:all][:marker][:cmax] = color_minmax
-		expression[:all][:marker][:colorscale] = 'Reds'
-		expression
-	end
+      expression[:all][:marker][:color] << expression_score
+      expression[:all][:marker][:line] = { color: 'rgb(40,40,40)', width: 0.5}
+      expression[:all][:marker][:size] << 6
+    end
+    color_minmax =  expression[:all][:marker][:color].minmax
+    expression[:all][:marker][:cmin], expression[:all][:marker][:cmax] = color_minmax
+    expression[:all][:marker][:colorscale] = 'Reds'
+    expression
+  end
 
   # method to initialize containers for plotly by annotation values
   def initialize_plotly_objects_by_annotation(annotation)
@@ -1180,7 +1211,7 @@ class SiteController < ApplicationController
   def calculate_mean(genes, cell)
     sum = 0.0
     genes.each do |gene|
-      sum += gene.scores[cell].to_f
+      sum += gene['scores'][cell].to_f
     end
     sum / genes.size
   end
@@ -1189,7 +1220,7 @@ class SiteController < ApplicationController
   def calculate_median(genes, cell)
     gene_scores = []
     genes.each do |gene|
-      gene_scores << gene.scores[cell].to_f
+      gene_scores << gene['scores'][cell].to_f
     end
     sorted = gene_scores.sort
     len = sorted.length
@@ -1210,7 +1241,7 @@ class SiteController < ApplicationController
   def load_expression_scores(terms)
     genes = []
     terms.each do |term|
-      matches = @study.expression_scores.by_gene(term)
+      matches = @study.expression_scores.by_gene(term, @study.expression_matrix_files.map(&:id))
       unless matches.empty?
         genes << load_best_gene_match(matches, term)
       end
@@ -1223,7 +1254,7 @@ class SiteController < ApplicationController
     genes = []
     not_found = []
     terms.each do |term|
-      matches = @study.expression_scores.by_gene(term)
+      matches = @study.expression_scores.by_gene(term, @study.expression_matrix_files.map(&:id))
       unless matches.empty?
         genes << load_best_gene_match(matches, term)
       else
@@ -1237,14 +1268,14 @@ class SiteController < ApplicationController
   def load_best_gene_match(matches, search_term)
     # iterate through all matches to see if there is an exact match
     matches.each do |match|
-      if match.gene == search_term
+      if match['gene'] == search_term
         return match
       end
     end
     # go through a second time to see if there is a case-insensitive match by looking at searchable_gene
     # this is done after a complete iteration to ensure that there wasn't an exact match available
     matches.each do |match|
-      if match.searchable_gene == search_term.downcase
+      if match['searchable_gene'] == search_term.downcase
         return match
       end
     end
@@ -1261,13 +1292,11 @@ class SiteController < ApplicationController
         'Cluster-based' => @cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]},
         'Study Wide' => @study.study_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
     }
-    #load a user's user annotations if user is signed in and has any
+    # load available user annotations (if any)
     if user_signed_in?
-      user_annotations = UserAnnotation.where(user_id: current_user.id, study_id: @study.id, cluster_group_id: @cluster.id, queued_for_deletion: false).to_a
-      shared_annotations = UserAnnotationShare.where(email: current_user.email).map(&:user_annotation).select {|a| !a.queued_for_deletion && a.study_id == @study.id && a.cluster_group_id == @cluster.id}
-      user_annotations.concat(shared_annotations)
+      user_annotations = UserAnnotation.viewable_by_cluster(current_user, @cluster)
       unless user_annotations.empty?
-        grouped_options['User Annotations'] = user_annotations.map {|annot| ["#{annot.name}", "#{annot.name}--group--user"] }
+        grouped_options['User Annotations'] = user_annotations.map {|annot| ["#{annot.name}", "#{annot.id}--group--user"] }
       end
     end
     grouped_options
@@ -1330,7 +1359,7 @@ class SiteController < ApplicationController
 
   # load all precomputed options for a study
   def load_precomputed_options
-     @precomputed = @study.precomputed_scores.map(&:name)
+    @precomputed = @study.precomputed_scores.map(&:name)
   end
 
   # retrieve axis labels from cluster coordinates file (if provided)
@@ -1344,7 +1373,7 @@ class SiteController < ApplicationController
   end
 
   def load_expression_axis_title
-    @study.expression_matrix_file.y_axis_label.empty? ? 'Expression' : @study.expression_matrix_file.y_axis_label
+    @study.expression_matrix_files.first.y_axis_label.empty? ? 'Expression' : @study.expression_matrix_files.first.y_axis_label
   end
 
   # create a unique hex digest of a list of genes for use in set_cache_path

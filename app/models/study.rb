@@ -16,8 +16,7 @@ class Study
   # method to renew firecloud client (forces new access token for API and reinitializes storage driver)
   def self.refresh_firecloud_client
     begin
-      @@firecloud_client.refresh_access_token
-      @@firecloud_client.refresh_storage_driver
+      @@firecloud_client = FireCloudClient.new
       true
     rescue => e
       Rails.logger.error "#{Time.now}: unable to refresh FireCloud client: #{e.message}"
@@ -51,8 +50,18 @@ class Study
   end
 
   has_many :expression_scores, dependent: :delete do
-    def by_gene(gene)
-      any_of({gene: gene}, {searchable_gene: gene.downcase}).to_a
+    def by_gene(gene, study_file_ids)
+      found_scores = any_of({gene: gene, :study_file_id.in => study_file_ids}, {searchable_gene: gene.downcase, :study_file_id.in => study_file_ids}).to_a
+      if found_scores.empty?
+        return []
+      else
+        # since we can have duplicate genes but not cells, merge into one object for rendering
+        merged_scores = {'searchable_gene' => gene.downcase, 'gene' => gene, 'scores' => {}}
+        found_scores.each do |score|
+          merged_scores['scores'].merge!(score.scores)
+        end
+        return [merged_scores]
+      end
     end
   end
 
@@ -95,9 +104,24 @@ class Study
       where(sync_status: false).to_a
     end
 
-    # can't used 'synced' as this is a built-in ruby method
+    # all synced directories, regardless of type
     def are_synced
       where(sync_status: true).to_a
+    end
+
+    # synced directories of a specific type
+    def synced_by_type(file_type)
+      where(sync_status: true, file_type: file_type).to_a
+    end
+
+    # primary data directories
+    def primary_data
+      where(sync_status: true, :file_type.in => DirectoryListing::PRIMARY_DATA_TYPES).to_a
+    end
+
+    # non-primary data directories
+    def non_primary_data
+      where(sync_status: true, :file_type.nin => DirectoryListing::PRIMARY_DATA_TYPES).to_a
     end
   end
 
@@ -188,6 +212,11 @@ class Study
   # check if a given user can view study by share (does not take public into account - use Study.viewable(user) instead)
   def can_view?(user)
     self.can_edit?(user) || self.study_shares.can_view.include?(user.email)
+  end
+
+  # check if a user can download data directly from the bucket
+  def can_direct_download?(user)
+    self.user.email == user.email || self.study_shares.can_view.include?(user.email)
   end
 
   # check if user can delete a study - only owners can
@@ -307,16 +336,6 @@ class Study
   def set_cell_count(file_type)
     @cell_count = 0
     case file_type
-      when 'Expression Matrix'
-        if self.expression_matrix_file.upload_content_type == 'application/gzip'
-          @file = Zlib::GzipReader.open(self.expression_matrix_file.upload.path)
-        else
-          @file = File.open(self.expression_matrix_file.upload.path)
-        end
-        cells = @file.readline.split(/[\t,]/)
-        @file.close
-        cells.shift
-        @cell_count = cells.size
       when 'Metadata'
         metadata_name, metadata_type = StudyMetadatum.where(study_id: self.id).pluck(:name, :annotation_type).flatten
         @cell_count = self.study_metadata_values(metadata_name, metadata_type).keys.size
@@ -328,13 +347,18 @@ class Study
   # return a count of the number of fastq files both uploaded and referenced via directory_listings for a study
   def primary_data_file_count
     study_file_count = self.study_files.by_type('Fastq').size
-    directory_listing_count = self.directory_listings.where(sync_status: true).map {|d| d.files.size}.reduce(:+)
-    [study_file_count, directory_listing_count].compact.reduce(:+)
+    directory_listing_count = self.directory_listings.primary_data.map {|d| d.files.size}.reduce(0, :+)
+    study_file_count + directory_listing_count
+  end
+
+  # return a count of the number of miscella files both uploaded and referenced via directory_listings for a study
+  def misc_directory_file_count
+    self.directory_listings.non_primary_data.map {|d| d.files.size}.reduce(0, :+)
   end
 
   # count the number of cluster-based annotations in a study
   def cluster_annotation_count
-    self.cluster_groups.map {|c| c.cell_annotations.size}.reduce(:+)
+    self.cluster_groups.map {|c| c.cell_annotations.size}.reduce(0, :+)
   end
 
   # return an array of all single cell names in study
@@ -391,14 +415,18 @@ class Study
     self.study_files.find_by(file_type: 'Cluster', name: name)
   end
 
-  # helper method to directly access expression matrix file
-  def expression_matrix_file
-    self.study_files.find_by(file_type:'Expression Matrix')
+  # helper method to directly access expression matrix files
+  def expression_matrix_files
+    self.study_files.by_type('Expression Matrix')
   end
 
-  # helper method to directly access expression matrix file
+  # helper method to directly access expression matrix file file by name
+  def expression_matrix_file(name)
+    self.study_files.find_by(file_type:'Expression Matrix', name: name)
+  end
+  # helper method to directly access metadata file
   def metadata_file
-    self.study_files.find_by(file_type:'Metadata')
+    self.study_files.by_type('Metadata').first
   end
 
   # nightly cron to delete any studies that are 'queued for deletion'
@@ -416,6 +444,7 @@ class Study
       StudyFile.where(study_id: study.id).delete_all
       DirectoryListing.where(study_id: study.id).delete_all
       UserAnnotation.where(study_id: study.id).delete_all
+      UserAnnotationShare.where(study_id: study.id).delete_all
       UserDataArray.where(study_id: study.id).delete_all
       # now destroy study to ensure everything is removed
       study.destroy
@@ -537,9 +566,18 @@ class Study
         expression_data = File.open(expression_file.upload.path)
       end
       cells = expression_data.readline.strip.split(/[\t,]/)
-      @last_line = "#{expression_file.name}, line 1: #{cells.join("\t")}"
+      @last_line = "#{expression_file.name}, line 1"
 
       cells.shift
+
+      # validate that new expression matrix does not have repeated cells, raise error if repeats found
+      existing_cells = self.data_arrays.by_name_and_type('All Cells', 'cells').map(&:values).flatten
+      uniques = cells - existing_cells
+      unless uniques.size == cells.size
+        repeats = cells - uniques
+        raise StandardError, "cell names validation failed; repeated cells were found: #{repeats.join(', ')}"
+      end
+
       # store study id for later to save memory
       study_id = self._id
       @records = []
@@ -615,9 +653,6 @@ class Study
         Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
       end
 
-      # update study cell count
-      self.set_cell_count(expression_file.file_type)
-
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       if opts[:local]
         begin
@@ -627,7 +662,7 @@ class Study
             SingleCellMailer.notify_admin_upload_fail(expression_file, 'FireCloud API unavailable').deliver_now
           end
         rescue => e
-          Rails.logger.info "#{Time.now}: Metadata file: '#{expression_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
+          Rails.logger.info "#{Time.now}: Expression file: '#{expression_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
           SingleCellMailer.notify_admin_upload_fail(expression_file, e.message).deliver_now
         end
       else
@@ -857,7 +892,7 @@ class Study
       @message << "Total points in cluster: #{@point_count}"
       @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
       # set initialized to true if possible
-      if !self.expression_matrix_file.nil? && !self.metadata_file.nil? && !self.initialized?
+      if !self.expression_matrix_files.nil? && !self.metadata_file.nil? && !self.initialized?
         self.update(initialized: true)
       end
 
@@ -1067,7 +1102,7 @@ class Study
       metadata_file.update(parse_status: 'parsed')
 
       # set initialized to true if possible
-      if !self.expression_matrix_file.nil? && !self.cluster_ordinations_files.empty? && !self.initialized?
+      if !self.expression_matrix_files.nil? && !self.cluster_ordinations_files.empty? && !self.initialized?
         self.update(initialized: true)
       end
 
@@ -1540,13 +1575,15 @@ class Study
         rescue => e
           # delete workspace on any fail as this amounts to a validation fail
           Rails.logger.info "#{Time.now}: Error creating workspace: #{e.message}"
-          begin
+          # delete firecloud workspace unless error is 409 Conflict (workspace already taken)
+          if e.message != '409 Conflict'
             Study.firecloud_client.delete_workspace(self.firecloud_workspace)
-          rescue => err
-            Rails.logger.info "#{Time.now}: Unable to remove workspace due to: #{err.message}"
+            errors.add(:firecloud_workspace, " creation failed: #{e.message}; Please try again.")
+          else
+            errors.add(:firecloud_workspace, ' - there is already an existing workspace using this name.  Please choose another name for your study.')
+            errors.add(:name, ' - you must choose a different name for your study.')
+            self.firecloud_workspace = nil
           end
-          errors.add(:firecloud_workspace, " creation failed: #{e.message}; Please try again later.")
-          self.firecloud_workspace = nil
           return false
         end
       end

@@ -198,7 +198,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 				context = " encountered when requesting '#{path}'"
 				log_message = "#{Time.now}: " + e.message + context
 				Rails.logger.error log_message
-				@error = e.http_body
+				@error = e.message
 				process_firecloud_request(http_method, path, payload)
 			end
 		else
@@ -225,26 +225,29 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		rescue Errno::ECONNREFUSED => e
 			false
 		end
-	end
+  end
 
-	# get more detailed status information about FireCloud api
-	#
-	# return: JSON object with health status information for various FireCloud services
-	def api_status
-		path = self.api_root + '/status'
-		headers = {
-				'Authorization' => "Bearer #{self.access_token['access_token']}",
-				'Content-Type' => 'application/json',
-				'Accept' => 'application/json'
-		}
-		begin
-			response = RestClient::Request.execute(method: :get, url: path, headers: headers)
-			JSON.parse(response.body)
-		rescue RestClient::ExceptionWithResponse => e
-			Rails.logger.error "#{Time.now}: FireCloud status error: #{e.message}"
-			e.response
-		end
-	end
+  # get more detailed status information about FireCloud api
+  # this method doesn't use process_firecloud_request as we want to preserve error states rather than catch and suppress them
+  #
+  # return: JSON object with health status information for various FireCloud services
+  def api_status
+    path = self.api_root + '/status'
+    # make sure access token is still valid
+    self.access_token_expired? ? self.refresh_access_token : nil
+    headers = {
+        'Authorization' => "Bearer #{self.access_token['access_token']}",
+        'Content-Type' => 'application/json',
+        'Accept' => 'application/json'
+    }
+    begin
+      response = RestClient::Request.execute(method: :get, url: path, headers: headers)
+      JSON.parse(response.body)
+    rescue RestClient::ExceptionWithResponse => e
+      Rails.logger.error "#{Time.now}: FireCloud status error: #{e.message}"
+      e.response
+    end
+  end
 
 	##
 	## WORKSPACE METHODS
@@ -635,7 +638,11 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	# return: true on file deletion
 	def delete_workspace_file(workspace_name, filename)
 		file = self.get_workspace_file(workspace_name, filename)
-		file.delete
+		begin
+			file.delete
+		rescue => e
+			logger.info("#{Time.now}: failed to delete workspace file #{filename} with error #{e.message}")
+		end
 	end
 
 	# retrieve single file in a GCP bucket of a workspace and download locally to portal (likely for parsing)

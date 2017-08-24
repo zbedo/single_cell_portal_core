@@ -13,7 +13,7 @@ class DeleteQueueJob < Struct.new(:object)
         study = object.study
 
         # reset initialized if needed
-        if study.cluster_ordinations_files.empty? || study.expression_matrix_file.nil? || study.metadata_file.nil?
+        if study.cluster_ordinations_files.empty? || study.expression_matrix_files.empty? || study.metadata_file.nil?
           study.update!(initialized: false)
         end
 
@@ -27,8 +27,16 @@ class DeleteQueueJob < Struct.new(:object)
               study.save
             end
 
-            ClusterGroup.where(study_file_id: object.id, study_id: study.id).delete_all
+            clusters = ClusterGroup.where(study_file_id: object.id, study_id: study.id)
+            cluster_group_id = clusters.first.id
+            clusters.delete_all
             DataArray.where(study_file_id: object.id, study_id: study.id).delete_all
+            user_annotations = UserAnnotation.where(study_id: study.id, cluster_group_id: cluster_group_id )
+            user_annotations.each do |annot|
+              annot.user_data_arrays.delete_all
+              annot.user_annotation_shares.delete_all
+            end
+            user_annotations.delete_all
           when 'Expression Matrix'
             ExpressionScore.where(study_file_id: object.id, study_id: study.id).delete_all
             DataArray.where(study_file_id: object.id, study_id: study.id).delete_all
@@ -48,9 +56,9 @@ class DeleteQueueJob < Struct.new(:object)
         new_name = "DELETE-#{SecureRandom.uuid}"
         object.update!(name: new_name)
 
-        # delete data arrays right away
+        # delete data arrays and shares right away
         object.user_data_arrays.delete_all
-
+        object.user_annotation_shares.delete_all
     end
   end
 end
