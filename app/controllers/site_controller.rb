@@ -6,7 +6,7 @@ class SiteController < ApplicationController
   before_action :load_precomputed_options, except: [:index, :search, :edit_study_description, :annotation_query, :download_file, :get_fastq_files, :log_action, :show_user_annotations_form, :view_workflow_wdl]
   before_action :set_cluster_group, except: [:index, :search, :update_study_settings, :edit_study_description, :precomputed_results, :download_file, :get_fastq_files, :log_action, :create_user_annotations, :view_workflow_wdl]
   before_action :set_selected_annotation, except: [:index, :search, :study, :update_study_settings, :edit_study_description, :precomputed_results, :expression_query, :get_new_annotations, :download_file, :get_fastq_files, :log_action, :create_user_annotations,  :view_workflow_wdl]
-  before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query, :log_action]
+  before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query, :view_workflow_wdl, :log_action]
 
   # caching
   caches_action :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots,
@@ -84,10 +84,10 @@ class SiteController < ApplicationController
       (rand(20) + 10).times do
         @submissions << {'submissionId' => SecureRandom.uuid, 'submittedOn' => (Time.now - rand(48).hours).strftime('%D %r'), 'methodName' => @workflows_list.sample.first.split.first, 'status' => %w(Queued Running Completed Error).sample}
       end
-      @primary_data = []
-      fastq_files = @study.study_files.by_type('Fastq').select {|f| !f.human_data}
-      [fastq_files, @directories].flatten.each do |entry|
-        @primary_data << ["#{entry.name} (#{entry.description})", "#{entry.class.name.downcase}--#{entry.name}"]
+      @primary_data_locations = []
+      fastq_files = @primary_study_files.select {|f| !f.human_data}
+      [fastq_files, @primary_data].flatten.each do |entry|
+        @primary_data_locations << ["#{entry.name} (#{entry.description})", "#{entry.class.name.downcase}--#{entry.name}"]
       end
     end
   end

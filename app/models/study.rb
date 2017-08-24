@@ -643,7 +643,7 @@ class Study
       @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
       Rails.logger.info @message.join("\n")
       # set initialized to true if possible
-      if !self.cluster_ordinations_files.empty? && !self.metadata_file.nil? && !self.initialized?
+      if self.cluster_ordinations_files.any? && !self.metadata_file.nil? && !self.initialized?
         self.update(initialized: true)
       end
 
@@ -892,7 +892,7 @@ class Study
       @message << "Total points in cluster: #{@point_count}"
       @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
       # set initialized to true if possible
-      if !self.expression_matrix_files.nil? && !self.metadata_file.nil? && !self.initialized?
+      if self.expression_matrix_files.any? && !self.metadata_file.nil? && !self.initialized?
         self.update(initialized: true)
       end
 
@@ -1102,7 +1102,7 @@ class Study
       metadata_file.update(parse_status: 'parsed')
 
       # set initialized to true if possible
-      if !self.expression_matrix_files.nil? && !self.cluster_ordinations_files.empty? && !self.initialized?
+      if self.expression_matrix_files.any? && self.cluster_ordinations_files.any? && !self.initialized?
         self.update(initialized: true)
       end
 
