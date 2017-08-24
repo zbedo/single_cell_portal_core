@@ -27,11 +27,11 @@ class ReportsController < ApplicationController
     if @private_study_age_dist[private_label].empty?
       @private_dist_avg = 0
     else
-      @private_dist_avg = @private_study_age_dist[private_label].reduce(:+) / @private_study_age_dist[private_label].size.to_f
+      @private_dist_avg = @private_study_age_dist[private_label].reduce(0, :+) / @private_study_age_dist[private_label].size.to_f
     end
 
     @collab_dist = {all_studies_label => @all_studies.map {|s| s.study_shares.size}}
-    @collab_dist_avg = @collab_dist[all_studies_label].reduce(:+) / @collab_dist[all_studies_label].size.to_f
+    @collab_dist_avg = @collab_dist[all_studies_label].reduce(0, :+) / @collab_dist[all_studies_label].size.to_f
     @cell_dist = @all_studies.map(&:cell_count)
     max_cells = @cell_dist.max - @cell_dist.max % 1000
     @cell_count_bin_dist = {'Public' => {}, 'Private' => {}}
@@ -41,7 +41,7 @@ class ReportsController < ApplicationController
       @cell_count_bin_dist['Public'][bin_label] = @public_studies.select {|s| s.cell_count >= bin && s.cell_count < (bin + 1000)}.size
       @cell_count_bin_dist['Private'][bin_label] = @private_studies.select {|s| s.cell_count >= bin && s.cell_count < (bin + 1000)}.size
     end
-    @cell_avg = @cell_dist.reduce(:+) / @cell_dist.size.to_f
+    @cell_avg = @cell_dist.reduce(0, :+) / @cell_dist.size.to_f
 
     # user distributions
     @user_study_dist = {all_studies_label => users.map {|u| u.studies.size}}
@@ -52,13 +52,13 @@ class ReportsController < ApplicationController
       user_study_email_dist[study_type] = {}
       email_domains.sort.each do |domain|
         totals_by_domain[domain] ||= 0
-        count = users.select {|u| u.email =~ /#{domain}/}.map {|u| u.studies.select {|s| study_type == public_label ? s.public? : !s.public?}.size}.reduce(:+)
+        count = users.select {|u| u.email =~ /#{domain}/}.map {|u| u.studies.select {|s| study_type == public_label ? s.public? : !s.public?}.size}.reduce(0, :+)
         totals_by_domain[domain] += count
         user_study_email_dist[study_type][domain] = count
       end
     end
-    @user_study_avg = @user_study_dist[all_studies_label].reduce(:+) / @user_study_dist[all_studies_label].size.to_f
-    @email_domain_avg = totals_by_domain.values.reduce(:+) / totals_by_domain.values.size
+    @user_study_avg = @user_study_dist[all_studies_label].reduce(0, :+) / @user_study_dist[all_studies_label].size.to_f
+    @email_domain_avg = totals_by_domain.values.reduce(0, :+) / totals_by_domain.values.size
 
     # compute time-based breakdown of returning user counts
     @returning_users_by_week = {}

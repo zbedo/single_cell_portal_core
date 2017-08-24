@@ -217,6 +217,28 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		end
 	end
 
+	# get more detailed status information about FireCloud api
+  # this method doesn't use process_firecloud_request as we want to preserve error states rather than catch and suppress them
+	#
+	# return: JSON object with health status information for various FireCloud services
+	def api_status
+		path = self.api_root + '/status'
+		# make sure access token is still valid
+		self.access_token_expired? ? self.refresh_access_token : nil
+		headers = {
+				'Authorization' => "Bearer #{self.access_token['access_token']}",
+				'Content-Type' => 'application/json',
+				'Accept' => 'application/json'
+		}
+		begin
+			response = RestClient::Request.execute(method: :get, url: path, headers: headers)
+			JSON.parse(response.body)
+		rescue RestClient::ExceptionWithResponse => e
+			Rails.logger.error "#{Time.now}: FireCloud status error: #{e.message}"
+			e.response
+		end
+	end
+
 	# return a list of all workspaces in the portal namespace
 	#
 	# return: array of JSON objects detailing workspaces

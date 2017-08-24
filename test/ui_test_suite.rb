@@ -403,6 +403,25 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get(url)
 	end
 
+	# accept an open alert with error handling
+	def accept_alert
+		open = false
+		i = 1
+		while !open
+			if i <= 5
+				begin
+					@driver.switch_to.alert.accept
+					open = true
+				rescue Selenium::WebDriver::Error::NoSuchAlertError
+					sleep 1
+					i += 1
+				end
+			else
+				raise Selenium::WebDriver::Error::TimeOutError, "Timing out on closing alert"
+			end
+		end
+	end
+
 	##
 	## ADMIN TESTS
 	##
@@ -738,7 +757,7 @@ class UiTestSuite < Test::Unit::TestCase
 		form = @driver.find_element(:class, 'initialize_misc_form')
 		delete = form.find_element(:class, 'delete-file')
 		delete.click
-		@driver.switch_to.alert.accept
+		accept_alert
 
 		# wait a few seconds to allow delete call to propogate all the way to FireCloud after confirmation modal
 		close_modal('study-file-notices')
@@ -869,7 +888,7 @@ class UiTestSuite < Test::Unit::TestCase
 		study_file_count = @driver.find_element(:id, "error-messaging-test-study-#{$random_seed}-study-file-count")
 		assert study_file_count.text == '0', "found incorrect number of study files; expected 0 and found #{study_file_count.text}"
 		@driver.find_element(:class, "error-messaging-test-study-#{$random_seed}-delete").click
-		@driver.switch_to.alert.accept
+		accept_alert
 		close_modal('message_modal')
 		puts "Test method: #{self.method_name} successful!"
 	end
@@ -1109,10 +1128,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# sync directory listings
 		directory_forms = @driver.find_elements(:class, 'unsynced-directory-listing')
-		num_files = 0
 		directory_forms.each do |form|
-			files_found = form.find_element(:class, 'directory-files-found').text.to_i
-			num_files += files_found
 			sync_button = form.find_element(:class, 'save-directory-listing')
 			sync_button.click
 			close_modal('sync-notice-modal')
@@ -1158,7 +1174,8 @@ class UiTestSuite < Test::Unit::TestCase
 			description_field = sync_form.find_element(:id, 'directory_listing_description')
 			description_field.send_keys(description)
 			updated_dirs["#{sync_form[:id]}"] = {
-					description: description
+					description: description,
+					file_type: sync_form.find_element(:id, 'directory_listing_file_type')[:value]
 			}
 			sync_button = sync_form.find_element(:class, 'save-directory-listing')
 			sync_button.click
@@ -1177,8 +1194,10 @@ class UiTestSuite < Test::Unit::TestCase
 		# assert number of files using the count badges (faster than counting table rows)
 		study_file_count = @driver.find_element(:id, 'study-file-count').text.to_i
 		primary_data_count = @driver.find_element(:id, 'primary-data-count').text.to_i
+		other_data_count = @driver.find_element(:id, 'other-data-count').text.to_i
 		assert study_file_count == study_file_forms.size, "did not find correct number of study files, expected #{study_file_forms.size} but found #{study_file_count}"
-		assert primary_data_count == directory_forms.size, "did not find correct number of primary data files, expected #{directory_forms.size} but found #{primary_data_count}"
+		assert primary_data_count == 1, "did not find correct number of primary data files, expected 1 but found #{primary_data_count}"
+		assert other_data_count == 19, "did not find correct number of other data files, expected 19 but found #{primary_data_count}"
 
 		# make sure edits saved by going through updated list of synced files and comparing values
 		updated_files.each do |id, values|
@@ -1193,12 +1212,11 @@ class UiTestSuite < Test::Unit::TestCase
 			assert values[:parsed] == entry_parsed, "study file entry #{id} parse incorrect, expected #{values[:parsed]} but found #{entry_parsed}"
 		end
 
-		# now check directory listings datatable - there should only be one entry in this test
-		# since we cannot easily assign ids/classes to entries in the datatable, reference values by position index
+		# now check directory listings datatables - we only need to match the first found row as all rows will have identical descriptions
 		updated_dirs.each_value do |values|
-			directory_listing_row = @driver.find_element(:id, 'fastq-files-target').find_element(:tag_name, 'tr')
-			row_cells = directory_listing_row.find_elements(:tag_name, 'td')
-			assert values[:description] == row_cells[1].text, "directory listing description incorrect, expected #{values[:description]} but found #{row_cells[1].text}"
+			directory_listing_row = @driver.find_element(:class, values[:file_type] + '-entry')
+			found_description = directory_listing_row.find_element(:class, 'dl-description')
+			assert values[:description] == found_description.text, "directory listing description incorrect, expected #{values[:description]} but found #{found_description.text}"
 		end
 
 		# assert share was added
@@ -1227,14 +1245,16 @@ class UiTestSuite < Test::Unit::TestCase
 		file_to_delete = synced_files.sample
 		delete_file_btn = file_to_delete.find_element(:class, 'delete-study-file')
 		delete_file_btn.click
-		@driver.switch_to.alert.accept
+		accept_alert
 		close_modal('sync-notice-modal')
 
 		# delete directory listing
 		delete_dir_btn = synced_directory_listing.find_element(:class, 'delete-directory-listing')
 		delete_dir_btn.click
-		@driver.switch_to.alert.accept
+		accept_alert
 		close_modal('sync-notice-modal')
+		# give DelayedJob one second to fire the DeleteQueueJob to remove the deleted entries
+		sleep(1)
 
 		# confirm files were removed
 		@driver.get studies_path
@@ -1245,10 +1265,13 @@ class UiTestSuite < Test::Unit::TestCase
 		# remove share and resync
 		edit_button = @driver.find_element(:class, "sync-test-#{uuid}-edit")
 		edit_button.click
-		wait_for_render(:class, 'edit_study')
+		wait_for_render(:class, 'study-share-form')
+		# we need an extra sleep here to allow the javascript handlers to attach so that the remove_nested_fields event will fire
+		sleep(0.5)
 		remove_share = @driver.find_element(:class, 'remove_nested_fields')
 		remove_share.click
-		@driver.switch_to.alert.accept
+		accept_alert
+		# let the form remove from the page
 		sleep (0.25)
 		save_study = @driver.find_element(:id, 'save-study')
 		save_study.click
@@ -1287,7 +1310,7 @@ class UiTestSuite < Test::Unit::TestCase
 		login_as_other($test_email)
 		delete_local_link = @driver.find_element(:class, "sync-test-#{uuid}-delete-local")
 		delete_local_link.click
-		@driver.switch_to.alert.accept
+		accept_alert
 		close_modal('message_modal')
 
 		puts "Test method: #{self.method_name} successful!"
@@ -2743,10 +2766,9 @@ class UiTestSuite < Test::Unit::TestCase
 	# test whether or not maintenance mode functions properly
 	test 'front-end: maintenance mode' do
 		puts "Test method: #{self.method_name}"
-
 		# only execute this test when testing locally - when using a remote host it will fail as the shell script being executed
 		# is on the wrong host
-		unless $portal_url.include?('localhost')
+		omit_if !$portal_url.include?('localhost'), 'cannot enable maintenance mode on remote host' do
 			# enable maintenance mode
 			system("#{@base_path}/bin/enable_maintenance.sh on")
 			@driver.get @base_url
@@ -2756,8 +2778,6 @@ class UiTestSuite < Test::Unit::TestCase
 			@driver.get @base_url
 			assert element_present?(:id, 'main-banner'), 'could not load home page'
 			puts "Test method: #{self.method_name} successful!"
-		else
-			skip "Skipping #{self.method_name} -- cannot execute on remote host"
 		end
 	end
 
@@ -3793,7 +3813,7 @@ class UiTestSuite < Test::Unit::TestCase
 		num_annotations = @driver.find_elements(:class, 'annotation-name').length
 
 		@driver.find_element(:class, "user-#{$random_seed}-publish").click
-		@driver.switch_to.alert.accept
+		accept_alert
 		close_modal('message_modal')
 
 		new_num_annotations = num_annotations
@@ -3931,7 +3951,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		delete_btn = @driver.find_element(:class, "user-#{$random_seed}-exp-delete")
 		delete_btn.click
-		@driver.switch_to.alert.accept
+		accept_alert
 		close_modal('message_modal')
 
 		#check new names
@@ -3949,7 +3969,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# delete 2d test
 		@driver.find_element(:class, "twod-study-#{$random_seed}-delete").click
-		@driver.switch_to.alert.accept
+		accept_alert
 		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
 
@@ -3973,17 +3993,17 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# delete test
 		@driver.find_element(:class, "test-study-#{$random_seed}-delete").click
-		@driver.switch_to.alert.accept
+		accept_alert
 		close_modal('message_modal')
 
 		# delete private
 		@driver.find_element(:class, "private-study-#{$random_seed}-delete").click
-		@driver.switch_to.alert.accept
+		accept_alert
 		close_modal('message_modal')
 
 		# delete gzip parse
 		@driver.find_element(:class, "gzip-parse-#{$random_seed}-delete").click
-		@driver.switch_to.alert.accept
+		accept_alert
 		close_modal('message_modal')
 
 		puts "Test method: #{self.method_name} successful!"

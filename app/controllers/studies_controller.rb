@@ -20,6 +20,8 @@ class StudiesController < ApplicationController
   def show
     @study_fastq_files = @study.study_files.by_type('Fastq')
     @directories = @study.directory_listings.are_synced
+    @primary_data = @study.directory_listings.primary_data
+    @other_data = @study.directory_listings.non_primary_data
     # load study default options
     set_study_default_options
   end
@@ -116,8 +118,10 @@ class StudiesController < ApplicationController
       redirect_to studies_path, alert: "We were unable to sync with your workspace bucket due to an error: #{e.message}" and return
     end
 
-    # begin determining sync status with study_files and fastq data
+    # begin determining sync status with study_files and primary or other data
     begin
+      # create a map of file extension to use for creating directory_listings of groups of 10+ files of the same type
+      @file_extension_map = {}
       workspace_files = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, @study.firecloud_workspace)
       # see process_workspace_bucket_files in private methods for more details on syncing
       process_workspace_bucket_files(workspace_files)
@@ -130,15 +134,37 @@ class StudiesController < ApplicationController
       redirect_to studies_path, alert: "We were unable to sync with your workspace bucket due to an error: #{e.message}" and return
     end
 
-    # check against latest list of files by directory vs. what was just found to see if we are missing anything and add directory to unsynced list
+    files_to_remove = []
+
+    # before saving unsynced directories, make a pass to check if there were any files that ended up as study_files
+    # that should have been in a directory (might happen due to cutoff in files.next when iterating)
+    @unsynced_files.each do |study_file|
+      file_ext = DirectoryListing.file_extension(study_file.name)
+      directory = DirectoryListing.get_folder_name(study_file.name)
+      # check unsynced directories first, then existing directories
+      existing_dir = (@unsynced_directories + @directories).detect {|dir| dir.name == directory && dir.file_type == file_ext}
+      if !existing_dir.nil?
+        # we have a matching directory, so that means this file should be added to it
+        file_entry = {'name' => study_file.name, 'size' => study_file.upload_file_size, 'generation' => study_file.generation}
+        files_to_remove << study_file.generation
+        unless existing_dir.files.include?(file_entry)
+          existing_dir.files << file_entry
+        end
+      end
+    end
+
+    # now remove files that we found that were supposed to be in directory_listings
+    @unsynced_files.delete_if {|file| files_to_remove.include?(file.generation)}
+
+    # now check against latest list of files by directory vs. what was just found to see if we are missing anything and add directory to unsynced list
     @directories.each do |directory|
       synced = true
       directory.files.each do |file|
-        unless @files_by_dir[directory.name].find {|f| f[:name] = file[:name] && f[:size] == file[:size]}.nil?
-          next
-        else
+        if @files_by_dir[directory.name].detect {|f| f['generation'].to_s == file['generation'].to_s}.nil?
           synced = false
           directory.files.delete(file)
+        else
+          next
         end
       end
       # if no longer synced, check if already in the list and remove as files list has changed
@@ -155,6 +181,10 @@ class StudiesController < ApplicationController
     @unsynced_directories.each do |directory|
       directory.save
     end
+
+    # split directories into primary data types and 'others'
+    @unsynced_primary_data_dirs = @unsynced_directories.select {|dir| dir.file_type == 'fastq'}
+    @unsynced_other_dirs = @unsynced_directories.select {|dir| dir.file_type != 'fastq'}
 
     # now determine if we have study_files that have been 'orphaned' (cannot find a corresponding bucket file)
     @orphaned_study_files = @study_files - @synced_study_files
@@ -729,7 +759,7 @@ class StudiesController < ApplicationController
   end
 
   private
-  # Use callbacks to share common setup or constraints between actions.
+
   def set_study
     @study = Study.find(params[:id])
   end
@@ -745,7 +775,7 @@ class StudiesController < ApplicationController
   end
 
   def directory_listing_params
-    params.require(:directory_listing).permit(:_id, :name, :description, :sync_status)
+    params.require(:directory_listing).permit(:_id, :name, :description, :sync_status, :file_type)
   end
 
   def default_options_params
@@ -812,38 +842,70 @@ class StudiesController < ApplicationController
 
   # sub-method to iterate through list of GCP bucket files and build up necessary sync list objects
   def process_workspace_bucket_files(files)
+    # first mark any files that we already know are study files that haven't changed (can tell by generation tag)
+    files_to_remove = []
     files.each do |file|
-      if !%w(.fastq. .fq.).any? {|str| file.name.include?(str)}
-        # make sure filename and generation are identical, otherwise we have an unknown file
-        study_match = @study_files.detect {|f| (f.upload_file_name == file.name || f.name == file.name) && f.generation == file.generation }
-        # make sure file is not acutally a folder by checking its size and name
-        if study_match.nil? && file.size > 0
-          # create a new entry and default to cluster file (user can change via dropdown)
-          unsynced_file = StudyFile.new(study_id: @study.id, name: file.name, upload_file_name: file.name, upload_content_type: file.content_type, upload_file_size: file.size, generation: file.generation)
-          @unsynced_files << unsynced_file
-        elsif !study_match.nil?
-          @synced_study_files << study_match
-        end
-      else
-        # we have a fastq file now, so check if we know about it yet
-        directory = file.name.include?('/') ? file.name.split('/').first : '/'
-        all_dirs = @directories + @unsynced_directories
-        existing_dir = all_dirs.detect {|d| d.name == directory}
+      directory_name = DirectoryListing.get_folder_name(file.name)
+      found_file = {'name' => file.name, 'size' => file.size, 'generation' => file.generation}
+      # don't add directories to files_by_dir
+      unless file.name.end_with?('/')
         # add to list of discovered files
-        @files_by_dir[directory] ||= []
-        @files_by_dir[directory] << {name: file.name, size: file.size, generation: file.generation}
-        if existing_dir.nil?
-          dir = @study.directory_listings.build(name: directory, files: [{name: file.name, size: file.size, generation: file.generation}], sync_status: false)
-          @unsynced_directories << dir
-        elsif existing_dir.files.find {|f| f[:name] == file.name && f[:generation] == file.generation }.nil?
-          existing_dir.files << {name: file.name, size: file.size, generation: file.generation}
-          existing_dir.sync_status = false
-          if @unsynced_directories.map(&:name).include?(existing_dir.name)
-            @unsynced_directories.delete(existing_dir)
+        @files_by_dir[directory_name] ||= []
+        @files_by_dir[directory_name] << found_file
+      end
+      found_study_file = @study_files.detect {|f| f.generation == file.generation }
+      if found_study_file
+        @synced_study_files << found_study_file
+        files_to_remove << file.generation
+      end
+    end
+
+    # remove files from list to process
+    files.delete_if {|f| files_to_remove.include?(f.generation)}
+
+    # next update map of existing files to determine what can be grouped together in a directory listing
+    @file_extension_map = DirectoryListing.create_extension_map(files, @file_extension_map)
+
+    files.each do |file|
+      # check first if file type is in file map in a group larger than 10 (or 20 for text files)
+      file_extension = DirectoryListing.file_extension(file.name)
+      directory_name = DirectoryListing.get_folder_name(file.name)
+      max_size = file_extension == 'txt' ? 20 : 10
+      if @file_extension_map.has_key?(directory_name) && !@file_extension_map[directory_name][file_extension].nil? && @file_extension_map[directory_name][file_extension] >= max_size
+        process_directory_listing_file(file, file_extension)
+      else
+        # we are now dealing with singleton files or fastqs, so process accordingly
+        if DirectoryListing::PRIMARY_DATA_EXTENSIONS.any? {|ext| file.name.include?(ext)}
+          # process fastq file into appropriate directory listing
+          process_directory_listing_file(file, 'fastq')
+        else
+          # make sure file is not actually a folder by checking its size
+          if file.size > 0
+            # create a new entry
+            unsynced_file = StudyFile.new(study_id: @study.id, name: file.name, upload_file_name: file.name, upload_content_type: file.content_type, upload_file_size: file.size, generation: file.generation)
+            @unsynced_files << unsynced_file
           end
-          @unsynced_directories << existing_dir
         end
       end
+    end
+  end
+
+  # helper to process a file into a directory listing object
+  def process_directory_listing_file(file, file_type)
+    directory = DirectoryListing.get_folder_name(file.name)
+    all_dirs = @directories + @unsynced_directories
+    existing_dir = all_dirs.detect {|d| d.name == directory && d.file_type == file_type}
+    found_file = {'name' => file.name, 'size' => file.size, 'generation' => file.generation}
+    if existing_dir.nil?
+      dir = @study.directory_listings.build(name: directory, file_type: file_type, files: [{name: file.name, size: file.size, generation: file.generation}], sync_status: false)
+      @unsynced_directories << dir
+    elsif existing_dir.files.detect {|f| f['generation'] == file.generation }.nil?
+      existing_dir.files << found_file
+      existing_dir.sync_status = false
+      if @unsynced_directories.map(&:name).include?(existing_dir.name)
+        @unsynced_directories.delete(existing_dir)
+      end
+      @unsynced_directories << existing_dir
     end
   end
 end

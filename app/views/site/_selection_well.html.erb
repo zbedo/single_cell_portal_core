@@ -39,22 +39,8 @@
     var selectionTable = $('#selection-table');
     var selectionButton = $('#selection-button');
 
-    function rowIndex(array, item) {
-        for (var i = 0; i < array.length; i++) {
-            // This if statement depends on the format of your array
-            var cont = true;
-            for (var n = 0; n < array[i].length && cont; n++) {
-                if(array[i][n] === item[n]){}
-                else{cont = false}
-            }
-            if(cont){return i}
-        }
-        return -1;   // Not found
-    }
     // array of arrays of cell names, aka selections
     var selections = [];
-
-    selections = [];
 
     $(target).on('plotly_afterplot', function() {
         if($(target).data('spinner') !== undefined){

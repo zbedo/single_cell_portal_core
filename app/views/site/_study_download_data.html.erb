@@ -1,41 +1,43 @@
 <div class="row">
   <div class="col-xs-12">
-    <h2>Study Files <span class="badge"><%= @study_files.count %></span> <%= link_to "<i class='fa fa-question-circle'></i> Download Help".html_safe, 'javascript:;', class: 'btn btn-default pull-right', id: 'download-help' %></h2>
+    <h2>Study Files <span class="badge"><%= @study_files.count %></span>  <% if @study.can_direct_download?(current_user) %><%= link_to "<i class='fa fa-question-circle'></i> Download Help".html_safe, 'javascript:;', class: 'btn btn-default pull-right', id: 'download-help' %><% end %></h2>
 
-    <div class="modal fade" id="primary-data-download-modal" role="dialog" aria-labelledby="primary-data-download-modal" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h2 class="text-center">Download Help</h2>
-          </div>
-          <div class="modal-body">
-            <p class="lead">To download any individual file, click the download button in the corresponding row.</p>
-            <p class="lead">To download all files using <code>gsutil</code>, run the following command:</p>
-            <pre>gsutil -m cp -r gs://<%= @study.bucket_id %> [target path]</pre>
-            <% if @directories.any? %>
-              <p class="lead">To download all primary data files in a specific folder, use the following commands:</p>
-              <table class="table table-condensed table-striped">
-                <thead>
-                <tr>
-                  <th>Folder</th>
-                  <th>gsutil command</th>
-                </tr>
-                <% @directories.each do |directory| %>
+    <% if @study.can_direct_download?(current_user) %>
+      <div class="modal fade" id="primary-data-download-modal" role="dialog" aria-labelledby="primary-data-download-modal" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h2 class="text-center">Download Help</h2>
+            </div>
+            <div class="modal-body">
+              <p class="lead">To download any individual file, click the download button in the corresponding row.</p>
+              <p class="lead">To download all files using <code>gsutil</code>, run the following command:</p>
+              <pre>gsutil -m cp -r gs://<%= @study.bucket_id %> [target path]</pre>
+              <% if @directories.any? %>
+                <p class="lead">To download all data files in a specific folder, use the following commands:</p>
+                <table class="table table-condensed table-striped">
+                  <thead>
                   <tr>
-                    <td><%= directory.name %></td>
-                    <td><pre>gsutil -m cp gs://<%= @study.bucket_id %><%= directory.download_display_name %>*.fastq.*<%= %> [target path]</pre></td>
+                    <th>Folder</th>
+                    <th>gsutil command</th>
                   </tr>
-                <% end %>
-                </thead>
-              </table>
-            <% end %>
-          </div>
-          <div class="modal-footer">
-            <button class="close" data-dismiss="modal">×</button>
+                  <% @directories.each do |directory| %>
+                    <tr>
+                      <td><%= directory.name %></td>
+                      <td><pre>gsutil -m cp gs://<%= @study.bucket_id %><%= directory.download_display_name %>*.<%= directory.file_type %>*<%= %> [target path]</pre></td>
+                    </tr>
+                  <% end %>
+                  </thead>
+                </table>
+              <% end %>
+            </div>
+            <div class="modal-footer">
+              <button class="close" data-dismiss="modal">×</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    <% end %>
 
     <script type="text/javascript">
         $('#download-help').click(function() {
@@ -73,19 +75,73 @@
     <% end %>
     </tbody>
   </table>
-  <div class="well well-sm">
-    <h2>Primary Data <span class="badge"><%= @study.primary_data_file_count %></span> </h2>
-    <table class="table table-striped tabled-condensed" id="fastq-table">
-      <thead>
-      <tr>
-        <th class="col-sm-5">Filename</th>
-        <th class="col-sm-6">Description</th>
-        <th class="col-sm-1">Download</th>
-      </tr>
-      </thead>
-      <tbody id="fastq-files-target"></tbody>
-    </table>
-  </div>
+  <% if @primary_study_files.any? || @primary_data.any? %>
+    <div class="well well-sm">
+      <h2>Primary Data <span class="badge"><%= @study.primary_data_file_count %></span> </h2>
+      <table class="table table-striped tabled-condensed study-data-table" id="fastq-table">
+        <thead>
+        <tr>
+          <th class="col-sm-5">Filename</th>
+          <th class="col-sm-6">Description</th>
+          <th class="col-sm-1">Download</th>
+        </tr>
+        </thead>
+        <tbody id="fastq-files-target">
+          <% @primary_study_files.each do |file| %>
+            <tr>
+              <td><%= file.name %></td>
+              <td><%= file.description %></td>
+              <td>
+                <% if @allow_downloads %>
+                  <%= render partial: '/layouts/download_link', locals: {study: @study, study_file: file} %>
+                <% else %>
+                  <%= button_to 'Currently Unavailable', 'javascript:;', class: 'btn btn-danger disabled-download', disabled: true %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+          <% @primary_data.each do |directory| %>
+            <% directory.files.each do |file| %>
+              <% basename = file[:name].split('/').last %>
+              <tr>
+                <td><%= basename %></td>
+                <td><%= directory.description %></td>
+                <td><%= link_to("<span class='fa fa-download'></span> #{number_to_human_size(file[:size], prefix: :si)}".html_safe, directory.download_path(file[:name]), class: "btn btn-primary dl-link fastq", download: basename) %></td>
+              </tr>
+            <% end %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+  <% if @other_data.any? %>
+    <div class="well well-sm">
+      <h2>Other Data <span class="badge"><%= @study.misc_directory_file_count %></span> </h2>
+      <table class="table table-striped tabled-condensed study-data-table" id="other-data-table">
+        <thead>
+        <tr>
+          <th class="col-sm-3">Filename</th>
+          <th class="col-sm-2">Type</th>
+          <th class="col-sm-5">Description</th>
+          <th class="col-sm-1">Download</th>
+        </tr>
+        </thead>
+        <tbody>
+        <% @other_data.each do |directory| %>
+          <% directory.files.each do |file| %>
+            <% basename = file[:name].split('/').last %>
+            <tr>
+              <td><%= basename %></td>
+              <td><%= directory.file_type %></td>
+              <td><%= directory.description %></td>
+              <td><%= link_to("<span class='fa fa-download'></span> #{number_to_human_size(file[:size], prefix: :si)}".html_safe, directory.download_path(file[:name]), class: "btn btn-primary dl-link fastq", download: basename) %></td>
+            </tr>
+          <% end %>
+        <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
 </div>
 
 <script type="text/javascript">
@@ -94,8 +150,12 @@
     $('#fastq-table').dataTable({
         pagingType: 'full',
         order: [[0, 'asc']],
-        ajax: "<%= get_fastq_files_path(study_name: @study.url_safe_name) %>",
-        deferRender: true,
+        autoWidth: false
+    });
+
+    $('#other-data-table').dataTable({
+        pagingType: 'full',
+        order: [[1, 'asc'],[0, 'asc']],
         autoWidth: false
     });
 
