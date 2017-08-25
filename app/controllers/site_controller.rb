@@ -59,7 +59,10 @@ class SiteController < ApplicationController
   def study
     @study.update(view_count: @study.view_count + 1)
     @study_files = @study.study_files.non_primary_data.sort_by(&:name)
+    @primary_study_files = @study.study_files.by_type('Fastq')
     @directories = @study.directory_listings.are_synced
+    @primary_data = @study.directory_listings.primary_data
+    @other_data = @study.directory_listings.non_primary_data
 
     # double check on download availability: first, check if administrator has disabled downloads
     # then check if FireCloud is available and disable download links if either is true
@@ -93,6 +96,7 @@ class SiteController < ApplicationController
           # invalidate caches as needed
           if @study.previous_changes.keys.include?('default_options')
             @study.default_cluster.study_file.invalidate_cache_by_file_type
+            @study.expression_matrix_files.first.invalidate_cache_by_file_type
           elsif @study.previous_changes.keys.include?('name')
             # if user renames a study, invalidate all caches
             old_name = @study.previous_changes['url_safe_name'].first
@@ -106,7 +110,10 @@ class SiteController < ApplicationController
             set_selected_annotation
           end
           @study_files = @study.study_files.non_primary_data.sort_by(&:name)
+          @primary_study_files = @study.study_files.by_type('Fastq')
           @directories = @study.directory_listings.are_synced
+          @primary_data = @study.directory_listings.primary_data
+          @other_data = @study.directory_listings.non_primary_data
 
           # double check on download availability: first, check if administrator has disabled downloads
           # then check if FireCloud is available and disable download links if either is true
@@ -514,7 +521,7 @@ class SiteController < ApplicationController
       ]
     end
     # now load fastq's from directory_listings (only synced directories)
-    @study.directory_listings.where(sync_status: true).each do |directory|
+    @study.directory_listings.primary_data.each do |directory|
       directory.files.each do |file|
         basename = file[:name].split('/').last
         link = view_context.link_to("<span class='fa fa-download'></span> #{view_context.number_to_human_size(file[:size], prefix: :si)}".html_safe, directory.download_path(file[:name]), class: "btn btn-primary dl-link fastq", download: basename)
@@ -655,7 +662,7 @@ class SiteController < ApplicationController
 
   # whitelist parameters for updating studies on study settings tab (smaller list than in studies controller)
   def study_params
-    params.require(:study).permit(:name, :description, :public, :embargo, :default_options => [:cluster, :annotation, :color_profile], study_shares_attributes: [:id, :_destroy, :email, :permission])
+    params.require(:study).permit(:name, :description, :public, :embargo, :default_options => [:cluster, :annotation, :color_profile, :expression_label], study_shares_attributes: [:id, :_destroy, :email, :permission])
   end
 
   # whitelist parameters for creating custom user annotation
@@ -1311,7 +1318,7 @@ class SiteController < ApplicationController
   end
 
   def load_expression_axis_title
-    @study.expression_matrix_files.first.y_axis_label.empty? ? 'Expression' : @study.expression_matrix_files.first.y_axis_label
+    @study.default_expression_label
   end
 
   # create a unique hex digest of a list of genes for use in set_cache_path

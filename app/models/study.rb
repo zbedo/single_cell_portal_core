@@ -104,9 +104,24 @@ class Study
       where(sync_status: false).to_a
     end
 
-    # can't used 'synced' as this is a built-in ruby method
+    # all synced directories, regardless of type
     def are_synced
       where(sync_status: true).to_a
+    end
+
+    # synced directories of a specific type
+    def synced_by_type(file_type)
+      where(sync_status: true, file_type: file_type).to_a
+    end
+
+    # primary data directories
+    def primary_data
+      where(sync_status: true, :file_type.in => DirectoryListing::PRIMARY_DATA_TYPES).to_a
+    end
+
+    # non-primary data directories
+    def non_primary_data
+      where(sync_status: true, :file_type.nin => DirectoryListing::PRIMARY_DATA_TYPES).to_a
     end
   end
 
@@ -197,6 +212,11 @@ class Study
   # check if a given user can view study by share (does not take public into account - use Study.viewable(user) instead)
   def can_view?(user)
     self.can_edit?(user) || self.study_shares.can_view.include?(user.email)
+  end
+
+  # check if a user can download data directly from the bucket
+  def can_direct_download?(user)
+    self.user.email == user.email || self.study_shares.can_view.include?(user.email)
   end
 
   # check if user can delete a study - only owners can
@@ -307,6 +327,17 @@ class Study
     self.default_options[:color_profile].presence
   end
 
+  # return the value of the expression axis label
+  def default_expression_label
+    label = self.default_options[:expression_label].presence
+    label.nil? ? 'Expression' : label
+  end
+
+  # determine if a user has supplied an expression label
+  def has_expression_label?
+    !self.default_options[:expression_label].blank?
+  end
+
   # helper method to get number of unique single cells
   def set_cell_count(file_type)
     @cell_count = 0
@@ -319,26 +350,33 @@ class Study
     Rails.logger.info "#{Time.now}: Setting cell count in #{self.name} to #{@cell_count}"
   end
 
+  # helper method to set the number of unique genes in this study
+  def set_gene_count
+    gene_count = self.expression_scores.pluck(:gene).uniq.count
+    Rails.logger.info "#{Time.now}: setting gene count in #{self.name} to #{gene_count}"
+    self.update!(gene_count: gene_count)
+  end
+
   # return a count of the number of fastq files both uploaded and referenced via directory_listings for a study
   def primary_data_file_count
     study_file_count = self.study_files.by_type('Fastq').size
-    directory_listing_count = self.directory_listings.where(sync_status: true).map {|d| d.files.size}.reduce(:+)
-    [study_file_count, directory_listing_count].compact.reduce(:+)
+    directory_listing_count = self.directory_listings.primary_data.map {|d| d.files.size}.reduce(0, :+)
+    study_file_count + directory_listing_count
+  end
+
+  # return a count of the number of miscella files both uploaded and referenced via directory_listings for a study
+  def misc_directory_file_count
+    self.directory_listings.non_primary_data.map {|d| d.files.size}.reduce(0, :+)
   end
 
   # count the number of cluster-based annotations in a study
   def cluster_annotation_count
-    self.cluster_groups.map {|c| c.cell_annotations.size}.reduce(:+)
+    self.cluster_groups.map {|c| c.cell_annotations.size}.reduce(0, :+)
   end
 
   # return an array of all single cell names in study
   def all_cells
-    cell_arrays = self.data_arrays.where(name: 'All Cells').order('array_index asc').to_a
-    all_values = []
-    cell_arrays.each do |array|
-      all_values += array.values
-    end
-    all_values
+    self.study_metadata.first.keys
   end
 
   # return a hash keyed by cell name of the requested study_metadata values
@@ -596,21 +634,32 @@ class Study
       end
       Rails.logger.info "#{Time.now}: Creating last #{@records.size} expression scores from #{expression_file.name} for #{self.name}"
       ExpressionScore.create!(@records)
+
+      # launch job to set gene count
+      self.set_gene_count
+
+      # set the default expression label if the user supplied one
+      if !self.has_expression_label? && !expression_file.y_axis_label.blank?
+        Rails.logger.info "#{Time.now}: Setting default expression label in #{self.name} to '#{expression_file.y_axis_label}'"
+        opts = self.default_options
+        self.update!(default_options: opts.merge(expression_label: expression_file.y_axis_label))
+      end
+
       # create array of all cells for study
-      @cell_data_array = self.data_arrays.build(name: 'All Cells', cluster_name: expression_file.name, array_type: 'cells', array_index: 1, study_file_id: expression_file._id)
+      @cell_data_array = self.data_arrays.build(name: 'All Cells', cluster_name: expression_file.name, array_type: 'cells', array_index: 1, study_file_id: expression_file._id, cluster_group_id: expression_file._id)
       # chunk into pieces as necessary
       cells.each_slice(DataArray::MAX_ENTRIES) do |slice|
         new_array_index = @cell_data_array.array_index + 1
         @cell_data_array.values = slice
         Rails.logger.info "#{Time.now}: Saving all cells data array ##{@cell_data_array.array_index} using #{expression_file.name} for #{self.name}"
         @cell_data_array.save!
-        @cell_data_array = self.data_arrays.build(name: 'All Cells', cluster_name: expression_file.name, array_type: 'cells', array_index: new_array_index, study_file_id: expression_file._id)
+        @cell_data_array = self.data_arrays.build(name: 'All Cells', cluster_name: expression_file.name, array_type: 'cells', array_index: new_array_index, study_file_id: expression_file._id, cluster_group_id: expression_file._id)
       end
 
       # clean up, print stats
       expression_data.close
       expression_file.update(parse_status: 'parsed')
-      Study.find(self.id).update(gene_count: @genes_parsed.size)
+
       end_time = Time.now
       time = (end_time - start_time).divmod 60.0
       @message << "#{Time.now}: #{expression_file.name} parse completed!"

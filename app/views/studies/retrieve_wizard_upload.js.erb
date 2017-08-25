@@ -4,6 +4,16 @@ $("<%= params[:selector] %>").replaceWith("<%= escape_javascript( render params[
 // get instance of new form as ID has changed
 var wizForm = $('.<%= params[:partial] %>').slice(-1)[0];
 
+// if expression matrix was uploaded & an expression label was provided, then disable all fields for labels
+if ('<%= params[:partial] %>' == 'initialize_expression_form' && <%= !@study_file.y_axis_label.blank? %>) {
+    var toolTitle = 'This is displayed as the axis label for box & scatter plots showing expression values.  ' +
+        'This label is global to all expression values. Please use the study default options form to update this value.'
+    $('.expression-label').val('<%= @study_file.y_axis_label %>')
+    $('.expression-label').attr('disabled', true);
+    $('.expression-label-tooltip').attr('title', toolTitle);
+    $('.expression-label-tooltip').attr('data-original-title', toolTitle);
+}
+
 // reattach click listener to download a file when private, will open modal for timed HTML5 download
 $(wizForm).find('.download-btn').click(function() {
 	var url = $(this).data('filepath');
