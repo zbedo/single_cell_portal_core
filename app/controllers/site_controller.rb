@@ -96,6 +96,7 @@ class SiteController < ApplicationController
           # invalidate caches as needed
           if @study.previous_changes.keys.include?('default_options')
             @study.default_cluster.study_file.invalidate_cache_by_file_type
+            @study.expression_matrix_files.first.invalidate_cache_by_file_type
           elsif @study.previous_changes.keys.include?('name')
             # if user renames a study, invalidate all caches
             old_name = @study.previous_changes['url_safe_name'].first
@@ -661,7 +662,7 @@ class SiteController < ApplicationController
 
   # whitelist parameters for updating studies on study settings tab (smaller list than in studies controller)
   def study_params
-    params.require(:study).permit(:name, :description, :public, :embargo, :default_options => [:cluster, :annotation, :color_profile], study_shares_attributes: [:id, :_destroy, :email, :permission])
+    params.require(:study).permit(:name, :description, :public, :embargo, :default_options => [:cluster, :annotation, :color_profile, :expression_label], study_shares_attributes: [:id, :_destroy, :email, :permission])
   end
 
   # whitelist parameters for creating custom user annotation
@@ -1317,7 +1318,7 @@ class SiteController < ApplicationController
   end
 
   def load_expression_axis_title
-    @study.expression_matrix_files.first.y_axis_label.empty? ? 'Expression' : @study.expression_matrix_files.first.y_axis_label
+    @study.default_expression_label
   end
 
   # create a unique hex digest of a list of genes for use in set_cache_path
