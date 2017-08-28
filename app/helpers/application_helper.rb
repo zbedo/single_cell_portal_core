@@ -17,7 +17,8 @@ module ApplicationHelper
 
 	# create javascript-safe url with parameters
 	def javascript_safe_url(url)
-		URI.decode(url).html_safe
+		# remove utf8=✓& from url to avoid formatting errors
+		URI.decode(url.gsub(/utf8=%E2%9C%93&/, '')).html_safe
 	end
 
 	# construct nav menu breadcrumbs

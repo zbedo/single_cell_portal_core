@@ -893,8 +893,8 @@ class StudiesController < ApplicationController
       if @file_extension_map.has_key?(directory_name) && !@file_extension_map[directory_name][file_extension].nil? && @file_extension_map[directory_name][file_extension] >= max_size
         process_directory_listing_file(file, file_extension)
       else
-        # we are now dealing with singleton files or fastqs, so process accordingly
-        if DirectoryListing::PRIMARY_DATA_EXTENSIONS.any? {|ext| file.name.include?(ext)}
+        # we are now dealing with singleton files or fastqs, so process accordingly (making sure to ignore directories)
+        if DirectoryListing::PRIMARY_DATA_TYPES.any? {|ext| file_extension.include?(ext)} && !file.name.end_with?('/')
           # process fastq file into appropriate directory listing
           process_directory_listing_file(file, 'fastq')
         else

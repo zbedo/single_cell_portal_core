@@ -3,10 +3,10 @@ class SiteController < ApplicationController
   respond_to :html, :js, :json
 
   before_action :set_study, except: [:index, :search, :view_workflow_wdl]
-  before_action :load_precomputed_options, except: [:index, :search, :edit_study_description, :annotation_query, :download_file, :get_fastq_files, :log_action, :show_user_annotations_form, :view_workflow_wdl]
-  before_action :set_cluster_group, except: [:index, :search, :update_study_settings, :edit_study_description, :precomputed_results, :download_file, :get_fastq_files, :log_action, :create_user_annotations, :view_workflow_wdl]
-  before_action :set_selected_annotation, except: [:index, :search, :study, :update_study_settings, :edit_study_description, :precomputed_results, :expression_query, :get_new_annotations, :download_file, :get_fastq_files, :log_action, :create_user_annotations,  :view_workflow_wdl]
-  before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query, :view_workflow_wdl, :log_action]
+  before_action :set_cluster_group, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :expression_query, :annotation_query, :get_new_annotations, :annotation_values, :show_user_annotations_form]
+  before_action :set_selected_annotation, only: [:update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :annotation_query, :annotation_values, :show_user_annotations_form]
+  before_action :load_precomputed_options, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap]
+  before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query, :view_workflow_wdl, :log_action, :get_workspace_entities]
 
   # caching
   caches_action :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots,
@@ -79,11 +79,10 @@ class SiteController < ApplicationController
     # if user has permission to run workflows, load available workflows and current submissions
     if user_signed_in? && @study.can_compute?(current_user)
       @submissions = Study.firecloud_client.get_workspace_submissions(@study.firecloud_workspace)
+      all_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_workspace, 'sample')
+      @samples = Naturally.sort(all_samples.map {|s| s['name']})
       @workflows = Study.firecloud_client.get_methods(namespace: 'single-cell-portal')
       @workflows_list = @workflows.sort_by {|w| [w['name'], w['snapshotId'].to_i]}.map {|w| ["#{w['name']} (#{w['snapshotId']})#{w['synopsis'].blank? ? nil : " -- #{w['synopsis']}"}", "#{w['namespace']}--#{w['name']}--#{w['snapshotId']}"]}
-      (rand(20) + 10).times do
-        @submissions << {'submissionId' => SecureRandom.uuid, 'submittedOn' => (Time.now - rand(48).hours).strftime('%D %r'), 'methodName' => @workflows_list.sample.first.split.first, 'status' => %w(Queued Running Completed Error).sample}
-      end
       @primary_data_locations = []
       fastq_files = @primary_study_files.select {|f| !f.human_data}
       [fastq_files, @primary_data].flatten.each do |entry|
@@ -503,10 +502,6 @@ class SiteController < ApplicationController
     end
   end
 
-  # view all genes as heatmap in morpheus, will pull from pre-computed gct file
-  def view_all_gene_expression_heatmap
-  end
-
   # redirect to show precomputed marker gene results
   def search_precomputed_results
     redirect_to view_precomputed_gene_expression_heatmap_path(study_name: params[:study_name], precomputed: params[:expression])
@@ -522,49 +517,23 @@ class SiteController < ApplicationController
   # method to populate an array with entries corresponding to all fastq files for a study (both owner defined as study_files
   # and extra fastq's that happen to be in the bucket)
   def get_fastq_files
-    @fastq_files = {data: []}
+    @fastq_files = []
     case params[:mode]
-      when 'datatable'
-        # check if FireCloud is available first
-        @allow_downloads =  AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
-        @disabled_link = "<button type='button' class='btn btn-danger disabled-download' disabled>Currently Unavailable</button>".html_safe
-        # load study_file fastqs first
-        @study.study_files.by_type('Fastq').each do |file|
-          link = view_context.link_to("<span class='fa fa-download'></span> #{view_context.number_to_human_size(file.upload_file_size, prefix: :si)}".html_safe, file.download_path, class: "btn btn-primary dl-link fastq", download: file.upload_file_name)
-          @fastq_files[:data] << [
-              file.name,
-              file.description,
-              @allow_downloads ? link : @disabled_link
-          ]
-        end
-        # now load fastq's from directory_listings (only synced directories)
-        @study.directory_listings.are_synced.each do |directory|
-          directory.files.each do |file|
-            basename = file[:name].split('/').last
-            link = view_context.link_to("<span class='fa fa-download'></span> #{view_context.number_to_human_size(file[:size], prefix: :si)}".html_safe, directory.download_path(file[:name]), class: "btn btn-primary dl-link fastq", download: basename)
-            @fastq_files[:data] << [
-                file[:name],
-                directory.description,
-                @allow_downloads ? link : @disabled_link
-            ]
-          end
-        end
-
       when 'workflow'
-        @fastq_files = {data: []}
         selected_entries = params[:selected_entries].split(',').map(&:strip)
         selected_entries.each do |entry|
           class_name, entry_name = entry.split('--')
           case class_name
             when 'directorylisting'
-              dl = @study.directory_listings.are_synced.detect {|d| d.name == entry_name}
-              determine_read_pairs(@fastq_files, dl)
-
+              directory = @study.directory_listings.are_synced.detect {|d| d.name == entry_name}
+              populate_rows(@fastq_files, directory)
             when 'studyfile'
               study_file = @study.study_files.by_type('Fastq').detect {|f| f.name == entry_name}
-              @fastq_files[:data] << [
+              @fastq_files << [
                   study_file.upload_file_name.split('.').first,
                   study_file.upload_file_name,
+                  '',
+                  '',
                   ''
               ]
             else
@@ -667,6 +636,29 @@ class SiteController < ApplicationController
     rescue => e
       @workflow_wdl = "We're sorry, but we could not load the requested workflow object.  Please try again later.\n\nError: #{e.message}"
       logger.error "#{Time.now}: unable to load WDL for #{@workflow_namespace}:#{@workflow_name}:#{@workflow_snapshot}; #{e.message}"
+    end
+  end
+
+  # get the available entities for a workspace
+  def get_workspace_samples
+    begin
+      requested_samples = params[:samples].split(',')
+      # get all samples
+      all_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_workspace, 'sample')
+      # since we can't query the API (easily) for matching samples, just get all and then filter based on requested samples
+      matching_samples = all_samples.keep_if {|sample| requested_samples.include?(sample['name']) }
+      @samples = []
+      matching_samples.each do |sample|
+        @samples << [sample['name'],
+                     sample['attributes']['fastq_file_1'],
+                     sample['attributes']['fastq_file_2'],
+                     sample['attributes']['fastq_file_3'],
+                     sample['attributes']['fastq_file_4']
+        ]
+      end
+      render json: @samples.to_json
+    rescue => e
+      logger.error "#{Time.now}: Error retrieving workspace samples for #{study.name}; #{e.message}"
     end
   end
 
@@ -1383,26 +1375,17 @@ class SiteController < ApplicationController
     Digest::SHA256.hexdigest genes
   end
 
-  def determine_read_pairs(existing_list, directory)
-    # re-create hash of samples => reads
-    sample_map = {}
-    existing_list.each do |entry|
-      key = entry.slice!(0)
-      sample_map[key] = entry
+  def populate_rows(existing_list, directory)
+    # create hash of samples => array of reads
+    sample_map = directory.sample_read_pairings
+    sample_map.each do |sample, files|
+      row = [sample]
+      row += files
+      # pad out row to make sure it has the correct number of entries (5)
+      0.upto(4) {|i| row[i] ||= '' }
+      existing_list << row
     end
 
-    directory.files.each do |file|
-      sample_name = directory.possible_sample_name(file['name'])
-      if !sample_map.has_key?(sample_name)
-        sample_map[sample_name] = [file['name']]
-        existing_list[:data] << [
-          sample_name,
-          file['name'],
-          file['name'],
-          file['name']
-        ]
-      end
-    end
   end
 
   protected

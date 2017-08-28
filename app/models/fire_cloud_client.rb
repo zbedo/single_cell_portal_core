@@ -161,7 +161,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	# param: payload (hash) => HTTP POST/PATCH/PUT body for creates/updates, defaults to nil
 	#
 	# return: object depends on response code
-	def process_firecloud_request(http_method, path, payload=nil)
+	def process_firecloud_request(http_method, path, payload=nil, file_upload=false)
 		# check for token expiry first before executing
 		if self.access_token_expired?
 			Rails.logger.info "#{Time.now}: Token expired, refreshing access token"
@@ -169,10 +169,13 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		end
 		# set default headers
 		headers = {
-				'Authorization' => "Bearer #{self.access_token['access_token']}",
-				'Content-Type' => 'application/json',
-				'Accept' => 'application/json'
+				'Authorization' => "Bearer #{self.access_token['access_token']}"
 		}
+		# if not uploading a file, set the content_type to application/json
+		if !file_upload
+			headers.merge!({'Content-Type' => 'application/json'})
+		end
+
 		# initialize counter to prevent endless feedback loop
 		@retry_count.nil? ? @retry_count = 0 : nil
 		if @retry_count < MAX_RETRY_COUNT
@@ -387,7 +390,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	# param: name (string) => name of method
 	# param: snapshot_id (integer) => snapshot ID of method
 	#
-	# return: array of methods
+	# return: configuration object
 	def get_configuration(namespace, method_name, snapshot_id)
 		path = self.api_root + "/api/configurations/#{namespace}/#{method_name}/#{snapshot_id}"
 		process_firecloud_request(:get, path)
@@ -533,8 +536,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/importEntities"
 		entities_upload = {
 				entities: entities_file
-		}.to_json
-		process_firecloud_request(:post, path, entities_upload)
+		}
+		process_firecloud_request(:post, path, entities_upload, true)
 	end
 
 	# bulk delete workspace metadata entities
@@ -552,7 +555,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 			end
 		end
 		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/entities/delete"
-		process_firecloud_request(:get, path,  valid_workspace_entities.to_json)
+		process_firecloud_request(:post, path,  valid_workspace_entities.to_json)
 	end
 
 	#######
@@ -755,7 +758,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	#
 	# return: boolean of whether or not response is a known 'OK' response
 	def ok?(code)
-		[200, 201, 202, 206].include?(code)
+		[200, 201, 202, 204, 206].include?(code)
 	end
 
   # merge hash of options into single URL query string

@@ -3,8 +3,8 @@ class DirectoryListing
 	include Mongoid::Timestamps
 	include Rails.application.routes.url_helpers # for accessing download_file_path and download_private_file_path
 
-  PRIMARY_DATA_EXTENSIONS = %w(.fq .fastq .fastq. .fq.)
-  PRIMARY_DATA_TYPES = PRIMARY_DATA_EXTENSIONS.map {|ext| ext.gsub(/\./, '')}.uniq
+	PRIMARY_DATA_TYPES = %w(fq fastq).freeze
+  READ_PAIR_IDENTIFIERS = %w(_R1_ _R2_ _I1_ _I2_).freeze
 
 	belongs_to :study
 
@@ -44,7 +44,44 @@ class DirectoryListing
   # guess at a possible sample name based on filename
   def possible_sample_name(filename)
     filename.split('/').last.split('.').first
-  end
+	end
+
+  # return sample name based on filename (everything to the left of _(R|I)1_ string in file basename)
+  def self.sample_name(filename)
+		basename = filename.split('/').last.split('.').first
+		DirectoryListing::READ_PAIR_IDENTIFIERS.each do |identifier|
+			index = basename.index(identifier)
+			if index
+				return basename[0..index - 1]
+			else
+				next
+			end
+		end
+		basename
+	end
+
+  def self.read_position(filename)
+		basename = filename.split('/').last.split('.').first
+		DirectoryListing::READ_PAIR_IDENTIFIERS.each do |identifier|
+			if basename.match(/#{identifier}/)
+				return DirectoryListing::READ_PAIR_IDENTIFIERS.index(identifier)
+			end
+		end
+		0 # in case no paring info is found, return 0 for first position
+	end
+
+	# method to return a mapping of samples and paired reads based on contents of a file list
+	def sample_read_pairings
+		map = {}
+		self.files.each do |file|
+			sample = DirectoryListing.sample_name(file[:name])
+			map[sample] ||= []
+			# determine 'position' of read, i.e. 0-3 based on presence of read identifier in filename
+			position = DirectoryListing.read_position(file[:name])
+			map[sample][position] = file[:name]
+		end
+		map
+	end
 
   # create a mapping of file extensions and counts based on a list of input files from a google bucket
   # keys to map are the path at which groups of files are found, and values are key/value pairs of file
@@ -56,7 +93,7 @@ class DirectoryListing
 				path = self.get_folder_name(name)
 				ext = self.file_extension(name)
 				# don't store primary data filetypes in map as these are handled separately
-				if !DirectoryListing::PRIMARY_DATA_EXTENSIONS.any? {|e| ext.include?(e)}
+				if !DirectoryListing::PRIMARY_DATA_TYPES.any? {|e| ext.include?(e)}
 					if map[path].nil?
 						map[path] = {"#{ext}" => 1}
 					elsif map[path][ext].nil?
@@ -85,4 +122,5 @@ class DirectoryListing
   def self.get_folder_name(filepath)
 		filepath.include?('/') ? filepath.split('/').first : '/'
 	end
+
 end

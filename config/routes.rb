@@ -78,6 +78,7 @@ Rails.application.routes.draw do
     get 'study/:study_name/precomputed_results', to: 'site#precomputed_results', as: :precomputed_results
 		post 'study/:study_name/create_user_annotations', to: 'site#create_user_annotations', as: :create_user_annotations
     get 'study/:study_name/show_user_annotations_form', to: 'site#show_user_annotations_form', as: :show_user_annotations_form
+    get 'study/:study_name/get_workspace_samples', to: 'site#get_workspace_samples', as: :get_workspace_samples
     get 'view_workflow_wdl', to: 'site#view_workflow_wdl', as: :view_workflow_wdl
     get 'search', to: 'site#search', as: :search
     get 'log_action', to: 'site#log_action', as: :log_action
