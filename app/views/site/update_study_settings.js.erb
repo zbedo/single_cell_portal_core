@@ -4,6 +4,7 @@ closeModalSpinner('#update-study-settings-spinner', '#update-study-settings-moda
         $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {notice: 'Study successfully updated.'}) %>");
 
         // update summary and visualize tabs
+        $('#title-bar').html("<%= escape_javascript(render partial: 'study_title_bar') %>");
         $('#study-summary').html("<%= escape_javascript(render partial: 'study_description_view') %>");
         $('#study-download').html("<%= escape_javascript(render partial: 'study_download_data') %>");
         $('#study-visualize').html("<%= escape_javascript(render partial: 'study_visualize') %>");

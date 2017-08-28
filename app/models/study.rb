@@ -332,6 +332,17 @@ class Study
     self.default_options[:color_profile].presence
   end
 
+  # return the value of the expression axis label
+  def default_expression_label
+    label = self.default_options[:expression_label].presence
+    label.nil? ? 'Expression' : label
+  end
+
+  # determine if a user has supplied an expression label
+  def has_expression_label?
+    !self.default_options[:expression_label].blank?
+  end
+
   # helper method to get number of unique single cells
   def set_cell_count(file_type)
     @cell_count = 0
@@ -342,6 +353,13 @@ class Study
     end
     self.update(cell_count: @cell_count)
     Rails.logger.info "#{Time.now}: Setting cell count in #{self.name} to #{@cell_count}"
+  end
+
+  # helper method to set the number of unique genes in this study
+  def set_gene_count
+    gene_count = self.expression_scores.pluck(:gene).uniq.count
+    Rails.logger.info "#{Time.now}: setting gene count in #{self.name} to #{gene_count}"
+    self.update!(gene_count: gene_count)
   end
 
   # return a count of the number of fastq files both uploaded and referenced via directory_listings for a study
@@ -621,21 +639,32 @@ class Study
       end
       Rails.logger.info "#{Time.now}: Creating last #{@records.size} expression scores from #{expression_file.name} for #{self.name}"
       ExpressionScore.create!(@records)
+
+      # launch job to set gene count
+      self.set_gene_count
+
+      # set the default expression label if the user supplied one
+      if !self.has_expression_label? && !expression_file.y_axis_label.blank?
+        Rails.logger.info "#{Time.now}: Setting default expression label in #{self.name} to '#{expression_file.y_axis_label}'"
+        opts = self.default_options
+        self.update!(default_options: opts.merge(expression_label: expression_file.y_axis_label))
+      end
+
       # create array of all cells for study
-      @cell_data_array = self.data_arrays.build(name: 'All Cells', cluster_name: expression_file.name, array_type: 'cells', array_index: 1, study_file_id: expression_file._id)
+      @cell_data_array = self.data_arrays.build(name: 'All Cells', cluster_name: expression_file.name, array_type: 'cells', array_index: 1, study_file_id: expression_file._id, cluster_group_id: expression_file._id)
       # chunk into pieces as necessary
       cells.each_slice(DataArray::MAX_ENTRIES) do |slice|
         new_array_index = @cell_data_array.array_index + 1
         @cell_data_array.values = slice
         Rails.logger.info "#{Time.now}: Saving all cells data array ##{@cell_data_array.array_index} using #{expression_file.name} for #{self.name}"
         @cell_data_array.save!
-        @cell_data_array = self.data_arrays.build(name: 'All Cells', cluster_name: expression_file.name, array_type: 'cells', array_index: new_array_index, study_file_id: expression_file._id)
+        @cell_data_array = self.data_arrays.build(name: 'All Cells', cluster_name: expression_file.name, array_type: 'cells', array_index: new_array_index, study_file_id: expression_file._id, cluster_group_id: expression_file._id)
       end
 
       # clean up, print stats
       expression_data.close
       expression_file.update(parse_status: 'parsed')
-      Study.find(self.id).update(gene_count: @genes_parsed.size)
+
       end_time = Time.now
       time = (end_time - start_time).divmod 60.0
       @message << "#{Time.now}: #{expression_file.name} parse completed!"

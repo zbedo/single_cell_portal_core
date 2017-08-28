@@ -330,6 +330,10 @@ class StudiesController < ApplicationController
         @cluster.update(name: @study_file.name)
         # also update data_arrays
         @cluster.data_arrays.update_all(cluster_name: @study_file.name)
+      elsif study_file_params[:file_type] == 'Expression Matrix' && !study_file_params[:y_axis_label].blank?
+        # if user is supplying an expression axis label, update default options hash
+        @study.update(default_options: @study.default_options.merge(expression_label: study_file_params[:y_axis_label]))
+        @study.expression_matrix_files.first.invalidate_cache_by_file_type
       end
       @message = "'#{@study_file.name}' has been successfully updated."
 
@@ -370,6 +374,10 @@ class StudiesController < ApplicationController
         @cluster.update(name: @study_file.name)
         # also update data_arrays
         @cluster.data_arrays.update_all(cluster_name: study_file_params[:name])
+      elsif study_file_params[:file_type] == 'Expression Matrix' && !study_file_params[:y_axis_label].blank?
+        # if user is supplying an expression axis label, update default options hash
+        @study.update(default_options: @study.default_options.merge(expression_label: study_file_params[:y_axis_label]))
+        @study.expression_matrix_files.first.invalidate_cache_by_file_type
       end
       @message = "'#{@study_file.name}' has been successfully updated."
 
@@ -483,6 +491,12 @@ class StudiesController < ApplicationController
   def sync_study_file
     @study_file = @study.study_files.build
     if @study_file.update(study_file_params)
+      if study_file_params[:file_type] == 'Expression Matrix' && !study_file_params[:y_axis_label].blank?
+        # if user is supplying an expression axis label, update default options hash
+        @study.update(default_options: @study.default_options.merge(expression_label: study_file_params[:y_axis_label]))
+        @study.expression_matrix_files.first.invalidate_cache_by_file_type
+      end
+
       @message = "New Study File '#{@study_file.name}' successfully synced."
       # only grab id after update as it will change on new entries
       @form = "#study-file-#{@study_file.id}"
@@ -524,6 +538,11 @@ class StudiesController < ApplicationController
     end
 
     if @study_file.update(update_params)
+      if update_params[:file_type] == 'Expression Matrix' && !update_params[:y_axis_label].blank?
+        # if user is supplying an expression axis label, update default options hash
+        @study.update(default_options: @study.default_options.merge(expression_label: update_params[:y_axis_label]))
+        @study.expression_matrix_files.first.invalidate_cache_by_file_type
+      end
       @message = "New Study File '#{@study_file.name}' successfully synced."
       # only reparse if user requests
       if @study_file.parseable? && params[:reparse] == 'Yes'
@@ -749,6 +768,7 @@ class StudiesController < ApplicationController
     end
     if @study.save
       @study.default_cluster.study_file.invalidate_cache_by_file_type
+      @study.expression_matrix_files.first.invalidate_cache_by_file_type
       set_study_default_options
       render action: 'update_default_options_success'
     else
@@ -778,7 +798,7 @@ class StudiesController < ApplicationController
   end
 
   def default_options_params
-    params.require(:study_default_options).permit(:cluster, :annotation, :color_profile)
+    params.require(:study_default_options).permit(:cluster, :annotation, :color_profile, :expression_label)
   end
 
   def set_file_types

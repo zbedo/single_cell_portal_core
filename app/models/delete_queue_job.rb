@@ -40,8 +40,10 @@ class DeleteQueueJob < Struct.new(:object)
           when 'Expression Matrix'
             ExpressionScore.where(study_file_id: object.id, study_id: study.id).delete_all
             DataArray.where(study_file_id: object.id, study_id: study.id).delete_all
+            study.set_gene_count
           when 'Metadata'
             StudyMetadatum.where(study_file_id: object.id, study_id: study.id).delete_all
+            study.update(cell_count: 0)
           when 'Gene List'
             PrecomputedScore.where(study_file_id: object.id, study_id: study.id).delete_all
           else
