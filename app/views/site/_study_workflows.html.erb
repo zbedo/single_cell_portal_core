@@ -64,21 +64,25 @@
         <div class="col-sm-12">
           <div class="bs-callout bs-callout-info">
             <h4>Samples & Primary Data Files</h4>
-            <p class="help-block">Use the multi-select below to choose either existing samples or primary data directories from this study to use as inputs for this workflow.
-              If using directories, samples & paired reads will be determined by the names of the primary data files.  If you wish to edit the list of sample & file pairings, you can export it via the
-              <strong>Export Sample & File Parings</strong> button, make any desired changes, and import the new list using the <strong>Upload Sample & File Parings</strong> button.</p>
+            <p class="help-block">Use the multi-selects below to choose either existing samples or primary data directories from this study to use as inputs for this workflow.  Paired read information is pulled
+              either from the sample metadata in this study's workspace (for known samples) or is determined by the names of the primary data files (for files). If you wish to edit the list of sample & file pairings,
+              you can export it via the <strong>Export Sample & File Parings</strong> button, make any desired changes, and import the new list using the <strong>Upload Sample & File Parings</strong> button.</p>
+            <p class="help-block">You may also store the sample information below back to the workspace to use in future workflows by clicking the <strong>Save Sample Information</strong> button.</p>
           </div>
-          <div class="form-group row">
-            <div class="col-sm-6">
-              <%= f.label :samples, 'Please select known samples from the workspace (select all that apply)' %><br />
-              <%= f.select :samples, options_for_select(@samples), {}, multiple: true, class: 'form-control', size: @samples.size > 10 ? 10 : @samples.size %>
-            </div>
-            <div class="col-sm-6">
-              <%= f.label :study_data, 'OR choose primary data directories (select all that apply)' %><br />
-              <%= f.select :study_data, options_for_select(@primary_data_locations), {}, multiple: true, class: 'form-control', size: @primary_data.size > 10 ? 10 : @primary_data.size %>
-            </div>
-          </div>
+        </div>
+        <div class="col-sm-6">
+          <%= f.label :samples, 'Please select known samples from the workspace (select all that apply)' %><br />
+          <%= f.select :samples, options_for_select(@samples), {}, multiple: true, class: 'form-control', size: @samples.size > 10 ? 10 : @samples.size %>
+        </div>
+        <div class="col-sm-6">
+          <%= f.label :study_data, 'OR choose primary data directories (select all that apply)' %><br />
+          <%= f.select :study_data, options_for_select(@primary_data_locations), {}, multiple: true, class: 'form-control', size: @primary_data.size > 10 ? 10 : @primary_data.size %>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-12">
           <div class="well well-sm">
+            <h4 class="text-center">Selected Samples & Primary Data Files</h4>
             <div class="table-responsive">
               <table class="table table-striped tabled-condensed" id="samples-table">
                 <thead>
@@ -93,6 +97,7 @@
                 <tbody></tbody>
               </table>
             </div>
+            <p class="text-center"><%= link_to "Save Sample Information <i class='fa fa-fw fa-cloud-upload'></i>".html_safe, 'javascript:;', class: 'btn btn-lg btn-primary', data: {toggle: 'tooltip'}, title: 'Save the selected sample information back to the workspace.  This will overwrite any existing information for these samples.' %></p>
           </div>
         </div>
       </div>
@@ -241,6 +246,7 @@
 
     $('#clear-sample-info').click(function () {
         $('#workflow_study_data').val('');
+        $('#workflow_samples').val('');
         updateSampleTable([])
     });
 

@@ -2,6 +2,13 @@ class SiteController < ApplicationController
 
   ###
   #
+  # This is the main public controller for the portal.  All data viewing/rendering is handled here, including creating
+  # UserAnnotations and submitting workflows.
+  #
+  ###
+
+  ###
+  #
   # FILTERS & SETTINGS
   #
   ###
@@ -12,8 +19,8 @@ class SiteController < ApplicationController
   before_action :set_cluster_group, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :expression_query, :annotation_query, :get_new_annotations, :annotation_values, :show_user_annotations_form]
   before_action :set_selected_annotation, only: [:update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :annotation_query, :annotation_values, :show_user_annotations_form]
   before_action :load_precomputed_options, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap]
-  before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query, :view_workflow_wdl, :log_action, :get_workspace_entities]
-
+  before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query, :view_workflow_wdl, :log_action, :get_workspace_samples, :save_workspace_samples]
+  before_action :check_compute_permissions, only: [:get_fastq_files, :get_workspace_samples, :save_workspace_samples]
   # caching
   caches_action :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots,
                 :expression_query, :annotation_query, :precomputed_results,
@@ -29,7 +36,7 @@ class SiteController < ApplicationController
   #
   ###
 
-  # view study overviews and downloads
+  # view study overviews/descriptions
   def index
     # set study order
     case params[:order]
@@ -520,8 +527,11 @@ class SiteController < ApplicationController
 
   # method to download files if study is public
   def download_file
+    # make sure user is signed in
     if !user_signed_in?
       redirect_to view_study_path(@study.url_safe_name), alert: 'You must be signed in to download data.' and return
+    elsif @study.embargoed?(current_user)
+      redirect_to view_study_path(@study.url_safe_name), alert: "You may not download any data from this study until #{@study.embargo.to_s(:long)}." and return
     end
 
     # next check if downloads have been disabled by administrator, this will abort the download
@@ -645,30 +655,34 @@ class SiteController < ApplicationController
   # and extra fastq's that happen to be in the bucket)
   def get_fastq_files
     @fastq_files = []
-    case params[:mode]
-      when 'workflow'
-        selected_entries = params[:selected_entries].split(',').map(&:strip)
-        selected_entries.each do |entry|
-          class_name, entry_name = entry.split('--')
-          case class_name
-            when 'directorylisting'
-              directory = @study.directory_listings.are_synced.detect {|d| d.name == entry_name}
-              populate_rows(@fastq_files, directory)
-            when 'studyfile'
-              study_file = @study.study_files.by_type('Fastq').detect {|f| f.name == entry_name}
-              @fastq_files << [
-                  study_file.upload_file_name.split('.').first,
-                  study_file.upload_file_name,
-                  '',
-                  '',
-                  ''
-              ]
-            else
-              nil # this is called when selection is cleared out
+    if @study.can_compute?(current_user)
+      case params[:mode]
+        when 'workflow'
+          selected_entries = params[:selected_entries].split(',').map(&:strip)
+          selected_entries.each do |entry|
+            class_name, entry_name = entry.split('--')
+            case class_name
+              when 'directorylisting'
+                directory = @study.directory_listings.are_synced.detect {|d| d.name == entry_name}
+                populate_rows(@fastq_files, directory)
+              when 'studyfile'
+                study_file = @study.study_files.by_type('Fastq').detect {|f| f.name == entry_name}
+                @fastq_files << [
+                    study_file.upload_file_name.split('.').first,
+                    study_file.upload_file_name,
+                    '',
+                    '',
+                    ''
+                ]
+              else
+                nil # this is called when selection is cleared out
+            end
           end
-        end
-      else
-        nil
+        else
+          nil
+      end
+    else
+      nil # user doesn't have compute permission so render an empty array
     end
     render json: @fastq_files.to_json
   end
@@ -689,25 +703,35 @@ class SiteController < ApplicationController
 
   # get the available entities for a workspace
   def get_workspace_samples
-    begin
-      requested_samples = params[:samples].split(',')
-      # get all samples
-      all_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_workspace, 'sample')
-      # since we can't query the API (easily) for matching samples, just get all and then filter based on requested samples
-      matching_samples = all_samples.keep_if {|sample| requested_samples.include?(sample['name']) }
-      @samples = []
-      matching_samples.each do |sample|
-        @samples << [sample['name'],
-                     sample['attributes']['fastq_file_1'],
-                     sample['attributes']['fastq_file_2'],
-                     sample['attributes']['fastq_file_3'],
-                     sample['attributes']['fastq_file_4']
-        ]
+    if @study.can_compute?(current_user)
+      begin
+        requested_samples = params[:samples].split(',')
+        # get all samples
+        all_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_workspace, 'sample')
+        # since we can't query the API (easily) for matching samples, just get all and then filter based on requested samples
+        matching_samples = all_samples.keep_if {|sample| requested_samples.include?(sample['name']) }
+        @samples = []
+        matching_samples.each do |sample|
+          @samples << [sample['name'],
+                       sample['attributes']['fastq_file_1'],
+                       sample['attributes']['fastq_file_2'],
+                       sample['attributes']['fastq_file_3'],
+                       sample['attributes']['fastq_file_4']
+          ]
+        end
+        render json: @samples.to_json
+      rescue => e
+        logger.error "#{Time.now}: Error retrieving workspace samples for #{study.name}; #{e.message}"
+        render json: []
       end
-      render json: @samples.to_json
-    rescue => e
-      logger.error "#{Time.now}: Error retrieving workspace samples for #{study.name}; #{e.message}"
+    else
+      render json: [] # render empty array if user has no compute permissions
     end
+  end
+
+  # save currently selected sample information back to study workspace
+  def save_workspace_samples
+
   end
 
   ###
@@ -777,10 +801,26 @@ class SiteController < ApplicationController
     params.require(:user_annotation).permit(:_id, :name, :study_id, :user_id, :cluster_group_id, :subsample_threshold, :loaded_annotation, :subsample_annotation, user_data_arrays_attributes: [:name, :values])
   end
 
+  # make sure user has view permissions for selected study
   def check_view_permissions
     unless @study.public?
       if (!user_signed_in? && !@study.public?) || (user_signed_in? && !@study.can_view?(current_user))
-        redirect_to site_path, alert: 'You do not have permission to view the requested page.' and return
+        alert = 'You do not have permission to view the requested page.'
+        respond_to do |format|
+          format.js {render js: "alert('#{alert}')" and return}
+          format.html {redirect_to site_path, alert: alert and return}
+        end
+      end
+    end
+  end
+
+  # check compute permissions for study
+  def check_compute_permissions
+    if !user_signed_in? || !@study.can_compute?(current_user)
+      alert ='You do not have permission to perform that action.'
+      respond_to do |format|
+        format.js {render js: "alert('#{alert}')" and return}
+        format.html {redirect_to site_path, alert: alert and return}
       end
     end
   end

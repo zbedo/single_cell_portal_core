@@ -442,7 +442,6 @@ class UiTestSuite < Test::Unit::TestCase
 		# fill out study form
 		study_form = @driver.find_element(:id, 'new_study')
 		study_form.find_element(:id, 'study_name').send_keys("Test Study #{$random_seed}")
-		study_form.find_element(:id, 'study_embargo').send_keys('2016-12-31')
 		public = study_form.find_element(:id, 'study_public')
 		public.send_keys('Yes')
 		# add a share
@@ -467,10 +466,6 @@ class UiTestSuite < Test::Unit::TestCase
 		# close success modal
 		close_modal('upload-success-modal')
 
-		scroll_to(:bottom)
-		back_btn = @driver.find_element(:id, 'prev-btn')
-		back_btn.click
-
 		# upload a second expression file
 		new_expression = @driver.find_element(:class, 'add-expression')
 		new_expression.click
@@ -482,6 +477,8 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn.click
 		# close success modal
 		close_modal('upload-success-modal')
+		next_btn = @driver.find_element(:id, 'next-btn')
+		next_btn.click
 
 		# upload metadata
 		wait_for_render(:id, 'metadata_form')
@@ -623,7 +620,6 @@ class UiTestSuite < Test::Unit::TestCase
 		# fill out study form
 		study_form = @driver.find_element(:id, 'new_study')
 		study_form.find_element(:id, 'study_name').send_keys("twod Study #{$random_seed}")
-		study_form.find_element(:id, 'study_embargo').send_keys('2016-12-31')
 		public = study_form.find_element(:id, 'study_public')
 		public.send_keys('Yes')
 		# add a share
@@ -647,6 +643,8 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn.click
 		# close success modal
 		close_modal('upload-success-modal')
+		next_btn = @driver.find_element(:id, 'next-btn')
+		next_btn.click
 
 		# upload metadata
 		wait_for_render(:id, 'metadata_form')
@@ -816,6 +814,74 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
+	# test embargo functionality
+	test 'admin: create-study: embargo' do
+		puts "Test method: #{self.method_name}"
+
+		# log in first
+		path = @base_url + '/studies/new'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email)
+
+		# fill out study form
+		study_form = @driver.find_element(:id, 'new_study')
+		study_form.find_element(:id, 'study_name').send_keys("Embargo Study #{$random_seed}")
+		embargo_date = (Date.today + 1).to_s
+		study_form.find_element(:id, 'study_embargo').send_keys(embargo_date)
+		# save study
+		save_study = @driver.find_element(:id, 'save-study')
+		save_study.click
+
+		# upload expression matrix
+		close_modal('message_modal')
+		upload_expression = @driver.find_element(:id, 'upload-expression')
+		upload_expression.send_keys(@test_data_path + 'expression_matrix_example.txt')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		# close modal
+		close_modal('upload-success-modal')
+
+		# verify user can still download data
+		embargo_url = @base_url + "/study/embargo-study-#{$random_seed}"
+		@driver.get embargo_url
+		@wait.until {element_present?(:id, 'study-download')}
+		open_ui_tab('study-download')
+		download_links = @driver.find_elements(:class, 'dl-link')
+		assert download_links.size == 1, "did not find correct number of download links, expected 1 but found #{download_links.size}"
+
+		# logout
+		profile = @driver.find_element(:id, 'profile-nav')
+		profile.click
+		logout = @driver.find_element(:id, 'logout-nav')
+		logout.click
+		wait_until_page_loads(@base_url)
+		close_modal('message_modal')
+
+		# login as share user
+		login_link = @driver.find_element(:id, 'login-nav')
+		login_link.click
+		login_as_other($share_email)
+
+		# now assert download links do not load
+		@driver.get embargo_url
+		@wait.until {element_present?(:id, 'study-download')}
+		open_ui_tab('study-download')
+		embargo_links = @driver.find_elements(:class, 'embargoed-file')
+		assert embargo_links.size == 1, "did not find correct number of embargo links, expected 1 but found #{embargo_links.size}"
+
+		# make sure embargo redirect is in place
+		data_url = @base_url + "/data/public/embargo-study-#{$random_seed}/expression_matrix_example.txt"
+		@driver.get data_url
+		wait_for_render(:id, 'message_modal')
+		alert_text = @driver.find_element(:id, 'alert-content').text
+		expected_alert = "You may not download any data from this study until #{(Date.today + 1).strftime("%B %e, %Y")}."
+		assert alert_text == expected_alert, "did not find correct alert, expected '#{expected_alert}' but found '#{alert_text}'"
+
+		puts "Test method: #{self.method_name} successful!"
+	end
+
 	# negative tests to check file parsing & validation
 	# since parsing happens in background, all messaging is handled through emails
 	# this test just makes sure that parsing fails and removed entries appropriately
@@ -845,6 +911,8 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn.click
 		# close modal
 		close_modal('upload-success-modal')
+		next_btn = @driver.find_element(:id, 'next-btn')
+		next_btn.click
 
 		# upload bad metadata assignments
 		wait_for_render(:id, 'metadata_form')
@@ -922,6 +990,8 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn.click
 		# close success modal
 		close_modal('upload-success-modal')
+		next_btn = @driver.find_element(:id, 'next-btn')
+		next_btn.click
 
 		# upload metadata
 		wait_for_render(:id, 'metadata_form')
@@ -4010,6 +4080,11 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# delete gzip parse
 		@driver.find_element(:class, "gzip-parse-#{$random_seed}-delete").click
+		accept_alert
+		close_modal('message_modal')
+
+		# delete embargo study
+		@driver.find_element(:class, "embargo-study-#{$random_seed}-delete").click
 		accept_alert
 		close_modal('message_modal')
 

@@ -2,6 +2,12 @@ class StudiesController < ApplicationController
 
   ###
   #
+  # This is the main study creation controller.  Handles CRUDing studies, uploading & parsing files, and syncing to workspaces
+  #
+  ###
+
+  ###
+  #
   # FILTERS & SETTINGS
   #
   ###
@@ -403,6 +409,8 @@ class StudiesController < ApplicationController
     # check if user has permission in case someone is phishing
     if current_user.nil? || !@study.can_view?(current_user)
       redirect_to site_path, alert: 'You do not have permission to perform that action.' and return
+    elsif @study.embargoed?(current_user)
+      redirect_to site_path, alert: "You may not download any data from this study until #{@study.embargo.to_s(:long)}." and return
     else
       begin
         filesize = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_workspace, params[:filename]).size
@@ -885,19 +893,22 @@ class StudiesController < ApplicationController
 
   def check_edit_permissions
     if !user_signed_in? || !@study.can_edit?(current_user)
-      redirect_to studies_path, alert: 'You do not have permission to perform that action' and return
+      alert = 'You do not have permission to perform that action.'
+      respond_to do |format|
+        format.js {render js: "alert('#{alert}')" and return}
+        format.html {redirect_to studies_path, alert: alert and return}
+      end
     end
   end
 
   # check on FireCloud API status and respond accordingly
   def check_firecloud_status
     unless Study.firecloud_client.api_available?
-      if request.format.html?
-        redirect_to studies_path, alert: 'Study workspaces are temporarily unavailable, so we cannot complete your request.  Please try again later.' and return
-      elsif request.xhr?
-        render template: '/layouts/firecloud_unavailable'
-      else
-        head 503
+      alert = 'Study workspaces are temporarily unavailable, so we cannot complete your request.  Please try again later.'
+      respond_to do |format|
+        format.js {render js: "$('.modal').modal('hide'); alert('#{alert}')" and return}
+        format.html {redirect_to studies_path, alert: alert and return}
+        format.json {head 503}
       end
     end
   end

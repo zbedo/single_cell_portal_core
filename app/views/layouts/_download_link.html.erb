@@ -1,4 +1,6 @@
-<% if user_signed_in? %>
+<% if @study.embargoed?(current_user) %>
+  <span class="label label-warning embargoed-file"><i class="fa fa-ban"></i> Not available until <%= @study.embargo.to_s(:long) %></span>
+<% else %>
   <% if study_file.upload_file_name.nil? %>
     <%= link_to "<span class='fa fa-cloud-download'></span> External".html_safe, study_file.download_path, class: 'btn btn-primary', target: :_blank %>
   <% else %>
@@ -8,6 +10,4 @@
       <span class="btn btn-sm btn-danger disabled-download" title="This file exceeds your daily download quota of <%= number_to_human_size(@download_quota) %>.  Please wait until tomorrow.", data-toggle="tooltip"><i class="fa fa-times"></i> Exceeds Quota</span>
     <% end %>
   <% end %>
-<% else %>
-  <%= link_to "<span class='fa fa-sign-in fa-fw'></span> Login to Download".html_safe, new_user_session_path, class: 'btn btn-default' %>
 <% end %>
