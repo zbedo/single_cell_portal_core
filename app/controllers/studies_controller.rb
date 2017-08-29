@@ -1,4 +1,11 @@
 class StudiesController < ApplicationController
+
+  ###
+  #
+  # FILTERS & SETTINGS
+  #
+  ###
+
   before_action :set_study, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
   before_action :set_file_types, only: [:sync_study, :sync_study_file, :sync_orphaned_study_file, :update_study_file_from_sync]
   before_filter :check_edit_permissions, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
@@ -8,6 +15,12 @@ class StudiesController < ApplicationController
   end
   # special before_filter to make sure FireCloud is available and pre-empt any calls when down
   before_filter :check_firecloud_status, except: [:index, :do_upload, :resume_upload, :update_status, :retrieve_wizard_upload, :parse ]
+
+  ###
+  #
+  # STUDY OBJECT METHODS
+  #
+  ###
 
   # GET /studies
   # GET /studies.json
@@ -276,6 +289,93 @@ class StudiesController < ApplicationController
     end
   end
 
+  ###
+  #
+  # STUDYFILE OBJECT METHODS
+  #
+  ###
+
+  # create a new study_file for requested study
+  def new_study_file
+    file_type = params[:file_type] ? params[:file_type] : 'Cluster'
+    @study_file = @study.build_study_file({file_type: file_type})
+    @study_file = @study.build_study_file({file_type: file_type})
+  end
+
+  # method to perform chunked uploading of data
+  def do_upload
+    upload = get_upload
+    filename = upload.original_filename
+    study_file = @study.study_files.valid.detect {|sf| sf.upload_file_name == filename}
+    # If no file has been uploaded or the uploaded file has a different filename,
+    # do a new upload from scratch
+    if study_file.nil?
+      # don't use helper as we're about to mass-assign params
+      study_file = @study.study_files.build
+      if study_file.update(study_file_params)
+        render json: { file: { name: study_file.errors,size: nil } } and return
+        # If the already uploaded file has the same filename, try to resume
+      else
+        study_file.errors.each do |error|
+          logger.error "#{Time.now}: upload failed due to #{error.inspect}"
+        end
+        head 422 and return
+      end
+    else
+      current_size = study_file.upload_file_size
+      content_range = request.headers['CONTENT-RANGE']
+      begin_of_chunk = content_range[/\ (.*?)-/,1].to_i # "bytes 100-999999/1973660678" will return '100'
+
+      # If the there is a mismatch between the size of the incomplete upload and the content-range in the
+      # headers, then it's the wrong chunk!
+      # In this case, start the upload from scratch
+      unless begin_of_chunk == current_size
+        render json: study_file.to_jq_upload and return
+      end
+      # Add the following chunk to the incomplete upload, converting to unix line endings
+      File.open(study_file.upload.path, "ab") do |f|
+        if study_file.upload_content_type == 'text/plain'
+          f.write(upload.read.gsub(/\r\n?/, "\n"))
+        else
+          f.write upload.read
+        end
+      end
+
+      # Update the upload_file_size attribute
+      study_file.upload_file_size = study_file.upload_file_size.nil? ? upload.size : study_file.upload_file_size + upload.size
+      study_file.save!
+
+      render json: study_file.to_jq_upload and return
+    end
+  end
+
+  # GET /courses/:id/resume_upload.json
+  def resume_upload
+    study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
+    if study_file.nil?
+      render json: { file: { name: "/uploads/default/missing.png",size: nil } } and return
+    elsif study_file.status == 'uploaded'
+      render json: {file: nil } and return
+    else
+      render json: { file: { name: study_file.upload.url, size: study_file.upload_file_size } } and return
+    end
+  end
+
+  # update a study_file's upload status to 'uploaded'
+  def update_status
+    study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
+    study_file.update!(status: params[:status])
+    head :ok
+  end
+
+  # retrieve study file by filename during initializer wizard
+  def retrieve_wizard_upload
+    @study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
+    if @study_file.nil?
+      head 404 and return
+    end
+  end
+
   # parses file in foreground to maintain UI state for immediate messaging
   def parse
     @study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
@@ -297,11 +397,41 @@ class StudiesController < ApplicationController
     end
   end
 
-  # create a new study_file for requested study
-  def new_study_file
-    file_type = params[:file_type] ? params[:file_type] : 'Cluster'
-    @study_file = @study.build_study_file({file_type: file_type})
-    @study_file = @study.build_study_file({file_type: file_type})
+  # method to download files if study is private, will create temporary signed_url after checking user quota
+  def download_private_file
+    @study = Study.find_by(url_safe_name: params[:study_name])
+    # check if user has permission in case someone is phishing
+    if current_user.nil? || !@study.can_view?(current_user)
+      redirect_to site_path, alert: 'You do not have permission to perform that action.' and return
+    else
+      begin
+        filesize = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_workspace, params[:filename]).size
+        user_quota = current_user.daily_download_quota + filesize
+        # check against download quota that is loaded in ApplicationController.get_download_quota
+        if user_quota <= @download_quota
+          @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, params[:filename], expires: 15)
+          current_user.update(daily_download_quota: user_quota)
+        else
+          redirect_to view_study_path(@study.url_safe_name), alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
+        end
+      rescue RuntimeError => e
+        logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
+        redirect_to request.referrer, alert: "We were unable to download the file #{params[:filename]} do to an error: #{e.message}" and return
+      end
+      # redirect directly to file to trigger download
+      redirect_to @signed_url
+    end
+  end
+
+  # for files that don't need parsing, send directly to firecloud on upload completion
+  def send_to_firecloud
+    @study_file = StudyFile.find_by(study_id: params[:id], upload_file_name: params[:file])
+    @study.delay.send_to_firecloud(@study_file)
+    changes = ["Study file added: #{@study_file.upload_file_name}"]
+    if @study.study_shares.any?
+      SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
+    end
+    head :ok
   end
 
   # update an existing study file via upload wizard; cannot be called until file is uploaded, so there is no create
@@ -604,6 +734,12 @@ class StudiesController < ApplicationController
     end
   end
 
+  ###
+  #
+  # DIRECTORYLISTING OBJECT METHODS
+  #
+  ###
+
   # synchronize a directory_listing object
   def sync_directory_listing
     @directory = DirectoryListing.find(directory_listing_params[:_id])
@@ -636,127 +772,11 @@ class StudiesController < ApplicationController
     end
   end
 
-  # method to perform chunked uploading of data
-  def do_upload
-    upload = get_upload
-    filename = upload.original_filename
-    study_file = @study.study_files.valid.detect {|sf| sf.upload_file_name == filename}
-    # If no file has been uploaded or the uploaded file has a different filename,
-    # do a new upload from scratch
-    if study_file.nil?
-      # don't use helper as we're about to mass-assign params
-      study_file = @study.study_files.build
-      if study_file.update(study_file_params)
-        render json: { file: { name: study_file.errors,size: nil } } and return
-        # If the already uploaded file has the same filename, try to resume
-      else
-        study_file.errors.each do |error|
-          logger.error "#{Time.now}: upload failed due to #{error.inspect}"
-        end
-        head 422 and return
-      end
-    else
-      current_size = study_file.upload_file_size
-      content_range = request.headers['CONTENT-RANGE']
-      begin_of_chunk = content_range[/\ (.*?)-/,1].to_i # "bytes 100-999999/1973660678" will return '100'
-
-      # If the there is a mismatch between the size of the incomplete upload and the content-range in the
-      # headers, then it's the wrong chunk!
-      # In this case, start the upload from scratch
-      unless begin_of_chunk == current_size
-        render json: study_file.to_jq_upload and return
-      end
-      # Add the following chunk to the incomplete upload, converting to unix line endings
-      File.open(study_file.upload.path, "ab") do |f|
-        if study_file.upload_content_type == 'text/plain'
-          f.write(upload.read.gsub(/\r\n?/, "\n"))
-        else
-          f.write upload.read
-        end
-      end
-
-      # Update the upload_file_size attribute
-      study_file.upload_file_size = study_file.upload_file_size.nil? ? upload.size : study_file.upload_file_size + upload.size
-      study_file.save!
-
-      render json: study_file.to_jq_upload and return
-    end
-  end
-
-  # GET /courses/:id/resume_upload.json
-  def resume_upload
-    study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
-    if study_file.nil?
-      render json: { file: { name: "/uploads/default/missing.png",size: nil } } and return
-    elsif study_file.status == 'uploaded'
-      render json: {file: nil } and return
-    else
-      render json: { file: { name: study_file.upload.url, size: study_file.upload_file_size } } and return
-    end
-  end
-
-  # update a study_file's upload status to 'uploaded'
-  def update_status
-    study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
-    study_file.update!(status: params[:status])
-    head :ok
-  end
-
-  # retrieve study file by filename during initializer wizard
-  def retrieve_wizard_upload
-    @study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
-    if @study_file.nil?
-      head 404 and return
-    end
-  end
-
-  # method to download files if study is private, will create temporary signed_url after checking user quota
-  def download_private_file
-    @study = Study.find_by(url_safe_name: params[:study_name])
-    # check if user has permission in case someone is phishing
-    if current_user.nil? || !@study.can_view?(current_user)
-      redirect_to site_path, alert: 'You do not have permission to perform that action.' and return
-    else
-      begin
-        filesize = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_workspace, params[:filename]).size
-        user_quota = current_user.daily_download_quota + filesize
-        # check against download quota that is loaded in ApplicationController.get_download_quota
-        if user_quota <= @download_quota
-          @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, params[:filename], expires: 15)
-          current_user.update(daily_download_quota: user_quota)
-        else
-          redirect_to view_study_path(@study.url_safe_name), alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
-        end
-      rescue RuntimeError => e
-        logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
-        redirect_to request.referrer, alert: "We were unable to download the file #{params[:filename]} do to an error: #{e.message}" and return
-      end
-      # redirect directly to file to trigger download
-      redirect_to @signed_url
-    end
-  end
-
-  # for files that don't need parsing, send directly to firecloud on upload completion
-  def send_to_firecloud
-    @study_file = StudyFile.find_by(study_id: params[:id], upload_file_name: params[:file])
-    @study.delay.send_to_firecloud(@study_file)
-    changes = ["Study file added: #{@study_file.upload_file_name}"]
-    if @study.study_shares.any?
-      SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
-    end
-    head :ok
-  end
-
-  # load annotations for a given study and cluster
-  def load_annotation_options
-    @default_cluster = @study.cluster_groups.detect {|cluster| cluster.name == params[:cluster]}
-    @default_cluster_annotations = {
-        'Study Wide' => @study.study_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
-    }
-    unless @default_cluster.nil?
-      @default_cluster_annotations['Cluster-based'] = @default_cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]}
-    end
-  end
+  ###
+  #
+  # STUDY DEFAULT OPTIONS METHODS
+  #
+  ###
 
   def update_default_options
     @study.default_options = default_options_params
@@ -777,7 +797,24 @@ class StudiesController < ApplicationController
     end
   end
 
+  # load annotations for a given study and cluster
+  def load_annotation_options
+    @default_cluster = @study.cluster_groups.detect {|cluster| cluster.name == params[:cluster]}
+    @default_cluster_annotations = {
+        'Study Wide' => @study.study_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
+    }
+    unless @default_cluster.nil?
+      @default_cluster_annotations['Cluster-based'] = @default_cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]}
+    end
+  end
+
   private
+
+  ###
+  #
+  # SETTERS
+  #
+  ###
 
   def set_study
     @study = Study.find(params[:id])
@@ -810,25 +847,6 @@ class StudiesController < ApplicationController
     study_file_params.to_h['upload']
   end
 
-  def check_edit_permissions
-    if !user_signed_in? || !@study.can_edit?(current_user)
-      redirect_to studies_path, alert: 'You do not have permission to perform that action' and return
-    end
-  end
-
-  # check on FireCloud API status and respond accordingly
-  def check_firecloud_status
-    unless Study.firecloud_client.api_available?
-      if request.format.html?
-        redirect_to studies_path, alert: 'Study workspaces are temporarily unavailable, so we cannot complete your request.  Please try again later.' and return
-      elsif request.xhr?
-        render template: '/layouts/firecloud_unavailable'
-      else
-        head 503
-      end
-    end
-  end
-
   # set up variables for wizard
   def initialize_wizard_files
     @expression_files = @study.study_files.by_type('Expression Matrix')
@@ -858,6 +876,37 @@ class StudiesController < ApplicationController
       @other_files << @study.build_study_file({file_type: 'Documentation'})
     end
   end
+
+  ###
+  #
+  # PERMISSONS & STATUS CHECKS
+  #
+  ###
+
+  def check_edit_permissions
+    if !user_signed_in? || !@study.can_edit?(current_user)
+      redirect_to studies_path, alert: 'You do not have permission to perform that action' and return
+    end
+  end
+
+  # check on FireCloud API status and respond accordingly
+  def check_firecloud_status
+    unless Study.firecloud_client.api_available?
+      if request.format.html?
+        redirect_to studies_path, alert: 'Study workspaces are temporarily unavailable, so we cannot complete your request.  Please try again later.' and return
+      elsif request.xhr?
+        render template: '/layouts/firecloud_unavailable'
+      else
+        head 503
+      end
+    end
+  end
+
+  ###
+  #
+  # SYNC SUB METHODS
+  #
+  ###
 
   # sub-method to iterate through list of GCP bucket files and build up necessary sync list objects
   def process_workspace_bucket_files(files)

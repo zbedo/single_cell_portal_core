@@ -1,5 +1,11 @@
 #!/bin/bash
 
+###
+#
+# boot_mongo: Main boot script for database.  Collects and sets environment variables from host to pass to docker container.
+#
+###
+
 # usage error message
 usage=$(
 cat <<EOF

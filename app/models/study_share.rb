@@ -1,4 +1,17 @@
 class StudyShare
+
+  ###
+  #
+  # StudyShare: class to hold sharing information about studies.  Integrates with FireCloud workspace ACLs.
+  #
+  ###
+
+  ###
+  #
+  # FIELD DEFINITIONS, VALIDATIONS & CALLBACKS
+  #
+  ###
+
 	include Mongoid::Document
 	include Mongoid::Timestamps
 
@@ -26,16 +39,13 @@ class StudyShare
 	validate						:set_firecloud_acl, on: [:create, :update]
 	before_destroy			:revoke_firecloud_acl
 
-	# method to set firecloud_workspace in all existing shares (without firing callbacks)
-	def self.set_all_firecloud_workspaces
-		self.skip_callback(:save, :after, :set_firecloud_acl)
-		self.all.each do |share|
-			share.update(firecloud_workspace: share.study.firecloud_workspace)
-		end
-		self.set_callback(:save, :after, :set_firecloud_acl)
-	end
-
 	private
+
+  ###
+  #
+  # SETTERS & CUSTOM VALIDATIONS/CALLBACKS
+  #
+  ###
 
 	def set_firecloud_workspace
 		self.firecloud_workspace = self.study.firecloud_workspace

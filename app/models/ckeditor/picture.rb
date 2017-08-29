@@ -1,4 +1,11 @@
 class Ckeditor::Picture < Ckeditor::Asset
+
+  ###
+  #
+  # An uploaded image through the CKEditor GUI
+  #
+  ###
+
   has_mongoid_attached_file :data,
                             :url  => "/single_cell/ckeditor_assets/pictures/:id/:style_:basename.:extension",
                             :path => ":rails_root/public/single_cell/ckeditor_assets/pictures/:id/:style_:basename.:extension",

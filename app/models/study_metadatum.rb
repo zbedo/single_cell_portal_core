@@ -1,4 +1,11 @@
 class StudyMetadatum
+
+  ###
+  #
+  # StudyMetadatum: class holding key/value pairs of cell-level annotations.  Not to be confused with HCA study-level metadata.
+  #
+  ###
+
   include Mongoid::Document
 
   belongs_to :study

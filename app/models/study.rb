@@ -1,6 +1,20 @@
 class Study
+
+  ###
+  #
+  # Study: main object class for portal; stores information regarding study objects and references to FireCloud workspaces,
+  # access controls to viewing study objects, and also used as main parsing class for uploaded study files.
+  #
+  ###
+
   include Mongoid::Document
   include Mongoid::Timestamps
+
+  ###
+  #
+  # FIRECLOUD METHODS
+  #
+  ###
 
   # prefix for FireCloud workspaces, defaults to blank in production
   WORKSPACE_NAME_PREFIX = Rails.env != 'production' ? Rails.env + '-' : ''
@@ -23,6 +37,12 @@ class Study
       e.message
     end
   end
+
+  ###
+  #
+  # SETTINGS, ASSOCIATIONS AND SCOPES
+  #
+  ###
 
   # pagination
   def self.per_page
@@ -125,7 +145,7 @@ class Study
     end
   end
 
-  #User annotations are per study
+  # User annotations are per study
   has_many :user_annotations, dependent: :delete
   has_many :user_data_arrays, dependent: :delete
 
@@ -149,6 +169,12 @@ class Study
 
   accepts_nested_attributes_for :study_files, allow_destroy: true
   accepts_nested_attributes_for :study_shares, allow_destroy: true, reject_if: proc { |attributes| attributes['email'].blank? }
+
+  ###
+  #
+  # VALIDATIONS & CALLBACKS
+  #
+  ###
 
   # custom validator since we need everything to pass in a specific order (otherwise we get orphaned FireCloud workspaces)
   validate :initialize_with_new_workspace, on: :create, if: Proc.new {|study| !study.use_existing_workspace}
@@ -178,6 +204,12 @@ class Study
 
   # search definitions
   index({"name" => "text", "description" => "text"})
+
+  ###
+  #
+  # ACCESS CONTROL METHODS
+  #
+  ###
 
   # return all studies that are editable by a given user
   def self.editable(user)
@@ -243,6 +275,44 @@ class Study
     [self.user.email, self.study_shares.can_edit, User.where(admin: true).pluck(:email)].flatten.uniq
   end
 
+  # check if study is still under embargo or whether given user can bypass embargo
+  def embargoed?(user)
+    if user.nil?
+      self.check_embargo
+    else
+      # must not be viewable by current user & embargoed to be true
+      !self.can_view?(user) && self.check_embargo
+    end
+  end
+
+  # helper method to check embargo status
+  def check_embargo
+    self.embargo.nil? || self.embargo.blank? ? false : Date.today <= self.embargo
+  end
+
+  # label for study visibility
+  def visibility
+    self.public? ? "<span class='sc-badge bg-success text-success'>Public</span>".html_safe : "<span class='sc-badge bg-danger text-danger'>Private</span>".html_safe
+  end
+
+  # helper method to return key-value pairs of sharing permissions local to portal (not what is persisted in FireCloud)
+  # primarily used when syncing study with FireCloud workspace
+  def local_acl
+    acl = {
+        "#{self.user.email}" => "Owner"
+    }
+    self.study_shares.each do |share|
+      acl["#{share.email}"] = share.permission
+    end
+    acl
+  end
+
+  ###
+  #
+  # DATA PATHS & URLS
+  #
+  ###
+
   # file path to study public folder
   def data_public_path
     Rails.root.join('public', 'single_cell', 'data', self.url_safe_name)
@@ -263,25 +333,11 @@ class Study
     "https://console.cloud.google.com/storage/browser/#{self.bucket_id}"
   end
 
-  # label for study visibility
-  def visibility
-    self.public? ? "<span class='sc-badge bg-success text-success'>Public</span>".html_safe : "<span class='sc-badge bg-danger text-danger'>Private</span>".html_safe
-  end
-
-  # check if study is still under embargo or whether given user can bypass embargo
-  def embargoed?(user)
-    if user.nil?
-      self.check_embargo
-    else
-      # must not be viewable by current user & embargoed to be true
-      !self.can_view?(user) && self.check_embargo
-    end
-  end
-
-  # helper method to check embargo status
-  def check_embargo
-    self.embargo.nil? || self.embargo.blank? ? false : Date.today <= self.embargo
-  end
+  ###
+  #
+  # DEFAULT OPTIONS METHODS
+  #
+  ###
 
   # helper to return default cluster to load, will fall back to first cluster if no preference has been set
   # or default cluster cannot be loaded
@@ -343,6 +399,12 @@ class Study
     !self.default_options[:expression_label].blank?
   end
 
+  ###
+  #
+  # INSTANCE VALUE SETTERS & GETTERS
+  #
+  ###
+
   # helper method to get number of unique single cells
   def set_cell_count(file_type)
     @cell_count = 0
@@ -379,6 +441,12 @@ class Study
     self.cluster_groups.map {|c| c.cell_annotations.size}.reduce(0, :+)
   end
 
+  ###
+  #
+  # METADATA METHODS
+  #
+  ###
+
   # return an array of all single cell names in study
   def all_cells
     self.study_metadata.first.cell_annotations.keys
@@ -406,17 +474,12 @@ class Study
     vals.uniq
   end
 
-  # helper method to return key-value pairs of sharing permissions local to portal (not what is persisted in FireCloud)
-  # primarily used when syncing study with FireCloud workspace
-  def local_acl
-    acl = {
-      "#{self.user.email}" => "Owner"
-    }
-    self.study_shares.each do |share|
-      acl["#{share.email}"] = share.permission
-    end
-    acl
-  end
+  ###
+  #
+  # STUDYFILE GETTERS
+  #
+  ###
+
 
   # helper to build a study file of the requested type
   def build_study_file(attributes)
@@ -447,6 +510,12 @@ class Study
     self.study_files.by_type('Metadata').first
   end
 
+  ###
+  #
+  # DELETE METHODS
+  #
+  ###
+
   # nightly cron to delete any studies that are 'queued for deletion'
   # will run after database is re-indexed to make performance better
   # calls delete_all on collections to minimize memory usage
@@ -471,16 +540,11 @@ class Study
     true
   end
 
-  # one-time helper to update all file sizes after format migration
-  def update_study_file_sizes
-    self.study_files.each do |study_file|
-      unless study_file.upload.nil?
-        bucket_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, self.firecloud_workspace, study_file.upload_file_name)
-        puts "Updating file size for #{study_file.upload_file_name} from #{study_file.upload_file_size} to #{bucket_file.size}"
-        study_file.update(upload_file_size: bucket_file.size)
-      end
-    end
-  end
+  ###
+  #
+  # MISCELLANOUS METHODS
+  #
+  ###
 
   # transform expression data from db into mtx format
   def expression_to_mtx
@@ -510,9 +574,12 @@ class Study
     output_file.close
   end
 
-  ##
-  ## PARSERS
-  ##
+
+  ###
+  #
+  # PARSERS
+  #
+  ###
 
   # method to parse master expression scores file for study and populate collection
   # this parser assumes the data is a non-sparse square matrix
@@ -1369,6 +1436,12 @@ class Study
     true
   end
 
+  ###
+  #
+  # FIRECLOUD FILE METHODS
+  #
+  ###
+
   # shortcut method to send an uploaded file straight to firecloud from parser
   def send_to_firecloud(file)
     begin
@@ -1477,38 +1550,6 @@ class Study
     end
   end
 
-  # one time method to generate subsample data_arrays as needed
-  def generate_subsample_data_arrays
-    if self.cluster_groups.any?
-      study_metadata = StudyMetadatum.where(study_id: self.id).to_a
-      cluster_groups = self.cluster_groups.to_a
-      cluster_groups.each do |cluster_group|
-        # determine how many levels to subsample based on size of cluster_group
-        required_subsamples = ClusterGroup::SUBSAMPLE_THRESHOLDS.select {|sample| sample < cluster_group.points}
-        required_subsamples.each do |sample_size|
-          # create cluster-based annotation subsamples first
-          if cluster_group.cell_annotations.any?
-            cluster_group.cell_annotations.each do |cell_annot|
-              unless DataArray.where(study_id: self.id, cluster_name: cluster_group.name, subsample_annotation: "#{cell_annot[:name]}--#{cell_annot[:type]}--cluster", subsample_threshold: sample_size).any?
-                puts "Generating subsample array for #{self.name}:#{cluster_group.name} (#{cell_annot[:name]},#{cell_annot[:type]},cluster) at #{sample_size}"
-                cluster_group.generate_subsample_arrays(sample_size, cell_annot[:name], cell_annot[:type], 'cluster')
-              end
-            end
-          end
-          # create study-based annotation subsamples
-          study_metadata.each do |metadata|
-            unless DataArray.where(study_id: self.id, cluster_name: cluster_group.name, subsample_annotation: "#{metadata.name}--#{metadata.annotation_type}--study", subsample_threshold: sample_size).any?
-              puts "Generating subsample array for #{self.name}:#{cluster_group.name} (#{metadata.name},#{metadata.annotation_type},study) at #{sample_size}"
-              cluster_group.generate_subsample_arrays(sample_size, metadata.name, metadata.annotation_type, 'study')
-            end
-          end
-        end
-      end
-
-    end
-
-  end
-
   # make data directory after study creation is successful
   # this is now a public method so that we can use it whenever remote files are downloaded to validate that the directory exists
   def make_data_dir
@@ -1518,6 +1559,12 @@ class Study
   end
 
   private
+
+  ###
+  #
+  # SETTERS
+  #
+  ###
 
   # sets a url-safe version of study name (for linking)
   def set_url_safe_name
@@ -1543,6 +1590,12 @@ class Study
     end
     self.data_dir = @dir_val
   end
+
+  ###
+  #
+  # CUSTOM VALIDATIONS
+  #
+  ###
 
   # automatically create a FireCloud workspace on study creation after validating name & url_safe_name
   # will raise validation errors if creation, bucket or ACL assignment fail for any reason and deletes workspace on validation fail
@@ -1686,6 +1739,12 @@ class Study
       errors.add(:url_safe_name, ": The name you provided (#{self.name}) tried to create a public URL (#{self.url_safe_name}) that is already assigned.  Please rename your study to a different value.")
     end
   end
+
+  ###
+  #
+  # CUSTOM CALLBACKS
+  #
+  ###
 
   # remove data directory on delete
   def remove_data_dir

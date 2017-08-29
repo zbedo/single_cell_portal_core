@@ -1,4 +1,12 @@
 class DirectoryListing
+
+  ###
+  #
+  # DirectoryListing: object that holds metadata about groups of files in a specific location in a GCS bucket
+  # Mainly used to supply blanket descriptions for all files at given location
+  #
+  ###
+
 	include Mongoid::Document
 	include Mongoid::Timestamps
 	include Rails.application.routes.url_helpers # for accessing download_file_path and download_private_file_path

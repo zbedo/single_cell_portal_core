@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# tunnel into GCP VM for deployments/updates
+
 # usage error message
 usage=$(
 cat <<EOF

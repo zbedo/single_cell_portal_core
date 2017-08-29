@@ -1,11 +1,24 @@
 require 'rest-client'
 
 class User
+
+  ###
+  #
+  # User: class storing information regarding Google-based email accounts.
+  #
+  ###
+
   include Mongoid::Document
   include Mongoid::Timestamps
 
+  ###
+  #
+  # SCOPES & FIELD DEFINITIONS
+  #
+  ###
+
   has_many :studies
-  #User annotations are owned by a user
+  # User annotations are owned by a user
   has_many :user_annotations do
     def owned_by(user)
       where(user_id: user.id, queued_for_deletion: false).select {|ua| ua.valid_annotation?}
@@ -66,6 +79,12 @@ class User
   field :reporter, type: Boolean
   field :daily_download_quota, type: Integer, default: 0
 
+  ###
+  #
+  # OAUTH2 METHODS
+  #
+  ###
+
   def self.from_omniauth(access_token)
     data = access_token.info
     provider = access_token.provider
@@ -124,6 +143,12 @@ class User
   def valid_access_token
     self.access_token_expired? ? self.generate_access_token : self.access_token
   end
+
+  ###
+  #
+  # MISCELLANEOUS METHODS
+  #
+  ###
 
   # determine if user has access to reports functionality
   def acts_like_reporter?

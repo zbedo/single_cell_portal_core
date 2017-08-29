@@ -1,5 +1,11 @@
 class ReportsController < ApplicationController
 
+  ###
+  #
+  # This controller only displays charts with information about site usage (e.g. number of studies, users, etc.)
+  #
+  ###
+
   before_filter do
     authenticate_user!
     authenticate_reporter

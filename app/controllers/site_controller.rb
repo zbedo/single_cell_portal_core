@@ -1,5 +1,11 @@
 class SiteController < ApplicationController
 
+  ###
+  #
+  # FILTERS & SETTINGS
+  #
+  ###
+
   respond_to :html, :js, :json
 
   before_action :set_study, except: [:index, :search, :view_workflow_wdl]
@@ -16,6 +22,12 @@ class SiteController < ApplicationController
   COLORSCALE_THEMES = %w(Blackbody Bluered Blues Earth Electric Greens Hot Jet Picnic Portland Rainbow RdBu Reds Viridis YlGnBu YlOrRd)
 
   rescue_from ActionController::InvalidAuthenticityToken, with: :session_expired
+
+  ###
+  #
+  # HOME & SEARCH METHODS
+  #
+  ###
 
   # view study overviews and downloads
   def index
@@ -55,41 +67,49 @@ class SiteController < ApplicationController
     render 'index'
   end
 
-  # load single study and view top-level clusters
-  def study
-    @study.update(view_count: @study.view_count + 1)
-    @study_files = @study.study_files.non_primary_data.sort_by(&:name)
-    @primary_study_files = @study.study_files.by_type('Fastq')
-    @directories = @study.directory_listings.are_synced
-    @primary_data = @study.directory_listings.primary_data
-    @other_data = @study.directory_listings.non_primary_data
+  # search for one or more genes to view expression information
+  # will redirect to appropriate method as needed
+  def search_genes
+    if params[:search][:upload].blank?
+      terms = parse_search_terms(:genes)
+      @genes = load_expression_scores(terms)
+    else
+      geneset_file = params[:search][:upload]
+      terms = geneset_file.read.split(/[\s\r\n?,]/).map {|gene| gene.strip}
+      @genes = load_expression_scores(terms)
+    end
+    # grab saved params for loaded cluster, boxpoints mode, annotations and consensus
+    cluster = params[:search][:cluster]
+    annotation = params[:search][:annotation]
+    boxpoints = params[:search][:boxpoints]
+    consensus = params[:search][:consensus]
+    subsample = params[:search][:subsample]
 
-    # double check on download availability: first, check if administrator has disabled downloads
-    # then check if FireCloud is available and disable download links if either is true
-    @allow_downloads = AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
-    set_study_default_options
-    # load options and annotations
-    if @study.initialized?
-      @options = load_cluster_group_options
-      @cluster_annotations = load_cluster_group_annotations
-      # call set_selected_annotation manually
-      set_selected_annotation
+    # check if one gene was searched for, but more than one found
+    # we can assume that in this case there is an exact match possible
+    # cast as an array so block after still works properly
+    if @genes.size > 1 && terms.size == 1
+      @genes = [load_best_gene_match(@genes, terms.first)]
     end
 
-    # if user has permission to run workflows, load available workflows and current submissions
-    if user_signed_in? && @study.can_compute?(current_user)
-      @submissions = Study.firecloud_client.get_workspace_submissions(@study.firecloud_workspace)
-      all_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_workspace, 'sample')
-      @samples = Naturally.sort(all_samples.map {|s| s['name']})
-      @workflows = Study.firecloud_client.get_methods(namespace: 'single-cell-portal')
-      @workflows_list = @workflows.sort_by {|w| [w['name'], w['snapshotId'].to_i]}.map {|w| ["#{w['name']} (#{w['snapshotId']})#{w['synopsis'].blank? ? nil : " -- #{w['synopsis']}"}", "#{w['namespace']}--#{w['name']}--#{w['snapshotId']}"]}
-      @primary_data_locations = []
-      fastq_files = @primary_study_files.select {|f| !f.human_data}
-      [fastq_files, @primary_data].flatten.each do |entry|
-        @primary_data_locations << ["#{entry.name} (#{entry.description})", "#{entry.class.name.downcase}--#{entry.name}"]
-      end
+    # determine which view to load
+    if @genes.empty?
+      redirect_to request.referrer, alert: "No matches found for: #{terms.join(', ')}."
+    elsif @genes.size > 1 && !consensus.blank?
+      redirect_to view_gene_set_expression_path(study_name: params[:study_name], search: {genes: terms.join(' ')} , cluster: cluster, annotation: annotation, consensus: consensus, subsample: subsample)
+    elsif @genes.size > 1 && consensus.blank?
+      redirect_to view_gene_expression_heatmap_path(search: {genes: terms.join(' ')}, cluster: cluster, annotation: annotation)
+    else
+      gene = @genes.first
+      redirect_to view_gene_expression_path(study_name: params[:study_name], gene: gene['gene'], cluster: cluster, boxpoints: boxpoints, annotation: annotation, consensus: consensus, subsample: subsample)
     end
   end
+
+  ###
+  #
+  # STUDY SETTINGS
+  #
+  ###
 
   # re-render study description as CKEditor instance
   def edit_study_description
@@ -143,6 +163,50 @@ class SiteController < ApplicationController
     end
   end
 
+  ###
+  #
+  # VIEW/RENDER METHODS
+  #
+  ###
+
+  ## CLUSTER-BASED
+
+  # load single study and view top-level clusters
+  def study
+    @study.update(view_count: @study.view_count + 1)
+    @study_files = @study.study_files.non_primary_data.sort_by(&:name)
+    @primary_study_files = @study.study_files.by_type('Fastq')
+    @directories = @study.directory_listings.are_synced
+    @primary_data = @study.directory_listings.primary_data
+    @other_data = @study.directory_listings.non_primary_data
+
+    # double check on download availability: first, check if administrator has disabled downloads
+    # then check if FireCloud is available and disable download links if either is true
+    @allow_downloads = AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
+    set_study_default_options
+    # load options and annotations
+    if @study.initialized?
+      @options = load_cluster_group_options
+      @cluster_annotations = load_cluster_group_annotations
+      # call set_selected_annotation manually
+      set_selected_annotation
+    end
+
+    # if user has permission to run workflows, load available workflows and current submissions
+    if user_signed_in? && @study.can_compute?(current_user)
+      @submissions = Study.firecloud_client.get_workspace_submissions(@study.firecloud_workspace)
+      all_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_workspace, 'sample')
+      @samples = Naturally.sort(all_samples.map {|s| s['name']})
+      @workflows = Study.firecloud_client.get_methods(namespace: 'single-cell-portal')
+      @workflows_list = @workflows.sort_by {|w| [w['name'], w['snapshotId'].to_i]}.map {|w| ["#{w['name']} (#{w['snapshotId']})#{w['synopsis'].blank? ? nil : " -- #{w['synopsis']}"}", "#{w['namespace']}--#{w['name']}--#{w['snapshotId']}"]}
+      @primary_data_locations = []
+      fastq_files = @primary_study_files.select {|f| !f.human_data}
+      [fastq_files, @primary_data].flatten.each do |entry|
+        @primary_data_locations << ["#{entry.name} (#{entry.description})", "#{entry.class.name.downcase}--#{entry.name}"]
+      end
+    end
+  end
+
   # render a single cluster and its constituent sub-clusters
   def render_cluster
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
@@ -166,80 +230,7 @@ class SiteController < ApplicationController
     end
   end
 
-  # dynamically reload cluster-based annotations list when changing clusters
-  def get_new_annotations
-    @cluster_annotations = load_cluster_group_annotations
-  end
-
-  # method to download files if study is public
-  def download_file
-    if !user_signed_in?
-      redirect_to view_study_path(@study.url_safe_name), alert: 'You must be signed in to download data.' and return
-    end
-
-    # next check if downloads have been disabled by administrator, this will abort the download
-    # download links shouldn't be rendered in any case, this just catches someone doing a straight GET on a file
-    # also check if FireCloud is unavailable and abort if so as well
-    if !AdminConfiguration.firecloud_access_enabled? || !Study.firecloud_client.api_available?
-      head 503 and return
-    end
-
-    # get filesize and make sure the user is under their quota
-    begin
-      filesize = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_workspace, params[:filename]).size
-      user_quota = current_user.daily_download_quota + filesize
-      # check against download quota that is loaded in ApplicationController.get_download_quota
-      if user_quota <= @download_quota
-        @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, params[:filename], expires: 15)
-        current_user.update(daily_download_quota: user_quota)
-      else
-        redirect_to view_study_path(@study.url_safe_name), alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
-      end
-    rescue RuntimeError => e
-      logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
-      redirect_to view_study_path(@study.url_safe_name), alert: "We were unable to download the file #{params[:filename]} do to an error: #{e.message}" and return
-    end
-    # redirect directly to file to trigger download
-    redirect_to @signed_url
-  end
-
-  # search for one or more genes to view expression information
-  # will redirect to appropriate method as needed
-  def search_genes
-    if params[:search][:upload].blank?
-      terms = parse_search_terms(:genes)
-      @genes = load_expression_scores(terms)
-    else
-      geneset_file = params[:search][:upload]
-      terms = geneset_file.read.split(/[\s\r\n?,]/).map {|gene| gene.strip}
-      @genes = load_expression_scores(terms)
-    end
-    # grab saved params for loaded cluster, boxpoints mode, annotations and consensus
-    cluster = params[:search][:cluster]
-    annotation = params[:search][:annotation]
-    boxpoints = params[:search][:boxpoints]
-    consensus = params[:search][:consensus]
-    subsample = params[:search][:subsample]
-
-    # check if one gene was searched for, but more than one found
-    # we can assume that in this case there is an exact match possible
-    # cast as an array so block after still works properly
-    if @genes.size > 1 && terms.size == 1
-      @genes = [load_best_gene_match(@genes, terms.first)]
-    end
-
-    # determine which view to load
-    if @genes.empty?
-      redirect_to request.referrer, alert: "No matches found for: #{terms.join(', ')}."
-    elsif @genes.size > 1 && !consensus.blank?
-      redirect_to view_gene_set_expression_path(study_name: params[:study_name], search: {genes: terms.join(' ')} , cluster: cluster, annotation: annotation, consensus: consensus, subsample: subsample)
-    elsif @genes.size > 1 && consensus.blank?
-      redirect_to view_gene_expression_heatmap_path(search: {genes: terms.join(' ')}, cluster: cluster, annotation: annotation)
-    else
-      gene = @genes.first
-      redirect_to view_gene_expression_path(study_name: params[:study_name], gene: gene['gene'], cluster: cluster, boxpoints: boxpoints, annotation: annotation, consensus: consensus, subsample: subsample)
-    end
-  end
+  ## GENE-BASED
 
   # render box and scatter plots for parent clusters or a particular sub cluster
   def view_gene_expression
@@ -466,10 +457,17 @@ class SiteController < ApplicationController
     send_data @data, type: 'text/plain'
   end
 
+  # dynamically reload cluster-based annotations list when changing clusters
+  def get_new_annotations
+    @cluster_annotations = load_cluster_group_annotations
+  end
+
   # return JSON representation of selected annotation
   def annotation_values
     render json: @selected_annotation.to_json
   end
+
+  ## GENELIST-BASED
 
   # load precomputed data in gct form to render in Morpheus
   def precomputed_results
@@ -514,37 +512,49 @@ class SiteController < ApplicationController
     @cluster_annotations = load_cluster_group_annotations
   end
 
-  # method to populate an array with entries corresponding to all fastq files for a study (both owner defined as study_files
-  # and extra fastq's that happen to be in the bucket)
-  def get_fastq_files
-    @fastq_files = []
-    case params[:mode]
-      when 'workflow'
-        selected_entries = params[:selected_entries].split(',').map(&:strip)
-        selected_entries.each do |entry|
-          class_name, entry_name = entry.split('--')
-          case class_name
-            when 'directorylisting'
-              directory = @study.directory_listings.are_synced.detect {|d| d.name == entry_name}
-              populate_rows(@fastq_files, directory)
-            when 'studyfile'
-              study_file = @study.study_files.by_type('Fastq').detect {|f| f.name == entry_name}
-              @fastq_files << [
-                  study_file.upload_file_name.split('.').first,
-                  study_file.upload_file_name,
-                  '',
-                  '',
-                  ''
-              ]
-            else
-              nil # this is called when selection is cleared out
-          end
-        end
-      else
-        nil
+  ###
+  #
+  # DOWNLOAD METHODS
+  #
+  ###
+
+  # method to download files if study is public
+  def download_file
+    if !user_signed_in?
+      redirect_to view_study_path(@study.url_safe_name), alert: 'You must be signed in to download data.' and return
     end
-    render json: @fastq_files.to_json
+
+    # next check if downloads have been disabled by administrator, this will abort the download
+    # download links shouldn't be rendered in any case, this just catches someone doing a straight GET on a file
+    # also check if FireCloud is unavailable and abort if so as well
+    if !AdminConfiguration.firecloud_access_enabled? || !Study.firecloud_client.api_available?
+      head 503 and return
+    end
+
+    # get filesize and make sure the user is under their quota
+    begin
+      filesize = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_workspace, params[:filename]).size
+      user_quota = current_user.daily_download_quota + filesize
+      # check against download quota that is loaded in ApplicationController.get_download_quota
+      if user_quota <= @download_quota
+        @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, params[:filename], expires: 15)
+        current_user.update(daily_download_quota: user_quota)
+      else
+        redirect_to view_study_path(@study.url_safe_name), alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
+      end
+    rescue RuntimeError => e
+      logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
+      redirect_to view_study_path(@study.url_safe_name), alert: "We were unable to download the file #{params[:filename]} do to an error: #{e.message}" and return
+    end
+    # redirect directly to file to trigger download
+    redirect_to @signed_url
   end
+
+  ###
+  #
+  # ANNOTATION METHODS
+  #
+  ###
 
   # render the 'Create Annotations' form (must be done via ajax to get around page caching issues)
   def show_user_annotations_form
@@ -625,6 +635,44 @@ class SiteController < ApplicationController
     end
   end
 
+  ###
+  #
+  # WORKFLOW METHODS
+  #
+  ###
+
+  # method to populate an array with entries corresponding to all fastq files for a study (both owner defined as study_files
+  # and extra fastq's that happen to be in the bucket)
+  def get_fastq_files
+    @fastq_files = []
+    case params[:mode]
+      when 'workflow'
+        selected_entries = params[:selected_entries].split(',').map(&:strip)
+        selected_entries.each do |entry|
+          class_name, entry_name = entry.split('--')
+          case class_name
+            when 'directorylisting'
+              directory = @study.directory_listings.are_synced.detect {|d| d.name == entry_name}
+              populate_rows(@fastq_files, directory)
+            when 'studyfile'
+              study_file = @study.study_files.by_type('Fastq').detect {|f| f.name == entry_name}
+              @fastq_files << [
+                  study_file.upload_file_name.split('.').first,
+                  study_file.upload_file_name,
+                  '',
+                  '',
+                  ''
+              ]
+            else
+              nil # this is called when selection is cleared out
+          end
+        end
+      else
+        nil
+    end
+    render json: @fastq_files.to_json
+  end
+
   # view the wdl of a specified workflow
   def view_workflow_wdl
     @workflow_name = params[:workflow]
@@ -662,6 +710,12 @@ class SiteController < ApplicationController
     end
   end
 
+  ###
+  #
+  # MISCELLANEOUS METHODS
+  #
+  ###
+
   # route that is used to log actions in Google Analytics that would otherwise be ignored due to redirects or response types
   def log_action
     @action_to_log = params[:url_string]
@@ -669,7 +723,12 @@ class SiteController < ApplicationController
 
   private
 
+  ###
+  #
   # SETTERS
+  #
+  ###
+
   def set_study
     @study = Study.where(url_safe_name: params[:study_name]).first
   end
@@ -750,7 +809,11 @@ class SiteController < ApplicationController
     render action: :notice
   end
 
-  # SUB METHODS
+  ###
+  #
+  # DATA FORMATTING SUB METHODS
+  #
+  ###
 
   # generic method to populate data structure to render a cluster scatter plot
   # uses cluster_group model and loads annotation for both group & numeric plots
@@ -1220,6 +1283,51 @@ class SiteController < ApplicationController
     (sorted[(len - 1) / 2] + sorted[len / 2]) / 2.0
   end
 
+  # set the range for a plotly scatter, will default to data-defined if cluster hasn't defined its own ranges
+  # dynamically determines range based on inputs & available axes
+  def set_range(inputs)
+    # select coordinate axes from inputs
+    domain_keys = inputs.map(&:keys).flatten.uniq.select {|i| [:x, :y, :z].include?(i)}
+    range = Hash[domain_keys.zip]
+    if @cluster.has_range?
+      # use study-provided range if available
+      range = @cluster.domain_ranges
+    else
+      # take the minmax of each domain across all groups, then the global minmax
+      @vals = inputs.map {|v| domain_keys.map {|k| v[k].minmax}}.flatten.minmax
+      # add 2% padding to range
+      scope = (@vals.first - @vals.last) * 0.02
+      raw_range = [@vals.first + scope, @vals.last - scope]
+      range[:x] = raw_range
+      range[:y] = raw_range
+      range[:z] = raw_range
+    end
+    range
+  end
+
+  # compute the aspect ratio between all ranges and use to enforce equal-aspect ranges on 3d plots
+  def compute_aspect_ratios(range)
+    # determine largest range for computing aspect ratio
+    extent = {}
+    range.each.map {|axis, domain| extent[axis] = domain.first.upto(domain.last).size - 1}
+    largest_range = extent.values.max
+
+    # now compute aspect mode and ratios
+    aspect = {
+        mode: extent.values.uniq.size == 1 ? 'cube' : 'manual'
+    }
+    range.each_key do |axis|
+      aspect[axis.to_sym] = extent[axis].to_f / largest_range
+    end
+    aspect
+  end
+
+  ###
+  #
+  # SEARCH SUB METHODS
+  #
+  ###
+
   # generic search term parser
   def parse_search_terms(key)
     terms = params[:search][key]
@@ -1295,6 +1403,12 @@ class SiteController < ApplicationController
     grouped_options
   end
 
+  ###
+  #
+  # MISCELLANEOUS SUB METHODS
+  #
+  ###
+
   # defaults for annotation fonts
   def annotation_font
     {
@@ -1302,45 +1416,6 @@ class SiteController < ApplicationController
         size: 10,
         color: '#333'
     }
-  end
-
-  # set the range for a plotly scatter, will default to data-defined if cluster hasn't defined its own ranges
-  # dynamically determines range based on inputs & available axes
-  def set_range(inputs)
-    # select coordinate axes from inputs
-    domain_keys = inputs.map(&:keys).flatten.uniq.select {|i| [:x, :y, :z].include?(i)}
-    range = Hash[domain_keys.zip]
-    if @cluster.has_range?
-      # use study-provided range if available
-      range = @cluster.domain_ranges
-    else
-      # take the minmax of each domain across all groups, then the global minmax
-      @vals = inputs.map {|v| domain_keys.map {|k| v[k].minmax}}.flatten.minmax
-      # add 2% padding to range
-      scope = (@vals.first - @vals.last) * 0.02
-      raw_range = [@vals.first + scope, @vals.last - scope]
-      range[:x] = raw_range
-      range[:y] = raw_range
-      range[:z] = raw_range
-    end
-    range
-  end
-
-  # compute the aspect ratio between all ranges and use to enforce equal-aspect ranges on 3d plots
-  def compute_aspect_ratios(range)
-    # determine largest range for computing aspect ratio
-    extent = {}
-    range.each.map {|axis, domain| extent[axis] = domain.first.upto(domain.last).size - 1}
-    largest_range = extent.values.max
-
-    # now compute aspect mode and ratios
-    aspect = {
-        mode: extent.values.uniq.size == 1 ? 'cube' : 'manual'
-    }
-    range.each_key do |axis|
-      aspect[axis.to_sym] = extent[axis].to_f / largest_range
-    end
-    aspect
   end
 
   # parse gene list into 2 other arrays for formatting the header responsively

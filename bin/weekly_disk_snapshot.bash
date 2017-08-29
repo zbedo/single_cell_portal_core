@@ -1,4 +1,7 @@
 #!/bin/bash
+
+# create a disk snapshot of portal every week
+
 # create a date stamp for filename
 TODAY="$(date +%Y-%m-%d)"
 

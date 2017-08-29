@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# script that is called when booting portal in test environment to run all unit tests in the correct order
+
 echo "Seeding test database..."
 rake RAILS_ENV=test db:seed
 echo "Database initialized, launching unit & integration tests..."

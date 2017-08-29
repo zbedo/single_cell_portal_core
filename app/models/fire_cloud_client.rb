@@ -1,10 +1,14 @@
 class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :storage, :expires_at)
 
-	# Class that wraps API calls to both FireCloud and Google Cloud Storage to manage the CRUDing of both FireCloud workspaces
-	# and files inside the associated GCP storage buckets
+	###
+  #
+  # FireCloudClient: Class that wraps API calls to both FireCloud and Google Cloud Storage to manage the CRUDing of both
+  # FireCloud workspaces and files inside the associated GCP storage buckets
 	#
 	# Uses the gems googleauth (for generating access tokens), google-cloud-storage (for bucket/file access),
 	# and rest-client (for HTTP calls)
+  #
+  ###
 
 	## CONSTANTS
 	# base url for all API calls

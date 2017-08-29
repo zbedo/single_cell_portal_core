@@ -1,4 +1,11 @@
 class ExpressionScore
+
+  ###
+  #
+  # ExpressionScore: gene-based class that holds key/value pairs of cell names and gene expression scores
+  #
+  ###
+
   include Mongoid::Document
 
   belongs_to :study

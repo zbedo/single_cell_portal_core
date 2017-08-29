@@ -1,4 +1,13 @@
 class ApplicationController < ActionController::Base
+
+  ###
+  #
+  # These are methods that are not specific to any one controller and are inherited into all
+  # They are all either access control filters or instance variable setters
+  #
+  ###
+
+
   # Prevent CSRF attacks by raising an exception.
   # For APIs, you may want to use :null_session instead.
   protect_from_forgery with: :exception

@@ -1,4 +1,11 @@
 class ReportTimePoint
+
+  ###
+  #
+  # ReportTimePoint: generic container for storing time-based reporting data (for ReportsController graphs)
+  #
+  ###
+
   include Mongoid::Document
   include Mongoid::Timestamps
 

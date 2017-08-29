@@ -1,4 +1,17 @@
 class UserAnnotationShare
+
+  ###
+  #
+  # UserAnnotationShare: class holding share information about UserAnnotations (similar to StudyShare)
+  #
+  ###
+
+  ###
+  #
+  # FIELD DEFINITIONS, VALIDATIONS & CALLBACKS
+  #
+  ###
+
 	include Mongoid::Document
 	include Mongoid::Timestamps
 
@@ -31,6 +44,12 @@ class UserAnnotationShare
 	end
 
 	private
+
+  ###
+  #
+  # SETTERS & CUSTOM CALLBACKS
+  #
+  ###
 
   def clean_email
 		self.email = self.email.strip
