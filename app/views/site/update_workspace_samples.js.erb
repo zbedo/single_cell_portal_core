@@ -1,0 +1,8 @@
+closeModalSpinner('#save-modal-spinner', "#save-modal", function() {
+    $("#workflow_samples").html("<%= escape_javascript(select_tag :workflow_samples, options_for_select(@samples), {multiple: true, class: 'form-control', size: 10 }) %>")
+    if ( <%= @empty_samples_table == true %>) {
+        updateSampleTable([]);
+    }
+    $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {notice: @notice}) %>");
+});
+

@@ -205,13 +205,14 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 				context = " encountered when requesting '#{path}'"
 				log_message = "#{Time.now}: " + e.message + context
 				Rails.logger.error log_message
-				@error = e.message
+				@error = e
 				process_firecloud_request(http_method, path, payload)
 			end
 		else
 			@retry_count = 0
-			Rails.logger.error "#{Time.now}: Retry count exceeded - #{@error}"
-			raise RuntimeError.new(@error)
+			error_message = parse_error_message(@error)
+			Rails.logger.error "#{Time.now}: Retry count exceeded - #{error_message}"
+			raise RuntimeError.new(error_message)
 		end
 	end
 
@@ -775,5 +776,29 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		opts.blank? ? nil : '?' + opts.to_a.map {|k,v| "#{k}=#{v}"}.join("&")
 	end
 
-  # validate the structure of a workspace entity object ()
+  # create a map of workspace entities based on a list of names and a type
+  def create_entity_map(entity_names, entity_type)
+		map = []
+		entity_names.each do |name|
+			map << {entityName: name, entityType: entity_type}
+		end
+		map
+	end
+
+  # return a more user-friendly error message
+	def parse_error_message(error)
+		if error.http_body.blank?
+			error.message
+		else
+			begin
+				error_hash = JSON.parse(error.http_body)
+				if error_hash.has_key?('message')
+					return error_hash['message']
+				end
+			rescue => e
+				Rails.logger.error e.message
+				error.message + ': ' + error.http_body
+			end
+		end
+	end
 end

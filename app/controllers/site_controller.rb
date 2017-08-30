@@ -19,8 +19,8 @@ class SiteController < ApplicationController
   before_action :set_cluster_group, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :expression_query, :annotation_query, :get_new_annotations, :annotation_values, :show_user_annotations_form]
   before_action :set_selected_annotation, only: [:update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :annotation_query, :annotation_values, :show_user_annotations_form]
   before_action :load_precomputed_options, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap]
-  before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query, :view_workflow_wdl, :log_action, :get_workspace_samples, :save_workspace_samples]
-  before_action :check_compute_permissions, only: [:get_fastq_files, :get_workspace_samples, :save_workspace_samples]
+  before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query, :view_workflow_wdl, :log_action, :get_workspace_samples, :update_workspace_samples]
+  before_action :check_compute_permissions, only: [:get_fastq_files, :get_workspace_samples, :update_workspace_samples]
   # caching
   caches_action :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots,
                 :expression_query, :annotation_query, :precomputed_results,
@@ -554,7 +554,7 @@ class SiteController < ApplicationController
       end
     rescue RuntimeError => e
       logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
-      redirect_to view_study_path(@study.url_safe_name), alert: "We were unable to download the file #{params[:filename]} do to an error: #{e.message}" and return
+      redirect_to view_study_path(@study.url_safe_name), alert: "We were unable to download the file #{params[:filename]} do to an error: #{view_context.simple_format(e.message)}" and return
     end
     # redirect directly to file to trigger download
     redirect_to @signed_url
@@ -730,8 +730,79 @@ class SiteController < ApplicationController
   end
 
   # save currently selected sample information back to study workspace
-  def save_workspace_samples
+  def update_workspace_samples
+    form_payload = params[:samples]
 
+    begin
+      # create a 'real' temporary file as we can't pass open tempfiles
+      filename = "#{SecureRandom.uuid}-sample-info.tsv"
+      temp_tsv = File.new(Rails.root.join('data', @study.data_dir, filename), 'w+')
+
+      # add participant_id to new file as FireCloud data model requires this for samples (all samples get default_participant value)
+      headers = %w(entity:sample_id participant_id fastq_file_1 fastq_file_2 fastq_file_3 fastq_file_4)
+      temp_tsv.write headers.join("\t") + "\n"
+
+      # get list of samples from form payload
+      samples = form_payload.keys
+      samples.each do |sample|
+        # construct a new line to write to the tsv file
+        newline = "#{sample}\tdefault_participant\t"
+        vals = []
+        headers[2..5].each do |attr|
+          # add a value for each parameter, created an empty string if this was not present in the form data
+          vals << form_payload[sample][attr].to_s
+        end
+        # write new line to tsv file
+        newline += vals.join("\t")
+        temp_tsv.write newline + "\n"
+      end
+      # close the file to ensure write is completed
+      temp_tsv.close
+
+      # now reopen and import into FireCloud
+      upload = File.open(temp_tsv.path)
+      Study.firecloud_client.import_workspace_entities_file(@study.firecloud_workspace, upload)
+
+      # upon success, load the newly imported samples from the workspace and update the form
+      new_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_workspace, 'sample')
+      @samples = Naturally.sort(new_samples.map {|s| s['name']})
+
+      # clean up tempfile
+      File.delete(temp_tsv.path)
+
+      # render update notice
+      @notice = 'Your sample information has successfully been saved.'
+      render action: :update_workspace_samples
+    rescue => e
+      logger.info "#{Time.now}: Error saving workspace entities: #{e.message}"
+      @alert = "An error occurred while trying to save your sample information: #{view_context.simple_format(e.message)}"
+      render action: :notice
+    end
+  end
+
+  # delete selected samples from workspace data entities
+  def delete_workspace_samples
+    samples = params[:samples]
+    begin
+      # create a mapping of samples to delete
+      delete_payload = Study.firecloud_client.create_entity_map(samples, 'sample')
+      Study.firecloud_client.delete_workspace_entities(@study.firecloud_workspace, delete_payload)
+
+      # upon success, load the newly imported samples from the workspace and update the form
+      new_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_workspace, 'sample')
+      @samples = Naturally.sort(new_samples.map {|s| s['name']})
+
+      # render update notice
+      @notice = 'The requested samples have successfully been deleted.'
+
+      # set flag to empty out the samples table to prevent the user from trying to delete the sample again
+      @empty_samples_table = true
+      render action: :update_workspace_samples
+    rescue => e
+      logger.info "#{Time.now}: Error deleting workspace entities: #{e.message}"
+      @alert = "An error occurred while trying to delete your sample information: #{view_context.simple_format(e.message)}"
+      render action: :notice
+    end
   end
 
   ###
@@ -1490,6 +1561,7 @@ class SiteController < ApplicationController
     Digest::SHA256.hexdigest genes
   end
 
+  # update sample table with contents of sample map
   def populate_rows(existing_list, directory)
     # create hash of samples => array of reads
     sample_map = directory.sample_read_pairings
@@ -1500,7 +1572,6 @@ class SiteController < ApplicationController
       0.upto(4) {|i| row[i] ||= '' }
       existing_list << row
     end
-
   end
 
   protected

@@ -1,4 +1,3 @@
-closeModalSpinner('.modal.fade.in div.spinner-target', '.modal.fade.in', function() {
+closeModalSpinner("#" + OPEN_MODAL + ' div.spinner-target', '#' + OPEN_MODAL, function() {
     $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {alert: @alert, notice: @notice}) %>");
-    enableDefaultActions();
 });

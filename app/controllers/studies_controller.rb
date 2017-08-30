@@ -133,7 +133,7 @@ class StudiesController < ApplicationController
       end
     rescue => e
       logger.error "#{Time.now}: error syncing ACLs in workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
-      redirect_to studies_path, alert: "We were unable to sync with your workspace bucket due to an error: #{e.message}" and return
+      redirect_to studies_path, alert: "We were unable to sync with your workspace bucket due to an error: #{view_context.simple_format(e.message)}" and return
     end
 
     # begin determining sync status with study_files and primary or other data
@@ -149,7 +149,7 @@ class StudiesController < ApplicationController
       end
     rescue RuntimeError => e
       logger.error "#{Time.now}: error syncing files in workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
-      redirect_to studies_path, alert: "We were unable to sync with your workspace bucket due to an error: #{e.message}" and return
+      redirect_to studies_path, alert: "We were unable to sync with your workspace bucket due to an error: #{view_context.simple_format(e.message)}" and return
     end
 
     files_to_remove = []
@@ -268,7 +268,7 @@ class StudiesController < ApplicationController
           Study.firecloud_client.delete_workspace(@study.firecloud_workspace)
         rescue RuntimeError => e
           logger.error "#{Time.now} unable to delete workspace: #{@study.firecloud_workspace}; #{e.message}"
-          redirect_to studies_path, alert: "We were unable to delete your study due to: #{e.message}.<br /><br />No files or database records have been deleted.  Please try again later" and return
+          redirect_to studies_path, alert: "We were unable to delete your study due to: #{view_context.simple_format(e.message)}.<br /><br />No files or database records have been deleted.  Please try again later" and return
         end
       end
 
@@ -424,7 +424,7 @@ class StudiesController < ApplicationController
         end
       rescue RuntimeError => e
         logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
-        redirect_to request.referrer, alert: "We were unable to download the file #{params[:filename]} do to an error: #{e.message}" and return
+        redirect_to request.referrer, alert: "We were unable to download the file #{params[:filename]} do to an error: #{view_context.simple_format(e.message)}" and return
       end
       # redirect directly to file to trigger download
       redirect_to @signed_url
@@ -582,7 +582,7 @@ class StudiesController < ApplicationController
         end
       rescue RuntimeError => e
         logger.error "#{Time.now}: error in deleting #{@study_file.upload_file_name} from workspace: #{@study.firecloud_workspace}; #{e.message}"
-        redirect_to request.referrer, alert: "We were unable to delete #{@study_file.upload_file_name} due to an error: #{e.message}.  Please try again later."
+        redirect_to request.referrer, alert: "We were unable to delete #{@study_file.upload_file_name} due to an error: #{view_context.simple_format(e.message)}.  Please try again later."
       end
       changes = ["Study file deleted: #{@study_file.upload_file_name}"]
       if @study.study_shares.any?

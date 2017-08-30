@@ -199,7 +199,7 @@ class Study
   before_validation :set_url_safe_name
   before_validation :set_data_dir, :set_firecloud_workspace_name, on: :create
   # before_save       :verify_default_options
-  after_create      :make_data_dir
+  after_create      :make_data_dir, :set_default_participant
   after_destroy     :remove_data_dir
 
   # search definitions
@@ -1550,11 +1550,32 @@ class Study
     end
   end
 
+  ###
+  #
+  # PUBLIC CALLBACK SETTERS
+  # These are methods that are called as a part of callbacks, but need to be public as they are also referenced elsewhere
+  #
+  ###
+
   # make data directory after study creation is successful
   # this is now a public method so that we can use it whenever remote files are downloaded to validate that the directory exists
   def make_data_dir
     unless Dir.exists?(self.data_store_path)
       FileUtils.mkdir_p(self.data_store_path)
+    end
+  end
+
+  # set the 'default_participant' entity in workspace data to allow users to upload sample information
+  def set_default_participant
+    begin
+      entity_file = File.new(Rails.root.join('data', self.data_dir, 'default_participant.tsv'), 'w+')
+      entity_file.write "entity:participant_id\ndefault_participant"
+      entity_file.close
+      upload = File.open(entity_file.path)
+      Study.firecloud_client.import_workspace_entities_file(self.firecloud_workspace, upload)
+      File.delete(entity_file.path)
+    rescue => e
+      Rails.logger.error "#{Time.now}: Unable to set default participant: #{e.message}"
     end
   end
 

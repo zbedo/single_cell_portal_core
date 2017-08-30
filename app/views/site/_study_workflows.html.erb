@@ -67,16 +67,17 @@
             <p class="help-block">Use the multi-selects below to choose either existing samples or primary data directories from this study to use as inputs for this workflow.  Paired read information is pulled
               either from the sample metadata in this study's workspace (for known samples) or is determined by the names of the primary data files (for files). If you wish to edit the list of sample & file pairings,
               you can export it via the <strong>Export Sample & File Parings</strong> button, make any desired changes, and import the new list using the <strong>Upload Sample & File Parings</strong> button.</p>
-            <p class="help-block">You may also store the sample information below back to the workspace to use in future workflows by clicking the <strong>Save Sample Information</strong> button.</p>
+            <p class="help-block">You may also store the sample information below back to the workspace to use in future workflows by clicking the <strong>Save Selected Samples</strong> button.  To remove samples from
+              your workspace, select them from the known samples list and click <strong>Delete Selected Samples</strong>.</p>
           </div>
         </div>
         <div class="col-sm-6">
           <%= f.label :samples, 'Please select known samples from the workspace (select all that apply)' %><br />
-          <%= f.select :samples, options_for_select(@samples), {}, multiple: true, class: 'form-control', size: @samples.size > 10 ? 10 : @samples.size %>
+          <%= f.select :samples, options_for_select(@samples), {}, multiple: true, class: 'form-control', size: 10 %>
         </div>
         <div class="col-sm-6">
           <%= f.label :study_data, 'OR choose primary data directories (select all that apply)' %><br />
-          <%= f.select :study_data, options_for_select(@primary_data_locations), {}, multiple: true, class: 'form-control', size: @primary_data.size > 10 ? 10 : @primary_data.size %>
+          <%= f.select :study_data, options_for_select(@primary_data_locations), {}, multiple: true, class: 'form-control', size: 10 %>
         </div>
       </div>
       <div class="row">
@@ -86,7 +87,7 @@
             <div class="table-responsive">
               <table class="table table-striped tabled-condensed" id="samples-table">
                 <thead>
-                <tr>
+                <tr id="sample-attributes">
                   <th class="col-sm-3">Sample</th>
                   <th class="col-sm-3">Fastq File 1</th>
                   <th class="col-sm-2">Fastq File 2</th>
@@ -97,7 +98,10 @@
                 <tbody></tbody>
               </table>
             </div>
-            <p class="text-center"><%= link_to "Save Sample Information <i class='fa fa-fw fa-cloud-upload'></i>".html_safe, 'javascript:;', class: 'btn btn-lg btn-primary', data: {toggle: 'tooltip'}, title: 'Save the selected sample information back to the workspace.  This will overwrite any existing information for these samples.' %></p>
+            <p class="text-center">
+              <%= link_to "Save Selected Samples <i class='fa fa-fw fa-cloud-upload'></i>".html_safe, 'javascript:;', class: 'btn btn-lg btn-primary', id: 'save-workspace-samples', data: {toggle: 'tooltip'}, title: 'Save the selected sample information back to the workspace.  This will overwrite any existing values for these samples with the information displayed.' %>
+              <%= link_to "Delete Selected Samples <i class='fa fa-fw fa-trash'></i>".html_safe, 'javascript:;', class: 'btn btn-lg btn-danger', id: 'delete-workspace-samples', data: {toggle: 'tooltip'}, title: 'Remove the selected sample from the workspace.' %>
+            </p>
           </div>
         </div>
       </div>
@@ -118,7 +122,8 @@
         </div>
         <div class="col-sm-3">
           <%= link_to "<i class='fa fa-eraser'></i> Clear Samples & Files".html_safe,
-                      'javascript:;', class: 'btn btn-default', id: 'clear-sample-info' %>
+                      'javascript:;', class: 'btn btn-default', id: 'clear-sample-info',
+                      data: {toggle: 'tooltip'}, title: 'Clear the entries from the samples table (does not alter workspace sample information).'%>
         </div>
       </div>
       <div class="form-group row">
@@ -151,6 +156,7 @@
         }
     });
 
+    // view wdl contents of selected workflow
     $('#view-selected-wdl').click(function () {
         var selectedWdl = $('#workflow_identifier').val();
         if (selectedWdl === '') {
@@ -212,7 +218,52 @@
         });
     });
 
-    // read uploaded file as text and
+    // delete selected samples from workspace
+    $('#delete-workspace-samples').click(function () {
+        var samples = samplesTable.column(0).data().toArray();
+        if (samples.length !== 0) {
+            launchModalSpinner('#save-modal-spinner', '#save-modal');
+            $.ajax({
+                url: '<%= delete_workspace_samples_path %>',
+                method: 'POST',
+                dataType: 'script',
+                data: {samples: samples}
+            });
+        } else {
+            alert('Please choose samples before continuing.');
+            return false;
+        }
+    });
+
+    // save current set of samples back to workspace
+    $('#save-workspace-samples').click(function() {
+        var samples = samplesTable.rows().data();
+        if (samples.length !== 0) {
+            var sampleAttributes = ["fastq_file_1", "fastq_file_2", "fastq_file_3", "fastq_file_4"];
+            var samplePayload = {};
+            $(samples).each(function(index, row) {
+                var sample = row[0];
+                samplePayload[sample] = {};
+                $(row).each(function(i, el) {
+                    if (el !== '' && el !== sample) {
+                        samplePayload[sample][sampleAttributes[i - 1]] = el;
+                    }
+                });
+            });
+            launchModalSpinner('#save-modal-spinner', '#save-modal');
+            $.ajax({
+                url: '<%= update_workspace_samples_path %>',
+                method: 'POST',
+                dataType: 'script',
+                data: {samples: samplePayload}
+            });
+        } else {
+            alert('Please choose samples/files before continuing.');
+            return false;
+        }
+    });
+
+    // read uploaded file as text and update samples table
     var sampleInfoInput = $('#workflow_sample_info')[0];
     var reader = new FileReader();
     $(reader).on('load', function (e) {
