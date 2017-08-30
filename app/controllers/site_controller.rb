@@ -731,77 +731,81 @@ class SiteController < ApplicationController
 
   # save currently selected sample information back to study workspace
   def update_workspace_samples
-    form_payload = params[:samples]
+    if @study.can_compute?(current_user)
+      form_payload = params[:samples]
 
-    begin
-      # create a 'real' temporary file as we can't pass open tempfiles
-      filename = "#{SecureRandom.uuid}-sample-info.tsv"
-      temp_tsv = File.new(Rails.root.join('data', @study.data_dir, filename), 'w+')
+      begin
+        # create a 'real' temporary file as we can't pass open tempfiles
+        filename = "#{SecureRandom.uuid}-sample-info.tsv"
+        temp_tsv = File.new(Rails.root.join('data', @study.data_dir, filename), 'w+')
 
-      # add participant_id to new file as FireCloud data model requires this for samples (all samples get default_participant value)
-      headers = %w(entity:sample_id participant_id fastq_file_1 fastq_file_2 fastq_file_3 fastq_file_4)
-      temp_tsv.write headers.join("\t") + "\n"
+        # add participant_id to new file as FireCloud data model requires this for samples (all samples get default_participant value)
+        headers = %w(entity:sample_id participant_id fastq_file_1 fastq_file_2 fastq_file_3 fastq_file_4)
+        temp_tsv.write headers.join("\t") + "\n"
 
-      # get list of samples from form payload
-      samples = form_payload.keys
-      samples.each do |sample|
-        # construct a new line to write to the tsv file
-        newline = "#{sample}\tdefault_participant\t"
-        vals = []
-        headers[2..5].each do |attr|
-          # add a value for each parameter, created an empty string if this was not present in the form data
-          vals << form_payload[sample][attr].to_s
+        # get list of samples from form payload
+        samples = form_payload.keys
+        samples.each do |sample|
+          # construct a new line to write to the tsv file
+          newline = "#{sample}\tdefault_participant\t"
+          vals = []
+          headers[2..5].each do |attr|
+            # add a value for each parameter, created an empty string if this was not present in the form data
+            vals << form_payload[sample][attr].to_s
+          end
+          # write new line to tsv file
+          newline += vals.join("\t")
+          temp_tsv.write newline + "\n"
         end
-        # write new line to tsv file
-        newline += vals.join("\t")
-        temp_tsv.write newline + "\n"
+        # close the file to ensure write is completed
+        temp_tsv.close
+
+        # now reopen and import into FireCloud
+        upload = File.open(temp_tsv.path)
+        Study.firecloud_client.import_workspace_entities_file(@study.firecloud_workspace, upload)
+
+        # upon success, load the newly imported samples from the workspace and update the form
+        new_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_workspace, 'sample')
+        @samples = Naturally.sort(new_samples.map {|s| s['name']})
+
+        # clean up tempfile
+        File.delete(temp_tsv.path)
+
+        # render update notice
+        @notice = 'Your sample information has successfully been saved.'
+        render action: :update_workspace_samples
+      rescue => e
+        logger.info "#{Time.now}: Error saving workspace entities: #{e.message}"
+        @alert = "An error occurred while trying to save your sample information: #{view_context.simple_format(e.message)}"
+        render action: :notice
       end
-      # close the file to ensure write is completed
-      temp_tsv.close
-
-      # now reopen and import into FireCloud
-      upload = File.open(temp_tsv.path)
-      Study.firecloud_client.import_workspace_entities_file(@study.firecloud_workspace, upload)
-
-      # upon success, load the newly imported samples from the workspace and update the form
-      new_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_workspace, 'sample')
-      @samples = Naturally.sort(new_samples.map {|s| s['name']})
-
-      # clean up tempfile
-      File.delete(temp_tsv.path)
-
-      # render update notice
-      @notice = 'Your sample information has successfully been saved.'
-      render action: :update_workspace_samples
-    rescue => e
-      logger.info "#{Time.now}: Error saving workspace entities: #{e.message}"
-      @alert = "An error occurred while trying to save your sample information: #{view_context.simple_format(e.message)}"
-      render action: :notice
     end
   end
 
   # delete selected samples from workspace data entities
   def delete_workspace_samples
     samples = params[:samples]
-    begin
-      # create a mapping of samples to delete
-      delete_payload = Study.firecloud_client.create_entity_map(samples, 'sample')
-      Study.firecloud_client.delete_workspace_entities(@study.firecloud_workspace, delete_payload)
+    if @study.can_compute?(current_user)
+      begin
+        # create a mapping of samples to delete
+        delete_payload = Study.firecloud_client.create_entity_map(samples, 'sample')
+        Study.firecloud_client.delete_workspace_entities(@study.firecloud_workspace, delete_payload)
 
-      # upon success, load the newly imported samples from the workspace and update the form
-      new_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_workspace, 'sample')
-      @samples = Naturally.sort(new_samples.map {|s| s['name']})
+        # upon success, load the newly imported samples from the workspace and update the form
+        new_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_workspace, 'sample')
+        @samples = Naturally.sort(new_samples.map {|s| s['name']})
 
-      # render update notice
-      @notice = 'The requested samples have successfully been deleted.'
+        # render update notice
+        @notice = 'The requested samples have successfully been deleted.'
 
-      # set flag to empty out the samples table to prevent the user from trying to delete the sample again
-      @empty_samples_table = true
-      render action: :update_workspace_samples
-    rescue => e
-      logger.info "#{Time.now}: Error deleting workspace entities: #{e.message}"
-      @alert = "An error occurred while trying to delete your sample information: #{view_context.simple_format(e.message)}"
-      render action: :notice
+        # set flag to empty out the samples table to prevent the user from trying to delete the sample again
+        @empty_samples_table = true
+        render action: :update_workspace_samples
+      rescue => e
+        logger.info "#{Time.now}: Error deleting workspace entities: #{e.message}"
+        @alert = "An error occurred while trying to delete your sample information: #{view_context.simple_format(e.message)}"
+        render action: :notice
+      end
     end
   end
 

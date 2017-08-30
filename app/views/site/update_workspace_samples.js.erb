@@ -3,6 +3,6 @@ closeModalSpinner('#save-modal-spinner', "#save-modal", function() {
     if ( <%= @empty_samples_table == true %>) {
         updateSampleTable([]);
     }
+    $('#workflow_study_data').val('')
     $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {notice: @notice}) %>");
 });
-
