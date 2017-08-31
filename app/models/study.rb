@@ -63,6 +63,10 @@ class Study
         return [merged_scores]
       end
     end
+
+    def unique_genes
+      pluck(:gene).uniq
+    end
   end
 
   has_many :precomputed_scores, dependent: :delete do
