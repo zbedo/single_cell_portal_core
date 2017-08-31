@@ -16,12 +16,12 @@
             <tbody>
             <% @submissions.each do |submission| %>
               <tr id="submission-<%= submission['submissionId'] %>">
-                <td id="submission-<%= submission['submissionId'] %>-date"><%= submission['submittedOn'] %></td>
-                <td id="submission-<%= submission['submissionId'] %>-id"><%= submission['submissionId'] %></td>
-                <td id="submission-<%= submission['submissionId'] %>-name"><%= submission['methodName'] %></td>
+                <td id="submission-<%= submission['submissionId'] %>-date"><%= local_timestamp(submission['submissionDate']) %></td>
+                <td id="submission-<%= submission['submissionId'] %>-id"><%= link_to submission['submissionId'], @study.submission_url(submission['submissionId']), class: 'submission-bucket-link', target: :_blank, data: {toggle: 'tooltip'}, title: 'View submission directory'  %></td>
+                <td id="submission-<%= submission['submissionId'] %>-name"><%= submission['methodConfigurationName'] %></td>
                 <td id="submission-<%= submission['submissionId'] %>-status"><%= workflow_status_label(submission['status']) %></td>
                 <td class="actions">
-                  <% if !%w(Completed Error).include?(submission['status']) %>
+                  <% if !%w(Done Error).include?(submission['status']) %>
                     <%= link_to "<i class='fa fa-times'></i> Abort".html_safe, '#', class: 'btn btn-xs btn-danger abort-submission', title: 'Stop execution of this workflow', data: {toggle: 'tooltip', id: submission['submissionId']} %>
                   <% else %>
                     <%= link_to "<i class='fa fa-files-o'></i> Outputs".html_safe, '#', class: 'btn btn-xs btn-primary', title: 'View outputs from this run', data: {toggle: 'tooltip'} %>

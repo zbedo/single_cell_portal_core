@@ -337,6 +337,11 @@ class Study
     "https://console.cloud.google.com/storage/browser/#{self.bucket_id}"
   end
 
+  # helper to generate a URL to a specific FireCloud submission inside a study's GCP bucket
+  def submission_url(submission_id)
+    self.google_bucket_url + "/#{submission_id}"
+  end
+
   ###
   #
   # DEFAULT OPTIONS METHODS

@@ -376,7 +376,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		process_firecloud_request(:get, path)
 	end
 
-	# get list of available configurations
+	# get list of available configurations from the repository
 	#
 	# param: opts (hash) => hash of query parameter key/value pairs, see https://api.firecloud.org/#!/Method_Repository/listMethodRepositoryConfigurations for complete list
 	#
@@ -387,7 +387,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		process_firecloud_request(:get, path)
 	end
 
-	# get a FireCloud method configuration
+	# get a FireCloud method configuration from the repository
 	#
 	# param: namespace (string) => namespace of method
 	# param: name (string) => name of method
@@ -396,6 +396,44 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	# return: configuration object
 	def get_configuration(namespace, method_name, snapshot_id)
 		path = self.api_root + "/api/configurations/#{namespace}/#{method_name}/#{snapshot_id}"
+		process_firecloud_request(:get, path)
+	end
+
+  # create a method configuration template from a method
+  #
+	# param: method_namespace (string) => namespace of method
+	# param: method_name (string) => name of method
+	# param: method_version (string) => version of method
+  #
+  # return: method configuration template (JSON)
+	def create_configuration_template(method_namespace, method_name, method_version)
+		path = self.api_root + '/api/template'
+		payload = {
+				methodNamespace: method_namespace,
+				methodName: method_name,
+				methodVersion: method_version
+		}.to_json
+		process_firecloud_request(:post, path, payload)
+	end
+
+	# get a list of FireCloud method configurations in a specified workspace
+	#
+	# param: workspace_name (string) => name of requested workspace
+	#
+	# return: configuration object
+  def get_workspace_configurations(workspace_name)
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/methodconfigs"
+		process_firecloud_request(:get, path)
+	end
+
+	# get a FireCloud method configuration from a workspace
+	#
+	# param: workspace_name (string) => name of requested workspace
+	# param: config_name (string) => name of method
+	#
+	# return: configuration object
+	def get_workspace_configuration(workspace_name, config_name)
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/method_configs/#{self.project}/#{config_name}"
 		process_firecloud_request(:get, path)
 	end
 

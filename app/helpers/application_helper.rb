@@ -144,4 +144,9 @@ module ApplicationHelper
 		end
 		"<big><span class='label label-#{label_class}'>#{status}</span></big>".html_safe
 	end
+
+	# get a UTC timestamp in local time, formatted all purty-like
+	def local_timestamp(utc_time)
+		Time.zone.parse(utc_time).strftime("%F %r")
+	end
 end
