@@ -192,12 +192,7 @@ class SiteController < ApplicationController
   # search for one or more genes to view expression information
   # will redirect to appropriate method as needed
   def search_genes
-    if params[:search][:upload].blank?
-      @terms = parse_search_terms(:genes)
-    else
-      geneset_file = params[:search][:upload]
-      @terms = geneset_file.read.split(/[\s\r\n?,]/).map {|gene| gene.strip}
-    end
+    @terms = parse_search_terms(:genes)
     # grab saved params for loaded cluster, boxpoints mode, annotations and consensus
     cluster = params[:search][:cluster]
     annotation = params[:search][:annotation]
@@ -208,17 +203,18 @@ class SiteController < ApplicationController
     # if only one gene was searched for, make an attempt to load it and redirect to correct page
     if @terms.size == 1
       @gene = load_best_gene_match(@study.expression_scores.by_gene(@terms.first, @study.expression_matrix_files.map(&:id)), @terms.first)
+      if @gene.empty?
+        redirect_to request.referrer, alert: "No matches found for: #{@terms.first}." and return
+      else
+        redirect_to view_gene_expression_path(study_name: params[:study_name], gene: @gene['gene'], cluster: cluster, boxpoints: boxpoints, annotation: annotation, consensus: consensus, subsample: subsample) and return
+      end
     end
 
-    # determine which view to load
-    if @gene.nil? && @terms.size == 1
-      redirect_to request.referrer, alert: "No matches found for: #{@terms.join(', ')}."
-    elsif @terms.size > 1 && !consensus.blank?
+    # else, determine which view to load (heatmaps vs. violin/scatter)
+    if !consensus.blank?
       redirect_to view_gene_set_expression_path(study_name: params[:study_name], search: {genes: @terms.join(' ')} , cluster: cluster, annotation: annotation, consensus: consensus, subsample: subsample)
-    elsif @terms.size > 1 && consensus.blank?
-      redirect_to view_gene_expression_heatmap_path(search: {genes: @terms.join(' ')}, cluster: cluster, annotation: annotation)
     else
-      redirect_to view_gene_expression_path(study_name: params[:study_name], gene: @gene['gene'], cluster: cluster, boxpoints: boxpoints, annotation: annotation, consensus: consensus, subsample: subsample)
+      redirect_to view_gene_expression_heatmap_path(search: {genes: @terms.join(' ')}, cluster: cluster, annotation: annotation)
     end
   end
 
@@ -294,7 +290,12 @@ class SiteController < ApplicationController
     if @genes.size > 5
       @main_genes, @other_genes = divide_genes_for_header
     end
-    render 'view_gene_expression'
+    # make sure we found genes, otherwise redirect back to base view
+    if @genes.empty?
+      redirect_to view_study_path, alert: "None of the requested genes were found: #{terms.join(', ')}"
+    else
+      render 'view_gene_expression'
+    end
   end
 
   # re-renders plots when changing cluster selection
@@ -372,7 +373,10 @@ class SiteController < ApplicationController
     if @genes.size > 5
       @main_genes, @other_genes = divide_genes_for_header
     end
-
+    # make sure we found genes, otherwise redirect back to base view
+    if @genes.empty?
+      redirect_to view_study_path, alert: "None of the requested genes were found: #{terms.join(', ')}"
+    end
   end
 
   # load data in gct form to render in Morpheus, preserving query order
@@ -1185,7 +1189,7 @@ class SiteController < ApplicationController
       if known_genes.include?(term) || known_searchable_genes.include?(term)
         genes << {'gene' => term}
       else
-        not_found << {'gene' => term}
+        not_found << term
       end
     end
     [genes, not_found]
