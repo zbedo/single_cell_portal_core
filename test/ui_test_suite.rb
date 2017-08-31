@@ -876,7 +876,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get data_url
 		wait_for_render(:id, 'message_modal')
 		alert_text = @driver.find_element(:id, 'alert-content').text
-		expected_alert = "You may not download any data from this study until #{(Date.today + 1).strftime("%B %e, %Y")}."
+		expected_alert = "You may not download any data from this study until #{(Date.today + 1).strftime("%B %-d, %Y")}."
 		assert alert_text == expected_alert, "did not find correct alert, expected '#{expected_alert}' but found '#{alert_text}'"
 
 		puts "Test method: #{self.method_name} successful!"

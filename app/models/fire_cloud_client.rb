@@ -228,9 +228,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		begin
 			process_firecloud_request(:get, path)
 			true
-		rescue RuntimeError => e
-			false
-		rescue Errno::ECONNREFUSED => e
+		rescue => e
 			false
 		end
   end
