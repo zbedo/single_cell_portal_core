@@ -242,17 +242,25 @@ class Study
 
   # check if a give use can edit study
   def can_edit?(user)
-    self.admins.include?(user.email)
+    user.nil? ? false : self.admins.include?(user.email)
   end
 
   # check if a given user can view study by share (does not take public into account - use Study.viewable(user) instead)
   def can_view?(user)
-    self.can_edit?(user) || self.study_shares.can_view.include?(user.email)
+    if user.nil?
+      false
+    else
+      self.can_edit?(user) || self.study_shares.can_view.include?(user.email)
+    end
   end
 
   # check if a user can download data directly from the bucket
   def can_direct_download?(user)
-    self.user.email == user.email || self.study_shares.can_view.include?(user.email)
+    if user.nil?
+      false
+    else
+      self.user.email == user.email || self.study_shares.can_view.include?(user.email)
+    end
   end
 
   # check if user can delete a study - only owners can
@@ -271,7 +279,7 @@ class Study
 
   # check if a user can run workflows on the given study, currently only the study owner
   def can_compute?(user)
-    self.user_id == user.id
+    user.nil? ? false : self.user_id == user.id
   end
 
   # list of emails for accounts that can edit this study

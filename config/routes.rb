@@ -82,7 +82,8 @@ Rails.application.routes.draw do
 
     # workflow actions
     get 'study/:study_name/get_fastq_files', to: 'site#get_fastq_files', as: :get_fastq_files
-    get 'study/:study_name/workspace_samples', to: 'site#get_workspace_samples', as: :get_workspace_samples
+		get 'study/:study_name/workspace_samples', to: 'site#get_workspace_samples', as: :get_workspace_samples
+		get 'study/:study_name/submissions', to: 'site#get_submission_workflow', as: :get_submission_workflow
 		post 'study/:study_name/workspace_samples', to: 'site#update_workspace_samples', as: :update_workspace_samples
 		post 'study/:study_name/delete_workspace_samples', to: 'site#delete_workspace_samples', as: :delete_workspace_samples
     get 'view_workflow_wdl', to: 'site#view_workflow_wdl', as: :view_workflow_wdl

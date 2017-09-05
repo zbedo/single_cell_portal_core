@@ -1,15 +1,16 @@
 <div class="row">
   <div class="col-md-12">
-    <h2>Current Submissions <span class="badge"><%= @submissions.size %></span></h2>
+    <h2>Submission History <span class="badge"><%= @submissions.size %></span></h2>
       <div class="table-responsive">
         <div class="well well-sm">
           <table class="table table-striped" id="submissions-table">
             <thead>
             <tr>
-              <th>Submitted On</th>
-              <th>Submission ID</th>
-              <th>Workflow Name</th>
-              <th>Status</th>
+              <th>Date</th>
+              <th>Submitter</th>
+              <th>ID</th>
+              <th>Workflow<br/>Name</th>
+              <th>Workflow<br/>Status</th>
               <th>Actions</th>
             </tr>
             </thead>
@@ -17,14 +18,17 @@
             <% @submissions.each do |submission| %>
               <tr id="submission-<%= submission['submissionId'] %>">
                 <td id="submission-<%= submission['submissionId'] %>-date"><%= local_timestamp(submission['submissionDate']) %></td>
+                <td id="submission-<%= submission['submissionId'] %>-user"><%= submission['submitter'] %></td>
                 <td id="submission-<%= submission['submissionId'] %>-id"><%= link_to submission['submissionId'], @study.submission_url(submission['submissionId']), class: 'submission-bucket-link', target: :_blank, data: {toggle: 'tooltip'}, title: 'View submission directory'  %></td>
                 <td id="submission-<%= submission['submissionId'] %>-name"><%= submission['methodConfigurationName'] %></td>
-                <td id="submission-<%= submission['submissionId'] %>-status"><%= workflow_status_label(submission['status']) %></td>
+                <td id="submission-<%= submission['submissionId'] %>-status"><%= workflow_status_label(submission['workflowStatuses']) %></td>
                 <td class="actions">
-                  <% if !%w(Done Error).include?(submission['status']) %>
+                  <% if !%w(Done Failed).include?(submission['status']) %>
                     <%= link_to "<i class='fa fa-times'></i> Abort".html_safe, '#', class: 'btn btn-xs btn-danger abort-submission', title: 'Stop execution of this workflow', data: {toggle: 'tooltip', id: submission['submissionId']} %>
+                  <% elsif submission['status'] == 'Done' && !submission['workflowStatuses'].keys.include?('Failed') %>
+                    <%= link_to "<i class='fa fa-files-o'></i> Outputs".html_safe, '#', class: 'btn btn-xs btn-primary get-submission-outputs', title: 'View outputs from this run', data: {toggle: 'tooltip', id: submission['submissionId']} %>
                   <% else %>
-                    <%= link_to "<i class='fa fa-files-o'></i> Outputs".html_safe, '#', class: 'btn btn-xs btn-primary', title: 'View outputs from this run', data: {toggle: 'tooltip'} %>
+                    <%= link_to "<i class='fa fa-exclamation-triangle'></i> Show Errors".html_safe, '#', class: 'btn btn-xs btn-danger get-submission-errors', title: 'View errors for this run', data: {toggle: 'tooltip', id: submission['submissionId']} %>
                   <% end %>
                 </td>
               </tr>
@@ -138,7 +142,7 @@
 <script type="text/javascript">
     $('#submissions-table').dataTable({
         pagingType: "full_numbers",
-        order: [[0, 'asc']],
+        order: [[0, 'desc']],
         language: {
             search: "Filter Results By: "
         }
@@ -154,6 +158,17 @@
         } else {
             alert('Did not abort');
         }
+    });
+
+    // display errors from a failed submission
+    $('#submissions-table').on('click', '.get-submission-errors', function () {
+        var submissionId = $(this).data('id');
+        $('#generic-modal-title').html("Loading... Please Wait");
+        launchModalSpinner('#generic-modal-spinner', '#generic-modal');
+        $.ajax({
+            url: "<%= get_submission_workflow_path(study_name: @study.url_safe_name) %>?submission_id=" + submissionId,
+            dataType: 'script'
+        });
     });
 
     // view wdl contents of selected workflow

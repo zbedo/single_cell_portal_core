@@ -455,7 +455,42 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		process_firecloud_request(:get, path)
 	end
 
-	# create a workflow queue submissions
+	# get a single workflow submission
+	#
+	# param: workspace_name (string) => name of requested workspace
+	# param: submission_id (string) => id of requested submission
+	#
+	# return: array of workflow submissions
+	def get_workspace_submission(workspace_name, submission_id)
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/submissions/#{submission_id}"
+		process_firecloud_request(:get, path)
+	end
+
+	# get call-level metadata from a single workflow submission workflow instance
+	#
+	# param: workspace_name (string) => name of requested workspace
+	# param: submission_id (string) => id of requested submission
+	# param: workflow_id (string) => id of requested workflow
+	#
+	# return: array of workflow submissions
+	def get_workspace_submission_workflow(workspace_name, submission_id, workflow_id)
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/submissions/#{submission_id}/workflows/#{workflow_id}"
+		process_firecloud_request(:get, path)
+	end
+
+	# get outputs from a single workflow submission workflow instance
+	#
+	# param: workspace_name (string) => name of requested workspace
+	# param: submission_id (string) => id of requested submission
+	# param: workflow_id (string) => id of requested workflow
+	#
+	# return: array of workflow submissions
+	def get_workspace_submission_outputs(workspace_name, submission_id, workflow_id)
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/submissions/#{submission_id}/workflows/#{workflow_id}/outputs"
+		process_firecloud_request(:get, path)
+	end
+
+	# create a workflow submission
 	#
 	# param: workspace_name (string) => name of requested workspace
 	# param: submission (hash) => hash of submission parameters
@@ -466,7 +501,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		process_firecloud_request(:post, path, submission.to_json)
 	end
 
-	# monitor a workflow queue submission status
+	# monitor a workflow submission status
 	#
 	# param: workspace_name (string) => name of requested workspace
 	# param: submission_id (integer) => ID of workflow submission
@@ -477,7 +512,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		process_firecloud_request(:get, path)
 	end
 
-	# abort a workflow queue submission
+	# abort a workflow submission
 	#
 	# param: workspace_name (string) => name of requested workspace
 	# param: submission_id (integer) => ID of workflow submission

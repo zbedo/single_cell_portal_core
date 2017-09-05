@@ -665,7 +665,7 @@ class SiteController < ApplicationController
           nil
       end
     else
-      nil # user doesn't have compute permission so render an empty array
+      nil # user doesn't have compute permission so just return an empty array
     end
     render json: @fastq_files.to_json
   end
@@ -761,6 +761,9 @@ class SiteController < ApplicationController
         logger.info "#{Time.now}: Error saving workspace entities: #{e.message}"
         @alert = "An error occurred while trying to save your sample information: #{view_context.simple_format(e.message)}"
         render action: :notice
+      else
+        @alert = 'You do not have permission to perform that action'
+        render action: :notice
       end
     end
   end
@@ -789,7 +792,32 @@ class SiteController < ApplicationController
         @alert = "An error occurred while trying to delete your sample information: #{view_context.simple_format(e.message)}"
         render action: :notice
       end
+    else
+      @alert = 'You do not have permission to perform that action'
+      render action: :notice
     end
+  end
+
+
+  def get_submission_workflow
+    if @study.can_compute?(current_user)
+      begin
+        submission = Study.firecloud_client.get_workspace_submission(@study.firecloud_workspace, params[:submission_id])
+        workflow_id = submission['workflows'].first['workflowId']
+        workflow = Study.firecloud_client.get_workspace_submission_workflow(@study.firecloud_workspace, params[:submission_id], workflow_id)
+        error_messages = workflow['failures'].map {|failure| failure['causedBy'].map {|f| f['message']}}.flatten
+        @alert = "Submission #{params[:submission_id]} failed with the following errors:<br /><br />#{error_messages.join('<br />')}"
+        render action: :notice
+      end
+    else
+      @alert = 'You do not have permission to perform that action'
+      render action: :notice
+    end
+  end
+
+  # get errors for a failed submission
+  def get_workflow_errors
+
   end
 
   ###

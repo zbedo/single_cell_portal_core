@@ -129,15 +129,33 @@ module ApplicationHelper
 	end
 
 	# get a label for a workflow status code
-	def workflow_status_label(status)
+	def submission_status_label(status)
 		case status
-			when 'Queued'
+			when 'Submitted'
+				label_class = 'info'
+			when 'Running'
+				label_class = 'primary'
+			when 'Done'
+				label_class = 'success'
+			when 'Failed'
+				label_class = 'danger'
+			else
+				label_class = 'default'
+		end
+		"<big><span class='label label-#{label_class}'>#{status}</span></big>".html_safe
+	end
+
+	# get a label for a workflow status code
+	def workflow_status_label(workflow_statuses)
+		status = workflow_statuses.keys.first
+		case status
+			when 'Submitted'
 				label_class = 'info'
 			when 'Running'
 				label_class = 'primary'
 			when 'Completed'
 				label_class = 'success'
-			when 'Error'
+			when 'Failed'
 				label_class = 'danger'
 			else
 				label_class = 'default'
