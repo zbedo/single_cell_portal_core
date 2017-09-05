@@ -174,7 +174,9 @@ class AdminConfigurationsController < ApplicationController
     if refresh_status == true && (expiration < Study.firecloud_client.expires_at && storage_issue_date <  Study.firecloud_client.storage_issued_at)
       logger.info "#{Time.now}: Refreshing API client tokens and drivers.  New expiry: #{Study.firecloud_client.expires_at}"
       @notice = "API Client successfully refreshed.  Tokens are now valid until #{Study.firecloud_client.expires_at.strftime('%D %r')} and will renew automatically."
+      @alert = ''
     else
+      @notice = ''
       @alert = "Error refreshing API client: #{refresh_status}."
     end
   end

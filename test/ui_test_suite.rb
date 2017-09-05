@@ -37,7 +37,10 @@ require 'selenium-webdriver'
 #
 # Tests can be run singly or in groups by passing -n /pattern/ before the -- on the command line.  This will run any tests that match
 # the given regular expression.  You can run all 'front-end' and 'admin' tests this way (although front-end tests require the tests studies to have been created already)
-# To run a single test by name, pass -n 'test: [name of test]', e.g -n 'test: admin: create a study'
+# Tests are namespaced so that they can be run together in blocks.  For instance, to run all the tests that cover user annotations, you can pass 'user-annotation' as the pattern.
+# This will then run all test methods necessary to complete the block of tests, including creating required study entries
+#
+# To run a single test by name, pass -n 'test: [name of test]', e.g -n 'test: front-end: view: study
 #
 # NOTE: when running this test harness, it tends to perform better on an external monitor.  Webdriver is very sensitive to elements not
 # being clickable, and the more screen area available, the better
@@ -194,8 +197,18 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# method to close a bootstrap modal by id
 	def close_modal(id)
+		# sanity check in case modal has already opened and closed - if no modal opens in 10 seconds then exit and continue
+		i = 0
+		while @driver.execute_script("return OPEN_MODAL") == ''
+			if i == 10
+				puts "Exiting close_modal after 10 seconds - no modal open"
+				return true
+			else
+				sleep(1)
+				i += 1
+			end
+		end
 		# need to wait until modal is in the page and has completed opening
-		@wait.until {element_present?(:id, id)}
 		@wait.until {@driver.execute_script("return OPEN_MODAL") == id}
 		modal = @driver.find_element(:id, id)
 		close_button = modal.find_element(:class, 'close')
@@ -429,7 +442,7 @@ class UiTestSuite < Test::Unit::TestCase
 	# admin backend tests of entire study creation process including negative/error tests
 	# uses example data in test directory as inputs (based off of https://github.com/broadinstitute/single_cell_portal/tree/master/demo_data)
 	# these tests run first to create test studies to use in front-end tests later
-	test 'admin: create-study: user-annotation: public' do
+	test 'admin: create-study: configurations: user-annotation: public' do
 		puts "Test method: #{self.method_name}"
 
 		# log in first
