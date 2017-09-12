@@ -26,7 +26,7 @@ end
 
 # check to make sure all delayed_job daemons are still running
 @running = true
-if pids.size != processes.size
+if pids.size != processes.size || processes.size == 0
 	@running = false
 else
 	pids.each do |command, pid|
@@ -44,7 +44,7 @@ end
 @date = Time.now.strftime("%Y-%m-%d %H:%M:%S")
 if @running == false
 	@log_message = "#{@date}: One or more delayed_job workers have died.  Restarting daemon.\n"
-
+	puts @log_message
 	# restart delayed job workers
 	system(". /home/app/.cron_env ; cd /home/app/webapp ; bin/delayed_job restart #{@env} -n #{@num_workers}")
 
@@ -60,5 +60,7 @@ elsif @interactive && @running
 	puts "All jobs are running normally in #{@env}"
 	processes.each do |pid, command|
 		puts "#{pid}: #{command}"
-	end
+  end
+elsif !@interactive && @running
+  puts "#{@date}: DelayedJob processes all running normally.\n"
 end

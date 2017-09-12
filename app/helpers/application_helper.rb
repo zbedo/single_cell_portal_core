@@ -139,6 +139,8 @@ module ApplicationHelper
 				label_class = 'success'
 			when 'Failed'
 				label_class = 'danger'
+			when 'Aborting'
+				label_class = 'warning'
 			else
 				label_class = 'default'
 		end
@@ -146,25 +148,39 @@ module ApplicationHelper
 	end
 
 	# get a label for a workflow status code
-	def workflow_status_label(workflow_statuses)
-		status = workflow_statuses.keys.first
-		case status
-			when 'Submitted'
-				label_class = 'info'
-			when 'Running'
-				label_class = 'primary'
-			when 'Completed'
-				label_class = 'success'
-			when 'Failed'
-				label_class = 'danger'
-			else
-				label_class = 'default'
+	def workflow_status_labels(workflow_statuses)
+		labels = []
+		workflow_statuses.keys.each do |status|
+			case status
+				when 'Submitted'
+					label_class = 'info'
+				when 'Running'
+					label_class = 'primary'
+				when 'Completed'
+					label_class = 'success'
+				when 'Failed'
+					label_class = 'danger'
+				else
+					label_class = 'default'
+			end
+			labels << "<big><span class='label label-#{label_class}'>#{status}</span></big>"
 		end
-		"<big><span class='label label-#{label_class}'>#{status}</span></big>".html_safe
+		labels.join("&nbsp;").html_safe
 	end
 
 	# get a UTC timestamp in local time, formatted all purty-like
 	def local_timestamp(utc_time)
 		Time.zone.parse(utc_time).strftime("%F %r")
+	end
+
+	# get actions links for a workflow submission
+	def get_submission_actions(submission, study)
+		if %w(Queued Submitted Running).include?(submission['status'])
+			link_to"<i class='fa fa-times'></i> Abort".html_safe, '#', class: 'btn btn-xs btn-danger abort-submission', title: 'Stop execution of this workflow', data: {toggle: 'tooltip', url: abort_submission_workflow_path(study_name: study.url_safe_name, submission_id: submission['submissionId']), id: submission['submissionId']}
+		elsif submission['status'] == 'Done' && !submission['workflowStatuses'].keys.include?('Failed')
+			link_to "<i class='fa fa-files-o'></i> Outputs".html_safe, '#', class: 'btn btn-xs btn-primary get-submission-outputs', title: 'View outputs from this run', data: {toggle: 'tooltip', id: submission['submissionId']}
+		else
+			link_to "<i class='fa fa-exclamation-triangle'></i> Show Errors".html_safe, '#', class: 'btn btn-xs btn-danger get-submission-errors', title: 'View errors for this run', data: {toggle: 'tooltip', url: get_submission_workflow_path(study_name: study.url_safe_name, submission_id: submission['submissionId'])}
+		end
 	end
 end

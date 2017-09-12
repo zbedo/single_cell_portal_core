@@ -20,7 +20,8 @@ class SiteController < ApplicationController
   before_action :set_selected_annotation, only: [:update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :annotation_query, :annotation_values, :show_user_annotations_form]
   before_action :load_precomputed_options, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap]
   before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query, :view_workflow_wdl, :log_action, :get_workspace_samples, :update_workspace_samples]
-  before_action :check_compute_permissions, only: [:get_fastq_files, :get_workspace_samples, :update_workspace_samples]
+  before_action :check_compute_permissions, only: [:get_fastq_files, :get_workspace_samples, :update_workspace_samples, :delete_workspace_samples, :get_workspace_sumbissions, :create_workspace_submission, :get_submission_workflow, :abort_submission_workflow, :get_submission_errors]
+
   # caching
   caches_action :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots,
                 :expression_query, :annotation_query, :precomputed_results,
@@ -686,138 +687,192 @@ class SiteController < ApplicationController
 
   # get the available entities for a workspace
   def get_workspace_samples
-    if @study.can_compute?(current_user)
-      begin
-        requested_samples = params[:samples].split(',')
-        # get all samples
-        all_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_workspace, 'sample')
-        # since we can't query the API (easily) for matching samples, just get all and then filter based on requested samples
-        matching_samples = all_samples.keep_if {|sample| requested_samples.include?(sample['name']) }
-        @samples = []
-        matching_samples.each do |sample|
-          @samples << [sample['name'],
-                       sample['attributes']['fastq_file_1'],
-                       sample['attributes']['fastq_file_2'],
-                       sample['attributes']['fastq_file_3'],
-                       sample['attributes']['fastq_file_4']
-          ]
-        end
-        render json: @samples.to_json
-      rescue => e
-        logger.error "#{Time.now}: Error retrieving workspace samples for #{study.name}; #{e.message}"
-        render json: []
+    begin
+      requested_samples = params[:samples].split(',')
+      # get all samples
+      all_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_workspace, 'sample')
+      # since we can't query the API (easily) for matching samples, just get all and then filter based on requested samples
+      matching_samples = all_samples.keep_if {|sample| requested_samples.include?(sample['name']) }
+      @samples = []
+      matching_samples.each do |sample|
+        @samples << [sample['name'],
+                     sample['attributes']['fastq_file_1'],
+                     sample['attributes']['fastq_file_2'],
+                     sample['attributes']['fastq_file_3'],
+                     sample['attributes']['fastq_file_4']
+        ]
       end
-    else
-      render json: [] # render empty array if user has no compute permissions
+      render json: @samples.to_json
+    rescue => e
+      logger.error "#{Time.now}: Error retrieving workspace samples for #{study.name}; #{e.message}"
+      render json: []
     end
   end
 
   # save currently selected sample information back to study workspace
   def update_workspace_samples
-    if @study.can_compute?(current_user)
-      form_payload = params[:samples]
+    form_payload = params[:samples]
 
-      begin
-        # create a 'real' temporary file as we can't pass open tempfiles
-        filename = "#{SecureRandom.uuid}-sample-info.tsv"
-        temp_tsv = File.new(Rails.root.join('data', @study.data_dir, filename), 'w+')
+    begin
+      # create a 'real' temporary file as we can't pass open tempfiles
+      filename = "#{SecureRandom.uuid}-sample-info.tsv"
+      temp_tsv = File.new(Rails.root.join('data', @study.data_dir, filename), 'w+')
 
-        # add participant_id to new file as FireCloud data model requires this for samples (all samples get default_participant value)
-        headers = %w(entity:sample_id participant_id fastq_file_1 fastq_file_2 fastq_file_3 fastq_file_4)
-        temp_tsv.write headers.join("\t") + "\n"
+      # add participant_id to new file as FireCloud data model requires this for samples (all samples get default_participant value)
+      headers = %w(entity:sample_id participant_id fastq_file_1 fastq_file_2 fastq_file_3 fastq_file_4)
+      temp_tsv.write headers.join("\t") + "\n"
 
-        # get list of samples from form payload
-        samples = form_payload.keys
-        samples.each do |sample|
-          # construct a new line to write to the tsv file
-          newline = "#{sample}\tdefault_participant\t"
-          vals = []
-          headers[2..5].each do |attr|
-            # add a value for each parameter, created an empty string if this was not present in the form data
-            vals << form_payload[sample][attr].to_s
-          end
-          # write new line to tsv file
-          newline += vals.join("\t")
-          temp_tsv.write newline + "\n"
+      # get list of samples from form payload
+      samples = form_payload.keys
+      samples.each do |sample|
+        # construct a new line to write to the tsv file
+        newline = "#{sample}\tdefault_participant\t"
+        vals = []
+        headers[2..5].each do |attr|
+          # add a value for each parameter, created an empty string if this was not present in the form data
+          vals << form_payload[sample][attr].to_s
         end
-        # close the file to ensure write is completed
-        temp_tsv.close
-
-        # now reopen and import into FireCloud
-        upload = File.open(temp_tsv.path)
-        Study.firecloud_client.import_workspace_entities_file(@study.firecloud_workspace, upload)
-
-        # upon success, load the newly imported samples from the workspace and update the form
-        new_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_workspace, 'sample')
-        @samples = Naturally.sort(new_samples.map {|s| s['name']})
-
-        # clean up tempfile
-        File.delete(temp_tsv.path)
-
-        # render update notice
-        @notice = 'Your sample information has successfully been saved.'
-        render action: :update_workspace_samples
-      rescue => e
-        logger.info "#{Time.now}: Error saving workspace entities: #{e.message}"
-        @alert = "An error occurred while trying to save your sample information: #{view_context.simple_format(e.message)}"
-        render action: :notice
-      else
-        @alert = 'You do not have permission to perform that action'
-        render action: :notice
+        # write new line to tsv file
+        newline += vals.join("\t")
+        temp_tsv.write newline + "\n"
       end
+      # close the file to ensure write is completed
+      temp_tsv.close
+
+      # now reopen and import into FireCloud
+      upload = File.open(temp_tsv.path)
+      Study.firecloud_client.import_workspace_entities_file(@study.firecloud_workspace, upload)
+
+      # upon success, load the newly imported samples from the workspace and update the form
+      new_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_workspace, 'sample')
+      @samples = Naturally.sort(new_samples.map {|s| s['name']})
+
+      # clean up tempfile
+      File.delete(temp_tsv.path)
+
+      # render update notice
+      @notice = 'Your sample information has successfully been saved.'
+      render action: :update_workspace_samples
+    rescue => e
+      logger.info "#{Time.now}: Error saving workspace entities: #{e.message}"
+      @alert = "An error occurred while trying to save your sample information: #{view_context.simple_format(e.message)}"
+      render action: :notice
     end
   end
 
   # delete selected samples from workspace data entities
   def delete_workspace_samples
     samples = params[:samples]
-    if @study.can_compute?(current_user)
-      begin
-        # create a mapping of samples to delete
-        delete_payload = Study.firecloud_client.create_entity_map(samples, 'sample')
-        Study.firecloud_client.delete_workspace_entities(@study.firecloud_workspace, delete_payload)
+    begin
+      # create a mapping of samples to delete
+      delete_payload = Study.firecloud_client.create_entity_map(samples, 'sample')
+      Study.firecloud_client.delete_workspace_entities(@study.firecloud_workspace, delete_payload)
 
-        # upon success, load the newly imported samples from the workspace and update the form
-        new_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_workspace, 'sample')
-        @samples = Naturally.sort(new_samples.map {|s| s['name']})
+      # upon success, load the newly imported samples from the workspace and update the form
+      new_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_workspace, 'sample')
+      @samples = Naturally.sort(new_samples.map {|s| s['name']})
 
-        # render update notice
-        @notice = 'The requested samples have successfully been deleted.'
+      # render update notice
+      @notice = 'The requested samples have successfully been deleted.'
 
-        # set flag to empty out the samples table to prevent the user from trying to delete the sample again
-        @empty_samples_table = true
-        render action: :update_workspace_samples
-      rescue => e
-        logger.info "#{Time.now}: Error deleting workspace entities: #{e.message}"
-        @alert = "An error occurred while trying to delete your sample information: #{view_context.simple_format(e.message)}"
-        render action: :notice
-      end
-    else
-      @alert = 'You do not have permission to perform that action'
+      # set flag to empty out the samples table to prevent the user from trying to delete the sample again
+      @empty_samples_table = true
+      render action: :update_workspace_samples
+    rescue => e
+      logger.error "#{Time.now}: Error deleting workspace entities: #{e.message}"
+      @alert = "An error occurred while trying to delete your sample information: #{view_context.simple_format(e.message)}"
       render action: :notice
     end
   end
 
+  # get all submissions for a study workspace
+  def get_workspace_submissions
+    client = FireCloudClient.new(current_user, @study.firecloud_project)
+    @submissions = client.get_workspace_submissions(@study.firecloud_workspace)
+  end
 
+  # create a workspace analysis submission for a given sample
+  def create_workspace_submission
+    begin
+      workflow_namespace, workflow_name, workflow_snapshot = workflow_submission_params[:identifier].split('--')
+      @sample = workflow_submission_params[:samples].keep_if {|s| !s.blank?}.first
+      @submission_config = {
+          'methodConfigurationNamespace' => workflow_namespace,
+          'methodConfigurationName' => workflow_name,
+          'entityType' => "sample",
+          'entityName' => @sample,
+          'useCallCache' => true,
+          'workflowFailureMode' => "NoNewCalls"
+      }
+      # submission must be done as user, so create a client with current_user and submit
+      client = FireCloudClient.new(current_user, @study.firecloud_project)
+      @submission = client.create_workspace_submission(@study.firecloud_workspace, @submission_config)
+      @submissions = client.get_workspace_submissions(@study.firecloud_workspace)
+    rescue => e
+      logger.error "#{Time.now}: unable to submit workflow #{workflow_name} for sample #{@sample} in #{@study.firecloud_workspace} due to: #{e.message}"
+      @alert = "We were unable to submit your workflow due to an error: #{e.message}"
+      render action: :notice
+    end
+  end
+
+  # get a submission workflow object as JSON
   def get_submission_workflow
-    if @study.can_compute?(current_user)
-      begin
-        submission = Study.firecloud_client.get_workspace_submission(@study.firecloud_workspace, params[:submission_id])
-        workflow_id = submission['workflows'].first['workflowId']
-        workflow = Study.firecloud_client.get_workspace_submission_workflow(@study.firecloud_workspace, params[:submission_id], workflow_id)
-        error_messages = workflow['failures'].map {|failure| failure['causedBy'].map {|f| f['message']}}.flatten
-        @alert = "Submission #{params[:submission_id]} failed with the following errors:<br /><br />#{error_messages.join('<br />')}"
-        render action: :notice
-      end
-    else
-      @alert = 'You do not have permission to perform that action'
+    begin
+      submission = Study.firecloud_client.get_workspace_submission(@study.firecloud_workspace, params[:submission_id])
+      render json: submission.to_json
+    rescue => e
+      logger.error "#{Time.now}: unable to load workspace submission #{params[:submission_id]} in #{@study.firecloud_workspace} due to: #{e.message}"
+      render js: "alert('We were unable to load the requested submission due to an error: #{e.message}')"
+    end
+  end
+
+  # abort a pending workflow submission
+  def abort_submission_workflow
+    @submission_id = params[:submission_id]
+    begin
+      Study.firecloud_client.abort_workspace_submission(@study.firecloud_workspace, @submission_id)
+      @notice = "Submission #{@submission_id} was successfully aborted."
+      render action: :notice
+    rescue => e
+      @alert = "Unable to abort submission #{@submission_id} due to an error: #{e.message}"
       render action: :notice
     end
   end
 
   # get errors for a failed submission
-  def get_workflow_errors
+  def get_submission_errors
+    begin
+      workflow_ids = params[:workflow_ids].split(',')
+      errors = []
+      workflow_ids.each do |workflow_id|
+        workflow = Study.firecloud_client.get_workspace_submission_workflow(@study.firecloud_workspace, params[:submission_id], workflow_id)
+        # failure messages are buried deeply within the workflow object, so we need to go through each to find them
+        workflow['failures'].each do |workflow_failure|
+          errors << workflow_failure['message']
+          # sometimes there are extra errors nested below...
+          if !workflow_failure['causedBy'].empty?
+            workflow_failure['causedBy'].each do |failure|
+              errors << failure['message']
+            end
+          end
+        end
+      end
+      @error_message = errors.join("<br />")
+    rescue => e
+      @alert = "Unable to retrieve submission #{@submission_id} error messages due to: #{e.message}"
+      render action: :notice
+    end
+  end
 
+  # get outputs from a requested submission
+  def get_submission_outputs
+    begin
+      outputs = Study.firecloud_client.get_workspace_submission_outputs(@study.firecloud_workspace, params[:submission_id], params[:workflow_id])
+      render json: outputs.to_json
+    rescue => e
+      @alert = "Unable to retrieve submission #{@submission_id} outputs due to: #{e.message}"
+      render action: :notice
+    end
   end
 
   ###
@@ -887,6 +942,11 @@ class SiteController < ApplicationController
     params.require(:user_annotation).permit(:_id, :name, :study_id, :user_id, :cluster_group_id, :subsample_threshold, :loaded_annotation, :subsample_annotation, user_data_arrays_attributes: [:name, :values])
   end
 
+  # filter out unneeded workflow submission parameters
+  def workflow_submission_params
+    params.require(:workflow).permit(:identifier, :samples => [])
+  end
+
   # make sure user has view permissions for selected study
   def check_view_permissions
     unless @study.public?
@@ -903,10 +963,11 @@ class SiteController < ApplicationController
   # check compute permissions for study
   def check_compute_permissions
     if !user_signed_in? || !@study.can_compute?(current_user)
-      alert ='You do not have permission to perform that action.'
+      @alert ='You do not have permission to perform that action.'
       respond_to do |format|
-        format.js {render js: "alert('#{alert}')" and return}
-        format.html {redirect_to site_path, alert: alert and return}
+        format.js {render action: :notice}
+        format.html {redirect_to site_path, alert: @alert and return}
+        format.json {render json: []}
       end
     end
   end

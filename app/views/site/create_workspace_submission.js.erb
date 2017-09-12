@@ -1,0 +1,10 @@
+closeModalSpinner('#generic-modal-spinner', '#generic-modal', function () {
+    $('#generic-update-target').html("<%= escape_javascript(render partial: '/layouts/generic_update_modal') %>");
+    $('#generic-update-modal-title').html("Submission <%= params[:submission_id] %> has been successfully created.");
+    $('#generic-update-modal-body').html("<%= escape_javascript(@submission.to_json) %>");
+    $("#generic-update-modal").modal("show");
+    $.ajax({
+        url: '<%= get_workspace_submissions_path(study_name: @study.url_safe_name) %>',
+        dataType: 'script'
+    });
+});

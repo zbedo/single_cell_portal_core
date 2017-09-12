@@ -455,6 +455,17 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		process_firecloud_request(:get, path)
 	end
 
+	# create a workflow submission
+	#
+	# param: workspace_name (string) => name of requested workspace
+	# param: submission (hash) => hash of submission parameters
+	#
+	# return: array of workflow submissions
+	def create_workspace_submission(workspace_name, submission)
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/submissions"
+		process_firecloud_request(:post, path, submission.to_json)
+	end
+
 	# get a single workflow submission
 	#
 	# param: workspace_name (string) => name of requested workspace
@@ -464,6 +475,17 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	def get_workspace_submission(workspace_name, submission_id)
 		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/submissions/#{submission_id}"
 		process_firecloud_request(:get, path)
+	end
+
+	# abort a workflow submission
+	#
+	# param: workspace_name (string) => name of requested workspace
+	# param: submission_id (integer) => ID of workflow submission
+	#
+	# return: array of workflow submissions
+	def abort_workspace_submission(workspace_name, submission_id)
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/submissions/#{submission_id}"
+		process_firecloud_request(:delete, path)
 	end
 
 	# get call-level metadata from a single workflow submission workflow instance
@@ -490,38 +512,6 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		process_firecloud_request(:get, path)
 	end
 
-	# create a workflow submission
-	#
-	# param: workspace_name (string) => name of requested workspace
-	# param: submission (hash) => hash of submission parameters
-	#
-	# return: array of workflow submissions
-	def create_workspace_submission(workspace_name, submission)
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/submissions"
-		process_firecloud_request(:post, path, submission.to_json)
-	end
-
-	# monitor a workflow submission status
-	#
-	# param: workspace_name (string) => name of requested workspace
-	# param: submission_id (integer) => ID of workflow submission
-	#
-	# return: array of workflow submissions
-	def monitor_workspace_submission(workspace_name, submission_id)
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/submissions/#{submission_id}"
-		process_firecloud_request(:get, path)
-	end
-
-	# abort a workflow submission
-	#
-	# param: workspace_name (string) => name of requested workspace
-	# param: submission_id (integer) => ID of workflow submission
-	#
-	# return: array of workflow submissions
-	def abort_workspace_submission(workspace_name, submission_id)
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/submissions/#{submission_id}"
-		process_firecloud_request(:delete, path)
-	end
 	##
 	## METADATA ENTITY METHODS
 	##

@@ -505,24 +505,28 @@ class UserAnnotation
 
   # check if a given use can edit this annotation
   def can_edit?(user)
-    self.admins.include?(user.email)
+    user.nil? ? false : self.admins.include?(user.email)
   end
 
   # check if a given user can view annotation by share
   def can_view?(user)
-    self.can_edit?(user) || self.user_annotation_shares.can_view.include?(user.email)
+    user.nil? ? false : (self.can_edit?(user) || self.user_annotation_shares.can_view.include?(user.email))
   end
 
   # check if user can delete an annotation - only owners can
   def can_delete?(user)
-    if self.user_id == user.id || user.admin?
-      true
+    if user.nil?
+      false
     else
-      share = self.user_annotation_shares.detect {|s| s.email == user.email}
-      if !share.nil? && share.permission == 'Owner'
+      if self.user_id == user.id || user.admin?
         true
       else
-        false
+        share = self.user_annotation_shares.detect {|s| s.email == user.email}
+        if !share.nil? && share.permission == 'Owner'
+          true
+        else
+          false
+        end
       end
     end
   end

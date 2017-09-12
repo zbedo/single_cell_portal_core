@@ -159,6 +159,7 @@ class Study
   field :url_safe_name, type: String
   field :description, type: String
   field :firecloud_workspace, type: String
+  field :firecloud_project, type: String, default: FireCloudClient::PORTAL_NAMESPACE
   field :bucket_id, type: String
   field :data_dir, type: String
   field :public, type: Boolean, default: true
