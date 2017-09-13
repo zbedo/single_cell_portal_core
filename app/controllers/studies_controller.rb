@@ -93,6 +93,9 @@ class StudiesController < ApplicationController
     @unsynced_directories = @study.directory_listings.unsynced
     @permissions_changed = []
 
+    # get a list of workspace submissions so we know what directories to ignore
+    @submission_ids = Study.firecloud_client.get_workspace_submissions(@study.firecloud_workspace).map {|s| s['submissionId']}
+
     # first sync permissions if necessary
     begin
       portal_permissions = @study.local_acl
@@ -924,18 +927,23 @@ class StudiesController < ApplicationController
     # first mark any files that we already know are study files that haven't changed (can tell by generation tag)
     files_to_remove = []
     files.each do |file|
-      directory_name = DirectoryListing.get_folder_name(file.name)
-      found_file = {'name' => file.name, 'size' => file.size, 'generation' => file.generation}
-      # don't add directories to files_by_dir
-      unless file.name.end_with?('/')
-        # add to list of discovered files
-        @files_by_dir[directory_name] ||= []
-        @files_by_dir[directory_name] << found_file
-      end
-      found_study_file = @study_files.detect {|f| f.generation == file.generation }
-      if found_study_file
-        @synced_study_files << found_study_file
+      # first, check if file is in a submission directory, and if so mark it for removal from list of files to sync
+      if @submission_ids.include?(file.name.split('/').first)
         files_to_remove << file.generation
+      else
+        directory_name = DirectoryListing.get_folder_name(file.name)
+        found_file = {'name' => file.name, 'size' => file.size, 'generation' => file.generation}
+        # don't add directories to files_by_dir
+        unless file.name.end_with?('/')
+          # add to list of discovered files
+          @files_by_dir[directory_name] ||= []
+          @files_by_dir[directory_name] << found_file
+        end
+        found_study_file = @study_files.detect {|f| f.generation == file.generation }
+        if found_study_file
+          @synced_study_files << found_study_file
+          files_to_remove << file.generation
+        end
       end
     end
 
