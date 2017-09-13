@@ -1,0 +1,5 @@
+<p class="text-center">
+  <% @outputs.each do |output| %>
+    <%= link_to output[:display_name], @study.public? ? download_file_path(study_name: @study.url_safe_name, filename: output[:file_location]) : download_private_file_path(study_name: @study.url_safe_name, filename: output[:file_location]), class: 'btn btn-primary', download: output[:display_name] %>
+  <% end %>
+</p>

@@ -131,20 +131,22 @@ module ApplicationHelper
 	# get a label for a workflow status code
 	def submission_status_label(status)
 		case status
+			when 'Queued'
+				label_class = 'default'
 			when 'Submitted'
 				label_class = 'info'
 			when 'Running'
 				label_class = 'primary'
 			when 'Done'
 				label_class = 'success'
-			when 'Failed'
-				label_class = 'danger'
 			when 'Aborting'
 				label_class = 'warning'
+			when 'Aborted'
+				label_class = 'danger'
 			else
 				label_class = 'default'
 		end
-		"<big><span class='label label-#{label_class}'>#{status}</span></big>".html_safe
+		"<span class='label label-#{label_class}'>#{status}</span>".html_safe
 	end
 
 	# get a label for a workflow status code
@@ -156,21 +158,21 @@ module ApplicationHelper
 					label_class = 'info'
 				when 'Running'
 					label_class = 'primary'
-				when 'Completed'
+				when 'Succeeded'
 					label_class = 'success'
 				when 'Failed'
 					label_class = 'danger'
 				else
 					label_class = 'default'
 			end
-			labels << "<big><span class='label label-#{label_class}'>#{status}</span></big>"
+			labels << "<span class='label label-#{label_class}'>#{status}</span>"
 		end
 		labels.join("&nbsp;").html_safe
 	end
 
 	# get a UTC timestamp in local time, formatted all purty-like
 	def local_timestamp(utc_time)
-		Time.zone.parse(utc_time).strftime("%F %r")
+		Time.zone.parse(utc_time).strftime("%F %R")
 	end
 
 	# get actions links for a workflow submission
@@ -178,7 +180,7 @@ module ApplicationHelper
 		if %w(Queued Submitted Running).include?(submission['status'])
 			link_to"<i class='fa fa-times'></i> Abort".html_safe, '#', class: 'btn btn-xs btn-danger abort-submission', title: 'Stop execution of this workflow', data: {toggle: 'tooltip', url: abort_submission_workflow_path(study_name: study.url_safe_name, submission_id: submission['submissionId']), id: submission['submissionId']}
 		elsif submission['status'] == 'Done' && !submission['workflowStatuses'].keys.include?('Failed')
-			link_to "<i class='fa fa-files-o'></i> Outputs".html_safe, '#', class: 'btn btn-xs btn-primary get-submission-outputs', title: 'View outputs from this run', data: {toggle: 'tooltip', id: submission['submissionId']}
+			link_to "<i class='fa fa-files-o'></i> Outputs".html_safe, '#', class: 'btn btn-xs btn-primary get-submission-outputs', title: 'View outputs from this run', data: {toggle: 'tooltip', url: get_submission_outputs_path(study_name: study.url_safe_name, submission_id: submission['submissionId']), id: submission['submissionId']}
 		else
 			link_to "<i class='fa fa-exclamation-triangle'></i> Show Errors".html_safe, '#', class: 'btn btn-xs btn-danger get-submission-errors', title: 'View errors for this run', data: {toggle: 'tooltip', url: get_submission_workflow_path(study_name: study.url_safe_name, submission_id: submission['submissionId'])}
 		end

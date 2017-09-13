@@ -87,6 +87,7 @@ Rails.application.routes.draw do
 		post 'study/:study_name/submissions', to: 'site#create_workspace_submission', as: :create_workspace_submission
 		get 'study/:study_name/submissions/:submission_id', to: 'site#get_submission_workflow', as: :get_submission_workflow
 		delete 'study/:study_name/submissions/:submission_id', to: 'site#abort_submission_workflow', as: :abort_submission_workflow
+		get 'study/:study_name/submissions/:submission_id/outputs', to: 'site#get_submission_outputs', as: :get_submission_outputs
 		get 'study/:study_name/submissions/:submission_id/errors', to: 'site#get_submission_errors', as: :get_submission_errors
 		post 'study/:study_name/workspace_samples', to: 'site#update_workspace_samples', as: :update_workspace_samples
 		post 'study/:study_name/delete_workspace_samples', to: 'site#delete_workspace_samples', as: :delete_workspace_samples

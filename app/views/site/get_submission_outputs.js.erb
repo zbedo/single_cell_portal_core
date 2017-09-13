@@ -1,0 +1,6 @@
+closeModalSpinner('#generic-modal-spinner', '#generic-modal', function () {
+    $('#generic-update-target').html("<%= escape_javascript(render partial: '/layouts/generic_update_modal') %>");
+    $('#generic-update-modal-title').html("Submission <%= params[:submission_id] %> Outputs");
+    $('#generic-update-modal-body').html("<%= escape_javascript(render partial: 'submission_outputs') %>");
+    $("#generic-update-modal").modal("show");
+});

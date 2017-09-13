@@ -679,6 +679,9 @@ class SiteController < ApplicationController
     begin
       # load workflow payload object
       @workflow_wdl = Study.firecloud_client.get_method(@workflow_namespace, @workflow_name, @workflow_snapshot, true)
+      if @workflow_wdl.is_a?(Hash)
+        @workflow_wdl = @workflow_wdl['payload']
+      end
     rescue => e
       @workflow_wdl = "We're sorry, but we could not load the requested workflow object.  Please try again later.\n\nError: #{e.message}"
       logger.error "#{Time.now}: unable to load WDL for #{@workflow_namespace}:#{@workflow_name}:#{@workflow_snapshot}; #{e.message}"
@@ -807,7 +810,8 @@ class SiteController < ApplicationController
       # submission must be done as user, so create a client with current_user and submit
       client = FireCloudClient.new(current_user, @study.firecloud_project)
       @submission = client.create_workspace_submission(@study.firecloud_workspace, @submission_config)
-      @submissions = client.get_workspace_submissions(@study.firecloud_workspace)
+      @submission_date = @submission['submissionDate']
+      @submission_id = @submission['submissionId']
     rescue => e
       logger.error "#{Time.now}: unable to submit workflow #{workflow_name} for sample #{@sample} in #{@study.firecloud_workspace} due to: #{e.message}"
       @alert = "We were unable to submit your workflow due to an error: #{e.message}"
@@ -844,13 +848,21 @@ class SiteController < ApplicationController
     begin
       workflow_ids = params[:workflow_ids].split(',')
       errors = []
+      # first check workflow messages - if there was an issue with inputs, errors could be here
+      submission = Study.firecloud_client.get_workspace_submission(@study.firecloud_workspace, params[:submission_id])
+      submission['workflows'].each do |workflow|
+        if workflow['messages'].any?
+          workflow['messages'].each {|message| errors << message}
+        end
+      end
+      # now look at each individual workflow object
       workflow_ids.each do |workflow_id|
         workflow = Study.firecloud_client.get_workspace_submission_workflow(@study.firecloud_workspace, params[:submission_id], workflow_id)
         # failure messages are buried deeply within the workflow object, so we need to go through each to find them
         workflow['failures'].each do |workflow_failure|
           errors << workflow_failure['message']
           # sometimes there are extra errors nested below...
-          if !workflow_failure['causedBy'].empty?
+          if workflow_failure['causedBy'].any?
             workflow_failure['causedBy'].each do |failure|
               errors << failure['message']
             end
@@ -867,8 +879,17 @@ class SiteController < ApplicationController
   # get outputs from a requested submission
   def get_submission_outputs
     begin
-      outputs = Study.firecloud_client.get_workspace_submission_outputs(@study.firecloud_workspace, params[:submission_id], params[:workflow_id])
-      render json: outputs.to_json
+      @outputs = []
+      submission = Study.firecloud_client.get_workspace_submission(@study.firecloud_workspace, params[:submission_id])
+      submission['workflows'].each do |workflow|
+        workflow = Study.firecloud_client.get_workspace_submission_workflow(@study.firecloud_workspace, params[:submission_id], workflow['workflowId'])
+        workflow['outputs'].each do |output, file_url|
+          display_name = file_url.split('/').last
+          file_location = file_url.gsub(/gs\:\/\/#{@study.bucket_id}\//, '')
+          output = {display_name: display_name, file_location: file_location}
+          @outputs << output
+        end
+      end
     rescue => e
       @alert = "Unable to retrieve submission #{@submission_id} outputs due to: #{e.message}"
       render action: :notice
@@ -967,7 +988,7 @@ class SiteController < ApplicationController
       respond_to do |format|
         format.js {render action: :notice}
         format.html {redirect_to site_path, alert: @alert and return}
-        format.json {render json: []}
+        format.json {head 403}
       end
     end
   end

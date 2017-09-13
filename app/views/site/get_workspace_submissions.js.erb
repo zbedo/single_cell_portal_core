@@ -37,3 +37,4 @@ $('#submissions-table tbody tr').each(function(index, tableRow) {
 console.log('submissions table update complete');
 var btn = $('#refresh-submissions-table');
 btn.button('reset');
+$('<div />').html("Submissions successfully refreshed.").dialog();
