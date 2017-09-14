@@ -156,6 +156,8 @@ module ApplicationHelper
 			case status
 				when 'Submitted'
 					label_class = 'info'
+				when 'Launching'
+					label_class = 'info'
 				when 'Running'
 					label_class = 'primary'
 				when 'Succeeded'
@@ -167,7 +169,7 @@ module ApplicationHelper
 			end
 			labels << "<span class='label label-#{label_class}'>#{status}</span>"
 		end
-		labels.join("&nbsp;").html_safe
+		labels.join("<br />").html_safe
 	end
 
 	# get a UTC timestamp in local time, formatted all purty-like
@@ -177,12 +179,24 @@ module ApplicationHelper
 
 	# get actions links for a workflow submission
 	def get_submission_actions(submission, study)
+		actions = []
+		# submission is still queued or running
 		if %w(Queued Submitted Running).include?(submission['status'])
-			link_to"<i class='fa fa-times'></i> Abort".html_safe, '#', class: 'btn btn-xs btn-danger abort-submission', title: 'Stop execution of this workflow', data: {toggle: 'tooltip', url: abort_submission_workflow_path(study_name: study.url_safe_name, submission_id: submission['submissionId']), id: submission['submissionId']}
-		elsif submission['status'] == 'Done' && !submission['workflowStatuses'].keys.include?('Failed')
-			link_to "<i class='fa fa-files-o'></i> Outputs".html_safe, '#', class: 'btn btn-xs btn-primary get-submission-outputs', title: 'View outputs from this run', data: {toggle: 'tooltip', url: get_submission_outputs_path(study_name: study.url_safe_name, submission_id: submission['submissionId']), id: submission['submissionId']}
-		else
-			link_to "<i class='fa fa-exclamation-triangle'></i> Show Errors".html_safe, '#', class: 'btn btn-xs btn-danger get-submission-errors', title: 'View errors for this run', data: {toggle: 'tooltip', url: get_submission_workflow_path(study_name: study.url_safe_name, submission_id: submission['submissionId'])}
+			actions << link_to("<i class='fa fa-times'></i> Abort".html_safe, '#', class: 'btn btn-xs btn-block btn-danger abort-submission', title: 'Stop execution of this workflow', data: {toggle: 'tooltip', url: abort_submission_workflow_path(study_name: study.url_safe_name, submission_id: submission['submissionId']), id: submission['submissionId']})
 		end
+		# submission has completed successfully
+		if submission['status'] == 'Done' && submission['workflowStatuses'].keys.include?('Succeeded')
+			actions << link_to("<i class='fa fa-files-o'></i> Download".html_safe, '#', class: 'btn btn-xs btn-block btn-primary get-submission-outputs', title: 'Download outputs from this run', data: {toggle: 'tooltip', url: get_submission_outputs_path(study_name: study.url_safe_name, submission_id: submission['submissionId']), id: submission['submissionId']})
+			actions << link_to("<i class='fa fa-refresh'></i> Sync".html_safe, '#', class: 'btn btn-xs btn-block btn-warning sync-submission-outputs', title: 'Sync outputs from this run back to study', data: {toggle: 'tooltip', url: sync_submission_outputs_study_path(id: @study.id, submission_id: submission['submissionId']), id: submission['submissionId']})
+		end
+		# submission has failed
+		if %w(Done Aborted).include?(submission['status']) && submission['workflowStatuses'].keys.include?('Failed')
+			actions << link_to("<i class='fa fa-exclamation-triangle'></i> Show Errors".html_safe, '#', class: 'btn btn-xs btn-block btn-danger get-submission-errors', title: 'View errors for this run', data: {toggle: 'tooltip', url: get_submission_workflow_path(study_name: study.url_safe_name, submission_id: submission['submissionId']), id: submission['submissionId']})
+		end
+		# delete action to always load when completed
+		if %w(Done Aborted).include?(submission['status'])
+			actions << link_to("<i class='fa fa-trash'></i> Delete Files".html_safe, '#', class: 'btn btn-xs btn-block btn-danger delete-submission-files', title: 'Remove all files from submission directory', data: {toggle: 'tooltip', url: delete_submission_files_path(study_name: study.url_safe_name, submission_id: submission['submissionId']), id: submission['submissionId']})
+		end
+		actions.join(" ").html_safe
 	end
 end

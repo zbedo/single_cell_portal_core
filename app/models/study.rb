@@ -291,15 +291,15 @@ class Study
   # check if study is still under embargo or whether given user can bypass embargo
   def embargoed?(user)
     if user.nil?
-      self.check_embargo
+      self.check_embargo?
     else
       # must not be viewable by current user & embargoed to be true
-      !self.can_view?(user) && self.check_embargo
+      !self.can_view?(user) && self.check_embargo?
     end
   end
 
   # helper method to check embargo status
-  def check_embargo
+  def check_embargo?
     self.embargo.nil? || self.embargo.blank? ? false : Date.today <= self.embargo
   end
 

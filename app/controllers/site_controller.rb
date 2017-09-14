@@ -639,35 +639,30 @@ class SiteController < ApplicationController
   # and extra fastq's that happen to be in the bucket)
   def get_fastq_files
     @fastq_files = []
-    if @study.can_compute?(current_user)
-      case params[:mode]
-        when 'workflow'
-          selected_entries = params[:selected_entries].split(',').map(&:strip)
-          selected_entries.each do |entry|
-            class_name, entry_name = entry.split('--')
-            case class_name
-              when 'directorylisting'
-                directory = @study.directory_listings.are_synced.detect {|d| d.name == entry_name}
-                populate_rows(@fastq_files, directory)
-              when 'studyfile'
-                study_file = @study.study_files.by_type('Fastq').detect {|f| f.name == entry_name}
-                @fastq_files << [
-                    study_file.upload_file_name.split('.').first,
-                    study_file.upload_file_name,
-                    '',
-                    '',
-                    ''
-                ]
-              else
-                nil # this is called when selection is cleared out
-            end
+    file_list = []
+
+    #
+    selected_entries = params[:selected_entries].split(',').map(&:strip)
+    selected_entries.each do |entry|
+      class_name, entry_name = entry.split('--')
+      case class_name
+        when 'directorylisting'
+          directory = @study.directory_listings.are_synced.detect {|d| d.name == entry_name}
+          if !directory.nil?
+            file_list += directory.files
+          end
+        when 'studyfile'
+          study_file = @study.study_files.by_type('Fastq').detect {|f| f.name == entry_name}
+          if !study_file.nil?
+            file_list << {name: study_file.upload_file_name, size: study_file.upload_file_size, generation: study_file.generation}
           end
         else
-          nil
+          nil # this is called when selection is cleared out
       end
-    else
-      nil # user doesn't have compute permission so just return an empty array
     end
+    # now that we have the complete list, populate the table with sample pairs (if present)
+    populate_rows(@fastq_files, file_list)
+
     render json: @fastq_files.to_json
   end
 
@@ -798,18 +793,28 @@ class SiteController < ApplicationController
   def create_workspace_submission
     begin
       workflow_namespace, workflow_name, workflow_snapshot = workflow_submission_params[:identifier].split('--')
+      # create a name for the configuration; will be combination of workflow name and snapshot id
+      ws_config_name = [workflow_name, workflow_snapshot].join('_')
       @sample = workflow_submission_params[:samples].keep_if {|s| !s.blank?}.first
-      @submission_config = {
-          'methodConfigurationNamespace' => workflow_namespace,
-          'methodConfigurationName' => workflow_name,
-          'entityType' => "sample",
-          'entityName' => @sample,
-          'useCallCache' => true,
-          'workflowFailureMode' => "NoNewCalls"
-      }
+
+      # check if there is a configuration in the workspace that matches the requested workflow
+      # we need a separate begin/rescue block as if the configuration isn't found we will throw a RuntimeError
+      begin
+        @submission_config = Study.firecloud_client.get_workspace_configuration(@study.firecloud_workspace, ws_config_name)
+        logger.info "#{Time.now}: found existing configuration #{ws_config_name} in #{@study.firecloud_workspace}"
+      rescue RuntimeError
+        logger.info "#{Time.now}: No existing configuration found for #{ws_config_name} in #{@study.firecloud_workspace}; copying from repository"
+        # we did not find a configuration, so we must copy the public one from the repository
+        existing_configs = Study.firecloud_client.get_configurations(namespace: workflow_namespace, name: workflow_name)
+        matching_config = existing_configs.find {|config| config['method']['name'] == workflow_name && config['method']['namespace'] == workflow_namespace && config['method']['snapshotId'] == workflow_snapshot.to_i}
+        logger.info "matching config: #{matching_config}"
+        @submission_config = Study.firecloud_client.copy_configuration_to_workspace(@study.firecloud_workspace, matching_config['namespace'], matching_config['name'], matching_config['snapshotId'], @study.firecloud_project, ws_config_name)
+        logger.info "config: #{@submission_config}"
+      end
+
       # submission must be done as user, so create a client with current_user and submit
       client = FireCloudClient.new(current_user, @study.firecloud_project)
-      @submission = client.create_workspace_submission(@study.firecloud_workspace, @submission_config)
+      @submission = client.create_workspace_submission(@study.firecloud_workspace, @submission_config['methodConfiguration']['namespace'], @submission_config['methodConfiguration']['name'], 'sample', @sample)
       @submission_date = @submission['submissionDate']
       @submission_id = @submission['submissionId']
     rescue => e
@@ -892,6 +897,19 @@ class SiteController < ApplicationController
       end
     rescue => e
       @alert = "Unable to retrieve submission #{@submission_id} outputs due to: #{e.message}"
+      render action: :notice
+    end
+  end
+
+  # delete all files from a submission
+  def delete_submission_files
+    begin
+      logger.info "#{Time.now}: queueing submission #{params[:submission]} deletion in #{@study.firecloud_workspace}"
+      submission_files = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, @study.firecloud_workspace, prefix: params[:submission_id])
+      DeleteQueueJob.new(submission_files).delay.perform
+    rescue => e
+      logger.error "#{Time.now}: unable to remove submission #{params[:submission_id]} files from #{@study.firecloud_workspace} due to: #{e.message}"
+      @alert = "Unable to delete the outputs for #{params[:submission_id]} due to the following error: #{e.message}"
       render action: :notice
     end
   end
@@ -1661,9 +1679,9 @@ class SiteController < ApplicationController
   end
 
   # update sample table with contents of sample map
-  def populate_rows(existing_list, directory)
+  def populate_rows(existing_list, file_list)
     # create hash of samples => array of reads
-    sample_map = directory.sample_read_pairings
+    sample_map = DirectoryListing.sample_read_pairings(file_list)
     sample_map.each do |sample, files|
       row = [sample]
       row += files

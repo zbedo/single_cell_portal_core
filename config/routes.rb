@@ -21,7 +21,8 @@ Rails.application.routes.draw do
 			member do
 				get 'upload', to: 'studies#initialize_study', as: :initialize
 				get 'sync', to: 'studies#sync_study', as: :sync
-        patch 'upload', to: 'studies#do_upload'
+				get 'sync/:submission_id', to: 'studies#sync_submission_outputs', as: :sync_submission_outputs
+				patch 'upload', to: 'studies#do_upload'
         get 'resume_upload', to: 'studies#resume_upload'
         patch 'update_status', to: 'studies#update_status'
         get 'reset_upload', to: 'studies#reset_upload'
@@ -87,6 +88,7 @@ Rails.application.routes.draw do
 		post 'study/:study_name/submissions', to: 'site#create_workspace_submission', as: :create_workspace_submission
 		get 'study/:study_name/submissions/:submission_id', to: 'site#get_submission_workflow', as: :get_submission_workflow
 		delete 'study/:study_name/submissions/:submission_id', to: 'site#abort_submission_workflow', as: :abort_submission_workflow
+		delete 'study/:study_name/submissions/:submission_id/outputs', to: 'site#delete_submission_files', as: :delete_submission_files
 		get 'study/:study_name/submissions/:submission_id/outputs', to: 'site#get_submission_outputs', as: :get_submission_outputs
 		get 'study/:study_name/submissions/:submission_id/errors', to: 'site#get_submission_errors', as: :get_submission_errors
 		post 'study/:study_name/workspace_samples', to: 'site#update_workspace_samples', as: :update_workspace_samples

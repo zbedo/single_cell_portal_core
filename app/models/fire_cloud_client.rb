@@ -399,6 +399,28 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		process_firecloud_request(:get, path)
 	end
 
+	# copy a FireCloud method configuration from the repository into a workspace
+	#
+	# param: workspace_name (string) => name of workspace
+	# param: config_namespace (string) => namespace of source configuration
+	# param: config_name (string) => name of source configuration
+	# param: snapshot_id (integer) => snapshot ID of source configuration
+	# param: destination_namespace (string) => namespace of destination configuration (in workspace)
+	# param: destination_name (string) => name of destination configuration (in workspace)
+	#
+	# return: configuration object
+	def copy_configuration_to_workspace(workspace_name, config_namespace, config_name, snapshot_id, destination_namespace, destination_name)
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/method_configs/copyFromMethodRepo"
+		payload = {
+				configurationNamespace: config_namespace,
+				configurationName: config_name,
+				configurationSnapshotId: snapshot_id,
+				destinationNamespace: destination_namespace,
+				destinationName: destination_name
+		}.to_json
+		process_firecloud_request(:post, path, payload)
+	end
+
   # create a method configuration template from a method
   #
 	# param: method_namespace (string) => namespace of method
@@ -458,12 +480,23 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	# create a workflow submission
 	#
 	# param: workspace_name (string) => name of requested workspace
-	# param: submission (hash) => hash of submission parameters
+	# param: config_namespace (string) => namespace of requested configuration
+	# param: config_name (string) => name of requested configuration
+	# param: entity_type (string) => type of workspace entity (e.g. sample, participant, etc)
+	# param: entity_name (string) => name of workspace entity
 	#
-	# return: array of workflow submissions
-	def create_workspace_submission(workspace_name, submission)
+	# return: Hash of workflow submission details
+	def create_workspace_submission(workspace_name, config_namespace, config_name, entity_type, entity_name)
 		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/submissions"
-		process_firecloud_request(:post, path, submission.to_json)
+		submission = {
+				methodConfigurationNamespace: config_namespace,
+				methodConfigurationName: config_name,
+				entityType: entity_type,
+				entityName: entity_name,
+				useCallCache: true,
+				workflowFailureMode: 'NoNewCalls'
+		}.to_json
+		process_firecloud_request(:post, path, submission)
 	end
 
 	# get a single workflow submission
@@ -482,7 +515,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	# param: workspace_name (string) => name of requested workspace
 	# param: submission_id (integer) => ID of workflow submission
 	#
-	# return: array of workflow submissions
+	# return: boolean indication of workflow cancellation
 	def abort_workspace_submission(workspace_name, submission_id)
 		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/submissions/#{submission_id}"
 		process_firecloud_request(:delete, path)
@@ -494,7 +527,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	# param: submission_id (string) => id of requested submission
 	# param: workflow_id (string) => id of requested workflow
 	#
-	# return: array of workflow submissions
+	# return: Hash of workflow object
 	def get_workspace_submission_workflow(workspace_name, submission_id, workflow_id)
 		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/submissions/#{submission_id}/workflows/#{workflow_id}"
 		process_firecloud_request(:get, path)
@@ -506,7 +539,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	# param: submission_id (string) => id of requested submission
 	# param: workflow_id (string) => id of requested workflow
 	#
-	# return: array of workflow submissions
+	# return: array of workflow submission outputs
 	def get_workspace_submission_outputs(workspace_name, submission_id, workflow_id)
 		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/submissions/#{submission_id}/workflows/#{workflow_id}/outputs"
 		process_firecloud_request(:get, path)
@@ -685,12 +718,12 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		bucket.file filename
 	end
 
-	# add a study_file to a workspace bucket
+	# add a file to a workspace bucket
 	#
-	# param: workspace_name (string) => name of workspace
-	# param: filepath (string) => path to file
-	# param: filename (string) => name of file
-	# param: opts (hash) => extra options for create_file, see
+	# param: workspace_name (String) => name of workspace
+	# param: filepath (String) => path to file
+	# param: filename (String) => name of file
+	# param: opts (Hash) => extra options for create_file, see
 	# https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=create_file-instance
 	#
 	# return: Google::Cloud::Storage::File
@@ -699,26 +732,41 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		bucket.create_file filepath, filename, opts
 	end
 
-	# delete a study_file to a workspace bucket
+	# copy a file to a new location in a workspace bucket
 	#
-	# param: workspace_name (string) => name of workspace
-	# param: filename (string) => name of file
+	# param: workspace_name (String) => name of workspace
+	# param: filename (String) => name of target file
+	# param: destination_name (String) => destination of new file
+	# param: opts (Hash) => extra options for create_file, see
+	# https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=create_file-instance
 	#
-	# return: true on file deletion
+	# return: Google::Cloud::Storage::File
+	def copy_workspace_file(workspace_name, filename, destination_name, opts={})
+		file = self.get_workspace_file(workspace_name, filename)
+		file.copy destination_name, opts
+	end
+
+	# delete a file to a workspace bucket
+	#
+	# param: workspace_name (String) => name of workspace
+	# param: filename (String) => name of file
+	#
+	# return: Boolean indication of file deletion
 	def delete_workspace_file(workspace_name, filename)
 		file = self.get_workspace_file(workspace_name, filename)
 		begin
 			file.delete
 		rescue => e
 			logger.info("#{Time.now}: failed to delete workspace file #{filename} with error #{e.message}")
+			false
 		end
 	end
 
 	# retrieve single file in a GCP bucket of a workspace and download locally to portal (likely for parsing)
 	#
-	# param: workspace_name (string) => name of workspace
-	# param: filename (string) => name of file
-	# param: destination (string) => destination path for downloaded file
+	# param: workspace_name (String) => name of workspace
+	# param: filename (String) => name of file
+	# param: destination (String) => destination path for downloaded file
 	#
 	# return: File object
 	def download_workspace_file(workspace_name, filename, destination)
@@ -730,9 +778,9 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# generate a signed url to download a file that isn't public (set at study level)
 	#
-	# param: workspace_name (string) => name of workspace
-	# param: filename (string) => name of file
-	# param: opts (hash) => extra options for signed_url, see
+	# param: workspace_name (String) => name of workspace
+	# param: filename (String) => name of file
+	# param: opts (Hash) => extra options for signed_url, see
 	# https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/file?method=signed_url-instance
 	#
 	# return: signed URL (string)
@@ -741,40 +789,11 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		file.signed_url(opts)
 	end
 
-	# retrieve all directories in a GCP bucket of a workspace
-	# this is achieved by looking at filenames containing '/' and keeping the preceding token
-	# only first-level directories are returned
-	#
-	# param: workspace_name (string) => name of workspace
-	# param: opts (hash) => hash of optional parameters, see
-	# https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=files-instance
-	#
-	# return: array of Google::Cloud::Storage::File objects mapping to directories
-	def get_workspace_directories(workspace_name, opts={})
-		files = self.get_workspace_files(workspace_name, opts)
-		directories = []
-		files.each do |file|
-			if file.name.include?('/')
-				directories << file.name.split('/').first
-			end
-		end
-		# make sure we've looked at all files
-		while files.next?
-			files = files.next
-			files.each do |file|
-				if file.name.include?('/')
-					directories << file.name.split('/').first
-				end
-			end
-		end
-		directories.uniq
-	end
-
 	# retrieve all files in a GCP directory
 	#
-	# param: workspace_name (string) => name of workspace
-	# param: directory (string) => name of directory in bucket
-	# param: opts (hash) => hash of optional parameters, see
+	# param: workspace_name (String) => name of workspace
+	# param: directory (String) => name of directory in bucket
+	# param: opts (Hash) => hash of optional parameters, see
 	# https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=files-instance
 	#
 	# return: Google::Cloud::Storage::File::List
@@ -787,12 +806,12 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# retrieve number of files in a GCP directory
 	#
-	# param: workspace_name (string) => name of workspace
-	# param: directory (string) => name of directory in bucket
-	# param: opts (hash) => hash of optional parameters, see
+	# param: workspace_name (String) => name of workspace
+	# param: directory (String) => name of directory in bucket
+	# param: opts (Hash) => hash of optional parameters, see
 	# https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=files-instance
 	#
-	# return: integer count of files in directory (ignoring 0 size objects which may be folders)
+	# return: Integer count of files in directory (ignoring 0 size objects which may be folders)
 	def get_workspace_directory_size(workspace_name, directory, opts={})
 		# makes sure directory ends with '/', otherwise append to prevent spurious matches
 		directory += '/' unless directory.last == '/'
@@ -820,7 +839,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# check if OK response code was found
 	#
-	# param: code (integer) => integer HTTP response code
+	# param: code (Integer) => integer HTTP response code
 	#
 	# return: boolean of whether or not response is a known 'OK' response
 	def ok?(code)
@@ -829,7 +848,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
   # merge hash of options into single URL query string
   #
-	# param: opts (hash) => hash of query parameter key/value pairs
+	# param: opts (Hash) => hash of query parameter key/value pairs
   #
   # return: string of concatenated query params
   def merge_query_options(opts)
@@ -838,6 +857,11 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	end
 
   # create a map of workspace entities based on a list of names and a type
+  #
+  # param: entity_names (Array) => array of entity names
+  # param: entity_type (String) => type of entity that all names belong to
+  #
+  # return: array of key/value pairs of entityName: [name], entityType: entity_type
   def create_entity_map(entity_names, entity_type)
 		map = []
 		entity_names.each do |name|
@@ -847,6 +871,10 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	end
 
   # return a more user-friendly error message
+  #
+  # param: error (RestClient::Exception) => an RestClient error object
+  #
+  # return: String representation of complete error message, with http body if present
 	def parse_error_message(error)
 		if error.http_body.blank?
 			error.message

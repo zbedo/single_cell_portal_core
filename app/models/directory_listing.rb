@@ -79,9 +79,9 @@ class DirectoryListing
 	end
 
 	# method to return a mapping of samples and paired reads based on contents of a file list
-	def sample_read_pairings
+	def self.sample_read_pairings(files)
 		map = {}
-		self.files.each do |file|
+		files.each do |file|
 			sample = DirectoryListing.sample_name(file[:name])
 			map[sample] ||= []
 			# determine 'position' of read, i.e. 0-3 based on presence of read identifier in filename

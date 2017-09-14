@@ -30,11 +30,10 @@ $('#submissions-table tbody tr').each(function(index, tableRow) {
         "submission-" + id + "-actions"
     ];
     $(tableRow).find('td').each(function(i, cell) {
-        console.log('setting ' + id + 'cell id:' + cellIds[i]);
+        console.log('setting ' + id + ' cell id: ' + cellIds[i]);
         $(cell).attr('id', cellIds[i]);
     });
 });
 console.log('submissions table update complete');
 var btn = $('#refresh-submissions-table');
 btn.button('reset');
-$('<div />').html("Submissions successfully refreshed.").dialog();

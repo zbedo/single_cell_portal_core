@@ -41,6 +41,7 @@ class StudiesController < ApplicationController
     @directories = @study.directory_listings.are_synced
     @primary_data = @study.directory_listings.primary_data
     @other_data = @study.directory_listings.non_primary_data
+    @allow_downloads = AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
     # load study default options
     set_study_default_options
   end
@@ -850,7 +851,7 @@ class StudiesController < ApplicationController
   end
 
   def set_file_types
-    @file_types = StudyFile::STUDY_FILE_TYPES.delete_if {|f| f == 'Fastq'}
+    @file_types = StudyFile::STUDY_FILE_TYPES
   end
 
   # return upload object from study params
