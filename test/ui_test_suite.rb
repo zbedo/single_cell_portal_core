@@ -3825,12 +3825,12 @@ class UiTestSuite < Test::Unit::TestCase
 		share_permission = @driver.find_element(:class, 'share-permission')
 		share_permission.send_keys('View')
 
-		#change name
+		# change name
 		name = @driver.find_element(:id, 'user_annotation_name')
 		name.clear
 		name.send_key("user-#{$random_seed}-exp")
 
-		#update the annotation
+		# update the annotation
 		submit = @driver.find_element(:id, 'submit-button')
 		submit.click
 
@@ -3856,11 +3856,11 @@ class UiTestSuite < Test::Unit::TestCase
 		editable = element_present?(:class, "user-#{$random_seed}-exp-edit")
 		assert !editable, 'Edit button found'
 
-		#View the annotation
+		# View the annotation
 		@driver.find_element(:class, "user-#{$random_seed}-exp-show").click
 		wait_until_page_loads('view user annotation path')
 
-		#assert the plot still renders
+		# assert the plot still renders
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
 		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
@@ -3898,7 +3898,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	#check user annotation publishing
+	# check user annotation publishing
 	test 'front-end: user-annotation: publishing' do
 		puts "Test method: #{self.method_name}"
 
@@ -4074,6 +4074,100 @@ class UiTestSuite < Test::Unit::TestCase
 		accept_alert
 		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
+
+		puts "Test method: #{self.method_name} successful!"
+	end
+
+	# test creating sample entities for workflows
+	test 'front-end: workflows: import sample entities' do
+		puts "Test method: #{self.method_name}"
+
+		login_path = @base_url + '/users/sign_in'
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login($test_email)
+
+		study_page = @base_url + "/study/test-study-#{$random_seed}"
+		@driver.get study_page
+		wait_until_page_loads(study_page)
+
+		open_ui_tab('study-workflows')
+		wait_for_render(:id, 'submissions-table')
+		# select all available fastq files to create a sample entity
+		study_data_select = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_study_data'))
+		study_data_select.select_all
+		scroll_to(:bottom)
+		save_samples = @driver.find_element(:id, 'save-workspace-samples')
+		save_samples.click
+		close_modal('message_modal')
+
+		# test export button
+		export_samples = @driver.find_element(:id, 'export-sample-info')
+		export_samples.click
+		# wait for export to complete
+		sleep(3)
+		filename = 'sample_info.txt'
+		sample_info_file = File.open(File.join($download_dir, filename))
+		assert File.exist?(sample_info_file.path), 'Did not find exported sample info file'
+		file_contents = sample_info_file.readlines
+		assert file_contents.size == 2, "Sample info file is wrong size; exprected 2 lines but found #{file_contents.size}"
+		header_line = "entity:sample_id\tfastq_file_1\tfastq_file_2\tfastq_file_3\tfastq_file_4\n"
+		assert file_contents.first == header_line, "sample info header line incorrect, expected #{header_line} but found '#{file_contents.first}'"
+		sample_line = "cell_1\tcell_1_R1_001.fastq.gz\t\tcell_1_I1_001.fastq.gz\t\n"
+		assert file_contents.last == sample_line, "sample info content line incorrect, expected #{sample_line} but found '#{file_contents.last}'"
+
+		# clean up
+		sample_info_file.close
+		File.delete(File.join($download_dir, filename))
+
+		# clear samples table
+		clear_btn = @driver.find_element(:id, 'clear-sample-info')
+		clear_btn.click
+
+		# now select sample
+		study_samples = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_samples'))
+		study_samples.select_all
+		# wait for table to populate (will have a row with sorting_1 class)
+		@wait.until {@driver.find_element(:id, 'samples-table').find_element(:class, 'sorting_1').displayed?}
+
+		# assert samples loaded correctly
+		sample_table_body = @driver.find_element(:id, 'samples-table').find_element(:tag_name, 'tbody')
+		sample_rows = sample_table_body.find_elements(:tag_name, 'tr')
+		assert sample_rows.size == 1, "Did not find correct number of samples in table, expected 1 but found '#{sample_rows.size}'"
+		sample_name = sample_rows.first.find_element(:tag_name, 'td')
+		assert sample_name.text == 'cell_1', "Did not find correct sample name, expected 'cell_1' but found '#{sample_name.text}'"
+
+		puts "Test method: #{self.method_name} successful!"
+	end
+
+	# test creating & cancelling submissions of workflows
+	test 'front-end: workflows: launch and cancel submissions' do
+		puts "Test method: #{self.method_name}"
+
+		login_path = @base_url + '/users/sign_in'
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login($test_email)
+
+		study_page = @base_url + "/study/test-study-#{$random_seed}"
+		@driver.get study_page
+		wait_until_page_loads(study_page)
+
+		puts "Test method: #{self.method_name} successful!"
+	end
+
+	# test creating & cancelling submissions of workflows
+	test 'front-end: workflows: sync outputs and delete submissions' do
+		puts "Test method: #{self.method_name}"
+
+		login_path = @base_url + '/users/sign_in'
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login($test_email)
+
+		study_page = @base_url + "/study/test-study-#{$random_seed}"
+		@driver.get study_page
+		wait_until_page_loads(study_page)
 
 		puts "Test method: #{self.method_name} successful!"
 	end
