@@ -1,7 +1,7 @@
 closeModalSpinner('#generic-modal-spinner', '#generic-modal', function () {
     $('#generic-update-target').html("<%= escape_javascript(render partial: '/layouts/generic_update_modal') %>");
-    $('#generic-update-modal-title').html("<span class='text-success'>Your submission has been successfully created.</span>");
-    $('#generic-update-modal-body').html("<%= escape_javascript(render partial: 'new_submission') %>");
+    $('#generic-update-modal-title').html("<span class='text-success'>The following submissions has been successfully created:</span>");
+    $('#generic-update-modal-body').html("<%= escape_javascript(render partial: 'new_submissions') %>");
     $("#generic-update-modal").modal("show");
     $.ajax({
         url: '<%= get_workspace_submissions_path(study_name: @study.url_safe_name) %>',

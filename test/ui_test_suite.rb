@@ -40,12 +40,12 @@ require 'selenium-webdriver'
 # Tests are namespaced so that they can be run together in blocks.  For instance, to run all the tests that cover user annotations, you can pass 'user-annotation' as the pattern.
 # This will then run all test methods necessary to complete the block of tests, including creating required study entries
 #
-# To run a single test by name, pass -n 'test: [name of test]', e.g -n 'test: front-end: view: study
+# To run a single test by name, pass -n 'test: [name of test]', e.g -n 'test: front-end: view: study'
+#
+# Similarly, you can run all test but exclude some by using --ignore-name /pattern/.
 #
 # NOTE: when running this test harness, it tends to perform better on an external monitor.  Webdriver is very sensitive to elements not
-# being clickable, and the more screen area available, the better
-#
-# Lastly, these tests generate on the order of ~20 emails per complete run per account.
+# being clickable, and the more screen area available, the better.
 
 ## INITIALIZATION
 
@@ -442,7 +442,7 @@ class UiTestSuite < Test::Unit::TestCase
 	# admin backend tests of entire study creation process including negative/error tests
 	# uses example data in test directory as inputs (based off of https://github.com/broadinstitute/single_cell_portal/tree/master/demo_data)
 	# these tests run first to create test studies to use in front-end tests later
-	test 'admin: create-study: configurations: user-annotation: public' do
+	test 'admin: create-study: configurations: user-annotation: workflows: public' do
 		puts "Test method: #{self.method_name}"
 
 		# log in first
@@ -542,14 +542,26 @@ class UiTestSuite < Test::Unit::TestCase
 		next_btn = @driver.find_element(:id, 'next-btn')
 		next_btn.click
 
-		# upload fastq
+		# upload right fastq
 		wait_for_render(:class, 'initialize_primary_data_form')
 		upload_fastq = @driver.find_element(:class, 'upload-fastq')
-		upload_fastq.send_keys(@test_data_path + 'cell_1_L1.fastq.gz')
+		upload_fastq.send_keys(@test_data_path + 'cell_1_R1_001.fastq.gz')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
 		wait_for_render(:class, 'fastq-file')
+		close_modal('upload-success-modal')
+
+		# upload left fastq
+		add_fastq = @driver.find_element(:class, 'add-primary-data')
+		add_fastq.click
+		wait_for_render(:class, 'new-fastq-form')
+		new_fastq_form = @driver.find_element(class: 'new-fastq-form')
+		new_upload_fastq = new_fastq_form.find_element(:class, 'upload-fastq')
+		new_upload_fastq.send_keys(@test_data_path + 'cell_1_I1_001.fastq.gz')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = new_fastq_form.find_element(:id, 'start-file-upload')
+		upload_btn.click
 		close_modal('upload-success-modal')
 		next_btn = @driver.find_element(:id, 'next-btn')
 		next_btn.click
@@ -613,7 +625,7 @@ class UiTestSuite < Test::Unit::TestCase
 		assert metadata_count == 3, "did not find correct number of metadata objects, expected 3 but found #{metadata_count}"
 		assert cluster_annot_count == 3, "did not find correct number of cluster annotations, expected 2 but found #{cluster_annot_count}"
 		assert study_file_count == 7, "did not find correct number of study files, expected 7 but found #{study_file_count}"
-		assert primary_data_count == 1, "did not find correct number of primary data files, expected 1 but found #{primary_data_count}"
+		assert primary_data_count == 2, "did not find correct number of primary data files, expected 2 but found #{primary_data_count}"
 		assert share_count == 1, "did not find correct number of study shares, expected 1 but found #{share_count}"
 
 		puts "Test method: #{self.method_name} successful!"
@@ -734,7 +746,7 @@ class UiTestSuite < Test::Unit::TestCase
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
-		assert files.size == 8, "did not find correct number of files, expected 8 but found #{files.size}"
+		assert files.size == 9, "did not find correct number of files, expected 9 but found #{files.size}"
 		puts "Test method: #{self.method_name} successful!"
 	end
 

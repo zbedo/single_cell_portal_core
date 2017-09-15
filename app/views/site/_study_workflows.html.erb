@@ -11,6 +11,7 @@
               <th>Submitter</th>
               <th>ID</th>
               <th>Name</th>
+              <th>Sample</th>
               <th>State</th>
               <th>Status</th>
               <th>Actions</th>
@@ -23,6 +24,7 @@
                 <td id="submission-<%= submission['submissionId'] %>-user"><%= submission['submitter'] %></td>
                 <td id="submission-<%= submission['submissionId'] %>-id"><%= link_to submission['submissionId'], @study.submission_url(submission['submissionId']), class: 'submission-bucket-link', target: :_blank, data: {toggle: 'tooltip'}, title: 'View submission directory'  %></td>
                 <td id="submission-<%= submission['submissionId'] %>-name"><%= submission['methodConfigurationName'] %></td>
+                <td id="submission-<%= submission['submissionId'] %>-sample"><%= submission['submissionEntity']['entityName'] %></td>
                 <td id="submission-<%= submission['submissionId'] %>-state"><%= submission_status_label(submission['status']) %></td>
                 <td id="submission-<%= submission['submissionId'] %>-status"><%= workflow_status_labels(submission['workflowStatuses']) %></td>
                 <td class="actions">
@@ -86,15 +88,13 @@
       <div class="row">
         <div class="col-sm-12">
           <div class="well well-lg">
-            <h4 class="text-center">Selected Samples & Primary Data Files</h4>
+            <h4 class="text-center">Selected Samples for Workflow Inputs</h4>
             <div class="form-group row">
-              <div class="col-sm-3">
-                <%= f.file_field :sample_info, class: 'form-control' %>
-              </div>
-              <div class="col-sm-3">
-                <%= link_to "<i class='fa fa-upload'></i> Upload Sample & File Parings".html_safe,
-                            'javascript:;', class: 'btn btn-default', id: 'upload-sample-info',
-                            data: {toggle: 'tooltip'}, title: 'Upload a five-column tab-delimited file of sample names and 1-4 paired primary data files (per sample).' %>
+              <div class="col-sm-6 form-inline">
+                <%= f.file_field :sample_info, class: 'form-control' %>&nbsp;
+                <%= f.label :sample_info, "<i class='fa fa-upload'></i> Upload Sample & File Parings".html_safe,
+                            class: 'btn btn-default', data: {toggle: 'tooltip'}, title: 'Upload a five-column tab-delimited file of sample names and 1-4 paired primary data files (per sample).' %>
+
               </div>
               <div class="col-sm-3">
                 <%= link_to "<i class='fa fa-download'></i> Export Sample & File Parings".html_safe,
@@ -151,6 +151,7 @@
             {data: 'submission_email'},
             {data: 'submission_id'},
             {data: 'submission_workflow'},
+            {data: 'submission_sample'},
             {data: 'submission_state'},
             {data: 'submission_status'},
             {data: 'submission_actions'}
@@ -373,8 +374,7 @@
     });
 
     // upload a tab-delimited sample info file to use as inputs
-    $('#upload-sample-info').click(function () {
-        $(this).tooltip('hide');
+    $('#workflow_sample_info').change(function () {
         if (sampleInfoInput.files.length) {
             var upload = sampleInfoInput.files[0];
             reader.readAsText(upload);
@@ -423,8 +423,6 @@
             alert('You must create and select a sample in your workspace before submitting a workflow.');
             $('#workflow_samples').parent().addClass('has-error');
             return false;
-        } else if (selectedSamples.length > 1) {
-            alert('You may only submit a workflow for one sample - please select one from your list and continue.');
         } else {
             $('#generic-modal-title').html("Submitting... Please Wait");
             launchModalSpinner('#generic-modal-spinner', '#generic-modal');

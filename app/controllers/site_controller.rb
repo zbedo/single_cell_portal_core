@@ -806,7 +806,7 @@ class SiteController < ApplicationController
       workflow_namespace, workflow_name, workflow_snapshot = workflow_submission_params[:identifier].split('--')
       # create a name for the configuration; will be combination of workflow name and snapshot id
       ws_config_name = [workflow_name, workflow_snapshot].join('_')
-      @sample = workflow_submission_params[:samples].keep_if {|s| !s.blank?}.first
+      @samples = workflow_submission_params[:samples].keep_if {|s| !s.blank?}
 
       # check if there is a configuration in the workspace that matches the requested workflow
       # we need a separate begin/rescue block as if the configuration isn't found we will throw a RuntimeError
@@ -827,10 +827,11 @@ class SiteController < ApplicationController
 
       # submission must be done as user, so create a client with current_user and submit
       client = FireCloudClient.new(current_user, @study.firecloud_project)
-      @submission = client.create_workspace_submission(@study.firecloud_workspace, config_namespace, config_name, 'sample', @sample)
-      logger.info "submission: #{@submission}"
-      @submission_date = @submission['submissionDate']
-      @submission_id = @submission['submissionId']
+      @submissions = []
+      @samples.each do |sample|
+        @submissions << client.create_workspace_submission(@study.firecloud_workspace, config_namespace, config_name, 'sample', sample)
+      end
+      logger.info "submissions: #{@submissions}"
     rescue => e
       logger.error "#{Time.now}: unable to submit workflow #{workflow_name} for sample #{@sample} in #{@study.firecloud_workspace} due to: #{e.message}"
       @alert = "We were unable to submit your workflow due to an error: #{e.message}"
@@ -855,7 +856,7 @@ class SiteController < ApplicationController
     begin
       Study.firecloud_client.abort_workspace_submission(@study.firecloud_workspace, @submission_id)
       @notice = "Submission #{@submission_id} was successfully aborted."
-      
+
     rescue => e
       @alert = "Unable to abort submission #{@submission_id} due to an error: #{e.message}"
       render action: :notice
