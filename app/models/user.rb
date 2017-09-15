@@ -60,7 +60,7 @@ class User
   field :authentication_token, type: String
 
   # Google OAuth refresh token fields
-  field :refresh_token, type: String
+  field :refresh_token, type: Mongoid::EncryptedString
   field :access_token, type: Hash
 
   ## Confirmable

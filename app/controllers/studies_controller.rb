@@ -13,7 +13,7 @@ class StudiesController < ApplicationController
   ###
 
   before_action :set_study, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
-  before_action :set_file_types, only: [:sync_study, :sync_study_file, :sync_orphaned_study_file, :update_study_file_from_sync]
+  before_action :set_file_types, only: [:sync_study, :sync_submission_outputs, :sync_study_file, :sync_orphaned_study_file, :update_study_file_from_sync]
   before_filter :check_edit_permissions, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
   before_filter do
     authenticate_user!
@@ -211,6 +211,37 @@ class StudiesController < ApplicationController
     # now determine if we have study_files that have been 'orphaned' (cannot find a corresponding bucket file)
     @orphaned_study_files = @study_files - @synced_study_files
     @available_files = @unsynced_files.map {|f| {name: f.name, generation: f.generation, size: f.upload_file_size}}
+  end
+
+  # sync outputs from a specific submission
+  def sync_submission_outputs
+    @synced_study_files = @study.study_files.valid
+    @synced_directories = @study.directory_listings.to_a
+    @unsynced_files = []
+    @orphaned_study_files = []
+    @unsynced_primary_data_dirs = []
+    @unsynced_other_dirs = []
+    begin
+      submission = Study.firecloud_client.get_workspace_submission(@study.firecloud_workspace, params[:submission_id])
+      submission['workflows'].each do |workflow|
+        workflow = Study.firecloud_client.get_workspace_submission_workflow(@study.firecloud_workspace, params[:submission_id], workflow['workflowId'])
+        workflow['outputs'].each do |output, file_url|
+          file_location = file_url.gsub(/gs\:\/\/#{@study.bucket_id}\//, '')
+          # get google instance of file
+          file = Study.firecloud_client.get_workspace_file(@study.firecloud_workspace, file_location)
+          basename = file.name.split('/').last
+          # now copy the file to a new location for syncing and remove the old instance
+          new_location = "outputs_#{params[:submission_id]}/#{basename}"
+          new_file = file.copy new_location
+          unsynced_output = StudyFile.new(study_id: @study.id, name: new_file.name, upload_file_name: new_file.name, upload_content_type: new_file.content_type, upload_file_size: new_file.size, generation: new_file.generation)
+          @unsynced_files << unsynced_output
+        end
+      end
+      @available_files = @unsynced_files.map {|f| {name: f.name, generation: f.generation, size: f.upload_file_size}}
+      render action: :sync_study
+    rescue => e
+      redirect_to request.referrer, alert: "We were unable to sync the outputs from submission #{params[:submission_id]} due to the following error: #{e.message}"
+    end
   end
 
   # PATCH/PUT /studies/1

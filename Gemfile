@@ -72,3 +72,5 @@ gem 'rails-jquery-autocomplete', git: 'https://github.com/bigtunacan/rails-jquer
 gem 'naturally'
 gem 'rest-client'
 gem 'actionpack-action_caching'
+gem 'mongoid-encrypted-fields'
+gem 'gibberish'

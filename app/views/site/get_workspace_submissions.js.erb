@@ -1,4 +1,5 @@
 console.log('updating submissions table');
+$('#submissions-count').html("<%= @submissions.size %>");
 submissionsTable.clear();
 var rows = []
 <% @submissions.each do |submission| %>

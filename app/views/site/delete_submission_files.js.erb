@@ -3,4 +3,8 @@ closeModalSpinner('#generic-modal-spinner', '#generic-modal', function () {
     $('#generic-update-modal-title').html("Submission <%= params[:submission_id] %> has been deleted");
     $('#generic-update-modal-body').html("All files belonging to submission <%= params[:submission_id] %> are being removed.  Depending on the amount of files created, this may take a few minutes to complete.");
     $("#generic-update-modal").modal("show");
+    $.ajax({
+        url: '<%= get_workspace_submissions_path(study_name: @study.url_safe_name) %>',
+        dataType: 'script'
+    });
 });
