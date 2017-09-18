@@ -32,11 +32,21 @@ $('#submissions-table tbody tr').each(function(index, tableRow) {
         "submission-" + id + "-status",
         "submission-" + id + "-actions"
     ];
+    var cellClasses = [
+        "submission-date",
+        "submission-user",
+        "submission-id",
+        "submission-name",
+        "submission-sample",
+        "submission-state",
+        "submission-status",
+        "submission-actions"
+    ]
     $(tableRow).find('td').each(function(i, cell) {
         console.log('setting ' + id + ' cell id: ' + cellIds[i]);
         $(cell).attr('id', cellIds[i]);
+        $(cell).addClass(cellClasses[i]);
     });
 });
 console.log('submissions table update complete');
-var btn = $('#refresh-submissions-table');
-btn.button('reset');
+$('.refresh-submissions-table').each(function() {$(this).button('reset')});

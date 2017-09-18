@@ -1,7 +1,7 @@
 <div class="row">
   <div class="col-md-12">
     <h2>Submission History <span class="badge" id="submissions-count"><%= @submissions.size %></span></h2>
-    <p class="text-center"><button type="button" id="refresh-submissions-table" class="btn btn-sm btn-default" data-loading-text="Refreshing Submissions..."><i class='fa fa-refresh'></i> Refresh Table</button></p>
+    <p class="text-center"><button type="button" id="refresh-submissions-table-top" class="btn btn-sm btn-default refresh-submissions-table" data-loading-text="Refreshing Submissions..."><i class='fa fa-refresh'></i> Refresh Table</button></p>
     <div class="table-responsive">
         <div class="well well-sm">
           <table class="table table-striped" id="submissions-table">
@@ -20,13 +20,13 @@
             <tbody>
             <% @submissions.each do |submission| %>
               <tr id="submission-<%= submission['submissionId'] %>">
-                <td id="submission-<%= submission['submissionId'] %>-date"><%= local_timestamp(submission['submissionDate']) %></td>
-                <td id="submission-<%= submission['submissionId'] %>-user"><%= submission['submitter'] %></td>
-                <td id="submission-<%= submission['submissionId'] %>-id"><%= link_to submission['submissionId'], @study.submission_url(submission['submissionId']), class: 'submission-bucket-link', target: :_blank, data: {toggle: 'tooltip'}, title: 'View submission directory'  %></td>
-                <td id="submission-<%= submission['submissionId'] %>-name"><%= submission['methodConfigurationName'] %></td>
-                <td id="submission-<%= submission['submissionId'] %>-sample"><%= submission['submissionEntity']['entityName'] %></td>
-                <td id="submission-<%= submission['submissionId'] %>-state"><%= submission_status_label(submission['status']) %></td>
-                <td id="submission-<%= submission['submissionId'] %>-status"><%= workflow_status_labels(submission['workflowStatuses']) %></td>
+                <td id="submission-<%= submission['submissionId'] %>-date" class="submission-date"><%= local_timestamp(submission['submissionDate']) %></td>
+                <td id="submission-<%= submission['submissionId'] %>-user" class="submission-user"><%= submission['submitter'] %></td>
+                <td id="submission-<%= submission['submissionId'] %>-id" class="submission-id"><%= link_to submission['submissionId'], @study.submission_url(submission['submissionId']), class: 'submission-bucket-link', target: :_blank, data: {toggle: 'tooltip'}, title: 'View submission directory'  %></td>
+                <td id="submission-<%= submission['submissionId'] %>-name" class="submission-name"><%= submission['methodConfigurationName'] %></td>
+                <td id="submission-<%= submission['submissionId'] %>-sample" class="submission-sample"><%= submission['submissionEntity']['entityName'] %></td>
+                <td id="submission-<%= submission['submissionId'] %>-state" class="submission-state"><%= submission_status_label(submission['status']) %></td>
+                <td id="submission-<%= submission['submissionId'] %>-status" class="submission-status"><%= workflow_status_labels(submission['workflowStatuses']) %></td>
                 <td class="actions">
                   <%= get_submission_actions(submission, @study) %>
                 </td>
@@ -36,7 +36,7 @@
           </table>
         </div>
       </div>
-    <p class="text-center"><button type="button" id="refresh-submissions-table" class="btn btn-sm btn-default" data-loading-text="Refreshing Submissions..."><i class='fa fa-refresh'></i> Refresh Table</button></p>
+    <p class="text-center"><button type="button" id="refresh-submissions-table-bottom" class="btn btn-sm btn-default refresh-submissions-table" data-loading-text="Refreshing Submissions..."><i class='fa fa-refresh'></i> Refresh Table</button></p>
   </div>
 </div>
 <div class="row">
@@ -403,7 +403,7 @@
         $('#export-sample-info').attr('href', 'data:text/plain;base64,' + btoa(fileContents));
     }
 
-    $('#refresh-submissions-table').click(function() {
+    $('.refresh-submissions-table').click(function() {
         $(this).button('loading');
         $.ajax({
             url: "<%= get_workspace_submissions_path(study_name: @study.url_safe_name) %>",

@@ -4153,11 +4153,63 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get study_page
 		wait_until_page_loads(study_page)
 
+		# select worfklow & sample
+		open_ui_tab('study-workflows')
+		wait_for_render(:id, 'submissions-table')
+		wdl_workdropdown = @driver.find_element(:id, 'workflow_identifier')
+		wdl_workflows = wdl_workdropdown.find_elements(:tag_name, 'option')
+		wdl_workflows.last.click
+		study_samples = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_samples'))
+		study_samples.select_all
+		# wait for table to populate (will have a row with sorting_1 class)
+		@wait.until {@driver.find_element(:id, 'samples-table').find_element(:class, 'sorting_1').displayed?}
+
+		# submit workflow
+		submit_btn = @driver.find_element(id: 'submit-workflow')
+		submit_btn.click
+		close_modal('generic-update-modal')
+
+		# abort workflow
+		scroll_to(:top)
+		abort_btn = @driver.find_element(:class, 'abort-submission')
+		abort_btn.click
+		accept_alert
+		wait_for_render(:id, 'generic-update-modal-title')
+		expected_conf = 'Submission Successfully Cancelled'
+		confirmation = @driver.find_element(:id, 'generic-update-modal-title').text
+		assert confirmation == expected_conf, "Did not find correct confirmation message, expected '#{expected_conf}' but found '#{confirmation}'"
+		close_modal('generic-update-modal')
+
+		# submit new workflow
+		submit_btn = @driver.find_element(id: 'submit-workflow')
+		submit_btn.click
+		close_modal('generic-update-modal')
+
+		# force a refresh of the table
+		scroll_to(:top)
+		refresh_btn = @driver.find_element(:id, 'refresh-submissions-table-top')
+		refresh_btn.click
+		sleep(3)
+
+		# assert there are two workflows, one aborted and one submitted
+		submissions_table = @driver.find_element(:id, 'submissions-table')
+		submissions = submissions_table.find_element(:tag_name, 'tbody').find_elements(:tag_name, 'tr')
+		assert submissions.size >= 2, "Did not find correct number of submissions, expected at least 2 but found #{submissions.size}"
+		submissions.each do |submission|
+			submission_id = submission['id']
+			submission_state = @driver.find_element(:id, "submission-#{submission_id}-state").text
+			submission_status = @driver.find_element(:id, "submission-#{submission_id}-status").text
+			if %w(Aborting Aborted).include?(submission_state)
+				assert %w(Queued Aborted).include?(submission_status), "Found incorrect submissions status for aborted submission #{submission_id}: #{submission_status}"
+			else
+				assert %w(Queued Submitted Launching Running Succeeded).include?(submission_status), "Found incorrect submissions status for regular submission #{submission_id}: #{submission_status}"
+			end
+		end
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	# test creating & cancelling submissions of workflows
-	test 'front-end: workflows: sync outputs and delete submissions' do
+	# test syncing outputs from submission
+	test 'front-end: workflows: sync outputs' do
 		puts "Test method: #{self.method_name}"
 
 		login_path = @base_url + '/users/sign_in'
@@ -4168,6 +4220,96 @@ class UiTestSuite < Test::Unit::TestCase
 		study_page = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get study_page
 		wait_until_page_loads(study_page)
+		open_ui_tab('study-workflows')
+		wait_for_render(:id, 'submissions-table')
+
+		# make sure submission has completed
+		submissions_table = @driver.find_element(:id, 'submissions-table')
+		submissions = submissions_table.find_element(:tag_name, 'tbody').find_elements(:tag_name, 'tr')
+		completed_submission = submissions.find {|sub|
+			sub.find_element(:class, "submission-state").text == 'Done' &&
+			sub.find_element(:class, "submission-status").text == 'Succeeded'
+		}
+		i = 1
+		while completed_submission.nil?
+			puts "no completed submissions, refresh try ##{i}"
+			refresh_btn = @driver.find_element(:id, 'refresh-submissions-table-top')
+			refresh_btn.click
+			sleep 5
+			submissions_table = @driver.find_element(:id, 'submissions-table')
+			submissions = submissions_table.find_element(:tag_name, 'tbody').find_elements(:tag_name, 'tr')
+			completed_submission = submissions.find {|sub|
+				sub.find_element(:class, "submission-state").text == 'Done' &&
+						sub.find_element(:class, "submission-status").text == 'Succeeded'
+			}
+			i += 1
+		end
+
+		# download an output file
+		outputs_btn = completed_submission.find_element(:class, 'get-submission-outputs')
+		outputs_btn.click
+		wait_for_render(:class, 'submission-output')
+		output_download = @driver.find_element(:class, 'submission-output')
+		filename = output_download['download']
+		output_download.click
+		# give the app a few seconds to initiate download request
+		sleep(5)
+		output_file = File.open(File.join($download_dir, filename))
+		assert File.exist?(output_file.path), 'Did not find downloaded submission output file'
+		File.delete(File.join($download_dir, filename))
+		close_modal('generic-update-modal')
+
+		# sync an output file
+		sync_btn = completed_submission.find_element(:class, 'sync-submission-outputs')
+		sync_btn.click
+		wait_for_render(:class, 'unsynced-study-file')
+		study_file_forms = @driver.find_elements(:class, 'unsynced-study-file')
+		study_file_forms.each do |form|
+			file_type = form.find_element(:id, 'study_file_file_type')
+			file_type.send_keys('Other')
+			sync_button = form.find_element(:class, 'save-study-file')
+			sync_button.click
+			close_modal('sync-notice-modal')
+		end
+		scroll_to(:bottom)
+		synced_toggle = @driver.find_element(:id, 'synced-data-panel-toggle')
+		synced_toggle.click
+		wait_for_render(:class, 'synced-study-file')
+		synced_files = @driver.find_elements(:class, 'synced-study-file')
+		filenames = synced_files.map {|form| form.find_element(:class, 'filename')[:value]}
+		assert !filenames.find {|file| file[/#{filename}/]}.nil?, "Did not find #{filename} in list of synced files: #{filenames.join(', ')}"
+
+		puts "Test method: #{self.method_name} successful!"
+	end
+
+	# delete submissions from study
+	test 'front-end: workflows: delete submissions' do
+		puts "Test method: #{self.method_name}"
+
+		login_path = @base_url + '/users/sign_in'
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login($test_email)
+
+		study_page = @base_url + "/study/test-study-#{$random_seed}"
+		@driver.get study_page
+		wait_until_page_loads(study_page)
+		open_ui_tab('study-workflows')
+		wait_for_render(:id, 'submissions-table')
+		submissions_table = @driver.find_element(:id, 'submissions-table')
+		submission_ids = submissions_table.find_element(:tag_name, 'tbody').find_elements(:tag_name, 'tr').map {|s| s['id']}.delete_if {|id| id.empty?}
+		submission_ids.each do |submission_id|
+			submission = @driver.find_element(:id, submission_id)
+			delete_btn = submission.find_element(:class, 'delete-submission-files')
+			delete_btn.click
+			accept_alert
+			close_modal('generic-update-modal')
+			# let table refresh complete
+			sleep(3)
+		end
+		empty_table = @driver.find_element(:id, 'submissions-table')
+		empty_row = empty_table.find_element(:tag_name, 'tbody').find_element(:tag_name, 'tr').find_element(:tag_name, 'td')
+		assert empty_row.text == 'No data available in table', "Did not completely remove all submissions, expected 'No data available in table' but found #{empty_row.text}"
 
 		puts "Test method: #{self.method_name} successful!"
 	end
