@@ -569,6 +569,7 @@ class UserAnnotation
       annot.destroy
       Rails.logger.info "#{Time.now} #{annot.name} successfully deleted."
     end
+    true
   end
 
   ###

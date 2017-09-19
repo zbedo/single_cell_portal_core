@@ -28,6 +28,7 @@ class UserAnnotationShare
 	PERMISSION_TYPES = %w(Edit View)
 
 	before_save					:clean_email
+  before_create				:set_study_id
 	after_create				:send_notification
 	after_update				:check_updated_permissions
 
@@ -39,7 +40,7 @@ class UserAnnotationShare
 
   # return all valid user annotations for a given user (either all shares or scoped to a specific permission)
   def self.valid_user_annotations(user, permission=nil)
-		shares = permission.nil? ? self.where(email: user.email) : self.where(email: user.email, permission: permission)
+		shares = permission.nil? ? self.where(email: user.email).to_a : self.where(email: user.email, permission: permission).to_a
 		shares.map(&:user_annotation).flatten.select {|ua| ua.valid_annotation?}
 	end
 
@@ -65,5 +66,10 @@ class UserAnnotationShare
 		if self.permission_changed?
 			SingleCellMailer.share_annotation_notification(self.user_annotation.user, self).deliver_now
 		end
+	end
+
+  # set the study id after creation
+  def set_study_id
+		self.study_id = self.user_annotation.study_id
 	end
 end

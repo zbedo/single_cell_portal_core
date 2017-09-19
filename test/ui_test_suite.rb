@@ -788,7 +788,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		@driver.get path
 		files = @driver.find_element(:id, "test-study-#{$random_seed}-study-file-count")
-		assert files.text == '7', "did not find correct number of files, expected 7 but found #{files.text}"
+		assert files.text == '8', "did not find correct number of files, expected 8 but found #{files.text}"
 
 		# verify deletion in google
 		show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
@@ -799,7 +799,7 @@ class UiTestSuite < Test::Unit::TestCase
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
-		assert files.size == 7, "did not find correct number of files, expected 7 but found #{files.size}"
+		assert files.size == 8, "did not find correct number of files, expected 8 but found #{files.size}"
 		puts "Test method: #{self.method_name} successful!"
 	end
 
@@ -1165,7 +1165,7 @@ class UiTestSuite < Test::Unit::TestCase
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
-		assert files.size == 8, "did not find correct number of files, expected 8 but found #{files.size}"
+		assert files.size == 9, "did not find correct number of files, expected 9 but found #{files.size}"
 		puts "Test method: #{self.method_name} successful!"
 	end
 
@@ -1355,7 +1355,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get studies_path
 		wait_until_page_loads(studies_path)
 		study_file_count = @driver.find_element(:id, "sync-test-#{uuid}-study-file-count").text.to_i
-		assert study_file_count == 3, "did not remove files, expected 3 but found #{study_file_count}"
+		assert study_file_count == 4, "did not remove files, expected 4 but found #{study_file_count}"
 
 		# remove share and resync
 		edit_button = @driver.find_element(:class, "sync-test-#{uuid}-edit")
@@ -3776,16 +3776,13 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# check new names and labels
 		new_names = @driver.find_elements(:class, 'annotation-name').map{|x| x.text }
-		new_labels = @driver.find_elements(:class, "user-#{$random_seed}-exp-Share").map{|x| x.text }
 
 		# assert new name saved correctly
 		assert (new_names.include? "user-#{$random_seed}-exp-Share"), "Name edit failed, expected 'user-#{$random_seed}-exp-Share' but got '#{new_names}'"
-
-		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
 
 		# View the annotation
-		@driver.find_element(:class, "user-#{$random_seed}-exp-Share-show").click
+		@driver.find_element(:class, "user-#{$random_seed}-exp-share-show").click
 		wait_until_page_loads('view user annotation path')
 
 		# assert the plot still renders
@@ -3812,7 +3809,7 @@ class UiTestSuite < Test::Unit::TestCase
 		annot_path = @base_url + '/user_annotations'
 		@driver.get annot_path
 
-		@driver.find_element(:class, "user-#{$random_seed}-exp-Share-edit").click
+		@driver.find_element(:class, "user-#{$random_seed}-exp-share-edit").click
 		wait_until_page_loads('edit user annotation path')
 
 		# click the share button
@@ -4200,7 +4197,7 @@ class UiTestSuite < Test::Unit::TestCase
 			submission_state = @driver.find_element(:id, "submission-#{submission_id}-state").text
 			submission_status = @driver.find_element(:id, "submission-#{submission_id}-status").text
 			if %w(Aborting Aborted).include?(submission_state)
-				assert %w(Queued Aborted).include?(submission_status), "Found incorrect submissions status for aborted submission #{submission_id}: #{submission_status}"
+				assert %w(Queued Submitted Aborting Aborted).include?(submission_status), "Found incorrect submissions status for aborted submission #{submission_id}: #{submission_status}"
 			else
 				assert %w(Queued Submitted Launching Running Succeeded).include?(submission_status), "Found incorrect submissions status for regular submission #{submission_id}: #{submission_status}"
 			end
@@ -4232,6 +4229,8 @@ class UiTestSuite < Test::Unit::TestCase
 		}
 		i = 1
 		while completed_submission.nil?
+			omit_if i >= 36, 'Skipping test; waited 3 minutes but no submissions complete yet.'
+
 			puts "no completed submissions, refresh try ##{i}"
 			refresh_btn = @driver.find_element(:id, 'refresh-submissions-table-top')
 			refresh_btn.click
@@ -4310,6 +4309,42 @@ class UiTestSuite < Test::Unit::TestCase
 		empty_table = @driver.find_element(:id, 'submissions-table')
 		empty_row = empty_table.find_element(:tag_name, 'tbody').find_element(:tag_name, 'tr').find_element(:tag_name, 'td')
 		assert empty_row.text == 'No data available in table', "Did not completely remove all submissions, expected 'No data available in table' but found #{empty_row.text}"
+
+		puts "Test method: #{self.method_name} successful!"
+	end
+
+	# test deleting sample entities for workflows
+	test 'front-end: workflows: delete sample entities' do
+		puts "Test method: #{self.method_name}"
+
+		login_path = @base_url + '/users/sign_in'
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login($test_email)
+
+		study_page = @base_url + "/study/test-study-#{$random_seed}"
+		@driver.get study_page
+		wait_until_page_loads(study_page)
+
+		open_ui_tab('study-workflows')
+		wait_for_render(:id, 'submissions-table')
+
+		# now select sample
+		study_samples = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_samples'))
+		study_samples.select_all
+		# wait for table to populate (will have a row with sorting_1 class)
+		@wait.until {@driver.find_element(:id, 'samples-table').find_element(:class, 'sorting_1').displayed?}
+
+		# delete samples
+		delete_btn = @driver.find_element(:id, 'delete-workspace-samples')
+		delete_btn.click
+		close_modal('message_modal')
+
+		empty_table = @driver.find_element(:id, 'samples-table')
+		empty_row = empty_table.find_element(:tag_name, 'tbody').find_element(:tag_name, 'tr').find_element(:tag_name, 'td')
+		assert empty_row.text == 'No data available in table', "Did not completely remove all samples, expected 'No data available in table' but found #{empty_row.text}"
+		samples_list = @driver.find_element(:id, 'workflow_samples')
+		assert samples_list['value'].empty?, "Did not delete workspace samples; samples list is not empty: ''#{samples_list['value']}''"
 
 		puts "Test method: #{self.method_name} successful!"
 	end

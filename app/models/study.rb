@@ -449,7 +449,12 @@ class Study
     study_file_count + directory_listing_count
   end
 
-  # return a count of the number of miscella files both uploaded and referenced via directory_listings for a study
+  # count of all files in a study, regardless of type
+  def total_file_count
+    self.study_files.non_primary_data.count + self.primary_data_file_count
+  end
+
+  # return a count of the number of miscellanous files both uploaded and referenced via directory_listings for a study
   def misc_directory_file_count
     self.directory_listings.non_primary_data.map {|d| d.files.size}.reduce(0, :+)
   end
