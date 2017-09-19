@@ -1,4 +1,11 @@
 class SingleCellMailer < ApplicationMailer
+
+  ###
+  #
+  # Mailer that contains all portal-based emails to users & admins.
+  #
+  ###
+
   default from: 'no-reply@broadinstitute.org'
 
   def notify_admin_upload_fail(study_file, error)

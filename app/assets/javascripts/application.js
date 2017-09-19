@@ -13,7 +13,6 @@
 //= require jquery2
 //= require jquery_ujs
 //= require ckeditor/init
-//= require bootstrap-sprockets
 //= require dataTables/jquery.dataTables
 //= require dataTables/bootstrap/3/jquery.dataTables.bootstrap
 //= require jquery.bootstrap.wizard
@@ -27,6 +26,7 @@
 //= require jquery-ui/widgets/sortable
 //= require jquery-ui/widgets/dialog
 //= require jquery-ui/effects/effect-highlight
+//= require bootstrap-sprockets
 //= require jquery.actual.min
 //= require autocomplete-rails
 //= require bootstrap-select.min
@@ -198,7 +198,7 @@ function enableDefaultActions() {
 
     $('.datepicker').datepicker({dateFormat: 'yy-mm-dd'});
 
-    $('[data-toggle="tooltip"]').tooltip({container: 'body'});
+    $('body').tooltip({selector: '[data-toggle="tooltip"]', container: 'body'});
     $('[data-toggle="popover"]').popover();
 
     // warns user of in progress uploads, fileUploading is set to true from fileupload().add()
@@ -256,7 +256,6 @@ function toggleSearch() {
     if ( $('#show-search-options').css('display') === 'none' ) {
         $('#show-search-options').tooltip('hide');
     }
-
 
     // trigger resizeEnd to re-render Plotly to use available space
     $(window).trigger('resize');

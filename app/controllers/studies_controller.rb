@@ -1,6 +1,19 @@
 class StudiesController < ApplicationController
+
+  ###
+  #
+  # This is the main study creation controller.  Handles CRUDing studies, uploading & parsing files, and syncing to workspaces
+  #
+  ###
+
+  ###
+  #
+  # FILTERS & SETTINGS
+  #
+  ###
+
   before_action :set_study, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
-  before_action :set_file_types, only: [:sync_study, :sync_study_file, :sync_orphaned_study_file, :update_study_file_from_sync]
+  before_action :set_file_types, only: [:sync_study, :sync_submission_outputs, :sync_study_file, :sync_orphaned_study_file, :update_study_file_from_sync]
   before_filter :check_edit_permissions, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
   before_filter do
     authenticate_user!
@@ -8,6 +21,12 @@ class StudiesController < ApplicationController
   end
   # special before_filter to make sure FireCloud is available and pre-empt any calls when down
   before_filter :check_firecloud_status, except: [:index, :do_upload, :resume_upload, :update_status, :retrieve_wizard_upload, :parse ]
+
+  ###
+  #
+  # STUDY OBJECT METHODS
+  #
+  ###
 
   # GET /studies
   # GET /studies.json
@@ -22,6 +41,7 @@ class StudiesController < ApplicationController
     @directories = @study.directory_listings.are_synced
     @primary_data = @study.directory_listings.primary_data
     @other_data = @study.directory_listings.non_primary_data
+    @allow_downloads = AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
     # load study default options
     set_study_default_options
   end
@@ -46,7 +66,6 @@ class StudiesController < ApplicationController
         format.html { redirect_to path, notice: "Your study '#{@study.name}' was successfully created." }
         format.json { render :show, status: :ok, location: @study }
       else
-        logger.info(@study.errors)
         format.html { render :new }
         format.json { render json: @study.errors, status: :unprocessable_entity }
       end
@@ -74,6 +93,9 @@ class StudiesController < ApplicationController
     @unsynced_files = []
     @unsynced_directories = @study.directory_listings.unsynced
     @permissions_changed = []
+
+    # get a list of workspace submissions so we know what directories to ignore
+    @submission_ids = Study.firecloud_client.get_workspace_submissions(@study.firecloud_workspace).map {|s| s['submissionId']}
 
     # first sync permissions if necessary
     begin
@@ -115,7 +137,7 @@ class StudiesController < ApplicationController
       end
     rescue => e
       logger.error "#{Time.now}: error syncing ACLs in workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
-      redirect_to studies_path, alert: "We were unable to sync with your workspace bucket due to an error: #{e.message}" and return
+      redirect_to studies_path, alert: "We were unable to sync with your workspace bucket due to an error: #{view_context.simple_format(e.message)}" and return
     end
 
     # begin determining sync status with study_files and primary or other data
@@ -131,7 +153,7 @@ class StudiesController < ApplicationController
       end
     rescue RuntimeError => e
       logger.error "#{Time.now}: error syncing files in workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
-      redirect_to studies_path, alert: "We were unable to sync with your workspace bucket due to an error: #{e.message}" and return
+      redirect_to studies_path, alert: "We were unable to sync with your workspace bucket due to an error: #{view_context.simple_format(e.message)}" and return
     end
 
     files_to_remove = []
@@ -189,6 +211,37 @@ class StudiesController < ApplicationController
     # now determine if we have study_files that have been 'orphaned' (cannot find a corresponding bucket file)
     @orphaned_study_files = @study_files - @synced_study_files
     @available_files = @unsynced_files.map {|f| {name: f.name, generation: f.generation, size: f.upload_file_size}}
+  end
+
+  # sync outputs from a specific submission
+  def sync_submission_outputs
+    @synced_study_files = @study.study_files.valid
+    @synced_directories = @study.directory_listings.to_a
+    @unsynced_files = []
+    @orphaned_study_files = []
+    @unsynced_primary_data_dirs = []
+    @unsynced_other_dirs = []
+    begin
+      submission = Study.firecloud_client.get_workspace_submission(@study.firecloud_workspace, params[:submission_id])
+      submission['workflows'].each do |workflow|
+        workflow = Study.firecloud_client.get_workspace_submission_workflow(@study.firecloud_workspace, params[:submission_id], workflow['workflowId'])
+        workflow['outputs'].each do |output, file_url|
+          file_location = file_url.gsub(/gs\:\/\/#{@study.bucket_id}\//, '')
+          # get google instance of file
+          file = Study.firecloud_client.get_workspace_file(@study.firecloud_workspace, file_location)
+          basename = file.name.split('/').last
+          # now copy the file to a new location for syncing and remove the old instance
+          new_location = "outputs_#{params[:submission_id]}/#{basename}"
+          new_file = file.copy new_location
+          unsynced_output = StudyFile.new(study_id: @study.id, name: new_file.name, upload_file_name: new_file.name, upload_content_type: new_file.content_type, upload_file_size: new_file.size, generation: new_file.generation)
+          @unsynced_files << unsynced_output
+        end
+      end
+      @available_files = @unsynced_files.map {|f| {name: f.name, generation: f.generation, size: f.upload_file_size}}
+      render action: :sync_study
+    rescue => e
+      redirect_to request.referrer, alert: "We were unable to sync the outputs from submission #{params[:submission_id]} due to the following error: #{e.message}"
+    end
   end
 
   # PATCH/PUT /studies/1
@@ -250,7 +303,7 @@ class StudiesController < ApplicationController
           Study.firecloud_client.delete_workspace(@study.firecloud_workspace)
         rescue RuntimeError => e
           logger.error "#{Time.now} unable to delete workspace: #{@study.firecloud_workspace}; #{e.message}"
-          redirect_to studies_path, alert: "We were unable to delete your study due to: #{e.message}.<br /><br />No files or database records have been deleted.  Please try again later" and return
+          redirect_to studies_path, alert: "We were unable to delete your study due to: #{view_context.simple_format(e.message)}.<br /><br />No files or database records have been deleted.  Please try again later" and return
         end
       end
 
@@ -277,6 +330,93 @@ class StudiesController < ApplicationController
     end
   end
 
+  ###
+  #
+  # STUDYFILE OBJECT METHODS
+  #
+  ###
+
+  # create a new study_file for requested study
+  def new_study_file
+    file_type = params[:file_type] ? params[:file_type] : 'Cluster'
+    @study_file = @study.build_study_file({file_type: file_type})
+    @study_file = @study.build_study_file({file_type: file_type})
+  end
+
+  # method to perform chunked uploading of data
+  def do_upload
+    upload = get_upload
+    filename = upload.original_filename
+    study_file = @study.study_files.valid.detect {|sf| sf.upload_file_name == filename}
+    # If no file has been uploaded or the uploaded file has a different filename,
+    # do a new upload from scratch
+    if study_file.nil?
+      # don't use helper as we're about to mass-assign params
+      study_file = @study.study_files.build
+      if study_file.update(study_file_params)
+        render json: { file: { name: study_file.errors,size: nil } } and return
+        # If the already uploaded file has the same filename, try to resume
+      else
+        study_file.errors.each do |error|
+          logger.error "#{Time.now}: upload failed due to #{error.inspect}"
+        end
+        head 422 and return
+      end
+    else
+      current_size = study_file.upload_file_size
+      content_range = request.headers['CONTENT-RANGE']
+      begin_of_chunk = content_range[/\ (.*?)-/,1].to_i # "bytes 100-999999/1973660678" will return '100'
+
+      # If the there is a mismatch between the size of the incomplete upload and the content-range in the
+      # headers, then it's the wrong chunk!
+      # In this case, start the upload from scratch
+      unless begin_of_chunk == current_size
+        render json: study_file.to_jq_upload and return
+      end
+      # Add the following chunk to the incomplete upload, converting to unix line endings
+      File.open(study_file.upload.path, "ab") do |f|
+        if study_file.upload_content_type == 'text/plain'
+          f.write(upload.read.gsub(/\r\n?/, "\n"))
+        else
+          f.write upload.read
+        end
+      end
+
+      # Update the upload_file_size attribute
+      study_file.upload_file_size = study_file.upload_file_size.nil? ? upload.size : study_file.upload_file_size + upload.size
+      study_file.save!
+
+      render json: study_file.to_jq_upload and return
+    end
+  end
+
+  # GET /courses/:id/resume_upload.json
+  def resume_upload
+    study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
+    if study_file.nil?
+      render json: { file: { name: "/uploads/default/missing.png",size: nil } } and return
+    elsif study_file.status == 'uploaded'
+      render json: {file: nil } and return
+    else
+      render json: { file: { name: study_file.upload.url, size: study_file.upload_file_size } } and return
+    end
+  end
+
+  # update a study_file's upload status to 'uploaded'
+  def update_status
+    study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
+    study_file.update!(status: params[:status])
+    head :ok
+  end
+
+  # retrieve study file by filename during initializer wizard
+  def retrieve_wizard_upload
+    @study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
+    if @study_file.nil?
+      head 404 and return
+    end
+  end
+
   # parses file in foreground to maintain UI state for immediate messaging
   def parse
     @study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
@@ -298,11 +438,43 @@ class StudiesController < ApplicationController
     end
   end
 
-  # create a new study_file for requested study
-  def new_study_file
-    file_type = params[:file_type] ? params[:file_type] : 'Cluster'
-    @study_file = @study.build_study_file({file_type: file_type})
-    @study_file = @study.build_study_file({file_type: file_type})
+  # method to download files if study is private, will create temporary signed_url after checking user quota
+  def download_private_file
+    @study = Study.find_by(url_safe_name: params[:study_name])
+    # check if user has permission in case someone is phishing
+    if current_user.nil? || !@study.can_view?(current_user)
+      redirect_to site_path, alert: 'You do not have permission to perform that action.' and return
+    elsif @study.embargoed?(current_user)
+      redirect_to site_path, alert: "You may not download any data from this study until #{@study.embargo.to_s(:long)}." and return
+    else
+      begin
+        filesize = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_workspace, params[:filename]).size
+        user_quota = current_user.daily_download_quota + filesize
+        # check against download quota that is loaded in ApplicationController.get_download_quota
+        if user_quota <= @download_quota
+          @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, params[:filename], expires: 15)
+          current_user.update(daily_download_quota: user_quota)
+        else
+          redirect_to view_study_path(@study.url_safe_name), alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
+        end
+      rescue RuntimeError => e
+        logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
+        redirect_to request.referrer, alert: "We were unable to download the file #{params[:filename]} do to an error: #{view_context.simple_format(e.message)}" and return
+      end
+      # redirect directly to file to trigger download
+      redirect_to @signed_url
+    end
+  end
+
+  # for files that don't need parsing, send directly to firecloud on upload completion
+  def send_to_firecloud
+    @study_file = StudyFile.find_by(study_id: params[:id], upload_file_name: params[:file])
+    @study.delay.send_to_firecloud(@study_file)
+    changes = ["Study file added: #{@study_file.upload_file_name}"]
+    if @study.study_shares.any?
+      SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
+    end
+    head :ok
   end
 
   # update an existing study file via upload wizard; cannot be called until file is uploaded, so there is no create
@@ -445,7 +617,7 @@ class StudiesController < ApplicationController
         end
       rescue RuntimeError => e
         logger.error "#{Time.now}: error in deleting #{@study_file.upload_file_name} from workspace: #{@study.firecloud_workspace}; #{e.message}"
-        redirect_to request.referrer, alert: "We were unable to delete #{@study_file.upload_file_name} due to an error: #{e.message}.  Please try again later."
+        redirect_to request.referrer, alert: "We were unable to delete #{@study_file.upload_file_name} due to an error: #{view_context.simple_format(e.message)}.  Please try again later."
       end
       changes = ["Study file deleted: #{@study_file.upload_file_name}"]
       if @study.study_shares.any?
@@ -605,6 +777,12 @@ class StudiesController < ApplicationController
     end
   end
 
+  ###
+  #
+  # DIRECTORYLISTING OBJECT METHODS
+  #
+  ###
+
   # synchronize a directory_listing object
   def sync_directory_listing
     @directory = DirectoryListing.find(directory_listing_params[:_id])
@@ -637,127 +815,11 @@ class StudiesController < ApplicationController
     end
   end
 
-  # method to perform chunked uploading of data
-  def do_upload
-    upload = get_upload
-    filename = upload.original_filename
-    study_file = @study.study_files.valid.detect {|sf| sf.upload_file_name == filename}
-    # If no file has been uploaded or the uploaded file has a different filename,
-    # do a new upload from scratch
-    if study_file.nil?
-      # don't use helper as we're about to mass-assign params
-      study_file = @study.study_files.build
-      if study_file.update(study_file_params)
-        render json: { file: { name: study_file.errors,size: nil } } and return
-        # If the already uploaded file has the same filename, try to resume
-      else
-        study_file.errors.each do |error|
-          logger.error "#{Time.now}: upload failed due to #{error.inspect}"
-        end
-        head 422 and return
-      end
-    else
-      current_size = study_file.upload_file_size
-      content_range = request.headers['CONTENT-RANGE']
-      begin_of_chunk = content_range[/\ (.*?)-/,1].to_i # "bytes 100-999999/1973660678" will return '100'
-
-      # If the there is a mismatch between the size of the incomplete upload and the content-range in the
-      # headers, then it's the wrong chunk!
-      # In this case, start the upload from scratch
-      unless begin_of_chunk == current_size
-        render json: study_file.to_jq_upload and return
-      end
-      # Add the following chunk to the incomplete upload, converting to unix line endings
-      File.open(study_file.upload.path, "ab") do |f|
-        if study_file.upload_content_type == 'text/plain'
-          f.write(upload.read.gsub(/\r\n?/, "\n"))
-        else
-          f.write upload.read
-        end
-      end
-
-      # Update the upload_file_size attribute
-      study_file.upload_file_size = study_file.upload_file_size.nil? ? upload.size : study_file.upload_file_size + upload.size
-      study_file.save!
-
-      render json: study_file.to_jq_upload and return
-    end
-  end
-
-  # GET /courses/:id/resume_upload.json
-  def resume_upload
-    study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
-    if study_file.nil?
-      render json: { file: { name: "/uploads/default/missing.png",size: nil } } and return
-    elsif study_file.status == 'uploaded'
-      render json: {file: nil } and return
-    else
-      render json: { file: { name: study_file.upload.url, size: study_file.upload_file_size } } and return
-    end
-  end
-
-  # update a study_file's upload status to 'uploaded'
-  def update_status
-    study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
-    study_file.update!(status: params[:status])
-    head :ok
-  end
-
-  # retrieve study file by filename during initializer wizard
-  def retrieve_wizard_upload
-    @study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
-    if @study_file.nil?
-      head 404 and return
-    end
-  end
-
-  # method to download files if study is private, will create temporary signed_url after checking user quota
-  def download_private_file
-    @study = Study.find_by(url_safe_name: params[:study_name])
-    # check if user has permission in case someone is phishing
-    if current_user.nil? || !@study.can_view?(current_user)
-      redirect_to site_path, alert: 'You do not have permission to perform that action.' and return
-    else
-      begin
-        filesize = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_workspace, params[:filename]).size
-        user_quota = current_user.daily_download_quota + filesize
-        # check against download quota that is loaded in ApplicationController.get_download_quota
-        if user_quota <= @download_quota
-          @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, params[:filename], expires: 15)
-          current_user.update(daily_download_quota: user_quota)
-        else
-          redirect_to view_study_path(@study.url_safe_name), alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
-        end
-      rescue RuntimeError => e
-        logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
-        redirect_to request.referrer, alert: "We were unable to download the file #{params[:filename]} do to an error: #{e.message}" and return
-      end
-      # redirect directly to file to trigger download
-      redirect_to @signed_url
-    end
-  end
-
-  # for files that don't need parsing, send directly to firecloud on upload completion
-  def send_to_firecloud
-    @study_file = StudyFile.find_by(study_id: params[:id], upload_file_name: params[:file])
-    @study.delay.send_to_firecloud(@study_file)
-    changes = ["Study file added: #{@study_file.upload_file_name}"]
-    if @study.study_shares.any?
-      SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
-    end
-    head :ok
-  end
-
-  # load annotations for a given study and cluster
-  def load_annotation_options
-    @default_cluster = @study.cluster_groups.detect {|cluster| cluster.name == params[:cluster]}
-    @default_cluster_annotations = {
-        'Study Wide' => @study.study_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
-    }
-    unless @default_cluster.nil?
-      @default_cluster_annotations['Cluster-based'] = @default_cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]}
-    end
-  end
+  ###
+  #
+  # STUDY DEFAULT OPTIONS METHODS
+  #
+  ###
 
   def update_default_options
     @study.default_options = default_options_params
@@ -778,7 +840,24 @@ class StudiesController < ApplicationController
     end
   end
 
+  # load annotations for a given study and cluster
+  def load_annotation_options
+    @default_cluster = @study.cluster_groups.detect {|cluster| cluster.name == params[:cluster]}
+    @default_cluster_annotations = {
+        'Study Wide' => @study.study_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
+    }
+    unless @default_cluster.nil?
+      @default_cluster_annotations['Cluster-based'] = @default_cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]}
+    end
+  end
+
   private
+
+  ###
+  #
+  # SETTERS
+  #
+  ###
 
   def set_study
     @study = Study.find(params[:id])
@@ -803,31 +882,12 @@ class StudiesController < ApplicationController
   end
 
   def set_file_types
-    @file_types = StudyFile::STUDY_FILE_TYPES.delete_if {|f| f == 'Fastq'}
+    @file_types = StudyFile::STUDY_FILE_TYPES
   end
 
   # return upload object from study params
   def get_upload
     study_file_params.to_h['upload']
-  end
-
-  def check_edit_permissions
-    if !user_signed_in? || !@study.can_edit?(current_user)
-      redirect_to studies_path, alert: 'You do not have permission to perform that action' and return
-    end
-  end
-
-  # check on FireCloud API status and respond accordingly
-  def check_firecloud_status
-    unless Study.firecloud_client.api_available?
-      if request.format.html?
-        redirect_to studies_path, alert: 'Study workspaces are temporarily unavailable, so we cannot complete your request.  Please try again later.' and return
-      elsif request.xhr?
-        render template: '/layouts/firecloud_unavailable'
-      else
-        head 503
-      end
-    end
   end
 
   # set up variables for wizard
@@ -860,23 +920,62 @@ class StudiesController < ApplicationController
     end
   end
 
+  ###
+  #
+  # PERMISSONS & STATUS CHECKS
+  #
+  ###
+
+  def check_edit_permissions
+    if !user_signed_in? || !@study.can_edit?(current_user)
+      alert = 'You do not have permission to perform that action.'
+      respond_to do |format|
+        format.js {render js: "alert('#{alert}')" and return}
+        format.html {redirect_to studies_path, alert: alert and return}
+      end
+    end
+  end
+
+  # check on FireCloud API status and respond accordingly
+  def check_firecloud_status
+    unless Study.firecloud_client.api_available?
+      alert = 'Study workspaces are temporarily unavailable, so we cannot complete your request.  Please try again later.'
+      respond_to do |format|
+        format.js {render js: "$('.modal').modal('hide'); alert('#{alert}')" and return}
+        format.html {redirect_to studies_path, alert: alert and return}
+        format.json {head 503}
+      end
+    end
+  end
+
+  ###
+  #
+  # SYNC SUB METHODS
+  #
+  ###
+
   # sub-method to iterate through list of GCP bucket files and build up necessary sync list objects
   def process_workspace_bucket_files(files)
     # first mark any files that we already know are study files that haven't changed (can tell by generation tag)
     files_to_remove = []
     files.each do |file|
-      directory_name = DirectoryListing.get_folder_name(file.name)
-      found_file = {'name' => file.name, 'size' => file.size, 'generation' => file.generation}
-      # don't add directories to files_by_dir
-      unless file.name.end_with?('/')
-        # add to list of discovered files
-        @files_by_dir[directory_name] ||= []
-        @files_by_dir[directory_name] << found_file
-      end
-      found_study_file = @study_files.detect {|f| f.generation == file.generation }
-      if found_study_file
-        @synced_study_files << found_study_file
+      # first, check if file is in a submission directory, and if so mark it for removal from list of files to sync
+      if @submission_ids.include?(file.name.split('/').first)
         files_to_remove << file.generation
+      else
+        directory_name = DirectoryListing.get_folder_name(file.name)
+        found_file = {'name' => file.name, 'size' => file.size, 'generation' => file.generation}
+        # don't add directories to files_by_dir
+        unless file.name.end_with?('/')
+          # add to list of discovered files
+          @files_by_dir[directory_name] ||= []
+          @files_by_dir[directory_name] << found_file
+        end
+        found_study_file = @study_files.detect {|f| f.generation == file.generation }
+        if found_study_file
+          @synced_study_files << found_study_file
+          files_to_remove << file.generation
+        end
       end
     end
 
@@ -894,8 +993,8 @@ class StudiesController < ApplicationController
       if @file_extension_map.has_key?(directory_name) && !@file_extension_map[directory_name][file_extension].nil? && @file_extension_map[directory_name][file_extension] >= max_size
         process_directory_listing_file(file, file_extension)
       else
-        # we are now dealing with singleton files or fastqs, so process accordingly
-        if DirectoryListing::PRIMARY_DATA_EXTENSIONS.any? {|ext| file.name.include?(ext)}
+        # we are now dealing with singleton files or fastqs, so process accordingly (making sure to ignore directories)
+        if DirectoryListing::PRIMARY_DATA_TYPES.any? {|ext| file_extension.include?(ext)} && !file.name.end_with?('/')
           # process fastq file into appropriate directory listing
           process_directory_listing_file(file, 'fastq')
         else

@@ -1,4 +1,18 @@
 class UserAnnotation
+
+  ###
+  #
+  # UserAnnotation: class holding metadata about user-defined (as opposed to study-defined) annotation objects.  Annotation
+  # values are stored in child class UserDataArray
+  #
+  ###
+
+  ###
+  #
+  # FIELD DEFINITIONS & ASSOCIATIONS
+  #
+  ###
+
   include Mongoid::Document
   field :name, type: String
   field :values, type: Array
@@ -29,6 +43,13 @@ class UserAnnotation
   accepts_nested_attributes_for :user_annotation_shares, allow_destroy: true, reject_if: proc { |attributes| attributes['email'].blank? }
 
   index({ user_id: 1, study_id: 1, cluster_group_id: 1, name: 1}, { unique: true })
+
+  ###
+  #
+  # VALIDATIONS
+  #
+  ###
+
   # must have a name and values
   validates_presence_of :name, :values
   # unique values are name per user, study and cluster
@@ -44,6 +65,12 @@ class UserAnnotation
       end
     end
   end
+
+  ###
+  #
+  # PARSERS & CREATION METHODS
+  #
+  ###
 
   # create an annotations user data arrays
   def initialize_user_data_arrays(user_data_arrays_attributes, annotation, threshold, loaded_annotation)
@@ -301,98 +328,6 @@ class UserAnnotation
     created_at
   end
 
-  # get the annotation's formatted identifier (used to uniquely identify annotation when rendering/subsampling/clearing caches)
-  def formatted_annotation_identifier
-    "#{self.id}--group--user"
-  end
-
-  # return all studies that are editable by a given user
-  def self.editable(user)
-    if user.admin?
-      self.all.select {|ua| ua.valid_annotation?}
-    else
-      annotations = self.where(user_id: user.id).to_a.select {|ua| ua.valid_annotation?}
-      shares = UserAnnotationShare.valid_user_annotations(user, 'Edit')
-      [annotations + shares].flatten.uniq
-    end
-  end
-
-  # return all annotations that are viewable by a given user
-  def self.viewable(user)
-    if user.admin?
-      self.all.select {|ua| ua.valid_annotation?}
-    else
-      annotations = self.where(user_id: user.id).to_a.select {|ua| ua.valid_annotation?}
-      shares = UserAnnotationShare.valid_user_annotations(user)
-      [annotations + shares].flatten.uniq
-    end
-  end
-
-  # return all annotations that are viewable to a given user for a given cluster
-  def self.viewable_by_cluster(user, cluster)
-    self.viewable(user).select {|ua| ua.cluster_group_id == cluster.id}
-  end
-
-  # Share Methods
-
-  # check if a given use can edit this annotation
-  def can_edit?(user)
-    self.admins.include?(user.email)
-  end
-
-  # check if a given user can view annotation by share
-  def can_view?(user)
-    self.can_edit?(user) || self.user_annotation_shares.can_view.include?(user.email)
-  end
-
-  # check if user can delete an annotation - only owners can
-  def can_delete?(user)
-    if self.user_id == user.id || user.admin?
-      true
-    else
-      share = self.user_annotation_shares.detect {|s| s.email == user.email}
-      if !share.nil? && share.permission == 'Owner'
-        true
-      else
-        false
-      end
-    end
-  end
-
-  # check if an annotation is still valid (i.e. neither it nor its parent study is queued for deletion)
-  def valid_annotation?
-    !(self.queued_for_deletion || self.study.queued_for_deletion || self.publishing)
-  end
-
-  # check if user can edit the study this annotation is mapped to (will check first if study has been deleted)
-  def can_edit_study?(user)
-    if self.study.queued_for_deletion?
-      return false
-    else
-      return self.study.can_edit?(user)
-    end
-  end
-
-  # list of emails for accounts that can edit this annotation
-  def admins
-    [self.user.email, self.user_annotation_shares.can_edit, User.where(admin: true).pluck(:email)].flatten.uniq
-  end
-
-  # cache lookup key used when clearing entries on updates/deletes
-  def cache_removal_key
-    "#{self.study.url_safe_name}.*#{self.cluster_group.name.split.join('-')}_#{self.formatted_annotation_identifier}"
-  end
-
-  # delete all queued annotation objects
-  def self.delete_queued_annotations
-    annotations = self.where(queued_for_deletion: true)
-    annotations.each do |annot|
-      Rails.logger.info "#{Time.now} deleting queued annotation #{annot.name} in study #{annot.study.name}."
-      annot.destroy
-      Rails.logger.info "#{Time.now} #{annot.name} successfully deleted."
-    end
-  end
-
   def publish_to_study(current_user)
     begin
       # load original cluster group data arrays
@@ -533,9 +468,124 @@ class UserAnnotation
     end
   end
 
+  ###
+  #
+  # ACCESS CONTROL METHODS
+  #
+  ###
+
+  # return all studies that are editable by a given user
+  def self.editable(user)
+    if user.admin?
+      self.all.select {|ua| ua.valid_annotation?}
+    else
+      annotations = self.where(user_id: user.id).to_a.select {|ua| ua.valid_annotation?}
+      shares = UserAnnotationShare.valid_user_annotations(user, 'Edit')
+      [annotations + shares].flatten.uniq
+    end
+  end
+
+  # return all annotations that are viewable by a given user
+  def self.viewable(user)
+    if user.admin?
+      self.all.select {|ua| ua.valid_annotation?}
+    else
+      annotations = self.where(user_id: user.id).to_a.select {|ua| ua.valid_annotation?}
+      shares = UserAnnotationShare.valid_user_annotations(user)
+      [annotations + shares].flatten.uniq
+    end
+  end
+
+  # return all annotations that are viewable to a given user for a given cluster
+  def self.viewable_by_cluster(user, cluster)
+    self.viewable(user).select {|ua| ua.cluster_group_id == cluster.id}
+  end
+
+  # Share Methods
+
+  # check if a given use can edit this annotation
+  def can_edit?(user)
+    user.nil? ? false : self.admins.include?(user.email)
+  end
+
+  # check if a given user can view annotation by share
+  def can_view?(user)
+    user.nil? ? false : (self.can_edit?(user) || self.user_annotation_shares.can_view.include?(user.email))
+  end
+
+  # check if user can delete an annotation - only owners can
+  def can_delete?(user)
+    if user.nil?
+      false
+    else
+      if self.user_id == user.id || user.admin?
+        true
+      else
+        share = self.user_annotation_shares.detect {|s| s.email == user.email}
+        if !share.nil? && share.permission == 'Owner'
+          true
+        else
+          false
+        end
+      end
+    end
+  end
+
+  # check if user can edit the study this annotation is mapped to (will check first if study has been deleted)
+  def can_edit_study?(user)
+    if self.study.queued_for_deletion?
+      return false
+    else
+      return self.study.can_edit?(user)
+    end
+  end
+
+  # list of emails for accounts that can edit this annotation
+  def admins
+    [self.user.email, self.user_annotation_shares.can_edit, User.where(admin: true).pluck(:email)].flatten.uniq
+  end
+
+  # check if an annotation is still valid (i.e. neither it nor its parent study is queued for deletion)
+  def valid_annotation?
+    !(self.queued_for_deletion || self.study.queued_for_deletion || self.publishing)
+  end
+
+  ###
+  #
+  # CACHE & DELETE METHODS
+  #
+  ###
+
+  # cache lookup key used when clearing entries on updates/deletes
+  def cache_removal_key
+    "#{self.study.url_safe_name}.*#{self.cluster_group.name.split.join('-')}_#{self.formatted_annotation_identifier}"
+  end
+
+  # delete all queued annotation objects
+  def self.delete_queued_annotations
+    annotations = self.where(queued_for_deletion: true)
+    annotations.each do |annot|
+      Rails.logger.info "#{Time.now} deleting queued annotation #{annot.name} in study #{annot.study.name}."
+      annot.destroy
+      Rails.logger.info "#{Time.now} #{annot.name} successfully deleted."
+    end
+    true
+  end
+
+  ###
+  #
+  # MISCELLANEOUS METHODS
+  #
+  ###
+
   # annotation name as a DOM id
   def name_as_id
     self.name.downcase.gsub(/\s/, '-')
+  end
+
+  # get the annotation's formatted identifier (used to uniquely identify annotation when rendering/subsampling/clearing caches)
+  def formatted_annotation_identifier
+    "#{self.id}--group--user"
   end
 
   private

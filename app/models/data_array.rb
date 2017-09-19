@@ -1,4 +1,11 @@
 class DataArray
+
+  ###
+  #
+  # DataArray: child class of ClusterGroup & StudyFile, stores linear arrays of data (x/y/z coordinates, or annotation values)
+  #
+  ###
+
 	include Mongoid::Document
 
 	DATA_ARRAY_TYPES = %w(coordinates annotations cells)

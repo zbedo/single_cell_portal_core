@@ -1,4 +1,11 @@
 class ExpressionScoreController < ApplicationController
+
+  ###
+  #
+  # This controller is only used for the autocomplete funcitonality in the gene search panel
+  #
+  ###
+
   before_action :set_expression_score, only: [:show]
   autocomplete :expression_score, :gene
 

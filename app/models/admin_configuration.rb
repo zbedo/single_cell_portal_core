@@ -1,4 +1,12 @@
 class AdminConfiguration
+
+  ###
+  #
+  # AdminConfiguration: a generic object that is used to hold site-wide configuration options
+  # Can only be accessed by user accounts that are configured as 'admins'
+  #
+  ###
+
   include Mongoid::Document
   field :config_type, type: String
   field :value_type, type: String

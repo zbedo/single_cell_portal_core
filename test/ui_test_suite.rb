@@ -37,12 +37,15 @@ require 'selenium-webdriver'
 #
 # Tests can be run singly or in groups by passing -n /pattern/ before the -- on the command line.  This will run any tests that match
 # the given regular expression.  You can run all 'front-end' and 'admin' tests this way (although front-end tests require the tests studies to have been created already)
-# To run a single test by name, pass -n 'test: [name of test]', e.g -n 'test: admin: create a study'
+# Tests are namespaced so that they can be run together in blocks.  For instance, to run all the tests that cover user annotations, you can pass 'user-annotation' as the pattern.
+# This will then run all test methods necessary to complete the block of tests, including creating required study entries
+#
+# To run a single test by name, pass -n 'test: [name of test]', e.g -n 'test: front-end: view: study'
+#
+# Similarly, you can run all test but exclude some by using --ignore-name /pattern/.
 #
 # NOTE: when running this test harness, it tends to perform better on an external monitor.  Webdriver is very sensitive to elements not
-# being clickable, and the more screen area available, the better
-#
-# Lastly, these tests generate on the order of ~20 emails per complete run per account.
+# being clickable, and the more screen area available, the better.
 
 ## INITIALIZATION
 
@@ -194,8 +197,18 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# method to close a bootstrap modal by id
 	def close_modal(id)
+		# sanity check in case modal has already opened and closed - if no modal opens in 10 seconds then exit and continue
+		i = 0
+		while @driver.execute_script("return OPEN_MODAL") == ''
+			if i == 10
+				puts "Exiting close_modal after 10 seconds - no modal open"
+				return true
+			else
+				sleep(1)
+				i += 1
+			end
+		end
 		# need to wait until modal is in the page and has completed opening
-		@wait.until {element_present?(:id, id)}
 		@wait.until {@driver.execute_script("return OPEN_MODAL") == id}
 		modal = @driver.find_element(:id, id)
 		close_button = modal.find_element(:class, 'close')
@@ -429,7 +442,7 @@ class UiTestSuite < Test::Unit::TestCase
 	# admin backend tests of entire study creation process including negative/error tests
 	# uses example data in test directory as inputs (based off of https://github.com/broadinstitute/single_cell_portal/tree/master/demo_data)
 	# these tests run first to create test studies to use in front-end tests later
-	test 'admin: create-study: user-annotation: public' do
+	test 'admin: create-study: configurations: user-annotation: workflows: public' do
 		puts "Test method: #{self.method_name}"
 
 		# log in first
@@ -442,7 +455,6 @@ class UiTestSuite < Test::Unit::TestCase
 		# fill out study form
 		study_form = @driver.find_element(:id, 'new_study')
 		study_form.find_element(:id, 'study_name').send_keys("Test Study #{$random_seed}")
-		study_form.find_element(:id, 'study_embargo').send_keys('2016-12-31')
 		public = study_form.find_element(:id, 'study_public')
 		public.send_keys('Yes')
 		# add a share
@@ -467,10 +479,6 @@ class UiTestSuite < Test::Unit::TestCase
 		# close success modal
 		close_modal('upload-success-modal')
 
-		scroll_to(:bottom)
-		back_btn = @driver.find_element(:id, 'prev-btn')
-		back_btn.click
-
 		# upload a second expression file
 		new_expression = @driver.find_element(:class, 'add-expression')
 		new_expression.click
@@ -482,6 +490,8 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn.click
 		# close success modal
 		close_modal('upload-success-modal')
+		next_btn = @driver.find_element(:id, 'next-btn')
+		next_btn.click
 
 		# upload metadata
 		wait_for_render(:id, 'metadata_form')
@@ -532,14 +542,26 @@ class UiTestSuite < Test::Unit::TestCase
 		next_btn = @driver.find_element(:id, 'next-btn')
 		next_btn.click
 
-		# upload fastq
+		# upload right fastq
 		wait_for_render(:class, 'initialize_primary_data_form')
 		upload_fastq = @driver.find_element(:class, 'upload-fastq')
-		upload_fastq.send_keys(@test_data_path + 'cell_1_L1.fastq.gz')
+		upload_fastq.send_keys(@test_data_path + 'cell_1_R1_001.fastq.gz')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
 		wait_for_render(:class, 'fastq-file')
+		close_modal('upload-success-modal')
+
+		# upload left fastq
+		add_fastq = @driver.find_element(:class, 'add-primary-data')
+		add_fastq.click
+		wait_for_render(:class, 'new-fastq-form')
+		new_fastq_form = @driver.find_element(class: 'new-fastq-form')
+		new_upload_fastq = new_fastq_form.find_element(:class, 'upload-fastq')
+		new_upload_fastq.send_keys(@test_data_path + 'cell_1_I1_001.fastq.gz')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = new_fastq_form.find_element(:id, 'start-file-upload')
+		upload_btn.click
 		close_modal('upload-success-modal')
 		next_btn = @driver.find_element(:id, 'next-btn')
 		next_btn.click
@@ -603,7 +625,7 @@ class UiTestSuite < Test::Unit::TestCase
 		assert metadata_count == 3, "did not find correct number of metadata objects, expected 3 but found #{metadata_count}"
 		assert cluster_annot_count == 3, "did not find correct number of cluster annotations, expected 2 but found #{cluster_annot_count}"
 		assert study_file_count == 7, "did not find correct number of study files, expected 7 but found #{study_file_count}"
-		assert primary_data_count == 1, "did not find correct number of primary data files, expected 1 but found #{primary_data_count}"
+		assert primary_data_count == 2, "did not find correct number of primary data files, expected 2 but found #{primary_data_count}"
 		assert share_count == 1, "did not find correct number of study shares, expected 1 but found #{share_count}"
 
 		puts "Test method: #{self.method_name} successful!"
@@ -623,7 +645,6 @@ class UiTestSuite < Test::Unit::TestCase
 		# fill out study form
 		study_form = @driver.find_element(:id, 'new_study')
 		study_form.find_element(:id, 'study_name').send_keys("twod Study #{$random_seed}")
-		study_form.find_element(:id, 'study_embargo').send_keys('2016-12-31')
 		public = study_form.find_element(:id, 'study_public')
 		public.send_keys('Yes')
 		# add a share
@@ -647,6 +668,8 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn.click
 		# close success modal
 		close_modal('upload-success-modal')
+		next_btn = @driver.find_element(:id, 'next-btn')
+		next_btn.click
 
 		# upload metadata
 		wait_for_render(:id, 'metadata_form')
@@ -723,7 +746,7 @@ class UiTestSuite < Test::Unit::TestCase
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
-		assert files.size == 8, "did not find correct number of files, expected 8 but found #{files.size}"
+		assert files.size == 9, "did not find correct number of files, expected 9 but found #{files.size}"
 		puts "Test method: #{self.method_name} successful!"
 	end
 
@@ -765,7 +788,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		@driver.get path
 		files = @driver.find_element(:id, "test-study-#{$random_seed}-study-file-count")
-		assert files.text == '7', "did not find correct number of files, expected 7 but found #{files.text}"
+		assert files.text == '8', "did not find correct number of files, expected 8 but found #{files.text}"
 
 		# verify deletion in google
 		show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
@@ -776,7 +799,7 @@ class UiTestSuite < Test::Unit::TestCase
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
-		assert files.size == 7, "did not find correct number of files, expected 7 but found #{files.size}"
+		assert files.size == 8, "did not find correct number of files, expected 8 but found #{files.size}"
 		puts "Test method: #{self.method_name} successful!"
 	end
 
@@ -816,6 +839,74 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
+	# test embargo functionality
+	test 'admin: create-study: embargo' do
+		puts "Test method: #{self.method_name}"
+
+		# log in first
+		path = @base_url + '/studies/new'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email)
+
+		# fill out study form
+		study_form = @driver.find_element(:id, 'new_study')
+		study_form.find_element(:id, 'study_name').send_keys("Embargo Study #{$random_seed}")
+		embargo_date = (Date.today + 1).to_s
+		study_form.find_element(:id, 'study_embargo').send_keys(embargo_date)
+		# save study
+		save_study = @driver.find_element(:id, 'save-study')
+		save_study.click
+
+		# upload expression matrix
+		close_modal('message_modal')
+		upload_expression = @driver.find_element(:id, 'upload-expression')
+		upload_expression.send_keys(@test_data_path + 'expression_matrix_example.txt')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		# close modal
+		close_modal('upload-success-modal')
+
+		# verify user can still download data
+		embargo_url = @base_url + "/study/embargo-study-#{$random_seed}"
+		@driver.get embargo_url
+		@wait.until {element_present?(:id, 'study-download')}
+		open_ui_tab('study-download')
+		download_links = @driver.find_elements(:class, 'dl-link')
+		assert download_links.size == 1, "did not find correct number of download links, expected 1 but found #{download_links.size}"
+
+		# logout
+		profile = @driver.find_element(:id, 'profile-nav')
+		profile.click
+		logout = @driver.find_element(:id, 'logout-nav')
+		logout.click
+		wait_until_page_loads(@base_url)
+		close_modal('message_modal')
+
+		# login as share user
+		login_link = @driver.find_element(:id, 'login-nav')
+		login_link.click
+		login_as_other($share_email)
+
+		# now assert download links do not load
+		@driver.get embargo_url
+		@wait.until {element_present?(:id, 'study-download')}
+		open_ui_tab('study-download')
+		embargo_links = @driver.find_elements(:class, 'embargoed-file')
+		assert embargo_links.size == 1, "did not find correct number of embargo links, expected 1 but found #{embargo_links.size}"
+
+		# make sure embargo redirect is in place
+		data_url = @base_url + "/data/public/embargo-study-#{$random_seed}/expression_matrix_example.txt"
+		@driver.get data_url
+		wait_for_render(:id, 'message_modal')
+		alert_text = @driver.find_element(:id, 'alert-content').text
+		expected_alert = "You may not download any data from this study until #{(Date.today + 1).strftime("%B %-d, %Y")}."
+		assert alert_text == expected_alert, "did not find correct alert, expected '#{expected_alert}' but found '#{alert_text}'"
+
+		puts "Test method: #{self.method_name} successful!"
+	end
+
 	# negative tests to check file parsing & validation
 	# since parsing happens in background, all messaging is handled through emails
 	# this test just makes sure that parsing fails and removed entries appropriately
@@ -845,6 +936,8 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn.click
 		# close modal
 		close_modal('upload-success-modal')
+		next_btn = @driver.find_element(:id, 'next-btn')
+		next_btn.click
 
 		# upload bad metadata assignments
 		wait_for_render(:id, 'metadata_form')
@@ -922,6 +1015,8 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn.click
 		# close success modal
 		close_modal('upload-success-modal')
+		next_btn = @driver.find_element(:id, 'next-btn')
+		next_btn.click
 
 		# upload metadata
 		wait_for_render(:id, 'metadata_form')
@@ -1070,7 +1165,7 @@ class UiTestSuite < Test::Unit::TestCase
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
-		assert files.size == 8, "did not find correct number of files, expected 8 but found #{files.size}"
+		assert files.size == 9, "did not find correct number of files, expected 9 but found #{files.size}"
 		puts "Test method: #{self.method_name} successful!"
 	end
 
@@ -1260,7 +1355,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get studies_path
 		wait_until_page_loads(studies_path)
 		study_file_count = @driver.find_element(:id, "sync-test-#{uuid}-study-file-count").text.to_i
-		assert study_file_count == 3, "did not remove files, expected 3 but found #{study_file_count}"
+		assert study_file_count == 4, "did not remove files, expected 4 but found #{study_file_count}"
 
 		# remove share and resync
 		edit_button = @driver.find_element(:class, "sync-test-#{uuid}-edit")
@@ -3681,16 +3776,13 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# check new names and labels
 		new_names = @driver.find_elements(:class, 'annotation-name').map{|x| x.text }
-		new_labels = @driver.find_elements(:class, "user-#{$random_seed}-exp-Share").map{|x| x.text }
 
 		# assert new name saved correctly
 		assert (new_names.include? "user-#{$random_seed}-exp-Share"), "Name edit failed, expected 'user-#{$random_seed}-exp-Share' but got '#{new_names}'"
-
-		wait_for_render(:id, 'message_modal')
 		close_modal('message_modal')
 
 		# View the annotation
-		@driver.find_element(:class, "user-#{$random_seed}-exp-Share-show").click
+		@driver.find_element(:class, "user-#{$random_seed}-exp-share-show").click
 		wait_until_page_loads('view user annotation path')
 
 		# assert the plot still renders
@@ -3717,7 +3809,7 @@ class UiTestSuite < Test::Unit::TestCase
 		annot_path = @base_url + '/user_annotations'
 		@driver.get annot_path
 
-		@driver.find_element(:class, "user-#{$random_seed}-exp-Share-edit").click
+		@driver.find_element(:class, "user-#{$random_seed}-exp-share-edit").click
 		wait_until_page_loads('edit user annotation path')
 
 		# click the share button
@@ -3730,12 +3822,12 @@ class UiTestSuite < Test::Unit::TestCase
 		share_permission = @driver.find_element(:class, 'share-permission')
 		share_permission.send_keys('View')
 
-		#change name
+		# change name
 		name = @driver.find_element(:id, 'user_annotation_name')
 		name.clear
 		name.send_key("user-#{$random_seed}-exp")
 
-		#update the annotation
+		# update the annotation
 		submit = @driver.find_element(:id, 'submit-button')
 		submit.click
 
@@ -3761,11 +3853,11 @@ class UiTestSuite < Test::Unit::TestCase
 		editable = element_present?(:class, "user-#{$random_seed}-exp-edit")
 		assert !editable, 'Edit button found'
 
-		#View the annotation
+		# View the annotation
 		@driver.find_element(:class, "user-#{$random_seed}-exp-show").click
 		wait_until_page_loads('view user annotation path')
 
-		#assert the plot still renders
+		# assert the plot still renders
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
 		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
@@ -3803,7 +3895,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
-	#check user annotation publishing
+	# check user annotation publishing
 	test 'front-end: user-annotation: publishing' do
 		puts "Test method: #{self.method_name}"
 
@@ -3983,6 +4075,280 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name} successful!"
 	end
 
+	# test creating sample entities for workflows
+	test 'front-end: workflows: import sample entities' do
+		puts "Test method: #{self.method_name}"
+
+		login_path = @base_url + '/users/sign_in'
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login($test_email)
+
+		study_page = @base_url + "/study/test-study-#{$random_seed}"
+		@driver.get study_page
+		wait_until_page_loads(study_page)
+
+		open_ui_tab('study-workflows')
+		wait_for_render(:id, 'submissions-table')
+		# select all available fastq files to create a sample entity
+		study_data_select = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_study_data'))
+		study_data_select.select_all
+		scroll_to(:bottom)
+		save_samples = @driver.find_element(:id, 'save-workspace-samples')
+		save_samples.click
+		close_modal('message_modal')
+
+		# test export button
+		export_samples = @driver.find_element(:id, 'export-sample-info')
+		export_samples.click
+		# wait for export to complete
+		sleep(3)
+		filename = 'sample_info.txt'
+		sample_info_file = File.open(File.join($download_dir, filename))
+		assert File.exist?(sample_info_file.path), 'Did not find exported sample info file'
+		file_contents = sample_info_file.readlines
+		assert file_contents.size == 2, "Sample info file is wrong size; exprected 2 lines but found #{file_contents.size}"
+		header_line = "entity:sample_id\tfastq_file_1\tfastq_file_2\tfastq_file_3\tfastq_file_4\n"
+		assert file_contents.first == header_line, "sample info header line incorrect, expected #{header_line} but found '#{file_contents.first}'"
+		sample_line = "cell_1\tcell_1_R1_001.fastq.gz\t\tcell_1_I1_001.fastq.gz\t\n"
+		assert file_contents.last == sample_line, "sample info content line incorrect, expected #{sample_line} but found '#{file_contents.last}'"
+
+		# clean up
+		sample_info_file.close
+		File.delete(File.join($download_dir, filename))
+
+		# clear samples table
+		clear_btn = @driver.find_element(:id, 'clear-sample-info')
+		clear_btn.click
+
+		# now select sample
+		study_samples = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_samples'))
+		study_samples.select_all
+		# wait for table to populate (will have a row with sorting_1 class)
+		@wait.until {@driver.find_element(:id, 'samples-table').find_element(:class, 'sorting_1').displayed?}
+
+		# assert samples loaded correctly
+		sample_table_body = @driver.find_element(:id, 'samples-table').find_element(:tag_name, 'tbody')
+		sample_rows = sample_table_body.find_elements(:tag_name, 'tr')
+		assert sample_rows.size == 1, "Did not find correct number of samples in table, expected 1 but found '#{sample_rows.size}'"
+		sample_name = sample_rows.first.find_element(:tag_name, 'td')
+		assert sample_name.text == 'cell_1', "Did not find correct sample name, expected 'cell_1' but found '#{sample_name.text}'"
+
+		puts "Test method: #{self.method_name} successful!"
+	end
+
+	# test creating & cancelling submissions of workflows
+	test 'front-end: workflows: launch and cancel submissions' do
+		puts "Test method: #{self.method_name}"
+
+		login_path = @base_url + '/users/sign_in'
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login($test_email)
+
+		study_page = @base_url + "/study/test-study-#{$random_seed}"
+		@driver.get study_page
+		wait_until_page_loads(study_page)
+
+		# select worfklow & sample
+		open_ui_tab('study-workflows')
+		wait_for_render(:id, 'submissions-table')
+		wdl_workdropdown = @driver.find_element(:id, 'workflow_identifier')
+		wdl_workflows = wdl_workdropdown.find_elements(:tag_name, 'option')
+		wdl_workflows.last.click
+		study_samples = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_samples'))
+		study_samples.select_all
+		# wait for table to populate (will have a row with sorting_1 class)
+		@wait.until {@driver.find_element(:id, 'samples-table').find_element(:class, 'sorting_1').displayed?}
+
+		# submit workflow
+		submit_btn = @driver.find_element(id: 'submit-workflow')
+		submit_btn.click
+		close_modal('generic-update-modal')
+
+		# abort workflow
+		scroll_to(:top)
+		abort_btn = @driver.find_element(:class, 'abort-submission')
+		abort_btn.click
+		accept_alert
+		wait_for_render(:id, 'generic-update-modal-title')
+		expected_conf = 'Submission Successfully Cancelled'
+		confirmation = @driver.find_element(:id, 'generic-update-modal-title').text
+		assert confirmation == expected_conf, "Did not find correct confirmation message, expected '#{expected_conf}' but found '#{confirmation}'"
+		close_modal('generic-update-modal')
+
+		# submit new workflow
+		submit_btn = @driver.find_element(id: 'submit-workflow')
+		submit_btn.click
+		close_modal('generic-update-modal')
+
+		# force a refresh of the table
+		scroll_to(:top)
+		refresh_btn = @driver.find_element(:id, 'refresh-submissions-table-top')
+		refresh_btn.click
+		sleep(3)
+
+		# assert there are two workflows, one aborted and one submitted
+		submissions_table = @driver.find_element(:id, 'submissions-table')
+		submissions = submissions_table.find_element(:tag_name, 'tbody').find_elements(:tag_name, 'tr')
+		assert submissions.size >= 2, "Did not find correct number of submissions, expected at least 2 but found #{submissions.size}"
+		submissions.each do |submission|
+			submission_id = submission['id']
+			submission_state = @driver.find_element(:id, "submission-#{submission_id}-state").text
+			submission_status = @driver.find_element(:id, "submission-#{submission_id}-status").text
+			if %w(Aborting Aborted).include?(submission_state)
+				assert %w(Queued Submitted Aborting Aborted).include?(submission_status), "Found incorrect submissions status for aborted submission #{submission_id}: #{submission_status}"
+			else
+				assert %w(Queued Submitted Launching Running Succeeded).include?(submission_status), "Found incorrect submissions status for regular submission #{submission_id}: #{submission_status}"
+			end
+		end
+		puts "Test method: #{self.method_name} successful!"
+	end
+
+	# test syncing outputs from submission
+	test 'front-end: workflows: sync outputs' do
+		puts "Test method: #{self.method_name}"
+
+		login_path = @base_url + '/users/sign_in'
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login($test_email)
+
+		study_page = @base_url + "/study/test-study-#{$random_seed}"
+		@driver.get study_page
+		wait_until_page_loads(study_page)
+		open_ui_tab('study-workflows')
+		wait_for_render(:id, 'submissions-table')
+
+		# make sure submission has completed
+		submissions_table = @driver.find_element(:id, 'submissions-table')
+		submissions = submissions_table.find_element(:tag_name, 'tbody').find_elements(:tag_name, 'tr')
+		completed_submission = submissions.find {|sub|
+			sub.find_element(:class, "submission-state").text == 'Done' &&
+			sub.find_element(:class, "submission-status").text == 'Succeeded'
+		}
+		i = 1
+		while completed_submission.nil?
+			omit_if i >= 36, 'Skipping test; waited 3 minutes but no submissions complete yet.'
+
+			puts "no completed submissions, refresh try ##{i}"
+			refresh_btn = @driver.find_element(:id, 'refresh-submissions-table-top')
+			refresh_btn.click
+			sleep 5
+			submissions_table = @driver.find_element(:id, 'submissions-table')
+			submissions = submissions_table.find_element(:tag_name, 'tbody').find_elements(:tag_name, 'tr')
+			completed_submission = submissions.find {|sub|
+				sub.find_element(:class, "submission-state").text == 'Done' &&
+						sub.find_element(:class, "submission-status").text == 'Succeeded'
+			}
+			i += 1
+		end
+
+		# download an output file
+		outputs_btn = completed_submission.find_element(:class, 'get-submission-outputs')
+		outputs_btn.click
+		wait_for_render(:class, 'submission-output')
+		output_download = @driver.find_element(:class, 'submission-output')
+		filename = output_download['download']
+		output_download.click
+		# give the app a few seconds to initiate download request
+		sleep(5)
+		output_file = File.open(File.join($download_dir, filename))
+		assert File.exist?(output_file.path), 'Did not find downloaded submission output file'
+		File.delete(File.join($download_dir, filename))
+		close_modal('generic-update-modal')
+
+		# sync an output file
+		sync_btn = completed_submission.find_element(:class, 'sync-submission-outputs')
+		sync_btn.click
+		wait_for_render(:class, 'unsynced-study-file')
+		study_file_forms = @driver.find_elements(:class, 'unsynced-study-file')
+		study_file_forms.each do |form|
+			file_type = form.find_element(:id, 'study_file_file_type')
+			file_type.send_keys('Other')
+			sync_button = form.find_element(:class, 'save-study-file')
+			sync_button.click
+			close_modal('sync-notice-modal')
+		end
+		scroll_to(:bottom)
+		synced_toggle = @driver.find_element(:id, 'synced-data-panel-toggle')
+		synced_toggle.click
+		wait_for_render(:class, 'synced-study-file')
+		synced_files = @driver.find_elements(:class, 'synced-study-file')
+		filenames = synced_files.map {|form| form.find_element(:class, 'filename')[:value]}
+		assert !filenames.find {|file| file[/#{filename}/]}.nil?, "Did not find #{filename} in list of synced files: #{filenames.join(', ')}"
+
+		puts "Test method: #{self.method_name} successful!"
+	end
+
+	# delete submissions from study
+	test 'front-end: workflows: delete submissions' do
+		puts "Test method: #{self.method_name}"
+
+		login_path = @base_url + '/users/sign_in'
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login($test_email)
+
+		study_page = @base_url + "/study/test-study-#{$random_seed}"
+		@driver.get study_page
+		wait_until_page_loads(study_page)
+		open_ui_tab('study-workflows')
+		wait_for_render(:id, 'submissions-table')
+		submissions_table = @driver.find_element(:id, 'submissions-table')
+		submission_ids = submissions_table.find_element(:tag_name, 'tbody').find_elements(:tag_name, 'tr').map {|s| s['id']}.delete_if {|id| id.empty?}
+		submission_ids.each do |submission_id|
+			submission = @driver.find_element(:id, submission_id)
+			delete_btn = submission.find_element(:class, 'delete-submission-files')
+			delete_btn.click
+			accept_alert
+			close_modal('generic-update-modal')
+			# let table refresh complete
+			sleep(3)
+		end
+		empty_table = @driver.find_element(:id, 'submissions-table')
+		empty_row = empty_table.find_element(:tag_name, 'tbody').find_element(:tag_name, 'tr').find_element(:tag_name, 'td')
+		assert empty_row.text == 'No data available in table', "Did not completely remove all submissions, expected 'No data available in table' but found #{empty_row.text}"
+
+		puts "Test method: #{self.method_name} successful!"
+	end
+
+	# test deleting sample entities for workflows
+	test 'front-end: workflows: delete sample entities' do
+		puts "Test method: #{self.method_name}"
+
+		login_path = @base_url + '/users/sign_in'
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login($test_email)
+
+		study_page = @base_url + "/study/test-study-#{$random_seed}"
+		@driver.get study_page
+		wait_until_page_loads(study_page)
+
+		open_ui_tab('study-workflows')
+		wait_for_render(:id, 'submissions-table')
+
+		# now select sample
+		study_samples = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_samples'))
+		study_samples.select_all
+		# wait for table to populate (will have a row with sorting_1 class)
+		@wait.until {@driver.find_element(:id, 'samples-table').find_element(:class, 'sorting_1').displayed?}
+
+		# delete samples
+		delete_btn = @driver.find_element(:id, 'delete-workspace-samples')
+		delete_btn.click
+		close_modal('message_modal')
+
+		empty_table = @driver.find_element(:id, 'samples-table')
+		empty_row = empty_table.find_element(:tag_name, 'tbody').find_element(:tag_name, 'tr').find_element(:tag_name, 'td')
+		assert empty_row.text == 'No data available in table', "Did not completely remove all samples, expected 'No data available in table' but found #{empty_row.text}"
+		samples_list = @driver.find_element(:id, 'workflow_samples')
+		assert samples_list['value'].empty?, "Did not delete workspace samples; samples list is not empty: ''#{samples_list['value']}''"
+
+		puts "Test method: #{self.method_name} successful!"
+	end
+
 	##
 	## CLEANUP
 	##
@@ -4010,6 +4376,11 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# delete gzip parse
 		@driver.find_element(:class, "gzip-parse-#{$random_seed}-delete").click
+		accept_alert
+		close_modal('message_modal')
+
+		# delete embargo study
+		@driver.find_element(:class, "embargo-study-#{$random_seed}-delete").click
 		accept_alert
 		close_modal('message_modal')
 

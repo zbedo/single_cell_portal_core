@@ -1,4 +1,11 @@
 class Ckeditor::AttachmentFile < Ckeditor::Asset
+
+  ###
+  #
+  # An uploaded 'attachment' through the CKEditor GUI
+  #
+  ###
+
   has_mongoid_attached_file :data,
                             :url => "/single_cell/ckeditor_assets/attachments/:id/:filename",
                             :path => ":rails_root/public/single_cell/ckeditor_assets/attachments/:id/:filename"

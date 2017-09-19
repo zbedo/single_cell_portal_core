@@ -1,5 +1,11 @@
 class DeleteQueueJob < Struct.new(:object)
-  # generic class to queue objects for deletion.  Can handle studies & study files
+
+  ###
+  #
+  # DeleteQueueJob: generic class to queue objects for deletion.  Can handle studies, study files, user annotations,
+  # and lists of files in a GCP bucket.
+  #
+  ###
 
   def perform
     # determine type of delete job
@@ -61,6 +67,15 @@ class DeleteQueueJob < Struct.new(:object)
         # delete data arrays and shares right away
         object.user_data_arrays.delete_all
         object.user_annotation_shares.delete_all
+      when 'Google::Cloud::Storage::File::List'
+        # called when a user wants to delete an entire directory of files from a FireCloud submission
+        # this list could be very large, hence the background process so we don't tie the UI up
+        files = object
+        files.each {|f| f.delete}
+        while files.next?
+          files = object.next
+          files.each {|f| f.delete}
+        end
     end
   end
 end

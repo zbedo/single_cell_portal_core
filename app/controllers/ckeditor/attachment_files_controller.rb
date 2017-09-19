@@ -1,5 +1,11 @@
 class Ckeditor::AttachmentFilesController < Ckeditor::ApplicationController
 
+  ###
+  #
+  # This overwrites the CKeditor engine attachments controller.  Attachments are now scoped to the user that uploaded them.
+  #
+  ###
+
 	respond_to :html
 
 	def index

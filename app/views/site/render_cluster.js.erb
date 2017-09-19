@@ -53,5 +53,5 @@ closeUserAnnotationsForm();
 
 // check render status
 console.log('render status at end: ' + $('#cluster-plot').data('rendered'));
-var requestUrl = unescapeHTML('<%= request.fullpath %>');
+var requestUrl = '<%= javascript_safe_url(request.fullpath) %>';
 gaTrack(requestUrl, 'Single Cell Portal');

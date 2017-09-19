@@ -1,5 +1,11 @@
 #!/bin/bash
 
+###
+#
+# boot_docker: Main boot script for portal.  Collects and sets environment variables from host to pass to docker container.
+#
+###
+
 # usage error message
 usage=$(
 cat <<EOF

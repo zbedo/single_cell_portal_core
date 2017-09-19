@@ -1,4 +1,13 @@
 class UserDataArray
+
+  ###
+  #
+  # UserDataArray: child class of ClusterGroup & UserAnnotation, stores linear arrays of data (x/y/z coordinates, or annotation values)
+  # Data is held separate from DataArray collection unless study owner 'publishes' annotations back to source data, in which case
+  # the UserAnnotation is destroyed.
+  #
+  ###
+
   include Mongoid::Document
   field :name, type: String
   field :values, type: Array

@@ -1,8 +1,22 @@
 class UserAnnotationsController < ApplicationController
+
+  ###
+  #
+  # FILTERS AND SETTINGS
+  #
+  ###
+
   before_action :set_user_annotation, only: [:edit, :update, :destroy]
-  #Check that user is logged in in order to do anything
   before_filter :authenticate_user!
   before_action :check_permission, except: :index
+
+  ###
+  #
+  # USERANNOTATION OBJECT METHODS
+  # (show and create are removed as they are implemented in the SiteController)
+  #
+  ###
+
   # GET /user_annotations
   # GET /user_annotations.json
   def index
@@ -29,17 +43,17 @@ class UserAnnotationsController < ApplicationController
     else
       @share_changes = false
     end
-    #update the annotation's defined labels
+    # update the annotation's defined labels
     new_labels = user_annotation_params.to_h['values']
-    #If the labels sued to include undefined, make sure they do again
+    # If the labels sued to include undefined, make sure they do again
     if @user_annotation.values.include? 'Undefined'
       new_labels.push('Undefined')
     end
 
-    #Remeber the old values
+    # Remeber the old values
     old_labels = @user_annotation.values
 
-    #Remeber the old annotations
+    # Remeber the old annotations
     annotation_arrays = @user_annotation.user_data_arrays.by_name_and_type(@user_annotation.name,'annotations')
 
     respond_to do |format|
@@ -163,6 +177,13 @@ class UserAnnotationsController < ApplicationController
   end
 
   private
+
+  ###
+  #
+  # SETTERS
+  #
+  ###
+
   # Use callbacks to share common setup or constraints between actions.
   def set_user_annotation
     @user_annotation = UserAnnotation.find(params[:id])

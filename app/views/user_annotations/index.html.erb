@@ -19,22 +19,22 @@
             <% @user_annotations.each do |user_annotation| %>
               <tr>
                 <td class="annotation-name"><%= user_annotation.name %></td>
-                <td><%= user_annotation.values.map{|x| "<span class='label label-#{ x == 'Undefined' ? 'warning' : 'default'} #{user_annotation.name}'>#{x}</span>"}.join(' ').html_safe %></td>
+                <td><%= user_annotation.values.map{|x| "<span class='label label-#{ x == 'Undefined' ? 'warning' : 'default'} #{user_annotation.name_as_id}'>#{x}</span>"}.join(' ').html_safe %></td>
                 <td class="annotation-study <%= user_annotation.name_as_id %>_study"><%= link_to user_annotation.study.name,  view_study_path(user_annotation.study.url_safe_name) %></td>
                 <td class="annotation-cluster <%= user_annotation.name_as_id %>_cluster"><%= user_annotation.cluster_group.name %></td>
                 <td><%= user_annotation.subsampled_at %></td>
                 <td><%= user_annotation.user.email %></td>
                 <td>
-                  <%= link_to "<span class='fa fa-bar-chart'></span> Plot Annotation".html_safe, view_study_path(user_annotation.study.url_safe_name, cluster: user_annotation.cluster_group.name, annotation: user_annotation.formatted_annotation_identifier) + '#study-visualize', class: "btn btn-xs btn-info #{user_annotation.name}-show"  %>
+                  <%= link_to "<span class='fa fa-bar-chart'></span> Plot Annotation".html_safe, view_study_path(user_annotation.study.url_safe_name, cluster: user_annotation.cluster_group.name, annotation: user_annotation.formatted_annotation_identifier) + '#study-visualize', class: "btn btn-xs btn-info #{user_annotation.name_as_id}-show"  %>
                   <% if user_annotation.can_edit?(current_user) %>
-                    <%= link_to "<span class='fa fa-edit'></span> Edit".html_safe, edit_user_annotation_path(user_annotation), class: "btn btn-xs btn-primary #{user_annotation.name}-edit" %>
+                    <%= link_to "<span class='fa fa-edit'></span> Edit".html_safe, edit_user_annotation_path(user_annotation), class: "btn btn-xs btn-primary #{user_annotation.name_as_id}-edit" %>
                   <% end %>
-                  <%= link_to "<span class='fa fa-download'></span> Download".html_safe, download_user_annotation_path(user_annotation), class: "btn btn-xs btn-success #{user_annotation.name}-download" %>
+                  <%= link_to "<span class='fa fa-download'></span> Download".html_safe, download_user_annotation_path(user_annotation), class: "btn btn-xs btn-success #{user_annotation.name_as_id}-download" %>
                   <% if user_annotation.can_edit_study?(current_user) %>
-                      <%= link_to "<span class='fa fa-book'></span> Publish to Study".html_safe, publish_to_study_path(user_annotation), class: "btn btn-xs btn-warning publish-btn #{user_annotation.name}-publish", data: {toggle: 'tooltip', placement: 'top'}, title: 'Publish annotation to study (will this annotation remove from your list)' %>
+                      <%= link_to "<span class='fa fa-book'></span> Publish to Study".html_safe, publish_to_study_path(user_annotation), class: "btn btn-xs btn-warning publish-btn #{user_annotation.name_as_id}-publish", data: {toggle: 'tooltip', placement: 'top'}, title: 'Publish annotation to study (will this annotation remove from your list)' %>
                   <% end %>
                   <% if user_annotation.can_delete?(current_user) %>
-                      <%= link_to "<span class='fa fa-trash'></span> Delete".html_safe, user_annotation, class: "btn btn-xs btn-danger delete-btn #{user_annotation.name}-delete", method: :delete %>
+                      <%= link_to "<span class='fa fa-trash'></span> Delete".html_safe, user_annotation, class: "btn btn-xs btn-danger delete-btn #{user_annotation.name_as_id}-delete", method: :delete %>
                   <% end %>
                 </td>
               </tr>
@@ -45,21 +45,7 @@
     </div>
   </div>
 </div>
-<div class="modal fade" id="sync-modal" role="dialog" aria-labelledby="sync-modal-label" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="text-center">Syncing Files and Permissions... Please Wait.</h4>
-      </div>
-      <div class="modal-body">
-        <div class="spinner-target" id="sync-modal-spinner"></div>
-      </div>
-      <div class="modal-footer">
-        <button class="close" data-dismiss="modal">×</button>
-      </div>
-    </div>
-  </div>
-</div>
+
 <script type="text/javascript">
 
     $('#annotations').dataTable({
@@ -89,7 +75,8 @@
         var annot = $(this).parent().parent().find('.annotation-name').text();
         var study = $(this).parent().parent().find('.annotation-study').text();
         if ( confirm('Are you sure you want to publish \"' + annot + '\" to the study \"' + study + ' \"? This will remove this annotation from your list and add it to the source study data from which it was created.  It will be viewable to anyone who has access to that study.')) {
-            launchModalSpinner('#save-modal-spinner','#save-modal');
+            $('#generic-modal-title').html("Publishing Annotation... Please Wait");
+            launchModalSpinner('#generic-modal-spinner', '#generic-modal');
         } else {
             return false;
         }

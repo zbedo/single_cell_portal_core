@@ -4,6 +4,6 @@ closeModalSpinner('#spinner_target', '#loading-modal', function () {
     $('#study-visualize').html("<%= escape_javascript(render partial: 'study_visualize') %>");
     $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices') %>");
     enableDefaultActions();
-    var requestUrl = unescapeHTML('<%= request.fullpath %>');
+    var requestUrl = '<%= javascript_safe_url(request.fullpath) %>';
     gaTrack(requestUrl, 'Single Cell Portal');
 });

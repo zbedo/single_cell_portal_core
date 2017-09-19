@@ -1,4 +1,11 @@
 class ClusterGroup
+
+  ###
+  #
+  # ClusterGroup: intermediate class that holds metadata about a 'cluster', but not actual point information (stored in DataArray)
+  #
+  ###
+
   include Mongoid::Document
 
   field :name, type: String

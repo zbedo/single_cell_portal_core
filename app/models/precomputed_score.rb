@@ -1,4 +1,11 @@
 class PrecomputedScore
+
+  ###
+  #
+  # PrecomputedScore: gene-list based class that holds key/value pairs of genes and gene expression scores as well as cluster labels
+  #
+  ###
+
 	include Mongoid::Document
 
 	belongs_to :study

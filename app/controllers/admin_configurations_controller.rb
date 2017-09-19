@@ -1,9 +1,22 @@
 class AdminConfigurationsController < ApplicationController
+
+  ###
+  #
+  # FILTERS & SETTINGS
+  #
+  ###
+
   before_action :set_admin_configuration, only: [:show, :edit, :update, :destroy]
   before_filter do
     authenticate_user!
     authenticate_admin
   end
+
+  ###
+  #
+  # ADMINCONFIGURATION OBJECT METHODS
+  #
+  ###
 
   # GET /admin_configurations
   # GET /admin_configurations.json
@@ -88,6 +101,12 @@ class AdminConfigurationsController < ApplicationController
     end
   end
 
+  ###
+  #
+  # SITE ADMIN ACTIONS
+  #
+  ###
+
   # disable/enable all downloads by revoking workspace ACLs
   def manage_firecloud_access
     @config = AdminConfiguration.find_or_create_by(config_type: AdminConfiguration::FIRECLOUD_ACCESS_NAME)
@@ -155,10 +174,18 @@ class AdminConfigurationsController < ApplicationController
     if refresh_status == true && (expiration < Study.firecloud_client.expires_at && storage_issue_date <  Study.firecloud_client.storage_issued_at)
       logger.info "#{Time.now}: Refreshing API client tokens and drivers.  New expiry: #{Study.firecloud_client.expires_at}"
       @notice = "API Client successfully refreshed.  Tokens are now valid until #{Study.firecloud_client.expires_at.strftime('%D %r')} and will renew automatically."
+      @alert = ''
     else
+      @notice = ''
       @alert = "Error refreshing API client: #{refresh_status}."
     end
   end
+
+  ###
+  #
+  # USER ROLES METHODS
+  #
+  ###
 
   # edit a user account (to grant permissions)
   def edit_user
@@ -181,7 +208,13 @@ class AdminConfigurationsController < ApplicationController
   # reinitialize the firecloud client object (forces new access tokens)
 
   private
-  # Use callbacks to share common setup or constraints between actions.
+
+  ###
+  #
+  # SETTERS
+  #
+  ###
+
   def set_admin_configuration
     @admin_configuration = AdminConfiguration.find(params[:id])
   end
