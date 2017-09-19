@@ -280,7 +280,11 @@ class Study
 
   # check if a user can run workflows on the given study, currently only the study owner
   def can_compute?(user)
-    user.nil? ? false : self.user_id == user.id
+    if Rails.env == 'production'
+      false
+    else
+      user.nil? ? false : self.user_id == user.id
+    end
   end
 
   # list of emails for accounts that can edit this study
