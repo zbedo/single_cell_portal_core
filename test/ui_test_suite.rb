@@ -42,7 +42,8 @@ require 'selenium-webdriver'
 #
 # To run a single test by name, pass -n 'test: [name of test]', e.g -n 'test: front-end: view: study'
 #
-# Similarly, you can run all test but exclude some by using --ignore-name /pattern/.
+# Similarly, you can run all test but exclude some by using --ignore-name /pattern/.  Also, you can combine -n and --ignore-name to run all matching
+# test, excluding those matched by ignore-name.
 #
 # NOTE: when running this test harness, it tends to perform better on an external monitor.  Webdriver is very sensitive to elements not
 # being clickable, and the more screen area available, the better.
@@ -1156,7 +1157,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# verify upload has completed and is in FireCloud bucket
 		@driver.get @base_url + '/studies/'
 		file_count = @driver.find_element(:id, "test-study-#{$random_seed}-study-file-count")
-		assert file_count.text == '8', "did not find correct number of files, expected 8 but found #{file_count.text}"
+		assert file_count.text == '9', "did not find correct number of files, expected 9 but found #{file_count.text}"
 		show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
 		show_study.click
 		gcs_link = @driver.find_element(:id, 'gcs-link')
