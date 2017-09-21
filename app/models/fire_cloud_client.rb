@@ -41,18 +41,15 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 			# instantiate Google Cloud Storage driver to work with files in workspace buckets
 			# if no keyfile is present, use environment variables
-			if ENV['SERVICE_ACCOUNT_KEY'].blank?
-				self.storage = Google::Cloud::Storage.new(
-						project: PORTAL_NAMESPACE,
-						timeout: 3600
-				)
-			else
-				self.storage = Google::Cloud::Storage.new(
-						project: PORTAL_NAMESPACE,
-						keyfile: SERVICE_ACCOUNT_KEY,
-						timeout: 3600
-				)
+			storage_attr = {
+					project: PORTAL_NAMESPACE,
+					timeout: 3600
+			}
+			if !ENV['SERVICE_ACCOUNT_KEY'].blank?
+				storage_attr.merge!(keyfile: SERVICE_ACCOUNT_KEY)
 			end
+
+			self.storage = Google::Cloud::Storage.new(storage_attr)
 
 			# set expiration date of token
 			self.expires_at = Time.now + self.access_token['expires_in']
@@ -65,19 +62,15 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 			# use user-defined project instead of portal default
 			# if no keyfile is present, use environment variables
-			if ENV['SERVICE_ACCOUNT_KEY'].blank?
-				self.storage = Google::Cloud::Storage.new(
-						project: project,
-						timeout: 3600
-				)
-			else
-				self.storage = Google::Cloud::Storage.new(
-						project: project,
-						keyfile: SERVICE_ACCOUNT_KEY,
-						timeout: 3600
-				)
+			storage_attr = {
+					project: project,
+					timeout: 3600
+			}
+			if !ENV['SERVICE_ACCOUNT_KEY'].blank?
+				storage_attr.merge!(keyfile: SERVICE_ACCOUNT_KEY)
 			end
 
+			self.storage = Google::Cloud::Storage.new(storage_attr)
 		end
 
 		# set FireCloud API base url
@@ -94,17 +87,13 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	# (contains access_token (string), token_type (string) and expires_in (integer, in seconds)
 	def self.generate_access_token
 		# if no keyfile present, use environment variables
-		if ENV['SERVICE_ACCOUNT_KEY'].blank?
-			creds = Google::Auth::ServiceAccountCredentials.make_creds(scope: GOOGLE_SCOPES)
-			token = creds.fetch_access_token!
-			token
-		else
-			json_key = File.open(SERVICE_ACCOUNT_KEY)
-			creds = Google::Auth::ServiceAccountCredentials.make_creds(json_key_io: json_key, scope: GOOGLE_SCOPES)
-			token = creds.fetch_access_token!
-			token
+		creds_attr = {scope: GOOGLE_SCOPES}
+		if !ENV['SERVICE_ACCOUNT_KEY'].blank?
+			creds_attr.merge!(json_key: File.open(SERVICE_ACCOUNT_KEY))
 		end
-
+		creds = Google::Auth::ServiceAccountCredentials.make_creds(creds_attr)
+		token = creds.fetch_access_token!
+		token
 	end
 
 	# refresh access_token when expired and stores back in FireCloudClient instance
