@@ -8,10 +8,6 @@
 # usage error message
 usage=$(
 cat <<EOF
-to properly invoke script, type the following (the leading period is REQUIRED):
-
-. ./load_env_secrets.sh [OPTIONS]
-
 [OPTIONS]
 -p VALUE	set the path to the Vault configuration object
 -c VALUE	set the path to the service account credentials object in Vault
