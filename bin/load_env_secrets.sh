@@ -12,11 +12,14 @@ cat <<EOF
 -p VALUE	set the path to the Vault configuration object
 -c VALUE	set the path to the service account credentials object in Vault
 -f VALUE	set the path to the local JSON configuration file
+-e VALUE	set the environment to boot the portal in (defaults to development)
 -H COMMAND	print this text
 EOF
 )
 
-while getopts "p:c:f:bH" OPTION; do
+# defaults
+PASSENGER_APP_ENV="development"
+while getopts "p:c:f:e:bH" OPTION; do
 case $OPTION in
 	p)
 		VAULT_SECRET_PATH="$OPTARG"
@@ -26,6 +29,9 @@ case $OPTION in
 		;;
 	f)
 		CONFIG_FILE_PATH="$OPTARG"
+		;;
+	e)
+		PASSENGER_APP_ENV="$OPTARG"
 		;;
 	H)
 		echo "$usage"
@@ -77,4 +83,4 @@ if [ -n $SERVICE_ACCOUNT_PATH ] ; then
 	export GOOGLE_CLOUD_PROJECT=$(echo $CREDS_VALS | jq --raw-output .data.project_id)
 fi
 # boot portal once secrets are loaded
-bin/boot_docker
+bin/boot_docker -e $PASSENGER_APP_ENV
