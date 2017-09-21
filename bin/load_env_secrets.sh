@@ -43,6 +43,12 @@ case $OPTION in
     ;;
 	esac
 done
+if [ -z $SERVICE_ACCOUNT_PATH ] && [ -z $VAULT_SECRET_PATH ] ; then
+	echo "You must supply the SERVICE_ACCOUNT_PATH [-c] & VAULT_SECRET_PATH [-p] (or CONFIG_PATH_PATH [-f]) to use this script."
+	echo ""
+	echo "$usage"
+	exit 1
+fi
 # if user supplies a path to a configuration file, use that first
 if [ -z $VAULT_SECRET_PATH ] && [ -n $CONFIG_FILE_PATH ] ; then
 	# load raw secrets from config JSON file
