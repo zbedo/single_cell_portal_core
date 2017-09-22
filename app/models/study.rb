@@ -1736,7 +1736,13 @@ class Study
           workspace = Study.firecloud_client.get_workspace(self.firecloud_workspace)
           acl = Study.firecloud_client.get_workspace_acl(self.firecloud_workspace)
           study_owner = self.user.email
-          # check permissions first
+          # first check workspace authorization domain
+          auth_domain = workspace['workspace']['authorizationDomain']
+          unless auth_domain.empty?
+            errors.add(:firecloud_workspace, ': The workspace you provided is restricted.  We currently do not allow use of restricted workspaces.  Please use another workspace.')
+            return false
+          end
+          # check permissions
           unless !acl['acl'][study_owner].nil? && acl['acl'][study_owner]['accessLevel'] == 'OWNER'
             errors.add(:firecloud_workspace, ': The workspace you provided is not owned by the current user.  Please use another workspace.')
             return false

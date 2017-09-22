@@ -62,7 +62,9 @@
         // get name of study for confirmation
         var annot = $(this).parent().parent().find('.annotation-name').text();
         if ( confirm('Are you sure you want to delete \"' + annot + '\"? This will remove all associated database records.')) {
-            launchModalSpinner('#delete-modal-spinner','#delete-modal');
+            launchModalSpinner('#delete-modal-spinner','#delete-modal', function() {
+                return true;
+            });
         } else {
             return false;
         }
@@ -76,7 +78,9 @@
         var study = $(this).parent().parent().find('.annotation-study').text();
         if ( confirm('Are you sure you want to publish \"' + annot + '\" to the study \"' + study + ' \"? This will remove this annotation from your list and add it to the source study data from which it was created.  It will be viewable to anyone who has access to that study.')) {
             $('#generic-modal-title').html("Publishing Annotation... Please Wait");
-            launchModalSpinner('#generic-modal-spinner', '#generic-modal');
+            launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+                return true;
+            });
         } else {
             return false;
         }

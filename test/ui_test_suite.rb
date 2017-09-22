@@ -1173,7 +1173,7 @@ class UiTestSuite < Test::Unit::TestCase
 	# this test depends on a workspace already existing in FireCloud called development-sync-test
 	# if this study has been deleted, this test will fail until the workspace is re-created with at least
 	# 3 default files for expression, metadata, one cluster, and one fastq file (using the test data from test/test_data)
-	test 'admin: sync study' do
+	test 'admin: sync: existing workspace' do
 		puts "Test method: #{self.method_name}"
 
 		# log in first
@@ -1408,6 +1408,32 @@ class UiTestSuite < Test::Unit::TestCase
 		delete_local_link.click
 		accept_alert
 		close_modal('message_modal')
+
+		puts "Test method: #{self.method_name} successful!"
+	end
+
+	test 'admin: sync: restricted workspace' do
+		puts "Test method: #{self.method_name}"
+
+		# log in first
+		path = @base_url + '/studies/new'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email)
+
+		# attempt to create a study using a workspace with a restricted authorizationDomain
+		uuid = SecureRandom.uuid
+		random_name = "Restricted Sync Test #{uuid}"
+		study_form = @driver.find_element(:id, 'new_study')
+		study_form.find_element(:id, 'study_name').send_keys(random_name)
+		study_form.find_element(:id, 'study_use_existing_workspace').send_keys('Yes')
+		study_form.find_element(:id, 'study_firecloud_workspace').send_keys("development-authorization-domain-test-study")
+
+		save_study = @driver.find_element(:id, 'save-study')
+		save_study.click
+		wait_for_render(:id, 'study-errors-block')
+		error_message = @driver.find_element(:id, 'study-errors-block').find_element(:tag_name, 'li').text
+		assert error_message.include?('The workspace you provided is restricted.'), "Did not find correct error message, expected 'The workspace you provided is restricted.' but found #{error_message}"
 
 		puts "Test method: #{self.method_name} successful!"
 	end

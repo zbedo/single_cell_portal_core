@@ -1,6 +1,6 @@
 <%= nested_form_for(@study, html: {multipart: true}) do |f| %>
 	<% if @study.errors.any? %>
-		<div class="bs-callout bs-callout-danger">
+		<div class="bs-callout bs-callout-danger" id="study-errors-block">
 			<h4><%= pluralize(@study.errors.count, "error") %> prohibited this study from being saved:</h4>
 
 			<ul>

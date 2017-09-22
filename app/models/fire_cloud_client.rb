@@ -23,7 +23,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	SERVICE_ACCOUNT_KEY = !ENV['SERVICE_ACCOUNT_KEY'].blank? ? File.absolute_path(ENV['SERVICE_ACCOUNT_KEY']) : ''
 	# Permission values allowed for ACLs
 	WORKSPACE_PERMISSIONS = ['OWNER', 'READER', 'WRITER', 'NO ACCESS']
-
+  # List of user group roles
+  USER_GROUP_ROLES = %w(admin member)
   # List of available 'operations' or updating FireCloud workspace entities or attributes
   AVAILABLE_OPS = %w(AddUpdateAttribute RemoveAttribute AddListMember RemoveListMember)
 
@@ -291,7 +292,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	# param: workspace_name (String) => name of workspace
 	#
 	# return: JSON object of workspace instance
-	def create_workspace(workspace_name)
+	def create_workspace(workspace_name, *authorization_domains)
 		path = self.api_root + '/api/workspaces'
 		# construct payload for POST
 		payload = {
@@ -299,8 +300,12 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 				name: workspace_name,
 				attributes: {},
 				authorizationDomain: []
-		}.to_json
-		process_firecloud_request(:post, path, payload)
+		}
+		# add authorization domains to new workspace
+		authorization_domains.each do |domain|
+			payload[:authorizationDomain] << {membersGroupName: domain}
+		end
+		process_firecloud_request(:post, path, payload.to_json)
 	end
 
 	# get the specified workspace
@@ -684,6 +689,90 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		end
 		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/entities/delete"
 		process_firecloud_request(:post, path,  valid_workspace_entities.to_json)
+	end
+
+  ##
+  ## USER GROUPS METHODS (only work when FireCloudClient is instantiated with a User account)
+  ##
+
+  # get a list of groups for a user
+  #
+  # return: Array of groups
+  def get_user_groups
+		path = self.api_root + "/api/groups"
+		process_firecloud_request(:get, path)
+	end
+
+	# get a specific user group that the user belongs to
+	#
+  # param: group_name (String) => name of requested group
+  #
+	# return: Hash of group attributes
+	def get_user_group(group_name)
+		path = self.api_root + "/api/groups/#{group_name}"
+		process_firecloud_request(:get, path)
+	end
+
+	# create a user group
+	#
+	# param: group_name (String) => name of requested group
+	#
+	# return: Hash of group attributes
+	def create_user_group(group_name)
+		path = self.api_root + "/api/groups/#{group_name}"
+		process_firecloud_request(:post, path)
+	end
+
+	# delete a user group that a user owns
+	#
+	# param: group_name (String) => name of requested group
+	#
+	# return: Boolean indication of group delete
+	def delete_user_group(group_name)
+		path = self.api_root + "/api/groups/#{group_name}"
+		process_firecloud_request(:delete, path)
+	end
+
+	# add another user to a user group the current user owns
+	#
+	# param: group_name (String) => name of requested group
+	# param: user_role (String) => role of user to add to group (must be member or admin)
+	# param: user_email (String) => email of user to add to group
+	#
+	# return: Boolean indication of user addition
+	def add_user_to_group(group_name, user_role, user_email)
+		if USER_GROUP_ROLES.include?(user_role)
+			path = self.api_root + "/api/groups/#{group_name}/#{user_role}/#{user_email}"
+			process_firecloud_request(:put, path)
+		else
+			raise RuntimeError.new("Invalid FireCloud user group role: #{user_role}; must be one of '#{USER_GROUP_ROLES.join(', ')}'")
+		end
+	end
+
+	# remove another user to a user group the current user owns
+	#
+	# param: group_name (String) => name of requested group
+	# param: user_role (String) => role of user to add to group (must be member or admin)
+	# param: user_email (String) => email of user to add to group
+	#
+	# return: Boolean indication of user removal
+	def delete_user_from_group(group_name, user_role, user_email)
+		if USER_GROUP_ROLES.include?(user_role)
+			path = self.api_root + "/api/groups/#{group_name}/#{user_role}/#{user_email}"
+			process_firecloud_request(:delete, path)
+		else
+			raise RuntimeError.new("Invalid FireCloud user group role: #{user_role}; must be one of '#{USER_GROUP_ROLES.join(', ')}'")
+		end
+	end
+
+	# request access to a user group as the current user
+	#
+	# param: group_name (String) => name of requested group
+	#
+	# return: Boolean indication of request submission
+	def request_user_group(group_name)
+		path = self.api_root + "/api/groups/#{group_name}/requestAccess"
+		process_firecloud_request(:post, path)
 	end
 
 	#######

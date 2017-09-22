@@ -216,31 +216,32 @@ function enableDefaultActions() {
 
     // handler for file deletion clicks, need to grab return value and pass to window
     $('.delete-file').click(function() {
-        if (deleteFileConfirmation('Are you sure?  This file will be deleted and any associated database records removed.  This cannot be undone.')) {
-            return true;
-        } else {
-            return false;
-        }
+        new Promise(function(resolve) {
+            return deleteFileConfirmation('Are you sure?  This file will be deleted and any associated database records removed.  This cannot be undone.', resolve)
+        }).then(function(answer) {
+            return(answer);
+        });
     });
 
     // handler for file deletion clicks, need to grab return value and pass to window
     $('.delete-file-sync').click(function() {
-        if (deleteFileConfirmation('Are you sure?  This will remove any database records associated with this file.  This cannot be undone.')) {
-            return true;
-        } else {
-            return false;
-        }
+        new Promise(function(resolve) {
+            return deleteFileConfirmation('Are you sure?  This will remove any database records associated with this file.  This cannot be undone.', resolve)
+        }).then(function(answer) {
+            return(answer);
+        });
     });
 }
 
 // generic warning and spinner for deleting files
-function deleteFileConfirmation(confMessage) {
+function deleteFileConfirmation(confMessage, resolve) {
     var conf = confirm(confMessage);
-    if ( conf === true) {
-        launchModalSpinner('#delete-modal-spinner','#delete-modal');
-        return true;
+    if ( conf === true ) {
+        launchModalSpinner('#delete-modal-spinner','#delete-modal', function() {
+            return resolve(true);
+        });
     } else {
-        return false;
+        return resolve(false);
     }
 }
 
@@ -314,16 +315,24 @@ var smallOpts = {
 };
 
 // functions to show loading modals with spinners
-function launchModalSpinner(spinnerTarget, modalTarget) {
+// callback function will execute after modal completes opening
+function launchModalSpinner(spinnerTarget, modalTarget, callback) {
+    // set listener to fire callback, and immediately clear listener to prevent multiple requests queueing
+    $(modalTarget).on('shown.bs.modal', function() {
+        $(modalTarget).off('shown.bs.modal');
+        callback();
+    });
+
     $(spinnerTarget).empty();
     var target = $(spinnerTarget)[0];
     var spinner = new Spinner(opts).spin(target);
     $(target).data('spinner', spinner);
     $(modalTarget).modal('show');
+    console.log('finished')
 };
 
 // function to close modals with spinners launched from launchModalSpinner
-// callback function will execute after modal closes
+// callback function will execute after modal completes closing
 function closeModalSpinner(spinnerTarget, modalTarget, callback) {
     // set listener to fire callback, and immediately clear listener to prevent multiple requests queueing
     $(modalTarget).on('hidden.bs.modal', function() {

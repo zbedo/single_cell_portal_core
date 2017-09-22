@@ -21,9 +21,11 @@
             setErrorOnBlank(needText);
         } else {
             $('#generic-modal-title').html("Saving... Please Wait");
-            launchModalSpinner('#generic-modal-spinner', '#generic-modal');
-            var form = $('#selection-well > form');
-            form.submit();
+            launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+                var form = $('#selection-well > form');
+                form.submit();
+            });
+
         }
 
     });

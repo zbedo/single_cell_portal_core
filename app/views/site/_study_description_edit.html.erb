@@ -24,6 +24,8 @@
 
 <script type="text/javascript">
     $('#update-study-description').click( function() {
-        launchModalSpinner('#update-study-settings-spinner', '#update-study-settings-modal');
+        launchModalSpinner('#update-study-settings-spinner', '#update-study-settings-modal', function() {
+            return true;
+        });
     });
 </script>
