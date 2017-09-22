@@ -14,6 +14,8 @@ class ApplicationController < ActionController::Base
 
   before_action :get_download_quota
 
+  rescue_from ActionController::InvalidAuthenticityToken, with: :session_expired
+
   # auth action for portal admins
   def authenticate_admin
     unless current_user.admin?
@@ -56,6 +58,16 @@ class ApplicationController < ActionController::Base
     }
     unless @default_cluster.nil?
       @default_cluster_annotations['Cluster-based'] = @default_cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]}
+    end
+  end
+
+  # rescue from an invalid csrf token (if user logged out in another window)
+  def session_expired
+    @alert = 'Your session has expired.  Please log in again to continue.'
+    respond_to do |format|
+      format.html {redirect_to site_path, alert: @alert}
+      format.js {render template: '/layouts/session_expired'}
+      format.json {head 403}
     end
   end
 end

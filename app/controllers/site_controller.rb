@@ -29,8 +29,6 @@ class SiteController < ApplicationController
 
   COLORSCALE_THEMES = %w(Blackbody Bluered Blues Earth Electric Greens Hot Jet Picnic Portland Rainbow RdBu Reds Viridis YlGnBu YlOrRd)
 
-  rescue_from ActionController::InvalidAuthenticityToken, with: :session_expired
-
   ###
   #
   # HOME & SEARCH METHODS
@@ -1054,12 +1052,6 @@ class SiteController < ApplicationController
     else
       return true
     end
-  end
-
-  # rescue from an invalid csrf token (if user logged out in another window)
-  def session_expired
-    @alert = 'Your session has expired.  Please log in again to continue.'
-    render action: :notice
   end
 
   ###
