@@ -90,7 +90,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		# if no keyfile present, use environment variables
 		creds_attr = {scope: GOOGLE_SCOPES}
 		if !ENV['SERVICE_ACCOUNT_KEY'].blank?
-			creds_attr.merge!(json_key: File.open(SERVICE_ACCOUNT_KEY))
+			creds_attr.merge!(json_key_io: File.open(SERVICE_ACCOUNT_KEY))
 		end
 		creds = Google::Auth::ServiceAccountCredentials.make_creds(creds_attr)
 		token = creds.fetch_access_token!
