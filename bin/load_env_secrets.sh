@@ -8,10 +8,15 @@
 # usage error message
 usage=$(
 cat <<EOF
+
+### shell script to load secrets from Vault and execute command ###
+$0
+
 [OPTIONS]
 -p VALUE	set the path to the Vault configuration object
--c VALUE	set the path to the service account credentials object in Vault
--f VALUE	set the path to the local JSON configuration file
+-s VALUE	set the path to the service account credentials object in Vault
+-f VALUE	set the path to the local JSON configuration file (optional, is overridden by -p)
+-c VALUE	command to execute after loading secrets (defaults to bin/boot_docker, please wrap command in 'quotes' to ensure proper execution)
 -e VALUE	set the environment to boot the portal in (defaults to development)
 -H COMMAND	print this text
 EOF
@@ -19,16 +24,20 @@ EOF
 
 # defaults
 PASSENGER_APP_ENV="development"
-while getopts "p:c:f:e:bH" OPTION; do
+COMMAND="bin/boot_docker"
+while getopts "p:s:f:c:e:bH" OPTION; do
 case $OPTION in
 	p)
 		VAULT_SECRET_PATH="$OPTARG"
 		;;
-	c)
+	s)
 		SERVICE_ACCOUNT_PATH="$OPTARG"
 		;;
 	f)
 		CONFIG_FILE_PATH="$OPTARG"
+		;;
+	c)
+		COMMAND="$OPTARG"
 		;;
 	e)
 		PASSENGER_APP_ENV="$OPTARG"
@@ -88,5 +97,5 @@ if [ -n $SERVICE_ACCOUNT_PATH ] ; then
 	echo "setting value for GOOGLE_CLOUD_PROJECT"
 	export GOOGLE_CLOUD_PROJECT=$(echo $CREDS_VALS | jq --raw-output .data.project_id)
 fi
-# boot portal once secrets are loaded
-bin/boot_docker -e $PASSENGER_APP_ENV
+# execute requested command
+$COMMAND -e $PASSENGER_APP_ENV
