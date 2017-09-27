@@ -137,38 +137,30 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   #
   # return: new instance of storage driver
   def refresh_storage_driver(project_name=PORTAL_NAMESPACE)
-		new_storage = Google::Cloud::Storage.new(
+		storage_attr = {
 				project: project_name,
-				keyfile: SERVICE_ACCOUNT_KEY,
 				timeout: 3600
-		)
+		}
+		if !ENV['SERVICE_ACCOUNT_KEY'].blank?
+			storage_attr.merge!(keyfile: SERVICE_ACCOUNT_KEY)
+		end
+		new_storage = Google::Cloud::Storage.new(storage_attr)
 		self.storage = new_storage
+		new_storage
 	end
 
   # get storage driver access token
   #
   # return: access token (String)
   def storage_access_token
-		attr = self.storage_attributes
-		begin
-			attr['service']['credentials']['client']['access_token']
-		rescue NoMethodError => e
-			Rails.logger.error "#{Time.now}: cannot retrieve GCS storage access token: #{e.message}"
-			nil
-		end
+		self.storage.service.credentials.client.access_token
 	end
 
   # get storage driver issue timestamp
   #
   # return: issue timestamp (DateTime)
   def storage_issued_at
-		attr = self.storage_attributes
-		begin
-			DateTime.parse attr['service']['credentials']['client']['issued_at']
-		rescue NoMethodError => e
-			Rails.logger.error "#{Time.now}: cannot retrieve GCS storage issued_at timestamp: #{e.message}"
-			nil
-		end
+		self.storage.service.credentials.client.issued_at
 	end
 
 	######
