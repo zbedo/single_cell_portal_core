@@ -8,7 +8,7 @@ class ClusterGroupTest < ActiveSupport::TestCase
   # test to validate that subsampling algorithm creates representative samples and also maintains relationships
   # checks for cluster-level annotations of type 'group'
   def test_generate_subsample_arrays_group_cluster
-    puts "Test method: #{self.method_name}"
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
     # load raw data for comparison and assertions later
     x_array = @cluster_group.concatenate_data_arrays('x', 'coordinates')
@@ -61,13 +61,13 @@ class ClusterGroupTest < ActiveSupport::TestCase
     # extra assertion to make sure all group categories are represented
     assert subsampled_categories == original_category_values, "not all categories represented, expected #{original_category_values} but found #{subsampled_categories}"
 
-    puts "Test method: #{self.method_name} successful!"
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 
   # test to validate that subsampling algorithm creates representative samples and also maintains relationships
   # checks for cluster-level annotations of type 'numeric'
   def test_generate_subsample_arrays_numeric_cluster
-    puts "Test method: #{self.method_name}"
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
     # load raw data for comparison and assertions later
     x_array = @cluster_group.concatenate_data_arrays('x', 'coordinates')
@@ -112,13 +112,13 @@ class ClusterGroupTest < ActiveSupport::TestCase
     assert random_cell == cell_array[random_point], "original cell array numeric association incorrect, expected #{cell_array[random_point]} but found #{random_cell}"
     assert random_intensity == intensity_array[random_point], "original category association is incorrect, expected #{intensity_array[random_point]} but found #{random_intensity}"
 
-    puts "Test method: #{self.method_name} successful!"
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 
   # test to validate that subsampling algorithm creates representative samples and also maintains relationships
   # checks for study-level annotations of type 'group'
   def test_generate_subsample_arrays_group_study
-    puts "Test method: #{self.method_name}"
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
     # load raw data for comparison and assertions later
     x_array = @cluster_group.concatenate_data_arrays('x', 'coordinates')
@@ -162,13 +162,13 @@ class ClusterGroupTest < ActiveSupport::TestCase
     assert random_point == z_array[random_point], "original z array group association incorrect, expected #{z_array[random_point]} but found #{random_point}"
     assert random_cell == cell_array[random_point], "original cell array group association incorrect, expected #{cell_array[random_point]} but found #{random_cell}"
 
-    puts "Test method: #{self.method_name} successful!"
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 
   # test to validate that subsampling algorithm creates representative samples and also maintains relationships
   # checks for study-level annotations of type 'numeric'
   def test_generate_subsample_arrays_numeric_study
-    puts "Test method: #{self.method_name}"
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
     # load raw data for comparison and assertions later
     x_array = @cluster_group.concatenate_data_arrays('x', 'coordinates')
@@ -210,7 +210,7 @@ class ClusterGroupTest < ActiveSupport::TestCase
     assert random_point == z_array[random_point], "original z array group association incorrect, expected #{z_array[random_point]} but found #{random_point}"
     assert random_cell == cell_array[random_point], "original cell array group association incorrect, expected #{cell_array[random_point]} but found #{random_cell}"
 
-    puts "Test method: #{self.method_name} successful!"
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 end
 

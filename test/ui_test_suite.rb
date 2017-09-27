@@ -98,7 +98,8 @@ class UiTestSuite < Test::Unit::TestCase
 		options = Selenium::WebDriver::Chrome::Options.new
 		options.add_argument('--enable-webgl-draft-extensions')
 
-		@driver = Selenium::WebDriver::Driver.for :chrome, driver_path: $chromedriver_dir, options: options, desired_capabilities: caps
+		@driver = Selenium::WebDriver::Driver.for :chrome, driver_path: $chromedriver_dir,
+																							options: options, desired_capabilities: caps, driver_opts: {log_path: '/tmp/webdriver.log'}
 		@driver.manage.window.maximize
 		@base_url = $portal_url
 		@accept_next_alert = true
@@ -484,6 +485,41 @@ class UiTestSuite < Test::Unit::TestCase
 		close_modal('upload-success-modal')
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+	end
+
+	# text gzip parsing of expression matrices
+	test 'admin: create-study: gzip expression matrix' do
+		puts "Test method: #{self.method_name}"
+
+		# log in first
+		path = @base_url + '/studies/new'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email, $test_email_password)
+
+		# fill out study form
+		study_form = @driver.find_element(:id, 'new_study')
+		study_form.find_element(:id, 'study_name').send_keys("Gzip Parse #{$random_seed}")
+		# save study
+		save_study = @driver.find_element(:id, 'save-study')
+		save_study.click
+
+		# upload bad expression matrix
+		close_modal('message_modal')
+		upload_expression = @driver.find_element(:id, 'upload-expression')
+		upload_expression.send_keys(@test_data_path + 'expression_matrix_example_gzipped.txt.gz')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		close_modal('upload-success-modal')
+
+		# verify parse completed
+		studies_path = @base_url + '/studies'
+		@driver.get studies_path
+		wait_until_page_loads(studies_path)
+		study_file_count = @driver.find_element(:id, "gzip-parse-#{$random_seed}-study-file-count")
+		assert study_file_count.text == '1', "found incorrect number of study files; expected 1 and found #{study_file_count.text}"
+		puts "Test method: #{self.method_name} successful!"
 	end
 
 	##

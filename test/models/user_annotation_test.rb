@@ -8,7 +8,7 @@ class UserAnnotationTest < ActiveSupport::TestCase
   end
 
    def test_generate_user_annotation_full_data
-    puts "Test method: #{self.method_name}"
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
     #Generate keys
     num_keys = rand(8) + 2
@@ -68,11 +68,11 @@ class UserAnnotationTest < ActiveSupport::TestCase
     num_data_arrays = @user_annotation.user_data_arrays.all.to_a.count
     assert num_data_arrays == 16, "Incorrect number of user data arrays, #{num_data_arrays} instead of 16"
 
-    puts "Test method: #{self.method_name} successful!"
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
    end
 
   def test_generate_user_annotation_twenty_k_data
-    puts "Test method: #{self.method_name}"
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
     #Generate keys
     num_keys = rand(8) + 2
@@ -132,11 +132,11 @@ class UserAnnotationTest < ActiveSupport::TestCase
     created_at = @user_annotation.subsampled_at
     assert created_at == 'Created at a subsample of 20,000 Cells', "Incorrect created at, '#{created_at} should be 'Created at a subsample of 20,000 Cells"
 
-    puts "Test method: #{self.method_name} successful!"
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 
   def test_generate_user_annotation_ten_k_data
-    puts "Test method: #{self.method_name}"
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
     #Generate keys
     num_keys = rand(8) + 2
@@ -196,11 +196,11 @@ class UserAnnotationTest < ActiveSupport::TestCase
     created_at = @user_annotation.subsampled_at
     assert created_at == 'Created at a subsample of 10,000 Cells', "Incorrect created at, '#{created_at} should be 'Created at a subsample of 10,000 Cells"
 
-    puts "Test method: #{self.method_name} successful!"
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 
   def test_generate_user_annotation_one_k_data
-    puts "Test method: #{self.method_name}"
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
     #Generate keys
     num_keys = rand(8) + 2
@@ -260,6 +260,6 @@ class UserAnnotationTest < ActiveSupport::TestCase
     created_at = @user_annotation.subsampled_at
     assert created_at == 'Created at a subsample of 1,000 Cells', "Incorrect created at, '#{created_at} should be 'Created at a subsample of 1,000 Cells"
 
-    puts "Test method: #{self.method_name} successful!"
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 end
