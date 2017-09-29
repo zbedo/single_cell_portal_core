@@ -418,10 +418,11 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	# param: namespace (String) => namespace of method
 	# param: name (String) => name of method
 	# param: snapshot_id (Integer) => snapshot ID of method
+	# param: payload_as_object (Boolean) => Instead of returning a string under key payload, return a JSON object under key payloadObject
 	#
 	# return: configuration object
-	def get_configuration(namespace, method_name, snapshot_id)
-		path = self.api_root + "/api/configurations/#{namespace}/#{method_name}/#{snapshot_id}"
+	def get_configuration(namespace, method_name, snapshot_id, payload_as_object=false)
+		path = self.api_root + "/api/configurations/#{namespace}/#{method_name}/#{snapshot_id}?payloadAsObject=#{payload_as_object}"
 		process_firecloud_request(:get, path)
 	end
 
@@ -572,7 +573,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	end
 
 	##
-	## METADATA ENTITY METHODS
+	## WORKSPACE ENTITY METHODS
 	##
 
 	# list workspace metadata entities with type and attribute information
@@ -645,9 +646,9 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # param: entity_names (String) => list of requested entities to include in file (provide each as a separate parameter)
 	#
 	# return: Array of workspace metadata entities with type and attribute information
-	def get_workspace_entities_as_tsv(workspace_name, entity_type, *entity_names)
-		entity_list = entity_names.join(',')
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/entities/#{entity_type}#{entity_list.blank? ? nil : '?attributeNames=' + entity_list}"
+	def get_workspace_entities_as_tsv(workspace_name, entity_type, *attribute_names)
+		attribute_list = attribute_names.join(',')
+		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/entities/#{entity_type}/tsv#{attribute_list.blank? ? nil : '?attributeNames=' + attribute_list}"
 		process_firecloud_request(:get, path)
 	end
 
@@ -656,7 +657,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	# param: workspace_name (String) => name of requested workspace
 	# param: entities_file (File) => valid TSV import file of metadata entities (must be an open File handler)
 	#
-	# return: Array of workspace metadata entities with type and attribute information
+	# return: String of entity type that was just created
 	def import_workspace_entities_file(workspace_name, entities_file)
 		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/importEntities"
 		entities_upload = {
@@ -912,33 +913,6 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		directory += '/' unless directory.last == '/'
 		opts.merge!(prefix: directory)
 		self.get_workspace_files(workspace_name, opts)
-	end
-
-	# retrieve number of files in a GCP directory
-	#
-	# param: workspace_name (String) => name of workspace
-	# param: directory (String) => name of directory in bucket
-	# param: opts (Hash) => hash of optional parameters, see
-	# https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=files-instance
-	#
-	# return: Integer count of files in directory (ignoring 0 size objects which may be folders)
-	def get_workspace_directory_size(workspace_name, directory, opts={})
-		# makes sure directory ends with '/', otherwise append to prevent spurious matches
-		directory += '/' unless directory.last == '/'
-		opts.merge!(prefix: directory)
-		files = self.get_workspace_directory_files(workspace_name, directory, opts)
-		count = 0
-		files.each do |file|
-			count += 1 if file.size != 0
-		end
-		# make sure we've counted all files
-		while files.next?
-			files = files.next
-			files.each do |file|
-				count += 1 if file.size != 0
-			end
-		end
-		count
 	end
 
   #######

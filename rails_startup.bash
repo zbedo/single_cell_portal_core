@@ -20,7 +20,14 @@ echo "export PROD_DATABASE_PASSWORD=$PROD_DATABASE_PASSWORD" >| /home/app/.cron_
 echo "export SENDGRID_USERNAME=$SENDGRID_USERNAME" >> /home/app/.cron_env
 echo "export SENDGRID_PASSWORD=$SENDGRID_PASSWORD" >> /home/app/.cron_env
 echo "export MONGO_LOCALHOST=$MONGO_LOCALHOST" >> /home/app/.cron_env
-echo "export SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY" >> /home/app/.cron_env
+if [[ -z $SERVICE_ACCOUNT_KEY ]]; then
+	echo $GOOGLE_CLOUD_KEYFILE_JSON >| /home/app/.google_service_account.json
+	chmod 400 /home/app/.google_service_account.json
+	chown app:app /home/app/.google_service_account.json
+	echo "export SERVICE_ACCOUNT_KEY=/home/app/.google_service_account.json" >> /home/app/.cron_env
+else
+	echo "export SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY" >> /home/app/.cron_env
+fi
 chmod 400 /home/app/.cron_env
 chown app:app /home/app/.cron_env
 echo "*** COMPLETED ***"

@@ -1595,12 +1595,14 @@ class Study
   # set the 'default_participant' entity in workspace data to allow users to upload sample information
   def set_default_participant
     begin
-      entity_file = File.new(Rails.root.join('data', self.data_dir, 'default_participant.tsv'), 'w+')
+      path = Rails.root.join('data', self.data_dir, 'default_participant.tsv')
+      entity_file = File.new(path, 'w+')
       entity_file.write "entity:participant_id\ndefault_participant"
       entity_file.close
       upload = File.open(entity_file.path)
       Study.firecloud_client.import_workspace_entities_file(self.firecloud_workspace, upload)
-      File.delete(entity_file.path)
+      Rails.logger.info "#{Time.now}: created default_participant for #{self.firecloud_workspace}"
+      File.delete(path)
     rescue => e
       Rails.logger.error "#{Time.now}: Unable to set default participant: #{e.message}"
     end

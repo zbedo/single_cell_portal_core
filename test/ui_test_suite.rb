@@ -3977,7 +3977,7 @@ class UiTestSuite < Test::Unit::TestCase
 		}
 		i = 1
 		while completed_submission.nil?
-			omit_if i >= 72, 'Skipping test; waited 6 minutes but no submissions complete yet.'
+			omit_if i >= 60, 'Skipping test; waited 5 minutes but no submissions complete yet.'
 
 			$verbose ? puts("no completed submissions, refresh try ##{i}") : nil
 			refresh_btn = @driver.find_element(:id, 'refresh-submissions-table-top')
