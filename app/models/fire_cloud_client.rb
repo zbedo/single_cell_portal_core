@@ -769,7 +769,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	end
 
   ##
-  ## PROFILE/BILLING METHODS (only works when instantiated as a user)
+  ## PROFILE/BILLING METHODS
   ##
 
 	# list billing projects for a given user
