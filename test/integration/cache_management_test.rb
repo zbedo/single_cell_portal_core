@@ -7,7 +7,7 @@ class CacheManagementTest < ActionDispatch::IntegrationTest
   end
 
   def test_manage_cache_entries
-    puts "Test method: #{self.method_name}"
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
     study = Study.first
     cluster = ClusterGroup.first
@@ -64,7 +64,7 @@ class CacheManagementTest < ActionDispatch::IntegrationTest
       puts "#{annotation} tests pass!"
     end
 
-    puts "Test method: #{self.method_name} successful!"
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 
 end
