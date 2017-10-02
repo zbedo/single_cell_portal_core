@@ -1210,7 +1210,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get path
 		panic_modal_link = @driver.find_element(:id, 'show-panic-modal')
 		panic_modal_link.click
-		wait_for_render(:id, 'panic-modal')
+		wait_for_modal_open('panic-modal')
 		local_access_button = @driver.find_element(:id, 'disable-local-access')
 		local_access_button.click
 		close_modal('message_modal')
