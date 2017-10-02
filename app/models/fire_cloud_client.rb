@@ -14,7 +14,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	# base url for all API calls
 	BASE_URL = 'https://api.firecloud.org'
 	# default auth scopes
-	GOOGLE_SCOPES = %w(https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email)
+	GOOGLE_SCOPES = %w(https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/cloud-billing.readonly)
 	# constant used for retry loops in process_request
 	MAX_RETRY_COUNT = 3
 	# default namespace used for all FireCloud project workspaces owned by the 'portal'
@@ -766,6 +766,36 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	def request_user_group(group_name)
 		path = self.api_root + "/api/groups/#{group_name}/requestAccess"
 		process_firecloud_request(:post, path)
+	end
+
+  ##
+  ## PROFILE/BILLING METHODS (only works when instantiated as a user)
+  ##
+
+	# list billing projects for a given user
+	#
+	# return: Array of Hashes of billing projects
+	def get_billing_projects
+		path = self.api_root + '/api/profile/billing'
+		process_firecloud_request(:get, path)
+	end
+
+	# list billing accounts for a given user
+	#
+	# return: Array of Hashes of billing accounts
+  def get_billing_accounts
+		path = self.api_root + '/api/profile/billingAccounts'
+		process_firecloud_request(:get, path)
+	end
+
+  # list all members of a FireCloud billing project
+  #
+  # param: project_id (String) => ID of billing project (must start with billingAccounts/)
+  #
+  # return: Array of FireCloud user accounts
+  def get_billing_project_members(project_id)
+		path = self.api_root + "/api/billing/#{project_id}/members"
+		process_firecloud_request(:get, path)
 	end
 
 	#######
