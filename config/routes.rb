@@ -14,6 +14,11 @@ Rails.application.routes.draw do
     get 'reports', to: 'reports#index', as: :reports
     post 'reports/report_request', to: 'reports#report_request', as: :report_request
 
+    # firecloud billing project actions
+		get 'studies/billing_projects', to: 'studies#manage_firecloud_projects', as: :manage_firecloud_projects
+		get 'studies/get_firecloud_billing', to: 'studies#get_firecloud_billing', as: :get_firecloud_billing
+		post 'studies/create_firecloud_project', to: 'studies#create_firecloud_project', as: :create_firecloud_project
+
     # study admin actions
 		mount Ckeditor::Engine => 'ckeditor'
     devise_for :users, :controllers => { :omniauth_callbacks => 'users/omniauth_callbacks' }

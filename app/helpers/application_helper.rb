@@ -53,6 +53,8 @@ module ApplicationHelper
 					breadcrumbs << {title: "Upload/Edit Study Data", link: 'javascript:;'}
 				when 'sync_study'
 					breadcrumbs << {title: "Synchronize Workspace", link: 'javascript:;'}
+				when 'manage_firecloud_projects'
+					breadcrumbs << {title: "Manage FireCloud Projects", link: 'javascript:;'}
 			end
 		elsif controller_name == 'admin_configurations'
 			breadcrumbs << {title: 'Admin Control Panel', link: admin_configurations_path}
