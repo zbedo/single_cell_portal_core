@@ -163,6 +163,20 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		self.storage.service.credentials.client.issued_at
 	end
 
+  # get issuer of storage credentials
+  #
+  # return: String of issuer email
+  def storage_issuer
+		self.storage.service.credentials.issuer
+	end
+
+  # get issuer of access_token
+  #
+  # return: String of access_token issuer email
+  def issuer
+		self.user.nil? ? self.storage_issuer : self.user.email
+	end
+
 	######
 	##
 	## FIRECLOUD METHODS
@@ -347,15 +361,18 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	#
 	# param: email (String) => email of FireCloud user
 	# param: permission (String) => granted permission level
+	# param: share_permission (Boolean) => whether or not user can share workspace
+	# param: compute_permission (Boolean) => whether or not user can run computes in workspace
 	#
 	# return: JSON-encoded ACL object for use in HTTP body
-	def create_workspace_acl(email, permission)
+	def create_workspace_acl(email, permission, share_permission=true, compute_permission=false)
 		if WORKSPACE_PERMISSIONS.include?(permission)
 			[
 					{
 							'email' => email,
 							'accessLevel' => permission,
-							'canShare' => true
+							'canShare' => share_permission,
+							'canCompute' => compute_permission
 					}
 			].to_json
 		else
@@ -795,7 +812,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	#
 	# return: Array of FireCloud user accounts
   def create_billing_project(project_name, billing_account)
-		if billing_account.start_with('billingAccounts/')
+		if billing_account.start_with?('billingAccounts/')
 			path = self.api_root + '/api/billing'
 			project_payload = {
 					projectName: project_name,
