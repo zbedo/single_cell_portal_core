@@ -141,7 +141,7 @@ Due to the nature of Docker, the tests cannot be run from inside the container a
 and the display from inside the VM.  As a result, the UI test suite has no knowledge of the Rails environment or application stack.
 Therefore, you will need to have a minimal portal environment enabled outside of Docker. The minumum requirements are as follows:
 
-* Ruby >= 2.3, preferably mangaged through RVM[https://rvm.io/] or rbenv[https://github.com/rbenv/rbenv]
+* Ruby 2.3, preferably mangaged through RVM[https://rvm.io/] or rbenv[https://github.com/rbenv/rbenv]
 * Gems: rubygems[https://github.com/rubygems/rubygems], test-unit[http://test-unit.github.io], selenium-webdriver[https://github.com/SeleniumHQ/selenium/tree/master/rb] (see Gemfile.lock for version requirements)
 * Google Chrome along with 2 Google accounts, one of which needs to be a portal admin account (see above)
 * Chromedriver
