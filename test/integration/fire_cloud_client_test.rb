@@ -335,6 +335,119 @@ class FireCloudClientTest < ActiveSupport::TestCase
 
   ##
   #
+  # USER GROUP TESTS
+  #
+  ##
+
+  # main groups test - CRUD group & members
+  def test_create_and_mange_user_groups
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    # set group name
+    group_name = "test-group-#{SecureRandom.uuid}"
+    puts 'creating group...'
+    group = @fire_cloud_client.create_user_group(group_name)
+    assert group.present?, 'Did not create user group'
+
+    puts 'adding user to group...'
+    user_role = FireCloudClient::USER_GROUP_ROLES.sample
+    user_added = @fire_cloud_client.add_user_to_group(group_name, user_role, @test_email)
+    assert user_added, 'Did not add user to group'
+
+    puts 'getting user groups...'
+    groups = @fire_cloud_client.get_user_groups
+    assert groups.any?, 'Did not find any user groups'
+
+    puts 'getting user group...'
+    group = @fire_cloud_client.get_user_group(group_name)
+    assert group.present?, "Did not retrieve user group: #{group_name}"
+    email_key = user_role == 'admin' ? 'adminsEmails' : 'membersEmails'
+    assert group[email_key].include?(@test_email), "Test group did not have #{@test_email} as member of #{email_key}: #{group[email_key]}"
+
+    puts 'delete user from group...'
+    delete_user = @fire_cloud_client.delete_user_from_group(group_name, user_role, @test_email)
+    assert delete_user, 'Did not delete user from group'
+
+    puts 'confirming user delete...'
+    updated_group = @fire_cloud_client.get_user_group(group_name)
+    assert !updated_group[email_key].include?(@test_email), "Test group did still has #{@test_email} as member of #{email_key}: #{updated_group[email_key]}"
+
+    puts 'deleting user group...'
+    delete_group = @fire_cloud_client.delete_user_group(group_name)
+    assert delete_group, 'Did not delete user group'
+
+    puts 'confirming user group delete...'
+    updated_groups = @fire_cloud_client.get_user_groups
+    group_names = updated_groups.map {|g| g['groupName']}
+    assert !group_names.include?(group_name), "Test group '#{group_name}' was not deleted: #{group_names.join(', ')}"
+
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+  end
+
+  ##
+  #
+  # BILLING TESTS (does not test create billing projects as we cannot delete them yet)
+  #
+  ##
+
+  # get available billing projects
+  def test_get_billing_projects
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    # get all projects
+    projects = @fire_cloud_client.get_billing_projects
+    assert projects.any?, 'Did not find any billing projects'
+
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+  end
+
+  # update a billing project's member list
+  def test_update_billing_project_members
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    # get all projects
+    puts 'selecting project...'
+    projects = @fire_cloud_client.get_billing_projects
+    assert projects.any?, 'Did not find any billing projects'
+
+    # select a project
+    project_name = projects.sample['projectName']
+    assert project_name.present?, 'Did not select a billing project'
+
+    # get users
+    puts 'getting project users...'
+    users = @fire_cloud_client.get_billing_project_members(project_name)
+    assert users.any?, 'Did not retrieve billing project users'
+
+    # add user to project
+    puts 'adding user to project...'
+    user_role = FireCloudClient::BILLING_PROJECT_ROLES.sample
+    user_added = @fire_cloud_client.add_user_to_billing_project(project_name, user_role, @test_email)
+    assert user_added == 'OK', "Did not add user to project: #{user_added}"
+
+    # get updated list of users
+    puts 'confirming user add...'
+    updated_users = @fire_cloud_client.get_billing_project_members(project_name)
+    emails = updated_users.map {|user| user['email']}
+    assert emails.include?(@test_email), "Did not successfully add #{@test_email} to list of billing project members: #{emails.join(', ')}"
+    added_user = updated_users.find {|user| user['email'] == @test_email}
+    assert added_user['role'].downcase == user_role, "Did not set user role for #{@test_email} correctly; expected '#{user_role}' but found '#{added_user['role'].downcase}'"
+
+    # remove user
+    puts 'deleting user from billing project...'
+    user_deleted = @fire_cloud_client.delete_user_from_billing_project(project_name, user_role, @test_email)
+    assert user_deleted == 'OK', "Did not delete user from project: #{user_deleted}"
+
+    puts 'confirming user delete...'
+    updated_users = @fire_cloud_client.get_billing_project_members(project_name)
+    emails = updated_users.map {|user| user['email']}
+    assert !emails.include?(@test_email), "Did not successfully remove #{@test_email} from list of billing project members: #{emails.join(', ')}"
+
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+  end
+
+  ##
+  #
   # GCS TESTS
   #
   ##
