@@ -124,6 +124,7 @@ To create an admin user account:
 * Create a user account normally through the UI (using sign-up or Google auth features)
 * Start the portal locally (or ssh into production VM)
 * Connect to the running portal container: <code>docker exec -it single_cell bash</code>
+* Enter the Rails console: <code>rails console</code>
 * Query for the desired user account: <code>user = User.find_by(email: '<email address here>')</code>
 * Set the admin flag to true: <code>user.update(admin: true)</code>
 
