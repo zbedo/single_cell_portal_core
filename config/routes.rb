@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+
 	scope 'single_cell' do
 
 		# portal admin actions
@@ -15,9 +16,12 @@ Rails.application.routes.draw do
     post 'reports/report_request', to: 'reports#report_request', as: :report_request
 
     # firecloud billing project actions
-		get 'studies/billing_projects', to: 'studies#manage_firecloud_projects', as: :manage_firecloud_projects
-		get 'studies/get_firecloud_billing', to: 'studies#get_firecloud_billing', as: :get_firecloud_billing
-		post 'studies/create_firecloud_project', to: 'studies#create_firecloud_project', as: :create_firecloud_project
+		get 'billing_projects', to: 'billing_projects#index', as: :billing_projects
+		get 'billing_projects/create', to: 'billing_projects#create', as: :create_billing_project
+		get 'billing_projects/:project_name', to: 'billing_projects#show_users', as: :show_billing_project_users
+		get 'billing_projects/:project_name/new_user', to: 'billing_projects#new_user', as: :new_billing_project_user
+		post 'billing_projects/:project_name/add_user', to: 'billing_projects#create_user', as: :create_billing_project_user
+		delete 'billing_projects/:project_name/:role/:email', to: 'billing_projects#delete_user', as: :delete_billing_project_user, constraints: {email: /.*/}
 
     # study admin actions
 		mount Ckeditor::Engine => 'ckeditor'

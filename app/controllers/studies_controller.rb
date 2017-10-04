@@ -12,9 +12,11 @@ class StudiesController < ApplicationController
   #
   ###
 
-  before_action :set_study, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file, :manage_firecloud_projects, :get_firecloud_projects, :create_firecloud_project, :add_user_to_firecloud_project, :remove_user_from_firecloud_project]
+  respond_to :html, :js, :json
+
+  before_action :set_study, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
   before_action :set_file_types, only: [:sync_study, :sync_submission_outputs, :sync_study_file, :sync_orphaned_study_file, :update_study_file_from_sync]
-  before_filter :check_edit_permissions, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file, :manage_firecloud_projects, :get_firecloud_projects, :create_firecloud_project, :add_user_to_firecloud_project, :remove_user_from_firecloud_project]
+  before_filter :check_edit_permissions, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
   before_filter do
     authenticate_user!
     check_access_settings
@@ -852,58 +854,6 @@ class StudiesController < ApplicationController
     end
   end
 
-  ###
-  #
-  # FIRECLOUD BILLING PROJECT METHODS
-  #
-  ###
-
-  # manage current_users available projects and billing accounts
-  def manage_firecloud_projects
-    # instantiate temporary client as user
-    @fire_cloud_client = FireCloudClient.new(current_user, 'single-cell-portal')
-
-    # get available billing accounts & projects
-    billing_accounts = @fire_cloud_client.get_billing_accounts
-    @accounts = billing_accounts.map {|account| [account['displayName'], account['accountName']]}
-    @projects = {}
-    billing_projects = @fire_cloud_client.get_billing_projects
-    billing_projects.each do |project|
-      project_name = project['projectName']
-      @projects[project_name] = {
-          members: @fire_cloud_client.get_billing_project_members(project_name)
-      }
-    end
-
-    # load portal service account email for use in view (we don't want to display this in the portal)
-    @portal_service_account = Study.firecloud_client.storage_issuer
-  end
-
-  # get a list of available firecloud billing accounts & projects for a user
-  def get_firecloud_billing
-    @fire_cloud_client = FireCloudClient.new(current_user, 'single-cell-portal')
-    @accounts = @fire_cloud_client.get_billing_accounts
-    @projects = @fire_cloud_client.get_billing_projects
-    render json: {accounts: @accounts, projects: @projects}
-  end
-
-  # create a new billing project owned the current_user
-  def create_firecloud_project
-    @fire_cloud_client = FireCloudClient.new(current_user, 'single-cell-portal')
-    project_name = billing_project_params[:project_name]
-    billing_account = billing_project_params[:billing_account]
-    begin
-      # create project
-      @fire_cloud_client.create_billing_project(project_name, billing_account)
-      # add portal service account to project
-      @fire_cloud_client.add_user_to_billing_project(project_name, 'owner', Study.firecloud_client.storage_issuer)
-      redirect_to manage_firecloud_projects_path, notice: "Your new project '#{project_name}' was successfully created using '#{billing_account}'" and return
-    rescue => e
-      logger.error "#{Time.now}: Unable to create new billing project #{project_name} due to error: #{e.message}"
-      redirect_to manage_firecloud_projects_path, alert: "We were unable to create your new project due to the following error: #{e.message}'" and return
-    end
-  end
-
   private
 
   ###
@@ -932,10 +882,6 @@ class StudiesController < ApplicationController
 
   def default_options_params
     params.require(:study_default_options).permit(:cluster, :annotation, :color_profile, :expression_label)
-  end
-
-  def billing_project_params
-    params.require(:billing_project).permit(:project_name, :billing_account)
   end
 
   def set_file_types

@@ -53,8 +53,6 @@ module ApplicationHelper
 					breadcrumbs << {title: "Upload/Edit Study Data", link: 'javascript:;'}
 				when 'sync_study'
 					breadcrumbs << {title: "Synchronize Workspace", link: 'javascript:;'}
-				when 'manage_firecloud_projects'
-					breadcrumbs << {title: "Manage FireCloud Projects", link: 'javascript:;'}
 			end
 		elsif controller_name == 'admin_configurations'
 			breadcrumbs << {title: 'Admin Control Panel', link: admin_configurations_path}
@@ -63,6 +61,12 @@ module ApplicationHelper
 					breadcrumbs << {title: "New Config Option", link: 'javascript:;'}
 				when 'edit'
 					breadcrumbs << {title: "Editing '#{@admin_configuration.config_type}'", link: 'javascript:;'}
+			end
+		elsif controller_name == 'billing_projects'
+			breadcrumbs << {title: "My Billing Projects", link: billing_projects_path}
+			case action_name
+				when 'new_user'
+					breadcrumbs << {title: "Add Billing Project User", link: 'javascript:;'}
 			end
 		end
 		breadcrumbs

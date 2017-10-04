@@ -1,0 +1,63 @@
+<h1>Add a User to '<%= params[:project_name] %>'</h1>
+<div class="bs-callout bs-callout-default">
+  <h4>Instructions</h4>
+  <p class="help-block">Use the form below to add a user to this billing project.  Note that by default, <strong><%= current_user.email %></strong> is set as
+    the project owner.  You will also see the 'SCP Service Account' listed as an owner as well.  <span class="text-danger">Please do not remove either user from your project as this will result in the portal being unable to manage any workspaces
+    or files under this project.</span></p>
+  <p class="help-block">Normally, you should not need to add a user at the project level.  However, if you encounter a scenario where you need to grant project owner or member
+    roles to a user, you can do so here.  The roles are as follows:</p>
+  <dl class="dl-horizontal">
+    <dt>user</dt>
+    <dd>User will have read access to all workspaces in this project, and can create workspaces in FireCloud</dd>
+    <dt>owner</dt>
+    <dd>User will have read/write access to all workspaces in this project, and can create & delete workspaces in FireCloud</dd>
+  </dl>
+  <p class="text-primary"><i class="fa fa-fw fa-exclamation-triangle"></i> The user you are adding must already be a FireCloud user in order to add them to the project.</p>
+</div>
+<div class="well well-lg">
+  <%= form_for(:billing_project_user, url: create_billing_project_user_path(project_name: params[:project_name]), html: {class: 'form'}) do |f| %>
+    <div class="form-group row">
+      <div class="col-md-6">
+        <%= f.label :email %><br />
+        <%= f.text_field :email, class: 'form-control', autocomplete: false %>
+      </div>
+      <div class="col-md-3">
+        <%= f.label :role %><br />
+        <%= f.select :role, options_for_select(FireCloudClient::BILLING_PROJECT_ROLES), {}, class: 'form-control' %>
+      </div>
+      <div class="col-md-3">
+        <%= f.label :submit, "&nbsp;".html_safe %><br />
+        <%= f.submit 'Add User', class: 'btn btn-success', id: 'add-billing-project-user', disabled: true %>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<script type="text/javascript">
+
+    $('#add-billing-project-user').click(function () {
+        $('#generic-modal-title').html("Adding User... Please Wait");
+        launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+            return true;
+        });
+    });
+
+    // enable/disable submit button on email validation
+    $('#billing_project_user_email').change(function () {
+        var email = $(this).val();
+        var submitBtn = $('#add-billing-project-user');
+        if (validateEmail(email)) {
+            $(this).parent().removeClass('has-error has-feedback');
+            submitBtn.attr('disabled', false);
+        } else {
+            if (email !== '') {
+                $(this).parent().addClass('has-error has-feedback');
+                alert('The email address you entered is invalid.');
+            } else {
+                $(this).parent().removeClass('has-error has-feedback');
+            }
+            submitBtn.attr('disabled', true);
+        }
+    });
+
+</script>

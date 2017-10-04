@@ -17,10 +17,15 @@
           <td>
             <% project_attributes[:members].each do |member| %>
               <% email = member['email'] == @portal_service_account ? 'SCP Service Account' : member['email'] %>
-              <label class="label label-<%= get_billing_member_class(member['role']) %>"><%= email %></label>
+              <p><big><label class="label label-<%= get_billing_member_class(member['role']) %>"><%= email %></label></big>
+              <% if member['role'] == 'User' %>
+                <%= link_to "<i class='fa fa-fw fa-times'></i>".html_safe, delete_billing_project_user_path(project_name: project_name, role: member['role'].downcase, email: email), class: 'btn btn-xs btn-danger delete-billing-project-user', method: :delete, title: 'Remove this user?', data: {toggle: 'tooltip', email: email} %></p>
+              <% end %>
             <% end %>
           </td>
-          <td></td>
+          <td class="actions">
+            <%= link_to "<i class='fa fa-fw fa-plus'></i> Add User".html_safe, new_billing_project_user_path(project_name), class: 'btn btn-xs btn-success add-billing-project-user' %>
+          </td>
         </tr>
       <% end %>
       </tbody>
@@ -39,7 +44,7 @@
             created a Google billing account to bill against, and granted FireCloud access to that account.</p>
           <p class="text-center"><%= link_to 'Instructions on creating Google billing accounts', 'https://software.broadinstitute.org/firecloud/documentation/article?id=9762', target: :_blank, class: 'btn btn-default' %></p>
         </div>
-        <%= form_for(:billing_project, url: create_firecloud_project_path, html: {class: 'form', id: 'new-billing-project'}) do |f| %>
+        <%= form_for(:billing_project, url: create_billing_project_path, html: {class: 'form', id: 'new-billing-project'}) do |f| %>
           <div class="form-group row">
             <div class="col-sm-6">
               <%= f.label :project_name %><br />
@@ -99,4 +104,10 @@
             return true;
         }
     });
+
+    $('body').on('click', '.delete-billing-project-user', function(event) {
+        var email = $(this).data('email');
+        deletePromise(event, 'Are you sure you want to remove ' + email + ' from this project?');
+    });
+
 </script>
