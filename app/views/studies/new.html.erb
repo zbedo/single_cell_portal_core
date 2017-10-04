@@ -8,6 +8,10 @@
     service account has shared the study workspace with you.</p>
   <p>You may also create a study based on an existing workspace you already own.  To do so, select <strong>'Yes'</strong> under <strong>'Use Existing Workspace'</strong>
     and then provide the name in the text box.</p>
+  <h4>Billing Projects</h4>
+  <p>You must select a billing project when creating your study.  You may use the default project, but you will not be allowed to run any computes in your workspace.  If you
+    wish to run computes, then you must <%= link_to 'create a billing project', billing_projects_path %> (using a Google billing account that you own) first before creating this study.</p>
+  <strong><p class="text-danger"><i class="fa fa-fw fa-exclamation-triangle"></i> You cannot change the billing project of a workspace once it has been created.</p></strong>
 </div>
 
 <%= render 'form' %>
@@ -29,11 +33,3 @@
     </div>
   </div>
 </div>
-
-<script type="text/javascript">
-
-    $('#save-study').click(function() {
-        launchModalSpinner('#create-study-spinner', '#create-modal');
-    });
-
-</script>

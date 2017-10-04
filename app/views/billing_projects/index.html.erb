@@ -6,7 +6,8 @@
       <thead>
       <tr>
         <th>Project Name</th>
-        <th>Users <span class="label label-primary">Owner</span>&nbsp;<span class="label label-default">Member</span></th>
+        <th>Project Status</th>
+        <th>Users <span class="label label-primary">Owner</span>&nbsp;<span class="label label-default">User</span></th>
         <th>Actions</th>
       </tr>
       </thead>
@@ -14,6 +15,7 @@
       <% @projects.each do |project_name, project_attributes| %>
         <tr>
           <td><%= project_name %></td>
+          <td><%= get_project_status_label(project_attributes[:status]) %></td>
           <td>
             <% project_attributes[:members].each do |member| %>
               <% email = member['email'] == @portal_service_account ? 'SCP Service Account' : member['email'] %>

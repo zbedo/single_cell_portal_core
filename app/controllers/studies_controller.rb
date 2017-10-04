@@ -51,6 +51,16 @@ class StudiesController < ApplicationController
   # GET /studies/new
   def new
     @study = Study.new
+
+    # load the given user's available FireCloud billing projects
+    @projects = [['Default Project', FireCloudClient::PORTAL_NAMESPACE]]
+    client = FireCloudClient.new(current_user, 'single-cell-portal')
+    available_projects = client.get_billing_projects
+    available_projects.each do |project|
+      if project['creationStatus'] == 'Created'
+        @projects << [project['projectName'], project['projectName']]
+      end
+    end
   end
 
   # GET /studies/1/edit

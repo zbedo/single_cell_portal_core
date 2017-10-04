@@ -36,6 +36,7 @@ class BillingProjectsController < ApplicationController
     billing_projects.each do |project|
       project_name = project['projectName']
       @projects[project_name] = {
+          status: project['creationStatus'],
           members: @fire_cloud_client.get_billing_project_members(project_name)
       }
     end

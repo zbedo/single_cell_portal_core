@@ -17,7 +17,7 @@ Rails.application.routes.draw do
 
     # firecloud billing project actions
 		get 'billing_projects', to: 'billing_projects#index', as: :billing_projects
-		get 'billing_projects/create', to: 'billing_projects#create', as: :create_billing_project
+		post 'billing_projects/create', to: 'billing_projects#create', as: :create_billing_project
 		get 'billing_projects/:project_name', to: 'billing_projects#show_users', as: :show_billing_project_users
 		get 'billing_projects/:project_name/new_user', to: 'billing_projects#new_user', as: :new_billing_project_user
 		post 'billing_projects/:project_name/add_user', to: 'billing_projects#create_user', as: :create_billing_project_user
