@@ -187,12 +187,32 @@ function toggleGlyph(el) {
     el.toggleClass('fa-chevron-right fa-chevron-down');
 }
 
+// function to delegate delete call for a file after showing confirmation dialog
+function deletePromise(event, message) {
+    new Promise(function (resolve) {
+        var conf = confirm(message);
+        if ( conf === true ) {
+            launchModalSpinner('#delete-modal-spinner','#delete-modal', function() {
+                return resolve(true);
+            });
+        } else {
+            return resolve(false);
+        }
+    }).then(function (answer) {
+        if (answer !== true) {
+            event.stopPropagation();
+            event.preventDefault();
+        }
+        return answer;
+    });
+}
+
 // attach various handlers to bootstrap items and turn on functionality
 function enableDefaultActions() {
     // need to clear previous listener to prevent conflict
     $('.panel-collapse').off('show.bs.collapse hide.bs.collapse');
 
-    $('.panel-collapse').on('show.bs.collapse hide.bs.collapse', function() {
+    $('.panel-collapse').on('show.bs.collapse hide.bs.collapse', function () {
         toggleGlyph($(this).prev().find('span.toggle-glyph'));
     });
 
@@ -202,11 +222,10 @@ function enableDefaultActions() {
     $('[data-toggle="popover"]').popover();
 
     // warns user of in progress uploads, fileUploading is set to true from fileupload().add()
-    $('.check-upload').click(function() {
+    $('.check-upload').click(function () {
         if (fileUploading) {
             if (confirm("You still have file uploads in progress - leaving the page will cancel any incomplete uploads.  " +
-                "Click 'OK' to leave or 'Cancel' to stay.  You may open another tab to continue browsing if you wish."))
-            {
+                    "Click 'OK' to leave or 'Cancel' to stay.  You may open another tab to continue browsing if you wish.")) {
                 return true;
             } else {
                 return false;
@@ -215,34 +234,14 @@ function enableDefaultActions() {
     });
 
     // handler for file deletion clicks, need to grab return value and pass to window
-    $('.delete-file').click(function() {
-        new Promise(function(resolve) {
-            return deleteFileConfirmation('Are you sure?  This file will be deleted and any associated database records removed.  This cannot be undone.', resolve)
-        }).then(function(answer) {
-            return(answer);
-        });
+    $('body').on('click', '.delete-file', function (event) {
+        deletePromise(event, 'Are you sure?  This file will be deleted and any associated database records removed.  This cannot be undone.');
     });
 
-    // handler for file deletion clicks, need to grab return value and pass to window
-    $('.delete-file-sync').click(function() {
-        new Promise(function(resolve) {
-            return deleteFileConfirmation('Are you sure?  This will remove any database records associated with this file.  This cannot be undone.', resolve)
-        }).then(function(answer) {
-            return(answer);
-        });
+    // handler for file unsync clicks, need to grab return value and pass to window
+    $('body').on('click', '.delete-file-sync', function (event) {
+        deletePromise(event, 'Are you sure?  This will remove any database records associated with this file.  This cannot be undone.');
     });
-}
-
-// generic warning and spinner for deleting files
-function deleteFileConfirmation(confMessage, resolve) {
-    var conf = confirm(confMessage);
-    if ( conf === true ) {
-        launchModalSpinner('#delete-modal-spinner','#delete-modal', function() {
-            return resolve(true);
-        });
-    } else {
-        return resolve(false);
-    }
 }
 
 var stickyOptions = {
@@ -627,4 +626,10 @@ function closeUserAnnotationsForm() {
         $('#selection_div').toggleClass('collapse');
         $('#toggle-scatter').children().toggleClass('fa-toggle-on fa-toggle-off');
     }
+}
+
+// validate an email address
+function validateEmail(email) {
+    var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(email);
 }

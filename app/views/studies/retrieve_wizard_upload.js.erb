@@ -14,23 +14,7 @@ if ('<%= params[:partial] %>' == 'initialize_expression_form' && <%= !@study_fil
     $('.expression-label-tooltip').attr('data-original-title', toolTitle);
 }
 
-// reattach click listener to download a file when private, will open modal for timed HTML5 download
-$(wizForm).find('.download-btn').click(function() {
-	var url = $(this).data('filepath');
-	$.get(url);
-});
-
 $(wizForm).find('[data-toggle="tooltip"]').tooltip({container: 'body'});
-
-// reattach click handler for deleting
-$(wizForm).find('.delete-file').click(function() {
-  // handler for file deletion clicks
-  if (deleteFileConfirmation('Are you sure?  This file will be deleted and any associated database records removed.  This cannot be undone.')) {
-    return true;
-  } else {
-    return false;
-  }
-});
 
 // go to next step in wizard
 if ('<%= params[:partial] %>' == 'initialize_metadata_form' && getWizardStatus() <= 2) {

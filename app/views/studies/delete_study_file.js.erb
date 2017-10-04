@@ -1,45 +1,30 @@
-// replace form with fresh instance if needed
-if (<%= !@message.blank? %>) {
-	$("<%= params[:target] %>").replaceWith("<%= escape_javascript( render partial: @partial, locals: {study_file: @study_file}) %>");
-  var wizForm = $('.<%= @partial %>').slice(-1)[0];
+closeModalSpinner('#delete-modal-spinner', '#delete-modal', function() {
+    // replace form with fresh instance if needed
+    if (<%= !@message.blank? %>) {
+        $("<%= params[:target] %>").replaceWith("<%= escape_javascript( render partial: @partial, locals: {study_file: @study_file}) %>");
+        var wizForm = $('.<%= @partial %>').slice(-1)[0];
 
-  // reattach click listener to download a file when private, will open modal for timed HTML5 download
-  $(wizForm).find('.download-btn').click(function() {
-    var url = $(this).data('filepath');
-    $.get(url);
-  });
+        $(wizForm).find('[data-toggle="tooltip"]').tooltip({container: 'body'});
 
-  $(wizForm).find('[data-toggle="tooltip"]').tooltip({container: 'body'});
-
-  // reattach click handler for deleting
-  $(wizForm).find('.delete-file').click(function() {
-    // handler for file deletion clicks
-    if (deleteFileConfirmation()) {
-      return true;
     } else {
-      return false;
+        $("<%= params[:target] %>").remove();
     }
-  });
-} else {
-	$("<%= params[:target] %>").remove();
-}
-// if status needs to be decremented, reset necessary fields
-if (<%= @reset_status %>) {
-	resetWizardStep('<%= @partial %>_nav');
-	var statusLabel = '<%= @partial %>_completed';
-	$('#' + statusLabel).replaceWith("<small class='initialize-label' id='" + statusLabel + "'><span class='label label-<%= @color %>'><%= @status %></span></small>");
-}
+    // if status needs to be decremented, reset necessary fields
+    if (<%= @reset_status %>) {
+        resetWizardStep('<%= @partial %>_nav');
+        var statusLabel = '<%= @partial %>_completed';
+        $('#' + statusLabel).replaceWith("<small class='initialize-label' id='" + statusLabel + "'><span class='label label-<%= @color %>'><%= @status %></span></small>");
+    }
 
-// check study initialization status and re-attach tooltip
-$("#initialized").replaceWith("<%= escape_javascript(render partial: 'initialize_study_label') %>");
-$('.initialize-label').tooltip({container: 'body'});
+    // check study initialization status and re-attach tooltip
+    $("#initialized").replaceWith("<%= escape_javascript(render partial: 'initialize_study_label') %>");
+    $('.initialize-label').tooltip({container: 'body'});
 
-// close modal
-$('#delete-modal').find('.spinner-target').data('spinner').stop();
-$('#delete-modal').modal('hide');
 
-// show message
-if (<%= !@message.blank? %>) {
-	$("#study-files-notice-target").html("<%= escape_javascript( render partial: 'studies/study_file_notices', locals: {message: @message}) %>");
-};
+    // show message
+    if (<%= !@message.blank? %>) {
+        $("#study-files-notice-target").html("<%= escape_javascript( render partial: 'studies/study_file_notices', locals: {message: @message}) %>");
+    };
+});
+
 
