@@ -557,7 +557,7 @@ class StudiesController < ApplicationController
       # only reparse if user requests
       if @study_file.parseable? && params[:reparse] == 'Yes'
         logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
-        @message += " You will receive and email at #{current_user.email} when the parse has completed."
+        @message += " You will receive an email at #{current_user.email} when the parse has completed."
         case @study_file.file_type
           when 'Cluster'
             @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false, reparse: true})
@@ -676,7 +676,7 @@ class StudiesController < ApplicationController
       @partial = 'study_file_form'
       if @study_file.parseable?
         logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
-        @message += " You will receive and email at #{current_user.email} when the parse has completed."
+        @message += " You will receive an email at #{current_user.email} when the parse has completed."
         # parse file as appropriate type
         case @study_file.file_type
           when 'Cluster'
@@ -720,7 +720,7 @@ class StudiesController < ApplicationController
       # only reparse if user requests
       if @study_file.parseable? && params[:reparse] == 'Yes'
         logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
-        @message += " You will receive and email at #{current_user.email} when the parse has completed."
+        @message += " You will receive an email at #{current_user.email} when the parse has completed."
         case @study_file.file_type
           when 'Cluster'
             @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false, reparse: true})
