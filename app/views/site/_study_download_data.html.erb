@@ -1,18 +1,17 @@
 <div class="row">
   <div class="col-xs-12">
-    <h2>Study Files <span class="badge"><%= @study_files.count %></span>  <% if @study.can_direct_download?(current_user) %><%= link_to "<i class='fa fa-question-circle'></i> Download Help".html_safe, 'javascript:;', class: 'btn btn-default pull-right', id: 'download-help' %><% end %></h2>
-
-    <% if @study.can_direct_download?(current_user) %>
-      <div class="modal fade" id="primary-data-download-modal" role="dialog" aria-labelledby="primary-data-download-modal" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h2 class="text-center">Download Help</h2>
-            </div>
-            <div class="modal-body">
-              <p class="lead">To download any individual file, click the download button in the corresponding row.</p>
-              <p class="lead">To download all files using <code>gsutil</code>, run the following command:</p>
-              <pre>gsutil -m cp -r gs://<%= @study.bucket_id %> [target path]</pre>
+    <h2>Study Files <span class="badge"><%= @study_files.count %></span>  <%= link_to "<i class='fa fa-question-circle'></i> Download Help".html_safe, 'javascript:;', class: 'btn btn-default pull-right', id: 'download-help' %></h2>
+    <div class="modal fade" id="primary-data-download-modal" role="dialog" aria-labelledby="primary-data-download-modal" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="text-center">Download Help</h2>
+          </div>
+          <div class="modal-body">
+            <% if @study.can_direct_download?(current_user) %>
+            <p class="lead">To download any individual file, click the download button in the corresponding row.</p>
+            <p class="lead">To download all files using <code>gsutil</code>, run the following command:</p>
+            <pre>gsutil -m cp -r gs://<%= @study.bucket_id %> [target path]</pre>
               <% if @directories.any? %>
                 <p class="lead">To download all data files in a specific folder, use the following commands:</p>
                 <table class="table table-condensed table-striped">
@@ -22,23 +21,24 @@
                     <th>gsutil command</th>
                   </tr>
                   <% @directories.each do |directory| %>
-                    <tr>
-                      <td><%= directory.name %></td>
-                      <td><pre>gsutil -m cp gs://<%= @study.bucket_id %><%= directory.download_display_name %>*.<%= directory.file_type %>*<%= %> [target path]</pre></td>
-                    </tr>
+                      <tr>
+                        <td><%= directory.name %></td>
+                        <td><pre>gsutil -m cp gs://<%= @study.bucket_id %><%= directory.download_display_name %>*.<%= directory.file_type %>*<%= %> [target path]</pre></td>
+                      </tr>
                   <% end %>
                   </thead>
                 </table>
               <% end %>
-            </div>
-            <div class="modal-footer">
-              <button class="close" data-dismiss="modal">×</button>
-            </div>
+            <% elsif @study.public? %>
+                <!-- Put new instructions here -->
+            <% end %>
+          </div>
+          <div class="modal-footer">
+            <button class="close" data-dismiss="modal">×</button>
           </div>
         </div>
       </div>
-    <% end %>
-
+    </div>
     <script type="text/javascript">
         $('#download-help').click(function() {
             $('#primary-data-download-modal').modal('show');
