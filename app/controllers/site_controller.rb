@@ -550,6 +550,52 @@ class SiteController < ApplicationController
     redirect_to @signed_url
   end
 
+  # Returns text file listing signed URLs of study files for download via curl.
+  def download_bulk_files
+
+    # 'all' or the name of a directory, e.g. <insert example here>
+    download_object = params[:download_object]
+
+    # Ensure user is signed in and study is public
+    if !user_signed_in?
+      message = 'You must be signed in to download data.'
+      redirect_to view_study_path(@study.url_safe_name), alert: message and return
+    elsif !@study.public?
+      message = 'Only public studies can be downloaded via curl.'
+      redirect_to view_study_path(@study.url_safe_name), alert: message and return
+    end
+
+    # TODO: Extract AdminConfiguration and quota checks from download_file into new method,
+    # then call that from here.  Better than copy-pasting mostly duplicative code.
+
+    signed_urls = []
+
+    files = []
+    if download_object == 'all'
+      files = @study.study_files
+      files.each do |study_file|
+        filename = study_file.upload_file_name
+        signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, filename, expires: 300)
+        signed_urls.push(signed_url)
+      end
+    else
+      files = @study.directory_listings
+      # TODO: filter by download_object
+    end
+
+    # curl -K urls.txt
+    # signed_urls = "url=\"" + signed_urls.join("\"\nurl=\"") + "\""
+
+    # wget -i urls.txt
+    signed_urls = signed_urls.join("\n")
+
+    f = Tempfile.new('urls.txt')
+    f.write(signed_urls)
+    f.close
+
+    send_file f.path, filename: 'urls.txt'
+  end
+
   ###
   #
   # ANNOTATION METHODS

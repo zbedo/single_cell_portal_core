@@ -30,21 +30,21 @@
                 </table>
               <% end %>
             <% elsif @study.public? %>
-                <p class="lead">To download all files using <code>curl</code>, run the following command:</p>
-                <pre>curl -K urls.txt > [target path]</pre>
-                <%= link_to "<i class='fa fa-download'></i> Get urls.txt".html_safe, 'javascript:;', class: 'btn btn-default pull-right', class: 'bulk-download' %>
+                <p class="lead">To download all files using <code>wget</code>, run the following command:</p>
+                <pre>wget -i urls.txt</pre>
+                <%= link_to "<i class='fa fa-download'></i> Get urls.txt".html_safe, '/single_cell/bulk_data/public-study/all/', class: 'btn btn-default pull-right', class: 'bulk-download' %>
                 <% if @directories.any? %>
                     <p class="lead">To download all data files in a specific folder, use the following commands:</p>
                     <table class="table table-condensed table-striped">
                       <thead>
                       <tr>
                         <th>Folder</th>
-                        <th>curl command</th>
+                        <th>wget command</th>
                       </tr>
                       <% @directories.each do |directory| %>
                           <tr>
                             <td><%= directory.name %></td>
-                            <td><pre>curl -K urls.txt > [target path]</pre></td>
+                            <td><pre>wget -i urls.txt</pre></td>
                           </tr>
                       <% end %>
                       </thead>
