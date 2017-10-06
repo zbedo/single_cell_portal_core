@@ -197,7 +197,7 @@ class Test::Unit::TestCase
     password_next = @driver.find_element(:id, 'passwordNext')
     password_next.click
     # check to make sure if we need to accept terms
-    if @driver.current_url.include?('https://accounts.google.com/o/oauth2/auth')
+    if @driver.current_url.include?('https://accounts.google.com/signin/oauth/consent')
       $verbose ? puts('approving access') : nil
       approve = @driver.find_element(:id, 'submit_approve_access')
       @clickable = approve['disabled'].nil?
