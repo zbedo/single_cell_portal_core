@@ -1589,17 +1589,19 @@ class Study
           Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud bucket assignment successful"
           # set workspace acl
           study_owner = self.user.email
+          workspace_permission = 'OWNER'
+          can_compute = true
           # if study project is in the compute blacklist, set permissions to WRITER and revoke computes
           # otherwise, set to OWNER with default permissions
-          if Rails.env != 'production' || !FireCloudClient::COMPUTE_BLACKLIST.include?(self.firecloud_project)
-            @acl = Study.firecloud_client.create_workspace_acl(study_owner, 'OWNER', true, true)
-          else
-            @acl = Study.firecloud_client.create_workspace_acl(study_owner, 'WRITER', true, false)
+          if Rails.env == 'production' && FireCloudClient::COMPUTE_BLACKLIST.include?(self.firecloud_project)
+            workspace_permission = 'WRITER'
+            can_compute = false
           end
-          Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, @acl)
+          acl = Study.firecloud_client.create_workspace_acl(study_owner, workspace_permission, true, can_compute)
+          Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
           # validate acl
           ws_acl = Study.firecloud_client.get_workspace_acl(ws_name)
-          unless ws_acl['acl'][study_owner]['accessLevel'] == 'OWNER' && !ws_acl['acl'][study_owner]['canCompute']
+          unless ws_acl['acl'][study_owner]['accessLevel'] == workspace_permission && ws_acl['acl'][study_owner]['canCompute'] == can_compute
             # delete workspace on validation fail
             Study.firecloud_client.delete_workspace(self.firecloud_workspace)
             errors.add(:firecloud_workspace, ' was not created properly (permissions do not match).  Please try again later.')
@@ -1651,16 +1653,19 @@ class Study
       unless self.errors.any?
         begin
           workspace = Study.firecloud_client.get_workspace(self.firecloud_workspace)
-          # revoke compute permission if appropriate
+          study_owner = self.user.email
+          workspace_permission = 'OWNER'
+          can_compute = true
+          # if study project is in the compute blacklist, set permissions to WRITER and revoke computes
+          # otherwise, set to OWNER with default permissions
           if Rails.env == 'production' && FireCloudClient::COMPUTE_BLACKLIST.include?(self.firecloud_project)
+            workspace_permission = 'WRITER'
+            can_compute = false
             Rails.logger.info "#{Time.now}: Study: #{self.name} removing compute permissions"
-            # if study project is in the compute blacklist, set permissions to WRITER and revoke computes
-            # otherwise, set to OWNER with default permissions
-            compute_acl = Study.firecloud_client.create_workspace_acl(self.user.email, 'WRITER', true, false)
+            compute_acl = Study.firecloud_client.create_workspace_acl(self.user.email, workspace_permission, true, can_compute)
             Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, compute_acl)
           end
           acl = Study.firecloud_client.get_workspace_acl(self.firecloud_workspace)
-          study_owner = self.user.email
           # first check workspace authorization domain
           auth_domain = workspace['workspace']['authorizationDomain']
           unless auth_domain.empty?
@@ -1673,8 +1678,8 @@ class Study
             return false
           end
           # check compute permissions
-          if acl['acl'][study_owner]['canCompute'] && Rails.env == 'production' && FireCloudClient::COMPUTE_BLACKLIST.include?(self.firecloud_project)
-            errors.add(:firecloud_workspace, ': There was an error setting the permissions on your workspace (computes were not disabled).  Please try again.')
+          if acl['acl'][study_owner]['canCompute'] != can_compute
+            errors.add(:firecloud_workspace, ': There was an error setting the permissions on your workspace (compute permissions were not set correctly).  Please try again.')
             return false
           end
           Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl check successful"
