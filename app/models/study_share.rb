@@ -25,8 +25,8 @@ class StudyShare
 
 	index({ email: 1, study_id: 1 }, { unique: true })
 
-	PERMISSION_TYPES = %w(Owner Edit View)
-	FIRECLOUD_ACLS = %w(OWNER WRITER READER)
+	PERMISSION_TYPES = %w(Edit View)
+	FIRECLOUD_ACLS = %w(WRITER READER)
 
 	# hashes that represent ACL mapping between the portal & firecloud and the inverse
 	FIRECLOUD_ACL_MAP = Hash[PERMISSION_TYPES.zip(FIRECLOUD_ACLS)]
