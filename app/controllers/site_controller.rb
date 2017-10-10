@@ -626,12 +626,13 @@ class SiteController < ApplicationController
         signed_urls.push(signed_url)
       end
     else
-      files = @study.directory_listings
-      directory = @study.directory_listings.are_synced.detect {|d| d.name == entry_name}
-      if !directory.nil?
-        file_list += directory.files
+      synced_directories = @study.directory_listings.are_synced
+      synced_directories.each do |synced_dir|
+        synced_dir.files.each do |file|
+          signed_url = get_signed_url(file[:name])
+          signed_urls.push(signed_url)
+        end
       end
-      # TODO: filter by download_object
     end
 
     # curl -K urls.txt
