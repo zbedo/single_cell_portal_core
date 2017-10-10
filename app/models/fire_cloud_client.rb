@@ -27,6 +27,10 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   USER_GROUP_ROLES = %w(admin member)
 	# List of billing project roles
 	BILLING_PROJECT_ROLES = %w(user owner)
+  # List of available 'operations' or updating FireCloud workspace entities or attributes
+  AVAILABLE_OPS = %w(AddUpdateAttribute RemoveAttribute AddListMember RemoveListMember)
+  # List of projects where computes are not permitted (will cause all workspaces created to set owner acls to WRITER instead of OWNER)
+  COMPUTE_BLACKLIST = %w(single-cell-portal)
 
 	## CONSTRUCTOR
 	#

@@ -24,18 +24,19 @@ require File.expand_path('ui_test_helper.rb', 'test')
 #
 # ruby test/ui_test_suite.rb [-n /pattern/] [--ignore-name /pattern/] -- -c=/path/to/chromedriver -e=testing.email@gmail.com -p='testing_email_password' -s=sharing.email@gmail.com -P='sharing_email_password' -o=order -d=/path/to/downloads -u=portal_url -E=environment -r=random_seed -v
 #
-# ui_test_suite.rb takes up to 11 arguments (4 are required):
+# ui_test_suite.rb takes up to 12 arguments (4 are required):
 # 1. path to your Chromedriver binary (passed with -c=)
-# 2. test email account (passed with -e=); REQUIRED. this must be a valid Google & FireCloud user and also configured as an 'admin' account in the portal
-# 3. test email account password (passed with -p) REQUIRED. NOTE: you must quote the password to ensure it is passed correctly
-# 4. share email account (passed with -s=); REQUIRED. this must be a valid Google & FireCloud user
-# 5. share email account password (passed with -P) REQUIRED. NOTE: you must quote the password to ensure it is passed correctly
-# 6. test order (passed with -o=); defaults to defined order (can be alphabetic or random, but random will most likely fail horribly
-# 7. download directory (passed with -d=); place where files are downloaded on your OS, defaults to standard OSX location (/Users/`whoami`/Downloads)
-# 8. portal url (passed with -u=); url to point tests at, defaults to https://localhost/single_cell
-# 9. environment (passed with -E=); Rails environment that the target instance is running in.  Needed for constructing certain URLs
-# 10. random seed (passed with -r=); random seed to use when running tests (will be needed if you're running front end tests against previously created studies from test suite)
-# 11. verbose (passed with -v); run tests in verbose mode, will print extra logging messages where appropriate
+# 2. path to your Chrome profile (passed with -C=): tests may fail to log in properly if you do not load the default chrome profile due to Google captchas
+# 3. test email account (passed with -e=); REQUIRED. this must be a valid Google & FireCloud user and also configured as an 'admin' account in the portal
+# 4. test email account password (passed with -p) REQUIRED. NOTE: you must quote the password to ensure it is passed correctly
+# 5. share email account (passed with -s=); REQUIRED. this must be a valid Google & FireCloud user
+# 6. share email account password (passed with -P) REQUIRED. NOTE: you must quote the password to ensure it is passed correctly
+# 7. test order (passed with -o=); defaults to defined order (can be alphabetic or random, but random will most likely fail horribly
+# 8. download directory (passed with -d=); place where files are downloaded on your OS, defaults to standard OSX location (/Users/`whoami`/Downloads)
+# 9. portal url (passed with -u=); url to point tests at, defaults to https://localhost/single_cell
+# 10. environment (passed with -E=); Rails environment that the target instance is running in.  Needed for constructing certain URLs
+# 11. random seed (passed with -r=); random seed to use when running tests (will be needed if you're running front end tests against previously created studies from test suite)
+# 12. verbose (passed with -v); run tests in verbose mode, will print extra logging messages where appropriate
 #
 # IMPORTANT: if you do not use -- before the argument list and give the appropriate flag (with =), it is processed as a Test::Unit flag and ignored, and likely may
 # cause the suite to fail to launch.
@@ -97,9 +98,10 @@ class UiTestSuite < Test::Unit::TestCase
 		caps = Selenium::WebDriver::Remote::Capabilities.chrome("chromeOptions" => {'prefs' => {'credentials_enable_service' => false}})
 		options = Selenium::WebDriver::Chrome::Options.new
 		options.add_argument('--enable-webgl-draft-extensions')
-
+		profile = Selenium::WebDriver::Chrome::Profile.new($profile_dir)
 		@driver = Selenium::WebDriver::Driver.for :chrome, driver_path: $chromedriver_dir,
-																							options: options, desired_capabilities: caps, driver_opts: {log_path: '/tmp/webdriver.log'}
+																							profile: profile, options: options, desired_capabilities: caps,
+																							driver_opts: {log_path: '/tmp/webdriver.log'}
 		@driver.manage.window.maximize
 		@base_url = $portal_url
 		@accept_next_alert = true

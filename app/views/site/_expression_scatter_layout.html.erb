@@ -14,13 +14,16 @@
     scatterLayout.scene = {
       camera: currentCamera,
       xaxis: {
-          range: <%= raw @range[:x] %>
+          range: <%= raw @range[:x] %>,
+          showticklabels: false
       },
       yaxis: {
-          range: <%= raw @range[:y] %>
+          range: <%= raw @range[:y] %>,
+          showticklabels: false
       },
       zaxis: {
-          range: <%= raw @range[:z] %>
+          range: <%= raw @range[:z] %>,
+          showticklabels: false
       },
       <% if @cluster.has_range? %>
         aspectmode: '<%= @expression_aspect[:mode] %>',
@@ -36,10 +39,12 @@
 
 <% else %>
     scatterLayout.xaxis = {
-      range: <%= raw @range[:x] %>
+      range: <%= raw @range[:x] %>,
+      showticklabels: false
   };
 
     scatterLayout.yaxis = {
-      range: <%= raw @range[:y] %>
+      range: <%= raw @range[:y] %>,
+      showticklabels: false
   };
 <% end %>
