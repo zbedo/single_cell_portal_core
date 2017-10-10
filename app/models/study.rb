@@ -287,7 +287,7 @@ class Study
       false
     else
       workspace_acl = Study.firecloud_client.get_workspace_acl(self.firecloud_workspace)
-      workspace_acl['acl'][user].nil? ? false : workspace_acl['acl'][user]['canCompute']
+      workspace_acl['acl'][user.email].nil? ? false : workspace_acl['acl'][user.email]['canCompute']
     end
   end
 

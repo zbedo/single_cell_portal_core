@@ -117,7 +117,7 @@ class StudiesController < ApplicationController
             @permissions_changed << new_share
           elsif portal_permissions[user] != StudyShare::PORTAL_ACL_MAP[permissions['accessLevel']] && user != @study.user.email
             # share exists, but permissions are wrong
-            share = @study.study_shares.detect(email: user)
+            share = @study.study_shares.detect {|s| s.email == user}
             share.update(permission: StudyShare::PORTAL_ACL_MAP[permissions['accessLevel']])
             @permissions_changed << share
           else
