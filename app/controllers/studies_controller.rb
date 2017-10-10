@@ -57,7 +57,7 @@ class StudiesController < ApplicationController
     client = FireCloudClient.new(current_user, 'single-cell-portal')
     available_projects = client.get_billing_projects
     available_projects.each do |project|
-      if project['creationStatus'] == 'Created'
+      if project['creationStatus'] == 'Ready'
         @projects << [project['projectName'], project['projectName']]
       end
     end
@@ -107,12 +107,12 @@ class StudiesController < ApplicationController
     @permissions_changed = []
 
     # get a list of workspace submissions so we know what directories to ignore
-    @submission_ids = Study.firecloud_client.get_workspace_submissions(@study.firecloud_workspace).map {|s| s['submissionId']}
+    @submission_ids = Study.firecloud_client.get_workspace_submissions(@study.firecloud_project, @study.firecloud_workspace).map {|s| s['submissionId']}
 
     # first sync permissions if necessary
     begin
       portal_permissions = @study.local_acl
-      firecloud_permissions = Study.firecloud_client.get_workspace_acl(@study.firecloud_workspace)
+      firecloud_permissions = Study.firecloud_client.get_workspace_acl(@study.firecloud_project, @study.firecloud_workspace)
       firecloud_permissions['acl'].each do |user, permissions|
         # skip project owner permissions, they aren't relevant in this context
         if permissions['accessLevel'] == 'PROJECT_OWNER'
@@ -156,7 +156,7 @@ class StudiesController < ApplicationController
     begin
       # create a map of file extension to use for creating directory_listings of groups of 10+ files of the same type
       @file_extension_map = {}
-      workspace_files = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, @study.firecloud_workspace)
+      workspace_files = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, @study.firecloud_project, @study.firecloud_workspace)
       # see process_workspace_bucket_files in private methods for more details on syncing
       process_workspace_bucket_files(workspace_files)
       while workspace_files.next?
@@ -234,9 +234,9 @@ class StudiesController < ApplicationController
     @unsynced_primary_data_dirs = []
     @unsynced_other_dirs = []
     begin
-      submission = Study.firecloud_client.get_workspace_submission(@study.firecloud_workspace, params[:submission_id])
+      submission = Study.firecloud_client.get_workspace_submission(@study.firecloud_project, @study.firecloud_workspace, params[:submission_id])
       submission['workflows'].each do |workflow|
-        workflow = Study.firecloud_client.get_workspace_submission_workflow(@study.firecloud_workspace, params[:submission_id], workflow['workflowId'])
+        workflow = Study.firecloud_client.get_workspace_submission_workflow(@study.firecloud_project, @study.firecloud_workspace, params[:submission_id], workflow['workflowId'])
         workflow['outputs'].each do |output, file_url|
           file_location = file_url.gsub(/gs\:\/\/#{@study.bucket_id}\//, '')
           # get google instance of file
@@ -312,7 +312,7 @@ class StudiesController < ApplicationController
         @study.update(firecloud_workspace: nil)
       else
         begin
-          Study.firecloud_client.delete_workspace(@study.firecloud_workspace)
+          Study.firecloud_client.delete_workspace(@study.firecloud_project, @study.firecloud_workspace)
         rescue RuntimeError => e
           logger.error "#{Time.now} unable to delete workspace: #{@study.firecloud_workspace}; #{e.message}"
           redirect_to studies_path, alert: "We were unable to delete your study due to: #{view_context.simple_format(e.message)}.<br /><br />No files or database records have been deleted.  Please try again later" and return
@@ -460,11 +460,11 @@ class StudiesController < ApplicationController
       redirect_to site_path, alert: "You may not download any data from this study until #{@study.embargo.to_s(:long)}." and return
     else
       begin
-        filesize = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_workspace, params[:filename]).size
+        filesize = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project, @study.firecloud_workspace, params[:filename]).size
         user_quota = current_user.daily_download_quota + filesize
         # check against download quota that is loaded in ApplicationController.get_download_quota
         if user_quota <= @download_quota
-          @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, params[:filename], expires: 15)
+          @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_project, @study.firecloud_workspace, params[:filename], expires: 15)
           current_user.update(daily_download_quota: user_quota)
         else
           redirect_to view_study_path(@study.url_safe_name), alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
@@ -624,8 +624,8 @@ class StudiesController < ApplicationController
       # delete source file in FireCloud and then remove record
       begin
         # make sure file is in FireCloud first as user may be aborting the upload
-        if !Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_workspace, @study_file.upload_file_name).nil?
-          Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, @study.firecloud_workspace, @study_file.upload_file_name)
+        if !Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project, @study.firecloud_workspace, @study_file.upload_file_name).nil?
+          Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, @study.firecloud_project, @study.firecloud_workspace, @study_file.upload_file_name)
         end
       rescue RuntimeError => e
         logger.error "#{Time.now}: error in deleting #{@study_file.upload_file_name} from workspace: #{@study.firecloud_workspace}; #{e.message}"
