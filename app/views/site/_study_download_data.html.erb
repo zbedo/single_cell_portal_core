@@ -31,7 +31,10 @@
               <% end %>
             <% elsif @study.public? %>
                 <p class="lead">To download all files using <code>wget</code>, run the following command:</p>
-                <pre>wget -i urls.txt</pre>
+                <pre>wget -i https://<%= request.headers['SERVER_NAME'] %>/single_cell/bulk_data/<%= @study.url_safe_name %>/all/<%= current_user.uid %></pre>
+                <% request.headers.each do |header| %>
+                    <%= header %>
+                <% end %>
                 <%= link_to "<i class='fa fa-download'></i> Get urls.txt".html_safe, '/single_cell/bulk_data/public-study/all/', class: 'btn btn-default pull-right', class: 'bulk-download' %>
                 <% if @directories.any? %>
                     <p class="lead">To download all data files in a specific folder, use the following commands:</p>
@@ -44,7 +47,7 @@
                       <% @directories.each do |directory| %>
                           <tr>
                             <td><%= directory.name %></td>
-                            <td><pre>wget -i urls.txt</pre></td>
+                            <td><pre>wget https://</pre></td>
                           </tr>
                       <% end %>
                       </thead>

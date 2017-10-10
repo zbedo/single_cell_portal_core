@@ -63,6 +63,12 @@ class User
   field :refresh_token, type: Mongoid::EncryptedString
   field :access_token, type: Hash
 
+  # Used for time-based one-time access token (TOTAT)
+  field :totat, type: Integer
+
+# Time (t) and time interval (ti) for the TOTAT
+  field :totat_t_ti, type: String
+
   ## Confirmable
   # field :confirmation_token,   type: String
   # field :confirmed_at,         type: Time

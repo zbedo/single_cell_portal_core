@@ -550,18 +550,60 @@ class SiteController < ApplicationController
     redirect_to @signed_url
   end
 
+  # Time since Unix epoch, in milliseconds
+  def milliseconds_since_epoch
+    return (Time.now.to_f * 1000).round
+  end
+
+  # Creates and returns a time-based one-time access token (TOTAT).
+  #
+  # This isn't a password, because, after creation, it is intended for later
+  # use without a username.  Instead it is an access token. For security, we
+  # allow only one use of this token, and that use must be within a given
+  # time interval from the creation of the token.
+  #
+  # Note that this TOTAT implementation is not yet intended for sensitive data.
+  def create_totat(time_interval=30)
+    puts 'test'
+    user_id, auth_token = params[:request_user_token].split(':')
+    user = User.find_by(id: user_id, authentication_token: auth_token)
+    totat = rand(999999)
+    t = milliseconds_since_epoch()
+    ti = time_interval
+    t_ti = t + '_' + ti
+    user.update(totat: totat)
+    user.update(totat_t_ti: t_ti)
+    puts 'otat'
+    puts otat
+    render json: otat
+  end
+
+  def verify_totat(totat)
+    user = User.find_by(totat: totat)
+    if user == nil
+      return false
+    end
+    totat_t, time_interval = user.totat_t_ti.split('_')
+    current_t = ms_since_epoch()
+    return current_t - totat_t >= time_interval
+  end
+
   # Returns text file listing signed URLs of study files for download via curl.
   def download_bulk_files
 
     # 'all' or the name of a directory, e.g. <insert example here>
     download_object = params[:download_object]
 
-    # Ensure user is signed in and study is public
-    if !user_signed_in?
-      message = 'You must be signed in to download data.'
-      redirect_to view_study_path(@study.url_safe_name), alert: message and return
-    elsif !@study.public?
-      message = 'Only public studies can be downloaded via curl.'
+    # Time-based one-time access token is used to track user's download quota
+    # valid_totat = verify_totat(params[:totat])
+    #
+    # if valid_totat == false
+    #   return 403
+    # end
+
+    # Ensure study is public
+    if !@study.public?
+      message = 'Only public studies can be downloaded via CLI.'
       redirect_to view_study_path(@study.url_safe_name), alert: message and return
     end
 
@@ -587,13 +629,29 @@ class SiteController < ApplicationController
     # signed_urls = "url=\"" + signed_urls.join("\"\nurl=\"") + "\""
 
     # wget -i urls.txt
-    signed_urls = signed_urls.join("\n")
+    signed_urls = signed_urls.join("\n") + "\n"
 
-    f = Tempfile.new('urls.txt')
-    f.write(signed_urls)
-    f.close
+    # Report CLI download to Google Analytics (GA).
+    # This uses the Measurement Protocol:
+    # https://developers.google.com/analytics/devguides/collection/protocol/v1/
+    #
+    # tid = Rails.env == 'production' ? 'UA-61688341-8' : 'UA-61688341-12'
+    # analytics_params =
+    #   'v=1' + # Protocol version
+    #   '&tid=' + tid + # Tracking ID (details above)
+    #   '&cid=555' + # Client ID
+    #   '&t=event' + # Hit type
+    #   '&ec=cli' + # Event category
+    #   '&ea=download' # Event action
+    # http = Net::HTTP.new('www.google-analytics.com')
+    # http.use_ssl = true
+    # request = Net::HTTP::Post.new('/collect')
+    # request.body = analytics_params
+    # http.request(request)
+    # response = http.request(request)
+    # puts response
 
-    send_file f.path, filename: 'urls.txt'
+    send_data signed_urls, type: 'text/plain', filename: 'urls.txt'
   end
 
   ###
