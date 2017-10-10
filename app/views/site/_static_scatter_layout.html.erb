@@ -15,13 +15,16 @@
     staticLayout.scene = {
       camera: staticCamera,
       xaxis: {
-          range: <%= raw @static_range[:x] %>
+          range: <%= raw @static_range[:x] %>,
+          showticklabels: false
       },
       yaxis: {
-          range: <%= raw @static_range[:y] %>
+          range: <%= raw @static_range[:y] %>,
+          showticklabels: false
       },
       zaxis: {
-          range: <%= raw @static_range[:z] %>
+          range: <%= raw @static_range[:z] %>,
+          showticklabels: false
       },
       <% if @cluster.has_range? %>
         aspectmode: '<%= @static_aspect[:mode] %>',
@@ -36,10 +39,12 @@
     };
   <% else %>
     staticLayout.xaxis = {
-        range: <%= raw @static_range[:x] %>
+        range: <%= raw @static_range[:x] %>,
+        showticklabels: false
     };
 
     staticLayout.yaxis = {
-        range: <%= raw @static_range[:y] %>
+        range: <%= raw @static_range[:y] %>,
+        showticklabels: false
     };
   <% end %>

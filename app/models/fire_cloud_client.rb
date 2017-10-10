@@ -27,6 +27,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   USER_GROUP_ROLES = %w(admin member)
   # List of available 'operations' or updating FireCloud workspace entities or attributes
   AVAILABLE_OPS = %w(AddUpdateAttribute RemoveAttribute AddListMember RemoveListMember)
+  # List of projects where computes are not permitted (will cause all workspaces created to set owner acls to WRITER instead of OWNER)
+  COMPUTE_BLACKLIST = %w(single-cell-portal)
 
 	## CONSTRUCTOR
 	#
@@ -347,15 +349,18 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	#
 	# param: email (String) => email of FireCloud user
 	# param: permission (String) => granted permission level
+	# param: share_permission (Boolean) => whether or not user can share workspace
+	# param: compute_permission (Boolean) => whether or not user can run computes in workspace
 	#
 	# return: JSON-encoded ACL object for use in HTTP body
-	def create_workspace_acl(email, permission)
+	def create_workspace_acl(email, permission, share_permission=true, compute_permission=false)
 		if WORKSPACE_PERMISSIONS.include?(permission)
 			[
 					{
 							'email' => email,
 							'accessLevel' => permission,
-							'canShare' => true
+							'canShare' => share_permission,
+							'canCompute' => compute_permission
 					}
 			].to_json
 		else

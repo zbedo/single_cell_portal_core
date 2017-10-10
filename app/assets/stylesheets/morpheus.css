@@ -108,6 +108,11 @@
     border-radius: 3px;
 }
 
+.morpheus.form-horizontal .help-block {
+    margin-bottom: 0px;
+    margin-top: 0px;
+}
+
 .morpheus-menu {
     padding-right: 7px;
     padding-left: 7px;
@@ -142,3 +147,61 @@
     float: left;
 }
 
+.morpheus-landing-panel {
+    padding: 20px;
+    border: 1px solid #707070;
+    min-height: 300px;
+    max-height: 400px;
+    overflow: auto;
+}
+
+.morpheus-file-drop.drag {
+    border: 2px dotted #0571b0;
+}
+
+.morpheus-file-drop.drag .morpheus-drag-text {
+    color: #0571b0;
+}
+
+.morpheus-nav {
+    border-bottom: none;
+}
+
+.morpheus-preloaded {
+    text-align: left;
+}
+
+.morpheus-preloaded label {
+    font-weight: normal;
+    display: block;
+}
+
+.nav-pills.morpheus > li.active > a, .nav-pills > li.active > a:focus, .nav-pills > li.active > a:hover {
+    background-color: #ca0020;
+}
+
+.morpheus-footer {
+    padding-top: 25px;
+    padding-bottom: 25px;
+    margin-top: 50px;
+    color: #99979c;
+    text-align: center;
+    background-color: black;
+}
+
+.morpheus-footer a {
+    color: #fff;
+}
+
+.morpheus-footer-links {
+    padding-left: 0;
+    margin-bottom: 20px;
+}
+
+.morpheus-footer-links li {
+    display: inline-block;
+}
+
+.morpheus-footer-links li + li {
+    margin-left: 15px;
+}

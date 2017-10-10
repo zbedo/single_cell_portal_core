@@ -25,9 +25,10 @@ def parse_test_arguments(arguments)
   $env = 'development'
   $random_seed = SecureRandom.uuid
   $verbose = false
+  $profile_dir = "/Users/#{$user}/Library/Application Support/Google/Chrome/Default"
 
   # usage string for help message
-  $usage = "ruby test/ui_test_suite.rb -- -c=/path/to/chromedriver -e=testing.email@gmail.com -p='testing_email_password' -s=sharing.email@gmail.com -P='sharing_email_password' -o=order -d=/path/to/downloads -u=portal_url -E=environment -r=random_seed"
+  $usage = "ruby test/ui_test_suite.rb -- -c=/path/to/chromedriver -C=/path/to/chrome/profile -e=testing.email@gmail.com -p='testing_email_password' -s=sharing.email@gmail.com -P='sharing_email_password' -o=order -d=/path/to/downloads -u=portal_url -E=environment -r=random_seed"
 
   # parse arguments and set values
   arguments.each do |arg|
@@ -51,6 +52,8 @@ def parse_test_arguments(arguments)
       $env = arg.gsub(/\-E\=/, '')
     elsif arg =~ /\-r\=/
       $random_seed = arg.gsub(/\-r\=/, '')
+    elsif arg =~ /\-C\=/
+      $profile_dir = arg.gsub(/\-C\=/, '')
     elsif arg =~ /\-v/
       $verbose = true
     end
@@ -186,18 +189,25 @@ class Test::Unit::TestCase
     google_auth = @driver.find_element(:id, 'google-auth')
     google_auth.click
     $verbose ? puts('logging in as ' + email) : nil
-    email_field = @driver.find_element(:id, 'identifierId')
-    email_field.send_key(email)
+    begin
+      profile_link = @driver.find_element(:css, "[data-email='#{email}']")
+      profile_link.click
+    rescue Selenium::WebDriver::Error::NoSuchElementError => e
+      other_account = @driver.find_element(:id, 'identifierLink')
+      other_account.click
+      email_field = @driver.find_element(:id, 'identifierId')
+      email_field.send_key(email)
+      email_next = @driver.find_element(:id, 'identifierNext')
+      email_next.click
+    end
     sleep(0.5) # this lets the animation complete
-    email_next = @driver.find_element(:id, 'identifierNext')
-    email_next.click
     password_field = @driver.find_element(:name, 'password')
     password_field.send_key(password)
     sleep(0.5) # this lets the animation complete
     password_next = @driver.find_element(:id, 'passwordNext')
     password_next.click
     # check to make sure if we need to accept terms
-    if @driver.current_url.include?('https://accounts.google.com/o/oauth2/auth')
+    if @driver.current_url.include?('https://accounts.google.com/signin/oauth/consent')
       $verbose ? puts('approving access') : nil
       approve = @driver.find_element(:id, 'submit_approve_access')
       @clickable = approve['disabled'].nil?
@@ -240,13 +250,18 @@ class Test::Unit::TestCase
     $verbose ? puts('logging in as ' + email) : nil
     use_new = @driver.find_element(:id, 'identifierLink')
     use_new.click
-    sleep(0.5)
+    wait_for_render(:id, 'identifierId')
+    sleep(1)
     email_field = @driver.find_element(:id, 'identifierId')
+    # gotcha to clear out any stored value
+    email_field.clear
     email_field.send_key(email)
     sleep(0.5) # this lets the animation complete
     email_next = @driver.find_element(:id, 'identifierNext')
     email_next.click
     password_field = @driver.find_element(:name, 'password')
+    sleep(0.5)
+    password_field.clear
     password_field.send_key(password)
     sleep(0.5) # this lets the animation complete
     password_next = @driver.find_element(:id, 'passwordNext')
