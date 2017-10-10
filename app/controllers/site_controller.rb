@@ -588,6 +588,11 @@ class SiteController < ApplicationController
     return current_t - totat_t >= time_interval
   end
 
+  # Helper method
+  def get_signed_url(filename, expires=300)
+    return Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, filename, expires: expires)
+  end
+
   # Returns text file listing signed URLs of study files for download via curl.
   def download_bulk_files
 
@@ -617,11 +622,15 @@ class SiteController < ApplicationController
       files = @study.study_files
       files.each do |study_file|
         filename = study_file.upload_file_name
-        signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, filename, expires: 300)
+        signed_url = get_signed_url(filename)
         signed_urls.push(signed_url)
       end
     else
       files = @study.directory_listings
+      directory = @study.directory_listings.are_synced.detect {|d| d.name == entry_name}
+      if !directory.nil?
+        file_list += directory.files
+      end
       # TODO: filter by download_object
     end
 
