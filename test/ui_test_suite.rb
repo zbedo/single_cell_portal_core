@@ -132,7 +132,7 @@ class UiTestSuite < Test::Unit::TestCase
 	##
 
 	# create basic test study
-	test 'admin: create-study: configurations: user-annotation: workflows: public' do
+	test 'admin: create-study: configurations: download: user-annotation: workflows: public' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in first
@@ -408,7 +408,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# create private study for testing visibility/edit restrictions
-	test 'admin: create-study: private' do
+	test 'admin: create-study: download: private' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in first
@@ -1140,7 +1140,7 @@ class UiTestSuite < Test::Unit::TestCase
 	##
 
 	# test the various levels of firecloud access integration (on, read-only, local-off, and off)
-	test 'admin: configurations: firecloud access' do
+	test 'configurations: firecloud access' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 		path = @base_url + '/admin'
 		@driver.get path
@@ -1243,7 +1243,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
   # check
-	test 'admin: configurations: download-quota: enforcement' do
+	test 'configurations: quota: enforcement' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 		path = @base_url + '/admin'
 		@driver.get path
@@ -1305,7 +1305,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# test unlocking jobs feature - this mainly just tests that the request goes through. it is difficult to test the
 	# entire method as it require the portal to crash while in the middle of a parse, which cannot be reliably automated.
-	test 'admin: configurations: restart locked jobs' do
+	test 'configurations: restart locked jobs' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 		path = @base_url + '/users/sign_in'
 		@driver.get path
@@ -1325,7 +1325,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# reset user download quotas to 0 bytes
-	test 'admin: configurations: download-quota: reset' do
+	test 'configurations: download-quota: reset' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 		path = @base_url + '/users/sign_in'
 		@driver.get path
@@ -1346,7 +1346,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# test force-refreshing the FireCloud API access tokens and storage driver connections
-	test 'admin: configurations: refresh api connections' do
+	test 'configurations: refresh api connections' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 		path = @base_url + '/admin'
 		@driver.get path
@@ -1367,7 +1367,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# update a user's roles (admin or reporter)
-	test 'admin: configurations: update user roles' do
+	test 'configurations: update user roles' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 		path = @base_url + '/admin'
 		@driver.get path
@@ -1409,7 +1409,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# test whether or not maintenance mode functions properly
 	# technically this is not an AdminConfiguration, but a bash script that only a project admin can invoke
-	test 'admin: configurations: maintenance mode' do
+	test 'configurations: maintenance mode' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 		# only execute this test when testing locally - when using a remote host it will fail as the shell script being executed
 		# is on the wrong host
@@ -1432,7 +1432,7 @@ class UiTestSuite < Test::Unit::TestCase
 	##
 
 	# test loading plots from reporting controller
-	test 'admin: reports: view' do
+	test 'reports: view' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		path = @base_url + '/reports'
@@ -1467,7 +1467,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# send a request to site admins for a new report plot
-	test 'admin: reports: request new' do
+	test 'reports: request new' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		path = @base_url + '/reports'
@@ -1679,7 +1679,7 @@ class UiTestSuite < Test::Unit::TestCase
 		login_path = @base_url + '/users/sign_in'
 		@driver.get login_path
 		wait_until_page_loads(login_path)
-		login($share_email, $share_email_password)
+		login_as_other($share_email, $share_email_password)
 
 		# negative test, should not be able to download private files from study without access
 		non_share_public_link = @base_url + "/data/public/private-study-#{$random_seed}/README.txt"
