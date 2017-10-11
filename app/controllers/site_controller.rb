@@ -550,12 +550,13 @@ class SiteController < ApplicationController
     redirect_to @signed_url
   end
 
-  def create_totat(time_interval=30)
+  def create_totat
     if !user_signed_in?
       error = {'message': "Forbidden: You must be signed in to do this"}
       render json:  + totat, status: 403
     end
-    totat_and_ti = current_user.create_totat()
+    half_hour = 1800 # seconds
+    totat_and_ti = current_user.create_totat(time_interval=half_hour)
     render json: totat_and_ti
   end
 
@@ -566,6 +567,9 @@ class SiteController < ApplicationController
 
   # Returns text file listing signed URLs of study files for download via curl.
   def download_bulk_files
+
+    # Have you exceeded your quota?  Only check at beginning.
+    # Studies might be massive.
 
     # 'all' or the name of a directory, e.g. <insert example here>
     download_object = params[:download_object]
@@ -588,28 +592,37 @@ class SiteController < ApplicationController
     # TODO: Extract AdminConfiguration and quota checks from download_file into new method,
     # then call that from here.  Better than copy-pasting mostly duplicative code.
 
-    signed_urls = []
+    curl_configs = ['--create-dirs']
 
     files = []
     if download_object == 'all'
       files = @study.study_files
       files.each do |study_file|
         filename = study_file.upload_file_name
-        signed_url = get_signed_url(filename)
-        signed_urls.push(signed_url)
+        signed_url = get_signed_url(filename, expires=1800)
+        curl_config = [
+            'url="' + signed_url + '"',
+            'output="' + filename + '"'
+        ]
+        curl_configs.push(curl_config.join("\n"))
       end
     else
       synced_directories = @study.directory_listings.are_synced
       synced_directories.each do |synced_dir|
         synced_dir.files.each do |file|
-          signed_url = get_signed_url(file[:name])
-          signed_urls.push(signed_url)
+          filename = file[:name]
+          signed_url = get_signed_url(filename, expires=1800)
+          curl_config = [
+            'url="' + signed_url + '"',
+            'output="' + filename + '"'
+          ]
+          curl_configs.push(curl_config.join("\n"))
         end
       end
     end
 
     # For curl
-    signed_urls = "url=\"" + signed_urls.join("\"\nurl=\"") + "\"\n"
+    curl_configs = curl_configs.join("\n\n")
 
     # wget -i urls.txt
     # signed_urls = signed_urls.join("\n") + "\n"
@@ -634,7 +647,7 @@ class SiteController < ApplicationController
     # response = http.request(request)
     # puts response
 
-    send_data signed_urls, type: 'text/plain', filename: 'urls.txt'
+    send_data curl_configs, type: 'text/plain', filename: 'cfg.txt'
   end
 
   ###

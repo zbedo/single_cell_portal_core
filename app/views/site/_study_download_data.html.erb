@@ -30,22 +30,21 @@
                 </table>
               <% end %>
             <% elsif @study.public? %>
-                <p class="lead">To download all files using <code>wget</code>, run the following command:</p>
-                <pre>wget -i https://<%= request.headers['SERVER_NAME'] %>/single_cell/bulk_data/<%= @study.url_safe_name %>/all/<%= current_user.uid %></pre>
-                <%= link_to "<i class='fa fa-download'></i> Get download command for all study data".html_safe, 'javascript:;', class: 'btn btn-default pull-right get-download-command', id: 'get-download-command_all' %>
+                <p class="lead">To download all files using <code>curl</code>, click the button below to get the download command:</p>
+                <p class="lead"><%= link_to "<i class='fa fa-download'></i> Get download command for all study data".html_safe, 'javascript:;', class: 'btn btn-default get-download-command', id: 'get-download-command_all' %></p>
                 <% if @directories.any? %>
                     <p class="lead">To download all data files in a specific folder, use the following commands:</p>
                     <table class="table table-condensed table-striped">
                       <thead>
                       <tr>
                         <th>Folder</th>
-                        <th>wget command</th>
+                        <th>curl command</th>
                       </tr>
                       <% @directories.each do |directory| %>
                           <tr>
                             <td><%= directory.name %></td>
                             <td>
-                              <%= link_to "<i class='fa fa-download'></i> Get download command".html_safe, 'javascript:;', class: 'btn btn-default pull-right get-download-command', id: "get-download-command_#{directory.name}" %>
+                              <%= link_to "<i class='fa fa-download'></i> Get download command".html_safe, 'javascript:;', class: 'btn btn-default get-download-command', id: "get-download-command_#{directory.name}" %>
                             </td>
                           </tr>
                       <% end %>
@@ -65,7 +64,8 @@
             $('#primary-data-download-modal').modal('show');
         });
         $('body').on('click', '.get-download-command', function(event) {
-          var directoryObject = $(this).attr('id').split('_')[1];
+          var downloadButton = $(this);
+          var directoryObject = downloadButton.attr('id').split('_')[1];
           $.ajax({
             url: '/single_cell/totat',
             type: 'post'
@@ -77,10 +77,13 @@
               '/' + directoryObject +
               '/' + response.totat
             );
+            var flag = (window.location.host === 'localhost') ? '--insecure ' : '';
             var downloadCommand = (
-              'curl "' + url + '" -so /tmp/urls.txt; ' +
-              'curl -K /tmp/urls.txt -o data.txt' // TODO: Fix handling for multiple files
+              'curl ' + flag + '"' + url + '" -so /tmp/cfg.txt; ' +
+              'curl -K /tmp/cfg.txt'
             );
+            downloadButton.parent().prepend('<pre>' + downloadCommand + '</pre>');
+            downloadButton.addClass('pull-right');
           });
         });
     </script>
