@@ -52,6 +52,20 @@ which will show you how to pass specific values to the above env variables.  <em
 an environment of 'production' will cause the container to spawn headlessly by passing the <code>-d</code> flag, rather
 than <code>--rm -it</code>.</em>
 
+=== BROAD INSTITUTE CONFIGURATION
+
+Broad Institute project members can load all project secrets from Vault and boot the portal directly by using the <code>bin/load_env_secrets.sh</code> script.
+
+  bin/load_env_secrets.sh -p (path/to/service/account) -f (path/to/portal/config) -e (environment)
+
+This script takes three parameters:
+
+1. *VAULT_SECRET_PATH* (passed with -p): Path to portal configuration JSON inside Vault.
+2. *SERVICE_ACCOUNT_PATH* (passed with -c): Path to GCP service account configuration JSON inside Vault.
+3. *PASSENGER_APP_ENV* (passed with -e; optional): Environment to boot portal in.  Defaults to 'development'.
+
+The script requires two command line utilities: vault[https://www.vaultproject.io] and jq[https://stedolan.github.io/jq/].  Please refer to their respective sites for installation instructions.
+
 === DOCKER RUN COMMAND ENVIRONMENT VARIABLES
 There are several variables that need to be passed to the Docker container in order to run properly:
 1. *CONTAINER_NAME* (passed with --name): This names your container to whatever you want.  This is useful when linking containers.
@@ -189,6 +203,15 @@ To run the unit & integration test suite, the <code>boot_docker</code> script ca
   bin/boot_docker -e test -k (service account key path)
 
 This will boot a new instance of the portal in test mode and run all associated tests, <em>not including the UI test suite</em>.
+
+It is also possible to run individual unit tests suites by booting the portal as normal (in development mode) and then running
+the following command after attaching to the running instance (with <code>docker exec -it single_cell bash</code>):
+
+  ruby -I test path/to/test/suite.rb
+
+For instance, to run the FireCloudClient unit test suite:
+
+	ruby -I test test/models/fire_cloud_client_test.rb
 
 == GOOGLE DEPLOYMENT
 

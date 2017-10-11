@@ -1,4 +1,12 @@
 class Devise::SessionsController < DeviseController
+
+  ###
+  #
+  # This controller overwrites the existing default Devise::SessionsController.  Since all accounts have been migrated
+  # to Google OAuth2 authentication, this is likely not used at all anymore.
+  #
+  ###
+
 	prepend_before_action :require_no_authentication, only: [:new, :create]
 	prepend_before_action :allow_params_authentication!, only: :create
 	prepend_before_action :verify_signed_out_user, only: :destroy

@@ -1,4 +1,17 @@
 class StudyFile
+
+  ###
+  #
+  # StudyFile: class holding metadata about data files either uploaded through the UI or 'synced' from a GCS bucket
+  #
+  ###
+
+  ###
+  #
+  # SETTINGS & FIELD DEFINITIONS
+  #
+  ###
+
   include Mongoid::Document
   include Mongoid::Timestamps
   include Mongoid::Paperclip
@@ -9,6 +22,7 @@ class StudyFile
   PARSEABLE_TYPES = ['Cluster', 'Expression Matrix', 'Gene List', 'Metadata']
   UPLOAD_STATUSES = %w(new uploading uploaded)
   PARSE_STATUSES = %w(unparsed parsing parsed)
+  PRIMARY_DATA_EXTENTIONS = %w(fastq fastq.zip fastq.gz fastq.tar.gz fq fq.zip fq.gz fq.tar.gz)
 
   # associations
   belongs_to :study, index: true
@@ -39,6 +53,16 @@ class StudyFile
   field :z_axis_max, type: Integer
   field :queued_for_deletion, type: Boolean, default: false
 
+  Paperclip.interpolates :data_dir do |attachment, style|
+    attachment.instance.data_dir
+  end
+
+  ###
+  #
+  # VALIDATIONS & CALLBACKS
+  #
+  ###
+
   # callbacks
   before_validation   :set_file_name_and_data_dir, on: :create
   before_save         :sanitize_name
@@ -54,9 +78,11 @@ class StudyFile
   validates_uniqueness_of :upload_file_name, scope: :study_id, unless: Proc.new {|f| f.human_data?}
   validates_presence_of :name
 
-  Paperclip.interpolates :data_dir do |attachment, style|
-    attachment.instance.data_dir
-  end
+  ###
+  #
+  # INSTANCE METHODS
+  #
+  ###
 
   # return correct path to file based on visibility & type
   def download_path
@@ -101,17 +127,6 @@ class StudyFile
     File.join(self.study.data_public_path, self.upload_file_name)
   end
 
-  # single-use method to set data_dir for existing study_files
-  def self.set_data_dir
-    self.all.each do |study_file|
-      if study_file.data_dir.nil?
-        study_file.update(data_dir: study_file.study.data_dir)
-        puts "Updated #{study_file.upload_file_name} with data_dir #{study_file.data_dir}"
-      end
-    end
-    true
-  end
-
   # convert all domain ranges from floats to integers
   def convert_all_ranges
     if self.file_type == 'Cluster'
@@ -143,6 +158,12 @@ class StudyFile
     end
   end
 
+  ###
+  #
+  # CACHING METHODS
+  #
+  ###
+
   # helper method to invalidate any matching front-end caches when parsing/deleting a study_file
   def invalidate_cache_by_file_type
     cache_key = self.cache_removal_key
@@ -173,6 +194,12 @@ class StudyFile
     @cache_key
   end
 
+  ###
+  #
+  # DELETE METHODS
+  #
+  ###
+
   # delete all queued study file objects
   def self.delete_queued_files
     study_files = self.where(queued_for_deletion: true)
@@ -185,6 +212,12 @@ class StudyFile
   end
 
   private
+
+  ###
+  #
+  # CUSTOM VALIDATIONS & CALLBACKS
+  #
+  ###
 
   # strip whitespace from name if the file is a cluster or gene list (will cause problems when rendering)
   def sanitize_name

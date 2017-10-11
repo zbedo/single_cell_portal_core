@@ -1,5 +1,11 @@
 class Ckeditor::PicturesController < Ckeditor::ApplicationController
 
+	###
+	#
+	# This overwrites the CKeditor engine pictures controller.  Images are now scoped to the user that uploaded them.
+	#
+	###
+
 	respond_to :html
 
 	def index

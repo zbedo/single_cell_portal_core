@@ -17,15 +17,18 @@ var layout = {
       camera: currentCamera,
       xaxis: {
           range: <%= raw @range[:x] %>,
-          title: '<%=  @axes[:x] %>'
+          title: '<%=  @axes[:x] %>',
+          showticklabels: false
       },
       yaxis: {
           range: <%= raw @range[:y] %>,
-          title: '<%= @axes[:y] %>'
+          title: '<%= @axes[:y] %>',
+          showticklabels: false
       },
       zaxis: {
           range: <%= raw @range[:z] %>,
-          title: '<%= @axes[:z] %>'
+          title: '<%= @axes[:z] %>',
+          showticklabels: false
       },
       <% if @cluster.has_range? %>
         aspectmode: '<%= @aspect[:mode] %>',
@@ -42,11 +45,13 @@ var layout = {
 <% else %>
   layout.xaxis = {
       range: <%= raw @range[:x] %>,
-      title: '<%=  @axes[:x] %>'
+      title: '<%=  @axes[:x] %>',
+      showticklabels: false
   };
 
   layout.yaxis = {
       range: <%= raw @range[:y] %>,
-      title: '<%= @axes[:y] %>'
+      title: '<%= @axes[:y] %>',
+      showticklabels: false
   };
 <% end %>

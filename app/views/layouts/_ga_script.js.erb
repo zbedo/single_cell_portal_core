@@ -1,4 +1,3 @@
 var trackingID = '<%= Rails.env == 'production' ? 'UA-61688341-8' : 'UA-61688341-12' %>';
 gaTracker(trackingID);
-gaTrack(unescapeHTML('<%= request.fullpath %>'), 'Single Cell Portal');
-
+gaTrack('<%= javascript_safe_url(request.fullpath) %>', 'Single Cell Portal');

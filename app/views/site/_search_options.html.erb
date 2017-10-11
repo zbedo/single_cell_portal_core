@@ -35,12 +35,14 @@
                       var annotation = $('#search_annotation').val();
                       var subsample = $('#search_subsample').val();
                       var url = "<%= view_study_path(study_name: @study.url_safe_name )%>?cluster=" + cluster + "&annotation=" + annotation + "&subsample=" + subsample;
-                      launchModalSpinner('#spinner_target', '#loading-modal');
-                      $.ajax({
-                          url: url,
-                          type: 'GET',
-                          dataType: 'script'
+                      launchModalSpinner('#spinner_target', '#loading-modal', function() {
+                          $.ajax({
+                              url: url,
+                              type: 'GET',
+                              dataType: 'script'
+                          });
                       });
+
                   });
                   $('#perform-gene-search').click(function(){
                       var fileInput = $('#search_upload')[0];
@@ -66,13 +68,14 @@
                           alert('You must specify at least one gene or upload a list of genes to search');
                           setErrorOnBlank($('.search-genes-input'));
                       } else {
-                          launchModalSpinner('#spinner_target', '#loading-modal');
-                          var form = $('#search-genes-form');
-                          $.ajax({
-                              type: 'POST',
-                              url: form.attr('action'),
-                              data: form.serialize(),
-                              dataType: 'script'
+                          launchModalSpinner('#spinner_target', '#loading-modal', function() {
+                              var form = $('#search-genes-form');
+                              $.ajax({
+                                  type: 'POST',
+                                  url: form.attr('action'),
+                                  data: form.serialize(),
+                                  dataType: 'script'
+                              });
                           });
                       }
                   };
@@ -96,8 +99,10 @@
                   $('#gene_set_subsample').val($('#search_subsample').val());
                   $('#gene_set').change(function() {
                       if ($(this).val() != '') {
-                          launchModalSpinner('#spinner_target', '#loading-modal');
-                          $('#gene-sets').submit();
+                          launchModalSpinner('#spinner_target', '#loading-modal', function() {
+                              $('#gene-sets').submit();
+                          });
+
                       }
                   });
               </script>
@@ -114,12 +119,16 @@
               <script type="text/javascript">
                   $('#gene').change(function() {
                       if ($(this).val() != '') {
-                          launchModalSpinner('#spinner_target', '#loading-modal');
-                          var url = $(this).val();
-                          var cluster = $('#search_cluster').val();
-                          var annotation = $('#search_annotation').val();
-                          var subsample = $('#search_subsample').val();
-                          $.get( url + '?cluster=' + cluster + '&annotation=' + annotation + '&subsample=' + subsample);
+                          launchModalSpinner('#spinner_target', '#loading-modal', function () {
+                              var url = $(this).val();
+                              var cluster = $('#search_cluster').val();
+                              var annotation = $('#search_annotation').val();
+                              var subsample = $('#search_subsample').val();
+                              $.ajax({
+                                  url: url + '?cluster=' + cluster + '&annotation=' + annotation + '&subsample=' + subsample,
+                                  dataType: 'script'
+                              });
+                          });
                       }
                   });
               </script>
@@ -136,8 +145,9 @@
                   <script type="text/javascript">
                       $('#expression').change(function() {
                           if ($(this).val() != '') {
-                              launchModalSpinner('#spinner_target', '#loading-modal');
-                              $('#precomputed-expression').submit();
+                              launchModalSpinner('#spinner_target', '#loading-modal', function() {
+                                  $('#precomputed-expression').submit();
+                              });
                           }
                       });
                   </script>

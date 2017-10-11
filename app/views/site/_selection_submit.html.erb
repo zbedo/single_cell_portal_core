@@ -20,9 +20,12 @@
             alert('Undefined is a reserved term. Select a different name for this label.');
             setErrorOnBlank(needText);
         } else {
-            launchModalSpinner('#save-modal-spinner', '#save-modal');
-            var form = $('#selection-well > form');
-            form.submit();
+            $('#generic-modal-title').html("Saving... Please Wait");
+            launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+                var form = $('#selection-well > form');
+                form.submit();
+            });
+
         }
 
     });

@@ -21,7 +21,8 @@ Rails.application.routes.draw do
 			member do
 				get 'upload', to: 'studies#initialize_study', as: :initialize
 				get 'sync', to: 'studies#sync_study', as: :sync
-        patch 'upload', to: 'studies#do_upload'
+				get 'sync/:submission_id', to: 'studies#sync_submission_outputs', as: :sync_submission_outputs
+				patch 'upload', to: 'studies#do_upload'
         get 'resume_upload', to: 'studies#resume_upload'
         patch 'update_status', to: 'studies#update_status'
         get 'reset_upload', to: 'studies#reset_upload'
@@ -57,11 +58,10 @@ Rails.application.routes.draw do
 			get :autocomplete_expression_score_gene, on: :collection
 		end
 
-		# public site actions
+		# data viewing actions
 		get 'study/:study_name', to: 'site#study', as: :view_study
 		get 'study/:study_name/edit_study_description', to: 'site#edit_study_description', as: :edit_study_description
 		match 'study/:study_name/update_settings', to: 'site#update_study_settings', via: [:post, :patch], as: :update_study_settings
-		get 'study/:study_name/get_fastq_files', to: 'site#get_fastq_files', as: :get_fastq_files
 		get 'study/:study_name/render_cluster', to: 'site#render_cluster', as: :render_cluster
 		get 'study/:study_name/get_new_annotations', to: 'site#get_new_annotations', as: :get_new_annotations
     post 'study/:study_name/search', to: 'site#search_genes', as: :search_genes
@@ -76,8 +76,26 @@ Rails.application.routes.draw do
     post 'study/:study_name/precomputed_gene_expression', to: 'site#search_precomputed_results', as: :search_precomputed_results
     get 'study/:study_name/precomputed_gene_expression', to: 'site#view_precomputed_gene_expression_heatmap', as: :view_precomputed_gene_expression_heatmap
     get 'study/:study_name/precomputed_results', to: 'site#precomputed_results', as: :precomputed_results
-		post 'study/:study_name/create_user_annotations', to: 'site#create_user_annotations', as: :create_user_annotations
+
+    # user annotation actions
+    post 'study/:study_name/create_user_annotations', to: 'site#create_user_annotations', as: :create_user_annotations
     get 'study/:study_name/show_user_annotations_form', to: 'site#show_user_annotations_form', as: :show_user_annotations_form
+
+    # workflow actions
+    get 'study/:study_name/get_fastq_files', to: 'site#get_fastq_files', as: :get_fastq_files
+		get 'study/:study_name/workspace_samples', to: 'site#get_workspace_samples', as: :get_workspace_samples
+		get 'study/:study_name/submissions', to: 'site#get_workspace_submissions', as: :get_workspace_submissions
+		post 'study/:study_name/submissions', to: 'site#create_workspace_submission', as: :create_workspace_submission
+		get 'study/:study_name/submissions/:submission_id', to: 'site#get_submission_workflow', as: :get_submission_workflow
+		delete 'study/:study_name/submissions/:submission_id', to: 'site#abort_submission_workflow', as: :abort_submission_workflow
+		delete 'study/:study_name/submissions/:submission_id/outputs', to: 'site#delete_submission_files', as: :delete_submission_files
+		get 'study/:study_name/submissions/:submission_id/outputs', to: 'site#get_submission_outputs', as: :get_submission_outputs
+		get 'study/:study_name/submissions/:submission_id/errors', to: 'site#get_submission_errors', as: :get_submission_errors
+		post 'study/:study_name/workspace_samples', to: 'site#update_workspace_samples', as: :update_workspace_samples
+		post 'study/:study_name/delete_workspace_samples', to: 'site#delete_workspace_samples', as: :delete_workspace_samples
+    get 'view_workflow_wdl', to: 'site#view_workflow_wdl', as: :view_workflow_wdl
+
+    # base actions
     get 'search', to: 'site#search', as: :search
     get 'log_action', to: 'site#log_action', as: :log_action
     get '/', to: 'site#index', as: :site

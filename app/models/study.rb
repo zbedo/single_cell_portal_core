@@ -1,6 +1,20 @@
 class Study
+
+  ###
+  #
+  # Study: main object class for portal; stores information regarding study objects and references to FireCloud workspaces,
+  # access controls to viewing study objects, and also used as main parsing class for uploaded study files.
+  #
+  ###
+
   include Mongoid::Document
   include Mongoid::Timestamps
+
+  ###
+  #
+  # FIRECLOUD METHODS
+  #
+  ###
 
   # prefix for FireCloud workspaces, defaults to blank in production
   WORKSPACE_NAME_PREFIX = Rails.env != 'production' ? Rails.env + '-' : ''
@@ -23,6 +37,12 @@ class Study
       e.message
     end
   end
+
+  ###
+  #
+  # SETTINGS, ASSOCIATIONS AND SCOPES
+  #
+  ###
 
   # pagination
   def self.per_page
@@ -129,7 +149,7 @@ class Study
     end
   end
 
-  #User annotations are per study
+  # User annotations are per study
   has_many :user_annotations, dependent: :delete
   has_many :user_data_arrays, dependent: :delete
 
@@ -139,6 +159,7 @@ class Study
   field :url_safe_name, type: String
   field :description, type: String
   field :firecloud_workspace, type: String
+  field :firecloud_project, type: String, default: FireCloudClient::PORTAL_NAMESPACE
   field :bucket_id, type: String
   field :data_dir, type: String
   field :public, type: Boolean, default: true
@@ -153,6 +174,12 @@ class Study
 
   accepts_nested_attributes_for :study_files, allow_destroy: true
   accepts_nested_attributes_for :study_shares, allow_destroy: true, reject_if: proc { |attributes| attributes['email'].blank? }
+
+  ###
+  #
+  # VALIDATIONS & CALLBACKS
+  #
+  ###
 
   # custom validator since we need everything to pass in a specific order (otherwise we get orphaned FireCloud workspaces)
   validate :initialize_with_new_workspace, on: :create, if: Proc.new {|study| !study.use_existing_workspace}
@@ -177,11 +204,17 @@ class Study
   before_validation :set_url_safe_name
   before_validation :set_data_dir, :set_firecloud_workspace_name, on: :create
   # before_save       :verify_default_options
-  after_create      :make_data_dir
+  after_create      :make_data_dir, :set_default_participant
   after_destroy     :remove_data_dir
 
   # search definitions
   index({"name" => "text", "description" => "text"})
+
+  ###
+  #
+  # ACCESS CONTROL METHODS
+  #
+  ###
 
   # return all studies that are editable by a given user
   def self.editable(user)
@@ -210,17 +243,25 @@ class Study
 
   # check if a give use can edit study
   def can_edit?(user)
-    self.admins.include?(user.email)
+    user.nil? ? false : self.admins.include?(user.email)
   end
 
   # check if a given user can view study by share (does not take public into account - use Study.viewable(user) instead)
   def can_view?(user)
-    self.can_edit?(user) || self.study_shares.can_view.include?(user.email)
+    if user.nil?
+      false
+    else
+      self.can_edit?(user) || self.study_shares.can_view.include?(user.email)
+    end
   end
 
   # check if a user can download data directly from the bucket
   def can_direct_download?(user)
-    self.user.email == user.email || self.study_shares.can_view.include?(user.email)
+    if user.nil?
+      false
+    else
+      self.user.email == user.email || self.study_shares.can_view.include?(user.email)
+    end
   end
 
   # check if user can delete a study - only owners can
@@ -237,10 +278,61 @@ class Study
     end
   end
 
+  # check if a user can run workflows on the given study
+  # projects in the compute blacklist are never allowed computes, otherwise check ACLs for workspace
+  def can_compute?(user)
+    if Rails.env == 'production' && FireCloudClient::COMPUTE_BLACKLIST.include?(self.firecloud_project)
+      false
+    elsif user.nil?
+      false
+    else
+      workspace_acl = Study.firecloud_client.get_workspace_acl(self.firecloud_workspace)
+      workspace_acl['acl'][user.email].nil? ? false : workspace_acl['acl'][user.email]['canCompute']
+    end
+  end
+
   # list of emails for accounts that can edit this study
   def admins
     [self.user.email, self.study_shares.can_edit, User.where(admin: true).pluck(:email)].flatten.uniq
   end
+
+  # check if study is still under embargo or whether given user can bypass embargo
+  def embargoed?(user)
+    if user.nil?
+      self.check_embargo?
+    else
+      # must not be viewable by current user & embargoed to be true
+      !self.can_view?(user) && self.check_embargo?
+    end
+  end
+
+  # helper method to check embargo status
+  def check_embargo?
+    self.embargo.nil? || self.embargo.blank? ? false : Date.today <= self.embargo
+  end
+
+  # label for study visibility
+  def visibility
+    self.public? ? "<span class='sc-badge bg-success text-success'>Public</span>".html_safe : "<span class='sc-badge bg-danger text-danger'>Private</span>".html_safe
+  end
+
+  # helper method to return key-value pairs of sharing permissions local to portal (not what is persisted in FireCloud)
+  # primarily used when syncing study with FireCloud workspace
+  def local_acl
+    acl = {
+        "#{self.user.email}" => (Rails.env == 'production' && FireCloudClient::COMPUTE_BLACKLIST.include?(self.firecloud_project)) ? 'Edit' : 'Owner'
+    }
+    self.study_shares.each do |share|
+      acl["#{share.email}"] = share.permission
+    end
+    acl
+  end
+
+  ###
+  #
+  # DATA PATHS & URLS
+  #
+  ###
 
   # file path to study public folder
   def data_public_path
@@ -262,25 +354,16 @@ class Study
     "https://console.cloud.google.com/storage/browser/#{self.bucket_id}"
   end
 
-  # label for study visibility
-  def visibility
-    self.public? ? "<span class='sc-badge bg-success text-success'>Public</span>".html_safe : "<span class='sc-badge bg-danger text-danger'>Private</span>".html_safe
+  # helper to generate a URL to a specific FireCloud submission inside a study's GCP bucket
+  def submission_url(submission_id)
+    self.google_bucket_url + "/#{submission_id}"
   end
 
-  # check if study is still under embargo or whether given user can bypass embargo
-  def embargoed?(user)
-    if user.nil?
-      self.check_embargo
-    else
-      # must not be viewable by current user & embargoed to be true
-      !self.can_view?(user) && self.check_embargo
-    end
-  end
-
-  # helper method to check embargo status
-  def check_embargo
-    self.embargo.nil? || self.embargo.blank? ? false : Date.today <= self.embargo
-  end
+  ###
+  #
+  # DEFAULT OPTIONS METHODS
+  #
+  ###
 
   # helper to return default cluster to load, will fall back to first cluster if no preference has been set
   # or default cluster cannot be loaded
@@ -342,6 +425,12 @@ class Study
     !self.default_options[:expression_label].blank?
   end
 
+  ###
+  #
+  # INSTANCE VALUE SETTERS & GETTERS
+  #
+  ###
+
   # helper method to get number of unique single cells
   def set_cell_count(file_type)
     @cell_count = 0
@@ -368,7 +457,12 @@ class Study
     study_file_count + directory_listing_count
   end
 
-  # return a count of the number of miscella files both uploaded and referenced via directory_listings for a study
+  # count of all files in a study, regardless of type
+  def total_file_count
+    self.study_files.non_primary_data.count + self.primary_data_file_count
+  end
+
+  # return a count of the number of miscellanous files both uploaded and referenced via directory_listings for a study
   def misc_directory_file_count
     self.directory_listings.non_primary_data.map {|d| d.files.size}.reduce(0, :+)
   end
@@ -378,9 +472,15 @@ class Study
     self.cluster_groups.map {|c| c.cell_annotations.size}.reduce(0, :+)
   end
 
+  ###
+  #
+  # METADATA METHODS
+  #
+  ###
+
   # return an array of all single cell names in study
   def all_cells
-    self.study_metadata.first.keys
+    self.study_metadata.first.cell_annotations.keys
   end
 
   # return a hash keyed by cell name of the requested study_metadata values
@@ -405,17 +505,12 @@ class Study
     vals.uniq
   end
 
-  # helper method to return key-value pairs of sharing permissions local to portal (not what is persisted in FireCloud)
-  # primarily used when syncing study with FireCloud workspace
-  def local_acl
-    acl = {
-      "#{self.user.email}" => "Owner"
-    }
-    self.study_shares.each do |share|
-      acl["#{share.email}"] = share.permission
-    end
-    acl
-  end
+  ###
+  #
+  # STUDYFILE GETTERS
+  #
+  ###
+
 
   # helper to build a study file of the requested type
   def build_study_file(attributes)
@@ -446,6 +541,12 @@ class Study
     self.study_files.by_type('Metadata').first
   end
 
+  ###
+  #
+  # DELETE METHODS
+  #
+  ###
+
   # nightly cron to delete any studies that are 'queued for deletion'
   # will run after database is re-indexed to make performance better
   # calls delete_all on collections to minimize memory usage
@@ -470,16 +571,11 @@ class Study
     true
   end
 
-  # one-time helper to update all file sizes after format migration
-  def update_study_file_sizes
-    self.study_files.each do |study_file|
-      unless study_file.upload.nil?
-        bucket_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, self.firecloud_workspace, study_file.upload_file_name)
-        puts "Updating file size for #{study_file.upload_file_name} from #{study_file.upload_file_size} to #{bucket_file.size}"
-        study_file.update(upload_file_size: bucket_file.size)
-      end
-    end
-  end
+  ###
+  #
+  # MISCELLANOUS METHODS
+  #
+  ###
 
   # transform expression data from db into mtx format
   def expression_to_mtx
@@ -509,9 +605,11 @@ class Study
     output_file.close
   end
 
-  ##
-  ## PARSERS
-  ##
+  ###
+  #
+  # PARSERS
+  #
+  ###
 
   # method to parse master expression scores file for study and populate collection
   # this parser assumes the data is a non-sparse square matrix
@@ -671,7 +769,7 @@ class Study
       @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
       Rails.logger.info @message.join("\n")
       # set initialized to true if possible
-      if !self.cluster_ordinations_files.empty? && !self.metadata_file.nil? && !self.initialized?
+      if self.cluster_ordinations_files.any? && !self.metadata_file.nil? && !self.initialized?
         self.update(initialized: true)
       end
 
@@ -920,7 +1018,7 @@ class Study
       @message << "Total points in cluster: #{@point_count}"
       @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
       # set initialized to true if possible
-      if !self.expression_matrix_files.nil? && !self.metadata_file.nil? && !self.initialized?
+      if self.expression_matrix_files.any? && !self.metadata_file.nil? && !self.initialized?
         self.update(initialized: true)
       end
 
@@ -1130,7 +1228,7 @@ class Study
       metadata_file.update(parse_status: 'parsed')
 
       # set initialized to true if possible
-      if !self.expression_matrix_files.nil? && !self.cluster_ordinations_files.empty? && !self.initialized?
+      if self.expression_matrix_files.any? && self.cluster_ordinations_files.any? && !self.initialized?
         self.update(initialized: true)
       end
 
@@ -1368,6 +1466,12 @@ class Study
     true
   end
 
+  ###
+  #
+  # FIRECLOUD FILE METHODS
+  #
+  ###
+
   # shortcut method to send an uploaded file straight to firecloud from parser
   def send_to_firecloud(file)
     begin
@@ -1382,131 +1486,12 @@ class Study
     end
   end
 
-  # one-time use method to push a study into FireCloud from local storage
-  def migrate_to_firecloud
-    @migration_error = false
-    if self.firecloud_workspace.nil?
-      begin
-        # set firecloud workspace name
-        puts "#{Time.now}: Study: #{self.name} beginning FireCloud migration"
-        ws_id = "#{WORKSPACE_NAME_PREFIX}#{self.url_safe_name}"
-        self.firecloud_workspace = ws_id
-        # must make an explicit call to save to database as we can't update reference to self
-        Study.where(id: self.id).update(firecloud_workspace: ws_id)
-
-        # begin workspace & acl creation
-        workspace = Study.firecloud_client.create_workspace(self.firecloud_workspace)
-        puts "#{Time.now}: Study: #{self.name} FireCloud workspace creation successful"
-        ws_name = workspace['name']
-        # validate creation
-        unless ws_name == self.firecloud_workspace
-          raise RuntimeError.new 'workspace was not created properly (workspace name did not match or was not created)'
-        end
-        puts "#{Time.now}: Study: #{self.name} FireCloud workspace validation successful"
-        # set bucket_id
-        bucket = workspace['bucketName']
-        if bucket.nil?
-          raise RuntimeError.new 'workspace was not created properly (storage bucket was not found)'
-        end
-        self.bucket_id = bucket
-        Study.where(id: self.id).update(bucket_id: bucket)
-        puts "#{Time.now}: Study: #{self.name} FireCloud bucket assignment successful"
-
-        # set workspace acl
-        study_owner = self.user.email
-        if study_owner.include?('gmail') || study_owner.include?('broadinstitute')
-          acl = Study.firecloud_client.create_workspace_acl(study_owner, 'OWNER')
-          Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
-          # validate acl
-          ws_acl = Study.firecloud_client.get_workspace_acl(ws_name)
-          unless ws_acl['acl'][study_owner]['accessLevel'] == 'OWNER'
-            raise RuntimeError.new 'workspace was not created properly (permissions do not match)'
-          end
-          puts "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment successful"
-        end
-        if self.study_shares.any?
-          puts "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares starting"
-          self.study_shares.each do |share|
-            if share.email.include?('gmail') || share.email.include?('broadinstitute')
-              acl = Study.firecloud_client.create_workspace_acl(share.email, StudyShare::FIRECLOUD_ACL_MAP[share.permission])
-              Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
-              puts "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares #{share.email} successful"
-            end
-          end
-        end
-        puts "#{Time.now}: Study #{self.name} uploading study files to FireCloud workspace: #{self.firecloud_workspace}"
-        self.study_files.each do |file|
-          if file.human_fastq_url.nil? && File.exists?(file.upload.path)
-            puts "#{Time.now}: Uploading #{file.upload_file_name} to FireCloud workspace: #{self.firecloud_workspace}"
-            remote_file = Study.firecloud_client.execute_gcloud_method(:create_workspace_file, self.firecloud_workspace, file.upload.path, file.upload_file_name)
-            file.update(generation: remote_file.generation)
-            puts "#{Time.now}: Upload of #{file.upload_file_name} complete"
-          end
-        end
-        puts "#{Time.now}: Study: #{self.name} FireCloud migration successful!"
-      rescue => e
-        # delete workspace on any fail as this amounts to a validation fail
-        Study.firecloud_client.delete_workspace(self.firecloud_workspace)
-        Study.where(id: self.id).update(firecloud_workspace: nil)
-        puts "Study: #{self.name} workspace migration failed due to #{e.message}; reverting"
-        @migration_error = true
-      end
-      if @migration_error == false
-        begin
-          puts "#{Time.now}: Study: #{self.name} FireCloud migration complete, deleting local files"
-          FileUtils.rm_rf(Rails.root.join('data', self.url_safe_name))
-          puts "#{Time.now}: Study: #{self.name} local data deleted successfully"
-          puts "#{Time.now}: Study: #{self.name} deleting public data dir #{self.data_public_path}"
-          FileUtils.rm_rf self.data_public_path
-          puts "#{Time.now}: Study: #{self.name} assigning new data dir "
-          new_data_dir = SecureRandom.hex(32)
-          Study.where(id: self.id).update_all(data_dir: new_data_dir)
-          FileUtils.mkdir_p(Rails.root.join('data', new_data_dir))
-          StudyFile.where(study_id: self.id).update_all(data_dir: new_data_dir)
-          puts "#{Time.now}: Study: #{self.name} new data dir #{new_data_dir} created"
-          puts "#{Time.now}: Study: #{self.name} cleanup complete"
-        rescue => e
-          puts "#{Time.now}: Study: #{self.name} data cleanup failed due to #{e.message}; manual cleanup required"
-          false
-        end
-        true
-      else
-        false
-      end
-    end
-  end
-
-  # one time method to generate subsample data_arrays as needed
-  def generate_subsample_data_arrays
-    if self.cluster_groups.any?
-      study_metadata = StudyMetadatum.where(study_id: self.id).to_a
-      cluster_groups = self.cluster_groups.to_a
-      cluster_groups.each do |cluster_group|
-        # determine how many levels to subsample based on size of cluster_group
-        required_subsamples = ClusterGroup::SUBSAMPLE_THRESHOLDS.select {|sample| sample < cluster_group.points}
-        required_subsamples.each do |sample_size|
-          # create cluster-based annotation subsamples first
-          if cluster_group.cell_annotations.any?
-            cluster_group.cell_annotations.each do |cell_annot|
-              unless DataArray.where(study_id: self.id, cluster_name: cluster_group.name, subsample_annotation: "#{cell_annot[:name]}--#{cell_annot[:type]}--cluster", subsample_threshold: sample_size).any?
-                puts "Generating subsample array for #{self.name}:#{cluster_group.name} (#{cell_annot[:name]},#{cell_annot[:type]},cluster) at #{sample_size}"
-                cluster_group.generate_subsample_arrays(sample_size, cell_annot[:name], cell_annot[:type], 'cluster')
-              end
-            end
-          end
-          # create study-based annotation subsamples
-          study_metadata.each do |metadata|
-            unless DataArray.where(study_id: self.id, cluster_name: cluster_group.name, subsample_annotation: "#{metadata.name}--#{metadata.annotation_type}--study", subsample_threshold: sample_size).any?
-              puts "Generating subsample array for #{self.name}:#{cluster_group.name} (#{metadata.name},#{metadata.annotation_type},study) at #{sample_size}"
-              cluster_group.generate_subsample_arrays(sample_size, metadata.name, metadata.annotation_type, 'study')
-            end
-          end
-        end
-      end
-
-    end
-
-  end
+  ###
+  #
+  # PUBLIC CALLBACK SETTERS
+  # These are methods that are called as a part of callbacks, but need to be public as they are also referenced elsewhere
+  #
+  ###
 
   # make data directory after study creation is successful
   # this is now a public method so that we can use it whenever remote files are downloaded to validate that the directory exists
@@ -1516,7 +1501,29 @@ class Study
     end
   end
 
+  # set the 'default_participant' entity in workspace data to allow users to upload sample information
+  def set_default_participant
+    begin
+      path = Rails.root.join('data', self.data_dir, 'default_participant.tsv')
+      entity_file = File.new(path, 'w+')
+      entity_file.write "entity:participant_id\ndefault_participant"
+      entity_file.close
+      upload = File.open(entity_file.path)
+      Study.firecloud_client.import_workspace_entities_file(self.firecloud_workspace, upload)
+      Rails.logger.info "#{Time.now}: created default_participant for #{self.firecloud_workspace}"
+      File.delete(path)
+    rescue => e
+      Rails.logger.error "#{Time.now}: Unable to set default participant: #{e.message}"
+    end
+  end
+
   private
+
+  ###
+  #
+  # SETTERS
+  #
+  ###
 
   # sets a url-safe version of study name (for linking)
   def set_url_safe_name
@@ -1542,6 +1549,12 @@ class Study
     end
     self.data_dir = @dir_val
   end
+
+  ###
+  #
+  # CUSTOM VALIDATIONS
+  #
+  ###
 
   # automatically create a FireCloud workspace on study creation after validating name & url_safe_name
   # will raise validation errors if creation, bucket or ACL assignment fail for any reason and deletes workspace on validation fail
@@ -1576,11 +1589,19 @@ class Study
           Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud bucket assignment successful"
           # set workspace acl
           study_owner = self.user.email
-          acl = Study.firecloud_client.create_workspace_acl(study_owner, 'OWNER')
+          workspace_permission = 'OWNER'
+          can_compute = true
+          # if study project is in the compute blacklist, set permissions to WRITER and revoke computes
+          # otherwise, set to OWNER with default permissions
+          if Rails.env == 'production' && FireCloudClient::COMPUTE_BLACKLIST.include?(self.firecloud_project)
+            workspace_permission = 'WRITER'
+            can_compute = false
+          end
+          acl = Study.firecloud_client.create_workspace_acl(study_owner, workspace_permission, true, can_compute)
           Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
           # validate acl
           ws_acl = Study.firecloud_client.get_workspace_acl(ws_name)
-          unless ws_acl['acl'][study_owner]['accessLevel'] == 'OWNER'
+          unless ws_acl['acl'][study_owner]['accessLevel'] == workspace_permission && ws_acl['acl'][study_owner]['canCompute'] == can_compute
             # delete workspace on validation fail
             Study.firecloud_client.delete_workspace(self.firecloud_workspace)
             errors.add(:firecloud_workspace, ' was not created properly (permissions do not match).  Please try again later.')
@@ -1591,7 +1612,7 @@ class Study
             Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares starting"
             self.study_shares.each do |share|
               begin
-                acl = Study.firecloud_client.create_workspace_acl(share.email, StudyShare::FIRECLOUD_ACL_MAP[share.permission])
+                acl = Study.firecloud_client.create_workspace_acl(share.email, StudyShare::FIRECLOUD_ACL_MAP[share.permission], true, false)
                 Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
                 Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares #{share.email} successful"
               rescue RuntimeError => e
@@ -1632,11 +1653,33 @@ class Study
       unless self.errors.any?
         begin
           workspace = Study.firecloud_client.get_workspace(self.firecloud_workspace)
-          acl = Study.firecloud_client.get_workspace_acl(self.firecloud_workspace)
           study_owner = self.user.email
-          # check permissions first
-          unless !acl['acl'][study_owner].nil? && acl['acl'][study_owner]['accessLevel'] == 'OWNER'
-            errors.add(:firecloud_workspace, ': The workspace you provided is not owned by the current user.  Please use another workspace.')
+          workspace_permission = 'OWNER'
+          can_compute = true
+          # if study project is in the compute blacklist, set permissions to WRITER and revoke computes
+          # otherwise, set to OWNER with default permissions
+          if Rails.env == 'production' && FireCloudClient::COMPUTE_BLACKLIST.include?(self.firecloud_project)
+            workspace_permission = 'WRITER'
+            can_compute = false
+            Rails.logger.info "#{Time.now}: Study: #{self.name} removing compute permissions"
+            compute_acl = Study.firecloud_client.create_workspace_acl(self.user.email, workspace_permission, true, can_compute)
+            Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, compute_acl)
+          end
+          acl = Study.firecloud_client.get_workspace_acl(self.firecloud_workspace)
+          # first check workspace authorization domain
+          auth_domain = workspace['workspace']['authorizationDomain']
+          unless auth_domain.empty?
+            errors.add(:firecloud_workspace, ': The workspace you provided is restricted.  We currently do not allow use of restricted workspaces.  Please use another workspace.')
+            return false
+          end
+          # check permissions
+          if acl['acl'][study_owner].nil? || acl['acl'][study_owner]['accessLevel'] == 'READER'
+            errors.add(:firecloud_workspace, ': You do not have write permission for the workspace you provided.  Please use another workspace.')
+            return false
+          end
+          # check compute permissions
+          if acl['acl'][study_owner]['canCompute'] != can_compute
+            errors.add(:firecloud_workspace, ': There was an error setting the permissions on your workspace (compute permissions were not set correctly).  Please try again.')
             return false
           end
           Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl check successful"
@@ -1653,7 +1696,7 @@ class Study
             Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares starting"
             self.study_shares.each do |share|
               begin
-                acl = Study.firecloud_client.create_workspace_acl(share.email, StudyShare::FIRECLOUD_ACL_MAP[share.permission])
+                acl = Study.firecloud_client.create_workspace_acl(share.email, StudyShare::FIRECLOUD_ACL_MAP[share.permission], true, false)
                 Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
                 Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares #{share.email} successful"
               rescue RuntimeError => e
@@ -1685,6 +1728,12 @@ class Study
       errors.add(:url_safe_name, ": The name you provided (#{self.name}) tried to create a public URL (#{self.url_safe_name}) that is already assigned.  Please rename your study to a different value.")
     end
   end
+
+  ###
+  #
+  # CUSTOM CALLBACKS
+  #
+  ###
 
   # remove data directory on delete
   def remove_data_dir

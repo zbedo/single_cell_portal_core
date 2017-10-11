@@ -1,9 +1,20 @@
 class ApplicationController < ActionController::Base
+
+  ###
+  #
+  # These are methods that are not specific to any one controller and are inherited into all
+  # They are all either access control filters or instance variable setters
+  #
+  ###
+
+
   # Prevent CSRF attacks by raising an exception.
   # For APIs, you may want to use :null_session instead.
   protect_from_forgery with: :exception
 
   before_action :get_download_quota
+
+  rescue_from ActionController::InvalidAuthenticityToken, with: :session_expired
 
   # auth action for portal admins
   def authenticate_admin
@@ -47,6 +58,16 @@ class ApplicationController < ActionController::Base
     }
     unless @default_cluster.nil?
       @default_cluster_annotations['Cluster-based'] = @default_cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]}
+    end
+  end
+
+  # rescue from an invalid csrf token (if user logged out in another window)
+  def session_expired
+    @alert = 'Your session has expired.  Please log in again to continue.'
+    respond_to do |format|
+      format.html {redirect_to site_path, alert: @alert}
+      format.js {render template: '/layouts/session_expired'}
+      format.json {head 403}
     end
   end
 end

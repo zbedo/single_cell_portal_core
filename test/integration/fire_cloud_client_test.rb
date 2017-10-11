@@ -1,0 +1,466 @@
+require "test_helper"
+
+##
+#
+# FireCloudClientTest - integration tests for FireCloudClient, validates client methods behave as expected & FireCloud API is functioning as normal
+# Only covers Service Account level actions (cannot authenticate as user, so no workflow or billing unit tests)
+#
+# Also covers Google Cloud Storage integration (File IO into GCP buckets from workspaces)
+#
+##
+
+class FireCloudClientTest < ActiveSupport::TestCase
+
+  def setup
+    @fire_cloud_client = FireCloudClient.new
+    @test_email = 'singlecelltest@gmail.com'
+  end
+
+  ##
+  #
+  # TOKEN & STATUS TESTS
+  #
+  ##
+
+  # refresh the FireCloud API access token
+  # test only checks expiry date as we can't be sure that the access_token will actually refresh fast enough
+  def test_refresh_access_token
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    expires_at = @fire_cloud_client.expires_at
+    assert !@fire_cloud_client.access_token_expired?, 'Token should not be expired for new clients'
+    new_expiry = @fire_cloud_client.refresh_access_token
+    assert new_expiry > expires_at, "Expiration date did not update, #{new_expiry} is not greater than #{expires_at}"
+
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+  end
+
+  # refresh the GCS Driver
+  # test only checks issue date as we can't be sure that the storage_access_token will actually refresh fast enough
+  def test_refresh_google_storage_driver
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    issued_at = @fire_cloud_client.storage_issued_at
+    new_storage = @fire_cloud_client.refresh_storage_driver
+    assert new_storage.present?, 'New storage did not get instantiated'
+
+    new_issued_at = new_storage.service.credentials.client.issued_at
+    assert new_issued_at > issued_at, "Storage driver did not update, #{new_issued_at} is not greater than #{issued_at}"
+
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+  end
+
+  # assert FireCloud is responding
+  def test_firecloud_status
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    # check that API is up
+    assert @fire_cloud_client.api_available?, 'FireCloud API is not available'
+    firecloud_status = @fire_cloud_client.api_status
+    assert firecloud_status['ok'], 'Detailed FireCloud API status is not available'
+
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+  end
+
+  ##
+  #
+  # WORKSPACE TESTS
+  #
+  ##
+
+  # test getting workspaces
+  def test_workspaces
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    workspaces = @fire_cloud_client.workspaces
+    assert workspaces.any?, 'Did not find any workspaces'
+
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+  end
+
+  # main workspace test: create, get, set & update acls, delete
+  def test_create_and_manage_workspace
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    # set workspace name
+    workspace_name = "#{self.method_name}-#{SecureRandom.uuid}"
+
+    # create workspace
+    puts 'creating workspace...'
+    workspace = @fire_cloud_client.create_workspace(workspace_name)
+    assert workspace['name'] == workspace_name, "Name was not set correctly, expected '#{workspace_name}' but found '#{workspace['name']}'"
+
+    # get workspace
+    puts 'retrieving workspace...'
+    retrieved_workspace = @fire_cloud_client.get_workspace(workspace_name)
+    assert retrieved_workspace.present?, "Did not find requested workspace: #{workspace_name}"
+
+    # set ACL
+    puts 'setting workspace acl...'
+    acl = @fire_cloud_client.create_workspace_acl(@test_email, 'OWNER')
+    updated_workspace = @fire_cloud_client.update_workspace_acl(workspace_name, acl)
+    assert updated_workspace['usersUpdated'].size == 1, 'Did not update a user in workspace'
+
+    # retrieve new ACL
+    puts 'retrieving workspace acl...'
+    ws_acl = @fire_cloud_client.get_workspace_acl(workspace_name)
+    assert ws_acl['acl'].keys.include?(@test_email), "Workspace ACL does not contain #{@test_email}"
+    assert ws_acl['acl'][@test_email]['accessLevel'] == 'OWNER', "Workspace ACL does not list #{@test_email} as owner"
+
+    # set workspace attribute
+    puts 'setting workspace attribute...'
+    new_attribute = {
+        'random_attribute' => SecureRandom.uuid
+    }
+    updated_ws_attributes = @fire_cloud_client.set_workspace_attributes(workspace_name, new_attribute)
+    assert updated_ws_attributes['attributes'] == new_attribute, "Did not properly set new attribute to workspace, expected '#{new_attribute}' but found '#{updated_ws_attributes['attributes']}'"
+
+    # delete workspace
+    puts 'deleting workspace...'
+    delete_message = @fire_cloud_client.delete_workspace(workspace_name)
+    assert delete_message.has_key?('message'), 'Did not receive a delete confirmation'
+    expected_confirmation = "The workspace #{@fire_cloud_client.project}:#{workspace_name} has been un-published."
+    assert delete_message['message'].include?(expected_confirmation), "Did not receive correct confirmation, expected '#{expected_confirmation}' but found '#{delete_message['message']}'"
+
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+  end
+
+  # test CRUDing workspace entities
+  def test_create_and_manage_workspace_entities
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    # set workspace name
+    workspace_name = "#{self.method_name}-#{SecureRandom.uuid}"
+
+    # create workspace
+    puts 'creating workspace...'
+    workspace = @fire_cloud_client.create_workspace(workspace_name)
+    assert workspace['name'] == workspace_name, "Name was not set correctly, expected '#{workspace_name}' but found '#{workspace['name']}'"
+
+    # create default participant
+    puts 'creating participant...'
+    participant_upload = File.open(Rails.root.join('test', 'test_data', 'default_participant.tsv'))
+    confirmation = @fire_cloud_client.import_workspace_entities_file(workspace_name, participant_upload)
+    assert confirmation == 'participant', "Did not receive correct confirmation, expected 'participant' but found #{confirmation}"
+
+    # create samples
+    puts 'creating samples...'
+    samples_upload = File.open(Rails.root.join('test', 'test_data', 'workspace_samples.tsv'))
+    confirmation = @fire_cloud_client.import_workspace_entities_file(workspace_name, samples_upload)
+    assert confirmation == 'sample', "Did not receive correct confirmation, expected 'sample' but found #{confirmation}"
+
+    # get entity types
+    puts 'getting entity types...'
+    entity_types = @fire_cloud_client.get_workspace_entity_types(workspace_name)
+    assert entity_types.keys.sort == %w(participant sample), "Did not find correct entity types, expected 'participant, sample' but found #{entity_types.keys}"
+
+    # get single entity
+    puts 'getting single entity...'
+    default_participant = @fire_cloud_client.get_workspace_entity(workspace_name, 'participant', 'default_participant')
+    assert default_participant.present?, 'Did not find default participant from direct query'
+
+    # get all entities
+    puts 'getting all entities...'
+    workspace_entities = @fire_cloud_client.get_workspace_entities(workspace_name)
+    assert workspace_entities.size == 6, "Did not find correct number of entities, expected 6 but found #{workspace_entities.size}"
+    participant = workspace_entities.find {|entity| entity['entityType'] == 'participant'}
+    assert participant.present?, 'Did not find default participant from workspace query'
+    assert participant['name'] == 'default_participant', "Did not find correct name for participant, expected 'default_participant' but found #{participant['name']}"
+
+    # get entities by type
+    puts 'getting entities by type...'
+    samples = @fire_cloud_client.get_workspace_entities_by_type(workspace_name, 'sample')
+    assert samples.size == 5, "Did not find correct number of samples, expected 5 but found #{samples.size}"
+    assert samples.first['entityType'] == 'sample', "Did not set entity type correctly, expected 'sample' but found '#{samples.first['entityType']}'"
+    assert samples.first['name'] == 'sample_1', "Did not set entity type correctly, expected 'sample_1' but found '#{samples.first['entityName']}'"
+    sample_attributes = samples.first['attributes']
+    assert sample_attributes.size == 4, "Did not find correct number of sample attributes, expected 4 but found #{sample_attributes.size}"
+    assert sample_attributes['participant'].present?, "Did not find participant attribute of sample"
+    assert sample_attributes['participant']['entityName'] == 'default_participant', "Did not set correct association for participant, expected 'default_participant' but found #{sample_attributes['participant']['entityName']}"
+    sample_attribute_names = sample_attributes.keys.delete_if {|key| key == 'participant'}
+    assert sample_attribute_names.sort == %w(attribute_1	 attribute_2 attribute_3), "Did not find correct sample attributes, expected 'attribute_1, attribute_2, attribute_3' but found #{sample_attribute_names.join(', ')}"
+
+    # get entities as tsv
+    puts 'getting entities as tsv...'
+    samples_tsv = @fire_cloud_client.get_workspace_entities_as_tsv(workspace_name, 'sample', sample_attribute_names)
+    sample_tsv_vales = samples_tsv.split("\n").map {|line| line.split("\t")}
+    assert sample_tsv_vales.size == 6, "TSV file did not have correct number of lines, expected 6 but found #{sample_tsv_vales.size}"
+    assert sample_tsv_vales.last.size == sample_attribute_names.size + 1, "TSV row did not have correct number of entries, expected #{sample_attribute_names.size + 1} but found #{sample_tsv_vales.last.size}"
+
+    # delete workspace entities
+    puts 'deleting entities...'
+    participant_map = @fire_cloud_client.create_entity_map(%w(default_participant), 'participant')
+    sample_map = @fire_cloud_client.create_entity_map(%w(sample_1 sample_2 sample_3 sample_4 sample_5), 'sample')
+    entity_map = participant_map + sample_map
+    delete_confirmation = @fire_cloud_client.delete_workspace_entities(workspace_name, entity_map)
+    assert delete_confirmation, 'Entities did not delete successfully'
+
+    # delete workspace
+    puts 'deleting workspace...'
+    delete_message = @fire_cloud_client.delete_workspace(workspace_name)
+    assert delete_message.has_key?('message'), 'Did not receive a delete confirmation'
+
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+  end
+
+  ##
+  #
+  # WORKFLOW & CONFIGURATION TESTS (only a subset can be run as submissions require user authentication)
+  #
+  ##
+
+  # get queue status
+  def test_get_submission_queue_status
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    status = @fire_cloud_client.get_submission_queue_status
+    assert status.any?, 'Did not receive queue status object'
+    assert status['workflowCountsByStatus'].any?, 'Did not receive queue count status'
+
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+  end
+
+  # get available workflows
+  def test_get_methods
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    # get all available methods
+    workflow_methods = @fire_cloud_client.get_methods(entityType: 'workflow')
+    assert workflow_methods.any?, 'Did not find any workflow methods'
+
+    # get a single method
+    method_params = workflow_methods.sample
+    method = @fire_cloud_client.get_method(method_params['namespace'], method_params['name'], method_params['snapshotId'])
+    assert method.present?, "Did not retrieve requested method: '#{method_params['namespace']}/#{method_params['name']}/#{method_params['snapshotId']}'"
+
+    # get a method payload
+    method_payload = @fire_cloud_client.get_method(method_params['namespace'], method_params['name'], method_params['snapshotId'], true)
+    assert method_payload.present?, "Did not retrieve requested method payload: '#{method_params['namespace']}/#{method_params['name']}/#{method_params['snapshotId']}'"
+    assert method_payload.is_a?(String), "Method payload is wrong type, expected String but found #{method_payload.class}"
+
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+  end
+
+  # get method configurations
+  def test_get_configurations
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    # get all available configurations
+    workflow_configurations = @fire_cloud_client.get_configurations
+    assert workflow_configurations.any?, 'Did not find any method configurations'
+
+    # get all configurations in a namespace
+    namespace = workflow_configurations.sample['namespace']
+    namespace_configs = @fire_cloud_client.get_configurations(namespace: namespace)
+    assert namespace_configs.any?, "Did not find any method configurations in namespace: #{namespace}"
+
+    # get a single configuration
+    config_params = workflow_configurations.sample
+    config = @fire_cloud_client.get_configuration(config_params['namespace'], config_params['name'], config_params['snapshotId'])
+    assert config.present?, "Did not retrieve requested configuration: '#{config_params['namespace']}/#{config_params['name']}/#{config_params['snapshotId']}'"
+
+    # get a configuration with method payload as JSON
+    config_with_payload = @fire_cloud_client.get_configuration(config_params['namespace'], config_params['name'], config_params['snapshotId'], true)
+    assert config_with_payload.present?, "Did not retrieve requested configuration with payload object: '#{config_params['namespace']}/#{config_params['name']}/#{config_params['snapshotId']}'"
+    assert config_with_payload.has_key?('payloadObject'), 'Configuration did not have payloadObject'
+    assert config_with_payload['payloadObject'].is_a?(Hash), "Did not return correct object type for payload, expected Hash but found #{config_with_payload['payloadObject'].class}"
+
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+  end
+
+  # create a method configuration template from a method
+  def test_create_configuration_template
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    workflow_methods = @fire_cloud_client.get_methods(entityType: 'workflow')
+    method = workflow_methods.sample
+    assert method.present?, 'Did not retrieve a method to create a configuration template from'
+
+    # create template
+    configuration_template = @fire_cloud_client.create_configuration_template(method['namespace'], method['name'], method['snapshotId'])
+    assert configuration_template.present?, 'Did not create a configuration template'
+    template_method = configuration_template['methodRepoMethod']
+    assert template_method['methodName'] == method['name'], "Configuration template method name is incorrect, expected '#{method['name']}' but found #{template_method['methodName']}"
+    assert template_method['methodNamespace'] == method['namespace'], "Configuration template method name is incorrect, expected '#{method['namespace']}' but found #{template_method['methodNamespace']}"
+    assert template_method['methodVersion'] == method['snapshotId'], "Configuration template method name is incorrect, expected '#{method['snapshotId']}' but found #{template_method['methodVersion']}"
+    assert configuration_template['inputs'].any?, "Did not find any configuration inputs: #{configuration_template['inputs']}"
+    assert configuration_template['outputs'].any?, "Did not find any configuration outputs: #{configuration_template['outputs']}"
+
+    # get random method
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+  end
+
+  # manage configurations in a workspace: copy, list all, get
+  def test_manage_workspace_configurations
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    # set workspace name
+    workspace_name = "#{self.method_name}-#{SecureRandom.uuid}"
+
+    # create workspace
+    puts 'creating workspace...'
+    workspace = @fire_cloud_client.create_workspace(workspace_name)
+    assert workspace.present?, 'Did not create workspace'
+
+    puts 'loading configurations...'
+    configurations = @fire_cloud_client.get_configurations
+    assert configurations.any?, 'Did not load any configurations'
+
+    # select configuration
+    configuration = configurations.sample
+
+    puts 'copying configuration to workspace...'
+    copied_config = @fire_cloud_client.copy_configuration_to_workspace(workspace_name, configuration['namespace'], configuration['name'], configuration['snapshotId'], workspace['namespace'], configuration['name'])
+    assert copied_config['methodConfiguration']['name'] == configuration['name'], "Copied configuration name is incorrect, expected '#{configuration['name']}' but found '#{copied_config['methodConfiguration']['name']}'"
+    assert copied_config['methodConfiguration']['namespace'] == workspace['namespace'], "Copied configuration name is incorrect, expected '#{workspace['namespace']}' but found '#{copied_config['methodConfiguration']['namespace']}'"
+
+    puts 'getting workspace configurations...'
+    workspace_configs = @fire_cloud_client.get_workspace_configurations(workspace_name)
+    assert workspace_configs.any?, 'Did not find any workspace configurations'
+
+    puts 'getting single workspace configuration...'
+    ws_config = workspace_configs.first
+    single_configuration = @fire_cloud_client.get_workspace_configuration(workspace_name, ws_config['name'])
+    assert single_configuration.any?, "Did not load workspace configuration: #{ws_config['name']}"
+    assert single_configuration.has_key?('inputs'), "Single workspace configuration '#{single_configuration['name']}' has no inputs"
+    assert single_configuration.has_key?('outputs'), "Single workspace configuration '#{single_configuration['name']}' has no outputs"
+
+    # delete workspace
+    puts 'deleting workspace...'
+    delete_message = @fire_cloud_client.delete_workspace(workspace_name)
+    assert delete_message.has_key?('message'), 'Did not receive a delete confirmation'
+
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+  end
+
+  ##
+  #
+  # GCS TESTS
+  #
+  ##
+
+  # get a workspace's GCS bucket
+  def test_get_workspace_bucket
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    # set workspace name
+    workspace_name = "#{self.method_name}-#{SecureRandom.uuid}"
+
+    # create workspace
+    puts 'creating workspace...'
+    workspace = @fire_cloud_client.create_workspace(workspace_name)
+    assert workspace.present?, 'Did not create workspace'
+
+    # get workspace bucket
+    bucket = @fire_cloud_client.get_workspace_bucket(workspace_name)
+    assert bucket.name == workspace['bucketName'], "Bucket does not have correct name, expected '#{workspace['bucketName']}' but found '#{bucket.name}'"
+
+    # delete workspace
+    puts 'deleting workspace...'
+    delete_message = @fire_cloud_client.delete_workspace(workspace_name)
+    assert delete_message.has_key?('message'), 'Did not receive a delete confirmation'
+
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+  end
+
+  # main File IO test for buckets: create, copy, download, delete
+  def test_get_workspace_files
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    # set workspace name
+    workspace_name = "#{self.method_name}-#{SecureRandom.uuid}"
+
+    # create workspace
+    puts 'creating workspace...'
+    workspace = @fire_cloud_client.create_workspace(workspace_name)
+    assert workspace.present?, 'Did not create workspace'
+
+
+    puts 'uploading files...'
+    # upload files
+    participant_upload = File.open(Rails.root.join('test', 'test_data', 'default_participant.tsv'))
+    participant_filename = File.basename(participant_upload)
+    uploaded_participant = @fire_cloud_client.create_workspace_file(workspace_name, participant_upload.to_path, participant_filename)
+    assert uploaded_participant.present?, 'Did not upload participant file'
+    assert uploaded_participant.name == participant_filename, "Name not set correctly on uploaded participant file, expected '#{participant_filename}' but found '#{uploaded_participant.name}'"
+
+    samples_upload = File.open(Rails.root.join('test', 'test_data', 'workspace_samples.tsv'))
+    samples_filename = File.basename(samples_upload)
+    uploaded_samples = @fire_cloud_client.create_workspace_file(workspace_name, samples_upload.to_path, samples_filename)
+    assert uploaded_samples.present?, 'Did not upload samples file'
+    assert uploaded_samples.name == samples_filename, "Name not set correctly on uploaded participant file, expected '#{samples_filename}' but found '#{uploaded_samples.name}'"
+
+    # get remote files
+    puts 'getting files...'
+    bucket_files = @fire_cloud_client.get_workspace_files(workspace_name)
+    assert bucket_files.size == 2, "Did not find correct number of files, expected 2 but found #{bucket_files.size}"
+
+    # get single remote file
+    puts 'getting single file...'
+    bucket_file = bucket_files.sample
+    file = @fire_cloud_client.get_workspace_file(workspace_name, bucket_file.name)
+    assert file.present?, "Did not retrieve bucket file '#{bucket_file.name}'"
+    assert file.generation == bucket_file.generation, "Generation tag is incorrect on retrieved file, expected '#{bucket_file.generation}' but found '#{file.generation}'"
+
+    # copy a file to new destination
+    copy_destination = "copy_destination_path/new_#{file.name}"
+    copied_file = @fire_cloud_client.copy_workspace_file(workspace_name, file.name, copy_destination)
+    assert copied_file.present?, 'Did not copy file'
+    assert copied_file.name == copy_destination, "Did not copy file to correct destination, expected '#{copy_destination}' but found #{copied_file.name}"
+
+    # download remote file to local
+    puts 'downloading file...'
+    # load study for place to download files to
+    @study = Study.first
+    downloaded_file = @fire_cloud_client.download_workspace_file(workspace_name, file.name, @study.data_store_path)
+    assert downloaded_file.present?, 'Did not download local copy of file'
+    assert downloaded_file.to_path == File.join(@study.data_store_path, file.name), "Did not download #{file.name} to #{@study.data_store_path}, downloaded file is at #{downloaded_file.to_path}"
+    # clean up download
+    File.delete(downloaded_file.to_path)
+
+    # generate a signed URL for a file
+    puts 'getting signed URL for file...'
+    signed_url = @fire_cloud_client.generate_signed_url(workspace_name, participant_filename, expires: 3)
+    response = RestClient.get signed_url
+    assert response.code == 200, "Did not receive correct response code on signed_url, expected 200 but found #{response.code}"
+    participant_contents = participant_upload.read
+    assert participant_contents == response.body, "Response body contents are incorrect, expected '#{participant_contents}' but found '#{response.body}'"
+
+    # check timeout
+    sleep(3)
+    begin
+      RestClient.get signed_url
+    rescue RestClient::BadRequest => timeout
+      expected_message = '400 Bad Request'
+      expected_error_class = RestClient::BadRequest
+      assert timeout.message == expected_message, "Did not receive correct error message, expected '#{expected_message}' but found '#{timeout.message}'"
+      assert timeout.class == expected_error_class, "Did not receive correct error class, expected '#{expected_error_class}' but found '#{timeout.class}'"
+    end
+
+    # close upload files
+    participant_upload.close
+    samples_upload.close
+
+    # get files at a specific location
+    puts 'getting files at location...'
+    location = 'copy_destination_path'
+    files_at_location = @fire_cloud_client.get_workspace_directory_files(workspace_name, location)
+    assert files_at_location.size == 1, "Did not find correct number of files, expected 1 but found #{files_at_location.size}"
+
+    # delete remote file
+    puts 'deleting file...'
+    num_files = @fire_cloud_client.get_workspace_files(workspace_name).size
+    delete_confirmation = @fire_cloud_client.delete_workspace_file(workspace_name, file.name)
+    assert delete_confirmation, 'File did not delete, confirmation did not return true'
+    current_num_files = @fire_cloud_client.get_workspace_files(workspace_name).size
+    assert current_num_files == num_files - 1, "Number of files is incorrect, expected #{num_files - 1} but found #{current_num_files}"
+
+    # delete workspace
+    puts 'deleting workspace...'
+    delete_message = @fire_cloud_client.delete_workspace(workspace_name)
+    assert delete_message.has_key?('message'), 'Did not receive a delete confirmation'
+
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+  end
+
+end
