@@ -53,14 +53,7 @@ class StudiesController < ApplicationController
     @study = Study.new
 
     # load the given user's available FireCloud billing projects
-    @projects = [['Default Project', FireCloudClient::PORTAL_NAMESPACE]]
-    client = FireCloudClient.new(current_user, 'single-cell-portal')
-    available_projects = client.get_billing_projects
-    available_projects.each do |project|
-      if project['creationStatus'] == 'Ready'
-        @projects << [project['projectName'], project['projectName']]
-      end
-    end
+    set_user_projects
   end
 
   # GET /studies/1/edit
@@ -78,6 +71,7 @@ class StudiesController < ApplicationController
         format.html { redirect_to path, notice: "Your study '#{@study.name}' was successfully created." }
         format.json { render :show, status: :ok, location: @study }
       else
+        set_user_projects
         format.html { render :new }
         format.json { render json: @study.errors, status: :unprocessable_entity }
       end
@@ -878,7 +872,7 @@ class StudiesController < ApplicationController
 
   # study params whitelist
   def study_params
-    params.require(:study).permit(:name, :description, :public, :user_id, :embargo, :use_existing_workspace, :firecloud_workspace, study_shares_attributes: [:id, :_destroy, :email, :permission])
+    params.require(:study).permit(:name, :description, :public, :user_id, :embargo, :use_existing_workspace, :firecloud_workspace, :firecloud_project, study_shares_attributes: [:id, :_destroy, :email, :permission])
   end
 
   # study file params whitelist
@@ -930,6 +924,17 @@ class StudiesController < ApplicationController
     end
     if @other_files.empty?
       @other_files << @study.build_study_file({file_type: 'Documentation'})
+    end
+  end
+
+  def set_user_projects
+    @projects = [['Default Project', FireCloudClient::PORTAL_NAMESPACE]]
+    client = FireCloudClient.new(current_user, 'single-cell-portal')
+    available_projects = client.get_billing_projects
+    available_projects.each do |project|
+      if project['creationStatus'] == 'Ready'
+        @projects << [project['projectName'], project['projectName']]
+      end
     end
   end
 
