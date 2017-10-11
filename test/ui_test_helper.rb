@@ -195,8 +195,10 @@ class Test::Unit::TestCase
     rescue Selenium::WebDriver::Error::NoSuchElementError => e
       other_account = @driver.find_element(:id, 'identifierLink')
       other_account.click
+      sleep(0.5) # this lets the animation complete
       email_field = @driver.find_element(:id, 'identifierId')
       email_field.send_key(email)
+      sleep(0.5) # this lets the animation complete
       email_next = @driver.find_element(:id, 'identifierNext')
       email_next.click
     end
