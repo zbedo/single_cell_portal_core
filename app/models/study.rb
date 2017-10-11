@@ -1633,15 +1633,21 @@ class Study
             workspace_permission = 'WRITER'
             can_compute = false
           end
-          acl = Study.firecloud_client.create_workspace_acl(study_owner, workspace_permission, true, can_compute)
-          Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, acl)
-          # validate acl
-          ws_acl = Study.firecloud_client.get_workspace_acl(self.firecloud_project, ws_name)
-          unless ws_acl['acl'][study_owner]['accessLevel'] == workspace_permission && ws_acl['acl'][study_owner]['canCompute'] == can_compute
-            # delete workspace on validation fail
-            Study.firecloud_client.delete_workspace(self.firecloud_project, self.firecloud_workspace)
-            errors.add(:firecloud_workspace, ' was not created properly (permissions do not match).  Please try again later.')
-            return false
+          # check project acls to see if user is project member
+          project_acl = Study.firecloud_client.get_billing_project_members(self.firecloud_project)
+          user_project_acl = project_acl.find {|acl| acl['email'] == study_owner}
+          # if user has no project acls, then we set specific workspace-level acls
+          if user_project_acl.nil?
+            acl = Study.firecloud_client.create_workspace_acl(study_owner, workspace_permission, true, can_compute)
+            Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, acl)
+            # validate acl
+            ws_acl = Study.firecloud_client.get_workspace_acl(self.firecloud_project, ws_name)
+            unless ws_acl['acl'][study_owner]['accessLevel'] == workspace_permission && ws_acl['acl'][study_owner]['canCompute'] == can_compute
+              # delete workspace on validation fail
+              Study.firecloud_client.delete_workspace(self.firecloud_project, self.firecloud_workspace)
+              errors.add(:firecloud_workspace, ' was not created properly (permissions do not match).  Please try again later.')
+              return false
+            end
           end
           Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment successful"
           if self.study_shares.any?
@@ -1690,36 +1696,43 @@ class Study
         begin
           workspace = Study.firecloud_client.get_workspace(self.firecloud_project, self.firecloud_workspace)
           study_owner = self.user.email
-          workspace_permission = 'OWNER'
-          can_compute = true
-          # if study project is in the compute blacklist, set permissions to WRITER and revoke computes
-          # otherwise, set to OWNER with default permissions
-          if Rails.env == 'production' && FireCloudClient::COMPUTE_BLACKLIST.include?(self.firecloud_project)
-            workspace_permission = 'WRITER'
-            can_compute = false
-            Rails.logger.info "#{Time.now}: Study: #{self.name} removing compute permissions"
-            compute_acl = Study.firecloud_client.create_workspace_acl(self.user.email, workspace_permission, true, can_compute)
-            Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, compute_acl)
+          # check project acls to see if user is project member
+          project_acl = Study.firecloud_client.get_billing_project_members(self.firecloud_project)
+          user_project_acl = project_acl.find {|acl| acl['email'] == study_owner}
+          # if user has no project acls, then we set specific workspace-level acls
+          if user_project_acl.nil?
+            workspace_permission = 'OWNER'
+            can_compute = true
+            # if study project is in the compute blacklist, set permissions to WRITER and revoke computes
+            # otherwise, set to OWNER with default permissions
+            if Rails.env == 'production' && FireCloudClient::COMPUTE_BLACKLIST.include?(self.firecloud_project)
+              workspace_permission = 'WRITER'
+              can_compute = false
+              Rails.logger.info "#{Time.now}: Study: #{self.name} removing compute permissions"
+              compute_acl = Study.firecloud_client.create_workspace_acl(self.user.email, workspace_permission, true, can_compute)
+              Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, compute_acl)
+            end
+            acl = Study.firecloud_client.get_workspace_acl(self.firecloud_project, self.firecloud_workspace)
+            # first check workspace authorization domain
+            auth_domain = workspace['workspace']['authorizationDomain']
+            unless auth_domain.empty?
+              errors.add(:firecloud_workspace, ': The workspace you provided is restricted.  We currently do not allow use of restricted workspaces.  Please use another workspace.')
+              return false
+            end
+            # check permissions
+            if acl['acl'][study_owner].nil? || acl['acl'][study_owner]['accessLevel'] == 'READER'
+              errors.add(:firecloud_workspace, ': You do not have write permission for the workspace you provided.  Please use another workspace.')
+              return false
+            end
+            # check compute permissions
+            if acl['acl'][study_owner]['canCompute'] != can_compute
+              errors.add(:firecloud_workspace, ': There was an error setting the permissions on your workspace (compute permissions were not set correctly).  Please try again.')
+              return false
+            end
+            Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl check successful"
+            # set bucket_id, it is nested lower since we had to get an existing workspace
           end
-          acl = Study.firecloud_client.get_workspace_acl(self.firecloud_project, self.firecloud_workspace)
-          # first check workspace authorization domain
-          auth_domain = workspace['workspace']['authorizationDomain']
-          unless auth_domain.empty?
-            errors.add(:firecloud_workspace, ': The workspace you provided is restricted.  We currently do not allow use of restricted workspaces.  Please use another workspace.')
-            return false
-          end
-          # check permissions
-          if acl['acl'][study_owner].nil? || acl['acl'][study_owner]['accessLevel'] == 'READER'
-            errors.add(:firecloud_workspace, ': You do not have write permission for the workspace you provided.  Please use another workspace.')
-            return false
-          end
-          # check compute permissions
-          if acl['acl'][study_owner]['canCompute'] != can_compute
-            errors.add(:firecloud_workspace, ': There was an error setting the permissions on your workspace (compute permissions were not set correctly).  Please try again.')
-            return false
-          end
-          Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl check successful"
-          # set bucket_id, it is nested lower since we had to get an existing workspace
+
           bucket = workspace['workspace']['bucketName']
           self.bucket_id = bucket
           if self.bucket_id.nil?
