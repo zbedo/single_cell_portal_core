@@ -50,7 +50,7 @@
                             <td><pre>wget https://</pre></td>
                           </tr>
                       <% end %>
-                      </thead>
+                    </thead>
                     </table>
                 <% end %>
             <% end %>
@@ -64,6 +64,15 @@
     <script type="text/javascript">
         $('#download-help').click(function() {
             $('#primary-data-download-modal').modal('show');
+        });
+        $('body').on('click', '.get-download-command', function(event) {
+          console.log($(this))
+          $.ajax({
+            url: '/single_cell/totat',
+            type: 'post'
+          }).then(function(response) {
+            console.log(response.responseJSON.totat);
+          });
         });
     </script>
   </div>

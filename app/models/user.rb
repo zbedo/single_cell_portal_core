@@ -152,6 +152,47 @@ class User
 
   ###
   #
+  # OTHER AUTHENTICATION METHODS
+  #
+  ###
+
+  # Time since Unix epoch, in milliseconds
+  def self.milliseconds_since_epoch
+    return (Time.now.to_f * 1000).round
+  end
+
+  # Creates and returns a time-based one-time access token (TOTAT).
+  #
+  # This isn't a password, because, after creation, it is intended for later
+  # use without a username.  Instead it is an access token. For security, we
+  # allow only one use of this token, and that use must be within a given
+  # time interval from the creation of the token.
+  #
+  # Note that this TOTAT implementation is not yet intended for sensitive data.
+  def create_totat(time_interval=30)
+    totat = rand(999999)
+    t = User.milliseconds_since_epoch()
+    ti = time_interval
+    t_ti = t.to_s + '_' + ti.to_s
+    self.update(totat: totat)
+    self.update(totat_t_ti: t_ti)
+    return {'totat': totat, 'time_interval': ti}
+  end
+
+  def self.verify_totat(totat)
+    user = User.find_by(totat: totat)
+    if user == nil
+      return false
+    end
+    totat_t, time_interval = user.totat_t_ti.split('_')
+    current_t = User.milliseconds_since_epoch()
+    puts (current_t - totat_t.to_i).to_s
+    puts (time_interval.to_i*1000).to_s
+    return current_t - totat_t.to_i <= time_interval.to_i*1000
+  end
+
+  ###
+  #
   # MISCELLANEOUS METHODS
   #
   ###

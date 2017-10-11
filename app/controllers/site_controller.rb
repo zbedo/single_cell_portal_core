@@ -19,7 +19,7 @@ class SiteController < ApplicationController
   before_action :set_cluster_group, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :expression_query, :annotation_query, :get_new_annotations, :annotation_values, :show_user_annotations_form]
   before_action :set_selected_annotation, only: [:update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :annotation_query, :annotation_values, :show_user_annotations_form]
   before_action :load_precomputed_options, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap]
-  before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query, :view_workflow_wdl, :log_action, :get_workspace_samples, :update_workspace_samples]
+  before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query, :view_workflow_wdl, :log_action, :get_workspace_samples, :update_workspace_samples, :create_totat]
   before_action :check_compute_permissions, only: [:get_fastq_files, :get_workspace_samples, :update_workspace_samples, :delete_workspace_samples, :get_workspace_sumbissions, :create_workspace_submission, :get_submission_workflow, :abort_submission_workflow, :get_submission_errors, :get_submission_outputs, :delete_submission_files]
 
   # caching
@@ -550,42 +550,13 @@ class SiteController < ApplicationController
     redirect_to @signed_url
   end
 
-  # Time since Unix epoch, in milliseconds
-  def milliseconds_since_epoch
-    return (Time.now.to_f * 1000).round
-  end
-
-  # Creates and returns a time-based one-time access token (TOTAT).
-  #
-  # This isn't a password, because, after creation, it is intended for later
-  # use without a username.  Instead it is an access token. For security, we
-  # allow only one use of this token, and that use must be within a given
-  # time interval from the creation of the token.
-  #
-  # Note that this TOTAT implementation is not yet intended for sensitive data.
   def create_totat(time_interval=30)
-    puts 'test'
-    user_id, auth_token = params[:request_user_token].split(':')
-    user = User.find_by(id: user_id, authentication_token: auth_token)
-    totat = rand(999999)
-    t = milliseconds_since_epoch()
-    ti = time_interval
-    t_ti = t + '_' + ti
-    user.update(totat: totat)
-    user.update(totat_t_ti: t_ti)
-    puts 'otat'
-    puts otat
-    render json: otat
-  end
-
-  def verify_totat(totat)
-    user = User.find_by(totat: totat)
-    if user == nil
-      return false
+    if !user_signed_in?
+      error = {'message': "Forbidden: You must be signed in to do this"}
+      render json:  + totat, status: 403
     end
-    totat_t, time_interval = user.totat_t_ti.split('_')
-    current_t = ms_since_epoch()
-    return current_t - totat_t >= time_interval
+    totat_and_ti = current_user.create_totat()
+    render json: totat_and_ti
   end
 
   # Helper method
@@ -599,12 +570,14 @@ class SiteController < ApplicationController
     # 'all' or the name of a directory, e.g. <insert example here>
     download_object = params[:download_object]
 
+    totat = params[:totat]
     # Time-based one-time access token is used to track user's download quota
-    # valid_totat = verify_totat(params[:totat])
-    #
-    # if valid_totat == false
-    #   return 403
-    # end
+    valid_totat = User.verify_totat(totat)
+
+    if valid_totat == false
+      render plain: "Forbidden: Invalid access token " + totat, status: 403
+      return
+    end
 
     # Ensure study is public
     if !@study.public?
@@ -635,11 +608,11 @@ class SiteController < ApplicationController
       end
     end
 
-    # curl -K urls.txt
-    # signed_urls = "url=\"" + signed_urls.join("\"\nurl=\"") + "\""
+    # For curl
+    signed_urls = "url=\"" + signed_urls.join("\"\nurl=\"") + "\"\n"
 
     # wget -i urls.txt
-    signed_urls = signed_urls.join("\n") + "\n"
+    # signed_urls = signed_urls.join("\n") + "\n"
 
     # Report CLI download to Google Analytics (GA).
     # This uses the Measurement Protocol:
