@@ -32,10 +32,7 @@
             <% elsif @study.public? %>
                 <p class="lead">To download all files using <code>wget</code>, run the following command:</p>
                 <pre>wget -i https://<%= request.headers['SERVER_NAME'] %>/single_cell/bulk_data/<%= @study.url_safe_name %>/all/<%= current_user.uid %></pre>
-                <% request.headers.each do |header| %>
-                    <%= header %>
-                <% end %>
-                <%= link_to "<i class='fa fa-download'></i> Get urls.txt".html_safe, '/single_cell/bulk_data/public-study/all/', class: 'btn btn-default pull-right', class: 'bulk-download' %>
+                <%= link_to "<i class='fa fa-download'></i> Get download command for all study data".html_safe, 'javascript:;', class: 'btn btn-default pull-right get-download-command', id: 'get-download-command_all' %>
                 <% if @directories.any? %>
                     <p class="lead">To download all data files in a specific folder, use the following commands:</p>
                     <table class="table table-condensed table-striped">
@@ -47,7 +44,9 @@
                       <% @directories.each do |directory| %>
                           <tr>
                             <td><%= directory.name %></td>
-                            <td><pre>wget https://</pre></td>
+                            <td>
+                              <%= link_to "<i class='fa fa-download'></i> Get download command".html_safe, 'javascript:;', class: 'btn btn-default pull-right get-download-command', id: "get-download-command_#{directory.name}" %>
+                            </td>
                           </tr>
                       <% end %>
                     </thead>
@@ -66,12 +65,22 @@
             $('#primary-data-download-modal').modal('show');
         });
         $('body').on('click', '.get-download-command', function(event) {
-          console.log($(this))
+          var directoryObject = $(this).attr('id').split('_')[1];
           $.ajax({
             url: '/single_cell/totat',
             type: 'post'
-          }).then(function(response) {
-            console.log(response.responseJSON.totat);
+          }).success(function(response) {
+            var url = (
+              window.location.origin +
+              '/single_cell/bulk_data' +
+              '/<%= @study.url_safe_name %>' +
+              '/' + directoryObject +
+              '/' + response.totat
+            );
+            var downloadCommand = (
+              'curl "' + url + '" -so /tmp/urls.txt; ' +
+              'curl -K /tmp/urls.txt -o data.txt' // TODO: Fix handling for multiple files
+            );
           });
         });
     </script>
