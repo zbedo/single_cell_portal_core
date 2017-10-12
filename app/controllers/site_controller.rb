@@ -1816,7 +1816,7 @@ class SiteController < ApplicationController
     return Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, filename, expires: expires)
   end
 
-  # Helper method for download_bulk_files
+  # Helper method for download_bulk_files.  Returns file's curl config, size.
   def get_curl_config(file)
 
     # Is this a study file, or a file from a directory listing?
