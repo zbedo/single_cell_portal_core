@@ -63,26 +63,65 @@
         $('#download-help').click(function() {
             $('#primary-data-download-modal').modal('show');
         });
+
+        // Enables copying to clipboard upon clicking a "clipboard" icon,
+        // like on GitHub.  https://clipboardjs.com.
+        var clipboard = new Clipboard('.btn-copy');
+        clipboard.on('success', function(event) {
+          $('#' + event.trigger.id)
+            .attr('title', 'Copied!')
+            .tooltip('fixTitle')
+            .tooltip('show');
+        });
+
+        // Show the download command upon clicking the "Get download command" button
         $('body').on('click', '.get-download-command', function(event) {
+
           var downloadButton = $(this);
+
+          // 'all' or a particular directory listing, e.g. 'csvs'
           var directoryObject = downloadButton.attr('id').split('_')[1];
+
+          // Get a time-based one time authentication token (totat),
+          // then show the download command
           $.ajax({
             url: '/single_cell/totat',
             type: 'post'
           }).success(function(response) {
+            var totat = response.totat;
+
+            // Gets a curl configuration ("cfg.txt") containing signed
+            // URLs and output names for all files in the download object.
             var url = (
               window.location.origin +
               '/single_cell/bulk_data' +
               '/<%= @study.url_safe_name %>' +
               '/' + directoryObject +
-              '/' + response.totat
+              '/' + totat
             );
+
+            // For convenience when developing
             var flag = (window.location.host === 'localhost') ? '--insecure ' : '';
+
+            // This is what the user will run in their terminal to download the data.
             var downloadCommand = (
-              'curl ' + flag + '"' + url + '" -so /tmp/cfg.txt; ' +
+              'curl ' + flag + '&quot;' + url + '&quot; -so /tmp/cfg.txt; ' +
               'curl -K /tmp/cfg.txt'
             );
-            downloadButton.parent().prepend('<pre>' + downloadCommand + '</pre>');
+
+            var commandID = 'command-' + totat;
+
+            // TODO: Tighten the UX on this.
+            downloadButton.parent().prepend(
+              '<div class="input-group">' +
+                '<input id="' + commandID + '" class="form-control" value="' + downloadCommand + '" readonly/>' +
+                '<span class="input-group-btn">' +
+                  '<button id="copy-button-' + totat + '" class="btn btn-default btn-copy" data-clipboard-target="#' + commandID + '" data-toggle="tooltip" title="Copy to clipboard">' +
+                    '<img src="/single_cell/assets/clippy.svg" width="16px" alt="Copy to clipboard">' +
+                  '</button>' +
+                '</span>' +
+              '</div>'
+            );
             downloadButton.addClass('pull-right');
           });
         });
