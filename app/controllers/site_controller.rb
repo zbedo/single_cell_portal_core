@@ -560,7 +560,8 @@ class SiteController < ApplicationController
     render json: totat_and_ti
   end
 
-  # Returns text file listing signed URLs of study files for download via curl.
+  # Returns text file listing signed URLs, etc. of files for download via curl.
+  # That is, this return 'cfg.txt' used as config (K) argument in 'curl -K cfg.txt'
   def download_bulk_files
 
     # Ensure study is public
@@ -587,7 +588,7 @@ class SiteController < ApplicationController
 
     user_quota = user.daily_download_quota
 
-    # Have you exceeded your quota?  Only check at beginning.
+    # Only check at quota at beginning of download, not per file.
     # Studies might be massive, and we want user to be able to download at least
     # one requested download object per day.
     if user_quota >= @download_quota
@@ -596,45 +597,32 @@ class SiteController < ApplicationController
       return
     end
 
-    # TODO: Extract AdminConfiguration and quota checks from download_file into new method,
-    # then call that from here.  Better than copy-pasting mostly duplicative code.
-
     curl_configs = ['--create-dirs']
 
-    files = []
+    half_hour = 1800 # seconds
+
     if download_object == 'all'
       files = @study.study_files
       files.each do |study_file|
-        filename = study_file.upload_file_name
-        signed_url = get_signed_url(filename, expires=1800)
-        curl_config = [
-            'url="' + signed_url + '"',
-            'output="' + filename + '"'
-        ]
-        curl_configs.push(curl_config.join("\n"))
-        user_quota += study_file.upload_file_size
+        curl_config, file_size = get_curl_config(study_file)
+        curl_configs.push(curl_config)
+        user_quota += file_size
       end
-    else
-      synced_directories = @study.directory_listings.are_synced
-      synced_directories.each do |synced_dir|
-        synced_dir.files.each do |file|
-          filename = file[:name]
-          signed_url = get_signed_url(filename, expires=1800)
-          curl_config = [
-            'url="' + signed_url + '"',
-            'output="' + filename + '"'
-          ]
-          curl_configs.push(curl_config.join("\n"))
-          user_quota += file[:size]
-        end
+    end
+    synced_dirs = @study.directory_listings.are_synced
+    synced_dirs.each do |synced_dir|
+      if download_object != 'all' and synced_dir[:name] != download_object
+        next
+      end
+      synced_dir.files.each do |file|
+        curl_config, file_size = get_curl_config(file)
+        curl_configs.push(curl_config)
+        user_quota += file_size
       end
     end
 
-    # For curl
-    curl_configs = curl_configs.join("\n\n")
 
-    # wget -i urls.txt
-    # signed_urls = signed_urls.join("\n") + "\n"
+    curl_configs = curl_configs.join("\n\n")
 
     # Report CLI download to Google Analytics (GA).
     # This uses the Measurement Protocol:
@@ -1822,9 +1810,30 @@ class SiteController < ApplicationController
     end
   end
 
-  # Helper method for bulk data download
+  # Helper method for get_curl_config
+  # TODO: Make this a class method of Study?  Run by Jon.
   def get_signed_url(filename, expires=30)
     return Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, filename, expires: expires)
+  end
+
+  # Helper method for download_bulk_files
+  def get_curl_config(file)
+
+    # Is this a study file, or a file from a directory listing?
+    is_study_file = file.class == StudyFile
+
+    filename = (is_study_file ? file.upload_file_name : file[:name])
+
+    half_hour = 1800 # seconds
+    signed_url = get_signed_url(filename, expires=half_hour)
+    curl_config = [
+      'url="' + signed_url + '"',
+      'output="' + filename + '"'
+    ]
+    curl_config = curl_config.join("\n")
+    file_size = (is_study_file ? file.upload_file_size : file[:size])
+
+    return curl_config, file_size
   end
 
   protected
