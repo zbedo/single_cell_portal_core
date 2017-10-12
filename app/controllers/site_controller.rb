@@ -560,33 +560,40 @@ class SiteController < ApplicationController
     render json: totat_and_ti
   end
 
-  # Helper method
-  def get_signed_url(filename, expires=300)
-    return Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, filename, expires: expires)
-  end
-
   # Returns text file listing signed URLs of study files for download via curl.
   def download_bulk_files
 
-    # Have you exceeded your quota?  Only check at beginning.
-    # Studies might be massive.
+    # Ensure study is public
+    if !@study.public?
+      message = 'Only public studies can be downloaded via curl.'
+      render plain: "Forbidden: " + message, status: 403
+      return
+    end
 
-    # 'all' or the name of a directory, e.g. <insert example here>
+    # 'all' or the name of a directory, e.g. 'csvs'
     download_object = params[:download_object]
 
     totat = params[:totat]
-    # Time-based one-time access token is used to track user's download quota
+
+    # Time-based one-time access token (totat) is used to track user's download quota
     valid_totat = User.verify_totat(totat)
 
     if valid_totat == false
       render plain: "Forbidden: Invalid access token " + totat, status: 403
       return
+    else
+      user = valid_totat
     end
 
-    # Ensure study is public
-    if !@study.public?
-      message = 'Only public studies can be downloaded via CLI.'
-      redirect_to view_study_path(@study.url_safe_name), alert: message and return
+    user_quota = user.daily_download_quota
+
+    # Have you exceeded your quota?  Only check at beginning.
+    # Studies might be massive, and we want user to be able to download at least
+    # one requested download object per day.
+    if user_quota >= @download_quota
+      message = 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this object.'
+      render plain: "Forbidden: " + message, status: 403
+      return
     end
 
     # TODO: Extract AdminConfiguration and quota checks from download_file into new method,
@@ -605,6 +612,7 @@ class SiteController < ApplicationController
             'output="' + filename + '"'
         ]
         curl_configs.push(curl_config.join("\n"))
+        user_quota += study_file.upload_file_size
       end
     else
       synced_directories = @study.directory_listings.are_synced
@@ -617,6 +625,7 @@ class SiteController < ApplicationController
             'output="' + filename + '"'
           ]
           curl_configs.push(curl_config.join("\n"))
+          user_quota += file[:size]
         end
       end
     end
@@ -646,6 +655,8 @@ class SiteController < ApplicationController
     # http.request(request)
     # response = http.request(request)
     # puts response
+
+    user.update(daily_download_quota: user_quota)
 
     send_data curl_configs, type: 'text/plain', filename: 'cfg.txt'
   end
@@ -1809,6 +1820,11 @@ class SiteController < ApplicationController
       0.upto(4) {|i| row[i] ||= '' }
       existing_list << row
     end
+  end
+
+  # Helper method for bulk data download
+  def get_signed_url(filename, expires=30)
+    return Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, filename, expires: expires)
   end
 
   protected
