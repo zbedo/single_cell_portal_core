@@ -31,7 +31,7 @@
               <% end %>
             <% elsif @study.public? %>
                 <p class="lead">To download all files using <code>curl</code>, click the button below to get the download command:</p>
-                <p class="lead"><%= link_to "<i class='fa fa-download'></i> Get download command for all study data".html_safe, 'javascript:;', class: 'btn btn-default get-download-command', id: 'get-download-command_all' %></p>
+                <p class="lead command-container" id="command-container-all"><%= link_to "<i class='fa fa-download'></i> Get download command for all study data".html_safe, 'javascript:;', class: 'btn btn-default get-download-command', id: 'get-download-command_all' %></p>
                 <% if @directories.any? %>
                     <p class="lead">To download all data files in a specific folder, use the following commands:</p>
                     <table class="table table-condensed table-striped">
@@ -43,7 +43,7 @@
                       <% @directories.each do |directory| %>
                           <tr>
                             <td><%= directory.name %></td>
-                            <td>
+                            <td class="command-container" id="command-container-<%= directory.name %>">
                               <%= link_to "<i class='fa fa-download'></i> Get download command".html_safe, 'javascript:;', class: 'btn btn-default get-download-command', id: "get-download-command_#{directory.name}" %>
                             </td>
                           </tr>
@@ -74,20 +74,24 @@
             .tooltip('show');
         });
 
-        // Show the download command upon clicking the "Get download command" button
-        $('body').on('click', '.get-download-command', function(event) {
+        $('body').on('click', '.btn-refresh', function(event) {
+          var commandContainer = $(this).parentsUntil('.command-container').parent();
+          var downloadObject = commandContainer.attr('id').split('-').slice(-1)[0];
+          writeDownloadCommand(downloadObject);
+        });
 
-          var downloadButton = $(this);
-
-          // 'all' or a particular directory listing, e.g. 'csvs'
-          var directoryObject = downloadButton.attr('id').split('_')[1];
-
+        /**
+         * Writes HTML containing curl command used to download public study data
+         *
+         * @param downloadObject {String} 'all' or a particular directory listing, e.g. 'csvs'
+         */
+        function writeDownloadCommand(downloadObject) {
           // Get a time-based one time authentication token (totat),
           // then show the download command
           $.ajax({
             url: '/single_cell/totat',
             type: 'post'
-          }).success(function(response) {
+          }).success(function (response) {
             var totat = response.totat;
 
             // Gets a curl configuration ("cfg.txt") containing signed
@@ -96,7 +100,7 @@
               window.location.origin +
               '/single_cell/bulk_data' +
               '/<%= @study.url_safe_name %>' +
-              '/' + directoryObject +
+              '/' + downloadObject +
               '/' + totat
             );
 
@@ -110,20 +114,28 @@
             );
 
             var commandID = 'command-' + totat;
+            var commandContainer = $('#command-container-' + downloadObject);
 
-            // TODO: Tighten the UX on this.
-            downloadButton.parent().prepend(
+            commandContainer.html(
               '<div class="input-group">' +
                 '<input id="' + commandID + '" class="form-control" value="' + downloadCommand + '" readonly/>' +
                 '<span class="input-group-btn">' +
                   '<button id="copy-button-' + totat + '" class="btn btn-default btn-copy" data-clipboard-target="#' + commandID + '" data-toggle="tooltip" title="Copy to clipboard">' +
                     '<img src="/single_cell/assets/clippy.svg" width="16px" alt="Copy to clipboard">' +
                   '</button>' +
+                  '<button id="refresh-button-' + totat + '" class="btn btn-default btn-refresh glyphicon glyphicon-refresh" data-toggle="tooltip" style="top: -0.5px;" title="Refresh download command">' +
+                  '</button>' +
                 '</span>' +
               '</div>'
             );
-            downloadButton.addClass('pull-right');
           });
+        }
+
+        // Show the download command upon clicking the "Get download command" button
+        $('body').on('click', '.get-download-command', function(event) {
+          var downloadButton = $(this);
+          var downloadObject = downloadButton.attr('id').split('_')[1];
+          writeDownloadCommand(downloadObject);
         });
     </script>
   </div>
