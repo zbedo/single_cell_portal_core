@@ -1,18 +1,17 @@
 <div class="row">
   <div class="col-xs-12">
-    <h2>Study Files <span class="badge"><%= @study_files.count %></span>  <% if @study.can_direct_download?(current_user) %><%= link_to "<i class='fa fa-question-circle'></i> Download Help".html_safe, 'javascript:;', class: 'btn btn-default pull-right', id: 'download-help' %><% end %></h2>
-
-    <% if @study.can_direct_download?(current_user) %>
-      <div class="modal fade" id="primary-data-download-modal" role="dialog" aria-labelledby="primary-data-download-modal" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h2 class="text-center">Download Help</h2>
-            </div>
-            <div class="modal-body">
-              <p class="lead">To download any individual file, click the download button in the corresponding row.</p>
-              <p class="lead">To download all files using <code>gsutil</code>, run the following command:</p>
-              <pre>gsutil -m cp -r gs://<%= @study.bucket_id %> [target path]</pre>
+    <h2>Study Files <span class="badge"><%= @study_files.count %></span>  <%= link_to "<i class='fa fa-question-circle'></i> Bulk Download Help".html_safe, 'javascript:;', class: 'btn btn-default pull-right', id: 'download-help' %></h2>
+    <div class="modal fade" id="primary-data-download-modal" role="dialog" aria-labelledby="primary-data-download-modal" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="text-center">Bulk Download Help</h2>
+          </div>
+          <div class="modal-body">
+            <p class="lead">To download any individual file, click the download button in the corresponding row.</p>
+            <% if @study.can_direct_download?(current_user) %>
+            <p class="lead">To download all files using <code>gsutil</code>, run the following command:</p>
+            <pre>gsutil -m cp -r gs://<%= @study.bucket_id %> [target path]</pre>
               <% if @directories.any? %>
                 <p class="lead">To download all data files in a specific folder, use the following commands:</p>
                 <table class="table table-condensed table-striped">
@@ -22,26 +21,129 @@
                     <th>gsutil command</th>
                   </tr>
                   <% @directories.each do |directory| %>
-                    <tr>
-                      <td><%= directory.name %></td>
-                      <td><pre>gsutil -m cp gs://<%= @study.bucket_id %><%= directory.download_display_name %>*.<%= directory.file_type %>*<%= %> [target path]</pre></td>
-                    </tr>
+                      <tr>
+                        <td><%= directory.name %></td>
+                        <td><pre>gsutil -m cp gs://<%= @study.bucket_id %><%= directory.download_display_name %>*.<%= directory.file_type %>*<%= %> [target path]</pre></td>
+                      </tr>
                   <% end %>
                   </thead>
                 </table>
               <% end %>
-            </div>
-            <div class="modal-footer">
-              <button class="close" data-dismiss="modal">×</button>
-            </div>
+            <% elsif @study.public? %>
+                <p class="lead">To download all files using <code>curl</code>, click the button below to get the download command:</p>
+                <p class="lead command-container" id="command-container-all"><%= link_to "<i class='fa fa-download'></i> Get download command for all study data".html_safe, 'javascript:;', class: 'btn btn-default get-download-command', id: 'get-download-command_all' %></p>
+                <% if @directories.any? %>
+                    <p class="lead">To download all data files in a specific folder, use the following commands:</p>
+                    <table class="table table-condensed table-striped">
+                      <thead>
+                      <tr>
+                        <th>Folder</th>
+                        <th>Download command</th>
+                      </tr>
+                      <% @directories.each do |directory| %>
+                          <tr>
+                            <td><%= directory.name %></td>
+                            <td class="command-container" id="command-container-<%= directory.name %>">
+                              <%= link_to "<i class='fa fa-download'></i> Get download command".html_safe, 'javascript:;', class: 'btn btn-default get-download-command', id: "get-download-command_#{directory.name}" %>
+                            </td>
+                          </tr>
+                      <% end %>
+                    </thead>
+                    </table>
+                <% end %>
+            <% end %>
+          </div>
+          <div class="modal-footer">
+            <button class="close" data-dismiss="modal">×</button>
           </div>
         </div>
       </div>
-    <% end %>
-
+    </div>
     <script type="text/javascript">
         $('#download-help').click(function() {
             $('#primary-data-download-modal').modal('show');
+        });
+
+        // Enables copying to clipboard upon clicking a "clipboard" icon,
+        // like on GitHub.  https://clipboardjs.com.
+        var clipboard = new Clipboard('.btn-copy');
+        clipboard.on('success', function(event) {
+          $('#' + event.trigger.id)
+            .attr('title', 'Copied!')
+            .tooltip('fixTitle')
+            .tooltip('show');
+        });
+
+        $('body').on('click', '.btn-refresh', function(event) {
+          var commandContainer = $(this).parentsUntil('.command-container').parent();
+          var downloadObject = commandContainer.attr('id').split('-').slice(-1)[0];
+          writeDownloadCommand(downloadObject);
+        });
+
+        /**
+         * Writes HTML containing curl command used to download public study data
+         *
+         * @param downloadObject {String} 'all' or a particular directory listing, e.g. 'csvs'
+         */
+        function writeDownloadCommand(downloadObject) {
+
+          $('.tooltip').remove();
+
+          // Get a time-based one time authentication token (totat),
+          // then show the download command
+          $.ajax({
+            url: '/single_cell/totat',
+            type: 'post'
+          }).success(function (response) {
+            var totat = response.totat;
+            var timeInterval = response.time_interval; // token expires after this many seconds
+
+            var expiresMinutes = timeInterval / 60;
+
+            // Gets a curl configuration ("cfg.txt") containing signed
+            // URLs and output names for all files in the download object.
+            var url = (
+              window.location.origin +
+              '/single_cell/bulk_data' +
+              '/<%= @study.url_safe_name %>' +
+              '/' + downloadObject +
+              '/' + totat
+            );
+
+            // For convenience when developing
+            var flag = (window.location.host === 'localhost') ? '--insecure ' : '';
+
+            // This is what the user will run in their terminal to download the data.
+            var downloadCommand = (
+              'curl ' + flag + '&quot;' + url + '&quot; -so /tmp/cfg.txt; ' +
+              'curl -K /tmp/cfg.txt'
+            );
+
+            var commandID = 'command-' + totat;
+            var commandContainer = $('#command-container-' + downloadObject);
+            var countdownValue = '<span class="countdown" id="countdown-' + totat + '">' + expiresMinutes + '</span>';
+
+            commandContainer.html(
+              '<div class="input-group">' +
+                '<input id="' + commandID + '" class="form-control" value="' + downloadCommand + '" readonly/>' +
+                '<span class="input-group-btn">' +
+                  '<button id="copy-button-' + totat + '" class="btn btn-default btn-copy" data-clipboard-target="#' + commandID + '" data-toggle="tooltip" title="Copy to clipboard">' +
+                    '<img src="/single_cell/assets/clippy.svg" width="16px" alt="Copy to clipboard">' +
+                  '</button>' +
+                  '<button id="refresh-button-' + totat + '" class="btn btn-default btn-refresh glyphicon glyphicon-refresh" data-toggle="tooltip" style="top: -0.5px;" title="Refresh download command">' +
+                  '</button>' +
+                '</span>' +
+              '</div>' +
+              '<div style="font-size: 12px">Valid for one use within ' + countdownValue + ' minutes.  Paste into Mac/Linux/Unix terminal and execute to download.</div>'
+            );
+          });
+        }
+
+        // Show the download command upon clicking the "Get download command" button
+        $('body').on('click', '.get-download-command', function(event) {
+          var downloadButton = $(this);
+          var downloadObject = downloadButton.attr('id').split('_')[1];
+          writeDownloadCommand(downloadObject);
         });
     </script>
   </div>
