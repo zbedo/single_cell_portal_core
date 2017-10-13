@@ -38,7 +38,7 @@
                       <thead>
                       <tr>
                         <th>Folder</th>
-                        <th>curl command</th>
+                        <th>Download command</th>
                       </tr>
                       <% @directories.each do |directory| %>
                           <tr>
@@ -86,6 +86,9 @@
          * @param downloadObject {String} 'all' or a particular directory listing, e.g. 'csvs'
          */
         function writeDownloadCommand(downloadObject) {
+
+          $('.tooltip').remove();
+
           // Get a time-based one time authentication token (totat),
           // then show the download command
           $.ajax({
@@ -93,6 +96,9 @@
             type: 'post'
           }).success(function (response) {
             var totat = response.totat;
+            var timeInterval = response.time_interval; // token expires after this many seconds
+
+            var expiresMinutes = timeInterval / 60;
 
             // Gets a curl configuration ("cfg.txt") containing signed
             // URLs and output names for all files in the download object.
@@ -115,6 +121,7 @@
 
             var commandID = 'command-' + totat;
             var commandContainer = $('#command-container-' + downloadObject);
+            var countdownValue = '<span class="countdown" id="countdown-' + totat + '">' + expiresMinutes + '</span>';
 
             commandContainer.html(
               '<div class="input-group">' +
@@ -126,7 +133,8 @@
                   '<button id="refresh-button-' + totat + '" class="btn btn-default btn-refresh glyphicon glyphicon-refresh" data-toggle="tooltip" style="top: -0.5px;" title="Refresh download command">' +
                   '</button>' +
                 '</span>' +
-              '</div>'
+              '</div>' +
+              '<div style="font-size: 12px">Valid for one use within ' + countdownValue + ' minutes</div>'
             );
           });
         }
