@@ -1,11 +1,11 @@
 <div class="row">
   <div class="col-xs-12">
-    <h2>Study Files <span class="badge"><%= @study_files.count %></span>  <%= link_to "<i class='fa fa-question-circle'></i> Download Help".html_safe, 'javascript:;', class: 'btn btn-default pull-right', id: 'download-help' %></h2>
+    <h2>Study Files <span class="badge"><%= @study_files.count %></span>  <%= link_to "<i class='fa fa-question-circle'></i> Bulk Download Help".html_safe, 'javascript:;', class: 'btn btn-default pull-right', id: 'download-help' %></h2>
     <div class="modal fade" id="primary-data-download-modal" role="dialog" aria-labelledby="primary-data-download-modal" aria-hidden="true">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h2 class="text-center">Download Help</h2>
+            <h2 class="text-center">Bulk Download Help</h2>
           </div>
           <div class="modal-body">
             <p class="lead">To download any individual file, click the download button in the corresponding row.</p>
@@ -134,7 +134,7 @@
                   '</button>' +
                 '</span>' +
               '</div>' +
-              '<div style="font-size: 12px">Valid for one use within ' + countdownValue + ' minutes</div>'
+              '<div style="font-size: 12px">Valid for one use within ' + countdownValue + ' minutes.  Paste into Mac/Linux/Unix terminal and execute to download.</div>'
             );
           });
         }
