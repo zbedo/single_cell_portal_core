@@ -50,8 +50,8 @@ Rails.application.routes.draw do
 		get 'publish_to_study/:id', to: 'user_annotations#publish_to_study', as: :publish_to_study
 
 		# public/private file download links (redirect to signed_urls from Google)
-		get 'data/public/:study_name/:filename', to: 'site#download_file', as: :download_file, constraints: {filename: /.*/}
-		get 'data/private/:study_name/:filename', to: 'studies#download_private_file', as: :download_private_file, constraints: {filename: /.*/}
+		get 'data/public/:study_name', to: 'site#download_file', as: :download_file
+		get 'data/private/:study_name', to: 'studies#download_private_file', as: :download_private_file
 
 		# autocomplete
 		resources :expression_score, only: [:show, :index] do

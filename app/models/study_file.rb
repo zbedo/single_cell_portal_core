@@ -92,9 +92,9 @@ class StudyFile
       self.human_fastq_url
     else
       if self.study.public?
-        download_file_path(self.study.url_safe_name, self.download_location)
+        download_file_path(self.study.url_safe_name, filename: self.download_location)
       else
-        download_private_file_path(self.study.url_safe_name, self.download_location)
+        download_private_file_path(self.study.url_safe_name, filename: self.download_location)
       end
     end
   end
