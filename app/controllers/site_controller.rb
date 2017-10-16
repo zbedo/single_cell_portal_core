@@ -553,7 +553,7 @@ class SiteController < ApplicationController
   def create_totat
     if !user_signed_in?
       error = {'message': "Forbidden: You must be signed in to do this"}
-      render json:  + totat, status: 403
+      render json:  + error, status: 403
     end
     half_hour = 1800 # seconds
     totat_and_ti = current_user.create_totat(time_interval=half_hour)
@@ -599,8 +599,7 @@ class SiteController < ApplicationController
 
     curl_configs = ['--create-dirs']
 
-    half_hour = 1800 # seconds
-
+    # Get signed URLs for all study files and update user quota, if we're downloading whole study ('all')
     if download_object == 'all'
       files = @study.study_files
       files.each do |study_file|
@@ -609,6 +608,8 @@ class SiteController < ApplicationController
         user_quota += file_size
       end
     end
+
+    # Get signed URLs for all directory listings and update user quota
     synced_dirs = @study.directory_listings.are_synced
     synced_dirs.each do |synced_dir|
       if download_object != 'all' and synced_dir[:name] != download_object
@@ -623,26 +624,6 @@ class SiteController < ApplicationController
 
 
     curl_configs = curl_configs.join("\n\n")
-
-    # Report CLI download to Google Analytics (GA).
-    # This uses the Measurement Protocol:
-    # https://developers.google.com/analytics/devguides/collection/protocol/v1/
-    #
-    # tid = Rails.env == 'production' ? 'UA-61688341-8' : 'UA-61688341-12'
-    # analytics_params =
-    #   'v=1' + # Protocol version
-    #   '&tid=' + tid + # Tracking ID (details above)
-    #   '&cid=555' + # Client ID
-    #   '&t=event' + # Hit type
-    #   '&ec=cli' + # Event category
-    #   '&ea=download' # Event action
-    # http = Net::HTTP.new('www.google-analytics.com')
-    # http.use_ssl = true
-    # request = Net::HTTP::Post.new('/collect')
-    # request.body = analytics_params
-    # http.request(request)
-    # response = http.request(request)
-    # puts response
 
     user.update(daily_download_quota: user_quota)
 
@@ -1810,22 +1791,18 @@ class SiteController < ApplicationController
     end
   end
 
-  # Helper method for get_curl_config
-  # TODO: Make this a class method of Study?  Run by Jon.
-  def get_signed_url(filename, expires=30)
-    return Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, filename, expires: expires)
-  end
-
   # Helper method for download_bulk_files.  Returns file's curl config, size.
   def get_curl_config(file)
 
     # Is this a study file, or a file from a directory listing?
-    is_study_file = file.class == StudyFile
+    is_study_file = file.is_a? StudyFile
 
     filename = (is_study_file ? file.upload_file_name : file[:name])
 
-    half_hour = 1800 # seconds
-    signed_url = get_signed_url(filename, expires=half_hour)
+    signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url,
+                                                              @study.firecloud_workspace,
+                                                              filename,
+                                                              expires: 1800) # seconds
     curl_config = [
       'url="' + signed_url + '"',
       'output="' + filename + '"'

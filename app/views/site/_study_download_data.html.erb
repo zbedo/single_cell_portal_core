@@ -115,8 +115,8 @@
 
             // This is what the user will run in their terminal to download the data.
             var downloadCommand = (
-              'curl ' + flag + '&quot;' + url + '&quot; -so /tmp/cfg.txt; ' +
-              'curl -K /tmp/cfg.txt'
+              'curl ' + flag + '&quot;' + url + '&quot; -so cfg.txt; ' +
+              'curl -K cfg.txt'
             );
 
             var commandID = 'command-' + totat;
