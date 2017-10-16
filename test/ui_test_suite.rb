@@ -868,7 +868,7 @@ class UiTestSuite < Test::Unit::TestCase
 	# this test depends on a workspace already existing in FireCloud called development-sync-test
 	# if this study has been deleted, this test will fail until the workspace is re-created with at least
 	# 3 default files for expression, metadata, one cluster, and one fastq file (using the test data from test/test_data)
-	test 'admin: sync: existing workspace' do
+	test 'admin: sync-study: existing workspace' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in first
@@ -905,7 +905,7 @@ class UiTestSuite < Test::Unit::TestCase
 			case filename
 				when 'cluster_example.txt'
 					file_type.send_keys('Cluster')
-				when 'expression_matrix_example.txt'
+				when 'subfolder/expression_matrix_example.txt'
 					file_type.send_keys('Expression Matrix')
 				when 'metadata_example.txt'
 					file_type.send_keys('Metadata')
@@ -1108,7 +1108,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# test validation of not allowing studies with an authorizationDomain attribute
-	test 'admin: sync: restricted workspace' do
+	test 'admin: sync-study: restricted workspace' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in first
