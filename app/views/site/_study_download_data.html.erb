@@ -110,12 +110,9 @@
               '/' + totat
             );
 
-            // For convenience when developing
-            var flag = (window.location.host === 'localhost') ? '--insecure ' : '';
-
             // This is what the user will run in their terminal to download the data.
             var downloadCommand = (
-              'curl ' + flag + '&quot;' + url + '&quot; -so cfg.txt; ' +
+              'curl &quot;' + url + '&quot; -ko cfg.txt; ' +
               'curl -K cfg.txt'
             );
 
