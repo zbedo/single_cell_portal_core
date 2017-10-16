@@ -19,7 +19,7 @@ class SiteController < ApplicationController
   before_action :set_cluster_group, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :expression_query, :annotation_query, :get_new_annotations, :annotation_values, :show_user_annotations_form]
   before_action :set_selected_annotation, only: [:update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :annotation_query, :annotation_values, :show_user_annotations_form]
   before_action :load_precomputed_options, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap]
-  before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query, :view_workflow_wdl, :log_action, :get_workspace_samples, :update_workspace_samples]
+  before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query, :view_workflow_wdl, :log_action, :get_workspace_samples, :update_workspace_samples, :create_totat]
   before_action :check_compute_permissions, only: [:get_fastq_files, :get_workspace_samples, :update_workspace_samples, :delete_workspace_samples, :get_workspace_sumbissions, :create_workspace_submission, :get_submission_workflow, :abort_submission_workflow, :get_submission_errors, :get_submission_outputs, :delete_submission_files]
 
   # caching
@@ -548,6 +548,105 @@ class SiteController < ApplicationController
     end
     # redirect directly to file to trigger download
     redirect_to @signed_url
+  end
+
+  def create_totat
+    if !user_signed_in?
+      error = {'message': "Forbidden: You must be signed in to do this"}
+      render json:  + totat, status: 403
+    end
+    half_hour = 1800 # seconds
+    totat_and_ti = current_user.create_totat(time_interval=half_hour)
+    render json: totat_and_ti
+  end
+
+  # Returns text file listing signed URLs, etc. of files for download via curl.
+  # That is, this return 'cfg.txt' used as config (K) argument in 'curl -K cfg.txt'
+  def download_bulk_files
+
+    # Ensure study is public
+    if !@study.public?
+      message = 'Only public studies can be downloaded via curl.'
+      render plain: "Forbidden: " + message, status: 403
+      return
+    end
+
+    # 'all' or the name of a directory, e.g. 'csvs'
+    download_object = params[:download_object]
+
+    totat = params[:totat]
+
+    # Time-based one-time access token (totat) is used to track user's download quota
+    valid_totat = User.verify_totat(totat)
+
+    if valid_totat == false
+      render plain: "Forbidden: Invalid access token " + totat, status: 403
+      return
+    else
+      user = valid_totat
+    end
+
+    user_quota = user.daily_download_quota
+
+    # Only check at quota at beginning of download, not per file.
+    # Studies might be massive, and we want user to be able to download at least
+    # one requested download object per day.
+    if user_quota >= @download_quota
+      message = 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this object.'
+      render plain: "Forbidden: " + message, status: 403
+      return
+    end
+
+    curl_configs = ['--create-dirs']
+
+    half_hour = 1800 # seconds
+
+    if download_object == 'all'
+      files = @study.study_files
+      files.each do |study_file|
+        curl_config, file_size = get_curl_config(study_file)
+        curl_configs.push(curl_config)
+        user_quota += file_size
+      end
+    end
+    synced_dirs = @study.directory_listings.are_synced
+    synced_dirs.each do |synced_dir|
+      if download_object != 'all' and synced_dir[:name] != download_object
+        next
+      end
+      synced_dir.files.each do |file|
+        curl_config, file_size = get_curl_config(file)
+        curl_configs.push(curl_config)
+        user_quota += file_size
+      end
+    end
+
+
+    curl_configs = curl_configs.join("\n\n")
+
+    # Report CLI download to Google Analytics (GA).
+    # This uses the Measurement Protocol:
+    # https://developers.google.com/analytics/devguides/collection/protocol/v1/
+    #
+    # tid = Rails.env == 'production' ? 'UA-61688341-8' : 'UA-61688341-12'
+    # analytics_params =
+    #   'v=1' + # Protocol version
+    #   '&tid=' + tid + # Tracking ID (details above)
+    #   '&cid=555' + # Client ID
+    #   '&t=event' + # Hit type
+    #   '&ec=cli' + # Event category
+    #   '&ea=download' # Event action
+    # http = Net::HTTP.new('www.google-analytics.com')
+    # http.use_ssl = true
+    # request = Net::HTTP::Post.new('/collect')
+    # request.body = analytics_params
+    # http.request(request)
+    # response = http.request(request)
+    # puts response
+
+    user.update(daily_download_quota: user_quota)
+
+    send_data curl_configs, type: 'text/plain', filename: 'cfg.txt'
   end
 
   ###
@@ -1709,6 +1808,32 @@ class SiteController < ApplicationController
       0.upto(4) {|i| row[i] ||= '' }
       existing_list << row
     end
+  end
+
+  # Helper method for get_curl_config
+  # TODO: Make this a class method of Study?  Run by Jon.
+  def get_signed_url(filename, expires=30)
+    return Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, filename, expires: expires)
+  end
+
+  # Helper method for download_bulk_files.  Returns file's curl config, size.
+  def get_curl_config(file)
+
+    # Is this a study file, or a file from a directory listing?
+    is_study_file = file.class == StudyFile
+
+    filename = (is_study_file ? file.upload_file_name : file[:name])
+
+    half_hour = 1800 # seconds
+    signed_url = get_signed_url(filename, expires=half_hour)
+    curl_config = [
+      'url="' + signed_url + '"',
+      'output="' + filename + '"'
+    ]
+    curl_config = curl_config.join("\n")
+    file_size = (is_study_file ? file.upload_file_size : file[:size])
+
+    return curl_config, file_size
   end
 
   protected
