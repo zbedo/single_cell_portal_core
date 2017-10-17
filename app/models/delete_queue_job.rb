@@ -18,11 +18,6 @@ class DeleteQueueJob < Struct.new(:object)
         file_type = object.file_type
         study = object.study
 
-        # reset initialized if needed
-        if study.cluster_ordinations_files.empty? || study.expression_matrix_files.empty? || study.metadata_file.nil?
-          study.update!(initialized: false)
-        end
-
         # now remove all child objects first to free them up to be re-used.
         case file_type
           when 'Cluster'
@@ -59,6 +54,11 @@ class DeleteQueueJob < Struct.new(:object)
         # queue study file object for deletion
         new_name = "DELETE-#{SecureRandom.uuid}"
         object.update!(queued_for_deletion: true, upload_file_name: new_name, name: new_name, file_type: nil)
+
+        # reset initialized if needed
+        if study.cluster_groups.empty? || study.expression_scores.empty? || study.study_metadata.nil?
+          study.update!(initialized: false)
+        end
       when 'UserAnnotation'
         # set queued for deletion to true and set user annotation name
         new_name = "DELETE-#{SecureRandom.uuid}"

@@ -673,7 +673,7 @@ class UiTestSuite < Test::Unit::TestCase
 		assert embargo_links.size == 1, "did not find correct number of embargo links, expected 1 but found #{embargo_links.size}"
 
 		# make sure embargo redirect is in place
-		data_url = @base_url + "/data/public/embargo-study-#{$random_seed}/expression_matrix_example.txt"
+		data_url = @base_url + "/data/public/embargo-study-#{$random_seed}?filename=expression_matrix_example.txt"
 		@driver.get data_url
 		wait_for_modal_open('message_modal')
 		alert_text = @driver.find_element(:id, 'alert-content').text
@@ -868,7 +868,7 @@ class UiTestSuite < Test::Unit::TestCase
 	# this test depends on a workspace already existing in FireCloud called development-sync-test
 	# if this study has been deleted, this test will fail until the workspace is re-created with at least
 	# 3 default files for expression, metadata, one cluster, and one fastq file (using the test data from test/test_data)
-	test 'admin: sync: existing workspace' do
+	test 'admin: sync-study: bulk: existing workspace' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in first
@@ -879,8 +879,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# create a new study using an existing workspace, also generate a random name to validate that workspace name
 		# and study name can be different
-		uuid = SecureRandom.uuid
-		random_name = "Sync Test #{uuid}"
+		random_name = "Sync Test #{$random_seed}"
 		study_form = @driver.find_element(:id, 'new_study')
 		study_form.find_element(:id, 'study_name').send_keys(random_name)
 		study_form.find_element(:id, 'study_use_existing_workspace').send_keys('Yes')
@@ -905,7 +904,7 @@ class UiTestSuite < Test::Unit::TestCase
 			case filename
 				when 'cluster_example.txt'
 					file_type.send_keys('Cluster')
-				when 'expression_matrix_example.txt'
+				when 'subfolder/expression_matrix_example.txt'
 					file_type.send_keys('Expression Matrix')
 				when 'metadata_example.txt'
 					file_type.send_keys('Metadata')
@@ -978,7 +977,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get studies_path
 		wait_until_page_loads(studies_path)
 
-		show_button = @driver.find_element(:class, "sync-test-#{uuid}-show")
+		show_button = @driver.find_element(:class, "sync-test-#{$random_seed}-show")
 		show_button.click
 		@wait.until {element_present?(:id, 'info-panel')}
 
@@ -1050,16 +1049,18 @@ class UiTestSuite < Test::Unit::TestCase
 		# confirm files were removed
 		@driver.get studies_path
 		wait_until_page_loads(studies_path)
-		study_file_count = @driver.find_element(:id, "sync-test-#{uuid}-study-file-count").text.to_i
+		study_file_count = @driver.find_element(:id, "sync-test-#{$random_seed}-study-file-count").text.to_i
 		assert study_file_count == 4, "did not remove files, expected 4 but found #{study_file_count}"
 
 		# remove share and resync
-		edit_button = @driver.find_element(:class, "sync-test-#{uuid}-edit")
+		edit_button = @driver.find_element(:class, "sync-test-#{$random_seed}-edit")
 		edit_button.click
 		wait_for_render(:class, 'study-share-form')
 		# we need an extra sleep here to allow the javascript handlers to attach so that the remove_nested_fields event will fire
 		sleep(0.5)
-		remove_share = @driver.find_element(:class, 'remove_nested_fields')
+		share_id = $share_email.gsub(/[@\.]/, '-') + '-share-form'
+		share_form = @driver.find_element(:id, share_id)
+		remove_share = share_form.find_element(:class, 'remove_nested_fields')
 		remove_share.click
 		accept_alert
 		# let the form remove from the page
@@ -1067,7 +1068,7 @@ class UiTestSuite < Test::Unit::TestCase
 		save_study = @driver.find_element(:id, 'save-study')
 		save_study.click
 		close_modal('message_modal')
-		sync_button = @driver.find_element(:class, "sync-test-#{uuid}-sync")
+		sync_button = @driver.find_element(:class, "sync-test-#{$random_seed}-sync")
 		sync_button.click
 		wait_for_render(:id, 'synced-data-panel-toggle')
 
@@ -1084,31 +1085,15 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get login_path
 		wait_until_page_loads(login_path)
 		login_as_other($share_email, $share_email_password)
-		firecloud_workspace = "https://portal.firecloud.org/#workspaces/single-cell-portal/sync-test-#{uuid}"
+		firecloud_workspace = "https://portal.firecloud.org/#workspaces/single-cell-portal/sync-test-#{$random_seed}"
 		@driver.get firecloud_workspace
 		assert !element_present?(:class, 'fa-check-circle'), 'did not revoke access - study workspace still loads'
-
-		# log back in as test user and clean up study
-		@driver.get @base_url
-		profile = @driver.find_element(:id, 'profile-nav')
-		profile.click
-		logout = @driver.find_element(:id, 'logout-nav')
-		logout.click
-		wait_until_page_loads(@base_url)
-		close_modal('message_modal')
-		@driver.get @base_url + '/studies'
-		close_modal('message_modal')
-		login_as_other($test_email, $test_email_password)
-		delete_local_link = @driver.find_element(:class, "sync-test-#{uuid}-delete-local")
-		delete_local_link.click
-		accept_alert
-		close_modal('message_modal')
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
 
 	# test validation of not allowing studies with an authorizationDomain attribute
-	test 'admin: sync: restricted workspace' do
+	test 'admin: sync-study: restricted workspace' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in first
@@ -1118,8 +1103,7 @@ class UiTestSuite < Test::Unit::TestCase
 		login($test_email, $test_email_password)
 
 		# attempt to create a study using a workspace with a restricted authorizationDomain
-		uuid = SecureRandom.uuid
-		random_name = "Restricted Sync Test #{uuid}"
+		random_name = "Restricted Sync Test #{$random_seed}"
 		study_form = @driver.find_element(:id, 'new_study')
 		study_form.find_element(:id, 'study_name').send_keys(random_name)
 		study_form.find_element(:id, 'study_use_existing_workspace').send_keys('Yes')
@@ -1284,7 +1268,7 @@ class UiTestSuite < Test::Unit::TestCase
 		assert files.size >= 1, 'downloads not properly disabled (did not find any disabled-download links)'
 
 		# try bypassing download with a direct call to file we uploaded earlier
-		direct_link = @base_url + "/data/public/test-study-#{$random_seed}/expression_matrix_example.txt"
+		direct_link = @base_url + "/data/public/test-study-#{$random_seed}?filename=expression_matrix_example.txt"
 		@driver.get direct_link
 		alert_content = @driver.find_element(:id, 'alert-content')
 		assert alert_content.text == 'You have exceeded your current daily download quota. You must wait until tomorrow to download this file.', 'download was not successfully blocked'
@@ -1682,8 +1666,8 @@ class UiTestSuite < Test::Unit::TestCase
 		login_as_other($share_email, $share_email_password)
 
 		# negative test, should not be able to download private files from study without access
-		non_share_public_link = @base_url + "/data/public/private-study-#{$random_seed}/README.txt"
-		non_share_private_link = @base_url + "/data/private/private-study-#{$random_seed}/README.txt"
+		non_share_public_link = @base_url + "/data/public/private-study-#{$random_seed}?filename=README.txt"
+		non_share_private_link = @base_url + "/data/private/private-study-#{$random_seed}?filename=README.txt"
 
 		# try public rout
 		@driver.get non_share_public_link
@@ -1697,6 +1681,43 @@ class UiTestSuite < Test::Unit::TestCase
 		private_alert_text = @driver.find_element(:id, 'alert-content').text
 		assert private_alert_text == 'You do not have permission to perform that action.',
 					 "did not properly redirect, expected 'You do not have permission to view the requested page.' but got #{private_alert_text}"
+
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+	end
+
+	test 'front-end: download: bulk data' do
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		login_path = @base_url + '/users/sign_in'
+		# downloads require login now
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login_as_other($share_email, $share_email_password)
+
+		path = @base_url + "/study/sync-test-#{$random_seed}"
+		@driver.get(path)
+		wait_until_page_loads(path)
+		open_ui_tab('study-download')
+
+		# open download help modal
+		download_modal = @driver.find_element(id: 'download-help')
+		download_modal.click
+		wait_for_modal_open('download-help-modal')
+
+		# get command for all data download
+		all_data_link = @driver.find_element(:id, 'get-download-command_all')
+		all_data_link.click
+		wait_for_render(:class, 'curl-download-command')
+		command_value = @driver.find_element(:class, 'curl-download-command')['value']
+
+		# run command and verify that download works
+		system("cd #{$download_dir}; mkdir #{$random_seed}; cd #{$random_seed}; #{command_value}")
+		bulk_path = File.join($download_dir, $random_seed)
+		files_found = Dir.entries(bulk_path).keep_if {|entry| !entry.start_with?('.')}.size
+		assert files_found > 0, 'did not download any files'
+
+		# clean up
+		FileUtils.rm_rf(bulk_path)
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
@@ -4135,6 +4156,11 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# delete 2d test
 		@driver.find_element(:class, "twod-study-#{$random_seed}-delete").click
+		accept_alert
+		close_modal('message_modal')
+
+		# delete sync test (local only)
+		@driver.find_element(:class, "sync-test-#{$random_seed}-delete-local").click
 		accept_alert
 		close_modal('message_modal')
 

@@ -563,7 +563,7 @@ class StudiesController < ApplicationController
       # only reparse if user requests
       if @study_file.parseable? && params[:reparse] == 'Yes'
         logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
-        @message += " You will receive and email at #{current_user.email} when the parse has completed."
+        @message += " You will receive an email at #{current_user.email} when the parse has completed."
         case @study_file.file_type
           when 'Cluster'
             @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false, reparse: true})
@@ -682,7 +682,7 @@ class StudiesController < ApplicationController
       @partial = 'study_file_form'
       if @study_file.parseable?
         logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
-        @message += " You will receive and email at #{current_user.email} when the parse has completed."
+        @message += " You will receive an email at #{current_user.email} when the parse has completed."
         # parse file as appropriate type
         case @study_file.file_type
           when 'Cluster'
@@ -726,7 +726,7 @@ class StudiesController < ApplicationController
       # only reparse if user requests
       if @study_file.parseable? && params[:reparse] == 'Yes'
         logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
-        @message += " You will receive and email at #{current_user.email} when the parse has completed."
+        @message += " You will receive an email at #{current_user.email} when the parse has completed."
         case @study_file.file_type
           when 'Cluster'
             @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false, reparse: true})
@@ -877,7 +877,7 @@ class StudiesController < ApplicationController
 
   # study file params whitelist
   def study_file_params
-    params.require(:study_file).permit(:_id, :study_id, :name, :upload, :upload_file_name, :upload_content_type, :upload_file_size, :description, :file_type, :status, :human_fastq_url, :human_data, :cluster_type, :generation, :x_axis_label, :y_axis_label, :z_axis_label, :x_axis_min, :x_axis_max, :y_axis_min, :y_axis_max, :z_axis_min, :z_axis_max)
+    params.require(:study_file).permit(:_id, :study_id, :name, :upload, :upload_file_name, :upload_content_type, :upload_file_size, :remote_location, :description, :file_type, :status, :human_fastq_url, :human_data, :cluster_type, :generation, :x_axis_label, :y_axis_label, :z_axis_label, :x_axis_min, :x_axis_max, :y_axis_min, :y_axis_max, :z_axis_min, :z_axis_max)
   end
 
   def directory_listing_params
@@ -1019,7 +1019,7 @@ class StudiesController < ApplicationController
           # make sure file is not actually a folder by checking its size
           if file.size > 0
             # create a new entry
-            unsynced_file = StudyFile.new(study_id: @study.id, name: file.name, upload_file_name: file.name, upload_content_type: file.content_type, upload_file_size: file.size, generation: file.generation)
+            unsynced_file = StudyFile.new(study_id: @study.id, name: file.name, upload_file_name: file.name, upload_content_type: file.content_type, upload_file_size: file.size, generation: file.generation, remote_location: file.name)
             @unsynced_files << unsynced_file
           end
         end

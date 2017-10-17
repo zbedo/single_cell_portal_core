@@ -30,4 +30,13 @@ class ExpressionScore
     end
     sum / cells.size
   end
+
+  # calculate a mean value for a given gene based on merged expression scores
+  def self.mean(scores, cells)
+    sum = 0.0
+    cells.each do |cell|
+      sum += scores[cell].to_f
+    end
+    sum / cells.size
+  end
 end

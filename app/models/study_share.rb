@@ -39,6 +39,11 @@ class StudyShare
 	validate						:set_firecloud_acl, on: [:create, :update]
 	before_destroy			:revoke_firecloud_acl
 
+	# use the share email as an ID for forms
+	def email_as_id
+		self.email.gsub(/[@\.]/, '-')
+	end
+
 	private
 
   ###

@@ -52,6 +52,7 @@ class StudyFile
   field :z_axis_min, type: Integer
   field :z_axis_max, type: Integer
   field :queued_for_deletion, type: Boolean, default: false
+  field :remote_location, type: String, default: ''
 
   Paperclip.interpolates :data_dir do |attachment, style|
     attachment.instance.data_dir
@@ -70,7 +71,8 @@ class StudyFile
 
   has_mongoid_attached_file :upload,
                             :path => ":rails_root/data/:data_dir/:filename",
-                            :url => ''
+                            :url => '',
+                            :filename_cleaner => Paperclip::FilenameCleaner.new(/[\s&$+,:;=?@<>\[\]\{\}\|\\\^~%# ]/)
 
   # turning off validation to allow any kind of data file to be uploaded
   do_not_validate_attachment_file_type :upload
@@ -90,9 +92,9 @@ class StudyFile
       self.human_fastq_url
     else
       if self.study.public?
-        download_file_path(self.study.url_safe_name, self.upload_file_name)
+        download_file_path(self.study.url_safe_name, filename: self.download_location)
       else
-        download_private_file_path(self.study.url_safe_name, self.upload_file_name)
+        download_private_file_path(self.study.url_safe_name, filename: self.download_location)
       end
     end
   end
@@ -156,6 +158,11 @@ class StudyFile
         self.update(domain)
       end
     end
+  end
+
+  # for constructing a path to a file in a Google bucket (takes folders into account due to issue with upload_file_name not allowing slashes)
+  def download_location
+    self.remote_location.blank? ? self.upload_file_name : self.remote_location
   end
 
   ###

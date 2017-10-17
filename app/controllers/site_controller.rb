@@ -19,7 +19,7 @@ class SiteController < ApplicationController
   before_action :set_cluster_group, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :expression_query, :annotation_query, :get_new_annotations, :annotation_values, :show_user_annotations_form]
   before_action :set_selected_annotation, only: [:update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :annotation_query, :annotation_values, :show_user_annotations_form]
   before_action :load_precomputed_options, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap]
-  before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query, :view_workflow_wdl, :log_action, :get_workspace_samples, :update_workspace_samples]
+  before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query, :view_workflow_wdl, :log_action, :get_workspace_samples, :update_workspace_samples, :create_totat]
   before_action :check_compute_permissions, only: [:get_fastq_files, :get_workspace_samples, :update_workspace_samples, :delete_workspace_samples, :get_workspace_sumbissions, :create_workspace_submission, :get_submission_workflow, :abort_submission_workflow, :get_submission_errors, :get_submission_outputs, :delete_submission_files]
 
   # caching
@@ -416,7 +416,7 @@ class SiteController < ApplicationController
         # calculate mean to perform row centering if requested
         mean = 0.0
         if params[:row_centered] == '1'
-          mean = gene.mean(@cells)
+          mean = ExpressionScore.mean(gene['scores'],@cells)
         end
         @cells.each do |cell|
           row << gene['scores'][cell].to_f - mean
@@ -548,6 +548,88 @@ class SiteController < ApplicationController
     end
     # redirect directly to file to trigger download
     redirect_to @signed_url
+  end
+
+  def create_totat
+    if !user_signed_in?
+      error = {'message': "Forbidden: You must be signed in to do this"}
+      render json:  + error, status: 403
+    end
+    half_hour = 1800 # seconds
+    totat_and_ti = current_user.create_totat(time_interval=half_hour)
+    render json: totat_and_ti
+  end
+
+  # Returns text file listing signed URLs, etc. of files for download via curl.
+  # That is, this return 'cfg.txt' used as config (K) argument in 'curl -K cfg.txt'
+  def download_bulk_files
+
+    # Ensure study is public
+    if !@study.public?
+      message = 'Only public studies can be downloaded via curl.'
+      render plain: "Forbidden: " + message, status: 403
+      return
+    end
+
+    # 'all' or the name of a directory, e.g. 'csvs'
+    download_object = params[:download_object]
+
+    totat = params[:totat]
+
+    # Time-based one-time access token (totat) is used to track user's download quota
+    valid_totat = User.verify_totat(totat)
+
+    if valid_totat == false
+      render plain: "Forbidden: Invalid access token " + totat, status: 403
+      return
+    else
+      user = valid_totat
+    end
+
+    user_quota = user.daily_download_quota
+
+    # Only check at quota at beginning of download, not per file.
+    # Studies might be massive, and we want user to be able to download at least
+    # one requested download object per day.
+    if user_quota >= @download_quota
+      message = 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this object.'
+      render plain: "Forbidden: " + message, status: 403
+      return
+    end
+
+    curl_configs = ['--create-dirs']
+
+    # Get signed URLs for all study files and update user quota, if we're downloading whole study ('all')
+    if download_object == 'all'
+      files = @study.study_files.valid
+      files.each do |study_file|
+        unless study_file.human_data?
+          curl_config, file_size = get_curl_config(study_file)
+          curl_configs.push(curl_config)
+          user_quota += file_size
+        end
+      end
+    end
+
+    # Get signed URLs for all directory listings and update user quota
+    synced_dirs = @study.directory_listings.are_synced
+    synced_dirs.each do |synced_dir|
+      if download_object != 'all' and synced_dir[:name] != download_object
+        next
+      end
+      synced_dir.files.each do |file|
+        curl_config, file_size = get_curl_config(file)
+        curl_configs.push(curl_config)
+        user_quota += file_size
+      end
+    end
+
+
+    curl_configs = curl_configs.join("\n\n")
+
+    user.update(daily_download_quota: user_quota)
+
+    send_data curl_configs, type: 'text/plain', filename: 'cfg.txt'
   end
 
   ###
@@ -1709,6 +1791,28 @@ class SiteController < ApplicationController
       0.upto(4) {|i| row[i] ||= '' }
       existing_list << row
     end
+  end
+
+  # Helper method for download_bulk_files.  Returns file's curl config, size.
+  def get_curl_config(file)
+
+    # Is this a study file, or a file from a directory listing?
+    is_study_file = file.is_a? StudyFile
+
+    filename = (is_study_file ? file.upload_file_name : file[:name])
+
+    signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url,
+                                                              @study.firecloud_workspace,
+                                                              filename,
+                                                              expires: 1.day.to_i) # 1 day in seconds, 86400
+    curl_config = [
+      'url="' + signed_url + '"',
+      'output="' + filename + '"'
+    ]
+    curl_config = curl_config.join("\n")
+    file_size = (is_study_file ? file.upload_file_size : file[:size])
+
+    return curl_config, file_size
   end
 
   protected

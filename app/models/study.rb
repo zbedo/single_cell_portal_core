@@ -385,7 +385,7 @@ class Study
     default_annot = self.default_options[:annotation]
     # in case default has not been set
     if default_annot.nil?
-      if default_cluster.cell_annotations.any?
+      if !default_cluster.nil? && default_cluster.cell_annotations.any?
         annot = default_cluster.cell_annotations.first
         default_annot = "#{annot[:name]}--#{annot[:type]}--cluster"
       elsif self.study_metadata.any?
@@ -656,7 +656,7 @@ class Study
     if !opts[:local]
       # make sure data dir exists first
       self.make_data_dir
-      remote_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, expression_file.upload_file_name, self.data_store_path)
+      remote_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, expression_file.remote_location, self.data_store_path)
       expression_file.update(upload: remote_file)
     end
 
@@ -855,7 +855,7 @@ class Study
     if !opts[:local]
       # make sure data dir exists first
       self.make_data_dir
-      remote_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, ordinations_file.upload_file_name, self.data_store_path)
+      remote_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, ordinations_file.remote_location, self.data_store_path)
       ordinations_file.update(upload: remote_file)
     end
 
@@ -1152,7 +1152,7 @@ class Study
     if !opts[:local]
       # make sure data dir exists first
       self.make_data_dir
-      remote_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, metadata_file.upload_file_name, self.data_store_path)
+      remote_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, metadata_file.remote_location, self.data_store_path)
       metadata_file.update(upload: remote_file)
     end
 
@@ -1362,7 +1362,7 @@ class Study
     if !opts[:local]
       # make sure data dir exists first
       self.make_data_dir
-      remote_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, marker_file.upload_file_name, self.data_store_path)
+      remote_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, marker_file.remote_location, self.data_store_path)
       marker_file.update(upload: remote_file)
     end
 

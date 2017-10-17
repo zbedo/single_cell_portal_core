@@ -52,6 +52,7 @@
 //= require simple-statistics.min
 //= require sheather_jones
 //= require jquery.stickyPanel
+//= require clipboard.min
 
 var fileUploading = false;
 var PAGE_RENDERED = false;

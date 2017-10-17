@@ -1018,6 +1018,13 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		file = self.get_workspace_file(workspace_namespace, workspace_name, filename)
 		# create a valid path by combining destination directory and filename, making sure no double / exist
 		end_path = [destination, filename].join('/').gsub(/\/\//, '/')
+		# gotcha in case file is in a subdirectory
+		if filename.include?('/')
+			path_parts = filename.split('/')
+			path_parts.pop
+			directory = File.join(destination, path_parts)
+			FileUtils.mkdir_p directory
+		end
 		file.download end_path
 	end
 
