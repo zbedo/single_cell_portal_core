@@ -7,6 +7,7 @@
   <%= f.hidden_field :status, value: 'uploaded' %>
   <%= f.hidden_field :upload_content_type %>
   <%= f.hidden_field :generation %>
+  <%= f.hidden_field :remote_location %>
   <div class="row">
     <div class="col-xs-12">
       <%= f.label :upload_file_name, "Unsynced File: #{study_file.upload_file_name}" %>

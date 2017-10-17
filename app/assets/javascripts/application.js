@@ -199,7 +199,7 @@ function enableDefaultActions() {
 
     $('.datepicker').datepicker({dateFormat: 'yy-mm-dd'});
 
-    $('body').tooltip({selector: '[data-toggle="tooltip"]', container: 'body'});
+    $('body').tooltip({selector: '[data-toggle="tooltip"]', container: 'body', trigger: 'hover'});
     $('[data-toggle="popover"]').popover();
 
     // warns user of in progress uploads, fileUploading is set to true from fileupload().add()
