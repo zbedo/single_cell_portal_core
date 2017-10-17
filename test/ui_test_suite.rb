@@ -98,9 +98,8 @@ class UiTestSuite < Test::Unit::TestCase
 		caps = Selenium::WebDriver::Remote::Capabilities.chrome("chromeOptions" => {'prefs' => {'credentials_enable_service' => false}})
 		options = Selenium::WebDriver::Chrome::Options.new
 		options.add_argument('--enable-webgl-draft-extensions')
-		profile = Selenium::WebDriver::Chrome::Profile.new($profile_dir)
 		@driver = Selenium::WebDriver::Driver.for :chrome, driver_path: $chromedriver_dir,
-																							profile: profile, options: options, desired_capabilities: caps,
+																							options: options, desired_capabilities: caps,
 																							driver_opts: {log_path: '/tmp/webdriver.log'}
 		@driver.manage.window.maximize
 		@base_url = $portal_url
@@ -117,6 +116,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# called on completion of every test (whether it passes or fails)
 	def teardown
+		@driver.get 'https://accounts.google.com/Logout'
 		@driver.quit
 	end
 

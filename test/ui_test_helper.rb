@@ -25,10 +25,9 @@ def parse_test_arguments(arguments)
   $env = 'development'
   $random_seed = SecureRandom.uuid
   $verbose = false
-  $profile_dir = "/Users/#{$user}/Library/Application Support/Google/Chrome/Default"
 
   # usage string for help message
-  $usage = "ruby test/ui_test_suite.rb -- -c=/path/to/chromedriver -C=/path/to/chrome/profile -e=testing.email@gmail.com -p='testing_email_password' -s=sharing.email@gmail.com -P='sharing_email_password' -o=order -d=/path/to/downloads -u=portal_url -E=environment -r=random_seed"
+  $usage = "ruby test/ui_test_suite.rb -- -c=/path/to/chromedriver -e=testing.email@gmail.com -p='testing_email_password' -s=sharing.email@gmail.com -P='sharing_email_password' -o=order -d=/path/to/downloads -u=portal_url -E=environment -r=random_seed"
 
   # parse arguments and set values
   arguments.each do |arg|
@@ -52,8 +51,6 @@ def parse_test_arguments(arguments)
       $env = arg.gsub(/\-E\=/, '')
     elsif arg =~ /\-r\=/
       $random_seed = arg.gsub(/\-r\=/, '')
-    elsif arg =~ /\-C\=/
-      $profile_dir = arg.gsub(/\-C\=/, '')
     elsif arg =~ /\-v/
       $verbose = true
     end
