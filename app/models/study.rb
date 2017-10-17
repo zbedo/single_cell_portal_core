@@ -385,7 +385,7 @@ class Study
     default_annot = self.default_options[:annotation]
     # in case default has not been set
     if default_annot.nil?
-      if default_cluster.cell_annotations.any?
+      if !default_cluster.nil? && default_cluster.cell_annotations.any?
         annot = default_cluster.cell_annotations.first
         default_annot = "#{annot[:name]}--#{annot[:type]}--cluster"
       elsif self.study_metadata.any?
