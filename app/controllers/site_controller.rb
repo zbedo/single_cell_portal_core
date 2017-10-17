@@ -1804,7 +1804,7 @@ class SiteController < ApplicationController
     signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url,
                                                               @study.firecloud_workspace,
                                                               filename,
-                                                              expires: 1800) # seconds
+                                                              expires: 1.day.to_i) # 1 day in seconds, 86400
     curl_config = [
       'url="' + signed_url + '"',
       'output="' + filename + '"'
