@@ -1,7 +1,7 @@
 <div class="row">
   <div class="col-xs-12">
     <h2>Study Files <span class="badge"><%= @study_files.count %></span>  <%= link_to "<i class='fa fa-question-circle'></i> Bulk Download Help".html_safe, 'javascript:;', class: 'btn btn-default pull-right', id: 'download-help' %></h2>
-    <div class="modal fade" id="primary-data-download-modal" role="dialog" aria-labelledby="primary-data-download-modal" aria-hidden="true">
+    <div class="modal fade" id="download-help-modal" role="dialog" aria-labelledby="download-help-modal" aria-hidden="true">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
@@ -29,7 +29,7 @@
                   </thead>
                 </table>
               <% end %>
-            <% elsif @study.public? %>
+            <% elsif @study.public? && !@study.embargoed?(current_user) %>
                 <p class="lead">To download all files using <code>curl</code>, click the button below to get the download command:</p>
                 <p class="lead command-container" id="command-container-all"><%= link_to "<i class='fa fa-download'></i> Get download command for all study data".html_safe, 'javascript:;', class: 'btn btn-default get-download-command', id: 'get-download-command_all' %></p>
                 <% if @directories.any? %>
@@ -61,7 +61,7 @@
     </div>
     <script type="text/javascript">
         $('#download-help').click(function() {
-            $('#primary-data-download-modal').modal('show');
+            $('#download-help-modal').modal('show');
         });
 
         // Enables copying to clipboard upon clicking a "clipboard" icon,
@@ -122,7 +122,7 @@
 
             commandContainer.html(
               '<div class="input-group">' +
-                '<input id="' + commandID + '" class="form-control" value="' + downloadCommand + '" readonly/>' +
+                '<input id="' + commandID + '" class="form-control curl-download-command" value="' + downloadCommand + '" readonly/>' +
                 '<span class="input-group-btn">' +
                   '<button id="copy-button-' + totat + '" class="btn btn-default btn-copy" data-clipboard-target="#' + commandID + '" data-toggle="tooltip" title="Copy to clipboard">' +
                     '<img src="/single_cell/assets/clippy.svg" width="16px" alt="Copy to clipboard">' +
