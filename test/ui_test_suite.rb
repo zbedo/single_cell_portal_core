@@ -116,7 +116,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# called on completion of every test (whether it passes or fails)
 	def teardown
-		@driver.get 'https://accounts.google.com/Logout'
+		invalidate_google_session
 		@driver.quit
 	end
 
@@ -653,12 +653,7 @@ class UiTestSuite < Test::Unit::TestCase
 		assert download_links.size == 1, "did not find correct number of download links, expected 1 but found #{download_links.size}"
 
 		# logout
-		profile = @driver.find_element(:id, 'profile-nav')
-		profile.click
-		logout = @driver.find_element(:id, 'logout-nav')
-		logout.click
-		wait_until_page_loads(@base_url)
-		close_modal('message_modal')
+		logout_from_portal
 
 		# login as share user
 		login_link = @driver.find_element(:id, 'login-nav')
@@ -794,12 +789,7 @@ class UiTestSuite < Test::Unit::TestCase
 		share_study_id = @driver.current_url.split('/')[5]
 
 		# logout
-		profile = @driver.find_element(:id, 'profile-nav')
-		profile.click
-		logout = @driver.find_element(:id, 'logout-nav')
-		logout.click
-		wait_until_page_loads(@base_url)
-		close_modal('message_modal')
+		logout_from_portal
 
 		# login as share user
 		login_link = @driver.find_element(:id, 'login-nav')
@@ -1073,12 +1063,7 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_for_render(:id, 'synced-data-panel-toggle')
 
 		# now confirm share was removed at FireCloud level
-		profile = @driver.find_element(:id, 'profile-nav')
-		profile.click
-		logout = @driver.find_element(:id, 'logout-nav')
-		logout.click
-		wait_until_page_loads(@base_url)
-		close_modal('message_modal')
+		logout_from_portal
 
 		# now login as share user and check workspace
 		login_path = @base_url + '/users/sign_in'
@@ -1622,12 +1607,7 @@ class UiTestSuite < Test::Unit::TestCase
 		Dir.glob("#{$download_dir}/*").select {|f| /#{private_basename}/.match(f)}.map {|f| File.delete(f)}
 
 		# logout
-		profile = @driver.find_element(:id, 'profile-nav')
-		profile.click
-		logout = @driver.find_element(:id, 'logout-nav')
-		logout.click
-		wait_until_page_loads(@base_url)
-		close_modal('message_modal')
+		logout_from_portal
 
 		# now login as share user and test downloads
 		@driver.get login_path
@@ -1663,7 +1643,7 @@ class UiTestSuite < Test::Unit::TestCase
 		login_path = @base_url + '/users/sign_in'
 		@driver.get login_path
 		wait_until_page_loads(login_path)
-		login_as_other($share_email, $share_email_password)
+		login($share_email, $share_email_password)
 
 		# negative test, should not be able to download private files from study without access
 		non_share_public_link = @base_url + "/data/public/private-study-#{$random_seed}?filename=README.txt"
@@ -1692,7 +1672,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# downloads require login now
 		@driver.get login_path
 		wait_until_page_loads(login_path)
-		login_as_other($share_email, $share_email_password)
+		login($share_email, $share_email_password)
 
 		path = @base_url + "/study/sync-test-#{$random_seed}"
 		@driver.get(path)
@@ -2996,12 +2976,7 @@ class UiTestSuite < Test::Unit::TestCase
 		end
 
 		# now test if auth challenge is working properly using test study
-		@driver.get(study_page)
-		open_new_page(@base_url)
-		profile_nav = @driver.find_element(:id, 'profile-nav')
-		profile_nav.click
-		logout = @driver.find_element(:id, 'logout-nav')
-		logout.click
+		logout_from_portal
 
 		# check authentication challenge
 		@driver.switch_to.window(@driver.window_handles.first)
@@ -3456,13 +3431,7 @@ class UiTestSuite < Test::Unit::TestCase
 		submit.click
 
 		# logout
-		close_modal('message_modal')
-		profile = @driver.find_element(:id, 'profile-nav')
-		profile.click
-		logout = @driver.find_element(:id, 'logout-nav')
-		logout.click
-		wait_until_page_loads(@base_url)
-		close_modal('message_modal')
+		logout_from_portal
 
 		# login
 		login_as_other($test_email, $test_email_password)
@@ -3573,12 +3542,7 @@ class UiTestSuite < Test::Unit::TestCase
 		assert plot_labels.include?("user-#{$random_seed}-exp-Share: group0 (3 points)"), "labels are incorrect: '#{plot_labels}' should include 'user-#{$random_seed}-exp-Share: group0'"
 
 		# logout
-		profile = @driver.find_element(:id, 'profile-nav')
-		profile.click
-		logout = @driver.find_element(:id, 'logout-nav')
-		logout.click
-		wait_until_page_loads(@base_url)
-		close_modal('message_modal')
+		logout_from_portal
 
 		# login
 		login_as_other($test_email, $test_email_password)
@@ -3612,13 +3576,7 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(annot_path)
 
 		# logout
-		close_modal('message_modal')
-		profile = @driver.find_element(:id, 'profile-nav')
-		profile.click
-		logout = @driver.find_element(:id, 'logout-nav')
-		logout.click
-		wait_until_page_loads(@base_url)
-		close_modal('message_modal')
+		logout_from_portal
 
 		# login
 		login_as_other($share_email, $share_email_password)

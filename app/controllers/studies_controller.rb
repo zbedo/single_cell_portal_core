@@ -58,6 +58,7 @@ class StudiesController < ApplicationController
 
   # GET /studies/1/edit
   def edit
+    set_user_projects
   end
 
   # POST /studies

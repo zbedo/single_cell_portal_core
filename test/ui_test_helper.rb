@@ -186,19 +186,11 @@ class Test::Unit::TestCase
     google_auth = @driver.find_element(:id, 'google-auth')
     google_auth.click
     $verbose ? puts('logging in as ' + email) : nil
-    begin
-      profile_link = @driver.find_element(:css, "[data-email='#{email}']")
-      profile_link.click
-    rescue Selenium::WebDriver::Error::NoSuchElementError => e
-      other_account = @driver.find_element(:id, 'identifierLink')
-      other_account.click
-      sleep(0.5) # this lets the animation complete
-      email_field = @driver.find_element(:id, 'identifierId')
-      email_field.send_key(email)
-      sleep(0.5) # this lets the animation complete
-      email_next = @driver.find_element(:id, 'identifierNext')
-      email_next.click
-    end
+    email_field = @driver.find_element(:id, 'identifierId')
+    email_field.send_key(email)
+    sleep(0.5) # this lets the animation complete
+    email_next = @driver.find_element(:id, 'identifierNext')
+    email_next.click
     sleep(0.5) # this lets the animation complete
     password_field = @driver.find_element(:name, 'password')
     password_field.send_key(password)
@@ -241,7 +233,7 @@ class Test::Unit::TestCase
   # method to log out of google so that we can log in with a different account
   def login_as_other(email, password)
     # determine which password to use
-    @driver.get 'https://accounts.google.com/Logout'
+    invalidate_google_session
     @driver.get @base_url + '/users/sign_in'
     google_auth = @driver.find_element(:id, 'google-auth')
     sleep(1)
@@ -295,6 +287,22 @@ class Test::Unit::TestCase
       close_modal('message_modal')
     end
     $verbose ? puts('login successful') : nil
+  end
+
+  # method to log out of portal (not Google)
+  def logout_from_portal
+    profile = @driver.find_element(:id, 'profile-nav')
+    profile.click
+    logout = @driver.find_element(:id, 'logout-nav')
+    logout.click
+    wait_until_page_loads(@base_url)
+    close_modal('message_modal')
+  end
+
+  # method to log out of Google and portal
+  def invalidate_google_session
+    @driver.get 'https://accounts.google.com/Logout'
+    sleep(1)
   end
 
   # helper to open tabs in front end, allowing time for tab to become visible
