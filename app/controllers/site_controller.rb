@@ -601,11 +601,13 @@ class SiteController < ApplicationController
 
     # Get signed URLs for all study files and update user quota, if we're downloading whole study ('all')
     if download_object == 'all'
-      files = @study.study_files
+      files = @study.study_files.valid
       files.each do |study_file|
-        curl_config, file_size = get_curl_config(study_file)
-        curl_configs.push(curl_config)
-        user_quota += file_size
+        unless study_file.human_data?
+          curl_config, file_size = get_curl_config(study_file)
+          curl_configs.push(curl_config)
+          user_quota += file_size
+        end
       end
     end
 
