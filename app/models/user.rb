@@ -188,7 +188,7 @@ class User
     current_t = User.milliseconds_since_epoch()
     # Expires TOTAT
     user.update(totat: 0)
-    user.update(totat: '')
+    user.update(totat_t_ti: '')
     totat_is_fresh = current_t - totat_t.to_i <= time_interval.to_i*1000
     if totat_is_fresh
       return user
