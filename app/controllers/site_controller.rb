@@ -416,7 +416,7 @@ class SiteController < ApplicationController
         # calculate mean to perform row centering if requested
         mean = 0.0
         if params[:row_centered] == '1'
-          mean = gene.mean(@cells)
+          mean = ExpressionScore.mean(gene['scores'],@cells)
         end
         @cells.each do |cell|
           row << gene['scores'][cell].to_f - mean
