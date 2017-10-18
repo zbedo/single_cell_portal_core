@@ -56,7 +56,7 @@ class DeleteQueueJob < Struct.new(:object)
         object.update!(queued_for_deletion: true, upload_file_name: new_name, name: new_name, file_type: nil)
 
         # reset initialized if needed
-        if study.cluster_groups.empty? || study.expression_scores.empty? || study.study_metadata.nil?
+        if study.cluster_groups.empty? || study.expression_scores.empty? || study.study_metadata.empty?
           study.update!(initialized: false)
         end
       when 'UserAnnotation'

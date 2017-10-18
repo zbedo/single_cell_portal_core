@@ -20,7 +20,7 @@
 						<tr class="study-entry">
               <td class="study-name"><%= link_to study.name, view_study_path(study_name: study.url_safe_name), title: 'View Live', data: {toggle: 'tooltip', placement: 'right'} %></td>
               <td><%= study.user.email %></td>
-							<td><%= truncate_html(study.description, length: 50) %></td>
+							<td><%= strip_tags(truncate_html(study.description, length: 50)) %></td>
 							<td><%= study.visibility %></td>
               <td id="<%= study.url_safe_name %>-study-file-count"><%= study.total_file_count %></td>
 							<td>
