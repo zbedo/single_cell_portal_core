@@ -16,8 +16,8 @@ class SiteController < ApplicationController
   respond_to :html, :js, :json
 
   before_action :set_study, except: [:index, :search, :view_workflow_wdl]
-  before_action :set_cluster_group, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :expression_query, :annotation_query, :get_new_annotations, :annotation_values, :show_user_annotations_form]
-  before_action :set_selected_annotation, only: [:update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :annotation_query, :annotation_values, :show_user_annotations_form]
+  before_action :set_cluster_group, only: [:study, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :expression_query, :annotation_query, :get_new_annotations, :annotation_values, :show_user_annotations_form]
+  before_action :set_selected_annotation, only: [:render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :annotation_query, :annotation_values, :show_user_annotations_form]
   before_action :load_precomputed_options, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap]
   before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query, :view_workflow_wdl, :log_action, :get_workspace_samples, :update_workspace_samples, :create_totat]
   before_action :check_compute_permissions, only: [:get_fastq_files, :get_workspace_samples, :update_workspace_samples, :delete_workspace_samples, :get_workspace_sumbissions, :create_workspace_submission, :get_submission_workflow, :abort_submission_workflow, :get_submission_errors, :get_submission_outputs, :delete_submission_files]
@@ -140,6 +140,7 @@ class SiteController < ApplicationController
             @cluster_annotations = load_cluster_group_annotations
             set_selected_annotation
           end
+
           @study_files = @study.study_files.non_primary_data.sort_by(&:name)
           @primary_study_files = @study.study_files.by_type('Fastq')
           @directories = @study.directory_listings.are_synced

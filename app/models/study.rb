@@ -439,7 +439,7 @@ class Study
         metadata_name, metadata_type = StudyMetadatum.where(study_id: self.id).pluck(:name, :annotation_type).flatten
         @cell_count = self.study_metadata_values(metadata_name, metadata_type).keys.size
     end
-    self.update(cell_count: @cell_count)
+    self.update!(cell_count: @cell_count)
     Rails.logger.info "#{Time.now}: Setting cell count in #{self.name} to #{@cell_count}"
   end
 
@@ -770,7 +770,8 @@ class Study
       Rails.logger.info @message.join("\n")
       # set initialized to true if possible
       if self.cluster_ordinations_files.any? && !self.metadata_file.nil? && !self.initialized?
-        self.update(initialized: true)
+        Rails.logger.info "#{Time.now}: #{self.name} successfully initialized"
+        self.update!(initialized: true)
       end
 
       begin
@@ -1018,8 +1019,9 @@ class Study
       @message << "Total points in cluster: #{@point_count}"
       @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
       # set initialized to true if possible
-      if self.expression_matrix_files.any? && !self.metadata_file.nil? && !self.initialized?
-        self.update(initialized: true)
+      if self.expression_scores.any? && self.study_metadata.any? && !self.initialized?
+        Rails.logger.info "#{Time.now}: #{self.name} successfully initialized"
+        self.update!(initialized: true)
       end
 
       # check to see if a default cluster & annotation have been set yet
@@ -1228,8 +1230,9 @@ class Study
       metadata_file.update(parse_status: 'parsed')
 
       # set initialized to true if possible
-      if self.expression_matrix_files.any? && self.cluster_ordinations_files.any? && !self.initialized?
-        self.update(initialized: true)
+      if self.expression_scores.any? && self.cluster_groups.any? && !self.initialized?
+        Rails.logger.info "#{Time.now}: #{self.name} successfully initialized"
+        self.update!(initialized: true)
       end
 
       # assemble message

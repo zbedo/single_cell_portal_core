@@ -188,6 +188,26 @@ function toggleGlyph(el) {
     el.toggleClass('fa-chevron-right fa-chevron-down');
 }
 
+// function to delegate delete call for a file after showing confirmation dialog
+function deletePromise(event, message) {
+    new Promise(function (resolve) {
+        var conf = confirm(message);
+        if ( conf === true ) {
+            launchModalSpinner('#delete-modal-spinner','#delete-modal', function() {
+                return resolve(true);
+            });
+        } else {
+            return resolve(false);
+        }
+    }).then(function (answer) {
+        if (answer !== true) {
+            event.stopPropagation();
+            event.preventDefault();
+        }
+        return answer;
+    });
+}
+
 // attach various handlers to bootstrap items and turn on functionality
 function enableDefaultActions() {
     // need to clear previous listener to prevent conflict
@@ -216,21 +236,13 @@ function enableDefaultActions() {
     });
 
     // handler for file deletion clicks, need to grab return value and pass to window
-    $('.delete-file').click(function() {
-        new Promise(function(resolve) {
-            return deleteFileConfirmation('Are you sure?  This file will be deleted and any associated database records removed.  This cannot be undone.', resolve)
-        }).then(function(answer) {
-            return(answer);
-        });
+    $('body').on('click', '.delete-file', function (event) {
+        deletePromise(event, 'Are you sure?  This file will be deleted and any associated database records removed.  This cannot be undone.');
     });
 
-    // handler for file deletion clicks, need to grab return value and pass to window
-    $('.delete-file-sync').click(function() {
-        new Promise(function(resolve) {
-            return deleteFileConfirmation('Are you sure?  This will remove any database records associated with this file.  This cannot be undone.', resolve)
-        }).then(function(answer) {
-            return(answer);
-        });
+    // handler for file unsync clicks, need to grab return value and pass to window
+    $('body').on('click', '.delete-file-sync', function (event) {
+        deletePromise(event, 'Are you sure?  This will remove any database records associated with this file.  This cannot be undone.');
     });
 }
 
