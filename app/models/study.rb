@@ -439,7 +439,7 @@ class Study
         metadata_name, metadata_type = StudyMetadatum.where(study_id: self.id).pluck(:name, :annotation_type).flatten
         @cell_count = self.study_metadata_values(metadata_name, metadata_type).keys.size
     end
-    self.update(cell_count: @cell_count)
+    self.update!(cell_count: @cell_count)
     Rails.logger.info "#{Time.now}: Setting cell count in #{self.name} to #{@cell_count}"
   end
 
@@ -779,15 +779,12 @@ class Study
         self.update!(default_options: opts.merge(expression_label: expression_file.y_axis_label))
       end
 
-      # create array of all cells for study
-      @cell_data_array = self.data_arrays.build(name: 'All Cells', cluster_name: expression_file.name, array_type: 'cells', array_index: 1, study_file_id: expression_file._id, cluster_group_id: expression_file._id)
       # chunk into pieces as necessary
-      cells.each_slice(DataArray::MAX_ENTRIES) do |slice|
-        new_array_index = @cell_data_array.array_index + 1
-        @cell_data_array.values = slice
+      cells.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
+        # create array of all cells for study
+        @cell_data_array = self.data_arrays.build(name: 'All Cells', cluster_name: expression_file.name, array_type: 'cells', array_index: index + 1, study_file_id: expression_file._id, cluster_group_id: expression_file._id, values: slice)
         Rails.logger.info "#{Time.now}: Saving all cells data array ##{@cell_data_array.array_index} using #{expression_file.name} for #{self.name}"
         @cell_data_array.save!
-        @cell_data_array = self.data_arrays.build(name: 'All Cells', cluster_name: expression_file.name, array_type: 'cells', array_index: new_array_index, study_file_id: expression_file._id, cluster_group_id: expression_file._id)
       end
 
       # clean up, print stats
@@ -802,7 +799,9 @@ class Study
       Rails.logger.info @message.join("\n")
       # set initialized to true if possible
       if self.cluster_ordinations_files.any? && !self.metadata_file.nil? && !self.initialized?
-        self.update(initialized: true)
+        Rails.logger.info "#{Time.now}: initializing #{self.name}"
+        self.update!(initialized: true)
+        Rails.logger.info "#{Time.now}: #{self.name} successfully initialized"
       end
 
       begin
@@ -1051,8 +1050,10 @@ class Study
       @message << "Total points in cluster: #{@point_count}"
       @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
       # set initialized to true if possible
-      if self.expression_matrix_files.any? && !self.metadata_file.nil? && !self.initialized?
-        self.update(initialized: true)
+      if self.expression_scores.any? && self.study_metadata.any? && !self.initialized?
+        Rails.logger.info "#{Time.now}: initializing #{self.name}"
+        self.update!(initialized: true)
+        Rails.logger.info "#{Time.now}: #{self.name} successfully initialized"
       end
 
       # check to see if a default cluster & annotation have been set yet
@@ -1262,8 +1263,10 @@ class Study
       metadata_file.update(parse_status: 'parsed')
 
       # set initialized to true if possible
-      if self.expression_matrix_files.any? && self.cluster_ordinations_files.any? && !self.initialized?
-        self.update(initialized: true)
+      if self.expression_scores.any? && self.cluster_groups.any? && !self.initialized?
+        Rails.logger.info "#{Time.now}: initializing #{self.name}"
+        self.update!(initialized: true)
+        Rails.logger.info "#{Time.now}: #{self.name} successfully initialized"
       end
 
       # assemble message

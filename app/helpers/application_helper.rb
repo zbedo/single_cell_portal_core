@@ -205,4 +205,8 @@ module ApplicationHelper
 		end
 		actions.join(" ").html_safe
 	end
+
+	def get_initialized_icon(initialized)
+		initialized ? "<small data-toggle='tooltip' title='Visualizations are enabled'><span class='fa fa-fw fa-eye text-success'></span></small>".html_safe : "<small data-toggle='tooltip' title='Visualizations are disabled'><span class='fa fa-fw fa-eye text-danger'></span></small>".html_safe
+	end
 end

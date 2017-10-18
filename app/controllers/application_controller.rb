@@ -52,6 +52,7 @@ class ApplicationController < ActionController::Base
 
   # load default study options for updating
   def set_study_default_options
+    logger.info 'calling default options'
     @default_cluster = @study.default_cluster
     @default_cluster_annotations = {
         'Study Wide' => @study.study_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
