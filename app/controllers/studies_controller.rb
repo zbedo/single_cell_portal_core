@@ -354,8 +354,14 @@ class StudiesController < ApplicationController
       # don't use helper as we're about to mass-assign params
       study_file = @study.study_files.build
       if study_file.update(study_file_params)
+        # if upload content type is 'text/plain', then attempt to transform line endings
+        if upload.content_type == 'text/plain'
+          uploaded_file_contents = File.open(study_file.upload.path).read.gsub(/\r\n?/, "\n")
+          new_file = File.new(study_file.upload.path, 'w+')
+          new_file.write uploaded_file_contents
+          new_file.close
+        end
         render json: { file: { name: study_file.errors,size: nil } } and return
-        # If the already uploaded file has the same filename, try to resume
       else
         study_file.errors.each do |error|
           logger.error "#{Time.now}: upload failed due to #{error.inspect}"
