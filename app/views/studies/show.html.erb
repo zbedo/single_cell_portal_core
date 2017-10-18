@@ -1,5 +1,5 @@
 <h1>
-  <%= @study.name %> <%= @study.visibility %> <span class="badge" id="cell-count"><%= @study.cell_count %> cells</span> <span class="badge" id="gene-count"><%= @study.gene_count %> genes</span>
+  <%= @study.name %> <%= get_initialized_icon(@study.initialized) %> <%= @study.visibility %> <span class="badge" id="cell-count"><%= @study.cell_count %> cells</span> <span class="badge" id="gene-count"><%= @study.gene_count %> genes</span>
   <%= link_to "Toggle All Panels <i class='fa fa-toggle-on'></i>".html_safe, 'javascript:;', class: 'btn btn-default btn-sm pull-right', id: 'toggle-panels' %>
 </h1>
 <% if @study.check_embargo? %>

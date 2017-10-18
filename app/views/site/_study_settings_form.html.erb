@@ -12,17 +12,23 @@
     </div>
   <% end %>
   <div class="form-group row">
-    <div class="col-md-6">
+    <div class="col-md-12">
       <%= f.label :name %><br/>
       <%= f.text_field :name, class: 'form-control', autocomplete: 'off' %>
     </div>
-    <div class="col-md-3">
+  </div>
+  <div class="form-group row">
+    <div class="col-md-4">
       <%= f.label :embargo, 'No Data Download Until?' %>&nbsp;<span class='fa fa-question-circle' data-toggle='tooltip' title='Prevent data file downloads until date specified below (leave blank to allow downloads)' data-placement='right'></span><br />
       <%= f.text_field :embargo, class: 'form-control datepicker' %>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-4">
       <%= f.label :public %><br />
       <%= f.select :public, options_for_select([['Yes',1],['No',0]], @study.public? ? 1: 0), {}, {class: 'form-control'} %>
+    </div>
+    <div class="col-md-4">
+      <%= f.label :cell_count %><br/>
+      <%= f.text_field :cell_count, class: 'form-control' %>
     </div>
   </div>
   <% unless @study.default_cluster.nil? %>
@@ -47,7 +53,7 @@
           </div>
         </div>
         <div class="form-group row">
-          <div class="col-sm-12">
+          <div class="col-sm-9">
             <%= opts.label :expression_label, 'Expression Axis Label' %>&nbsp;<span class="fa fa-question-circle" data-toggle="tooltip" data-placement="right" title='This is displayed as the axis label for box & scatter plots showing expression values.  This label is global to all expression values.'></span> <br />
             <%= opts.text_field :expression_label, value: @study.default_options[:expression_label], placeholder: @study.default_expression_label, class: 'form-control' %>
           </div>

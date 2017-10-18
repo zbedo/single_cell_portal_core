@@ -2976,6 +2976,11 @@ class UiTestSuite < Test::Unit::TestCase
 			color_dropdown.send_key(new_color)
 		end
 
+		# set cell count
+		new_cells = rand(100) + 1
+		cell_count = @driver.find_element(:id, 'study_cell_count')
+		cell_count.send_key(new_cells)
+
 		# manually set rendered to false to avoid a race condition when checking for updates
 		@driver.execute_script("$('#cluster-plot').data('rendered', false);")
 		# now save changes
@@ -2994,6 +2999,8 @@ class UiTestSuite < Test::Unit::TestCase
 			loaded_color = @driver.find_element(:id, 'colorscale')['value']
 			assert new_color == loaded_color, "default color incorrect, expected #{new_color} but found #{loaded_color}"
 		end
+		new_cell_count = @driver.find_element(:id, 'cell-count').text.split.first.to_i
+		assert new_cell_count == new_cells, "cell count did not update, expected #{new_cells} but found #{new_cell_count}"
 
 		# now test if auth challenge is working properly using test study
 		@driver.get(study_page)
