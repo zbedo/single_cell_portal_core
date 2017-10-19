@@ -818,6 +818,50 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   ## PROFILE/BILLING METHODS
   ##
 
+	# get a user's profile status
+	#
+	# return: Hash of user registration properties, including email, userID and enabled features
+	def get_registration
+		path = self.api_root + '/register'
+		process_firecloud_request(:get, path)
+	end
+
+  # register a new user or update a user's profile in FireCloud
+  #
+  # param: profile_contents (Hash) => complete FireCloud profile information, see https://api.firecloud.org/#!/Profile/setProfile for details
+  #
+  # return: Hash of user's registration status information (see FireCloudClient#registration)
+  def set_profile(profile_contents)
+		path = self.api_root + '/register/profile'
+		process_firecloud_request(:post, path, profile_contents.to_json)
+	end
+
+	# get a user's profile status
+	#
+	# return: Hash of key/value pairs of information stored in a user's FireCloud profile
+  def get_profile
+		path = self.api_root + '/register/profile'
+		process_firecloud_request(:get, path)
+	end
+
+  # check if a user is registered (via access token)
+  #
+  # return: Boolean indication of whether or not user is registered
+  def registered?
+		begin
+			self.registration
+			true
+		rescue RuntimeError => e
+			# if user isn't registered, error message should beging with '404 Not Found'
+			if e.message.starts_with?('404')
+				false
+			else
+				# something else happened, so raise exception
+				raise e
+			end
+		end
+	end
+
 	# list billing projects for a given user
 	#
 	# return: Array of Hashes of billing projects
