@@ -1018,6 +1018,35 @@ class UiTestSuite < Test::Unit::TestCase
 		shared_permission = share_row.find_element(:class, 'share-permission').text
 		assert shared_permission == 'View', "did not find correct share permissions, expected View but found #{shared_permission}"
 
+		# make sure parsing succeeded
+		sync_study_path = @base_url + "/study/sync-test-#{$random_seed}"
+		@driver.get(sync_study_path)
+		wait_until_page_loads(sync_study_path)
+		open_ui_tab('study-visualize')
+
+		assert element_present?(:class, 'study-lead'), 'could not find study title'
+		assert element_present?(:id, 'cluster-plot'), 'could not find study cluster plot'
+
+		# wait until cluster finishes rendering
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
+		assert rendered, "cluster plot did not finish rendering, expected true but found #{rendered}"
+
+		# search for a gene
+		gene = @genes.sample
+		search_box = @driver.find_element(:id, 'search_genes')
+		search_box.send_key(gene)
+		search_genes = @driver.find_element(:id, 'perform-gene-search')
+		search_genes.click
+
+		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
+		assert violin_rendered, "violin plot did not finish rendering, expected true but found #{violin_rendered}"
+		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
+		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
+		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
+		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
+
 		# now test removing items
 		@driver.get(@base_url + '/studies')
 		sync_button_class = random_name.split.map(&:downcase).join('-') + '-sync'

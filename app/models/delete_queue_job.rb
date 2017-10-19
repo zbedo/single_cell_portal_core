@@ -21,23 +21,25 @@ class DeleteQueueJob < Struct.new(:object)
         # now remove all child objects first to free them up to be re-used.
         case file_type
           when 'Cluster'
-            # first check if default cluster needs to be cleared
-            if study.default_cluster.name == object.cluster_groups.first.name
-              study.default_options[:cluster] = nil
-              study.default_options[:annotation] = nil
-              study.save
-            end
+            # first check if default cluster needs to be cleared, unless parsing has failed and cleanup didn't happen
+            unless object.cluster_groups.empty? || object.parse_status == 'unparsed'
+              if study.default_cluster.name == object.cluster_groups.first.name
+                study.default_options[:cluster] = nil
+                study.default_options[:annotation] = nil
+                study.save
+              end
 
-            clusters = ClusterGroup.where(study_file_id: object.id, study_id: study.id)
-            cluster_group_id = clusters.first.id
-            clusters.delete_all
-            DataArray.where(study_file_id: object.id, study_id: study.id).delete_all
-            user_annotations = UserAnnotation.where(study_id: study.id, cluster_group_id: cluster_group_id )
-            user_annotations.each do |annot|
-              annot.user_data_arrays.delete_all
-              annot.user_annotation_shares.delete_all
+              clusters = ClusterGroup.where(study_file_id: object.id, study_id: study.id)
+              cluster_group_id = clusters.first.id
+              clusters.delete_all
+              DataArray.where(study_file_id: object.id, study_id: study.id).delete_all
+              user_annotations = UserAnnotation.where(study_id: study.id, cluster_group_id: cluster_group_id )
+              user_annotations.each do |annot|
+                annot.user_data_arrays.delete_all
+                annot.user_annotation_shares.delete_all
+              end
+              user_annotations.delete_all
             end
-            user_annotations.delete_all
           when 'Expression Matrix'
             ExpressionScore.where(study_file_id: object.id, study_id: study.id).delete_all
             DataArray.where(study_file_id: object.id, study_id: study.id).delete_all

@@ -619,13 +619,14 @@ class Study
     @last_line = ""
     start_time = Time.now
     @validation_error = false
+    @file_location = expression_file.upload.path
 
     # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
     if !opts[:local]
       # make sure data dir exists first
       self.make_data_dir
-      remote_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_workspace, expression_file.remote_location, self.data_store_path)
-      expression_file.update(upload: remote_file)
+      Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_workspace, expression_file.remote_location, self.data_store_path)
+      @file_location = File.join(self.data_store_path, expression_file.remote_location)
     end
 
     # next, check if this is a re-parse job, in which case we need to remove all existing entries first
@@ -638,10 +639,10 @@ class Study
     begin
       if expression_file.upload_content_type == 'application/gzip'
         Rails.logger.info "#{Time.now}: Parsing #{expression_file.name} as application/gzip"
-        file = Zlib::GzipReader.open(expression_file.upload.path)
+        file = Zlib::GzipReader.open(@file_location)
       else
         Rails.logger.info "#{Time.now}: Parsing #{expression_file.name} as text/plain"
-        file = File.open(expression_file.upload.path)
+        file = File.open(@file_location)
       end
       cells = file.readline.strip.split(/[\t,]/)
       @last_line = "#{expression_file.name}, line 1"
@@ -676,9 +677,9 @@ class Study
       # open data file and grab header row with name of all cells, deleting 'GENE' at start
       # determine proper reader
       if expression_file.upload_content_type == 'application/gzip'
-        expression_data = Zlib::GzipReader.open(expression_file.upload.path)
+        expression_data = Zlib::GzipReader.open(@file_location)
       else
-        expression_data = File.open(expression_file.upload.path)
+        expression_data = File.open(@file_location)
       end
       cells = expression_data.readline.strip.split(/[\t,]/)
       @last_line = "#{expression_file.name}, line 1"
@@ -793,10 +794,11 @@ class Study
       else
         # we have the file in FireCloud already, so just delete it
         begin
-          File.delete(expression_file.upload.path)
+          File.delete(@file_location)
         rescue => e
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
           Rails.logger.error "#{Time.now}: Could not delete #{expression_file.name} in study #{self.name}; aborting"
+          SingleCellMailer.admin_notification('Local file deletion failed', nil, "The file at #{@file_location} failed to clean up after parsing, please remove.").deliver_now
         end
       end
     rescue => e
@@ -817,12 +819,13 @@ class Study
   # stores point data in cluster_group_data_arrays instead of single_cells and cluster_points
   def initialize_cluster_group_and_data_arrays(ordinations_file, user, opts={local: true})
 
+    @file_location = ordinations_file.upload.path
     # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
     if !opts[:local]
       # make sure data dir exists first
       self.make_data_dir
-      remote_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_workspace, ordinations_file.remote_location, self.data_store_path)
-      ordinations_file.update(upload: remote_file)
+      Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_workspace, ordinations_file.remote_location, self.data_store_path)
+      @file_location = File.join(self.data_store_path, ordinations_file.remote_location)
     end
 
     # next, check if this is a re-parse job, in which case we need to remove all existing entries first
@@ -836,7 +839,7 @@ class Study
     @validation_error = false
     start_time = Time.now
     begin
-      d_file = File.open(ordinations_file.upload.path)
+      d_file = File.open(@file_location)
       headers = d_file.readline.split(/[\t,]/).map(&:strip)
       second_header = d_file.readline.split(/[\t,]/).map(&:strip)
       @last_line = "#{ordinations_file.name}, line 1"
@@ -873,8 +876,9 @@ class Study
     begin
       cluster_name = ordinations_file.name
       Rails.logger.info "#{Time.now}: Beginning cluster initialization using #{ordinations_file.upload_file_name} for cluster: #{cluster_name} in #{self.name}"
+      ordinations_file.update(parse_status: 'parsing')
 
-      cluster_data = File.open(ordinations_file.upload.path)
+      cluster_data = File.open(@file_location)
       header_data = cluster_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
       type_data = cluster_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
 
@@ -1092,10 +1096,11 @@ class Study
       else
         # we have the file in FireCloud already, so just delete it
         begin
-          File.delete(ordinations_file.upload.path)
+          File.delete(@file_location)
         rescue => e
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
           Rails.logger.error "#{Time.now}: Could not delete #{ordinations_file.name} in study #{self.name}; aborting"
+          SingleCellMailer.admin_notification('Local file deletion failed', nil, "The file at #{@file_location} failed to clean up after parsing, please remove.").deliver_now
         end
       end
     rescue => e
@@ -1115,12 +1120,14 @@ class Study
   # study_metadata objects are hashes that store annotations in cell_name/annotation_value pairs
   # call @study.study_metadata_values(metadata_name, metadata_type) to return all values as one hash
   def initialize_study_metadata(metadata_file, user, opts={local: true})
+
+    @file_location = metadata_file.upload.path
     # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
     if !opts[:local]
       # make sure data dir exists first
       self.make_data_dir
-      remote_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_workspace, metadata_file.remote_location, self.data_store_path)
-      metadata_file.update(upload: remote_file)
+      Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_workspace, metadata_file.remote_location, self.data_store_path)
+      @file_location = File.join(self.data_store_path, metadata_file.remote_location)
     end
 
     # next, check if this is a re-parse job, in which case we need to remove all existing entries first
@@ -1134,7 +1141,7 @@ class Study
     start_time = Time.now
     begin
       Rails.logger.info "#{Time.now}: Validating metadata file headers for #{metadata_file.name} in #{self.name}"
-      m_file = File.open(metadata_file.upload.path)
+      m_file = File.open(@file_location)
       headers = m_file.readline.split(/[\t,]/).map(&:strip)
       @last_line = "#{metadata_file.name}, line 1"
       second_header = m_file.readline.split(/[\t,]/).map(&:strip)
@@ -1169,9 +1176,9 @@ class Study
     # begin parse
     begin
       Rails.logger.info "#{Time.now}: Beginning metadata initialization using #{metadata_file.upload_file_name} in #{self.name}"
-
+      metadata_file.update(parse_status: 'parsing')
       # open files for parsing and grab header & type data
-      metadata_data = File.open(metadata_file.upload.path)
+      metadata_data = File.open(@file_location)
       header_data = metadata_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
       type_data = metadata_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
       name_index = header_data.index('NAME')
@@ -1306,10 +1313,11 @@ class Study
       else
         # we have the file in FireCloud already, so just delete it
         begin
-          File.delete(metadata_file.upload.path)
+          File.delete(@file_location)
         rescue => e
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
           Rails.logger.error "#{Time.now}: Could not delete #{metadata_file.name} in study #{self.name}; aborting"
+          SingleCellMailer.admin_notification('Local file deletion failed', nil, "The file at #{@file_location} failed to clean up after parsing, please remove.").deliver_now
         end
       end
     rescue => e
@@ -1326,12 +1334,14 @@ class Study
 
   # parse precomputed marker gene files and create documents to render in Morpheus
   def initialize_precomputed_scores(marker_file, user, opts={local: true})
+
+    @file_location = marker_file.upload.path
     # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
     if !opts[:local]
       # make sure data dir exists first
       self.make_data_dir
-      remote_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_workspace, marker_file.remote_location, self.data_store_path)
-      marker_file.update(upload: remote_file)
+      Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_workspace, marker_file.remote_location, self.data_store_path)
+      @file_location = File.join(self.data_store_path, marker_file.remote_location)
     end
 
     # next, check if this is a re-parse job, in which case we need to remove all existing entries first
@@ -1348,7 +1358,7 @@ class Study
 
     # validate headers
     begin
-      file = File.open(marker_file.upload.path)
+      file = File.open(@file_location)
       headers = file.readline.strip.split(/[\t,]/)
       @last_line = "#{marker_file.name}, line 1"
       if headers.first != 'GENE NAMES' || headers.size <= 1
@@ -1451,10 +1461,11 @@ class Study
       else
         # we have the file in FireCloud already, so just delete it
         begin
-          File.delete(marker_file.upload.path)
+          File.delete(@file_location)
         rescue => e
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
           Rails.logger.error "#{Time.now}: Could not delete #{marker_file.name} in study #{self.name}; aborting"
+          SingleCellMailer.admin_notification('Local file deletion failed', nil, "The file at #{@file_location} failed to clean up after parsing, please remove.").deliver_now
         end
       end
     rescue => e
