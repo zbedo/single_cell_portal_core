@@ -279,11 +279,8 @@ class Study
   end
 
   # check if a user can run workflows on the given study
-  # projects in the compute blacklist are never allowed computes, otherwise check ACLs for workspace
   def can_compute?(user)
-    if Rails.env == 'production' && FireCloudClient::COMPUTE_BLACKLIST.include?(self.firecloud_project)
-      false
-    elsif user.nil?
+    if user.nil?
       false
     else
       workspace_acl = Study.firecloud_client.get_workspace_acl(self.firecloud_project, self.firecloud_workspace)
@@ -1559,7 +1556,7 @@ class Study
       entity_file.write "entity:participant_id\ndefault_participant"
       entity_file.close
       upload = File.open(entity_file.path)
-      Study.firecloud_client.import_workspace_entities_file(self.firecloud_workspace, upload)
+      Study.firecloud_client.import_workspace_entities_file(self.firecloud_project, self.firecloud_workspace, upload)
       Rails.logger.info "#{Time.now}: created default_participant for #{self.firecloud_workspace}"
       File.delete(path)
     rescue => e
