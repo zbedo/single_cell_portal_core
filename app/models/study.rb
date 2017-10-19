@@ -1636,12 +1636,10 @@ class Study
           Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud bucket assignment successful"
           # set workspace acl
           study_owner = self.user.email
-          workspace_permission = 'OWNER'
+          workspace_permission = 'WRITER'
           can_compute = true
-          # if study project is in the compute blacklist, set permissions to WRITER and revoke computes
-          # otherwise, set to OWNER with default permissions
+          # if study project is in the compute blacklist, revoke compute permission
           if Rails.env == 'production' && FireCloudClient::COMPUTE_BLACKLIST.include?(self.firecloud_project)
-            workspace_permission = 'WRITER'
             can_compute = false
           end
           # check project acls to see if user is project member
@@ -1712,12 +1710,10 @@ class Study
           user_project_acl = project_acl.find {|acl| acl['email'] == study_owner}
           # if user has no project acls, then we set specific workspace-level acls
           if user_project_acl.nil?
-            workspace_permission = 'OWNER'
+            workspace_permission = 'WRITER'
             can_compute = true
-            # if study project is in the compute blacklist, set permissions to WRITER and revoke computes
-            # otherwise, set to OWNER with default permissions
+            # if study project is in the compute blacklist, revoke compute permission
             if Rails.env == 'production' && FireCloudClient::COMPUTE_BLACKLIST.include?(self.firecloud_project)
-              workspace_permission = 'WRITER'
               can_compute = false
               Rails.logger.info "#{Time.now}: Study: #{self.name} removing compute permissions"
               compute_acl = Study.firecloud_client.create_workspace_acl(self.user.email, workspace_permission, true, can_compute)
