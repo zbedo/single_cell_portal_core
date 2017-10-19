@@ -9,7 +9,7 @@ module BillingProjectsHelper
     case status
       when 'Creating'
         label_class = 'warning'
-      when 'Created'
+      when 'Ready'
         label_class = 'success'
       when 'Error'
         label_class = 'danger'
