@@ -914,7 +914,6 @@ class SiteController < ApplicationController
       @samples.each do |sample|
         @submissions << client.create_workspace_submission(@study.firecloud_project, @study.firecloud_workspace, config_namespace, config_name, 'sample', sample)
       end
-      logger.info "submissions: #{@submissions}"
     rescue => e
       logger.error "#{Time.now}: unable to submit workflow #{workflow_name} for sample #{@sample} in #{@study.firecloud_workspace} due to: #{e.message}"
       @alert = "We were unable to submit your workflow due to an error: #{e.message}"
@@ -1803,6 +1802,7 @@ class SiteController < ApplicationController
     filename = (is_study_file ? file.upload_file_name : file[:name])
 
     signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url,
+                                                              @study.firecloud_project,
                                                               @study.firecloud_workspace,
                                                               filename,
                                                               expires: 1.day.to_i) # 1 day in seconds, 86400

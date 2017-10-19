@@ -235,7 +235,7 @@ class StudiesController < ApplicationController
         workflow['outputs'].each do |output, file_url|
           file_location = file_url.gsub(/gs\:\/\/#{@study.bucket_id}\//, '')
           # get google instance of file
-          file = Study.firecloud_client.get_workspace_file(@study.firecloud_workspace, file_location)
+          file = Study.firecloud_client.get_workspace_file(@study.firecloud_project, @study.firecloud_workspace, file_location)
           basename = file.name.split('/').last
           # now copy the file to a new location for syncing and remove the old instance
           new_location = "outputs_#{params[:submission_id]}/#{basename}"
