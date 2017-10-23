@@ -733,7 +733,9 @@ class Study
       while !expression_data.eof?
         # grab single row of scores, parse out gene name at beginning
         line = expression_data.readline.strip.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
-        unless line.blank?
+        if line.blank?
+          next
+        else
           row = line.split(/[\t,]/)
           @last_line = "#{expression_file.name}, line #{expression_data.lineno}"
 
@@ -764,8 +766,6 @@ class Study
             @records = []
             Rails.logger.info "Processed #{@count} expression scores from #{expression_file.name} for #{self.name}"
           end
-        else
-          next
         end
       end
       Rails.logger.info "#{Time.now}: Creating last #{@records.size} expression scores from #{expression_file.name} for #{self.name}"
@@ -995,7 +995,9 @@ class Study
       # begin reading data
       while !cluster_data.eof?
         line = cluster_data.readline.strip.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
-        unless line.blank?
+        if line.blank?
+          next
+        else
           @point_count += 1
           @last_line = "#{ordinations_file.name}, line #{cluster_data.lineno}"
           vals = line.split(/[\t,]/).map(&:strip)
@@ -1028,8 +1030,6 @@ class Study
               end
             end
           end
-        else
-          next
         end
       end
       # clean up
@@ -1234,7 +1234,9 @@ class Study
       # read file data
       while !metadata_data.eof?
         line = metadata_data.readline.strip.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
-        unless line.blank?
+        if line.blank?
+          next
+        else
           @last_line = "#{metadata_file.name}, line #{metadata_data.lineno}"
           vals = line.split(/[\t,]/).map(&:strip)
 
@@ -1262,8 +1264,6 @@ class Study
               end
             end
           end
-        else
-          next
         end
       end
       # clean up
