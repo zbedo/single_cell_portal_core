@@ -197,18 +197,6 @@ class Test::Unit::TestCase
     sleep(0.5) # this lets the animation complete
     password_next = @driver.find_element(:id, 'passwordNext')
     password_next.click
-    # check to make sure if we need to accept terms
-    if @driver.current_url.include?('https://accounts.google.com/signin/oauth/consent')
-      $verbose ? puts('approving access') : nil
-      approve = @driver.find_element(:id, 'submit_approve_access')
-      @clickable = approve['disabled'].nil?
-      while @clickable != true
-        sleep(1)
-        @clickable = @driver.find_element(:id, 'submit_approve_access')['disabled'].nil?
-      end
-      approve.click
-      $verbose ? puts('access approved') : nil
-    end
     # wait for redirect to finish by checking for footer element
     @not_loaded = true
     while @not_loaded == true
@@ -220,6 +208,18 @@ class Test::Unit::TestCase
         end
         sleep(1)
       rescue Selenium::WebDriver::Error::UnknownError
+        # check to make sure if we need to accept terms first to complete login
+        if @driver.current_url.include?('https://accounts.google.com/signin/oauth/consent')
+          $verbose ? puts('approving access') : nil
+          approve = @driver.find_element(:id, 'submit_approve_access')
+          @clickable = approve['disabled'].nil?
+          while @clickable != true
+            sleep(1)
+            @clickable = @driver.find_element(:id, 'submit_approve_access')['disabled'].nil?
+          end
+          approve.click
+          $verbose ? puts('access approved') : nil
+        end
         sleep(1)
       end
     end
@@ -232,7 +232,6 @@ class Test::Unit::TestCase
 
   # method to log out of google so that we can log in with a different account
   def login_as_other(email, password)
-    # determine which password to use
     invalidate_google_session
     @driver.get @base_url + '/users/sign_in'
     google_auth = @driver.find_element(:id, 'google-auth')
@@ -257,18 +256,6 @@ class Test::Unit::TestCase
     sleep(0.5) # this lets the animation complete
     password_next = @driver.find_element(:id, 'passwordNext')
     password_next.click
-    # check to make sure if we need to accept terms
-    if @driver.current_url.include?('https://accounts.google.com/o/oauth2/auth')
-      $verbose ? puts('approving access') : nil
-      approve = @driver.find_element(:id, 'submit_approve_access')
-      @clickable = approve['disabled'].nil?
-      while @clickable != true
-        sleep(1)
-        @clickable = @driver.find_element(:id, 'submit_approve_access')['disabled'].nil?
-      end
-      approve.click
-      $verbose ? puts('access approved') : nil
-    end
     # wait for redirect to finish by checking for footer element
     @not_loaded = true
     while @not_loaded == true
@@ -280,6 +267,18 @@ class Test::Unit::TestCase
         end
         sleep(1)
       rescue Selenium::WebDriver::Error::UnknownError
+        # check to make sure if we need to accept terms to complete login
+        if @driver.current_url.include?('https://accounts.google.com/o/oauth2/auth')
+          $verbose ? puts('approving access') : nil
+          approve = @driver.find_element(:id, 'submit_approve_access')
+          @clickable = approve['disabled'].nil?
+          while @clickable != true
+            sleep(1)
+            @clickable = @driver.find_element(:id, 'submit_approve_access')['disabled'].nil?
+          end
+          approve.click
+          $verbose ? puts('access approved') : nil
+        end
         sleep(1)
       end
     end
@@ -301,8 +300,11 @@ class Test::Unit::TestCase
 
   # method to log out of Google and portal
   def invalidate_google_session
-    @driver.get 'https://accounts.google.com/Logout'
-    sleep(1)
+    # check if driver was instantiated to suppress spurious errors when aborting/cancelling tests
+    unless @driver.nil?
+      @driver.get 'https://accounts.google.com/Logout'
+      sleep(1)
+    end
   end
 
   # helper to open tabs in front end, allowing time for tab to become visible

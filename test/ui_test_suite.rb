@@ -1133,6 +1133,72 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	##
+	## BILLING TESTS
+	## Validate the portal can create and manage new FireCloud projects given existing billing projects/accounts
+	##
+
+	# create a new firecloud billing project
+	test 'admin: billing-projects: create' do
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		path = @base_url + '/billing_projects'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email, $test_email_password)
+
+		# create new billing project
+		add_btn = @driver.find_element(:id, 'add-billing-project')
+		add_btn.click
+		wait_for_modal_open('new-firecloud-project-modal')
+
+		# select available billing account and name project
+		accounts = @driver.find_element(:id, 'billing_project_billing_account').find_element(:tag_name, 'option').keep_if {|opt| !opt['value'].blank?}
+		account = accounts.sample
+		account.click
+		name_field = @driver.find_element(:id, 'billing_project_project_name')
+		project_name = "test-scp-project-#{$random_seed}"
+		name_field.send_key(project_name)
+
+		# save new billing project
+		save_btn = @driver.find_element(:id, 'create-billing-project')
+		save_btn.click
+
+		# confirm project creation
+		close_modal('message_modal')
+		created_project = @driver.find_element(:id, project_name)
+		assert created_project.present, "Did not find a new project with the name #{project_name}"
+		created_project_name = created_project.find_element(:class, 'project-name').text
+		assert project_name == created_project_name, "Did not set name of project correctly, expected '#{project_name}' but found '#{created_project_name}'"
+
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+	end
+
+	# add users to a billing project
+	test 'admin: billing-projects: manage users' do
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		path = @base_url + '/billing_projects'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email, $test_email_password)
+
+		# add a user to newly created project
+		project_name = "test-scp-project-#{$random_seed}"
+		add_user_button = @driver.find_element(:id, project_name).find_element(:class, 'add-billing-project-user')
+		add_user_button.click
+		project_path = path + "/#{project_name}/new_user"
+		wait_for_page_load(project_path)
+		email_field = @driver.find_element(:id, 'billing_project_user_email')
+		email_field.send_key($share_email)
+		role_select = @driver.find_element(:id, 'billing_project_user_role')
+		role_select.send_key('user')
+		save_btn = @driver.find_element(:id, 'add-billing-project-user')
+		save_btn.click
+
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+	end
+
+	##
 	## CONFIGURATIONS TESTS
 	## Test AdminConfiguration functionality and other site admin features
 	##
