@@ -36,6 +36,6 @@ for i in {1..80}; do
   content+="${randomFloatString}\n"
 done
 
-data="${header}\n${content}\n"
+data="${header}\n${content}"
 
 printf $data > 'IJ_test_data_signature_50000.txt'
