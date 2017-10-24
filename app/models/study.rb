@@ -716,35 +716,39 @@ class Study
       while !expression_data.eof?
         # grab single row of scores, parse out gene name at beginning
         line = expression_data.readline.strip.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
-        row = line.split(/[\t,]/).map(&:strip)
-        @last_line = "#{expression_file.name}, line #{expression_data.lineno}"
-
-        gene_name = row.shift
-        # check for duplicate genes
-        if @genes_parsed.include?(gene_name)
-          user_error_message = "You have a duplicate gene entry (#{gene_name}) in your gene list.  Please check your file and try again."
-          error_message = "Duplicate gene #{gene_name} in #{expression_file.name} (#{expression_file._id}) for study: #{self.name}"
-          Rails.logger.info error_message
-          raise StandardError, user_error_message
+        if line.strip.blank?
+          next
         else
-          @genes_parsed << gene_name
-        end
+          row = line.split(/[\t,]/).map(&:strip)
+          @last_line = "#{expression_file.name}, line #{expression_data.lineno}"
 
-        # convert all remaining strings to floats, then store only significant values (!= 0)
-        scores = row.map(&:to_f)
-        significant_scores = {}
-        scores.each_with_index do |score, index|
-          unless score == 0.0
-            significant_scores[cells[index]] = score
+          gene_name = row.shift
+          # check for duplicate genes
+          if @genes_parsed.include?(gene_name)
+            user_error_message = "You have a duplicate gene entry (#{gene_name}) in your gene list.  Please check your file and try again."
+            error_message = "Duplicate gene #{gene_name} in #{expression_file.name} (#{expression_file._id}) for study: #{self.name}"
+            Rails.logger.info error_message
+            raise StandardError, user_error_message
+          else
+            @genes_parsed << gene_name
           end
-        end
-        # create expression score object
-        @records << {gene: gene_name, searchable_gene: gene_name.downcase, scores: significant_scores, study_id: study_id, study_file_id: expression_file._id}
-        @count += 1
-        if @count % 1000 == 0
-          ExpressionScore.create(@records)
-          @records = []
-          Rails.logger.info "Processed #{@count} expression scores from #{expression_file.name} for #{self.name}"
+
+          # convert all remaining strings to floats, then store only significant values (!= 0)
+          scores = row.map(&:to_f)
+          significant_scores = {}
+          scores.each_with_index do |score, index|
+            unless score == 0.0
+              significant_scores[cells[index]] = score
+            end
+          end
+          # create expression score object
+          @records << {gene: gene_name, searchable_gene: gene_name.downcase, scores: significant_scores, study_id: study_id, study_file_id: expression_file._id}
+          @count += 1
+          if @count % 1000 == 0
+            ExpressionScore.create(@records)
+            @records = []
+            Rails.logger.info "Processed #{@count} expression scores from #{expression_file.name} for #{self.name}"
+          end
         end
       end
       Rails.logger.info "#{Time.now}: Creating last #{@records.size} expression scores from #{expression_file.name} for #{self.name}"
@@ -973,39 +977,42 @@ class Study
       # begin reading data
       while !cluster_data.eof?
         line = cluster_data.readline.strip.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
-        @point_count += 1
-        @last_line = "#{ordinations_file.name}, line #{cluster_data.lineno}"
-        vals = line.split(/[\t,]/).map(&:strip)
-        # assign value to corresponding data_array by column index
-        vals.each_with_index do |val, index|
-          if @data_arrays[index].values.size >= DataArray::MAX_ENTRIES
-            # array already has max number of values, so save it and replace it with a new data array
-            # of same name & type with array_index incremented by 1
-            current_data_array_index = @data_arrays[index].array_index
-            data_array = @data_arrays[index]
-            Rails.logger.info "#{Time.now}: Saving data array: #{data_array.name}-#{data_array.array_type}-#{data_array.array_index} using #{ordinations_file.upload_file_name} for cluster: #{cluster_name} in #{self.name}"
-            data_array.save
-            new_data_array = self.data_arrays.build(name: data_array.name, cluster_name: data_array.cluster_name ,array_type: data_array.array_type, array_index: current_data_array_index + 1, study_file_id: ordinations_file._id, cluster_group_id: @cluster_group._id, values: [])
-            @data_arrays[index] = new_data_array
-          end
-          # determine whether or not value needs to be cast as a float or not
-          if type_data[index] == 'numeric'
-            @data_arrays[index].values << val.to_f
-          else
-            @data_arrays[index].values << val
-            # check if this is a group annotation, and if so store its value in the cluster_group.cell_annotations
-            # hash if the value is not already present
-            if type_data[index] == 'group'
-              existing_vals = cell_annotations.find {|annot| annot[:name] == header_data[index]}
-              metadata_idx = cell_annotations.index(existing_vals)
-              unless existing_vals[:values].include?(val)
-                cell_annotations[metadata_idx][:values] << val
-                Rails.logger.info "#{Time.now}: Adding #{val} to #{@cluster_group.name} list of group values for #{header_data[index]}"
+        if line.strip.blank?
+          next
+        else
+          @point_count += 1
+          @last_line = "#{ordinations_file.name}, line #{cluster_data.lineno}"
+          vals = line.split(/[\t,]/).map(&:strip)
+          # assign value to corresponding data_array by column index
+          vals.each_with_index do |val, index|
+            if @data_arrays[index].values.size >= DataArray::MAX_ENTRIES
+              # array already has max number of values, so save it and replace it with a new data array
+              # of same name & type with array_index incremented by 1
+              current_data_array_index = @data_arrays[index].array_index
+              data_array = @data_arrays[index]
+              Rails.logger.info "#{Time.now}: Saving data array: #{data_array.name}-#{data_array.array_type}-#{data_array.array_index} using #{ordinations_file.upload_file_name} for cluster: #{cluster_name} in #{self.name}"
+              data_array.save
+              new_data_array = self.data_arrays.build(name: data_array.name, cluster_name: data_array.cluster_name ,array_type: data_array.array_type, array_index: current_data_array_index + 1, study_file_id: ordinations_file._id, cluster_group_id: @cluster_group._id, values: [])
+              @data_arrays[index] = new_data_array
+            end
+            # determine whether or not value needs to be cast as a float or not
+            if type_data[index] == 'numeric'
+              @data_arrays[index].values << val.to_f
+            else
+              @data_arrays[index].values << val
+              # check if this is a group annotation, and if so store its value in the cluster_group.cell_annotations
+              # hash if the value is not already present
+              if type_data[index] == 'group'
+                existing_vals = cell_annotations.find {|annot| annot[:name] == header_data[index]}
+                metadata_idx = cell_annotations.index(existing_vals)
+                unless existing_vals[:values].include?(val)
+                  cell_annotations[metadata_idx][:values] << val
+                  Rails.logger.info "#{Time.now}: Adding #{val} to #{@cluster_group.name} list of group values for #{header_data[index]}"
+                end
               end
             end
           end
         end
-
       end
       # clean up
       @data_arrays.each do |data_array|
@@ -1208,29 +1215,33 @@ class Study
       # read file data
       while !metadata_data.eof?
         line = metadata_data.readline.strip.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
-        @last_line = "#{metadata_file.name}, line #{metadata_data.lineno}"
-        vals = line.split(/[\t,]/).map(&:strip)
+        if line.strip.blank?
+          next
+        else
+          @last_line = "#{metadata_file.name}, line #{metadata_data.lineno}"
+          vals = line.split(/[\t,]/).map(&:strip)
 
-        # assign values to correct study_metadata object
-        vals.each_with_index do |val, index|
-          unless index == name_index
-            if @metadata_records[index].cell_annotations.size >= StudyMetadatum::MAX_ENTRIES
-              # study metadata already has max number of values, so save it and replace it with a new study_metadata of same name & type
-              metadata = @metadata_records[index]
-              Rails.logger.info "Saving study metadata: #{metadata.name}-#{metadata.annotation_type} using #{metadata_file.upload_file_name} in #{self.name}"
-              metadata.save
-              new_metadata = self.study_metadata.build(name: metadata.name, annotation_type: metadata.annotation_type, study_file_id: metadata_file._id, cell_annotations: {}, values: [])
-              @metadata_records[index] = new_metadata
-            end
-            # determine whether or not value needs to be cast as a float or not
-            if type_data[index] == 'numeric'
-              @metadata_records[index].cell_annotations.merge!({"#{vals[name_index]}" => val.to_f})
-            else
-              @metadata_records[index].cell_annotations.merge!({"#{vals[name_index]}" => val})
-              # determine if a new unique value needs to be stored in values array
-              if type_data[index] == 'group' && !@metadata_records[index].values.include?(val)
-                @metadata_records[index].values << val
-                Rails.logger.info "Adding #{val} to #{@metadata_records[index].name} list of group values for #{header_data[index]}"
+          # assign values to correct study_metadata object
+          vals.each_with_index do |val, index|
+            unless index == name_index
+              if @metadata_records[index].cell_annotations.size >= StudyMetadatum::MAX_ENTRIES
+                # study metadata already has max number of values, so save it and replace it with a new study_metadata of same name & type
+                metadata = @metadata_records[index]
+                Rails.logger.info "Saving study metadata: #{metadata.name}-#{metadata.annotation_type} using #{metadata_file.upload_file_name} in #{self.name}"
+                metadata.save
+                new_metadata = self.study_metadata.build(name: metadata.name, annotation_type: metadata.annotation_type, study_file_id: metadata_file._id, cell_annotations: {}, values: [])
+                @metadata_records[index] = new_metadata
+              end
+              # determine whether or not value needs to be cast as a float or not
+              if type_data[index] == 'numeric'
+                @metadata_records[index].cell_annotations.merge!({"#{vals[name_index]}" => val.to_f})
+              else
+                @metadata_records[index].cell_annotations.merge!({"#{vals[name_index]}" => val})
+                # determine if a new unique value needs to be stored in values array
+                if type_data[index] == 'group' && !@metadata_records[index].values.include?(val)
+                  @metadata_records[index].values << val
+                  Rails.logger.info "Adding #{val} to #{@metadata_records[index].name} list of group values for #{header_data[index]}"
+                end
               end
             end
           end
