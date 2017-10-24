@@ -241,6 +241,18 @@ class Study
     end
   end
 
+  # return all studies either owned by or shared with a given user as a Mongoid criterion
+  def self.accessible(user)
+    if user.admin?
+      self.where(queued_for_deletion: false)
+    else
+      owned = self.where(user_id: user._id, public: false, queued_for_deletion: false).map(&:_id)
+      shares = StudyShare.where(email: user.email).map(&:study).select {|s| !s.queued_for_deletion }.map(&:_id)
+      intersection = owned + shares
+      Study.in(:_id => intersection)
+    end
+  end
+
   # check if a give use can edit study
   def can_edit?(user)
     user.nil? ? false : self.admins.include?(user.email)
@@ -642,9 +654,9 @@ class Study
         file = Zlib::GzipReader.open(@file_location)
       else
         Rails.logger.info "#{Time.now}: Parsing #{expression_file.name} as text/plain"
-        file = File.open(@file_location)
+        file = File.open(@file_location, 'rb')
       end
-      cells = file.readline.strip.split(/[\t,]/)
+      cells = file.readline.split(/[\t,]/).map(&:strip)
       @last_line = "#{expression_file.name}, line 1"
       if !['gene', ''].include?(cells.first.downcase) || cells.size <= 1
         expression_file.update(parse_status: 'failed')
@@ -679,9 +691,9 @@ class Study
       if expression_file.upload_content_type == 'application/gzip'
         expression_data = Zlib::GzipReader.open(@file_location)
       else
-        expression_data = File.open(@file_location)
+        expression_data = File.open(@file_location, 'rb')
       end
-      cells = expression_data.readline.strip.split(/[\t,]/)
+      cells = expression_data.readline.split(/[\t,]/).map(&:strip)
       @last_line = "#{expression_file.name}, line 1"
 
       cells.shift
@@ -704,7 +716,7 @@ class Study
       while !expression_data.eof?
         # grab single row of scores, parse out gene name at beginning
         line = expression_data.readline.strip.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
-        row = line.split(/[\t,]/)
+        row = line.split(/[\t,]/).map(&:strip)
         @last_line = "#{expression_file.name}, line #{expression_data.lineno}"
 
         gene_name = row.shift
@@ -839,7 +851,7 @@ class Study
     @validation_error = false
     start_time = Time.now
     begin
-      d_file = File.open(@file_location)
+      d_file = File.open(@file_location, 'rb')
       headers = d_file.readline.split(/[\t,]/).map(&:strip)
       second_header = d_file.readline.split(/[\t,]/).map(&:strip)
       @last_line = "#{ordinations_file.name}, line 1"
@@ -878,7 +890,7 @@ class Study
       Rails.logger.info "#{Time.now}: Beginning cluster initialization using #{ordinations_file.upload_file_name} for cluster: #{cluster_name} in #{self.name}"
       ordinations_file.update(parse_status: 'parsing')
 
-      cluster_data = File.open(@file_location)
+      cluster_data = File.open(@file_location, 'rb')
       header_data = cluster_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
       type_data = cluster_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
 
@@ -1141,7 +1153,7 @@ class Study
     start_time = Time.now
     begin
       Rails.logger.info "#{Time.now}: Validating metadata file headers for #{metadata_file.name} in #{self.name}"
-      m_file = File.open(@file_location)
+      m_file = File.open(@file_location, 'rb')
       headers = m_file.readline.split(/[\t,]/).map(&:strip)
       @last_line = "#{metadata_file.name}, line 1"
       second_header = m_file.readline.split(/[\t,]/).map(&:strip)
@@ -1178,7 +1190,7 @@ class Study
       Rails.logger.info "#{Time.now}: Beginning metadata initialization using #{metadata_file.upload_file_name} in #{self.name}"
       metadata_file.update(parse_status: 'parsing')
       # open files for parsing and grab header & type data
-      metadata_data = File.open(@file_location)
+      metadata_data = File.open(@file_location, 'rb')
       header_data = metadata_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
       type_data = metadata_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
       name_index = header_data.index('NAME')
@@ -1358,8 +1370,8 @@ class Study
 
     # validate headers
     begin
-      file = File.open(@file_location)
-      headers = file.readline.strip.split(/[\t,]/)
+      file = File.open(@file_location, 'rb')
+      headers = file.readline.split(/[\t,]/).map(&:strip)
       @last_line = "#{marker_file.name}, line 1"
       if headers.first != 'GENE NAMES' || headers.size <= 1
         marker_file.update(parse_status: 'failed')
@@ -1395,8 +1407,8 @@ class Study
         list_name = marker_file.upload_file_name.gsub(/(-|_)+/, ' ')
       end
       precomputed_score = self.precomputed_scores.build(name: list_name, study_file_id: marker_file._id)
-      marker_scores = File.open(marker_file.upload.path).readlines.map(&:strip).delete_if {|line| line.blank? }
-      clusters = marker_scores.shift.split(/[\t,]/)
+      marker_scores = File.open(@file_location, 'rb').readlines.map(&:strip).delete_if {|line| line.blank? }
+      clusters = marker_scores.shift.split(/[\t,]/).map(&:strip)
       @last_line = "#{marker_file.name}, line 1"
 
       clusters.shift # remove 'Gene Name' at start
@@ -1407,7 +1419,7 @@ class Study
       @genes_parsed = []
       marker_scores.each_with_index do |line, i|
         @last_line = "#{marker_file.name}, line #{i + 2}"
-        vals = line.split(/[\t,]/)
+        vals = line.split(/[\t,]/).map(&:strip)
         gene = vals.shift
         if @genes_parsed.include?(gene)
           marker_file.update(parse_status: 'failed')
