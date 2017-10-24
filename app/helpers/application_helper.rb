@@ -67,6 +67,12 @@ module ApplicationHelper
 			case action_name
 				when 'new_user'
 					breadcrumbs << {title: "Add Billing Project User", link: 'javascript:;'}
+				when 'workspaces'
+					breadcrumbs << {title: "Workspaces <span class='badge'>#{params[:project_name]}</span>", link: 'javascript:;'}
+				when 'storage_estimate'
+					breadcrumbs << {title: "Storage Costs <span class='badge'>#{params[:project_name]}</span>", link: 'javascript:;'}
+				when 'edit_workspace_computes'
+					breadcrumbs << {title: "Editing Compute Permissions <span class='badge'>#{truncate(params[:study_name], length: 10)}</span>", link: 'javascript:;'}
 			end
 		end
 		breadcrumbs

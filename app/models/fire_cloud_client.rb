@@ -403,6 +403,17 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		process_firecloud_request(:patch, path, attributes.to_json)
 	end
 
+	# get the current storage cost estimate for a workspace
+	#
+	# param: workspace_namespace (String) => namespace of workspace
+	# param: workspace_name (String) => name of workspace
+	#
+	# return: JSON object of workspace
+	def get_workspace_storage_cost(workspace_namespace, workspace_name)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/storageCostEstimate"
+		process_firecloud_request(:get, path)
+	end
+
   ##
   ## WORKFLOW SUBMISSION METHODS
 	##

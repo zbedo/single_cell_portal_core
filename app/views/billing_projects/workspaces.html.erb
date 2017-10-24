@@ -1,0 +1,46 @@
+<h1>Workspaces in <%= params[:project_name] %></h1>
+
+<div class="table-responsive">
+  <div class="well well-lg">
+    <table class="table table-striped" id="workspaces">
+      <thead>
+      <tr>
+        <th>Workspace Name</th>
+        <th>Active Submissions</th>
+        <th>Created At</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+        <% @workspaces.each do |workspace| %>
+          <% workspace_name = workspace['workspace']['name'] %>
+          <tr id="<%= workspace_name %>">
+            <td class="workspace-name">
+              <%= workspace_name %>
+            </td>
+            <td>
+              <%= workspace['workspaceSubmissionStats']['runningSubmissionsCount'] %>
+            </td>
+            <td>
+              <%= local_timestamp(workspace['workspace']['createdDate']) %>
+            </td>
+            <td>
+              <%= link_to "<i class='fa fa-fw fa-edit'></i> Computes".html_safe, edit_workspace_computes_path(params[:project_name], workspace['workspace']['name']), class: 'btn btn-sm btn-primary' %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script type="text/javascript">
+    var workspacesTable = $('#workspaces').DataTable({
+        pagingType: "full_numbers",
+        order: [[0, 'asc']],
+        language: {
+            search: "Filter Results By: "
+        }
+    });
+
+</script>

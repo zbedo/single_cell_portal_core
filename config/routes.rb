@@ -22,6 +22,10 @@ Rails.application.routes.draw do
 		get 'billing_projects/:project_name/new_user', to: 'billing_projects#new_user', as: :new_billing_project_user
 		post 'billing_projects/:project_name/add_user', to: 'billing_projects#create_user', as: :create_billing_project_user
 		delete 'billing_projects/:project_name/:role/:email', to: 'billing_projects#delete_user', as: :delete_billing_project_user, constraints: {email: /.*/}
+		get 'billing_projects/:project_name/storage_estimate', to: 'billing_projects#storage_estimate', as: :billing_project_storage_estimate
+		get 'billing_projects/:project_name/workspaces', to: 'billing_projects#workspaces', as: :billing_project_workspaces
+		get 'billing_projects/:project_name/workspaces/:study_name', to: 'billing_projects#edit_workspace_computes', as: :edit_workspace_computes
+		post 'billing_projects/:project_name/workspaces/:study_name', to: 'billing_projects#update_workspace_computes', as: :update_workspace_computes
 
     # study admin actions
 		mount Ckeditor::Engine => 'ckeditor'

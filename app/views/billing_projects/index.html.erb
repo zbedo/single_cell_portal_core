@@ -27,6 +27,10 @@
           </td>
           <td class="actions">
             <%= link_to "<i class='fa fa-fw fa-plus'></i> Add User".html_safe, new_billing_project_user_path(project_name), class: 'btn btn-xs btn-success add-billing-project-user' %>
+            <% unless project_attributes[:status] == 'Error' %>
+              <%= link_to "<i class='fa fa-fw fa-search'></i> Workspaces".html_safe, billing_project_workspaces_path(project_name), class: 'btn btn-xs btn-primary view-workspaces' %>
+              <%= link_to "<i class='fa fa-fw fa-usd'></i> Storage Costs".html_safe, billing_project_storage_estimate_path(project_name), class: 'btn btn-xs btn-warning storage-estimate' %>
+            <% end %>
           </td>
         </tr>
       <% end %>
@@ -87,6 +91,13 @@
             $(this).parent().removeClass('has-error has-feedback');
         });
         $('#new-firecloud-project-modal').modal('show');
+    });
+
+    $('#firecloud-billing').on('click', '.storage-estimate', function() {
+        $('#generic-modal-title').html("Calculating Total Cost... Please Wait<br /><small>This may take a while...</small>");
+        launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+            return true;
+        });
     });
 
     $('#create-billing-project').click(function () {
