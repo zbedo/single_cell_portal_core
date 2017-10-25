@@ -19,17 +19,17 @@
           <td>
             <% project_attributes[:members].each do |member| %>
               <% email = member['email'] == @portal_service_account ? 'SCP Service Account' : member['email'] %>
-              <p><big><label class="label label-<%= get_billing_member_class(member['role']) %>"><%= email %></label></big>
+              <p><big><label class="label label-<%= get_billing_member_class(member['role']) %>" id="<%= project_name %>-<%= email_as_id(email) %>"><%= email %></label></big>
               <% if ![current_user.email, @portal_service_account].include? member['email'] %>
                 <%= link_to "<i class='fa fa-fw fa-times'></i>".html_safe, delete_billing_project_user_path(project_name: project_name, role: member['role'].downcase, email: email), class: 'btn btn-xs btn-danger delete-billing-project-user', method: :delete, title: 'Remove this user?', data: {toggle: 'tooltip', email: email} %></p>
               <% end %>
             <% end %>
           </td>
           <td class="actions">
-            <%= link_to "<i class='fa fa-fw fa-plus'></i> Add User".html_safe, new_billing_project_user_path(project_name), class: 'btn btn-xs btn-success add-billing-project-user' %>
             <% unless project_attributes[:status] == 'Error' %>
-              <%= link_to "<i class='fa fa-fw fa-search'></i> Workspaces".html_safe, billing_project_workspaces_path(project_name), class: 'btn btn-xs btn-primary view-workspaces' %>
-              <%= link_to "<i class='fa fa-fw fa-usd'></i> Storage Costs".html_safe, billing_project_storage_estimate_path(project_name), class: 'btn btn-xs btn-warning storage-estimate' %>
+              <%= link_to "<i class='fa fa-fw fa-plus'></i> Add User".html_safe, new_billing_project_user_path(project_name), class: 'btn btn-xs btn-success add-billing-project-user' %>
+              <%= link_to "<i class='fa fa-fw fa-briefcase'></i> Workspaces".html_safe, billing_project_workspaces_path(project_name), class: 'btn btn-xs btn-primary view-workspaces' %>
+              <%= link_to "<i class='fa fa-fw fa-usd'></i> Storage Costs".html_safe, billing_project_storage_estimate_path(project_name), class: 'btn btn-xs btn-info storage-estimate' %>
             <% end %>
           </td>
         </tr>

@@ -212,7 +212,13 @@ module ApplicationHelper
 		actions.join(" ").html_safe
 	end
 
+	# return a formatted label for a study's intializatin status
 	def get_initialized_icon(initialized)
 		initialized ? "<small data-toggle='tooltip' title='Visualizations are enabled'><span class='fa fa-fw fa-eye text-success'></span></small>".html_safe : "<small data-toggle='tooltip' title='Visualizations are disabled'><span class='fa fa-fw fa-eye text-danger'></span></small>".html_safe
+	end
+
+	# convert an email address into string that can be used as a DOM element id
+	def email_as_id(email)
+		email.gsub(/[@\.]/, '-')
 	end
 end

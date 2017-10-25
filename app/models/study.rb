@@ -355,7 +355,7 @@ class Study
 
   # helper to generate a URL to a study's FireCloud workspace
   def workspace_url
-    "https://portal.firecloud.org/#workspaces/#{FireCloudClient::PORTAL_NAMESPACE}/#{self.firecloud_workspace}"
+    "https://portal.firecloud.org/#workspaces/#{self.firecloud_project}/#{self.firecloud_workspace}"
   end
 
   # helper to generate a URL to a study's GCP bucket

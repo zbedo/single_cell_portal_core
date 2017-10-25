@@ -1184,9 +1184,9 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# add a user to newly created project
 		project_name = "test-scp-project-#{$random_seed}"
+		project_path = path + "/#{project_name}/new_user"
 		add_user_button = @driver.find_element(:id, project_name).find_element(:class, 'add-billing-project-user')
 		add_user_button.click
-		project_path = path + "/#{project_name}/new_user"
 		wait_for_page_load(project_path)
 		email_field = @driver.find_element(:id, 'billing_project_user_email')
 		email_field.send_key($share_email)
@@ -1194,6 +1194,83 @@ class UiTestSuite < Test::Unit::TestCase
 		role_select.send_key('user')
 		save_btn = @driver.find_element(:id, 'add-billing-project-user')
 		save_btn.click
+		wait_for_page_load(path)
+		close_modal('message_modal')
+
+		# assert user was added
+		email_id = "#{project_name}-#{$share_email.gsub(/[@\.]/, '-')}"
+		assert element_present(:id, email_id), "Did not successfully add user to billing project, could not find element with id: #{email_id}"
+
+		# remove user
+		remove_link = @driver.find_element(:id, project_name).find_element(:class, 'delete-billing-project-user')
+		remove_link.click
+		accept_alert
+		close_modal('message_modal')
+
+		# assert deletion
+		assert !element_present(:id, email_id), "Did not successfully remove user to billing project, found element with id: #{email_id}"
+
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+	end
+
+	# add a study to a newly created billing project
+	test 'admin: billing-projects: create a study' do
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		path = @base_url + '/studies/new'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email, $test_email_password)
+
+		# fill out study form
+		study_form = @driver.find_element(:id, 'new_study')
+		study_form.find_element(:id, 'study_name').send_keys("New Project Study #{$random_seed}")
+		project = study_form.find_element(:id, 'study_firecloud_project')
+		project.send_keys("test-scp-project-#{$random_seed}")
+		# add a share
+		share = @driver.find_element(:id, 'add-study-share')
+		@wait.until {share.displayed?}
+		share.click
+		share_email = study_form.find_element(:class, 'share-email')
+		share_email.send_keys($share_email)
+		share_permission = study_form.find_element(:class, 'share-permission')
+		share_permission.send_keys('Edit')
+		# save study
+		save_study = @driver.find_element(:id, 'save-study')
+		save_study.click
+
+		# upload expression matrix
+		close_modal('message_modal')
+		upload_expression = @driver.find_element(:id, 'upload-expression')
+		upload_expression.send_keys(@test_data_path + 'expression_matrix_example.txt')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		# close success modal
+		close_modal('upload-success-modal')
+		next_btn = @driver.find_element(:id, 'next-btn')
+		next_btn.click
+
+		# upload metadata
+		wait_for_render(:id, 'metadata_form')
+		upload_metadata = @driver.find_element(:id, 'upload-metadata')
+		upload_metadata.send_keys(@test_data_path + 'metadata_example2.txt')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		close_modal('upload-success-modal')
+
+		# upload cluster
+		cluster_form_1 = @driver.find_element(:class, 'initialize_ordinations_form')
+		cluster_name = cluster_form_1.find_element(:class, 'filename')
+		cluster_name.send_keys('Test Cluster 1')
+		upload_cluster = cluster_form_1.find_element(:class, 'upload-clusters')
+		upload_cluster.send_keys(@test_data_path + 'cluster_example_2.txt')
+		wait_for_render(:id, 'start-file-upload')
+		# perform upload
+		upload_btn = cluster_form_1.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		close_modal('upload-success-modal')
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end

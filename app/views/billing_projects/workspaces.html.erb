@@ -8,7 +8,7 @@
         <th>Workspace Name</th>
         <th>Active Submissions</th>
         <th>Created At</th>
-        <th></th>
+        <th>Actions</th>
       </tr>
       </thead>
       <tbody>
@@ -24,8 +24,10 @@
             <td>
               <%= local_timestamp(workspace['workspace']['createdDate']) %>
             </td>
-            <td>
-              <%= link_to "<i class='fa fa-fw fa-edit'></i> Computes".html_safe, edit_workspace_computes_path(params[:project_name], workspace['workspace']['name']), class: 'btn btn-sm btn-primary' %>
+            <td class="actions">
+              <%= link_to "<i class='fa fa-fw fa-edit'></i> Computes".html_safe, edit_workspace_computes_path(params[:project_name], workspace['workspace']['name']), class: 'btn btn-xs btn-primary' %>
+              <%= link_to "<i class='fa fa-fw fa-search'></i> Workspace".html_safe, "https://portal.firecloud.org/#workspaces/#{params[:project_name]}/#{workspace['workspace']['name']}", class: 'btn btn-xs btn-info', target: :_blank %>
+              <%= link_to "<i class='fa fa-fw fa-archive'></i> Bucket".html_safe, "https://console.cloud.google.com/storage/browser/#{workspace['workspace']['bucketName']}", class: 'btn btn-xs btn-warning', target: :_blank %>
             </td>
           </tr>
         <% end %>
@@ -33,6 +35,11 @@
     </table>
   </div>
 </div>
+<p>
+  <%= link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, billing_projects_path, class: 'btn btn-warning' %>
+  <%= link_to "<span class='fa fa-usd'></span> Storage Costs".html_safe, billing_project_storage_estimate_path(project_name: params[:project_name]), class: 'btn btn-info' %>
+
+</p>
 
 <script type="text/javascript">
     var workspacesTable = $('#workspaces').DataTable({

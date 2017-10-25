@@ -104,7 +104,7 @@ class BillingProjectsController < ApplicationController
         next
       else
         @acl[user] = {
-            compute_permission: permissions['canCompute'],
+            can_compute: permissions['canCompute'],
             can_share: permissions['canShare'],
             access_level: access_level,
         }
@@ -114,15 +114,21 @@ class BillingProjectsController < ApplicationController
 
   # update a workspace's compute permissions for a given user
   def update_workspace_computes
-    # create new acl, and cast share & compute values to Booleans
-    new_acl = Study.firecloud_client.create_workspace_acl(compute_params[:email],
-                                                          compute_params[:access_level],
-                                                          compute_params[:can_share] == 'true',
-                                                          compute_params[:can_compute] == 'true')
+    # construct form ID from user email
+    @email = compute_params[:email]
+    @form_id = @email.gsub(/[@\.]/, '-')
+
+
     begin
+      # create new acl, and cast share & compute values to Booleans
+      new_acl = Study.firecloud_client.create_workspace_acl(compute_params[:email],
+                                                            compute_params[:access_level],
+                                                            compute_params[:can_share] == 'true',
+                                                            compute_params[:can_compute] == 'true')
       Study.firecloud_client.update_workspace_acl(params[:project_name], params[:study_name], new_acl)
     rescue => e
       logger.error "#{Time.now}: error in updating acl for #{params[:project_name]}:#{params[:study_name]}: #{e.message}"
+      @error = e.message
     end
   end
 
