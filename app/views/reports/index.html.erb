@@ -15,6 +15,11 @@
 </div>
 <div class="row">
   <div class="col-md-12">
+    <div id="plotly-study-cell-time-dist" class="plotly-report"></div>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
     <div id="plotly-private-study-age-dist" class="plotly-report"></div>
   </div>
 </div>
@@ -141,6 +146,39 @@
             }
         }
     ).then(setRenderStatus('#plotly-study-cell-dist', true));
+
+    var cellsTimeDist = [];
+    var colors = [7,3,4];
+    <% @cells_over_time.each_with_index do |(trace, totals), index| %>
+
+        cellsTimeDist.push(
+            {
+                name: '<%= trace %>',
+                x: <%= raw totals.keys %>,
+                y: <%= raw totals.values %>,
+                type: 'scatter',
+                marker: {
+                    color: colorBrewerSet[colors[<%= index %>]]
+                }
+            }
+        );
+    <% end %>
+
+    Plotly.newPlot('plotly-study-cell-time-dist', cellsTimeDist,
+        {
+            title: 'How quickly are we accumulating cells in studies?',
+            titlefont: plotlyTitleFont,
+            font: plotlyLabelFont,
+            showlegend: true,
+            xaxis: {
+                title: 'Date'
+            },
+            yaxis: {
+                title: 'Number of cells'
+            },
+            annotations: loadScatterAnnotations(cellsTimeDist)
+        }
+    ).then(setRenderStatus('#plotly-study-cell-time-dist', true));
 
     var privateAgeDist = formatPlotlyHistogramData(<%= raw @private_study_age_dist.to_json %>, 4);
 
@@ -301,6 +339,8 @@
                 console.log('toggling annotations to on for div ' + divId);
                 if (plotData[0]['type'] === 'bar') {
                     annotUpdate['annotations'] = loadBarChartAnnotations(plotData)
+                } else if (plotData[0]['type'] === 'scatter') {
+                    annotUpdate['annotations'] = loadScatterAnnotations(plotData)
                 } else {
                     annotUpdate['annotations'] = loadHistogramAnnotations(plotData)
                 }

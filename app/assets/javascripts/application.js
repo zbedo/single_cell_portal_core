@@ -553,6 +553,36 @@ function loadBarChartAnnotations(plotlyData) {
     return annotationsArray;
 }
 
+// load column totals for scatter charts
+function loadScatterAnnotations(plotlyData) {
+    var annotationsArray = [];
+    var max = 0;
+    $(plotlyData).each(function(index, trace) {
+        $(trace['y']).each(function(i, el) {
+            if (el > max) {max = el};
+            var annot = {
+                xref: 'x',
+                yref: 'y',
+                x: plotlyData[index]['x'][i],
+                y: el,
+                text: el,
+                showarrow: false,
+                font: {
+                    size: 12
+                }
+            };
+            annotationsArray.push(annot);
+        });
+    });
+    // calculate offset at 5% of maximum value
+    offset = max * 0.05;
+    $(annotationsArray).each(function(index, annotation) {
+        // push up each annotation by offset value
+        annotation['y'] += offset;
+    });
+    return annotationsArray;
+}
+
 // load bin counts for histogram charts
 function loadHistogramAnnotations(plotlyData) {
     var annotationsArray = [];
