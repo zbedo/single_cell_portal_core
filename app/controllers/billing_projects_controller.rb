@@ -55,7 +55,7 @@ class BillingProjectsController < ApplicationController
       redirect_to billing_projects_path, notice: "Your new project '#{project_name}' was successfully created using '#{billing_account}'" and return
     rescue => e
       logger.error "#{Time.now}: Unable to create new billing project #{project_name} due to error: #{e.message}"
-      redirect_to billing_projects_path, alert: "We were unable to create your new project due to the following error: #{e.message}'" and return
+      redirect_to billing_projects_path, alert: "We were unable to create your new project due to the following error: #{e.message}" and return
     end
   end
 

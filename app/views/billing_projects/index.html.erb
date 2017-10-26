@@ -13,7 +13,7 @@
       </thead>
       <tbody>
       <% @projects.each do |project_name, project_attributes| %>
-        <tr id="<%= project_name %>">
+        <tr id="<%= project_name %>" class="billing-project">
           <td class="project-name"><%= project_name %></td>
           <td><%= get_project_status_label(project_attributes[:status]) %></td>
           <td>

@@ -1,6 +1,6 @@
 <div class="row">
   <div class="col-sm-4 text-center">
-    <h1>Project<br /><span class="label label-default"><%= params[:project_name] %></h1>
+    <h1>Project<br /><span class="label label-default" id="project-name"><%= params[:project_name] %></h1>
   </div>
   <div class="col-sm-4 text-center">
     <h1>Cost Estimate<br /><span class="label label-primary"><span id="selected-cost"><%= number_to_currency(@total_cost) %></span>/month</span></h1>

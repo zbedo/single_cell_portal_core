@@ -1312,7 +1312,23 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 			begin
 				error_hash = JSON.parse(error.http_body)
 				if error_hash.has_key?('message')
-					return error_hash['message']
+					# check if hash can be parsed further
+					message = error_hash['message']
+					if message.index('{').nil?
+						return message
+					else
+						# attempt to extract nested JSON from message
+						json_start = message.index('{')
+						json = message[json_start, message.size + 1]
+						new_message = JSON.parse(json)
+						if new_message.has_key?('message')
+							new_message['message']
+						else
+							new_message
+						end
+					end
+				else
+					return error.message
 				end
 			rescue => e
 				Rails.logger.error e.message

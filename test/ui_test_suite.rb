@@ -1135,6 +1135,7 @@ class UiTestSuite < Test::Unit::TestCase
 	##
 	## BILLING TESTS
 	## Validate the portal can create and manage new FireCloud projects given existing billing projects/accounts
+	## The user being used for the test must have an available Google billing project that they own for these tests to work
 	##
 
 	# create a new firecloud billing project
@@ -1152,11 +1153,13 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_for_modal_open('new-firecloud-project-modal')
 
 		# select available billing account and name project
-		accounts = @driver.find_element(:id, 'billing_project_billing_account').find_element(:tag_name, 'option').keep_if {|opt| !opt['value'].blank?}
+		accounts = @driver.find_element(:id, 'billing_project_billing_account').find_elements(:tag_name, 'option').keep_if {|opt| !opt['value'].empty?}
 		account = accounts.sample
 		account.click
 		name_field = @driver.find_element(:id, 'billing_project_project_name')
-		project_name = "test-scp-project-#{$random_seed}"
+		# project names have a length limit, so shorten random seed element
+		random_seed_slug = $random_seed.split('-').first
+		project_name = "test-scp-project-#{random_seed_slug}"
 		name_field.send_key(project_name)
 
 		# save new billing project
@@ -1166,7 +1169,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# confirm project creation
 		close_modal('message_modal')
 		created_project = @driver.find_element(:id, project_name)
-		assert created_project.present, "Did not find a new project with the name #{project_name}"
+		assert created_project.present?, "Did not find a new project with the name #{project_name}"
 		created_project_name = created_project.find_element(:class, 'project-name').text
 		assert project_name == created_project_name, "Did not set name of project correctly, expected '#{project_name}' but found '#{created_project_name}'"
 
@@ -1183,23 +1186,24 @@ class UiTestSuite < Test::Unit::TestCase
 		login($test_email, $test_email_password)
 
 		# add a user to newly created project
-		project_name = "test-scp-project-#{$random_seed}"
+		random_seed_slug = $random_seed.split('-').first
+		project_name = "test-scp-project-#{random_seed_slug}"
 		project_path = path + "/#{project_name}/new_user"
 		add_user_button = @driver.find_element(:id, project_name).find_element(:class, 'add-billing-project-user')
 		add_user_button.click
-		wait_for_page_load(project_path)
+		wait_until_page_loads(project_path)
 		email_field = @driver.find_element(:id, 'billing_project_user_email')
 		email_field.send_key($share_email)
 		role_select = @driver.find_element(:id, 'billing_project_user_role')
 		role_select.send_key('user')
 		save_btn = @driver.find_element(:id, 'add-billing-project-user')
 		save_btn.click
-		wait_for_page_load(path)
+		wait_until_page_loads(path)
 		close_modal('message_modal')
 
 		# assert user was added
 		email_id = "#{project_name}-#{$share_email.gsub(/[@\.]/, '-')}"
-		assert element_present(:id, email_id), "Did not successfully add user to billing project, could not find element with id: #{email_id}"
+		assert element_present?(:id, email_id), "Did not successfully add user to billing project, could not find element with id: #{email_id}"
 
 		# remove user
 		remove_link = @driver.find_element(:id, project_name).find_element(:class, 'delete-billing-project-user')
@@ -1208,7 +1212,7 @@ class UiTestSuite < Test::Unit::TestCase
 		close_modal('message_modal')
 
 		# assert deletion
-		assert !element_present(:id, email_id), "Did not successfully remove user to billing project, found element with id: #{email_id}"
+		assert !element_present?(:id, email_id), "Did not successfully remove user to billing project, found element with id: #{email_id}"
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
@@ -1226,7 +1230,9 @@ class UiTestSuite < Test::Unit::TestCase
 		study_form = @driver.find_element(:id, 'new_study')
 		study_form.find_element(:id, 'study_name').send_keys("New Project Study #{$random_seed}")
 		project = study_form.find_element(:id, 'study_firecloud_project')
-		project.send_keys("test-scp-project-#{$random_seed}")
+		random_seed_slug = $random_seed.split('-').first
+		project_name = "test-scp-project-#{random_seed_slug}"
+		project.send_keys(project_name)
 		# add a share
 		share = @driver.find_element(:id, 'add-study-share')
 		@wait.until {share.displayed?}
@@ -1271,6 +1277,77 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn = cluster_form_1.find_element(:id, 'start-file-upload')
 		upload_btn.click
 		close_modal('upload-success-modal')
+
+		# validate everything uploaded and parsed
+		sleep(3)
+		study_path = @base_url + '/study/' + "new-project-study-#{$random_seed}"
+		@driver.get study_path
+		wait_until_page_loads(study_path)
+		open_ui_tab('study-download')
+		files = @driver.find_elements(:class, 'dl-link').size
+		assert files == 3, "Did not find correct nubmer of files to download, expected 3 but found #{files}"
+		open_ui_tab('study-visualize')
+		assert element_visible?(:id, 'cluster-plot'), 'Study visualizations are not enabled'
+
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+	end
+
+	# manage compute permissions for workspaces in a project
+	test 'admin: billing-projects: compute permissions' do
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		path = @base_url + '/billing_projects'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email, $test_email_password)
+
+		# make sure there is a project and a workspace
+		assert @driver.find_element(:class, 'billing-project').any?, 'Did not find any billing projects'
+		random_seed_slug = $random_seed.split('-').first
+		project_name = "test-scp-project-#{random_seed_slug}"
+		workspaces_btn = @driver.find_element(:id, project_name).find_element(:class, 'view-workspaces')
+		workspaces_btn.click
+		wait_until_page_loads(path + "/#{project_name}/workspaces")
+		assert @driver.find_elements(:class, 'project-workspace').any?, 'Did not find any project workspaces'
+
+		# navigate to compute permissions page
+		edit_compute = @driver.find_element(:class, 'edit-computes')
+		edit_compute.click
+		wait_until_page_loads(path + "/#{project_name}/workspaces/new-project-study-#{$random_seed}")
+
+		# revoke compute permissions
+		share_email_id = $share_email.gsub(/[@.]/, '-')
+		form = @driver.find_element(:id, share_email_id)
+		compute_permissions = form.find_element(:id, 'compute_can_compute')
+		compute_permissions.send_key('No')
+		update_btn = form.find_element(:class, 'update-compute-permissions')
+		update_btn.click
+		wait_for_modal_open('message_modal')
+		notice = @driver.find_element(:id, 'notice-content').text
+		assert notice.include?('successfully updated'), "Did not find correct notification, expected 'successfully updated' but found #{notice}"
+
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+	end
+
+	# view storage cost estimate for a project
+	test 'admin: billing-projects: storage costs' do
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		path = @base_url + '/billing_projects'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email, $test_email_password)
+
+		# navigate to storage page
+		random_seed_slug = $random_seed.split('-').first
+		project_name = "test-scp-project-#{random_seed_slug}"
+		storage_btn = @driver.find_element(:id, project_name).find_element(:class, 'storage-estimate')
+		storage_btn.click
+		wait_until_page_loads(path + "/#{project_name}/storage_estimate")
+
+		project_label = @driver.find_element(:id, 'project-name').text
+		assert project_label == project_name, "Did not load correct project, expected '#{project_name}' but found '#{project_label}'"
+		assert element_present?(:id, 'workspace-costs'), 'Did not find workspace costs table'
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
@@ -4293,6 +4370,11 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# delete 2d test
 		@driver.find_element(:class, "twod-study-#{$random_seed}-delete").click
+		accept_alert
+		close_modal('message_modal')
+
+		# delete external project study
+		@driver.find_element(:class, "new-project-study-#{$random_seed}-delete").click
 		accept_alert
 		close_modal('message_modal')
 
