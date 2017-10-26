@@ -16,7 +16,8 @@ class BillingProjectsController < ApplicationController
   ##
 
   respond_to :html, :js, :json
-  before_action :create_firecloud_client, except: [:new_user, :billing_project_workspaces]
+  before_action :create_firecloud_client
+  before_action :check_project_permissions, except: [:index]
   before_action :load_service_account, except: [:new_user, :create_user, :delete_user, :storage_estimate]
   before_filter :authenticate_user!
 
@@ -91,12 +92,12 @@ class BillingProjectsController < ApplicationController
 
   # get a list of all workspaces in a project
   def workspaces
-    @workspaces = Study.firecloud_client.workspaces(params[:project_name])
+    @workspaces = @fire_cloud_client.workspaces(params[:project_name])
   end
 
   # get a workspace's compute permissions
   def edit_workspace_computes
-    workspace_acl = Study.firecloud_client.get_workspace_acl(params[:project_name], params[:study_name])
+    workspace_acl = @fire_cloud_client.get_workspace_acl(params[:project_name], params[:study_name])
     @acl = {}
     workspace_acl['acl'].each do |user, permissions|
       access_level = permissions['accessLevel']
@@ -121,11 +122,11 @@ class BillingProjectsController < ApplicationController
 
     begin
       # create new acl, and cast share & compute values to Booleans
-      new_acl = Study.firecloud_client.create_workspace_acl(compute_params[:email],
+      new_acl = @fire_cloud_client.create_workspace_acl(compute_params[:email],
                                                             compute_params[:access_level],
                                                             compute_params[:can_share] == 'true',
                                                             compute_params[:can_compute] == 'true')
-      Study.firecloud_client.update_workspace_acl(params[:project_name], params[:study_name], new_acl)
+      @fire_cloud_client.update_workspace_acl(params[:project_name], params[:study_name], new_acl)
     rescue => e
       logger.error "#{Time.now}: error in updating acl for #{params[:project_name]}:#{params[:study_name]}: #{e.message}"
       @error = e.message
@@ -134,7 +135,7 @@ class BillingProjectsController < ApplicationController
 
   # get a complete rollup of all storage costs for an entire project
   def storage_estimate
-    workspaces = Study.firecloud_client.workspaces(params[:project_name])
+    workspaces = @fire_cloud_client.workspaces(params[:project_name])
     @workspaces = {}
     @total_cost = 0.0
     workspaces.each do |workspace|
@@ -162,18 +163,33 @@ class BillingProjectsController < ApplicationController
     params.require(:billing_project_user).permit(:email, :role)
   end
 
+  def compute_params
+    params.require(:compute).permit(:email, :access_level, :can_compute, :can_share)
+  end
+
+  # create client scoped to current user
   def create_firecloud_client
-    # create client scoped to current user
     @fire_cloud_client = FireCloudClient.new(current_user, 'single-cell-portal')
   end
 
+  # load portal service account email for use in view (we don't want to display this in the portal)
   def load_service_account
-    # load portal service account email for use in view (we don't want to display this in the portal)
     @portal_service_account = Study.firecloud_client.storage_issuer
   end
 
-  def compute_params
-    params.require(:compute).permit(:email, :access_level, :can_compute, :can_share)
+
+  ##
+  #
+  # AUTH/PERMISSON CHECKS
+  #
+  ##
+
+  # check to make sure that the current user has access to the current project
+  def check_project_permissions
+    projects = @fire_cloud_client.get_billing_projects
+    unless projects.map {|project| project['projectName']}.include?(params[:project_name])
+      redirect_to billing_projects_path, alert: 'You do not have permission to perform that action.' and return
+    end
   end
 end
 
