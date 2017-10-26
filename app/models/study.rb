@@ -241,6 +241,18 @@ class Study
     end
   end
 
+  # return all studies either owned by or shared with a given user as a Mongoid criterion
+  def self.accessible(user)
+    if user.admin?
+      self.where(queued_for_deletion: false)
+    else
+      owned = self.where(user_id: user._id, public: false, queued_for_deletion: false).map(&:_id)
+      shares = StudyShare.where(email: user.email).map(&:study).select {|s| !s.queued_for_deletion }.map(&:_id)
+      intersection = owned + shares
+      Study.in(:_id => intersection)
+    end
+  end
+
   # check if a give use can edit study
   def can_edit?(user)
     user.nil? ? false : self.admins.include?(user.email)
@@ -642,9 +654,9 @@ class Study
         file = Zlib::GzipReader.open(@file_location)
       else
         Rails.logger.info "#{Time.now}: Parsing #{expression_file.name} as text/plain"
-        file = File.open(@file_location)
+        file = File.open(@file_location, 'rb')
       end
-      cells = file.readline.strip.split(/[\t,]/)
+      cells = file.readline.split(/[\t,]/).map(&:strip)
       @last_line = "#{expression_file.name}, line 1"
       if !['gene', ''].include?(cells.first.downcase) || cells.size <= 1
         expression_file.update(parse_status: 'failed')
@@ -679,9 +691,9 @@ class Study
       if expression_file.upload_content_type == 'application/gzip'
         expression_data = Zlib::GzipReader.open(@file_location)
       else
-        expression_data = File.open(@file_location)
+        expression_data = File.open(@file_location, 'rb')
       end
-      cells = expression_data.readline.strip.split(/[\t,]/)
+      cells = expression_data.readline.split(/[\t,]/).map(&:strip)
       @last_line = "#{expression_file.name}, line 1"
 
       cells.shift
@@ -704,35 +716,39 @@ class Study
       while !expression_data.eof?
         # grab single row of scores, parse out gene name at beginning
         line = expression_data.readline.strip.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
-        row = line.split(/[\t,]/)
-        @last_line = "#{expression_file.name}, line #{expression_data.lineno}"
-
-        gene_name = row.shift
-        # check for duplicate genes
-        if @genes_parsed.include?(gene_name)
-          user_error_message = "You have a duplicate gene entry (#{gene_name}) in your gene list.  Please check your file and try again."
-          error_message = "Duplicate gene #{gene_name} in #{expression_file.name} (#{expression_file._id}) for study: #{self.name}"
-          Rails.logger.info error_message
-          raise StandardError, user_error_message
+        if line.strip.blank?
+          next
         else
-          @genes_parsed << gene_name
-        end
+          row = line.split(/[\t,]/).map(&:strip)
+          @last_line = "#{expression_file.name}, line #{expression_data.lineno}"
 
-        # convert all remaining strings to floats, then store only significant values (!= 0)
-        scores = row.map(&:to_f)
-        significant_scores = {}
-        scores.each_with_index do |score, index|
-          unless score == 0.0
-            significant_scores[cells[index]] = score
+          gene_name = row.shift
+          # check for duplicate genes
+          if @genes_parsed.include?(gene_name)
+            user_error_message = "You have a duplicate gene entry (#{gene_name}) in your gene list.  Please check your file and try again."
+            error_message = "Duplicate gene #{gene_name} in #{expression_file.name} (#{expression_file._id}) for study: #{self.name}"
+            Rails.logger.info error_message
+            raise StandardError, user_error_message
+          else
+            @genes_parsed << gene_name
           end
-        end
-        # create expression score object
-        @records << {gene: gene_name, searchable_gene: gene_name.downcase, scores: significant_scores, study_id: study_id, study_file_id: expression_file._id}
-        @count += 1
-        if @count % 1000 == 0
-          ExpressionScore.create(@records)
-          @records = []
-          Rails.logger.info "Processed #{@count} expression scores from #{expression_file.name} for #{self.name}"
+
+          # convert all remaining strings to floats, then store only significant values (!= 0)
+          scores = row.map(&:to_f)
+          significant_scores = {}
+          scores.each_with_index do |score, index|
+            unless score == 0.0
+              significant_scores[cells[index]] = score
+            end
+          end
+          # create expression score object
+          @records << {gene: gene_name, searchable_gene: gene_name.downcase, scores: significant_scores, study_id: study_id, study_file_id: expression_file._id}
+          @count += 1
+          if @count % 1000 == 0
+            ExpressionScore.create(@records)
+            @records = []
+            Rails.logger.info "Processed #{@count} expression scores from #{expression_file.name} for #{self.name}"
+          end
         end
       end
       Rails.logger.info "#{Time.now}: Creating last #{@records.size} expression scores from #{expression_file.name} for #{self.name}"
@@ -839,7 +855,7 @@ class Study
     @validation_error = false
     start_time = Time.now
     begin
-      d_file = File.open(@file_location)
+      d_file = File.open(@file_location, 'rb')
       headers = d_file.readline.split(/[\t,]/).map(&:strip)
       second_header = d_file.readline.split(/[\t,]/).map(&:strip)
       @last_line = "#{ordinations_file.name}, line 1"
@@ -878,7 +894,7 @@ class Study
       Rails.logger.info "#{Time.now}: Beginning cluster initialization using #{ordinations_file.upload_file_name} for cluster: #{cluster_name} in #{self.name}"
       ordinations_file.update(parse_status: 'parsing')
 
-      cluster_data = File.open(@file_location)
+      cluster_data = File.open(@file_location, 'rb')
       header_data = cluster_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
       type_data = cluster_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
 
@@ -961,39 +977,42 @@ class Study
       # begin reading data
       while !cluster_data.eof?
         line = cluster_data.readline.strip.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
-        @point_count += 1
-        @last_line = "#{ordinations_file.name}, line #{cluster_data.lineno}"
-        vals = line.split(/[\t,]/).map(&:strip)
-        # assign value to corresponding data_array by column index
-        vals.each_with_index do |val, index|
-          if @data_arrays[index].values.size >= DataArray::MAX_ENTRIES
-            # array already has max number of values, so save it and replace it with a new data array
-            # of same name & type with array_index incremented by 1
-            current_data_array_index = @data_arrays[index].array_index
-            data_array = @data_arrays[index]
-            Rails.logger.info "#{Time.now}: Saving data array: #{data_array.name}-#{data_array.array_type}-#{data_array.array_index} using #{ordinations_file.upload_file_name} for cluster: #{cluster_name} in #{self.name}"
-            data_array.save
-            new_data_array = self.data_arrays.build(name: data_array.name, cluster_name: data_array.cluster_name ,array_type: data_array.array_type, array_index: current_data_array_index + 1, study_file_id: ordinations_file._id, cluster_group_id: @cluster_group._id, values: [])
-            @data_arrays[index] = new_data_array
-          end
-          # determine whether or not value needs to be cast as a float or not
-          if type_data[index] == 'numeric'
-            @data_arrays[index].values << val.to_f
-          else
-            @data_arrays[index].values << val
-            # check if this is a group annotation, and if so store its value in the cluster_group.cell_annotations
-            # hash if the value is not already present
-            if type_data[index] == 'group'
-              existing_vals = cell_annotations.find {|annot| annot[:name] == header_data[index]}
-              metadata_idx = cell_annotations.index(existing_vals)
-              unless existing_vals[:values].include?(val)
-                cell_annotations[metadata_idx][:values] << val
-                Rails.logger.info "#{Time.now}: Adding #{val} to #{@cluster_group.name} list of group values for #{header_data[index]}"
+        if line.strip.blank?
+          next
+        else
+          @point_count += 1
+          @last_line = "#{ordinations_file.name}, line #{cluster_data.lineno}"
+          vals = line.split(/[\t,]/).map(&:strip)
+          # assign value to corresponding data_array by column index
+          vals.each_with_index do |val, index|
+            if @data_arrays[index].values.size >= DataArray::MAX_ENTRIES
+              # array already has max number of values, so save it and replace it with a new data array
+              # of same name & type with array_index incremented by 1
+              current_data_array_index = @data_arrays[index].array_index
+              data_array = @data_arrays[index]
+              Rails.logger.info "#{Time.now}: Saving data array: #{data_array.name}-#{data_array.array_type}-#{data_array.array_index} using #{ordinations_file.upload_file_name} for cluster: #{cluster_name} in #{self.name}"
+              data_array.save
+              new_data_array = self.data_arrays.build(name: data_array.name, cluster_name: data_array.cluster_name ,array_type: data_array.array_type, array_index: current_data_array_index + 1, study_file_id: ordinations_file._id, cluster_group_id: @cluster_group._id, values: [])
+              @data_arrays[index] = new_data_array
+            end
+            # determine whether or not value needs to be cast as a float or not
+            if type_data[index] == 'numeric'
+              @data_arrays[index].values << val.to_f
+            else
+              @data_arrays[index].values << val
+              # check if this is a group annotation, and if so store its value in the cluster_group.cell_annotations
+              # hash if the value is not already present
+              if type_data[index] == 'group'
+                existing_vals = cell_annotations.find {|annot| annot[:name] == header_data[index]}
+                metadata_idx = cell_annotations.index(existing_vals)
+                unless existing_vals[:values].include?(val)
+                  cell_annotations[metadata_idx][:values] << val
+                  Rails.logger.info "#{Time.now}: Adding #{val} to #{@cluster_group.name} list of group values for #{header_data[index]}"
+                end
               end
             end
           end
         end
-
       end
       # clean up
       @data_arrays.each do |data_array|
@@ -1141,7 +1160,7 @@ class Study
     start_time = Time.now
     begin
       Rails.logger.info "#{Time.now}: Validating metadata file headers for #{metadata_file.name} in #{self.name}"
-      m_file = File.open(@file_location)
+      m_file = File.open(@file_location, 'rb')
       headers = m_file.readline.split(/[\t,]/).map(&:strip)
       @last_line = "#{metadata_file.name}, line 1"
       second_header = m_file.readline.split(/[\t,]/).map(&:strip)
@@ -1178,7 +1197,7 @@ class Study
       Rails.logger.info "#{Time.now}: Beginning metadata initialization using #{metadata_file.upload_file_name} in #{self.name}"
       metadata_file.update(parse_status: 'parsing')
       # open files for parsing and grab header & type data
-      metadata_data = File.open(@file_location)
+      metadata_data = File.open(@file_location, 'rb')
       header_data = metadata_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
       type_data = metadata_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
       name_index = header_data.index('NAME')
@@ -1196,29 +1215,33 @@ class Study
       # read file data
       while !metadata_data.eof?
         line = metadata_data.readline.strip.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
-        @last_line = "#{metadata_file.name}, line #{metadata_data.lineno}"
-        vals = line.split(/[\t,]/).map(&:strip)
+        if line.strip.blank?
+          next
+        else
+          @last_line = "#{metadata_file.name}, line #{metadata_data.lineno}"
+          vals = line.split(/[\t,]/).map(&:strip)
 
-        # assign values to correct study_metadata object
-        vals.each_with_index do |val, index|
-          unless index == name_index
-            if @metadata_records[index].cell_annotations.size >= StudyMetadatum::MAX_ENTRIES
-              # study metadata already has max number of values, so save it and replace it with a new study_metadata of same name & type
-              metadata = @metadata_records[index]
-              Rails.logger.info "Saving study metadata: #{metadata.name}-#{metadata.annotation_type} using #{metadata_file.upload_file_name} in #{self.name}"
-              metadata.save
-              new_metadata = self.study_metadata.build(name: metadata.name, annotation_type: metadata.annotation_type, study_file_id: metadata_file._id, cell_annotations: {}, values: [])
-              @metadata_records[index] = new_metadata
-            end
-            # determine whether or not value needs to be cast as a float or not
-            if type_data[index] == 'numeric'
-              @metadata_records[index].cell_annotations.merge!({"#{vals[name_index]}" => val.to_f})
-            else
-              @metadata_records[index].cell_annotations.merge!({"#{vals[name_index]}" => val})
-              # determine if a new unique value needs to be stored in values array
-              if type_data[index] == 'group' && !@metadata_records[index].values.include?(val)
-                @metadata_records[index].values << val
-                Rails.logger.info "Adding #{val} to #{@metadata_records[index].name} list of group values for #{header_data[index]}"
+          # assign values to correct study_metadata object
+          vals.each_with_index do |val, index|
+            unless index == name_index
+              if @metadata_records[index].cell_annotations.size >= StudyMetadatum::MAX_ENTRIES
+                # study metadata already has max number of values, so save it and replace it with a new study_metadata of same name & type
+                metadata = @metadata_records[index]
+                Rails.logger.info "Saving study metadata: #{metadata.name}-#{metadata.annotation_type} using #{metadata_file.upload_file_name} in #{self.name}"
+                metadata.save
+                new_metadata = self.study_metadata.build(name: metadata.name, annotation_type: metadata.annotation_type, study_file_id: metadata_file._id, cell_annotations: {}, values: [])
+                @metadata_records[index] = new_metadata
+              end
+              # determine whether or not value needs to be cast as a float or not
+              if type_data[index] == 'numeric'
+                @metadata_records[index].cell_annotations.merge!({"#{vals[name_index]}" => val.to_f})
+              else
+                @metadata_records[index].cell_annotations.merge!({"#{vals[name_index]}" => val})
+                # determine if a new unique value needs to be stored in values array
+                if type_data[index] == 'group' && !@metadata_records[index].values.include?(val)
+                  @metadata_records[index].values << val
+                  Rails.logger.info "Adding #{val} to #{@metadata_records[index].name} list of group values for #{header_data[index]}"
+                end
               end
             end
           end
@@ -1358,8 +1381,8 @@ class Study
 
     # validate headers
     begin
-      file = File.open(@file_location)
-      headers = file.readline.strip.split(/[\t,]/)
+      file = File.open(@file_location, 'rb')
+      headers = file.readline.split(/[\t,]/).map(&:strip)
       @last_line = "#{marker_file.name}, line 1"
       if headers.first != 'GENE NAMES' || headers.size <= 1
         marker_file.update(parse_status: 'failed')
@@ -1395,8 +1418,8 @@ class Study
         list_name = marker_file.upload_file_name.gsub(/(-|_)+/, ' ')
       end
       precomputed_score = self.precomputed_scores.build(name: list_name, study_file_id: marker_file._id)
-      marker_scores = File.open(marker_file.upload.path).readlines.map(&:strip).delete_if {|line| line.blank? }
-      clusters = marker_scores.shift.split(/[\t,]/)
+      marker_scores = File.open(@file_location, 'rb').readlines.map(&:strip).delete_if {|line| line.blank? }
+      clusters = marker_scores.shift.split(/[\t,]/).map(&:strip)
       @last_line = "#{marker_file.name}, line 1"
 
       clusters.shift # remove 'Gene Name' at start
@@ -1407,7 +1430,7 @@ class Study
       @genes_parsed = []
       marker_scores.each_with_index do |line, i|
         @last_line = "#{marker_file.name}, line #{i + 2}"
-        vals = line.split(/[\t,]/)
+        vals = line.split(/[\t,]/).map(&:strip)
         gene = vals.shift
         if @genes_parsed.include?(gene)
           marker_file.update(parse_status: 'failed')

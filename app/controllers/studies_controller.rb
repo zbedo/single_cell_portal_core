@@ -31,7 +31,7 @@ class StudiesController < ApplicationController
   # GET /studies
   # GET /studies.json
   def index
-    @studies = Study.editable(current_user).to_a
+    @studies = Study.accessible(current_user).to_a
   end
 
   # GET /studies/1
@@ -354,13 +354,6 @@ class StudiesController < ApplicationController
       # don't use helper as we're about to mass-assign params
       study_file = @study.study_files.build
       if study_file.update(study_file_params)
-        # if upload content type is 'text/plain', then attempt to transform line endings
-        if upload.content_type == 'text/plain'
-          uploaded_file_contents = File.open(study_file.upload.path).read.gsub(/\r\n?/, "\n")
-          new_file = File.new(study_file.upload.path, 'w+')
-          new_file.write uploaded_file_contents
-          new_file.close
-        end
         render json: { file: { name: study_file.errors,size: nil } } and return
       else
         study_file.errors.each do |error|
@@ -381,11 +374,7 @@ class StudiesController < ApplicationController
       end
       # Add the following chunk to the incomplete upload, converting to unix line endings
       File.open(study_file.upload.path, "ab") do |f|
-        if study_file.upload_content_type == 'text/plain'
-          f.write(upload.read.gsub(/\r\n?/, "\n"))
-        else
-          f.write upload.read
-        end
+        f.write upload.read
       end
 
       # Update the upload_file_size attribute

@@ -25,10 +25,9 @@ def parse_test_arguments(arguments)
   $env = 'development'
   $random_seed = SecureRandom.uuid
   $verbose = false
-  $profile_dir = "/Users/#{$user}/Library/Application Support/Google/Chrome/Default"
 
   # usage string for help message
-  $usage = "ruby test/ui_test_suite.rb -- -c=/path/to/chromedriver -C=/path/to/chrome/profile -e=testing.email@gmail.com -p='testing_email_password' -s=sharing.email@gmail.com -P='sharing_email_password' -o=order -d=/path/to/downloads -u=portal_url -E=environment -r=random_seed"
+  $usage = "ruby test/ui_test_suite.rb -- -c=/path/to/chromedriver -e=testing.email@gmail.com -p='testing_email_password' -s=sharing.email@gmail.com -P='sharing_email_password' -o=order -d=/path/to/downloads -u=portal_url -E=environment -r=random_seed"
 
   # parse arguments and set values
   arguments.each do |arg|
@@ -52,8 +51,6 @@ def parse_test_arguments(arguments)
       $env = arg.gsub(/\-E\=/, '')
     elsif arg =~ /\-r\=/
       $random_seed = arg.gsub(/\-r\=/, '')
-    elsif arg =~ /\-C\=/
-      $profile_dir = arg.gsub(/\-C\=/, '')
     elsif arg =~ /\-v/
       $verbose = true
     end
@@ -189,37 +186,17 @@ class Test::Unit::TestCase
     google_auth = @driver.find_element(:id, 'google-auth')
     google_auth.click
     $verbose ? puts('logging in as ' + email) : nil
-    begin
-      profile_link = @driver.find_element(:css, "[data-email='#{email}']")
-      profile_link.click
-    rescue Selenium::WebDriver::Error::NoSuchElementError => e
-      other_account = @driver.find_element(:id, 'identifierLink')
-      other_account.click
-      sleep(0.5) # this lets the animation complete
-      email_field = @driver.find_element(:id, 'identifierId')
-      email_field.send_key(email)
-      sleep(0.5) # this lets the animation complete
-      email_next = @driver.find_element(:id, 'identifierNext')
-      email_next.click
-    end
+    email_field = @driver.find_element(:id, 'identifierId')
+    email_field.send_key(email)
+    sleep(0.5) # this lets the animation complete
+    email_next = @driver.find_element(:id, 'identifierNext')
+    email_next.click
     sleep(0.5) # this lets the animation complete
     password_field = @driver.find_element(:name, 'password')
     password_field.send_key(password)
     sleep(0.5) # this lets the animation complete
     password_next = @driver.find_element(:id, 'passwordNext')
     password_next.click
-    # check to make sure if we need to accept terms
-    if @driver.current_url.include?('https://accounts.google.com/signin/oauth/consent')
-      $verbose ? puts('approving access') : nil
-      approve = @driver.find_element(:id, 'submit_approve_access')
-      @clickable = approve['disabled'].nil?
-      while @clickable != true
-        sleep(1)
-        @clickable = @driver.find_element(:id, 'submit_approve_access')['disabled'].nil?
-      end
-      approve.click
-      $verbose ? puts('access approved') : nil
-    end
     # wait for redirect to finish by checking for footer element
     @not_loaded = true
     while @not_loaded == true
@@ -231,6 +208,18 @@ class Test::Unit::TestCase
         end
         sleep(1)
       rescue Selenium::WebDriver::Error::UnknownError
+        # check to make sure if we need to accept terms first to complete login
+        if @driver.current_url.include?('https://accounts.google.com/signin/oauth/consent')
+          $verbose ? puts('approving access') : nil
+          approve = @driver.find_element(:id, 'submit_approve_access')
+          @clickable = approve['disabled'].nil?
+          while @clickable != true
+            sleep(1)
+            @clickable = @driver.find_element(:id, 'submit_approve_access')['disabled'].nil?
+          end
+          approve.click
+          $verbose ? puts('access approved') : nil
+        end
         sleep(1)
       end
     end
@@ -243,8 +232,7 @@ class Test::Unit::TestCase
 
   # method to log out of google so that we can log in with a different account
   def login_as_other(email, password)
-    # determine which password to use
-    @driver.get 'https://accounts.google.com/Logout'
+    invalidate_google_session
     @driver.get @base_url + '/users/sign_in'
     google_auth = @driver.find_element(:id, 'google-auth')
     sleep(1)
@@ -268,18 +256,6 @@ class Test::Unit::TestCase
     sleep(0.5) # this lets the animation complete
     password_next = @driver.find_element(:id, 'passwordNext')
     password_next.click
-    # check to make sure if we need to accept terms
-    if @driver.current_url.include?('https://accounts.google.com/o/oauth2/auth')
-      $verbose ? puts('approving access') : nil
-      approve = @driver.find_element(:id, 'submit_approve_access')
-      @clickable = approve['disabled'].nil?
-      while @clickable != true
-        sleep(1)
-        @clickable = @driver.find_element(:id, 'submit_approve_access')['disabled'].nil?
-      end
-      approve.click
-      $verbose ? puts('access approved') : nil
-    end
     # wait for redirect to finish by checking for footer element
     @not_loaded = true
     while @not_loaded == true
@@ -291,6 +267,18 @@ class Test::Unit::TestCase
         end
         sleep(1)
       rescue Selenium::WebDriver::Error::UnknownError
+        # check to make sure if we need to accept terms to complete login
+        if @driver.current_url.include?('https://accounts.google.com/o/oauth2/auth')
+          $verbose ? puts('approving access') : nil
+          approve = @driver.find_element(:id, 'submit_approve_access')
+          @clickable = approve['disabled'].nil?
+          while @clickable != true
+            sleep(1)
+            @clickable = @driver.find_element(:id, 'submit_approve_access')['disabled'].nil?
+          end
+          approve.click
+          $verbose ? puts('access approved') : nil
+        end
         sleep(1)
       end
     end
@@ -298,6 +286,25 @@ class Test::Unit::TestCase
       close_modal('message_modal')
     end
     $verbose ? puts('login successful') : nil
+  end
+
+  # method to log out of portal (not Google)
+  def logout_from_portal
+    profile = @driver.find_element(:id, 'profile-nav')
+    profile.click
+    logout = @driver.find_element(:id, 'logout-nav')
+    logout.click
+    wait_until_page_loads(@base_url)
+    close_modal('message_modal')
+  end
+
+  # method to log out of Google and portal
+  def invalidate_google_session
+    # check if driver was instantiated to suppress spurious errors when aborting/cancelling tests
+    unless @driver.nil?
+      @driver.get 'https://accounts.google.com/Logout'
+      sleep(1)
+    end
   end
 
   # helper to open tabs in front end, allowing time for tab to become visible
