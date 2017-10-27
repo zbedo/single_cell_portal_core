@@ -37,6 +37,25 @@ To deploy the database container:
 Note: Once the container has been run once, you can stop & restart it using: <code>docker stop mongodb</code> or
 <code>docker restart mongodb</code>
 
+== DEPLOYING A PRIVATE INSTANCE
+
+If you are deploying a private instance of the Single Cell Portal (i.e. not any Broad Institute instance), there are a few extra steps that need to be taken before the
+portal is configured and ready to use:
+
+* <b>GCP Service Account keys</b>: Regardless of where the portal is deployed, it requires a Google Cloud Platform Service Account in order to make authenticated calls into FireCloud and Google Cloud Storage.  Therefore, you must create a Google Cloud Platform project and export the default service account key.  See https://developers.google.com/identity/protocols/OAuth2ServiceAccount for more information about service accounts, or https://console.developers.google.com/permissions/serviceaccounts to create and export keys (exported keys must be in JSON format).
+* <b>Registering your Service Account as a FireCloud user</b>: Once you have configured and booted your instance of the portal, you will need to register your service account as a FireCloud user in order to create a billing project and create studies.  To do so:
+  * Create an admin user account (see ADMIN USER ACCOUNTS below).
+  * Log in with the admin account, and select 'Admin Configurations' from the profile menu (top righthand corner).
+  * At the bottom of the page, in the 'Other Tasks' dropdown, select 'Manage Service Account FireCloud Registration' and click 'Execute Task'.
+  * Fill out all form fields and submit.
+* <b>Creating a FireCloud Project</b>: Before you can create studies, you will need to create a FireCloud project that will own all the workspaces created in the portal.  To do this:
+  * Create a {Google Billing Project}[https://software.broadinstitute.org/firecloud/documentation/article?id=9762].
+  * Using the same Google account that owns the billing project, log into the portal and select 'My Billing Projects' from the profile menu.
+  * Click 'New Billing Project' at the bottom of the page
+    * Select your newly-created billing account
+    * Provide a name for your project (no spaces allowed)
+    * Click 'Create Billing Project'
+
 == RUNNING THE CONTAINER
 
 Once the image has successfully built and the database container is running, use the following command to start the container:
@@ -158,8 +177,6 @@ in the portal root directory:
 Passwords are required as all portal accounts are actual Google accounts, so we pass in passwords at runtime to allow the
 script to authenticate as the specified user.  Passwords are only stored temporarily in-memory and are not persisted to disk
 at any point.
-
-
 
 Paths to the chromedriver binary and your profile download directory can also be configured with the <code>-c</code> and <code>-d</code> flags, respectively.
 
@@ -309,10 +326,15 @@ files and permissions.
 All portal users are required to authenticate before downloading data as we implement daily per-user quotas.  These are configurable
 through the admin control panel which can be accessed only by portal admin accounts (available through the profile menu or at /single_cell/admin).
 
-There are currently 2 configuration options:
+There are currently 5 configuration options:
 
 * Daily download quota limit (defaults to 2 terabytes, but is configurable to any amount, including 0)
-* Disabling all FireCloud access
+* Manage FireCloud access (can disable local access, compute access, or all access)
+* Unlock orphaned jobs (any background jobs that were running during a portal restart are locked until this option is used)
+* Refresh API clients (force the FireCloudClient class to renew all access tokens)
+* Manage service account FireCloud profile (register or update the FireCloud profile associated with the portal service account).
+
+==== FIRECLOUD ACCESS SETTINGS
 
 Disabling all FireCloud access is achieved by revoking all access to studies directly in FireCloud and using the portal permission map
 (study ownership & shares) as a backup cache.  This will prevent anyone from downloading data either through the portal or directly from the
@@ -320,7 +342,13 @@ workspaces themselves.  This will have the side effect of disallowing any edits 
 be used as a last resort to curtail runaway downloads.  While access is disabled, only the portal service account will have
 access to workspaces.
 
-Re-enabling FireCloud access will restore all permissions back to their previous state.
+Disabling compute access will set all user access permissions to READER, thus disabling computes.
+
+Disabling local access does not alter FireCloud permissions, but prevents users from accessing the 'My Studies' page and uploading data
+through the portal.  Downloads are still enabled, and normal front-end actions are unaffected.  The portal is configured to automatically enable
+this option if the FireCloud API ever becomes enabled (see AdminConfiguration.check_api_health for more info).
+
+Re-enabling FireCloud access will restore all permissions back to their original state.
 
 === MAINTENANCE MODE
 

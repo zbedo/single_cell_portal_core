@@ -40,6 +40,7 @@
             <div class="form-group row">
               <div class="col-md-6">
                 <%= select_tag :admin_action, options_for_select(@administrative_tasks), include_blank: 'Please select a task...', class: 'form-control' %>
+                <%= hidden_field_tag :action_method %>
                 <div id="task-descriptions">
                   <% @task_descriptions.each do |task_name, description| %>
                     <span id="<%= task_name.downcase.gsub(/ /, '-') %>" style="display: none;"><%= description %></span>
@@ -145,6 +146,9 @@
 
           $('#admin_action').change(function() {
              var selectedAction = $('#admin_action option:selected').text();
+             var httpMethods = <%= raw @task_http_methods.to_json %>;
+             $('#action_method').val(httpMethods[selectedAction]);
+
              var actionVal = $(this).val();
              $('#task-descriptions span').css('display', 'none');
              if (actionVal !== '') {
@@ -155,13 +159,14 @@
 
           $('#perform-admin-task').click(function() {
              var taskUrl = $('#admin_action').val();
+             var taskMethod = $('#action_method').val();
              if (taskUrl === '') {
                  alert('You must select an action before continuing.');
              } else {
                  launchModalSpinner('#working-modal-spinner','#working-modal', function() {
                      $.ajax({
                          url: taskUrl,
-                         method: 'POST',
+                         method: taskMethod,
                          dataType: 'script'
                      });
                  });

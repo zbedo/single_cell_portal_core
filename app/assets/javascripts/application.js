@@ -328,7 +328,6 @@ function launchModalSpinner(spinnerTarget, modalTarget, callback) {
     var spinner = new Spinner(opts).spin(target);
     $(target).data('spinner', spinner);
     $(modalTarget).modal('show');
-    console.log('finished')
 };
 
 // function to close modals with spinners launched from launchModalSpinner
