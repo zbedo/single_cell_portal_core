@@ -39,10 +39,10 @@ class ReportsController < ApplicationController
     @collab_dist = {all_studies_label => @all_studies.map {|s| s.study_shares.size}}
     @collab_dist_avg = @collab_dist[all_studies_label].reduce(0, :+) / @collab_dist[all_studies_label].size.to_f
     @cell_dist = @all_studies.map(&:cell_count)
-    max_cells = @cell_dist.max - @cell_dist.max % 1000
-    @cell_count_bin_dist = {public_label => {}, private_label => {}}
     # calculate bin size as 10 ** two orders of magnitude less than max cells
     bin_size = 10 ** (@cell_dist.max.to_s.size - 2)
+    max_cells = @cell_dist.max - @cell_dist.max % bin_size
+    @cell_count_bin_dist = {public_label => {}, private_label => {}}
     0.step(max_cells, bin_size).each do |bin|
       bin_label = "#{bin}-#{bin + bin_size}"
       @cell_count_bin_dist[public_label][bin_label] = @public_studies.select {|s| s.cell_count >= bin && s.cell_count < (bin + bin_size)}.size
