@@ -251,7 +251,7 @@ the following command after attaching to the running instance (with <code>docker
 
 For instance, to run the FireCloudClient unit test suite:
 
-	ruby -I test test/models/fire_cloud_client_test.rb
+  ruby -I test test/models/fire_cloud_client_test.rb
 
 == GOOGLE DEPLOYMENT
 
