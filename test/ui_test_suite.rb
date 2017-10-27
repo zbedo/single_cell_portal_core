@@ -3013,6 +3013,7 @@ class UiTestSuite < Test::Unit::TestCase
 		assert new_cell_count == new_cells, "cell count did not update, expected #{new_cells} but found #{new_cell_count}"
 
 		# now test if auth challenge is working properly using test study
+		open_new_page(@base_url)
 		logout_from_portal
 
 		# check authentication challenge
@@ -3610,8 +3611,8 @@ class UiTestSuite < Test::Unit::TestCase
 		# update the annotation
 		submit = @driver.find_element(:id, 'submit-button')
 		submit.click
-
 		wait_until_page_loads(annot_path)
+		close_modal('message_modal')
 
 		# logout
 		logout_from_portal
