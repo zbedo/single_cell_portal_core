@@ -51,8 +51,8 @@ portal is configured and ready to use:
   * Click the navigation menu in the top left and select 'APIs & Services' > 'Credentials'
   * Click 'Create Credentials' > 'OAuth Client ID'
   * Select 'Web Application', and provide a name
-  * For 'Authorized Javascript Origins', enter 'https ://(your hostname)/single_cell'
-  * For 'Authorized redirect URIs', enter 'https ://(your hostname)/single_cell/users/auth/google_oauth2/callback'
+  * For 'Authorized Javascript Origins', enter "https://(your hostname)/single_cell"
+  * For 'Authorized redirect URIs', enter "https://(your hostname)/single_cell/users/auth/google_oauth2/callback"
   * Save the client id
 * <b>GCP Service Account keys</b>: Regardless of where the portal is deployed, it requires a Google Cloud Platform Service Account in order to make authenticated calls into FireCloud and Google Cloud Storage.  Therefore, you must export the default service account key.  See https://developers.google.com/identity/protocols/OAuth2ServiceAccount for more information about service accounts.  To export the credentials:
   * Log into your new GCP project
