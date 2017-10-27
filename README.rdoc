@@ -42,12 +42,34 @@ Note: Once the container has been run once, you can stop & restart it using: <co
 If you are deploying a private instance of the Single Cell Portal (i.e. not any Broad Institute instance), there are a few extra steps that need to be taken before the
 portal is configured and ready to use:
 
-* <b>GCP Service Account keys</b>: Regardless of where the portal is deployed, it requires a Google Cloud Platform Service Account in order to make authenticated calls into FireCloud and Google Cloud Storage.  Therefore, you must create a Google Cloud Platform project and export the default service account key.  See https://developers.google.com/identity/protocols/OAuth2ServiceAccount for more information about service accounts, or https://console.developers.google.com/permissions/serviceaccounts to create and export keys (exported keys must be in JSON format).
+* <b>Create a GCP project</b>: Even if you are deploying locally or in a private cluster, the portal requires a Google Cloud Plaform project in order to handle OAuth callbacks and service account credentials.  To create your project:
+  * Visit https://console.developers.google.com
+  * Click 'Select a project' in the top lefthand corner and click the + button
+  * Name your new project and save
+* <b>OAuth Credentials</b>: Once your project is created, you will need to create an OAuth Client ID in order to allow users to log in with their Google accounts.  To do so:
+  * Log into your new GCP project
+  * Click the navigation menu in the top left and select 'APIs & Services' > 'Credentials'
+  * Click 'Create Credentials' > 'OAuth Client ID'
+  * Select 'Web Application', and provide a name
+  * For 'Authorized Javascript Origins', enter 'https://(your hostname)/single_cell'
+  * For 'Authorized redirect URIs', enter 'https://(your hostname)/single_cell/users/auth/google_oauth2/callback'
+  * Save the client id
+* <b>GCP Service Account keys</b>: Regardless of where the portal is deployed, it requires a Google Cloud Platform Service Account in order to make authenticated calls into FireCloud and Google Cloud Storage.  Therefore, you must export the default service account key.  See https://developers.google.com/identity/protocols/OAuth2ServiceAccount for more information about service accounts.  To export the credentials:
+  * Log into your new GCP project
+  * Click the navigation menu in the top left and select 'IAM & Admin	' > 'Service Accounts'
+  * On entry 'Compute Engine default service account', click the 'Options' menu (far right) and select 'Create key'
+  * Select 'JSON' and export and save the key locally
+* <b>Enable GCP APIs</b>: The following Google Cloud Platform APIs must be enabled:
+  * Google Compute Engine API
+  * Google Cloud APIs
+  * Google Cloud Billing API
+  * Google Cloud Storage JSON API
+  * Google+ API
 * <b>Registering your Service Account as a FireCloud user</b>: Once you have configured and booted your instance of the portal, you will need to register your service account as a FireCloud user in order to create a billing project and create studies.  To do so:
-  * Create an admin user account (see ADMIN USER ACCOUNTS below).
-  * Log in with the admin account, and select 'Admin Configurations' from the profile menu (top righthand corner).
-  * At the bottom of the page, in the 'Other Tasks' dropdown, select 'Manage Service Account FireCloud Registration' and click 'Execute Task'.
-  * Fill out all form fields and submit.
+  * Create an admin user account (see ADMIN USER ACCOUNTS below)
+  * Log in with the admin account, and select 'Admin Configurations' from the profile menu (top righthand corner)
+  * At the bottom of the page, in the 'Other Tasks' dropdown, select 'Manage Service Account FireCloud Registration' and click 'Execute Task'
+  * Fill out all form fields and submit
 * <b>Creating a FireCloud Project</b>: Before you can create studies, you will need to create a FireCloud project that will own all the workspaces created in the portal.  To do this:
   * Create a {Google Billing Project}[https://software.broadinstitute.org/firecloud/documentation/article?id=9762].
   * Using the same Google account that owns the billing project, log into the portal and select 'My Billing Projects' from the profile menu.
