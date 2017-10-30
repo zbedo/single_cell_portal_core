@@ -619,11 +619,11 @@ class Study
     puts "regenerating #{expression_study_file.upload_file_name} expression matrix"
 
     # load cell arrays to create headers
-    expression_cell_arrays = study.data_arrays.where(cluster_name: expression_study_file.upload_file_name).to_a
+    expression_cell_arrays = self.data_arrays.where(cluster_name: expression_study_file.upload_file_name).to_a
     all_cells = expression_cell_arrays.map(&:values).flatten
 
     # create new file and write headers
-    new_expression_file = File.new(File.join(study.data_store_path, expression_study_file.upload_file_name), 'w')
+    new_expression_file = File.new(File.join(self.data_store_path, expression_study_file.upload_file_name), 'w')
     headers = ['GENE', all_cells].flatten.join("\t")
     new_expression_file.write headers + "\n"
 
