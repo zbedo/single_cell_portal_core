@@ -669,18 +669,18 @@ class Study
         # if file has no generation tag, then we know the upload failed
         if file.generation.blank?
           puts "#{file_location} was never uploaded to #{study.bucket_id} (no generation tag)"
-          @missing_files << {filename: file_location, study: study.name, reason: 'Upload never completed (no generation tag)'}
+          @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: 'Upload never completed (no generation tag)'}
         else
           begin
             # check remote file for existence
             remote_file = Study.firecloud_client.get_workspace_file(study.firecloud_workspace, file_location)
             if remote_file.nil?
               puts "#{file_location} not found in #{study.bucket_id}"
-              @missing_files << {filename: file_location, study: study.name, reason: "File missing from bucket: #{study.bucket_id}"}
+              @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "File missing from bucket: #{study.bucket_id}"}
             end
           rescue => e
             puts "#{Time.now}: error in performing sanity check on #{study.name}: #{e.message}"
-            @missing_files << {filename: file_location, study: study.name, reason: "Error retrieving remote file: #{e.message}"}
+            @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "Error retrieving remote file: #{e.message}"}
           end
         end
       end
@@ -696,18 +696,22 @@ class Study
             remote_file = Study.firecloud_client.get_workspace_file(study.firecloud_workspace, file_location)
             if remote_file.nil?
               puts "#{file_location} not found in #{study.bucket_id}"
-              @missing_files << {filename: file_location, study: study.name, reason: "File missing from bucket: #{study.bucket_id}"}
+              @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "File missing from bucket: #{study.bucket_id}"}
             end
           rescue => e
             puts "#{Time.now}: error in performing sanity check on #{study.name}: #{e.message}"
-            @missing_files << {filename: file_location, study: study.name, reason: "Error retrieving remote file: #{e.message}"}
+            @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "Error retrieving remote file: #{e.message}"}
           end
         end
       end
     end
     puts "Sanity check complete!"
     puts "Missing files found: #{@missing_files.size}"
-    @missing_files
+    if @missing_files.any?
+      SingleCellMailer.sanity_check(@missing_files).deliver_now
+    else
+      SingleCellMailer.admin_notification('Sanity check results: All files accounted for', nil, '<p>No missing files found!</p>').deliver_now
+    end
   end
 
   ###

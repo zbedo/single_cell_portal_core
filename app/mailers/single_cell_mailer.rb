@@ -154,4 +154,14 @@ class SingleCellMailer < ApplicationMailer
       end
     end
   end
+
+  # nightly sanity check email looking for missing files
+  def sanity_check(missing_files)
+    @missing_files = missing_files
+    @admins = User.where(admin: true).map(&:email)
+
+    mail(to: @admins, subject: "[Single Cell Portal Admin Notification]: Sanity check results: #{@missing_files.size} files missing") do |format|
+      format.html
+    end
+  end
 end

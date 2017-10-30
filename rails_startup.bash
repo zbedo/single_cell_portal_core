@@ -63,6 +63,10 @@ echo "*** ADDING DAILY ADMIN DISK MONITOR EMAIL ***"
 (crontab -u app -l ; echo "0 3 * * * . /home/app/.cron_env ; cd /home/app/webapp/; /home/app/webapp/bin/rails runner -e $PASSENGER_APP_ENV \"SingleCellMailer.daily_disk_status.deliver_now\" >> /home/app/webapp/log/cron_out.log 2>&1") | crontab -u app -
 echo "*** COMPLETED ***"
 
+echo "*** ADDING DAILY STORAGE SANTIY CHECK ***"
+(crontab -u app -l ; echo "30 3 * * * . /home/app/.cron_env ; cd /home/app/webapp/; /home/app/webapp/bin/rails runner -e $PASSENGER_APP_ENV \"Study.delay.storage_sanity_check\" >> /home/app/webapp/log/cron_out.log 2>&1") | crontab -u app -
+echo "*** COMPLETED ***"
+
 echo "*** ADDING DAILY RESET OF USER DOWNLOAD QUOTAS ***"
 (crontab -u app -l ; echo "@daily . /home/app/.cron_env ; cd /home/app/webapp/; /home/app/webapp/bin/rails runner -e $PASSENGER_APP_ENV \"User.update_all(daily_download_quota: 0)\" >> /home/app/webapp/log/cron_out.log 2>&1") | crontab -u app -
 echo "*** COMPLETED ***"
