@@ -635,6 +635,7 @@ class Study
     @new_expression_file.write headers + "\n"
 
     # load expression scores for requested file and write
+    puts "loading expression data from #{self.name}"
     expression_scores = self.expression_scores.where(study_file_id: expression_study_file.id).to_a
     expression_scores.each do |expression|
       puts "writing #{expression.gene} scores"
