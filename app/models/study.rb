@@ -246,7 +246,7 @@ class Study
     if user.admin?
       self.where(queued_for_deletion: false)
     else
-      owned = self.where(user_id: user._id, public: false, queued_for_deletion: false).map(&:_id)
+      owned = self.where(user_id: user._id, queued_for_deletion: false).map(&:_id)
       shares = StudyShare.where(email: user.email).map(&:study).select {|s| !s.queued_for_deletion }.map(&:_id)
       intersection = owned + shares
       Study.in(:_id => intersection)
