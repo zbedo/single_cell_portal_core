@@ -810,6 +810,7 @@ class Study
       else
         # we have the file in FireCloud already, so just delete it
         begin
+          Rails.logger.info "#{Time.now}: deleting local file #{expression_file.upload_file_name} after successful parse; file already exists in #{self.bucket_id}"
           File.delete(@file_location)
         rescue => e
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
