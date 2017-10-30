@@ -598,9 +598,6 @@ class SiteController < ApplicationController
       return
     end
 
-    @log_message = []
-    start_time = Time.now
-
     curl_configs = ['--create-dirs']
 
     curl_files = []
@@ -626,6 +623,8 @@ class SiteController < ApplicationController
       end
     end
 
+    start_time = Time.now
+
     # Get signed URLs for all files in the requested download objects, and update user quota
     curl_files.each do |file|
       curl_config, file_size = get_curl_config(file)
@@ -635,9 +634,9 @@ class SiteController < ApplicationController
 
     end_time = Time.now
     time = (end_time - start_time).divmod 60.0
-    @log_message << "#{Time.now}: #{@study.url_safe_name} curl configs generated!"
+    @log_message = ["#{Time.now}: #{@study.url_safe_name} curl configs generated!"]
     @log_message << "Signed URLs generated: #{curl_configs.size}"
-    @log_message << "Total time: #{time.first} minutes, #{time.last} seconds"
+    @log_message << "Total time in get_curl_config: #{time.first} minutes, #{time.last} seconds"
     Rails.logger.info @log_message.join("\n")
 
     curl_configs = curl_configs.join("\n\n")
