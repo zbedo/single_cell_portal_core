@@ -598,6 +598,9 @@ class SiteController < ApplicationController
       return
     end
 
+    @log_message = []
+    start_time = Time.now
+
     curl_configs = ['--create-dirs']
 
     # Get signed URLs for all study files and update user quota, if we're downloading whole study ('all')
@@ -605,6 +608,7 @@ class SiteController < ApplicationController
       files = @study.study_files.valid
       files.each do |study_file|
         unless study_file.human_data?
+
           curl_config, file_size = get_curl_config(study_file)
           curl_configs.push(curl_config)
           user_quota += file_size
@@ -625,6 +629,12 @@ class SiteController < ApplicationController
       end
     end
 
+    end_time = Time.now
+    time = (end_time - start_time).divmod 60.0
+    @log_message << "#{Time.now}: #{@study.url_safe_name} curl configs generated!"
+    @log_message << "Signed URLs generated: #{curl_configs.size}"
+    @log_message << "Total time: #{time.first} minutes, #{time.last} seconds"
+    Rails.logger.info @log_message.join("\n")
 
     curl_configs = curl_configs.join("\n\n")
 
