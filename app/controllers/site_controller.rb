@@ -603,30 +603,34 @@ class SiteController < ApplicationController
 
     curl_configs = ['--create-dirs']
 
-    # Get signed URLs for all study files and update user quota, if we're downloading whole study ('all')
+    curl_files = []
+
+    # Gather all study files, if we're downloading whole study ('all')
     if download_object == 'all'
       files = @study.study_files.valid
       files.each do |study_file|
         unless study_file.human_data?
-
-          curl_config, file_size = get_curl_config(study_file)
-          curl_configs.push(curl_config)
-          user_quota += file_size
+          curl_files.push(study_file)
         end
       end
     end
 
-    # Get signed URLs for all directory listings and update user quota
+    # Gather all files in requested directory listings
     synced_dirs = @study.directory_listings.are_synced
     synced_dirs.each do |synced_dir|
       if download_object != 'all' and synced_dir[:name] != download_object
         next
       end
       synced_dir.files.each do |file|
-        curl_config, file_size = get_curl_config(file)
-        curl_configs.push(curl_config)
-        user_quota += file_size
+        curl_files.push(file)
       end
+    end
+
+    # Get signed URLs for all files in the requested download objects, and update user quota
+    curl_files.each do |file|
+      curl_config, file_size = get_curl_config(file)
+      curl_configs.push(curl_config)
+      user_quota += file_size
     end
 
     end_time = Time.now
