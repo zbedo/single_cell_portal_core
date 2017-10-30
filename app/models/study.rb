@@ -617,6 +617,38 @@ class Study
     output_file.close
   end
 
+  # regenerate an expression matrix from database records
+  def regenerate_expression_matrix(expression_study_file)
+    puts "regenerating #{expression_study_file.upload_file_name} expression matrix"
+
+    # load cell arrays to create headers
+    expression_cell_arrays = study.data_arrays.where(cluster_name: expression_study_file.upload_file_name).to_a
+    all_cells = expression_cell_arrays.map(&:values).flatten
+
+    # create new file and write headers
+    new_expression_file = File.new(File.join(study.data_store_path, expression_study_file.upload_file_name), 'w')
+    headers = ['GENE', all_cells].flatten.join("\t")
+    new_expression_file.write headers + "\n"
+
+    # load expression scores for requested file and write
+    expression_scores = self.expression_scores.where(study_file_id: expression_study_file.id).to_a
+    expression_scores.each do |expression|
+      puts "writing #{expression.gene} scores"
+      new_expression_file.write "#{expression.gene}\t"
+      vals = []
+      all_cells.each do |cell|
+        vals << expression.scores[cell].to_f
+      end
+      new_expression_file.write vals.join("\t") + "\n"
+    end
+    puts "all scores complete"
+
+    # return filepath
+    filepath = new_expression_file.to_path
+    new_expression_file.close
+    filepath
+  end
+
   ###
   #
   # PARSERS
