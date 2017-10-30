@@ -623,26 +623,30 @@ class Study
     all_cells = expression_cell_arrays.map(&:values).flatten
 
     # create new file and write headers
-    new_expression_file = File.new(File.join(self.data_store_path, expression_study_file.upload_file_name), 'w')
+    if expression_study_file.upload_content_type == 'application/gzip'
+      @new_expression_file = Zlib::GzipWriter.open(File.join(self.data_store_path, expression_study_file.upload_file_name))
+    else
+      @new_expression_file = File.new(File.join(self.data_store_path, expression_study_file.upload_file_name), 'w')
+    end
     headers = ['GENE', all_cells].flatten.join("\t")
-    new_expression_file.write headers + "\n"
+    @new_expression_file.write headers + "\n"
 
     # load expression scores for requested file and write
     expression_scores = self.expression_scores.where(study_file_id: expression_study_file.id).to_a
     expression_scores.each do |expression|
       puts "writing #{expression.gene} scores"
-      new_expression_file.write "#{expression.gene}\t"
+      @new_expression_file.write "#{expression.gene}\t"
       vals = []
       all_cells.each do |cell|
         vals << expression.scores[cell].to_f
       end
-      new_expression_file.write vals.join("\t") + "\n"
+      @new_expression_file.write vals.join("\t") + "\n"
     end
     puts "all scores complete"
 
     # return filepath
-    filepath = new_expression_file.to_path
-    new_expression_file.close
+    filepath = @new_expression_file.path
+    @new_expression_file.close
     filepath
   end
 
@@ -849,7 +853,7 @@ class Study
       end
     rescue => e
       # error has occurred, so clean up records and remove file
-      ExpressionScore.where(study_id: self.id).delete_all
+      ExpressionScore.where(study_id: self.id, study_file_id: expression_file.id).delete_all
       DataArray.where(study_id: self.id, study_file_id: expression_file.id).delete_all
       filename = expression_file.name
       expression_file.destroy
