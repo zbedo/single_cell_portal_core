@@ -149,8 +149,10 @@ class SingleCellMailer < ApplicationMailer
       @message = message
       @admins = User.where(admin: true).map(&:email)
 
-      mail(to: @admins, reply_to: @requester, subject: "[Single Cell Portal Admin Notification]: #{@subject}") do |format|
-        format.html
+      unless @admins.empty?
+        mail(to: @admins, reply_to: @requester, subject: "[Single Cell Portal Admin Notification]: #{@subject}") do |format|
+          format.html
+        end
       end
     end
   end
