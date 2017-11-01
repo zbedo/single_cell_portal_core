@@ -1,30 +1,28 @@
-// replace form with fresh instance if needed
-if (<%= !@message.blank? %>) {
-	$("<%= params[:target] %>").replaceWith("<%= escape_javascript( render partial: @partial, locals: {study_file: @study_file}) %>");
-  var wizForm = $('.<%= @partial %>').slice(-1)[0];
+closeModalSpinner('#delete-modal-spinner', '#delete-modal', function() {
+    // replace form with fresh instance if needed
+    if (<%= !@message.blank? %>) {
+        $("<%= params[:target] %>").replaceWith("<%= escape_javascript( render partial: @partial, locals: {study_file: @study_file}) %>");
+        var wizForm = $('.<%= @partial %>').slice(-1)[0];
 
-  $(wizForm).find('[data-toggle="tooltip"]').tooltip({container: 'body'});
+        $(wizForm).find('[data-toggle="tooltip"]').tooltip({container: 'body'});
 
-} else {
-	$("<%= params[:target] %>").remove();
-}
-// if status needs to be decremented, reset necessary fields
-if (<%= @reset_status %>) {
-	resetWizardStep('<%= @partial %>_nav');
-	var statusLabel = '<%= @partial %>_completed';
-	$('#' + statusLabel).replaceWith("<small class='initialize-label' id='" + statusLabel + "'><span class='label label-<%= @color %>'><%= @status %></span></small>");
-}
+    } else {
+        $("<%= params[:target] %>").remove();
+    }
+    // if status needs to be decremented, reset necessary fields
+    if (<%= @reset_status %>) {
+        resetWizardStep('<%= @partial %>_nav');
+        var statusLabel = '<%= @partial %>_completed';
+        $('#' + statusLabel).replaceWith("<small class='initialize-label' id='" + statusLabel + "'><span class='label label-<%= @color %>'><%= @status %></span></small>");
+    }
 
-// check study initialization status and re-attach tooltip
-$("#initialized").replaceWith("<%= escape_javascript(render partial: 'initialize_study_label') %>");
-$('.initialize-label').tooltip({container: 'body'});
+    // check study initialization status and re-attach tooltip
+    $("#initialized").replaceWith("<%= escape_javascript(render partial: 'initialize_study_label') %>");
+    $('.initialize-label').tooltip({container: 'body'});
 
-// close modal
-$('#delete-modal').find('.spinner-target').data('spinner').stop();
-$('#delete-modal').modal('hide');
 
-// show message
-if (<%= !@message.blank? %>) {
-	$("#study-files-notice-target").html("<%= escape_javascript( render partial: 'studies/study_file_notices', locals: {message: @message}) %>");
-};
-
+    // show message
+    if (<%= !@message.blank? %>) {
+        $("#study-files-notice-target").html("<%= escape_javascript( render partial: 'studies/study_file_notices', locals: {message: @message}) %>");
+    };
+});
