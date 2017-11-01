@@ -403,10 +403,10 @@ $(window).resize(function() {
 });
 
 // generic function to render Morpheus
-function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, target, annotations, fitType, heatmapHeight) {
+function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, target, annotations, fitType, heatmapHeight, colorScaleMode) {
     console.log('render status of ' + target + ' at start: ' + $(target).data('rendered'));
     $(target).empty();
-    var config = {dataset: dataPath, el: $(target), menu: null};
+    var config = {dataset: dataPath, el: $(target), menu: null, colorScheme: {scalingMode: colorScaleMode}};
 
     // set height if specified, otherwise use default setting of 500 px
     if (heatmapHeight !== undefined) {
@@ -563,6 +563,36 @@ function loadBarChartAnnotations(plotlyData) {
         };
         annotationsArray.push(annot);
     }
+    return annotationsArray;
+}
+
+// load column totals for scatter charts
+function loadScatterAnnotations(plotlyData) {
+    var annotationsArray = [];
+    var max = 0;
+    $(plotlyData).each(function(index, trace) {
+        $(trace['y']).each(function(i, el) {
+            if (el > max) {max = el};
+            var annot = {
+                xref: 'x',
+                yref: 'y',
+                x: plotlyData[index]['x'][i],
+                y: el,
+                text: el,
+                showarrow: false,
+                font: {
+                    size: 12
+                }
+            };
+            annotationsArray.push(annot);
+        });
+    });
+    // calculate offset at 5% of maximum value
+    offset = max * 0.05;
+    $(annotationsArray).each(function(index, annotation) {
+        // push up each annotation by offset value
+        annotation['y'] += offset;
+    });
     return annotationsArray;
 }
 

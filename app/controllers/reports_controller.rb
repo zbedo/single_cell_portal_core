@@ -39,15 +39,46 @@ class ReportsController < ApplicationController
     @collab_dist = {all_studies_label => @all_studies.map {|s| s.study_shares.size}}
     @collab_dist_avg = @collab_dist[all_studies_label].reduce(0, :+) / @collab_dist[all_studies_label].size.to_f
     @cell_dist = @all_studies.map(&:cell_count)
-    max_cells = @cell_dist.max - @cell_dist.max % 1000
-    @cell_count_bin_dist = {'Public' => {}, 'Private' => {}}
-    # bin studies by cell counts into groups of 1000
-    0.step(max_cells, 1000).each do |bin|
-      bin_label = "#{bin}-#{bin + 1000}"
-      @cell_count_bin_dist['Public'][bin_label] = @public_studies.select {|s| s.cell_count >= bin && s.cell_count < (bin + 1000)}.size
-      @cell_count_bin_dist['Private'][bin_label] = @private_studies.select {|s| s.cell_count >= bin && s.cell_count < (bin + 1000)}.size
+    # calculate bin size as 10 ** two orders of magnitude less than max cells
+    bin_size = 10 ** (@cell_dist.max.to_s.size - 2)
+    max_cells = @cell_dist.max - @cell_dist.max % bin_size
+    @cell_count_bin_dist = {public_label => {}, private_label => {}}
+    0.step(max_cells, bin_size).each do |bin|
+      bin_label = "#{bin}-#{bin + bin_size}"
+      @cell_count_bin_dist[public_label][bin_label] = @public_studies.select {|s| s.cell_count >= bin && s.cell_count < (bin + bin_size)}.size
+      @cell_count_bin_dist[private_label][bin_label] = @private_studies.select {|s| s.cell_count >= bin && s.cell_count < (bin + bin_size)}.size
     end
     @cell_avg = @cell_dist.reduce(0, :+) / @cell_dist.size.to_f
+
+    # cells over time
+    @cells_over_time = { 'All Studies' => {}, public_label => {}, private_label => {}}
+    @all_studies.each do |study|
+      # get date as YYYY-MM
+      date = study.created_at.strftime("%Y-%m")
+      cell_count = study.cell_count
+      # initialize entry for that date in cumulative count
+      @cells_over_time['All Studies'][date] ||= 0
+      @cells_over_time['All Studies'][date] += cell_count
+      # determine which bucket to add cell count into (Public/Private)
+      label = study.public? ? public_label : private_label
+      @cells_over_time[label][date] ||= 0
+      @cells_over_time[label][date] += cell_count
+      # create an empty entry at the same timepoint in the opposite bucket so we have the same number of timepoints in both
+      opposite_label = label == public_label ? private_label : public_label
+      @cells_over_time[opposite_label][date] ||= 0
+    end
+    # calculate cumulative rollups
+    @cells_over_time.each do |visibility, totals|
+      sum = 0
+      totals.sort_by {|date, count| date}.each_with_index do |entry, index|
+        if index == 0
+          sum = entry.last
+        else
+          sum += entry.last
+          @cells_over_time[visibility][entry.first] = sum
+        end
+      end
+    end
 
     # user distributions
     @user_study_dist = {all_studies_label => users.map {|u| u.studies.size}}

@@ -1440,7 +1440,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# check for reports
 		report_plots = @driver.find_elements(:class, 'plotly-report')
-		assert report_plots.size == 8, "did not find correct number of plots, expected 8 but found #{report_plots.size}"
+		assert report_plots.size == 9, "did not find correct number of plots, expected 9 but found #{report_plots.size}"
 		report_plots.each do |plot|
 			rendered = @driver.execute_script("return $('##{plot['id']}').data('rendered')")
 			assert rendered, "#{plot['id']} rendered status was not true"
@@ -1601,10 +1601,12 @@ class UiTestSuite < Test::Unit::TestCase
 
 		files = @driver.find_elements(:class, 'dl-link')
 		file_link = files.last
-		filename = file_link['download']
+		filename = file_link['data-filename']
 		basename = filename.split('.').first
 		@wait.until { file_link.displayed? }
-		file_link.click
+		# perform 'Save as' action
+		save_link_as(file_link)
+
 		# give browser 5 seconds to initiate download
 		sleep(5)
 		# make sure file was actually downloaded
@@ -1625,7 +1627,7 @@ class UiTestSuite < Test::Unit::TestCase
 		private_filename = private_file_link['download']
 		private_basename = private_filename.split('.').first
 		@wait.until { private_file_link.displayed? }
-		private_file_link.click
+		save_link_as(private_file_link)
 		# give browser 5 seconds to initiate download
 		sleep(5)
 		# make sure file was actually downloaded
@@ -1652,7 +1654,7 @@ class UiTestSuite < Test::Unit::TestCase
 		share_filename = share_file_link['data-filename']
 		share_basename = share_filename.split('.').first
 		@wait.until { share_file_link.displayed? }
-		share_file_link.click
+		save_link_as(share_file_link)
 		# give browser 5 seconds to initiate download
 		sleep(5)
 		# make sure file was actually downloaded
@@ -3013,6 +3015,7 @@ class UiTestSuite < Test::Unit::TestCase
 		assert new_cell_count == new_cells, "cell count did not update, expected #{new_cells} but found #{new_cell_count}"
 
 		# now test if auth challenge is working properly using test study
+		open_new_page(@base_url)
 		logout_from_portal
 
 		# check authentication challenge
@@ -3610,8 +3613,8 @@ class UiTestSuite < Test::Unit::TestCase
 		# update the annotation
 		submit = @driver.find_element(:id, 'submit-button')
 		submit.click
-
 		wait_until_page_loads(annot_path)
+		close_modal('message_modal')
 
 		# logout
 		logout_from_portal

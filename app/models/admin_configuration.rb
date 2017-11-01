@@ -186,8 +186,17 @@ class AdminConfiguration
   # method to be called from cron to check the health status of the FireCloud API and set access if an outage is detected
   def self.check_api_health
     notifier_config = self.find_or_create_by(config_type: AdminConfiguration::API_NOTIFIER_NAME, value_type: 'Boolean')
-    firecloud_access = AdminConfiguration.find_or_create_by(config_type: AdminConfiguration::FIRECLOUD_ACCESS_NAME)
+    firecloud_access = AdminConfiguration.find_or_create_by(config_type: AdminConfiguration::FIRECLOUD_ACCESS_NAME, value_type: 'String')
     api_available = Study.firecloud_client.api_available?
+
+    # gotcha for very first time this is ever called
+    if firecloud_access.value.nil?
+      firecloud_access.update(value: 'on')
+    end
+
+    if notifier_config.value.nil?
+      notifier_config.update(value: 1)
+    end
 
     # if api is down...
     if !api_available

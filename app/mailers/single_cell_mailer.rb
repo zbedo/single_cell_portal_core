@@ -149,9 +149,21 @@ class SingleCellMailer < ApplicationMailer
       @message = message
       @admins = User.where(admin: true).map(&:email)
 
-      mail(to: @admins, reply_to: @requester, subject: "[Single Cell Portal Admin Notification]: #{@subject}") do |format|
-        format.html
+      unless @admins.empty?
+        mail(to: @admins, reply_to: @requester, subject: "[Single Cell Portal Admin Notification]: #{@subject}") do |format|
+          format.html
+        end
       end
+    end
+  end
+
+  # nightly sanity check email looking for missing files
+  def sanity_check(missing_files)
+    @missing_files = missing_files
+    @admins = User.where(admin: true).map(&:email)
+
+    mail(to: @admins, subject: "[Single Cell Portal Admin Notification]: Sanity check results: #{@missing_files.size} files missing") do |format|
+      format.html
     end
   end
 end
