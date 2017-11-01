@@ -54,14 +54,14 @@ class Study
   has_many :study_files, dependent: :delete do
     def by_type(file_type)
       if file_type.is_a?(Array)
-        where(queued_for_deletion: false, :generation.ne => nil, :file_type.in => file_type).to_a
+        where(queued_for_deletion: false, :file_type.in => file_type).to_a
       else
-        where(queued_for_deletion: false, :generation.ne => nil, file_type: file_type).to_a
+        where(queued_for_deletion: false, file_type: file_type).to_a
       end
     end
 
     def non_primary_data
-      where(queued_for_deletion: false, :generation.ne => nil).not_in(file_type: 'Fastq').to_a
+      where(queued_for_deletion: false).not_in(file_type: 'Fastq').to_a
     end
 
     def valid
