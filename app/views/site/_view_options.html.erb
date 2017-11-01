@@ -27,8 +27,8 @@
         <% end %>
 				<% if action_name =~ /heatmap/ %>
 					<div class="col-sm-4">
-						<%= label_tag :row_centered, 'Row centering' %> <span class="fa fa-question-circle" data-toggle="tooltip" title="For every value in each row, subtract the mean of the entire row from the value"></span><br />
-						<%= check_box_tag :row_centered, nil, params[:row_centered] == "1" %>
+						<%= label_tag :row_centered, 'Row centering' %> <span class="fa fa-question-circle" data-toggle="tooltip" title="Row-center expression data using the selected metric.  Selecting a value other than none will enforce global color values."></span><br />
+						<%= select_tag :row_centered, options_for_select([['Z-score [(v - mean) / stdev]','z-score'],['Robust z-score [(v - median) / MAD]', 'robust-z-score']], params[:transform]), {include_blank: 'None', class: 'form-control'} %>
 					</div>
 				<% end %>
 			</div>

@@ -321,10 +321,8 @@ class SiteController < ApplicationController
     # first check if there is a user-supplied gene list to view as consensus
     # call load expression scores since we know genes exist already from view_gene_set_expression
 
-    terms = params[:gene_set].blank? ? parse_search_terms(:genes)
-      : @study.precomputed_scores.by_name(params[:gene_set])
-      .gene_list
-         @genes = load_expression_scores(terms)
+    terms = params[:gene_set].blank? ? parse_search_terms(:genes) : @study.precomputed_scores.by_name(params[:gene_set]).gene_list
+    @genes = load_expression_scores(terms)
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
     consensus = params[:consensus].nil? ? 'Mean ' : params[:consensus].capitalize + ' '
     @gene_list = @genes.map{|gene| gene['gene']}.join(' ')
@@ -414,15 +412,18 @@ class SiteController < ApplicationController
       @rows = []
       @genes.each do |gene|
         row = [gene['gene'], ""]
-        # calculate mean to perform row centering if requested
-        mean = 0.0
-        if params[:row_centered] == '1'
-          mean = ExpressionScore.mean(gene['scores'],@cells)
+        case params[:row_centered]
+          when 'z-score'
+            vals = ExpressionScore.z_score(gene['scores'], @cells)
+            row += vals
+          when 'robust-z-score'
+            vals = ExpressionScore.robust_z_score(gene['scores'], @cells)
+            row += vals
+          else
+            @cells.each do |cell|
+              row << gene['scores'][cell].to_f
+            end
         end
-        @cells.each do |cell|
-          row << gene['scores'][cell].to_f - mean
-        end
-
         @rows << row.join("\t")
       end
       @data = ['#1.2', [@rows.size, @cols].join("\t"), @headers.join("\t"), @rows.join("\n")].join("\n")
@@ -1581,6 +1582,7 @@ class SiteController < ApplicationController
       expression[:all][:marker][:line] = { color: 'rgb(40,40,40)', width: 0.5}
       expression[:all][:marker][:size] << 6
     end
+    logger.info expression[:all][:marker][:color]
     color_minmax =  expression[:all][:marker][:color].minmax
     expression[:all][:marker][:cmin], expression[:all][:marker][:cmax] = color_minmax
     expression[:all][:marker][:colorscale] = 'Reds'
@@ -1598,22 +1600,14 @@ class SiteController < ApplicationController
 
   # find mean of expression scores for a given cell & list of genes
   def calculate_mean(genes, cell)
-    sum = 0.0
-    genes.each do |gene|
-      sum += gene['scores'][cell].to_f
-    end
-    sum / genes.size
+    values = genes.map {|gene| gene['scores'][cell].to_f}
+    values.mean
   end
 
   # find median expression score for a given cell & list of genes
   def calculate_median(genes, cell)
-    gene_scores = []
-    genes.each do |gene|
-      gene_scores << gene['scores'][cell].to_f
-    end
-    sorted = gene_scores.sort
-    len = sorted.length
-    (sorted[(len - 1) / 2] + sorted[len / 2]) / 2.0
+    values = genes.map {|gene| gene['scores'][cell].to_f}
+    ExpressionScore.array_median(values)
   end
 
   # set the range for a plotly scatter, will default to data-defined if cluster hasn't defined its own ranges
@@ -1861,6 +1855,9 @@ class SiteController < ApplicationController
         end
         unless params[:band_type].nil?
           params_key += "_#{params[:band_type]}"
+        end
+        unless params[:consensus].nil?
+          params_key += "_#{params[:consensus]}"
         end
         render_gene_set_expression_plots_url(study_name: params[:study_name]) + params_key
       when 'expression_query'
