@@ -635,7 +635,6 @@ class SiteController < ApplicationController
       user_quota += file_size
     end
 
-
     end_time = Time.now
     time = (end_time - start_time).divmod 60.0
     @log_message = ["#{Time.now}: #{@study.url_safe_name} curl configs generated!"]
