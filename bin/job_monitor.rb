@@ -44,7 +44,11 @@ end
 @date = Time.now.strftime("%Y-%m-%d %H:%M:%S")
 if @running == false
 	@log_message = "#{@date}: One or more delayed_job workers have died.  Restarting daemon.\n"
-	puts @log_message
+
+  # move old logfile to crash backup
+  date_string = Time.now.strftime("%Y-%m-%d.%H.%M.%S")
+  File.rename('log/delayed_job.log', "log/delayed_job.crash.#{date_string}.log")
+
 	# restart delayed job workers
 	system(". /home/app/.cron_env ; cd /home/app/webapp ; bin/delayed_job restart #{@env} -n #{@num_workers}")
 

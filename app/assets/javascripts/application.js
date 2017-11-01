@@ -389,10 +389,10 @@ $(window).resize(function() {
 });
 
 // generic function to render Morpheus
-function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, target, annotations, fitType, heatmapHeight) {
+function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, target, annotations, fitType, heatmapHeight, colorScaleMode) {
     console.log('render status of ' + target + ' at start: ' + $(target).data('rendered'));
     $(target).empty();
-    var config = {dataset: dataPath, el: $(target), menu: null};
+    var config = {dataset: dataPath, el: $(target), menu: null, colorScheme: {scalingMode: colorScaleMode}};
 
     // set height if specified, otherwise use default setting of 500 px
     if (heatmapHeight !== undefined) {

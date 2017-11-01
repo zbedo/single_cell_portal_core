@@ -84,9 +84,9 @@ elsif !Dir.exists?($download_dir)
 	puts $usage
 	exit(1)
 elsif !$portal_url.start_with?('https://') || $portal_url[($portal_url.size - 12)..($portal_url.size - 1)] != '/single_cell'
-  puts "Invalid portal url: #{$portal_url}; must begin with https:// and end with /single_cell"
-  puts $usage
-  exit(1)
+	puts "Invalid portal url: #{$portal_url}; must begin with https:// and end with /single_cell"
+	puts $usage
+	exit(1)
 end
 
 class UiTestSuite < Test::Unit::TestCase
@@ -1460,7 +1460,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
 
-  # check
+	# validate that the download quota will prevent user downloads once reached
 	test 'configurations: quota: enforcement' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 		path = @base_url + '/admin'
@@ -1821,10 +1821,12 @@ class UiTestSuite < Test::Unit::TestCase
 
 		files = @driver.find_elements(:class, 'dl-link')
 		file_link = files.last
-		filename = file_link['download']
+		filename = file_link['data-filename']
 		basename = filename.split('.').first
 		@wait.until { file_link.displayed? }
-		file_link.click
+		# perform 'Save as' action
+		save_link_as(file_link)
+
 		# give browser 5 seconds to initiate download
 		sleep(5)
 		# make sure file was actually downloaded
@@ -1845,7 +1847,7 @@ class UiTestSuite < Test::Unit::TestCase
 		private_filename = private_file_link['download']
 		private_basename = private_filename.split('.').first
 		@wait.until { private_file_link.displayed? }
-		private_file_link.click
+		save_link_as(private_file_link)
 		# give browser 5 seconds to initiate download
 		sleep(5)
 		# make sure file was actually downloaded
@@ -1872,7 +1874,7 @@ class UiTestSuite < Test::Unit::TestCase
 		share_filename = share_file_link['data-filename']
 		share_basename = share_filename.split('.').first
 		@wait.until { share_file_link.displayed? }
-		share_file_link.click
+		save_link_as(share_file_link)
 		# give browser 5 seconds to initiate download
 		sleep(5)
 		# make sure file was actually downloaded
@@ -3208,6 +3210,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# set cell count
 		new_cells = rand(100) + 1
 		cell_count = @driver.find_element(:id, 'study_cell_count')
+		cell_count.clear
 		cell_count.send_key(new_cells)
 
 		# manually set rendered to false to avoid a race condition when checking for updates
@@ -3232,6 +3235,7 @@ class UiTestSuite < Test::Unit::TestCase
 		assert new_cell_count == new_cells, "cell count did not update, expected #{new_cells} but found #{new_cell_count}"
 
 		# now test if auth challenge is working properly using test study
+		open_new_page(@base_url)
 		logout_from_portal
 
 		# check authentication challenge
@@ -3685,6 +3689,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# update the annotation
 		submit = @driver.find_element(:id, 'submit-button')
 		submit.click
+		close_modal('message_modal')
 
 		# logout
 		logout_from_portal
@@ -3828,8 +3833,8 @@ class UiTestSuite < Test::Unit::TestCase
 		# update the annotation
 		submit = @driver.find_element(:id, 'submit-button')
 		submit.click
-
 		wait_until_page_loads(annot_path)
+		close_modal('message_modal')
 
 		# logout
 		logout_from_portal
