@@ -1,5 +1,7 @@
 class SiteController < ApplicationController
 
+  include Parallel
+
   ###
   #
   # This is the main public controller for the portal.  All data viewing/rendering is handled here, including creating
@@ -626,11 +628,13 @@ class SiteController < ApplicationController
     start_time = Time.now
 
     # Get signed URLs for all files in the requested download objects, and update user quota
-    curl_files.each do |file|
-      curl_config, file_size = get_curl_config(file)
+    Parallel.map(curl_files, in_threads: 100) do |file|
+      fc_client = FireCloudClient.new(current_user, @study.firecloud_project)
+      curl_config, file_size = get_curl_config(file, fc_client)
       curl_configs.push(curl_config)
       user_quota += file_size
     end
+
 
     end_time = Time.now
     time = (end_time - start_time).divmod 60.0
@@ -1808,14 +1812,18 @@ class SiteController < ApplicationController
   end
 
   # Helper method for download_bulk_files.  Returns file's curl config, size.
-  def get_curl_config(file)
+  def get_curl_config(file, fc_client=nil)
 
     # Is this a study file, or a file from a directory listing?
     is_study_file = file.is_a? StudyFile
 
+    if fc_client == nil
+      fc_client = Study.firecloud_client
+    end
+
     filename = (is_study_file ? file.upload_file_name : file[:name])
 
-    signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url,
+    signed_url = fc_client.execute_gcloud_method(:generate_signed_url,
                                                               @study.firecloud_workspace,
                                                               filename,
                                                               expires: 1.day.to_i) # 1 day in seconds, 86400
