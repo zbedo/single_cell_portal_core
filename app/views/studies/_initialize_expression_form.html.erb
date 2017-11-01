@@ -88,7 +88,17 @@
 						data: { status: 'uploaded', file: fileName}
 					});
 					fileUploading = false;
-					$.post("<%= parse_study_file_study_path(@study._id) %>", {file: fileName, modal_target: '#expression-parse-modal', partial: 'initialize_expression_form', selector: "#expression_form_<%= study_file._id %>"});
+					$.ajax({
+              url: "<%= parse_study_file_study_path(@study._id) %>",
+              type: 'POST',
+              data: {
+                  file: fileName,
+                  modal_target: '#expression-parse-modal',
+                  partial: 'initialize_expression_form',
+                  selector: "#expression_form_<%= study_file._id %>"
+              },
+              dataType: 'script'
+          });
 				},
         fail: function(e, data) {
 				    if (data.jqXHR != undefined) {
