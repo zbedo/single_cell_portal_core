@@ -933,7 +933,6 @@ class SiteController < ApplicationController
       @samples.each do |sample|
         @submissions << client.create_workspace_submission(@study.firecloud_workspace, config_namespace, config_name, 'sample', sample)
       end
-      logger.info "submissions: #{@submissions}"
     rescue => e
       logger.error "#{Time.now}: unable to submit workflow #{workflow_name} for sample #{@sample} in #{@study.firecloud_workspace} due to: #{e.message}"
       @alert = "We were unable to submit your workflow due to an error: #{e.message}"
