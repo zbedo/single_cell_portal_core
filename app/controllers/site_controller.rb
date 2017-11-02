@@ -1,7 +1,5 @@
 class SiteController < ApplicationController
 
-  include Parallel
-
   ###
   #
   # This is the main public controller for the portal.  All data viewing/rendering is handled here, including creating
