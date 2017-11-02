@@ -260,6 +260,7 @@ GEM
       cocaine (~> 0.5.5)
       mime-types
       mimemagic (~> 0.3.0)
+    parallel (1.12.0)
     power_assert (0.2.7)
     public_suffix (2.0.5)
     rack (1.6.4)
@@ -390,6 +391,7 @@ DEPENDENCIES
   nested_form!
   non-stupid-digest-assets
   omniauth-google-oauth2
+  parallel
   rails (= 4.2.6)
   rails-jquery-autocomplete!
   rest-client
