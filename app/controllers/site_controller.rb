@@ -1882,6 +1882,9 @@ class SiteController < ApplicationController
         unless params[:band_type].nil?
           params_key += "_#{params[:band_type]}"
         end
+        unless params[:consensus].nil?
+          params_key += "_#{params[:consensus]}"
+        end
         render_gene_set_expression_plots_url(study_name: params[:study_name]) + params_key
       when 'expression_query'
         params_key += "_#{params[:row_centered]}"

@@ -65,7 +65,7 @@ class Study
     end
 
     def valid
-      where(queued_for_deletion: false).to_a
+      where(queued_for_deletion: false, :generation.ne => nil).to_a
     end
   end
 
@@ -673,7 +673,7 @@ class Study
         else
           begin
             # check remote file for existence
-            remote_file = Study.firecloud_client.get_workspace_file(study.firecloud_workspace, file_location)
+            remote_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, study.firecloud_workspace, file_location)
             if remote_file.nil?
               puts "#{file_location} not found in #{study.bucket_id}"
               @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "File missing from bucket: #{study.bucket_id}"}
@@ -693,7 +693,7 @@ class Study
           puts "Checking directory file: #{file_location}"
           begin
             # check remote file for existence
-            remote_file = Study.firecloud_client.get_workspace_file(study.firecloud_workspace, file_location)
+            remote_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, study.firecloud_workspace, file_location)
             if remote_file.nil?
               puts "#{file_location} not found in #{study.bucket_id}"
               @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "File missing from bucket: #{study.bucket_id}"}
@@ -1614,9 +1614,11 @@ class Study
       # store generation tag to know whether a file has been updated in GCP
       Rails.logger.info "#{Time.now}: Updating #{file.upload_file_name} with generation tag: #{remote_file.generation} after successful upload"
       file.update(generation: remote_file.generation)
-      Rails.logger.info "#{Time.now}: Deleting local copy of #{file.upload_file_name} from #{self.data_store_path}"
-      File.delete(file.upload.path)
-      Rails.logger.info "#{Time.now}: Upload of #{file.upload_file_name} complete"
+      Rails.logger.info "#{Time.now}: Upload of #{file.upload_file_name} complete, scheduling cleanup job"
+      # schedule the upload cleanup job to run in two minutes
+      run_at = 2.minutes.from_now
+      Delayed::Job.enqueue(UploadCleanupJob.new(file.study, file), run_at: run_at)
+      Rails.logger.info "#{Time.now}: cleanup job for #{file.upload_file_name} scheduled for #{run_at}"
     rescue RuntimeError => e
       Rails.logger.error "#{Time.now}: unable to upload '#{file.upload_file_name} to FireCloud; #{e.message}"
       # check if file still exists

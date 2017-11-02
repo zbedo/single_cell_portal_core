@@ -14,12 +14,6 @@ if ('<%= params[:partial] %>' == 'initialize_expression_form' && <%= !@study_fil
     $('.expression-label-tooltip').attr('data-original-title', toolTitle);
 }
 
-// reattach click listener to download a file when private, will open modal for timed HTML5 download
-$(wizForm).find('.download-btn').click(function() {
-	var url = $(this).data('filepath');
-	$.get(url);
-});
-
 // go to next step in wizard
 if ('<%= params[:partial] %>' == 'initialize_metadata_form' && getWizardStatus() <= 2) {
 	$('#next-btn').click();

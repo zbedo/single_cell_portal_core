@@ -89,7 +89,17 @@
 						data: { status: 'uploaded', file: fileName}
 					});
 					fileUploading = false;
-					$.post("<%= parse_study_file_study_path(@study._id) %>", {file: fileName, modal_target: '#marker-gene-parse-<%= study_file._id %>-modal', partial: 'initialize_marker_genes_form', selector: "#marker_genes_form_<%= study_file._id %>"});
+          $.ajax({
+              url: "<%= parse_study_file_study_path(@study._id) %>",
+              type: 'POST',
+              data: {
+                  file: fileName,
+                  modal_target: '#marker-gene-parse-<%= study_file._id %>-modal',
+                  partial: 'initialize_marker_genes_form',
+                  selector: "#marker_genes_form_<%= study_file._id %>"
+              },
+              dataType: 'script'
+          });
 				},
         fail: function(e, data) {
             if (data.jqXHR != undefined) {

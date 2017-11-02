@@ -246,18 +246,6 @@ function enableDefaultActions() {
     });
 }
 
-// generic warning and spinner for deleting files
-function deleteFileConfirmation(confMessage, resolve) {
-    var conf = confirm(confMessage);
-    if ( conf === true ) {
-        launchModalSpinner('#delete-modal-spinner','#delete-modal', function() {
-            return resolve(true);
-        });
-    } else {
-        return resolve(false);
-    }
-}
-
 var stickyOptions = {
     topPadding: 85
 };
