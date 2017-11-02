@@ -1601,10 +1601,12 @@ class UiTestSuite < Test::Unit::TestCase
 
 		files = @driver.find_elements(:class, 'dl-link')
 		file_link = files.last
-		filename = file_link['download']
+		filename = file_link['data-filename']
 		basename = filename.split('.').first
 		@wait.until { file_link.displayed? }
-		file_link.click
+		# perform 'Save as' action
+		save_link_as(file_link)
+
 		# give browser 5 seconds to initiate download
 		sleep(5)
 		# make sure file was actually downloaded
@@ -1625,7 +1627,7 @@ class UiTestSuite < Test::Unit::TestCase
 		private_filename = private_file_link['download']
 		private_basename = private_filename.split('.').first
 		@wait.until { private_file_link.displayed? }
-		private_file_link.click
+		save_link_as(private_file_link)
 		# give browser 5 seconds to initiate download
 		sleep(5)
 		# make sure file was actually downloaded
@@ -1652,7 +1654,7 @@ class UiTestSuite < Test::Unit::TestCase
 		share_filename = share_file_link['data-filename']
 		share_basename = share_filename.split('.').first
 		@wait.until { share_file_link.displayed? }
-		share_file_link.click
+		save_link_as(share_file_link)
 		# give browser 5 seconds to initiate download
 		sleep(5)
 		# make sure file was actually downloaded

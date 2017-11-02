@@ -532,23 +532,28 @@ class SiteController < ApplicationController
       head 503 and return
     end
 
-    # get filesize and make sure the user is under their quota
     begin
-      filesize = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_workspace, params[:filename]).size
-      user_quota = current_user.daily_download_quota + filesize
-      # check against download quota that is loaded in ApplicationController.get_download_quota
-      if user_quota <= @download_quota
-        @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, params[:filename], expires: 15)
-        current_user.update(daily_download_quota: user_quota)
+      # get filesize and make sure the user is under their quota
+      requested_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_workspace, params[:filename])
+      if requested_file.present?
+        filesize = requested_file.size
+        user_quota = current_user.daily_download_quota + filesize
+        # check against download quota that is loaded in ApplicationController.get_download_quota
+        if user_quota <= @download_quota
+          @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, params[:filename], expires: 15)
+          current_user.update(daily_download_quota: user_quota)
+        else
+          redirect_to view_study_path(@study.url_safe_name), alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
+        end
+        # redirect directly to file to trigger download
+        redirect_to @signed_url
       else
-        redirect_to view_study_path(@study.url_safe_name), alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
+        redirect_to view_study_path, alert: 'The file you requested is currently not available.  Please try again later.'
       end
     rescue RuntimeError => e
       logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
       redirect_to view_study_path(@study.url_safe_name), alert: "We were unable to download the file #{params[:filename]} do to an error: #{view_context.simple_format(e.message)}" and return
     end
-    # redirect directly to file to trigger download
-    redirect_to @signed_url
   end
 
   def create_totat
@@ -1856,6 +1861,9 @@ class SiteController < ApplicationController
         end
         unless params[:band_type].nil?
           params_key += "_#{params[:band_type]}"
+        end
+        unless params[:consensus].nil?
+          params_key += "_#{params[:consensus]}"
         end
         render_gene_set_expression_plots_url(study_name: params[:study_name]) + params_key
       when 'expression_query'

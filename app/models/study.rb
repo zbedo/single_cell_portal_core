@@ -65,7 +65,7 @@ class Study
     end
 
     def valid
-      where(queued_for_deletion: false).to_a
+      where(queued_for_deletion: false, :generation.ne => nil).to_a
     end
   end
 
@@ -654,6 +654,66 @@ class Study
     filepath
   end
 
+  # perform a sanity check to look for any missing files in remote storage
+  def self.storage_sanity_check
+    puts 'Performing global storage sanity check for all studies'
+    @missing_files = []
+    self.where(queued_for_deletion: false).to_a.each do |study|
+      puts "Performing check for '#{study.name}'"
+      puts "Beginning with study_files"
+      # begin with study_files
+      files = study.study_files.valid
+      files.each do |file|
+        file_location = file.remote_location.blank? ? file.upload_file_name : file.remote_location
+        puts "Checking file: #{file_location}"
+        # if file has no generation tag, then we know the upload failed
+        if file.generation.blank?
+          puts "#{file_location} was never uploaded to #{study.bucket_id} (no generation tag)"
+          @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: 'Upload never completed (no generation tag)'}
+        else
+          begin
+            # check remote file for existence
+            remote_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, study.firecloud_workspace, file_location)
+            if remote_file.nil?
+              puts "#{file_location} not found in #{study.bucket_id}"
+              @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "File missing from bucket: #{study.bucket_id}"}
+            end
+          rescue => e
+            puts "#{Time.now}: error in performing sanity check on #{study.name}: #{e.message}"
+            @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "Error retrieving remote file: #{e.message}"}
+          end
+        end
+      end
+      # next check directory_listings
+      directories = study.directory_listings.are_synced
+      directories.each do |directory|
+        puts "Checking directory: #{directory.name}"
+        directory.files.each do |file|
+          file_location = file['name']
+          puts "Checking directory file: #{file_location}"
+          begin
+            # check remote file for existence
+            remote_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, study.firecloud_workspace, file_location)
+            if remote_file.nil?
+              puts "#{file_location} not found in #{study.bucket_id}"
+              @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "File missing from bucket: #{study.bucket_id}"}
+            end
+          rescue => e
+            puts "#{Time.now}: error in performing sanity check on #{study.name}: #{e.message}"
+            @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "Error retrieving remote file: #{e.message}"}
+          end
+        end
+      end
+    end
+    puts "Sanity check complete!"
+    puts "Missing files found: #{@missing_files.size}"
+    if @missing_files.any?
+      SingleCellMailer.sanity_check(@missing_files).deliver_now
+    else
+      SingleCellMailer.admin_notification('Sanity check results: All files accounted for', nil, '<p>No missing files found!</p>').deliver_now
+    end
+  end
+
   ###
   #
   # PARSERS
@@ -832,16 +892,14 @@ class Study
         Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
       end
 
+      Rails.logger.info "#{Time.now}: determining upload status of expression file: #{expression_file.upload_file_name}"
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       if opts[:local]
         begin
-          if Study.firecloud_client.api_available?
-            self.send_to_firecloud(expression_file)
-          else
-            SingleCellMailer.notify_admin_upload_fail(expression_file, 'FireCloud API unavailable').deliver_now
-          end
+          Rails.logger.info "#{Time.now}: preparing to upload expression file: #{expression_file.upload_file_name} to FireCloud"
+          self.send_to_firecloud(expression_file)
         rescue => e
-          Rails.logger.info "#{Time.now}: Expression file: '#{expression_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
+          Rails.logger.info "#{Time.now}: Expression file: #{expression_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
           SingleCellMailer.notify_admin_upload_fail(expression_file, e.message).deliver_now
         end
       else
@@ -1138,21 +1196,21 @@ class Study
         Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
       end
 
+      Rails.logger.info "#{Time.now}: determining upload status of ordinations file: #{ordinations_file.upload_file_name}"
+
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       if opts[:local]
         begin
-          if Study.firecloud_client.api_available?
-            self.send_to_firecloud(ordinations_file)
-          else
-            SingleCellMailer.notify_admin_upload_fail(ordinations_file, 'FireCloud API unavailable').deliver_now
-          end
+          Rails.logger.info "#{Time.now}: preparing to upload ordinations file: #{ordinations_file.upload_file_name} to FireCloud"
+          self.send_to_firecloud(ordinations_file)
         rescue => e
-          Rails.logger.info "#{Time.now}: Cluster file: '#{ordinations_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
+          Rails.logger.info "#{Time.now}: Cluster file: #{ordinations_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
           SingleCellMailer.notify_admin_upload_fail(ordinations_file, e.message).deliver_now
         end
       else
         # we have the file in FireCloud already, so just delete it
         begin
+          Rails.logger.info "#{Time.now}: deleting local file #{ordinations_file.upload_file_name} after successful parse; file already exists in #{self.bucket_id}"
           File.delete(@file_location)
         rescue => e
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
@@ -1359,21 +1417,21 @@ class Study
       # set the cell count
       self.set_cell_count(metadata_file.file_type)
 
+      Rails.logger.info "#{Time.now}: determining upload status of metadata file: #{metadata_file.upload_file_name}"
+
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       if opts[:local]
         begin
-          if Study.firecloud_client.api_available?
-            self.send_to_firecloud(metadata_file)
-          else
-            SingleCellMailer.notify_admin_upload_fail(metadata_file, 'FireCloud API unavailable').deliver_now
-          end
+          Rails.logger.info "#{Time.now}: preparing to upload metadata file: #{metadata_file.upload_file_name} to FireCloud"
+          self.send_to_firecloud(metadata_file)
         rescue => e
-          Rails.logger.info "#{Time.now}: Metadata file: '#{metadata_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
+          Rails.logger.info "#{Time.now}: Metadata file: #{metadata_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
           SingleCellMailer.notify_admin_upload_fail(metadata_file, e.message).deliver_now
         end
       else
         # we have the file in FireCloud already, so just delete it
         begin
+          Rails.logger.info "#{Time.now}: deleting local file #{metadata_file.upload_file_name} after successful parse; file already exists in #{self.bucket_id}"
           File.delete(@file_location)
         rescue => e
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
@@ -1507,21 +1565,21 @@ class Study
         Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
       end
 
+      Rails.logger.info "#{Time.now}: determining upload status of gene list file: #{marker_file.upload_file_name}"
+
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       if opts[:local]
         begin
-          if Study.firecloud_client.api_available?
-            self.send_to_firecloud(marker_file)
-          else
-            SingleCellMailer.notify_admin_upload_fail(marker_file, 'FireCloud API unavailable').deliver_now
-          end
+          Rails.logger.info "#{Time.now}: preparing to upload gene list file: #{marker_file.upload_file_name} to FireCloud"
+          self.send_to_firecloud(marker_file)
         rescue => e
-          Rails.logger.info "#{Time.now}: Gene List file: '#{marker_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
+          Rails.logger.info "#{Time.now}: Gene List file: #{marker_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
           SingleCellMailer.notify_admin_upload_fail(marker_file, e.message).deliver_now
         end
       else
         # we have the file in FireCloud already, so just delete it
         begin
+          Rails.logger.info "#{Time.now}: deleting local file #{marker_file.upload_file_name} after successful parse; file already exists in #{self.bucket_id}"
           File.delete(@file_location)
         rescue => e
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
@@ -1553,10 +1611,19 @@ class Study
       Rails.logger.info "#{Time.now}: Uploading #{file.upload_file_name} to FireCloud workspace: #{self.firecloud_workspace}"
       remote_file = Study.firecloud_client.execute_gcloud_method(:create_workspace_file, self.firecloud_workspace, file.upload.path, file.upload_file_name)
       # store generation tag to know whether a file has been updated in GCP
+      Rails.logger.info "#{Time.now}: Updating #{file.upload_file_name} with generation tag: #{remote_file.generation} after successful upload"
       file.update(generation: remote_file.generation)
-      File.delete(file.upload.path)
-      Rails.logger.info "#{Time.now}: Upload of #{file.upload_file_name} complete"
+      Rails.logger.info "#{Time.now}: Upload of #{file.upload_file_name} complete, scheduling cleanup job"
+      # schedule the upload cleanup job to run in two minutes
+      run_at = 2.minutes.from_now
+      Delayed::Job.enqueue(UploadCleanupJob.new(file.study, file), run_at: run_at)
+      Rails.logger.info "#{Time.now}: cleanup job for #{file.upload_file_name} scheduled for #{run_at}"
     rescue RuntimeError => e
+      Rails.logger.error "#{Time.now}: unable to upload '#{file.upload_file_name} to FireCloud; #{e.message}"
+      # check if file still exists
+      file_location = file.remote_location.blank? ? file.upload.path : File.join(self.data_store_path, file.remote_location)
+      exists = File.exists?(file_location)
+      Rails.logger.info "#{Time.now} local copy of #{file.upload_file_name} still in #{self.data_store_path}? #{exists}"
       SingleCellMailer.notify_admin_upload_fail(file, e.message).deliver_now
     end
   end
