@@ -632,7 +632,7 @@ class SiteController < ApplicationController
 
     # Get signed URLs for all files in the requested download objects, and update user quota
     Parallel.map(curl_files, in_threads: 100) do |file|
-      fc_client = FireCloudClient.new(current_user, @study.firecloud_project)
+      fc_client = FireCloudClient.new
       curl_config, file_size = get_curl_config(file, fc_client)
       curl_configs.push(curl_config)
       user_quota += file_size
