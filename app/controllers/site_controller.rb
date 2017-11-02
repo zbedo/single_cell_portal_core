@@ -605,31 +605,45 @@ class SiteController < ApplicationController
 
     curl_configs = ['--create-dirs']
 
-    # Get signed URLs for all study files and update user quota, if we're downloading whole study ('all')
+    curl_files = []
+
+    # Gather all study files, if we're downloading whole study ('all')
     if download_object == 'all'
       files = @study.study_files.valid
       files.each do |study_file|
         unless study_file.human_data?
-          curl_config, file_size = get_curl_config(study_file)
-          curl_configs.push(curl_config)
-          user_quota += file_size
+          curl_files.push(study_file)
         end
       end
     end
 
-    # Get signed URLs for all directory listings and update user quota
+    # Gather all files in requested directory listings
     synced_dirs = @study.directory_listings.are_synced
     synced_dirs.each do |synced_dir|
       if download_object != 'all' and synced_dir[:name] != download_object
         next
       end
       synced_dir.files.each do |file|
-        curl_config, file_size = get_curl_config(file)
-        curl_configs.push(curl_config)
-        user_quota += file_size
+        curl_files.push(file)
       end
     end
 
+    start_time = Time.now
+
+    # Get signed URLs for all files in the requested download objects, and update user quota
+    Parallel.map(curl_files, in_threads: 100) do |file|
+      fc_client = FireCloudClient.new
+      curl_config, file_size = get_curl_config(file, fc_client)
+      curl_configs.push(curl_config)
+      user_quota += file_size
+    end
+
+    end_time = Time.now
+    time = (end_time - start_time).divmod 60.0
+    @log_message = ["#{Time.now}: #{@study.url_safe_name} curl configs generated!"]
+    @log_message << "Signed URLs generated: #{curl_configs.size}"
+    @log_message << "Total time in get_curl_config: #{time.first} minutes, #{time.last} seconds"
+    Rails.logger.info @log_message.join("\n")
 
     curl_configs = curl_configs.join("\n\n")
 
@@ -919,6 +933,7 @@ class SiteController < ApplicationController
       @samples.each do |sample|
         @submissions << client.create_workspace_submission(@study.firecloud_project, @study.firecloud_workspace, config_namespace, config_name, 'sample', sample)
       end
+      logger.info "submissions: #{@submissions}"
     rescue => e
       logger.error "#{Time.now}: unable to submit workflow #{workflow_name} for sample #{@sample} in #{@study.firecloud_workspace} due to: #{e.message}"
       @alert = "We were unable to submit your workflow due to an error: #{e.message}"
@@ -1799,15 +1814,18 @@ class SiteController < ApplicationController
   end
 
   # Helper method for download_bulk_files.  Returns file's curl config, size.
-  def get_curl_config(file)
+  def get_curl_config(file, fc_client=nil)
 
     # Is this a study file, or a file from a directory listing?
     is_study_file = file.is_a? StudyFile
 
+    if fc_client == nil
+      fc_client = Study.firecloud_client
+    end
+
     filename = (is_study_file ? file.upload_file_name : file[:name])
 
-    signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url,
-                                                              @study.firecloud_project,
+    signed_url = fc_client.execute_gcloud_method(:generate_signed_url,
                                                               @study.firecloud_workspace,
                                                               filename,
                                                               expires: 1.day.to_i) # 1 day in seconds, 86400

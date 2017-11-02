@@ -727,7 +727,7 @@ class Study
       else
         expression_data = File.open(@file_location, 'rb')
       end
-      cells = expression_data.readline.split(/[\t,]/).map(&:strip)
+      cells = expression_data.readline.rstrip.split(/[\t,]/).map(&:strip)
       @last_line = "#{expression_file.name}, line 1"
 
       cells.shift
@@ -735,6 +735,7 @@ class Study
       # validate that new expression matrix does not have repeated cells, raise error if repeats found
       existing_cells = self.data_arrays.by_name_and_type('All Cells', 'cells').map(&:values).flatten
       uniques = cells - existing_cells
+
       unless uniques.size == cells.size
         repeats = cells - uniques
         raise StandardError, "cell names validation failed; repeated cells were found: #{repeats.join(', ')}"
