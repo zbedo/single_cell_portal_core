@@ -98,6 +98,7 @@ class UiTestSuite < Test::Unit::TestCase
 		caps = Selenium::WebDriver::Remote::Capabilities.chrome("chromeOptions" => {'prefs' => {'credentials_enable_service' => false}})
 		options = Selenium::WebDriver::Chrome::Options.new
 		options.add_argument('--enable-webgl-draft-extensions')
+		options.add_argument('--incognito')
 		@driver = Selenium::WebDriver::Driver.for :chrome, driver_path: $chromedriver_dir,
 																							options: options, desired_capabilities: caps,
 																							driver_opts: {log_path: '/tmp/webdriver.log'}
