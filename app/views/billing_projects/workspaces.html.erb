@@ -6,6 +6,7 @@
       <thead>
       <tr>
         <th>Workspace Name</th>
+        <th>Compute Permissions <i class="fa fa-question-circle" data-toggle="tooltip" title="Only non-owner users are shown here.  You cannot revoke compute permission from workspace- or project-level owners."></i> </th>
         <th>Active Submissions</th>
         <th>Created At</th>
         <th>Actions</th>
@@ -17,6 +18,15 @@
           <tr id="<%= workspace_name %>" class="project-workspace">
             <td class="workspace-name">
               <%= workspace_name %>
+            </td>
+            <td class="compute-permissions">
+              <% @computes[workspace_name].each do |compute| %>
+                <% compute.each do |user, permissions| %>
+                  <% if !permissions[:access_level].include?('OWNER') %>
+                    <span style="white-space: nowrap"><%= permissions[:can_compute] ? "<i class='fa fa-fw fa-check text-success'></i>".html_safe : "<i class='fa fa-fw fa-times text-danger'></i>".html_safe %><%= user %></span><br />
+                  <% end %>
+                <% end %>
+              <% end %>
             </td>
             <td>
               <%= workspace['workspaceSubmissionStats']['runningSubmissionsCount'] %>

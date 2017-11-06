@@ -93,6 +93,16 @@ class BillingProjectsController < ApplicationController
   # get a list of all workspaces in a project
   def workspaces
     @workspaces = @fire_cloud_client.workspaces(params[:project_name])
+    @computes = {}
+    Parallel.map(@workspaces, in_threads: 100) do |workspace|
+      client = FireCloudClient.new(current_user, params[:project_name])
+      workspace_name = workspace['workspace']['name']
+      acl = client.get_workspace_acl(params[:project_name], workspace_name)
+      @computes[workspace_name] = []
+      acl['acl'].each do |user, permission|
+        @computes[workspace_name] << {"#{user}" => {can_compute: permission['canCompute'], access_level: permission['accessLevel']} }
+      end
+    end
   end
 
   # get a workspace's compute permissions
@@ -138,9 +148,11 @@ class BillingProjectsController < ApplicationController
     workspaces = @fire_cloud_client.workspaces(params[:project_name])
     @workspaces = {}
     @total_cost = 0.0
-    workspaces.each do |workspace|
+    # parallelize retrieving workspace storage estimates
+    Parallel.map(workspaces, in_threads: 100) do |workspace|
+      client = FireCloudClient.new(current_user, params[:project_name])
       workspace_name = workspace['workspace']['name']
-      cost_estimate = Study.firecloud_client.get_workspace_storage_cost(params[:project_name], workspace_name)
+      cost_estimate = client.get_workspace_storage_cost(params[:project_name], workspace_name)
       actual_cost = cost_estimate['estimate'].gsub(/\$/, '').to_f
       @workspaces[workspace_name] = actual_cost
       @total_cost += actual_cost
