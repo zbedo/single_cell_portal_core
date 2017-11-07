@@ -78,6 +78,12 @@ Rails.application.routes.draw do
 			get :autocomplete_expression_score_gene, on: :collection
     end
 
+    # user account actions
+		get 'profile/:id', to: 'profiles#show', as: :view_profile
+		match 'profile/:id', to: 'profiles#update', via: [:post, :patch], as: :update_profile
+		match 'profile/:id/subscriptions/share/:study_share_id', to: 'profiles#update_share_subscription', via: [:post, :patch], as: :update_share_subscription
+		match 'profile/:id/subscriptions/study/:study_id', to: 'profiles#update_study_subscription', via: [:post, :patch], as: :update_study_subscription
+
 		# data viewing actions
 		get 'study/:study_name', to: 'site#study', as: :view_study
 		get 'study/:study_name/edit_study_description', to: 'site#edit_study_description', as: :edit_study_description

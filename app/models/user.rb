@@ -84,6 +84,7 @@ class User
   field :admin, type: Boolean
   field :reporter, type: Boolean
   field :daily_download_quota, type: Integer, default: 0
+  field :admin_email_delivery, type: Boolean, default: true
 
   ###
   #

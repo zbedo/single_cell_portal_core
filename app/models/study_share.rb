@@ -21,6 +21,7 @@ class StudyShare
 	field	:firecloud_workspace, type: String
 	field	:firecloud_project, type: String
 	field :permission, type: String, default: 'View'
+  field :deliver_emails, type: Boolean, default: true
 
 	validates_uniqueness_of :email, scope: :study_id
 
