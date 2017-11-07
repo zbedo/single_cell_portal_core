@@ -46,7 +46,12 @@ class ExpressionScore
   def self.array_z_score(values)
     mean = values.mean
     stddev = values.stdev
-    values.map {|v| (v - mean) / stddev}
+    if stddev === 0.0
+      # if the standard deviation is zero, return NaN for all values (to avoid getting Infinity)
+      values.map {Float::NAN}
+    else
+      values.map {|v| (v - mean) / stddev}
+    end
   end
 
   # calculate a z-score for every entry (subtract the mean, divide by the standard deviation)
@@ -62,7 +67,12 @@ class ExpressionScore
     deviations = values.map {|v| (v - median).abs}
     # compute median absolute deviation
     mad = self.array_median(deviations)
-    values.map {|v| (v - median) / mad}
+    if mad === 0.0
+      # if the median absolute deviation is zero, return NaN for all values (to avoid getting Infinity)
+      values.map {Float::NAN}
+    else
+      values.map {|v| (v - median) / mad}
+    end
   end
 
   # calculate a robust z-score for every entry (subtract the median, divide by the median absolute deviation)
