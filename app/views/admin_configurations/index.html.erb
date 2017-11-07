@@ -38,7 +38,7 @@
           <h3>Other Tasks</h3>
           <div class="well well-lg">
             <div class="form-group row">
-              <div class="col-md-6">
+              <div class="col-md-5">
                 <%= select_tag :admin_action, options_for_select(@administrative_tasks), include_blank: 'Please select a task...', class: 'form-control' %>
                 <%= hidden_field_tag :action_method %>
                 <div id="task-descriptions">
@@ -50,7 +50,8 @@
               <div class="col-md-2">
                 <%= link_to 'Execute Task', 'javascript:;', id: 'perform-admin-task', class: 'btn btn-default' %>
               </div>
-              <div class="col-md-4 text-right">
+              <div class="col-md-5 text-right">
+                <%= link_to 'Email All Users', compose_users_email_path, id: 'email-all-users', class: 'btn btn-primary' %>
                 <%= link_to "<span class='fa fa-exclamation-circle'></span> MANAGE FIRECLOUD ACCESS".html_safe, '#', class: 'btn btn-danger panic', id: 'show-panic-modal' %>
               </div>
             </div>

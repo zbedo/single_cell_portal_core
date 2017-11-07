@@ -1,17 +1,18 @@
 <div class="row">
   <div class="col-sm-4 text-center">
-    <h1>Project<br /><span class="label label-default" id="project-name"><%= params[:project_name] %></h1>
+    <h2>Project<br /><span class="label label-default" id="project-name"><%= params[:project_name] %></h2>
   </div>
   <div class="col-sm-4 text-center">
-    <h1>Cost Estimate<br /><span class="label label-primary"><span id="selected-cost"><%= number_to_currency(@total_cost) %></span>/month</span></h1>
+    <h2>Storage Cost Estimate<br /><span class="label label-primary"><span id="selected-cost"><%= number_to_currency(@total_cost) %></span>/month</span></h2>
   </div>
   <div class="col-sm-4 text-center">
-    <h1>Workspaces<br /><span class="text-right label label-success"><span id="selected-count"><%= @workspaces.size %></span> selected</span></h1>
+    <h2>Workspaces<br /><span class="text-right label label-success"><span id="selected-count"><%= @workspaces.size %></span> selected</span></h2>
   </div>
 </div>
 <div class="bs-callout bs-callout-default">
   <h4>Storage Cost Breakdown</h4>
   <p class="help-block">Use the table below to find per-workspace storage costs.  Filtering workspaces will update the total cost estimate to only calculate the currently displayed entries.</p>
+  <p class="text-primary"><i class="fa fa-fw fa-info-circle"></i> Costs shown are projected monthly storage costs for the selected workspaces.  These does not include compute costs.</p>
 </div>
 <div class="row">
   <div class="col-xs-12 text-center">

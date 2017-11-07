@@ -235,6 +235,28 @@ class AdminConfigurationsController < ApplicationController
     end
   end
 
+  ###
+  #
+  # USER EMAIL METHODS
+  #
+  ###
+
+  # compose an email to send all portal users
+  def compose_users_email
+
+  end
+
+  # deliver an email to all portal users
+  def deliver_users_email
+    begin
+      SingleCellMailer.users_email(users_email_params, current_user).deliver_now
+      @notice = 'Your email has successfully been delivered.'
+    rescue => e
+      logger.error "#{Time.now}: Error delivering users email: #{e.message}"
+      @alert = "Unabled to deliver users email due to the following error: #{e.message}"
+    end
+  end
+
   private
 
   ###
@@ -261,6 +283,11 @@ class AdminConfigurationsController < ApplicationController
     params.require(:service_account).permit(:contactEmail, :email, :firstName, :lastName, :institute, :institutionalProgram,
                                             :nonProfitStatus, :pi, :programLocationCity, :programLocationState,
                                             :programLocationCountry, :title)
+  end
+
+  # parameters for sending user emails
+  def users_email_params
+    params.require(:email).permit(:subject, :from, :contents, :preview)
   end
 
   # list of available actions to perform

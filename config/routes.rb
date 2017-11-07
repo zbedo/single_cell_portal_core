@@ -9,9 +9,11 @@ Rails.application.routes.draw do
 		post 'admin/refresh_api_connections', to: 'admin_configurations#refresh_api_connections', as: :refresh_api_connections
 		get 'admin/service_account', to: 'admin_configurations#get_service_account_profile', as: :get_service_account_profile
 		post 'admin/service_account', to: 'admin_configurations#update_service_account_profile', as: :update_service_account_profile
-		resources :admin_configurations, path: 'admin'
     get 'admin/users/:id/edit', to: 'admin_configurations#edit_user', as: :edit_user
 		match 'admin/users/:id', to: 'admin_configurations#update_user', via: [:post, :patch], as: :update_user
+    get 'admin/email_users/compose', to: 'admin_configurations#compose_users_email', as: :compose_users_email
+    post 'admin/email_users/compose', to: 'admin_configurations#deliver_users_email', as: :deliver_users_email
+		resources :admin_configurations, path: 'admin'
 
     # study reporter actions
     get 'reports', to: 'reports#index', as: :reports
@@ -74,7 +76,7 @@ Rails.application.routes.draw do
 		# autocomplete
 		resources :expression_score, only: [:show, :index] do
 			get :autocomplete_expression_score_gene, on: :collection
-		end
+    end
 
 		# data viewing actions
 		get 'study/:study_name', to: 'site#study', as: :view_study

@@ -8,6 +8,17 @@ class SingleCellMailer < ApplicationMailer
 
   default from: 'no-reply@broadinstitute.org'
 
+  # deliver an email to all users
+  def users_email(email_params, user)
+    @users = email_params[:preview] == "1" ? [user.email] : User.all.map(&:email)
+    @subject = email_params[:subject]
+    @from = email_params[:from]
+    @message = email_params[:contents]
+    mail(to: @from, bcc: @users, subject: "[Single Cell Portal Message] #{@subject}", from: @from) do |format|
+      format.html {@message.html_safe}
+    end
+  end
+
   def notify_admin_upload_fail(study_file, error)
     @users = User.where(admin: true).map(&:email)
     @study = study_file.study

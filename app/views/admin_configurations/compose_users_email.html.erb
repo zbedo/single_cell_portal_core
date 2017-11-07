@@ -1,0 +1,65 @@
+<h1>Send an Email to all Users <span class="badge"><%= User.count %> users</span> </h1>
+<div class="bs-callout bs-callout-default">
+  <h4>Instructions</h4>
+  <p>Use this form to send an email to all registered user accounts in the portal.  All messages delivered will have
+    <strong>[Single Cell Portal Message]</strong> prepended in front of the subject.  To send a test message to yourself
+    first, click <strong>'Preview Email'</strong>.</p>
+</div>
+<%= form_for(:email, url: deliver_users_email_path, html: {class: 'form', id: 'new_users_email', data: {remote: true}}) do |f| %>
+  <%= f.hidden_field :preview, value: 0 %>
+  <div class="form-group row">
+    <div class="col-md-8">
+      <%= f.label :subject %><br />
+      <%= f.text_field :subject, class: 'form-control' %>
+    </div>
+    <div class="col-md-4">
+      <%= f.label :from, 'From Email' %><br />
+      <%= f.text_field :from, value: SingleCellMailer.default_params[:from], class: 'form-control' %>
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-md-12">
+      <%= f.cktext_area :contents, ckeditor: {toolbar: 'mini'} %>
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-md-12">
+      <%= link_to "<i class='fa fa-fw fa-envelope'></i> Deliver Email".html_safe, 'javascript:;', class: 'btn btn-lg btn-success', id: 'deliver-users-email' %>
+      <%= link_to "<i class='fa fa-fw fa-eye'></i> Preview Email".html_safe, 'javascript:;', class: 'btn btn-lg btn-primary', id: 'deliver-preview-email', data: {toggle: 'tooltip'}, title: "Send a preview of this email to #{current_user.email}" %>
+    </div>
+  </div>
+<% end %>
+<p><%= link_to "<i class='fa fa-fw fa-chevron-left'></i> Back".html_safe, admin_configurations_path, class: 'btn btn-warning' %></p>
+
+<script type="text/javascript">
+
+    function validateEmail() {
+        var subject = $('#email_subject').val();
+        var content = CKEDITOR.instances['email_contents'].getData();
+        if ( subject === '' ) {
+            alert('You must provide a subject before sending.');
+            setErrorOnBlank($('#email_subject'));
+        } else if (content === '') {
+            alert('You must provide a message before sending');
+        } else {
+            $('#generic-modal-title').html("Sending Email... Please Wait");
+            launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+                CKEDITOR.instances['email_contents'].updateElement();
+                $('#new_users_email').submit();
+            });
+        }
+    }
+
+    $('#deliver-users-email').click(function() {
+        // turn off preview
+        $('#email_preview').val(0);
+        validateEmail();
+    });
+
+    $('#deliver-preview-email').click(function() {
+        // turn on preview
+        $('#email_preview').val(1);
+        validateEmail();
+    });
+
+</script>
