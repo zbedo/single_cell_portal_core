@@ -23,20 +23,62 @@ class ExpressionScore
   validates_uniqueness_of :gene, scope: [:study_id, :study_file_id]
   validates_presence_of :gene
 
-  def mean(cells)
-    sum = 0.0
-    cells.each do |cell|
-      sum += self.scores[cell].to_f
-    end
-    sum / cells.size
+  # calculate a mean value for a given gene based on merged expression scores hash
+  def self.mean(scores, cells)
+    values = cells.map {|c| scores[c].to_f}
+    values.mean
   end
 
-  # calculate a mean value for a given gene based on merged expression scores
-  def self.mean(scores, cells)
-    sum = 0.0
-    cells.each do |cell|
-      sum += scores[cell].to_f
+  # calculate a median value for a given gene based on merged expression scores hash
+  def self.median(scores, cells)
+    values = cells.map {|c| scores[c].to_f}
+    self.array_median(values)
+  end
+
+  # calculate median of an array
+  def self.array_median(values)
+    sorted_values = values.sort
+    len = sorted_values.length
+    (sorted_values[(len - 1) / 2] + sorted_values[len / 2]) / 2.0
+  end
+
+  # calculate the z-score of an array
+  def self.array_z_score(values)
+    mean = values.mean
+    stddev = values.stdev
+    if stddev === 0.0
+      # if the standard deviation is zero, return NaN for all values (to avoid getting Infinity)
+      values.map {Float::NAN}
+    else
+      values.map {|v| (v - mean) / stddev}
     end
-    sum / cells.size
+  end
+
+  # calculate a z-score for every entry (subtract the mean, divide by the standard deviation)
+  # for a given gene based on merged expression scores hash
+  def self.z_score(scores, cells)
+    values = cells.map {|c| scores[c].to_f}
+    self.array_z_score(values)
+  end
+
+  # calculate the robust z-score of an array of values
+  def self.array_robust_z_score(values)
+    median = self.array_median(values)
+    deviations = values.map {|v| (v - median).abs}
+    # compute median absolute deviation
+    mad = self.array_median(deviations)
+    if mad === 0.0
+      # if the median absolute deviation is zero, return NaN for all values (to avoid getting Infinity)
+      values.map {Float::NAN}
+    else
+      values.map {|v| (v - median) / mad}
+    end
+  end
+
+  # calculate a robust z-score for every entry (subtract the median, divide by the median absolute deviation)
+  # for a given gene based on merged expression scores hash
+  def self.robust_z_score(scores, cells)
+    values = cells.map {|c| scores[c].to_f}
+    self.array_robust_z_score(values)
   end
 end

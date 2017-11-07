@@ -308,6 +308,7 @@ GEM
       rake (>= 0.8.1)
     ruby-prof (0.15.9)
     ruby-progressbar (1.8.1)
+    ruby_native_statistics (0.8)
     rubyzip (1.2.1)
     sass (3.4.22)
     sass-rails (5.0.4)
@@ -396,6 +397,7 @@ DEPENDENCIES
   rest-client
   ruby-debug-ide
   ruby-prof
+  ruby_native_statistics
   sass-rails (~> 5.0)
   sdoc (~> 0.4.0)
   selenium-webdriver
