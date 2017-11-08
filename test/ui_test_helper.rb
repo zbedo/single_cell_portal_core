@@ -267,8 +267,8 @@ class Test::Unit::TestCase
         end
         sleep(1)
       rescue Selenium::WebDriver::Error::UnknownError
-        # check to make sure if we need to accept terms to complete login
-        if @driver.current_url.include?('https://accounts.google.com/o/oauth2/auth')
+        # check to make sure if we need to accept terms first to complete login
+        if @driver.current_url.include?('https://accounts.google.com/signin/oauth/consent')
           $verbose ? puts('approving access') : nil
           approve = @driver.find_element(:id, 'submit_approve_access')
           @clickable = approve['disabled'].nil?

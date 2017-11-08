@@ -361,11 +361,9 @@ class StudiesController < ApplicationController
       # don't use helper as we're about to mass-assign params
       study_file = @study.study_files.build
       if study_file.update(study_file_params)
-        render json: { file: { name: study_file.errors,size: nil } } and return
+        render json: { file: { name: study_file.upload_file_name, size: upload.size } } and return
       else
-        study_file.errors.each do |error|
-          logger.error "#{Time.now}: upload failed due to #{error.inspect}"
-        end
+        logger.error "#{Time.now} #{study_file.errors.full_messages.join (", ")}"
         head 422 and return
       end
     else

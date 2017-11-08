@@ -32,6 +32,10 @@ chmod 400 /home/app/.cron_env
 chown app:app /home/app/.cron_env
 echo "*** COMPLETED ***"
 
+echo "*** RUNNING PENDING MIGRATIONS ***"
+sudo -E -u app -H bin/rake db:migrate
+echo "*** COMPLETED ***"
+
 echo "*** STARTING DELAYED_JOB ***"
 sudo -E -u app -H bin/delayed_job start $PASSENGER_APP_ENV -n 4
 echo "*** ADDING CRONTAB TO CHECK DELAYED_JOB ***"

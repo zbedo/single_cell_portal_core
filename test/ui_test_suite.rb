@@ -133,7 +133,7 @@ class UiTestSuite < Test::Unit::TestCase
 	##
 
 	# create basic test study
-	test 'admin: create-study: configurations: download: user-annotation: workflows: public' do
+	test 'admin: create-study: configurations: download: user-annotation: workflows: user-profiles: public' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in first
@@ -1134,6 +1134,49 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	##
+	## USER PROFILE TESTS
+	## Setting email preferences, etc
+	##
+
+	test 'user-profiles: update email preferences' do
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		@driver.get @base_url + '/users/sign_in'
+		login($test_email, $test_email_password)
+
+		# open profile page
+		profile = @driver.find_element(:id, 'profile-nav')
+		profile.click
+		profile_link = @driver.find_element(:id, 'my-profile')
+		profile_link.click
+		wait_for_render(:id, 'profile-header')
+
+		# toggle admin emails
+		admin_toggle = @driver.find_element(:id, 'toggle-admin-emails')
+		admin_toggle.click
+		@wait.until {admin_toggle.text == 'Off'}
+		toggle_text = admin_toggle.text
+		assert toggle_text == 'Off', "Did not properly turn off admin emails (text is still #{toggle_text})"
+		admin_toggle.click
+		@wait.until {admin_toggle.text == 'On'}
+		new_toggle_text = admin_toggle.text
+		assert toggle_text == 'On', "Did not properly turn on admin emails (text is still #{new_toggle_text})"
+
+		# toggle study/share notification
+		study_notifier_toggle = @driver.find_element(:class, 'toggle-study-subscription')
+		study_notifier_toggle.click
+		@wait.until {study_notifier_toggle.text == 'Off'}
+		study_text = study_notifier_toggle.text
+		assert study_text == 'Off', "Did not properly turn off study notification (text is still #{study_text})"
+		study_notifier_toggle.click
+		@wait.until {study_notifier_toggle.text == 'On'}
+		new_study_text = study_notifier_toggle.text
+		assert study_text == 'Off', "Did not properly turn on study notification (text is still #{new_study_text})"
+
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+	end
+
+	##
 	## BILLING TESTS
 	## Validate the portal can create and manage new FireCloud projects given existing billing projects/accounts
 	## The user being used for the test must have an available Google billing project that they own for these tests to work
@@ -1643,6 +1686,44 @@ class UiTestSuite < Test::Unit::TestCase
 			assert element_present?(:id, 'main-banner'), 'could not load home page'
 			puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 		end
+	end
+
+	# test sending an email to users
+	test 'configurations: email all users' do
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		path = @base_url + '/admin'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email, $test_email_password)
+
+		email_users_btn = @driver.find_element(:id, 'email-all-users')
+		email_users_btn.click
+		wait_until_page_loads(path + '/email_users/compose')
+
+		subject = @driver.find_element(:id, 'email_subject')
+		subject.send_keys('This is the subject')
+		@driver.switch_to.frame(@driver.find_element(:tag_name, 'iframe'))
+		message = @driver.find_element(:class, 'cke_editable')
+		message_content = "This is an email to all users."
+		message.send_keys(message_content)
+		@driver.switch_to.default_content
+
+		# send preview email
+		preview_btn = @driver.find_element(:id, 'deliver-preview-email')
+		preview_btn.click
+		wait_for_modal_open('message_modal')
+		notification = @driver.find_element(:id, 'notice-content')
+		assert notification.text == 'Your email has successfully been delivered.', "Did not find correct notification, expeceted 'Your email has successfully been delivered.' but found '#{notification.text}'"
+
+		# send regular email
+		deliver_btn = @driver.find_element(:id, 'deliver-users-email')
+		deliver_btn.click
+		wait_for_modal_open('message_modal')
+		new_notification = @driver.find_element(:id, 'notice-content')
+		assert new_notification.text == 'Your email has successfully been delivered.', "Did not find correct notification, expeceted 'Your email has successfully been delivered.' but found '#{new_notification.text}'"
+
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
 
 	##

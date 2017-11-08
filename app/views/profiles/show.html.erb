@@ -1,4 +1,14 @@
-<h1>Profile for <span class="label label-primary"><%= @user.email %></span></h1>
+<h1 id="profile-header">Profile for <span class="label label-primary"><%= @user.email %></span></h1>
+
+<%= form_for(@user, url: update_profile_path, html: {class: 'form', id: 'update-user-profile', data: {remote: true}}) do |f| %>
+  <div class="form-group">
+    <%= f.hidden_field :admin_email_delivery %>
+    <% button_text = @user.admin_email_delivery ? "On <i class='fa fa-fw fa-toggle-on'></i>".html_safe : "Off <i class='fa fa-fw fa-toggle-off'></i>".html_safe %>
+    <h3>Admin Email Delivery <%= link_to button_text, 'javascript:;', class: 'btn btn-default', id: 'toggle-admin-emails', data: {toggle: 'button', 'saving-text' => 'Saving...'} %></h3>
+    <p class="help-block">Use this toggle to determine whether or not you would like to receive information emails from Single Cell Portal adminsitrators (new feature announcements, unplanned site maintenance, general notices, etc.).</p>
+  </div>
+<% end %>
+
 <h3>My Study Subscriptions</h3>
 <div class="bs-callout bs-callout-default">
   <p>Use the table below to manage email delivery for all studies that are accessible to you.  You do not receive notification emails for studies when you make changes, only when others do.</p>
@@ -49,15 +59,6 @@
     <% end %>
   </tbody>
 </table>
-
-<%= form_for(@user, url: update_profile_path, html: {class: 'form', id: 'update-user-profile', data: {remote: true}}) do |f| %>
-  <div class="form-group">
-    <%= f.hidden_field :admin_email_delivery %>
-    <% button_text = @user.admin_email_delivery ? "On <i class='fa fa-fw fa-toggle-on'></i>".html_safe : "Off <i class='fa fa-fw fa-toggle-off'></i>".html_safe %>
-    <h3>Admin Email Delivery <%= link_to button_text, 'javascript:;', class: 'btn btn-default', id: 'toggle-admin-emails', data: {toggle: 'button', 'saving-text' => 'Saving...'} %></h3>
-    <p class="help-block">Use this toggle to determine whether or not you would like to receive information emails from Single Cell Portal adminsitrators (new feature announcements, unplanned site maintenance, general notices, etc.).</p>
-  </div>
-<% end %>
 
 
 <script type="text/javascript">

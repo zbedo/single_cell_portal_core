@@ -278,16 +278,7 @@ class Study
 
   # check if user can delete a study - only owners can
   def can_delete?(user)
-    if self.user_id == user.id || user.admin?
-      true
-    else
-      share = self.study_shares.detect {|s| s.email == user.email}
-      if !share.nil? && share.permission == 'Owner'
-        true
-      else
-        false
-      end
-    end
+    self.user_id == user.id || user.admin?
   end
 
   # check if a user can run workflows on the given study
