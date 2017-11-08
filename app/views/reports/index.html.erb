@@ -151,17 +151,17 @@
     var colors = [7,3,4];
     <% @cells_over_time.each_with_index do |(trace, totals), index| %>
 
-    cellsTimeDist.push(
-        {
-            name: '<%= trace %>',
-            x: <%= raw totals.keys %>,
-            y: <%= raw totals.values %>,
-            type: 'scatter',
-            marker: {
-                color: colorBrewerSet[colors[<%= index %>]]
+        cellsTimeDist.push(
+            {
+                name: '<%= trace %>',
+                x: <%= raw totals.keys %>,
+                y: <%= raw totals.values %>,
+                type: 'scatter',
+                marker: {
+                    color: colorBrewerSet[colors[<%= index %>]]
+                }
             }
-        }
-    );
+        );
     <% end %>
 
     Plotly.newPlot('plotly-study-cell-time-dist', cellsTimeDist,

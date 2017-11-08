@@ -1,41 +1,49 @@
+##
+# FireCloudClient: Class that wraps API calls to both FireCloud and Google Cloud Storage to manage the CRUDing of both
+# FireCloud workspaces and files inside the associated GCP storage buckets, as well as billing/user group/workflow submission
+# management.
+#
+# Uses the gems googleauth (for generating access tokens), google-cloud-storage (for bucket/file access),
+# and rest-client (for HTTP calls)
+#
+# Author::  Jon Bistline  (mailto:bistline@broadinstitute.org)
+
 class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :storage, :expires_at)
 
-	###
-  #
-  # FireCloudClient: Class that wraps API calls to both FireCloud and Google Cloud Storage to manage the CRUDing of both
-  # FireCloud workspaces and files inside the associated GCP storage buckets
 	#
-	# Uses the gems googleauth (for generating access tokens), google-cloud-storage (for bucket/file access),
-	# and rest-client (for HTTP calls)
+  # CONSTANTS
   #
-  ###
 
-	## CONSTANTS
 	# base url for all API calls
 	BASE_URL = 'https://api.firecloud.org'
 	# default auth scopes
-	GOOGLE_SCOPES = %w(https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email)
-	# constant used for retry loops in process_request
+	GOOGLE_SCOPES = %w(https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/cloud-billing.readonly)
+	# constant used for retry loops in process_firecloud_request and execute_gcloud_method
 	MAX_RETRY_COUNT = 3
-	# default namespace used for all FireCloud project workspaces owned by the 'portal'
+	# default namespace used for all FireCloud workspaces owned by the 'portal'
 	PORTAL_NAMESPACE = 'single-cell-portal'
 	# location of Google service account JSON (must be absolute path to file)
 	SERVICE_ACCOUNT_KEY = !ENV['SERVICE_ACCOUNT_KEY'].blank? ? File.absolute_path(ENV['SERVICE_ACCOUNT_KEY']) : ''
-	# Permission values allowed for ACLs
+	# Permission values allowed for FireCloud workspace ACLs
 	WORKSPACE_PERMISSIONS = ['OWNER', 'READER', 'WRITER', 'NO ACCESS']
-  # List of user group roles
+  # List of FireCloud user group roles
   USER_GROUP_ROLES = %w(admin member)
-  # List of available 'operations' or updating FireCloud workspace entities or attributes
+	# List of FireCloud billing project roles
+	BILLING_PROJECT_ROLES = %w(user owner)
+  # List of available FireCloud 'operations' for updating FireCloud workspace entities or attributes
   AVAILABLE_OPS = %w(AddUpdateAttribute RemoveAttribute AddListMember RemoveListMember)
-  # List of projects where computes are not permitted (will cause all workspaces created to set owner acls to WRITER instead of OWNER)
+  # List of projects where computes are not permitted (sets canCompute to false for all users by default, can only be overridden
+  # by PROJECT_OWNER)
   COMPUTE_BLACKLIST = %w(single-cell-portal)
 
-	## CONSTRUCTOR
-	#
-	# initialize is called after instantiating with FireCloudClient.new
+  # initialize is called after instantiating with FireCloudClient.new
 	# will set the access token, FireCloud api url root and GCP storage driver instance
 	#
-	# return: FireCloudClient object
+  # * *params*
+  #   - +user+: (User) => User object from which access tokens are generated
+  #   - +project+: (String) => Default GCP Project to use (can be overridden by other parameters)
+  # * *return*
+  #   - +FireCloudClient+ object
 	def initialize(user=nil, project=nil)
 		# when initializing without a user, default to base configuration
 		if user.nil?
@@ -80,14 +88,14 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		self.api_root = BASE_URL
 	end
 
-	##
-	## TOKEN METHODS
-	##
+	#
+	# TOKEN METHODS
+	#
 
 	# generate an access token to use for all requests
 	#
-	# return: Hash of Google Auth access token
-	# (contains access_token (string), token_type (string) and expires_in (integer, in seconds)
+	# * *return*
+	#   - +Hash+ of Google Auth access token (contains access_token (string), token_type (string) and expires_in (integer, in seconds)
 	def self.generate_access_token
 		# if no keyfile present, use environment variables
 		creds_attr = {scope: GOOGLE_SCOPES}
@@ -101,7 +109,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# refresh access_token when expired and stores back in FireCloudClient instance
 	#
-	# return: timestamp of new access token expiration
+	# * *return*
+	#   - +DateTime+ timestamp of new access token expiration
 	def refresh_access_token
 		if self.user.nil?
 			new_token = FireCloudClient.generate_access_token
@@ -118,7 +127,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# check if an access_token is expired
 	#
-	# return: boolean of token expiration
+	# * *return*
+	#   - +Boolean+ of token expiration
 	def access_token_expired?
 		Time.now >= self.expires_at
 	end
@@ -129,15 +139,19 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
   # get instance information about the storage driver
   #
-  # return: JSON object of storage driver instance attributes
+	# * *return*
+	#   - +JSON+ object of storage driver instance attributes
   def storage_attributes
 		JSON.parse self.storage.to_json
 	end
 
   # renew the storage driver
-  # default project is value of PORTAL_NAMESPACE
+	#
+	# * *params*
+  #   - +project_name+ (String )=> name of GCP project, default project is value of PORTAL_NAMESPACE
   #
-  # return: new instance of storage driver
+	# * *return*
+	#   - +Google::Cloud::Storage+ instance
   def refresh_storage_driver(project_name=PORTAL_NAMESPACE)
 		storage_attr = {
 				project: project_name,
@@ -153,16 +167,34 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
   # get storage driver access token
   #
-  # return: access token (String)
+	# * *return*
+	#   - +String+ access token
   def storage_access_token
 		self.storage.service.credentials.client.access_token
 	end
 
   # get storage driver issue timestamp
   #
-  # return: issue timestamp (DateTime)
+	# * *return*
+	#   - +DateTime+ issue timestamp
   def storage_issued_at
 		self.storage.service.credentials.client.issued_at
+	end
+
+  # get issuer of storage credentials
+  #
+	# * *return*
+	#   - +String+ of issuer email
+  def storage_issuer
+		self.storage.service.credentials.issuer
+	end
+
+  # get issuer of access_token
+  #
+	# * *return*
+	#   - +String+ of access_token issuer email
+  def issuer
+		self.user.nil? ? self.storage_issuer : self.user.email
 	end
 
 	######
@@ -173,11 +205,15 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# generic handler to execute http calls, process returned JSON and handle exceptions
 	#
-	# param: http_method (String, Symbol) => valid http method
-	# param: path (String) => FireCloud REST API path
-	# param: payload (Hash) => HTTP POST/PATCH/PUT body for creates/updates, defaults to nil
+	# * *params*
+	#   - +http_method+ (String, Symbol) => valid http method
+	#   - +path+ (String) => FireCloud REST API path
+	#   - +payload+ (Hash) => HTTP POST/PATCH/PUT body for creates/updates, defaults to nil
 	#
-	# return: object depends on response code
+	# * *return*
+	#   - +Hash+, +Boolean+ depending on response body
+	# * *raises*
+	#   - +RuntimeError+
 	def process_firecloud_request(http_method, path, payload=nil, file_upload=false)
 		# check for token expiry first before executing
 		if self.access_token_expired?
@@ -200,14 +236,14 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 				@retry_count += 1
 				@obj = RestClient::Request.execute(method: http_method, url: path, payload: payload, headers: headers)
 				# handle response codes as necessary
-				if self.ok?(@obj.code) && !@obj.body.blank?
+				if ok?(@obj.code) && !@obj.body.blank?
 					@retry_count = 0
 					begin
 						return JSON.parse(@obj.body)
 					rescue JSON::ParserError => e
 						return @obj.body
 					end
-				elsif self.ok?(@obj.code) && @obj.body.blank?
+				elsif ok?(@obj.code) && @obj.body.blank?
 					@retry_count = 0
 					return true
 				else
@@ -235,7 +271,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# determine if FireCloud api is currently up/available
 	#
-	# return: Boolean indication of FireCloud current status
+	# * *return*
+	#   - +Boolean+ indication of FireCloud current status
 	def api_available?
 		path = self.api_root + '/health'
 		begin
@@ -249,7 +286,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # get more detailed status information about FireCloud api
   # this method doesn't use process_firecloud_request as we want to preserve error states rather than catch and suppress them
   #
-  # return: JSON object with health status information for various FireCloud services
+	# * *return*
+	#   - +Hash+ with health status information for various FireCloud services or error response
   def api_status
     path = self.api_root + '/status'
     # make sure access token is still valid
@@ -272,25 +310,32 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	## WORKSPACE METHODS
 	##
 
-	# return a list of all workspaces in the portal namespace
+	# return a list of all workspaces in a given namespace
 	#
-	# return: array of JSON objects detailing workspaces
-	def workspaces
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#
+	# * *return*
+	#   - +Array+ of +Hash+ objects detailing workspaces
+	def workspaces(workspace_namespace)
 		path = self.api_root + '/api/workspaces'
 		workspaces = process_firecloud_request(:get, path)
-		workspaces.keep_if {|ws| ws['workspace']['namespace'] == self.project}
+		workspaces.keep_if {|ws| ws['workspace']['namespace'] == workspace_namespace}
 	end
 
 	# create a workspace, prepending WORKSPACE_NAME_PREFIX as necessary
 	#
-	# param: workspace_name (String) => name of workspace
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of workspace
 	#
-	# return: JSON object of workspace instance
-	def create_workspace(workspace_name, *authorization_domains)
+  # * *return*
+  #   - +Hash+ object of workspace instance
+	def create_workspace(workspace_namespace, workspace_name, *authorization_domains)
 		path = self.api_root + '/api/workspaces'
 		# construct payload for POST
 		payload = {
-				namespace: self.project,
+				namespace: workspace_namespace,
 				name: workspace_name,
 				attributes: {},
 				authorizationDomain: []
@@ -304,55 +349,69 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# get the specified workspace
 	#
-	# param: workspace_name (String) => name of workspace
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of workspace
 	#
-	# return: JSON object of workspace instance
-	def get_workspace(workspace_name)
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}"
+  # * *return*
+  #   - +Hash+ object of workspace instance
+	def get_workspace(workspace_namespace, workspace_name)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}"
 		process_firecloud_request(:get, path)
 	end
 
 	# delete a workspace
 	#
-	# param: workspace_name (String) => name of workspace
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of workspace
 	#
-	# return: JSON message of status of workspace deletion
-	def delete_workspace(workspace_name)
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}"
+  # * *return*
+  #   - +Hash+ message of status of workspace deletion
+	def delete_workspace(workspace_namespace, workspace_name)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}"
 		process_firecloud_request(:delete, path)
 	end
 
 	# get the specified workspace ACL
 	#
-	# param: workspace_name (String) => name of workspace
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of workspace
 	#
-	# return: JSON object of workspace ACL instance
-	def get_workspace_acl(workspace_name)
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/acl"
+  # * *return*
+  #   - +Hash+ object of workspace ACL instance
+	def get_workspace_acl(workspace_namespace, workspace_name)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/acl"
 		process_firecloud_request(:get, path)
 	end
 
 	# update the specified workspace ACL
 	# can also be used to remove access by passing 'NO ACCESS' to create_acl
 	#
-	# param: workspace_name (String) => name of workspace
-	# param: acl (JSON) => ACL object (see create_workspace_acl)
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of workspace
+	#   - +acl+ (JSON) => ACL object (see create_workspace_acl)
 	#
-	# return: JSON response of ACL update
-	def update_workspace_acl(workspace_name, acl)
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/acl?inviteUsersNotFound=true"
+  # * *return*
+  #   - +Hash+ response of ACL update
+	def update_workspace_acl(workspace_namespace, workspace_name, acl)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/acl?inviteUsersNotFound=true"
 		process_firecloud_request(:patch, path, acl)
 	end
 
 	# helper for creating FireCloud ACL objects
 	# will raise a RuntimeError if permission requested does not match allowed values in WORKSPACE_PERMISSONS
 	#
-	# param: email (String) => email of FireCloud user
-	# param: permission (String) => granted permission level
-	# param: share_permission (Boolean) => whether or not user can share workspace
-	# param: compute_permission (Boolean) => whether or not user can run computes in workspace
+	# * *params*
+	#   - +email+ (String) => email of FireCloud user
+	#   - +permission+ (String) => granted permission level
+	#   - +share_permission+ (Boolean) => whether or not user can share workspace
+	#   - +compute_permission+ (Boolean) => whether or not user can run computes in workspace
 	#
-	# return: JSON-encoded ACL object for use in HTTP body
+  # * *return*
+  #   - +JSON+ ACL object
 	def create_workspace_acl(email, permission, share_permission=true, compute_permission=false)
 		if WORKSPACE_PERMISSIONS.include?(permission)
 			[
@@ -370,13 +429,29 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# set attributes for the specified workspace (will delete all existing attributes and overwrite with provided info)
 	#
-	# param: workspace_name (String) => name of workspace
-	# param: attributes (Hash) => Hash of workspace attributes (description, tags (Array), key/value pairs of other attributes)
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of workspace
+	#   - +attributes+ (Hash) => Hash of workspace attributes (description, tags (Array), key/value pairs of other attributes)
 	#
-	# return: JSON object of workspace
-	def set_workspace_attributes(workspace_name, attributes)
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/setAttributes"
+  # * *return*
+  #   - +Hash+ object of workspace
+	def set_workspace_attributes(workspace_namespace, workspace_name, attributes)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/setAttributes"
 		process_firecloud_request(:patch, path, attributes.to_json)
+	end
+
+	# get the current storage cost estimate for a workspace
+	#
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of workspace
+	#
+  # * *return*
+  #   - +Hash+ object of workspace
+	def get_workspace_storage_cost(workspace_namespace, workspace_name)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/storageCostEstimate"
+		process_firecloud_request(:get, path)
 	end
 
   ##
@@ -385,9 +460,11 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
   # get list of available FireCloud methods
   #
-  # param: opts (Hash) => hash of query parameter key/value pairs, see https://api.firecloud.org/#!/Method_Repository/listMethodRepositoryMethods for complete list
+	# * *params*
+	#   - +opts+ (Hash) => hash of query parameter key/value pairs, see https://api.firecloud.org/#!/Method_Repository/listMethodRepositoryMethods for complete list
   #
-  # return: array of methods
+  # * *return*
+  #   - +Array+ of methods
   def get_methods(opts={})
 		query_params = self.merge_query_options(opts)
 		path = self.api_root + "/api/methods#{query_params}"
@@ -396,12 +473,14 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# get a FireCloud method object
 	#
-	# param: namespace (String) => namespace of method
-	# param: name (String) => name of method
-	# param: snapshot_id (Integer) => snapshot ID of method
-	# param: only_payload (Boolean) => boolean of whether or not to return only the payload object
+	# * *params*
+	#   - +namespace+ (String) => namespace of method
+	#   - +name+ (String) => name of method
+	#   - +snapshot_id+ (Integer) => snapshot ID of method
+	#   - +only_payload+ (Boolean) => boolean of whether or not to return only the payload object
   #
-	# return: array of methods
+  # * *return*
+  #   - +Hash+ method object
 	def get_method(namespace, method_name, snapshot_id, only_payload=false)
 		path = self.api_root + "/api/methods/#{namespace}/#{method_name}/#{snapshot_id}?onlyPayload=#{only_payload}"
 		process_firecloud_request(:get, path)
@@ -409,9 +488,11 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# get list of available configurations from the repository
 	#
-	# param: opts (Hash) => hash of query parameter key/value pairs, see https://api.firecloud.org/#!/Method_Repository/listMethodRepositoryConfigurations for complete list
+	# * *params*
+	#   - +opts+ (Hash) => hash of query parameter key/value pairs, see https://api.firecloud.org/#!/Method_Repository/listMethodRepositoryConfigurations for complete list
 	#
-	# return: array of configurations
+  # * *return*
+  #   - +Array+ of configurations
 	def get_configurations(opts={})
 		query_params = self.merge_query_options(opts)
 		path = self.api_root + "/api/configurations#{query_params}"
@@ -420,12 +501,14 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# get a FireCloud method configuration from the repository
 	#
-	# param: namespace (String) => namespace of method
-	# param: name (String) => name of method
-	# param: snapshot_id (Integer) => snapshot ID of method
-	# param: payload_as_object (Boolean) => Instead of returning a string under key payload, return a JSON object under key payloadObject
+	# * *params*
+	#   - +namespace+ (String) => namespace of method
+	#   - +name+ (String) => name of method
+	#   - +snapshot_id+ (Integer) => snapshot ID of method
+	#   - +payload_as_object+ (Boolean) => Instead of returning a string under key payload, return a JSON object under key payloadObject
 	#
-	# return: configuration object
+  # * *return*
+  #   - +Hash+ configuration object
 	def get_configuration(namespace, method_name, snapshot_id, payload_as_object=false)
 		path = self.api_root + "/api/configurations/#{namespace}/#{method_name}/#{snapshot_id}?payloadAsObject=#{payload_as_object}"
 		process_firecloud_request(:get, path)
@@ -433,16 +516,19 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# copy a FireCloud method configuration from the repository into a workspace
 	#
-	# param: workspace_name (String) => name of workspace
-	# param: config_namespace (String) => namespace of source configuration
-	# param: config_name (String) => name of source configuration
-	# param: snapshot_id (Integer) => snapshot ID of source configuration
-	# param: destination_namespace (String) => namespace of destination configuration (in workspace)
-	# param: destination_name (String) => name of destination configuration (in workspace)
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of workspace
+	#   - +config_namespace+ (String) => namespace of source configuration
+	#   - +config_name+ (String) => name of source configuration
+	#   - +snapshot_id+ (Integer) => snapshot ID of source configuration
+	#   - +destination_namespace+ (String) => namespace of destination configuration (in workspace)
+	#   - +destination_name+ (String) => name of destination configuration (in workspace)
 	#
-	# return: configuration object
-	def copy_configuration_to_workspace(workspace_name, config_namespace, config_name, snapshot_id, destination_namespace, destination_name)
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/method_configs/copyFromMethodRepo"
+  # * *return*
+  #   - +Hash+ configuration object
+	def copy_configuration_to_workspace(workspace_namespace, workspace_name, config_namespace, config_name, snapshot_id, destination_namespace, destination_name)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/method_configs/copyFromMethodRepo"
 		payload = {
 				configurationNamespace: config_namespace,
 				configurationName: config_name,
@@ -455,11 +541,13 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
   # create a method configuration template from a method
   #
-	# param: method_namespace (String) => namespace of method
-	# param: method_name (String) => name of method
-	# param: method_version (String) => version of method
+	# * *params*
+	#   - +method_namespace+ (String) => namespace of method
+	#   - +method_name+ (String) => name of method
+	#   - +method_version+ (String) => version of method
   #
-  # return: method configuration template (JSON)
+  # * *return*
+  #   - +Hash+ method configuration template
 	def create_configuration_template(method_namespace, method_name, method_version)
 		path = self.api_root + '/api/template'
 		payload = {
@@ -472,28 +560,35 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# get a list of FireCloud method configurations in a specified workspace
 	#
-	# param: workspace_name (String) => name of requested workspace
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of requested workspace
 	#
-	# return: configuration object
-  def get_workspace_configurations(workspace_name)
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/methodconfigs"
+  # * *return*
+  #   - +Array+ of configuration objects
+  def get_workspace_configurations(workspace_namespace, workspace_name)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/methodconfigs"
 		process_firecloud_request(:get, path)
 	end
 
 	# get a FireCloud method configuration from a workspace
 	#
-	# param: workspace_name (String) => name of requested workspace
-	# param: config_name (String) => name of method
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of requested workspace
+	#   - +config_name+ (String) => name of method
 	#
-	# return: configuration object
-	def get_workspace_configuration(workspace_name, config_name)
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/method_configs/#{self.project}/#{config_name}"
+  # * *return*
+  #   - +Hash+ configuration object
+	def get_workspace_configuration(workspace_namespace, workspace_name, config_name)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/method_configs/#{workspace_namespace}/#{config_name}"
 		process_firecloud_request(:get, path)
 	end
 
   # get submission queue status
   #
-  # return: JSON object of current submission queue status
+  # * *return*
+  #   - +Hash+ object of current submission queue status
 	def get_submission_queue_status
 		path = self.api_root + '/api/submissions/queueStatus'
 		process_firecloud_request(:get, path)
@@ -501,25 +596,31 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
   # get a list of workspace workflow queue submissions
   #
-	# param: workspace_name (String) => name of requested workspace
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of requested workspace
   #
-  # return: array of workflow submissions
-  def get_workspace_submissions(workspace_name)
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/submissions"
+  # * *return*
+  #   - +Array+ of workflow submissions
+  def get_workspace_submissions(workspace_namespace, workspace_name)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/submissions"
 		process_firecloud_request(:get, path)
 	end
 
 	# create a workflow submission
 	#
-	# param: workspace_name (String) => name of requested workspace
-	# param: config_namespace (String) => namespace of requested configuration
-	# param: config_name (String) => name of requested configuration
-	# param: entity_type (String) => type of workspace entity (e.g. sample, participant, etc)
-	# param: entity_name (String) => name of workspace entity
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of requested workspace
+	#   - +config_namespace+ (String) => namespace of requested configuration
+	#   - +config_name+ (String) => name of requested configuration
+	#   - +entity_type+ (String) => type of workspace entity (e.g. sample, participant, etc)
+	#   - +entity_name+ (String) => name of workspace entity
 	#
-	# return: Hash of workflow submission details
-	def create_workspace_submission(workspace_name, config_namespace, config_name, entity_type, entity_name)
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/submissions"
+  # * *return*
+  #   - +Hash+ of workflow submission details
+	def create_workspace_submission(workspace_namespace, workspace_name, config_namespace, config_name, entity_type, entity_name)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/submissions"
 		submission = {
 				methodConfigurationNamespace: config_namespace,
 				methodConfigurationName: config_name,
@@ -533,47 +634,59 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# get a single workflow submission
 	#
-	# param: workspace_name (String) => name of requested workspace
-	# param: submission_id (String) => id of requested submission
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of requested workspace
+	#   - +submission_id+ (String) => id of requested submission
 	#
-	# return: Array of workflow submissions
-	def get_workspace_submission(workspace_name, submission_id)
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/submissions/#{submission_id}"
+  # * *return*
+  #   - +Hash+ workflow submission object
+	def get_workspace_submission(workspace_namespace, workspace_name, submission_id)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/submissions/#{submission_id}"
 		process_firecloud_request(:get, path)
 	end
 
 	# abort a workflow submission
 	#
-	# param: workspace_name (String) => name of requested workspace
-	# param: submission_id (Integer) => ID of workflow submission
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of requested workspace
+	#   - +submission_id+ (Integer) => ID of workflow submission
 	#
-	# return: Boolean indication of workflow cancellation
-	def abort_workspace_submission(workspace_name, submission_id)
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/submissions/#{submission_id}"
+  # * *return*
+  #   - +Boolean+ indication of workflow cancellation
+	def abort_workspace_submission(workspace_namespace, workspace_name, submission_id)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/submissions/#{submission_id}"
 		process_firecloud_request(:delete, path)
 	end
 
 	# get call-level metadata from a single workflow submission workflow instance
 	#
-	# param: workspace_name (String) => name of requested workspace
-	# param: submission_id (String) => id of requested submission
-	# param: workflow_id (String) => id of requested workflow
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of requested workspace
+	#   - +submission_id+ (String) => id of requested submission
+	#   - +workflow_id+ (String) => id of requested workflow
 	#
-	# return: Hash of workflow object
-	def get_workspace_submission_workflow(workspace_name, submission_id, workflow_id)
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/submissions/#{submission_id}/workflows/#{workflow_id}"
+  # * *return*
+  #   - +Hash+ of workflow object
+	def get_workspace_submission_workflow(workspace_namespace, workspace_name, submission_id, workflow_id)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/submissions/#{submission_id}/workflows/#{workflow_id}"
 		process_firecloud_request(:get, path)
 	end
 
 	# get outputs from a single workflow submission workflow instance
 	#
-	# param: workspace_name (String) => name of requested workspace
-	# param: submission_id (String) => id of requested submission
-	# param: workflow_id (String) => id of requested workflow
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of requested workspace
+	#   - +submission_id+ (String) => id of requested submission
+	#   - +workflow_id+ (String) => id of requested workflow
 	#
-	# return: Array of workflow submission outputs
-	def get_workspace_submission_outputs(workspace_name, submission_id, workflow_id)
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/submissions/#{submission_id}/workflows/#{workflow_id}/outputs"
+  # * *return*
+  #   - +Array+ of workflow submission outputs
+	def get_workspace_submission_outputs(workspace_namespace, workspace_name, submission_id, workflow_id)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/submissions/#{submission_id}/workflows/#{workflow_id}/outputs"
 		process_firecloud_request(:get, path)
 	end
 
@@ -583,88 +696,109 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# list workspace metadata entities with type and attribute information
 	#
-	# param: workspace_name (String) => name of requested workspace
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of requested workspace
 	#
-	# return: Array of workspace metadata entities with type and attribute information
-	def get_workspace_entities(workspace_name)
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/entities_with_type"
+  # * *return*
+  #   - +Array+ of workspace metadata entities with type and attribute information
+	def get_workspace_entities(workspace_namespace, workspace_name)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/entities_with_type"
 		process_firecloud_request(:get, path)
 	end
 
 	# list workspace metadata entity types
 	#
-	# param: workspace_name (String) => name of requested workspace
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of requested workspace
 	#
-	# return: Array of workspace metadata entities
-	def get_workspace_entity_types(workspace_name)
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/entities"
+  # * *return*
+  #   - +Array+ of workspace metadata entities
+	def get_workspace_entity_types(workspace_namespace, workspace_name)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/entities"
 		process_firecloud_request(:get, path)
 	end
 
 	# get a list workspace metadata entities of requested type
 	#
-	# param: workspace_name (String) => name of requested workspace
-	# param: entity_type (String) => type of requested entity
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of requested workspace
+	#   - +entity_type+ (String) => type of requested entity
 	#
-	# return: Array of workspace metadata entities with type and attribute information
-	def get_workspace_entities_by_type(workspace_name, entity_type)
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/entities/#{entity_type}"
+  # * *return*
+  #   - +Array+ of workspace metadata entities with type and attribute information
+	def get_workspace_entities_by_type(workspace_namespace, workspace_name, entity_type)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/entities/#{entity_type}"
 		process_firecloud_request(:get, path)
 	end
 
 	# get an individual workspace metadata entity
 	#
-	# param: workspace_name (String) => name of requested workspace
-	# param: entity_type (String) => type of requested entity
-	# param: entity_name (String) => name of requested entity
+  # * *params*
+  #   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of requested workspace
+	#   - +entity_type+ (String) => type of requested entity
+	#   - +entity_name+ (String) => name of requested entity
 	#
-	# return: Array of workspace metadata entities with type and attribute information
-	def get_workspace_entity(workspace_name, entity_type, entity_name)
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/entities/#{entity_type}/#{entity_name}"
+  # * *return*
+  #   - +Array+ of workspace metadata entities with type and attribute information
+	def get_workspace_entity(workspace_namespace, workspace_name, entity_type, entity_name)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/entities/#{entity_type}/#{entity_name}"
 		process_firecloud_request(:get, path)
 	end
 
 	# update an individual workspace metadata entity
 	#
-	# param: workspace_name (String) => name of requested workspace
-	# param: entity_type (String) => type of requested entity
-	# param: entity_name (String) => name of requested entity
-	# param: operation_type (String) => type of operation requested (add/update)
-	# param: attribute_name (String) => name of attribute being changed
-  # param: attribute_value (String) => value of attribute being changed
+  # * *params*
+  #   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of requested workspace
+	#   - +entity_type+ (String) => type of requested entity
+	#   - +entity_name+ (String) => name of requested entity
+	#   - +operation_type+ (String) => type of operation requested (add/update)
+	#   - +attribute_name+ (String) => name of attribute being changed
+  #   - +attribute_value+ (String) => value of attribute being changed
 	#
-	# return: Array of workspace metadata entities with type and attribute information
-	def update_workspace_entity(workspace_name, entity_type, entity_name, operation_type, attribute_name, attribute_value)
+  # * *return*
+  #   - +Array+ of workspace metadata entities with type and attribute information
+	def update_workspace_entity(workspace_namespace, workspace_name, entity_type, entity_name, operation_type, attribute_name, attribute_value)
 		update = {
 				op: operation_type,
 				attributeName: attribute_name,
 				addUpdateAttribute: attribute_value
 		}.to_json
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/entities/#{entity_type}/#{entity_name}"
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/entities/#{entity_type}/#{entity_name}"
 		process_firecloud_request(:patch, path, update)
 	end
 
 	# get a tsv file of requested workspace metadata entities of requested type
 	#
-	# param: workspace_name (String) => name of requested workspace
-	# param: entity_type (String) => type of requested entity
-  # param: entity_names (String) => list of requested entities to include in file (provide each as a separate parameter)
+  # * *params*
+  #   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of requested workspace
+	#   - +entity_type+ (String) => type of requested entity
+  #   - +entity_names+ (String) => list of requested entities to include in file (provide each as a separate parameter)
 	#
-	# return: Array of workspace metadata entities with type and attribute information
-	def get_workspace_entities_as_tsv(workspace_name, entity_type, *attribute_names)
+  # * *return*
+  #   - +Array+ of workspace metadata entities with type and attribute information
+	def get_workspace_entities_as_tsv(workspace_namespace, workspace_name, entity_type, *attribute_names)
 		attribute_list = attribute_names.join(',')
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/entities/#{entity_type}/tsv#{attribute_list.blank? ? nil : '?attributeNames=' + attribute_list}"
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/entities/#{entity_type}/tsv#{attribute_list.blank? ? nil : '?attributeNames=' + attribute_list}"
 		process_firecloud_request(:get, path)
 	end
 
 	# get a tsv file of requested workspace metadata entities of requested type
 	#
-	# param: workspace_name (String) => name of requested workspace
-	# param: entities_file (File) => valid TSV import file of metadata entities (must be an open File handler)
+  # * *params*
+  #   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of requested workspace
+	#   - +entities_file+ (File) => valid TSV import file of metadata entities (must be an open File handler)
 	#
-	# return: String of entity type that was just created
-	def import_workspace_entities_file(workspace_name, entities_file)
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/importEntities"
+  # * *return*
+  #   -  String of entity type that was just created
+	def import_workspace_entities_file(workspace_namespace, workspace_name, entities_file)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/importEntities"
 		entities_upload = {
 				entities: entities_file
 		}
@@ -673,11 +807,14 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# bulk delete workspace metadata entities
 	#
-	# param: workspace_name (String) => name of requested workspace
-  # param: workspace_entities (Array of objects) => array of hashes mapping to workspace metadata entities
+  # * *params*
+  #   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of requested workspace
+  #   - +workspace_entities+ (Array of objects) => array of hashes mapping to workspace metadata entities
 	#
-	# return: Array of workspace metadata entities
-	def delete_workspace_entities(workspace_name, workspace_entities)
+  # * *return*
+  #   - +Array+ of workspace metadata entities
+	def delete_workspace_entities(workspace_namespace, workspace_name, workspace_entities)
 		# validate entities first before making delete call
 		valid_workspace_entities = []
 		workspace_entities.each do |entity|
@@ -685,7 +822,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 				valid_workspace_entities << entity
 			end
 		end
-		path = self.api_root + "/api/workspaces/#{self.project}/#{workspace_name}/entities/delete"
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/entities/delete"
 		process_firecloud_request(:post, path,  valid_workspace_entities.to_json)
 	end
 
@@ -695,7 +832,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
   # get a list of groups for a user
   #
-  # return: Array of groups
+  # * *return*
+  #   - +Array+ of groups
   def get_user_groups
 		path = self.api_root + "/api/groups"
 		process_firecloud_request(:get, path)
@@ -703,9 +841,11 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# get a specific user group that the user belongs to
 	#
-  # param: group_name (String) => name of requested group
+  # * *params*
+  #   - +group_name+ (String) => name of requested group
   #
-	# return: Hash of group attributes
+  # * *return*
+  #   - +Hash+ of group attributes
 	def get_user_group(group_name)
 		path = self.api_root + "/api/groups/#{group_name}"
 		process_firecloud_request(:get, path)
@@ -713,9 +853,11 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# create a user group
 	#
-	# param: group_name (String) => name of requested group
+  # * *params*
+  #   - +group_name+ (String) => name of requested group
 	#
-	# return: Hash of group attributes
+  # * *return*
+  #   - +Hash+ of group attributes
 	def create_user_group(group_name)
 		path = self.api_root + "/api/groups/#{group_name}"
 		process_firecloud_request(:post, path)
@@ -723,9 +865,11 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# delete a user group that a user owns
 	#
-	# param: group_name (String) => name of requested group
+  # * *params*
+  #   - +group_name+ (String) => name of requested group
 	#
-	# return: Boolean indication of group delete
+  # * *return*
+  #   - +Boolean+ indication of group delete
 	def delete_user_group(group_name)
 		path = self.api_root + "/api/groups/#{group_name}"
 		process_firecloud_request(:delete, path)
@@ -733,11 +877,13 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# add another user to a user group the current user owns
 	#
-	# param: group_name (String) => name of requested group
-	# param: user_role (String) => role of user to add to group (must be member or admin)
-	# param: user_email (String) => email of user to add to group
+  # * *params*
+  #   - +group_name+ (String) => name of requested group
+	#   - +user_role+ (String) => role of user to add to group (must be member or admin)
+	#   - +user_email+ (String) => email of user to add to group
 	#
-	# return: Boolean indication of user addition
+  # * *return*
+  #   - +Boolean+ indication of user addition
 	def add_user_to_group(group_name, user_role, user_email)
 		if USER_GROUP_ROLES.include?(user_role)
 			path = self.api_root + "/api/groups/#{group_name}/#{user_role}/#{user_email}"
@@ -749,11 +895,13 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# remove another user to a user group the current user owns
 	#
-	# param: group_name (String) => name of requested group
-	# param: user_role (String) => role of user to add to group (must be member or admin)
-	# param: user_email (String) => email of user to add to group
+  # * *params*
+  #   - +group_name+ (String) => name of requested group
+	#   - +user_role+ (String) => role of user to add to group (must be member or admin)
+	#   - +user_email+ (String) => email of user to add to group
 	#
-	# return: Boolean indication of user removal
+  # * *return*
+  #   - +Boolean+ indication of user removal
 	def delete_user_from_group(group_name, user_role, user_email)
 		if USER_GROUP_ROLES.include?(user_role)
 			path = self.api_root + "/api/groups/#{group_name}/#{user_role}/#{user_email}"
@@ -765,12 +913,154 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# request access to a user group as the current user
 	#
-	# param: group_name (String) => name of requested group
+  # * *params*
+  #   - +group_name+ (String) => name of requested group
 	#
-	# return: Boolean indication of request submission
+  # * *return*
+  #   - +Boolean+ indication of request submission
 	def request_user_group(group_name)
 		path = self.api_root + "/api/groups/#{group_name}/requestAccess"
 		process_firecloud_request(:post, path)
+	end
+
+  ##
+  ## PROFILE/BILLING METHODS
+  ##
+
+	# get a user's profile status
+	#
+  # * *return*
+  #   - +Hash+ of user registration properties, including email, userID and enabled features
+	def get_registration
+		path = self.api_root + '/register'
+		process_firecloud_request(:get, path)
+	end
+
+  # register a new user or update a user's profile in FireCloud
+  #
+  # * *params*
+  #   - +profile_contents+ (Hash) => complete FireCloud profile information, see https://api.firecloud.org/#!/Profile/setProfile for details
+  #
+  # * *return*
+  #   - +Hash+ of user's registration status information (see FireCloudClient#registration)
+  def set_profile(profile_contents)
+		path = self.api_root + '/register/profile'
+		process_firecloud_request(:post, path, profile_contents.to_json)
+	end
+
+	# get a user's profile status
+	#
+  # * *return*
+  #   - +Hash+ of key/value pairs of information stored in a user's FireCloud profile
+  def get_profile
+		path = self.api_root + '/register/profile'
+		process_firecloud_request(:get, path)
+	end
+
+  # check if a user is registered (via access token)
+  #
+  # * *return*
+  #   - +Boolean+ indication of whether or not user is registered
+  def registered?
+		begin
+			self.get_registration
+			true
+		rescue RuntimeError => e
+			# if user isn't registered, error message should beging with '404 Not Found'
+			if e.message.starts_with?('404')
+				false
+			else
+				# something else happened, so raise exception
+				raise e
+			end
+		end
+	end
+
+	# list billing projects for a given user
+	#
+  # * *return*
+  #   - +Array+ of Hashes of billing projects
+	def get_billing_projects
+		path = self.api_root + '/api/profile/billing'
+		process_firecloud_request(:get, path)
+	end
+
+	# list billing accounts for a given user
+	#
+  # * *return*
+  #   - +Array+ of Hashes of billing accounts
+  def get_billing_accounts
+		path = self.api_root + '/api/profile/billingAccounts'
+		process_firecloud_request(:get, path)
+	end
+
+	# create a FireCloud billing project
+	#
+  # * *params*
+  #   - +project_name+ (String) => name of new billing project
+	#   - +billing_account+ (String) => ID of billing project (must start with billingAccounts/)
+	#
+  # * *return*
+  #   - +Array+ of FireCloud user accounts
+  def create_billing_project(project_name, billing_account)
+		if billing_account.start_with?('billingAccounts/')
+			path = self.api_root + '/api/billing'
+			project_payload = {
+					projectName: project_name,
+					billingAccount: billing_account
+			}.to_json
+			process_firecloud_request(:post, path, project_payload)
+		else
+			raise RuntimeError.new("Invalid billing account: #{billing_account}; must begin with 'billingAccounts/'")
+		end
+	end
+
+	# list all members of a FireCloud billing project
+	#
+  # * *params*
+  #   - +project_id+ (String) => ID of billing project (must start with billingAccounts/)
+	#
+  # * *return*
+  #   - +Array+ of FireCloud user accounts
+	def get_billing_project_members(project_id)
+		path = self.api_root + "/api/billing/#{project_id}/members"
+		process_firecloud_request(:get, path)
+	end
+
+	# add a member to a FireCloud billing project
+	#
+  # * *params*
+  #   - +project_id+ (String) => ID of billing project (must start with billingAccounts/)
+	#   - +role+ (String) => role of member being added (user/owner)
+	#   - +email+ (String) => email of member being added
+	#
+  # * *return*
+  #   - +Array+ of FireCloud user accounts
+	def add_user_to_billing_project(project_id, role, email)
+		if BILLING_PROJECT_ROLES.include?(role)
+			path = self.api_root + "/api/billing/#{project_id}/#{role}/#{email}"
+			process_firecloud_request(:put, path)
+		else
+			raise RuntimeError.new("Invalid billing account role: #{role}; must be a member of '#{BILLING_PROJECT_ROLES.join(', ')}'")
+		end
+	end
+
+	# remove a member from a FireCloud billing project
+	#
+  # * *params*
+  #   - +project_id+ (String) => ID of billing project (must start with billingAccounts/)
+	#   - +role+ (String) => role of member being added (user/owner)
+	#   - +email+ (String) => email of member being added
+	#
+  # * *return*
+  #   - +Array+ of FireCloud user accounts
+	def delete_user_from_billing_project(project_id, role, email)
+		if BILLING_PROJECT_ROLES.include?(role)
+			path = self.api_root + "/api/billing/#{project_id}/#{role}/#{email}"
+			process_firecloud_request(:delete, path)
+		else
+			raise RuntimeError.new("Invalid billing account role: #{role}; must be a member of '#{BILLING_PROJECT_ROLES.join(', ')}'")
+		end
 	end
 
 	#######
@@ -783,7 +1073,16 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	#######
 
 	# generic handler to process GCS method with retries and error handling
-	def execute_gcloud_method(method_name, *params)
+  #
+  # * *params*
+  #   - +method_name+ (String, Symbol) => name of FireCloudClient GCS method to execute
+  #   - +params+ (Array) => array of method parameters (passed with splat operator, so does not need to be an actual array)
+  #
+  # * *return*
+  #   - Object depends on method, can be one of the following: +Google::Cloud::Storage::Bucket+, +Google::Cloud::Storage::File+,
+  #     +Google::Cloud::Storage::FileList+, +Boolean+, +File+, or +String+
+
+  def execute_gcloud_method(method_name, *params)
 		@retries ||= 0
 		if @retries < MAX_RETRY_COUNT
 			begin
@@ -802,74 +1101,92 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# retrieve a workspace's GCP bucket
 	#
-	# param: workspace_name (String) => name of workspace
+  # * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of workspace
 	#
-	# return: GoogleCloudStorage Bucket object
-	def get_workspace_bucket(workspace_name)
-		workspace = self.get_workspace(workspace_name)
+  # * *return*
+  #   - +Google::Cloud::Storage::Bucket+ object
+	def get_workspace_bucket(workspace_namespace, workspace_name)
+		workspace = self.get_workspace(workspace_namespace, workspace_name)
 		bucket_name = workspace['workspace']['bucketName']
 		self.storage.bucket bucket_name
 	end
 
 	# retrieve all files in a GCP bucket of a workspace
 	#
-	# param: workspace_name (String) => name of workspace
-	# param: opts (Hash) => hash of optional parameters, see
-	# https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=files-instance
+  # * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of workspace
+	#   - +opts+ (Hash) => hash of optional parameters, see
+	#     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=files-instance
 	#
-	# return: Google::Cloud::Storage::File::List
-	def get_workspace_files(workspace_name, opts={})
-		bucket = self.get_workspace_bucket(workspace_name)
+  # * *return*
+  #   - +Google::Cloud::Storage::File::List+
+	def get_workspace_files(workspace_namespace, workspace_name, opts={})
+		bucket = self.get_workspace_bucket(workspace_namespace, workspace_name)
 		bucket.files(opts)
 	end
 
 	# retrieve single study_file in a GCP bucket of a workspace
 	#
-	# param: workspace_name (String) => name of workspace
-	# param: filename (String) => name of file
+  # * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of workspace
+	#   - +filename+ (String) => name of file
 	#
-	# return: Google::Cloud::Storage::File
-	def get_workspace_file(workspace_name, filename)
-		bucket = self.get_workspace_bucket(workspace_name)
+  # * *return*
+  #   - +Google::Cloud::Storage::File+
+	def get_workspace_file(workspace_namespace, workspace_name, filename)
+		bucket = self.get_workspace_bucket(workspace_namespace, workspace_name)
 		bucket.file filename
 	end
 
 	# add a file to a workspace bucket
 	#
-	# param: workspace_name (String) => name of workspace
-	# param: filepath (String) => path to file
-	# param: filename (String) => name of file
-	# param: opts (Hash) => extra options for create_file, see
-	# https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=create_file-instance
+  # * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of workspace
+	#   - +filepath+ (String) => path to file
+	#   - +filename+ (String) => name of file
+	#   - +opts+ (Hash) => extra options for create_file, see
+  #     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=create_file-instance
 	#
-	# return: Google::Cloud::Storage::File
-	def create_workspace_file(workspace_name, filepath, filename, opts={})
-		bucket = self.get_workspace_bucket(workspace_name)
+  # * *return*
+  #   - +Google::Cloud::Storage::File+
+	def create_workspace_file(workspace_namespace, workspace_name, filepath, filename, opts={})
+		bucket = self.get_workspace_bucket(workspace_namespace, workspace_name)
 		bucket.create_file filepath, filename, opts
 	end
 
 	# copy a file to a new location in a workspace bucket
 	#
-	# param: workspace_name (String) => name of workspace
-	# param: filename (String) => name of target file
-	# param: destination_name (String) => destination of new file
-	# param: opts (Hash) => extra options for create_file, see
-	# https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=create_file-instance
+  # * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of workspace
+	#   - +filename+ (String) => name of target file
+	#   - +destination_name+ (String) => destination of new file
+	#   - +opts+ (Hash) => extra options for create_file, see
+	#     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=create_file-instance
 	#
-	# return: Google::Cloud::Storage::File
-	def copy_workspace_file(workspace_name, filename, destination_name, opts={})
-		file = self.get_workspace_file(workspace_name, filename)
+  # * *return*
+  #   - +Google::Cloud::Storage::File+
+	def copy_workspace_file(workspace_namespace, workspace_name, filename, destination_name, opts={})
+		file = self.get_workspace_file(workspace_namespace, workspace_name, filename)
 		file.copy destination_name, opts
 	end
 
 	# delete a file to a workspace bucket
 	#
-	# param: workspace_name (String) => name of workspace
-	# param: filename (String) => name of file
+  # * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of workspace
+	#   - +filename+ (String) => name of file
 	#
-	# return: Boolean indication of file deletion
-	def delete_workspace_file(workspace_name, filename)
-		file = self.get_workspace_file(workspace_name, filename)
+  # * *return*
+  #   - +Boolean+ indication of file deletion
+	def delete_workspace_file(workspace_namespace, workspace_name, filename)
+		file = self.get_workspace_file(workspace_namespace, workspace_name, filename)
 		begin
 			file.delete
 		rescue => e
@@ -880,13 +1197,16 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# retrieve single file in a GCP bucket of a workspace and download locally to portal (likely for parsing)
 	#
-	# param: workspace_name (String) => name of workspace
-	# param: filename (String) => name of file
-	# param: destination (String) => destination path for downloaded file
+  # * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of workspace
+	#   - +filename+ (String) => name of file
+	#   - +destination+ (String) => destination path for downloaded file
 	#
-	# return: File object
-	def download_workspace_file(workspace_name, filename, destination)
-		file = self.get_workspace_file(workspace_name, filename)
+  # * *return*
+  #   - +File+ object
+	def download_workspace_file(workspace_namespace, workspace_name, filename, destination)
+		file = self.get_workspace_file(workspace_namespace, workspace_name, filename)
 		# create a valid path by combining destination directory and filename, making sure no double / exist
 		end_path = [destination, filename].join('/').gsub(/\/\//, '/')
 		# gotcha in case file is in a subdirectory
@@ -901,30 +1221,36 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# generate a signed url to download a file that isn't public (set at study level)
 	#
-	# param: workspace_name (String) => name of workspace
-	# param: filename (String) => name of file
-	# param: opts (Hash) => extra options for signed_url, see
-	# https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/file?method=signed_url-instance
+  # * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of workspace
+	#   - +filename+ (String) => name of file
+	#   - +opts+ (Hash) => extra options for signed_url, see
+	#     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/file?method=signed_url-instance
 	#
-	# return: signed URL (string)
-	def generate_signed_url(workspace_name, filename, opts={})
-		file = self.get_workspace_file(workspace_name, filename)
+  # * *return*
+  #   - +String+ signed URL
+	def generate_signed_url(workspace_namespace, workspace_name, filename, opts={})
+		file = self.get_workspace_file(workspace_namespace, workspace_name, filename)
 		file.signed_url(opts)
 	end
 
 	# retrieve all files in a GCP directory
 	#
-	# param: workspace_name (String) => name of workspace
-	# param: directory (String) => name of directory in bucket
-	# param: opts (Hash) => hash of optional parameters, see
-	# https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=files-instance
+  # * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of workspace
+	#   - +directory+ (String) => name of directory in bucket
+	#   - +opts+ (Hash) => hash of optional parameters, see
+  #     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=files-instance
 	#
-	# return: Google::Cloud::Storage::File::List
-	def get_workspace_directory_files(workspace_name, directory, opts={})
+  # * *return*
+  #   - +Google::Cloud::Storage::File::List+
+	def get_workspace_directory_files(workspace_namespace, workspace_name, directory, opts={})
 		# makes sure directory ends with '/', otherwise append to prevent spurious matches
 		directory += '/' unless directory.last == '/'
 		opts.merge!(prefix: directory)
-		self.get_workspace_files(workspace_name, opts)
+		self.get_workspace_files(workspace_namespace, workspace_name, opts)
 	end
 
   #######
@@ -933,44 +1259,52 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	##
   #######
 
+  # create a map of workspace entities based on a list of names and a type
+  #
+  # * *params*
+  #   - +entity_names+ (Array) => array of entity names
+  #   - +entity_type+ (String) => type of entity that all names belong to
+  #
+  # * *return*
+  #   - +Array+ of Hash objects: {entityName: [name], entityType: entity_type}
+  def create_entity_map(entity_names, entity_type)
+    map = []
+    entity_names.each do |name|
+      map << {entityName: name, entityType: entity_type}
+    end
+    map
+  end
+
 	# check if OK response code was found
 	#
-	# param: code (Integer) => integer HTTP response code
+  # * *params*
+  #   - +code+ (Integer) => integer HTTP response code
 	#
-	# return: boolean of whether or not response is a known 'OK' response
+  # * *return*
+  #   - +Boolean+ of whether or not response is a known 'OK' response
 	def ok?(code)
 		[200, 201, 202, 204, 206].include?(code)
 	end
 
   # merge hash of options into single URL query string
   #
-	# param: opts (Hash) => hash of query parameter key/value pairs
+  # * *params*
+  #   - +opts+ (Hash) => hash of query parameter key/value pairs
   #
-  # return: string of concatenated query params
+  # * *return*
+  #   - +String+ of concatenated query params
   def merge_query_options(opts)
 		# return nil if opts is empty, else concat
 		opts.blank? ? nil : '?' + opts.to_a.map {|k,v| "#{k}=#{v}"}.join("&")
 	end
 
-  # create a map of workspace entities based on a list of names and a type
-  #
-  # param: entity_names (Array) => array of entity names
-  # param: entity_type (String) => type of entity that all names belong to
-  #
-  # return: array of key/value pairs of entityName: [name], entityType: entity_type
-  def create_entity_map(entity_names, entity_type)
-		map = []
-		entity_names.each do |name|
-			map << {entityName: name, entityType: entity_type}
-		end
-		map
-	end
-
   # return a more user-friendly error message
   #
-  # param: error (RestClient::Exception) => an RestClient error object
+  # * *params*
+  #   - +error+ (RestClient::Exception) => an RestClient error object
   #
-  # return: String representation of complete error message, with http body if present
+  # * *return*
+  #   - +String+ representation of complete error message, with http body if present
 	def parse_error_message(error)
 		if error.http_body.blank?
 			error.message
@@ -978,7 +1312,23 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 			begin
 				error_hash = JSON.parse(error.http_body)
 				if error_hash.has_key?('message')
-					return error_hash['message']
+					# check if hash can be parsed further
+					message = error_hash['message']
+					if message.index('{').nil?
+						return message
+					else
+						# attempt to extract nested JSON from message
+						json_start = message.index('{')
+						json = message[json_start, message.size + 1]
+						new_message = JSON.parse(json)
+						if new_message.has_key?('message')
+							new_message['message']
+						else
+							new_message
+						end
+					end
+				else
+					return error.message
 				end
 			rescue => e
 				Rails.logger.error e.message

@@ -102,6 +102,9 @@
 				},
         fail: function(e, data) {
             if (data.jqXHR != undefined) {
+                if (data.jqXHR.responseJSON != undefined) {
+                    alert("An error occurred while uploading this file:\n\n" + data.jqXHR.responseJSON.file.errors + "\n\nThis file will be removed once you close this dialog.");
+                }
                 data.jqXHR.abort();
             }
             fileUploading = false;

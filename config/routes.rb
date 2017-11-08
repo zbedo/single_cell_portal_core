@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+
 	scope 'single_cell' do
 
 		# portal admin actions
@@ -6,13 +7,29 @@ Rails.application.routes.draw do
 		post 'admin/restart_locked_jobs', to: 'admin_configurations#restart_locked_jobs', as: :restart_locked_jobs
 		post 'admin/firecloud_access', to: 'admin_configurations#manage_firecloud_access', as: :manage_firecloud_access
 		post 'admin/refresh_api_connections', to: 'admin_configurations#refresh_api_connections', as: :refresh_api_connections
-		resources :admin_configurations, path: 'admin'
+		get 'admin/service_account', to: 'admin_configurations#get_service_account_profile', as: :get_service_account_profile
+		post 'admin/service_account', to: 'admin_configurations#update_service_account_profile', as: :update_service_account_profile
     get 'admin/users/:id/edit', to: 'admin_configurations#edit_user', as: :edit_user
 		match 'admin/users/:id', to: 'admin_configurations#update_user', via: [:post, :patch], as: :update_user
+    get 'admin/email_users/compose', to: 'admin_configurations#compose_users_email', as: :compose_users_email
+    post 'admin/email_users/compose', to: 'admin_configurations#deliver_users_email', as: :deliver_users_email
+		resources :admin_configurations, path: 'admin'
 
     # study reporter actions
     get 'reports', to: 'reports#index', as: :reports
     post 'reports/report_request', to: 'reports#report_request', as: :report_request
+
+    # firecloud billing project actions
+		get 'billing_projects', to: 'billing_projects#index', as: :billing_projects
+		post 'billing_projects/create', to: 'billing_projects#create', as: :create_billing_project
+		get 'billing_projects/:project_name', to: 'billing_projects#show_users', as: :show_billing_project_users
+		get 'billing_projects/:project_name/new_user', to: 'billing_projects#new_user', as: :new_billing_project_user
+		post 'billing_projects/:project_name/add_user', to: 'billing_projects#create_user', as: :create_billing_project_user
+		delete 'billing_projects/:project_name/:role/:email', to: 'billing_projects#delete_user', as: :delete_billing_project_user, constraints: {email: /.*/}
+		get 'billing_projects/:project_name/storage_estimate', to: 'billing_projects#storage_estimate', as: :billing_project_storage_estimate
+		get 'billing_projects/:project_name/workspaces', to: 'billing_projects#workspaces', as: :billing_project_workspaces
+		get 'billing_projects/:project_name/workspaces/:study_name', to: 'billing_projects#edit_workspace_computes', as: :edit_workspace_computes
+		post 'billing_projects/:project_name/workspaces/:study_name', to: 'billing_projects#update_workspace_computes', as: :update_workspace_computes
 
     # study admin actions
 		mount Ckeditor::Engine => 'ckeditor'
@@ -59,7 +76,13 @@ Rails.application.routes.draw do
 		# autocomplete
 		resources :expression_score, only: [:show, :index] do
 			get :autocomplete_expression_score_gene, on: :collection
-		end
+    end
+
+    # user account actions
+		get 'profile/:id', to: 'profiles#show', as: :view_profile
+		match 'profile/:id', to: 'profiles#update', via: [:post, :patch], as: :update_profile
+		match 'profile/:id/subscriptions/share/:study_share_id', to: 'profiles#update_share_subscription', via: [:post, :patch], as: :update_share_subscription
+		match 'profile/:id/subscriptions/study/:study_id', to: 'profiles#update_study_subscription', via: [:post, :patch], as: :update_study_subscription
 
 		# data viewing actions
 		get 'study/:study_name', to: 'site#study', as: :view_study

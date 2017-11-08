@@ -108,13 +108,13 @@ class AdminConfiguration
         shares.each do |user|
           Rails.logger.info "#{Time.now}: revoking share access for #{user}"
           revoke_share_acl = Study.firecloud_client.create_workspace_acl(user, @config_setting)
-          Study.firecloud_client.update_workspace_acl(study.firecloud_workspace, revoke_share_acl)
+          Study.firecloud_client.update_workspace_acl(study.firecloud_project, study.firecloud_workspace, revoke_share_acl)
         end
         # last, remove study owner access
         owner = study.user.email
         Rails.logger.info "#{Time.now}: revoking owner access for #{owner}"
         revoke_owner_acl = Study.firecloud_client.create_workspace_acl(owner, @config_setting)
-        Study.firecloud_client.update_workspace_acl(study.firecloud_workspace, revoke_owner_acl)
+        Study.firecloud_client.update_workspace_acl(study.firecloud_project, study.firecloud_workspace, revoke_owner_acl)
         Rails.logger.info "#{Time.now}: access revocation for #{study.name} complete"
       end
       Rails.logger.info "#{Time.now}: all study access set to #{@config_setting}"
@@ -136,13 +136,13 @@ class AdminConfiguration
         share_permission = StudyShare::FIRECLOUD_ACL_MAP[share.permission]
         Rails.logger.info "#{Time.now}: restoring #{share_permission} permission for #{user}"
         restore_share_acl = Study.firecloud_client.create_workspace_acl(user, share_permission)
-        Study.firecloud_client.update_workspace_acl(study.firecloud_workspace, restore_share_acl)
+        Study.firecloud_client.update_workspace_acl(study.firecloud_project, study.firecloud_workspace, restore_share_acl)
       end
       # last, remove study owner access
       owner = study.user.email
       Rails.logger.info "#{Time.now}: restoring owner access for #{owner}"
       restore_owner_acl = Study.firecloud_client.create_workspace_acl(owner, 'OWNER')
-      Study.firecloud_client.update_workspace_acl(study.firecloud_workspace, restore_owner_acl)
+      Study.firecloud_client.update_workspace_acl(study.firecloud_project, study.firecloud_workspace, restore_owner_acl)
       Rails.logger.info "#{Time.now}: access restoration for #{study.name} complete"
     end
     Rails.logger.info "#{Time.now}: all study access restored"

@@ -1,0 +1,9 @@
+// reset button state
+var btn = $('#<%= @form_id %> .update-compute-permissions');
+btn.button('reset');
+
+<% if @error.nil? %>
+  $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {notice: "Compute permissions for #{@email} successfully updated."}) %>");
+<% else %>
+  $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {alert: "Unable to update compute permissions for #{@email}: #{@error}"}) %>");
+<% end %>

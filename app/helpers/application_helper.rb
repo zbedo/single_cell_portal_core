@@ -62,6 +62,18 @@ module ApplicationHelper
 				when 'edit'
 					breadcrumbs << {title: "Editing '#{@admin_configuration.config_type}'", link: 'javascript:;'}
 			end
+		elsif controller_name == 'billing_projects'
+			breadcrumbs << {title: "My Billing Projects", link: billing_projects_path}
+			case action_name
+				when 'new_user'
+					breadcrumbs << {title: "Add Billing Project User", link: 'javascript:;'}
+				when 'workspaces'
+					breadcrumbs << {title: "Workspaces <span class='badge'>#{params[:project_name]}</span>", link: 'javascript:;'}
+				when 'storage_estimate'
+					breadcrumbs << {title: "Storage Costs <span class='badge'>#{params[:project_name]}</span>", link: 'javascript:;'}
+				when 'edit_workspace_computes'
+					breadcrumbs << {title: "Editing Compute Permissions <span class='badge'>#{truncate(params[:study_name], length: 10)}</span>", link: 'javascript:;'}
+			end
 		end
 		breadcrumbs
 	end
@@ -200,7 +212,13 @@ module ApplicationHelper
 		actions.join(" ").html_safe
 	end
 
+	# return a formatted label for a study's intializatin status
 	def get_initialized_icon(initialized)
 		initialized ? "<small data-toggle='tooltip' title='Visualizations are enabled'><span class='fa fa-fw fa-eye text-success'></span></small>".html_safe : "<small data-toggle='tooltip' title='Visualizations are disabled'><span class='fa fa-fw fa-eye text-danger'></span></small>".html_safe
+	end
+
+	# convert an email address into string that can be used as a DOM element id
+	def email_as_id(email)
+		email.gsub(/[@\.]/, '-')
 	end
 end
