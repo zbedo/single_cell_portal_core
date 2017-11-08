@@ -19,7 +19,9 @@ class StudyShare
 
 	field :email, type: String
 	field	:firecloud_workspace, type: String
+	field	:firecloud_project, type: String
 	field :permission, type: String, default: 'View'
+  field :deliver_emails, type: Boolean, default: true
 
 	validates_uniqueness_of :email, scope: :study_id
 
@@ -32,7 +34,7 @@ class StudyShare
 	FIRECLOUD_ACL_MAP = Hash[PERMISSION_TYPES.zip(FIRECLOUD_ACLS)]
 	PORTAL_ACL_MAP = Hash[FIRECLOUD_ACLS.zip(PERMISSION_TYPES)]
 
-	before_validation		:set_firecloud_workspace, on: :create
+	before_validation		:set_firecloud_workspace_and_project, on: :create
 	before_save					:clean_email
 	after_create				:send_notification
 	after_update				:check_updated_permissions
@@ -52,8 +54,9 @@ class StudyShare
   #
   ###
 
-	def set_firecloud_workspace
+	def set_firecloud_workspace_and_project
 		self.firecloud_workspace = self.study.firecloud_workspace
+		self.firecloud_project = self.study.firecloud_project
 	end
 
 	def clean_email
@@ -83,7 +86,7 @@ class StudyShare
 				Rails.logger.info "#{Time.now}: Creating FireCloud ACLs for study #{self.study.name} - share #{self.email}, permission: #{self.permission}"
 				begin
 					acl = Study.firecloud_client.create_workspace_acl(self.email, FIRECLOUD_ACL_MAP[self.permission])
-					Study.firecloud_client.update_workspace_acl(self.study.firecloud_workspace, acl)
+					Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.study.firecloud_workspace, acl)
 				rescue RuntimeError => e
 					errors.add(:base, "Could not create a share for #{self.email} to workspace #{self.firecloud_workspace} due to: #{e.message}")
 					false
@@ -96,7 +99,7 @@ class StudyShare
 	def revoke_firecloud_acl
 		begin
 			acl = Study.firecloud_client.create_workspace_acl(self.email, 'NO ACCESS')
-			Study.firecloud_client.update_workspace_acl(self.firecloud_workspace, acl)
+			Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, acl)
 		rescue RuntimeError => e
 			Rails.logger.error "#{Time.now}: Could not remove share for #{self.email} to workspace #{self.firecloud_workspace} due to: #{e.message}"
 			SingleCellMailer.share_delete_fail(self.study, self.email).deliver_now

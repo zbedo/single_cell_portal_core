@@ -42,9 +42,11 @@ class AdminConfigurationsController < ApplicationController
     # load actions for UI
     @administrative_tasks = []
     @task_descriptions = {}
+    @task_http_methods = {}
     available_admin_actions.each do |action|
       @administrative_tasks << [action[:name], action[:url]]
       @task_descriptions[action[:name]] = action[:description]
+      @task_http_methods[action[:name]] = action[:method]
     end
   end
 
@@ -170,6 +172,7 @@ class AdminConfigurationsController < ApplicationController
   def refresh_api_connections
     expiration = Study.firecloud_client.expires_at
     storage_issue_date = Study.firecloud_client.storage_issued_at
+    # reinitialize the firecloud client object (forces new access tokens)
     refresh_status = Study.refresh_firecloud_client
     if refresh_status == true && (expiration < Study.firecloud_client.expires_at && storage_issue_date <  Study.firecloud_client.storage_issued_at)
       logger.info "#{Time.now}: Refreshing API client tokens and drivers.  New expiry: #{Study.firecloud_client.expires_at}"
@@ -178,6 +181,33 @@ class AdminConfigurationsController < ApplicationController
     else
       @notice = ''
       @alert = "Error refreshing API client: #{refresh_status}."
+    end
+  end
+
+  # retrieve the firecloud registration for the portal service account
+  def get_service_account_profile
+    @profile_info = {}
+    @portal_service_account = Study.firecloud_client.issuer
+    begin
+      if Study.firecloud_client.registered?
+        profile = Study.firecloud_client.get_profile
+        profile['keyValuePairs'].each do |attribute|
+          @profile_info[attribute['key']] = attribute['value']
+        end
+      end
+    rescue => e
+      logger.error "#{Time.now}: unable to retrieve service account FireCloud registration: #{e.message}"
+    end
+  end
+
+  # register or update the FireCloud profile of the portal service account
+  def update_service_account_profile
+    begin
+      Study.firecloud_client.set_profile(profile_params)
+      @notice = "The portal service account FireCloud profile has been successfully updated."
+    rescue => e
+      logger.error "#{Time.now}: unable to update service account FireCloud registration: #{e.message}"
+      @alert = "Unable to update portal service account FireCloud profile: #{e.message}"
     end
   end
 
@@ -205,7 +235,27 @@ class AdminConfigurationsController < ApplicationController
     end
   end
 
-  # reinitialize the firecloud client object (forces new access tokens)
+  ###
+  #
+  # USER EMAIL METHODS
+  #
+  ###
+
+  # compose an email to send all portal users
+  def compose_users_email
+
+  end
+
+  # deliver an email to all portal users
+  def deliver_users_email
+    begin
+      SingleCellMailer.users_email(users_email_params, current_user).deliver_now
+      @notice = 'Your email has successfully been delivered.'
+    rescue => e
+      logger.error "#{Time.now}: Error delivering users email: #{e.message}"
+      @alert = "Unabled to deliver users email due to the following error: #{e.message}"
+    end
+  end
 
   private
 
@@ -228,23 +278,44 @@ class AdminConfigurationsController < ApplicationController
     params.require(:user).permit(:id, :admin, :reporter)
   end
 
+  # parameters for service account profile
+  def profile_params
+    params.require(:service_account).permit(:contactEmail, :email, :firstName, :lastName, :institute, :institutionalProgram,
+                                            :nonProfitStatus, :pi, :programLocationCity, :programLocationState,
+                                            :programLocationCountry, :title)
+  end
+
+  # parameters for sending user emails
+  def users_email_params
+    params.require(:email).permit(:subject, :from, :contents, :preview)
+  end
+
   # list of available actions to perform
   def available_admin_actions
     [
         {
             name: 'Reset User Download Quotas',
             description: 'Rest all user daily download quota back to 0.',
-            url: reset_user_download_quotas_path
+            url: reset_user_download_quotas_path,
+            method: 'POST'
         },
         {
             name: 'Unlock Orphaned Jobs',
             description: 'Restart any parse jobs that may have been orphaned due to a restart or unexpected crash.',
-            url: restart_locked_jobs_path
+            url: restart_locked_jobs_path,
+            method: 'POST'
         },
         {
             name: 'Refresh API Clients',
             description: 'Force the FireCloud API client to regenerate all access tokens (may be needed after service outage).',
-            url: refresh_api_connections_path
+            url: refresh_api_connections_path,
+            method: 'POST'
+        },
+        {
+            name: 'Manage Service Account FireCloud Registration',
+            description: 'Create or update the FireCloud registration of the portal service account.',
+            url: get_service_account_profile_path,
+            method: 'GET'
         }
     ]
   end

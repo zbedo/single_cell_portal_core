@@ -1,0 +1,17 @@
+<h1>Compute permissions for '<%= params[:study_name]%>'</h1>
+<div class="row">
+  <div class="col-md-12" id="user-computes">
+    <% @acl.each do |user, permissions| %>
+      <%= render partial: 'compute_permissions_fields', locals: {user: user, permissions: permissions } %>
+    <% end %>
+  </div>
+</div>
+<p><%= link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, billing_project_workspaces_path(project_name: params[:project_name]), class: 'btn btn-warning' %></p>
+
+<script type="text/javascript">
+    $('#user-computes').on('click', '.update-compute-permissions', function () {
+        var btn = $(this);
+        btn.button('loading');
+    });
+</script>
+

@@ -213,7 +213,7 @@ function enableDefaultActions() {
     // need to clear previous listener to prevent conflict
     $('.panel-collapse').off('show.bs.collapse hide.bs.collapse');
 
-    $('.panel-collapse').on('show.bs.collapse hide.bs.collapse', function() {
+    $('.panel-collapse').on('show.bs.collapse hide.bs.collapse', function () {
         toggleGlyph($(this).prev().find('span.toggle-glyph'));
     });
 
@@ -223,11 +223,10 @@ function enableDefaultActions() {
     $('[data-toggle="popover"]').popover();
 
     // warns user of in progress uploads, fileUploading is set to true from fileupload().add()
-    $('.check-upload').click(function() {
+    $('.check-upload').click(function () {
         if (fileUploading) {
             if (confirm("You still have file uploads in progress - leaving the page will cancel any incomplete uploads.  " +
-                "Click 'OK' to leave or 'Cancel' to stay.  You may open another tab to continue browsing if you wish."))
-            {
+                    "Click 'OK' to leave or 'Cancel' to stay.  You may open another tab to continue browsing if you wish.")) {
                 return true;
             } else {
                 return false;
@@ -329,7 +328,6 @@ function launchModalSpinner(spinnerTarget, modalTarget, callback) {
     var spinner = new Spinner(opts).spin(target);
     $(target).data('spinner', spinner);
     $(modalTarget).modal('show');
-    console.log('finished')
 };
 
 // function to close modals with spinners launched from launchModalSpinner
@@ -394,7 +392,7 @@ $(window).resize(function() {
 function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, target, annotations, fitType, heatmapHeight, colorScaleMode) {
     console.log('render status of ' + target + ' at start: ' + $(target).data('rendered'));
     $(target).empty();
-    var config = {dataset: dataPath, el: $(target), menu: null, colorScheme: {scalingMode: colorScaleMode}};
+    var config = {dataset: dataPath, el: $(target), colorScheme: {scalingMode: colorScaleMode}};
 
     // set height if specified, otherwise use default setting of 500 px
     if (heatmapHeight !== undefined) {
@@ -658,4 +656,10 @@ function closeUserAnnotationsForm() {
         $('#selection_div').toggleClass('collapse');
         $('#toggle-scatter').children().toggleClass('fa-toggle-on fa-toggle-off');
     }
+}
+
+// validate an email address
+function validateEmail(email) {
+    var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(email);
 }

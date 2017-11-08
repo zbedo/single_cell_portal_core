@@ -14,6 +14,8 @@ if ('<%= params[:partial] %>' == 'initialize_expression_form' && <%= !@study_fil
     $('.expression-label-tooltip').attr('data-original-title', toolTitle);
 }
 
+$(wizForm).find('[data-toggle="tooltip"]').tooltip({container: 'body'});
+
 // go to next step in wizard
 if ('<%= params[:partial] %>' == 'initialize_metadata_form' && getWizardStatus() <= 2) {
 	$('#next-btn').click();

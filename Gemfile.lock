@@ -225,6 +225,12 @@ GEM
     mongoid-encrypted-fields (1.3.6)
       json (< 2)
       mongoid (>= 3)
+    mongoid_rails_migrations (1.1.0)
+      activesupport (>= 4.2.0)
+      bundler (>= 1.0.0)
+      mongoid (>= 4.0.0)
+      rails (>= 4.2.0)
+      railties (>= 4.2.0)
     multi_json (1.12.1)
     multi_xml (0.5.5)
     multipart-post (2.0.0)
@@ -308,6 +314,7 @@ GEM
       rake (>= 0.8.1)
     ruby-prof (0.15.9)
     ruby-progressbar (1.8.1)
+    ruby_native_statistics (0.8)
     rubyzip (1.2.1)
     sass (3.4.22)
     sass-rails (5.0.4)
@@ -386,6 +393,7 @@ DEPENDENCIES
   mongoid (= 5.1)
   mongoid-encrypted-fields
   mongoid-paperclip!
+  mongoid_rails_migrations
   naturally
   nested_form!
   non-stupid-digest-assets
@@ -396,6 +404,7 @@ DEPENDENCIES
   rest-client
   ruby-debug-ide
   ruby-prof
+  ruby_native_statistics
   sass-rails (~> 5.0)
   sdoc (~> 0.4.0)
   selenium-webdriver
