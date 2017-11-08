@@ -932,10 +932,11 @@ class SiteController < ApplicationController
       client = FireCloudClient.new(current_user, @study.firecloud_project)
       @submissions = []
       @samples.each do |sample|
+        logger.info "#{Time.now}: Creating submission for #{sample} using #{config_namespace}/#{config_name} in #{@study.firecloud_project}/#{@study.firecloud_workspace} "
         @submissions << client.create_workspace_submission(@study.firecloud_project, @study.firecloud_workspace, config_namespace, config_name, 'sample', sample)
       end
     rescue => e
-      logger.error "#{Time.now}: unable to submit workflow #{workflow_name} for sample #{@sample} in #{@study.firecloud_workspace} due to: #{e.message}"
+      logger.error "#{Time.now}: unable to submit workflow #{workflow_name} for sample #{@samples.join(', ')} in #{@study.firecloud_workspace} due to: #{e.message}"
       @alert = "We were unable to submit your workflow due to an error: #{e.message}"
       render action: :notice
     end
