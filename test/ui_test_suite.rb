@@ -1160,7 +1160,7 @@ class UiTestSuite < Test::Unit::TestCase
 		admin_toggle.click
 		@wait.until {admin_toggle.text == 'On'}
 		new_toggle_text = admin_toggle.text
-		assert toggle_text == 'On', "Did not properly turn on admin emails (text is still #{new_toggle_text})"
+		assert new_toggle_text == 'On', "Did not properly turn on admin emails (text is still #{new_toggle_text})"
 
 		# toggle study/share notification
 		study_notifier_toggle = @driver.find_element(:class, 'toggle-study-subscription')
@@ -1171,7 +1171,7 @@ class UiTestSuite < Test::Unit::TestCase
 		study_notifier_toggle.click
 		@wait.until {study_notifier_toggle.text == 'On'}
 		new_study_text = study_notifier_toggle.text
-		assert study_text == 'Off', "Did not properly turn on study notification (text is still #{new_study_text})"
+		assert new_study_text == 'Off', "Did not properly turn on study notification (text is still #{new_study_text})"
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
@@ -1213,7 +1213,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# confirm project creation
 		close_modal('message_modal')
 		created_project = @driver.find_element(:id, project_name)
-		assert created_project.present?, "Did not find a new project with the name #{project_name}"
+		assert !created_project.nil?, "Did not find a new project with the name #{project_name}"
 		created_project_name = created_project.find_element(:class, 'project-name').text
 		assert project_name == created_project_name, "Did not set name of project correctly, expected '#{project_name}' but found '#{created_project_name}'"
 
@@ -1262,7 +1262,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# add a study to a newly created billing project
-	test 'admin: billing-projects: create a study' do
+	test 'admin: billing-projects: add a study' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		path = @base_url + '/studies/new'
@@ -1346,7 +1346,7 @@ class UiTestSuite < Test::Unit::TestCase
 		login($test_email, $test_email_password)
 
 		# make sure there is a project and a workspace
-		assert @driver.find_element(:class, 'billing-project').any?, 'Did not find any billing projects'
+		assert element_present?(:class, 'billing-project'), 'Did not find any billing projects'
 		random_seed_slug = $random_seed.split('-').first
 		project_name = "test-scp-project-#{random_seed_slug}"
 		workspaces_btn = @driver.find_element(:id, project_name).find_element(:class, 'view-workspaces')
@@ -1357,7 +1357,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# navigate to compute permissions page
 		edit_compute = @driver.find_element(:class, 'edit-computes')
 		edit_compute.click
-		wait_until_page_loads(path + "/#{project_name}/workspaces/new-project-study-#{$random_seed}")
+		wait_for_render(:id, 'user-computes')
 
 		# revoke compute permissions
 		share_email_id = $share_email.gsub(/[@.]/, '-')
@@ -1715,6 +1715,8 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_for_modal_open('message_modal')
 		notification = @driver.find_element(:id, 'notice-content')
 		assert notification.text == 'Your email has successfully been delivered.', "Did not find correct notification, expeceted 'Your email has successfully been delivered.' but found '#{notification.text}'"
+		close_modal('message_modal')
+		sleep(2)
 
 		# send regular email
 		deliver_btn = @driver.find_element(:id, 'deliver-users-email')

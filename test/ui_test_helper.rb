@@ -365,6 +365,7 @@ class Test::Unit::TestCase
 
   # perform as right-click 'Save Link As...' action in Chrome
   def save_link_as(link)
-    @driver.action.context_click(link).send_keys(['Save', :enter]).perform
+    @driver.action.context_click(link).send_keys([:down, :down, :down, :enter]).perform
+    accept_alert
   end
 end

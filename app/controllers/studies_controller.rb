@@ -354,7 +354,7 @@ class StudiesController < ApplicationController
   def do_upload
     upload = get_upload
     filename = upload.original_filename
-    study_file = @study.study_files.valid.detect {|sf| sf.upload_file_name == filename}
+    study_file = @study.study_files.detect {|sf| sf.upload_file_name == filename}
     # If no file has been uploaded or the uploaded file has a different filename,
     # do a new upload from scratch
     if study_file.nil?
@@ -363,8 +363,8 @@ class StudiesController < ApplicationController
       if study_file.update(study_file_params)
         render json: { file: { name: study_file.upload_file_name, size: upload.size } } and return
       else
-        logger.error "#{Time.now} #{study_file.errors.full_messages.join (", ")}"
-        head 422 and return
+        logger.error "#{Time.now} #{study_file.errors.full_messages.join(", ")}"
+        render json: { file: { name: study_file.upload_file_name, errors: study_file.errors.full_messages.join(", ") } }, status: 422 and return
       end
     else
       current_size = study_file.upload_file_size
@@ -441,14 +441,24 @@ class StudiesController < ApplicationController
   # method to download files if study is private, will create temporary signed_url after checking user quota
   def download_private_file
     @study = Study.find_by(url_safe_name: params[:study_name])
-    # check if user has permission in case someone is phishing
-    if current_user.nil? || !@study.can_view?(current_user)
-      redirect_to site_path, alert: 'You do not have permission to perform that action.' and return
+    # make sure user is signed in
+    if !user_signed_in? || !@study.can_view?(current_user)
+      redirect_to view_study_path(@study.url_safe_name), alert: 'You do not have permission to perform that action.' and return
     elsif @study.embargoed?(current_user)
-      redirect_to site_path, alert: "You may not download any data from this study until #{@study.embargo.to_s(:long)}." and return
-    else
-      begin
-        filesize = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project, @study.firecloud_workspace, params[:filename]).size
+      redirect_to view_study_path(@study.url_safe_name), alert: "You may not download any data from this study until #{@study.embargo.to_s(:long)}." and return
+    end
+
+    # next check if downloads have been disabled by administrator, this will abort the download
+    # download links shouldn't be rendered in any case, this just catches someone doing a straight GET on a file
+    # also check if FireCloud is unavailable and abort if so as well
+    if !AdminConfiguration.firecloud_access_enabled? || !Study.firecloud_client.api_available?
+      head 503 and return
+    end
+    begin
+      # get filesize and make sure the user is under their quota
+      requested_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project, @study.firecloud_workspace, params[:filename])
+      if requested_file.present?
+        filesize = requested_file.size
         user_quota = current_user.daily_download_quota + filesize
         # check against download quota that is loaded in ApplicationController.get_download_quota
         if user_quota <= @download_quota
@@ -457,12 +467,14 @@ class StudiesController < ApplicationController
         else
           redirect_to view_study_path(@study.url_safe_name), alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
         end
-      rescue RuntimeError => e
-        logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
-        redirect_to request.referrer, alert: "We were unable to download the file #{params[:filename]} do to an error: #{view_context.simple_format(e.message)}" and return
+        # redirect directly to file to trigger download
+        redirect_to @signed_url
+      else
+        redirect_to view_study_path, alert: 'The file you requested is currently not available.  Please try again later.'
       end
-      # redirect directly to file to trigger download
-      redirect_to @signed_url
+    rescue RuntimeError => e
+      logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
+      redirect_to request.referrer, alert: "We were unable to download the file #{params[:filename]} do to an error: #{view_context.simple_format(e.message)}" and return
     end
   end
 

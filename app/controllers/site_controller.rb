@@ -1819,6 +1819,7 @@ class SiteController < ApplicationController
     filename = (is_study_file ? file.upload_file_name : file[:name])
 
     signed_url = fc_client.execute_gcloud_method(:generate_signed_url,
+                                                              @study.firecloud_project,
                                                               @study.firecloud_workspace,
                                                               filename,
                                                               expires: 1.day.to_i) # 1 day in seconds, 86400
