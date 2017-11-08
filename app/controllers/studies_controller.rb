@@ -347,14 +347,14 @@ class StudiesController < ApplicationController
   def do_upload
     upload = get_upload
     filename = upload.original_filename
-    study_file = @study.study_files.valid.detect {|sf| sf.upload_file_name == filename}
+    study_file = @study.study_files.detect {|sf| sf.upload_file_name == filename}
     # If no file has been uploaded or the uploaded file has a different filename,
     # do a new upload from scratch
     if study_file.nil?
       # don't use helper as we're about to mass-assign params
       study_file = @study.study_files.build
       if study_file.update(study_file_params)
-        render json: { file: { name: study_file.errors,size: nil } } and return
+        render json: { file: { name: study_file.upload_file_name ,size: upload.size } } and return
       else
         study_file.errors.each do |error|
           logger.error "#{Time.now}: upload failed due to #{error.inspect}"
