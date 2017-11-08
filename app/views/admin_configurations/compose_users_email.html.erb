@@ -33,6 +33,12 @@
 
 <script type="text/javascript">
 
+    $(document).ready(function() {
+        CKEDITOR.instances['email_contents'].setData("<p>-- MESSAGE TEXT HERE --</p><hr /><p>To Unsubscribe from Single Cell Portal messages:</p>" +
+            "<ol><li><a href='<%= new_user_session_url %>'>Sign in</a> the portal with your Google account</li><li>Click 'My Profile' from the top-right dropdown</li>" +
+            "<li>Set 'Admin Email Delivery' to 'Off'</li></ol>");
+    });
+
     function validateEmail() {
         var subject = $('#email_subject').val();
         var content = CKEDITOR.instances['email_contents'].getData();
