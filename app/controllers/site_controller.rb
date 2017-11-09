@@ -594,7 +594,7 @@ class SiteController < ApplicationController
 
     user_quota = user.daily_download_quota
 
-    # Only check at quota at beginning of download, not per file.
+    # Only check quota at beginning of download, not per file.
     # Studies might be massive, and we want user to be able to download at least
     # one requested download object per day.
     if user_quota >= @download_quota
@@ -603,7 +603,7 @@ class SiteController < ApplicationController
       return
     end
 
-    curl_configs = ['--create-dirs']
+    curl_configs = ['--create-dirs', '--compressed']
 
     curl_files = []
 

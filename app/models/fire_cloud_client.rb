@@ -845,7 +845,22 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	# return: Google::Cloud::Storage::File
 	def create_workspace_file(workspace_name, filepath, filename, opts={})
 		bucket = self.get_workspace_bucket(workspace_name)
-		bucket.create_file filepath, filename, opts
+		if filepath.last(3) != '.gz'
+			# Compress all uncompressed files.
+			# This saves time on upload and download, and money on egress and storage.
+			gzip_filepath = filepath + '.tmp.gz'
+			Zlib::GzipWriter.open(gzip_filepath) do |gz|
+				File.open(filepath).each do |line|
+					gz.write line
+				end
+				gz.close
+			end
+			File.rename gzip_filepath, filepath
+			bucket.create_file filepath, filename, content_encoding: 'gzip'
+		else
+			bucket.create_file filepath, filename, opts
+		end
+
 	end
 
 	# copy a file to a new location in a workspace bucket
