@@ -1596,7 +1596,6 @@ class SiteController < ApplicationController
       expression[:all][:marker][:line] = { color: 'rgb(40,40,40)', width: 0.5}
       expression[:all][:marker][:size] << 6
     end
-    logger.info expression[:all][:marker][:color]
     color_minmax =  expression[:all][:marker][:color].minmax
     expression[:all][:marker][:cmin], expression[:all][:marker][:cmax] = color_minmax
     expression[:all][:marker][:colorscale] = 'Reds'
