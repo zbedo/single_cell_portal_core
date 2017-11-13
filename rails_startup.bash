@@ -33,7 +33,7 @@ chown app:app /home/app/.cron_env
 echo "*** COMPLETED ***"
 
 echo "*** RUNNING PENDING MIGRATIONS ***"
-sudo -E -u app -H bin/rake db:migrate
+sudo -E -u app -H bin/rake RAILS_ENV=$PASSENGER_APP_ENV db:migrate
 echo "*** COMPLETED ***"
 
 echo "*** STARTING DELAYED_JOB ***"
