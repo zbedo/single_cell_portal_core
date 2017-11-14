@@ -651,6 +651,7 @@ class Study
     filepath
   end
 
+  # perform a sanity check to look for any missing files in remote storage
   def self.storage_sanity_check
     puts 'Performing global storage sanity check for all studies'
     @missing_files = []
