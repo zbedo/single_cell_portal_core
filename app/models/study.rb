@@ -434,6 +434,11 @@ class Study
     end
   end
 
+  # default size for cluster points
+  def default_cluster_point_size
+    self.default_options[:cluster_point_size].presence
+  end
+
   ###
   #
   # INSTANCE VALUE SETTERS & GETTERS
