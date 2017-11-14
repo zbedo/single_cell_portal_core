@@ -669,6 +669,62 @@ class Study
     filepath
   end
 
+  # perform a sanity check to look for any missing files in remote storage
+  def self.storage_sanity_check
+    puts 'Performing global storage sanity check for all studies'
+    @missing_files = []
+    self.where(queued_for_deletion: false).to_a.each do |study|
+      puts "Performing check for '#{study.name}'"
+      puts "Beginning with study_files"
+      # begin with study_files
+      files = study.study_files.valid
+      files.each do |file|
+        file_location = file.remote_location.blank? ? file.upload_file_name : file.remote_location
+        puts "Checking file: #{file_location}"
+        # if file has no generation tag, then we know the upload failed
+        if file.generation.blank?
+          puts "#{file_location} was never uploaded to #{study.bucket_id} (no generation tag)"
+          @missing_files << {filename: file_location, study: study.name, reason: 'Upload never completed (no generation tag)'}
+        else
+          begin
+            # check remote file for existence
+            remote_file = Study.firecloud_client.get_workspace_file(study.firecloud_workspace, file_location)
+            if remote_file.nil?
+              puts "#{file_location} not found in #{study.bucket_id}"
+              @missing_files << {filename: file_location, study: study.name, reason: "File missing from bucket: #{study.bucket_id}"}
+            end
+          rescue => e
+            puts "#{Time.now}: error in performing sanity check on #{study.name}: #{e.message}"
+            @missing_files << {filename: file_location, study: study.name, reason: "Error retrieving remote file: #{e.message}"}
+          end
+        end
+      end
+      # next check directory_listings
+      directories = study.directory_listings.are_synced
+      directories.each do |directory|
+        puts "Checking directory: #{directory.name}"
+        directory.files.each do |file|
+          file_location = file['name']
+          puts "Checking directory file: #{file_location}"
+          begin
+            # check remote file for existence
+            remote_file = Study.firecloud_client.get_workspace_file(study.firecloud_workspace, file_location)
+            if remote_file.nil?
+              puts "#{file_location} not found in #{study.bucket_id}"
+              @missing_files << {filename: file_location, study: study.name, reason: "File missing from bucket: #{study.bucket_id}"}
+            end
+          rescue => e
+            puts "#{Time.now}: error in performing sanity check on #{study.name}: #{e.message}"
+            @missing_files << {filename: file_location, study: study.name, reason: "Error retrieving remote file: #{e.message}"}
+          end
+        end
+      end
+    end
+    puts "Sanity check complete!"
+    puts "Missing files found: #{@missing_files.size}"
+    @missing_files
+  end
+
   ###
   #
   # PARSERS
