@@ -23,7 +23,7 @@ var data = [];
         size: <%= raw data[:marker_size] %>,
         line: {
           color: plotlyDefaultLineColor,
-          width: 0.5
+          width: <%= @study.show_cluster_point_borders? ? 0.5 : 0 %>
         }
       }
     <% end %>

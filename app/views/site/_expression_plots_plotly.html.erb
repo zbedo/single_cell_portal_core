@@ -36,9 +36,9 @@ var dataRef = [];
       marker: {
         color: colorBrewerSet[<%= index %>],
         size: <%= raw @coordinates[key][:marker_size] %>,
-        line:{
+        line: {
           color: plotlyDefaultLineColor,
-          width: 0.5
+          width: <%= @study.show_cluster_point_borders? ? 0.5 : 0 %>
         }
       }
     };
@@ -61,9 +61,9 @@ var dataRef = [];
       marker: {
         color: colorBrewerSet[<%= index %> % 27],
         size: <%= raw @coordinates[key][:marker_size] %>,
-        line:{
+        line: {
           color: plotlyDefaultLineColor,
-          width: 0.5
+          width: <%= @study.show_cluster_point_borders? ? 0.5 : 0 %>
         }
       }
     };
@@ -82,12 +82,6 @@ var dataRef = [];
       Plotly.newPlot('scatter-plot', clusterData, scatterLayout);
 
       // re-render reference plot if showing numeric annotations
-      /*
-      for(var i = 0; i < dataRef.length; i ++){
-        dataRef[i].type = new_type;
-      }
-      Plotly.newPlot('reference-plot', dataRef, staticLayout);
-      */
 
     });
 <% end %>
@@ -138,14 +132,14 @@ var expressionData = [];
         type: 'box',
         marker: {
           color: colorBrewerSet[<%= index %> % 27],
-          line:{
+          line: {
             color: plotlyDefaultLineColor,
-            width: 0.5
+            width: <%= @study.show_cluster_point_borders? ? 0.5 : 0 %>
           }
         }
       };
 
-        expressionData.push(cluster_<%= index %>_exp);
+      expressionData.push(cluster_<%= index %>_exp);
     <% end %>
 
     <%= render partial: 'expression_box_layout' %>

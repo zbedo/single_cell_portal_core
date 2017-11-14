@@ -427,7 +427,7 @@ class Study
 
   # determine whether or not the study owner wants to receive update emails
   def deliver_emails?
-    if self.default_options[:deliver_emails].nil?
+    if self.default_options[:deliver_emails].blank?
       true
     else
       self.default_options[:deliver_emails]
@@ -436,7 +436,20 @@ class Study
 
   # default size for cluster points
   def default_cluster_point_size
-    self.default_options[:cluster_point_size].presence
+    if self.default_options[:cluster_point_size].blank?
+      6
+    else
+      self.default_options[:cluster_point_size].to_i
+    end
+  end
+
+  # default size for cluster points
+  def show_cluster_point_borders?
+    if self.default_options[:cluster_point_border].blank?
+      true
+    else
+      self.default_options[:cluster_point_border] == 'true'
+    end
   end
 
   ###

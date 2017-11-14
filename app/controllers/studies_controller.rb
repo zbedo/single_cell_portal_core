@@ -843,8 +843,9 @@ class StudiesController < ApplicationController
       @study.default_options[:color_profile] = nil
     end
     if @study.save
-      @study.default_cluster.study_file.invalidate_cache_by_file_type
-      @study.expression_matrix_files.first.invalidate_cache_by_file_type
+      # invalidate all cluster & expression caches as points sizes/borders may have changed globally
+      @study.cluster_groups.map {|cluster_group| cluster_group.study_file.invalidate_cache_by_file_type}
+      @study.expression_matrix_files.map {|matrix_file| matrix_file.invalidate_cache_by_file_type}
       set_study_default_options
       render action: 'update_default_options_success'
     else
@@ -891,7 +892,7 @@ class StudiesController < ApplicationController
   end
 
   def default_options_params
-    params.require(:study_default_options).permit(:cluster, :annotation, :color_profile, :expression_label)
+    params.require(:study_default_options).permit(:cluster, :annotation, :color_profile, :expression_label, :cluster_point_size, :cluster_point_border)
   end
 
   def set_file_types
