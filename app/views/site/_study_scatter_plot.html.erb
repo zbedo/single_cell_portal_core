@@ -15,11 +15,12 @@ var data = [];
 		name: "<%= data[:name] %>",
 		mode: 'markers',
 		type: '<%= @plot_type %>',
+    opacity: <%= @study.default_cluster_point_alpha %>,
     <% if !data[:marker].nil? %>
       marker: <%= raw data[:marker].to_json %>
     <% else %>
       marker: {
-        color: "rgba(" + hexToRgb(colorBrewerSet[<%= index %> % 27]) + "," + <%= @study.default_cluster_point_alpha %> + ")",
+        color: colorBrewerSet[<%= index %> % 27],
         size: <%= raw data[:marker_size] %>,
         line: {
           color: plotlyDefaultLineColor,

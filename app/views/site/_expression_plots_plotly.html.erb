@@ -34,8 +34,9 @@ var dataRef = [];
       name: "<%= @coordinates[key][:name] %>",
       mode: 'markers',
       type: 'scatter3d',
+      opacity: <%= @study.default_cluster_point_alpha %>,
       marker: {
-        color: "rgba(" + hexToRgb(colorBrewerSet[<%= index %> % 27]) + "," + <%= @study.default_cluster_point_alpha %> + ")",
+        color: colorBrewerSet[<%= index %> % 27],
         size: <%= raw @coordinates[key][:marker_size] %>,
         line: {
           color: plotlyDefaultLineColor,
@@ -59,8 +60,9 @@ var dataRef = [];
       mode: 'markers',
       dragmode: 'lasso, select',
       type: 'scattergl',
+      opacity: <%= @study.default_cluster_point_alpha %>,
       marker: {
-        color: "rgba(" + hexToRgb(colorBrewerSet[<%= index %> % 27]) + "," + <%= @study.default_cluster_point_alpha %> + ")",
+        color: colorBrewerSet[<%= index %> % 27],
         size: <%= raw @coordinates[key][:marker_size] %>,
         line: {
           color: plotlyDefaultLineColor,

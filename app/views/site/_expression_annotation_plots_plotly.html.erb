@@ -29,6 +29,7 @@ var exp = {
   mode: 'markers',
   type: '<%= @cluster.is_3d? ? 'scatter3d' : 'scattergl' %>',
   hoverinfo: 'text',
+  opacity: <%= @study.default_cluster_point_alpha %>,
   marker: <%= raw @expression[:all][:marker].to_json %>
 };
 
@@ -50,6 +51,7 @@ var data = [];
     textposition: 'bottom left',
     mode: 'markers',
     type: 'scatter3d',
+    opacity: <%= @study.default_cluster_point_alpha %>,
     marker: <%= raw @coordinates[:all][:marker].to_json %>
   };
 <% else %>
@@ -60,6 +62,7 @@ var data = [];
     name: '<%= raw @coordinates[:all][:name] %>',
     mode: 'markers',
     type: 'scattergl',
+    opacity: <%= @study.default_cluster_point_alpha %>,
     marker: <%= raw @coordinates[:all][:marker].to_json %>
   };
 <% end %>
