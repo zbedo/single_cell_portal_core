@@ -845,7 +845,7 @@ class StudiesController < ApplicationController
     if @study.save
       # invalidate all cluster & expression caches as points sizes/borders may have changed globally
       # start with default cluster then do everything else
-      @study.default_cluster.study_files.invalidate_cache_by_file_type
+      @study.default_cluster.study_file.invalidate_cache_by_file_type
       other_clusters = @study.cluster_groups.keep_if {|cluster_group| cluster_group.name != @study.default_cluster}
       other_clusters.map {|cluster_group| cluster_group.study_file.invalidate_cache_by_file_type}
       @study.expression_matrix_files.map {|matrix_file| matrix_file.invalidate_cache_by_file_type}
