@@ -696,7 +696,7 @@ class Study
         else
           begin
             # check remote file for existence
-            remote_file = Study.firecloud_client.get_workspace_file(study.firecloud_project,study.firecloud_workspace, file_location)
+            remote_file = Study.firecloud_client.get_workspace_file(study.firecloud_project, study.firecloud_workspace, file_location)
             if remote_file.nil?
               puts "#{file_location} not found in #{study.bucket_id}"
               @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "File missing from bucket: #{study.bucket_id}"}
@@ -716,7 +716,7 @@ class Study
           puts "Checking directory file: #{file_location}"
           begin
             # check remote file for existence
-            remote_file = Study.firecloud_client.get_workspace_file(study.firecloud_project,study.firecloud_workspace, file_location)
+            remote_file = Study.firecloud_client.get_workspace_file(study.firecloud_project, study.firecloud_workspace, file_location)
             if remote_file.nil?
               puts "#{file_location} not found in #{study.bucket_id}"
               @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "File missing from bucket: #{study.bucket_id}"}
