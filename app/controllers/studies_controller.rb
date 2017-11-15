@@ -895,7 +895,7 @@ class StudiesController < ApplicationController
   end
 
   def default_options_params
-    params.require(:study_default_options).permit(:cluster, :annotation, :color_profile, :expression_label, :cluster_point_size, :cluster_point_border)
+    params.require(:study_default_options).permit(:cluster, :annotation, :color_profile, :expression_label, :cluster_point_size, :cluster_point_alpha, :cluster_point_border)
   end
 
   def set_file_types

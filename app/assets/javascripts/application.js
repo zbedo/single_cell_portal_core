@@ -363,6 +363,16 @@ var colorBrewerSet = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#a
     "#66c2a5", "#fc8d62", "#8da0cb", "#e78ac3", "#a6d854", "#ffd92f", "#e5c494", "#b3b3b3", "#8dd3c7",
     "#bebada", "#fb8072", "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd", "#ccebc5", "#ffed6f"];
 
+
+// convert a hex color code to an RGB triplet
+var hexToRgb = function(hex) {
+    var bigint = parseInt(hex.replace(/#/, ''), 16);
+    var r = (bigint >> 16) & 255;
+    var g = (bigint >> 8) & 255;
+    var b = bigint & 255;
+    return [r,g,b].join(',');
+}
+
 // clear out text area in a form
 function clearForm(target) {
     $('#' + target).val("");

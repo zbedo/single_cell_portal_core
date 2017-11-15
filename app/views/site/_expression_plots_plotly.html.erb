@@ -10,6 +10,7 @@ var exp = {
   text: <%= raw @expression[:all][:text] %>,
   mode: 'markers',
   type: '<%= @cluster.is_3d? ? 'scatter3d' : 'scattergl' %>',
+  opacity: <%= @study.default_cluster_point_alpha %>,
   hoverinfo: 'text',
   marker: <%= raw @expression[:all][:marker].to_json %>
 };
@@ -34,7 +35,7 @@ var dataRef = [];
       mode: 'markers',
       type: 'scatter3d',
       marker: {
-        color: colorBrewerSet[<%= index %>],
+        color: "rgba(" + hexToRgb(colorBrewerSet[<%= index %> % 27]) + "," + <%= @study.default_cluster_point_alpha %> + ")",
         size: <%= raw @coordinates[key][:marker_size] %>,
         line: {
           color: plotlyDefaultLineColor,
@@ -59,7 +60,7 @@ var dataRef = [];
       dragmode: 'lasso, select',
       type: 'scattergl',
       marker: {
-        color: colorBrewerSet[<%= index %> % 27],
+        color: "rgba(" + hexToRgb(colorBrewerSet[<%= index %> % 27]) + "," + <%= @study.default_cluster_point_alpha %> + ")",
         size: <%= raw @coordinates[key][:marker_size] %>,
         line: {
           color: plotlyDefaultLineColor,
@@ -131,7 +132,7 @@ var expressionData = [];
         boxmean: true,
         type: 'box',
         marker: {
-          color: colorBrewerSet[<%= index %> % 27],
+          color: "rgba(" + hexToRgb(colorBrewerSet[<%= index %> % 27]) + "," + <%= @study.default_cluster_point_alpha %> + ")",
           line: {
             color: plotlyDefaultLineColor,
             width: <%= @study.show_cluster_point_borders? ? 0.5 : 0 %>

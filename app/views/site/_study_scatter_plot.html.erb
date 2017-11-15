@@ -19,7 +19,7 @@ var data = [];
       marker: <%= raw data[:marker].to_json %>
     <% else %>
       marker: {
-        color: colorBrewerSet[<%= index %> % 27],
+        color: "rgba(" + hexToRgb(colorBrewerSet[<%= index %> % 27]) + "," + <%= @study.default_cluster_point_alpha %> + ")",
         size: <%= raw data[:marker_size] %>,
         line: {
           color: plotlyDefaultLineColor,
