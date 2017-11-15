@@ -83,9 +83,6 @@ var dataRef = [];
       });
 
       Plotly.newPlot('scatter-plot', clusterData, scatterLayout);
-
-      // re-render reference plot if showing numeric annotations
-
     });
 <% end %>
 
@@ -134,7 +131,7 @@ var expressionData = [];
         boxmean: true,
         type: 'box',
         marker: {
-          color: "rgba(" + hexToRgb(colorBrewerSet[<%= index %> % 27]) + "," + <%= @study.default_cluster_point_alpha %> + ")",
+          color: colorBrewerSet[<%= index %> % 27],
           line: {
             color: plotlyDefaultLineColor,
             width: <%= @study.show_cluster_point_borders? ? 0.5 : 0 %>
