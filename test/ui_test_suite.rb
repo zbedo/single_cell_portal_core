@@ -3189,14 +3189,17 @@ class UiTestSuite < Test::Unit::TestCase
 		# change expression axis label
 		expression_label = options_form.find_element(:id, 'study_default_options_expression_label')
 		new_exp_label = 'Gene Expression Scores'
+		expression_label.clear
 		expression_label.send_keys(new_exp_label)
 
 		# change cluster point size, turn off borders, and reduce alpha
 		cluster_point_size = options_form.find_element(:id, 'study_default_options_cluster_point_size')
+		cluster_point_size.clear
 		cluster_point_size.send_keys(8)
 		cluster_borders = options_form.find_element(:id, 'study_default_options_cluster_point_border')
 		cluster_borders.send_keys('No')
 		cluster_alpha = options_form.find_element(:id, 'study_default_options_cluster_point_alpha')
+		cluster_alpha.clear
 		cluster_alpha.send_keys(0.5)
 
 		# save options
@@ -3288,10 +3291,12 @@ class UiTestSuite < Test::Unit::TestCase
 		cluster_dropdown.send_key(new_cluster)
 		# change cluster point size, turn on borders, and reset alpha
 		cluster_point_size = options_form.find_element(:id, 'study_default_options_cluster_point_size')
+		cluster_point_size.clear
 		cluster_point_size.send_keys(6)
 		cluster_borders = options_form.find_element(:id, 'study_default_options_cluster_point_border')
 		cluster_borders.send_keys('Yes')
 		cluster_alpha = options_form.find_element(:id, 'study_default_options_cluster_point_alpha')
+		cluster_alpha.clear
 		cluster_alpha.send_keys(1)
 
 		# wait one second while annotation options update
