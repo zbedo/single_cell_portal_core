@@ -13,7 +13,7 @@
         </div>
       <% end %>
       <h4>Study Default View Options</h4>
-      <p class="help-block">Use this form to choose what the default expression axis label, cluster, annotation, and (if applicable) color profile are when someone views your study.<br/>
+      <p class="help-block">Use this form to choose what the default expression axis label, cluster, annotation, color profile, and cluster point display properties are when someone views your study.<br/>
         <span class="text-warning"><i class="fa fa-info-circle"></i> The default color profile only applies to the selected annotation (if the type is numeric).</span></p>
       <div class="form-group row">
         <div class="col-sm-4">
@@ -30,12 +30,27 @@
         </div>
       </div>
       <div class="form-group row">
-        <div class="col-sm-9">
+        <div class="col-sm-4">
+          <%= f.label :cluster_point_size, "Size of cluster points (in px) <i class='fa fa-fw fa-question-circle' data-toggle='tooltip' title='Global value for the size of all cluster points, in pixels.'></i>".html_safe %><br />
+          <%= f.number_field :cluster_point_size, value: @study.default_cluster_point_size, class: 'form-control' %>
+        </div>
+        <div class="col-sm-4">
+          <%= f.label :cluster_point_border, 'Show cluster point borders?' %><br />
+          <%= f.select :cluster_point_border, options_for_select([['Yes', true],['No', false]], @study.show_cluster_point_borders?) , {}, class: 'form-control' %>
+        </div>
+        <div class="col-sm-4">
+          <%= f.label :cluster_point_alpha, "Cluster point transparency <i class='fa fa-fw fa-question-circle' data-toggle='tooltip' title='Global value for the transparency (alpha) of all cluster points.  Only values between 0 and 1 are accepted.'></i>".html_safe %><br />
+          <%= f.number_field :cluster_point_alpha, value: @study.default_cluster_point_alpha, in: 0.0..1.0, step: 0.05, class: 'form-control' %>
+        </div>
+      </div>
+      <div class="form-group row">
+        <div class="col-sm-12">
           <%= f.label :expression_label, 'Expression Axis Label' %>&nbsp;<span class="fa fa-question-circle" data-toggle="tooltip" data-placement="right" title='This is displayed as the axis label for box & scatter plots showing expression values.  This label is global to all expression values.'></span> <br />
           <%= f.text_field :expression_label, value: @study.default_options[:expression_label], placeholder: @study.default_expression_label, class: 'form-control' %>
         </div>
-        <div class="col-sm-3">
-          <%= f.label :actions, "&nbsp;".html_safe %><br />
+      </div>
+      <div class="form-group row">
+        <div class="col-sm-12 text-center">
           <%= f.submit 'Update Defaults', class: 'btn btn-success' %>
         </div>
       </div>
@@ -52,10 +67,21 @@
             }
         });
 
+        $('#study_default_options_cluster_point_alpha').change(function () {
+            var formElement = $(this);
+            var alpha = parseFloat(formElement.val());
+            if (alpha < 0) {
+                formElement.val(0.0);
+            } else if (alpha > 1) {
+                formElement.val(1.0);
+            }
+        });
+
         $('#study_default_options_cluster').change(function(){
             var cluster = $(this).val();
             $.get("<%= load_annotation_options_study_path %>?cluster=" + cluster)
         });
     </script>
   <% end %>
+
 <% end %>

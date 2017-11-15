@@ -10,6 +10,7 @@ var exp = {
   text: <%= raw @expression[:all][:text] %>,
   mode: 'markers',
   type: '<%= @cluster.is_3d? ? 'scatter3d' : 'scattergl' %>',
+  opacity: <%= @study.default_cluster_point_alpha %>,
   hoverinfo: 'text',
   marker: <%= raw @expression[:all][:marker].to_json %>
 };
@@ -33,12 +34,13 @@ var dataRef = [];
       name: "<%= @coordinates[key][:name] %>",
       mode: 'markers',
       type: 'scatter3d',
+      opacity: <%= @study.default_cluster_point_alpha %>,
       marker: {
-        color: colorBrewerSet[<%= index %>],
+        color: colorBrewerSet[<%= index %> % 27],
         size: <%= raw @coordinates[key][:marker_size] %>,
-        line:{
+        line: {
           color: plotlyDefaultLineColor,
-          width: 0.5
+          width: <%= @study.show_cluster_point_borders? ? 0.5 : 0 %>
         }
       }
     };
@@ -58,12 +60,13 @@ var dataRef = [];
       mode: 'markers',
       dragmode: 'lasso, select',
       type: 'scattergl',
+      opacity: <%= @study.default_cluster_point_alpha %>,
       marker: {
         color: colorBrewerSet[<%= index %> % 27],
         size: <%= raw @coordinates[key][:marker_size] %>,
-        line:{
+        line: {
           color: plotlyDefaultLineColor,
-          width: 0.5
+          width: <%= @study.show_cluster_point_borders? ? 0.5 : 0 %>
         }
       }
     };
@@ -82,12 +85,6 @@ var dataRef = [];
       Plotly.newPlot('scatter-plot', clusterData, scatterLayout);
 
       // re-render reference plot if showing numeric annotations
-      /*
-      for(var i = 0; i < dataRef.length; i ++){
-        dataRef[i].type = new_type;
-      }
-      Plotly.newPlot('reference-plot', dataRef, staticLayout);
-      */
 
     });
 <% end %>
@@ -137,15 +134,15 @@ var expressionData = [];
         boxmean: true,
         type: 'box',
         marker: {
-          color: colorBrewerSet[<%= index %> % 27],
-          line:{
+          color: "rgba(" + hexToRgb(colorBrewerSet[<%= index %> % 27]) + "," + <%= @study.default_cluster_point_alpha %> + ")",
+          line: {
             color: plotlyDefaultLineColor,
-            width: 0.5
+            width: <%= @study.show_cluster_point_borders? ? 0.5 : 0 %>
           }
         }
       };
 
-        expressionData.push(cluster_<%= index %>_exp);
+      expressionData.push(cluster_<%= index %>_exp);
     <% end %>
 
     <%= render partial: 'expression_box_layout' %>

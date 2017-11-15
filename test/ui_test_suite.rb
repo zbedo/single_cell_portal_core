@@ -133,7 +133,7 @@ class UiTestSuite < Test::Unit::TestCase
 	##
 
 	# create basic test study
-	test 'admin: create-study: configurations: download: user-annotation: workflows: user-profiles: public' do
+	test 'admin: create-study: configurations: validation: download: user-annotation: workflows: user-profiles: public' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in first
@@ -3189,7 +3189,18 @@ class UiTestSuite < Test::Unit::TestCase
 		# change expression axis label
 		expression_label = options_form.find_element(:id, 'study_default_options_expression_label')
 		new_exp_label = 'Gene Expression Scores'
+		expression_label.clear
 		expression_label.send_keys(new_exp_label)
+
+		# change cluster point size, turn off borders, and reduce alpha
+		cluster_point_size = options_form.find_element(:id, 'study_default_options_cluster_point_size')
+		cluster_point_size.clear
+		cluster_point_size.send_keys(8)
+		cluster_borders = options_form.find_element(:id, 'study_default_options_cluster_point_border')
+		cluster_borders.send_keys('No')
+		cluster_alpha = options_form.find_element(:id, 'study_default_options_cluster_point_alpha')
+		cluster_alpha.clear
+		cluster_alpha.send_keys(0.5)
 
 		# save options
 		options_form.submit
@@ -3203,8 +3214,14 @@ class UiTestSuite < Test::Unit::TestCase
 		# assert values have persisted
 		loaded_cluster = @driver.find_element(:id, 'cluster')['value']
 		loaded_annotation = @driver.find_element(:id, 'annotation')['value']
+		cluster_point_size = @driver.execute_script("return data[0].marker.size[0];")
+		cluster_border = @driver.execute_script("return data[0].marker.line.width;").to_f
+		cluster_alpha_val = @driver.execute_script("return data[0].opacity;").to_f
 		assert new_cluster == loaded_cluster, "default cluster incorrect, expected #{new_cluster} but found #{loaded_cluster}"
 		assert new_annot == loaded_annotation, "default annotation incorrect, expected #{new_annot} but found #{loaded_annotation}"
+		assert cluster_point_size == 8, "default cluster point size incorrect, expected 8 but found #{cluster_point_size}"
+		assert cluster_border == 0.0, "default cluster border incorrect, expected 0.0 but found #{cluster_border}"
+		assert cluster_alpha_val == 0.5, "default cluster alpha incorrect, expected 0.5 but found #{cluster_alpha_val}"
 		unless new_color.empty?
 			loaded_color = @driver.find_element(:id, 'colorscale')['value']
 			assert new_color == loaded_color, "default color incorrect, expected #{new_color} but found #{loaded_color}"
@@ -3224,6 +3241,7 @@ class UiTestSuite < Test::Unit::TestCase
 		assert new_cluster == exp_loaded_cluster, "default cluster incorrect, expected #{new_cluster} but found #{exp_loaded_cluster}"
 		assert new_annot == exp_loaded_annotation, "default annotation incorrect, expected #{new_annot} but found #{exp_loaded_annotation}"
 		assert exp_loaded_label == new_exp_label, "default expression label incorrect, expected #{new_exp_label} but found #{exp_loaded_label}"
+
 		unless new_color.empty?
 			exp_loaded_color = @driver.find_element(:id, 'colorscale')['value']
 			assert new_color == exp_loaded_color, "default color incorrect, expected #{new_color} but found #{exp_loaded_color}"
@@ -3271,6 +3289,15 @@ class UiTestSuite < Test::Unit::TestCase
 		cluster_opts = cluster_dropdown.find_elements(:tag_name, 'option')
 		new_cluster = cluster_opts.select {|opt| !opt.selected?}.sample.text
 		cluster_dropdown.send_key(new_cluster)
+		# change cluster point size, turn on borders, and reset alpha
+		cluster_point_size = options_form.find_element(:id, 'study_default_options_cluster_point_size')
+		cluster_point_size.clear
+		cluster_point_size.send_keys(6)
+		cluster_borders = options_form.find_element(:id, 'study_default_options_cluster_point_border')
+		cluster_borders.send_keys('Yes')
+		cluster_alpha = options_form.find_element(:id, 'study_default_options_cluster_point_alpha')
+		cluster_alpha.clear
+		cluster_alpha.send_keys(1)
 
 		# wait one second while annotation options update
 		sleep(1)
@@ -3309,8 +3336,15 @@ class UiTestSuite < Test::Unit::TestCase
 		open_ui_tab('study-visualize')
 		loaded_cluster = @driver.find_element(:id, 'cluster')['value']
 		loaded_annotation = @driver.find_element(:id, 'annotation')['value']
+		cluster_point_size = @driver.execute_script("return data[0].marker.size[0];")
+		cluster_border = @driver.execute_script("return data[0].marker.line.width;").to_f
+		cluster_alpha_val = @driver.execute_script("return data[0].opacity;").to_f
 		assert new_cluster == loaded_cluster, "default cluster incorrect, expected #{new_cluster} but found #{loaded_cluster}"
 		assert new_annot == loaded_annotation, "default annotation incorrect, expected #{new_annot} but found #{loaded_annotation}"
+		assert cluster_point_size == 6, "default cluster point size incorrect, expected 8 but found #{cluster_point_size}"
+		assert cluster_border == 0.5, "default cluster border incorrect, expected 0.0 but found #{cluster_border}"
+		assert cluster_alpha_val == 1.0, "default cluster alpha incorrect, expected 0.5 but found #{cluster_alpha_val}"
+
 		unless new_color.empty?
 			loaded_color = @driver.find_element(:id, 'colorscale')['value']
 			assert new_color == loaded_color, "default color incorrect, expected #{new_color} but found #{loaded_color}"
