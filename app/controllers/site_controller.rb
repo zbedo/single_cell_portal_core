@@ -127,7 +127,10 @@ class SiteController < ApplicationController
           # invalidate caches as needed
           if @study.previous_changes.keys.include?('default_options')
             # invalidate all cluster & expression caches as points sizes/borders may have changed globally
-            @study.cluster_groups.map {|cluster_group| cluster_group.study_file.invalidate_cache_by_file_type}
+            # start with default cluster then do everything else
+            @study.default_cluster.study_file.invalidate_cache_by_file_type
+            other_clusters = @study.cluster_groups.keep_if {|cluster_group| cluster_group.name != @study.default_cluster}
+            other_clusters.map {|cluster_group| cluster_group.study_file.invalidate_cache_by_file_type}
             @study.expression_matrix_files.map {|matrix_file| matrix_file.invalidate_cache_by_file_type}
           elsif @study.previous_changes.keys.include?('name')
             # if user renames a study, invalidate all caches
