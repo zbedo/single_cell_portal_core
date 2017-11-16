@@ -36,6 +36,12 @@ echo "*** RUNNING PENDING MIGRATIONS ***"
 sudo -E -u app -H bin/rake RAILS_ENV=$PASSENGER_APP_ENV db:migrate
 echo "*** COMPLETED ***"
 
+if [[ ! -d /home/app/webapp/tmp/pids ]]
+then
+	echo "*** MAKING TMP DIR ***"
+	sudo -E -u app -H mkdir -p /home/app/webapp/tmp/pids
+	echo "*** COMPLETED ***"
+fi
 echo "*** STARTING DELAYED_JOB ***"
 sudo -E -u app -H bin/delayed_job start $PASSENGER_APP_ENV -n 4
 echo "*** ADDING CRONTAB TO CHECK DELAYED_JOB ***"
