@@ -33,22 +33,20 @@
   </div>
   <% unless @study.default_cluster.nil? %>
     <h4>Study Default View Options</h4>
-    <p class="help-block">Use this form to choose what the default expression axis label, cluster, annotation, color profile, and cluster point display properties are when someone views your study.<br/>
-      <span class="text-warning"><i class="fa fa-info-circle"></i> The default color profile only applies to the selected annotation (if the type is numeric).</span>
-    </p>
+    <p class="help-block">Use this form to choose what the default expression axis label, cluster, annotation, color profile, and cluster point display properties are when someone views your study.</p>
     <div class="well well-sm" id="default-study-options-form">
       <%= f.fields_for :default_options do |opts| %>
         <div class="form-group row">
           <div class="col-sm-4">
-            <%= opts.label :cluster %><br />
+            <%= opts.label :cluster, 'Default Cluster' %><br />
             <%= opts.select :cluster, options_for_select(@study.cluster_groups.map(&:name), @default_cluster.name), {}, class: 'form-control' %>
           </div>
           <div class="col-sm-4">
-            <%= opts.label :annotation %><br />
+            <%= opts.label :annotation, 'Default Annotation' %><br />
             <%= opts.select :annotation, grouped_options_for_select(@default_cluster_annotations, @study.default_annotation), {},class: 'form-control' %>
           </div>
           <div class="col-sm-4">
-            <%= opts.label :color_profile %><br />
+            <%= opts.label :color_profile, "Default Color Profile <i class='fa fa-info-circle' title='The default color profile only applies to the selected annotation (if the type is numeric)' data-toggle='tooltip'></i>".html_safe %><br />
             <%= opts.select :color_profile, options_for_select(SiteController::COLORSCALE_THEMES, @study.default_color_profile), {include_blank: 'N/A'} , class: 'form-control', disabled: @study.default_annotation_type == 'group' %>
           </div>
         </div>
