@@ -1614,6 +1614,7 @@ class Study
       # store generation tag to know whether a file has been updated in GCP
       Rails.logger.info "#{Time.now}: Updating #{file.upload_file_name} with generation tag: #{remote_file.generation} after successful upload"
       file.update(generation: remote_file.generation)
+      file.update(upload_file_size: remote_file.size)
       Rails.logger.info "#{Time.now}: Upload of #{file.upload_file_name} complete, scheduling cleanup job"
       # schedule the upload cleanup job to run in two minutes
       run_at = 2.minutes.from_now
