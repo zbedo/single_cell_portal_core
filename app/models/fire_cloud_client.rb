@@ -1144,19 +1144,39 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# add a file to a workspace bucket
 	#
-  # * *params*
+	# * *params*
 	#   - +workspace_namespace+ (String) => namespace of workspace
 	#   - +workspace_name+ (String) => name of workspace
 	#   - +filepath+ (String) => path to file
 	#   - +filename+ (String) => name of file
 	#   - +opts+ (Hash) => extra options for create_file, see
-  #     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=create_file-instance
+	#     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=create_file-instance
 	#
-  # * *return*
-  #   - +Google::Cloud::Storage::File+
+	# * *return*
+	#   - +Google::Cloud::Storage::File+
 	def create_workspace_file(workspace_namespace, workspace_name, filepath, filename, opts={})
 		bucket = self.get_workspace_bucket(workspace_namespace, workspace_name)
-		bucket.create_file filepath, filename, opts
+		first_two_bytes = File.open(filepath).read(2)
+		gzip_signature = "\x1F\x8B".force_encoding(Encoding::ASCII_8BIT) # per IETF
+		file_is_gzipped = (first_two_bytes == gzip_signature)
+		if file_is_gzipped or filepath.last(4) == '.bam' or filepath.last(5) == '.cram'
+			Rails.logger.info "#{Time.now}: Direct upload"
+			# Directly upload data if it's already compressed
+			bucket.create_file filepath, filename, opts
+		else
+			Rails.logger.info "#{Time.now}: Gzipping, then upload"
+			# Compress all uncompressed files before upload.
+			# This saves time on upload and download, and money on egress and storage.
+			gzip_filepath = filepath + '.tmp.gz'
+			Zlib::GzipWriter.open(gzip_filepath) do |gz|
+				File.open(filepath).each do |line|
+					gz.write line
+				end
+				gz.close
+			end
+			File.rename gzip_filepath, filepath
+			bucket.create_file filepath, filename, opts.merge(content_encoding: 'gzip')
+		end
 	end
 
 	# copy a file to a new location in a workspace bucket
