@@ -1824,15 +1824,23 @@ class SiteController < ApplicationController
 
     filename = (is_study_file ? file.upload_file_name : file[:name])
 
-    signed_url = fc_client.execute_gcloud_method(:generate_signed_url,
+    begin
+      signed_url = fc_client.execute_gcloud_method(:generate_signed_url,
                                                               @study.firecloud_project,
                                                               @study.firecloud_workspace,
                                                               filename,
                                                               expires: 1.day.to_i) # 1 day in seconds, 86400
-    curl_config = [
-      'url="' + signed_url + '"',
-      'output="' + filename + '"'
-    ]
+      curl_config = [
+          'url="' + signed_url + '"',
+          'output="' + filename + '"'
+      ]
+    rescue
+      curl_config = [
+          '# Error downloading ' + filename + '.  ' +
+          'Did you delete the file in the bucket and not sync it in Single Cell Portal?'
+      ]
+    end
+    
     curl_config = curl_config.join("\n")
     file_size = (is_study_file ? file.upload_file_size : file[:size])
 
