@@ -12,6 +12,8 @@ class StudiesController < ApplicationController
   #
   ###
 
+  respond_to :html, :js, :json
+
   before_action :set_study, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
   before_action :set_file_types, only: [:sync_study, :sync_submission_outputs, :sync_study_file, :sync_orphaned_study_file, :update_study_file_from_sync]
   before_filter :check_edit_permissions, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
@@ -49,10 +51,14 @@ class StudiesController < ApplicationController
   # GET /studies/new
   def new
     @study = Study.new
+
+    # load the given user's available FireCloud billing projects
+    set_user_projects
   end
 
   # GET /studies/1/edit
   def edit
+    set_user_projects
   end
 
   # POST /studies
@@ -66,6 +72,7 @@ class StudiesController < ApplicationController
         format.html { redirect_to path, notice: "Your study '#{@study.name}' was successfully created." }
         format.json { render :show, status: :ok, location: @study }
       else
+        set_user_projects
         format.html { render :new }
         format.json { render json: @study.errors, status: :unprocessable_entity }
       end
@@ -95,12 +102,12 @@ class StudiesController < ApplicationController
     @permissions_changed = []
 
     # get a list of workspace submissions so we know what directories to ignore
-    @submission_ids = Study.firecloud_client.get_workspace_submissions(@study.firecloud_workspace).map {|s| s['submissionId']}
+    @submission_ids = Study.firecloud_client.get_workspace_submissions(@study.firecloud_project, @study.firecloud_workspace).map {|s| s['submissionId']}
 
     # first sync permissions if necessary
     begin
       portal_permissions = @study.local_acl
-      firecloud_permissions = Study.firecloud_client.get_workspace_acl(@study.firecloud_workspace)
+      firecloud_permissions = Study.firecloud_client.get_workspace_acl(@study.firecloud_project, @study.firecloud_workspace)
       firecloud_permissions['acl'].each do |user, permissions|
         # skip project owner permissions, they aren't relevant in this context
         if permissions['accessLevel'] == 'PROJECT_OWNER'
@@ -144,7 +151,7 @@ class StudiesController < ApplicationController
     begin
       # create a map of file extension to use for creating directory_listings of groups of 10+ files of the same type
       @file_extension_map = {}
-      workspace_files = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, @study.firecloud_workspace)
+      workspace_files = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, @study.firecloud_project, @study.firecloud_workspace)
       # see process_workspace_bucket_files in private methods for more details on syncing
       process_workspace_bucket_files(workspace_files)
       while workspace_files.next?
@@ -222,13 +229,13 @@ class StudiesController < ApplicationController
     @unsynced_primary_data_dirs = []
     @unsynced_other_dirs = []
     begin
-      submission = Study.firecloud_client.get_workspace_submission(@study.firecloud_workspace, params[:submission_id])
+      submission = Study.firecloud_client.get_workspace_submission(@study.firecloud_project, @study.firecloud_workspace, params[:submission_id])
       submission['workflows'].each do |workflow|
-        workflow = Study.firecloud_client.get_workspace_submission_workflow(@study.firecloud_workspace, params[:submission_id], workflow['workflowId'])
+        workflow = Study.firecloud_client.get_workspace_submission_workflow(@study.firecloud_project, @study.firecloud_workspace, params[:submission_id], workflow['workflowId'])
         workflow['outputs'].each do |output, file_url|
           file_location = file_url.gsub(/gs\:\/\/#{@study.bucket_id}\//, '')
           # get google instance of file
-          file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_workspace, file_location)
+          file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project, @study.firecloud_workspace, file_location)
           basename = file.name.split('/').last
           # now copy the file to a new location for syncing and remove the old instance
           new_location = "outputs_#{params[:submission_id]}/#{basename}"
@@ -300,7 +307,7 @@ class StudiesController < ApplicationController
         @study.update(firecloud_workspace: nil)
       else
         begin
-          Study.firecloud_client.delete_workspace(@study.firecloud_workspace)
+          Study.firecloud_client.delete_workspace(@study.firecloud_project, @study.firecloud_workspace)
         rescue RuntimeError => e
           logger.error "#{Time.now} unable to delete workspace: #{@study.firecloud_workspace}; #{e.message}"
           redirect_to studies_path, alert: "We were unable to delete your study due to: #{view_context.simple_format(e.message)}.<br /><br />No files or database records have been deleted.  Please try again later" and return
@@ -354,12 +361,10 @@ class StudiesController < ApplicationController
       # don't use helper as we're about to mass-assign params
       study_file = @study.study_files.build
       if study_file.update(study_file_params)
-        render json: { file: { name: study_file.upload_file_name ,size: upload.size } } and return
+        render json: { file: { name: study_file.upload_file_name, size: upload.size } } and return
       else
-        study_file.errors.each do |error|
-          logger.error "#{Time.now}: upload failed due to #{error.inspect}"
-        end
-        head 422 and return
+        logger.error "#{Time.now} #{study_file.errors.full_messages.join(", ")}"
+        render json: { file: { name: study_file.upload_file_name, errors: study_file.errors.full_messages.join(", ") } }, status: 422 and return
       end
     else
       current_size = study_file.upload_file_size
@@ -432,28 +437,40 @@ class StudiesController < ApplicationController
   # method to download files if study is private, will create temporary signed_url after checking user quota
   def download_private_file
     @study = Study.find_by(url_safe_name: params[:study_name])
-    # check if user has permission in case someone is phishing
-    if current_user.nil? || !@study.can_view?(current_user)
-      redirect_to site_path, alert: 'You do not have permission to perform that action.' and return
+    # make sure user is signed in
+    if !user_signed_in? || !@study.can_view?(current_user)
+      redirect_to view_study_path(@study.url_safe_name), alert: 'You do not have permission to perform that action.' and return
     elsif @study.embargoed?(current_user)
-      redirect_to site_path, alert: "You may not download any data from this study until #{@study.embargo.to_s(:long)}." and return
-    else
-      begin
-        filesize = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_workspace, params[:filename]).size
+      redirect_to view_study_path(@study.url_safe_name), alert: "You may not download any data from this study until #{@study.embargo.to_s(:long)}." and return
+    end
+
+    # next check if downloads have been disabled by administrator, this will abort the download
+    # download links shouldn't be rendered in any case, this just catches someone doing a straight GET on a file
+    # also check if FireCloud is unavailable and abort if so as well
+    if !AdminConfiguration.firecloud_access_enabled? || !Study.firecloud_client.api_available?
+      head 503 and return
+    end
+    begin
+      # get filesize and make sure the user is under their quota
+      requested_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project, @study.firecloud_workspace, params[:filename])
+      if requested_file.present?
+        filesize = requested_file.size
         user_quota = current_user.daily_download_quota + filesize
         # check against download quota that is loaded in ApplicationController.get_download_quota
         if user_quota <= @download_quota
-          @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_workspace, params[:filename], expires: 15)
+          @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_project, @study.firecloud_workspace, params[:filename], expires: 15)
           current_user.update(daily_download_quota: user_quota)
         else
           redirect_to view_study_path(@study.url_safe_name), alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
         end
-      rescue RuntimeError => e
-        logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
-        redirect_to request.referrer, alert: "We were unable to download the file #{params[:filename]} do to an error: #{view_context.simple_format(e.message)}" and return
+        # redirect directly to file to trigger download
+        redirect_to @signed_url
+      else
+        redirect_to view_study_path, alert: 'The file you requested is currently not available.  Please try again later.'
       end
-      # redirect directly to file to trigger download
-      redirect_to @signed_url
+    rescue RuntimeError => e
+      logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
+      redirect_to request.referrer, alert: "We were unable to download the file #{params[:filename]} do to an error: #{view_context.simple_format(e.message)}" and return
     end
   end
 
@@ -603,8 +620,8 @@ class StudiesController < ApplicationController
       # delete source file in FireCloud and then remove record
       begin
         # make sure file is in FireCloud first as user may be aborting the upload
-        if !Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_workspace, @study_file.upload_file_name).nil?
-          Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, @study.firecloud_workspace, @study_file.upload_file_name)
+        if !Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project, @study.firecloud_workspace, @study_file.upload_file_name).nil?
+          Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, @study.firecloud_project, @study.firecloud_workspace, @study_file.upload_file_name)
         end
       rescue RuntimeError => e
         logger.error "#{Time.now}: error in deleting #{@study_file.upload_file_name} from workspace: #{@study.firecloud_workspace}; #{e.message}"
@@ -812,6 +829,7 @@ class StudiesController < ApplicationController
   #
   ###
 
+  # update the default_options field for a study
   def update_default_options
     @study.default_options = default_options_params
     # get new annotation type from parameters
@@ -821,8 +839,12 @@ class StudiesController < ApplicationController
       @study.default_options[:color_profile] = nil
     end
     if @study.save
+      # invalidate all cluster & expression caches as points sizes/borders may have changed globally
+      # start with default cluster then do everything else
       @study.default_cluster.study_file.invalidate_cache_by_file_type
-      @study.expression_matrix_files.first.invalidate_cache_by_file_type
+      other_clusters = @study.cluster_groups.keep_if {|cluster_group| cluster_group.name != @study.default_cluster}
+      other_clusters.map {|cluster_group| cluster_group.study_file.invalidate_cache_by_file_type}
+      @study.expression_matrix_files.map {|matrix_file| matrix_file.invalidate_cache_by_file_type}
       set_study_default_options
       render action: 'update_default_options_success'
     else
@@ -856,7 +878,7 @@ class StudiesController < ApplicationController
 
   # study params whitelist
   def study_params
-    params.require(:study).permit(:name, :description, :public, :user_id, :embargo, :use_existing_workspace, :firecloud_workspace, study_shares_attributes: [:id, :_destroy, :email, :permission])
+    params.require(:study).permit(:name, :description, :public, :user_id, :embargo, :use_existing_workspace, :firecloud_workspace, :firecloud_project, study_shares_attributes: [:id, :_destroy, :email, :permission])
   end
 
   # study file params whitelist
@@ -869,7 +891,7 @@ class StudiesController < ApplicationController
   end
 
   def default_options_params
-    params.require(:study_default_options).permit(:cluster, :annotation, :color_profile, :expression_label)
+    params.require(:study_default_options).permit(:cluster, :annotation, :color_profile, :expression_label, :cluster_point_size, :cluster_point_alpha, :cluster_point_border)
   end
 
   def set_file_types
@@ -908,6 +930,17 @@ class StudiesController < ApplicationController
     end
     if @other_files.empty?
       @other_files << @study.build_study_file({file_type: 'Documentation'})
+    end
+  end
+
+  def set_user_projects
+    @projects = [['Default Project', FireCloudClient::PORTAL_NAMESPACE]]
+    client = FireCloudClient.new(current_user, 'single-cell-portal')
+    available_projects = client.get_billing_projects
+    available_projects.each do |project|
+      if project['creationStatus'] == 'Ready'
+        @projects << [project['projectName'], project['projectName']]
+      end
     end
   end
 

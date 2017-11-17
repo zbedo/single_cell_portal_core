@@ -133,7 +133,7 @@ class UiTestSuite < Test::Unit::TestCase
 	##
 
 	# create basic test study
-	test 'admin: create-study: configurations: download: user-annotation: workflows: public' do
+	test 'admin: create-study: configurations: validation: download: user-annotation: workflows: user-profiles: public' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in first
@@ -1134,6 +1134,269 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	##
+	## USER PROFILE TESTS
+	## Setting email preferences, etc
+	##
+
+	test 'user-profiles: update email preferences' do
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		@driver.get @base_url + '/users/sign_in'
+		login($test_email, $test_email_password)
+
+		# open profile page
+		profile = @driver.find_element(:id, 'profile-nav')
+		profile.click
+		profile_link = @driver.find_element(:id, 'my-profile')
+		profile_link.click
+		wait_for_render(:id, 'profile-header')
+
+		# toggle admin emails
+		admin_toggle = @driver.find_element(:id, 'toggle-admin-emails')
+		admin_toggle.click
+		@wait.until {admin_toggle.text == 'Off'}
+		toggle_text = admin_toggle.text
+		assert toggle_text == 'Off', "Did not properly turn off admin emails (text is still #{toggle_text})"
+		admin_toggle.click
+		@wait.until {admin_toggle.text == 'On'}
+		new_toggle_text = admin_toggle.text
+		assert new_toggle_text == 'On', "Did not properly turn on admin emails (text is still #{new_toggle_text})"
+
+		# toggle study/share notification
+		study_notifier_toggle = @driver.find_element(:class, 'toggle-study-subscription')
+		study_notifier_toggle.click
+		@wait.until {study_notifier_toggle.text == 'Off'}
+		study_text = study_notifier_toggle.text
+		assert study_text == 'Off', "Did not properly turn off study notification (text is still #{study_text})"
+		study_notifier_toggle.click
+		@wait.until {study_notifier_toggle.text == 'On'}
+		new_study_text = study_notifier_toggle.text
+		assert new_study_text == 'Off', "Did not properly turn on study notification (text is still #{new_study_text})"
+
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+	end
+
+	##
+	## BILLING TESTS
+	## Validate the portal can create and manage new FireCloud projects given existing billing projects/accounts
+	## The user being used for the test must have an available Google billing project that they own for these tests to work
+	##
+
+	# create a new firecloud billing project
+	test 'admin: billing-projects: create' do
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		path = @base_url + '/billing_projects'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email, $test_email_password)
+
+		# create new billing project
+		add_btn = @driver.find_element(:id, 'add-billing-project')
+		add_btn.click
+		wait_for_modal_open('new-firecloud-project-modal')
+
+		# select available billing account and name project
+		accounts = @driver.find_element(:id, 'billing_project_billing_account').find_elements(:tag_name, 'option').keep_if {|opt| !opt['value'].empty?}
+		account = accounts.sample
+		account.click
+		name_field = @driver.find_element(:id, 'billing_project_project_name')
+		# project names have a length limit, so shorten random seed element
+		random_seed_slug = $random_seed.split('-').first
+		project_name = "test-scp-project-#{random_seed_slug}"
+		name_field.send_key(project_name)
+
+		# save new billing project
+		save_btn = @driver.find_element(:id, 'create-billing-project')
+		save_btn.click
+
+		# confirm project creation
+		close_modal('message_modal')
+		created_project = @driver.find_element(:id, project_name)
+		assert !created_project.nil?, "Did not find a new project with the name #{project_name}"
+		created_project_name = created_project.find_element(:class, 'project-name').text
+		assert project_name == created_project_name, "Did not set name of project correctly, expected '#{project_name}' but found '#{created_project_name}'"
+
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+	end
+
+	# add users to a billing project
+	test 'admin: billing-projects: manage users' do
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		path = @base_url + '/billing_projects'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email, $test_email_password)
+
+		# add a user to newly created project
+		random_seed_slug = $random_seed.split('-').first
+		project_name = "test-scp-project-#{random_seed_slug}"
+		project_path = path + "/#{project_name}/new_user"
+		add_user_button = @driver.find_element(:id, project_name).find_element(:class, 'add-billing-project-user')
+		add_user_button.click
+		wait_until_page_loads(project_path)
+		email_field = @driver.find_element(:id, 'billing_project_user_email')
+		email_field.send_key($share_email)
+		role_select = @driver.find_element(:id, 'billing_project_user_role')
+		role_select.send_key('user')
+		save_btn = @driver.find_element(:id, 'add-billing-project-user')
+		save_btn.click
+		wait_until_page_loads(path)
+		close_modal('message_modal')
+
+		# assert user was added
+		email_id = "#{project_name}-#{$share_email.gsub(/[@\.]/, '-')}"
+		assert element_present?(:id, email_id), "Did not successfully add user to billing project, could not find element with id: #{email_id}"
+
+		# remove user
+		remove_link = @driver.find_element(:id, project_name).find_element(:class, 'delete-billing-project-user')
+		remove_link.click
+		accept_alert
+		close_modal('message_modal')
+
+		# assert deletion
+		assert !element_present?(:id, email_id), "Did not successfully remove user to billing project, found element with id: #{email_id}"
+
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+	end
+
+	# add a study to a newly created billing project
+	test 'admin: billing-projects: add a study' do
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		path = @base_url + '/studies/new'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email, $test_email_password)
+
+		# fill out study form
+		study_form = @driver.find_element(:id, 'new_study')
+		study_form.find_element(:id, 'study_name').send_keys("New Project Study #{$random_seed}")
+		project = study_form.find_element(:id, 'study_firecloud_project')
+		random_seed_slug = $random_seed.split('-').first
+		project_name = "test-scp-project-#{random_seed_slug}"
+		project.send_keys(project_name)
+		# add a share
+		share = @driver.find_element(:id, 'add-study-share')
+		@wait.until {share.displayed?}
+		share.click
+		share_email = study_form.find_element(:class, 'share-email')
+		share_email.send_keys($share_email)
+		share_permission = study_form.find_element(:class, 'share-permission')
+		share_permission.send_keys('Edit')
+		# save study
+		save_study = @driver.find_element(:id, 'save-study')
+		save_study.click
+
+		# upload expression matrix
+		close_modal('message_modal')
+		upload_expression = @driver.find_element(:id, 'upload-expression')
+		upload_expression.send_keys(@test_data_path + 'expression_matrix_example.txt')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		# close success modal
+		close_modal('upload-success-modal')
+		next_btn = @driver.find_element(:id, 'next-btn')
+		next_btn.click
+
+		# upload metadata
+		wait_for_render(:id, 'metadata_form')
+		upload_metadata = @driver.find_element(:id, 'upload-metadata')
+		upload_metadata.send_keys(@test_data_path + 'metadata_example2.txt')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		close_modal('upload-success-modal')
+
+		# upload cluster
+		cluster_form_1 = @driver.find_element(:class, 'initialize_ordinations_form')
+		cluster_name = cluster_form_1.find_element(:class, 'filename')
+		cluster_name.send_keys('Test Cluster 1')
+		upload_cluster = cluster_form_1.find_element(:class, 'upload-clusters')
+		upload_cluster.send_keys(@test_data_path + 'cluster_example_2.txt')
+		wait_for_render(:id, 'start-file-upload')
+		# perform upload
+		upload_btn = cluster_form_1.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		close_modal('upload-success-modal')
+
+		# validate everything uploaded and parsed
+		sleep(3)
+		study_path = @base_url + '/study/' + "new-project-study-#{$random_seed}"
+		@driver.get study_path
+		wait_until_page_loads(study_path)
+		open_ui_tab('study-download')
+		files = @driver.find_elements(:class, 'dl-link').size
+		assert files == 3, "Did not find correct nubmer of files to download, expected 3 but found #{files}"
+		open_ui_tab('study-visualize')
+		assert element_visible?(:id, 'cluster-plot'), 'Study visualizations are not enabled'
+
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+	end
+
+	# manage compute permissions for workspaces in a project
+	test 'admin: billing-projects: compute permissions' do
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		path = @base_url + '/billing_projects'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email, $test_email_password)
+
+		# make sure there is a project and a workspace
+		assert element_present?(:class, 'billing-project'), 'Did not find any billing projects'
+		random_seed_slug = $random_seed.split('-').first
+		project_name = "test-scp-project-#{random_seed_slug}"
+		workspaces_btn = @driver.find_element(:id, project_name).find_element(:class, 'view-workspaces')
+		workspaces_btn.click
+		wait_until_page_loads(path + "/#{project_name}/workspaces")
+		assert @driver.find_elements(:class, 'project-workspace').any?, 'Did not find any project workspaces'
+
+		# navigate to compute permissions page
+		edit_compute = @driver.find_element(:class, 'edit-computes')
+		edit_compute.click
+		wait_for_render(:id, 'user-computes')
+
+		# revoke compute permissions
+		share_email_id = $share_email.gsub(/[@.]/, '-')
+		form = @driver.find_element(:id, share_email_id)
+		compute_permissions = form.find_element(:id, 'compute_can_compute')
+		compute_permissions.send_key('No')
+		update_btn = form.find_element(:class, 'update-compute-permissions')
+		update_btn.click
+		wait_for_modal_open('message_modal')
+		notice = @driver.find_element(:id, 'notice-content').text
+		assert notice.include?('successfully updated'), "Did not find correct notification, expected 'successfully updated' but found #{notice}"
+
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+	end
+
+	# view storage cost estimate for a project
+	test 'admin: billing-projects: storage costs' do
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		path = @base_url + '/billing_projects'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email, $test_email_password)
+
+		# navigate to storage page
+		random_seed_slug = $random_seed.split('-').first
+		project_name = "test-scp-project-#{random_seed_slug}"
+		storage_btn = @driver.find_element(:id, project_name).find_element(:class, 'storage-estimate')
+		storage_btn.click
+		wait_until_page_loads(path + "/#{project_name}/storage_estimate")
+
+		project_label = @driver.find_element(:id, 'project-name').text
+		assert project_label == project_name, "Did not load correct project, expected '#{project_name}' but found '#{project_label}'"
+		assert element_present?(:id, 'workspace-costs'), 'Did not find workspace costs table'
+
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+	end
+
+	##
 	## CONFIGURATIONS TESTS
 	## Test AdminConfiguration functionality and other site admin features
 	##
@@ -1423,6 +1686,46 @@ class UiTestSuite < Test::Unit::TestCase
 			assert element_present?(:id, 'main-banner'), 'could not load home page'
 			puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 		end
+	end
+
+	# test sending an email to users
+	test 'configurations: email all users' do
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		path = @base_url + '/admin'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email, $test_email_password)
+
+		email_users_btn = @driver.find_element(:id, 'email-all-users')
+		email_users_btn.click
+		wait_until_page_loads(path + '/email_users/compose')
+
+		subject = @driver.find_element(:id, 'email_subject')
+		subject.send_keys('This is the subject')
+		@driver.switch_to.frame(@driver.find_element(:tag_name, 'iframe'))
+		message = @driver.find_element(:class, 'cke_editable')
+		message_content = "This is an email to all users."
+		message.send_keys(message_content)
+		@driver.switch_to.default_content
+
+		# send preview email
+		preview_btn = @driver.find_element(:id, 'deliver-preview-email')
+		preview_btn.click
+		wait_for_modal_open('message_modal')
+		notification = @driver.find_element(:id, 'notice-content')
+		assert notification.text == 'Your email has successfully been delivered.', "Did not find correct notification, expeceted 'Your email has successfully been delivered.' but found '#{notification.text}'"
+		close_modal('message_modal')
+		sleep(2)
+
+		# send regular email
+		deliver_btn = @driver.find_element(:id, 'deliver-users-email')
+		deliver_btn.click
+		wait_for_modal_open('message_modal')
+		new_notification = @driver.find_element(:id, 'notice-content')
+		assert new_notification.text == 'Your email has successfully been delivered.', "Did not find correct notification, expeceted 'Your email has successfully been delivered.' but found '#{new_notification.text}'"
+
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
 
 	##
@@ -2886,7 +3189,18 @@ class UiTestSuite < Test::Unit::TestCase
 		# change expression axis label
 		expression_label = options_form.find_element(:id, 'study_default_options_expression_label')
 		new_exp_label = 'Gene Expression Scores'
+		expression_label.clear
 		expression_label.send_keys(new_exp_label)
+
+		# change cluster point size, turn off borders, and reduce alpha
+		cluster_point_size = options_form.find_element(:id, 'study_default_options_cluster_point_size')
+		cluster_point_size.clear
+		cluster_point_size.send_keys(8)
+		cluster_borders = options_form.find_element(:id, 'study_default_options_cluster_point_border')
+		cluster_borders.send_keys('No')
+		cluster_alpha = options_form.find_element(:id, 'study_default_options_cluster_point_alpha')
+		cluster_alpha.clear
+		cluster_alpha.send_keys(0.5)
 
 		# save options
 		options_form.submit
@@ -2900,8 +3214,14 @@ class UiTestSuite < Test::Unit::TestCase
 		# assert values have persisted
 		loaded_cluster = @driver.find_element(:id, 'cluster')['value']
 		loaded_annotation = @driver.find_element(:id, 'annotation')['value']
+		cluster_point_size = @driver.execute_script("return data[0].marker.size[0];")
+		cluster_border = @driver.execute_script("return data[0].marker.line.width;").to_f
+		cluster_alpha_val = @driver.execute_script("return data[0].opacity;").to_f
 		assert new_cluster == loaded_cluster, "default cluster incorrect, expected #{new_cluster} but found #{loaded_cluster}"
 		assert new_annot == loaded_annotation, "default annotation incorrect, expected #{new_annot} but found #{loaded_annotation}"
+		assert cluster_point_size == 8, "default cluster point size incorrect, expected 8 but found #{cluster_point_size}"
+		assert cluster_border == 0.0, "default cluster border incorrect, expected 0.0 but found #{cluster_border}"
+		assert cluster_alpha_val == 0.5, "default cluster alpha incorrect, expected 0.5 but found #{cluster_alpha_val}"
 		unless new_color.empty?
 			loaded_color = @driver.find_element(:id, 'colorscale')['value']
 			assert new_color == loaded_color, "default color incorrect, expected #{new_color} but found #{loaded_color}"
@@ -2921,6 +3241,7 @@ class UiTestSuite < Test::Unit::TestCase
 		assert new_cluster == exp_loaded_cluster, "default cluster incorrect, expected #{new_cluster} but found #{exp_loaded_cluster}"
 		assert new_annot == exp_loaded_annotation, "default annotation incorrect, expected #{new_annot} but found #{exp_loaded_annotation}"
 		assert exp_loaded_label == new_exp_label, "default expression label incorrect, expected #{new_exp_label} but found #{exp_loaded_label}"
+
 		unless new_color.empty?
 			exp_loaded_color = @driver.find_element(:id, 'colorscale')['value']
 			assert new_color == exp_loaded_color, "default color incorrect, expected #{new_color} but found #{exp_loaded_color}"
@@ -2968,6 +3289,15 @@ class UiTestSuite < Test::Unit::TestCase
 		cluster_opts = cluster_dropdown.find_elements(:tag_name, 'option')
 		new_cluster = cluster_opts.select {|opt| !opt.selected?}.sample.text
 		cluster_dropdown.send_key(new_cluster)
+		# change cluster point size, turn on borders, and reset alpha
+		cluster_point_size = options_form.find_element(:id, 'study_default_options_cluster_point_size')
+		cluster_point_size.clear
+		cluster_point_size.send_keys(6)
+		cluster_borders = options_form.find_element(:id, 'study_default_options_cluster_point_border')
+		cluster_borders.send_keys('Yes')
+		cluster_alpha = options_form.find_element(:id, 'study_default_options_cluster_point_alpha')
+		cluster_alpha.clear
+		cluster_alpha.send_keys(1)
 
 		# wait one second while annotation options update
 		sleep(1)
@@ -3006,8 +3336,15 @@ class UiTestSuite < Test::Unit::TestCase
 		open_ui_tab('study-visualize')
 		loaded_cluster = @driver.find_element(:id, 'cluster')['value']
 		loaded_annotation = @driver.find_element(:id, 'annotation')['value']
+		cluster_point_size = @driver.execute_script("return data[0].marker.size[0];")
+		cluster_border = @driver.execute_script("return data[0].marker.line.width;").to_f
+		cluster_alpha_val = @driver.execute_script("return data[0].opacity;").to_f
 		assert new_cluster == loaded_cluster, "default cluster incorrect, expected #{new_cluster} but found #{loaded_cluster}"
 		assert new_annot == loaded_annotation, "default annotation incorrect, expected #{new_annot} but found #{loaded_annotation}"
+		assert cluster_point_size == 6, "default cluster point size incorrect, expected 8 but found #{cluster_point_size}"
+		assert cluster_border == 0.5, "default cluster border incorrect, expected 0.0 but found #{cluster_border}"
+		assert cluster_alpha_val == 1.0, "default cluster alpha incorrect, expected 0.5 but found #{cluster_alpha_val}"
+
 		unless new_color.empty?
 			loaded_color = @driver.find_element(:id, 'colorscale')['value']
 			assert new_color == loaded_color, "default color incorrect, expected #{new_color} but found #{loaded_color}"
@@ -4156,6 +4493,11 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# delete 2d test
 		@driver.find_element(:class, "twod-study-#{$random_seed}-delete").click
+		accept_alert
+		close_modal('message_modal')
+
+		# delete external project study
+		@driver.find_element(:class, "new-project-study-#{$random_seed}-delete").click
 		accept_alert
 		close_modal('message_modal')
 

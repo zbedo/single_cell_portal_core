@@ -1,0 +1,18 @@
+<%= form_for(:compute, url: edit_workspace_computes_path(params[:project_name], params[:study_name]), html: {class: 'form', id: "#{user.gsub(/[@\.]/, '-')}"}, data: {remote: true}) do |f| %>
+  <%= f.hidden_field :access_level, value: permissions[:access_level] %>
+  <%= f.hidden_field :can_share, value: permissions[:can_share] %>
+  <div class="form-group row">
+    <div class="col-xs-6">
+      <%= f.label :email %><br />
+      <%= f.text_field :email, value: user, class: 'form-control', readonly: true %>
+    </div>
+    <div class="col-xs-3">
+      <%= f.label :can_compute, 'Can Compute?' %><br />
+      <%= f.select :can_compute, options_for_select([['No', false],['Yes', true]], permissions[:can_compute]), {}, {class: 'form-control'} %>
+    </div>
+    <div class="col-xs-3">
+      <%= f.label :submit, "&nbsp;".html_safe %><br />
+      <%= f.submit 'Update', class: 'btn btn-success update-compute-permissions', data: {'loading-text' => 'Updating Permissions...'} %>
+    </div>
+  </div>
+<% end %>

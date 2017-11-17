@@ -1,0 +1,126 @@
+<h1>My FireCloud Billing Projects</h1>
+
+<div class="table-responsive">
+  <div class="well well-lg">
+    <table class="table table-striped" id="firecloud-billing">
+      <thead>
+      <tr>
+        <th>Project Name</th>
+        <th>Project Status</th>
+        <th>Users <span class="label label-primary">Owner</span>&nbsp;<span class="label label-default">User</span></th>
+        <th>Actions</th>
+      </tr>
+      </thead>
+      <tbody>
+      <% @projects.each do |project_name, project_attributes| %>
+        <tr id="<%= project_name %>" class="billing-project">
+          <td class="project-name"><%= project_name %></td>
+          <td><%= get_project_status_label(project_attributes[:status]) %></td>
+          <td>
+            <% project_attributes[:members].each do |member| %>
+              <% email = member['email'] == @portal_service_account ? 'SCP Service Account' : member['email'] %>
+              <p><big><label class="label label-<%= get_billing_member_class(member['role']) %>" id="<%= project_name %>-<%= email_as_id(email) %>"><%= email %></label></big>
+              <% if ![current_user.email, @portal_service_account].include? member['email'] %>
+                <%= link_to "<i class='fa fa-fw fa-times'></i>".html_safe, delete_billing_project_user_path(project_name: project_name, role: member['role'].downcase, email: email), class: 'btn btn-xs btn-danger delete-billing-project-user', method: :delete, title: 'Remove this user?', data: {toggle: 'tooltip', email: email} %></p>
+              <% end %>
+            <% end %>
+          </td>
+          <td class="actions">
+            <% unless project_attributes[:status] == 'Error' %>
+              <%= link_to "<i class='fa fa-fw fa-plus'></i> Add User".html_safe, new_billing_project_user_path(project_name), class: 'btn btn-xs btn-success add-billing-project-user' %>
+              <%= link_to "<i class='fa fa-fw fa-briefcase'></i> Workspaces".html_safe, billing_project_workspaces_path(project_name), class: 'btn btn-xs btn-primary view-workspaces' %>
+              <%= link_to "<i class='fa fa-fw fa-usd'></i> Storage Costs".html_safe, billing_project_storage_estimate_path(project_name), class: 'btn btn-xs btn-info storage-estimate' %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<p><%= link_to "<i class='fa fa-fw fa-plus'></i> New Billing Project".html_safe, '#', class: 'btn btn-lg btn-success', id: 'add-billing-project' %></p>
+
+<div class="modal fade" id="new-firecloud-project-modal" role="dialog" aria-labelledby="new-firecloud-project-modal" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-body">
+        <div class="bs-callout bs-callout-info">
+          <h4 class="text-center">Create a new FireCloud Billing Project</h4>
+          <p class="help-block">Use this form to create a new FireCloud billing project.  In order to create a new project, you will need to have already
+            created a Google billing account to bill against, and granted FireCloud access to that account.</p>
+          <p class="text-center"><%= link_to 'Instructions on creating Google billing accounts', 'https://software.broadinstitute.org/firecloud/documentation/article?id=9762', target: :_blank, class: 'btn btn-default' %></p>
+        </div>
+        <%= form_for(:billing_project, url: create_billing_project_path, html: {class: 'form', id: 'new-billing-project'}) do |f| %>
+          <div class="form-group row">
+            <div class="col-sm-6">
+              <%= f.label :project_name %><br />
+              <%= f.text_field :project_name, class: 'form-control' %>
+            </div>
+            <div class="col-sm-6">
+              <%= f.label :billing_account %><br />
+              <%= f.select :billing_account, options_for_select(@accounts), {include_blank: 'Please select an available account...'}, class: 'form-control' %>
+            </div>
+          </div>
+          <div class="form-group row">
+            <div class="col-sm-12 text-center">
+              <%= f.submit 'Create Billing Project', class: 'btn btn-success btn-lg', id: 'create-billing-project', data: {'saving-text' => 'Creating project... Please wait'} %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+      <div class="modal-footer">
+        <button class="close" data-dismiss="modal">×</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+    var projectsTable = $('#firecloud-billing').DataTable({
+        pagingType: "full_numbers",
+        order: [[0, 'asc']],
+        language: {
+            search: "Filter Results By: "
+        }
+    });
+
+    $('#add-billing-project').click(function () {
+        $('#billing_project_project_name').val('');
+        $('#billing_project_billing_account').val('');
+        $('#new-billing-project .form-control').each(function() {
+            $(this).parent().removeClass('has-error has-feedback');
+        });
+        $('#new-firecloud-project-modal').modal('show');
+    });
+
+    $('#firecloud-billing').on('click', '.storage-estimate', function() {
+        $('#generic-modal-title').html("Calculating Total Cost... Please Wait<br /><small>This may take a while...</small>");
+        launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+            return true;
+        });
+    });
+
+    $('#create-billing-project').click(function () {
+        var projectName = $('#billing_project_project_name').val();
+        var billingAccount = $('#billing_project_billing_account').val();
+        if (projectName === '' || billingAccount === '') {
+            alert('You must provide name and select a billing account before saving.');
+            setErrorOnBlank($('#new-billing-project .form-control'));
+            return false;
+        } else if (projectName.split(' ').length > 1) {
+            alert('Only alphanumeric characters are allowed for the project name (no spaces)');
+            $('#billing_project_project_name').parent().addClass('has-error has-feedback');
+            return false;
+        } else {
+            $(this).button('saving');
+            $(this).toggleClass('btn-success btn-warning');
+            return true;
+        }
+    });
+
+    $('body').on('click', '.delete-billing-project-user', function(event) {
+        var email = $(this).data('email');
+        deletePromise(event, 'Are you sure you want to remove ' + email + ' from this project?');
+    });
+
+</script>

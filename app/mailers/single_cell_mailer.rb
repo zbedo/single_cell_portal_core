@@ -8,6 +8,17 @@ class SingleCellMailer < ApplicationMailer
 
   default from: 'no-reply@broadinstitute.org'
 
+  # deliver an email to all users
+  def users_email(email_params, user)
+    @users = email_params[:preview] == "1" ? [user.email] : User.where(admin_email_delivery: true).map(&:email)
+    @subject = email_params[:subject]
+    @from = email_params[:from]
+    @message = email_params[:contents]
+    mail(to: @from, bcc: @users, subject: "[Single Cell Portal Message] #{@subject}", from: @from) do |format|
+      format.html {@message.html_safe}
+    end
+  end
+
   def notify_admin_upload_fail(study_file, error)
     @users = User.where(admin: true).map(&:email)
     @study = study_file.study
@@ -52,9 +63,22 @@ class SingleCellMailer < ApplicationMailer
     @share = share
     @study = @share.study
     @user = user
+    subject = "[Single Cell Portal Notifier] Study: #{@study.name} has been shared"
 
-    mail(to: @share.email, cc: user.email, subject: "[Single Cell Portal Notifier] Study: #{@study.name} has been shared") do |format|
-      format.html
+    if @study.deliver_emails? && @share.deliver_emails?
+      mail(to: @share.email, cc: user.email, subject: subject) do |format|
+        format.html
+      end
+    elsif !@study.deliver_emails? && @share.deliver_emails?
+      mail(to: @share.email, subject: subject) do |format|
+        format.html
+      end
+    elsif @study.deliver_emails? && !@share.deliver_emails?
+      mail(to: user.email, subject: subject) do |format|
+        format.html
+      end
+    else
+      nil # neither user requested to be notified, so do nothing
     end
 	end
 
@@ -71,14 +95,18 @@ class SingleCellMailer < ApplicationMailer
   def share_update_notification(study, changes, update_user)
 		@study = study
 		@changes = changes
-		@notify = @study.study_shares.map(&:email)
-		@notify << @study.user.email
+		@notify = @study.study_shares.where(deliver_emails: true).map(&:email)
+    if @study.deliver_emails?
+      @notify << @study.user.email
+    end
 
 		# remove user performing action from notification
 		@notify.delete(update_user.email)
-		mail(to: @notify, subject: "[Single Cell Portal Notifier] Study: #{@study.name} has been updated") do |format|
-			format.html
-		end
+    unless @notify.empty?
+      mail(to: @notify, subject: "[Single Cell Portal Notifier] Study: #{@study.name} has been updated") do |format|
+        format.html
+      end
+    end
   end
 
   def annot_share_update_notification(annot, changes, update_user)
@@ -99,22 +127,28 @@ class SingleCellMailer < ApplicationMailer
 		@share = share
 		@message = "<p>The study #{@study.name} was unable to properly revoke sharing to #{@share}</p>
 								<p>Please log into <a href='https://portal.firecloud.org'>FireCloud</a> and manually remove this user</p>".html_safe
-		mail(to: @study.user.email, subject: "[Single Cell Portal Notifier] Study: #{@study.name} sharing update failed") do |format|
-			format.html {render html: @message}
-		end
+		if @study.deliver_emails?
+      mail(to: @study.user.email, subject: "[Single Cell Portal Notifier] Study: #{@study.name} sharing update failed") do |format|
+        format.html {render html: @message}
+      end
+    end
 	end
 
 	def study_delete_notification(study, user)
 		@study = study
 		@user = user.email
 
-		@notify = @study.study_shares.map(&:email)
-		@notify << @study.user.email
+		@notify = @study.study_shares.where(deliver_emails: true).map(&:email)
+    if @study.deliver_emails?
+      @notify << @study.user.email
+    end
 		@notify.delete_if(&:blank?)
 
-		mail(to: @notify, subject: "[Single Cell Portal Notifier] Study: #{@study.name} has been deleted") do |format|
-			format.html {render html: "<p>The study #{@study.name} has been deleted by #{@user}</p>".html_safe}
-		end
+    unless @notify.empty?
+      mail(to: @notify, subject: "[Single Cell Portal Notifier] Study: #{@study.name} has been deleted") do |format|
+        format.html {render html: "<p>The study #{@study.name} has been deleted by #{@user}</p>".html_safe}
+      end
+    end
   end
 
   def annotation_publish_fail(annot, user, error)

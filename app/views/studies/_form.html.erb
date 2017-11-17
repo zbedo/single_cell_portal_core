@@ -2,7 +2,6 @@
 	<% if @study.errors.any? %>
 		<div class="bs-callout bs-callout-danger" id="study-errors-block">
 			<h4><%= pluralize(@study.errors.count, "error") %> prohibited this study from being saved:</h4>
-
 			<ul>
 				<% @study.errors.full_messages.each do |message| %>
 					<li><%= message %></li>
@@ -12,10 +11,14 @@
 	<% end %>
   <%= f.hidden_field :user_id, value: @study.new_record? ? current_user._id : @study.user_id %>
 	<div class="form-group row">
-		<div class="col-md-12">
+		<div class="col-md-8">
 			<%= f.label :name %><br/>
 			<%= f.text_field :name, class: 'form-control', autocomplete: 'off' %>
 		</div>
+    <div class="col-md-4">
+      <%= f.label :firecloud_project, 'FireCloud billing project' %><br />
+      <%= f.select :firecloud_project, options_for_select(@projects, @study.firecloud_project), {include_blank: 'Please select a billing project'}, class: 'form-control' %>
+    </div>
   </div>
   <div class="form-group row">
 		<div class="col-md-3">
@@ -51,10 +54,24 @@
 
 <script type="text/javascript">
     $('#study_use_existing_workspace').change(function() {
-        if ($(this).val() == 1) {
+        if ($(this).val() == '1') {
             $('#study_firecloud_workspace').attr('disabled', false);
         } else {
             $('#study_firecloud_workspace').attr('disabled', true);
         }
     });
+
+    $('#save-study').click(function() {
+        var project = $('#study_firecloud_workspace');
+        if (project.val() === 1) {
+            alert('You must select a billing project first before continuing');
+            project.parent().addClass('has-error has-feedback');
+            return false;
+        } else {
+            launchModalSpinner('#create-study-spinner', '#create-modal', function () {
+                return true;
+            });
+        }
+    });
+
 </script>
