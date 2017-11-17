@@ -111,9 +111,7 @@ class AdminConfigurationsController < ApplicationController
 
   # disable/enable all downloads by revoking workspace ACLs
   def manage_firecloud_access
-    @config = AdminConfiguration.find_or_create_by(config_type: AdminConfiguration::FIRECLOUD_ACCESS_NAME)
-    # make sure that the value type has been set if just created
-    @config.value_type ||= 'String'
+    @config = AdminConfiguration.find_or_create_by(config_type: AdminConfiguration::FIRECLOUD_ACCESS_NAME, value_type: 'String')
     status = params[:firecloud_access][:status].downcase
     begin
       case status
