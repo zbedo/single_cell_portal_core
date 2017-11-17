@@ -1160,11 +1160,11 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		gzip_signature = "\x1F\x8B".force_encoding(Encoding::ASCII_8BIT) # per IETF
 		file_is_gzipped = (first_two_bytes == gzip_signature)
 		if file_is_gzipped or filepath.last(4) == '.bam' or filepath.last(5) == '.cram'
-			Rails.logger.info "Direct upload"
+			Rails.logger.info "#{Time.now}: Direct upload"
 			# Directly upload data if it's already compressed
 			bucket.create_file filepath, filename, opts
 		else
-			Rails.logger.info "Gzipping, then upload"
+			Rails.logger.info "#{Time.now}: Gzipping, then upload"
 			# Compress all uncompressed files before upload.
 			# This saves time on upload and download, and money on egress and storage.
 			gzip_filepath = filepath + '.tmp.gz'
@@ -1175,7 +1175,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 				gz.close
 			end
 			File.rename gzip_filepath, filepath
-			bucket.create_file filepath, filename, content_encoding: 'gzip'
+			bucket.create_file filepath, filename, opts.merge(content_encoding: 'gzip')
 		end
 	end
 
