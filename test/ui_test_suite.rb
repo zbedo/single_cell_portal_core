@@ -240,7 +240,6 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
-		wait_for_render(:class, 'fastq-file')
 		close_modal('upload-success-modal')
 
 		# upload left fastq
@@ -278,7 +277,6 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
-		wait_for_render(:class, 'documentation-file')
 		# close success modal
 		close_modal('upload-success-modal')
 
@@ -662,6 +660,7 @@ class UiTestSuite < Test::Unit::TestCase
 		login_as_other($share_email, $share_email_password)
 
 		# now assert download links do not load
+		sleep(8) # wait for parse and upload to complete, otherwise link will not render correctly
 		@driver.get embargo_url
 		@wait.until {element_present?(:id, 'study-download')}
 		open_ui_tab('study-download')

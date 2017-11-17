@@ -15,7 +15,7 @@ class SiteController < ApplicationController
 
   respond_to :html, :js, :json
 
-  before_action :set_study, except: [:index, :search, :view_workflow_wdl]
+  before_action :set_study, except: [:index, :search, :view_workflow_wdl, :create_totat]
   before_action :set_cluster_group, only: [:study, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :expression_query, :annotation_query, :get_new_annotations, :annotation_values, :show_user_annotations_form]
   before_action :set_selected_annotation, only: [:render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :annotation_query, :annotation_values, :show_user_annotations_form]
   before_action :load_precomputed_options, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap]
@@ -1066,7 +1066,11 @@ class SiteController < ApplicationController
   ###
 
   def set_study
-    @study = Study.where(url_safe_name: params[:study_name]).first
+    @study = Study.find_by(url_safe_name: params[:study_name])
+    # redirect if study is not found
+    if @study.nil?
+      redirect_to site_path, alert: 'Study not found.  Please check the name and try again.' and return
+    end
   end
 
   def set_cluster_group
@@ -1834,7 +1838,8 @@ class SiteController < ApplicationController
           'url="' + signed_url + '"',
           'output="' + filename + '"'
       ]
-    rescue
+    rescue => e
+      logger.error "#{Time.now}: error generating signed url for #{filename}; #{e.message}"
       curl_config = [
           '# Error downloading ' + filename + '.  ' +
           'Did you delete the file in the bucket and not sync it in Single Cell Portal?'
