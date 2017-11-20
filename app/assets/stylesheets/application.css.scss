@@ -47,7 +47,7 @@ html, body {
 }
 
 .section-pad {
-  margin-top: 80px;
+  margin-top: 50px;
   margin-bottom: 20px;
 }
 
@@ -68,17 +68,26 @@ html, body {
 }
 
 .sc-navbar {
-  min-height: 70px !important;
+  min-height: 50px !important;
   .navbar-header {
-    margin-top: 10px;
+    position: relative;
+    top: 8px;
     .navbar-brand {
       font-size: 22px;
     }
   }
   .nav {
-    margin-top: 12px;
+    margin-top: 0px;
     font-size: 16px;
   }
+}
+
+.navbar-brand {
+  padding: 6px 15px;
+}
+
+.navbar-collapse.collapse {
+
 }
 
 .bs-callout{
@@ -413,4 +422,17 @@ html, body {
 
 #wdl-contents pre {
   height: 400px;
+}
+
+h1, .h1 {
+  font-size: 32px;
+}
+
+h1, .h1, h2, .h2, h3, .h3 {
+  margin-top: 10px;
+}
+
+h4, .h4, h5, .h5, h6, .h6 {
+  margin-top: 2px;
+  margin-bottom: 2px;
 }
