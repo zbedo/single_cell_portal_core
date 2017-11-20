@@ -83,34 +83,8 @@
           <% end %>
         </div>
       </div>
-      <hr />
-      <div class="row">
-        <div class="col-sm-12">
-          <%= form_tag(view_gene_set_expression_path(study_name: params[:study_name]), id: 'gene-sets', method: :get, data: {remote: true}) do %>
-              <%= label_tag :gene_set, 'View curated gene lists as mean expression (box & scatter plots)' %>
-              <%= select_tag :gene_set, options_for_select(@precomputed, params[:gene_set]), {include_blank: 'Please select a gene list', class: 'form-control'} %>
-              <%= hidden_field_tag :gene_set_cluster %>
-              <%= hidden_field_tag :gene_set_annotation %>
-              <%= hidden_field_tag :gene_set_subsample %>
-              <script type="text/javascript">
-                  // set default values on render
-                  $('#gene_set_cluster').val($('#search_cluster').val());
-                  $('#gene_set_annotation').val($('#search_annotation').val());
-                  $('#gene_set_subsample').val($('#search_subsample').val());
-                  $('#gene_set').change(function() {
-                      if ($(this).val() != '') {
-                          launchModalSpinner('#spinner_target', '#loading-modal', function() {
-                              $('#gene-sets').submit();
-                          });
-
-                      }
-                  });
-              </script>
-          <% end %>
-        </div>
-      </div>
-      <hr />
       <% if action_name =~ /(gene_set|heatmap)/ && action_name !~ /precomputed/ %>
+          <hr />
           <div class="row">
             <div class="col-sm-12">
               <%= label_tag :gene, 'Load single gene-level expression' %><br />
@@ -136,25 +110,6 @@
           </div>
           <hr />
       <% end %>
-      <div class="row">
-        <div class="col-sm-12">
-          <%= form_tag(search_precomputed_results_path(study_name: params[:study_name]), id: 'precomputed-expression', data: {remote: true}) do %>
-              <%= label_tag :expression, 'View curated gene lists as heatmaps' %><br />
-              <%= select_tag :expression, options_for_select(@precomputed, params[:precomputed]), {include_blank: 'Please select a gene list', class: "form-control"} %>
-              <% if action_name !~ /precomputed/ %>
-                  <script type="text/javascript">
-                      $('#expression').change(function() {
-                          if ($(this).val() != '') {
-                              launchModalSpinner('#spinner_target', '#loading-modal', function() {
-                                  $('#precomputed-expression').submit();
-                              });
-                          }
-                      });
-                  </script>
-              <% end %>
-          <% end %>
-        </div>
-      </div>
     </div>
     <div class="modal fade" id="loading-modal" role="dialog" aria-labelledby="loading-modal" aria-hidden="true">
       <div class="modal-dialog">
@@ -168,6 +123,59 @@
           <div class="modal-footer">
             <button class="close" data-dismiss="modal">×</button>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="panel panel-info" id="search-options-panel">
+    <div class="panel-heading">
+      <div class="panel-title">
+        <h4><a href="#panel-gene-lists" data-toggle="collapse" data-parent="#search-parent" id="gene-lists-link">Gene Lists <span class='fa fa-search'></span></a></h4>
+      </div>
+    </div>
+    <div class="panel-body collapse" id="panel-gene-lists">
+      <div class="row">
+        <div class="col-sm-12">
+          <%= form_tag(view_gene_set_expression_path(study_name: params[:study_name]), id: 'gene-sets', method: :get, data: {remote: true}) do %>
+              <%= label_tag :gene_set, 'View curated gene lists as mean expression (box & scatter plots)' %>
+              <%= select_tag :gene_set, options_for_select(@precomputed, params[:gene_set]), {include_blank: 'Please select a gene list', class: 'form-control'} %>
+              <%= hidden_field_tag :gene_set_cluster %>
+              <%= hidden_field_tag :gene_set_annotation %>
+              <%= hidden_field_tag :gene_set_subsample %>
+              <script type="text/javascript">
+                // set default values on render
+                $('#gene_set_cluster').val($('#search_cluster').val());
+                $('#gene_set_annotation').val($('#search_annotation').val());
+                $('#gene_set_subsample').val($('#search_subsample').val());
+                $('#gene_set').change(function() {
+                  if ($(this).val() != '') {
+                    launchModalSpinner('#spinner_target', '#loading-modal', function() {
+                      $('#gene-sets').submit();
+                    });
+
+                  }
+                });
+              </script>
+          <% end %>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-12">
+          <%= form_tag(search_precomputed_results_path(study_name: params[:study_name]), id: 'precomputed-expression', data: {remote: true}) do %>
+              <%= label_tag :expression, 'View curated gene lists as heatmaps' %><br />
+              <%= select_tag :expression, options_for_select(@precomputed, params[:precomputed]), {include_blank: 'Please select a gene list', class: "form-control"} %>
+              <% if action_name !~ /precomputed/ %>
+                  <script type="text/javascript">
+                    $('#expression').change(function() {
+                      if ($(this).val() != '') {
+                        launchModalSpinner('#spinner_target', '#loading-modal', function() {
+                          $('#precomputed-expression').submit();
+                        });
+                      }
+                    });
+                  </script>
+              <% end %>
+          <% end %>
         </div>
       </div>
     </div>
