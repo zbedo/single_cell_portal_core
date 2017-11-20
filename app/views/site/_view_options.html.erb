@@ -9,13 +9,13 @@
 			<div class="form-group row">
 				<% if action_name !~ /precomputed/ %>
 					<div class="col-sm-4">
-						<%= label_tag :cluster, 'Load a cluster' %><br />
+						<%= label_tag :cluster, 'Load cluster' %><br />
 						<%= select_tag :cluster, options_for_select(@options, set_cluster_value(@study, params)), class: 'form-control' %>
 					</div>
 				<% end %>
         <% if action_name !~ /precomputed/ %>
           <div class="col-sm-4">
-            <%= label_tag :annotation, 'Select an annotation' %><br />
+            <%= label_tag :annotation, 'Select annotation' %><br />
             <%= select_tag :annotation, grouped_options_for_select(@cluster_annotations, set_annotation_value(@study, params)), class: 'form-control' %>
           </div>
         <% end %>

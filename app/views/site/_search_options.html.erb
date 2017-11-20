@@ -14,15 +14,15 @@
               <%= f.hidden_field :annotation, value: set_annotation_value(@study, params) %>
               <%= f.hidden_field :subsample, value: set_subsample_value(params) %>
               <div class="form-group">
-                <%= f.label :genes, 'Search for genes of interest (autocomplete)' %>
+                <%= f.label :genes, 'Search for genes' %>
                 <%= f.autocomplete_field :genes, autocomplete_expression_score_gene_expression_score_index_path(study_id: @study._id), {multiple: true, class: 'form-control search-genes-input', placeholder: 'Search genes...', value: set_search_value, data: {delimiter: ' '}} %>
               </div>
               <div class="form-group">
-                <%= f.label :upload, "Or upload a list of genes (one gene per line)" %><br/>
+                <%= f.label :upload, "Or upload gene list" %><br/>
                 <%= f.file_field :upload, class: 'form-control', accept: '.txt,text/plain' %>
               </div>
               <div class="form-group">
-                <%= f.label :consensus, "Collapse Genes by <i class='fa fa-question-circle'></i>".html_safe, title: "Multiple genes only: Collapse expression scores of multiple genes for each cell using this metric.  Selecting 'None' will view genes individually as a heatmap.", data: {toggle: 'tooltip', placement: 'right'} %><br/>
+                <%= f.label :consensus, "Collapse genes by <i class='fa fa-question-circle'></i>".html_safe, title: "Multiple genes only: Collapse expression scores of multiple genes for each cell using this metric.  Selecting 'None' will view genes individually as a heatmap.", data: {toggle: 'tooltip', placement: 'right'} %><br/>
                 <%= f.select :consensus, options_for_select([['Mean', 'mean'],['Median', 'median']], params[:consensus]), {include_blank: 'None'}, {class: 'form-control'} %>
               </div>
               <%= link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, "javascript:", class: "btn pull-right #{action_name == 'study' ? 'btn-default disabled' : 'btn-warning'}", id: 'clear-gene-search', title: 'Clear gene search and return to cluster scatter plots', data: {toggle: 'tooltip'} %>
@@ -130,7 +130,7 @@
   <div class="panel panel-info" id="search-options-panel">
     <div class="panel-heading">
       <div class="panel-title">
-        <h4><a href="#panel-gene-lists" data-toggle="collapse" data-parent="#search-parent" id="gene-lists-link">Gene Lists <span class='fa fa-search'></span></a></h4>
+        <h4><a href="#panel-gene-lists" data-toggle="collapse" data-parent="#search-parent" id="gene-lists-link">View Gene Lists <span class='fa fa-file-text-o'></span></a></h4>
       </div>
     </div>
     <div class="panel-body collapse" id="panel-gene-lists">
