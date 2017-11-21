@@ -102,7 +102,6 @@
                           launchModalSpinner('#spinner_target', '#loading-modal', function() {
                               $('#gene-sets').submit();
                           });
-
                       }
                   });
               </script>
@@ -118,9 +117,9 @@
               <br />
               <script type="text/javascript">
                   $('#gene').change(function() {
-                      if ($(this).val() != '') {
+                      var url = $(this).val();
+                      if (url != '') {
                           launchModalSpinner('#spinner_target', '#loading-modal', function () {
-                              var url = $(this).val();
                               var cluster = $('#search_cluster').val();
                               var annotation = $('#search_annotation').val();
                               var subsample = $('#search_subsample').val();
