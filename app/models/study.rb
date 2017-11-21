@@ -1631,10 +1631,34 @@ class Study
   ###
 
   # shortcut method to send an uploaded file straight to firecloud from parser
+  # will compress plain text files before uploading to reduce storage/egress charges
   def send_to_firecloud(file)
     begin
       Rails.logger.info "#{Time.now}: Uploading #{file.upload_file_name} to FireCloud workspace: #{self.firecloud_workspace}"
-      remote_file = Study.firecloud_client.execute_gcloud_method(:create_workspace_file, self.firecloud_project, self.firecloud_workspace, file.upload.path, file.upload_file_name)
+      file_location = file.remote_location.blank? ? file.upload.path : File.join(self.data_store_path, file.remote_location)
+      # determine if file needs to be compressed
+      first_two_bytes = File.open(file_location).read(2)
+      gzip_signature = "\x1F\x8B".force_encoding(Encoding::ASCII_8BIT) # per IETF
+      file_is_gzipped = (first_two_bytes == gzip_signature)
+      opts = {}
+      if file_is_gzipped or file.upload_file_name.last(4) == '.bam' or file.upload_file_name.last(5) == '.cram'
+        # log that file is already compressed
+        Rails.logger.info "#{Time.now}: #{file.upload_file_name} is already compressed, direct uploading"
+      else
+        Rails.logger.info "#{Time.now}: Performing gzip on #{file.upload_file_name}"
+        # Compress all uncompressed files before upload.
+        # This saves time on upload and download, and money on egress and storage.
+        gzip_filepath = file_location + '.tmp.gz'
+        Zlib::GzipWriter.open(gzip_filepath) do |gz|
+          File.open(file_location, 'rb').each do |line|
+            gz.write line
+          end
+          gz.close
+        end
+        File.rename gzip_filepath, file_location
+        opts.merge!(content_encoding: 'gzip')
+      end
+      remote_file = Study.firecloud_client.execute_gcloud_method(:create_workspace_file, self.firecloud_project, self.firecloud_workspace, file.upload.path, file.upload_file_name, opts)
       # store generation tag to know whether a file has been updated in GCP
       Rails.logger.info "#{Time.now}: Updating #{file.upload_file_name} with generation tag: #{remote_file.generation} after successful upload"
       file.update(generation: remote_file.generation)
