@@ -111,9 +111,7 @@ class AdminConfigurationsController < ApplicationController
 
   # disable/enable all downloads by revoking workspace ACLs
   def manage_firecloud_access
-    @config = AdminConfiguration.find_or_create_by(config_type: AdminConfiguration::FIRECLOUD_ACCESS_NAME)
-    # make sure that the value type has been set if just created
-    @config.value_type ||= 'String'
+    @config = AdminConfiguration.find_or_create_by(config_type: AdminConfiguration::FIRECLOUD_ACCESS_NAME, value_type: 'String')
     status = params[:firecloud_access][:status].downcase
     begin
       case status
@@ -149,7 +147,7 @@ class AdminConfigurationsController < ApplicationController
       end
     rescue RuntimeError => e
       logger.error "#{Time.now}: error in setting download status to #{status}; #{e.message}"
-      redirect_to admin_configuration_path, alert: "An error occured while turing #{status} downloads: #{e.message}" and return
+      redirect_to admin_configurations_path, alert: "An error occured while turing #{status} downloads: #{e.message}" and return
     end
   end
 
@@ -208,6 +206,16 @@ class AdminConfigurationsController < ApplicationController
     rescue => e
       logger.error "#{Time.now}: unable to update service account FireCloud registration: #{e.message}"
       @alert = "Unable to update portal service account FireCloud profile: #{e.message}"
+    end
+  end
+
+  # get the current status of FireCloud API services
+  def firecloud_api_status
+    begin
+      @status = Study.firecloud_client.api_status
+    rescue => e
+      logger.error "#{Time.now}: unable to retrieve FireCloud API status due to: #{e.message}"
+      @status = {error: "An error occurred while fetching the FireCloud API status: #{e.message}"}
     end
   end
 
@@ -315,6 +323,12 @@ class AdminConfigurationsController < ApplicationController
             name: 'Manage Service Account FireCloud Registration',
             description: 'Create or update the FireCloud registration of the portal service account.',
             url: get_service_account_profile_path,
+            method: 'GET'
+        },
+        {
+            name: 'FireCloud API Status',
+            description: 'Get the current status of all FireCloud services',
+            url: firecloud_api_status_path,
             method: 'GET'
         }
     ]

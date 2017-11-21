@@ -15,6 +15,7 @@ var data = [];
 		name: "<%= data[:name] %>",
 		mode: 'markers',
 		type: '<%= @plot_type %>',
+    opacity: <%= @study.default_cluster_point_alpha %>,
     <% if !data[:marker].nil? %>
       marker: <%= raw data[:marker].to_json %>
     <% else %>
@@ -23,7 +24,7 @@ var data = [];
         size: <%= raw data[:marker_size] %>,
         line: {
           color: plotlyDefaultLineColor,
-          width: 0.5
+          width: <%= @study.show_cluster_point_borders? ? 0.5 : 0 %>
         }
       }
     <% end %>

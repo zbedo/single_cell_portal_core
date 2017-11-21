@@ -364,8 +364,20 @@ class Test::Unit::TestCase
   end
 
   # perform as right-click 'Save Link As...' action in Chrome
-  def save_link_as(link)
-    @driver.action.context_click(link).send_keys([:down, :down, :down, :enter]).perform
-    accept_alert
+  def download_file(link, basename)
+    link.click
+    if @driver.current_url.include?('https://storage.googleapis.com/')
+      assert @driver.current_url =~ /#{basename}/, "Downloaded file url incorrect, did not find #{basename}"
+      @driver.navigate.back
+    else
+      # give browser 5 seconds to initiate download
+      sleep(5)
+      # make sure file was actually downloaded
+      file_exists = Dir.entries($download_dir).select {|f| f =~ /#{basename}/}.size >= 1 || File.exists?(File.join($download_dir, filename))
+      assert file_exists, "did not find downloaded file: #{filename} in #{Dir.entries($download_dir).join(', ')}"
+
+      # delete matching files
+      Dir.glob("#{$download_dir}/*").select {|f| /#{basename}/.match(f)}.map {|f| File.delete(f)}
+    end
   end
 end

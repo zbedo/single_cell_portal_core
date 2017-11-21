@@ -382,10 +382,6 @@ class StudiesController < ApplicationController
         f.write upload.read
       end
 
-      # Update the upload_file_size attribute
-      study_file.upload_file_size = study_file.upload_file_size.nil? ? upload.size : study_file.upload_file_size + upload.size
-      study_file.save!
-
       render json: study_file.to_jq_upload and return
     end
   end
@@ -843,8 +839,12 @@ class StudiesController < ApplicationController
       @study.default_options[:color_profile] = nil
     end
     if @study.save
+      # invalidate all cluster & expression caches as points sizes/borders may have changed globally
+      # start with default cluster then do everything else
       @study.default_cluster.study_file.invalidate_cache_by_file_type
-      @study.expression_matrix_files.first.invalidate_cache_by_file_type
+      other_clusters = @study.cluster_groups.keep_if {|cluster_group| cluster_group.name != @study.default_cluster}
+      other_clusters.map {|cluster_group| cluster_group.study_file.invalidate_cache_by_file_type}
+      @study.expression_matrix_files.map {|matrix_file| matrix_file.invalidate_cache_by_file_type}
       set_study_default_options
       render action: 'update_default_options_success'
     else
@@ -891,7 +891,7 @@ class StudiesController < ApplicationController
   end
 
   def default_options_params
-    params.require(:study_default_options).permit(:cluster, :annotation, :color_profile, :expression_label)
+    params.require(:study_default_options).permit(:cluster, :annotation, :color_profile, :expression_label, :cluster_point_size, :cluster_point_alpha, :cluster_point_border)
   end
 
   def set_file_types
