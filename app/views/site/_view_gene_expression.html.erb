@@ -1,12 +1,18 @@
 <div class="row">
-  <div class="col-md-3" id="search-target">
+  <div class="col-md-2" id="search-target">
     <%= render partial: 'search_options' %>
   </div>
-  <div class="col-md-9" id="render-target">
-    <%= render partial: 'view_options' %>
-    <div id="expression-plots">
+  <div class="col-md-10" id="render-target">
+    <ul class="nav nav-tabs" role="tablist" id="view-tabs">
+      <li role="presentation" class="study-nav active" id="view-options-tab-nav"><a href="#view-options-tab" data-toggle="tab">View Options </a></li>
+      <li role="presentation" class="study-nav" id="box-or-violin-tab-nav"><a href="#box-or-violin-tab" data-toggle="tab">Box or violin </a></li>
+      <li role="presentation" class="study-nav" id="scatter-tab-nav"><a href="#scatter-tab" data-toggle="tab">Scatter </a></li>
+    </ul>
+    <div class="tab-content top-pad">
+      <div class="tab-pane active" id="view-options-tab" role="tabpanel">
+        <%= render partial: 'view_options' %>
+      </div>
       <%= render partial: @top_plot_partial %>
-    </div>
   </div>
 </div>
 <script type="text/javascript">
