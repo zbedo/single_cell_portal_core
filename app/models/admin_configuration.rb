@@ -99,25 +99,26 @@ class AdminConfiguration
         @config_setting = 'ERROR'
     end
     unless @config_setting == 'ERROR'
-      Rails.logger.info "#{Time.now}: setting access on all studies to #{@config_setting}"
+      Rails.logger.info "#{Time.now}: setting access on all '#{FireCloudClient::COMPUTE_BLACKLIST.join(', ')}' studies to #{@config_setting}"
       # only use studies not queued for deletion; those have already had access revoked
-      Study.not_in(queued_for_deletion: true).each do |study|
+      # also filter out studies not in default portal project - user-funded projects are exempt from access revocation
+      Study.not_in(queued_for_deletion: true).where(:firecloud_project.in => FireCloudClient::COMPUTE_BLACKLIST).each do |study|
         Rails.logger.info "#{Time.now}: begin revoking access to study: #{study.name}"
-        # first remove share access
+        # first remove share access (unless share user is a project member)
         shares = study.study_shares.map(&:email)
         shares.each do |user|
           Rails.logger.info "#{Time.now}: revoking share access for #{user}"
           revoke_share_acl = Study.firecloud_client.create_workspace_acl(user, @config_setting)
           Study.firecloud_client.update_workspace_acl(study.firecloud_project, study.firecloud_workspace, revoke_share_acl)
         end
-        # last, remove study owner access
+        # last, remove study owner access (unless project owner)
         owner = study.user.email
         Rails.logger.info "#{Time.now}: revoking owner access for #{owner}"
         revoke_owner_acl = Study.firecloud_client.create_workspace_acl(owner, @config_setting)
         Study.firecloud_client.update_workspace_acl(study.firecloud_project, study.firecloud_workspace, revoke_owner_acl)
         Rails.logger.info "#{Time.now}: access revocation for #{study.name} complete"
       end
-      Rails.logger.info "#{Time.now}: all study access set to #{@config_setting}"
+      Rails.logger.info "#{Time.now}: all '#{FireCloudClient::COMPUTE_BLACKLIST.join(', ')}' study access set to #{@config_setting}"
     else
       Rails.logger.info "#{Time.now}: invalid status setting: #{status}; aborting"
     end
@@ -125,9 +126,10 @@ class AdminConfiguration
 
   # method that re-enables access by restoring permissions to studies directly in FireCloud
   def self.enable_firecloud_access
-    Rails.logger.info "#{Time.now}: restoring access to all studies"
+    Rails.logger.info "#{Time.now}: restoring access to all '#{FireCloudClient::COMPUTE_BLACKLIST.join(', ')}' studies"
     # only use studies not queued for deletion; those have already had access revoked
-    Study.not_in(queued_for_deletion: true).each do |study|
+    # also filter out studies not in default portal project - user-funded projects are exempt from access revocation
+    Study.not_in(queued_for_deletion: true).where(:firecloud_project.in => FireCloudClient::COMPUTE_BLACKLIST).each do |study|
       Rails.logger.info "#{Time.now}: begin restoring access to study: #{study.name}"
       # first remove share access
       shares = study.study_shares
@@ -138,14 +140,15 @@ class AdminConfiguration
         restore_share_acl = Study.firecloud_client.create_workspace_acl(user, share_permission)
         Study.firecloud_client.update_workspace_acl(study.firecloud_project, study.firecloud_workspace, restore_share_acl)
       end
-      # last, remove study owner access
+      # last, remove study owner access (unless project is owned by user)
       owner = study.user.email
       Rails.logger.info "#{Time.now}: restoring owner access for #{owner}"
-      restore_owner_acl = Study.firecloud_client.create_workspace_acl(owner, 'OWNER')
+      # restore permissions, setting compute acls correctly (disabled in production for COMPUTE_BLACKLIST projects)
+      restore_owner_acl = Study.firecloud_client.create_workspace_acl(owner, 'WRITER', true, Rails.env == 'production' ? false : true)
       Study.firecloud_client.update_workspace_acl(study.firecloud_project, study.firecloud_workspace, restore_owner_acl)
       Rails.logger.info "#{Time.now}: access restoration for #{study.name} complete"
     end
-    Rails.logger.info "#{Time.now}: all study access restored"
+    Rails.logger.info "#{Time.now}: all '#{FireCloudClient::COMPUTE_BLACKLIST.join(', ')}' study access restored"
   end
 
   # sends an email to all site administrators on startup notifying them of portal restart
