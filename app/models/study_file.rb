@@ -184,12 +184,12 @@ class StudyFile
     study_name = self.study.url_safe_name
     case self.file_type
       when 'Cluster'
-        name_key = self.name.split.join('-')
+        name_key = self.cluster_groups.first.name.split.join('-')
         @cache_key = "#{study_name}.*render_cluster.*#{name_key}"
       when 'Expression Matrix'
         @cache_key = "#{study_name}.*expression"
       when 'Gene List'
-        name_key = self.name.split.join('-')
+        name_key = self.precomputed_scores.first.name.split.join('-')
         @cache_key = "#{study_name}.*#{name_key}"
       when 'Metadata'
         # when reparsing metadata, almost all caches now become invalid so we just clear all matching the study
