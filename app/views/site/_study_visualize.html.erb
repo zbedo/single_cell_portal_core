@@ -3,25 +3,35 @@
     <%= render partial: 'search_options' %>
   </div>
   <div class="col-md-10" id="render-target">
-    <div id="view_options_div"><%= render partial: 'view_options' %></div>
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <div class="panel-title">
-          <h4><%= link_to "#{@study.name} Clusters <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#plots', 'data-toggle' => 'collapse' %></h4>
-        </div>
+    <ul class="nav nav-tabs" role="tablist" id="view-tabs">
+      <li role="presentation" class="study-nav active" id="view-options-tab-nav"><a href="#view-options-tab" data-toggle="tab">View Options </a></li>
+      <li role="presentation" class="study-nav" id="plots-tab-nav"><a href="#plots-tab" data-toggle="tab">Plots </a></li>
+    </ul>
+    <div class="tab-content top-pad">
+      <div class="tab-pane active" id="view-options-tab" role="tabpanel">
+        <div id="view_options_div"><%= render partial: 'view_options' %></div>
       </div>
-      <div id="plots" class="panel-collapse collapse in">
-        <div class="panel-body">
-          <div class="col-md-12">
-            <div class="row">
-              <div class="col-xs-12">
-                <div id="colorscale-target"></div>
-                <div id="toggle-plots"></div>
-              </div>
+      <div class="tab-pane" id="plots-tab" role="tabpanel">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <div class="panel-title">
+              <h4><%= link_to "#{@study.name} Clusters <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#plots', 'data-toggle' => 'collapse' %></h4>
             </div>
-            <div class="row">
-              <div id="cluster-plot"></div>
-              <div id="cluster-figure-legend"></div>
+          </div>
+          <div id="plots" class="panel-collapse collapse in">
+            <div class="panel-body">
+              <div class="col-md-12">
+                <div class="row">
+                  <div class="col-xs-12">
+                    <div id="colorscale-target"></div>
+                    <div id="toggle-plots"></div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div id="cluster-plot"></div>
+                  <div id="cluster-figure-legend"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
