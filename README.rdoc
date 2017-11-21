@@ -163,8 +163,8 @@ studies in the portal for QA purposes, as well as receive certain admin-related 
 through the console.
 
 To create an admin user account:
-* Create a user account normally through the UI (using sign-up or Google auth features)
 * Start the portal locally (or ssh into production VM)
+* Create a user account normally by logging in through the UI
 * Connect to the running portal container: <code>docker exec -it single_cell bash</code>
 * Enter the Rails console: <code>rails console</code>
 * Query for the desired user account: <code>user = User.find_by(email: '<email address here>')</code>
