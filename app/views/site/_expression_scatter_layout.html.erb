@@ -37,6 +37,10 @@
       <% end %>
   };
 
+    <% if @cluster.has_coordinate_labels? %>
+      scatterLayout.scene.annotations = <%= raw @coordinate_labels.to_json %>
+    <% end %>
+
 <% else %>
     scatterLayout.xaxis = {
       range: <%= raw @range[:x] %>,
@@ -47,4 +51,8 @@
       range: <%= raw @range[:y] %>,
       showticklabels: false
   };
+
+    <% if @cluster.has_coordinate_labels? %>
+      scatterLayout.annotations = <%= raw @coordinate_labels.to_json %>
+    <% end %>
 <% end %>

@@ -222,7 +222,9 @@ class SiteController < ApplicationController
     @plot_type = @cluster.cluster_type == '3d' ? 'scatter3d' : 'scattergl'
     @options = load_cluster_group_options
     @cluster_annotations = load_cluster_group_annotations
-    @coordinate_labels = load_cluster_group_coordinate_labels
+    if @cluster.has_coordinate_labels?
+      @coordinate_labels = load_cluster_group_coordinate_labels
+    end
     @range = set_range(@coordinates.values)
     if @cluster.is_3d? && @cluster.has_range?
       @aspect = compute_aspect_ratios(@range)
@@ -279,6 +281,9 @@ class SiteController < ApplicationController
     @options = load_cluster_group_options
     @range = set_range([@expression[:all]])
     @coordinates = load_cluster_group_data_array_points(@selected_annotation, subsample)
+    if @cluster.has_coordinate_labels?
+      @coordinate_labels = load_cluster_group_coordinate_labels
+    end
     @static_range = set_range(@coordinates.values)
     if @cluster.is_3d? && @cluster.has_range?
       @expression_aspect = compute_aspect_ratios(@range)
