@@ -75,6 +75,11 @@ class ClusterGroup
     !self.domain_ranges.nil?
   end
 
+  # check if cluster has coordinate-based annotation labels
+  def has_coordinate_labels?
+    self.data_arrays.where(array_type: 'labels').any?
+  end
+
   # method used during parsing to generate representative sub-sampled data_arrays for rendering
   #
   # annotation_name: name of annotation to subsample off of

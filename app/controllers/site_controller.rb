@@ -222,6 +222,7 @@ class SiteController < ApplicationController
     @plot_type = @cluster.cluster_type == '3d' ? 'scatter3d' : 'scattergl'
     @options = load_cluster_group_options
     @cluster_annotations = load_cluster_group_annotations
+    @coordinate_labels = load_cluster_group_coordinate_labels
     @range = set_range(@coordinates.values)
     if @cluster.is_3d? && @cluster.has_range?
       @aspect = compute_aspect_ratios(@range)
@@ -1619,6 +1620,32 @@ class SiteController < ApplicationController
       values["#{value}"] = {y: [], cells: [], annotations: [], name: "#{value}" }
     end
     values
+  end
+
+  # load custom coordinate-based annotation labels for a given cluster
+  def load_cluster_group_coordinate_labels
+    # assemble source data
+    x_array = @cluster.concatenate_data_arrays('x', 'labels')
+    y_array = @cluster.concatenate_data_arrays('y', 'labels')
+    z_array = @cluster.concatenate_data_arrays('z', 'labels')
+    text_array = @cluster.concatenate_data_arrays('text', 'labels')
+    annotations = []
+    # iterate through list of data objects to construct necessary annotations
+    x_array.each_with_index do |point, index|
+      annotations << {
+          showarrow: false,
+          x: point,
+          y: y_array[index],
+          z: z_array[index],
+          text: text_array[index],
+          font: {
+              family: 'Helvetica Neue',
+              size: 10,
+              color: '#333'
+          }
+      }
+    end
+    annotations
   end
 
   # find mean of expression scores for a given cell & list of genes
