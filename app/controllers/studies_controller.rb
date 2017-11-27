@@ -347,7 +347,6 @@ class StudiesController < ApplicationController
   def new_study_file
     file_type = params[:file_type] ? params[:file_type] : 'Cluster'
     @study_file = @study.build_study_file({file_type: file_type})
-    @study_file = @study.build_study_file({file_type: file_type})
   end
 
   # method to perform chunked uploading of data
@@ -599,6 +598,9 @@ class StudiesController < ApplicationController
     @study_file = StudyFile.find(params[:study_file_id])
     @message = ""
     unless @study_file.nil?
+      # delete matching caches
+      @study_file.invalidate_cache_by_file_type
+      # queue for deletion
       @study_file.update(queued_for_deletion: true)
       DeleteQueueJob.new(@study_file).delay.perform
       @file_type = @study_file.file_type
@@ -607,6 +609,8 @@ class StudiesController < ApplicationController
       case @file_type
         when 'Cluster'
           @partial = 'initialize_ordinations_form'
+        when 'Coordinate Labels'
+          @partial = 'initialize_labels_form'
         when 'Expression Matrix'
           @partial = 'initialize_expression_form'
         when 'Metadata'
@@ -618,8 +622,6 @@ class StudiesController < ApplicationController
         else
           @partial = 'initialize_misc_form'
       end
-      # delete matching caches
-      @study_file.invalidate_cache_by_file_type
       # delete source file in FireCloud and then remove record
       begin
         # make sure file is in FireCloud first as user may be aborting the upload
