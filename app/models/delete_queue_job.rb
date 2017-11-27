@@ -40,6 +40,8 @@ class DeleteQueueJob < Struct.new(:object)
               end
               user_annotations.delete_all
             end
+          when 'Coordinate Labels'
+            DataArray.where(study_file_id: object.id, study_id: study.id).delete_all
           when 'Expression Matrix'
             ExpressionScore.where(study_file_id: object.id, study_id: study.id).delete_all
             DataArray.where(study_file_id: object.id, study_id: study.id).delete_all
