@@ -1644,9 +1644,9 @@ class SiteController < ApplicationController
           z: z_array[index],
           text: text_array[index],
           font: {
-              family: 'Helvetica Neue',
-              size: 10,
-              color: '#333'
+              family: @cluster.coordinate_labels_options[:font_family],
+              size: @cluster.coordinate_labels_options[:font_size],
+              color: @cluster.coordinate_labels_options[:font_color]
           }
       }
     end
