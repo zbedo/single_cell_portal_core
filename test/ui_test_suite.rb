@@ -233,6 +233,20 @@ class UiTestSuite < Test::Unit::TestCase
 		next_btn = @driver.find_element(:id, 'next-btn')
 		next_btn.click
 
+		# upload a coordinate labels file
+		wait_for_render(:class, 'add-coordinate-labels')
+		add_coords_btn = @driver.find_element(:class, 'add-coordinate-labels')
+		add_coords_btn.click
+		wait_for_render(:class, 'initialize_labels_form')
+		coords_form = @driver.find_element(:class, 'initialize_labels_form')
+		cluster_select = coords_form.find_element(:id, 'study_file_options_cluster_group_id')
+		cluster_select.send_keys('Test Cluster 1')
+		upload_coords = coords_form.find_element(:class, 'upload-labels')
+		upload_coords.send_keys(@test_data_path + 'coordinate_labels_1.txt')
+		upload_btn = coords_form.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		close_modal('upload-success-modal')
+
 		# upload right fastq
 		wait_for_render(:class, 'initialize_primary_data_form')
 		upload_fastq = @driver.find_element(:class, 'upload-fastq')
@@ -313,7 +327,7 @@ class UiTestSuite < Test::Unit::TestCase
 		assert gene_list_count == 1, "did not find correct number of gene lists, expected 1 but found #{gene_list_count}"
 		assert metadata_count == 3, "did not find correct number of metadata objects, expected 3 but found #{metadata_count}"
 		assert cluster_annot_count == 3, "did not find correct number of cluster annotations, expected 2 but found #{cluster_annot_count}"
-		assert study_file_count == 7, "did not find correct number of study files, expected 7 but found #{study_file_count}"
+		assert study_file_count == 8, "did not find correct number of study files, expected 8 but found #{study_file_count}"
 		assert primary_data_count == 2, "did not find correct number of primary data files, expected 2 but found #{primary_data_count}"
 		assert share_count == 1, "did not find correct number of study shares, expected 1 but found #{share_count}"
 
@@ -557,7 +571,7 @@ class UiTestSuite < Test::Unit::TestCase
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
-		assert files.size == 9, "did not find correct number of files, expected 9 but found #{files.size}"
+		assert files.size == 10, "did not find correct number of files, expected 10 but found #{files.size}"
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
 
@@ -599,7 +613,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		@driver.get path
 		files = @driver.find_element(:id, "test-study-#{$random_seed}-study-file-count")
-		assert files.text == '8', "did not find correct number of files, expected 8 but found #{files.text}"
+		assert files.text == '9', "did not find correct number of files, expected 9 but found #{files.text}"
 
 		# verify deletion in google
 		show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
@@ -610,7 +624,7 @@ class UiTestSuite < Test::Unit::TestCase
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
-		assert files.size == 8, "did not find correct number of files, expected 8 but found #{files.size}"
+		assert files.size == 9, "did not find correct number of files, expected 9 but found #{files.size}"
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
 
