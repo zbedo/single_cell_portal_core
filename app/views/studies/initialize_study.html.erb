@@ -75,7 +75,7 @@
         <div class="well well-sm">
           <h2>Step 3. Upload Coordinate Labels <small class="initialize-label" id="initialize_labels_form_completed"><span class="label label-info">Optional</span></small></h2>
           <p class="lead">Upload a tab- or comma-delimited text file containing any 2d or 3d spatial coordinates and labels to display.  The file must be a plain text (.txt) file with at least 3 columns and a header row containing the values '<strong>X</strong>', '<strong>Y</strong>', and '<strong>LABELS</strong>'.  The file may have an optional column of '<strong>Z</strong>' (for 3d clusters).  The last column must contain text labels to display at the specified coordinates.</p>
-          <h3>Metadata Columns</h3>
+          <p class="lead"><i class="fa fa-fw fa-exclamation-triangle text-warning"></i> The coordinates of the labels must fall inside the ranges of the cluster they are associated with for them to render.</p>
           <p><%= link_to "Example Cluster File <span class='fa fa-download'></span>".html_safe, 'https://raw.githubusercontent.com/broadinstitute/single_cell_portal/master/demo_data/coordinates_example.txt', class: 'btn btn-default', download: 'coordinates_example.txt' %></p>
         </div>
         <% @coordinate_labels.each do |study_file| %>
