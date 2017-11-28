@@ -15,7 +15,7 @@ class SiteController < ApplicationController
 
   respond_to :html, :js, :json
 
-  before_action :set_study, except: [:index, :search, :privacy_policy, :view_workflow_wdl]
+  before_action :set_study, except: [:index, :search, :privacy_policy, :view_workflow_wdl, :create_totat]
   before_action :set_cluster_group, only: [:study, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :expression_query, :annotation_query, :get_new_annotations, :annotation_values, :show_user_annotations_form]
   before_action :set_selected_annotation, only: [:render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :annotation_query, :annotation_values, :show_user_annotations_form]
   before_action :load_precomputed_options, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap]
@@ -130,8 +130,12 @@ class SiteController < ApplicationController
         if @study.update(study_params)
           # invalidate caches as needed
           if @study.previous_changes.keys.include?('default_options')
+            # invalidate all cluster & expression caches as points sizes/borders may have changed globally
+            # start with default cluster then do everything else
             @study.default_cluster.study_file.invalidate_cache_by_file_type
-            @study.expression_matrix_files.first.invalidate_cache_by_file_type
+            other_clusters = @study.cluster_groups.keep_if {|cluster_group| cluster_group.name != @study.default_cluster}
+            other_clusters.map {|cluster_group| cluster_group.study_file.invalidate_cache_by_file_type}
+            @study.expression_matrix_files.map {|matrix_file| matrix_file.invalidate_cache_by_file_type}
           elsif @study.previous_changes.keys.include?('name')
             # if user renames a study, invalidate all caches
             old_name = @study.previous_changes['url_safe_name'].first
@@ -599,7 +603,7 @@ class SiteController < ApplicationController
 
     user_quota = user.daily_download_quota
 
-    # Only check at quota at beginning of download, not per file.
+    # Only check quota at beginning of download, not per file.
     # Studies might be massive, and we want user to be able to download at least
     # one requested download object per day.
     if user_quota >= @download_quota
@@ -608,7 +612,7 @@ class SiteController < ApplicationController
       return
     end
 
-    curl_configs = ['--create-dirs']
+    curl_configs = ['--create-dirs', '--compressed']
 
     curl_files = []
 
@@ -1066,7 +1070,11 @@ class SiteController < ApplicationController
   ###
 
   def set_study
-    @study = Study.where(url_safe_name: params[:study_name]).first
+    @study = Study.find_by(url_safe_name: params[:study_name])
+    # redirect if study is not found
+    if @study.nil?
+      redirect_to site_path, alert: 'Study not found.  Please check the name and try again.' and return
+    end
   end
 
   def set_cluster_group
@@ -1105,7 +1113,7 @@ class SiteController < ApplicationController
 
   # whitelist parameters for updating studies on study settings tab (smaller list than in studies controller)
   def study_params
-    params.require(:study).permit(:name, :description, :public, :embargo, :cell_count, :default_options => [:cluster, :annotation, :color_profile, :expression_label, :deliver_emails], study_shares_attributes: [:id, :_destroy, :email, :permission])
+    params.require(:study).permit(:name, :description, :public, :embargo, :cell_count, :default_options => [:cluster, :annotation, :color_profile, :expression_label, :deliver_emails, :cluster_point_size, :cluster_point_alpha, :cluster_point_border], study_shares_attributes: [:id, :_destroy, :email, :permission])
   end
 
   # whitelist parameters for creating custom user annotation
@@ -1225,8 +1233,8 @@ class SiteController < ApplicationController
               cmax: annotation_array.max,
               cmin: annotation_array.min,
               color: color_array,
-              size: color_array.map {|a| 6},
-              line: { color: 'rgb(40,40,40)', width: 0.5},
+              size: color_array.map {|a| @study.default_cluster_point_size},
+              line: { color: 'rgb(40,40,40)', width: @study.show_cluster_point_borders? ? 0.5 : 0},
               colorscale: 'Reds',
               showscale: true,
               colorbar: {
@@ -1257,7 +1265,7 @@ class SiteController < ApplicationController
           if @cluster.cluster_type == '3d'
             coordinates[annotation_value][:z] << z_array[index]
           end
-          coordinates[annotation_value][:marker_size] << 6
+          coordinates[annotation_value][:marker_size] << @study.default_cluster_point_size
         end
         coordinates.each do |key, data|
           data[:name] << " (#{data[:x].size} points)"
@@ -1274,7 +1282,7 @@ class SiteController < ApplicationController
             if @cluster.cluster_type == '3d'
               coordinates[annotation_value][:z] << z_array[index]
             end
-            coordinates[annotation_value][:marker_size] << 6
+            coordinates[annotation_value][:marker_size] << @study.default_cluster_point_size
           end
         end
         coordinates.each do |key, data|
@@ -1320,7 +1328,7 @@ class SiteController < ApplicationController
         values[:all][:x] << annotation_value
         values[:all][:y] << expression_value
         values[:all][:cells] << cell_name
-        values[:all][:marker_size] << 6
+        values[:all][:marker_size] << @study.default_cluster_point_size
       end
     else
       cells.each do |cell|
@@ -1332,7 +1340,7 @@ class SiteController < ApplicationController
           values[:all][:x] << annotation_value
           values[:all][:y] << expression_value
           values[:all][:cells] << cell
-          values[:all][:marker_size] << 6
+          values[:all][:marker_size] << @study.default_cluster_point_size
         end
       end
     end
@@ -1376,7 +1384,7 @@ class SiteController < ApplicationController
         values[:all][:x] << annotation_value
         values[:all][:y] << expression_value
         values[:all][:cells] << cell
-        values[:all][:marker_size] << 6
+        values[:all][:marker_size] << @study.default_cluster_point_size
         end
     end
     values
@@ -1468,8 +1476,9 @@ class SiteController < ApplicationController
       expression[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
       expression[:all][:text] << text_value
       expression[:all][:marker][:color] << expression_score
-      expression[:all][:marker][:size] << 6
+      expression[:all][:marker][:size] << @study.default_cluster_point_size
     end
+    expression[:all][:marker][:line] = { color: 'rgb(255,255,255)', width: @study.show_cluster_point_borders? ? 0.5 : 0}
     color_minmax =  expression[:all][:marker][:color].minmax
     expression[:all][:marker][:cmin], expression[:all][:marker][:cmax] = color_minmax
     expression[:all][:marker][:colorscale] = 'Reds'
@@ -1597,9 +1606,10 @@ class SiteController < ApplicationController
       expression[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
       expression[:all][:text] << text_value
       expression[:all][:marker][:color] << expression_score
-      expression[:all][:marker][:line] = { color: 'rgb(40,40,40)', width: 0.5}
-      expression[:all][:marker][:size] << 6
+
+      expression[:all][:marker][:size] << @study.default_cluster_point_size
     end
+    expression[:all][:marker][:line] = { color: 'rgb(40,40,40)', width: @study.show_cluster_point_borders? ? 0.5 : 0}
     color_minmax =  expression[:all][:marker][:color].minmax
     expression[:all][:marker][:cmin], expression[:all][:marker][:cmax] = color_minmax
     expression[:all][:marker][:colorscale] = 'Reds'
@@ -1822,15 +1832,24 @@ class SiteController < ApplicationController
 
     filename = (is_study_file ? file.upload_file_name : file[:name])
 
-    signed_url = fc_client.execute_gcloud_method(:generate_signed_url,
+    begin
+      signed_url = fc_client.execute_gcloud_method(:generate_signed_url,
                                                               @study.firecloud_project,
                                                               @study.firecloud_workspace,
                                                               filename,
                                                               expires: 1.day.to_i) # 1 day in seconds, 86400
-    curl_config = [
-      'url="' + signed_url + '"',
-      'output="' + filename + '"'
-    ]
+      curl_config = [
+          'url="' + signed_url + '"',
+          'output="' + filename + '"'
+      ]
+    rescue => e
+      logger.error "#{Time.now}: error generating signed url for #{filename}; #{e.message}"
+      curl_config = [
+          '# Error downloading ' + filename + '.  ' +
+          'Did you delete the file in the bucket and not sync it in Single Cell Portal?'
+      ]
+    end
+    
     curl_config = curl_config.join("\n")
     file_size = (is_study_file ? file.upload_file_size : file[:size])
 

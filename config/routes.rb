@@ -13,6 +13,7 @@ Rails.application.routes.draw do
 		match 'admin/users/:id', to: 'admin_configurations#update_user', via: [:post, :patch], as: :update_user
     get 'admin/email_users/compose', to: 'admin_configurations#compose_users_email', as: :compose_users_email
     post 'admin/email_users/compose', to: 'admin_configurations#deliver_users_email', as: :deliver_users_email
+    get 'admin/firecloud_api_status', to: 'admin_configurations#firecloud_api_status', as: :firecloud_api_status
 		resources :admin_configurations, path: 'admin'
 
     # study reporter actions

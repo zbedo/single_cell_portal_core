@@ -1144,16 +1144,16 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# add a file to a workspace bucket
 	#
-  # * *params*
+	# * *params*
 	#   - +workspace_namespace+ (String) => namespace of workspace
 	#   - +workspace_name+ (String) => name of workspace
 	#   - +filepath+ (String) => path to file
 	#   - +filename+ (String) => name of file
 	#   - +opts+ (Hash) => extra options for create_file, see
-  #     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=create_file-instance
+	#     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=create_file-instance
 	#
-  # * *return*
-  #   - +Google::Cloud::Storage::File+
+	# * *return*
+	#   - +Google::Cloud::Storage::File+
 	def create_workspace_file(workspace_namespace, workspace_name, filepath, filename, opts={})
 		bucket = self.get_workspace_bucket(workspace_namespace, workspace_name)
 		bucket.create_file filepath, filename, opts

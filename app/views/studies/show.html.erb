@@ -33,8 +33,8 @@
                   <td><%= link_to "<span class='fa fa-area-chart'></span> View Study".html_safe, view_study_path(@study.url_safe_name), class: 'btn btn-primary', id: 'study-link' %></td>
                 </tr>
                 <tr>
-                  <td>FireCloud Workspace</td>
-                  <td><%= @study.firecloud_workspace %></td>
+                  <td>FireCloud Project & Workspace</td>
+                  <td><%= @study.firecloud_project %>/<%= @study.firecloud_workspace %></td>
                   <td><%= link_to_if !@study.firecloud_workspace.nil?, "<span class='fa fa-cloud'></span> View FireCloud Workspace".html_safe, @study.workspace_url, class: 'btn btn-info', id: 'firecloud-link', target: :_blank %>
                   </td>
                 </tr>
