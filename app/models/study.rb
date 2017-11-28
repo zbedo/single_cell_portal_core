@@ -692,8 +692,7 @@ class Study
         # if file has no generation tag, then we know the upload failed
         if file.generation.blank?
           puts "#{file_location} was never uploaded to #{study.bucket_id} (no generation tag)"
-          @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: 'Upload never completed (no generation tag)'}
-        else
+       else
           begin
             # check remote file for existence
             remote_file = Study.firecloud_client.get_workspace_file(study.firecloud_project, study.firecloud_workspace, file_location)
