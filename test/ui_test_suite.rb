@@ -3078,7 +3078,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# wait a second for event to fire, then get new camera
 		sleep(1)
 		new_camera = @driver.execute_script("return $('#cluster-plot').data('camera');")
-		assert camera == new_camera['camera'], "camera position did not save correctly, expected #{camera.to_json}, got #{new_camera.to_json}"
+		assert camera == new_camera, "camera position did not save correctly, expected #{camera.to_json}, got #{new_camera.to_json}"
 		# load annotation
 		annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
 		annotations.select {|opt| opt.text == 'Sub-Cluster'}.first.click
@@ -3090,7 +3090,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# verify camera position was saved
 		annot_camera = @driver.execute_script("return $('#cluster-plot').data('camera');")
-		assert camera == annot_camera['camera'], "camera position did not save correctly, expected #{camera.to_json}, got #{annot_camera.to_json}"
+		assert camera == annot_camera, "camera position did not save correctly, expected #{camera.to_json}, got #{annot_camera.to_json}"
 
 		# load new cluster
 		clusters = @driver.find_element(:id, 'cluster').find_elements(:tag_name, 'option')
@@ -3104,7 +3104,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# verify camera position was saved
 		cluster_camera = @driver.execute_script("return $('#cluster-plot').data('camera');")
-		assert camera == cluster_camera['camera'], "camera position did not save correctly, expected #{camera.to_json}, got #{cluster_camera.to_json}"
+		assert camera == cluster_camera, "camera position did not save correctly, expected #{camera.to_json}, got #{cluster_camera.to_json}"
 
 		# now check gene expression views
 		# load random gene to search
@@ -3129,7 +3129,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# wait a second for event to fire, then get new camera
 		sleep(1)
 		new_scatter_camera = @driver.execute_script("return $('#expression-plots').data('scatter-camera');")
-		assert scatter_camera == new_scatter_camera['camera'], "scatter camera position did not save correctly, expected #{scatter_camera.to_json}, got #{new_scatter_camera.to_json}"
+		assert scatter_camera == new_scatter_camera, "scatter camera position did not save correctly, expected #{scatter_camera.to_json}, got #{new_scatter_camera.to_json}"
 
 		# load annotation
 		exp_annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
@@ -3142,7 +3142,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# verify camera position was saved
 		exp_annot_camera = @driver.execute_script("return $('#expression-plots').data('scatter-camera');")
-		assert scatter_camera == exp_annot_camera['camera'], "camera position did not save correctly, expected #{scatter_camera.to_json}, got #{exp_annot_camera.to_json}"
+		assert scatter_camera == exp_annot_camera, "camera position did not save correctly, expected #{scatter_camera.to_json}, got #{exp_annot_camera.to_json}"
 
 		# load new cluster
 		clusters = @driver.find_element(:id, 'cluster').find_elements(:tag_name, 'option')
@@ -3156,7 +3156,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# verify camera position was saved
 		exp_cluster_camera = @driver.execute_script("return $('#expression-plots').data('scatter-camera');")
-		assert scatter_camera == exp_cluster_camera['camera'], "camera position did not save correctly, expected #{scatter_camera.to_json}, got #{exp_cluster_camera.to_json}"
+		assert scatter_camera == exp_cluster_camera, "camera position did not save correctly, expected #{scatter_camera.to_json}, got #{exp_cluster_camera.to_json}"
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
