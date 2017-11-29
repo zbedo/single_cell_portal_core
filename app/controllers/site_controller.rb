@@ -15,7 +15,7 @@ class SiteController < ApplicationController
 
   respond_to :html, :js, :json
 
-  before_action :set_study, except: [:index, :search, :view_workflow_wdl, :create_totat]
+  before_action :set_study, except: [:index, :search, :view_workflow_wdl, :create_totat, :log_action]
   before_action :set_cluster_group, only: [:study, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :expression_query, :annotation_query, :get_new_annotations, :annotation_values, :show_user_annotations_form]
   before_action :set_selected_annotation, only: [:render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :annotation_query, :annotation_values, :show_user_annotations_form]
   before_action :load_precomputed_options, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap]
