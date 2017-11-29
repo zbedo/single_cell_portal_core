@@ -75,6 +75,22 @@ class ClusterGroup
     !self.domain_ranges.nil?
   end
 
+  # check if cluster has coordinate-based annotation labels
+  def has_coordinate_labels?
+    self.data_arrays.where(array_type: 'labels').any?
+  end
+
+  # retrieve font options for coordinate labels
+  def coordinate_labels_options
+    # must retrieve study file where options have been set, so search options hash for string value of cluster_group id
+    study_file = StudyFile.find_by('options.cluster_group_id' => self.id.to_s)
+    {
+        font_family: study_file.coordinate_labels_font_family,
+        font_size: study_file.coordinate_labels_font_size,
+        font_color: study_file.coordinate_labels_font_color
+    }
+  end
+
   # method used during parsing to generate representative sub-sampled data_arrays for rendering
   #
   # annotation_name: name of annotation to subsample off of

@@ -5,9 +5,10 @@
     <li role="presentation" class="wizard-nav" id="initialize_expression_form_nav"><a href="#expression" data-toggle="tab">1. Expression Matrix <span id="initialize_expression_form_nav_completed"></span></a></li>
     <li role="presentation" class="wizard-nav" id="initialize_metadata_form_nav"><a href="#metadata" data-toggle="tab">2. Metadata <span id="initialize_metadata_form_nav_completed"></span></a></li>
     <li role="presentation" class="wizard-nav" id="initialize_ordinations_form_nav"><a href="#ordinations" data-toggle="tab">3. Clusters <span id="initialize_ordinations_form_nav_completed"></span></a></li>
-		<li role="presentation" class="wizard-nav" id="initialize_primary_data_form_nav"><a href="#primary-data" data-toggle="tab">4. Primary Data <span id="initialize_primary_data_form_nav_completed"></span></a></li>
-    <li role="presentation" class="wizard-nav" id="initialize_marker_genes_form_nav"><a href="#marker-genes" data-toggle="tab">5. Gene Lists <span id="initialize_marker_genes_form_nav_completed"></span></a></li>
-		<li role="presentation" class="wizard-nav" id="initialize_misc_form_nav"><a href="#misc" data-toggle="tab">6. Miscellaneous <span id="initialize_misc_form_nav_completed"></span></a></li>
+    <li role="presentation" class="wizard-nav" id="initialize_labels_form_nav"><a href="#labels" data-toggle="tab">4. Coordinate Labels <span id="initialize_labels_form_nav_completed"></span></a></li>
+		<li role="presentation" class="wizard-nav" id="initialize_primary_data_form_nav"><a href="#primary-data" data-toggle="tab">5. Primary Data <span id="initialize_primary_data_form_nav_completed"></span></a></li>
+    <li role="presentation" class="wizard-nav" id="initialize_marker_genes_form_nav"><a href="#marker-genes" data-toggle="tab">6. Gene Lists <span id="initialize_marker_genes_form_nav_completed"></span></a></li>
+		<li role="presentation" class="wizard-nav" id="initialize_misc_form_nav"><a href="#misc" data-toggle="tab">7. Miscellaneous <span id="initialize_misc_form_nav_completed"></span></a></li>
 	</ul>
 
 	<div id="bar" class="progress">
@@ -69,6 +70,28 @@
 			</div>
 			<p><%= link_to "<span class='fa fa-plus'></span> Add a Cluster File".html_safe, new_study_file_study_path(@study._id, file_type: 'Cluster', target: '#ordinations-target', form: 'initialize_ordinations_form'), class: 'btn btn-sm btn-primary add-cluster', 'data-remote' => true %></p>
 		</div>
+    <div class="tab-pane" id="labels">
+      <div id="labels-target">
+        <div class="well well-sm">
+          <h2>Step 3. Upload Coordinate Labels <small class="initialize-label" id="initialize_labels_form_completed"><span class="label label-info">Optional</span></small></h2>
+          <p class="lead">Upload a tab- or comma-delimited text file containing any 2d or 3d spatial coordinates and labels to display.  The file must be a plain text (.txt) file with at least 3 columns and a header row containing the values '<strong>X</strong>', '<strong>Y</strong>', and '<strong>LABELS</strong>'.  The file may have an optional column of '<strong>Z</strong>' (for 3d clusters).  The last column must contain text labels to display at the specified coordinates.</p>
+          <p class="lead"><i class="fa fa-fw fa-exclamation-triangle text-warning"></i> The coordinates of the labels must fall inside the ranges of the cluster they are associated with for them to render.</p>
+          <p><%= link_to "Example Coordinate Label File <span class='fa fa-download'></span>".html_safe, 'https://raw.githubusercontent.com/broadinstitute/single_cell_portal/master/demo_data/coordinate_labels_example.txt', class: 'btn btn-default', download: 'coordinates_example.txt' %></p>
+        </div>
+        <% @coordinate_labels.each do |study_file| %>
+          <%= render partial: 'initialize_labels_form', locals: {study_file: study_file} %>
+        <% end %>
+        <script type="text/javascript">
+            if (<%= @coordinate_labels.any? && !@coordinate_labels.first.new_record? %>) {
+                completeWizardStep('initialize_labels_form_nav');
+                console.log('incrementing status for coordinate labels upload');
+                $('#initialize_labels_form_completed').replaceWith("<%= escape_javascript(render partial: 'step_completed', locals: {id: 'initialize_labels_form_completed'}) %>");
+                $('#initialize_labels_form_nav_completed').html("<span class='fa fa-check text-success'></span>");
+            }
+        </script>
+      </div>
+      <p><%= link_to "<span class='fa fa-plus'></span> Add a Coordinate Labels File".html_safe, new_study_file_study_path(@study._id, file_type: 'Coordinate Labels', target: '#labels-target', form: 'initialize_labels_form'), class: 'btn btn-sm btn-primary add-coordinate-labels', 'data-remote' => true %></p>
+    </div>
     <div class="tab-pane" id="primary-data">
       <div id="primary-data-target">
         <div class="well well-sm">

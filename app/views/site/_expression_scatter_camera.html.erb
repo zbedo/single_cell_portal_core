@@ -1,13 +1,16 @@
 // listen for relayout events and redraw plots accordingly
-$('#scatter-plot')[0].on('plotly_relayout', function(cameraData) {
-  if (cameraData.scene != null) {
+
+var expressionPlotDiv = document.getElementById('scatter-plot');
+expressionPlotDiv.on('plotly_relayout', function(cameraData) {
+  console.log('camera change event on scatter-plot');
+  if (typeof cameraData['scene.camera'] !== 'undefined') {
     var oldScene = $('#expression-plots').data('scatter-camera');
-    var newScene = cameraData.scene;
+    var newCamera = cameraData['scene.camera'];
     console.log('Updating scatter camera information; was ' + JSON.stringify(oldScene));
-    $('#expression-plots').data('scatter-camera', newScene);
+    $('#expression-plots').data('scatter-camera', newCamera);
     console.log('Update complete, scatter camera data now ' + JSON.stringify($('#expression-plots').data('scatter-camera')));
 
-    staticLayout.scene.camera = newScene;
+    staticLayout.scene.camera = newCamera;
     Plotly.relayout('reference-plot', staticLayout);
   }
 });

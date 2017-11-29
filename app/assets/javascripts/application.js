@@ -139,6 +139,7 @@ var completed = {
     initialize_expression_form_nav: false,
     initialize_metadata_form_nav: false,
     initialize_ordinations_form_nav: false,
+    initialize_labels_form_nav: false,
     initialize_marker_genes_form_nav: false,
     initialize_primary_data_form_nav: false,
     initialize_misc_form_nav: false
