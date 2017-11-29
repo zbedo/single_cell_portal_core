@@ -42,6 +42,10 @@ var layout = {
       <% end %>
   };
 
+  <% if @cluster.has_coordinate_labels? %>
+    layout.scene.annotations = <%= raw @coordinate_labels.to_json %>
+  <% end %>
+
 <% else %>
   layout.xaxis = {
       range: <%= raw @range[:x] %>,
@@ -54,4 +58,8 @@ var layout = {
       title: '<%= @axes[:y] %>',
       showticklabels: false
   };
+
+  <% if @cluster.has_coordinate_labels? %>
+    layout.annotations = <%= raw @coordinate_labels.to_json %>
+  <% end %>
 <% end %>
