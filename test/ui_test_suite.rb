@@ -246,6 +246,8 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn = coords_form.find_element(:id, 'start-file-upload')
 		upload_btn.click
 		close_modal('upload-success-modal')
+		next_btn = @driver.find_element(:id, 'next-btn')
+		next_btn.click
 
 		# upload right fastq
 		wait_for_render(:class, 'initialize_primary_data_form')
@@ -663,15 +665,14 @@ class UiTestSuite < Test::Unit::TestCase
 		@wait.until {element_present?(:id, 'study-download')}
 		open_ui_tab('study-download')
 		i = 0
-		link_present = element_present?(:class, 'embargoed-file')
+		link_present = element_present?(:class, 'dl-link')
 		while !link_present
-			omit_if i > 4, 'file has not completed upload to firecloud, skipping' do
-				sleep 1
-				@driver.get embargo_url
-				@wait.until {element_present?(:id, 'study-download')}
-				open_ui_tab('study-download')
-				i += 1
-			end
+			sleep 1
+			@driver.get embargo_url
+			@wait.until {element_present?(:id, 'study-download')}
+			open_ui_tab('study-download')
+			link_present = element_present?(:class, 'dl-link')
+			i += 1
 		end
 		download_links = @driver.find_elements(:class, 'dl-link')
 		assert download_links.size == 1, "did not find correct number of download links, expected 1 but found #{download_links.size}"
@@ -1877,6 +1878,11 @@ class UiTestSuite < Test::Unit::TestCase
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 		rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
 		assert rendered, "cluster plot did not finish rendering, expected true but found #{rendered}"
+
+		# check for coordinate labels
+		labels = @driver.execute_script("return layout.scene.annotations;")
+		assert_not_nil labels, 'Did not return coordinate labels'
+		assert labels.size == 8, "Did not find coorect number of coordinate labels, expected 8 but found #{labels.size}"
 
 		# load subclusters
 		clusters = @driver.find_element(:id, 'cluster').find_elements(:tag_name, 'option')
