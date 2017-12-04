@@ -37,6 +37,10 @@
         aspectmode: 'cube'
       <% end %>
     };
+
+    <% if @cluster.has_coordinate_labels? %>
+      staticLayout.scene.annotations = <%= raw @coordinate_labels.to_json %>
+    <% end %>
   <% else %>
     staticLayout.xaxis = {
         range: <%= raw @static_range[:x] %>,
@@ -47,4 +51,8 @@
         range: <%= raw @static_range[:y] %>,
         showticklabels: false
     };
+
+    <% if @cluster.has_coordinate_labels? %>
+      staticLayout.annotations = <%= raw @coordinate_labels.to_json %>
+    <% end %>
   <% end %>

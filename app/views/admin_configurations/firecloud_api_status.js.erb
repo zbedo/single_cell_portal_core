@@ -1,0 +1,5 @@
+closeModalSpinner('#working-modal-spinner', '#working-modal', function() {
+    $('#generic-update-target').html("<%= escape_javascript(render partial: '/layouts/generic_update_modal') %>");
+    $('#generic-update-modal-title').html("FireCloud Services Status");
+    $('#generic-update-modal-body').html("<%= escape_javascript(render partial: 'firecloud_api_status') %>");
+    $("#generic-update-modal").modal("show");});

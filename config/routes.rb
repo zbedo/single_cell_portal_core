@@ -13,6 +13,7 @@ Rails.application.routes.draw do
 		match 'admin/users/:id', to: 'admin_configurations#update_user', via: [:post, :patch], as: :update_user
     get 'admin/email_users/compose', to: 'admin_configurations#compose_users_email', as: :compose_users_email
     post 'admin/email_users/compose', to: 'admin_configurations#deliver_users_email', as: :deliver_users_email
+    get 'admin/firecloud_api_status', to: 'admin_configurations#firecloud_api_status', as: :firecloud_api_status
 		resources :admin_configurations, path: 'admin'
 
     # study reporter actions
@@ -124,6 +125,7 @@ Rails.application.routes.draw do
     # base actions
     get 'search', to: 'site#search', as: :search
     get 'log_action', to: 'site#log_action', as: :log_action
+    get 'privacy_policy', to: 'site#privacy_policy', as: :privacy_policy
     get '/', to: 'site#index', as: :site
     root to: 'site#index'
   end

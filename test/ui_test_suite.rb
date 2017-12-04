@@ -233,6 +233,22 @@ class UiTestSuite < Test::Unit::TestCase
 		next_btn = @driver.find_element(:id, 'next-btn')
 		next_btn.click
 
+		# upload a coordinate labels file
+		wait_for_render(:class, 'add-coordinate-labels')
+		add_coords_btn = @driver.find_element(:class, 'add-coordinate-labels')
+		add_coords_btn.click
+		wait_for_render(:class, 'initialize_labels_form')
+		coords_form = @driver.find_element(:class, 'initialize_labels_form')
+		cluster_select = coords_form.find_element(:id, 'study_file_options_cluster_group_id')
+		cluster_select.send_keys('Test Cluster 1')
+		upload_coords = coords_form.find_element(:class, 'upload-labels')
+		upload_coords.send_keys(@test_data_path + 'coordinate_labels_1.txt')
+		upload_btn = coords_form.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		close_modal('upload-success-modal')
+		next_btn = @driver.find_element(:id, 'next-btn')
+		next_btn.click
+
 		# upload right fastq
 		wait_for_render(:class, 'initialize_primary_data_form')
 		upload_fastq = @driver.find_element(:class, 'upload-fastq')
@@ -313,7 +329,7 @@ class UiTestSuite < Test::Unit::TestCase
 		assert gene_list_count == 1, "did not find correct number of gene lists, expected 1 but found #{gene_list_count}"
 		assert metadata_count == 3, "did not find correct number of metadata objects, expected 3 but found #{metadata_count}"
 		assert cluster_annot_count == 3, "did not find correct number of cluster annotations, expected 2 but found #{cluster_annot_count}"
-		assert study_file_count == 7, "did not find correct number of study files, expected 7 but found #{study_file_count}"
+		assert study_file_count == 8, "did not find correct number of study files, expected 8 but found #{study_file_count}"
 		assert primary_data_count == 2, "did not find correct number of primary data files, expected 2 but found #{primary_data_count}"
 		assert share_count == 1, "did not find correct number of study shares, expected 1 but found #{share_count}"
 
@@ -557,7 +573,7 @@ class UiTestSuite < Test::Unit::TestCase
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
-		assert files.size == 9, "did not find correct number of files, expected 9 but found #{files.size}"
+		assert files.size == 10, "did not find correct number of files, expected 10 but found #{files.size}"
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
 
@@ -599,7 +615,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		@driver.get path
 		files = @driver.find_element(:id, "test-study-#{$random_seed}-study-file-count")
-		assert files.text == '8', "did not find correct number of files, expected 8 but found #{files.text}"
+		assert files.text == '9', "did not find correct number of files, expected 9 but found #{files.text}"
 
 		# verify deletion in google
 		show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
@@ -610,7 +626,7 @@ class UiTestSuite < Test::Unit::TestCase
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
-		assert files.size == 8, "did not find correct number of files, expected 8 but found #{files.size}"
+		assert files.size == 9, "did not find correct number of files, expected 9 but found #{files.size}"
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
 
@@ -648,6 +664,16 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get embargo_url
 		@wait.until {element_present?(:id, 'study-download')}
 		open_ui_tab('study-download')
+		i = 0
+		link_present = element_present?(:class, 'dl-link')
+		while !link_present
+			sleep 1
+			@driver.get embargo_url
+			@wait.until {element_present?(:id, 'study-download')}
+			open_ui_tab('study-download')
+			link_present = element_present?(:class, 'dl-link')
+			i += 1
+		end
 		download_links = @driver.find_elements(:class, 'dl-link')
 		assert download_links.size == 1, "did not find correct number of download links, expected 1 but found #{download_links.size}"
 
@@ -660,7 +686,6 @@ class UiTestSuite < Test::Unit::TestCase
 		login_as_other($share_email, $share_email_password)
 
 		# now assert download links do not load
-		sleep(8) # wait for parse and upload to complete, otherwise link will not render correctly
 		@driver.get embargo_url
 		@wait.until {element_present?(:id, 'study-download')}
 		open_ui_tab('study-download')
@@ -1164,11 +1189,11 @@ class UiTestSuite < Test::Unit::TestCase
 		# toggle study/share notification
 		study_notifier_toggle = @driver.find_element(:class, 'toggle-study-subscription')
 		study_notifier_toggle.click
-		@wait.until {study_notifier_toggle.text == 'Off'}
+		@wait.until {@driver.find_element(:class, 'toggle-study-subscription').text == 'Off'}
 		study_text = study_notifier_toggle.text
 		assert study_text == 'Off', "Did not properly turn off study notification (text is still #{study_text})"
 		study_notifier_toggle.click
-		@wait.until {study_notifier_toggle.text == 'On'}
+		@wait.until {@driver.find_element(:class, 'toggle-study-subscription').text == 'On'}
 		new_study_text = study_notifier_toggle.text
 		assert new_study_text == 'Off', "Did not properly turn on study notification (text is still #{new_study_text})"
 
@@ -1276,6 +1301,8 @@ class UiTestSuite < Test::Unit::TestCase
 		random_seed_slug = $random_seed.split('-').first
 		project_name = "test-scp-project-#{random_seed_slug}"
 		project.send_keys(project_name)
+		# make sure dropdown changed to new project name
+		assert project['value'] == project_name, "Did not set FireCloud project to correct value, expected #{project_name} but found #{project['value']}"
 		# add a share
 		share = @driver.find_element(:id, 'add-study-share')
 		@wait.until {share.displayed?}
@@ -1637,6 +1664,8 @@ class UiTestSuite < Test::Unit::TestCase
 
 		open_ui_tab('users')
 		share_email_id = $share_email.gsub(/[@.]/, '-')
+		search_box = @driver.find_element(:xpath, "//div[@id='users']//input[@type='search']")
+		search_box.send_keys($share_email)
 		share_user_edit = @driver.find_element(:id, share_email_id + '-edit')
 		share_user_edit.click
 		wait_for_render(:id, 'user_reporter')
@@ -1648,6 +1677,8 @@ class UiTestSuite < Test::Unit::TestCase
 		# assert that reporter access was granted
 		close_modal('message_modal')
 		open_ui_tab('users')
+		search_box = @driver.find_element(:xpath, "//div[@id='users']//input[@type='search']")
+		search_box.send_keys($share_email)
 		assert element_present?(:id, share_email_id + '-reporter'), "did not grant reporter access to #{$share_email}"
 
 		# now remove to reset for future tests
@@ -1848,6 +1879,11 @@ class UiTestSuite < Test::Unit::TestCase
 		rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
 		assert rendered, "cluster plot did not finish rendering, expected true but found #{rendered}"
 
+		# check for coordinate labels
+		labels = @driver.execute_script("return layout.scene.annotations;")
+		assert_not_nil labels, 'Did not return coordinate labels'
+		assert labels.size == 8, "Did not find coorect number of coordinate labels, expected 8 but found #{labels.size}"
+
 		# load subclusters
 		clusters = @driver.find_element(:id, 'cluster').find_elements(:tag_name, 'option')
 		assert clusters.size == 2, "incorrect number of clusters found, expected 2 but found #{clusters.size}"
@@ -1903,21 +1939,14 @@ class UiTestSuite < Test::Unit::TestCase
 		open_ui_tab('study-download')
 
 		files = @driver.find_elements(:class, 'dl-link')
-		file_link = files.last
+		file_link = files.sample
 		filename = file_link['data-filename']
 		basename = filename.split('.').first
 		@wait.until { file_link.displayed? }
 		# perform 'Save as' action
-		save_link_as(file_link)
+		download_file(file_link, basename)
+		# since we don't do HTML5 downloads, and the webdriver context menu is very unreliable...
 
-		# give browser 5 seconds to initiate download
-		sleep(5)
-		# make sure file was actually downloaded
-		file_exists = Dir.entries($download_dir).select {|f| f =~ /#{basename}/}.size >= 1 || File.exists?(File.join($download_dir, filename))
-		assert file_exists, "did not find downloaded file: #{filename} in #{Dir.entries($download_dir).join(', ')}"
-
-		# delete matching files
-		Dir.glob("#{$download_dir}/*").select {|f| /#{basename}/.match(f)}.map {|f| File.delete(f)}
 
 		# now download a file from a private study
 		private_path = @base_url + "/study/private-study-#{$random_seed}"
@@ -1930,15 +1959,7 @@ class UiTestSuite < Test::Unit::TestCase
 		private_filename = private_file_link['download']
 		private_basename = private_filename.split('.').first
 		@wait.until { private_file_link.displayed? }
-		save_link_as(private_file_link)
-		# give browser 5 seconds to initiate download
-		sleep(5)
-		# make sure file was actually downloaded
-		private_file_exists = Dir.entries($download_dir).select {|f| f =~ /#{private_basename}/}.size >= 1 || File.exists?(File.join($download_dir, private_filename))
-		assert private_file_exists, "did not find downloaded file: #{private_filename} in #{Dir.entries($download_dir).join(', ')}"
-
-		# delete matching files
-		Dir.glob("#{$download_dir}/*").select {|f| /#{private_basename}/.match(f)}.map {|f| File.delete(f)}
+		download_file(private_file_link, private_basename)
 
 		# logout
 		logout_from_portal
@@ -1957,15 +1978,7 @@ class UiTestSuite < Test::Unit::TestCase
 		share_filename = share_file_link['data-filename']
 		share_basename = share_filename.split('.').first
 		@wait.until { share_file_link.displayed? }
-		save_link_as(share_file_link)
-		# give browser 5 seconds to initiate download
-		sleep(5)
-		# make sure file was actually downloaded
-		share_file_exists = Dir.entries($download_dir).select {|f| f =~ /#{share_basename}/}.size >= 1 || File.exists?(File.join($download_dir, share_filename))
-		assert share_file_exists, "did not find downloaded file: #{share_filename} in #{Dir.entries($download_dir).join(', ')}"
-
-		# delete matching files
-		Dir.glob("#{$download_dir}/*").select {|f| /#{share_basename}/.match(f)}.map {|f| File.delete(f)}
+		download_file(share_file_link, share_basename)
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
@@ -1993,7 +2006,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get non_share_private_link
 		wait_for_modal_open('message_modal')
 		private_alert_text = @driver.find_element(:id, 'alert-content').text
-		assert private_alert_text == 'You do not have permission to perform that action.',
+		assert private_alert_text == 'You do not have permission to view the requested page.',
 					 "did not properly redirect, expected 'You do not have permission to view the requested page.' but got #{private_alert_text}"
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
@@ -2559,6 +2572,7 @@ class UiTestSuite < Test::Unit::TestCase
 		login_path = @base_url + '/users/sign_in'
 		@driver.get login_path
 		wait_until_page_loads(login_path)
+		close_modal('message_modal')
 		login($test_email, $test_email_password)
 		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
@@ -2608,6 +2622,7 @@ class UiTestSuite < Test::Unit::TestCase
 		login_path = @base_url + '/users/sign_in'
 		@driver.get login_path
 		wait_until_page_loads(login_path)
+		close_modal('message_modal')
 		login($test_email, $test_email_password)
 		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
@@ -3063,7 +3078,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# wait a second for event to fire, then get new camera
 		sleep(1)
 		new_camera = @driver.execute_script("return $('#cluster-plot').data('camera');")
-		assert camera == new_camera['camera'], "camera position did not save correctly, expected #{camera.to_json}, got #{new_camera.to_json}"
+		assert camera == new_camera, "camera position did not save correctly, expected #{camera.to_json}, got #{new_camera.to_json}"
 		# load annotation
 		annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
 		annotations.select {|opt| opt.text == 'Sub-Cluster'}.first.click
@@ -3075,7 +3090,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# verify camera position was saved
 		annot_camera = @driver.execute_script("return $('#cluster-plot').data('camera');")
-		assert camera == annot_camera['camera'], "camera position did not save correctly, expected #{camera.to_json}, got #{annot_camera.to_json}"
+		assert camera == annot_camera, "camera position did not save correctly, expected #{camera.to_json}, got #{annot_camera.to_json}"
 
 		# load new cluster
 		clusters = @driver.find_element(:id, 'cluster').find_elements(:tag_name, 'option')
@@ -3089,7 +3104,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# verify camera position was saved
 		cluster_camera = @driver.execute_script("return $('#cluster-plot').data('camera');")
-		assert camera == cluster_camera['camera'], "camera position did not save correctly, expected #{camera.to_json}, got #{cluster_camera.to_json}"
+		assert camera == cluster_camera, "camera position did not save correctly, expected #{camera.to_json}, got #{cluster_camera.to_json}"
 
 		# now check gene expression views
 		# load random gene to search
@@ -3114,7 +3129,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# wait a second for event to fire, then get new camera
 		sleep(1)
 		new_scatter_camera = @driver.execute_script("return $('#expression-plots').data('scatter-camera');")
-		assert scatter_camera == new_scatter_camera['camera'], "scatter camera position did not save correctly, expected #{scatter_camera.to_json}, got #{new_scatter_camera.to_json}"
+		assert scatter_camera == new_scatter_camera, "scatter camera position did not save correctly, expected #{scatter_camera.to_json}, got #{new_scatter_camera.to_json}"
 
 		# load annotation
 		exp_annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
@@ -3127,7 +3142,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# verify camera position was saved
 		exp_annot_camera = @driver.execute_script("return $('#expression-plots').data('scatter-camera');")
-		assert scatter_camera == exp_annot_camera['camera'], "camera position did not save correctly, expected #{scatter_camera.to_json}, got #{exp_annot_camera.to_json}"
+		assert scatter_camera == exp_annot_camera, "camera position did not save correctly, expected #{scatter_camera.to_json}, got #{exp_annot_camera.to_json}"
 
 		# load new cluster
 		clusters = @driver.find_element(:id, 'cluster').find_elements(:tag_name, 'option')
@@ -3141,7 +3156,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# verify camera position was saved
 		exp_cluster_camera = @driver.execute_script("return $('#expression-plots').data('scatter-camera');")
-		assert scatter_camera == exp_cluster_camera['camera'], "camera position did not save correctly, expected #{scatter_camera.to_json}, got #{exp_cluster_camera.to_json}"
+		assert scatter_camera == exp_cluster_camera, "camera position did not save correctly, expected #{scatter_camera.to_json}, got #{exp_cluster_camera.to_json}"
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
@@ -4125,23 +4140,13 @@ class UiTestSuite < Test::Unit::TestCase
 		download_button = @driver.find_element(:class, 'cluster-file')
 		download_button.click
 
-		sleep(5)
-		filename = 'cluster_2d_example.txt'
-		basename = 'cluster_2d_example'
-		# make sure file was actually downloaded
-		file_exists = Dir.entries($download_dir).select {|f| f =~ /#{basename}/}.size >= 1 || File.exists?(File.join($download_dir, filename))
-		assert file_exists, "did not find downloaded file: #{filename} in #{Dir.entries($download_dir).join(', ')}"
-
-		# open the file
-		file = File.open(File.join($download_dir, filename))
-		first_line = file.readline.split("\t").map(&:strip)
+		# get the file contents
+		contents = @driver.find_element(:tag_name, 'pre').text
+		first_line = contents.split("\n").first.split("\t").map(&:strip)
 		%w[NAME X Y Sub-Group].each do |header|
-			assert (first_line.include?header), "Original cluster's rows are absent, rows: #{first_line}, is missing #{header}"
+			assert first_line.include?(header), "Original cluster's rows are absent, rows: #{first_line}, is missing #{header}"
 		end
 		assert (first_line.include?"user-#{$random_seed}"), "New annotation's rows are absent, rows: #{first_line}, missing: user-#{$random_seed}"
-
-		# delete matching files
-		Dir.glob("#{$download_dir}/*").select {|f| /#{basename}/.match(f)}.map {|f| File.delete(f)}
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
@@ -4470,40 +4475,24 @@ class UiTestSuite < Test::Unit::TestCase
 		close_modal('message_modal')
 		login($test_email, $test_email_password)
 
-		# delete test
-		@driver.find_element(:class, "test-study-#{$random_seed}-delete").click
-		accept_alert
-		close_modal('message_modal')
+		study_keys = [
+				"test-study-#{$random_seed}-delete",
+				"private-study-#{$random_seed}-delete",
+				"gzip-parse-#{$random_seed}-delete",
+				"embargo-study-#{$random_seed}-delete",
+				"twod-study-#{$random_seed}-delete",
+				"new-project-study-#{$random_seed}-delete",
+				"sync-test-#{$random_seed}-delete-local"
+		]
 
-		# delete private
-		@driver.find_element(:class, "private-study-#{$random_seed}-delete").click
-		accept_alert
-		close_modal('message_modal')
-
-		# delete gzip parse
-		@driver.find_element(:class, "gzip-parse-#{$random_seed}-delete").click
-		accept_alert
-		close_modal('message_modal')
-
-		# delete embargo study
-		@driver.find_element(:class, "embargo-study-#{$random_seed}-delete").click
-		accept_alert
-		close_modal('message_modal')
-
-		# delete 2d test
-		@driver.find_element(:class, "twod-study-#{$random_seed}-delete").click
-		accept_alert
-		close_modal('message_modal')
-
-		# delete external project study
-		@driver.find_element(:class, "new-project-study-#{$random_seed}-delete").click
-		accept_alert
-		close_modal('message_modal')
-
-		# delete sync test (local only)
-		@driver.find_element(:class, "sync-test-#{$random_seed}-delete-local").click
-		accept_alert
-		close_modal('message_modal')
+		# delete studies
+		study_keys.each do |study_key|
+			if element_present?(:class, study_key)
+				@driver.find_element(:class, study_key).click
+				accept_alert
+				close_modal('message_modal')
+			end
+		end
 
 		puts "Test method: '#{self.method_name}' successful!"
 	end

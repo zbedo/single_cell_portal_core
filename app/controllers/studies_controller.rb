@@ -347,7 +347,6 @@ class StudiesController < ApplicationController
   def new_study_file
     file_type = params[:file_type] ? params[:file_type] : 'Cluster'
     @study_file = @study.build_study_file({file_type: file_type})
-    @study_file = @study.build_study_file({file_type: file_type})
   end
 
   # method to perform chunked uploading of data
@@ -381,6 +380,10 @@ class StudiesController < ApplicationController
       File.open(study_file.upload.path, "ab") do |f|
         f.write upload.read
       end
+
+      # Update the upload_file_size attribute
+      study_file.upload_file_size = study_file.upload_file_size.nil? ? upload.size : study_file.upload_file_size + upload.size
+      study_file.save!
 
       render json: study_file.to_jq_upload and return
     end
@@ -419,8 +422,9 @@ class StudiesController < ApplicationController
     logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name}"
     case @study_file.file_type
       when 'Cluster'
-        @cache_key = render_cluster_url(study_name: @study.url_safe_name, cluster: @study_file.name)
         @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user)
+      when 'Coordinate Labels'
+        @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user)
       when 'Expression Matrix'
         @study.delay.initialize_expression_scores(@study_file, current_user)
       when 'Gene List'
@@ -497,7 +501,7 @@ class StudiesController < ApplicationController
     @partial = params[:partial]
 
     # invalidate caches (even if transaction rolls back, the user wants to update so clearing is safe)
-    if ['Cluster', 'Gene List'].include?(@study_file.file_type)
+    if ['Cluster', 'Coordinate Labels', 'Gene List'].include?(@study_file.file_type) && @study_file.valid?
       @study_file.invalidate_cache_by_file_type
     end
 
@@ -541,7 +545,7 @@ class StudiesController < ApplicationController
 
     # do a test assignment and check for validity; if valid and either Cluster or Gene List, invalidate caches
     @study_file.assign_attributes(study_file_params)
-    if ['Cluster', 'Gene List'].include?(@study_file.file_type) && @study_file.valid?
+    if ['Cluster', 'Coordinate Labels', 'Gene List'].include?(@study_file.file_type) && @study_file.valid?
       @study_file.invalidate_cache_by_file_type
     end
 
@@ -569,6 +573,8 @@ class StudiesController < ApplicationController
         case @study_file.file_type
           when 'Cluster'
             @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false, reparse: true})
+          when 'Coordinate Labels'
+            @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user, {local: false, reparse: true})
           when 'Expression Matrix'
             @study.delay.initialize_expression_scores(@study_file, current_user, {local: false, reparse: true})
           when 'Gene List'
@@ -596,6 +602,9 @@ class StudiesController < ApplicationController
     @study_file = StudyFile.find(params[:study_file_id])
     @message = ""
     unless @study_file.nil?
+      # delete matching caches
+      @study_file.invalidate_cache_by_file_type
+      # queue for deletion
       @study_file.update(queued_for_deletion: true)
       DeleteQueueJob.new(@study_file).delay.perform
       @file_type = @study_file.file_type
@@ -604,6 +613,8 @@ class StudiesController < ApplicationController
       case @file_type
         when 'Cluster'
           @partial = 'initialize_ordinations_form'
+        when 'Coordinate Labels'
+          @partial = 'initialize_labels_form'
         when 'Expression Matrix'
           @partial = 'initialize_expression_form'
         when 'Metadata'
@@ -615,8 +626,6 @@ class StudiesController < ApplicationController
         else
           @partial = 'initialize_misc_form'
       end
-      # delete matching caches
-      @study_file.invalidate_cache_by_file_type
       # delete source file in FireCloud and then remove record
       begin
         # make sure file is in FireCloud first as user may be aborting the upload
@@ -878,12 +887,16 @@ class StudiesController < ApplicationController
 
   # study params whitelist
   def study_params
-    params.require(:study).permit(:name, :description, :public, :user_id, :embargo, :use_existing_workspace, :firecloud_workspace, :firecloud_project, study_shares_attributes: [:id, :_destroy, :email, :permission])
+    params.require(:study).permit(:name, :description, :public, :user_id, :embargo, :use_existing_workspace, :firecloud_workspace,
+                                  :firecloud_project, study_shares_attributes: [:id, :_destroy, :email, :permission])
   end
 
   # study file params whitelist
   def study_file_params
-    params.require(:study_file).permit(:_id, :study_id, :name, :upload, :upload_file_name, :upload_content_type, :upload_file_size, :remote_location, :description, :file_type, :status, :human_fastq_url, :human_data, :cluster_type, :generation, :x_axis_label, :y_axis_label, :z_axis_label, :x_axis_min, :x_axis_max, :y_axis_min, :y_axis_max, :z_axis_min, :z_axis_max)
+    params.require(:study_file).permit(:_id, :study_id, :name, :upload, :upload_file_name, :upload_content_type, :upload_file_size,
+                                       :remote_location, :description, :file_type, :status, :human_fastq_url, :human_data, :cluster_type,
+                                       :generation, :x_axis_label, :y_axis_label, :z_axis_label, :x_axis_min, :x_axis_max, :y_axis_min,
+                                       :y_axis_max, :z_axis_min, :z_axis_max, options: [:cluster_group_id, :font_family, :font_size, :font_color])
   end
 
   def directory_listing_params
@@ -891,7 +904,8 @@ class StudiesController < ApplicationController
   end
 
   def default_options_params
-    params.require(:study_default_options).permit(:cluster, :annotation, :color_profile, :expression_label, :cluster_point_size, :cluster_point_alpha, :cluster_point_border)
+    params.require(:study_default_options).permit(:cluster, :annotation, :color_profile, :expression_label, :cluster_point_size,
+                                                  :cluster_point_alpha, :cluster_point_border)
   end
 
   def set_file_types
@@ -908,11 +922,12 @@ class StudiesController < ApplicationController
     @expression_files = @study.study_files.by_type('Expression Matrix')
     @metadata_file = @study.metadata_file
     @cluster_ordinations = @study.study_files.by_type('Cluster')
+    @coordinate_labels = @study.study_files.by_type('Coordinate Labels')
     @marker_lists = @study.study_files.by_type('Gene List')
     @fastq_files = @study.study_files.by_type('Fastq')
     @other_files = @study.study_files.by_type(['Documentation', 'Other'])
 
-    # if files don't exist, build them for use later
+    # if files don't exist, build them for use later (excluding coordinate labels as we need the data to be current)
     if @expression_files.empty?
       @expression_files << @study.build_study_file({file_type: 'Expression Matrix'})
     end

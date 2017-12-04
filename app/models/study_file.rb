@@ -18,8 +18,8 @@ class StudyFile
   include Rails.application.routes.url_helpers # for accessing download_file_path and download_private_file_path
 
   # constants, used for statuses and file types
-  STUDY_FILE_TYPES = ['Cluster', 'Expression Matrix', 'Gene List', 'Metadata', 'Fastq', 'Documentation', 'Other']
-  PARSEABLE_TYPES = ['Cluster', 'Expression Matrix', 'Gene List', 'Metadata']
+  STUDY_FILE_TYPES = ['Cluster', 'Coordinate Labels' ,'Expression Matrix', 'Gene List', 'Metadata', 'Fastq', 'Documentation', 'Other']
+  PARSEABLE_TYPES = ['Cluster', 'Coordinate Labels', 'Expression Matrix', 'Gene List', 'Metadata']
   UPLOAD_STATUSES = %w(new uploading uploaded)
   PARSE_STATUSES = %w(unparsed parsing parsed)
   PRIMARY_DATA_EXTENTIONS = %w(fastq fastq.zip fastq.gz fastq.tar.gz fq fq.zip fq.gz fq.tar.gz)
@@ -53,6 +53,7 @@ class StudyFile
   field :z_axis_max, type: Integer
   field :queued_for_deletion, type: Boolean, default: false
   field :remote_location, type: String, default: ''
+  field :options, type: Hash, default: {}
 
   Paperclip.interpolates :data_dir do |attachment, style|
     attachment.instance.data_dir
@@ -164,6 +165,42 @@ class StudyFile
     self.remote_location.blank? ? self.upload_file_name : self.remote_location
   end
 
+  # retrieve the target cluster group from the options hash for a cluster labels file
+  def coordinate_labels_target
+    if self.options[:cluster_group_id].blank?
+      nil
+    else
+      ClusterGroup.find(self.options[:cluster_group_id])
+    end
+  end
+
+  # retrieve the cluster group id from the options hash for a cluster labels file
+  def coordinate_labels_font_family
+    if self.options[:font_family].blank?
+      'Helvetica Neue'
+    else
+      self.options[:font_family]
+    end
+  end
+
+  # retrieve the font size from the options hash for a cluster labels file
+  def coordinate_labels_font_size
+    if self.options[:font_size].blank?
+      10
+    else
+      self.options[:font_size]
+    end
+  end
+
+  # retrieve the font color from the options hash for a cluster labels file
+  def coordinate_labels_font_color
+    if self.options[:font_color].blank?
+      '#333333'
+    else
+      self.options[:font_color]
+    end
+  end
+
   ###
   #
   # CACHING METHODS
@@ -184,12 +221,15 @@ class StudyFile
     study_name = self.study.url_safe_name
     case self.file_type
       when 'Cluster'
-        name_key = self.name.split.join('-')
+        name_key = self.cluster_groups.first.name.split.join('-')
+        @cache_key = "#{study_name}.*render_cluster.*#{name_key}"
+      when 'Coordinate Labels'
+        name_key = self.coordinate_labels_target.name.split.join('-')
         @cache_key = "#{study_name}.*render_cluster.*#{name_key}"
       when 'Expression Matrix'
         @cache_key = "#{study_name}.*expression"
       when 'Gene List'
-        name_key = self.name.split.join('-')
+        name_key = self.precomputed_scores.first.name.split.join('-')
         @cache_key = "#{study_name}.*#{name_key}"
       when 'Metadata'
         # when reparsing metadata, almost all caches now become invalid so we just clear all matching the study
