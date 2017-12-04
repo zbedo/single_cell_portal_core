@@ -373,13 +373,17 @@ class StudiesController < ApplicationController
       # If the there is a mismatch between the size of the incomplete upload and the content-range in the
       # headers, then it's the wrong chunk!
       # In this case, start the upload from scratch
-      # unless begin_of_chunk == current_size
-      #   render json: study_file.to_jq_upload and return
-      # end
+      unless begin_of_chunk == current_size
+        render json: study_file.to_jq_upload and return
+      end
       # Add the following chunk to the incomplete upload, converting to unix line endings
       File.open(study_file.upload.path, "ab") do |f|
         f.write upload.read
       end
+
+      # Update the upload_file_size attribute
+      study_file.upload_file_size = study_file.upload_file_size.nil? ? upload.size : study_file.upload_file_size + upload.size
+      study_file.save!
 
       render json: study_file.to_jq_upload and return
     end
