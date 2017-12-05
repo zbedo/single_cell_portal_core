@@ -4,14 +4,11 @@
   </div>
   <div class="col-md-10" id="render-target">
     <ul class="nav nav-tabs" role="tablist" id="view-tabs">
-      <li role="presentation" class="study-nav active" id="view-options-tab-nav"><a href="#view-options-tab" data-toggle="tab">View Options </a></li>
-      <li role="presentation" class="study-nav" id="plots-tab-nav"><a href="#plots-tab" data-toggle="tab">Plots </a></li>
+      <li role="presentation" class="study-nav active" id="plots-tab-nav"><a href="#plots-tab" data-toggle="tab">Plots </a></li>
+      <li role="presentation" class="study-nav" id="view-options-tab-nav"><a href="#view-options-tab" data-toggle="tab">View Options </a></li>
     </ul>
     <div class="tab-content top-pad">
-      <div class="tab-pane active" id="view-options-tab" role="tabpanel">
-        <div id="view_options_div"><%= render partial: 'view_options' %></div>
-      </div>
-      <div class="tab-pane" id="plots-tab" role="tabpanel">
+      <div class="tab-pane active" id="plots-tab" role="tabpanel">
         <div class="panel panel-default">
           <div class="panel-heading">
             <div class="panel-title">
@@ -35,6 +32,9 @@
             </div>
           </div>
         </div>
+      </div>
+      <div class="tab-pane" id="view-options-tab" role="tabpanel">
+        <div id="view_options_div"><%= render partial: 'view_options' %></div>
       </div>
     </div>
   </div>

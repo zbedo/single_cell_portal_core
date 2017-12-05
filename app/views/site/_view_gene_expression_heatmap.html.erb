@@ -1,24 +1,35 @@
 <div class="row">
-  <div class="col-md-3" id="search-target">
+  <div class="col-md-2" id="search-target">
     <%= render partial: 'search_options' %>
   </div>
-  <div class="col-md-9" id="render-target">
-    <%= render partial: 'view_options' %>
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <div class="panel-title">
-          <h4><%= link_to "Expression Heatmap <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#plots', 'data-toggle' => 'collapse' %> <%= render partial: 'show_search_options_button' %></h4>
-        </div>
-      </div>
-      <div id="plots" class="panel-collapse collapse in">
-        <div class="panel-body">
-          <div class="col-md-12">
-            <%= render partial: 'morpheus_help' %>
-            <div id="heatmap-plot"></div>
+  <div class="col-md-10" id="render-target">
+    <ul class="nav nav-tabs" role="tablist" id="view-tabs">
+      <li role="presentation" class="study-nav active" id="plots-tab-nav"><a href="#plots-tab" data-toggle="tab">Heatmap </a></li>
+      <li role="presentation" class="study-nav" id="view-options-tab-nav"><a href="#view-options-tab" data-toggle="tab">View Options </a></li>
+    </ul>
+    <div class="tab-content top-pad">
+      <div class="tab-pane active" id="plots-tab" role="tabpanel">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <div class="panel-title">
+              <h4><%= link_to "Expression Heatmap <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#plots', 'data-toggle' => 'collapse' %> <%= render partial: 'show_search_options_button' %></h4>
+            </div>
+          </div>
+          <div id="plots" class="panel-collapse collapse in">
+            <div class="panel-body">
+              <div class="col-md-12">
+                <%= render partial: 'morpheus_help' %>
+                <div id="heatmap-plot"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+      <div class="tab-pane" id="view-options-tab" role="tabpanel">
+        <div id="view_options_div"><%= render partial: 'view_options' %></div>
+      </div>
     </div>
+
   </div>
 </div>
 
