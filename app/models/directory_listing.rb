@@ -1,24 +1,24 @@
 class DirectoryListing
 
-  ###
-  #
-  # DirectoryListing: object that holds metadata about groups of files in a specific location in a GCS bucket
-  # Mainly used to supply blanket descriptions for all files at given location
-  #
-  ###
+	###
+	#
+	# DirectoryListing: object that holds metadata about groups of files in a specific location in a GCS bucket
+	# Mainly used to supply blanket descriptions for all files at given location
+	#
+	###
 
 	include Mongoid::Document
 	include Mongoid::Timestamps
 	include Rails.application.routes.url_helpers # for accessing download_file_path and download_private_file_path
 
 	PRIMARY_DATA_TYPES = %w(fq fastq).freeze
-  READ_PAIR_IDENTIFIERS = %w(_R1_ _R2_ _I1_ _I2_).freeze
+	READ_PAIR_IDENTIFIERS = %w(_R1 _R2 _I1 _I2).freeze
 
 	belongs_to :study
 
 	field :name, type: String
 	field :description, type: String
-  field :file_type, type: String
+	field :file_type, type: String
 	field :files, type: Array
 	field :sync_status, type: Boolean, default: false
 
@@ -47,15 +47,15 @@ class DirectoryListing
 		else
 			'/' + self.name + '/'
 		end
-  end
-
-  # guess at a possible sample name based on filename
-  def possible_sample_name(filename)
-    filename.split('/').last.split('.').first
 	end
 
-  # return sample name based on filename (everything to the left of _(R|I)1_ string in file basename)
-  def self.sample_name(filename)
+	# guess at a possible sample name based on filename
+	def possible_sample_name(filename)
+		filename.split('/').last.split('.').first
+	end
+
+	# return sample name based on filename (everything to the left of _(R|I)(1|2) string in file basename)
+	def self.sample_name(filename)
 		basename = filename.split('/').last.split('.').first
 		DirectoryListing::READ_PAIR_IDENTIFIERS.each do |identifier|
 			index = basename.index(identifier)
@@ -68,7 +68,7 @@ class DirectoryListing
 		basename
 	end
 
-  def self.read_position(filename)
+	def self.read_position(filename)
 		basename = filename.split('/').last.split('.').first
 		DirectoryListing::READ_PAIR_IDENTIFIERS.each do |identifier|
 			if basename.match(/#{identifier}/)
@@ -91,10 +91,10 @@ class DirectoryListing
 		map
 	end
 
-  # create a mapping of file extensions and counts based on a list of input files from a google bucket
-  # keys to map are the path at which groups of files are found, and values are key/value pairs of file
-  # extensions and counts
-  def self.create_extension_map(files, map={})
+	# create a mapping of file extensions and counts based on a list of input files from a google bucket
+	# keys to map are the path at which groups of files are found, and values are key/value pairs of file
+	# extensions and counts
+	def self.create_extension_map(files, map={})
 		files.map(&:name).each do |name|
 			# don't use directories in extension map
 			unless name.end_with?('/')
@@ -126,8 +126,14 @@ class DirectoryListing
 		end
 	end
 
-  # get the 'folder' of a file in a bucket based on its pathname
-  def self.get_folder_name(filepath)
+	# get basename of file (everything in front of extension)
+	def self.file_basename(filename)
+		filename.chomp(".#{self.file_extension(filename)}")
+
+	end
+
+	# get the 'folder' of a file in a bucket based on its pathname
+	def self.get_folder_name(filepath)
 		filepath.include?('/') ? filepath.split('/').first : '/'
 	end
 
