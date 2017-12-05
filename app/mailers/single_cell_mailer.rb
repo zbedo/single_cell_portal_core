@@ -191,6 +191,16 @@ class SingleCellMailer < ApplicationMailer
     end
   end
 
+  # generic user notification
+  def user_notification(user, subject, message)
+    @subject = subject
+    @message = message
+    @user = user
+    mail(to: @user.email, subject: "[Single Cell Portal Notifier]: #{subject}") do |format|
+      format.html {render html: @message.html_safe}
+    end
+  end
+
   # nightly sanity check email looking for missing files
   def sanity_check(missing_files)
     @missing_files = missing_files
