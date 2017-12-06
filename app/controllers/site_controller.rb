@@ -15,11 +15,11 @@ class SiteController < ApplicationController
 
   respond_to :html, :js, :json
 
-  before_action :set_study, except: [:index, :search, :view_workflow_wdl, :create_totat]
+  before_action :set_study, except: [:index, :search, :privacy_policy, :view_workflow_wdl, :create_totat, :log_action]
   before_action :set_cluster_group, only: [:study, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :expression_query, :annotation_query, :get_new_annotations, :annotation_values, :show_user_annotations_form]
   before_action :set_selected_annotation, only: [:render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :annotation_query, :annotation_values, :show_user_annotations_form]
   before_action :load_precomputed_options, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap]
-  before_action :check_view_permissions, except: [:index, :search, :precomputed_results, :expression_query, :view_workflow_wdl, :log_action, :get_workspace_samples, :update_workspace_samples, :create_totat]
+  before_action :check_view_permissions, except: [:index, :privacy_policy, :search, :precomputed_results, :expression_query, :view_workflow_wdl, :log_action, :get_workspace_samples, :update_workspace_samples, :create_totat]
   before_action :check_compute_permissions, only: [:get_fastq_files, :get_workspace_samples, :update_workspace_samples, :delete_workspace_samples, :get_workspace_sumbissions, :create_workspace_submission, :get_submission_workflow, :abort_submission_workflow, :get_submission_errors, :get_submission_outputs, :delete_submission_files]
 
   # caching
@@ -71,6 +71,10 @@ class SiteController < ApplicationController
     # use built-in MongoDB text index (supports quoting terms & case sensitivity)
     @studies = Study.where({'$text' => {'$search' => params[:search_terms]}})
     render 'index'
+  end
+
+  def privacy_policy
+
   end
 
   # search for one or more genes to view expression information
@@ -222,6 +226,9 @@ class SiteController < ApplicationController
     @plot_type = @cluster.cluster_type == '3d' ? 'scatter3d' : 'scattergl'
     @options = load_cluster_group_options
     @cluster_annotations = load_cluster_group_annotations
+    if @cluster.has_coordinate_labels?
+      @coordinate_labels = load_cluster_group_coordinate_labels
+    end
     @range = set_range(@coordinates.values)
     if @cluster.is_3d? && @cluster.has_range?
       @aspect = compute_aspect_ratios(@range)
@@ -278,6 +285,9 @@ class SiteController < ApplicationController
     @options = load_cluster_group_options
     @range = set_range([@expression[:all]])
     @coordinates = load_cluster_group_data_array_points(@selected_annotation, subsample)
+    if @cluster.has_coordinate_labels?
+      @coordinate_labels = load_cluster_group_coordinate_labels
+    end
     @static_range = set_range(@coordinates.values)
     if @cluster.is_3d? && @cluster.has_range?
       @expression_aspect = compute_aspect_ratios(@range)
@@ -553,7 +563,9 @@ class SiteController < ApplicationController
         # redirect directly to file to trigger download
         redirect_to @signed_url
       else
-        redirect_to view_study_path, alert: 'The file you requested is currently not available.  Please try again later.'
+        # send notification to the study owner that file is missing (if notifications turned on)
+        SingleCellMailer.user_download_fail_notification(@study, params[:filename]).deliver_now
+        redirect_to view_study_path, alert: 'The file you requested is currently not available.  Please contact the study owner if you require access to this file.' and return
       end
     rescue RuntimeError => e
       logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
@@ -1619,6 +1631,32 @@ class SiteController < ApplicationController
       values["#{value}"] = {y: [], cells: [], annotations: [], name: "#{value}" }
     end
     values
+  end
+
+  # load custom coordinate-based annotation labels for a given cluster
+  def load_cluster_group_coordinate_labels
+    # assemble source data
+    x_array = @cluster.concatenate_data_arrays('x', 'labels')
+    y_array = @cluster.concatenate_data_arrays('y', 'labels')
+    z_array = @cluster.concatenate_data_arrays('z', 'labels')
+    text_array = @cluster.concatenate_data_arrays('text', 'labels')
+    annotations = []
+    # iterate through list of data objects to construct necessary annotations
+    x_array.each_with_index do |point, index|
+      annotations << {
+          showarrow: false,
+          x: point,
+          y: y_array[index],
+          z: z_array[index],
+          text: text_array[index],
+          font: {
+              family: @cluster.coordinate_labels_options[:font_family],
+              size: @cluster.coordinate_labels_options[:font_size],
+              color: @cluster.coordinate_labels_options[:font_color]
+          }
+      }
+    end
+    annotations
   end
 
   # find mean of expression scores for a given cell & list of genes

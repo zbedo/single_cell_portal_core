@@ -692,8 +692,7 @@ class Study
         # if file has no generation tag, then we know the upload failed
         if file.generation.blank?
           puts "#{file_location} was never uploaded to #{study.bucket_id} (no generation tag)"
-          @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: 'Upload never completed (no generation tag)'}
-        else
+       else
           begin
             # check remote file for existence
             remote_file = Study.firecloud_client.get_workspace_file(study.firecloud_project, study.firecloud_workspace, file_location)
@@ -746,29 +745,30 @@ class Study
   # method to parse master expression scores file for study and populate collection
   # this parser assumes the data is a non-sparse square matrix
   def initialize_expression_scores(expression_file, user, opts={local: true})
-    @count = 0
-    @message = []
-    @last_line = ""
-    start_time = Time.now
-    @validation_error = false
-    @file_location = expression_file.upload.path
-
-    # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
-    if !opts[:local]
-      # make sure data dir exists first
-      self.make_data_dir
-      Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, expression_file.remote_location, self.data_store_path)
-      @file_location = File.join(self.data_store_path, expression_file.remote_location)
-    end
-
-    # next, check if this is a re-parse job, in which case we need to remove all existing entries first
-    if opts[:reparse]
-      self.expression_scores.delete_all
-      expression_file.invalidate_cache_by_file_type
-    end
-
-    # validate headers
     begin
+      @count = 0
+      @message = []
+      @last_line = ""
+      start_time = Time.now
+      @validation_error = false
+      @file_location = expression_file.upload.path
+      @shift_headers = true
+
+      # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
+      if !opts[:local]
+        # make sure data dir exists first
+        self.make_data_dir
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, expression_file.remote_location, self.data_store_path)
+        @file_location = File.join(self.data_store_path, expression_file.remote_location)
+      end
+
+      # next, check if this is a re-parse job, in which case we need to remove all existing entries first
+      if opts[:reparse]
+        self.expression_scores.delete_all
+        expression_file.invalidate_cache_by_file_type
+      end
+
+      # validate headers
       if expression_file.upload_content_type == 'application/gzip'
         Rails.logger.info "#{Time.now}: Parsing #{expression_file.name} as application/gzip"
         file = Zlib::GzipReader.open(@file_location)
@@ -779,8 +779,15 @@ class Study
       cells = file.readline.split(/[\t,]/).map(&:strip)
       @last_line = "#{expression_file.name}, line 1"
       if !['gene', ''].include?(cells.first.downcase) || cells.size <= 1
-        expression_file.update(parse_status: 'failed')
-        @validation_error = true
+        # file did not have correct header information, but may be an export from R which will have one less column
+        next_line_size = file.readline.split(/[\t,]/).size
+        if cells.size == next_line_size - 1
+          # don't shift the headers later as they are beginning with the names of cells (doesn't start with GENE or blank)
+          @shift_headers = false
+        else
+          expression_file.update(parse_status: 'failed')
+          @validation_error = true
+        end
       end
       file.close
     rescue => e
@@ -816,7 +823,10 @@ class Study
       cells = expression_data.readline.rstrip.split(/[\t,]/).map(&:strip)
       @last_line = "#{expression_file.name}, line 1"
 
-      cells.shift
+      # shift headers if first cell is blank or GENE
+      if @shift_headers
+        cells.shift
+      end
 
       # validate that new expression matrix does not have repeated cells, raise error if repeats found
       existing_cells = self.data_arrays.by_name_and_type('All Cells', 'cells').map(&:values).flatten
@@ -954,27 +964,26 @@ class Study
   # uses cluster_group model instead of single clusters; group membership now defined by metadata
   # stores point data in cluster_group_data_arrays instead of single_cells and cluster_points
   def initialize_cluster_group_and_data_arrays(ordinations_file, user, opts={local: true})
-
-    @file_location = ordinations_file.upload.path
-    # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
-    if !opts[:local]
-      # make sure data dir exists first
-      self.make_data_dir
-      Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, ordinations_file.remote_location, self.data_store_path)
-      @file_location = File.join(self.data_store_path, ordinations_file.remote_location)
-    end
-
-    # next, check if this is a re-parse job, in which case we need to remove all existing entries first
-    if opts[:reparse]
-      self.cluster_groups.where(study_file_id: ordinations_file.id).delete_all
-      self.data_arrays.where(study_file_id: ordinations_file.id).delete_all
-      ordinations_file.invalidate_cache_by_file_type
-    end
-
-    # validate headers of cluster file
-    @validation_error = false
-    start_time = Time.now
     begin
+      @file_location = ordinations_file.upload.path
+      # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
+      if !opts[:local]
+        # make sure data dir exists first
+        self.make_data_dir
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, ordinations_file.remote_location, self.data_store_path)
+        @file_location = File.join(self.data_store_path, ordinations_file.remote_location)
+      end
+
+      # next, check if this is a re-parse job, in which case we need to remove all existing entries first
+      if opts[:reparse]
+        self.cluster_groups.where(study_file_id: ordinations_file.id).delete_all
+        self.data_arrays.where(study_file_id: ordinations_file.id).delete_all
+        ordinations_file.invalidate_cache_by_file_type
+      end
+
+      # validate headers of cluster file
+      @validation_error = false
+      start_time = Time.now
       d_file = File.open(@file_location, 'rb')
       headers = d_file.readline.split(/[\t,]/).map(&:strip)
       second_header = d_file.readline.split(/[\t,]/).map(&:strip)
@@ -1256,30 +1265,204 @@ class Study
     true
   end
 
+  # parse a coordinate labels file and create necessary data_array objects
+  # coordinate labels are specific to a cluster_group
+  def initialize_coordinate_label_data_arrays(coordinate_file, use, opts={local: true})
+    begin
+      @file_location = coordinate_file.upload.path
+      # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
+      if !opts[:local]
+        # make sure data dir exists first
+        self.make_data_dir
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, coordinate_file.remote_location, self.data_store_path)
+        @file_location = File.join(self.data_store_path, coordinate_file.remote_location)
+      end
+
+      # next, check if this is a re-parse job, in which case we need to remove all existing entries first
+      if opts[:reparse]
+        self.data_arrays.where(study_file_id: coordinate_file.id).delete_all
+        coordinate_file.invalidate_cache_by_file_type
+      end
+
+      # validate headers of coordinate file
+      @validation_error = false
+      start_time = Time.now
+      c_file = File.open(@file_location, 'rb')
+      headers = c_file.readline.split(/[\t,]/).map(&:strip)
+      @last_line = "#{coordinate_file.name}, line 1"
+      # must have at least NAME, X and Y fields
+      unless (headers & %w(X Y LABELS)).size == 3
+        coordinate_file.update(parse_status: 'failed')
+        @validation_error = true
+      end
+      c_file.close
+    rescue => e
+      coordinate_file.update(parse_status: 'failed')
+      error_message = "#{e.message}"
+      Rails.logger.info Time.now.to_s + ': ' + error_message
+      filename = coordinate_file.upload_file_name
+      coordinate_file.destroy
+      SingleCellMailer.notify_user_parse_fail(user.email, "Coordinate Labels file: '#{filename}' parse has failed", error_message).deliver_now
+      raise StandardError, error_message
+    end
+
+    # raise validation error if needed
+    if @validation_error
+      error_message = "file header validation failed: should be at least NAME, X, Y, LABELS"
+      Rails.logger.info Time.now.to_s + ': ' + error_message
+      filename = coordinate_file.upload_file_name
+      coordinate_file.destroy
+      SingleCellMailer.notify_user_parse_fail(user.email, "Coordinate Labels file: '#{filename}' parse has failed", error_message).deliver_now
+      raise StandardError, error_message
+    end
+
+    # set up containers
+    @labels_created = []
+    @message = []
+    begin
+      # load target cluster
+      cluster = coordinate_file.coordinate_labels_target
+
+      Rails.logger.info "#{Time.now}: Beginning coordinate label initialization using #{coordinate_file.upload_file_name} for cluster: #{cluster.name} in #{self.name}"
+      coordinate_file.update(parse_status: 'parsing')
+
+      coordinate_data = File.open(@file_location, 'rb')
+      header_data = coordinate_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
+
+      # determine if 3d coordinates have been provided
+      is_3d = header_data.include?('Z')
+
+      # grad header indices, z index will be nil if no 3d data
+      x_index = header_data.index('X')
+      y_index = header_data.index('Y')
+      z_index = header_data.index('Z')
+      label_index = header_data.index('LABELS')
+
+      # container to store temporary data arrays until ready to save
+      @data_arrays = []
+      # create required data_arrays (name, x, y)
+      @data_arrays[x_index] = self.data_arrays.build(name: 'x', cluster_name: cluster.name, array_type: 'labels', array_index: 1, study_file_id: coordinate_file._id, cluster_group_id: cluster._id, values: [])
+      @data_arrays[y_index] = self.data_arrays.build(name: 'y', cluster_name: cluster.name, array_type: 'labels', array_index: 1, study_file_id: coordinate_file._id, cluster_group_id: cluster._id, values: [])
+      @data_arrays[label_index] = self.data_arrays.build(name: 'text', cluster_name: cluster.name, array_type: 'labels', array_index: 1, study_file_id: coordinate_file._id, cluster_group_id: cluster._id, values: [])
+
+      # add optional data arrays (z, metadata)
+      if is_3d
+        @data_arrays[z_index] = self.data_arrays.build(name: 'z', cluster_name: cluster.name, array_type: 'labels', array_index: 1, study_file_id: coordinate_file._id, cluster_group_id: cluster._id, values: [])
+      end
+
+      Rails.logger.info "#{Time.now}: Headers/Metadata loaded for coordinate file initialization using #{coordinate_file.upload_file_name} for cluster: #{cluster.name} in #{self.name}"
+      # begin reading data
+      while !coordinate_data.eof?
+        line = coordinate_data.readline.strip.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
+        if line.strip.blank?
+          next
+        else
+          @last_line = "#{coordinate_file.name}, line #{coordinate_data.lineno}"
+          vals = line.split(/[\t,]/).map(&:strip)
+          # assign value to corresponding data_array by column index
+          vals.each_with_index do |val, index|
+            if @data_arrays[index].values.size >= DataArray::MAX_ENTRIES
+              # array already has max number of values, so save it and replace it with a new data array
+              # of same name & type with array_index incremented by 1
+              current_data_array_index = @data_arrays[index].array_index
+              data_array = @data_arrays[index]
+              Rails.logger.info "#{Time.now}: Saving full-lenght data array: #{data_array.name}-#{data_array.array_type}-#{data_array.array_index} using #{coordinate_file.upload_file_name} for cluster: #{cluster.name} in #{self.name}; initializing new array index #{current_data_array_index + 1}"
+              data_array.save
+              new_data_array = self.data_arrays.build(name: data_array.name, cluster_name: data_array.cluster_name ,array_type: data_array.array_type, array_index: current_data_array_index + 1, study_file_id: coordinate_file._id, cluster_group_id: cluster._id, values: [])
+              @data_arrays[index] = new_data_array
+            end
+            # determine whether or not value needs to be cast as a float or not (only values at label index stay as a string)
+            if index == label_index
+              @data_arrays[index].values << val
+            else
+              @data_arrays[index].values << val.to_f
+            end
+          end
+        end
+
+      end
+
+      # clean up
+      @data_arrays.each do |data_array|
+        Rails.logger.info "#{Time.now}: Saving data array: #{data_array.name}-#{data_array.array_type}-#{data_array.array_index} using #{coordinate_file.upload_file_name} for cluster: #{cluster.name} in #{self.name}"
+        data_array.save
+      end
+      coordinate_data.close
+      coordinate_file.update(parse_status: 'parsed')
+      end_time = Time.now
+      time = (end_time - start_time).divmod 60.0
+      # assemble email message parts
+      @message << "#{coordinate_file.upload_file_name} parse completed!"
+      @message << "Labels created (#{@labels_created.size}: #{@labels_created.join(', ')}"
+      @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
+
+      # expire cluster caches to load label data on render
+      cluster_study_file = cluster.study_file
+      cluster_study_file.invalidate_cache_by_file_type
+
+      begin
+        SingleCellMailer.notify_user_parse_complete(user.email, "Coordinate Label file: '#{coordinate_file.upload_file_name}' has completed parsing", @message).deliver_now
+      rescue => e
+        Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
+      end
+
+      Rails.logger.info "#{Time.now}: determining upload status of coordinate labels file: #{coordinate_file.upload_file_name}"
+
+      # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
+      if opts[:local]
+        begin
+          Rails.logger.info "#{Time.now}: preparing to upload ordinations file: #{coordinate_file.upload_file_name} to FireCloud"
+          self.send_to_firecloud(coordinate_file)
+        rescue => e
+          Rails.logger.info "#{Time.now}: Cluster file: #{coordinate_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
+          SingleCellMailer.notify_admin_upload_fail(coordinate_file, e.message).deliver_now
+        end
+      else
+        # we have the file in FireCloud already, so just delete it
+        begin
+          Rails.logger.info "#{Time.now}: deleting local file #{coordinate_file.upload_file_name} after successful parse; file already exists in #{self.bucket_id}"
+          File.delete(@file_location)
+        rescue => e
+          # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
+          Rails.logger.error "#{Time.now}: Could not delete #{coordinate_file.name} in study #{self.name}; aborting"
+          SingleCellMailer.admin_notification('Local file deletion failed', nil, "The file at #{@file_location} failed to clean up after parsing, please remove.").deliver_now
+        end
+      end
+    rescue => e
+      # error has occurred, so clean up records and remove file
+      DataArray.where(study_file_id: coordinate_file.id).delete_all
+      filename = coordinate_file.upload_file_name
+      coordinate_file.destroy
+      error_message = "#{@last_line} ERROR: #{e.message}"
+      Rails.logger.info Time.now.to_s + ': ' + error_message
+      SingleCellMailer.notify_user_parse_fail(user.email, "Coordinate Labels file: '#{filename}' parse has failed", error_message).deliver_now
+
+    end
+  end
+
   # parse a study metadata file and create necessary study_metadata objects
   # study_metadata objects are hashes that store annotations in cell_name/annotation_value pairs
   # call @study.study_metadata_values(metadata_name, metadata_type) to return all values as one hash
   def initialize_study_metadata(metadata_file, user, opts={local: true})
-
-    @file_location = metadata_file.upload.path
-    # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
-    if !opts[:local]
-      # make sure data dir exists first
-      self.make_data_dir
-      Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, metadata_file.remote_location, self.data_store_path)
-      @file_location = File.join(self.data_store_path, metadata_file.remote_location)
-    end
-
-    # next, check if this is a re-parse job, in which case we need to remove all existing entries first
-    if opts[:reparse]
-      self.study_metadata.delete_all
-      metadata_file.invalidate_cache_by_file_type
-    end
-
-    # validate headers of definition file
-    @validation_error = false
-    start_time = Time.now
     begin
+      @file_location = metadata_file.upload.path
+      # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
+      if !opts[:local]
+        # make sure data dir exists first
+        self.make_data_dir
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, metadata_file.remote_location, self.data_store_path)
+        @file_location = File.join(self.data_store_path, metadata_file.remote_location)
+      end
+
+      # next, check if this is a re-parse job, in which case we need to remove all existing entries first
+      if opts[:reparse]
+        self.study_metadata.delete_all
+        metadata_file.invalidate_cache_by_file_type
+      end
+
+      # validate headers of metadata file
+      @validation_error = false
+      start_time = Time.now
       Rails.logger.info "#{Time.now}: Validating metadata file headers for #{metadata_file.name} in #{self.name}"
       m_file = File.open(@file_location, 'rb')
       headers = m_file.readline.split(/[\t,]/).map(&:strip)
@@ -1478,30 +1661,29 @@ class Study
 
   # parse precomputed marker gene files and create documents to render in Morpheus
   def initialize_precomputed_scores(marker_file, user, opts={local: true})
-
-    @file_location = marker_file.upload.path
-    # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
-    if !opts[:local]
-      # make sure data dir exists first
-      self.make_data_dir
-      Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, marker_file.remote_location, self.data_store_path)
-      @file_location = File.join(self.data_store_path, marker_file.remote_location)
-    end
-
-    # next, check if this is a re-parse job, in which case we need to remove all existing entries first
-    if opts[:reparse]
-      self.precomputed_scores.where(study_file_id: marker_file.id).delete_all
-      marker_file.invalidate_cache_by_file_type
-    end
-
-    @count = 0
-    @message = []
-    start_time = Time.now
-    @last_line = ""
-    @validation_error = false
-
-    # validate headers
     begin
+      @file_location = marker_file.upload.path
+      # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
+      if !opts[:local]
+        # make sure data dir exists first
+        self.make_data_dir
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, marker_file.remote_location, self.data_store_path)
+        @file_location = File.join(self.data_store_path, marker_file.remote_location)
+      end
+
+      # next, check if this is a re-parse job, in which case we need to remove all existing entries first
+      if opts[:reparse]
+        self.precomputed_scores.where(study_file_id: marker_file.id).delete_all
+        marker_file.invalidate_cache_by_file_type
+      end
+
+      @count = 0
+      @message = []
+      start_time = Time.now
+      @last_line = ""
+      @validation_error = false
+
+      # validate headers
       file = File.open(@file_location, 'rb')
       headers = file.readline.split(/[\t,]/).map(&:strip)
       @last_line = "#{marker_file.name}, line 1"

@@ -233,6 +233,22 @@ class UiTestSuite < Test::Unit::TestCase
 		next_btn = @driver.find_element(:id, 'next-btn')
 		next_btn.click
 
+		# upload a coordinate labels file
+		wait_for_render(:class, 'add-coordinate-labels')
+		add_coords_btn = @driver.find_element(:class, 'add-coordinate-labels')
+		add_coords_btn.click
+		wait_for_render(:class, 'initialize_labels_form')
+		coords_form = @driver.find_element(:class, 'initialize_labels_form')
+		cluster_select = coords_form.find_element(:id, 'study_file_options_cluster_group_id')
+		cluster_select.send_keys('Test Cluster 1')
+		upload_coords = coords_form.find_element(:class, 'upload-labels')
+		upload_coords.send_keys(@test_data_path + 'coordinate_labels_1.txt')
+		upload_btn = coords_form.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		close_modal('upload-success-modal')
+		next_btn = @driver.find_element(:id, 'next-btn')
+		next_btn.click
+
 		# upload right fastq
 		wait_for_render(:class, 'initialize_primary_data_form')
 		upload_fastq = @driver.find_element(:class, 'upload-fastq')
@@ -313,7 +329,7 @@ class UiTestSuite < Test::Unit::TestCase
 		assert gene_list_count == 1, "did not find correct number of gene lists, expected 1 but found #{gene_list_count}"
 		assert metadata_count == 3, "did not find correct number of metadata objects, expected 3 but found #{metadata_count}"
 		assert cluster_annot_count == 3, "did not find correct number of cluster annotations, expected 2 but found #{cluster_annot_count}"
-		assert study_file_count == 7, "did not find correct number of study files, expected 7 but found #{study_file_count}"
+		assert study_file_count == 8, "did not find correct number of study files, expected 8 but found #{study_file_count}"
 		assert primary_data_count == 2, "did not find correct number of primary data files, expected 2 but found #{primary_data_count}"
 		assert share_count == 1, "did not find correct number of study shares, expected 1 but found #{share_count}"
 
@@ -557,7 +573,7 @@ class UiTestSuite < Test::Unit::TestCase
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
-		assert files.size == 9, "did not find correct number of files, expected 9 but found #{files.size}"
+		assert files.size == 10, "did not find correct number of files, expected 10 but found #{files.size}"
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
 
@@ -599,7 +615,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		@driver.get path
 		files = @driver.find_element(:id, "test-study-#{$random_seed}-study-file-count")
-		assert files.text == '8', "did not find correct number of files, expected 8 but found #{files.text}"
+		assert files.text == '9', "did not find correct number of files, expected 9 but found #{files.text}"
 
 		# verify deletion in google
 		show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
@@ -610,7 +626,7 @@ class UiTestSuite < Test::Unit::TestCase
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
-		assert files.size == 8, "did not find correct number of files, expected 8 but found #{files.size}"
+		assert files.size == 9, "did not find correct number of files, expected 9 but found #{files.size}"
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
 
@@ -649,15 +665,14 @@ class UiTestSuite < Test::Unit::TestCase
 		@wait.until {element_present?(:id, 'study-download')}
 		open_ui_tab('study-download')
 		i = 0
-		link_present = element_present?(:class, 'embargoed-file')
+		link_present = element_present?(:class, 'dl-link')
 		while !link_present
-			omit_if i > 4, 'file has not completed upload to firecloud, skipping' do
-				sleep 1
-				@driver.get embargo_url
-				@wait.until {element_present?(:id, 'study-download')}
-				open_ui_tab('study-download')
-				i += 1
-			end
+			sleep 1
+			@driver.get embargo_url
+			@wait.until {element_present?(:id, 'study-download')}
+			open_ui_tab('study-download')
+			link_present = element_present?(:class, 'dl-link')
+			i += 1
 		end
 		download_links = @driver.find_elements(:class, 'dl-link')
 		assert download_links.size == 1, "did not find correct number of download links, expected 1 but found #{download_links.size}"
@@ -1864,6 +1879,11 @@ class UiTestSuite < Test::Unit::TestCase
 		rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
 		assert rendered, "cluster plot did not finish rendering, expected true but found #{rendered}"
 
+		# check for coordinate labels
+		labels = @driver.execute_script("return layout.scene.annotations;")
+		assert_not_nil labels, 'Did not return coordinate labels'
+		assert labels.size == 8, "Did not find coorect number of coordinate labels, expected 8 but found #{labels.size}"
+
 		# load subclusters
 		clusters = @driver.find_element(:id, 'cluster').find_elements(:tag_name, 'option')
 		assert clusters.size == 2, "incorrect number of clusters found, expected 2 but found #{clusters.size}"
@@ -3058,7 +3078,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# wait a second for event to fire, then get new camera
 		sleep(1)
 		new_camera = @driver.execute_script("return $('#cluster-plot').data('camera');")
-		assert camera == new_camera['camera'], "camera position did not save correctly, expected #{camera.to_json}, got #{new_camera.to_json}"
+		assert camera == new_camera, "camera position did not save correctly, expected #{camera.to_json}, got #{new_camera.to_json}"
 		# load annotation
 		annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
 		annotations.select {|opt| opt.text == 'Sub-Cluster'}.first.click
@@ -3070,7 +3090,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# verify camera position was saved
 		annot_camera = @driver.execute_script("return $('#cluster-plot').data('camera');")
-		assert camera == annot_camera['camera'], "camera position did not save correctly, expected #{camera.to_json}, got #{annot_camera.to_json}"
+		assert camera == annot_camera, "camera position did not save correctly, expected #{camera.to_json}, got #{annot_camera.to_json}"
 
 		# load new cluster
 		clusters = @driver.find_element(:id, 'cluster').find_elements(:tag_name, 'option')
@@ -3084,7 +3104,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# verify camera position was saved
 		cluster_camera = @driver.execute_script("return $('#cluster-plot').data('camera');")
-		assert camera == cluster_camera['camera'], "camera position did not save correctly, expected #{camera.to_json}, got #{cluster_camera.to_json}"
+		assert camera == cluster_camera, "camera position did not save correctly, expected #{camera.to_json}, got #{cluster_camera.to_json}"
 
 		# now check gene expression views
 		# load random gene to search
@@ -3109,7 +3129,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# wait a second for event to fire, then get new camera
 		sleep(1)
 		new_scatter_camera = @driver.execute_script("return $('#expression-plots').data('scatter-camera');")
-		assert scatter_camera == new_scatter_camera['camera'], "scatter camera position did not save correctly, expected #{scatter_camera.to_json}, got #{new_scatter_camera.to_json}"
+		assert scatter_camera == new_scatter_camera, "scatter camera position did not save correctly, expected #{scatter_camera.to_json}, got #{new_scatter_camera.to_json}"
 
 		# load annotation
 		exp_annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
@@ -3122,7 +3142,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# verify camera position was saved
 		exp_annot_camera = @driver.execute_script("return $('#expression-plots').data('scatter-camera');")
-		assert scatter_camera == exp_annot_camera['camera'], "camera position did not save correctly, expected #{scatter_camera.to_json}, got #{exp_annot_camera.to_json}"
+		assert scatter_camera == exp_annot_camera, "camera position did not save correctly, expected #{scatter_camera.to_json}, got #{exp_annot_camera.to_json}"
 
 		# load new cluster
 		clusters = @driver.find_element(:id, 'cluster').find_elements(:tag_name, 'option')
@@ -3136,7 +3156,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# verify camera position was saved
 		exp_cluster_camera = @driver.execute_script("return $('#expression-plots').data('scatter-camera');")
-		assert scatter_camera == exp_cluster_camera['camera'], "camera position did not save correctly, expected #{scatter_camera.to_json}, got #{exp_cluster_camera.to_json}"
+		assert scatter_camera == exp_cluster_camera, "camera position did not save correctly, expected #{scatter_camera.to_json}, got #{exp_cluster_camera.to_json}"
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
