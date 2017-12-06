@@ -72,7 +72,7 @@ $(document).on('hidden.bs.modal', function(e) {
 jQuery.railsAutocomplete.options.noMatchesLabel = "No matches in this study";
 
 // used for calculating size of plotly graphs to maintain square aspect ratio
-var SCATTER_RATIO = 0.65;
+var SCATTER_RATIO = 0.75;
 
 function elementVisible(element) {
     return $(element).is(":visible");
