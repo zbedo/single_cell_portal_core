@@ -563,7 +563,9 @@ class SiteController < ApplicationController
         # redirect directly to file to trigger download
         redirect_to @signed_url
       else
-        redirect_to view_study_path, alert: 'The file you requested is currently not available.  Please try again later.'
+        # send notification to the study owner that file is missing (if notifications turned on)
+        SingleCellMailer.user_download_fail_notification(@study, params[:filename]).deliver_now
+        redirect_to view_study_path, alert: 'The file you requested is currently not available.  Please contact the study owner if you require access to this file.' and return
       end
     rescue RuntimeError => e
       logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
