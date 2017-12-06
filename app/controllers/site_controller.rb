@@ -564,16 +564,8 @@ class SiteController < ApplicationController
         redirect_to @signed_url
       else
         # send notification to the study owner that file is missing (if notifications turned on)
-        if @study.deliver_emails?
-          user = @study.user
-          subject = "A file is missing from '#{@study.name}'"
-          message = "<p>A user attempted to download <strong>#{params[:filename]}</strong> from '#{@study.name}', but the  "\
-          "file was missing from the study's storage bucket.  Please check the workspace bucket to make sure the file has "\
-          "not been deleted: #{view_context.link_to @study.google_bucket_url, @study.google_bucket_url}</p><p>If you have "\
-          "deleted this file from your workspace, please delete the corresponding file from your study in the portal.</p>"
-          SingleCellMailer.user_notification(user, subject, message).deliver_now
-        end
-        redirect_to view_study_path, alert: 'The file you requested is currently not available.  Please contact the study owner if you require access to this file.'
+        SingleCellMailer.user_download_fail_notification(@study, params[:filename]).deliver_now
+        redirect_to view_study_path, alert: 'The file you requested is currently not available.  Please contact the study owner if you require access to this file.' and return
       end
     rescue RuntimeError => e
       logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"

@@ -174,6 +174,17 @@ class SingleCellMailer < ApplicationMailer
     end
   end
 
+  # notify a user of a missing download file
+  def user_download_fail_notification(study, file)
+    @study = study
+    @file_location = file
+    if @study.deliver_emails?
+      mail(to: @study.user.email, subject: "[Single Cell Portal Notifier] A file is missing from your study") do |format|
+        format.html
+      end
+    end
+  end
+
   # generic admin notification email method
   def admin_notification(subject, requester, message)
     # don't deliver if config value is set to true

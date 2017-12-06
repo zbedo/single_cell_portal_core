@@ -1,0 +1,7 @@
+<p>A user attempted to download <strong><%= @file_location %></strong> from '<%= @study.name %>', but the file was missing
+  from the study's storage bucket.  Please check the workspace bucket to make sure the file has not been deleted:</p>
+
+<p><%= link_to @study.google_bucket_url, @study.google_bucket_url %></p>
+
+<p>If you have intentionally deleted this file from your workspace, please delete the corresponding file from your study
+  in the portal.</p>
