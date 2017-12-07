@@ -27,7 +27,7 @@ class AdminConfiguration
   end
 
   def self.config_types
-    ['Daily User Download Quota', API_NOTIFIER_NAME]
+    ['Daily User Download Quota', 'Workflow/Configuration Namespace', API_NOTIFIER_NAME]
   end
 
   def self.value_types

@@ -209,7 +209,9 @@ class SiteController < ApplicationController
       end
       all_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_project, @study.firecloud_workspace, 'sample')
       @samples = Naturally.sort(all_samples.map {|s| s['name']})
-      @workflows = Study.firecloud_client.get_methods(namespace: 'single-cell-portal')
+      workflow_config_option = AdminConfiguration.find_by(config_type: 'Workflow/Configuration Namespace')
+      workflow_namespace = workflow_config_option.nil? ? FireCloudClient::PORTAL_NAMESPACE : workflow_config_option.value
+      @workflows = Study.firecloud_client.get_methods(namespace: workflow_namespace)
       @workflows_list = @workflows.sort_by {|w| [w['name'], w['snapshotId'].to_i]}.map {|w| ["#{w['name']} (#{w['snapshotId']})#{w['synopsis'].blank? ? nil : " -- #{w['synopsis']}"}", "#{w['namespace']}--#{w['name']}--#{w['snapshotId']}"]}
       @primary_data_locations = []
       fastq_files = @primary_study_files.select {|f| !f.human_data}
