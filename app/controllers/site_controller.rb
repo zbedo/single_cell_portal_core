@@ -774,12 +774,16 @@ class SiteController < ApplicationController
         when 'directorylisting'
           directory = @study.directory_listings.are_synced.detect {|d| d.name == entry_name}
           if !directory.nil?
-            file_list += directory.files
+            directory.files.each do |file|
+              entry = file
+              entry[:gs_url] = directory.gs_url(file.name)
+              file_list << entry
+            end
           end
         when 'studyfile'
           study_file = @study.study_files.by_type('Fastq').detect {|f| f.name == entry_name}
           if !study_file.nil?
-            file_list << {name: study_file.upload_file_name, size: study_file.upload_file_size, generation: study_file.generation}
+            file_list << {name: study_file.download_location, size: study_file.upload_file_size, generation: study_file.generation, gs_url: study_file.gs_url}
           end
         else
           nil # this is called when selection is cleared out

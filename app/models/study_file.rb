@@ -124,9 +124,9 @@ class StudyFile
     self.file_type.downcase.split.join('-') + '-file'
   end
 
-  # return path to a file's 'public data' path (which will be a symlink to data dir)
-  def public_data_path
-    File.join(self.study.data_public_path, self.upload_file_name)
+  # generate a gs-url to this study file in the study's GCS bucket
+  def gs_url
+    "gs://#{self.study.bucket_id}/#{self.download_location}"
   end
 
   # convert all domain ranges from floats to integers

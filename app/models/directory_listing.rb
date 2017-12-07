@@ -54,13 +54,21 @@ class DirectoryListing
 		filename.split('/').last.split('.').first
 	end
 
+  # generate a gs-url to a file in the files list in the study's GCS bucket
+  def gs_url(filename)
+		if self.has_file?(filename)
+			"gs://#{self.study.bucket_id}/#{filename}"
+		end
+	end
+
 	# return sample name based on filename (everything to the left of _(R|I)(1|2) string in file basename)
+  # will also transform periods into underscores as these are unallowed in FireCloud
 	def self.sample_name(filename)
-		basename = filename.split('/').last.split('.').first
+		basename = self.file_basename(filename)
 		DirectoryListing::READ_PAIR_IDENTIFIERS.each do |identifier|
-			index = basename.index(identifier)
+			index = filename.index(identifier)
 			if index
-				return basename[0..index - 1]
+				return filename[0..index - 1].gsub(/\./, '_')
 			else
 				next
 			end
@@ -69,9 +77,8 @@ class DirectoryListing
 	end
 
 	def self.read_position(filename)
-		basename = filename.split('/').last.split('.').first
 		DirectoryListing::READ_PAIR_IDENTIFIERS.each do |identifier|
-			if basename.match(/#{identifier}/)
+			if filename.match(/#{identifier}/)
 				return DirectoryListing::READ_PAIR_IDENTIFIERS.index(identifier)
 			end
 		end
@@ -86,7 +93,7 @@ class DirectoryListing
 			map[sample] ||= []
 			# determine 'position' of read, i.e. 0-3 based on presence of read identifier in filename
 			position = DirectoryListing.read_position(file[:name])
-			map[sample][position] = file[:name]
+			map[sample][position] = file[:gs_url]
 		end
 		map
 	end
@@ -118,9 +125,13 @@ class DirectoryListing
 	# helper to return file extension for a given filename
 	def self.file_extension(filename)
 		parts = filename.split('.')
-		if parts.size > 2
-			# grab everything after first period as file extension
-			parts[1..parts.size - 1].join('.')
+		size = parts.size
+		if parts[size - 2] == 'tar' && parts.last == 'gz'
+			# handle tar.gz files first, returning '[ext].tar.gz'
+			parts[(size - 3)..(size - 1)].join('.')
+		elsif parts.last == 'gz'
+			# if the file is a gzip archive, return '[ext].gz'
+			parts[(size - 2)..(size - 1)].join('.')
 		else
 			parts.last
 		end
@@ -129,7 +140,6 @@ class DirectoryListing
 	# get basename of file (everything in front of extension)
 	def self.file_basename(filename)
 		filename.chomp(".#{self.file_extension(filename)}")
-
 	end
 
 	# get the 'folder' of a file in a bucket based on its pathname
