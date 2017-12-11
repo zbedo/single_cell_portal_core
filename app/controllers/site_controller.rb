@@ -200,24 +200,28 @@ class SiteController < ApplicationController
 
     # if user has permission to run workflows, load available workflows and current submissions
     if user_signed_in? && @study.can_compute?(current_user)
+      # load list of previous submissions
       workspace = Study.firecloud_client.get_workspace(@study.firecloud_project, @study.firecloud_workspace)
       @submissions = Study.firecloud_client.get_workspace_submissions(@study.firecloud_project, @study.firecloud_workspace)
+
       # remove deleted submissions from list of runs
       if !workspace['workspace']['attributes']['deleted_submissions'].blank?
         deleted_submissions = workspace['workspace']['attributes']['deleted_submissions']['items']
         @submissions.delete_if {|submission| deleted_submissions.include?(submission['submissionId'])}
       end
+
+      # load samples from workspace
       all_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_project, @study.firecloud_workspace, 'sample')
       @samples = Naturally.sort(all_samples.map {|s| s['name']})
-      workflow_config_option = AdminConfiguration.find_by(config_type: 'Workflow/Configuration Namespace')
-      workflow_namespace = workflow_config_option.nil? ? FireCloudClient::PORTAL_NAMESPACE : workflow_config_option.value
-      @workflows = Study.firecloud_client.get_methods(namespace: workflow_namespace)
-      @workflows_list = @workflows.sort_by {|w| [w['name'], w['snapshotId'].to_i]}.map {|w| ["#{w['name']} (#{w['snapshotId']})#{w['synopsis'].blank? ? nil : " -- #{w['synopsis']}"}", "#{w['namespace']}--#{w['name']}--#{w['snapshotId']}"]}
+
+      # load locations of primary data (for new sample selection)
       @primary_data_locations = []
       fastq_files = @primary_study_files.select {|f| !f.human_data}
       [fastq_files, @primary_data].flatten.each do |entry|
         @primary_data_locations << ["#{entry.name} (#{entry.description})", "#{entry.class.name.downcase}--#{entry.name}"]
       end
+      # load list of available workflows
+      @workflows_list = load_available_workflows
     end
   end
 
@@ -778,7 +782,7 @@ class SiteController < ApplicationController
           if !directory.nil?
             directory.files.each do |file|
               entry = file
-              entry[:gs_url] = directory.gs_url(file.name)
+              entry[:gs_url] = directory.gs_url(file[:name])
               file_list << entry
             end
           end
@@ -1858,6 +1862,27 @@ class SiteController < ApplicationController
       0.upto(4) {|i| row[i] ||= '' }
       existing_list << row
     end
+  end
+
+  # load list of available workflows
+  def load_available_workflows
+    config_options = AdminConfiguration.where(config_type: 'Workflow/Configuration Namespace').to_a
+    allowed_workflow_namespaces = config_options.empty? ? [FireCloudClient::PORTAL_NAMESPACE] : config_options.map(&:value)
+    logger.info "namespaces: #{allowed_workflow_namespaces}"
+    all_workflows = []
+
+    # parellelize gets to speed up performance if there are a lot of namespaces
+    Parallel.map(allowed_workflow_namespaces, in_threads: 100) do |namespace|
+     all_workflows << Study.firecloud_client.get_methods(namespace: namespace)
+    end
+
+    # flatten list as it will be nested arrays
+    all_workflows.flatten!
+    logger.info "workflows: #{all_workflows}"
+
+    # assemble readable list for the dropdown menu
+    list = all_workflows.sort_by {|w| [w['name'], w['snapshotId'].to_i]}.map {|w| ["#{w['name']} (#{w['snapshotId']})#{w['synopsis'].blank? ? nil : " -- #{w['synopsis']}"}", "#{w['namespace']}--#{w['name']}--#{w['snapshotId']}"]}
+    list
   end
 
   # Helper method for download_bulk_files.  Returns file's curl config, size.
