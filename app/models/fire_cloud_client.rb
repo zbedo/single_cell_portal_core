@@ -209,15 +209,19 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	#   - +http_method+ (String, Symbol) => valid http method
 	#   - +path+ (String) => FireCloud REST API path
 	#   - +payload+ (Hash) => HTTP POST/PATCH/PUT body for creates/updates, defaults to nil
+	#		- +opts+ (Hash) => Hash of extra options (defaults are file_upload=false, max_attemps=MAX_RETRY_COUNT)
 	#
 	# * *return*
 	#   - +Hash+, +Boolean+ depending on response body
 	# * *raises*
 	#   - +RuntimeError+
-	def process_firecloud_request(http_method, path, payload=nil, file_upload=false)
+	def process_firecloud_request(http_method, path, payload=nil, opts={})
+		# set up default options
+		request_opts = {file_upload: false, max_attempts: MAX_RETRY_COUNT}.merge(opts)
+
 		# check for token expiry first before executing
 		if self.access_token_expired?
-			Rails.logger.info "#{Time.now}: Token expired, refreshing access token"
+			Rails.logger.info "#{Time.now}: FireCloudClient token expired, refreshing access token"
 			self.refresh_access_token
 		end
 		# set default headers
@@ -225,13 +229,15 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 				'Authorization' => "Bearer #{self.access_token['access_token']}"
 		}
 		# if not uploading a file, set the content_type to application/json
-		if !file_upload
+		if !request_opts[:file_upload]
 			headers.merge!({'Content-Type' => 'application/json'})
 		end
 
 		# initialize counter to prevent endless feedback loop
-		@retry_count.nil? ? @retry_count = 0 : nil
-		if @retry_count < MAX_RETRY_COUNT
+		@retry_count ||= 0
+
+		# process request
+		if @retry_count < request_opts[:max_attempts]
 			begin
 				@retry_count += 1
 				@obj = RestClient::Request.execute(method: http_method, url: path, payload: payload, headers: headers)
@@ -255,7 +261,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 				log_message = "#{Time.now}: " + e.message + context
 				Rails.logger.error log_message
 				@error = e
-				process_firecloud_request(http_method, path, payload)
+				process_firecloud_request(http_method, path, payload, opts)
 			end
 		else
 			@retry_count = 0
@@ -607,6 +613,32 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		process_firecloud_request(:get, path)
 	end
 
+	# validate a workflow submission before submitting
+	#
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of requested workspace
+	#   - +config_namespace+ (String) => namespace of requested configuration
+	#   - +config_name+ (String) => name of requested configuration
+	#   - +entity_type+ (String) => type of workspace entity (e.g. sample, participant, etc)
+	#   - +entity_name+ (String) => name of workspace entity
+	#
+	# * *return*
+	#   - +Hash+ of workflow submission details
+	def validate_workspace_submission(workspace_namespace, workspace_name, config_namespace, config_name, entity_type, entity_name)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/submissions/validate"
+		submission = {
+				methodConfigurationNamespace: config_namespace,
+				methodConfigurationName: config_name,
+				entityType: entity_type,
+				entityName: entity_name,
+				useCallCache: true,
+				workflowFailureMode: 'NoNewCalls'
+		}.to_json
+
+		process_firecloud_request(:post, path, submission)
+	end
+
 	# create a workflow submission
 	#
 	# * *params*
@@ -802,7 +834,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		entities_upload = {
 				entities: entities_file
 		}
-		process_firecloud_request(:post, path, entities_upload, true)
+		process_firecloud_request(:post, path, entities_upload, {file_upload: true})
 	end
 
 	# bulk delete workspace metadata entities
