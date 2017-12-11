@@ -1,5 +1,5 @@
-<div class="no-top-border" id="view-options-panel">
-	<div id="view-options" class="panel panel-default">
+<div id="view-options-panel">
+	<div id="view-options" class="panel panel-default no-top-border">
       <div id="precomputed-panel" class="no-top-border">
         <div class="panel-body">
           <div id="precomputed" class="panel-collapse collapse <% if action_name !~ /precomputed/ %>in<% end %>">
@@ -26,6 +26,68 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <div id="expression-options-panel" class="panel panel-default">
+          <div class="panel-heading">
+            <div class="panel-title">
+              <a data-toggle="collapse" href="#box-controls"> Distribution plot<span class="fa fa-chevron-down toggle-glyph"></span></a>
+            </div>
+          </div>
+          <div id="box-controls" class="panel-collapse collapse in">
+            <div class="panel-body">
+              <div class="row">
+                  <div class="col-md-3">
+                    <%= label_tag :plot_type, 'Distribution Plot Type' %>&nbsp;<i class='fa fa-question-circle' title="Choose which distribution type to display." data-toggle="tooltip"></i>
+                    <%= select_tag :plot_type, options_for_select([['Violin Plot', "violin"], ['Box Plot', "box"]], params[:plot_type]), {class: 'form-control'} %>
+                  </div>
+                  <script>
+                    $('#plot_type').change(function() {
+                      $('#expression-plots').data('box-rendered', false);
+                      $('#expression-plots').data('scatter-rendered', false);
+                      $('#expression-plots').data('reference-rendered', false);
+                      renderGeneExpressionPlots();
+                    });
+                  </script>
+                <div class="col-md-3">
+                  <% if @values_box_type == 'box' %>
+                    <%= render partial: 'boxpoints_picker' %>
+                  <% elsif action_name !~ /heatmap/ %>
+                    <%= label_tag :kernel_type, 'Kernel Type' %>&nbsp;<i class='fa fa-question-circle' title="Choose which kernel function to use to calculate violin plot density." data-toggle="tooltip"></i>
+                    <%= select_tag :kernel_type, options_for_select([['Gaussian', "gau"],['Epanechnikov', "epa"]], params[:kernel_type]), {class: 'form-control'} %>
+                    <script>
+                      $('#kernel_type').change(function() {
+                        $('#expression-plots').data('box-rendered', false);
+                        $('#expression-plots').data('scatter-rendered', false);
+                        $('#expression-plots').data('reference-rendered', false);
+                        renderGeneExpressionPlots();
+                      });
+                    </script>
+                  <% end %>
+                </div>
+                <div class="col-md-3">
+                  <% if @values_box_type == 'box' %>
+                  <% elsif action_name !~ /heatmap/ %>
+                    <%= label_tag :band_type, 'Bandwidth Selector' %>&nbsp;<i class='fa fa-question-circle' title="Choose which bandwidth selector to use to calculate violin plot density. SJ selector may hurt performance with larger datasets." data-toggle="tooltip"></i>
+                    <%= select_tag :band_type, options_for_select([['nrd0', "nrd0"],['SJ-STE', "sjste"]], params[:band_type]), {class: 'form-control'} %>
+                    <script>
+                      $('#band_type').change(function() {
+                       $('#expression-plots').data('box-rendered', false);
+                       $('#expression-plots').data('scatter-rendered', false);
+                       $('#expression-plots').data('reference-rendered', false);
+                       renderGeneExpressionPlots();
+                      });
+                    </script>
+                  <% end %>
+                </div>
+                <div class="col-md-3">
+                  <div id="toggle-plots">
+                    <%= render partial: 'trace_toggle' %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
       </div>
 
     <div id="heatmap-panel" class="panel panel-default no-top-border">
@@ -81,4 +143,7 @@
       <!-- end -->
 		</div>
 	</div>
+</div>
+
+  </div>
 </div>
