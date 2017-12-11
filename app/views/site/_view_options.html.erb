@@ -1,33 +1,50 @@
-<div class="panel panel-default no-top-border" id="view-options-panel">
-	<div id="view-options" class="panel-collapse collapse in">
-		<div class="panel-body">
-			<div class="form-group row">
-				<% if action_name !~ /precomputed/ %>
-					<div class="col-sm-4">
-						<%= label_tag :cluster, 'Load cluster' %><br />
-						<%= select_tag :cluster, options_for_select(@options, set_cluster_value(@study, params)), class: 'form-control' %>
-					</div>
-				<% end %>
-        <% if action_name !~ /precomputed/ %>
-          <div class="col-sm-4">
-            <%= label_tag :annotation, 'Select annotation' %><br />
-            <%= select_tag :annotation, grouped_options_for_select(@cluster_annotations, set_annotation_value(@study, params)), class: 'form-control' %>
+<div class="no-top-border" id="view-options-panel">
+	<div id="view-options" class="panel panel-default">
+      <div id="precomputed-panel" class="no-top-border">
+        <div class="panel-body">
+          <div id="precomputed" class="panel-collapse collapse <% if action_name !~ /precomputed/ %>in<% end %>">
+            <div class="form-group row">
+
+                <div class="col-sm-4">
+                  <%= label_tag :cluster, 'Load cluster' %><br />
+                  <%= select_tag :cluster, options_for_select(@options, set_cluster_value(@study, params)), class: 'form-control' %>
+                </div>
+
+
+                <div class="col-sm-4">
+                  <%= label_tag :annotation, 'Select annotation' %><br />
+                  <%= select_tag :annotation, grouped_options_for_select(@cluster_annotations, set_annotation_value(@study, params)), class: 'form-control' %>
+                </div>
+
+                <!-- if action_name !~ /heatmap/ -->
+                <div class="col-sm-4">
+                  <%= label_tag :subsample, 'Subsampling threshold' %>&nbsp;<i class='fa fa-question-circle' title="Take a representative subsample of the current cluster.  Choosing all cells may dramatically increase rendering time." data-toggle="tooltip"></i><br />
+                  <%= select_tag :subsample, options_for_select(subsampling_options(@cluster.points), set_subsample_value(params) ), {include_blank: 'All Cells', class: 'form-control'} %>
+                </div>
+                <!-- end -->
+
+            </div>
           </div>
-        <% end %>
-        <% if action_name !~ /heatmap/ %>
-          <div class="col-sm-4">
-            <%= label_tag :subsample, 'Subsampling threshold' %>&nbsp;<i class='fa fa-question-circle' title="Take a representative subsample of the current cluster.  Choosing all cells may dramatically increase rendering time." data-toggle="tooltip"></i><br />
-            <%= select_tag :subsample, options_for_select(subsampling_options(@cluster.points), set_subsample_value(params) ), {include_blank: 'All Cells', class: 'form-control'} %>
-          </div>
-        <% end %>
-				<% if action_name =~ /heatmap/ %>
+        </div>
+      </div>
+
+    <div id="heatmap-panel" class="panel panel-default no-top-border">
+      <div class="panel-heading">
+        <div class="panel-title">
+          <a data-toggle="collapse" href="#heatmap"> Heatmap<span class="fa fa-chevron-down toggle-glyph"></span></a>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div id="heatmap" class="panel-collapse collapse <% if action_name !~ /heatmap/ %>in<% end %>">
+          <div class="form-group row">
+
 					<div class="col-sm-4">
 						<%= label_tag :row_centered, 'Row centering' %> <span class="fa fa-question-circle" data-toggle="tooltip" title="Row-center expression data using the selected metric.  Selecting a value other than none will enforce global color values."></span><br />
 						<%= select_tag :row_centered, options_for_select([['Z-score [(v - mean) / stdev]','z-score'],['Robust z-score [(v - median) / MAD]', 'robust-z-score']], params[:transform]), {include_blank: 'None', class: 'form-control'} %>
 					</div>
-				<% end %>
-			</div>
-      <% if action_name =~ /heatmap/ %>
+
+			  </div>
+      <!-- if action_name =~ /heatmap/ -->
         <div class="row">
           <div class="col-sm-4">
             <div class="row">
@@ -61,7 +78,7 @@
             </div>
           </div>
         </div>
-      <% end %>
+      <!-- end -->
 		</div>
 	</div>
 </div>
