@@ -199,22 +199,24 @@ class SiteController < ApplicationController
     end
 
     # if user has permission to run workflows, load available workflows and current submissions
-    if user_signed_in? && @study.can_compute?(current_user)
-      workspace = Study.firecloud_client.get_workspace(@study.firecloud_project, @study.firecloud_workspace)
-      @submissions = Study.firecloud_client.get_workspace_submissions(@study.firecloud_project, @study.firecloud_workspace)
-      # remove deleted submissions from list of runs
-      if !workspace['workspace']['attributes']['deleted_submissions'].blank?
-        deleted_submissions = workspace['workspace']['attributes']['deleted_submissions']['items']
-        @submissions.delete_if {|submission| deleted_submissions.include?(submission['submissionId'])}
-      end
-      all_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_project, @study.firecloud_workspace, 'sample')
-      @samples = Naturally.sort(all_samples.map {|s| s['name']})
-      @workflows = Study.firecloud_client.get_methods(namespace: 'single-cell-portal')
-      @workflows_list = @workflows.sort_by {|w| [w['name'], w['snapshotId'].to_i]}.map {|w| ["#{w['name']} (#{w['snapshotId']})#{w['synopsis'].blank? ? nil : " -- #{w['synopsis']}"}", "#{w['namespace']}--#{w['name']}--#{w['snapshotId']}"]}
-      @primary_data_locations = []
-      fastq_files = @primary_study_files.select {|f| !f.human_data}
-      [fastq_files, @primary_data].flatten.each do |entry|
-        @primary_data_locations << ["#{entry.name} (#{entry.description})", "#{entry.class.name.downcase}--#{entry.name}"]
+    if AdminConfiguration.firecloud_access_enabled?
+      if user_signed_in? && @study.can_compute?(current_user)
+        workspace = Study.firecloud_client.get_workspace(@study.firecloud_project, @study.firecloud_workspace)
+        @submissions = Study.firecloud_client.get_workspace_submissions(@study.firecloud_project, @study.firecloud_workspace)
+        # remove deleted submissions from list of runs
+        if !workspace['workspace']['attributes']['deleted_submissions'].blank?
+          deleted_submissions = workspace['workspace']['attributes']['deleted_submissions']['items']
+          @submissions.delete_if {|submission| deleted_submissions.include?(submission['submissionId'])}
+        end
+        all_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_project, @study.firecloud_workspace, 'sample')
+        @samples = Naturally.sort(all_samples.map {|s| s['name']})
+        @workflows = Study.firecloud_client.get_methods(namespace: 'single-cell-portal')
+        @workflows_list = @workflows.sort_by {|w| [w['name'], w['snapshotId'].to_i]}.map {|w| ["#{w['name']} (#{w['snapshotId']})#{w['synopsis'].blank? ? nil : " -- #{w['synopsis']}"}", "#{w['namespace']}--#{w['name']}--#{w['snapshotId']}"]}
+        @primary_data_locations = []
+        fastq_files = @primary_study_files.select {|f| !f.human_data}
+        [fastq_files, @primary_data].flatten.each do |entry|
+          @primary_data_locations << ["#{entry.name} (#{entry.description})", "#{entry.class.name.downcase}--#{entry.name}"]
+        end
       end
     end
   end
