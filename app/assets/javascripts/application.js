@@ -69,6 +69,12 @@ $(document).on('hidden.bs.modal', function(e) {
     OPEN_MODAL = '';
 });
 
+// Toggle sidebar, e.g. for "View Options" in Explore tab.
+$(document).on('click', '[data-toggle="offcanvas"]', function () {
+  console.log('clicked "offcanvas" toggler')
+  $('.row-offcanvas').toggleClass('active')
+});
+
 jQuery.railsAutocomplete.options.noMatchesLabel = "No matches in this study";
 
 // used for calculating size of plotly graphs to maintain square aspect ratio

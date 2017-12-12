@@ -1,4 +1,4 @@
-<div id="view-options-panel">
+<div id="view-options-panel" class="sidebar-offcanvas">
 	<div id="view-options" class="panel panel-default no-top-border">
       <div id="precomputed-panel" class="no-top-border">
         <div class="panel-body">
@@ -9,7 +9,6 @@
                   <%= label_tag :cluster, 'Load cluster' %><br />
                   <%= select_tag :cluster, options_for_select(@options, set_cluster_value(@study, params)), class: 'form-control' %>
                 </div>
-
 
                 <div class="col-sm-4">
                   <%= label_tag :annotation, 'Select annotation' %><br />
