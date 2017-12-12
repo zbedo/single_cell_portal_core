@@ -256,6 +256,24 @@ function enableDefaultActions() {
     $('form').on('blur', 'input[type=number]', function (e) {
         $(this).off('mousewheel.disableScroll')
     });
+
+    // when clicking the main study view page tabs, update the current URL so that when you refresh the tab stays open
+    $('#study-tabs').on('shown.bs.tab', function(event) {
+        var anchor = $(event.target).attr('href')
+        var currentUrl = window.location.href;
+        var urlParts = currentUrl.split('#');
+        var newUrl = '';
+        if (urlParts.length === 1 || urlParts[1] === '') {
+            newUrl = currentUrl + anchor;
+        } else {
+            var currentTab = urlParts[1];
+            // we need to replace the current tab with the new one in the anchor/parameter string
+            replaceRegex = new RegExp('#' + currentTab);
+            newUrl = currentUrl.replace(replaceRegex, anchor);
+        }
+        // use HTML5 history API to update the url without reloading the DOM
+        history.pushState('', document.title, newUrl);
+    });
 }
 
 var stickyOptions = {
