@@ -381,6 +381,10 @@ class StudiesController < ApplicationController
         f.write upload.read
       end
 
+      # Update the upload_file_size attribute
+      study_file.upload_file_size = study_file.upload_file_size.nil? ? upload.size : study_file.upload_file_size + upload.size
+      study_file.save!
+
       render json: study_file.to_jq_upload and return
     end
   end
