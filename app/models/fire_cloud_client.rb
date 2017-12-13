@@ -589,8 +589,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	#
   # * *return*
   #   - +Hash+ configuration object
-	def get_workspace_configuration(workspace_namespace, workspace_name, config_name)
-		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/method_configs/#{workspace_namespace}/#{config_name}"
+	def get_workspace_configuration(workspace_namespace, workspace_name, config_namespace, config_name)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/method_configs/#{config_namespace}/#{config_name}"
 		process_firecloud_request(:get, path)
 	end
 
