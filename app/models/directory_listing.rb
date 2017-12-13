@@ -66,9 +66,9 @@ class DirectoryListing
 	def self.sample_name(filename)
 		basename = self.file_basename(filename)
 		DirectoryListing::READ_PAIR_IDENTIFIERS.each do |identifier|
-			index = filename.index(identifier)
+			index = basename.index(identifier)
 			if index
-				return filename[0..index - 1].gsub(/\./, '_')
+				return basename[0..index - 1].gsub(/\./, '_')
 			else
 				next
 			end
@@ -139,7 +139,9 @@ class DirectoryListing
 
 	# get basename of file (everything in front of extension)
 	def self.file_basename(filename)
-		filename.chomp(".#{self.file_extension(filename)}")
+		# in case the file is in a directory in the bucket, trim off the directory name(s)
+		actual_filename = filename.split('/').last
+		actual_filename.chomp(".#{self.file_extension(actual_filename)}")
 	end
 
 	# get the 'folder' of a file in a bucket based on its pathname
