@@ -320,7 +320,7 @@ class FireCloudClientTest < ActiveSupport::TestCase
 
     puts 'getting single workspace configuration...'
     ws_config = workspace_configs.first
-    single_configuration = @fire_cloud_client.get_workspace_configuration(@fire_cloud_client.project, workspace_name, ws_config['name'])
+    single_configuration = @fire_cloud_client.get_workspace_configuration(@fire_cloud_client.project, workspace_name, ws_config['namespace'], ws_config['name'])
     assert single_configuration.any?, "Did not load workspace configuration: #{ws_config['name']}"
     assert single_configuration.has_key?('inputs'), "Single workspace configuration '#{single_configuration['name']}' has no inputs"
     assert single_configuration.has_key?('outputs'), "Single workspace configuration '#{single_configuration['name']}' has no outputs"
