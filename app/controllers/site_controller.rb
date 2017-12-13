@@ -942,7 +942,7 @@ class SiteController < ApplicationController
       # check if there is a configuration in the workspace that matches the requested workflow
       # we need a separate begin/rescue block as if the configuration isn't found we will throw a RuntimeError
       begin
-        submission_config = Study.firecloud_client.get_workspace_configuration(@study.firecloud_project, @study.firecloud_workspace, ws_config_name)
+        submission_config = Study.firecloud_client.get_workspace_configuration(@study.firecloud_project, @study.firecloud_workspace, @study.firecloud_workspace,ws_config_name)
         logger.info "#{Time.now}: found existing configuration #{ws_config_name} in #{@study.firecloud_workspace}"
         config_namespace = submission_config['namespace']
         config_name = submission_config['name']
