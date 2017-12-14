@@ -487,34 +487,34 @@ h4, .h4, h5, .h5, h6, .h6 {
 
   .row-offcanvas-right
   .sidebar-offcanvas {
-    right: -31%; /* 3 columns */
+    right: -21%;
   }
 
   .contracted-for-sidebar {
-    width: 70%;
-    margin-left: 31%;
+    width: 80%;
+    margin-left: 21%;
   }
 
   .row-offcanvas-left
   .sidebar-offcanvas {
-    left: -31%; /* 3 columns */
+    left: -21%;
   }
 
   .offcanvas-right-inactive {
-    width: 60%;
+    width: 80%;
   }
 
   .row-offcanvas-right.active {
-    right: 31%; /* 3 columns */
+    right: 21%;
   }
 
   .row-offcanvas-left.active {
-    left: 31%; /* 3 columns */
+    left: 21%;
   }
 
   .sidebar-offcanvas {
     position: absolute;
     top: 0;
-    width: 30%; /* 3 columns */
+    width: 20%;
   }
 //}
