@@ -447,6 +447,12 @@ h4, .h4, h5, .h5, h6, .h6 {
   margin-bottom: 2px;
 }
 
+@media (min-width: 768px) {
+  #view-options .col-sm-4, #view-options .col-md-3, #view-options .col-xs-12 {
+    width: inherit;
+    float: inherit;
+  }
+}
 
 /*
  * Off Canvas, a collapsible side bar used for e.g. 'View Options' menu
@@ -470,17 +476,17 @@ h4, .h4, h5, .h5, h6, .h6 {
 
   .row-offcanvas-right
   .sidebar-offcanvas {
-    right: -25%; /* 3 columns */
+    right: -31%; /* 3 columns */
   }
 
   .contracted-for-sidebar {
     width: 70%;
-    margin-left: 25%;
+    margin-left: 31%;
   }
 
   .row-offcanvas-left
   .sidebar-offcanvas {
-    left: -25%; /* 3 columns */
+    left: -31%; /* 3 columns */
   }
 
   .offcanvas-right-inactive {
@@ -488,11 +494,11 @@ h4, .h4, h5, .h5, h6, .h6 {
   }
 
   .row-offcanvas-right.active {
-    right: 25%; /* 3 columns */
+    right: 31%; /* 3 columns */
   }
 
   .row-offcanvas-left.active {
-    left: 25%; /* 3 columns */
+    left: 31%; /* 3 columns */
   }
 
   .sidebar-offcanvas {
