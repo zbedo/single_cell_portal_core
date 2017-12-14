@@ -69,7 +69,7 @@ $(document).on('hidden.bs.modal', function(e) {
     OPEN_MODAL = '';
 });
 
-// Toggle sidebar, e.g. for "View Options" menu in Explore tab.
+// Toggle sidebar, e.g. for "View Options" menu in Explore tab
 $(document).on('click', '[data-toggle="offcanvas"]', function () {
   console.log('clicked "offcanvas" toggler')
 
@@ -79,6 +79,9 @@ $(document).on('click', '[data-toggle="offcanvas"]', function () {
   // Contract main content area to make room View Options menu
   $('.row-offcanvas > .nav-tabs, .row-offcanvas > .tab-content')
     .toggleClass('contracted-for-sidebar');
+
+  // Re-render Plotly to use available space
+  $(window).trigger('resize');
 
 });
 
