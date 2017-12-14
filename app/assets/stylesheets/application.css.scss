@@ -455,9 +455,9 @@ h4, .h4, h5, .h5, h6, .h6 {
 //@media screen and (max-width: 767px) {
   .row-offcanvas {
     position: relative;
-    -webkit-transition: all .25s ease-out;
-    -o-transition: all .25s ease-out;
-    transition: all .25s ease-out;
+    //-webkit-transition: all .25s ease-out;
+    //-o-transition: all .25s ease-out;
+    //transition: all .25s ease-out;
   }
 
   .row-offcanvas-right {
@@ -470,25 +470,34 @@ h4, .h4, h5, .h5, h6, .h6 {
 
   .row-offcanvas-right
   .sidebar-offcanvas {
-    right: -50%; /* 6 columns */
+    right: -25%; /* 3 columns */
+  }
+
+  .contracted-for-sidebar {
+    width: 70%;
+    margin-left: 25%;
   }
 
   .row-offcanvas-left
   .sidebar-offcanvas {
-    left: -50%; /* 6 columns */
+    left: -25%; /* 3 columns */
+  }
+
+  .offcanvas-right-inactive {
+    width: 60%;
   }
 
   .row-offcanvas-right.active {
-    right: 50%; /* 6 columns */
+    right: 25%; /* 3 columns */
   }
 
   .row-offcanvas-left.active {
-    left: 50%; /* 6 columns */
+    left: 25%; /* 3 columns */
   }
 
   .sidebar-offcanvas {
     position: absolute;
     top: 0;
-    width: 50%; /* 6 columns */
+    width: 30%; /* 3 columns */
   }
 //}

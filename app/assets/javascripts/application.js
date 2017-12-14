@@ -69,10 +69,17 @@ $(document).on('hidden.bs.modal', function(e) {
     OPEN_MODAL = '';
 });
 
-// Toggle sidebar, e.g. for "View Options" in Explore tab.
+// Toggle sidebar, e.g. for "View Options" menu in Explore tab.
 $(document).on('click', '[data-toggle="offcanvas"]', function () {
   console.log('clicked "offcanvas" toggler')
-  $('.row-offcanvas').toggleClass('active')
+
+  // Expand View Options menu
+  $('.row-offcanvas').toggleClass('active');
+
+  // Contract main content area to make room View Options menu
+  $('.row-offcanvas > .nav-tabs, .row-offcanvas > .tab-content')
+    .toggleClass('contracted-for-sidebar');
+
 });
 
 jQuery.railsAutocomplete.options.noMatchesLabel = "No matches in this study";
