@@ -2,7 +2,7 @@
 	<div id="view-options" class="panel panel-default no-top-border">
       <div id="precomputed-panel" class="no-top-border">
         <div class="panel-body">
-          <div id="precomputed" class="panel-collapse collapse <% if action_name !~ /precomputed/ %>in<% end %>">
+          <div id="precomputed" class="panel-collapse collapse <% if action_name != /precomputed/ %>in<% end %>">
             <div class="form-group row">
 
                 <div class="col-sm-4">
@@ -30,10 +30,10 @@
       <div id="expression-options-panel" class="panel panel-default">
           <div class="panel-heading">
             <div class="panel-title">
-              <a data-toggle="collapse" href="#box-controls"> By Metadata<span class="fa fa-chevron-down toggle-glyph"></span></a>
+              <a data-toggle="collapse" href="#box-controls"><span class="fa fa-chevron-right toggle-glyph"></span> By Metadata</a>
             </div>
           </div>
-          <div id="box-controls" class="panel-collapse collapse in">
+          <div id="box-controls" class="panel-collapse collapse <% if action_name =~ /set/ %>in<% end %>">
             <div class="panel-body">
               <div class="row">
                   <div class="col-md-3">
@@ -93,10 +93,10 @@
     <div id="original-view-panel" class="panel panel-default">
       <div class="panel-heading">
         <div class="panel-title">
-          <a data-toggle="collapse" href="#original-view-controls"> Original View<span class="fa fa-chevron-down toggle-glyph"></span></a>
+          <a data-toggle="collapse" href="#original-view-controls"><span class="fa fa-chevron-right toggle-glyph"></span> Original View</a>
         </div>
       </div>
-      <div id="original-view-controls" class="panel-collapse collapse in">
+      <div id="original-view-controls" class="panel-collapse collapse <% if action_name =~ /set/ %>in<% end %>">
         <div class="row">
           <div class="col-xs-12">
             <%= render partial: 'colorscale_picker' %>
@@ -108,11 +108,11 @@
     <div id="heatmap-panel" class="panel panel-default no-top-border">
       <div class="panel-heading">
         <div class="panel-title">
-          <a data-toggle="collapse" href="#heatmap"> Heatmap<span class="fa fa-chevron-down toggle-glyph"></span></a>
+          <a data-toggle="collapse" href="#heatmap"><span class="fa fa-chevron-right toggle-glyph"></span> Heatmap</a>
         </div>
       </div>
       <div class="panel-body">
-        <div id="heatmap" class="panel-collapse collapse <% if action_name !~ /heatmap/ %>in<% end %>">
+        <div id="heatmap" class="panel-collapse collapse <% if action_name =~ /heatmap/ %>in<% end %>">
           <div class="form-group row">
 
 					<div class="col-sm-4">
