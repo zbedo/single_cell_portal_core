@@ -3,28 +3,27 @@
     <%= render partial: 'search_options' %>
   </div>
   <div class="col-md-10" id="render-target">
-    <ul class="nav nav-tabs" role="tablist" id="view-tabs">
-      <li role="presentation" class="study-nav active" id="plots-tab-nav"><a href="#plots-tab" data-toggle="tab">Heatmap </a></li>
-      <li role="presentation" class="study-nav" id="view-options-tab-nav"><a href="#view-options-tab" data-toggle="tab">View Options </a></li>
-    </ul>
-    <div class="tab-content">
-      <div class="tab-pane active" id="plots-tab" role="tabpanel">
-        <div class="panel panel-default no-top-border">
-          <div id="plots" class="panel-collapse collapse in">
-            <div class="panel-body">
-              <div class="col-md-12">
-                <%= render partial: 'morpheus_help' %>
-                <div id="heatmap-plot"></div>
+    <div class="row-offcanvas row-offcanvas-right">
+      <div id="view-options-nav"><a href="#view-options" id="view-option-link" data-toggle="offcanvas"><i class="fa fa-bars" aria-hidden="true"></i> View Options </a></div>
+      <ul class="nav nav-tabs" role="tablist" id="view-tabs">
+        <li role="presentation" class="study-nav active" id="plots-tab-nav"><a href="#plots-tab" data-toggle="tab">Heatmap </a></li>
+      </ul>
+      <div class="tab-content">
+        <div class="tab-pane active" id="plots-tab" role="tabpanel">
+          <div class="panel panel-default no-top-border">
+            <div id="plots" class="panel-collapse collapse in">
+              <div class="panel-body">
+                <div class="col-md-12">
+                  <%= render partial: 'morpheus_help' %>
+                  <div id="heatmap-plot"></div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="tab-pane" id="view-options-tab" role="tabpanel">
-        <div id="view_options_div"><%= render partial: 'view_options' %></div>
-      </div>
+      <%= render partial: 'view_options' %>
     </div>
-
   </div>
 </div>
 

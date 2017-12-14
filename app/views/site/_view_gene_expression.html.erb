@@ -11,17 +11,17 @@
     <%= render partial: 'search_options' %>
   </div>
   <div class="col-md-10" id="render-target">
-    <ul class="nav nav-tabs" role="tablist" id="view-tabs">
-      <li role="presentation" class="study-nav active" id="box-or-violin-tab-nav"><a href="#box-or-violin-tab" data-toggle="tab">By Metadata<!-- Box or violin --></a></li>
-      <li role="presentation" class="study-nav" id="scatter-tab-nav"><a href="#scatter-tab" data-toggle="tab">Original View<!-- Scatter --></a></li>
-      <li role="presentation" class="study-nav" id="view-options-tab-nav"><a href="#view-options-tab" data-toggle="tab">View Options </a></li>
-    </ul>
-    <div class="tab-content">
-        <%= render partial: @top_plot_partial %>
-      <div class="tab-pane" id="view-options-tab" role="tabpanel">
-        <%= render partial: 'view_options' %>
+    <div class="row-offcanvas row-offcanvas-right">
+      <div id="view-options-nav"><a href="#view-options" id="view-option-link" data-toggle="offcanvas"><i class="fa fa-bars" aria-hidden="true"></i> View Options </a></div>
+      <ul class="nav nav-tabs" role="tablist" id="view-tabs">
+        <li role="presentation" class="study-nav active" id="box-or-violin-tab-nav"><a href="#box-or-violin-tab" data-toggle="tab">By Metadata<!-- Box or violin --></a></li>
+        <li role="presentation" class="study-nav" id="scatter-tab-nav"><a href="#scatter-tab" data-toggle="tab">Original View<!-- Scatter --></a></li>
+      </ul>
+      <div class="tab-content">
+          <%= render partial: @top_plot_partial %>
       </div>
-  </div>
+      <%= render partial: 'view_options' %>
+    </div>
 </div>
 <div id="expression-plots"></div>
 <script type="text/javascript">
