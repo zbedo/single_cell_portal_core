@@ -85,7 +85,9 @@ $(document).on('click', '[data-toggle="offcanvas"]', function () {
 
 });
 
+// Prevent scroll upon clicking View Options link
 $(document).on('click', '#view-option-link', function(e) { e.preventDefault(); });
+
 
 jQuery.railsAutocomplete.options.noMatchesLabel = "No matches in this study";
 
