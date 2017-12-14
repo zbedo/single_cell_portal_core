@@ -85,6 +85,8 @@ $(document).on('click', '[data-toggle="offcanvas"]', function () {
 
 });
 
+$(document).on('click', '#view-option-link', function(e) { e.preventDefault(); });
+
 jQuery.railsAutocomplete.options.noMatchesLabel = "No matches in this study";
 
 // used for calculating size of plotly graphs to maintain square aspect ratio
