@@ -1,22 +1,22 @@
-<div id="view-options-panel" class="sidebar-offcanvas">
-	<div id="view-options" class="panel panel-default no-top-border">
+<div id="view-options-panel" class="panel sidebar-offcanvas">
+	<div id="view-options" class="panel-default no-top-border">
       <div id="precomputed-panel" class="no-top-border">
         <div class="panel-body">
           <div id="precomputed" class="panel-collapse collapse <% if action_name != /precomputed/ %>in<% end %>">
-            <div class="form-group row">
+            <div class="row">
 
-                <div class="col-sm-4">
+                <div class="form-group col-sm-4">
                   <%= label_tag :cluster, 'Load cluster' %><br />
                   <%= select_tag :cluster, options_for_select(@options, set_cluster_value(@study, params)), class: 'form-control' %>
                 </div>
 
-                <div class="col-sm-4">
+                <div class="form-group col-sm-4">
                   <%= label_tag :annotation, 'Select annotation' %><br />
                   <%= select_tag :annotation, grouped_options_for_select(@cluster_annotations, set_annotation_value(@study, params)), class: 'form-control' %>
                 </div>
 
                 <!-- if action_name !~ /heatmap/ -->
-                <div class="col-sm-4">
+                <div class="form-group col-sm-4">
                   <%= label_tag :subsample, 'Subsampling threshold' %>&nbsp;<i class='fa fa-question-circle' title="Take a representative subsample of the current cluster.  Choosing all cells may dramatically increase rendering time." data-toggle="tooltip"></i><br />
                   <%= select_tag :subsample, options_for_select(subsampling_options(@cluster.points), set_subsample_value(params) ), {include_blank: 'All Cells', class: 'form-control'} %>
                 </div>
@@ -27,7 +27,7 @@
         </div>
       </div>
 
-      <div id="expression-options-panel" class="panel panel-default">
+      <div id="expression-options-panel" class="panel-default">
           <div class="panel-heading">
             <div class="panel-title">
               <a data-toggle="collapse" href="#box-controls"><span class="fa fa-chevron-right toggle-glyph"></span> By Metadata</a>
@@ -36,7 +36,7 @@
           <div id="box-controls" class="panel-collapse collapse <% if action_name =~ /set/ %>in<% end %>">
             <div class="panel-body">
               <div class="row">
-                  <div class="col-md-3">
+                  <div class="form-group col-md-3">
                     <%= label_tag :plot_type, 'Distribution Plot Type' %>&nbsp;<i class='fa fa-question-circle' title="Choose which distribution type to display." data-toggle="tooltip"></i>
                     <%= select_tag :plot_type, options_for_select([['Violin Plot', "violin"], ['Box Plot', "box"]], params[:plot_type]), {class: 'form-control'} %>
                   </div>
@@ -48,7 +48,7 @@
                       renderGeneExpressionPlots();
                     });
                   </script>
-                <div class="col-md-3">
+                <div class="form-group col-md-3">
                   <% if @values_box_type == 'box' %>
                     <%= render partial: 'boxpoints_picker' %>
                   <% elsif action_name !~ /heatmap/ %>
@@ -64,7 +64,7 @@
                     </script>
                   <% end %>
                 </div>
-                <div class="col-md-3">
+                <div class="form-group col-md-3">
                   <% if @values_box_type == 'box' %>
                   <% elsif action_name !~ /heatmap/ %>
                     <%= label_tag :band_type, 'Bandwidth Selector' %>&nbsp;<i class='fa fa-question-circle' title="Choose which bandwidth selector to use to calculate violin plot density. SJ selector may hurt performance with larger datasets." data-toggle="tooltip"></i>
@@ -90,7 +90,7 @@
       </div>
 
     <!-- TODO: Ask Jon if this could fit in global settings (up top) -->
-    <div id="original-view-panel" class="panel panel-default">
+    <div id="original-view-panel" class="panel-default">
       <div class="panel-heading">
         <div class="panel-title">
           <a data-toggle="collapse" href="#original-view-controls"><span class="fa fa-chevron-right toggle-glyph"></span> Original View</a>
@@ -105,7 +105,7 @@
       </div>
     </div>
 
-    <div id="heatmap-panel" class="panel panel-default no-top-border">
+    <div id="heatmap-panel" class="panel-default no-top-border">
       <div class="panel-heading">
         <div class="panel-title">
           <a data-toggle="collapse" href="#heatmap"><span class="fa fa-chevron-right toggle-glyph"></span> Heatmap</a>
@@ -140,7 +140,7 @@
               </div>
             </div>
           </div>
-          <div class="col-sm-8">
+          <div class="form-group col-sm-8">
             <div class="row">
               <div class="col-xs-12">
                 <%= label_tag :fit_options, 'Fit Options', class: 'control-label' %><i class="fa fa-fw fa-question-circle" title="Use these buttons to rescale the contents of the heatmap plot.  Each option is can be toggled and combined with other options." data-toggle="tooltip"></i>
