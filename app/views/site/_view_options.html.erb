@@ -29,14 +29,14 @@
         <div id="expression-options-panel" class="panel <%= action_name == 'view_gene_expression' ? "panel-info" : "panel-default" %>">
             <div class="panel-heading">
               <div class="panel-title">
-                <a data-toggle="collapse" data-parent="#view-options-accordion" href="#distribution-plot-controls"><span class="fa fa-chevron-right toggle-glyph"></span> By Metadata</a>
+                <a data-toggle="collapse" data-parent="#view-options-accordion" href="#distribution-plot-controls"><span class="fa fa-chevron-<%= action_name == 'view_gene_expression' ? 'down' : 'right' %> toggle-glyph"></span> Distribution</a>
               </div>
             </div>
             <div id="distribution-plot-controls" class="panel-collapse collapse <% if action_name == 'view_gene_expression' %>in<% end %>">
               <div class="panel-body">
                 <div class="row">
                     <div class="form-group col-md-3">
-                      <%= label_tag :plot_type, 'Distribution Plot Type' %>&nbsp;<i class='fa fa-question-circle' title="Choose which distribution type to display." data-toggle="tooltip"></i>
+                      <%= label_tag :plot_type, 'Plot Type' %>&nbsp;<i class='fa fa-question-circle' title="Choose which distribution type to display." data-toggle="tooltip"></i>
                       <%= select_tag :plot_type, options_for_select([['Violin Plot', "violin"], ['Box Plot', "box"]], params[:plot_type]), {class: 'form-control'} %>
                     </div>
                     <script>
@@ -87,15 +87,13 @@
               </div>
             </div>
         </div>
-        <%= action_name %>
-
         <div id="original-view-panel" class="panel <%= action_name == 'view_gene_expression' ? "panel-info" : "panel-default" %>">
         <div class="panel-heading">
           <div class="panel-title">
-            <a data-toggle="collapse" data-parent="#view-options-accordion" href="#original-view-controls"><span class="fa fa-chevron-right toggle-glyph"></span> Original View</a>
+            <a data-toggle="collapse" data-parent="#view-options-accordion" href="#original-view-controls"><span class="fa fa-chevron-right toggle-glyph"></span> Cluster</a>
           </div>
         </div>
-        <div id="original-view-controls" class="panel-collapse collapse <% if action_name == 'view_gene_expression'%>in<% end %>">
+        <div id="original-view-controls" class="panel-collapse collapse">
           <div class="panel-body">
             <div class="row">
               <div class="col-xs-12">
@@ -109,7 +107,7 @@
         <div id="heatmap-panel" class="panel panel-default">
       <div class="panel-heading">
         <div class="panel-title">
-          <a data-toggle="collapse" data-parent="#view-options-accordion" href="#heatmap-controls"><span class="fa fa-chevron-right toggle-glyph"></span> Heatmap</a>
+          <a data-toggle="collapse" data-parent="#view-options-accordion" href="#heatmap-controls"><span class="fa fa-chevron-<%= action_name =~ /heatmap/ ? 'down' : 'right' %> toggle-glyph"></span> Heatmap</a>
         </div>
       </div>
       <div id="heatmap-controls" class="panel-collapse collapse <% if action_name =~ /heatmap/ %>in<% end %>">
