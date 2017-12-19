@@ -325,6 +325,23 @@ class FireCloudClientTest < ActiveSupport::TestCase
     assert single_configuration.has_key?('inputs'), "Single workspace configuration '#{single_configuration['name']}' has no inputs"
     assert single_configuration.has_key?('outputs'), "Single workspace configuration '#{single_configuration['name']}' has no outputs"
 
+    puts 'updating workspace configuration'
+    updated_input = single_configuration['inputs'].keys.first
+    updated_value = 'this is the update'
+    single_configuration['inputs'][updated_input] = updated_value
+    update_request = @fire_cloud_client.update_workspace_configuration(@fire_cloud_client.project, workspace_name, single_configuration['namespace'], single_configuration['name'], single_configuration)
+    assert update_request.present?, "Request did not go through, response is nil: #{update_request}"
+    updated_config = @fire_cloud_client.get_workspace_configuration(@fire_cloud_client.project, workspace_name, ws_config['namespace'], ws_config['name'])
+    assert updated_config['inputs'][updated_input] == updated_value, "did not update configuration input, expected '#{updated_value}' but found '#{updated_config['inputs'][updated_input]}'"
+
+    puts 'overwriting workspace configuration'
+    new_value = 'this is a new update'
+    single_configuration['inputs'][updated_input] = new_value
+    overwrite_request = @fire_cloud_client.overwrite_workspace_configuration(@fire_cloud_client.project, workspace_name, ws_config['namespace'], ws_config['name'], single_configuration)
+    assert overwrite_request.present?, "Overwrite did not go through, response is nil: #{overwrite_request}"
+    overwritten_config = @fire_cloud_client.get_workspace_configuration(@fire_cloud_client.project, workspace_name, ws_config['namespace'], ws_config['name'])
+    assert overwritten_config['inputs'][updated_input] == new_value, "did not overwrite configuration input, expected '#{new_value}' but found '#{overwritten_config['inputs'][updated_input]}'"
+
     # delete workspace
     puts 'deleting workspace...'
     delete_message = @fire_cloud_client.delete_workspace(@fire_cloud_client.project, workspace_name)

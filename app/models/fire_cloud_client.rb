@@ -512,14 +512,14 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	#
 	# * *params*
 	#   - +namespace+ (String) => namespace of method
-	#   - +name+ (String) => name of method
+	#   - +name+ (String) => name of configuration
 	#   - +snapshot_id+ (Integer) => snapshot ID of method
 	#   - +payload_as_object+ (Boolean) => Instead of returning a string under key payload, return a JSON object under key payloadObject
 	#
   # * *return*
   #   - +Hash+ configuration object
-	def get_configuration(namespace, method_name, snapshot_id, payload_as_object=false)
-		path = self.api_root + "/api/configurations/#{namespace}/#{method_name}/#{snapshot_id}?payloadAsObject=#{payload_as_object}"
+	def get_configuration(namespace, name, snapshot_id, payload_as_object=false)
+		path = self.api_root + "/api/configurations/#{namespace}/#{name}/#{snapshot_id}?payloadAsObject=#{payload_as_object}"
 		process_firecloud_request(:get, path)
 	end
 
@@ -585,13 +585,46 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	# * *params*
 	#   - +workspace_namespace+ (String) => namespace of workspace
 	#   - +workspace_name+ (String) => name of requested workspace
-	#   - +config_name+ (String) => name of method
+	#   - +config_namespace+ (String) => namespace of configuration
+	#   - +config_name+ (String) => name of configuration
 	#
-  # * *return*
-  #   - +Hash+ configuration object
+	# * *return*
+	#   - +Hash+ configuration object
 	def get_workspace_configuration(workspace_namespace, workspace_name, config_namespace, config_name)
 		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/method_configs/#{config_namespace}/#{config_name}"
 		process_firecloud_request(:get, path)
+	end
+
+	# create/update a FireCloud method configuration in a workspace (usually from a template)
+	#
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of requested workspace
+	#   - +config_namespace+ (String) => namespace of configuration
+	#   - +config_name+ (String) => name of configuration
+	#		- +configuration+ (Hash) => configuration object (see https://api.firecloud.org/#!/Method_Configurations/updateWorkspaceMethodConfig for more info)
+	#
+	# * *return*
+	#   - +Hash+ configuration object
+	def update_workspace_configuration(workspace_namespace, workspace_name, config_namespace, config_name, configuration)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/method_configs/#{config_namespace}/#{config_name}"
+		process_firecloud_request(:post, path, configuration.to_json)
+	end
+
+	# overwrite an existing FireCloud method configuration in a workspace
+	#
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of requested workspace
+	#   - +config_namespace+ (String) => namespace of configuration
+	#   - +config_name+ (String) => name of configuration
+	#		- +configuration+ (Hash) => configuration object (see https://api.firecloud.org/#!/Method_Configurations/overwriteWorkspaceMethodConfig for more info)
+	#
+	# * *return*
+	#   - +Hash+ configuration object
+	def overwrite_workspace_configuration(workspace_namespace, workspace_name, config_namespace, config_name, configuration)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/method_configs/#{config_namespace}/#{config_name}"
+		process_firecloud_request(:put, path, configuration.to_json)
 	end
 
   # get submission queue status
