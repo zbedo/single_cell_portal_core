@@ -938,30 +938,54 @@ class SiteController < ApplicationController
       # create a name for the configuration; will be combination of workflow name and snapshot id
       ws_config_name = [workflow_name, workflow_snapshot].join('_')
       @samples = workflow_submission_params[:samples].keep_if {|s| !s.blank?}
-
+      @config_namespace = ""
+      @config_name = ""
       # check if there is a configuration in the workspace that matches the requested workflow
       # we need a separate begin/rescue block as if the configuration isn't found we will throw a RuntimeError
       begin
-        submission_config = Study.firecloud_client.get_workspace_configuration(@study.firecloud_project, @study.firecloud_workspace, @study.firecloud_workspace,ws_config_name)
+        submission_config = Study.firecloud_client.get_workspace_configuration(@study.firecloud_project, @study.firecloud_workspace, workflow_namespace, ws_config_name)
         logger.info "#{Time.now}: found existing configuration #{ws_config_name} in #{@study.firecloud_workspace}"
-        config_namespace = submission_config['namespace']
-        config_name = submission_config['name']
+        @config_namespace = submission_config['namespace']
+        @config_name = submission_config['name']
       rescue RuntimeError
         logger.info "#{Time.now}: No existing configuration found for #{ws_config_name} in #{@study.firecloud_workspace}; copying from repository"
         # we did not find a configuration, so we must copy the public one from the repository
-        existing_configs = Study.firecloud_client.get_configurations(namespace: workflow_namespace, name: workflow_name)
+        # first check for a public configuration in 'scp-pipeline-configurations'
+        existing_configs = Study.firecloud_client.get_configurations(namespace: 'scp-pipeline-configurations', name: workflow_name)
+        if existing_configs.empty?
+          # check for configurations in the workflow namespace next
+          existing_configs = Study.firecloud_client.get_configurations(namespace: workflow_namespace, name: workflow_name)
+        end
         matching_config = existing_configs.find {|config| config['method']['name'] == workflow_name && config['method']['namespace'] == workflow_namespace && config['method']['snapshotId'] == workflow_snapshot.to_i}
-        new_config = Study.firecloud_client.copy_configuration_to_workspace(@study.firecloud_project, @study.firecloud_workspace, matching_config['namespace'], matching_config['name'], matching_config['snapshotId'], @study.firecloud_project, ws_config_name)
-        config_namespace = new_config['methodConfiguration']['namespace']
-        config_name = new_config['methodConfiguration']['name']
+        if matching_config.present?
+          logger.info "#{Time.now}: Found matching configuration: #{matching_config['namespace']}/#{matching_config['name']}"
+          new_config = Study.firecloud_client.copy_configuration_to_workspace(@study.firecloud_project, @study.firecloud_workspace, matching_config['namespace'], matching_config['name'], matching_config['snapshotId'], @study.firecloud_project, ws_config_name)
+          logger.info "found config: #{@submission_configuration}"
+          @config_namespace = new_config['methodConfiguration']['namespace']
+          @config_name = new_config['methodConfiguration']['name']
+        else
+          # no matching configurations were present, so create a blank template and configure later
+          logger.info "#{Time.now}: No configurations found, creating blank template for #{workflow_namespace}/#{workflow_name}"
+          config_template = Study.firecloud_client.create_configuration_template(workflow_namespace, workflow_name, workflow_snapshot)
+          # configure name, namespace and rootEntityType
+          config_template['name'] = ws_config_name
+          config_template['namespace'] = workflow_namespace
+          config_template['rootEntityType'] = 'sample'
+          new_config = Study.firecloud_client.update_workspace_configuration(@study.firecloud_project, @study.firecloud_workspace, config_template['namespace'],
+                                                                             config_template['name'], config_template)
+          @config_namespace = new_config['namespace']
+          @config_name = new_config['name']
+        end
       end
-
       # submission must be done as user, so create a client with current_user and submit
       client = FireCloudClient.new(current_user, @study.firecloud_project)
       @submissions = []
       @samples.each do |sample|
-        logger.info "#{Time.now}: Creating submission for #{sample} using #{config_namespace}/#{config_name} in #{@study.firecloud_project}/#{@study.firecloud_workspace} "
-        @submissions << client.create_workspace_submission(@study.firecloud_project, @study.firecloud_workspace, config_namespace, config_name, 'sample', sample)
+        logger.info "#{Time.now}: Updating configuration for #{@config_namespace}/#{@config_name} to run #{workflow_namespace}/#{workflow_name} in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
+        # Run any workflow-specific extra configuration steps
+        WorkflowConfiguration.new(@study, @config_namespace, @config_name, workflow_namespace, workflow_name, {sample_name: sample}).perform
+        logger.info "#{Time.now}: Creating submission for #{sample} using #{@config_namespace}/#{@config_name} in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
+        @submissions << client.create_workspace_submission(@study.firecloud_project, @study.firecloud_workspace, @config_namespace, @config_name, 'sample', sample)
       end
     rescue => e
       logger.error "#{Time.now}: unable to submit workflow #{workflow_name} for sample #{@samples.join(', ')} in #{@study.firecloud_workspace} due to: #{e.message}"
