@@ -21,20 +21,18 @@
                   <%= select_tag :subsample, options_for_select(subsampling_options(@cluster.points), set_subsample_value(params) ), {include_blank: 'All Cells', class: 'form-control'} %>
                 </div>
                 <!-- end -->
-
             </div>
           </div>
         </div>
       </div>
-
       <div id="view-options-accordion" class="panel-group">
-        <div id="expression-options-panel" class="panel panel-default">
+        <div id="expression-options-panel" class="panel <%= action_name == 'view_gene_expression' ? "panel-info" : "panel-default" %>">
             <div class="panel-heading">
               <div class="panel-title">
                 <a data-toggle="collapse" data-parent="#view-options-accordion" href="#distribution-plot-controls"><span class="fa fa-chevron-right toggle-glyph"></span> By Metadata</a>
               </div>
             </div>
-            <div id="distribution-plot-controls" class="panel-collapse collapse <% if action_name =~ /set/ %>in<% end %>">
+            <div id="distribution-plot-controls" class="panel-collapse collapse <% if action_name == 'view_gene_expression' %>in<% end %>">
               <div class="panel-body">
                 <div class="row">
                     <div class="form-group col-md-3">
@@ -89,14 +87,15 @@
               </div>
             </div>
         </div>
+        <%= action_name %>
 
-        <div id="original-view-panel" class="panel panel-default">
+        <div id="original-view-panel" class="panel <%= action_name == 'view_gene_expression' ? "panel-info" : "panel-default" %>">
         <div class="panel-heading">
           <div class="panel-title">
             <a data-toggle="collapse" data-parent="#view-options-accordion" href="#original-view-controls"><span class="fa fa-chevron-right toggle-glyph"></span> Original View</a>
           </div>
         </div>
-        <div id="original-view-controls" class="panel-collapse collapse <% if action_name =~ /set/ %>in<% end %>">
+        <div id="original-view-controls" class="panel-collapse collapse <% if action_name == 'view_gene_expression'%>in<% end %>">
           <div class="panel-body">
             <div class="row">
               <div class="col-xs-12">
