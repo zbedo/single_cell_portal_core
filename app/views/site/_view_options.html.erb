@@ -104,7 +104,7 @@
         </div>
       </div>
 
-        <div id="heatmap-panel" class="panel panel-default">
+        <div id="heatmap-panel" class="panel <%= action_name =~ /heatmap/ ? 'panel-info' : 'panel-default' %>">
       <div class="panel-heading">
         <div class="panel-title">
           <a data-toggle="collapse" data-parent="#view-options-accordion" href="#heatmap-controls"><span class="fa fa-chevron-<%= action_name =~ /heatmap/ ? 'down' : 'right' %> toggle-glyph"></span> Heatmap</a>
