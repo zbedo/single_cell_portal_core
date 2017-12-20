@@ -88,7 +88,7 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
         end
       else
         # return immediately as we have no special code to execute for requested workflow
-        Rails.logger.info "#{Time.now}: No extra configuration present for  #{configuration_namespace}/#{configuration_name}; exiting"
+        Rails.logger.info "#{Time.now}: No extra configuration present for #{configuration_namespace}/#{configuration_name}; exiting"
         response[:complete] = true
         return response
     end
