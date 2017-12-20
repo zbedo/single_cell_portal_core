@@ -81,13 +81,15 @@ class SiteController < ApplicationController
   # will redirect to appropriate method as needed
   def search_genes
     @terms = parse_search_terms(:genes)
-    # grab saved params for loaded cluster, boxpoints mode, annotations and consensus
+    # grab saved params for loaded cluster, boxpoints mode, annotations, consensus and other view settings
     cluster = params[:search][:cluster]
     annotation = params[:search][:annotation]
     boxpoints = params[:search][:boxpoints]
     consensus = params[:search][:consensus]
     subsample = params[:search][:subsample]
     plot_type = params[:search][:plot_type]
+    kernel_type = params[:search][:kernel_type]
+    band_type = params[:search][:band_type]
 
     # if only one gene was searched for, make an attempt to load it and redirect to correct page
     if @terms.size == 1
@@ -95,15 +97,15 @@ class SiteController < ApplicationController
       if @gene.empty?
         redirect_to request.referrer, alert: "No matches found for: #{@terms.first}." and return
       else
-        redirect_to view_gene_expression_path(study_name: params[:study_name], gene: @gene['gene'], cluster: cluster, boxpoints: boxpoints, annotation: annotation, consensus: consensus, subsample: subsample, plot_type: plot_type) and return
+        redirect_to view_gene_expression_path(study_name: params[:study_name], gene: @gene['gene'], cluster: cluster, annotation: annotation, consensus: consensus, subsample: subsample, plot_type: plot_type, kernel_type: kernel_type, band_type: band_type, boxpoints: boxpoints) and return
       end
     end
 
     # else, determine which view to load (heatmaps vs. violin/scatter)
     if !consensus.blank?
-      redirect_to view_gene_set_expression_path(study_name: params[:study_name], search: {genes: @terms.join(' ')} , cluster: cluster, annotation: annotation, consensus: consensus, subsample: subsample, plot_type: plot_type)
+      redirect_to view_gene_set_expression_path(study_name: params[:study_name], search: {genes: @terms.join(' ')} , cluster: cluster, annotation: annotation, consensus: consensus, subsample: subsample, plot_type: plot_type, kernel_type: kernel_type, band_type: band_type, boxpoints: boxpoints)
     else
-      redirect_to view_gene_expression_heatmap_path(search: {genes: @terms.join(' ')}, cluster: cluster, annotation: annotation, plot_type: plot_type)
+      redirect_to view_gene_expression_heatmap_path(search: {genes: @terms.join(' ')}, cluster: cluster, annotation: annotation, plot_type: plot_type, kernel_type: kernel_type, band_type: band_type, boxpoints: boxpoints)
     end
   end
 

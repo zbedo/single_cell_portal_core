@@ -14,6 +14,9 @@
               <%= f.hidden_field :annotation, value: set_annotation_value(@study, params) %>
               <%= f.hidden_field :subsample, value: set_subsample_value(params) %>
               <%= f.hidden_field :plot_type, value: set_distribution_plot_type_value(params) %>
+              <%= f.hidden_field :kernel_type, value: set_kernel_type_value(params) %>
+              <%= f.hidden_field :band_type, value: set_band_type_value(params) %>
+              <%= f.hidden_field :boxpoints, value: set_boxpoints_value(params) %>
               <div class="form-group">
                 <%= f.label :genes, 'Search for genes' %>
                 <%= f.autocomplete_field :genes, autocomplete_expression_score_gene_expression_score_index_path(study_id: @study._id), {multiple: true, class: 'form-control search-genes-input', placeholder: 'Enter gene names', value: set_search_value, data: {delimiter: ' '}} %>
@@ -36,7 +39,10 @@
                       var annotation = $('#search_annotation').val();
                       var subsample = $('#search_subsample').val();
                       var plotType = $('#search_plot_type').val();
-                      var url = "<%= view_study_path(study_name: @study.url_safe_name )%>?cluster=" + cluster + "&annotation=" + annotation + "&subsample=" + subsample + "&plot_type=" + plotType;
+                      var kernelType = $('#search_kernel_type').val();
+                      var bandType = $('#search_band_type').val();
+                      var boxpoints = $('#search_boxpoints').val();
+                      var url = "<%= view_study_path(study_name: @study.url_safe_name )%>?cluster=" + cluster + "&annotation=" + annotation + "&subsample=" + subsample + "&plot_type=" + plotType + '&kernel_type=' + kernelType + '&band_type=' + bandType + '&boxpoints=' + boxpoints;
                       launchModalSpinner('#spinner_target', '#loading-modal', function() {
                           $.ajax({
                               url: url,

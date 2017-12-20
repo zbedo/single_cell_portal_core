@@ -87,6 +87,11 @@ module ApplicationHelper
 		nav
 	end
 
+	# TODO eweitz 2017-12-20: Can the 'set_foo_value' methods below be abstracted?
+	# They have a similar form, and might be more succinctly expressed in one method that uses
+	# a hash to map parameter names to default values, and returns the deterministic parameter value.
+	# Refactoring might be worthwhile after ensuring the redundant-but-familiar methods pass all tests.
+
 	# method to set cluster value based on options and parameters
 	# will fall back to default cluster if nothing is specified
 	def set_cluster_value(selected_study, parameters)
@@ -123,6 +128,7 @@ module ApplicationHelper
 		end
 	end
 
+	### Beginning of 'Distribution' view options
 	def set_distribution_plot_type_value(parameters)
 		if !parameters[:gene_set_plot_type].nil?
 			parameters[:gene_set_plot_type]
@@ -132,6 +138,37 @@ module ApplicationHelper
 			'violin'
 		end
 	end
+
+	def set_kernel_type_value(parameters)
+		if !parameters[:gene_set_kernel_type].nil?
+			parameters[:gene_set_kernel_type]
+		elsif !parameters[:kernel_type].nil?
+			parameters[:kernel_type]
+		else
+			'gau' # Gaussian
+		end
+	end
+
+	def set_band_type_value(parameters)
+		if !parameters[:gene_set_band_type].nil?
+			parameters[:gene_set_band_type]
+		elsif !parameters[:band_type].nil?
+			parameters[:band_type]
+		else
+			'nrd0'
+		end
+	end
+
+	def set_boxpoints_value(parameters)
+		if !parameters[:gene_set_boxpoints].nil?
+			parameters[:gene_set_boxpoints]
+		elsif !parameters[:boxpoints].nil?
+			parameters[:boxpoints]
+		else
+			'all'
+		end
+	end
+	### End of 'Distribution' view options
 
 	# set colorscale value
 	def set_colorscale_value(selected_study, parameters)

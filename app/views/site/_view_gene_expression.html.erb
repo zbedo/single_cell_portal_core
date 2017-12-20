@@ -66,6 +66,9 @@
         $("#search_annotation").val(''); // clear value first
         $("#search_annotation").val(annotation);
         $('#search_plot_type').val(plot_type);
+        $('#search_kernel_type').val(kernel_type);
+        $('#search_band_type').val(band_type);
+        $('#search_boxpoints').val(boxpoints);
 
         var delimiter = "<%= params[:gene] ? "?".html_safe : "&".html_safe %>";
         url += delimiter + 'cluster=' + cluster + '&annotation=' + annotation + '&boxpoints=' + boxpoints + '&consensus=' + consensus + '&subsample=' + subsample + '&plot_type=' + plot_type + '&kernel_type=' + kernel_type + '&band_type=' + band_type
