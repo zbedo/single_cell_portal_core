@@ -954,7 +954,10 @@ class SiteController < ApplicationController
       samples.each do |sample|
         logger.info "#{Time.now}: Updating configuration for #{config_namespace}/#{config_name} to run #{workflow_namespace}/#{workflow_name} in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
         # create input hash for submission
-        submission_inputs = {sample_name: sample}.merge(optional_inputs)
+        submission_inputs = {sample_name: sample}
+        if optional_inputs.present?
+          submission_inputs.merge!(optional_inputs)
+        end
         # Run any workflow-specific extra configuration steps
         configuration_response = WorkflowConfiguration.new(@study, config_namespace, config_name, workflow_namespace, workflow_name, submission_inputs).perform
         # make sure the configuration step completed without error, otherwise abort submission
@@ -967,7 +970,7 @@ class SiteController < ApplicationController
         end
       end
     rescue => e
-      logger.error "#{Time.now}: unable to submit workflow #{workflow_name} for sample #{@samples.join(', ')} in #{@study.firecloud_workspace} due to: #{e.message}"
+      logger.error "#{Time.now}: unable to submit workflow #{workflow_name} for sample #{samples.join(', ')} in #{@study.firecloud_workspace} due to: #{e.message}"
       @alert = "We were unable to submit your workflow due to an error: #{e.message}"
       render action: :notice
     end
