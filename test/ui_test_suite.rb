@@ -4201,6 +4201,9 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(study_page)
 
 		open_ui_tab('study-workflows')
+		wait_for_render(:id, 'workflow_identifier')
+		samples_tab = @driver.find_element(:id, 'select-samples-nav')
+		samples_tab.click
 		wait_for_render(:id, 'submissions-table')
 		# select all available fastq files to create a sample entity
 		study_data_select = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_study_data'))
@@ -4222,8 +4225,7 @@ class UiTestSuite < Test::Unit::TestCase
 		assert file_contents.size == 2, "Sample info file is wrong size; exprected 2 lines but found #{file_contents.size}"
 		header_line = "entity:sample_id\tfastq_file_1\tfastq_file_2\tfastq_file_3\tfastq_file_4\n"
 		assert file_contents.first == header_line, "sample info header line incorrect, expected #{header_line} but found '#{file_contents.first}'"
-		sample_line = "cell_1\tcell_1_R1_001.fastq.gz\t\tcell_1_I1_001.fastq.gz\t\n"
-		assert file_contents.last == sample_line, "sample info content line incorrect, expected #{sample_line} but found '#{file_contents.last}'"
+		assert file_contents.last.start_with?('cell_1'), "sample name in content line incorrect, expected 'cell_1' but found '#{file_contents.last}'"
 
 		# clean up
 		sample_info_file.close
@@ -4264,16 +4266,24 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# select worfklow & sample
 		open_ui_tab('study-workflows')
-		wait_for_render(:id, 'submissions-table')
+		wait_for_render(:id, 'workflow_identifier')
 		wdl_workdropdown = @driver.find_element(:id, 'workflow_identifier')
 		wdl_workflows = wdl_workdropdown.find_elements(:tag_name, 'option')
 		wdl_workflows.last.click
+
+		samples_tab = @driver.find_element(:id, 'select-samples-nav')
+		samples_tab.click
+		wait_for_render(:id, 'submissions-table')
+
 		study_samples = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_samples'))
 		study_samples.select_all
 		# wait for table to populate (will have a row with sorting_1 class)
 		@wait.until {@driver.find_element(:id, 'samples-table').find_element(:class, 'sorting_1').displayed?}
 
 		# submit workflow
+		review_tab = @driver.find_element(:id, 'review-submission-nav')
+		review_tab.click
+		wait_for_render(:id, 'submit-workflow')
 		submit_btn = @driver.find_element(id: 'submit-workflow')
 		submit_btn.click
 		close_modal('generic-update-modal')
@@ -4439,6 +4449,9 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(study_page)
 
 		open_ui_tab('study-workflows')
+		wait_for_render(:id, 'workflow_identifier')
+		samples_tab = @driver.find_element(:id, 'select-samples-nav')
+		samples_tab.click
 		wait_for_render(:id, 'submissions-table')
 
 		# now select sample
