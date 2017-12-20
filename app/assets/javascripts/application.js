@@ -452,7 +452,7 @@ $('#plot_type, #kernel_type, #band_type').change(function() {
 $(document).on('change', '#heatmap_row_centering, #annotation', function() {
   updateSearchGeneParams();
 });
-$('#resize-heatmap').click(function() {
+$(document).on('click', '#resize-heatmap', function() {
   updateSearchGeneParams();
 });
 
