@@ -170,6 +170,28 @@ module ApplicationHelper
 	end
 	### End of 'Distribution' view options
 
+	### Beginning of 'Heatmap' view options
+	def set_heatmap_row_centering_value(parameters)
+		if !parameters[:gene_set_heatmap_row_centering].nil?
+			parameters[:gene_set_heatmap_row_centering]
+		elsif !parameters[:heatmap_row_centering].nil?
+			parameters[:heatmap_row_centering]
+		else
+			''
+		end
+	end
+
+	def set_heatmap_size_value(parameters)
+		if !parameters[:gene_set_heatmap_size].nil?
+			parameters[:gene_set_heatmap_size]
+		elsif !parameters[:heatmap_size].nil?
+		parameters[:heatmap_size]
+		else
+			''
+		end
+	end
+	### End of 'Heatmap' view options
+
 	# set colorscale value
 	def set_colorscale_value(selected_study, parameters)
 		if !parameters[:colorscale].nil?

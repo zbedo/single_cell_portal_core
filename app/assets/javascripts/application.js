@@ -375,7 +375,6 @@ function closeModalSpinner(spinnerTarget, modalTarget, callback) {
     $(modalTarget).modal('hide');
 }
 
-
 // Propagate changes from the View Options sidebar to the Search Genes form.
 function updateSearchGeneParams() {
 
@@ -388,6 +387,9 @@ function updateSearchGeneParams() {
   var kernel_type = $('#kernel_type').val() === undefined ? 'gau' : $('#kernel_type').val();
   var band_type = $('#band_type').val() === undefined ? 'nrd0' : $('#band_type').val();
   var boxpoints = $('#boxpoints_select').val() === undefined ? 'all' : $('#boxpoints_select').val();
+  var heatmap_size = $('#heatmap');
+  var heatmap_row_centering = $('#heatmap_row_centering').val();
+  var heatmap_size = parseInt($('#heatmap_size').val());
 
   // These 'search_foo' values exist in hidden form elements in '#search-genes-input'
   $("#search_cluster").val(cluster);
@@ -397,9 +399,12 @@ function updateSearchGeneParams() {
   $('#search_kernel_type').val(kernel_type);
   $('#search_band_type').val(band_type);
   $('#search_boxpoints').val(boxpoints);
+  $('#search_heatmap_row_centering').val(heatmap_row_centering);
+  $('#search_heatmap_size').val(heatmap_size);
 }
 
-// Gets URL parameters needed for each "render" call, e.g. no-gene, single-gene, multi-gene,
+
+// Gets URL parameters needed for each "render" call, e.g. no-gene, single-gene, multi-gene
 function getRenderUrlParams() {
 
   // Get values from control elements in View Options sidebar
@@ -411,6 +416,8 @@ function getRenderUrlParams() {
   var kernel_type = $('#kernel_type').val() === undefined ? 'gau' : $('#kernel_type').val();
   var band_type = $('#band_type').val() === undefined ? 'nrd0' : $('#band_type').val();
   var boxpoints = $('#boxpoints_select').val() === undefined ? 'all' : $('#boxpoints_select').val();
+  var heatmap_row_centering = $('#heatmap_row_centering').val();
+  var heatmap_size = parseInt($('#heatmap_size').val());
 
   var urlParams =
     'cluster=' + cluster +
@@ -420,10 +427,34 @@ function getRenderUrlParams() {
     '&subsample=' + subsample +
     '&plot_type=' + plot_type +
     '&kernel_type=' + kernel_type +
-    '&band_type=' + band_type
+    '&band_type=' + band_type +
+    '&heatmap_row_centering=' + heatmap_row_centering +
+    '&heatmap_size=' + heatmap_size;
 
   return urlParams;
 }
+
+// Handle changes in View Options for 'Distribution' view
+$('#plot_type, #kernel_type, #band_type').change(function() {
+  $('#expression-plots').data('box-rendered', false);
+  $('#expression-plots').data('scatter-rendered', false);
+  $('#expression-plots').data('reference-rendered', false);
+
+  updateSearchGeneParams();
+
+  if (typeof renderGeneExpressionPlots !== 'undefined') {
+    // Accounts for changing View Options when not in Distribution view
+    renderGeneExpressionPlots();
+  }
+});
+
+// Handles changes in View Options for 'Heatmap' view
+$(document).on('change', '#heatmap_row_centering, #annotation', function() {
+  updateSearchGeneParams();
+});
+$('#resize-heatmap').click(function() {
+  updateSearchGeneParams();
+});
 
 // default title font settings for axis titles in plotly
 var plotlyTitleFont = {

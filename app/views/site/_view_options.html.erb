@@ -52,20 +52,6 @@
                     <% elsif action_name !~ /heatmap/ %>
                       <%= label_tag :band_type, 'Bandwidth Selector' %>&nbsp;<i class='fa fa-question-circle' title="Choose which bandwidth selector to use to calculate violin plot density. SJ selector may hurt performance with larger datasets." data-toggle="tooltip"></i>
                       <%= select_tag :band_type, options_for_select([['nrd0', "nrd0"],['SJ-STE', "sjste"]], params[:band_type]), {class: 'form-control'} %>
-                      <script>
-                        $('#plot_type, #kernel_type, #band_type').change(function() {
-                          $('#expression-plots').data('box-rendered', false);
-                          $('#expression-plots').data('scatter-rendered', false);
-                          $('#expression-plots').data('reference-rendered', false);
-
-                          updateSearchGeneParams();
-
-                          if (typeof renderGeneExpressionPlots !== 'undefined') {
-                            // Accounts for changing View Options when not in single-gene view
-                            renderGeneExpressionPlots();
-                          }
-                        });
-                      </script>
                     <% end %>
                   </div>
                   <div class="col-md-3">
@@ -104,8 +90,8 @@
         <div class="panel-body">
           <div class="form-group row">
             <div class="col-sm-4">
-              <%= label_tag :row_centered, 'Row centering' %> <span class="fa fa-question-circle" data-toggle="tooltip" title="Row-center expression data using the selected metric.  Selecting a value other than none will enforce global color values."></span><br />
-              <%= select_tag :row_centered, options_for_select([['Z-score [(v - mean) / stdev]','z-score'],['Robust z-score [(v - median) / MAD]', 'robust-z-score']], params[:transform]), {include_blank: 'None', class: 'form-control'} %>
+              <%= label_tag :heatmap_row_centering, 'Row centering' %> <span class="fa fa-question-circle" data-toggle="tooltip" title="Row-center expression data using the selected metric.  Selecting a value other than none will enforce global color values."></span><br />
+              <%= select_tag :heatmap_row_centering, options_for_select([['Z-score [(v - mean) / stdev]','z-score'],['Robust z-score [(v - median) / MAD]', 'robust-z-score']], params[:heatmap_row_centering]), {include_blank: 'None', class: 'form-control'} %>
             </div>
 
           </div>
