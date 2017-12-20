@@ -121,6 +121,7 @@ Rails.application.routes.draw do
 		post 'study/:study_name/workspace_samples', to: 'site#update_workspace_samples', as: :update_workspace_samples
 		post 'study/:study_name/delete_workspace_samples', to: 'site#delete_workspace_samples', as: :delete_workspace_samples
     get 'view_workflow_wdl', to: 'site#view_workflow_wdl', as: :view_workflow_wdl
+    get 'workflow_options', to: 'site#get_workflow_options', as: :get_workflow_options
 
     # base actions
     get 'search', to: 'site#search', as: :search

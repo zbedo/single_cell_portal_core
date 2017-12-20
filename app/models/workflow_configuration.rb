@@ -54,32 +54,28 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
           # add input files (must cast as string for JSON encoding to work properly)
           configuration['inputs']['cellranger.fastqs'] = input_files.to_s
 
+          # add optional parameters
+          configuration['inputs']['cellranger.expectCells'] = inputs['expectCells']
+          configuration['inputs']['cellranger.secondary'] = inputs['secondary']
+          Rails.logger.info "config: #{configuration}"
+
           # set workspace information
           Rails.logger.info "#{Time.now}: setting workspace info for #{configuration['name']}"
           configuration['workspaceName'] = {'namespace' => study.firecloud_project, 'name' => study.firecloud_workspace}
 
-          # check if we have created a sample-specific configuration already for this run
-          # we need to do this as the input files are hard-coded into the configuration, so we can't overwrite the same
-          # configuration continually or concurrent sample submissions will fail
-          sample_config_name = configuration_name + "_#{sample_name}"
-          existing_configurations = Study.firecloud_client.get_workspace_configurations(study.firecloud_project, study.firecloud_workspace)
-          sample_configuration = existing_configurations.find {|config| config['name'] == sample_config_name}
-          if sample_configuration.present?
-            # overwrite configuration to use current sample values
-            configuration['name'] = sample_config_name
-            Rails.logger.info "#{Time.now}: overwiting existing sample-specific configuration: #{configuration_namespace}/#{sample_config_name}"
-            Study.firecloud_client.overwrite_workspace_configuration(study.firecloud_project, study.firecloud_workspace,
-                                                                     sample_configuration['namespace'], sample_configuration['name'],
-                                                                     configuration)
-          else
-            # create new sample-specific configuration
-            old_name = configuration['name']
-            configuration['name'] = sample_config_name
-            Rails.logger.info "#{Time.now}: creating new sample-specific configuration: #{configuration_namespace}/#{sample_config_name}"
-            Study.firecloud_client.update_workspace_configuration(study.firecloud_project, study.firecloud_workspace,
-                                                                  configuration['namespace'], old_name,
-                                                                  configuration)
+          # to avoid continually appending sample name to the end of the configuration name, check to make sure it's not already there
+          sample_config_name = configuration_name
+          if !sample_config_name.end_with?(sample_name)
+            sample_config_name += "_#{sample_name}"
           end
+
+          # create or update new sample-specific configuration
+          old_name = configuration['name']
+          configuration['name'] = sample_config_name
+          Rails.logger.info "#{Time.now}: creating new sample-specific configuration: #{configuration_namespace}/#{sample_config_name}"
+          Study.firecloud_client.update_workspace_configuration(study.firecloud_project, study.firecloud_workspace,
+                                                                configuration['namespace'], old_name,
+                                                                configuration)
 
           # update response
           response[:configuration_name] = sample_config_name
@@ -92,7 +88,30 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
         end
       else
         # return immediately as we have no special code to execute for requested workflow
+        Rails.logger.info "#{Time.now}: No extra configuration present for  #{configuration_namespace}/#{configuration_name}; exiting"
+        response[:complete] = true
         return response
     end
+  end
+
+  # load optional parameters for a requested workflow (curated list)
+  def self.get_optional_parameters(workflow_identifier)
+    opts = {}
+    case workflow_identifier
+      when 'regev--cell_ranger_2.0.2_count--15'
+        opts.merge!(
+             'expectCells' => {
+                 type: 'integer',
+                 default: 3000,
+                 help: 'Expected number of recovered cells. Default: 3,000 cells.'
+             },
+             'secondary' => {
+                 type: 'boolean',
+                 default: 'true',
+                 help: 'Set to false to skip secondary analysis of the gene-barcode matrix (dimensionality reduction, clustering and visualization).'
+             }
+        )
+    end
+    opts
   end
 end
