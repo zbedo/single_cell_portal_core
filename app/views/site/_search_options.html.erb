@@ -13,6 +13,7 @@
               <%= f.hidden_field :boxpoints, value: params[:boxpoints].nil? ? 'all' : params[:boxpoints] %>
               <%= f.hidden_field :annotation, value: set_annotation_value(@study, params) %>
               <%= f.hidden_field :subsample, value: set_subsample_value(params) %>
+              <%= f.hidden_field :plot_type, value: set_distribution_plot_type_value(params) %>
               <div class="form-group">
                 <%= f.label :genes, 'Search for genes' %>
                 <%= f.autocomplete_field :genes, autocomplete_expression_score_gene_expression_score_index_path(study_id: @study._id), {multiple: true, class: 'form-control search-genes-input', placeholder: 'Enter gene names', value: set_search_value, data: {delimiter: ' '}} %>
@@ -34,7 +35,8 @@
                       var cluster = $('#search_cluster').val();
                       var annotation = $('#search_annotation').val();
                       var subsample = $('#search_subsample').val();
-                      var url = "<%= view_study_path(study_name: @study.url_safe_name )%>?cluster=" + cluster + "&annotation=" + annotation + "&subsample=" + subsample;
+                      var plotType = $('#search_plot_type').val();
+                      var url = "<%= view_study_path(study_name: @study.url_safe_name )%>?cluster=" + cluster + "&annotation=" + annotation + "&subsample=" + subsample + "&plot_type=" + plotType;
                       launchModalSpinner('#spinner_target', '#loading-modal', function() {
                           $.ajax({
                               url: url,

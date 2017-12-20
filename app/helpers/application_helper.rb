@@ -123,6 +123,16 @@ module ApplicationHelper
 		end
 	end
 
+	def set_distribution_plot_type_value(parameters)
+		if !parameters[:gene_set_plot_type].nil?
+			parameters[:gene_set_plot_type]
+		elsif !parameters[:plot_type].nil?
+			parameters[:plot_type]
+		else
+			'violin'
+		end
+	end
+
 	# set colorscale value
 	def set_colorscale_value(selected_study, parameters)
 		if !parameters[:colorscale].nil?

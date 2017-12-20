@@ -87,6 +87,7 @@ class SiteController < ApplicationController
     boxpoints = params[:search][:boxpoints]
     consensus = params[:search][:consensus]
     subsample = params[:search][:subsample]
+    plot_type = params[:search][:plot_type]
 
     # if only one gene was searched for, make an attempt to load it and redirect to correct page
     if @terms.size == 1
@@ -94,15 +95,15 @@ class SiteController < ApplicationController
       if @gene.empty?
         redirect_to request.referrer, alert: "No matches found for: #{@terms.first}." and return
       else
-        redirect_to view_gene_expression_path(study_name: params[:study_name], gene: @gene['gene'], cluster: cluster, boxpoints: boxpoints, annotation: annotation, consensus: consensus, subsample: subsample) and return
+        redirect_to view_gene_expression_path(study_name: params[:study_name], gene: @gene['gene'], cluster: cluster, boxpoints: boxpoints, annotation: annotation, consensus: consensus, subsample: subsample, plot_type: plot_type) and return
       end
     end
 
     # else, determine which view to load (heatmaps vs. violin/scatter)
     if !consensus.blank?
-      redirect_to view_gene_set_expression_path(study_name: params[:study_name], search: {genes: @terms.join(' ')} , cluster: cluster, annotation: annotation, consensus: consensus, subsample: subsample)
+      redirect_to view_gene_set_expression_path(study_name: params[:study_name], search: {genes: @terms.join(' ')} , cluster: cluster, annotation: annotation, consensus: consensus, subsample: subsample, plot_type: plot_type)
     else
-      redirect_to view_gene_expression_heatmap_path(search: {genes: @terms.join(' ')}, cluster: cluster, annotation: annotation)
+      redirect_to view_gene_expression_heatmap_path(search: {genes: @terms.join(' ')}, cluster: cluster, annotation: annotation, plot_type: plot_type)
     end
   end
 
