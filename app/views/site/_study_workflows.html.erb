@@ -42,7 +42,7 @@
 <div class="row">
   <div class="col-md-12">
     <h2>Submit a Workflow</h2>
-    <p class="lead help-block">Use this wizard to configure and submit a workflow using the data from this study. You will be able to check the status of this workflow in the table above.</p>
+    <p class="lead help-block">Configure and submit a workflow using the wizard below. You will be able to check the status of this workflow in the table above once submitted.</p>
     <%= form_for(:workflow, url: create_workspace_submission_path, html: {class: 'form', id: 'workflow-submission'}, data: {remote: true}) do |f| %>
       <div id="workflow-wizard">
         <ul class="nav wizard">
