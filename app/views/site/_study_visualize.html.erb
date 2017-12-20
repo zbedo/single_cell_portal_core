@@ -50,11 +50,9 @@
         var target = $('#cluster-plot')[0];
         var spinner = new Spinner(opts).spin(target);
         $('#cluster-plot').data('spinner', spinner);
-        var cluster = $('#cluster').val();
-        var annotation = $('#annotation').val();
-        var subsample = $('#subsample').val();
 
-        url += '?cluster=' + cluster + '&annotation=' + annotation + '&subsample=' + subsample;
+        var urlParams = getRenderUrlParams();
+        url += '?' + urlParams;
 
         $.ajax({
             url: url,

@@ -39,28 +39,12 @@
                       <%= label_tag :plot_type, 'Plot Type' %>&nbsp;<i class='fa fa-question-circle' title="Choose which distribution type to display." data-toggle="tooltip"></i>
                       <%= select_tag :plot_type, options_for_select([['Violin Plot', "violin"], ['Box Plot', "box"]], params[:plot_type]), {class: 'form-control'} %>
                     </div>
-                    <script>
-                      $('#plot_type').change(function() {
-                        $('#expression-plots').data('box-rendered', false);
-                        $('#expression-plots').data('scatter-rendered', false);
-                        $('#expression-plots').data('reference-rendered', false);
-                        renderGeneExpressionPlots();
-                      });
-                    </script>
                   <div class="form-group col-md-3">
                     <% if @values_box_type == 'box' %>
                       <%= render partial: 'boxpoints_picker' %>
                     <% elsif action_name !~ /heatmap/ %>
                       <%= label_tag :kernel_type, 'Kernel Type' %>&nbsp;<i class='fa fa-question-circle' title="Choose which kernel function to use to calculate violin plot density." data-toggle="tooltip"></i>
                       <%= select_tag :kernel_type, options_for_select([['Gaussian', "gau"],['Epanechnikov', "epa"]], params[:kernel_type]), {class: 'form-control'} %>
-                      <script>
-                        $('#kernel_type').change(function() {
-                          $('#expression-plots').data('box-rendered', false);
-                          $('#expression-plots').data('scatter-rendered', false);
-                          $('#expression-plots').data('reference-rendered', false);
-                          renderGeneExpressionPlots();
-                        });
-                      </script>
                     <% end %>
                   </div>
                   <div class="form-group col-md-3">
@@ -69,11 +53,17 @@
                       <%= label_tag :band_type, 'Bandwidth Selector' %>&nbsp;<i class='fa fa-question-circle' title="Choose which bandwidth selector to use to calculate violin plot density. SJ selector may hurt performance with larger datasets." data-toggle="tooltip"></i>
                       <%= select_tag :band_type, options_for_select([['nrd0', "nrd0"],['SJ-STE', "sjste"]], params[:band_type]), {class: 'form-control'} %>
                       <script>
-                        $('#band_type').change(function() {
-                         $('#expression-plots').data('box-rendered', false);
-                         $('#expression-plots').data('scatter-rendered', false);
-                         $('#expression-plots').data('reference-rendered', false);
-                         renderGeneExpressionPlots();
+                        $('#plot_type, #kernel_type, #band_type').change(function() {
+                          $('#expression-plots').data('box-rendered', false);
+                          $('#expression-plots').data('scatter-rendered', false);
+                          $('#expression-plots').data('reference-rendered', false);
+
+                          updateSearchGeneParams();
+
+                          if (typeof renderGeneExpressionPlots !== 'undefined') {
+                            // Accounts for changing View Options when not in single-gene view
+                            renderGeneExpressionPlots();
+                          }
                         });
                       </script>
                     <% end %>
