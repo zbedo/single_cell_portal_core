@@ -427,7 +427,7 @@ class Study
 
   # determine whether or not the study owner wants to receive update emails
   def deliver_emails?
-    if self.default_options[:deliver_emails].blank?
+    if self.default_options[:deliver_emails].nil?
       true
     else
       self.default_options[:deliver_emails]

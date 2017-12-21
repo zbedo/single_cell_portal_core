@@ -14,10 +14,10 @@
     <% else %>
       <li role="presentation" class="study-nav disabled" id="study-download-nav"><a href="#" data-toggle="tooltip" title="Please login to download">Download <i class="fa fa-fw fa-download"></i></a></li>
     <% end %>
-    <% if user_signed_in? && @study.can_compute?(current_user) %>
+    <% if @allow_firecloud_access && @study.can_compute?(current_user) %>
       <li role="presentation" class="study-nav" id="study-workflows-nav"><a href="#study-workflows" data-toggle="tab">Workflows <i class="fa fa-fw fa-tasks"></i></a></li>
     <% end %>
-    <% if user_signed_in? && @study.can_edit?(current_user) %>
+    <% if @allow_firecloud_access && @study.can_edit?(current_user) %>
       <li role="presentation" class="study-nav" id="study-settings-nav"><a href="#study-settings" data-toggle="tab">Settings <i class="fa fa-fw fa-gears"></i></a></li>
     <% end %>
   </ul>
@@ -35,12 +35,12 @@
         <%= render partial: 'study_download_data' %>
       </div>
     <% end %>
-    <% if user_signed_in? && @study.can_compute?(current_user) %>
+    <% if @allow_firecloud_access && @study.can_compute?(current_user) %>
       <div class="tab-pane" id="study-workflows" role="tabpanel">
         <%= render partial: 'study_workflows' %>
       </div>
     <% end %>
-    <% if user_signed_in? && @study.can_edit?(current_user) %>
+    <% if @allow_firecloud_access && @study.can_edit?(current_user) %>
       <div class="tab-pane" id="study-settings" role="tabpanel">
         <div class="row">
           <div class="col-xs-12" id="study-settings-form-target">

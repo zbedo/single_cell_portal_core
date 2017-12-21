@@ -193,7 +193,8 @@ class SiteController < ApplicationController
 
     # double check on download availability: first, check if administrator has disabled downloads
     # then check if FireCloud is available and disable download links if either is true
-    @allow_downloads = AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
+    @allow_firecloud_access = AdminConfiguration.firecloud_access_enabled?
+    @allow_downloads = @allow_firecloud_access && Study.firecloud_client.api_available?
     set_study_default_options
     # load options and annotations
     if @study.initialized?
@@ -204,7 +205,7 @@ class SiteController < ApplicationController
     end
 
     # if user has permission to run workflows, load available workflows and current submissions
-    if AdminConfiguration.firecloud_access_enabled?
+    if @allow_firecloud_access
       if user_signed_in? && @study.can_compute?(current_user)
         # load list of previous submissions
         workspace = Study.firecloud_client.get_workspace(@study.firecloud_project, @study.firecloud_workspace)
