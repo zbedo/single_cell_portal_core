@@ -3,7 +3,8 @@ console.log('render status of box plot at start: ' + $('#expression-plots').data
 console.log('render status of scatter plot at start: ' + $('#expression-plots').data('scatter-rendered'));
 console.log('render status of reference plot at start: ' + $('#expression-plots').data('reference-rendered'));
 
-$('#expression-plots').html("<%= escape_javascript(render partial: @top_plot_partial)%>");
+$('.expression-plot').remove();
+$('#render-target .tab-content').append("<%= escape_javascript(render partial: @top_plot_partial)%>");
 
 $('#box-controls, #scatter-plots').on('show.bs.collapse hide.bs.collapse', function() {
 	toggleGlyph($(this).prev().find('span.toggle-glyph'));

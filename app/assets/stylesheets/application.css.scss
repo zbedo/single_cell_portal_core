@@ -38,7 +38,12 @@ html, body {
   height: 100%;
 }
 
+label {
+  margin-bottom: 2px;
+}
+
 #main-body {
+  min-height: 950px;
   padding-bottom: 155px;
 }
 
@@ -47,7 +52,7 @@ html, body {
 }
 
 .section-pad {
-  margin-top: 80px;
+  margin-top: 50px;
   margin-bottom: 20px;
 }
 
@@ -68,17 +73,26 @@ html, body {
 }
 
 .sc-navbar {
-  min-height: 70px !important;
+  min-height: 50px !important;
   .navbar-header {
-    margin-top: 10px;
+    position: relative;
+    top: 8px;
     .navbar-brand {
       font-size: 22px;
     }
   }
   .nav {
-    margin-top: 12px;
+    margin-top: 0px;
     font-size: 16px;
   }
+}
+
+.navbar-brand {
+  padding: 6px 15px;
+}
+
+.navbar-collapse.collapse {
+
 }
 
 .bs-callout{
@@ -219,7 +233,6 @@ html, body {
 
 #colorscale-picker{
   display: inline-block;
-  width: 33%;
   float: left;
 }
 
@@ -403,8 +416,19 @@ html, body {
   margin-bottom: 0 !important;
 }
 
+.no-top-border {
+  border-top: 0 !important;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+}
+
 .well-red{
   background-color: #fcf8e3;
+}
+
+#search-target {
+  padding-right: 0;
+  z-index: 2;
 }
 
 #search-parent {
@@ -415,6 +439,88 @@ html, body {
   height: 400px;
 }
 
+
 .workflow-tab {
   margin: 15px 0;
 }
+
+h1, .h1 {
+  font-size: 32px;
+}
+
+h1, .h1, h2, .h2, h3, .h3 {
+  margin-top: 10px;
+}
+
+h4, .h4, h5, .h5, h6, .h6 {
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+@media (min-width: 768px) {
+  #view-options .col-sm-4, #view-options .col-md-3, #view-options .col-xs-12 {
+    width: inherit;
+    float: inherit;
+  }
+}
+
+#view-options-nav {
+  float: right;
+  margin-top: 16px;
+  margin-right: 4px;
+}
+
+/*
+ * Off Canvas, a collapsible side bar used for e.g. 'View Options' menu
+ * --------------------------------------------------
+ */
+//@media screen and (max-width: 767px) {
+  .row-offcanvas {
+    position: relative;
+    //-webkit-transition: all .25s ease-out;
+    //-o-transition: all .25s ease-out;
+    //transition: all .25s ease-out;
+  }
+
+  .row-offcanvas-right {
+    right: 0;
+  }
+
+  .row-offcanvas-left {
+    left: 0;
+  }
+
+  .row-offcanvas-right
+  .sidebar-offcanvas {
+    right: -21%;
+  }
+
+  .contracted-for-sidebar {
+    width: 80%;
+    margin-left: 21%;
+  }
+
+  .row-offcanvas-left
+  .sidebar-offcanvas {
+    left: -21%;
+  }
+
+  .offcanvas-right-inactive {
+    width: 80%;
+  }
+
+  .row-offcanvas-right.active {
+    right: 21%;
+  }
+
+  .row-offcanvas-left.active {
+    left: 21%;
+  }
+
+  .sidebar-offcanvas {
+    position: absolute;
+    top: 0;
+    width: 20%;
+  }
+//}
+

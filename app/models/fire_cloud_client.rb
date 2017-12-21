@@ -279,17 +279,17 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	#
 	# * *return*
 	#   - +Boolean+ indication of FireCloud current status
-  def api_available?
-    begin
-      response = self.api_status
-      if response.is_a?(Hash) && response['ok']
-        true
-      else
-        false
-      end
-    rescue => e
-      false
-    end
+	def api_available?
+		begin
+			response = self.api_status
+			if response.is_a?(Hash) && response['ok']
+				true
+			else
+				false
+			end
+		rescue => e
+			false
+		end
   end
 
   # get more detailed status information about FireCloud api
