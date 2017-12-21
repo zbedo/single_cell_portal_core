@@ -14,124 +14,125 @@
     <div class="row-offcanvas row-offcanvas-right">
       <div id="view-options-nav"><a href="#view-options" id="view-option-link" data-toggle="offcanvas"><i class="fa fa-bars" aria-hidden="true"></i> View Options </a></div>
       <ul class="nav nav-tabs" role="tablist" id="view-tabs">
-        <li role="presentation" class="study-nav active" id="box-or-violin-tab-nav"><a href="#box-or-violin-tab" data-toggle="tab">Distribution</a></li>
-        <li role="presentation" class="study-nav" id="scatter-tab-nav"><a href="#scatter-tab" data-toggle="tab">Scatter</a></li>
+        <li role="presentation" class="study-nav active" id="box-or-violin-tab-nav"><a href="#box-or-violin-tab" id="distribution-link" data-toggle="tab">Distribution</a></li>
+        <li role="presentation" class="study-nav" id="scatter-tab-nav"><a href="#scatter-tab" id="scatter-link" data-toggle="tab">Scatter</a></li>
       </ul>
       <div class="tab-content">
           <%= render partial: @top_plot_partial %>
       </div>
       <%= render partial: 'view_options' %>
     </div>
+  </div>
+  <div id="expression-plots"></div>
+  <script type="text/javascript">
+
+      var baseCamera = {
+          "up":{"x":0,"y":0,"z":1},
+          "center":{"x":0,"y":0,"z":0},
+          "eye":{"x":1.25,"y":1.25,"z":1.25}
+      };
+
+      $('#expression-plots').data('box-rendered', false);
+      $('#expression-plots').data('scatter-rendered', false);
+      $('#expression-plots').data('reference-rendered', false);
+
+      function renderGeneExpressionPlots() {
+
+          <% if !params[:gene].nil? %>
+          var url = '<%= render_gene_expression_plots_path(study_name: params[:study_name], gene: params[:gene]) %>';
+          <% elsif !params[:gene_set].nil? %>
+          var url = '<%= render_gene_set_expression_plots_path(study_name: params[:study_name], gene_set: params[:gene_set]) %>';
+          <% else %>
+          var url = '<%= render_gene_set_expression_plots_path(study_name: params[:study_name], search: {genes: @gene_list}) %>';
+          <% end %>
+          var target1 = document.getElementById('box-plot');
+          var target2 = document.getElementById('scatter-plot');
+          var target3 = document.getElementById('reference-plot');
+
+          // no need to store spinners in data attribute as entire plot div will be re-rendered
+          new Spinner(opts).spin(target1);
+          new Spinner(opts).spin(target2);
+          new Spinner(opts).spin(target3);
+
+          var urlParams = getRenderUrlParams();
+
+          var delimiter = "<%= params[:gene] ? "?".html_safe : "&".html_safe %>";
+          url += delimiter + urlParams;
+          $.ajax({
+              url: url,
+              method: 'GET',
+              dataType: 'script'
+          });
+      }
+
+      $(document).ready(function() {
+          // store camera data in outer plot so it will persist past render
+          $('#expression-plots').data('scatter-camera', baseCamera);
+          // default to outliers on first render if over 1000 points
+          if (<%= params[:subsample].to_i > 1000 %>) {
+              $("#boxpoints_select").val('outliers');
+          }
+          renderGeneExpressionPlots();
+      });
+
+      // listener for annotation nav, specific to expression pages
+      $("#annotation").change(function() {
+          $('#expression-plots').data('box-rendered', false);
+          $('#expression-plots').data('scatter-rendered', false);
+          $('#expression-plots').data('reference-rendered', false);
+          // keep track for search purposes
+          var val = $(this).val();
+          $('#search_annotation').val(val);
+          $('#gene_set_annotation').val(val);
+
+          renderGeneExpressionPlots();
+      });
+
+      $('#subsample').change(function() {
+          $('#expression-plots').data('box-rendered', false);
+          $('#expression-plots').data('scatter-rendered', false);
+          $('#expression-plots').data('reference-rendered', false);
+          var sample = $(this).val();
+          $('#search_subsample').val(sample);
+          $('#gene_set_subsample').val(sample);
+          // turn off boxpoints over 1000
+          if (parseInt(sample) > 1000) {
+              $("#boxpoints_select").val('');
+          }
+          renderGeneExpressionPlots();
+      });
+
+      // when changing cluster, re-render annotation options and call render function
+      $("#cluster").change(function() {
+          $('#expression-plots').data('box-rendered', false);
+          $('#expression-plots').data('scatter-rendered', false);
+          $('#expression-plots').data('reference-rendered', false);
+          var newCluster = $(this).val();
+          // keep track for search purposes
+          $('#search_cluster').val(newCluster);
+          $('#gene_set_cluster').val(newCluster);
+          // grab currently selected annotation
+          var currAnnot = $('#annotation').val();
+          // get new annotation options and re-render
+          $.ajax({
+              url: "<%= get_new_annotations_path(study_name: params[:study_name])%>?cluster=" + newCluster,
+              method: 'GET',
+              dataType: 'script',
+              success: function (data) {
+                  // parse response as a string and see if currently selected annotation exists in new annotations
+                  if (data.indexOf(currAnnot) >= 0) {
+                      $('#annotation').val(currAnnot);
+                  }
+                  $(document).ready(function () {
+                      // since we now have new annotations, we need to set them in the search form for persistence
+                      var an = $('#annotation').val();
+                      $('#search_annotation').val(an);
+                      $('#gene_set_annotation').val(an);
+                      renderGeneExpressionPlots();
+                  });
+              }
+          });
+      });
+
+  </script>
 </div>
-<div id="expression-plots"></div>
-<script type="text/javascript">
-
-    var baseCamera = {
-        "up":{"x":0,"y":0,"z":1},
-        "center":{"x":0,"y":0,"z":0},
-        "eye":{"x":1.25,"y":1.25,"z":1.25}
-    };
-
-    $('#expression-plots').data('box-rendered', false);
-    $('#expression-plots').data('scatter-rendered', false);
-    $('#expression-plots').data('reference-rendered', false);
-
-    function renderGeneExpressionPlots() {
-
-        <% if !params[:gene].nil? %>
-        var url = '<%= render_gene_expression_plots_path(study_name: params[:study_name], gene: params[:gene]) %>';
-        <% elsif !params[:gene_set].nil? %>
-        var url = '<%= render_gene_set_expression_plots_path(study_name: params[:study_name], gene_set: params[:gene_set]) %>';
-        <% else %>
-        var url = '<%= render_gene_set_expression_plots_path(study_name: params[:study_name], search: {genes: @gene_list}) %>';
-        <% end %>
-        var target1 = document.getElementById('box-plot');
-        var target2 = document.getElementById('scatter-plot');
-        var target3 = document.getElementById('reference-plot');
-
-        // no need to store spinners in data attribute as entire plot div will be re-rendered
-        new Spinner(opts).spin(target1);
-        new Spinner(opts).spin(target2);
-        new Spinner(opts).spin(target3);
-
-        var urlParams = getRenderUrlParams();
-
-        var delimiter = "<%= params[:gene] ? "?".html_safe : "&".html_safe %>";
-        url += delimiter + urlParams;
-        $.ajax({
-            url: url,
-            method: 'GET',
-            dataType: 'script'
-        });
-    }
-
-    $(document).ready(function() {
-        // store camera data in outer plot so it will persist past render
-        $('#expression-plots').data('scatter-camera', baseCamera);
-        // default to outliers on first render if over 1000 points
-        if (<%= params[:subsample].to_i > 1000 %>) {
-            $("#boxpoints_select").val('outliers');
-        }
-        renderGeneExpressionPlots();
-    });
-
-    // listener for annotation nav, specific to expression pages
-    $("#annotation").change(function() {
-        $('#expression-plots').data('box-rendered', false);
-        $('#expression-plots').data('scatter-rendered', false);
-        $('#expression-plots').data('reference-rendered', false);
-        // keep track for search purposes
-        var val = $(this).val();
-        $('#search_annotation').val(val);
-        $('#gene_set_annotation').val(val);
-
-        renderGeneExpressionPlots();
-    });
-
-    $('#subsample').change(function() {
-        $('#expression-plots').data('box-rendered', false);
-        $('#expression-plots').data('scatter-rendered', false);
-        $('#expression-plots').data('reference-rendered', false);
-        var sample = $(this).val();
-        $('#search_subsample').val(sample);
-        $('#gene_set_subsample').val(sample);
-        // turn off boxpoints over 1000
-        if (parseInt(sample) > 1000) {
-            $("#boxpoints_select").val('');
-        }
-        renderGeneExpressionPlots();
-    });
-
-    // when changing cluster, re-render annotation options and call render function
-    $("#cluster").change(function() {
-        $('#expression-plots').data('box-rendered', false);
-        $('#expression-plots').data('scatter-rendered', false);
-        $('#expression-plots').data('reference-rendered', false);
-        var newCluster = $(this).val();
-        // keep track for search purposes
-        $('#search_cluster').val(newCluster);
-        $('#gene_set_cluster').val(newCluster);
-        // grab currently selected annotation
-        var currAnnot = $('#annotation').val();
-        // get new annotation options and re-render
-        $.ajax({
-            url: "<%= get_new_annotations_path(study_name: params[:study_name])%>?cluster=" + newCluster,
-            method: 'GET',
-            dataType: 'script',
-            success: function (data) {
-                // parse response as a string and see if currently selected annotation exists in new annotations
-                if (data.indexOf(currAnnot) >= 0) {
-                    $('#annotation').val(currAnnot);
-                }
-                $(document).ready(function () {
-                    // since we now have new annotations, we need to set them in the search form for persistence
-                    var an = $('#annotation').val();
-                    $('#search_annotation').val(an);
-                    $('#gene_set_annotation').val(an);
-                    renderGeneExpressionPlots();
-                });
-            }
-        });
-    });
-
-</script>
