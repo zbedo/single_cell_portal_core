@@ -104,7 +104,7 @@
       </div>
     </div>
   </div>
-  <div class="panel panel-info" id="search-options-panel">
+  <div class="panel panel-info" id="gene-lists-panel">
     <div class="panel-heading">
       <div class="panel-title">
         <h4><a href="#panel-gene-lists" data-toggle="collapse" data-parent="#search-parent" id="gene-lists-link">View Gene Lists <span class='fa fa-file-text-o'></span></a></h4>
@@ -158,7 +158,7 @@
     </div>
   </div>
   <% if action_name !~ /heatmap/ %>
-    <div class="panel panel-<%= user_signed_in? ? 'info' : 'default' %>" id="search-options-panel">
+    <div class="panel panel-<%= user_signed_in? ? 'info' : 'default' %>" id="annotations-panel">
       <div class="panel-heading">
         <div class="panel-title">
           <h4><a href="#panel-selection" data-toggle="<%= user_signed_in? ? 'collapse' : 'tooltip'%>" data-parent="#search-parent" id="create_annotations_panel" title="<%= user_signed_in? ? '' : 'Sign in to create custom annotations.'%>">Create Annotations <span class='fa fa-tags'></span></a></h4>
