@@ -225,7 +225,11 @@ example, to run all front-end tests that deal with file downloads:
 
 You can also run a single test by passing the entire test name as the name paramenter:
 
-	ruby test/ui_test_suite.rb -n 'test: admin: create a study' -- (rest of test parameters)
+  ruby test/ui_test_suite.rb -n 'test: admin: create a study' -- (rest of test parameters)
+
+Similarly, you can pass <code>--ignore-name /pattern/</code> to run all tests that do not match the given pattern:
+
+  ruby test/ui_test_suite.rb --ignore-name /billing-accounts/ -- (rest of test parameters)
 
 More information on usage & test configuration can be found in the comments at the top of the test suite.
 

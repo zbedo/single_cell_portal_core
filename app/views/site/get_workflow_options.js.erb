@@ -1,0 +1,45 @@
+var optionsForm = $('#optional-parameters-target');
+optionsForm.empty();
+
+var workflowOptions = <%= raw @options.to_json %>;
+
+if (Object.keys(workflowOptions).length > 0) {
+    for (var parameter in workflowOptions) {
+        var input = "";
+        var inputName = "workflow[optional_parameters][" + parameter + "]";
+        var inputId = "workflow_optional_parameters_" + parameter;
+        var paramType = workflowOptions[parameter]['type'];
+        var paramDefault = workflowOptions[parameter]['default'];
+        var paramHelp = workflowOptions[parameter]['help']
+
+        var optionalParam = "<label for='" + inputId + "'>" + parameter + "</label><br />";
+        switch(paramType) {
+            case 'integer':
+                input = "<input type='number' id='" + inputId + "' name='" + inputName + "' value='" + paramDefault + "' class='form-control'></input>";
+                break;
+            case 'boolean':
+                input = "<select id='" + inputId + "' name='" + inputName + "' value='" + paramDefault + "' class='form-control'>";
+                if (workflowOptions[parameter]['default'] === 'true') {
+                    input += "<option value='true' selected='selected'>Yes</option><option value='false'>No</option></select>";
+                } else {
+                    input += "<option value='true'>Yes</option><option value='false' selected='selected'>No</option></select>";
+                }
+                break;
+            case 'text_field':
+                input = "<input type='text' id='" + inputId + "' name='" + inputName + "' value='" + paramDefault + "' class='form-control'></input>";
+
+                break;
+            default:
+                break;
+        }
+        optionalParam += input;
+        if (paramHelp !== '') {
+            optionalParam += "<p class='help-block'>" + paramHelp + "</p>";
+        }
+        optionsForm.append(optionalParam);
+    }
+} else {
+    optionsForm.html("<p class='help-block'>There are no optional parameters for this workflow.  " +
+        "Click 'Submit Workflow' to launch your submission.</p>");
+}
+
