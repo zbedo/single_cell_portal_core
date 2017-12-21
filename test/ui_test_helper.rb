@@ -373,8 +373,8 @@ class Test::Unit::TestCase
       # give browser 5 seconds to initiate download
       sleep(5)
       # make sure file was actually downloaded
-      file_exists = Dir.entries($download_dir).select {|f| f =~ /#{basename}/}.size >= 1 || File.exists?(File.join($download_dir, filename))
-      assert file_exists, "did not find downloaded file: #{filename} in #{Dir.entries($download_dir).join(', ')}"
+      file_exists = Dir.entries($download_dir).select {|f| f =~ /#{basename}/}.size >= 1 || File.exists?(File.join($download_dir, basename))
+      assert file_exists, "did not find downloaded file: #{basename} in #{Dir.entries($download_dir).join(', ')}"
 
       # delete matching files
       Dir.glob("#{$download_dir}/*").select {|f| /#{basename}/.match(f)}.map {|f| File.delete(f)}
