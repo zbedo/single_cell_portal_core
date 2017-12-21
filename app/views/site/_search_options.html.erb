@@ -4,7 +4,7 @@
   <div class="panel panel-info" id="search-options-panel">
     <div class="panel-heading">
       <div class="panel-title">
-        <h4><a href="#panel-genes-search" data-toggle="collapse" data-parent="#search-parent" id="search-genes-link">Search Genes <span class='fa fa-search'></span></a><%= link_to "<span class='fa fa-compress'></span>".html_safe, 'javascript:toggleSearch();', 'data-toggle' => 'tooltip', title: 'Collapse Search Options', 'data-placement' => 'left', class: 'btn btn-sm btn-danger pull-right', style: 'margin-top: -5px;' %></h4>
+        <h4><a href="#panel-genes-search" data-toggle="collapse" data-parent="#search-parent" id="search-genes-link"><span class='fa fa-search'></span> Search Genes</a><%= link_to "<span class='fa fa-compress'></span>".html_safe, 'javascript:toggleSearch();', 'data-toggle' => 'tooltip', title: 'Collapse Search Options', 'data-placement' => 'left', class: 'btn btn-sm btn-danger pull-right', style: 'margin-top: -5px;' %></h4>
       </div>
     </div>
     <div class="panel-body collapse in" id="panel-genes-search">
@@ -107,7 +107,7 @@
   <div class="panel panel-info" id="gene-lists-panel">
     <div class="panel-heading">
       <div class="panel-title">
-        <h4><a href="#panel-gene-lists" data-toggle="collapse" data-parent="#search-parent" id="gene-lists-link">View Gene Lists <span class='fa fa-file-text-o'></span></a></h4>
+        <h4><a href="#panel-gene-lists" data-toggle="collapse" data-parent="#search-parent" id="gene-lists-link"><span class='fa fa-file-text-o'></span> View Gene Lists</a></h4>
       </div>
     </div>
     <div class="panel-body collapse" id="panel-gene-lists">
@@ -161,7 +161,7 @@
     <div class="panel panel-<%= user_signed_in? ? 'info' : 'default' %>" id="annotations-panel">
       <div class="panel-heading">
         <div class="panel-title">
-          <h4><a href="#panel-selection" data-toggle="<%= user_signed_in? ? 'collapse' : 'tooltip'%>" data-parent="#search-parent" id="create_annotations_panel" title="<%= user_signed_in? ? '' : 'Sign in to create custom annotations.'%>">Create Annotations <span class='fa fa-tags'></span></a></h4>
+          <h4><a href="#panel-selection" data-toggle="<%= user_signed_in? ? 'collapse' : 'tooltip'%>" data-parent="#search-parent" id="create_annotations_panel" title="<%= user_signed_in? ? '' : 'Sign in to create custom annotations.'%>"><span class='fa fa-tags'></span> Create Annotations</a></h4>
         </div>
       </div>
       <div class="panel-body collapse" id="panel-selection">
