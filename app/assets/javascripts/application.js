@@ -457,7 +457,7 @@ function getRenderUrlParams() {
 }
 
 // Handle changes in View Options for 'Distribution' view
-$('#plot_type, #kernel_type, #band_type').change(function() {
+$(document).on('change', '#plot_type, #kernel_type, #band_type', function() {
   $('#expression-plots').data('box-rendered', false);
   $('#expression-plots').data('scatter-rendered', false);
   $('#expression-plots').data('reference-rendered', false);
