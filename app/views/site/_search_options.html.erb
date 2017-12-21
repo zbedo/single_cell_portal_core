@@ -2,7 +2,7 @@
   <div class="panel panel-info" id="search-options-panel">
     <div class="panel-heading">
       <div class="panel-title">
-        <h4><a href="#panel-genes-search" data-toggle="collapse" data-parent="#search-parent" id="search-genes-link"><span class='fa fa-search'></span> Search Genes</a><%= link_to "<span class='fa fa-compress'></span>".html_safe, 'javascript:toggleSearch();', 'data-toggle' => 'tooltip', title: 'Collapse Search Options', 'data-placement' => 'left', class: 'btn btn-sm btn-danger pull-right', style: 'margin-top: -5px;' %></h4>
+        <h4><a href="#panel-genes-search" data-toggle="collapse" data-parent="#search-parent" id="search-genes-link"><span class='fa fa-search'></span> Search Genes</a></h4>
       </div>
     </div>
     <div class="panel-body collapse in" id="panel-genes-search">
@@ -83,21 +83,6 @@
                   };
               </script>
           <% end %>
-        </div>
-      </div>
-    </div>
-    <div class="modal fade" id="loading-modal" role="dialog" aria-labelledby="loading-modal" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="text-center">Loading... Please Wait</h4>
-          </div>
-          <div class="modal-body">
-            <div id="spinner_target"></div>
-          </div>
-          <div class="modal-footer">
-            <button class="close" data-dismiss="modal">×</button>
-          </div>
         </div>
       </div>
     </div>
@@ -215,7 +200,10 @@
         });
 
         $('#panel-genes-search').on('show.bs.collapse', function () {
-            $('#search-parent').stickyPanel('unstick');
+            var searchParent = $('#search-parent');
+            if (typeof searchParent.data("stickyPanel.state") !== 'undefined') {
+                searchParent.stickyPanel('unstick');
+            }
         });
       <% end %>
     </script>

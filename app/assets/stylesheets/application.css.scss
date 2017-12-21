@@ -45,6 +45,7 @@ label {
 #main-body {
   min-height: 950px;
   padding-bottom: 155px;
+  overflow-x: hidden;
 }
 
 #wrap {
@@ -202,6 +203,10 @@ label {
 
 .fastq-label {
   font-size: 100% !important;
+}
+
+#main-banner {
+  margin-top: 20px;
 }
 
 #main-banner h1 sup small {
@@ -432,7 +437,7 @@ label {
 }
 
 #search-parent {
-  z-index: 1000;
+  z-index: 500;
 }
 
 #wdl-contents pre {
@@ -474,53 +479,49 @@ h4, .h4, h5, .h5, h6, .h6 {
  * Off Canvas, a collapsible side bar used for e.g. 'View Options' menu
  * --------------------------------------------------
  */
-//@media screen and (max-width: 767px) {
-  .row-offcanvas {
-    position: relative;
-    //-webkit-transition: all .25s ease-out;
-    //-o-transition: all .25s ease-out;
-    //transition: all .25s ease-out;
-  }
 
-  .row-offcanvas-right {
-    right: 0;
-  }
+.row-offcanvas {
+  position: relative;
+}
 
-  .row-offcanvas-left {
-    left: 0;
-  }
+.row-offcanvas-right {
+  right: 0;
+}
 
-  .row-offcanvas-right
-  .sidebar-offcanvas {
-    right: -21%;
-  }
+.row-offcanvas-left {
+  left: 0;
+}
 
-  .contracted-for-sidebar {
-    width: 80%;
-    margin-left: 21%;
-  }
+.row-offcanvas-right
+.sidebar-offcanvas {
+  right: -22%;
+}
 
-  .row-offcanvas-left
-  .sidebar-offcanvas {
-    left: -21%;
-  }
+.contracted-for-sidebar {
+  width: 80%;
+  margin-left: 22%;
+}
 
-  .offcanvas-right-inactive {
-    width: 80%;
-  }
+.row-offcanvas-left
+.sidebar-offcanvas {
+  left: -22%;
+}
 
-  .row-offcanvas-right.active {
-    right: 21%;
-  }
+.offcanvas-right-inactive {
+  width: 80%;
+}
 
-  .row-offcanvas-left.active {
-    left: 21%;
-  }
+.row-offcanvas-right.active {
+  right: 22%;
+}
 
-  .sidebar-offcanvas {
-    position: absolute;
-    top: 0;
-    width: 20%;
-  }
-//}
+.row-offcanvas-left.active {
+  left: 22%;
+}
+
+.sidebar-offcanvas {
+  position: absolute;
+  top: 0;
+  width: 20%;
+}
 

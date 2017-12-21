@@ -311,10 +311,14 @@ function toggleSearch() {
 
     // trigger resizeEnd to re-render Plotly to use available space
     $(window).trigger('resize');
-    if ($('#create_annotations_panel').length > 0) {if($('#search-target').is(":visible")){
-        $('#search-parent').stickyPanel(stickyOptions)
-    } else{
-        $('#search-parent').stickyPanel('unstick')}
+    if ($('#panel-selection').is(':visible')) {
+        if ($('#search-target').is(":visible")) {
+            $('#search-parent').stickyPanel(stickyOptions)
+        } else {
+            if ($('#search-parent').data("stickyPanel.state") !== 'undefined') {
+                $('#search-parent').stickyPanel('unstick')
+            }
+        }
     }
 }
 
