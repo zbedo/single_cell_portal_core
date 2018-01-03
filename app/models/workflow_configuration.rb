@@ -57,7 +57,6 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
           # add optional parameters
           configuration['inputs']['cellranger.expectCells'] = inputs['expectCells']
           configuration['inputs']['cellranger.secondary'] = inputs['secondary']
-          Rails.logger.info "config: #{configuration}"
 
           # set workspace information
           Rails.logger.info "#{Time.now}: setting workspace info for #{configuration['name']}"
