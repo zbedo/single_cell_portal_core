@@ -15,7 +15,7 @@ class AdminConfiguration
 
   validates_uniqueness_of :config_type,
                           message: ": '%{value}' has already been set.  Please edit the corresponding entry to update.",
-                          unless: proc {|attributes| attributes['config_type'] == 'Workflow/Configuration Namespace'}
+                          unless: proc {|attributes| attributes['config_type'] == 'Workflow Name'}
 
   validate :validate_value_by_type
 
@@ -29,7 +29,7 @@ class AdminConfiguration
   end
 
   def self.config_types
-    ['Daily User Download Quota', 'Workflow/Configuration Namespace', API_NOTIFIER_NAME]
+    ['Daily User Download Quota', 'Workflow Name', API_NOTIFIER_NAME]
   end
 
   def self.value_types

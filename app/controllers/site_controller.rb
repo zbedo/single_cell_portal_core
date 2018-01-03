@@ -1929,19 +1929,18 @@ class SiteController < ApplicationController
 
   # load list of available workflows
   def load_available_workflows
-    config_options = AdminConfiguration.where(config_type: 'Workflow/Configuration Namespace').to_a
-    allowed_workflow_namespaces = config_options.empty? ? [FireCloudClient::PORTAL_NAMESPACE] : config_options.map(&:value)
-    logger.info "namespaces: #{allowed_workflow_namespaces}"
+    config_options = AdminConfiguration.where(config_type: 'Workflow Name').to_a
+    allowed_workflows = config_options.map(&:value)
     all_workflows = []
 
-    # parellelize gets to speed up performance if there are a lot of namespaces
-    Parallel.map(allowed_workflow_namespaces, in_threads: 100) do |namespace|
-     all_workflows << Study.firecloud_client.get_methods(namespace: namespace)
+    # parellelize gets to speed up performance if there are a lot of workflows
+    Parallel.map(allowed_workflows, in_threads: 100) do |workflow_opts|
+      namespace, name = workflow_opts.split('/')
+      all_workflows << Study.firecloud_client.get_methods(namespace: namespace, name: name)
     end
 
     # flatten list as it will be nested arrays
     all_workflows.flatten!
-    logger.info "workflows: #{all_workflows}"
 
     # assemble readable list for the dropdown menu
     list = all_workflows.sort_by {|w| [w['name'], w['snapshotId'].to_i]}.map {|w| ["#{w['name']} (#{w['snapshotId']})#{w['synopsis'].blank? ? nil : " -- #{w['synopsis']}"}", "#{w['namespace']}--#{w['name']}--#{w['snapshotId']}"]}
