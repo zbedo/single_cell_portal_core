@@ -464,8 +464,9 @@ $(document).on('change', '#plot_type, #kernel_type, #band_type', function() {
 
   updateSearchGeneParams();
 
-  if (typeof renderGeneExpressionPlots !== 'undefined') {
-    // Accounts for changing View Options when not in Distribution view
+  if (typeof renderGeneExpressionPlots !== 'undefined' && /numeric/.test($('#annotation').val()) === false) {
+    // Accounts for changing View Options when not in Distribution view,
+    // but does not apply if we're looking at an annotation like "Intensity" or "Average intensity".
     renderGeneExpressionPlots();
   }
 });
