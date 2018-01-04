@@ -237,11 +237,17 @@ class AdminConfigurationsController < ApplicationController
         end
         # now collect all registered portal users and add to the list
         portal_users = User.where(provider: 'google_oauth2').to_a
-        portal_users.map(&:email).each do |user_email|
-          unless user_group['membersEmails'].include?(user_email)
-            logger.info "#{Time.now}: adding #{user_email} to #{@group_name}"
-            Study.firecloud_client.add_user_to_group(@group_name, 'member', user_email)
-            @new_users << user_email
+        portal_users.each do |user|
+          unless user_group['membersEmails'].include?(user.email)
+            # check if user is FireCloud member first
+            user_client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
+            if user_client.registered?
+              logger.info "#{Time.now}: adding #{user.email} to #{@group_name}"
+              Study.firecloud_client.add_user_to_group(@group_name, 'member', user_email)
+              @new_users << user.email
+            else
+              logger.info "#{Time.now}: skipping #{user.email}; not registered in FireCloud yet."
+            end
           end
         end
         logger.info "#{Time.now}: User group #{@group_name} successfully synchronized"

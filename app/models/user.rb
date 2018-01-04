@@ -106,10 +106,8 @@ class User
                          uid: uid,
                          provider: provider)
 
-      # add user to the name of the 'all users group' for this installation of the portal
-
-    # update info if account was originally local but switching to Google auth
     elsif user.provider.nil? || user.uid.nil?
+      # update info if account was originally local but switching to Google auth
       user.update(provider: provider, uid: uid)
     end
     # store refresh token

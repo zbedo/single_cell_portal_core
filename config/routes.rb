@@ -86,6 +86,7 @@ Rails.application.routes.draw do
 		match 'profile/:id', to: 'profiles#update', via: [:post, :patch], as: :update_profile
 		match 'profile/:id/subscriptions/share/:study_share_id', to: 'profiles#update_share_subscription', via: [:post, :patch], as: :update_share_subscription
 		match 'profile/:id/subscriptions/study/:study_id', to: 'profiles#update_study_subscription', via: [:post, :patch], as: :update_study_subscription
+		post 'profile/:id/firecloud_profile', to: 'profiles#update_firecloud_profile', as: :update_user_firecloud_profile
 
 		# data viewing actions
 		get 'study/:study_name', to: 'site#study', as: :view_study
