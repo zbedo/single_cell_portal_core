@@ -6,6 +6,11 @@ console.log('render status of reference plot at start: ' + $('#expression-plots'
 $('.expression-plot').remove();
 $('#render-target .tab-content').append("<%= escape_javascript(render partial: @top_plot_partial)%>");
 
+// Ensure active tab doesn't get overwritten with default tab (SCP-780)
+var activeViewTabId = $('#view-tabs .active').attr('id').replace('-nav', '');
+$('.tab-pane.expression-plot').removeClass('active');
+$('#' + activeViewTabId).addClass('active');
+
 $('#box-controls, #scatter-plots').on('show.bs.collapse hide.bs.collapse', function() {
 	toggleGlyph($(this).prev().find('span.toggle-glyph'));
 });
