@@ -279,12 +279,14 @@ function enableDefaultActions() {
 
     // when clicking the main study view page tabs, update the current URL so that when you refresh the tab stays open
     $('#study-tabs').on('shown.bs.tab', function(event) {
-        var anchor = $(event.target).attr('href')
+        var anchor = $(event.target).attr('href');
         var currentUrl = window.location.href;
         var urlParts = currentUrl.split('#');
         var newUrl = '';
-        if (urlParts.length === 1 || urlParts[1] === '') {
+        if (urlParts.length === 1) {
             newUrl = currentUrl + anchor;
+        } else if (urlParts[1] === '') {
+            newUrl = currentUrl.replace(/#/, '') + anchor;
         } else {
             var currentTab = urlParts[1];
             // we need to replace the current tab with the new one in the anchor/parameter string
@@ -529,6 +531,7 @@ $(window).resize(function() {
 function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, target, annotations, fitType, heatmapHeight, colorScaleMode) {
     console.log('render status of ' + target + ' at start: ' + $(target).data('rendered'));
     $(target).empty();
+    console.log("scaling mode: " + colorScaleMode);
     var config = {dataset: dataPath, el: $(target), menu: null, colorScheme: {scalingMode: colorScaleMode}};
 
     // set height if specified, otherwise use default setting of 500 px
