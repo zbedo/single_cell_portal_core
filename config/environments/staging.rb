@@ -93,5 +93,5 @@ Rails.application.configure do
   config.middleware.use Rack::Deflater
 
   # disable admin notification (like startup email)
-  config.disable_admin_notifications = true
+  config.disable_admin_notifications = false
 end
