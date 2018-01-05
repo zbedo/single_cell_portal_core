@@ -69,6 +69,10 @@ class ProfilesController < ApplicationController
         logger.info "#{Time.now}: adding #{current_user.email} to #{group_name} user group"
         Study.firecloud_client.add_user_to_group(group_name, 'member', current_user.email)
         logger.info "#{Time.now}: user group registration complete"
+        # log that user has registered so we can use this elsewhere
+        if !current_user.registered_for_firecloud
+          current_user.update(registered_for_firecloud: true)
+        end
       end
     rescue => e
       logger.info "#{Time.now}: unable to update FireCloud profile for #{current_user.email}: #{e.message}"
