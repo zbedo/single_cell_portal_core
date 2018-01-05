@@ -16,6 +16,16 @@ class ProfilesController < ApplicationController
   def show
     @study_shares = StudyShare.where(email: @user.email)
     @studies = Study.where(user_id: @user.id)
+    @profile_info = {}
+    begin
+      user_client = FireCloudClient.new(current_user, FireCloudClient::PORTAL_NAMESPACE)
+      profile = user_client.get_profile
+      profile['keyValuePairs'].each do |attribute|
+        @profile_info[attribute['key']] = attribute['value']
+      end
+    rescue => e
+      logger.info "#{Time.now}: unable to retrieve FireCloud profile for #{current_user.email}: #{e.message}"
+    end
   end
 
   def update
@@ -47,6 +57,29 @@ class ProfilesController < ApplicationController
     end
   end
 
+  def update_firecloud_profile
+    begin
+      user_client = FireCloudClient.new(current_user, FireCloudClient::PORTAL_NAMESPACE)
+      user_client.set_profile(profile_params)
+      @notice = "Your FireCloud profile has been successfully updated."
+      # now check if user is part of 'all-portal' user group
+      user_group_config = AdminConfiguration.find_by(config_type: 'Portal FireCloud User Group')
+      if user_group_config.present?
+        group_name = user_group_config.value
+        logger.info "#{Time.now}: adding #{current_user.email} to #{group_name} user group"
+        Study.firecloud_client.add_user_to_group(group_name, 'member', current_user.email)
+        logger.info "#{Time.now}: user group registration complete"
+        # log that user has registered so we can use this elsewhere
+        if !current_user.registered_for_firecloud
+          current_user.update(registered_for_firecloud: true)
+        end
+      end
+    rescue => e
+      logger.info "#{Time.now}: unable to update FireCloud profile for #{current_user.email}: #{e.message}"
+      @alert = "An error occurred when trying to update your FireCloud profile: #{e.message}"
+    end
+  end
+
   private
 
   # set the requested user account
@@ -71,5 +104,12 @@ class ProfilesController < ApplicationController
 
   def study_params
     params.require(:study).permit(:default_options => [:deliver_emails])
+  end
+
+  # parameters for service account profile
+  def profile_params
+    params.require(:firecloud_profile).permit(:contactEmail, :email, :firstName, :lastName, :institute, :institutionalProgram,
+                                            :nonProfitStatus, :pi, :programLocationCity, :programLocationState,
+                                            :programLocationCountry, :title)
   end
 end

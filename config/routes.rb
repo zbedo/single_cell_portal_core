@@ -13,7 +13,9 @@ Rails.application.routes.draw do
 		match 'admin/users/:id', to: 'admin_configurations#update_user', via: [:post, :patch], as: :update_user
     get 'admin/email_users/compose', to: 'admin_configurations#compose_users_email', as: :compose_users_email
     post 'admin/email_users/compose', to: 'admin_configurations#deliver_users_email', as: :deliver_users_email
-    get 'admin/firecloud_api_status', to: 'admin_configurations#firecloud_api_status', as: :firecloud_api_status
+		get 'admin/firecloud_api_status', to: 'admin_configurations#firecloud_api_status', as: :firecloud_api_status
+		get 'admin/create_portal_user_group', to: 'admin_configurations#create_portal_user_group', as: :create_portal_user_group
+		get 'admin/sync_portal_user_group', to: 'admin_configurations#sync_portal_user_group', as: :sync_portal_user_group
 		resources :admin_configurations, path: 'admin'
 
     # study reporter actions
@@ -84,6 +86,7 @@ Rails.application.routes.draw do
 		match 'profile/:id', to: 'profiles#update', via: [:post, :patch], as: :update_profile
 		match 'profile/:id/subscriptions/share/:study_share_id', to: 'profiles#update_share_subscription', via: [:post, :patch], as: :update_share_subscription
 		match 'profile/:id/subscriptions/study/:study_id', to: 'profiles#update_study_subscription', via: [:post, :patch], as: :update_study_subscription
+		post 'profile/:id/firecloud_profile', to: 'profiles#update_firecloud_profile', as: :update_user_firecloud_profile
 
 		# data viewing actions
 		get 'study/:study_name', to: 'site#study', as: :view_study

@@ -945,6 +945,16 @@ class SiteController < ApplicationController
   # create a workspace analysis submission for a given sample
   def create_workspace_submission
     begin
+      # before creating submission, we need to make sure that the user is on the 'all-portal' user group list if it exists
+      user_group_config = AdminConfiguration.find_by(config_type: 'Portal FireCloud User Group')
+      if user_group_config.present? && !current_user.registered_for_firecloud
+        group_name = user_group_config.value
+        logger.info "#{Time.now}: adding #{current_user.email} to #{group_name} user group"
+        Study.firecloud_client.add_user_to_group(group_name, 'member', current_user.email)
+        logger.info "#{Time.now}: user group registration complete"
+        current_user.update(registered_for_firecloud: true)
+      end
+
       # set up parameters
       workflow_namespace, workflow_name, workflow_snapshot = workflow_submission_params[:identifier].split('--')
       samples = workflow_submission_params[:samples].keep_if {|s| !s.blank?}

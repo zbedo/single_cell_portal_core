@@ -29,7 +29,7 @@ class AdminConfiguration
   end
 
   def self.config_types
-    ['Daily User Download Quota', 'Workflow Name', API_NOTIFIER_NAME]
+    ['Daily User Download Quota', 'Workflow Name', 'Portal FireCloud User Group', API_NOTIFIER_NAME]
   end
 
   def self.value_types
