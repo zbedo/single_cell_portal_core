@@ -158,11 +158,53 @@
         // get name of row to replace
         name = 'Selection ' + rowIndex.toString();
         // create delete button script to update unselected on row delete press
-        var deleteUpdateUnselected = 'var m = 0; \n var name = \'Selection \' + m.toString();\n if(m === 0){name = \'Unselected\'}\n var updateDiv = \'#Selection\' +  m.toString();\n if(m === 0){updateDiv = \'#Unselected\'}\nvar update = $(updateDiv);\nvar replace = name + \': \' +  selections[m].length.toString() + \' Cells\';\n update.html(replace);\nupdateDiv = \'#user_annotation_user_data_arrays_attributes_\' +  m.toString() + \'_values\';\nupdate = $(updateDiv);\nreplace = selections[m];\nupdate.val(replace);';
+        var deleteUpdateUnselected =
+          'var m = 0; \n ' +
+          'var name = \'Selection \' + m.toString();\n ' +
+          'if (m === 0){' +
+            'name = \'Unselected\'}\n' +
+            'var updateDiv = \'#Selection\' +  m.toString();\n ' +
+            'if (m === 0){' +
+              'updateDiv = \'#Unselected\'' +
+            '}\n' +
+            'var update = $(updateDiv);\n' +
+            'var replace = name + \': \' +  selections[m].length.toString() + \' Cells\';\n ' +
+            'update.html(replace);\n' +
+            'updateDiv = \'#user_annotation_user_data_arrays_attributes_\' +  m.toString() + \'_values\';\n' +
+            'update = $(updateDiv);\nreplace = selections[m];\n' +
+            'update.val(replace);';
+
         // create delete button and listener, attach listener to update unselected
-        var deleteButton = '<td class=\"col-sm-1\"><div class=\"btn btn-sm btn-danger delete-btn\" id=\"' + id +  'Button\"><span class=\"fa fa-times\"></span></div></td><script>$(\'#' + id + 'Button\').click(function(){var currentSelection = $(\'#user_annotation_user_data_arrays_attributes_' + rowIndex +'_values\').val().split(\',\');\n if(currentSelection[0] !== ""){selections[0] = selections[0].concat(currentSelection)}\n selections.splice(rowIndex(selections, currentSelection), 1);\n'+ deleteUpdateUnselected + '\n$(\'#' + id + 'Row\').remove();});<\/script>';
+        var deleteButton =
+          '<td class=\"col-sm-1\">' +
+            '<div class=\"btn btn-sm btn-danger delete-btn\" id=\"' + id +  'Button\">' +
+              '<span class=\"fa fa-times\"></span>' +
+            '</div>' +
+          '</td>' +
+          '<script>' +
+            '$(\'#' + id + 'Button\').click(function(){' +
+              'var currentSelection = $(\'#user_annotation_user_data_arrays_attributes_' + rowIndex +'_values\').val()' +
+                '.split(\',\');\n' +
+                'if(currentSelection[0] !== ""){' +
+                  'selections[0] = selections[0].concat(currentSelection)}\n ' +
+                  'selections.splice(rowIndex(selections, currentSelection), 1);\n' +
+                  deleteUpdateUnselected + '\n' +
+                  '$(\'#' + id + 'Row\').remove();' +
+                '});' +
+          '<\/script>';
+
         // rowString is the string to add, that contains all the row information
-        var rowString = '<tr id=\"' + id +  'Row\"><td class=\"col-sm-5\" id=\"' + id + '\">' + name + ': ' +  selections[selectionIndex].length.toString() + ' Cells</td><td class=\"col-sm-6\"><input type=\"text\" name=\"user_annotation[user_data_arrays_attributes][' + rowIndex + '][name]" id=\"user_annotation_user_data_arrays_attributes_' + rowIndex + '_name\" class="form-control annotation-label need-text\" placeholder=\"Set Label\"><input name=\"user_annotation[user_data_arrays_attributes][' + rowIndex + '][values]" id=\"user_annotation_user_data_arrays_attributes_' + rowIndex + '_values\" type="hidden" value=\"' + selections[selectionIndex]+'\" /></td>'+ deleteButton +'</tr>';
+        var rowString =
+          '<tr id=\"' + id +  'Row\">' +
+            '<td class=\"col-sm-5\" id=\"' + id + '\">' +
+              name + ': ' +  selections[selectionIndex].length.toString() + ' Cells' +
+            '</td>' +
+            '<td class=\"col-sm-6\">' +
+              '<input type=\"text\" name=\"user_annotation[user_data_arrays_attributes][' + rowIndex + '][name]" id=\"user_annotation_user_data_arrays_attributes_' + rowIndex + '_name\" class="form-control annotation-label need-text\" placeholder=\"Set Label\">' +
+              '<input name=\"user_annotation[user_data_arrays_attributes][' + rowIndex + '][values]" id=\"user_annotation_user_data_arrays_attributes_' + rowIndex + '_values\" type="hidden" value=\"' + selections[selectionIndex]+'\" />' +
+            '</td>' +
+            deleteButton +
+          '</tr>';
 
         $('#well-table').prepend(rowString);
         // attach listener to make sure all annotation labels are unique
