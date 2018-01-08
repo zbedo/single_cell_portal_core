@@ -222,6 +222,13 @@ class SiteController < ApplicationController
         all_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_project, @study.firecloud_workspace, 'sample')
         @samples = Naturally.sort(all_samples.map {|s| s['name']})
 
+        # load locations of primary data (for new sample selection)
+        @primary_data_locations = []
+        fastq_files = @primary_study_files.select {|f| !f.human_data}
+        [fastq_files, @primary_data].flatten.each do |entry|
+          @primary_data_locations << ["#{entry.name} (#{entry.description})", "#{entry.class.name.downcase}--#{entry.name}"]
+        end
+
         # load list of available workflows
         @workflows_list = load_available_workflows
       end
