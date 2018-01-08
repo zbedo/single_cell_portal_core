@@ -730,6 +730,18 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn.click
 		# close modal
 		close_modal('upload-success-modal')
+
+		# upload an expression matrix in R export format (no value at 0,0 in matrix)
+		new_expression = @driver.find_element(:class, 'add-expression')
+		new_expression.click
+		scroll_to(:bottom)
+		upload_expression = @driver.find_element(:id, 'upload-expression')
+		upload_expression.send_keys(@test_data_path + 'expression_matrix_example_r_format.txt')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		upload_btn.click
+		# close modal
+		close_modal('upload-success-modal')
 		next_btn = @driver.find_element(:id, 'next-btn')
 		next_btn.click
 
@@ -773,7 +785,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get(@base_url + '/studies')
 		wait_until_page_loads(@base_url + '/studies')
 		study_file_count = @driver.find_element(:id, "error-messaging-test-study-#{$random_seed}-study-file-count")
-		assert study_file_count.text == '0', "found incorrect number of study files; expected 0 and found #{study_file_count.text}"
+		assert study_file_count.text == '1', "found incorrect number of study files; expected 1 and found #{study_file_count.text}"
 		@driver.find_element(:class, "error-messaging-test-study-#{$random_seed}-delete").click
 		accept_alert
 		close_modal('message_modal')
@@ -1196,6 +1208,41 @@ class UiTestSuite < Test::Unit::TestCase
 		@wait.until {@driver.find_element(:class, 'toggle-study-subscription').text == 'On'}
 		new_study_text = study_notifier_toggle.text
 		assert new_study_text == 'Off', "Did not properly turn on study notification (text is still #{new_study_text})"
+
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+	end
+
+	# update a user's FireCloud profile from the user profile section
+	test 'user-profiles: update firecloud profile' do
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		@driver.get @base_url + '/users/sign_in'
+		login($test_email, $test_email_password)
+
+		# open profile page
+		profile = @driver.find_element(:id, 'profile-nav')
+		profile.click
+		profile_link = @driver.find_element(:id, 'my-profile')
+		profile_link.click
+		wait_for_render(:id, 'profile-header')
+
+		open_ui_tab('profile-firecloud')
+
+		job_title_field = @driver.find_element(:id, 'firecloud_profile_title')
+		job_title_field.clear
+		new_title = "Random Title #{$random_seed}"
+		job_title_field.send_keys(new_title)
+		update_btn = @driver.find_element(:id, 'update-user-firecloud-profile')
+		update_btn.click
+		wait_for_modal_open('message_modal')
+
+		# reload page to confirm save
+		@driver.get @driver.current_url
+		wait_for_render(:id, 'profile-header')
+		open_ui_tab('profile-firecloud')
+
+		job_title = @driver.find_element(:id, 'firecloud_profile_title')['value']
+		assert job_title == new_title, "Did not update job title correctly, expected '#{new_title}' but found '#{job_title}'"
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
