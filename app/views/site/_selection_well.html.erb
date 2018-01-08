@@ -120,7 +120,7 @@
         // reverse nums array to become ascending instead of descending
         var reverseNums = array.reverse();
         // iterate through the rows to update them
-        for(var n = 0; n < selections.length-1; n++){
+        for (var n = 0; n < selections.length - 1; n++){
             // for unselected row, when n == 0
             if (n === 0) {
                 name = 'Unselected'
@@ -148,8 +148,8 @@
         //get the maximum number of rows, aka the next row number
         var max = getMaxOfArray(array) + 1;
 
-        // get the current selection number, maybe less than max, but ultimately max needs to be used for div naming, so we never add a row with a selection number
-        // smaller than the largest selection number
+        // get the current selection number, maybe less than max, but ultimately max needs to be used for div naming,
+        // so we never add a row with a selection number smaller than the largest selection number
         var selectionIndex = selections.length-1;
         // row index is the larger of max or selectionIndex
         var rowIndex = selectionIndex > max ? selectionIndex : max;
@@ -159,49 +159,53 @@
         name = 'Selection ' + rowIndex.toString();
         // create delete button script to update unselected on row delete press
         var deleteUpdateUnselected =
-          'var m = 0; \n ' +
-          'var name = \'Selection \' + m.toString();\n ' +
-          'if (m === 0){' +
-            'name = \'Unselected\'}\n' +
-            'var updateDiv = \'#Selection\' +  m.toString();\n ' +
-            'if (m === 0){' +
-              'updateDiv = \'#Unselected\'' +
-            '}\n' +
-            'var update = $(updateDiv);\n' +
-            'var replace = name + \': \' +  selections[m].length.toString() + \' Cells\';\n ' +
-            'update.html(replace);\n' +
-            'updateDiv = \'#user_annotation_user_data_arrays_attributes_\' +  m.toString() + \'_values\';\n' +
-            'update = $(updateDiv);\nreplace = selections[m];\n' +
-            'update.val(replace);';
+          'var m = 0;' +
+          'var name = "Selection " + m.toString();' +
+          'if (m === 0) {' +
+            'name = "Unselected";' +
+          '}' +
+          'var updateDiv = "#Selection" +  m.toString(); ' +
+          'if (m === 0) {' +
+            'updateDiv = "#Unselected";' +
+          '}' +
+          'var update = $(updateDiv);' +
+          'var replace = name + ": " +  selections[m].length.toString() + " Cells";' +
+          'update.html(replace);' +
+          'updateDiv = "#user_annotation_user_data_arrays_attributes_" +  m.toString() + "_values";' +
+          'update = $(updateDiv);' +
+          'replace = selections[m];' +
+          'update.val(replace);';
 
         // create delete button and listener, attach listener to update unselected
         var deleteButton =
-          '<td class=\"col-sm-1\">' +
-            '<div class=\"btn btn-sm btn-danger delete-btn\" id=\"' + id +  'Button\">' +
-              '<span class=\"fa fa-times\"></span>' +
+          '<td class="col-sm-1">' +
+            '<div class="btn btn-sm btn-danger delete-btn" id="' + id +  'Button">' +
+              '<span class="fa fa-times"></span>' +
             '</div>' +
           '</td>' +
           '<script>' +
-            '$(\'#' + id + 'Button\').click(function(){' +
-              'var currentSelection = $(\'#user_annotation_user_data_arrays_attributes_' + rowIndex +'_values\').val()' +
-                '.split(\',\');\n' +
-                'if(currentSelection[0] !== ""){' +
-                  'selections[0] = selections[0].concat(currentSelection)}\n ' +
-                  'selections.splice(rowIndex(selections, currentSelection), 1);\n' +
-                  deleteUpdateUnselected + '\n' +
-                  '$(\'#' + id + 'Row\').remove();' +
-                '});' +
+            '$("#' + id + 'Button").click(function() {' +
+              'var currentSelection = $("#user_annotation_user_data_arrays_attributes_' + rowIndex +'_values").val().split(",");' +
+              'if (currentSelection[0] !== ""){' +
+                'selections[0] = selections[0].concat(currentSelection);' +
+              '} ' +
+              'selections.splice(rowIndex(selections, currentSelection), 1);' +
+              deleteUpdateUnselected +
+              '$("#' + id + 'Row").remove();' +
+            '});' +
           '<\/script>';
+
+        var numCells = selections[selectionIndex].length.toString();
 
         // rowString is the string to add, that contains all the row information
         var rowString =
-          '<tr id=\"' + id +  'Row\">' +
-            '<td class=\"col-sm-5\" id=\"' + id + '\">' +
-              name + ': ' +  selections[selectionIndex].length.toString() + ' Cells' +
+          '<tr id="' + id + 'Row">' +
+            '<td class="col-sm-5" id="' + id + '">' +
+              name + ': ' +  numCells + ' Cells' +
             '</td>' +
-            '<td class=\"col-sm-6\">' +
-              '<input type=\"text\" name=\"user_annotation[user_data_arrays_attributes][' + rowIndex + '][name]" id=\"user_annotation_user_data_arrays_attributes_' + rowIndex + '_name\" class="form-control annotation-label need-text\" placeholder=\"Set Label\">' +
-              '<input name=\"user_annotation[user_data_arrays_attributes][' + rowIndex + '][values]" id=\"user_annotation_user_data_arrays_attributes_' + rowIndex + '_values\" type="hidden" value=\"' + selections[selectionIndex]+'\" />' +
+            '<td class="col-sm-6">' +
+              '<input type="text" name="user_annotation[user_data_arrays_attributes][' + rowIndex + '][name]" id="user_annotation_user_data_arrays_attributes_' + rowIndex + '_name" class="form-control annotation-label need-text" placeholder="Set Label">' +
+              '<input name="user_annotation[user_data_arrays_attributes][' + rowIndex + '][values]" id="user_annotation_user_data_arrays_attributes_' + rowIndex + '_values" type="hidden" value="' + selections[selectionIndex] + '" />' +
             '</td>' +
             deleteButton +
           '</tr>';
