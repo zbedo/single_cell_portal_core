@@ -41,6 +41,7 @@
 
     // array of arrays of cell names, aka selections
     var selections = [];
+    var rowIndex;
 
     $(target).on('plotly_afterplot', function() {
         if($(target).data('spinner') !== undefined){
@@ -152,7 +153,7 @@
         // so we never add a row with a selection number smaller than the largest selection number
         var selectionIndex = selections.length-1;
         // row index is the larger of max or selectionIndex
-        var rowIndex = selectionIndex > max ? selectionIndex : max;
+        rowIndex = selectionIndex > max ? selectionIndex : max;
         // get id of row to replace
         var id = "Selection" + rowIndex.toString();
         // get name of row to replace
@@ -189,7 +190,7 @@
               'if (currentSelection[0] !== ""){' +
                 'selections[0] = selections[0].concat(currentSelection);' +
               '} ' +
-              'selections.splice(rowIndex(selections, currentSelection), 1);' +
+              'selections.splice(rowIndex, 1);' +
               deleteUpdateUnselected +
               '$("#' + id + 'Row").remove();' +
             '});' +
