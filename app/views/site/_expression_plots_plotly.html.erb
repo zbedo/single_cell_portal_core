@@ -1,3 +1,13 @@
+$('#distribution-link').html('Distribution');
+
+// If 'Distribution' panel is closed, open it
+if ($('#distribution-panel-link').hasClass('collapsed')) {
+  $('#distribution-panel-link').click();
+}
+
+// Make panel heading blue; accounts for possible greying by 'Annotation Scatter' view
+$('#expression-options-panel').removeClass('panel-default').addClass('panel-info');
+
 // load expression scatter plot
 var exp = {
   x: <%= raw @expression[:all][:x] %>,

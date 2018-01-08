@@ -1,0 +1,4 @@
+$('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {notice: @notice, alert: @alert}) %>");
+$('#message_modal').modal('show')
+var btn = $('#update-user-firecloud-profile');
+btn.button('reset');

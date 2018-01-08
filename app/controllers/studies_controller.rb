@@ -237,11 +237,18 @@ class StudiesController < ApplicationController
           # get google instance of file
           file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project, @study.firecloud_workspace, file_location)
           basename = file.name.split('/').last
-          # now copy the file to a new location for syncing and remove the old instance
           new_location = "outputs_#{params[:submission_id]}/#{basename}"
-          new_file = file.copy new_location
-          unsynced_output = StudyFile.new(study_id: @study.id, name: new_file.name, upload_file_name: new_file.name, upload_content_type: new_file.content_type, upload_file_size: new_file.size, generation: new_file.generation)
-          @unsynced_files << unsynced_output
+          # check if file has already been synced first
+          # we can only do this by md5 hash as the filename and generation will be different
+          existing_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project, @study.firecloud_workspace, new_location)
+          if existing_file.present? && existing_file.md5 == file.md5
+            next
+          else
+            # now copy the file to a new location for syncing
+            new_file = file.copy new_location
+            unsynced_output = StudyFile.new(study_id: @study.id, name: new_file.name, upload_file_name: new_file.name, upload_content_type: new_file.content_type, upload_file_size: new_file.size, generation: new_file.generation)
+            @unsynced_files << unsynced_output
+          end
         end
       end
       @available_files = @unsynced_files.map {|f| {name: f.name, generation: f.generation, size: f.upload_file_size}}
@@ -470,7 +477,9 @@ class StudiesController < ApplicationController
         # redirect directly to file to trigger download
         redirect_to @signed_url
       else
-        redirect_to view_study_path, alert: 'The file you requested is currently not available.  Please try again later.'
+        # send notification to the study owner that file is missing (if notifications turned on)
+        SingleCellMailer.user_download_fail_notification(@study, params[:filename]).deliver_now
+        redirect_to view_study_path, alert: 'The file you requested is currently not available.  Please contact the study owner if you require access to this file.' and return
       end
     rescue RuntimeError => e
       logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
@@ -680,6 +689,7 @@ class StudiesController < ApplicationController
   # adding new study_file entries based on remote files in GCP
   def sync_study_file
     @study_file = @study.study_files.build
+    @partial = 'study_file_form'
     if @study_file.update(study_file_params)
       if study_file_params[:file_type] == 'Expression Matrix' && !study_file_params[:y_axis_label].blank?
         # if user is supplying an expression axis label, update default options hash
@@ -690,7 +700,7 @@ class StudiesController < ApplicationController
       @message = "New Study File '#{@study_file.name}' successfully synced."
       # only grab id after update as it will change on new entries
       @form = "#study-file-#{@study_file.id}"
-      @partial = 'study_file_form'
+
       if @study_file.parseable?
         logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
         @message += " You will receive an email at #{current_user.email} when the parse has completed."
@@ -710,6 +720,7 @@ class StudiesController < ApplicationController
         format.js
       end
     else
+      @form = "#study-file-#{@study_file.id}"
       respond_to do |format|
         format.js {render action: 'sync_action_fail'}
       end

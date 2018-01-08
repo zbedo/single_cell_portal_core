@@ -85,6 +85,7 @@ class User
   field :reporter, type: Boolean
   field :daily_download_quota, type: Integer, default: 0
   field :admin_email_delivery, type: Boolean, default: true
+  field :registered_for_firecloud, type: Boolean, default: false
 
   ###
   #
@@ -105,8 +106,9 @@ class User
                          password_confirmation: password,
                          uid: uid,
                          provider: provider)
-    # update info if account was originally local but switching to Google auth
+
     elsif user.provider.nil? || user.uid.nil?
+      # update info if account was originally local but switching to Google auth
       user.update(provider: provider, uid: uid)
     end
     # store refresh token

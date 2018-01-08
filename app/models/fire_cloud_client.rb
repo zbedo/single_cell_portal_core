@@ -209,15 +209,19 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	#   - +http_method+ (String, Symbol) => valid http method
 	#   - +path+ (String) => FireCloud REST API path
 	#   - +payload+ (Hash) => HTTP POST/PATCH/PUT body for creates/updates, defaults to nil
+	#		- +opts+ (Hash) => Hash of extra options (defaults are file_upload=false, max_attemps=MAX_RETRY_COUNT)
 	#
 	# * *return*
 	#   - +Hash+, +Boolean+ depending on response body
 	# * *raises*
 	#   - +RuntimeError+
-	def process_firecloud_request(http_method, path, payload=nil, file_upload=false)
+	def process_firecloud_request(http_method, path, payload=nil, opts={})
+		# set up default options
+		request_opts = {file_upload: false, max_attempts: MAX_RETRY_COUNT}.merge(opts)
+
 		# check for token expiry first before executing
 		if self.access_token_expired?
-			Rails.logger.info "#{Time.now}: Token expired, refreshing access token"
+			Rails.logger.info "#{Time.now}: FireCloudClient token expired, refreshing access token"
 			self.refresh_access_token
 		end
 		# set default headers
@@ -225,13 +229,15 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 				'Authorization' => "Bearer #{self.access_token['access_token']}"
 		}
 		# if not uploading a file, set the content_type to application/json
-		if !file_upload
+		if !request_opts[:file_upload]
 			headers.merge!({'Content-Type' => 'application/json'})
 		end
 
 		# initialize counter to prevent endless feedback loop
-		@retry_count.nil? ? @retry_count = 0 : nil
-		if @retry_count < MAX_RETRY_COUNT
+		@retry_count ||= 0
+
+		# process request
+		if @retry_count < request_opts[:max_attempts]
 			begin
 				@retry_count += 1
 				@obj = RestClient::Request.execute(method: http_method, url: path, payload: payload, headers: headers)
@@ -255,7 +261,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 				log_message = "#{Time.now}: " + e.message + context
 				Rails.logger.error log_message
 				@error = e
-				process_firecloud_request(http_method, path, payload)
+				process_firecloud_request(http_method, path, payload, opts)
 			end
 		else
 			@retry_count = 0
@@ -274,10 +280,13 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	# * *return*
 	#   - +Boolean+ indication of FireCloud current status
 	def api_available?
-		path = self.api_root + '/health'
 		begin
-			process_firecloud_request(:get, path)
-			true
+			response = self.api_status
+			if response.is_a?(Hash) && response['ok']
+				true
+			else
+				false
+			end
 		rescue => e
 			false
 		end
@@ -503,14 +512,14 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	#
 	# * *params*
 	#   - +namespace+ (String) => namespace of method
-	#   - +name+ (String) => name of method
+	#   - +name+ (String) => name of configuration
 	#   - +snapshot_id+ (Integer) => snapshot ID of method
 	#   - +payload_as_object+ (Boolean) => Instead of returning a string under key payload, return a JSON object under key payloadObject
 	#
   # * *return*
   #   - +Hash+ configuration object
-	def get_configuration(namespace, method_name, snapshot_id, payload_as_object=false)
-		path = self.api_root + "/api/configurations/#{namespace}/#{method_name}/#{snapshot_id}?payloadAsObject=#{payload_as_object}"
+	def get_configuration(namespace, name, snapshot_id, payload_as_object=false)
+		path = self.api_root + "/api/configurations/#{namespace}/#{name}/#{snapshot_id}?payloadAsObject=#{payload_as_object}"
 		process_firecloud_request(:get, path)
 	end
 
@@ -576,13 +585,46 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	# * *params*
 	#   - +workspace_namespace+ (String) => namespace of workspace
 	#   - +workspace_name+ (String) => name of requested workspace
-	#   - +config_name+ (String) => name of method
+	#   - +config_namespace+ (String) => namespace of configuration
+	#   - +config_name+ (String) => name of configuration
 	#
-  # * *return*
-  #   - +Hash+ configuration object
-	def get_workspace_configuration(workspace_namespace, workspace_name, config_name)
-		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/method_configs/#{workspace_namespace}/#{config_name}"
+	# * *return*
+	#   - +Hash+ configuration object
+	def get_workspace_configuration(workspace_namespace, workspace_name, config_namespace, config_name)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/method_configs/#{config_namespace}/#{config_name}"
 		process_firecloud_request(:get, path)
+	end
+
+	# create/update a FireCloud method configuration in a workspace (usually from a template)
+	#
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of requested workspace
+	#   - +config_namespace+ (String) => namespace of configuration
+	#   - +config_name+ (String) => name of configuration
+	#		- +configuration+ (Hash) => configuration object (see https://api.firecloud.org/#!/Method_Configurations/updateWorkspaceMethodConfig for more info)
+	#
+	# * *return*
+	#   - +Hash+ configuration object
+	def update_workspace_configuration(workspace_namespace, workspace_name, config_namespace, config_name, configuration)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/method_configs/#{config_namespace}/#{config_name}"
+		process_firecloud_request(:post, path, configuration.to_json)
+	end
+
+	# overwrite an existing FireCloud method configuration in a workspace
+	#
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of requested workspace
+	#   - +config_namespace+ (String) => namespace of configuration
+	#   - +config_name+ (String) => name of configuration
+	#		- +configuration+ (Hash) => configuration object (see https://api.firecloud.org/#!/Method_Configurations/overwriteWorkspaceMethodConfig for more info)
+	#
+	# * *return*
+	#   - +Hash+ configuration object
+	def overwrite_workspace_configuration(workspace_namespace, workspace_name, config_namespace, config_name, configuration)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/method_configs/#{config_namespace}/#{config_name}"
+		process_firecloud_request(:put, path, configuration.to_json)
 	end
 
   # get submission queue status
@@ -605,6 +647,32 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   def get_workspace_submissions(workspace_namespace, workspace_name)
 		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/submissions"
 		process_firecloud_request(:get, path)
+	end
+
+	# validate a workflow submission before submitting
+	#
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of requested workspace
+	#   - +config_namespace+ (String) => namespace of requested configuration
+	#   - +config_name+ (String) => name of requested configuration
+	#   - +entity_type+ (String) => type of workspace entity (e.g. sample, participant, etc)
+	#   - +entity_name+ (String) => name of workspace entity
+	#
+	# * *return*
+	#   - +Hash+ of workflow submission details
+	def validate_workspace_submission(workspace_namespace, workspace_name, config_namespace, config_name, entity_type, entity_name)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/submissions/validate"
+		submission = {
+				methodConfigurationNamespace: config_namespace,
+				methodConfigurationName: config_name,
+				entityType: entity_type,
+				entityName: entity_name,
+				useCallCache: true,
+				workflowFailureMode: 'NoNewCalls'
+		}.to_json
+
+		process_firecloud_request(:post, path, submission)
 	end
 
 	# create a workflow submission
@@ -802,7 +870,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		entities_upload = {
 				entities: entities_file
 		}
-		process_firecloud_request(:post, path, entities_upload, true)
+		process_firecloud_request(:post, path, entities_upload, {file_upload: true})
 	end
 
 	# bulk delete workspace metadata entities

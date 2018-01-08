@@ -2,7 +2,7 @@
   <div class="panel panel-info" id="search-options-panel">
     <div class="panel-heading">
       <div class="panel-title">
-        <h4><a href="#panel-genes-search" data-toggle="collapse" data-parent="#search-parent" id="search-genes-link">Search Genes <span class='fa fa-search'></span></a><%= link_to "<span class='fa fa-compress'></span>".html_safe, 'javascript:toggleSearch();', 'data-toggle' => 'tooltip', title: 'Collapse Search Options', 'data-placement' => 'left', class: 'btn btn-sm btn-danger pull-right', style: 'margin-top: -5px;' %></h4>
+        <h4><a href="#panel-genes-search" data-toggle="collapse" data-parent="#search-parent" id="search-genes-link"><span class='fa fa-search'></span> Search Genes</a></h4>
       </div>
     </div>
     <div class="panel-body collapse in" id="panel-genes-search">
@@ -13,16 +13,21 @@
               <%= f.hidden_field :boxpoints, value: params[:boxpoints].nil? ? 'all' : params[:boxpoints] %>
               <%= f.hidden_field :annotation, value: set_annotation_value(@study, params) %>
               <%= f.hidden_field :subsample, value: set_subsample_value(params) %>
+              <%= f.hidden_field :plot_type, value: set_distribution_plot_type_value(params) %>
+              <%= f.hidden_field :kernel_type, value: set_kernel_type_value(params) %>
+              <%= f.hidden_field :band_type, value: set_band_type_value(params) %>
+              <%= f.hidden_field :heatmap_row_centering, value: set_heatmap_row_centering_value(params) %>
+              <%= f.hidden_field :heatmap_size, value: set_heatmap_size_value(params) %>
               <div class="form-group">
-                <%= f.label :genes, 'Search for genes of interest (autocomplete)' %>
-                <%= f.autocomplete_field :genes, autocomplete_expression_score_gene_expression_score_index_path(study_id: @study._id), {multiple: true, class: 'form-control search-genes-input', placeholder: 'Search genes...', value: set_search_value, data: {delimiter: ' '}} %>
+                <%= f.label :genes, 'Search for genes' %>
+                <%= f.autocomplete_field :genes, autocomplete_expression_score_gene_expression_score_index_path(study_id: @study._id), {multiple: true, class: 'form-control search-genes-input', placeholder: 'Enter gene names', value: set_search_value, data: {delimiter: ' '}} %>
               </div>
               <div class="form-group">
-                <%= f.label :upload, "Or upload a list of genes (one gene per line)" %><br/>
+                <%= f.label :upload, "Or upload gene list" %><br/>
                 <%= f.file_field :upload, class: 'form-control', accept: '.txt,text/plain' %>
               </div>
               <div class="form-group">
-                <%= f.label :consensus, "Collapse Genes by <i class='fa fa-question-circle'></i>".html_safe, title: "Multiple genes only: Collapse expression scores of multiple genes for each cell using this metric.  Selecting 'None' will view genes individually as a heatmap.", data: {toggle: 'tooltip', placement: 'right'} %><br/>
+                <%= f.label :consensus, "Collapse genes by <i class='fa fa-question-circle'></i>".html_safe, title: "Multiple genes only: Collapse expression scores of multiple genes for each cell using this metric.  Selecting 'None' will view genes individually as a heatmap.", data: {toggle: 'tooltip', placement: 'right'} %><br/>
                 <%= f.select :consensus, options_for_select([['Mean', 'mean'],['Median', 'median']], params[:consensus]), {include_blank: 'None'}, {class: 'form-control'} %>
               </div>
               <%= link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, "javascript:", class: "btn pull-right #{action_name == 'study' ? 'btn-default disabled' : 'btn-warning'}", id: 'clear-gene-search', title: 'Clear gene search and return to cluster scatter plots', data: {toggle: 'tooltip'} %>
@@ -31,10 +36,8 @@
                   $('#clear-gene-search').click(function(){
                       clearForm('search_genes');
                       $(this).tooltip('hide');
-                      var cluster = $('#search_cluster').val();
-                      var annotation = $('#search_annotation').val();
-                      var subsample = $('#search_subsample').val();
-                      var url = "<%= view_study_path(study_name: @study.url_safe_name )%>?cluster=" + cluster + "&annotation=" + annotation + "&subsample=" + subsample;
+                      var urlParams = getRenderUrlParams();
+                      var url = "<%= view_study_path(study_name: @study.url_safe_name )%>?" + urlParams;
                       launchModalSpinner('#spinner_target', '#loading-modal', function() {
                           $.ajax({
                               url: url,
@@ -42,7 +45,6 @@
                               dataType: 'script'
                           });
                       });
-
                   });
                   $('#perform-gene-search').click(function(){
                       var fileInput = $('#search_upload')[0];
@@ -83,99 +85,66 @@
           <% end %>
         </div>
       </div>
-      <hr />
+    </div>
+  </div>
+  <div class="panel panel-info" id="gene-lists-panel">
+    <div class="panel-heading">
+      <div class="panel-title">
+        <h4><a href="#panel-gene-lists" data-toggle="collapse" data-parent="#search-parent" id="gene-lists-link"><span class='fa fa-file-text-o'></span> View Gene Lists</a></h4>
+      </div>
+    </div>
+    <div class="panel-body collapse" id="panel-gene-lists">
       <div class="row">
         <div class="col-sm-12">
           <%= form_tag(view_gene_set_expression_path(study_name: params[:study_name]), id: 'gene-sets', method: :get, data: {remote: true}) do %>
-              <%= label_tag :gene_set, 'View curated gene lists as mean expression (box & scatter plots)' %>
-              <%= select_tag :gene_set, options_for_select(@precomputed, params[:gene_set]), {include_blank: 'Please select a gene list', class: 'form-control'} %>
+              <%= label_tag :gene_set, 'Mean expression' %>
+              <%= select_tag :gene_set, options_for_select(@precomputed, params[:gene_set]), {include_blank: 'Select gene list', class: 'form-control'} %>
               <%= hidden_field_tag :gene_set_cluster %>
               <%= hidden_field_tag :gene_set_annotation %>
               <%= hidden_field_tag :gene_set_subsample %>
               <script type="text/javascript">
-                  // set default values on render
-                  $('#gene_set_cluster').val($('#search_cluster').val());
-                  $('#gene_set_annotation').val($('#search_annotation').val());
-                  $('#gene_set_subsample').val($('#search_subsample').val());
-                  $('#gene_set').change(function() {
-                      if ($(this).val() != '') {
-                          launchModalSpinner('#spinner_target', '#loading-modal', function() {
-                              $('#gene-sets').submit();
-                          });
-                      }
-                  });
+                // set default values on render
+                $('#gene_set_cluster').val($('#search_cluster').val());
+                $('#gene_set_annotation').val($('#search_annotation').val());
+                $('#gene_set_subsample').val($('#search_subsample').val());
+                $('#gene_set').change(function() {
+                  if ($(this).val() != '') {
+                    launchModalSpinner('#spinner_target', '#loading-modal', function() {
+                      $('#gene-sets').submit();
+                    });
+
+                  }
+                });
               </script>
           <% end %>
         </div>
       </div>
-      <hr />
-      <% if action_name =~ /(gene_set|heatmap)/ && action_name !~ /precomputed/ %>
-          <div class="row">
-            <div class="col-sm-12">
-              <%= label_tag :gene, 'Load single gene-level expression' %><br />
-              <%= select_tag :gene, options_for_select(load_gene_nav(@genes)), {class: 'form-control'} %>
-              <br />
-              <script type="text/javascript">
-                  $('#gene').change(function() {
-                      var url = $(this).val();
-                      if (url != '') {
-                          launchModalSpinner('#spinner_target', '#loading-modal', function () {
-                              var cluster = $('#search_cluster').val();
-                              var annotation = $('#search_annotation').val();
-                              var subsample = $('#search_subsample').val();
-                              $.ajax({
-                                  url: url + '?cluster=' + cluster + '&annotation=' + annotation + '&subsample=' + subsample,
-                                  dataType: 'script'
-                              });
-                          });
-                      }
-                  });
-              </script>
-            </div>
-          </div>
-          <hr />
-      <% end %>
       <div class="row">
         <div class="col-sm-12">
           <%= form_tag(search_precomputed_results_path(study_name: params[:study_name]), id: 'precomputed-expression', data: {remote: true}) do %>
-              <%= label_tag :expression, 'View curated gene lists as heatmaps' %><br />
-              <%= select_tag :expression, options_for_select(@precomputed, params[:precomputed]), {include_blank: 'Please select a gene list', class: "form-control"} %>
+              <%= label_tag :expression, 'Heatmaps' %><br />
+              <%= select_tag :expression, options_for_select(@precomputed, params[:precomputed]), {include_blank: 'Select gene list', class: "form-control"} %>
               <% if action_name !~ /precomputed/ %>
                   <script type="text/javascript">
-                      $('#expression').change(function() {
-                          if ($(this).val() != '') {
-                              launchModalSpinner('#spinner_target', '#loading-modal', function() {
-                                  $('#precomputed-expression').submit();
-                              });
-                          }
-                      });
+                    $('#expression').change(function() {
+                      if ($(this).val() != '') {
+                        launchModalSpinner('#spinner_target', '#loading-modal', function() {
+                          $('#precomputed-expression').submit();
+                        });
+                      }
+                    });
                   </script>
               <% end %>
           <% end %>
         </div>
       </div>
     </div>
-    <div class="modal fade" id="loading-modal" role="dialog" aria-labelledby="loading-modal" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="text-center">Loading... Please Wait</h4>
-          </div>
-          <div class="modal-body">
-            <div id="spinner_target"></div>
-          </div>
-          <div class="modal-footer">
-            <button class="close" data-dismiss="modal">×</button>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
   <% if action_name !~ /heatmap/ %>
-    <div class="panel panel-<%= user_signed_in? ? 'info' : 'default' %>" id="search-options-panel">
+    <div class="panel panel-<%= user_signed_in? ? 'info' : 'default' %>" id="annotations-panel">
       <div class="panel-heading">
         <div class="panel-title">
-          <h4><a href="#panel-selection" data-toggle="<%= user_signed_in? ? 'collapse' : 'tooltip'%>" data-parent="#search-parent" id="create_annotations_panel" title="<%= user_signed_in? ? '' : 'Sign in to create custom annotations.'%>">Create Annotations <span class='fa fa-tags'></span></a></h4>
+          <h4><a href="#panel-selection" data-toggle="<%= user_signed_in? ? 'collapse' : 'tooltip'%>" data-parent="#search-parent" id="create_annotations_panel" title="<%= user_signed_in? ? '' : 'Sign in to create custom annotations.'%>"><span class='fa fa-tags'></span> Create Annotations</a></h4>
         </div>
       </div>
       <div class="panel-body collapse" id="panel-selection">
@@ -231,7 +200,10 @@
         });
 
         $('#panel-genes-search').on('show.bs.collapse', function () {
-            $('#search-parent').stickyPanel('unstick');
+            var searchParent = $('#search-parent');
+            if (typeof searchParent.data("stickyPanel.state") !== 'undefined') {
+                searchParent.stickyPanel('unstick');
+            }
         });
       <% end %>
     </script>

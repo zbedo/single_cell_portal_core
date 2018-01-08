@@ -1,0 +1,11 @@
+closeModalSpinner('#working-modal-spinner', '#working-modal', function() {
+    <% if @alert.nil? %>
+      $('#generic-update-target').empty();
+      $('#generic-update-target').html("<%= escape_javascript(render partial: '/layouts/generic_update_modal') %>");
+      $('#generic-update-modal-title').html("FireCloud User Group '<%= @group_name %>' Successfully Synced" );
+      $('#generic-update-modal-body').html("<%= escape_javascript(render partial: 'user_group_sync_list') %>");
+      $('#generic-update-modal').modal('show')
+    <% else %>
+      $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {alert: @alert}) %>");
+    <% end %>
+});

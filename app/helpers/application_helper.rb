@@ -87,6 +87,11 @@ module ApplicationHelper
 		nav
 	end
 
+	# TODO eweitz 2017-12-20: Can the 'set_foo_value' methods below be abstracted?
+	# They have a similar form, and might be more succinctly expressed in one method that uses
+	# a hash to map parameter names to default values, and returns the deterministic parameter value.
+	# Refactoring might be worthwhile after ensuring the redundant-but-familiar methods pass all tests.
+
 	# method to set cluster value based on options and parameters
 	# will fall back to default cluster if nothing is specified
 	def set_cluster_value(selected_study, parameters)
@@ -122,6 +127,70 @@ module ApplicationHelper
 			'All Cells'
 		end
 	end
+
+	### Beginning of 'Distribution' view options
+	def set_distribution_plot_type_value(parameters)
+		if !parameters[:gene_set_plot_type].nil?
+			parameters[:gene_set_plot_type]
+		elsif !parameters[:plot_type].nil?
+			parameters[:plot_type]
+		else
+			'violin'
+		end
+	end
+
+	def set_kernel_type_value(parameters)
+		if !parameters[:gene_set_kernel_type].nil?
+			parameters[:gene_set_kernel_type]
+		elsif !parameters[:kernel_type].nil?
+			parameters[:kernel_type]
+		else
+			'gau' # Gaussian
+		end
+	end
+
+	def set_band_type_value(parameters)
+		if !parameters[:gene_set_band_type].nil?
+			parameters[:gene_set_band_type]
+		elsif !parameters[:band_type].nil?
+			parameters[:band_type]
+		else
+			'nrd0'
+		end
+	end
+
+	def set_boxpoints_value(parameters)
+		if !parameters[:gene_set_boxpoints].nil?
+			parameters[:gene_set_boxpoints]
+		elsif !parameters[:boxpoints].nil?
+			parameters[:boxpoints]
+		else
+			'all'
+		end
+	end
+	### End of 'Distribution' view options
+
+	### Beginning of 'Heatmap' view options
+	def set_heatmap_row_centering_value(parameters)
+		if !parameters[:gene_set_heatmap_row_centering].nil?
+			parameters[:gene_set_heatmap_row_centering]
+		elsif !parameters[:heatmap_row_centering].nil?
+			parameters[:heatmap_row_centering]
+		else
+			''
+		end
+	end
+
+	def set_heatmap_size_value(parameters)
+		if !parameters[:gene_set_heatmap_size].nil?
+			parameters[:gene_set_heatmap_size]
+		elsif !parameters[:heatmap_size].nil?
+		parameters[:heatmap_size]
+		else
+			''
+		end
+	end
+	### End of 'Heatmap' view options
 
 	# set colorscale value
 	def set_colorscale_value(selected_study, parameters)
@@ -198,7 +267,7 @@ module ApplicationHelper
 		end
 		# submission has completed successfully
 		if submission['status'] == 'Done' && submission['workflowStatuses'].keys.include?('Succeeded')
-			actions << link_to("<i class='fa fa-files-o'></i> Download".html_safe, '#', class: 'btn btn-xs btn-block btn-primary get-submission-outputs', title: 'Download outputs from this run', data: {toggle: 'tooltip', url: get_submission_outputs_path(study_name: study.url_safe_name, submission_id: submission['submissionId']), id: submission['submissionId']})
+			# actions << link_to("<i class='fa fa-files-o'></i> Download".html_safe, '#', class: 'btn btn-xs btn-block btn-primary get-submission-outputs', title: 'Download outputs from this run', data: {toggle: 'tooltip', url: get_submission_outputs_path(study_name: study.url_safe_name, submission_id: submission['submissionId']), id: submission['submissionId']})
 			actions << link_to("<i class='fa fa-refresh'></i> Sync".html_safe, sync_submission_outputs_study_path(id: @study.id, submission_id: submission['submissionId']), class: 'btn btn-xs btn-block btn-warning sync-submission-outputs', title: 'Sync outputs from this run back to study', data: {toggle: 'tooltip', id: submission['submissionId']})
 		end
 		# submission has failed

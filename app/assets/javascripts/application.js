@@ -69,10 +69,30 @@ $(document).on('hidden.bs.modal', function(e) {
     OPEN_MODAL = '';
 });
 
+// Toggle sidebar, e.g. for "View Options" menu in Explore tab
+$(document).on('click', '[data-toggle="offcanvas"]', function () {
+  console.log('clicked "offcanvas" toggler')
+
+  // Expand View Options menu
+  $('.row-offcanvas').toggleClass('active');
+
+  // Contract main content area to make room View Options menu
+  $('.row-offcanvas > .nav-tabs, .row-offcanvas > .tab-content')
+    .toggleClass('contracted-for-sidebar');
+
+  // Re-render Plotly to use available space
+  $(window).trigger('resize');
+
+});
+
+// Prevent scroll upon clicking View Options link
+$(document).on('click', '#view-option-link', function(e) { e.preventDefault(); });
+
+
 jQuery.railsAutocomplete.options.noMatchesLabel = "No matches in this study";
 
 // used for calculating size of plotly graphs to maintain square aspect ratio
-var SCATTER_RATIO = 0.65;
+var SCATTER_RATIO = 0.75;
 
 function elementVisible(element) {
     return $(element).is(":visible");
@@ -256,6 +276,26 @@ function enableDefaultActions() {
     $('form').on('blur', 'input[type=number]', function (e) {
         $(this).off('mousewheel.disableScroll')
     });
+
+    // when clicking the main study view page tabs, update the current URL so that when you refresh the tab stays open
+    $('#study-tabs').on('shown.bs.tab', function(event) {
+        var anchor = $(event.target).attr('href');
+        var currentUrl = window.location.href;
+        var urlParts = currentUrl.split('#');
+        var newUrl = '';
+        if (urlParts.length === 1) {
+            newUrl = currentUrl + anchor;
+        } else if (urlParts[1] === '') {
+            newUrl = currentUrl.replace(/#/, '') + anchor;
+        } else {
+            var currentTab = urlParts[1];
+            // we need to replace the current tab with the new one in the anchor/parameter string
+            replaceRegex = new RegExp('#' + currentTab);
+            newUrl = currentUrl.replace(replaceRegex, anchor);
+        }
+        // use HTML5 history API to update the url without reloading the DOM
+        history.pushState('', document.title, newUrl);
+    });
 }
 
 var stickyOptions = {
@@ -273,10 +313,14 @@ function toggleSearch() {
 
     // trigger resizeEnd to re-render Plotly to use available space
     $(window).trigger('resize');
-    if ($('#create_annotations_panel').length > 0) {if($('#search-target').is(":visible")){
-        $('#search-parent').stickyPanel(stickyOptions)
-    } else{
-        $('#search-parent').stickyPanel('unstick')}
+    if ($('#panel-selection').is(':visible')) {
+        if ($('#search-target').is(":visible")) {
+            $('#search-parent').stickyPanel(stickyOptions)
+        } else {
+            if ($('#search-parent').data("stickyPanel.state") !== 'undefined') {
+                $('#search-parent').stickyPanel('unstick')
+            }
+        }
     }
 }
 
@@ -355,6 +399,88 @@ function closeModalSpinner(spinnerTarget, modalTarget, callback) {
     $(modalTarget).modal('hide');
 }
 
+// Propagate changes from the View Options sidebar to the Search Genes form.
+function updateSearchGeneParams() {
+
+  // Get values from control elements in View Options sidebar
+  var cluster = $('#cluster').val();
+  var annotation = $('#annotation').val();
+  var consensus = $('#search_consensus').val();
+  var subsample = $('#subsample').val();
+  var plot_type = $('#plot_type').val() === undefined ? 'violin' : $('#plot_type').val();
+  var kernel_type = $('#kernel_type').val() === undefined ? 'gau' : $('#kernel_type').val();
+  var band_type = $('#band_type').val() === undefined ? 'nrd0' : $('#band_type').val();
+  var boxpoints = $('#boxpoints_select').val() === undefined ? 'all' : $('#boxpoints_select').val();
+  var heatmap_size = $('#heatmap');
+  var heatmap_row_centering = $('#heatmap_row_centering').val();
+  var heatmap_size = parseInt($('#heatmap_size').val());
+
+  // These 'search_foo' values exist in hidden form elements in '#search-genes-input'
+  $("#search_cluster").val(cluster);
+  $("#search_annotation").val(''); // clear value first
+  $("#search_annotation").val(annotation);
+  $('#search_plot_type').val(plot_type);
+  $('#search_kernel_type').val(kernel_type);
+  $('#search_band_type').val(band_type);
+  $('#search_boxpoints').val(boxpoints);
+  $('#search_heatmap_row_centering').val(heatmap_row_centering);
+  $('#search_heatmap_size').val(heatmap_size);
+}
+
+
+// Gets URL parameters needed for each "render" call, e.g. no-gene, single-gene, multi-gene
+function getRenderUrlParams() {
+
+  // Get values from control elements in View Options sidebar
+  var cluster = $('#cluster').val();
+  var annotation = $('#annotation').val();
+  var consensus = $('#search_consensus').val();
+  var subsample = $('#subsample').val();
+  var plot_type = $('#plot_type').val() === undefined ? 'violin' : $('#plot_type').val();
+  var kernel_type = $('#kernel_type').val() === undefined ? 'gau' : $('#kernel_type').val();
+  var band_type = $('#band_type').val() === undefined ? 'nrd0' : $('#band_type').val();
+  var boxpoints = $('#boxpoints_select').val() === undefined ? 'all' : $('#boxpoints_select').val();
+  var heatmap_row_centering = $('#heatmap_row_centering').val();
+  var heatmap_size = parseInt($('#heatmap_size').val());
+
+  var urlParams =
+    'cluster=' + cluster +
+    '&annotation=' + annotation +
+    '&boxpoints=' + boxpoints +
+    '&consensus=' + consensus +
+    '&subsample=' + subsample +
+    '&plot_type=' + plot_type +
+    '&kernel_type=' + kernel_type +
+    '&band_type=' + band_type +
+    '&heatmap_row_centering=' + heatmap_row_centering +
+    '&heatmap_size=' + heatmap_size;
+
+  return urlParams;
+}
+
+// Handle changes in View Options for 'Distribution' view
+$(document).on('change', '#plot_type, #kernel_type, #band_type', function() {
+  $('#expression-plots').data('box-rendered', false);
+  $('#expression-plots').data('scatter-rendered', false);
+  $('#expression-plots').data('reference-rendered', false);
+
+  updateSearchGeneParams();
+
+  if (typeof renderGeneExpressionPlots !== 'undefined' && /numeric/.test($('#annotation').val()) === false) {
+    // Accounts for changing View Options when not in Distribution view,
+    // but does not apply if we're looking at an annotation like "Intensity" or "Average intensity".
+    renderGeneExpressionPlots();
+  }
+});
+
+// Handles changes in View Options for 'Heatmap' view
+$(document).on('change', '#heatmap_row_centering, #annotation', function() {
+  updateSearchGeneParams();
+});
+$(document).on('click', '#resize-heatmap', function() {
+  updateSearchGeneParams();
+});
+
 // default title font settings for axis titles in plotly
 var plotlyTitleFont = {
     family: 'Helvetica Neue',
@@ -405,6 +531,7 @@ $(window).resize(function() {
 function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, target, annotations, fitType, heatmapHeight, colorScaleMode) {
     console.log('render status of ' + target + ' at start: ' + $(target).data('rendered'));
     $(target).empty();
+    console.log("scaling mode: " + colorScaleMode);
     var config = {dataset: dataPath, el: $(target), menu: null, colorScheme: {scalingMode: colorScaleMode}};
 
     // set height if specified, otherwise use default setting of 500 px

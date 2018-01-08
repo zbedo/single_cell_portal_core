@@ -13,7 +13,9 @@ class AdminConfiguration
   field :multiplier, type: String
   field :value, type: String
 
-  validates_uniqueness_of :config_type, message: ": '%{value}' has already been set.  Please edit the corresponding entry to update."
+  validates_uniqueness_of :config_type,
+                          message: ": '%{value}' has already been set.  Please edit the corresponding entry to update.",
+                          unless: proc {|attributes| attributes['config_type'] == 'Workflow Name'}
 
   validate :validate_value_by_type
 
@@ -27,7 +29,7 @@ class AdminConfiguration
   end
 
   def self.config_types
-    ['Daily User Download Quota', API_NOTIFIER_NAME]
+    ['Daily User Download Quota', 'Workflow Name', 'Portal FireCloud User Group', API_NOTIFIER_NAME]
   end
 
   def self.value_types
@@ -140,9 +142,9 @@ class AdminConfiguration
         restore_share_acl = Study.firecloud_client.create_workspace_acl(user, share_permission)
         Study.firecloud_client.update_workspace_acl(study.firecloud_project, study.firecloud_workspace, restore_share_acl)
       end
-      # last, remove study owner access (unless project is owned by user)
+      # last, restore study owner access (unless project is owned by user)
       owner = study.user.email
-      Rails.logger.info "#{Time.now}: restoring owner access for #{owner}"
+      Rails.logger.info "#{Time.now}: restoring WRITER access for #{owner}"
       # restore permissions, setting compute acls correctly (disabled in production for COMPUTE_BLACKLIST projects)
       restore_owner_acl = Study.firecloud_client.create_workspace_acl(owner, 'WRITER', true, Rails.env == 'production' ? false : true)
       Study.firecloud_client.update_workspace_acl(study.firecloud_project, study.firecloud_workspace, restore_owner_acl)
@@ -188,7 +190,7 @@ class AdminConfiguration
 
   # method to be called from cron to check the health status of the FireCloud API and set access if an outage is detected
   def self.check_api_health
-    notifier_config = self.find_or_create_by(config_type: AdminConfiguration::API_NOTIFIER_NAME, value_type: 'Boolean')
+    notifier_config = AdminConfiguration.find_or_create_by(config_type: AdminConfiguration::API_NOTIFIER_NAME, value_type: 'Boolean')
     firecloud_access = AdminConfiguration.find_or_create_by(config_type: AdminConfiguration::FIRECLOUD_ACCESS_NAME, value_type: 'String')
     api_available = Study.firecloud_client.api_available?
 

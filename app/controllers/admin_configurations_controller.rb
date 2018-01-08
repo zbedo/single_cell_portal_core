@@ -219,6 +219,47 @@ class AdminConfigurationsController < ApplicationController
     end
   end
 
+  # make sure all portal users are a member of the portal-wide user group (if enabled)
+  def sync_portal_user_group
+    user_group_config = AdminConfiguration.find_by(config_type: 'Portal FireCloud User Group')
+    if user_group_config.present?
+      begin
+        @group_name = user_group_config.value
+        @new_users = []
+        # first check to see if group has already been created in FireCloud
+        groups = Study.firecloud_client.get_user_groups
+        matching_group = groups.find {|g| g['groupName'] == @group_name}
+        if matching_group.nil?
+          # we need to create the group before continuing
+          user_group = Study.firecloud_client.create_user_group(@group_name)
+        else
+          user_group = Study.firecloud_client.get_user_group(@group_name)
+        end
+        # now collect all registered portal users and add to the list
+        portal_users = User.where(provider: 'google_oauth2').to_a
+        portal_users.each do |user|
+          unless user_group['membersEmails'].include?(user.email)
+            # check if user is FireCloud member first
+            user_client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
+            if user_client.registered?
+              logger.info "#{Time.now}: adding #{user.email} to #{@group_name}"
+              Study.firecloud_client.add_user_to_group(@group_name, 'member', user_email)
+              @new_users << user.email
+            else
+              logger.info "#{Time.now}: skipping #{user.email}; not registered in FireCloud yet."
+            end
+          end
+        end
+        logger.info "#{Time.now}: User group #{@group_name} successfully synchronized"
+      rescue => e
+        logger.error "#{Time.now}: Error in synchronizing portal user group #{@group_name}: #{e.message}"
+        @alert = "Unable to synchronize user group #{@group_name} due to an error: #{e.message}"
+      end
+    else
+      @alert = "You have not specified a portal-wide user group yet.  Please create a 'Portal FireCloud User Group' configuration first."
+    end
+  end
+
   ###
   #
   # USER ROLES METHODS
@@ -329,6 +370,12 @@ class AdminConfigurationsController < ApplicationController
             name: 'FireCloud API Status',
             description: 'Get the current status of all FireCloud services',
             url: firecloud_api_status_path,
+            method: 'GET'
+        },
+        {
+            name: 'Synchronize FireCloud User Group',
+            description: 'Ensure that all registered portal members are a member of the portal-wide user group list (can be used for FireCloud read permissions to certain public workspaces for reference data, if needed).',
+            url: sync_portal_user_group_path,
             method: 'GET'
         }
     ]

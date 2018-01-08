@@ -1,3 +1,11 @@
+$('#distribution-link').html('Annotated Scatter');
+
+// If 'Distribution' panel is open, close it
+if ($('#distribution-panel-link').hasClass('collapsed') === false) {
+  $('#distribution-panel-link').click();
+}
+$('#expression-options-panel').removeClass('panel-info').addClass('panel-default');
+
 // load 2-d scatter data
 var expressionData = [];
 <% @values.each do |cluster, data| %>

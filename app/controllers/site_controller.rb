@@ -15,11 +15,11 @@ class SiteController < ApplicationController
 
   respond_to :html, :js, :json
 
-  before_action :set_study, except: [:index, :search, :privacy_policy, :view_workflow_wdl, :create_totat, :log_action]
+  before_action :set_study, except: [:index, :search, :privacy_policy, :view_workflow_wdl, :create_totat, :log_action, :get_workflow_options]
   before_action :set_cluster_group, only: [:study, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :expression_query, :annotation_query, :get_new_annotations, :annotation_values, :show_user_annotations_form]
   before_action :set_selected_annotation, only: [:render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :annotation_query, :annotation_values, :show_user_annotations_form]
   before_action :load_precomputed_options, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap]
-  before_action :check_view_permissions, except: [:index, :privacy_policy, :search, :precomputed_results, :expression_query, :view_workflow_wdl, :log_action, :get_workspace_samples, :update_workspace_samples, :create_totat]
+  before_action :check_view_permissions, except: [:index, :privacy_policy, :search, :precomputed_results, :expression_query, :view_workflow_wdl, :log_action, :get_workspace_samples, :update_workspace_samples, :create_totat, :get_workflow_options]
   before_action :check_compute_permissions, only: [:get_fastq_files, :get_workspace_samples, :update_workspace_samples, :delete_workspace_samples, :get_workspace_sumbissions, :create_workspace_submission, :get_submission_workflow, :abort_submission_workflow, :get_submission_errors, :get_submission_outputs, :delete_submission_files]
 
   # caching
@@ -81,12 +81,17 @@ class SiteController < ApplicationController
   # will redirect to appropriate method as needed
   def search_genes
     @terms = parse_search_terms(:genes)
-    # grab saved params for loaded cluster, boxpoints mode, annotations and consensus
+    # grab saved params for loaded cluster, boxpoints mode, annotations, consensus and other view settings
     cluster = params[:search][:cluster]
     annotation = params[:search][:annotation]
     boxpoints = params[:search][:boxpoints]
     consensus = params[:search][:consensus]
     subsample = params[:search][:subsample]
+    plot_type = params[:search][:plot_type]
+    kernel_type = params[:search][:kernel_type]
+    band_type = params[:search][:band_type]
+    heatmap_row_centering = params[:search][:heatmap_row_centering]
+    heatmap_size = params[:search][:heatmap_size]
 
     # if only one gene was searched for, make an attempt to load it and redirect to correct page
     if @terms.size == 1
@@ -94,15 +99,15 @@ class SiteController < ApplicationController
       if @gene.empty?
         redirect_to request.referrer, alert: "No matches found for: #{@terms.first}." and return
       else
-        redirect_to view_gene_expression_path(study_name: params[:study_name], gene: @gene['gene'], cluster: cluster, boxpoints: boxpoints, annotation: annotation, consensus: consensus, subsample: subsample) and return
+        redirect_to view_gene_expression_path(study_name: params[:study_name], gene: @gene['gene'], cluster: cluster, annotation: annotation, consensus: consensus, subsample: subsample, plot_type: plot_type, kernel_type: kernel_type, band_type: band_type, boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering, heatmap_size: heatmap_size) and return
       end
     end
 
     # else, determine which view to load (heatmaps vs. violin/scatter)
     if !consensus.blank?
-      redirect_to view_gene_set_expression_path(study_name: params[:study_name], search: {genes: @terms.join(' ')} , cluster: cluster, annotation: annotation, consensus: consensus, subsample: subsample)
+      redirect_to view_gene_set_expression_path(study_name: params[:study_name], search: {genes: @terms.join(' ')} , cluster: cluster, annotation: annotation, consensus: consensus, subsample: subsample, plot_type: plot_type, kernel_type: kernel_type, band_type: band_type, boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering, heatmap_size: heatmap_size)
     else
-      redirect_to view_gene_expression_heatmap_path(search: {genes: @terms.join(' ')}, cluster: cluster, annotation: annotation)
+      redirect_to view_gene_expression_heatmap_path(search: {genes: @terms.join(' ')}, cluster: cluster, annotation: annotation, plot_type: plot_type, kernel_type: kernel_type, band_type: band_type, boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering, heatmap_size: heatmap_size)
     end
   end
 
@@ -188,7 +193,8 @@ class SiteController < ApplicationController
 
     # double check on download availability: first, check if administrator has disabled downloads
     # then check if FireCloud is available and disable download links if either is true
-    @allow_downloads = AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
+    @allow_firecloud_access = AdminConfiguration.firecloud_access_enabled?
+    @allow_downloads = @allow_firecloud_access && Study.firecloud_client.api_available?
     set_study_default_options
     # load options and annotations
     if @study.initialized?
@@ -199,24 +205,25 @@ class SiteController < ApplicationController
     end
 
     # if user has permission to run workflows, load available workflows and current submissions
-    if AdminConfiguration.firecloud_access_enabled?
+
+    if @allow_firecloud_access
       if user_signed_in? && @study.can_compute?(current_user)
+        # load list of previous submissions
         workspace = Study.firecloud_client.get_workspace(@study.firecloud_project, @study.firecloud_workspace)
         @submissions = Study.firecloud_client.get_workspace_submissions(@study.firecloud_project, @study.firecloud_workspace)
+
         # remove deleted submissions from list of runs
         if !workspace['workspace']['attributes']['deleted_submissions'].blank?
           deleted_submissions = workspace['workspace']['attributes']['deleted_submissions']['items']
           @submissions.delete_if {|submission| deleted_submissions.include?(submission['submissionId'])}
         end
+
+        # load samples from workspace
         all_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_project, @study.firecloud_workspace, 'sample')
         @samples = Naturally.sort(all_samples.map {|s| s['name']})
-        @workflows = Study.firecloud_client.get_methods(namespace: 'single-cell-portal')
-        @workflows_list = @workflows.sort_by {|w| [w['name'], w['snapshotId'].to_i]}.map {|w| ["#{w['name']} (#{w['snapshotId']})#{w['synopsis'].blank? ? nil : " -- #{w['synopsis']}"}", "#{w['namespace']}--#{w['name']}--#{w['snapshotId']}"]}
-        @primary_data_locations = []
-        fastq_files = @primary_study_files.select {|f| !f.human_data}
-        [fastq_files, @primary_data].flatten.each do |entry|
-          @primary_data_locations << ["#{entry.name} (#{entry.description})", "#{entry.class.name.downcase}--#{entry.name}"]
-        end
+
+        # load list of available workflows
+        @workflows_list = load_available_workflows
       end
     end
   end
@@ -565,7 +572,9 @@ class SiteController < ApplicationController
         # redirect directly to file to trigger download
         redirect_to @signed_url
       else
-        redirect_to view_study_path, alert: 'The file you requested is currently not available.  Please try again later.'
+        # send notification to the study owner that file is missing (if notifications turned on)
+        SingleCellMailer.user_download_fail_notification(@study, params[:filename]).deliver_now
+        redirect_to view_study_path, alert: 'The file you requested is currently not available.  Please contact the study owner if you require access to this file.' and return
       end
     rescue RuntimeError => e
       logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
@@ -774,12 +783,16 @@ class SiteController < ApplicationController
         when 'directorylisting'
           directory = @study.directory_listings.are_synced.detect {|d| d.name == entry_name}
           if !directory.nil?
-            file_list += directory.files
+            directory.files.each do |file|
+              entry = file
+              entry[:gs_url] = directory.gs_url(file[:name])
+              file_list << entry
+            end
           end
         when 'studyfile'
           study_file = @study.study_files.by_type('Fastq').detect {|f| f.name == entry_name}
           if !study_file.nil?
-            file_list << {name: study_file.upload_file_name, size: study_file.upload_file_size, generation: study_file.generation}
+            file_list << {name: study_file.download_location, size: study_file.upload_file_size, generation: study_file.generation, gs_url: study_file.gs_url}
           end
         else
           nil # this is called when selection is cleared out
@@ -919,40 +932,56 @@ class SiteController < ApplicationController
     end
   end
 
+  # retrieve any optional parameters for a selected workflow
+  def get_workflow_options
+    @options = WorkflowConfiguration.get_optional_parameters(params[:workflow_identifier])
+  end
+
   # create a workspace analysis submission for a given sample
   def create_workspace_submission
     begin
-      workflow_namespace, workflow_name, workflow_snapshot = workflow_submission_params[:identifier].split('--')
-      # create a name for the configuration; will be combination of workflow name and snapshot id
-      ws_config_name = [workflow_name, workflow_snapshot].join('_')
-      @samples = workflow_submission_params[:samples].keep_if {|s| !s.blank?}
-
-      # check if there is a configuration in the workspace that matches the requested workflow
-      # we need a separate begin/rescue block as if the configuration isn't found we will throw a RuntimeError
-      begin
-        submission_config = Study.firecloud_client.get_workspace_configuration(@study.firecloud_project, @study.firecloud_workspace, ws_config_name)
-        logger.info "#{Time.now}: found existing configuration #{ws_config_name} in #{@study.firecloud_workspace}"
-        config_namespace = submission_config['namespace']
-        config_name = submission_config['name']
-      rescue RuntimeError
-        logger.info "#{Time.now}: No existing configuration found for #{ws_config_name} in #{@study.firecloud_workspace}; copying from repository"
-        # we did not find a configuration, so we must copy the public one from the repository
-        existing_configs = Study.firecloud_client.get_configurations(namespace: workflow_namespace, name: workflow_name)
-        matching_config = existing_configs.find {|config| config['method']['name'] == workflow_name && config['method']['namespace'] == workflow_namespace && config['method']['snapshotId'] == workflow_snapshot.to_i}
-        new_config = Study.firecloud_client.copy_configuration_to_workspace(@study.firecloud_project, @study.firecloud_workspace, matching_config['namespace'], matching_config['name'], matching_config['snapshotId'], @study.firecloud_project, ws_config_name)
-        config_namespace = new_config['methodConfiguration']['namespace']
-        config_name = new_config['methodConfiguration']['name']
+      # before creating submission, we need to make sure that the user is on the 'all-portal' user group list if it exists
+      user_group_config = AdminConfiguration.find_by(config_type: 'Portal FireCloud User Group')
+      if user_group_config.present? && !current_user.registered_for_firecloud
+        group_name = user_group_config.value
+        logger.info "#{Time.now}: adding #{current_user.email} to #{group_name} user group"
+        Study.firecloud_client.add_user_to_group(group_name, 'member', current_user.email)
+        logger.info "#{Time.now}: user group registration complete"
+        current_user.update(registered_for_firecloud: true)
       end
+
+      # set up parameters
+      workflow_namespace, workflow_name, workflow_snapshot = workflow_submission_params[:identifier].split('--')
+      samples = workflow_submission_params[:samples].keep_if {|s| !s.blank?}
+      optional_inputs = workflow_submission_params[:optional_parameters]
+
+      # either load existing workspace configuration or copy new one into the workspace from the methods repository
+      config_namespace, config_name = set_workflow_configuration(workflow_name, workflow_namespace, workflow_snapshot)
 
       # submission must be done as user, so create a client with current_user and submit
       client = FireCloudClient.new(current_user, @study.firecloud_project)
       @submissions = []
-      @samples.each do |sample|
-        logger.info "#{Time.now}: Creating submission for #{sample} using #{config_namespace}/#{config_name} in #{@study.firecloud_project}/#{@study.firecloud_workspace} "
-        @submissions << client.create_workspace_submission(@study.firecloud_project, @study.firecloud_workspace, config_namespace, config_name, 'sample', sample)
+      @failed_submissions = []
+      samples.each do |sample|
+        logger.info "#{Time.now}: Updating configuration for #{config_namespace}/#{config_name} to run #{workflow_namespace}/#{workflow_name} in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
+        # create input hash for submission
+        submission_inputs = {sample_name: sample}
+        if optional_inputs.present?
+          submission_inputs.merge!(optional_inputs)
+        end
+        # Run any workflow-specific extra configuration steps
+        configuration_response = WorkflowConfiguration.new(@study, config_namespace, config_name, workflow_namespace, workflow_name, submission_inputs).perform
+        # make sure the configuration step completed without error, otherwise abort submission
+        if configuration_response[:complete]
+          logger.info "#{Time.now}: Creating submission for #{sample} using #{configuration_response[:configuration_namespace]}/#{configuration_response[:configuration_name]} in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
+          @submissions << client.create_workspace_submission(@study.firecloud_project, @study.firecloud_workspace, configuration_response[:configuration_namespace], configuration_response[:configuration_name], 'sample', sample)
+        else
+          logger.error "#{Time.now}: Unable to submit #{sample} using #{config_namespace}/#{config_name} in #{@study.firecloud_project}/#{@study.firecloud_workspace}; logging error"
+          @failed_submissions << configuration_response
+        end
       end
     rescue => e
-      logger.error "#{Time.now}: unable to submit workflow #{workflow_name} for sample #{@samples.join(', ')} in #{@study.firecloud_workspace} due to: #{e.message}"
+      logger.error "#{Time.now}: unable to submit workflow #{workflow_name} for sample #{samples.join(', ')} in #{@study.firecloud_workspace} due to: #{e.message}"
       @alert = "We were unable to submit your workflow due to an error: #{e.message}"
       render action: :notice
     end
@@ -1119,6 +1148,53 @@ class SiteController < ApplicationController
     @selected_annotation
   end
 
+  # create/retrieve a workflow configuration object in a workspace prior to submitting a workflow
+  def set_workflow_configuration(workflow_name, workflow_namespace, workflow_snapshot)
+    # create a unique identifier for the configuration (combination of name & snapshot ID)
+    ws_config_name = [workflow_name, workflow_snapshot].join('_')
+    config_namespace = ""
+    config_name = ""
+    logger.info "#{Time.now}: checking for existing workspace configurations in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
+    workspace_configs = Study.firecloud_client.get_workspace_configurations(@study.firecloud_project, @study.firecloud_workspace)
+    matching_ws_config = workspace_configs.find {|config| config['methodRepoMethod']['methodName'] == workflow_name && config['methodRepoMethod']['methodNamespace'] == workflow_namespace && config['methodRepoMethod']['methodVersion'] == workflow_snapshot.to_i}
+    if matching_ws_config.present?
+      submission_config = Study.firecloud_client.get_workspace_configuration(@study.firecloud_project, @study.firecloud_workspace, matching_ws_config['namespace'], matching_ws_config['name'])
+      logger.info "#{Time.now}: found existing configuration #{ws_config_name} in #{@study.firecloud_workspace}"
+      config_namespace = submission_config['namespace']
+      config_name = submission_config['name']
+    else
+      logger.info "#{Time.now}: No existing configuration found for #{ws_config_name} in #{@study.firecloud_workspace}; copying from repository"
+      # we did not find a configuration, so we must copy the public one from the repository
+      # first check for a public configuration in 'scp-pipeline-configurations'
+      existing_configs = Study.firecloud_client.get_configurations(namespace: 'scp-pipeline-configurations', name: workflow_name)
+      if existing_configs.empty?
+        # check for configurations in the workflow namespace next
+        existing_configs = Study.firecloud_client.get_configurations(namespace: workflow_namespace, name: workflow_name)
+      end
+      matching_config = existing_configs.find {|config| config['method']['name'] == workflow_name && config['method']['namespace'] == workflow_namespace && config['method']['snapshotId'] == workflow_snapshot.to_i}
+      if matching_config.present?
+        logger.info "#{Time.now}: Found matching configuration: #{matching_config['namespace']}/#{matching_config['name']}"
+        new_config = Study.firecloud_client.copy_configuration_to_workspace(@study.firecloud_project, @study.firecloud_workspace, matching_config['namespace'], matching_config['name'], matching_config['snapshotId'], @study.firecloud_project, ws_config_name)
+        config_namespace = new_config['methodConfiguration']['namespace']
+        config_name = new_config['methodConfiguration']['name']
+      else
+        # no matching configurations were present, so create a blank template and configure later
+        logger.info "#{Time.now}: No configurations found, creating blank template for #{workflow_namespace}/#{workflow_name}"
+        config_template = Study.firecloud_client.create_configuration_template(workflow_namespace, workflow_name, workflow_snapshot)
+        # configure name, namespace and rootEntityType
+        config_template['name'] = ws_config_name
+        config_template['namespace'] = workflow_namespace
+        config_template['rootEntityType'] = 'sample'
+        new_config = Study.firecloud_client.update_workspace_configuration(@study.firecloud_project, @study.firecloud_workspace, config_template['namespace'],
+                                                                           config_template['name'], config_template)
+        config_namespace = new_config['namespace']
+        config_name = new_config['name']
+      end
+    end
+    # return new configuration namespace & name
+    [config_namespace, config_name]
+  end
+
   # whitelist parameters for updating studies on study settings tab (smaller list than in studies controller)
   def study_params
     params.require(:study).permit(:name, :description, :public, :embargo, :cell_count, :default_options => [:cluster, :annotation, :color_profile, :expression_label, :deliver_emails, :cluster_point_size, :cluster_point_alpha, :cluster_point_border], study_shares_attributes: [:id, :_destroy, :email, :permission])
@@ -1131,7 +1207,9 @@ class SiteController < ApplicationController
 
   # filter out unneeded workflow submission parameters
   def workflow_submission_params
-    params.require(:workflow).permit(:identifier, :samples => [])
+    params.require(:workflow).permit(:identifier, :samples => []).tap do |while_listed|
+      while_listed[:optional_parameters] = params[:workflow][:optional_parameters]
+    end
   end
 
   # make sure user has view permissions for selected study
@@ -1852,6 +1930,26 @@ class SiteController < ApplicationController
       0.upto(4) {|i| row[i] ||= '' }
       existing_list << row
     end
+  end
+
+  # load list of available workflows
+  def load_available_workflows
+    config_options = AdminConfiguration.where(config_type: 'Workflow Name').to_a
+    allowed_workflows = config_options.map(&:value)
+    all_workflows = []
+
+    # parellelize gets to speed up performance if there are a lot of workflows
+    Parallel.map(allowed_workflows, in_threads: 100) do |workflow_opts|
+      namespace, name = workflow_opts.split('/')
+      all_workflows << Study.firecloud_client.get_methods(namespace: namespace, name: name)
+    end
+
+    # flatten list as it will be nested arrays
+    all_workflows.flatten!
+
+    # assemble readable list for the dropdown menu
+    list = all_workflows.sort_by {|w| [w['name'], w['snapshotId'].to_i]}.map {|w| ["#{w['name']} (#{w['snapshotId']})#{w['synopsis'].blank? ? nil : " -- #{w['synopsis']}"}", "#{w['namespace']}--#{w['name']}--#{w['snapshotId']}"]}
+    list
   end
 
   # Helper method for download_bulk_files.  Returns file's curl config, size.

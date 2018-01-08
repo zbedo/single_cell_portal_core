@@ -862,7 +862,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# verify upload has completed and is in FireCloud bucket
 		@driver.get @base_url + '/studies/'
 		file_count = @driver.find_element(:id, "test-study-#{$random_seed}-study-file-count")
-		assert file_count.text == '9', "did not find correct number of files, expected 9 but found #{file_count.text}"
+		assert file_count.text == '10', "did not find correct number of files, expected 10 but found #{file_count.text}"
 		show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
 		show_study.click
 		gcs_link = @driver.find_element(:id, 'gcs-link')
@@ -871,7 +871,7 @@ class UiTestSuite < Test::Unit::TestCase
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
-		assert files.size == 9, "did not find correct number of files, expected 9 but found #{files.size}"
+		assert files.size == 10, "did not find correct number of files, expected 9 but found #{files.size}"
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
 
@@ -1885,6 +1885,9 @@ class UiTestSuite < Test::Unit::TestCase
 		assert labels.size == 8, "Did not find coorect number of coordinate labels, expected 8 but found #{labels.size}"
 
 		# load subclusters
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		wait_for_render(:id, 'view-options')
 		clusters = @driver.find_element(:id, 'cluster').find_elements(:tag_name, 'option')
 		assert clusters.size == 2, "incorrect number of clusters found, expected 2 but found #{clusters.size}"
 		annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
@@ -2151,6 +2154,9 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# testing loading all annotation types
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		wait_for_render(:id, 'view-options')
 		annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
 		annotations_values = annotations.map{|x| x['value']}
 		annotations_values.each do |annotation|
@@ -2266,6 +2272,9 @@ class UiTestSuite < Test::Unit::TestCase
 		assert private_reference_rendered, "private reference plot did not finish rendering, expected true but found #{private_reference_rendered}"
 
 		# select new kernel
+		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
 		private_kernel_dropdown = @driver.find_element(:id, 'kernel_type')
 		private_kernel_ops = private_kernel_dropdown.find_elements(:tag_name, 'option')
 		private_new_kernel = private_kernel_ops.select {|opt| !opt.selected?}.sample.text
@@ -2346,6 +2355,15 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# testing loading all annotation types
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		wait_for_render(:id, 'view-options')
+
+		# open distribution control panel as well
+		view_options_panel = @driver.find_element(:id, 'distribution-panel-link')
+		view_options_panel.click
+		wait_for_render(:id, 'distribution-plot-controls')
+
 		annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
 		annotations_values = annotations.map{|x| x['value']}
 		annotations_values.each do |annotation|
@@ -2439,7 +2457,6 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(private_study_path)
 		open_ui_tab('study-visualize')
 
-
 		new_genes = @genes.shuffle.take(rand(2..5))
 		search_box = @driver.find_element(:id, 'search_genes')
 		search_box.send_keys(new_genes.join(' '))
@@ -2470,6 +2487,15 @@ class UiTestSuite < Test::Unit::TestCase
 		assert private_reference_rendered, "private reference plot did not finish rendering, expected true but found #{private_reference_rendered}"
 
 		# select new kernel
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		wait_for_render(:id, 'view-options')
+
+		# open distribution control panel as well
+		view_options_panel = @driver.find_element(:id, 'distribution-panel-link')
+		view_options_panel.click
+		wait_for_render(:id, 'distribution-plot-controls')
+
 		private_kernel_dropdown = @driver.find_element(:id, 'kernel_type')
 		private_kernel_ops = private_kernel_dropdown.find_elements(:tag_name, 'option')
 		private_new_kernel = private_kernel_ops.select {|opt| !opt.selected?}.sample.text
@@ -2532,8 +2558,12 @@ class UiTestSuite < Test::Unit::TestCase
 		search_box.send_keys(genes.join(' '))
 		search_genes = @driver.find_element(:id, 'perform-gene-search')
 		search_genes.click
+		wait_for_render(:id, 'heatmap-plot')
 
 		assert element_present?(:id, 'plots'), 'could not find expression heatmap'
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		wait_for_render(:id, 'view-options')
 
 		annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
 		annotations_values = annotations.map{|x| x['value']}
@@ -2552,6 +2582,7 @@ class UiTestSuite < Test::Unit::TestCase
 		assert genes.sort == queried_genes.sort, "found incorrect genes, expected #{genes.sort} but found #{queried_genes.sort}"
 
 		# resize heatmap
+		scroll_to(:bottom)
 		heatmap_size = @driver.find_element(:id, 'heatmap_size')
 		heatmap_size.send_key(1000)
 		@wait.until {wait_for_morpheus_render('#heatmap-plot', 'morpheus')}
@@ -2572,7 +2603,6 @@ class UiTestSuite < Test::Unit::TestCase
 		login_path = @base_url + '/users/sign_in'
 		@driver.get login_path
 		wait_until_page_loads(login_path)
-		close_modal('message_modal')
 		login($test_email, $test_email_password)
 		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
@@ -2622,7 +2652,6 @@ class UiTestSuite < Test::Unit::TestCase
 		login_path = @base_url + '/users/sign_in'
 		@driver.get login_path
 		wait_until_page_loads(login_path)
-		close_modal('message_modal')
 		login($test_email, $test_email_password)
 		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
@@ -2650,10 +2679,17 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(path)
 		open_ui_tab('study-visualize')
 
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		gene_list_panel = @driver.find_element(:id, 'gene-lists-link')
+		gene_list_panel.click
+		wait_for_render(:id, 'expression')
+		sleep(1)
+
 		expression_list = @driver.find_element(:id, 'expression')
 		opts = expression_list.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
-		list = opts.sample
-		list.click
+		list = opts.last
+		gene_list_name = list['value']
+		expression_list.send_keys(gene_list_name)
 		assert element_present?(:id, 'heatmap-plot'), 'could not find heatmap plot'
 
 		# wait for heatmap to render
@@ -2671,10 +2707,17 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(private_study_path)
 		open_ui_tab('study-visualize')
 
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		gene_list_panel = @driver.find_element(:id, 'gene-lists-link')
+		gene_list_panel.click
+		wait_for_render(:id, 'expression')
+		sleep(1)
+
 		private_expression_list = @driver.find_element(:id, 'expression')
 		opts = private_expression_list.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
-		list = opts.sample
-		list.click
+		list = opts.last
+		gene_list_name = list['value']
+		private_expression_list.send_keys(gene_list_name)
 		assert element_present?(:id, 'heatmap-plot'), 'could not find heatmap plot'
 
 		# wait for heatmap to render
@@ -2694,14 +2737,30 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(path)
 		open_ui_tab('study-visualize')
 
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		gene_list_panel = @driver.find_element(:id, 'gene-lists-link')
+		gene_list_panel.click
+		wait_for_render(:id, 'expression')
+		sleep(1)
+
 		gene_sets = @driver.find_element(:id, 'gene_set')
 		opts = gene_sets.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
-		list = opts.sample
-		list.click
+		list = opts.last
+		gene_list_name = list['value']
+		gene_sets.send_keys(gene_list_name)
 		assert element_present?(:id, 'expression-plots'), 'could not find box/scatter divs'
 
 		# testing loading all annotation types
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		wait_for_render(:id, 'view-options')
+
+		# open distribution control panel as well
+		view_options_panel = @driver.find_element(:id, 'distribution-panel-link')
+		view_options_panel.click
+		wait_for_render(:id, 'distribution-plot-controls')
+
 		annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
 		annotations_values = annotations.map{|x| x['value']}
 		annotations_values.each do |annotation|
@@ -2796,10 +2855,17 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(private_study_path)
 		open_ui_tab('study-visualize')
 
+		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		gene_list_panel = @driver.find_element(:id, 'gene-lists-link')
+		gene_list_panel.click
+		wait_for_render(:id, 'expression')
+		sleep(1)
+
 		private_gene_sets = @driver.find_element(:id, 'gene_set')
 		opts = private_gene_sets.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
-		list = opts.sample
-		list.click
+		list = opts.last
+		gene_list_name = list['value']
+		private_gene_sets.send_keys(gene_list_name)
 		assert element_present?(:id, 'expression-plots'), 'could not find box/scatter divs'
 
 		# wait until box plot renders, at this point all 3 should be done
@@ -2812,6 +2878,15 @@ class UiTestSuite < Test::Unit::TestCase
 		assert private_reference_rendered, "private reference plot did not finish rendering, expected true but found #{private_reference_rendered}"
 
 		# select new kernel
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		wait_for_render(:id, 'view-options')
+
+		# open distribution control panel as well
+		view_options_panel = @driver.find_element(:id, 'distribution-panel-link')
+		view_options_panel.click
+		wait_for_render(:id, 'distribution-plot-controls')
+
 		private_kernel_dropdown = @driver.find_element(:id, 'kernel_type')
 		private_kernel_ops = private_kernel_dropdown.find_elements(:tag_name, 'option')
 		private_new_kernel = private_kernel_ops.select {|opt| !opt.selected?}.sample.text
@@ -2955,6 +3030,9 @@ class UiTestSuite < Test::Unit::TestCase
 		open_ui_tab('study-visualize')
 
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		wait_for_render(:id, 'view-options')
 		clusters = @driver.find_element(:id, 'cluster').find_elements(:tag_name, 'option')
 		cluster = clusters.last
 		cluster_name = cluster['text']
@@ -2994,6 +3072,9 @@ class UiTestSuite < Test::Unit::TestCase
 		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
 		# now check values
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		wait_for_render(:id, 'view-options')
 		loaded_cluster = @driver.find_element(:id, 'cluster')
 		loaded_annotation = @driver.find_element(:id, 'annotation')
 		assert loaded_cluster['value'] == cluster_name, "did not load correct cluster; expected #{cluster_name} but loaded #{loaded_cluster['value']}"
@@ -3004,6 +3085,9 @@ class UiTestSuite < Test::Unit::TestCase
 		back_btn.click
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 		sleep(1)
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		wait_for_render(:id, 'view-options')
 		current_cluster = @driver.find_element(:id, 'cluster')
 		current_annotation = @driver.find_element(:id, 'annotation')
 		assert current_cluster['value'] == cluster_name, "did not load correct cluster after back button; expected #{cluster_name} but loaded #{current_cluster['value']}"
@@ -3023,16 +3107,25 @@ class UiTestSuite < Test::Unit::TestCase
 		back_btn.click
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		wait_for_render(:id, 'view-options')
 		heatmap_cluster =  @driver.find_element(:id, 'cluster')['value']
 		heatmap_annot = @driver.find_element(:id, 'annotation')['value']
 		assert heatmap_cluster == cluster_name, "cluster was not preserved correctly from heatmap view, expected #{cluster_name} but found #{heatmap_cluster}"
 		assert heatmap_annot == annotation_value, "cluster was not preserved correctly from heatmap view, expected #{annotation_value} but found #{heatmap_annot}"
 
 		# show gene list in scatter mode
+		gene_list_panel = @driver.find_element(:id, 'gene-lists-link')
+		gene_list_panel.click
+		wait_for_render(:id, 'expression')
+
 		gene_sets = @driver.find_element(:id, 'gene_set')
 		opts = gene_sets.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
-		list = opts.sample
-		list.click
+		list = opts.last
+		gene_list_name = list['value']
+		gene_sets.send_keys(gene_list_name)
+
 		assert element_present?(:id, 'expression-plots'), 'could not find box/scatter divs'
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
 
@@ -3041,6 +3134,9 @@ class UiTestSuite < Test::Unit::TestCase
 		back_btn.click
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		wait_for_render(:id, 'view-options')
 		gene_list_cluster =  @driver.find_element(:id, 'cluster')['value']
 		gene_list_annot = @driver.find_element(:id, 'annotation')['value']
 		assert gene_list_cluster == cluster_name, "cluster was not preserved correctly from gene list scatter view, expected #{cluster_name} but found #{gene_list_cluster}"
@@ -3080,6 +3176,9 @@ class UiTestSuite < Test::Unit::TestCase
 		new_camera = @driver.execute_script("return $('#cluster-plot').data('camera');")
 		assert camera == new_camera, "camera position did not save correctly, expected #{camera.to_json}, got #{new_camera.to_json}"
 		# load annotation
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		wait_for_render(:id, 'view-options')
 		annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
 		annotations.select {|opt| opt.text == 'Sub-Cluster'}.first.click
 
@@ -3145,6 +3244,9 @@ class UiTestSuite < Test::Unit::TestCase
 		assert scatter_camera == exp_annot_camera, "camera position did not save correctly, expected #{scatter_camera.to_json}, got #{exp_annot_camera.to_json}"
 
 		# load new cluster
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		wait_for_render(:id, 'view-options')
 		clusters = @driver.find_element(:id, 'cluster').find_elements(:tag_name, 'option')
 		cluster = clusters.first
 		cluster.click
@@ -4201,6 +4303,9 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(study_page)
 
 		open_ui_tab('study-workflows')
+		wait_for_render(:id, 'workflow_identifier')
+		samples_tab = @driver.find_element(:id, 'select-samples-nav')
+		samples_tab.click
 		wait_for_render(:id, 'submissions-table')
 		# select all available fastq files to create a sample entity
 		study_data_select = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_study_data'))
@@ -4222,8 +4327,7 @@ class UiTestSuite < Test::Unit::TestCase
 		assert file_contents.size == 2, "Sample info file is wrong size; exprected 2 lines but found #{file_contents.size}"
 		header_line = "entity:sample_id\tfastq_file_1\tfastq_file_2\tfastq_file_3\tfastq_file_4\n"
 		assert file_contents.first == header_line, "sample info header line incorrect, expected #{header_line} but found '#{file_contents.first}'"
-		sample_line = "cell_1\tcell_1_R1_001.fastq.gz\t\tcell_1_I1_001.fastq.gz\t\n"
-		assert file_contents.last == sample_line, "sample info content line incorrect, expected #{sample_line} but found '#{file_contents.last}'"
+		assert file_contents.last.start_with?('cell_1'), "sample name in content line incorrect, expected 'cell_1' but found '#{file_contents.last}'"
 
 		# clean up
 		sample_info_file.close
@@ -4264,16 +4368,25 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# select worfklow & sample
 		open_ui_tab('study-workflows')
-		wait_for_render(:id, 'submissions-table')
+		wait_for_render(:id, 'workflow_identifier')
+		scroll_to(:bottom)
 		wdl_workdropdown = @driver.find_element(:id, 'workflow_identifier')
 		wdl_workflows = wdl_workdropdown.find_elements(:tag_name, 'option')
 		wdl_workflows.last.click
+
+		samples_tab = @driver.find_element(:id, 'select-samples-nav')
+		samples_tab.click
+		wait_for_render(:id, 'submissions-table')
+
 		study_samples = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_samples'))
 		study_samples.select_all
 		# wait for table to populate (will have a row with sorting_1 class)
 		@wait.until {@driver.find_element(:id, 'samples-table').find_element(:class, 'sorting_1').displayed?}
 
 		# submit workflow
+		review_tab = @driver.find_element(:id, 'review-submission-nav')
+		review_tab.click
+		wait_for_render(:id, 'submit-workflow')
 		submit_btn = @driver.find_element(id: 'submit-workflow')
 		submit_btn.click
 		close_modal('generic-update-modal')
@@ -4439,6 +4552,9 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(study_page)
 
 		open_ui_tab('study-workflows')
+		wait_for_render(:id, 'workflow_identifier')
+		samples_tab = @driver.find_element(:id, 'select-samples-nav')
+		samples_tab.click
 		wait_for_render(:id, 'submissions-table')
 
 		# now select sample
