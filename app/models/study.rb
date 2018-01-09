@@ -153,6 +153,9 @@ class Study
   has_many :user_annotations, dependent: :delete
   has_many :user_data_arrays, dependent: :delete
 
+  # HCA metadata object
+  has_many :analysis_metadata, dependent: :delete
+
   # field definitions
   field :name, type: String
   field :embargo, type: Date
@@ -599,6 +602,7 @@ class Study
       UserAnnotation.where(study_id: study.id).delete_all
       UserAnnotationShare.where(study_id: study.id).delete_all
       UserDataArray.where(study_id: study.id).delete_all
+      AnalysisMetadatum.where(study_id: study.id).delete_all
       # now destroy study to ensure everything is removed
       study.destroy
       Rails.logger.info "#{Time.now}: delete of #{study.name} completed"
