@@ -45,7 +45,7 @@ group :development do
   gem 'test-unit'
 end
 
-gem 'devise', '4.1.1'
+gem 'devise'
 gem 'omniauth-google-oauth2'
 gem 'googleauth'
 gem 'google-cloud-storage', require: 'google/cloud/storage'
@@ -53,7 +53,7 @@ gem 'selenium-webdriver'
 gem 'jquery-ui-rails', :git => 'https://github.com/joliss/jquery-ui-rails'
 gem 'bootstrap-sass', :git => 'https://github.com/twbs/bootstrap-sass'
 gem 'font-awesome-sass', git: 'https://github.com/FortAwesome/font-awesome-sass'
-gem 'mongoid', '5.1'
+gem 'mongoid'
 gem 'bson_ext'
 gem 'ruby-prof'
 gem 'delayed_job'
