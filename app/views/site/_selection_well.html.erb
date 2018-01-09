@@ -83,18 +83,27 @@
         }
     });
 
-    //create selection creates the first row, unselected. only called at creation of selection well
-    function createSelection(){
+    // create selection creates the first row, unselected. only called at creation of selection well
+    function createSelection() {
         // make sure table is empty
         selectionTable.empty();
         // add a well and table to div
-        selectionTable.prepend('<div class=\"col-sm-12\"><table id=\"well-table\" class=\"table table-condensed \"><tbody></tbody></table></div>');
+        selectionTable.prepend('<div class="col-sm-12"><table id="well-table" class="table table-condensed "><tbody></tbody></table></div>');
 
         // add the first row, unselected
-        for(var m = 0; m < selections.length; m++){
-            var name = 'Selection ' + m.toString();
-            if(m === 0){name = 'Unselected'}
-            var addS = '<tr><td id=\"' + name + '\">'+ name + ': ' +  selections[m].length.toString() + ' Cells</td><td><input type=\"text\" name=\"user_annotation[user_data_arrays_attributes][' + m + '][name]" id=\"user_annotation_user_data_arrays_attributes_' + m + '_name\" class="form-control annotation-label need-text\" placeholder=\"Set Label\"><input name=\"user_annotation[user_data_arrays_attributes][' + m + '][values]" id=\"user_annotation_user_data_arrays_attributes_' + m + '_values\" type="hidden" value=\"' + selections[m]+'\" /></td></tr>';
+        for (var m = 0; m < selections.length; m++) {
+            var name = 'Selection ' + m;
+            if (m === 0) {
+              name = 'Unselected';
+            }
+            var addS =
+              '<tr>' +
+                '<td id="' + name + '">'+ name + ': ' +  selections[m].length + ' Cells</td>' +
+                '<td>' +
+                  '<input type="text" name="user_annotation[user_data_arrays_attributes][' + m + '][name]" id="user_annotation_user_data_arrays_attributes_' + m + '_name" class="form-control annotation-label need-text" placeholder="Set Label">' +
+                  '<input name="user_annotation[user_data_arrays_attributes][' + m + '][values]" id="user_annotation_user_data_arrays_attributes_' + m + '_values" type="hidden" value="' + selections[m] + '" />' +
+                '</td>' +
+              '</tr>';
 
             $('#well-table').prepend(addS);
         }
