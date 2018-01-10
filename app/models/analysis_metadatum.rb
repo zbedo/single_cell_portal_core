@@ -24,6 +24,12 @@ class AnalysisMetadatum
   validates_uniqueness_of :submission_id
 
   ##
+  # CALLBACKS
+  ##
+
+  before_validation :set_payload, on: :create
+
+  ##
   # CONSTANTS
   ##
 
@@ -40,21 +46,45 @@ class AnalysisMetadatum
   # INSTANCE METHODS
   ##
 
+  # root directory for storing metadata schema copies
+  def definition_root
+    Rails.root.join('data', 'HCA_metadata', self.version)
+  end
+
   # remote endpoint containing metadata schema
   def definition_url
     "https://raw.githubusercontent.com/HumanCellAtlas/metadata-schema/#{self.version}/json_schema/analysis.json"
   end
 
+  # local filesytem location of copy of JSON schema
+  def definition_filepath
+    Rails.root.join(self.definition_root, 'analysis.json')
+  end
+
   # return a parsed JSON object detailing the metadata schema for this object
   def definition_schema
     begin
-      metadata_schema = RestClient.get self.definition_url
-      JSON.parse(metadata_schema.body)
+      # check for local copy first
+      if File.exists?(self.definition_filepath)
+        existing_schema = File.read(self.definition_filepath)
+        JSON.parse(existing_schema)
+      else
+        Rails.logger.info "#{Time.now}: saving new local copy of #{self.definition_filepath}"
+        metadata_schema = RestClient.get self.definition_url
+        # write a local copy
+        unless Dir.exist?(self.definition_root)
+          FileUtils.mkdir_p(self.definition_root)
+        end
+        new_schema = File.new(self.definition_filepath, 'w+')
+        new_schema.write metadata_schema.body
+        new_schema.close
+        JSON.parse(metadata_schema.body)
+      end
     rescue RestClient::ExceptionWithResponse => e
       Rails.logger.error "#{Time.now}: Error retrieving remote HCA Analysis metadata schema: #{e.message}"
       {error: "Error retrieving definition schema: #{e.message}"}
     rescue JSON::ParserError => e
-      Rails.logger.error "#{Time.now}: Error parsing remote HCA Analysis metadata schema: #{e.message}"
+      Rails.logger.error "#{Time.now}: Error parsing HCA Analysis metadata schema: #{e.message}"
       {error: "Error parsing definition schema: #{e.message}"}
     end
   end
@@ -88,23 +118,33 @@ class AnalysisMetadatum
     end
   end
 
+  # set a value based on the schema definition for a particular field
+  def set_value_by_type(definitions, value)
+    value_type = definitions['type']
+    case value_type
+      when 'string'
+        value
+      when 'integer'
+        value.to_i
+      when 'array'
+        if value.is_a?(Array)
+          value
+        elsif value.is_a?(String)
+          # try to split on commas to convert into array
+          value.split(',')
+        end
+      else
+        value
+    end
+  end
+
   # extract call-level metadata from a FireCloud submission to populate task attributes for an analysis
-  def get_workflow_call_attributes(submission_id)
+  def get_workflow_call_attributes(workflows)
     begin
       call_metadata = []
-      study = self.study
-      # load the instance of the requested workflow
-      submission = Study.firecloud_client.get_workspace_submission(study.firecloud_project,
-                                                                          study.firecloud_workspace,
-                                                                          submission_id)
-      submission['workflows'].each do |submission_workflow|
-        workflow = Study.firecloud_client.get_workspace_submission_workflow(study.firecloud_project,
-                                                                            study.firecloud_workspace,
-                                                                            submission_id,
-                                                                            submission_workflow['workflowId'])
+      workflows.each do |workflow|
         # for each 'call', extract the available information as defined by the 'task' definition for this
-        # version of the analysis metadatum schema
-
+        # version of the analysis metadata schema
         workflow['calls'].each do |task, task_attributes|
           call = {
               'name' => task
@@ -120,15 +160,16 @@ class AnalysisMetadatum
               # some fields are nested, so check first. do a conditional assignment in case we already have a value
               if location.include?('/')
                 parent, child = location.split('/')
-                call[property] ||= attributes[parent][child]
+                call[property] ||= set_value_by_type(definitions, attributes[parent][child])
               else
-                call[property] ||= attributes[location]
+                call[property] ||= set_value_by_type(definitions, attributes[location])
               end
+              # make sure we have a valid value type
             else
               # try to do a straight mapping, will likely miss
               Rails.logger.info "#{Time.now}: trying unmappable HCA analysis.task property: #{property}"
-              call[property] ||= attributes[property]
-              next # we don't know how to map this property yet, so ignore for now but log
+              call[property] ||= set_value_by_type(definitions, attributes[property])
+              next
             end
           end
           call_metadata << call
@@ -136,7 +177,7 @@ class AnalysisMetadatum
       end
       call_metadata
     rescue => e
-      Rails.logger.error "#{Time.now}: Error retrieving workflow call metadata for #{submission_id}/#{workflow_id}: #{e.message}"
+      Rails.logger.error "#{Time.now}: Error retrieving workflow call metadata for: #{e.message}"
       []
     end
   end
@@ -145,7 +186,7 @@ class AnalysisMetadatum
   def create_payload
     payload = {}
     study = self.study
-    # retrieve submission information
+    # retrieve available objects pertaining to submission (submission, configuration, all workflows contained in submission)
     submission = Study.firecloud_client.get_workspace_submission(study.firecloud_project,
                                                                  study.firecloud_workspace,
                                                                  self.submission_id)
@@ -153,38 +194,51 @@ class AnalysisMetadatum
                                                                        study.firecloud_workspace,
                                                                        submission['methodConfigurationNamespace'],
                                                                        submission['methodConfigurationName'])
-    # retrieve list of properties
+    workflows = []
+    submission['workflows'].each do |submission_workflow|
+      workflows << Study.firecloud_client.get_workspace_submission_workflow(study.firecloud_project,
+                                                                          study.firecloud_workspace,
+                                                                          self.submission_id,
+                                                                          submission_workflow['workflowId'])
+    end
+    # retrieve list of metadata properties
     properties = self.definitions('properties')
-    properties.each do |prop_name, prop_attr|
+    properties.each do |property, definitions|
       # decide where to pull information based on the property requested
       # TODO: make this more dynamic rather than a hard-coded case statement
-      case prop_name
+      value = nil
+      case property
         when 'inputs'
           inputs = []
-          configuration['inputs'].each do |name, value|
-            inputs << {'name' => name, 'value' => value}
+          workflows.each do |workflow|
+            workflow['inputs'].each do |name, value|
+              inputs << {'name' => name, 'value' => value}
+            end
           end
-          payload[prop_name] = inputs
+          value = set_value_by_type(definitions, inputs)
         when 'reference_bundle'
-          payload[prop_name] = 'https://portal.firecloud.org/#workspaces/single-cell-portal/scp-reference-data'
+          value = set_value_by_type(definitions, WorkflowConfiguration.get_reference_bundle(configuration))
         when 'tasks'
-          payload[prop_name] = self.get_workflow_call_attributes(self.submission_id)
+          value = set_value_by_type(definitions, self.get_workflow_call_attributes(workflows))
         when 'description'
           method_name = configuration['methodRepoMethod']
           name = "#{method_name['methodNamespace']}/#{method_name['methodName']}/#{method_name['methodVersion']}"
-          payload[prop_name] = "Analysis submission of #{name} from Single Cell Portal"
+          value = set_value_by_type(definitions, "Analysis submission of #{name} from Single Cell Portal")
         when 'timestamp_stop_utc'
-          payload[prop_name] = Time.now
+          stop = nil
+          workflows.each do |workflow|
+            end_time = workflow['end']
+            if stop.nil? || DateTime.parse(stop) > DateTime.parse(end_time)
+              stop = end_time
+            end
+          end
+          value = set_value_by_type(definitions, stop)
         when 'input_bundles'
-          payload[prop_name] = []
+          value = set_value_by_type(definitions, [])
         when 'outputs'
           outputs = []
-          submission['workflows'].each do |submission_workflow|
-            workflow = Study.firecloud_client.get_workspace_submission_workflow(study.firecloud_project,
-                                                                                           study.firecloud_workspace,
-                                                                                           submission_id,
-                                                                                           submission_workflow['workflowId'])
-            outs = workflow['outputs']
+          workflows.each do |workflow|
+            outs = workflow['outputs'].values
             outs.each do |o|
               outputs << {
                   'name' => o.split('/').last,
@@ -193,31 +247,39 @@ class AnalysisMetadatum
               }
             end
           end
-          payload[prop_name] = outputs
+          value = set_value_by_type(definitions, outputs)
         when 'name'
-          payload[prop_name] = configuration['name']
+          value = set_value_by_type(definitions, configuration['name'])
         when 'computational_method'
           method_name = configuration['methodRepoMethod']
           name = "#{method_name['methodNamespace']}/#{method_name['methodName']}/#{method_name['methodVersion']}"
           method_url = Study.firecloud_client.api_root + "/api/methods/#{name}"
-          payload[prop_name] = method_url
+          value = set_value_by_type(definitions, method_url)
         when 'timestamp_start_utc'
-          payload[prop_name] = submission['submissionDate']
+          value = set_value_by_type(definitions, submission['submissionDate'])
         when 'core'
           core = {
               'type' => 'analysis',
               'schema_url' => self.definition_url,
               'schema_version' => self.version
           }
-          payload[prop_name] = core
+          value = set_value_by_type(definitions, core)
         when 'analysis_run_type'
-          payload[prop_name] = 'run'
+          value = set_value_by_type(definitions, 'run')
         when 'metadata_schema'
-          payload[prop_name] = self.version
+          value = set_value_by_type(definitions, self.version)
         when 'analysis_id'
-          payload[prop_name] = "SCP-#{self.submission_id}"
+          value = set_value_by_type(definitions, "SCP-#{self.submission_id}")
       end
+      payload[property] = value
     end
     payload
+  end
+
+  private
+
+  # set payload object on create
+  def set_payload
+    self.payload = self.create_payload
   end
 end

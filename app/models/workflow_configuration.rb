@@ -113,4 +113,18 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
     end
     opts
   end
+
+  # retrieve configuration values for use in HCA metadata
+  def self.get_reference_bundle(configuration)
+    case configuration['methodRepoMethod']['methodName']
+      when 'cell_ranger_2.0.2_count'
+        configuration['inputs']['cellranger.transcriptomeTarGz'].gsub(/\"/, '')
+      else
+        # fallback to see if we can find anything that might be a 'reference'
+        input = configuration['inputs'].detect {|k,v| k =~ /(reference|genome)/}
+        if input.present?
+          input.last.gsub(/\"/, '')
+        end
+    end
+  end
 end
