@@ -16,11 +16,24 @@ class SiteController < ApplicationController
   respond_to :html, :js, :json
 
   before_action :set_study, except: [:index, :search, :privacy_policy, :view_workflow_wdl, :create_totat, :log_action, :get_workflow_options]
-  before_action :set_cluster_group, only: [:study, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :expression_query, :annotation_query, :get_new_annotations, :annotation_values, :show_user_annotations_form]
-  before_action :set_selected_annotation, only: [:render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :annotation_query, :annotation_values, :show_user_annotations_form]
-  before_action :load_precomputed_options, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap]
-  before_action :check_view_permissions, except: [:index, :privacy_policy, :search, :precomputed_results, :expression_query, :view_workflow_wdl, :log_action, :get_workspace_samples, :update_workspace_samples, :create_totat, :get_workflow_options]
-  before_action :check_compute_permissions, only: [:get_fastq_files, :get_workspace_samples, :update_workspace_samples, :delete_workspace_samples, :get_workspace_sumbissions, :create_workspace_submission, :get_submission_workflow, :abort_submission_workflow, :get_submission_errors, :get_submission_outputs, :delete_submission_files]
+  before_action :set_cluster_group, only: [:study, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots,
+                                           :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap,
+                                           :view_precomputed_gene_expression_heatmap, :expression_query, :annotation_query,
+                                           :get_new_annotations, :annotation_values, :show_user_annotations_form]
+  before_action :set_selected_annotation, only: [:render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots,
+                                                 :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap,
+                                                 :view_precomputed_gene_expression_heatmap, :annotation_query, :annotation_values,
+                                                 :show_user_annotations_form]
+  before_action :load_precomputed_options, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots,
+                                                  :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression,
+                                                  :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap]
+  before_action :check_view_permissions, except: [:index, :privacy_policy, :search, :precomputed_results, :expression_query,
+                                                  :view_workflow_wdl, :log_action, :get_workspace_samples, :update_workspace_samples,
+                                                  :create_totat, :get_workflow_options]
+  before_action :check_compute_permissions, only: [:get_fastq_files, :get_workspace_samples, :update_workspace_samples,
+                                                   :delete_workspace_samples, :get_workspace_submissions, :create_workspace_submission,
+                                                   :get_submission_workflow, :abort_submission_workflow, :get_submission_errors,
+                                                   :get_submission_outputs, :delete_submission_files, :get_submission_metadata]
 
   # caching
   caches_action :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots,
@@ -1068,6 +1081,32 @@ class SiteController < ApplicationController
     rescue => e
       @alert = "Unable to retrieve submission #{@submission_id} outputs due to: #{e.message}"
       render action: :notice
+    end
+  end
+
+  # retrieve a submission analysis metadata file
+  def get_submission_metadata
+    begin
+      submission = Study.firecloud_client.get_workspace_submission(@study.firecloud_project, @study.firecloud_workspace, params[:submission_id])
+      if submission.present?
+        # check to see if we already have an analysis_metadatum object
+        metadata = AnalysisMetadatum.find_by(study_id: @study.id, submission_id: params[:submission_id])
+        if metadata.nil?
+          metadata_attr = {
+              name: submission['methodConfigurationName'],
+              submission_id: params[:submission_id],
+              study_id: @study.id,
+              version: '4.6.1'
+          }
+          metadata = AnalysisMetadatum.create!(metadata_attr)
+        end
+        # respond with JSON payload, pretty-printed
+        send_data(JSON.pretty_generate(metadata.payload), content_type: :json, filename: 'analysis.json')
+      else
+        redirect_to request.referrer, alert: "We were unable to locate submission '#{params[:submission_id]}'.  Please check the ID and try again."
+      end
+    rescue => e
+      redirect_to request.referrer, alert: "An error occurred trying to load submission '#{params[:submission_id]}': #{e.message}"
     end
   end
 

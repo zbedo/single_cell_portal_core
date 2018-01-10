@@ -117,6 +117,7 @@ Rails.application.routes.draw do
 		get 'study/:study_name/submissions', to: 'site#get_workspace_submissions', as: :get_workspace_submissions
 		post 'study/:study_name/submissions', to: 'site#create_workspace_submission', as: :create_workspace_submission
 		get 'study/:study_name/submissions/:submission_id', to: 'site#get_submission_workflow', as: :get_submission_workflow
+		get 'study/:study_name/submissions/:submission_id/metadata', to: 'site#get_submission_metadata', as: :get_submission_metadata
 		delete 'study/:study_name/submissions/:submission_id', to: 'site#abort_submission_workflow', as: :abort_submission_workflow
 		delete 'study/:study_name/submissions/:submission_id/outputs', to: 'site#delete_submission_files', as: :delete_submission_files
 		get 'study/:study_name/submissions/:submission_id/outputs', to: 'site#get_submission_outputs', as: :get_submission_outputs

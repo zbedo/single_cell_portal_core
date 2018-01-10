@@ -67,14 +67,29 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
           if !sample_config_name.end_with?(sample_name)
             sample_config_name += "_#{sample_name}"
           end
-
-          # create or update new sample-specific configuration
-          old_name = configuration['name']
           configuration['name'] = sample_config_name
-          Rails.logger.info "#{Time.now}: creating new sample-specific configuration: #{configuration_namespace}/#{sample_config_name}"
-          Study.firecloud_client.update_workspace_configuration(study.firecloud_project, study.firecloud_workspace,
-                                                                configuration['namespace'], old_name,
-                                                                configuration)
+
+          # determine if we need to create a new configuration object to use for this submission
+          configs = Study.firecloud_client.get_workspace_configurations(study.firecloud_project, study.firecloud_workspace)
+          matching_conf = configs.detect {|conf| conf['methodRepoMethod'] == configuration['methodRepoMethod'] && conf['name'] == sample_config_name}
+          if matching_conf.present?
+            existing_configuration = Study.firecloud_client.get_workspace_configuration(study.firecloud_project, study.firecloud_workspace,
+                                                                                        matching_conf['namespace'], matching_conf['name'])
+            if configuration['inputs'] != existing_configuration['inputs']
+              # append an incrementing integer on the end to make this unique, but only if there is an match on the configuration name
+              # this may be the very first time this has been launched, in which case we don't have a sample-specific config yet
+              num_configs = configs.keep_if {|c| c['methodRepoMethod'] == configuration['methodRepoMethod'] && c['name'] =~ /#{sample_config_name}/}.size
+              if num_configs > 0
+                sample_config_name += "_#{num_configs + 1}"
+              end
+              configuration['name'] = sample_config_name
+              Rails.logger.info "#{Time.now}: creating new sample-specific configuration: #{configuration_namespace}/#{sample_config_name}"
+              Study.firecloud_client.create_workspace_configuration(study.firecloud_project, study.firecloud_workspace,
+                                                                    configuration)
+            else
+              Rails.logger.info "#{Time.now}: Found existing matching sample-specific configuration for #{sample_config_name}"
+            end
+          end
 
           # update response
           response[:configuration_name] = sample_config_name
