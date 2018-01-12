@@ -762,7 +762,7 @@ class Study
       if !opts[:local]
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, expression_file.remote_location, self.data_store_path)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, expression_file.remote_location, self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, expression_file.remote_location)
       end
 
@@ -974,7 +974,7 @@ class Study
       if !opts[:local]
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, ordinations_file.remote_location, self.data_store_path)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, ordinations_file.remote_location, self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, ordinations_file.remote_location)
       end
 
@@ -1278,7 +1278,7 @@ class Study
       if !opts[:local]
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, coordinate_file.remote_location, self.data_store_path)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, coordinate_file.remote_location, self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, coordinate_file.remote_location)
       end
 
@@ -1454,7 +1454,7 @@ class Study
       if !opts[:local]
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, metadata_file.remote_location, self.data_store_path)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, metadata_file.remote_location, self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, metadata_file.remote_location)
       end
 
@@ -1671,7 +1671,7 @@ class Study
       if !opts[:local]
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, marker_file.remote_location, self.data_store_path)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, marker_file.remote_location, self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, marker_file.remote_location)
       end
 
