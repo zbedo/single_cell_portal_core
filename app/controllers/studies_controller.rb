@@ -44,6 +44,7 @@ class StudiesController < ApplicationController
     @primary_data = @study.directory_listings.primary_data
     @other_data = @study.directory_listings.non_primary_data
     @allow_downloads = AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
+    @analysis_metadata = @study.analysis_metadata.to_a
     # load study default options
     set_study_default_options
   end
@@ -249,6 +250,16 @@ class StudiesController < ApplicationController
             unsynced_output = StudyFile.new(study_id: @study.id, name: new_file.name, upload_file_name: new_file.name, upload_content_type: new_file.content_type, upload_file_size: new_file.size, generation: new_file.generation)
             @unsynced_files << unsynced_output
           end
+        end
+        metadata = AnalysisMetadatum.find_by(study_id: @study.id, submission_id: params[:submission_id])
+        if metadata.nil?
+          metadata_attr = {
+              name: submission['methodConfigurationName'],
+              submission_id: params[:submission_id],
+              study_id: @study.id,
+              version: '4.6.1'
+          }
+          AnalysisMetadatum.create!(metadata_attr)
         end
       end
       @available_files = @unsynced_files.map {|f| {name: f.name, generation: f.generation, size: f.upload_file_size}}

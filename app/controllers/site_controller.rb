@@ -971,9 +971,9 @@ class SiteController < ApplicationController
       end
 
       # set up parameters
-      workflow_namespace, workflow_name, workflow_snapshot = workflow_submission_params[:identifier].split('--')
-      samples = workflow_submission_params[:samples].keep_if {|s| !s.blank?}
-      optional_inputs = workflow_submission_params[:optional_parameters]
+      workflow_namespace, workflow_name, workflow_snapshot = params[:workflow][:identifier].split('--')
+      samples = params[:workflow][:samples].keep_if {|s| !s.blank?}
+      optional_inputs = params[:workflow][:optional_parameters]
 
       # either load existing workspace configuration or copy new one into the workspace from the methods repository
       config_namespace, config_name = set_workflow_configuration(workflow_name, workflow_namespace, workflow_snapshot)
@@ -1090,24 +1090,30 @@ class SiteController < ApplicationController
       submission = Study.firecloud_client.get_workspace_submission(@study.firecloud_project, @study.firecloud_workspace, params[:submission_id])
       if submission.present?
         # check to see if we already have an analysis_metadatum object
-        metadata = AnalysisMetadatum.find_by(study_id: @study.id, submission_id: params[:submission_id])
-        if metadata.nil?
+        @metadata = AnalysisMetadatum.find_by(study_id: @study.id, submission_id: params[:submission_id])
+        if @metadata.nil?
           metadata_attr = {
               name: submission['methodConfigurationName'],
               submission_id: params[:submission_id],
               study_id: @study.id,
               version: '4.6.1'
           }
-          metadata = AnalysisMetadatum.create!(metadata_attr)
+          @metadata = AnalysisMetadatum.create!(metadata_attr)
         end
-        # respond with JSON payload, pretty-printed
-        send_data(JSON.pretty_generate(metadata.payload), content_type: :json, filename: 'analysis.json')
       else
-        redirect_to request.referrer, alert: "We were unable to locate submission '#{params[:submission_id]}'.  Please check the ID and try again."
+        @alert = "We were unable to locate submission '#{params[:submission_id]}'.  Please check the ID and try again."
+        render action: :notice
       end
     rescue => e
-      redirect_to request.referrer, alert: "An error occurred trying to load submission '#{params[:submission_id]}': #{e.message}"
+      @alert = "An error occurred trying to load submission '#{params[:submission_id]}': #{e.message}"
+      render action: :notice
     end
+  end
+
+  # export a submission analysis metadata file
+  def export_submission_metadata
+    @metadata = AnalysisMetadatum.find_by(study_id: @study.id, submission_id: params[:submission_id])
+    send_data JSON.pretty_generate(@metadata.payload), content_type: :json, filename: 'analysis.json'
   end
 
   # delete all files from a submission
@@ -1249,13 +1255,6 @@ class SiteController < ApplicationController
   # whitelist parameters for creating custom user annotation
   def user_annotation_params
     params.require(:user_annotation).permit(:_id, :name, :study_id, :user_id, :cluster_group_id, :subsample_threshold, :loaded_annotation, :subsample_annotation, user_data_arrays_attributes: [:name, :values])
-  end
-
-  # filter out unneeded workflow submission parameters
-  def workflow_submission_params
-    params.require(:workflow).permit(:identifier, :samples => []).tap do |while_listed|
-      while_listed[:optional_parameters] = params[:workflow][:optional_parameters]
-    end
   end
 
   # make sure user has view permissions for selected study

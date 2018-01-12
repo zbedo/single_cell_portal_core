@@ -268,16 +268,16 @@ module ApplicationHelper
 		# submission has completed successfully
 		if submission['status'] == 'Done' && submission['workflowStatuses'].keys.include?('Succeeded')
 			# actions << link_to("<i class='fa fa-files-o'></i> Download".html_safe, '#', class: 'btn btn-xs btn-block btn-primary get-submission-outputs', title: 'Download outputs from this run', data: {toggle: 'tooltip', url: get_submission_outputs_path(study_name: study.url_safe_name, submission_id: submission['submissionId']), id: submission['submissionId']})
-			actions << link_to("<i class='fa fa-fw fa-code'></i> Export Metadata".html_safe, get_submission_metadata_path(study_name: @study.url_safe_name, submission_id: submission['submissionId']), class: 'btn btn-xs btn-block btn-info export-submission-metadata', title: 'Export HCA-formatted analysis metadata', data: {toggle: 'tooltip', id: submission['submissionId']})
+			actions << link_to("<i class='fa fa-fw fa-code'></i> View Run Info".html_safe, 'javascript:;', class: 'btn btn-xs btn-block btn-info view-submission-metadata', title: 'View HCA-formatted analysis metadata', data: {toggle: 'tooltip', id: submission['submissionId'], url: get_submission_metadata_path(study_name: @study.url_safe_name, submission_id: submission['submissionId'])})
 			actions << link_to("<i class='fa fa-fw fa-refresh'></i> Sync".html_safe, sync_submission_outputs_study_path(id: @study.id, submission_id: submission['submissionId']), class: 'btn btn-xs btn-block btn-warning sync-submission-outputs', title: 'Sync outputs from this run back to study', data: {toggle: 'tooltip', id: submission['submissionId']})
 		end
 		# submission has failed
 		if %w(Done Aborted).include?(submission['status']) && submission['workflowStatuses'].keys.include?('Failed')
-			actions << link_to("<i class='fa fa-fw fa-exclamation-triangle'></i> Show Errors".html_safe, '#', class: 'btn btn-xs btn-block btn-danger get-submission-errors', title: 'View errors for this run', data: {toggle: 'tooltip', url: get_submission_workflow_path(study_name: study.url_safe_name, submission_id: submission['submissionId']), id: submission['submissionId']})
+			actions << link_to("<i class='fa fa-fw fa-exclamation-triangle'></i> Show Errors".html_safe, 'javascript:;', class: 'btn btn-xs btn-block btn-danger get-submission-errors', title: 'View errors for this run', data: {toggle: 'tooltip', url: get_submission_workflow_path(study_name: study.url_safe_name, submission_id: submission['submissionId']), id: submission['submissionId']})
 		end
 		# delete action to always load when completed
 		if %w(Done Aborted).include?(submission['status'])
-			actions << link_to("<i class='fa fa-fw fa-trash'></i> Delete Submission".html_safe, '#', class: 'btn btn-xs btn-block btn-danger delete-submission-files', title: 'Remove submission from list and delete all files from submission directory', data: {toggle: 'tooltip', url: delete_submission_files_path(study_name: study.url_safe_name, submission_id: submission['submissionId']), id: submission['submissionId']})
+			actions << link_to("<i class='fa fa-fw fa-trash'></i> Delete Submission".html_safe, 'javascript:;', class: 'btn btn-xs btn-block btn-danger delete-submission-files', title: 'Remove submission from list and delete all files from submission directory', data: {toggle: 'tooltip', url: delete_submission_files_path(study_name: study.url_safe_name, submission_id: submission['submissionId']), id: submission['submissionId']})
 		end
 		actions.join(" ").html_safe
 	end

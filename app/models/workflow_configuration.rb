@@ -68,7 +68,6 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
             sample_config_name += "_#{sample_name}"
           end
           configuration['name'] = sample_config_name
-
           # determine if we need to create a new configuration object to use for this submission
           configs = Study.firecloud_client.get_workspace_configurations(study.firecloud_project, study.firecloud_workspace)
           matching_conf = configs.detect {|conf| conf['methodRepoMethod'] == configuration['methodRepoMethod'] && conf['name'] == sample_config_name}
@@ -83,12 +82,16 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
                 sample_config_name += "_#{num_configs + 1}"
               end
               configuration['name'] = sample_config_name
-              Rails.logger.info "#{Time.now}: creating new sample-specific configuration: #{configuration_namespace}/#{sample_config_name}"
+              Rails.logger.info "#{Time.now}: incrementing new sample-specific configuration: #{configuration_namespace}/#{sample_config_name}"
               Study.firecloud_client.create_workspace_configuration(study.firecloud_project, study.firecloud_workspace,
                                                                     configuration)
             else
               Rails.logger.info "#{Time.now}: Found existing matching sample-specific configuration for #{sample_config_name}"
             end
+          else
+            Rails.logger.info "#{Time.now}: creating new sample-specific configuration: #{configuration_namespace}/#{sample_config_name}"
+            Study.firecloud_client.create_workspace_configuration(study.firecloud_project, study.firecloud_workspace,
+                                                                  configuration)
           end
 
           # update response

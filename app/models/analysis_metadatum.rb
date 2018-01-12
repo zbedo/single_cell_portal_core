@@ -17,6 +17,12 @@ class AnalysisMetadatum
   field :submission_id, type: String # FireCloud submission ID, also used as internal analysis_id
 
   ##
+  # INDEXES
+  ##
+
+  index({ study_id: 1, submission_id: 1}, { unique: true })
+
+  ##
   # VALIDATIONS
   ##
 

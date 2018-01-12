@@ -4517,18 +4517,18 @@ class UiTestSuite < Test::Unit::TestCase
 		end
 
 		# download an output file
-		outputs_btn = completed_submission.find_element(:class, 'get-submission-outputs')
-		outputs_btn.click
-		wait_for_render(:class, 'submission-output')
-		output_download = @driver.find_element(:class, 'submission-output')
-		filename = output_download['download']
-		output_download.click
-		# give the app a few seconds to initiate download request
-		sleep(5)
-		output_file = File.open(File.join($download_dir, filename))
-		assert File.exist?(output_file.path), 'Did not find downloaded submission output file'
-		File.delete(File.join($download_dir, filename))
-		close_modal('generic-update-modal')
+		# outputs_btn = completed_submission.find_element(:class, 'get-submission-outputs')
+		# outputs_btn.click
+		# wait_for_render(:class, 'submission-output')
+		# output_download = @driver.find_element(:class, 'submission-output')
+		# filename = output_download['download']
+		# output_download.click
+		# # give the app a few seconds to initiate download request
+		# sleep(5)
+		# output_file = File.open(File.join($download_dir, filename))
+		# assert File.exist?(output_file.path), 'Did not find downloaded submission output file'
+		# File.delete(File.join($download_dir, filename))
+		# close_modal('generic-update-modal')
 
 		# sync an output file
 		sync_btn = completed_submission.find_element(:class, 'sync-submission-outputs')
@@ -4549,6 +4549,36 @@ class UiTestSuite < Test::Unit::TestCase
 		synced_files = @driver.find_elements(:class, 'synced-study-file')
 		filenames = synced_files.map {|form| form.find_element(:class, 'filename')[:value]}
 		assert !filenames.find {|file| file[/#{filename}/]}.nil?, "Did not find #{filename} in list of synced files: #{filenames.join(', ')}"
+
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+	end
+
+	# view/export metadata from a submission
+	test 'front-end: workflows: export metadata' do
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		login_path = @base_url + '/users/sign_in'
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login($test_email, $test_email_password)
+
+		study_page = @base_url + "/study/test-study-#{$random_seed}"
+		@driver.get study_page
+		wait_until_page_loads(study_page)
+		open_ui_tab('study-workflows')
+		wait_for_render(:id, 'submissions-table')
+
+		# make sure submission has completed
+		submissions_table = @driver.find_element(:id, 'submissions-table')
+		submissions = submissions_table.find_element(:tag_name, 'tbody').find_elements(:tag_name, 'tr')
+		completed_submission = submissions.find {|sub|
+			sub.find_element(:class, "submission-state").text == 'Done' &&
+					sub.find_element(:class, "submission-status").text == 'Succeeded'
+		}
+
+		submission_name = completed_submission.find_element(:class, 'submission_workflow')
+
+		# view run metadata
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
