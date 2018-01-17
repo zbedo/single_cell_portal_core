@@ -1032,7 +1032,7 @@ class StudiesController < ApplicationController
           @files_by_dir[directory_name] ||= []
           @files_by_dir[directory_name] << found_file
         end
-        found_study_file = @study_files.detect {|f| f.generation == file.generation }
+        found_study_file = @study_files.detect {|f| f.generation.to_i == file.generation }
         if found_study_file
           @synced_study_files << found_study_file
           files_to_remove << file.generation
@@ -1079,7 +1079,7 @@ class StudiesController < ApplicationController
     if existing_dir.nil?
       dir = @study.directory_listings.build(name: directory, file_type: file_type, files: [{name: file.name, size: file.size, generation: file.generation}], sync_status: false)
       @unsynced_directories << dir
-    elsif existing_dir.files.detect {|f| f['generation'] == file.generation }.nil?
+    elsif existing_dir.files.detect {|f| f['generation'].to_i == file.generation }.nil?
       existing_dir.files << found_file
       existing_dir.sync_status = false
       if @unsynced_directories.map(&:name).include?(existing_dir.name)
