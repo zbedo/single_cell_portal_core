@@ -1265,15 +1265,17 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# retrieve single file in a GCP bucket of a workspace and download locally to portal (likely for parsing)
 	#
-  # * *params*
+	# * *params*
 	#   - +workspace_namespace+ (String) => namespace of workspace
 	#   - +workspace_name+ (String) => name of workspace
 	#   - +filename+ (String) => name of file
 	#   - +destination+ (String) => destination path for downloaded file
+	#   - +opts+ (Hash) => extra options for signed_url, see
+	#     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/file?method=signed_url-instance
 	#
-  # * *return*
-  #   - +File+ object
-	def download_workspace_file(workspace_namespace, workspace_name, filename, destination)
+	# * *return*
+	#   - +File+ object
+	def download_workspace_file(workspace_namespace, workspace_name, filename, destination, opts={})
 		file = self.get_workspace_file(workspace_namespace, workspace_name, filename)
 		# create a valid path by combining destination directory and filename, making sure no double / exist
 		end_path = [destination, filename].join('/').gsub(/\/\//, '/')
@@ -1284,7 +1286,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 			directory = File.join(destination, path_parts)
 			FileUtils.mkdir_p directory
 		end
-		file.download end_path
+		file.download end_path, opts
 	end
 
 	# generate a signed url to download a file that isn't public (set at study level)
