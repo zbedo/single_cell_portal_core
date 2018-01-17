@@ -1207,7 +1207,7 @@ class UiTestSuite < Test::Unit::TestCase
 		study_notifier_toggle.click
 		@wait.until {@driver.find_element(:class, 'toggle-study-subscription').text == 'On'}
 		new_study_text = study_notifier_toggle.text
-		assert new_study_text == 'Off', "Did not properly turn on study notification (text is still #{new_study_text})"
+		assert new_study_text == 'On', "Did not properly turn on study notification (text is still #{new_study_text})"
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
