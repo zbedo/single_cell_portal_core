@@ -3400,6 +3400,10 @@ class UiTestSuite < Test::Unit::TestCase
 
 		exp_loaded_cluster = @driver.find_element(:id, 'cluster')['value']
 		exp_loaded_annotation = @driver.find_element(:id, 'annotation')['value']
+		# open scatter tab
+		scatter_link = @driver.find_element(:id, 'scatter-link')
+		scatter_link.click
+		wait_for_render(:id, 'scatter-plots')
 		exp_loaded_label = @driver.find_element(:class, 'cbtitle').text
 		assert new_cluster == exp_loaded_cluster, "default cluster incorrect, expected #{new_cluster} but found #{exp_loaded_cluster}"
 		assert new_annot == exp_loaded_annotation, "default annotation incorrect, expected #{new_annot} but found #{exp_loaded_annotation}"

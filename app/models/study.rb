@@ -759,7 +759,7 @@ class Study
       if !opts[:local]
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, expression_file.remote_location, self.data_store_path)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, expression_file.remote_location, self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, expression_file.remote_location)
       end
 
@@ -769,8 +769,10 @@ class Study
         expression_file.invalidate_cache_by_file_type
       end
 
+      # determine content type from file contents, not from upload_content_type
+      content_type = expression_file.determine_content_type
       # validate headers
-      if expression_file.upload_content_type == 'application/gzip'
+      if content_type == 'application/gzip'
         Rails.logger.info "#{Time.now}: Parsing #{expression_file.name} as application/gzip"
         file = Zlib::GzipReader.open(@file_location)
       else
@@ -816,7 +818,7 @@ class Study
       expression_file.update(parse_status: 'parsing')
       # open data file and grab header row with name of all cells, deleting 'GENE' at start
       # determine proper reader
-      if expression_file.upload_content_type == 'application/gzip'
+      if content_type == 'application/gzip'
         expression_data = Zlib::GzipReader.open(@file_location)
       else
         expression_data = File.open(@file_location, 'rb')
@@ -971,7 +973,7 @@ class Study
       if !opts[:local]
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, ordinations_file.remote_location, self.data_store_path)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, ordinations_file.remote_location, self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, ordinations_file.remote_location)
       end
 
@@ -982,10 +984,20 @@ class Study
         ordinations_file.invalidate_cache_by_file_type
       end
 
+      # determine content type from file contents, not from upload_content_type
+      content_type = ordinations_file.determine_content_type
+      # validate headers
+      if content_type == 'application/gzip'
+        Rails.logger.info "#{Time.now}: Parsing #{ordinations_file.name} as application/gzip"
+        d_file = Zlib::GzipReader.open(@file_location)
+      else
+        Rails.logger.info "#{Time.now}: Parsing #{ordinations_file.name} as text/plain"
+        d_file = File.open(@file_location, 'rb')
+      end
+
       # validate headers of cluster file
       @validation_error = false
       start_time = Time.now
-      d_file = File.open(@file_location, 'rb')
       headers = d_file.readline.split(/[\t,]/).map(&:strip)
       second_header = d_file.readline.split(/[\t,]/).map(&:strip)
       @last_line = "#{ordinations_file.name}, line 1"
@@ -1024,7 +1036,12 @@ class Study
       Rails.logger.info "#{Time.now}: Beginning cluster initialization using #{ordinations_file.upload_file_name} for cluster: #{cluster_name} in #{self.name}"
       ordinations_file.update(parse_status: 'parsing')
 
-      cluster_data = File.open(@file_location, 'rb')
+      if content_type == 'application/gzip'
+        cluster_data = Zlib::GzipReader.open(@file_location)
+      else
+        cluster_data = File.open(@file_location, 'rb')
+      end
+
       header_data = cluster_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
       type_data = cluster_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
 
@@ -1275,7 +1292,7 @@ class Study
       if !opts[:local]
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, coordinate_file.remote_location, self.data_store_path)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, coordinate_file.remote_location, self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, coordinate_file.remote_location)
       end
 
@@ -1285,10 +1302,20 @@ class Study
         coordinate_file.invalidate_cache_by_file_type
       end
 
+      # determine content type from file contents, not from upload_content_type
+      content_type = coordinate_file.determine_content_type
+      # validate headers
+      if content_type == 'application/gzip'
+        Rails.logger.info "#{Time.now}: Parsing #{coordinate_file.name} as application/gzip"
+        c_file = Zlib::GzipReader.open(@file_location)
+      else
+        Rails.logger.info "#{Time.now}: Parsing #{coordinate_file.name} as text/plain"
+        c_file = File.open(@file_location, 'rb')
+      end
+
       # validate headers of coordinate file
       @validation_error = false
       start_time = Time.now
-      c_file = File.open(@file_location, 'rb')
       headers = c_file.readline.split(/[\t,]/).map(&:strip)
       @last_line = "#{coordinate_file.name}, line 1"
       # must have at least NAME, X and Y fields
@@ -1327,7 +1354,12 @@ class Study
       Rails.logger.info "#{Time.now}: Beginning coordinate label initialization using #{coordinate_file.upload_file_name} for cluster: #{cluster.name} in #{self.name}"
       coordinate_file.update(parse_status: 'parsing')
 
-      coordinate_data = File.open(@file_location, 'rb')
+      if content_type == 'application/gzip'
+        coordinate_data = Zlib::GzipReader.open(@file_location)
+      else
+        coordinate_data = File.open(@file_location, 'rb')
+      end
+
       header_data = coordinate_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
 
       # determine if 3d coordinates have been provided
@@ -1451,7 +1483,7 @@ class Study
       if !opts[:local]
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, metadata_file.remote_location, self.data_store_path)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, metadata_file.remote_location, self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, metadata_file.remote_location)
       end
 
@@ -1461,11 +1493,21 @@ class Study
         metadata_file.invalidate_cache_by_file_type
       end
 
+      # determine content type from file contents, not from upload_content_type
+      content_type = metadata_file.determine_content_type
+      # validate headers
+      if content_type == 'application/gzip'
+        Rails.logger.info "#{Time.now}: Parsing #{metadata_file.name} as application/gzip"
+        m_file = Zlib::GzipReader.open(@file_location)
+      else
+        Rails.logger.info "#{Time.now}: Parsing #{metadata_file.name} as text/plain"
+        m_file = File.open(@file_location, 'rb')
+      end
+
       # validate headers of metadata file
       @validation_error = false
       start_time = Time.now
       Rails.logger.info "#{Time.now}: Validating metadata file headers for #{metadata_file.name} in #{self.name}"
-      m_file = File.open(@file_location, 'rb')
       headers = m_file.readline.split(/[\t,]/).map(&:strip)
       @last_line = "#{metadata_file.name}, line 1"
       second_header = m_file.readline.split(/[\t,]/).map(&:strip)
@@ -1502,7 +1544,11 @@ class Study
       Rails.logger.info "#{Time.now}: Beginning metadata initialization using #{metadata_file.upload_file_name} in #{self.name}"
       metadata_file.update(parse_status: 'parsing')
       # open files for parsing and grab header & type data
-      metadata_data = File.open(@file_location, 'rb')
+      if content_type == 'application/gzip'
+        metadata_data = Zlib::GzipReader.open(@file_location)
+      else
+        metadata_data = File.open(@file_location, 'rb')
+      end
       header_data = metadata_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
       type_data = metadata_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
       name_index = header_data.index('NAME')
@@ -1668,7 +1714,7 @@ class Study
       if !opts[:local]
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, marker_file.remote_location, self.data_store_path)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, marker_file.remote_location, self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, marker_file.remote_location)
       end
 
@@ -1684,8 +1730,18 @@ class Study
       @last_line = ""
       @validation_error = false
 
+      # determine content type from file contents, not from upload_content_type
+      content_type = marker_file.determine_content_type
       # validate headers
-      file = File.open(@file_location, 'rb')
+      if content_type == 'application/gzip'
+        Rails.logger.info "#{Time.now}: Parsing #{marker_file.name} as application/gzip"
+        file = Zlib::GzipReader.open(@file_location)
+      else
+        Rails.logger.info "#{Time.now}: Parsing #{marker_file.name} as text/plain"
+        file = File.open(@file_location, 'rb')
+      end
+
+      # validate headers
       headers = file.readline.split(/[\t,]/).map(&:strip)
       @last_line = "#{marker_file.name}, line 1"
       if headers.first != 'GENE NAMES' || headers.size <= 1
@@ -1722,7 +1778,13 @@ class Study
         list_name = marker_file.upload_file_name.gsub(/(-|_)+/, ' ')
       end
       precomputed_score = self.precomputed_scores.build(name: list_name, study_file_id: marker_file._id)
-      marker_scores = File.open(@file_location, 'rb').readlines.map(&:strip).delete_if {|line| line.blank? }
+
+      if content_type == 'application/gzip'
+        marker_scores = Zlib::GzipReader.open(@file_location).readlines.map(&:strip).delete_if {|line| line.blank? }
+      else
+        marker_scores = File.open(@file_location, 'rb').readlines.map(&:strip).delete_if {|line| line.blank? }
+      end
+
       clusters = marker_scores.shift.split(/[\t,]/).map(&:strip)
       @last_line = "#{marker_file.name}, line 1"
 
@@ -1821,7 +1883,7 @@ class Study
       file_location = file.remote_location.blank? ? file.upload.path : File.join(self.data_store_path, file.remote_location)
       # determine if file needs to be compressed
       first_two_bytes = File.open(file_location).read(2)
-      gzip_signature = "\x1F\x8B".force_encoding(Encoding::ASCII_8BIT) # per IETF
+      gzip_signature = StudyFile::GZIP_MAGIC_NUMBER # per IETF
       file_is_gzipped = (first_two_bytes == gzip_signature)
       opts = {}
       if file_is_gzipped or file.upload_file_name.last(4) == '.bam' or file.upload_file_name.last(5) == '.cram'
