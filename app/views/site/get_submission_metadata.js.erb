@@ -1,8 +1,8 @@
 closeModalSpinner('#generic-modal-spinner', '#generic-modal', function () {
     $('#generic-update-target').html("<%= escape_javascript(render partial: '/layouts/generic_update_modal') %>");
     $('#generic-update-modal-title').html("Submission <%= params[:submission_id] %> Run Info");
-    $('#generic-update-modal-body').append("<p class='text-center'><%= escape_javascript(link_to "<i class='fa fa-fw fa-download'></i> Export".html_safe, export_submission_metadata_path(study_name: @study.url_safe_name, submission_id: params[:submission_id]), class: 'btn btn-sm btn-primary', id: 'export-submission-metadata') %></p>");
+    $('#generic-update-modal-body').append("<p class='text-center'><%= escape_javascript(link_to "<i class='fa fa-fw fa-download'></i> Export as JSON".html_safe, export_submission_metadata_path(study_name: @study.url_safe_name, submission_id: params[:submission_id]), class: 'btn btn-sm btn-primary export-submission-metadata') %></p>");
     $('#generic-update-modal-body').append("<pre><%= escape_javascript(JSON.pretty_generate(@metadata.payload)) %></pre>");
-    $('#generic-update-modal-body').append("<p class='text-center'><%= escape_javascript(link_to "<i class='fa fa-fw fa-download'></i> Export".html_safe, export_submission_metadata_path(study_name: @study.url_safe_name, submission_id: params[:submission_id]), class: 'btn btn-sm btn-primary', id: 'export-submission-metadata') %></p>");
+    $('#generic-update-modal-body').append("<p class='text-center'><%= escape_javascript(link_to "<i class='fa fa-fw fa-download'></i> Export as JSON".html_safe, export_submission_metadata_path(study_name: @study.url_safe_name, submission_id: params[:submission_id]), class: 'btn btn-sm btn-primary export-submission-metadata') %></p>");
     $("#generic-update-modal").modal("show");
 });

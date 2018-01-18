@@ -173,7 +173,7 @@
         <thead>
         <tr>
           <th>Name</th>
-          <th>Version</th>
+          <th>Submission</th>
           <th>Created</th>
           <th>Actions</th>
         </tr>
@@ -182,10 +182,10 @@
           <% @analysis_metadata.each do |analysis| %>
             <tr>
               <td><%= analysis.name %></td>
-              <td><%= analysis.version %></td>
+              <td><%= link_to analysis.submission_id, @study.submission_url(analysis.submission_id), target: :_blank %></td>
               <td><%= analysis.created_at.strftime("%F %R") %></td>
               <td class="actions">
-                <%= link_to "<i class='fa fa-fw fa-download'></i> Export".html_safe, export_submission_metadata_path(study_name: @study.url_safe_name, submission_id: analysis.submission_id), class: 'btn btn-sm btn-primary export-submission-metadata' %>
+                <%= link_to("<i class='fa fa-fw fa-code'></i> View Run Info".html_safe, 'javascript:;', class: 'btn btn-xs btn-info view-submission-metadata', title: 'View HCA-formatted analysis metadata', data: {toggle: 'tooltip', id: analysis.submission_id, url: get_submission_metadata_path(study_name: @study.url_safe_name, submission_id: analysis.submission_id)}) %>
               </td>
             </tr>
           <% end %>
@@ -374,6 +374,17 @@
         pagingType: 'full',
         order: [[1, 'asc'],[0, 'asc']],
         autoWidth: false
+    }).on('click', '.view-submission-metadata', function () {
+        console.log('view metadata');
+        var submissionUrl = $(this).data('url');
+        $('#generic-modal-title').html("Getting Run Info... Please Wait");
+        launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+            $.ajax({
+                url: submissionUrl,
+                method: 'GET',
+                dataType: 'script'
+            });
+        });
     });
 
     $('#toggle-panels').click(function() {
