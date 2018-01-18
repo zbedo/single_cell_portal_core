@@ -211,7 +211,6 @@ class AnalysisMetadatum
     properties = self.definitions('properties')
     properties.each do |property, definitions|
       # decide where to pull information based on the property requested
-      # TODO: make this more dynamic rather than a hard-coded case statement
       value = nil
       case property
         when 'inputs'
@@ -240,7 +239,7 @@ class AnalysisMetadatum
           end
           value = set_value_by_type(definitions, stop)
         when 'input_bundles'
-          value = set_value_by_type(definitions, [])
+          value = set_value_by_type(definitions, [study.workspace_url])
         when 'outputs'
           outputs = []
           workflows.each do |workflow|
