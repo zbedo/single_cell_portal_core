@@ -1,5 +1,19 @@
 <div class="row">
   <div class="col-md-2" id="search-target">
+    <i class="fa fa-bars" aria-hidden="true" style="
+    float: left;
+        margin-right: 7px;
+        font-size: 20px;
+        margin-top: 5px;
+    "></i>
+    <div class="input-group">
+      <input type="text" placeholder="Search genes" class="form-control search-genes-input">
+      <span class="input-group-btn">
+        <button class="btn btn-default" type="button">
+          <span class="fa fa-search"></span>
+        </button>
+      </span>
+    </div>
     <%= render partial: 'search_options' %>
   </div>
   <div class="col-md-10" id="render-target">
