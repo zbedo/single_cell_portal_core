@@ -1129,6 +1129,8 @@ class SiteController < ApplicationController
       end
       logger.info "#{Time.now}: adding #{params[:submission_id]} to workspace delete_submissions attribute in #{@study.firecloud_workspace}"
       Study.firecloud_client.set_workspace_attributes(@study.firecloud_project, @study.firecloud_workspace, ws_attributes)
+      logger.info "#{Time.now}: deleting analysis metadata for #{params[:submission_id]} in #{@study.url_safe_name}"
+      AnalysisMetadatum.where(submission_id: params[:submission_id]).delete
       logger.info "#{Time.now}: queueing submission #{params[:submission]} deletion in #{@study.firecloud_workspace}"
       submission_files = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, @study.firecloud_project, @study.firecloud_workspace, prefix: params[:submission_id])
       DeleteQueueJob.new(submission_files).delay.perform
