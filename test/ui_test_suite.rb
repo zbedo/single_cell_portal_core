@@ -4568,7 +4568,7 @@ class UiTestSuite < Test::Unit::TestCase
 		open_ui_tab('study-workflows')
 		wait_for_render(:id, 'submissions-table')
 
-		# make sure submission has completed
+		# find a completed submission
 		submissions_table = @driver.find_element(:id, 'submissions-table')
 		submissions = submissions_table.find_element(:tag_name, 'tbody').find_elements(:tag_name, 'tr')
 		completed_submission = submissions.find {|sub|
@@ -4576,9 +4576,26 @@ class UiTestSuite < Test::Unit::TestCase
 					sub.find_element(:class, "submission-status").text == 'Succeeded'
 		}
 
-		submission_name = completed_submission.find_element(:class, 'submission_workflow')
-
 		# view run metadata
+		view_btn = completed_submission.find_element(:class, 'view-submission-metadata')
+		view_btn.click
+		wait_for_modal_open('generic-update-modal')
+
+		# export analysis.json file
+		export_btn = @driver.find_element(:class, 'export-submission-metadata')
+		export_btn.click
+		sleep(1)
+		filename = 'analysis.json'
+		filepath = File.join($download_dir, filename)
+		assert File.exist?(filepath), "Did not find exported analysis metadata at #{filepath}"
+
+		# make sure exported file is valid by checking for some expected keys
+		analysis_file = File.open(filepath)
+		analysis_json = JSON.parse(analysis_file.read)
+		assert %w(inputs outputs name tasks analysis_id).all? {|k| analysis_json.has_key?(k)}, "Exported analysis file does not have required keys: #{analysis_json.keys}"
+
+		# clean up
+		File.delete(filepath)
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
