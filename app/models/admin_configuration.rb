@@ -117,7 +117,7 @@ class AdminConfiguration
         owner = study.user.email
         Rails.logger.info "#{Time.now}: revoking owner access for #{owner}"
         revoke_owner_acl = Study.firecloud_client.create_workspace_acl(owner, @config_setting)
-        Study.firecloud_client.update_workspace_acl(study.firecloud_project, study.firecloud_workspace, revoke_owner_acl)
+        Study.firecloud_client.update_workspace_acl(study.firecloud_project, study.firecloud_workspace, revoke_owner_acl, true, Rails.env == 'production' ? false : true)
         Rails.logger.info "#{Time.now}: access revocation for #{study.name} complete"
       end
       Rails.logger.info "#{Time.now}: all '#{FireCloudClient::COMPUTE_BLACKLIST.join(', ')}' study access set to #{@config_setting}"
@@ -138,8 +138,10 @@ class AdminConfiguration
       shares.each do |share|
         user = share.email
         share_permission = StudyShare::FIRECLOUD_ACL_MAP[share.permission]
+        can_share = share_permission === 'WRITER' ? true : false
+        can_compute = Rails.env == 'production' ? false : share_permission === 'WRITER' ? true : false
         Rails.logger.info "#{Time.now}: restoring #{share_permission} permission for #{user}"
-        restore_share_acl = Study.firecloud_client.create_workspace_acl(user, share_permission)
+        restore_share_acl = Study.firecloud_client.create_workspace_acl(user, share_permission, can_share, can_compute)
         Study.firecloud_client.update_workspace_acl(study.firecloud_project, study.firecloud_workspace, restore_share_acl)
       end
       # last, restore study owner access (unless project is owned by user)
