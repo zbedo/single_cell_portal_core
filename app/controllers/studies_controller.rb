@@ -44,6 +44,7 @@ class StudiesController < ApplicationController
     @primary_data = @study.directory_listings.primary_data
     @other_data = @study.directory_listings.non_primary_data
     @allow_downloads = AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
+    @analysis_metadata = @study.analysis_metadata.to_a
     # load study default options
     set_study_default_options
   end
@@ -249,6 +250,16 @@ class StudiesController < ApplicationController
             unsynced_output = StudyFile.new(study_id: @study.id, name: new_file.name, upload_file_name: new_file.name, upload_content_type: new_file.content_type, upload_file_size: new_file.size, generation: new_file.generation)
             @unsynced_files << unsynced_output
           end
+        end
+        metadata = AnalysisMetadatum.find_by(study_id: @study.id, submission_id: params[:submission_id])
+        if metadata.nil?
+          metadata_attr = {
+              name: submission['methodConfigurationName'],
+              submission_id: params[:submission_id],
+              study_id: @study.id,
+              version: '4.6.1'
+          }
+          AnalysisMetadatum.create!(metadata_attr)
         end
       end
       @available_files = @unsynced_files.map {|f| {name: f.name, generation: f.generation, size: f.upload_file_size}}
@@ -1021,7 +1032,7 @@ class StudiesController < ApplicationController
           @files_by_dir[directory_name] ||= []
           @files_by_dir[directory_name] << found_file
         end
-        found_study_file = @study_files.detect {|f| f.generation == file.generation }
+        found_study_file = @study_files.detect {|f| f.generation.to_i == file.generation }
         if found_study_file
           @synced_study_files << found_study_file
           files_to_remove << file.generation
@@ -1068,7 +1079,7 @@ class StudiesController < ApplicationController
     if existing_dir.nil?
       dir = @study.directory_listings.build(name: directory, file_type: file_type, files: [{name: file.name, size: file.size, generation: file.generation}], sync_status: false)
       @unsynced_directories << dir
-    elsif existing_dir.files.detect {|f| f['generation'] == file.generation }.nil?
+    elsif existing_dir.files.detect {|f| f['generation'].to_i == file.generation }.nil?
       existing_dir.files << found_file
       existing_dir.sync_status = false
       if @unsynced_directories.map(&:name).include?(existing_dir.name)

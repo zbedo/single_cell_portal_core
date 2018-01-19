@@ -278,10 +278,26 @@
 
         // sync outputs from a particular submission
         $('#submissions-table').on('click', '.sync-submission-outputs', function () {
+            console.log('sync outputs');
             $('#generic-modal-title').html("Syncing Outputs... Please Wait");
             launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
                 return true;
             });
+        });
+
+        // view submission metadata
+        $('#submissions-table').on('click', '.view-submission-metadata', function () {
+            console.log('view metadata');
+            var submissionUrl = $(this).data('url');
+            $('#generic-modal-title').html("Getting Run Info... Please Wait");
+            launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+                $.ajax({
+                    url: submissionUrl,
+                    method: 'GET',
+                    dataType: 'script'
+                });
+            });
+
         });
 
         function getSubmissionErrors(submissionUrl, workflowIds) {
