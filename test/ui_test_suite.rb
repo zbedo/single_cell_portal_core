@@ -3166,6 +3166,7 @@ class UiTestSuite < Test::Unit::TestCase
 		gene_list_panel = @driver.find_element(:id, 'gene-lists-link')
 		gene_list_panel.click
 		wait_for_render(:id, 'expression')
+		sleep(0.5)
 
 		gene_sets = @driver.find_element(:id, 'gene_set')
 		opts = gene_sets.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
@@ -3590,7 +3591,7 @@ class UiTestSuite < Test::Unit::TestCase
 		enable_select_button = @driver.find_element(:id, 'toggle-scatter')
 		enable_select_button.click
 		# let plot redraw
-		sleep(1)
+		wait_for_render(:id, 'selection-well')
 
 		# click box select button
 		select_button = @driver.find_element(:xpath, "//a[@data-val='select']")
@@ -3632,6 +3633,10 @@ class UiTestSuite < Test::Unit::TestCase
 		close_modal('message_modal')
 
 		# choose the user annotation
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		wait_for_render(:id, 'view-options')
+
 		annotation_dropdown = @driver.find_element(:id, 'annotation')
 		annotation_dropdown.send_keys("user-#{$random_seed}")
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
@@ -3641,16 +3646,17 @@ class UiTestSuite < Test::Unit::TestCase
 		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
 
 		@driver.find_element(:id, 'search-genes-link').click
-		wait_for_render(:id, 'panel-genes-search')
+		wait_for_render(:id, 'search-genes-form')
 
 		# load random gene to search
+		scroll_to(:top)
 		gene = @genes.sample
 		search_box = @driver.find_element(:id, 'search_genes')
 		search_box.send_key(gene)
 		search_genes = @driver.find_element(:id, 'perform-gene-search')
 		search_genes.click
 
-		#make sure the new annotation still renders plots for plotly
+		# make sure the new annotation still renders plots for plotly
 		assert element_present?(:id, 'box-controls'), 'could not find expression violin plot'
 		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
 
@@ -3668,6 +3674,10 @@ class UiTestSuite < Test::Unit::TestCase
 		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
 		# change to box plot
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		wait_for_render(:id, 'view-options')
+
 		plot_dropdown = @driver.find_element(:id, 'plot_type')
 		plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
 		new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
@@ -3682,11 +3692,15 @@ class UiTestSuite < Test::Unit::TestCase
 		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
 		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
+		gene_list_panel = @driver.find_element(:id, 'gene-lists-link')
+		gene_list_panel.click
+		wait_for_render(:id, 'expression')
+		sleep(1)
 		gene_sets = @driver.find_element(:id, 'gene_set')
 		opts = gene_sets.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
-		list = opts.sample
-		list.click
-		assert element_present?(:id, 'expression-plots'), 'could not find box/scatter divs'
+		list = opts.last
+		gene_list_name = list['value']
+		gene_sets.send_keys(gene_list_name)
 
 		# wait until violin plot renders, at this point all 3 should be done
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
@@ -3700,6 +3714,10 @@ class UiTestSuite < Test::Unit::TestCase
 		# Create an annotation from the gene page.  Due to the size of rendered elements, the only reproducible way to click the
 		# annotation selection button is to scroll to the top, close the search panel, and open the annotation panel
 		scroll_to(:top)
+		# open scatter tab
+		scatter_link = @driver.find_element(:id, 'scatter-link')
+		scatter_link.click
+		wait_for_render(:id, 'scatter-plots')
 		@driver.find_element(:id, 'search-genes-link').click
 		@wait.until {!element_visible?(:id, 'panel-genes-search')}
 
@@ -3711,8 +3729,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# Enable Selection
 		enable_select_button = @driver.find_element(:id, 'toggle-scatter')
 		enable_select_button.click
-		# let plot redraw
-		sleep(1)
+		wait_for_render(:id, 'selection-well')
 
 		# select the scatter plot
 		plot = @driver.find_element(:id, 'scatter-plot')
@@ -3720,11 +3737,10 @@ class UiTestSuite < Test::Unit::TestCase
 		# click box select button
 		scroll_to(:bottom)
 		@wait.until {wait_for_plotly_render('#expression-plots', 'scatter-rendered')}
-		select_button = @driver.find_elements(:xpath, "//a[@data-val='select']")[-1]
+		select_button = @driver.find_elements(:xpath, "//a[@data-val='select']")[1]
 		select_button.click
 
 		# get the points in the plotly trace
-
 		points = plot.find_elements(:class, 'point')
 		el1 = points[0]
 
@@ -3734,14 +3750,14 @@ class UiTestSuite < Test::Unit::TestCase
 		# wait for web driver
 		sleep 0.5
 
-		#drag the cursor to another point and release it
+		# drag the cursor to another point and release it
 		el2 = points[-1]
 		@driver.action.move_to(el2).release.perform
 
-		#wait for plotly and webdriver
+		# wait for plotly and webdriver
 		sleep 1.0
 
-		#send the keys for the name of the annotation
+		# send the keys for the name of the annotation
 		annotation_name = @driver.find_element(:class, 'annotation-name')
 		name = "user-#{$random_seed}-exp"
 		annotation_name.send_keys(name)
@@ -3753,7 +3769,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		sleep 0.5
 
-		#create the annotation
+		# create the annotation
 		submit_button = @driver.find_element(:id, 'selection-submit')
 		submit_button.click
 
@@ -3765,11 +3781,16 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# choose the user annotation
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		wait_for_render(:id, 'view-options')
+
 		annotation_dropdown = @driver.find_element(:id, 'annotation')
 		annotation_dropdown.send_keys("user-#{$random_seed}-exp")
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 
-		#make sure the new annotation still renders a plot for plotly
+		# make sure the new annotation still renders a plot for plotly
 		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
 		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
 
@@ -3781,7 +3802,7 @@ class UiTestSuite < Test::Unit::TestCase
 		search_genes = @driver.find_element(:id, 'perform-gene-search')
 		search_genes.click
 
-		#make sure the new annotation still renders plots for plotly
+		# make sure the new annotation still renders plots for plotly
 		assert element_present?(:id, 'box-controls'), 'could not find expression violin plot'
 		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
 
@@ -3801,6 +3822,10 @@ class UiTestSuite < Test::Unit::TestCase
 		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
 		# change to box plot
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		wait_for_render(:id, 'view-options')
+
 		plot_dropdown = @driver.find_element(:id, 'plot_type')
 		plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
 		new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
@@ -3817,11 +3842,15 @@ class UiTestSuite < Test::Unit::TestCase
 
 		sleep 0.5
 
+		gene_list_panel = @driver.find_element(:id, 'gene-lists-link')
+		gene_list_panel.click
+		wait_for_render(:id, 'expression')
+		sleep(1)
 		gene_sets = @driver.find_element(:id, 'gene_set')
 		opts = gene_sets.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
-		list = opts.sample
-		list.click
-		assert element_present?(:id, 'expression-plots'), 'could not find box/scatter divs'
+		list = opts.last
+		gene_list_name = list['value']
+		gene_sets.send_keys(gene_list_name)
 
 		# wait until violin plot renders, at this point all 3 should be done
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
@@ -3852,11 +3881,11 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.find_element(:class, "user-#{$random_seed}-edit").click
 		wait_for_render(:id, 'user_annotation_name')
 
-		#add 'new' to the name of annotation
+		# add 'new' to the name of annotation
 		name = @driver.find_element(:id, 'user_annotation_name')
 		name.send_key("new")
 
-		#add 'new' to the labels
+		# add 'new' to the labels
 		annotation_labels = @driver.find_elements(:id, 'user-annotation_values')
 
 		annotation_labels.each_with_index do |annot, i|
@@ -3864,46 +3893,46 @@ class UiTestSuite < Test::Unit::TestCase
 			annot.send_keys("group#{i}new")
 		end
 
-		#update the annotation
+		# update the annotation
 		submit = @driver.find_element(:id, 'submit-button')
 		submit.click
 
 		wait_for_render(:class, 'annotation-name')
 
-		#check names and labels
+		# check names and labels
 		new_names = @driver.find_elements(:class, 'annotation-name').map{|x| x.text }
 		new_labels = @driver.find_elements(:class, "user-#{$random_seed}new").map{|x| x.text }
 
-		#assert new name saved correctly
+		# assert new name saved correctly
 		assert (new_names.include? "user-#{$random_seed}new"), "Name edit failed, expected 'user-#{$random_seed}new' but got '#{new_names}'"
 
-		#assert labels saved correctly
+		# assert labels saved correctly
 		assert (new_labels.include? "group0new"), "Name edit failed, expected 'new in group' but got '#{new_labels}'"
 		close_modal('message_modal')
 
-		#View the annotation
+		# View the annotation
 		@driver.find_element(:class, "user-#{$random_seed}new-show").click
 
-		#assert the plot still renders
+		# assert the plot still renders
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
 		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
 
-		#assert labels are correct
+		# assert labels are correct
 		plot_labels = @driver.find_elements(:class, "legendtext").map(&:text)
 		assert (plot_labels.include? "user-#{$random_seed}new: group0new (3 points)"), "labels are incorrect: '#{plot_labels}' should include 'user-#{$random_seed}new: group0new'"
 
-		#revert the annotation to old name and labels
+		# revert the annotation to old name and labels
 		@driver.get annot_path
 		@driver.find_element(:class, "user-#{$random_seed}new-edit").click
 		wait_for_render(:id, 'user_annotation_name')
 
-		#revert name
+		# revert name
 		name = @driver.find_element(:id, 'user_annotation_name')
 		name.clear
 		name.send_key("user-#{$random_seed}")
 
-		#revert labels
+		# revert labels
 		annotation_labels = @driver.find_elements(:id, 'user-annotation_values')
 
 		annotation_labels.each_with_index do |annot, i|
@@ -3911,34 +3940,34 @@ class UiTestSuite < Test::Unit::TestCase
 			annot.send_keys("group#{i}")
 		end
 
-		#update annotation
+		# update annotation
 		submit = @driver.find_element(:id, 'submit-button')
 		submit.click
 
 		wait_for_render(:class, 'annotation-name')
 
 
-		#check new names and labels
+		# check new names and labels
 		new_names = @driver.find_elements(:class, 'annotation-name').map{|x| x.text }
 		new_labels = @driver.find_elements(:class, "user-#{$random_seed}").map{|x| x.text }
 
-		#assert new name saved correctly
+		# assert new name saved correctly
 		assert !(new_names.include? "user-#{$random_seed}new"), "Name edit failed, expected 'user-#{$random_seed}' but got '#{new_names}'"
 
-		#assert labels saved correctly
+		# assert labels saved correctly
 		assert !(new_labels.include? "group0new"), "Name edit failed, did not expect 'new in group' but got '#{new_labels}'"
 
 		close_modal('message_modal')
 
-		#View the annotation
+		# View the annotation
 		@driver.find_element(:class, "user-#{$random_seed}-show").click
 
-		#assert the plot still renders
+		# assert the plot still renders
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
 		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
 
-		#assert labels are correct
+		# assert labels are correct
 		plot_labels = @driver.find_elements(:class, "legendtext").map(&:text)
 		assert (plot_labels.include? "user-#{$random_seed}: group0 (3 points)"), "labels are incorrect: '#{plot_labels}' should include 'user-#{$random_seed}: group0'"
 
@@ -4021,6 +4050,9 @@ class UiTestSuite < Test::Unit::TestCase
 		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
 		# change to box plot
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		wait_for_render(:id, 'view-options')
 		plot_dropdown = @driver.find_element(:id, 'plot_type')
 		plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
 		new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
@@ -4037,11 +4069,15 @@ class UiTestSuite < Test::Unit::TestCase
 
 		sleep 0.5
 
+		gene_list_panel = @driver.find_element(:id, 'gene-lists-link')
+		gene_list_panel.click
+		wait_for_render(:id, 'expression')
+		sleep(1)
 		gene_sets = @driver.find_element(:id, 'gene_set')
 		opts = gene_sets.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
-		list = opts.sample
-		list.click
-		assert element_present?(:id, 'expression-plots'), 'could not find box/scatter divs'
+		list = opts.last
+		gene_list_name = list['value']
+		gene_sets.send_keys(gene_list_name)
 
 		# wait until violin plot renders, at this point all 3 should be done
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
@@ -4228,7 +4264,7 @@ class UiTestSuite < Test::Unit::TestCase
 		annotation_dropdown.send_keys("user-#{$random_seed}")
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 
-		#make sure the new annotation still renders a plot for plotly
+		# make sure the new annotation still renders a plot for plotly
 		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
 		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
 
@@ -4257,6 +4293,9 @@ class UiTestSuite < Test::Unit::TestCase
 		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
 		# change to box plot
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		wait_for_render(:id, 'view-options')
 		plot_dropdown = @driver.find_element(:id, 'plot_type')
 		plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
 		new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
@@ -4271,10 +4310,15 @@ class UiTestSuite < Test::Unit::TestCase
 		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
 		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
+		gene_list_panel = @driver.find_element(:id, 'gene-lists-link')
+		gene_list_panel.click
+		wait_for_render(:id, 'expression')
+		sleep(1)
 		gene_sets = @driver.find_element(:id, 'gene_set')
 		opts = gene_sets.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'Please select a gene list'}
-		list = opts.sample
-		list.click
+		list = opts.sample['value']
+		@driver.execute_script("$('expression-plots').data('box-rendered', false);")
+		gene_sets.send_keys(list)
 		assert element_present?(:id, 'expression-plots'), 'could not find box/scatter divs'
 		sleep(1)
 
@@ -4295,11 +4339,11 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# get the file contents
 		contents = @driver.find_element(:tag_name, 'pre').text
-		first_line = contents.split("\n").first.split("\t").map(&:strip)
+		first_line = contents.split("\n").first.split.map(&:strip)
 		%w[NAME X Y Sub-Group].each do |header|
 			assert first_line.include?(header), "Original cluster's rows are absent, rows: #{first_line}, is missing #{header}"
 		end
-		assert (first_line.include?"user-#{$random_seed}"), "New annotation's rows are absent, rows: #{first_line}, missing: user-#{$random_seed}"
+		assert (first_line.include?("user-#{$random_seed}")), "New annotation's rows are absent, rows: #{first_line}, missing: user-#{$random_seed}"
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
@@ -4552,7 +4596,7 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_for_render(:class, 'synced-study-file')
 		synced_files = @driver.find_elements(:class, 'synced-study-file')
 		filenames = synced_files.map {|form| form.find_element(:class, 'filename')[:value]}
-		assert !filenames.find {|file| file[/#{filename}/]}.nil?, "Did not find #{filename} in list of synced files: #{filenames.join(', ')}"
+		assert filenames.any?, "Did not find any files in list of synced files: #{filenames.join(', ')}"
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
@@ -4681,7 +4725,7 @@ class UiTestSuite < Test::Unit::TestCase
 	##
 
 	test 'cleanup: delete all test studies' do
-		puts "Test method: '#{self.method_name}'"
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in first
 		path = @base_url + '/studies'
@@ -4708,6 +4752,6 @@ class UiTestSuite < Test::Unit::TestCase
 			end
 		end
 
-		puts "Test method: '#{self.method_name}' successful!"
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
 end
