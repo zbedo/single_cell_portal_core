@@ -1207,7 +1207,7 @@ class UiTestSuite < Test::Unit::TestCase
 		study_notifier_toggle.click
 		@wait.until {@driver.find_element(:class, 'toggle-study-subscription').text == 'On'}
 		new_study_text = study_notifier_toggle.text
-		assert new_study_text == 'Off', "Did not properly turn on study notification (text is still #{new_study_text})"
+		assert new_study_text == 'On', "Did not properly turn on study notification (text is still #{new_study_text})"
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
@@ -4521,18 +4521,18 @@ class UiTestSuite < Test::Unit::TestCase
 		end
 
 		# download an output file
-		outputs_btn = completed_submission.find_element(:class, 'get-submission-outputs')
-		outputs_btn.click
-		wait_for_render(:class, 'submission-output')
-		output_download = @driver.find_element(:class, 'submission-output')
-		filename = output_download['download']
-		output_download.click
-		# give the app a few seconds to initiate download request
-		sleep(5)
-		output_file = File.open(File.join($download_dir, filename))
-		assert File.exist?(output_file.path), 'Did not find downloaded submission output file'
-		File.delete(File.join($download_dir, filename))
-		close_modal('generic-update-modal')
+		# outputs_btn = completed_submission.find_element(:class, 'get-submission-outputs')
+		# outputs_btn.click
+		# wait_for_render(:class, 'submission-output')
+		# output_download = @driver.find_element(:class, 'submission-output')
+		# filename = output_download['download']
+		# output_download.click
+		# # give the app a few seconds to initiate download request
+		# sleep(5)
+		# output_file = File.open(File.join($download_dir, filename))
+		# assert File.exist?(output_file.path), 'Did not find downloaded submission output file'
+		# File.delete(File.join($download_dir, filename))
+		# close_modal('generic-update-modal')
 
 		# sync an output file
 		sync_btn = completed_submission.find_element(:class, 'sync-submission-outputs')
@@ -4553,6 +4553,53 @@ class UiTestSuite < Test::Unit::TestCase
 		synced_files = @driver.find_elements(:class, 'synced-study-file')
 		filenames = synced_files.map {|form| form.find_element(:class, 'filename')[:value]}
 		assert !filenames.find {|file| file[/#{filename}/]}.nil?, "Did not find #{filename} in list of synced files: #{filenames.join(', ')}"
+
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+	end
+
+	# view/export metadata from a submission
+	test 'front-end: workflows: export metadata' do
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		login_path = @base_url + '/users/sign_in'
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login($test_email, $test_email_password)
+
+		study_page = @base_url + "/study/test-study-#{$random_seed}"
+		@driver.get study_page
+		wait_until_page_loads(study_page)
+		open_ui_tab('study-workflows')
+		wait_for_render(:id, 'submissions-table')
+
+		# find a completed submission
+		submissions_table = @driver.find_element(:id, 'submissions-table')
+		submissions = submissions_table.find_element(:tag_name, 'tbody').find_elements(:tag_name, 'tr')
+		completed_submission = submissions.find {|sub|
+			sub.find_element(:class, "submission-state").text == 'Done' &&
+					sub.find_element(:class, "submission-status").text == 'Succeeded'
+		}
+
+		# view run metadata
+		view_btn = completed_submission.find_element(:class, 'view-submission-metadata')
+		view_btn.click
+		wait_for_modal_open('generic-update-modal')
+
+		# export analysis.json file
+		export_btn = @driver.find_element(:class, 'export-submission-metadata')
+		export_btn.click
+		sleep(1)
+		filename = 'analysis.json'
+		filepath = File.join($download_dir, filename)
+		assert File.exist?(filepath), "Did not find exported analysis metadata at #{filepath}"
+
+		# make sure exported file is valid by checking for some expected keys
+		analysis_file = File.open(filepath)
+		analysis_json = JSON.parse(analysis_file.read)
+		assert %w(inputs outputs name tasks analysis_id).all? {|k| analysis_json.has_key?(k)}, "Exported analysis file does not have required keys: #{analysis_json.keys}"
+
+		# clean up
+		File.delete(filepath)
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end

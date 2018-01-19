@@ -595,7 +595,21 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		process_firecloud_request(:get, path)
 	end
 
-	# create/update a FireCloud method configuration in a workspace (usually from a template)
+	# create a FireCloud method configuration in a workspace from a template or existing configuration
+	#
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of requested workspace
+	#		- +configuration+ (Hash) => configuration object (see https://api.firecloud.org/#!/Method_Configurations/updateWorkspaceMethodConfig for more info)
+	#
+	# * *return*
+	#   - +Hash+ configuration object
+	def create_workspace_configuration(workspace_namespace, workspace_name, configuration)
+		path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/methodconfigs"
+		process_firecloud_request(:post, path, configuration.to_json)
+	end
+
+	# update a FireCloud method configuration in a workspace
 	#
 	# * *params*
 	#   - +workspace_namespace+ (String) => namespace of workspace
@@ -1273,8 +1287,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	#   - +opts+ (Hash) => extra options for signed_url, see
 	#     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/file?method=signed_url-instance
 	#
-	# * *return*
-	#   - +File+ object
+  # * *return*
+  #   - +File+ object
 	def download_workspace_file(workspace_namespace, workspace_name, filename, destination, opts={})
 		file = self.get_workspace_file(workspace_namespace, workspace_name, filename)
 		# create a valid path by combining destination directory and filename, making sure no double / exist

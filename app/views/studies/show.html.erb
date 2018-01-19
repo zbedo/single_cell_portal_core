@@ -114,14 +114,14 @@
 		</div>
 	</div>
 </div>
-<div class="panel panel-info" id="metadatas-annotations-panel">
+<div class="panel panel-info" id="metadata-annotations-panel">
   <div class="panel-heading">
     <div class="panel-title">
-      <h4><%= link_to "Metadata <span class='badge' id='metadata-count'>#{@study.study_metadata.count}</span> & Cluster Annotations <span class='badge' id='cluster-annotation-count'>#{@study.cluster_annotation_count}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#metadatas-annotations', 'data-toggle' => 'collapse' %></h4>
+      <h4><%= link_to "Metadata <span class='badge' id='metadata-count'>#{@study.study_metadata.count}</span> & Cluster Annotations <span class='badge' id='cluster-annotation-count'>#{@study.cluster_annotation_count}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#metadata-annotations', 'data-toggle' => 'collapse' %></h4>
     </div>
   </div>
 
-  <div class="panel-collapse collapse in" id="metadatas-annotations">
+  <div class="panel-collapse collapse in" id="metadata-annotations">
     <div class="panel-body table-responsive">
       <table class="table table-striped">
         <thead>
@@ -159,6 +159,42 @@
     </div>
   </div>
 </div>
+
+<div class="panel panel-info" id="analysis-metadata-panel">
+  <div class="panel-heading">
+    <div class="panel-title">
+      <h4><%= link_to "Submission Info <span class='badge' id='analysis-count'>#{@analysis_metadata.size}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#analysis-metadata', 'data-toggle' => 'collapse' %></h4>
+    </div>
+  </div>
+
+  <div class="panel-collapse collapse in" id="analysis-metadata">
+    <div class="panel-body table-responsive">
+      <table class="table table-striped" id="analysis-metadata-table">
+        <thead>
+        <tr>
+          <th>Name</th>
+          <th>Submission</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+          <% @analysis_metadata.each do |analysis| %>
+            <tr>
+              <td><%= analysis.name %></td>
+              <td><%= link_to analysis.submission_id, @study.submission_url(analysis.submission_id), target: :_blank %></td>
+              <td><%= analysis.created_at.strftime("%F %R") %></td>
+              <td class="actions">
+                <%= link_to("<i class='fa fa-fw fa-code'></i> View Run Info".html_safe, 'javascript:;', class: 'btn btn-xs btn-info view-submission-metadata', title: 'View HCA-formatted analysis metadata', data: {toggle: 'tooltip', id: analysis.submission_id, url: get_submission_metadata_path(study_name: @study.url_safe_name, submission_id: analysis.submission_id)}) %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <div class="panel panel-primary" id="study-files-panel">
 	<div class="panel-heading">
 		<div class="panel-title">
@@ -332,6 +368,23 @@
         pagingType: 'full',
         order: [[1, 'asc'],[0, 'asc']],
         autoWidth: false
+    });
+
+    $('#analysis-metadata-table').dataTable({
+        pagingType: 'full',
+        order: [[1, 'asc'],[0, 'asc']],
+        autoWidth: false
+    }).on('click', '.view-submission-metadata', function () {
+        console.log('view metadata');
+        var submissionUrl = $(this).data('url');
+        $('#generic-modal-title').html("Getting Run Info... Please Wait");
+        launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+            $.ajax({
+                url: submissionUrl,
+                method: 'GET',
+                dataType: 'script'
+            });
+        });
     });
 
     $('#toggle-panels').click(function() {
