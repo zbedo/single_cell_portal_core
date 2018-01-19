@@ -1279,7 +1279,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
 	# retrieve single file in a GCP bucket of a workspace and download locally to portal (likely for parsing)
 	#
-  # * *params*
+	# * *params*
 	#   - +workspace_namespace+ (String) => namespace of workspace
 	#   - +workspace_name+ (String) => name of workspace
 	#   - +filename+ (String) => name of file

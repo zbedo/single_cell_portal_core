@@ -23,6 +23,7 @@ class StudyFile
   UPLOAD_STATUSES = %w(new uploading uploaded)
   PARSE_STATUSES = %w(unparsed parsing parsed)
   PRIMARY_DATA_EXTENTIONS = %w(fastq fastq.zip fastq.gz fastq.tar.gz fq fq.zip fq.gz fq.tar.gz)
+  GZIP_MAGIC_NUMBER = "\x1f\x8b".force_encoding(Encoding::ASCII_8BIT)
 
   # associations
   belongs_to :study, index: true
@@ -198,6 +199,17 @@ class StudyFile
       '#333333'
     else
       self.options[:font_color]
+    end
+  end
+
+  # determine a file's content type by reading the first 2 bytes and comparing to known magic numbers
+  def determine_content_type
+    location = File.join(self.study.data_store_path, self.download_location)
+    signature = File.open(location).read(2)
+    if signature == StudyFile::GZIP_MAGIC_NUMBER
+      'application/gzip'
+    else
+      'text/plain'
     end
   end
 
