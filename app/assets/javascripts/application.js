@@ -89,6 +89,18 @@ $(document).on('click', '[data-toggle="offcanvas"]', function () {
 $(document).on('click', '#view-option-link', function(e) { e.preventDefault(); });
 
 
+$(document).on('click', '#search-omnibar-menu', function(e) {
+  var searchParent = $('#search-parent')
+  if (searchParent.is(':visible')) {
+    searchParent.hide();
+    $('#render-target').addClass('col-md-13').removeClass('col-md-10');
+  } else {
+    searchParent.show();
+    $('#render-target').removeClass('col-md-13').addClass('col-md-10');
+  }
+
+});
+
 jQuery.railsAutocomplete.options.noMatchesLabel = "No matches in this study";
 
 // used for calculating size of plotly graphs to maintain square aspect ratio
