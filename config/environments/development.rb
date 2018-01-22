@@ -59,4 +59,7 @@ Rails.application.configure do
 
   # disable admin notification (like startup email)
   config.disable_admin_notifications = false
+
+  # set MongoDB logging level
+  Mongoid.logger.level = Logger::INFO
 end

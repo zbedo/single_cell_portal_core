@@ -106,8 +106,8 @@ class AdminConfiguration
       # also filter out studies not in default portal project - user-funded projects are exempt from access revocation
       Study.not_in(queued_for_deletion: true).where(:firecloud_project.in => FireCloudClient::COMPUTE_BLACKLIST).each do |study|
         Rails.logger.info "#{Time.now}: begin revoking access to study: #{study.name}"
-        # first remove share access (unless share user is a project member)
-        shares = study.study_shares.map(&:email)
+        # first remove share access (only shares with FireCloud access, i.e. non-reviewers)
+        shares = study.study_shares.non_reviewers
         shares.each do |user|
           Rails.logger.info "#{Time.now}: revoking share access for #{user}"
           revoke_share_acl = Study.firecloud_client.create_workspace_acl(user, @config_setting)
@@ -133,13 +133,15 @@ class AdminConfiguration
     # also filter out studies not in default portal project - user-funded projects are exempt from access revocation
     Study.not_in(queued_for_deletion: true).where(:firecloud_project.in => FireCloudClient::COMPUTE_BLACKLIST).each do |study|
       Rails.logger.info "#{Time.now}: begin restoring access to study: #{study.name}"
-      # first remove share access
-      shares = study.study_shares
+      # first re-enable share access (to all non-reviewers)
+      shares = study.study_shares.where(:permission.nin => %w(Reviewer)).to_a
       shares.each do |share|
         user = share.email
         share_permission = StudyShare::FIRECLOUD_ACL_MAP[share.permission]
+        can_share = share_permission === 'WRITER' ? true : false
+        can_compute = Rails.env == 'production' ? false : share_permission === 'WRITER' ? true : false
         Rails.logger.info "#{Time.now}: restoring #{share_permission} permission for #{user}"
-        restore_share_acl = Study.firecloud_client.create_workspace_acl(user, share_permission)
+        restore_share_acl = Study.firecloud_client.create_workspace_acl(user, share_permission, can_share, can_compute)
         Study.firecloud_client.update_workspace_acl(study.firecloud_project, study.firecloud_workspace, restore_share_acl)
       end
       # last, restore study owner access (unless project is owned by user)

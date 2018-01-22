@@ -14,9 +14,9 @@ class StudiesController < ApplicationController
 
   respond_to :html, :js, :json
 
-  before_action :set_study, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
+  before_action :set_study, except: [:index, :new, :create, :download_private_file]
   before_action :set_file_types, only: [:sync_study, :sync_submission_outputs, :sync_study_file, :sync_orphaned_study_file, :update_study_file_from_sync]
-  before_filter :check_edit_permissions, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
+  before_filter :check_edit_permissions, except: [:index, :new, :create, :download_private_file]
   before_filter do
     authenticate_user!
     check_access_settings
@@ -44,6 +44,7 @@ class StudiesController < ApplicationController
     @primary_data = @study.directory_listings.primary_data
     @other_data = @study.directory_listings.non_primary_data
     @allow_downloads = AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
+    @analysis_metadata = @study.analysis_metadata.to_a
     # load study default options
     set_study_default_options
   end
@@ -250,6 +251,16 @@ class StudiesController < ApplicationController
             @unsynced_files << unsynced_output
           end
         end
+        metadata = AnalysisMetadatum.find_by(study_id: @study.id, submission_id: params[:submission_id])
+        if metadata.nil?
+          metadata_attr = {
+              name: submission['methodConfigurationName'],
+              submission_id: params[:submission_id],
+              study_id: @study.id,
+              version: '4.6.1'
+          }
+          AnalysisMetadatum.create!(metadata_attr)
+        end
       end
       @available_files = @unsynced_files.map {|f| {name: f.name, generation: f.generation, size: f.upload_file_size}}
       render action: :sync_study
@@ -453,6 +464,8 @@ class StudiesController < ApplicationController
       redirect_to view_study_path(@study.url_safe_name), alert: 'You do not have permission to perform that action.' and return
     elsif @study.embargoed?(current_user)
       redirect_to view_study_path(@study.url_safe_name), alert: "You may not download any data from this study until #{@study.embargo.to_s(:long)}." and return
+    elsif !@study.can_download?(current_user)
+      redirect_to view_study_path(@study.url_safe_name), alert: 'You do not have permission to perform that action.' and return
     end
 
     # next check if downloads have been disabled by administrator, this will abort the download
@@ -1021,7 +1034,7 @@ class StudiesController < ApplicationController
           @files_by_dir[directory_name] ||= []
           @files_by_dir[directory_name] << found_file
         end
-        found_study_file = @study_files.detect {|f| f.generation == file.generation }
+        found_study_file = @study_files.detect {|f| f.generation.to_i == file.generation }
         if found_study_file
           @synced_study_files << found_study_file
           files_to_remove << file.generation
@@ -1068,7 +1081,7 @@ class StudiesController < ApplicationController
     if existing_dir.nil?
       dir = @study.directory_listings.build(name: directory, file_type: file_type, files: [{name: file.name, size: file.size, generation: file.generation}], sync_status: false)
       @unsynced_directories << dir
-    elsif existing_dir.files.detect {|f| f['generation'] == file.generation }.nil?
+    elsif existing_dir.files.detect {|f| f['generation'].to_i == file.generation }.nil?
       existing_dir.files << found_file
       existing_dir.sync_status = false
       if @unsynced_directories.map(&:name).include?(existing_dir.name)

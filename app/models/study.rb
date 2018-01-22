@@ -103,6 +103,14 @@ class Study
     def can_view
       all.to_a.map(&:email)
     end
+
+    def non_reviewers
+      where(:permission.nin => %w(Reviewer)).map(&:email)
+    end
+
+    def reviewers
+      where(permission: 'Reviewer').map(&:email)
+    end
   end
 
   has_many :cluster_groups, dependent: :delete do
@@ -152,6 +160,9 @@ class Study
   # User annotations are per study
   has_many :user_annotations, dependent: :delete
   has_many :user_data_arrays, dependent: :delete
+
+  # HCA metadata object
+  has_many :analysis_metadata, dependent: :delete
 
   # field definitions
   field :name, type: String
@@ -273,6 +284,15 @@ class Study
       false
     else
       self.user.email == user.email || self.study_shares.can_view.include?(user.email)
+    end
+  end
+
+  # check if a user can download data through the portal
+  def can_download?(user)
+    if user.nil?
+      false
+    else
+      self.public? || self.can_edit?(user) || self.study_shares.non_reviewers.include?(user.email)
     end
   end
 
@@ -599,6 +619,7 @@ class Study
       UserAnnotation.where(study_id: study.id).delete_all
       UserAnnotationShare.where(study_id: study.id).delete_all
       UserDataArray.where(study_id: study.id).delete_all
+      AnalysisMetadatum.where(study_id: study.id).delete_all
       # now destroy study to ensure everything is removed
       study.destroy
       Rails.logger.info "#{Time.now}: delete of #{study.name} completed"
