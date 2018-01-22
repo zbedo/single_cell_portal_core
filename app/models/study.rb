@@ -292,7 +292,7 @@ class Study
     if user.nil?
       false
     else
-      self.public? || self.study_shares.non_reviewers.include?(user.email)
+      self.public? || self.can_edit?(user) || self.study_shares.non_reviewers.include?(user.email)
     end
   end
 
