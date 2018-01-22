@@ -94,9 +94,11 @@ $(document).on('click', '#search-omnibar-menu', function(e) {
   if (searchParent.is(':visible')) {
     searchParent.hide();
     $('#render-target').addClass('col-md-13').removeClass('col-md-10');
+    $('#plots-tab-nav').css('margin-left', '13px')
   } else {
     searchParent.show();
     $('#render-target').removeClass('col-md-13').addClass('col-md-10');
+    $('#plots-tab-nav').css('margin-left', '')
   }
 
 });
