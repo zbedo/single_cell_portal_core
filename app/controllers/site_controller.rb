@@ -567,6 +567,8 @@ class SiteController < ApplicationController
       redirect_to view_study_path(@study.url_safe_name), alert: 'You must be signed in to download data.' and return
     elsif @study.embargoed?(current_user)
       redirect_to view_study_path(@study.url_safe_name), alert: "You may not download any data from this study until #{@study.embargo.to_s(:long)}." and return
+    elsif !@study.can_download?(current_user)
+      redirect_to view_study_path(@study.url_safe_name), alert: 'You do not have permission to perform that action.' and return
     end
 
     # next check if downloads have been disabled by administrator, this will abort the download

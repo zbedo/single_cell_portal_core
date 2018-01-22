@@ -103,6 +103,14 @@ class Study
     def can_view
       all.to_a.map(&:email)
     end
+
+    def non_reviewers
+      where(:permission.nin => %w(Reviewer)).map(&:email)
+    end
+
+    def reviewers
+      where(permission: 'Reviewer').map(&:email)
+    end
   end
 
   has_many :cluster_groups, dependent: :delete do
@@ -276,6 +284,15 @@ class Study
       false
     else
       self.user.email == user.email || self.study_shares.can_view.include?(user.email)
+    end
+  end
+
+  # check if a user can download data through the portal
+  def can_download?(user)
+    if user.nil?
+      false
+    else
+      self.public? || self.study_shares.non_reviewers.include?(user.email)
     end
   end
 
