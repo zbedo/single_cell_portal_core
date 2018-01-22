@@ -1,4 +1,4 @@
-<%= nested_form_for(@study, html: {multipart: true}) do |f| %>
+<%= nested_form_for(@study, html: {multipart: true, class: 'study-form'}) do |f| %>
 	<% if @study.errors.any? %>
 		<div class="bs-callout bs-callout-danger" id="study-errors-block">
 			<h4><%= pluralize(@study.errors.count, "error") %> prohibited this study from being saved:</h4>
@@ -72,6 +72,13 @@
                 return true;
             });
         }
+    });
+
+    $(".study-form").on('change', '.share-permission', function() {
+        var newPermission = $(this).val();
+        var permissionText = <%= raw StudyShare::PERMISSION_DESCRIPTION_MAP.to_json %>;
+        var descField = $(this).next('.share-description');
+        descField.html(permissionText[newPermission])
     });
 
 </script>

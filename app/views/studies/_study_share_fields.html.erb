@@ -11,6 +11,7 @@
 		<div class="col-sm-5">
 			<%= f.label :permission %><br />
 			<%= f.select :permission, options_for_select(StudyShare::PERMISSION_TYPES, f.object.permission), {}, class: 'form-control share-permission' %>
+      <span class="help-block share-description"><%= StudyShare::PERMISSION_DESCRIPTION_MAP[f.object.permission] %></span>
 		</div>
 		<div class="col-sm-1">
 			<%= f.label :delete, "&nbsp;".html_safe %><br />

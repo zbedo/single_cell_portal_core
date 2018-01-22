@@ -14,9 +14,9 @@ class StudiesController < ApplicationController
 
   respond_to :html, :js, :json
 
-  before_action :set_study, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
+  before_action :set_study, except: [:index, :new, :create, :download_private_file]
   before_action :set_file_types, only: [:sync_study, :sync_submission_outputs, :sync_study_file, :sync_orphaned_study_file, :update_study_file_from_sync]
-  before_filter :check_edit_permissions, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
+  before_filter :check_edit_permissions, except: [:index, :new, :create, :download_private_file]
   before_filter do
     authenticate_user!
     check_access_settings
@@ -464,6 +464,8 @@ class StudiesController < ApplicationController
       redirect_to view_study_path(@study.url_safe_name), alert: 'You do not have permission to perform that action.' and return
     elsif @study.embargoed?(current_user)
       redirect_to view_study_path(@study.url_safe_name), alert: "You may not download any data from this study until #{@study.embargo.to_s(:long)}." and return
+    elsif !@study.can_download?(current_user)
+      redirect_to view_study_path(@study.url_safe_name), alert: 'You do not have permission to perform that action.' and return
     end
 
     # next check if downloads have been disabled by administrator, this will abort the download

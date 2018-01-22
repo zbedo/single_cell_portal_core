@@ -133,7 +133,7 @@ class UiTestSuite < Test::Unit::TestCase
 	##
 
 	# create basic test study
-	test 'admin: create-study: configurations: validation: download: user-annotation: workflows: user-profiles: public' do
+	test 'admin: create-study: sharing: configurations: validation: download: user-annotation: workflows: user-profiles: public' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in first
@@ -423,7 +423,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# create private study for testing visibility/edit restrictions
-	test 'admin: create-study: download: private' do
+	test 'admin: create-study: sharing: download: private' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in first
@@ -645,6 +645,7 @@ class UiTestSuite < Test::Unit::TestCase
 		study_form.find_element(:id, 'study_name').send_keys("Embargo Study #{$random_seed}")
 		embargo_date = (Date.today + 1).to_s
 		study_form.find_element(:id, 'study_embargo').send_keys(embargo_date)
+
 		# save study
 		save_study = @driver.find_element(:id, 'save-study')
 		save_study.click
@@ -884,6 +885,56 @@ class UiTestSuite < Test::Unit::TestCase
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
 		assert files.size == 10, "did not find correct number of files, expected 9 but found #{files.size}"
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+	end
+
+	# test reviewer functionality
+	test 'admin: sharing: reviewer permission' do
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		path = @base_url + '/studies'
+		@driver.get path
+		close_modal('message_modal')
+		login($test_email, $test_email_password)
+
+		edit = @driver.find_element(:class, "private-study-#{$random_seed}-edit")
+		edit.click
+		wait_for_render(:class, 'study-form')
+		study_form = @driver.find_element(:class, 'study-form')
+		share = study_form.find_element(:id, 'add-study-share')
+		@wait.until {share.displayed?}
+		share.click
+		share_email = study_form.find_element(:class, 'share-email')
+		share_email.send_keys($share_email)
+		share_permission = study_form.find_element(:class, 'share-permission')
+		share_permission.send_keys('Reviewer')
+		save_study = @driver.find_element(:id, 'save-study')
+		save_study.click
+		close_modal('message_modal')
+		# now confirm reviewer share
+		logout_from_portal
+		login_path = @base_url + '/users/sign_in'
+		@driver.get login_path
+		wait_until_page_loads(login_path)
+		login_as_other($share_email, $share_email_password)
+		# make sure study shows up in list of 'My Studies'
+		path = @base_url + "/studies"
+		@driver.get path
+		wait_for_render(:id, 'studies')
+		assert element_present?(:id, "private-study-#{$random_seed}-view-live-link"), "Did not find link to view private study"
+		private_study_link = @driver.find_element(:id, "private-study-#{$random_seed}-view-live-link")
+		private_study_link.click
+		assert element_present?(:class, 'study-lead'), 'Did not correctly load study page'
+
+		# make sure download tab is properly disabled and no files can be downloaded
+		download_tab = @driver.find_element(:id, 'study-download-nav')
+		assert download_tab['class'].include?('disabled'), "Download tab was not properly disabled: #{download_tab['class']}"
+		# try bypassing download with a direct call to file we uploaded earlier
+		direct_link = @base_url + "/data/public/private-study-#{$random_seed}?filename=expression_matrix_example.txt"
+		@driver.get direct_link
+		alert_content = @driver.find_element(:id, 'alert-content')
+		assert alert_content.text == 'You do not have permission to perform that action.', 'download was not successfully blocked'
+
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
 
