@@ -76,7 +76,6 @@
 
     $(".study-form").on('change', '.share-permission', function() {
         var newPermission = $(this).val();
-        console.log('changing description to ' + newPermission);
         var permissionText = <%= raw StudyShare::PERMISSION_DESCRIPTION_MAP.to_json %>;
         var descField = $(this).next('.share-description');
         descField.html(permissionText[newPermission])
