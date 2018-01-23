@@ -103,7 +103,7 @@ function setTabNavLeftMargin() {
       tabNavLeft = '13px';
     }
   }
-  $('#plots-tab-nav').css('margin-left', tabNavLeft);
+  $('#view-tabs li:first-child').css('margin-left', tabNavLeft);
 }
 
 // Prevent scroll upon clicking View Options link
@@ -116,8 +116,7 @@ $(document).on('click', '#view-option-link', function(e) {
 // Toggles search panel upon clicking burger menu to left of "Search genes"
 $(document).on('click', '#search-omnibar-menu i', function(e) {
 
-  var searchParent = $('#search-parent'),
-      tabNavLeft;
+  var searchParent = $('#search-parent');
 
   if (searchParent.is(':visible')) {
     // Search options panel is open, so close it.
@@ -132,7 +131,7 @@ $(document).on('click', '#search-omnibar-menu i', function(e) {
     setTabNavLeftMargin();
     $(this).addClass('open');
   }
-
+  $(window).trigger('resizeEnd');
 });
 
 $('#search_genes').focus();
