@@ -437,7 +437,13 @@ label {
 }
 
 #search-parent {
+  margin-top: 8px;
   z-index: 500;
+}
+
+#perform-gene-search {
+  background-color: #337ab7;
+  color: white;
 }
 
 #wdl-contents pre {
@@ -484,10 +490,17 @@ h4, .h4, h5, .h5, h6, .h6 {
   height: 25px;
   padding: 3px 4px;
   cursor: pointer;
+  border-radius: 3px;
 }
 
-#search-omnibar-menu i.open, #search-omnibar-menu i:hover {
+#search-omnibar-menu i.open {
   background-color: #e6e6e6;
+}
+
+#search_genes, #perform-gene-search:focus {
+  border: 1px solid #ccc;
+  box-shadow: none;
+  outline: none;
 }
 
 /*

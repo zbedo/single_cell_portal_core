@@ -110,6 +110,8 @@ $(document).on('click', '#search-omnibar-menu i', function(e) {
 
 });
 
+$('#search_genes').focus();
+
 jQuery.railsAutocomplete.options.noMatchesLabel = "No matches in this study";
 
 // used for calculating size of plotly graphs to maintain square aspect ratio
