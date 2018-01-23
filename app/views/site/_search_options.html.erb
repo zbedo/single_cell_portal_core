@@ -11,15 +11,9 @@
 
 <div id="search-omnibar">
   <div id="search-omnibar-menu">
-    <i class="fa fa-bars" aria-hidden="true" style="
-    float: left;
-        margin-right: 7px;
-        font-size: 20px;
-        margin-top: 5px;
-    "></i>
+    <i class="fa fa-bars" aria-hidden="true"></i>
   </div>
   <div class="input-group">
-    <!--<input type="text" placeholder="Search genes" class="form-control search-genes-input">-->
     <%= f.autocomplete_field :genes, autocomplete_expression_score_gene_expression_score_index_path(study_id: @study._id), {multiple: true, class: 'form-control search-genes-input', placeholder: 'Search genes', value: set_search_value, data: {delimiter: ' '}} %>
     <span class="input-group-btn">
       <button class="btn btn-default" id="perform-gene-search" type="button">

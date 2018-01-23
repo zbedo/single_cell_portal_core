@@ -475,6 +475,21 @@ h4, .h4, h5, .h5, h6, .h6 {
   margin-right: 4px;
 }
 
+#search-omnibar-menu i {
+  float: left;
+  margin-right: 7px;
+  font-size: 20px;
+  margin-top: 5px;
+  width: 25px;
+  height: 25px;
+  padding: 3px 4px;
+  cursor: pointer;
+}
+
+#search-omnibar-menu i.open, #search-omnibar-menu i:hover {
+  background-color: #e6e6e6;
+}
+
 /*
  * Off Canvas, a collapsible side bar used for e.g. 'View Options' menu
  * --------------------------------------------------
