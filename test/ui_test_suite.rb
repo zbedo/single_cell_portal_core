@@ -737,7 +737,7 @@ class UiTestSuite < Test::Unit::TestCase
 		new_expression.click
 		scroll_to(:bottom)
 		upload_expression = @driver.find_element(:id, 'upload-expression')
-		upload_expression.send_keys(@test_data_path + 'expression_matrix_example_r_format.txt')
+		upload_expression.send_keys(@test_data_path + 'R_format_text.txt')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		upload_btn.click
