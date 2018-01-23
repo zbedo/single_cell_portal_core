@@ -85,26 +85,51 @@ $(document).on('click', '[data-toggle="offcanvas"]', function () {
 
 });
 
+function setTabNavLeftMargin() {
+  var tabNavLeft,
+    viewOptionsIsOpen = $('#render-target > .row-offcanvas').hasClass('active'),
+    searchPanelIsVisible = $('#search-parent').is(':visible');
+
+  if (viewOptionsIsOpen) {
+    if (searchPanelIsVisible) {
+      tabNavLeft = '0px';
+    } else {
+      tabNavLeft = '22%';
+    }
+  } else {
+    if (searchPanelIsVisible) {
+      tabNavLeft = '0px';
+    } else {
+      tabNavLeft = '13px';
+    }
+  }
+  $('#plots-tab-nav').css('margin-left', tabNavLeft);
+}
+
 // Prevent scroll upon clicking View Options link
-$(document).on('click', '#view-option-link', function(e) { e.preventDefault(); });
+$(document).on('click', '#view-option-link', function(e) {
+  e.preventDefault();
+  setTabNavLeftMargin();
+});
 
 
 // Toggles search panel upon clicking burger menu to left of "Search genes"
 $(document).on('click', '#search-omnibar-menu i', function(e) {
 
-  var searchParent = $('#search-parent');
+  var searchParent = $('#search-parent'),
+      tabNavLeft;
 
   if (searchParent.is(':visible')) {
     // Search options panel is open, so close it.
     searchParent.hide();
     $('#render-target').addClass('col-md-13').removeClass('col-md-10');
-    $('#plots-tab-nav').css('margin-left', '13px');
+    setTabNavLeftMargin();
     $(this).removeClass('open');
   } else {
     // Search options panel is closed, so open it.
     searchParent.show();
     $('#render-target').removeClass('col-md-13').addClass('col-md-10');
-    $('#plots-tab-nav').css('margin-left', '');
+    setTabNavLeftMargin();
     $(this).addClass('open');
   }
 
