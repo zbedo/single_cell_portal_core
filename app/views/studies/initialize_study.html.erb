@@ -20,7 +20,7 @@
         <div class="well well-sm">
           <h2>Step 1. Upload Expression Matrix File <small class="initialize-label" id="initialize_expression_form_completed"><span class="label label-danger">Required</span></small></h2>
           <p class="lead">Upload a tab- or comma-delimited text file containing gene expression scores for cells in your study.  The file must be a plain text (.txt) or <%= link_to 'gzipped', 'http://www.gnu.org/software/gzip/manual/gzip.html' %> (.txt.gz) file with with a header row containing the value '<strong>GENE</strong>' in the first column, and single cell names in each successive column.</p>
-          <p class="lead">You may upload multiple expression matrix files for your study, provided that the list of cell names in each file is unique to each file (you may not repeat cells in successive expression matrices).</p>
+          <p class="lead">You may upload multiple expression matrix files for your study, provided that the list of cell names in each file is unique to each file (you may not repeat cells in successive expression matrices). <span class="text-warning"><i class="fa fa-fw fa-exclamation-triangle"></i>Cell names containing periods ( . ) will be transformed into underscores ( _ ).</span></p>
           <p><%= link_to "Example Expression Matrix <span class='fa fa-download'></span>".html_safe, 'https://raw.githubusercontent.com/broadinstitute/single_cell_portal/master/demo_data/expression_example.txt', class: 'btn btn-default', download: 'expression_matrix_example.txt' %></p>
         </div>
         <% @expression_files.each do |study_file| %>

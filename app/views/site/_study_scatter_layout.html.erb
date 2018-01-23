@@ -58,7 +58,8 @@ var layout = {
   layout.yaxis = {
       range: <%= raw @range[:y] %>,
       title: '<%= @axes[:y] %>',
-      showticklabels: false
+      showticklabels: false,
+      scaleanchor: 'x' // square a 2d plot
   };
 
   <% if @cluster.has_coordinate_labels? %>

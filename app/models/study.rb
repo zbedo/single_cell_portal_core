@@ -764,6 +764,16 @@ class Study
   #
   ###
 
+  # helper method to sanitize arrays of data for use as keys or names (removes quotes, can transform . into _)
+  def sanitize_input_array(array, replace_periods=false)
+    output = []
+    array.each do |entry|
+      value = entry.gsub(/(\"|\')/, '')
+      output << (replace_periods ? value.gsub(/\./, '_') : value)
+    end
+    output
+  end
+
   # method to parse master expression scores file for study and populate collection
   # this parser assumes the data is a non-sparse square matrix
   def initialize_expression_scores(expression_file, user, opts={local: true})
@@ -844,7 +854,8 @@ class Study
       else
         expression_data = File.open(@file_location, 'rb')
       end
-      cells = expression_data.readline.rstrip.split(/[\t,]/).map(&:strip)
+      raw_cells = expression_data.readline.rstrip.split(/[\t,]/).map(&:strip)
+      cells = self.sanitize_input_array(raw_cells, true)
       @last_line = "#{expression_file.name}, line 1"
 
       # shift headers if first cell is blank or GENE
@@ -874,7 +885,8 @@ class Study
         if line.strip.blank?
           next
         else
-          row = line.split(/[\t,]/).map(&:strip)
+          raw_row = line.split(/[\t,]/).map(&:strip)
+          row = self.sanitize_input_array(raw_row)
           @last_line = "#{expression_file.name}, line #{expression_data.lineno}"
 
           gene_name = row.shift
@@ -1063,8 +1075,10 @@ class Study
         cluster_data = File.open(@file_location, 'rb')
       end
 
-      header_data = cluster_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
-      type_data = cluster_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
+      raw_header_data = cluster_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
+      raw_type_data = cluster_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
+      header_data = self.sanitize_input_array(raw_header_data)
+      type_data = self.sanitize_input_array(raw_type_data)
 
       # determine if 3d coordinates have been provided
       is_3d = header_data.include?('Z')
@@ -1150,7 +1164,8 @@ class Study
         else
           @point_count += 1
           @last_line = "#{ordinations_file.name}, line #{cluster_data.lineno}"
-          vals = line.split(/[\t,]/).map(&:strip)
+          raw_vals = line.split(/[\t,]/).map(&:strip)
+          vals = self.sanitize_input_array(raw_vals)
           # assign value to corresponding data_array by column index
           vals.each_with_index do |val, index|
             if @data_arrays[index].values.size >= DataArray::MAX_ENTRIES
@@ -1381,7 +1396,8 @@ class Study
         coordinate_data = File.open(@file_location, 'rb')
       end
 
-      header_data = coordinate_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
+      raw_header_data = coordinate_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
+      header_data = self.sanitize_input_array(raw_header_data)
 
       # determine if 3d coordinates have been provided
       is_3d = header_data.include?('Z')
@@ -1412,7 +1428,8 @@ class Study
           next
         else
           @last_line = "#{coordinate_file.name}, line #{coordinate_data.lineno}"
-          vals = line.split(/[\t,]/).map(&:strip)
+          raw_vals = line.split(/[\t,]/).map(&:strip)
+          vals = self.sanitize_input_array(raw_vals)
           # assign value to corresponding data_array by column index
           vals.each_with_index do |val, index|
             if @data_arrays[index].values.size >= DataArray::MAX_ENTRIES
@@ -1570,8 +1587,10 @@ class Study
       else
         metadata_data = File.open(@file_location, 'rb')
       end
-      header_data = metadata_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
-      type_data = metadata_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
+      raw_header_data = metadata_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
+      raw_type_data = metadata_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
+      header_data = self.sanitize_input_array(raw_header_data)
+      type_data = self.sanitize_input_array(raw_type_data)
       name_index = header_data.index('NAME')
 
       # build study_metadata objects for use later
@@ -1591,7 +1610,8 @@ class Study
           next
         else
           @last_line = "#{metadata_file.name}, line #{metadata_data.lineno}"
-          vals = line.split(/[\t,]/).map(&:strip)
+          raw_vals = line.split(/[\t,]/).map(&:strip)
+          vals = self.sanitize_input_array(raw_vals)
 
           # assign values to correct study_metadata object
           vals.each_with_index do |val, index|
@@ -1806,7 +1826,8 @@ class Study
         marker_scores = File.open(@file_location, 'rb').readlines.map(&:strip).delete_if {|line| line.blank? }
       end
 
-      clusters = marker_scores.shift.split(/[\t,]/).map(&:strip)
+      raw_clusters = marker_scores.shift.split(/[\t,]/).map(&:strip)
+      clusters = self.sanitize_input_array(raw_clusters, true)
       @last_line = "#{marker_file.name}, line 1"
 
       clusters.shift # remove 'Gene Name' at start
@@ -1817,8 +1838,9 @@ class Study
       @genes_parsed = []
       marker_scores.each_with_index do |line, i|
         @last_line = "#{marker_file.name}, line #{i + 2}"
-        vals = line.split(/[\t,]/).map(&:strip)
-        gene = vals.shift
+        raw_vals = line.split(/[\t,]/).map(&:strip)
+        vals = self.sanitize_input_array(raw_vals)
+        gene = vals.shift.gsub(/\./, '_')
         if @genes_parsed.include?(gene)
           marker_file.update(parse_status: 'failed')
           user_error_message = "You have a duplicate gene entry (#{gene}) in your gene list.  Please check your file and try again."
