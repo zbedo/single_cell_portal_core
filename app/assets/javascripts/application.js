@@ -85,6 +85,7 @@ $(document).on('click', '[data-toggle="offcanvas"]', function () {
 
 });
 
+// Ensures that position of the Explore tab's internal tabs are flush with left container border
 function setTabNavLeftMargin() {
   var tabNavLeft,
     viewOptionsIsOpen = $('#render-target > .row-offcanvas').hasClass('active'),
@@ -134,7 +135,11 @@ $(document).on('click', '#search-omnibar-menu i', function(e) {
   $(window).trigger('resizeEnd');
 });
 
-$('#search_genes').focus();
+// When a change in made in the Explore tab's "Enhance Gene Search" panel,
+// do a search with the newly-specified options.
+$(document).on('change', '#panel-genes-search input, #panel-genes-search select', function() {
+  $('#perform-gene-search').click();
+});
 
 jQuery.railsAutocomplete.options.noMatchesLabel = "No matches in this study";
 
