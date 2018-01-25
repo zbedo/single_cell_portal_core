@@ -35,8 +35,8 @@ $( window ).on('resizeEnd', function() {
     staticLayout['width'] = newReferenceSize;
     staticLayout['height'] = newReferenceSize;
     Plotly.relayout('box-plot', {width: newBoxWidth});
-    Plotly.newPlot('scatter-plot', clusterData, scatterLayout);
-    Plotly.newPlot('reference-plot', dataRef, staticLayout);
+    Plotly.relayout('scatter-plot', scatterLayout);
+    Plotly.relayout('reference-plot', staticLayout);
 });
 
 // attach click event for toggle switch
