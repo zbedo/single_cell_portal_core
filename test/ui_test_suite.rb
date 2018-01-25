@@ -2433,14 +2433,19 @@ class UiTestSuite < Test::Unit::TestCase
 		genes = @genes.shuffle.take(rand(2..5))
 		search_box = @driver.find_element(:id, 'search_genes')
 		search_box.send_keys(genes.join(' ') + ' foo')
+
+		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
+		search_menu.click
+		wait_for_render(:id, 'search_consensus')
+
 		consensus = @driver.find_element(:id, 'search_consensus')
+
 		# select a random consensus measurement
 		opts = consensus.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'None'}
 		selected_consensus = opts.sample
 		selected_consensus_value = selected_consensus['value']
 		selected_consensus.click
-		search_genes = @driver.find_element(:id, 'perform-gene-search')
-		search_genes.click
+
 		assert element_present?(:id, 'box-controls'), 'could not find expression boxplot'
 		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
 		assert element_present?(:id, 'missing-genes'), 'did not find missing genes list'
@@ -2558,14 +2563,19 @@ class UiTestSuite < Test::Unit::TestCase
 		new_genes = @genes.shuffle.take(rand(2..5))
 		search_box = @driver.find_element(:id, 'search_genes')
 		search_box.send_keys(new_genes.join(' '))
+
+		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
+		search_menu.click
+		wait_for_render(:id, 'search_consensus')
+
 		new_consensus = @driver.find_element(:id, 'search_consensus')
+
 		# select a random consensus measurement
 		new_opts = new_consensus.find_elements(:tag_name, 'option').delete_if {|o| o.text == 'None'}
 		new_selected_consensus = new_opts.sample
 		new_selected_consensus_value = new_selected_consensus['value']
 		new_selected_consensus.click
-		search_genes = @driver.find_element(:id, 'perform-gene-search')
-		search_genes.click
+
 		assert element_present?(:id, 'box-controls'), 'could not find expression boxplot'
 		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
 
@@ -2735,11 +2745,13 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(path)
 		open_ui_tab('study-visualize')
 
+		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
+		search_menu.click
+		wait_for_render(:id, 'search_consensus')
+
 		# upload gene list
 		search_upload = @driver.find_element(:id, 'search_upload')
 		search_upload.send_keys(@test_data_path + 'search_genes.txt')
-		search_genes = @driver.find_element(:id, 'perform-gene-search')
-		search_genes.click
 
 		assert element_present?(:id, 'plots'), 'could not find expression heatmap'
 		@wait.until {wait_for_morpheus_render('#heatmap-plot', 'morpheus')}
@@ -2756,10 +2768,14 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(private_study_path)
 		open_ui_tab('study-visualize')
 
+		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
+		search_menu.click
+		wait_for_render(:id, 'search_consensus')
+
 		search_upload = @driver.find_element(:id, 'search_upload')
 		search_upload.send_keys(@test_data_path + 'search_genes.txt')
 		search_genes = @driver.find_element(:id, 'perform-gene-search')
-		search_genes.click
+
 		assert element_present?(:id, 'plots'), 'could not find expression heatmap'
 		@wait.until {wait_for_morpheus_render('#heatmap-plot', 'morpheus')}
 		private_heatmap_drawn = @driver.execute_script("return $('#heatmap-plot').data('morpheus').heatmap !== undefined;")
@@ -2776,6 +2792,10 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get(path)
 		wait_until_page_loads(path)
 		open_ui_tab('study-visualize')
+
+		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
+		search_menu.click
+		wait_for_render(:id, 'search_consensus')
 
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 		gene_list_panel = @driver.find_element(:id, 'gene-lists-link')
@@ -2804,6 +2824,10 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get private_study_path
 		wait_until_page_loads(private_study_path)
 		open_ui_tab('study-visualize')
+
+		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
+		search_menu.click
+		wait_for_render(:id, 'search_consensus')
 
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 		gene_list_panel = @driver.find_element(:id, 'gene-lists-link')
@@ -2834,6 +2858,10 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get(path)
 		wait_until_page_loads(path)
 		open_ui_tab('study-visualize')
+
+		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
+		search_menu.click
+		wait_for_render(:id, 'search_consensus')
 
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 		gene_list_panel = @driver.find_element(:id, 'gene-lists-link')
@@ -2952,6 +2980,10 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get private_study_path
 		wait_until_page_loads(private_study_path)
 		open_ui_tab('study-visualize')
+
+		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
+		search_menu.click
+		wait_for_render(:id, 'search_consensus')
 
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 		gene_list_panel = @driver.find_element(:id, 'gene-lists-link')

@@ -11,7 +11,7 @@
 
 <div id="search-omnibar">
   <div id="search-omnibar-menu">
-    <i class="fa fa-bars" aria-hidden="true"></i>
+    <i id="search-omnibar-menu-icon" class="fa fa-bars" aria-hidden="true"></i>
   </div>
   <div class="input-group">
     <%= f.autocomplete_field :genes, autocomplete_expression_score_gene_expression_score_index_path(study_id: @study._id), {multiple: true, class: 'form-control search-genes-input', placeholder: 'Search genes', value: set_search_value, data: {delimiter: ' '}} %>
@@ -27,7 +27,7 @@
   <div class="panel panel-info" id="search-options-panel">
     <div class="panel-heading">
       <div class="panel-title">
-        <h4><a href="#panel-genes-search" data-toggle="collapse" data-parent="#search-parent" id="search-genes-link"><span class='fa fa-search'></span> Enhance Gene Search</a></h4>
+        <h4><a href="#panel-genes-search" data-toggle="collapse" data-parent="#search-parent" id="search-genes-link"><span class='fa fa-search'></span> Advanced Gene Search</a></h4>
       </div>
     </div>
     <div class="panel-body collapse in" id="panel-genes-search">
