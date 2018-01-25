@@ -578,7 +578,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# test to verify deleting files removes them from gcs buckets
-	test 'admin: delete study file' do
+	test 'admin: create-study: delete study file' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		path = @base_url + '/studies'
