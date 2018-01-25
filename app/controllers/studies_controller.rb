@@ -438,6 +438,7 @@ class StudiesController < ApplicationController
   def parse
     @study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
     logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name}"
+    @study_file.update(parse_status: 'parsing')
     case @study_file.file_type
       when 'Cluster'
         @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user)

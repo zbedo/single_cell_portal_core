@@ -120,6 +120,10 @@ class StudyFile
     self.parse_status == 'parsed'
   end
 
+  def parsing?
+    self.parse_status == 'parsing'
+  end
+
   # file type as a css class
   def file_type_class
     self.file_type.downcase.split.join('-') + '-file'
