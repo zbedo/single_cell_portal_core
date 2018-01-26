@@ -1791,6 +1791,8 @@ class UiTestSuite < Test::Unit::TestCase
 		# assert that reporter access was removed
 		close_modal('message_modal')
 		open_ui_tab('users')
+		search_box = @driver.find_element(:xpath, "//div[@id='users']//input[@type='search']")
+		search_box.send_keys($share_email)
 		share_roles = @driver.find_element(:id, share_email_id + '-roles')
 		assert share_roles.text == '', "did not remove reporter access from #{$share_email}"
 
@@ -2100,7 +2102,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# try public rout
 		@driver.get non_share_public_link
 		public_alert_text = @driver.find_element(:id, 'alert-content').text
-		assert public_alert_text == 'You do not have permission to view the requested page.',
+		assert public_alert_text == 'You do not have permission to perform that action.',
 					 "did not properly redirect, expected 'You do not have permission to view the requested page.' but got #{public_alert_text}"
 
 		# try private route
@@ -3643,6 +3645,9 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(test_study_path)
 		open_ui_tab('study-visualize')
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
+		search_menu.click
+		wait_for_render(:id, 'search_consensus')
 		select_dropdown = @driver.find_element(:id, 'create_annotations_panel')
 		select_dropdown.click
 		# let collapse animation complete
@@ -3661,9 +3666,10 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(two_d_study_path)
 		open_ui_tab('study-visualize')
 
-		# Create an annotation from the study page
-
 		# Click selection tab
+		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
+		search_menu.click
+		wait_for_render(:id, 'search_consensus')
 		select_dropdown = @driver.find_element(:id, 'create_annotations_panel')
 		select_dropdown.click
 		# let collapse animation complete
@@ -3775,6 +3781,9 @@ class UiTestSuite < Test::Unit::TestCase
 		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
 		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
+		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
+		search_menu.click
+		wait_for_render(:id, 'search_consensus')
 		gene_list_panel = @driver.find_element(:id, 'gene-lists-link')
 		gene_list_panel.click
 		wait_for_render(:id, 'expression')
@@ -3801,8 +3810,9 @@ class UiTestSuite < Test::Unit::TestCase
 		scatter_link = @driver.find_element(:id, 'scatter-link')
 		scatter_link.click
 		wait_for_render(:id, 'scatter-plots')
-		@driver.find_element(:id, 'search-genes-link').click
-		@wait.until {!element_visible?(:id, 'panel-genes-search')}
+		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
+		search_menu.click
+		wait_for_render(:id, 'search_consensus')
 
 		# Click selection tabs
 		select_dropdown = @driver.find_element(:id, 'create_annotations_panel')
@@ -3925,6 +3935,9 @@ class UiTestSuite < Test::Unit::TestCase
 
 		sleep 0.5
 
+		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
+		search_menu.click
+		wait_for_render(:id, 'search_consensus')
 		gene_list_panel = @driver.find_element(:id, 'gene-lists-link')
 		gene_list_panel.click
 		wait_for_render(:id, 'expression')
@@ -4152,6 +4165,9 @@ class UiTestSuite < Test::Unit::TestCase
 
 		sleep 0.5
 
+		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
+		search_menu.click
+		wait_for_render(:id, 'search_consensus')
 		gene_list_panel = @driver.find_element(:id, 'gene-lists-link')
 		gene_list_panel.click
 		wait_for_render(:id, 'expression')
@@ -4343,6 +4359,9 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# choose the newly persisted annotation
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		wait_for_render(:id, 'view-options')
 		annotation_dropdown = @driver.find_element(:id, 'annotation')
 		annotation_dropdown.send_keys("user-#{$random_seed}")
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
@@ -4393,6 +4412,9 @@ class UiTestSuite < Test::Unit::TestCase
 		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
 		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
+		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
+		search_menu.click
+		wait_for_render(:id, 'search_consensus')
 		gene_list_panel = @driver.find_element(:id, 'gene-lists-link')
 		gene_list_panel.click
 		wait_for_render(:id, 'expression')
@@ -4706,6 +4728,8 @@ class UiTestSuite < Test::Unit::TestCase
 			sub.find_element(:class, "submission-state").text == 'Done' &&
 					sub.find_element(:class, "submission-status").text == 'Succeeded'
 		}
+
+		omit_if completed_submission.nil?, 'Skipping test; No completed submissions'
 
 		# view run metadata
 		view_btn = completed_submission.find_element(:class, 'view-submission-metadata')
