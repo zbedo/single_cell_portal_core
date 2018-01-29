@@ -804,10 +804,10 @@ class Study
       content_type = expression_file.determine_content_type
       # validate headers
       if content_type == 'application/gzip'
-        Rails.logger.info "#{Time.now}: Parsing #{expression_file.name} as application/gzip"
+        Rails.logger.info "#{Time.now}: Parsing #{expression_file.name}:#{expression_file.id} as application/gzip"
         file = Zlib::GzipReader.open(@file_location)
       else
-        Rails.logger.info "#{Time.now}: Parsing #{expression_file.name} as text/plain"
+        Rails.logger.info "#{Time.now}: Parsing #{expression_file.name}:#{expression_file.id} as text/plain"
         file = File.open(@file_location, 'rb')
       end
       cells = file.readline.split(/[\t,]/).map(&:strip)
@@ -845,7 +845,7 @@ class Study
 
     # begin parse
     begin
-      Rails.logger.info "#{Time.now}: Beginning expression score parse from #{expression_file.name} for #{self.name}"
+      Rails.logger.info "#{Time.now}: Beginning expression score parse from #{expression_file.name}:#{expression_file.id} for #{self.name}"
       expression_file.update(parse_status: 'parsing')
       # open data file and grab header row with name of all cells, deleting 'GENE' at start
       # determine proper reader
@@ -914,11 +914,11 @@ class Study
           if @count % 1000 == 0
             ExpressionScore.create(@records)
             @records = []
-            Rails.logger.info "Processed #{@count} expression scores from #{expression_file.name} for #{self.name}"
+            Rails.logger.info "Processed #{@count} expression scores from #{expression_file.name}:#{expression_file.id} for #{self.name}"
           end
         end
       end
-      Rails.logger.info "#{Time.now}: Creating last #{@records.size} expression scores from #{expression_file.name} for #{self.name}"
+      Rails.logger.info "#{Time.now}: Creating last #{@records.size} expression scores from #{expression_file.name}:#{expression_file.id} for #{self.name}"
       ExpressionScore.create!(@records)
 
       # launch job to set gene count
@@ -935,7 +935,7 @@ class Study
       cells.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
         # create array of all cells for study
         @cell_data_array = self.data_arrays.build(name: 'All Cells', cluster_name: expression_file.name, array_type: 'cells', array_index: index + 1, study_file_id: expression_file._id, cluster_group_id: expression_file._id, values: slice)
-        Rails.logger.info "#{Time.now}: Saving all cells data array ##{@cell_data_array.array_index} using #{expression_file.name} for #{self.name}"
+        Rails.logger.info "#{Time.now}: Saving all cells data array ##{@cell_data_array.array_index} using #{expression_file.name}:#{expression_file.id} for #{self.name}"
         @cell_data_array.save!
       end
 
@@ -962,17 +962,17 @@ class Study
         Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
       end
 
-      Rails.logger.info "#{Time.now}: determining upload status of expression file: #{expression_file.upload_file_name}"
+      Rails.logger.info "#{Time.now}: determining upload status of expression file: #{expression_file.upload_file_name}:#{expression_file.id}"
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       # rather than relying on opts[:local], actually check if the file is already in the GCS bucket
       destination = expression_file.remote_location.blank? ? expression_file.upload_file_name : expression_file.remote_location
       remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
       if remote.nil?
         begin
-          Rails.logger.info "#{Time.now}: preparing to upload expression file: #{expression_file.upload_file_name} to FireCloud"
+          Rails.logger.info "#{Time.now}: preparing to upload expression file: #{expression_file.upload_file_name}:#{expression_file.id} to FireCloud"
           self.send_to_firecloud(expression_file)
         rescue => e
-          Rails.logger.info "#{Time.now}: Expression file: #{expression_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
+          Rails.logger.info "#{Time.now}: Expression file: #{expression_file.upload_file_name}:#{expression_file.id} failed to upload to FireCloud due to #{e.message}"
           SingleCellMailer.notify_admin_upload_fail(expression_file, e.message).deliver_now
         end
       else
@@ -981,10 +981,10 @@ class Study
           Rails.logger.info "#{Time.now}: found remote version of #{expression_file.upload_file_name}: #{remote.name} (#{remote.generation})"
           run_at = 15.seconds.from_now
           Delayed::Job.enqueue(UploadCleanupJob.new(self, expression_file), run_at: run_at)
-          Rails.logger.info "#{Time.now}: cleanup job for #{expression_file.upload_file_name} scheduled for #{run_at}"
+          Rails.logger.info "#{Time.now}: cleanup job for #{expression_file.upload_file_name}:#{expression_file.id} scheduled for #{run_at}"
         rescue => e
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
-          Rails.logger.error "#{Time.now}: Could not delete #{expression_file.name} in study #{self.name}; aborting"
+          Rails.logger.error "#{Time.now}: Could not delete #{expression_file.name}:#{expression_file.id} in study #{self.name}; aborting"
           SingleCellMailer.admin_notification('Local file deletion failed', nil, "The file at #{@file_location} failed to clean up after parsing, please remove.").deliver_now
         end
       end
@@ -1026,10 +1026,10 @@ class Study
       content_type = ordinations_file.determine_content_type
       # validate headers
       if content_type == 'application/gzip'
-        Rails.logger.info "#{Time.now}: Parsing #{ordinations_file.name} as application/gzip"
+        Rails.logger.info "#{Time.now}: Parsing #{ordinations_file.name}:#{ordinations_file.id} as application/gzip"
         d_file = Zlib::GzipReader.open(@file_location)
       else
-        Rails.logger.info "#{Time.now}: Parsing #{ordinations_file.name} as text/plain"
+        Rails.logger.info "#{Time.now}: Parsing #{ordinations_file.name}:#{ordinations_file.id} as text/plain"
         d_file = File.open(@file_location, 'rb')
       end
 
@@ -1071,7 +1071,7 @@ class Study
     # begin parse
     begin
       cluster_name = ordinations_file.name
-      Rails.logger.info "#{Time.now}: Beginning cluster initialization using #{ordinations_file.upload_file_name} for cluster: #{cluster_name} in #{self.name}"
+      Rails.logger.info "#{Time.now}: Beginning cluster initialization using #{ordinations_file.upload_file_name}:#{ordinations_file.id} for cluster: #{cluster_name} in #{self.name}"
       ordinations_file.update(parse_status: 'parsing')
 
       if content_type == 'application/gzip'
@@ -1178,7 +1178,7 @@ class Study
               # of same name & type with array_index incremented by 1
               current_data_array_index = @data_arrays[index].array_index
               data_array = @data_arrays[index]
-              Rails.logger.info "#{Time.now}: Saving data array: #{data_array.name}-#{data_array.array_type}-#{data_array.array_index} using #{ordinations_file.upload_file_name} for cluster: #{cluster_name} in #{self.name}"
+              Rails.logger.info "#{Time.now}: Saving data array: #{data_array.name}-#{data_array.array_type}-#{data_array.array_index} using #{ordinations_file.upload_file_name}:#{ordinations_file.id} for cluster: #{cluster_name} in #{self.name}"
               data_array.save
               new_data_array = self.data_arrays.build(name: data_array.name, cluster_name: data_array.cluster_name ,array_type: data_array.array_type, array_index: current_data_array_index + 1, study_file_id: ordinations_file._id, cluster_group_id: @cluster_group._id, values: [])
               @data_arrays[index] = new_data_array
@@ -1205,7 +1205,7 @@ class Study
       end
       # clean up
       @data_arrays.each do |data_array|
-        Rails.logger.info "#{Time.now}: Saving data array: #{data_array.name}-#{data_array.array_type}-#{data_array.array_index} using #{ordinations_file.upload_file_name} for cluster: #{cluster_name} in #{self.name}"
+        Rails.logger.info "#{Time.now}: Saving data array: #{data_array.name}-#{data_array.array_type}-#{data_array.array_index} using #{ordinations_file.upload_file_name}:#{ordinations_file.id} for cluster: #{cluster_name} in #{self.name}"
         data_array.save
       end
       cluster_data.close
@@ -1289,17 +1289,17 @@ class Study
         Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
       end
 
-      Rails.logger.info "#{Time.now}: determining upload status of ordinations file: #{ordinations_file.upload_file_name}"
+      Rails.logger.info "#{Time.now}: determining upload status of ordinations file: #{ordinations_file.upload_file_name}:#{ordinations_file.id}"
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       destination = ordinations_file.remote_location.blank? ? ordinations_file.upload_file_name : ordinations_file.remote_location
       remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
       if remote.nil?
         begin
-          Rails.logger.info "#{Time.now}: preparing to upload ordinations file: #{ordinations_file.upload_file_name} to FireCloud"
+          Rails.logger.info "#{Time.now}: preparing to upload ordinations file: #{ordinations_file.upload_file_name}:#{ordinations_file.id} to FireCloud"
           self.send_to_firecloud(ordinations_file)
         rescue => e
-          Rails.logger.info "#{Time.now}: Cluster file: #{ordinations_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
+          Rails.logger.info "#{Time.now}: Cluster file: #{ordinations_file.upload_file_name}:#{ordinations_file.id} failed to upload to FireCloud due to #{e.message}"
           SingleCellMailer.notify_admin_upload_fail(ordinations_file, e.message).deliver_now
         end
       else
@@ -1308,10 +1308,10 @@ class Study
           Rails.logger.info "#{Time.now}: found remote version of #{ordinations_file.upload_file_name}: #{remote.name} (#{remote.generation})"
           run_at = 15.seconds.from_now
           Delayed::Job.enqueue(UploadCleanupJob.new(self, ordinations_file), run_at: run_at)
-          Rails.logger.info "#{Time.now}: cleanup job for #{ordinations_file.upload_file_name} scheduled for #{run_at}"
+          Rails.logger.info "#{Time.now}: cleanup job for #{ordinations_file.upload_file_name}:#{ordinations_file.id} scheduled for #{run_at}"
         rescue => e
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
-          Rails.logger.error "#{Time.now}: Could not delete #{ordinations_file.name} in study #{self.name}; aborting"
+          Rails.logger.error "#{Time.now}: Could not delete #{ordinations_file.name}:#{ordinations_file.id} in study #{self.name}; aborting"
           SingleCellMailer.admin_notification('Local file deletion failed', nil, "The file at #{@file_location} failed to clean up after parsing, please remove.").deliver_now
         end
       end
@@ -1351,10 +1351,10 @@ class Study
       content_type = coordinate_file.determine_content_type
       # validate headers
       if content_type == 'application/gzip'
-        Rails.logger.info "#{Time.now}: Parsing #{coordinate_file.name} as application/gzip"
+        Rails.logger.info "#{Time.now}: Parsing #{coordinate_file.name}:#{coordinate_file.id} as application/gzip"
         c_file = Zlib::GzipReader.open(@file_location)
       else
-        Rails.logger.info "#{Time.now}: Parsing #{coordinate_file.name} as text/plain"
+        Rails.logger.info "#{Time.now}: Parsing #{coordinate_file.name}:#{coordinate_file.id} as text/plain"
         c_file = File.open(@file_location, 'rb')
       end
 
@@ -1396,7 +1396,7 @@ class Study
       # load target cluster
       cluster = coordinate_file.coordinate_labels_target
 
-      Rails.logger.info "#{Time.now}: Beginning coordinate label initialization using #{coordinate_file.upload_file_name} for cluster: #{cluster.name} in #{self.name}"
+      Rails.logger.info "#{Time.now}: Beginning coordinate label initialization using #{coordinate_file.upload_file_name}:#{coordinate_file.id} for cluster: #{cluster.name} in #{self.name}"
       coordinate_file.update(parse_status: 'parsing')
 
       if content_type == 'application/gzip'
@@ -1429,7 +1429,7 @@ class Study
         @data_arrays[z_index] = self.data_arrays.build(name: 'z', cluster_name: cluster.name, array_type: 'labels', array_index: 1, study_file_id: coordinate_file._id, cluster_group_id: cluster._id, values: [])
       end
 
-      Rails.logger.info "#{Time.now}: Headers/Metadata loaded for coordinate file initialization using #{coordinate_file.upload_file_name} for cluster: #{cluster.name} in #{self.name}"
+      Rails.logger.info "#{Time.now}: Headers/Metadata loaded for coordinate file initialization using #{coordinate_file.upload_file_name}:#{coordinate_file.id} for cluster: #{cluster.name} in #{self.name}"
       # begin reading data
       while !coordinate_data.eof?
         line = coordinate_data.readline.strip.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
@@ -1446,7 +1446,7 @@ class Study
               # of same name & type with array_index incremented by 1
               current_data_array_index = @data_arrays[index].array_index
               data_array = @data_arrays[index]
-              Rails.logger.info "#{Time.now}: Saving full-lenght data array: #{data_array.name}-#{data_array.array_type}-#{data_array.array_index} using #{coordinate_file.upload_file_name} for cluster: #{cluster.name} in #{self.name}; initializing new array index #{current_data_array_index + 1}"
+              Rails.logger.info "#{Time.now}: Saving full-lenght data array: #{data_array.name}-#{data_array.array_type}-#{data_array.array_index} using #{coordinate_file.upload_file_name}:#{coordinate_file.id} for cluster: #{cluster.name} in #{self.name}; initializing new array index #{current_data_array_index + 1}"
               data_array.save
               new_data_array = self.data_arrays.build(name: data_array.name, cluster_name: data_array.cluster_name ,array_type: data_array.array_type, array_index: current_data_array_index + 1, study_file_id: coordinate_file._id, cluster_group_id: cluster._id, values: [])
               @data_arrays[index] = new_data_array
@@ -1464,7 +1464,7 @@ class Study
 
       # clean up
       @data_arrays.each do |data_array|
-        Rails.logger.info "#{Time.now}: Saving data array: #{data_array.name}-#{data_array.array_type}-#{data_array.array_index} using #{coordinate_file.upload_file_name} for cluster: #{cluster.name} in #{self.name}"
+        Rails.logger.info "#{Time.now}: Saving data array: #{data_array.name}-#{data_array.array_type}-#{data_array.array_index} using #{coordinate_file.upload_file_name}:#{coordinate_file.id} for cluster: #{cluster.name} in #{self.name}"
         data_array.save
       end
       coordinate_data.close
@@ -1486,17 +1486,17 @@ class Study
         Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
       end
 
-      Rails.logger.info "#{Time.now}: determining upload status of coordinate labels file: #{coordinate_file.upload_file_name}"
+      Rails.logger.info "#{Time.now}: determining upload status of coordinate labels file: #{coordinate_file.upload_file_name}:#{coordinate_file.id}"
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       destination = coordinate_file.remote_location.blank? ? coordinate_file.upload_file_name : coordinate_file.remote_location
       remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
       if remote.nil?
         begin
-          Rails.logger.info "#{Time.now}: preparing to upload ordinations file: #{coordinate_file.upload_file_name} to FireCloud"
+          Rails.logger.info "#{Time.now}: preparing to upload ordinations file: #{coordinate_file.upload_file_name}:#{coordinate_file.id} to FireCloud"
           self.send_to_firecloud(coordinate_file)
         rescue => e
-          Rails.logger.info "#{Time.now}: Cluster file: #{coordinate_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
+          Rails.logger.info "#{Time.now}: Cluster file: #{coordinate_file.upload_file_name}:#{coordinate_file.id} failed to upload to FireCloud due to #{e.message}"
           SingleCellMailer.notify_admin_upload_fail(coordinate_file, e.message).deliver_now
         end
       else
@@ -1505,10 +1505,10 @@ class Study
           Rails.logger.info "#{Time.now}: found remote version of #{coordinate_file.upload_file_name}: #{remote.name} (#{remote.generation})"
           run_at = 15.seconds.from_now
           Delayed::Job.enqueue(UploadCleanupJob.new(self, coordinate_file), run_at: run_at)
-          Rails.logger.info "#{Time.now}: cleanup job for #{coordinate_file.upload_file_name} scheduled for #{run_at}"
+          Rails.logger.info "#{Time.now}: cleanup job for #{coordinate_file.upload_file_name}:#{coordinate_file.id} scheduled for #{run_at}"
         rescue => e
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
-          Rails.logger.error "#{Time.now}: Could not delete #{coordinate_file.name} in study #{self.name}; aborting"
+          Rails.logger.error "#{Time.now}: Could not delete #{coordinate_file.name}:#{coordinate_file.id} in study #{self.name}; aborting"
           SingleCellMailer.admin_notification('Local file deletion failed', nil, "The file at #{@file_location} failed to clean up after parsing, please remove.").deliver_now
         end
       end
@@ -1548,17 +1548,17 @@ class Study
       content_type = metadata_file.determine_content_type
       # validate headers
       if content_type == 'application/gzip'
-        Rails.logger.info "#{Time.now}: Parsing #{metadata_file.name} as application/gzip"
+        Rails.logger.info "#{Time.now}: Parsing #{metadata_file.name}:#{metadata_file.id} as application/gzip"
         m_file = Zlib::GzipReader.open(@file_location)
       else
-        Rails.logger.info "#{Time.now}: Parsing #{metadata_file.name} as text/plain"
+        Rails.logger.info "#{Time.now}: Parsing #{metadata_file.name}:#{metadata_file.id} as text/plain"
         m_file = File.open(@file_location, 'rb')
       end
 
       # validate headers of metadata file
       @validation_error = false
       start_time = Time.now
-      Rails.logger.info "#{Time.now}: Validating metadata file headers for #{metadata_file.name} in #{self.name}"
+      Rails.logger.info "#{Time.now}: Validating metadata file headers for #{metadata_file.name}:#{metadata_file.id} in #{self.name}"
       headers = m_file.readline.split(/[\t,]/).map(&:strip)
       @last_line = "#{metadata_file.name}, line 1"
       second_header = m_file.readline.split(/[\t,]/).map(&:strip)
@@ -1592,7 +1592,7 @@ class Study
     @message = []
     # begin parse
     begin
-      Rails.logger.info "#{Time.now}: Beginning metadata initialization using #{metadata_file.upload_file_name} in #{self.name}"
+      Rails.logger.info "#{Time.now}: Beginning metadata initialization using #{metadata_file.upload_file_name}:#{metadata_file.id} in #{self.name}"
       metadata_file.update(parse_status: 'parsing')
       # open files for parsing and grab header & type data
       if content_type == 'application/gzip'
@@ -1615,7 +1615,7 @@ class Study
         end
       end
 
-      Rails.logger.info "#{Time.now}: Study metadata objects initialized using: #{metadata_file.name} for #{self.name}; beginning parse"
+      Rails.logger.info "#{Time.now}: Study metadata objects initialized using: #{metadata_file.name}:#{metadata_file.id} for #{self.name}; beginning parse"
       # read file data
       while !metadata_data.eof?
         line = metadata_data.readline.strip.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
@@ -1632,7 +1632,7 @@ class Study
               if @metadata_records[index].cell_annotations.size >= StudyMetadatum::MAX_ENTRIES
                 # study metadata already has max number of values, so save it and replace it with a new study_metadata of same name & type
                 metadata = @metadata_records[index]
-                Rails.logger.info "Saving study metadata: #{metadata.name}-#{metadata.annotation_type} using #{metadata_file.upload_file_name} in #{self.name}"
+                Rails.logger.info "Saving study metadata: #{metadata.name}-#{metadata.annotation_type} using #{metadata_file.upload_file_name}:#{metadata_file.id} in #{self.name}"
                 metadata.save
                 new_metadata = self.study_metadata.build(name: metadata.name, annotation_type: metadata.annotation_type, study_file_id: metadata_file._id, cell_annotations: {}, values: [])
                 @metadata_records[index] = new_metadata
@@ -1656,7 +1656,7 @@ class Study
       @metadata_records.each do |metadata|
         # since first element is nil to preserve index order from file...
         unless metadata.nil?
-          Rails.logger.info "#{Time.now}: Saving study metadata: #{metadata.name}-#{metadata.annotation_type} using #{metadata_file.upload_file_name} in #{self.name}"
+          Rails.logger.info "#{Time.now}: Saving study metadata: #{metadata.name}-#{metadata.annotation_type} using #{metadata_file.upload_file_name}:#{metadata_file.id} in #{self.name}"
           metadata.save
         end
       end
@@ -1726,17 +1726,17 @@ class Study
       # set the cell count
       self.set_cell_count(metadata_file.file_type)
 
-      Rails.logger.info "#{Time.now}: determining upload status of metadata file: #{metadata_file.upload_file_name}"
+      Rails.logger.info "#{Time.now}: determining upload status of metadata file: #{metadata_file.upload_file_name}:#{metadata_file.id}"
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       destination = metadata_file.remote_location.blank? ? metadata_file.upload_file_name : metadata_file.remote_location
       remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
       if remote.nil?
         begin
-          Rails.logger.info "#{Time.now}: preparing to upload metadata file: #{metadata_file.upload_file_name} to FireCloud"
+          Rails.logger.info "#{Time.now}: preparing to upload metadata file: #{metadata_file.upload_file_name}:#{metadata_file.id} to FireCloud"
           self.send_to_firecloud(metadata_file)
         rescue => e
-          Rails.logger.info "#{Time.now}: Metadata file: #{metadata_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
+          Rails.logger.info "#{Time.now}: Metadata file: #{metadata_file.upload_file_name}:#{metadata_file.id} failed to upload to FireCloud due to #{e.message}"
           SingleCellMailer.notify_admin_upload_fail(metadata_file, e.message).deliver_now
         end
       else
@@ -1745,7 +1745,7 @@ class Study
           Rails.logger.info "#{Time.now}: found remote version of #{metadata_file.upload_file_name}: #{remote.name} (#{remote.generation})"
           run_at = 15.seconds.from_now
           Delayed::Job.enqueue(UploadCleanupJob.new(self, metadata_file), run_at: run_at)
-          Rails.logger.info "#{Time.now}: cleanup job for #{metadata_file.upload_file_name} scheduled for #{run_at}"
+          Rails.logger.info "#{Time.now}: cleanup job for #{metadata_file.upload_file_name}:#{metadata_file.id} scheduled for #{run_at}"
         rescue => e
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
           Rails.logger.error "#{Time.now}: Could not delete #{metadata_file.name} in study #{self.name}; aborting"
@@ -1792,10 +1792,10 @@ class Study
       content_type = marker_file.determine_content_type
       # validate headers
       if content_type == 'application/gzip'
-        Rails.logger.info "#{Time.now}: Parsing #{marker_file.name} as application/gzip"
+        Rails.logger.info "#{Time.now}: Parsing #{marker_file.name}:#{marker_file.id} as application/gzip"
         file = Zlib::GzipReader.open(@file_location)
       else
-        Rails.logger.info "#{Time.now}: Parsing #{marker_file.name} as text/plain"
+        Rails.logger.info "#{Time.now}: Parsing #{marker_file.name}:#{marker_file.id} as text/plain"
         file = File.open(@file_location, 'rb')
       end
 
@@ -1829,7 +1829,7 @@ class Study
 
     # begin parse
     begin
-      Rails.logger.info "#{Time.now}: Beginning precomputed score parse using #{marker_file.name} for #{self.name}"
+      Rails.logger.info "#{Time.now}: Beginning precomputed score parse using #{marker_file.name}:#{marker_file.id} for #{self.name}"
       marker_file.update(parse_status: 'parsing')
       list_name = marker_file.name
       if list_name.nil? || list_name.blank?
@@ -1902,10 +1902,10 @@ class Study
       remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
       if remote.nil?
         begin
-          Rails.logger.info "#{Time.now}: preparing to upload gene list file: #{marker_file.upload_file_name} to FireCloud"
+          Rails.logger.info "#{Time.now}: preparing to upload gene list file: #{marker_file.upload_file_name}:#{marker_file.id} to FireCloud"
           self.send_to_firecloud(marker_file)
         rescue => e
-          Rails.logger.info "#{Time.now}: Gene List file: #{marker_file.upload_file_name} failed to upload to FireCloud due to #{e.message}"
+          Rails.logger.info "#{Time.now}: Gene List file: #{marker_file.upload_file_name}:#{marker_file.id} failed to upload to FireCloud due to #{e.message}"
           SingleCellMailer.notify_admin_upload_fail(marker_file, e.message).deliver_now
         end
       else
@@ -1914,7 +1914,7 @@ class Study
           Rails.logger.info "#{Time.now}: found remote version of #{marker_file.upload_file_name}: #{remote.name} (#{remote.generation})"
           run_at = 15.seconds.from_now
           Delayed::Job.enqueue(UploadCleanupJob.new(self, metadata_file), run_at: run_at)
-          Rails.logger.info "#{Time.now}: cleanup job for #{metadata_file.upload_file_name} scheduled for #{run_at}"
+          Rails.logger.info "#{Time.now}: cleanup job for #{marker_file.upload_file_name}:#{marker_file.id} scheduled for #{run_at}"
         rescue => e
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
           Rails.logger.error "#{Time.now}: Could not delete #{marker_file.name} in study #{self.name}; aborting"
@@ -1943,7 +1943,7 @@ class Study
   # will compress plain text files before uploading to reduce storage/egress charges
   def send_to_firecloud(file)
     begin
-      Rails.logger.info "#{Time.now}: Uploading #{file.upload_file_name} to FireCloud workspace: #{self.firecloud_workspace}"
+      Rails.logger.info "#{Time.now}: Uploading #{file.upload_file_name}:#{file.id} to FireCloud workspace: #{self.firecloud_workspace}"
       file_location = file.remote_location.blank? ? file.upload.path : File.join(self.data_store_path, file.remote_location)
       # determine if file needs to be compressed
       first_two_bytes = File.open(file_location).read(2)
@@ -1952,9 +1952,9 @@ class Study
       opts = {}
       if file_is_gzipped or file.upload_file_name.last(4) == '.bam' or file.upload_file_name.last(5) == '.cram'
         # log that file is already compressed
-        Rails.logger.info "#{Time.now}: #{file.upload_file_name} is already compressed, direct uploading"
+        Rails.logger.info "#{Time.now}: #{file.upload_file_name}:#{file.id} is already compressed, direct uploading"
       else
-        Rails.logger.info "#{Time.now}: Performing gzip on #{file.upload_file_name}"
+        Rails.logger.info "#{Time.now}: Performing gzip on #{file.upload_file_name}:#{file.id}"
         # Compress all uncompressed files before upload.
         # This saves time on upload and download, and money on egress and storage.
         gzip_filepath = file_location + '.tmp.gz'
@@ -1969,20 +1969,20 @@ class Study
       end
       remote_file = Study.firecloud_client.execute_gcloud_method(:create_workspace_file, self.firecloud_project, self.firecloud_workspace, file.upload.path, file.upload_file_name, opts)
       # store generation tag to know whether a file has been updated in GCP
-      Rails.logger.info "#{Time.now}: Updating #{file.upload_file_name} with generation tag: #{remote_file.generation} after successful upload"
+      Rails.logger.info "#{Time.now}: Updating #{file.upload_file_name}:#{file.id} with generation tag: #{remote_file.generation} after successful upload"
       file.update(generation: remote_file.generation)
       file.update(upload_file_size: remote_file.size)
-      Rails.logger.info "#{Time.now}: Upload of #{file.upload_file_name} complete, scheduling cleanup job"
+      Rails.logger.info "#{Time.now}: Upload of #{file.upload_file_name}:#{file.id} complete, scheduling cleanup job"
       # schedule the upload cleanup job to run in two minutes
       run_at = 15.seconds.from_now
       Delayed::Job.enqueue(UploadCleanupJob.new(file.study, file), run_at: run_at)
-      Rails.logger.info "#{Time.now}: cleanup job for #{file.upload_file_name} scheduled for #{run_at}"
+      Rails.logger.info "#{Time.now}: cleanup job for #{file.upload_file_name}:#{file.id} scheduled for #{run_at}"
     rescue RuntimeError => e
-      Rails.logger.error "#{Time.now}: unable to upload '#{file.upload_file_name} to FireCloud; #{e.message}"
+      Rails.logger.error "#{Time.now}: unable to upload '#{file.upload_file_name}:#{file.id} to FireCloud; #{e.message}"
       # check if file still exists
       file_location = file.remote_location.blank? ? file.upload.path : File.join(self.data_store_path, file.remote_location)
       exists = File.exists?(file_location)
-      Rails.logger.info "#{Time.now} local copy of #{file.upload_file_name} still in #{self.data_store_path}? #{exists}"
+      Rails.logger.info "#{Time.now} local copy of #{file.upload_file_name}:#{file.id} still in #{self.data_store_path}? #{exists}"
       SingleCellMailer.notify_admin_upload_fail(file, e.message).deliver_now
     end
   end
