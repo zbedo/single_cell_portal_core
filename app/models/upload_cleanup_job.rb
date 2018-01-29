@@ -12,7 +12,7 @@ class UploadCleanupJob < Struct.new(:study, :study_file)
     if study_file.queued_for_deletion || study.queued_for_deletion
       Rails.logger.info "#{Time.now}: aborting UploadCleanupJob for #{study_file.upload_file_name} in '#{study.name}', file queued for deletion"
     else
-      file_location = study_file.upload.path
+      file_location = File.join(study.data_store_path, study_file.download_location)
       # make sure the local file still exists
       if !File.exists?(file_location)
         Rails.logger.error "#{Time.now}: error in UploadCleanupJob for #{study.name}:#{study_file.upload_file_name}; file no longer present"
@@ -25,7 +25,7 @@ class UploadCleanupJob < Struct.new(:study, :study_file)
           if remote_file.present?
             # check generation tags to make sure we're in sync
             Rails.logger.info "#{Time.now}: remote file located for #{study_file.upload_file_name}, checking generation tag"
-            if remote_file.generation == study_file.generation
+            if remote_file.generation.to_s == study_file.generation
               Rails.logger.info "#{Time.now}: generation tags for #{study_file.upload_file_name} match, performing cleanup"
             else
               Rails.logger.info "#{Time.now}: generation tags for #{study_file.upload_file_name} do not match, updating database records"
@@ -33,7 +33,13 @@ class UploadCleanupJob < Struct.new(:study, :study_file)
               Rails.logger.info "#{Time.now}: generation tag for #{study_file.upload_file_name} updated, performing cleanup"
             end
             # once everything is in sync, perform cleanup
-            File.delete(study_file.upload.path)
+            File.delete(file_location)
+            # clean up file upload directory
+            subdir = study_file.remote_location.blank? ? study_file.id : study_file.remote_location.split('/').first
+            Dir.chdir(study.data_store_path)
+            if Dir.exist?(subdir)
+              Dir.delete(subdir)
+            end
             Rails.logger.info "#{Time.now}: cleanup for #{study_file.upload_file_name} complete"
           else
             # remote file was not found, so attempt upload again and reschedule cleanup

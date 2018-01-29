@@ -820,6 +820,22 @@ function validateUnique(formId, textFieldClass) {
     });
 }
 
+function validateCandidateUpload(formId, filename, classSelector) {
+    var names = [];
+    classSelector.each(function(index, name) {
+        var n = $(name).val().trim();
+        if (n !== '') {
+            names.push(n);
+        }
+    });
+    if (names.filter(function(n) {return n === filename}).length > 1) {
+        alert(filename + ' has already been uploaded or is staged for upload.  Please select a different file.');
+        return false;
+    } else {
+        return true;
+    }
+}
+
 // function to call Google Analytics whenever AJAX call is made
 // must be called manually from every AJAX success or js page render
 function gaTracker(id){

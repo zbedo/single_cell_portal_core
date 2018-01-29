@@ -743,6 +743,11 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_btn.click
 		# close modal
 		close_modal('upload-success-modal')
+		# assert that we cannot delete the newly uploaded file
+		exp_form = @driver.find_elements(:class, 'initialize_expression_form').last
+		delete_btn = exp_form.find_element(:class, 'disabled-delete')
+		assert !delete_btn.nil?, 'Did not find disabled delete button for newly uploaded file'
+		assert delete_btn['disabled'] == 'true', "Delete button is not correctly disabled, expected disabled == 'true' but found #{delete_btn['disabled']}"
 		next_btn = @driver.find_element(:id, 'next-btn')
 		next_btn.click
 
