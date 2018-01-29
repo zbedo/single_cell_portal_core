@@ -964,7 +964,10 @@ class Study
 
       Rails.logger.info "#{Time.now}: determining upload status of expression file: #{expression_file.upload_file_name}"
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
-      if opts[:local]
+      # rather than relying on opts[:local], actually check if the file is already in the GCS bucket
+      destination = expression_file.remote_location.blank? ? expression_file.upload_file_name : expression_file.remote_location
+      remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      if remote.nil?
         begin
           Rails.logger.info "#{Time.now}: preparing to upload expression file: #{expression_file.upload_file_name} to FireCloud"
           self.send_to_firecloud(expression_file)
@@ -975,8 +978,10 @@ class Study
       else
         # we have the file in FireCloud already, so just delete it
         begin
-          Rails.logger.info "#{Time.now}: deleting local file #{expression_file.upload_file_name} after successful parse; file already exists in #{self.bucket_id}"
-          File.delete(@file_location)
+          Rails.logger.info "#{Time.now}: found remote version of #{expression_file.upload_file_name}: #{remote.name} (#{remote.generation})"
+          run_at = 15.seconds.from_now
+          Delayed::Job.enqueue(UploadCleanupJob.new(self, expression_file), run_at: run_at)
+          Rails.logger.info "#{Time.now}: cleanup job for #{expression_file.upload_file_name} scheduled for #{run_at}"
         rescue => e
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
           Rails.logger.error "#{Time.now}: Could not delete #{expression_file.name} in study #{self.name}; aborting"
@@ -1287,7 +1292,9 @@ class Study
       Rails.logger.info "#{Time.now}: determining upload status of ordinations file: #{ordinations_file.upload_file_name}"
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
-      if opts[:local]
+      destination = ordinations_file.remote_location.blank? ? ordinations_file.upload_file_name : ordinations_file.remote_location
+      remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      if remote.nil?
         begin
           Rails.logger.info "#{Time.now}: preparing to upload ordinations file: #{ordinations_file.upload_file_name} to FireCloud"
           self.send_to_firecloud(ordinations_file)
@@ -1298,8 +1305,10 @@ class Study
       else
         # we have the file in FireCloud already, so just delete it
         begin
-          Rails.logger.info "#{Time.now}: deleting local file #{ordinations_file.upload_file_name} after successful parse; file already exists in #{self.bucket_id}"
-          File.delete(@file_location)
+          Rails.logger.info "#{Time.now}: found remote version of #{ordinations_file.upload_file_name}: #{remote.name} (#{remote.generation})"
+          run_at = 15.seconds.from_now
+          Delayed::Job.enqueue(UploadCleanupJob.new(self, ordinations_file), run_at: run_at)
+          Rails.logger.info "#{Time.now}: cleanup job for #{ordinations_file.upload_file_name} scheduled for #{run_at}"
         rescue => e
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
           Rails.logger.error "#{Time.now}: Could not delete #{ordinations_file.name} in study #{self.name}; aborting"
@@ -1480,7 +1489,9 @@ class Study
       Rails.logger.info "#{Time.now}: determining upload status of coordinate labels file: #{coordinate_file.upload_file_name}"
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
-      if opts[:local]
+      destination = coordinate_file.remote_location.blank? ? coordinate_file.upload_file_name : coordinate_file.remote_location
+      remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      if remote.nil?
         begin
           Rails.logger.info "#{Time.now}: preparing to upload ordinations file: #{coordinate_file.upload_file_name} to FireCloud"
           self.send_to_firecloud(coordinate_file)
@@ -1491,8 +1502,10 @@ class Study
       else
         # we have the file in FireCloud already, so just delete it
         begin
-          Rails.logger.info "#{Time.now}: deleting local file #{coordinate_file.upload_file_name} after successful parse; file already exists in #{self.bucket_id}"
-          File.delete(@file_location)
+          Rails.logger.info "#{Time.now}: found remote version of #{coordinate_file.upload_file_name}: #{remote.name} (#{remote.generation})"
+          run_at = 15.seconds.from_now
+          Delayed::Job.enqueue(UploadCleanupJob.new(self, coordinate_file), run_at: run_at)
+          Rails.logger.info "#{Time.now}: cleanup job for #{coordinate_file.upload_file_name} scheduled for #{run_at}"
         rescue => e
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
           Rails.logger.error "#{Time.now}: Could not delete #{coordinate_file.name} in study #{self.name}; aborting"
@@ -1716,7 +1729,9 @@ class Study
       Rails.logger.info "#{Time.now}: determining upload status of metadata file: #{metadata_file.upload_file_name}"
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
-      if opts[:local]
+      destination = metadata_file.remote_location.blank? ? metadata_file.upload_file_name : metadata_file.remote_location
+      remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      if remote.nil?
         begin
           Rails.logger.info "#{Time.now}: preparing to upload metadata file: #{metadata_file.upload_file_name} to FireCloud"
           self.send_to_firecloud(metadata_file)
@@ -1727,8 +1742,10 @@ class Study
       else
         # we have the file in FireCloud already, so just delete it
         begin
-          Rails.logger.info "#{Time.now}: deleting local file #{metadata_file.upload_file_name} after successful parse; file already exists in #{self.bucket_id}"
-          File.delete(@file_location)
+          Rails.logger.info "#{Time.now}: found remote version of #{metadata_file.upload_file_name}: #{remote.name} (#{remote.generation})"
+          run_at = 15.seconds.from_now
+          Delayed::Job.enqueue(UploadCleanupJob.new(self, metadata_file), run_at: run_at)
+          Rails.logger.info "#{Time.now}: cleanup job for #{metadata_file.upload_file_name} scheduled for #{run_at}"
         rescue => e
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
           Rails.logger.error "#{Time.now}: Could not delete #{metadata_file.name} in study #{self.name}; aborting"
@@ -1881,7 +1898,9 @@ class Study
       Rails.logger.info "#{Time.now}: determining upload status of gene list file: #{marker_file.upload_file_name}"
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
-      if opts[:local]
+      destination = marker_file.remote_location.blank? ? marker_file.upload_file_name : marker_file.remote_location
+      remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      if remote.nil?
         begin
           Rails.logger.info "#{Time.now}: preparing to upload gene list file: #{marker_file.upload_file_name} to FireCloud"
           self.send_to_firecloud(marker_file)
@@ -1892,8 +1911,10 @@ class Study
       else
         # we have the file in FireCloud already, so just delete it
         begin
-          Rails.logger.info "#{Time.now}: deleting local file #{marker_file.upload_file_name} after successful parse; file already exists in #{self.bucket_id}"
-          File.delete(@file_location)
+          Rails.logger.info "#{Time.now}: found remote version of #{marker_file.upload_file_name}: #{remote.name} (#{remote.generation})"
+          run_at = 15.seconds.from_now
+          Delayed::Job.enqueue(UploadCleanupJob.new(self, metadata_file), run_at: run_at)
+          Rails.logger.info "#{Time.now}: cleanup job for #{metadata_file.upload_file_name} scheduled for #{run_at}"
         rescue => e
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
           Rails.logger.error "#{Time.now}: Could not delete #{marker_file.name} in study #{self.name}; aborting"
@@ -1953,7 +1974,7 @@ class Study
       file.update(upload_file_size: remote_file.size)
       Rails.logger.info "#{Time.now}: Upload of #{file.upload_file_name} complete, scheduling cleanup job"
       # schedule the upload cleanup job to run in two minutes
-      run_at = 2.minutes.from_now
+      run_at = 15.seconds.from_now
       Delayed::Job.enqueue(UploadCleanupJob.new(file.study, file), run_at: run_at)
       Rails.logger.info "#{Time.now}: cleanup job for #{file.upload_file_name} scheduled for #{run_at}"
     rescue RuntimeError => e
