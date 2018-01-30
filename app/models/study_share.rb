@@ -27,12 +27,18 @@ class StudyShare
 
 	index({ email: 1, study_id: 1 }, { unique: true })
 
-	PERMISSION_TYPES = %w(Edit View)
-	FIRECLOUD_ACLS = %w(WRITER READER)
+	PERMISSION_TYPES = %w(Edit View Reviewer)
+	FIRECLOUD_ACLS = ['WRITER', 'READER', 'NO ACCESS']
+  PERMISSION_DESCRIPTIONS = [
+      'This user will have read/write access to both this study and FireCloud workspace',
+      'This user will have read access to both this study and FireCloud workspace (cannot edit)',
+      'This user will only have read access to this study (cannot download data or view FireCloud workspace)'
+  ]
 
 	# hashes that represent ACL mapping between the portal & firecloud and the inverse
 	FIRECLOUD_ACL_MAP = Hash[PERMISSION_TYPES.zip(FIRECLOUD_ACLS)]
 	PORTAL_ACL_MAP = Hash[FIRECLOUD_ACLS.zip(PERMISSION_TYPES)]
+  PERMISSION_DESCRIPTION_MAP = Hash[PERMISSION_TYPES.zip(PERMISSION_DESCRIPTIONS)]
 
 	before_validation		:set_firecloud_workspace_and_project, on: :create
 	before_save					:clean_email
@@ -81,15 +87,18 @@ class StudyShare
 		if self.new_record? && self.study.new_record?
 			return true
 		else
-			# set acls only if a new share or if the permission has changed
-			if (self.new_record? && !self.study.new_record?) || (!self.new_record? && self.permission_changed?)
-				Rails.logger.info "#{Time.now}: Creating FireCloud ACLs for study #{self.study.name} - share #{self.email}, permission: #{self.permission}"
-				begin
-					acl = Study.firecloud_client.create_workspace_acl(self.email, FIRECLOUD_ACL_MAP[self.permission])
-					Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.study.firecloud_workspace, acl)
-				rescue RuntimeError => e
-					errors.add(:base, "Could not create a share for #{self.email} to workspace #{self.firecloud_workspace} due to: #{e.message}")
-					false
+			# do not set ACLs for Reviewer shares (they have no FireCloud permissions)
+			unless self.permission == 'Reviewer'
+				# set acls only if a new share or if the permission has changed
+				if (self.new_record? && !self.study.new_record?) || (!self.new_record? && self.permission_changed?)
+					Rails.logger.info "#{Time.now}: Creating FireCloud ACLs for study #{self.study.name} - share #{self.email}, permission: #{self.permission}"
+					begin
+						acl = Study.firecloud_client.create_workspace_acl(self.email, FIRECLOUD_ACL_MAP[self.permission])
+						Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.study.firecloud_workspace, acl)
+					rescue RuntimeError => e
+						errors.add(:base, "Could not create a share for #{self.email} to workspace #{self.firecloud_workspace} due to: #{e.message}")
+						false
+					end
 				end
 			end
 		end
@@ -98,8 +107,10 @@ class StudyShare
 	# revoke FireCloud workspace access on share deletion, will email owner on fail to manually remove sharing as we can't do a validation on destroy
 	def revoke_firecloud_acl
 		begin
-			acl = Study.firecloud_client.create_workspace_acl(self.email, 'NO ACCESS')
-			Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, acl)
+			unless self.permission == 'Reviewer'
+				acl = Study.firecloud_client.create_workspace_acl(self.email, 'NO ACCESS')
+				Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, acl)
+			end
 		rescue RuntimeError => e
 			Rails.logger.error "#{Time.now}: Could not remove share for #{self.email} to workspace #{self.firecloud_workspace} due to: #{e.message}"
 			SingleCellMailer.share_delete_fail(self.study, self.email).deliver_now

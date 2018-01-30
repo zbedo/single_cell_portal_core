@@ -72,7 +72,7 @@ class StudyFile
   after_save          :set_cluster_group_ranges
 
   has_mongoid_attached_file :upload,
-                            :path => ":rails_root/data/:data_dir/:filename",
+                            :path => ":rails_root/data/:data_dir/:id/:filename",
                             :url => ''
 
   # turning off validation to allow any kind of data file to be uploaded
@@ -120,6 +120,10 @@ class StudyFile
     self.parse_status == 'parsed'
   end
 
+  def parsing?
+    self.parse_status == 'parsing'
+  end
+
   # file type as a css class
   def file_type_class
     self.file_type.downcase.split.join('-') + '-file'
@@ -163,7 +167,7 @@ class StudyFile
 
   # for constructing a path to a file in a Google bucket (takes folders into account due to issue with upload_file_name not allowing slashes)
   def download_location
-    self.remote_location.blank? ? self.upload_file_name : self.remote_location
+    self.remote_location.blank? ? File.join(self.id, self.upload_file_name) : self.remote_location
   end
 
   # retrieve the target cluster group from the options hash for a cluster labels file

@@ -30,9 +30,13 @@ $( window ).on('resizeEnd', function() {
     var newBoxWidth = $('#box-plot').actual('width');
     var newScatterSize = $('#scatter-plot').actual('width');
     var newReferenceSize = $('#reference-plot').actual('width');
+    scatterLayout['width'] = newScatterSize;
+    scatterLayout['height'] = newScatterSize;
+    staticLayout['width'] = newReferenceSize;
+    staticLayout['height'] = newReferenceSize;
     Plotly.relayout('box-plot', {width: newBoxWidth});
-    Plotly.relayout('scatter-plot', {width: newScatterSize, height: newScatterSize});
-    Plotly.relayout('reference-plot', {width: newReferenceSize, height: newReferenceSize});
+    Plotly.relayout('scatter-plot', scatterLayout);
+    Plotly.relayout('reference-plot', staticLayout);
 });
 
 // attach click event for toggle switch

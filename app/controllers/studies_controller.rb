@@ -14,9 +14,9 @@ class StudiesController < ApplicationController
 
   respond_to :html, :js, :json
 
-  before_action :set_study, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
+  before_action :set_study, except: [:index, :new, :create, :download_private_file]
   before_action :set_file_types, only: [:sync_study, :sync_submission_outputs, :sync_study_file, :sync_orphaned_study_file, :update_study_file_from_sync]
-  before_filter :check_edit_permissions, except: [:index, :new, :create, :download_private_file, :download_private_fastq_file]
+  before_filter :check_edit_permissions, except: [:index, :new, :create, :download_private_file]
   before_filter do
     authenticate_user!
     check_access_settings
@@ -438,6 +438,7 @@ class StudiesController < ApplicationController
   def parse
     @study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
     logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name}"
+    @study_file.update(parse_status: 'parsing')
     case @study_file.file_type
       when 'Cluster'
         @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user)
@@ -464,6 +465,8 @@ class StudiesController < ApplicationController
       redirect_to view_study_path(@study.url_safe_name), alert: 'You do not have permission to perform that action.' and return
     elsif @study.embargoed?(current_user)
       redirect_to view_study_path(@study.url_safe_name), alert: "You may not download any data from this study until #{@study.embargo.to_s(:long)}." and return
+    elsif !@study.can_download?(current_user)
+      redirect_to view_study_path(@study.url_safe_name), alert: 'You do not have permission to perform that action.' and return
     end
 
     # next check if downloads have been disabled by administrator, this will abort the download
@@ -622,43 +625,47 @@ class StudiesController < ApplicationController
     @study_file = StudyFile.find(params[:study_file_id])
     @message = ""
     unless @study_file.nil?
-      # delete matching caches
-      @study_file.invalidate_cache_by_file_type
-      # queue for deletion
-      @study_file.update(queued_for_deletion: true)
-      DeleteQueueJob.new(@study_file).delay.perform
-      @file_type = @study_file.file_type
-      @message = "'#{@study_file.name}' has been successfully deleted."
-      # clean up records before removing file (for memory optimization)
-      case @file_type
-        when 'Cluster'
-          @partial = 'initialize_ordinations_form'
-        when 'Coordinate Labels'
-          @partial = 'initialize_labels_form'
-        when 'Expression Matrix'
-          @partial = 'initialize_expression_form'
-        when 'Metadata'
-          @partial = 'initialize_metadata_form'
-        when 'Fastq'
-          @partial = 'initialize_primary_data_form'
-        when 'Gene List'
-          @partial = 'initialize_marker_genes_form'
-        else
-          @partial = 'initialize_misc_form'
-      end
-      # delete source file in FireCloud and then remove record
-      begin
-        # make sure file is in FireCloud first as user may be aborting the upload
-        if !Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project, @study.firecloud_workspace, @study_file.upload_file_name).nil?
-          Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, @study.firecloud_project, @study.firecloud_workspace, @study_file.upload_file_name)
+      if @study_file.parsing?
+        render action: 'abort_delete_study_file'
+      else
+        # delete matching caches
+        @study_file.invalidate_cache_by_file_type
+        # queue for deletion
+        @study_file.update(queued_for_deletion: true)
+        DeleteQueueJob.new(@study_file).delay.perform
+        @file_type = @study_file.file_type
+        @message = "'#{@study_file.name}' has been successfully deleted."
+        # clean up records before removing file (for memory optimization)
+        case @file_type
+          when 'Cluster'
+            @partial = 'initialize_ordinations_form'
+          when 'Coordinate Labels'
+            @partial = 'initialize_labels_form'
+          when 'Expression Matrix'
+            @partial = 'initialize_expression_form'
+          when 'Metadata'
+            @partial = 'initialize_metadata_form'
+          when 'Fastq'
+            @partial = 'initialize_primary_data_form'
+          when 'Gene List'
+            @partial = 'initialize_marker_genes_form'
+          else
+            @partial = 'initialize_misc_form'
         end
-      rescue RuntimeError => e
-        logger.error "#{Time.now}: error in deleting #{@study_file.upload_file_name} from workspace: #{@study.firecloud_workspace}; #{e.message}"
-        redirect_to request.referrer, alert: "We were unable to delete #{@study_file.upload_file_name} due to an error: #{view_context.simple_format(e.message)}.  Please try again later."
-      end
-      changes = ["Study file deleted: #{@study_file.upload_file_name}"]
-      if @study.study_shares.any?
-        SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
+        # delete source file in FireCloud and then remove record
+        begin
+          # make sure file is in FireCloud first as user may be aborting the upload
+          if !Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project, @study.firecloud_workspace, @study_file.upload_file_name).nil?
+            Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, @study.firecloud_project, @study.firecloud_workspace, @study_file.upload_file_name)
+          end
+        rescue RuntimeError => e
+          logger.error "#{Time.now}: error in deleting #{@study_file.upload_file_name} from workspace: #{@study.firecloud_workspace}; #{e.message}"
+          redirect_to request.referrer, alert: "We were unable to delete #{@study_file.upload_file_name} due to an error: #{view_context.simple_format(e.message)}.  Please try again later."
+        end
+        changes = ["Study file deleted: #{@study_file.upload_file_name}"]
+        if @study.study_shares.any?
+          SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
+        end
       end
     else
       # user most likely aborted upload before it began, so determine file type based on form target
@@ -788,29 +795,33 @@ class StudiesController < ApplicationController
     @form = "#study-file-#{@study_file.id}"
     @message = ""
     unless @study_file.nil?
-      begin
-        DeleteQueueJob.new(@study_file).delay.perform
+      if @study_file.parsing?
+        render action: 'abort_delete_study_file'
+      else
+        begin
+          DeleteQueueJob.new(@study_file).delay.perform
 
-        changes = ["Study file deleted: #{@study_file.upload_file_name}"]
-        if @study.study_shares.any?
-          SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
-        end
+          changes = ["Study file deleted: #{@study_file.upload_file_name}"]
+          if @study.study_shares.any?
+            SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
+          end
 
-        # delete matching caches
-        @study_file.delay.invalidate_cache_by_file_type
-        @message = "'#{@study_file.name}' has been successfully deleted."
+          # delete matching caches
+          @study_file.delay.invalidate_cache_by_file_type
+          @message = "'#{@study_file.name}' has been successfully deleted."
 
-        # reset initialized if needed
-        if @study.cluster_ordinations_files.empty? || @study.expression_matrix_files.nil? || @study.metadata_file.nil?
-          @study.update(initialized: false)
-        end
+          # reset initialized if needed
+          if @study.cluster_ordinations_files.empty? || @study.expression_matrix_files.nil? || @study.metadata_file.nil?
+            @study.update(initialized: false)
+          end
 
-        respond_to do |format|
-          format.js {render action: 'sync_action_success'}
-        end
-      rescue => e
-        respond_to do |format|
-          format.js {render action: 'sync_action_fail'}
+          respond_to do |format|
+            format.js {render action: 'sync_action_success'}
+          end
+        rescue => e
+          respond_to do |format|
+            format.js {render action: 'sync_action_fail'}
+          end
         end
       end
     end
@@ -973,10 +984,12 @@ class StudiesController < ApplicationController
   def set_user_projects
     @projects = [['Default Project', FireCloudClient::PORTAL_NAMESPACE]]
     client = FireCloudClient.new(current_user, 'single-cell-portal')
-    available_projects = client.get_billing_projects
-    available_projects.each do |project|
-      if project['creationStatus'] == 'Ready'
-        @projects << [project['projectName'], project['projectName']]
+    unless !client.registered?
+      available_projects = client.get_billing_projects
+      available_projects.each do |project|
+        if project['creationStatus'] == 'Ready'
+          @projects << [project['projectName'], project['projectName']]
+        end
       end
     end
   end

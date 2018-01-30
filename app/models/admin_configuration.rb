@@ -106,8 +106,8 @@ class AdminConfiguration
       # also filter out studies not in default portal project - user-funded projects are exempt from access revocation
       Study.not_in(queued_for_deletion: true).where(:firecloud_project.in => FireCloudClient::COMPUTE_BLACKLIST).each do |study|
         Rails.logger.info "#{Time.now}: begin revoking access to study: #{study.name}"
-        # first remove share access (unless share user is a project member)
-        shares = study.study_shares.map(&:email)
+        # first remove share access (only shares with FireCloud access, i.e. non-reviewers)
+        shares = study.study_shares.non_reviewers
         shares.each do |user|
           Rails.logger.info "#{Time.now}: revoking share access for #{user}"
           revoke_share_acl = Study.firecloud_client.create_workspace_acl(user, @config_setting)
@@ -133,8 +133,8 @@ class AdminConfiguration
     # also filter out studies not in default portal project - user-funded projects are exempt from access revocation
     Study.not_in(queued_for_deletion: true).where(:firecloud_project.in => FireCloudClient::COMPUTE_BLACKLIST).each do |study|
       Rails.logger.info "#{Time.now}: begin restoring access to study: #{study.name}"
-      # first remove share access
-      shares = study.study_shares
+      # first re-enable share access (to all non-reviewers)
+      shares = study.study_shares.where(:permission.nin => %w(Reviewer)).to_a
       shares.each do |share|
         user = share.email
         share_permission = StudyShare::FIRECLOUD_ACL_MAP[share.permission]
@@ -213,8 +213,21 @@ class AdminConfiguration
         firecloud_access.update(value: 'local-off')
         if notifier_config.value == '1'
           current_time = Time.now.strftime('%D %r')
-          SingleCellMailer.admin_notification('ALERT: FIRECLOUD API UNAVAILABLE', nil, "<p>The FireCloud API was found to be unavailable at #{current_time}.  Access has been disabled locally until API access is manually turned back on.").deliver_now
+          SingleCellMailer.admin_notification('ALERT: FIRECLOUD API UNAVAILABLE', nil, "<p>The FireCloud API was found to be unavailable at #{current_time}.  Access has been disabled locally until API access is manually turned back on or the next automatic check returns positive.").deliver_now
           notifier_config.update(value: '0')
+        end
+      end
+    # if api is up...
+    else
+      if firecloud_access.value == 'local-off'
+        # local-off is currently used exclusively for API outages, so if the API is up and the portal is set to local-off,
+        # then we can assume that the portal was put in this mode by AdminConfiguration.check_api_health and should
+        # automatically recover.  This will not affect disabling compute or all access settings.
+        firecloud_access.update(value: 'on')
+        if notifier_config.value == '0'
+          current_time = Time.now.strftime('%D %r')
+          SingleCellMailer.admin_notification('ALERT: FireCloud API recovery', nil, "<p>The FireCloud API has recovered as of #{current_time}.  Access has been automatically restored.").deliver_now
+          notifier_config.update(value: '1')
         end
       end
     end
