@@ -89,6 +89,26 @@ class Study
     end
   end
 
+  has_many :genes, dependent: :delete do
+    def by_gene(gene, study_file_ids)
+      found_scores = any_of({name: gene, :study_file_id.in => study_file_ids}, {searchable_name: gene.downcase, :study_file_id.in => study_file_ids}).to_a
+      if found_scores.empty?
+        return []
+      else
+        # since we can have duplicate genes but not cells, merge into one object for rendering
+        merged_scores = {'searchable_gene' => gene.downcase, 'gene' => gene, 'scores' => {}}
+        found_scores.each do |score|
+          merged_scores['scores'].merge!(score.scores)
+        end
+        return [merged_scores]
+      end
+    end
+
+    def unique_genes
+      pluck(:gene).uniq
+    end
+  end
+
   has_many :precomputed_scores, dependent: :delete do
     def by_name(name)
       where(name: name).first
@@ -121,13 +141,19 @@ class Study
 
   has_many :data_arrays, dependent: :delete do
     def by_name_and_type(name, type)
-      where(name: name, array_type: type).order_by(&:array_index).to_a
+      where(name: name, array_type: type).order_by(&:array_index)
     end
   end
 
   has_many :study_metadata, dependent: :delete do
     def by_name_and_type(name, type)
       where(name: name, annotation_type: type).to_a
+    end
+  end
+
+  has_many :cell_metadata, dependent: :delete do
+    def by_name_and_type(name, type)
+      where(name: name, annotation_type: type)
     end
   end
 
@@ -535,7 +561,20 @@ class Study
 
   # return an array of all single cell names in study
   def all_cells
-    self.study_metadata.first.cell_annotations.keys
+    annot = self.study_metadata.first
+    if annot.present?
+      annot.cell_annotations.keys
+    else
+      []
+    end
+  end
+
+  def all_cell_array
+    vals = []
+    self.data_arrays.by_name_and_type('All Cells', 'cells').each do |array|
+      vals += array.values
+    end
+    vals
   end
 
   # return a hash keyed by cell name of the requested study_metadata values
