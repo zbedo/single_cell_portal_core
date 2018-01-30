@@ -93,9 +93,9 @@ class StudyFile
       self.human_fastq_url
     else
       if self.study.public?
-        download_file_path(self.study.url_safe_name, filename: self.download_location)
+        download_file_path(self.study.url_safe_name, filename: self.bucket_location)
       else
-        download_private_file_path(self.study.url_safe_name, filename: self.download_location)
+        download_private_file_path(self.study.url_safe_name, filename: self.bucket_location)
       end
     end
   end
@@ -131,7 +131,7 @@ class StudyFile
 
   # generate a gs-url to this study file in the study's GCS bucket
   def gs_url
-    "gs://#{self.study.bucket_id}/#{self.download_location}"
+    "gs://#{self.study.bucket_id}/#{self.bucket_location}"
   end
 
   # convert all domain ranges from floats to integers
@@ -165,9 +165,14 @@ class StudyFile
     end
   end
 
-  # for constructing a path to a file in a Google bucket (takes folders into account due to issue with upload_file_name not allowing slashes)
+  # end path for a file when localizing during a parse
   def download_location
     self.remote_location.blank? ? File.join(self.id, self.upload_file_name) : self.remote_location
+  end
+
+  # for constructing a path to a file in a Google bucket
+  def bucket_location
+    self.remote_location.blank? ? self.upload_file_name : self.remote_location
   end
 
   # retrieve the target cluster group from the options hash for a cluster labels file
