@@ -366,6 +366,7 @@ class SiteController < ApplicationController
 
     terms = params[:gene_set].blank? ? parse_search_terms(:genes) : @study.precomputed_scores.by_name(params[:gene_set]).gene_list
     @genes = load_expression_scores(terms)
+    logger.info "genes: #{@genes}"
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
     consensus = params[:consensus].nil? ? 'Mean ' : params[:consensus].capitalize + ' '
     @gene_list = @genes.map{|gene| gene['gene']}.join(' ')
@@ -1196,7 +1197,7 @@ class SiteController < ApplicationController
     else
       @selected_annotation = {name: annot_name, type: annot_type, scope: annot_scope}
       if annot_type == 'group'
-        @selected_annotation[:values] = @study.study_metadata_keys(annot_name, annot_type)
+        @selected_annotation[:values] = @study.cell_metadata.by_name_and_type(annot_name, annot_type).values
       else
         @selected_annotation[:values] = []
       end
@@ -1337,8 +1338,9 @@ class SiteController < ApplicationController
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     else
       # for study-wide annotations, load from study_metadata values instead of cluster-specific annotations
-      annotation_hash = @study.study_metadata_values(annotation[:name], annotation[:type])
-      annotation[:values] = @study.study_metadata_keys(annotation[:name], annotation[:type])
+      metadata_obj = @study.cell_metadata.by_name_and_type(annotation[:name], annotation[:type])
+      annotation_hash = metadata_obj.cell_annotations
+      annotation[:values] = metadata_obj.values
     end
     coordinates = {}
     if annotation[:type] == 'numeric'
@@ -1448,7 +1450,8 @@ class SiteController < ApplicationController
       annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     else
-      annotation_hash = @study.study_metadata_values(annotation[:name], annotation[:type])
+      metadata_obj = @study.cell_metadata.by_name_and_type(annotation[:name], annotation[:type])
+      annotation_hash = metadata_obj.cell_annotations
     end
     values = {}
     values[:all] = {x: [], y: [], cells: [], annotations: [], text: [], marker_size: []}
@@ -1501,7 +1504,8 @@ class SiteController < ApplicationController
       annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     else
-      annotation_hash = @study.study_metadata_values(annotation[:name], annotation[:type])
+      metadata_obj = @study.cell_metadata.by_name_and_type(annotation[:name], annotation[:type])
+      annotation_hash = metadata_obj.cell_annotations
     end
     cells.each_with_index do |cell, index|
       annotation_value = annotation[:scope] == 'cluster' ? annotation_array[index] : annotation_hash[cell]
@@ -1551,7 +1555,7 @@ class SiteController < ApplicationController
       end
     else
       # since annotations are in a hash format, subsampling isn't necessary as we're going to retrieve values by key lookup
-      annotations =  @study.study_metadata_values(annotation[:name], annotation[:type])
+      annotations =  @study.cell_metadata.by_name_and_type(annotation[:name], annotation[:type]).cell_annotations
       cells.each do |cell|
         val = annotations[cell]
         # must check if key exists
@@ -1588,8 +1592,9 @@ class SiteController < ApplicationController
       z_array = user_annotation.concatenate_user_data_arrays('z', 'coordinates', subsample_threshold, subsample_annotation)
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     else
-      # for study-wide annotations, load from study_metadata values instead of cluster-specific annotations
-      annotation_hash = @study.study_metadata_values(annotation[:name], annotation[:type])
+      # for study-wide annotations, load from cell_metadata values instead of cluster-specific annotations
+      metadata_obj = @study.cell_metadata.by_name_and_type(annotation[:name], annotation[:type])
+      annotation_hash = metadata_obj.cell_annotations
     end
     expression = {}
     expression[:all] = {
@@ -1663,7 +1668,7 @@ class SiteController < ApplicationController
       end
     else
       # no need to subsample annotation since they are in hash format (lookup done by key)
-      annotations = @study.study_metadata_values(annotation[:name], annotation[:type])
+      annotations =  @study.cell_metadata.by_name_and_type(annotation[:name], annotation[:type]).cell_annotations
       cells.each do |cell|
         val = annotations[cell]
         # must check if key exists
@@ -1710,8 +1715,9 @@ class SiteController < ApplicationController
       z_array = user_annotation.concatenate_user_data_arrays('z', 'coordinates', subsample_threshold, subsample_annotation)
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     else
-      # for study-wide annotations, load from study_metadata values instead of cluster-specific annotations
-      annotation_hash = @study.study_metadata_values(annotation[:name], annotation[:type])
+      # for study-wide annotations, load from cell_metadata values instead of cluster-specific annotations
+      metadata_obj = @study.cell_metadata.by_name_and_type(annotation[:name], annotation[:type])
+      annotation_hash = metadata_obj.cell_annotations
     end
     expression = {}
     expression[:all] = {
@@ -1795,7 +1801,7 @@ class SiteController < ApplicationController
   # find median expression score for a given cell & list of genes
   def calculate_median(genes, cell)
     values = genes.map {|gene| gene['scores'][cell].to_f}
-    ExpressionScore.array_median(values)
+    Gene.array_median(values)
   end
 
   # set the range for a plotly scatter, will default to data-defined if cluster hasn't defined its own ranges
@@ -1858,7 +1864,7 @@ class SiteController < ApplicationController
     genes = []
     matrix_ids = @study.expression_matrix_files.map(&:id)
     terms.each do |term|
-      matches = @study.expression_scores.by_gene(term, matrix_ids)
+      matches = @study.genes.by_gene(term, matrix_ids)
       unless matches.empty?
         genes << load_best_gene_match(matches, term)
       end
@@ -1871,7 +1877,7 @@ class SiteController < ApplicationController
   def search_expression_scores(terms)
     genes = []
     not_found = []
-    known_genes = @study.expression_scores.unique_genes
+    known_genes = @study.genes.unique_genes
     known_searchable_genes = known_genes.map(&:downcase)
     terms.each do |term|
       if known_genes.include?(term) || known_searchable_genes.include?(term)

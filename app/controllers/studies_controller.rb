@@ -445,11 +445,11 @@ class StudiesController < ApplicationController
       when 'Coordinate Labels'
         @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user)
       when 'Expression Matrix'
-        @study.delay.initialize_expression_scores(@study_file, current_user)
+        @study.delay.initialize_gene_expression_data(@study_file, current_user)
       when 'Gene List'
         @study.delay.initialize_precomputed_scores(@study_file, current_user)
       when 'Metadata'
-        @study.delay.initialize_study_metadata(@study_file, current_user)
+        @study.delay.initialize_cell_metadata(@study_file, current_user)
     end
     changes = ["Study file added: #{@study_file.upload_file_name}"]
     if @study.study_shares.any?

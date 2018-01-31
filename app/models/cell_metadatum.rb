@@ -22,7 +22,7 @@ class CellMetadatum
 
   # concatenate all the necessary data_array objects and construct a hash of cell names => expression values
   def cell_annotations
-    cells = self.study.all_cell_array
+    cells = self.study.all_cells_array
     annot_values = self.concatenate_data_arrays(self.name, 'annotations')
     Hash[cells.zip(annot_values)]
   end
@@ -52,8 +52,7 @@ class CellMetadatum
       all_cells.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
         cell_array = study.data_arrays.build(study_file_id: study.metadata_file.id, name: 'All Cells',
                                              cluster_name: study.metadata_file.name, array_type: 'cells',
-                                             array_index: index + 1, values: slice, linear_data_id: study.id,
-                                             linear_data_type: 'Study')
+                                             array_index: index + 1, values: slice, study_id: study.id)
         cell_array.save
       end
     end
