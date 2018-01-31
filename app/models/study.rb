@@ -827,6 +827,7 @@ class Study
     rescue => e
       error_message = "Unexpected error: #{e.message}"
       filename = expression_file.name
+      expression_file.remote_local_copy
       expression_file.destroy
       Rails.logger.info Time.now.to_s + ': ' + error_message
       SingleCellMailer.notify_user_parse_fail(user.email, "Expression file: '#{filename}' parse has failed", error_message).deliver_now
@@ -993,13 +994,7 @@ class Study
       ExpressionScore.where(study_id: self.id, study_file_id: expression_file.id).delete_all
       DataArray.where(study_id: self.id, study_file_id: expression_file.id).delete_all
       filename = expression_file.name
-      if File.exist?(@file_location)
-        File.delete(@file_location)
-        if Dir.exist?(File.join(self.data_store_path, expression_file.id))
-          Dir.chdir(self.data_store_path)
-          Dir.rmdir(expression_file.id)
-        end
-      end
+      expression_file.remote_local_copy
       expression_file.destroy
       error_message = "#{@last_line}: #{e.message}"
       Rails.logger.info Time.now.to_s + ': ' + error_message
@@ -1067,6 +1062,7 @@ class Study
       error_message = "file header validation failed: should be at least NAME, X, Y with second line starting with TYPE"
       Rails.logger.info Time.now.to_s + ': ' + error_message
       filename = ordinations_file.upload_file_name
+      ordinations_file.remote_local_copy
       ordinations_file.destroy
       SingleCellMailer.notify_user_parse_fail(user.email, "Cluster file: '#{filename}' parse has failed", error_message).deliver_now
       raise StandardError, error_message
@@ -1327,13 +1323,7 @@ class Study
       ClusterGroup.where(study_file_id: ordinations_file.id).delete_all
       DataArray.where(study_file_id: ordinations_file.id).delete_all
       filename = ordinations_file.upload_file_name
-      if File.exist?(@file_location)
-        File.delete(@file_location)
-        if Dir.exist?(File.join(self.data_store_path, ordinations_file.id))
-          Dir.chdir(self.data_store_path)
-          Dir.rmdir(ordinations_file.id)
-        end
-      end
+      ordinations_file.remote_local_copy
       ordinations_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.now.to_s + ': ' + error_message
@@ -1388,6 +1378,7 @@ class Study
       error_message = "#{e.message}"
       Rails.logger.info Time.now.to_s + ': ' + error_message
       filename = coordinate_file.upload_file_name
+      coordinate_file.remote_local_copy
       coordinate_file.destroy
       SingleCellMailer.notify_user_parse_fail(user.email, "Coordinate Labels file: '#{filename}' parse has failed", error_message).deliver_now
       raise StandardError, error_message
@@ -1398,6 +1389,13 @@ class Study
       error_message = "file header validation failed: should be at least NAME, X, Y, LABELS"
       Rails.logger.info Time.now.to_s + ': ' + error_message
       filename = coordinate_file.upload_file_name
+      if File.exist?(@file_location)
+        File.delete(@file_location)
+        if Dir.exist?(File.join(self.data_store_path, coordinate_file.id))
+          Dir.chdir(self.data_store_path)
+          Dir.rmdir(coordinate_file.id)
+        end
+      end
       coordinate_file.destroy
       SingleCellMailer.notify_user_parse_fail(user.email, "Coordinate Labels file: '#{filename}' parse has failed", error_message).deliver_now
       raise StandardError, error_message
@@ -1530,13 +1528,7 @@ class Study
       # error has occurred, so clean up records and remove file
       DataArray.where(study_file_id: coordinate_file.id).delete_all
       filename = coordinate_file.upload_file_name
-      if File.exist?(@file_location)
-        File.delete(@file_location)
-        if Dir.exist?(File.join(self.data_store_path, coordinate_file.id))
-          Dir.chdir(self.data_store_path)
-          Dir.rmdir(coordinate_file.id)
-        end
-      end
+      coordinate_file.remote_local_copy
       coordinate_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.now.to_s + ': ' + error_message
@@ -1592,6 +1584,7 @@ class Study
       m_file.close
     rescue => e
       filename = metadata_file.upload_file_name
+      metadata_file.remote_local_copy
       metadata_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.now.to_s + ': ' + error_message
@@ -1777,13 +1770,7 @@ class Study
       # parse has failed, so clean up records and remove file
       StudyMetadatum.where(study_id: self.id).delete_all
       filename = metadata_file.upload_file_name
-      if File.exist?(@file_location)
-        File.delete(@file_location)
-        if Dir.exist?(File.join(self.data_store_path, metadata_file.id))
-          Dir.chdir(self.data_store_path)
-          Dir.rmdir(metadata_file.id)
-        end
-      end
+      metadata_file.remote_local_copy
       metadata_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.now.to_s + ': ' + error_message
@@ -1837,6 +1824,7 @@ class Study
       file.close
     rescue => e
       filename = marker_file.upload_file_name
+      marker_file.remote_local_copy
       marker_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.now.to_s + ': ' + error_message
@@ -1953,13 +1941,7 @@ class Study
       # parse has failed, so clean up records and remove file
       PrecomputedScore.where(study_file_id: marker_file.id).delete_all
       filename = marker_file.upload_file_name
-      if File.exist?(@file_location)
-        File.delete(@file_location)
-        if Dir.exist?(File.join(self.data_store_path, marker_file.id))
-          Dir.chdir(self.data_store_path)
-          Dir.rmdir(marker_file.id)
-        end
-      end
+      marker_file.remote_local_copy
       marker_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.now.to_s + ': ' + error_message
