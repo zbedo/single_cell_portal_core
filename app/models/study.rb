@@ -993,6 +993,9 @@ class Study
       ExpressionScore.where(study_id: self.id, study_file_id: expression_file.id).delete_all
       DataArray.where(study_id: self.id, study_file_id: expression_file.id).delete_all
       filename = expression_file.name
+      if File.exist?(@file_location)
+        File.delete(@file_location)
+      end
       expression_file.destroy
       error_message = "#{@last_line}: #{e.message}"
       Rails.logger.info Time.now.to_s + ': ' + error_message
@@ -1320,6 +1323,9 @@ class Study
       ClusterGroup.where(study_file_id: ordinations_file.id).delete_all
       DataArray.where(study_file_id: ordinations_file.id).delete_all
       filename = ordinations_file.upload_file_name
+      if File.exist?(@file_location)
+        File.delete(@file_location)
+      end
       ordinations_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.now.to_s + ': ' + error_message
@@ -1516,6 +1522,9 @@ class Study
       # error has occurred, so clean up records and remove file
       DataArray.where(study_file_id: coordinate_file.id).delete_all
       filename = coordinate_file.upload_file_name
+      if File.exist?(@file_location)
+        File.delete(@file_location)
+      end
       coordinate_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.now.to_s + ': ' + error_message
@@ -1756,6 +1765,9 @@ class Study
       # parse has failed, so clean up records and remove file
       StudyMetadatum.where(study_id: self.id).delete_all
       filename = metadata_file.upload_file_name
+      if File.exist?(@file_location)
+        File.delete(@file_location)
+      end
       metadata_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.now.to_s + ': ' + error_message
@@ -1925,6 +1937,9 @@ class Study
       # parse has failed, so clean up records and remove file
       PrecomputedScore.where(study_file_id: marker_file.id).delete_all
       filename = marker_file.upload_file_name
+      if File.exist?(@file_location)
+        File.delete(@file_location)
+      end
       marker_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.now.to_s + ': ' + error_message
