@@ -995,6 +995,10 @@ class Study
       filename = expression_file.name
       if File.exist?(@file_location)
         File.delete(@file_location)
+        if Dir.exist?(File.join(self.data_store_path, expression_file.id))
+          Dir.chdir(self.data_store_path)
+          Dir.rmdir(expression_file.id)
+        end
       end
       expression_file.destroy
       error_message = "#{@last_line}: #{e.message}"
@@ -1325,6 +1329,10 @@ class Study
       filename = ordinations_file.upload_file_name
       if File.exist?(@file_location)
         File.delete(@file_location)
+        if Dir.exist?(File.join(self.data_store_path, ordinations_file.id))
+          Dir.chdir(self.data_store_path)
+          Dir.rmdir(ordinations_file.id)
+        end
       end
       ordinations_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
@@ -1524,6 +1532,10 @@ class Study
       filename = coordinate_file.upload_file_name
       if File.exist?(@file_location)
         File.delete(@file_location)
+        if Dir.exist?(File.join(self.data_store_path, coordinate_file.id))
+          Dir.chdir(self.data_store_path)
+          Dir.rmdir(coordinate_file.id)
+        end
       end
       coordinate_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
@@ -1767,6 +1779,10 @@ class Study
       filename = metadata_file.upload_file_name
       if File.exist?(@file_location)
         File.delete(@file_location)
+        if Dir.exist?(File.join(self.data_store_path, metadata_file.id))
+          Dir.chdir(self.data_store_path)
+          Dir.rmdir(metadata_file.id)
+        end
       end
       metadata_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
@@ -1939,6 +1955,10 @@ class Study
       filename = marker_file.upload_file_name
       if File.exist?(@file_location)
         File.delete(@file_location)
+        if Dir.exist?(File.join(self.data_store_path, marker_file.id))
+          Dir.chdir(self.data_store_path)
+          Dir.rmdir(marker_file.id)
+        end
       end
       marker_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
