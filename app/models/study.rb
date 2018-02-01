@@ -90,13 +90,13 @@ class Study
   end
 
   has_many :genes, dependent: :delete do
-    def by_gene(gene_name, study_file_ids)
+    def by_name(gene_name, study_file_ids)
       found_scores = any_of({name: gene_name, :study_file_id.in => study_file_ids}, {searchable_name: gene_name.downcase, :study_file_id.in => study_file_ids}).to_a
       if found_scores.empty?
         return []
       else
         # since we can have duplicate genes but not cells, merge into one object for rendering
-        merged_scores = {'searchable_gene' => gene.downcase, 'gene' => gene, 'scores' => {}}
+        merged_scores = {'searchable_name' => gene_name.downcase, 'name' => gene_name, 'scores' => {}}
         found_scores.each do |score|
           merged_scores['scores'].merge!(score.scores)
         end
@@ -105,7 +105,7 @@ class Study
     end
 
     def unique_genes
-      pluck(:gene).uniq
+      pluck(:name).uniq
     end
   end
 
@@ -521,7 +521,7 @@ class Study
 
   # helper method to set the number of unique genes in this study
   def set_gene_count
-    gene_count = self.genes.pluck(:gene).uniq.count
+    gene_count = self.genes.pluck(:name).uniq.count
     Rails.logger.info "#{Time.now}: setting gene count in #{self.name} to #{gene_count}"
     self.update!(gene_count: gene_count)
   end
@@ -654,9 +654,9 @@ class Study
     studies = self.where(queued_for_deletion: true)
     studies.each do |study|
       Rails.logger.info "#{Time.now}: deleting queued study #{study.name}"
-      ExpressionScore.where(study_id: study.id).delete_all
+      Gene.where(study_id: study.id).delete_all
       DataArray.where(study_id: study.id).delete_all
-      StudyMetadatum.where(study_id: study.id).delete_all
+      CellMetadatum.where(study_id: study.id).delete_all
       PrecomputedScore.where(study_id: study.id).delete_all
       ClusterGroup.where(study_id: study.id).delete_all
       StudyFile.where(study_id: study.id).delete_all
@@ -950,7 +950,7 @@ class Study
             @genes_parsed << gene_name
           end
 
-          new_gene = Gene.new(gene: gene_name, searchable_gene: gene_name.downcase, study_file_id: expression_file._id,
+          new_gene = Gene.new(name: gene_name, searchable_name: gene_name.downcase, study_file_id: expression_file._id,
                               study_id: self.id)
           @records << new_gene.attributes
 
@@ -1332,7 +1332,7 @@ class Study
       @message << "Total points in cluster: #{@point_count}"
       @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
       # set initialized to true if possible
-      if self.expression_scores.any? && self.study_metadata.any? && !self.initialized?
+      if self.genes.any? && self.cell_metadata.any? && !self.initialized?
         Rails.logger.info "#{Time.now}: initializing #{self.name}"
         self.update!(initialized: true)
         Rails.logger.info "#{Time.now}: #{self.name} successfully initialized"

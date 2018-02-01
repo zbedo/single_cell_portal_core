@@ -5,16 +5,16 @@ class Gene
   belongs_to :study_file
   has_many :data_arrays, as: :linear_data
 
-  field :gene, type: String
-  field :searchable_gene, type: String
+  field :name, type: String
+  field :searchable_name, type: String
 
-  index({ gene: 1, study_id: 1, study_file_id: 1 }, { unique: true, background: true})
-  index({ searchable_gene: 1, study_id: 1 }, { unique: false, background: true })
+  index({ name: 1, study_id: 1, study_file_id: 1 }, { unique: true, background: true})
+  index({ searchable_name: 1, study_id: 1 }, { unique: false, background: true })
   index({ study_id: 1 }, { unique: false, background: true })
   index({ study_id: 1, study_file_id: 1} , { unique: false, background: true })
 
-  validates_uniqueness_of :gene, scope: [:study_id, :study_file_id]
-  validates_presence_of :gene
+  validates_uniqueness_of :name, scope: [:study_id, :study_file_id]
+  validates_presence_of :name
 
   ##
   # INSTANCE METHODS
@@ -29,12 +29,12 @@ class Gene
 
   # key to retrieve data arrays of cell names for this gene
   def cell_key
-    "#{self.gene} Cells"
+    "#{self.name} Cells"
   end
 
   # key to retrieve data arrays of expression values for this gene
   def score_key
-    "#{self.gene} Expression"
+    "#{self.name} Expression"
   end
 
   # concatenate data arrays of a given name/type in order
@@ -112,36 +112,56 @@ class Gene
 
   # generate new entries based on existing ExpressionScore objects
   def self.generate_new_entries
+    start_time = Time.now
     arrays_created = 0
     records = []
+    child_records = []
     ExpressionScore.all.each do |expression_score|
-      new_gene = Gene.create(study_id: expression_score.study_id, study_file_id: expression_score.study_file_id,
-                             gene: expression_score.gene, searchable_gene: expression_score.searchable_gene)
+      new_gene = Gene.new(study_id: expression_score.study_id, study_file_id: expression_score.study_file_id,
+                             name: expression_score.gene, searchable_name: expression_score.searchable_gene)
+      records << new_gene.attributes
       cells = expression_score.scores.keys
       exp_values = expression_score.scores.values
       cells.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
-        records << {name: "#{new_gene.gene} Cells", cluster_name: new_gene.study_file.name, array_type: 'cells',
+        child_records << {name: new_gene.cell_key, cluster_name: new_gene.study_file.name, array_type: 'cells',
                     array_index: index + 1, values: slice, study_id: new_gene.study_id,
                     study_file_id: new_gene.study_file_id, linear_data_id: new_gene.id,
                     linear_data_type: 'Gene'
         }
       end
       exp_values.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
-        records << {name: "#{new_gene.gene} Expression", cluster_name: new_gene.study_file.name, array_type: 'expression',
+        child_records << {name: new_gene.score_key, cluster_name: new_gene.study_file.name, array_type: 'expression',
                     array_index: index + 1, values: slice, study_id: new_gene.study_id,
                     study_file_id: new_gene.study_file_id, linear_data_id: new_gene.id,
                     linear_data_type: 'Gene'
         }
       end
+
       if records.size >= 1000
-        DataArray.create(records)
-        arrays_created += records.size
+        Gene.create(records)
         records = []
       end
+
+      if child_records.size >= 1000
+        DataArray.create(child_records)
+        arrays_created += child_records.size
+        child_records = []
+      end
     end
-    DataArray.create(records)
-    arrays_created += records.size
-    msg = "Gene migration complete: generated #{self.count} new entries with #{arrays_created} child data_arrays"
+    Gene.create(records)
+    DataArray.create(child_records)
+    arrays_created += child_records.size
+    end_time = Time.now
+    seconds_diff = (start_time - end_time).to_i.abs
+
+    hours = seconds_diff / 3600
+    seconds_diff -= hours * 3600
+
+    minutes = seconds_diff / 60
+    seconds_diff -= minutes * 60
+
+    seconds = seconds_diff
+    msg = "Gene migration complete: generated #{self.count} new entries with #{arrays_created} child data_arrays; elapsed time: #{hours} hours, #{minutes} minutes, #{seconds} seconds"
     Rails.logger.info msg
     msg
   end
