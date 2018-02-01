@@ -751,7 +751,7 @@ class Study
       puts "Performing check for '#{study.name}'"
       puts "Beginning with study_files"
       # begin with study_files
-      files = study.study_files.where(queued_for_deletion: false, human_data: false).to_a
+      files = study.study_files.where(queued_for_deletion: false, human_data: false, :parse_status.ne => 'parsing', status: 'uploaded')
       files.each do |file|
         file_location = file.remote_location.blank? ? file.upload_file_name : file.remote_location
         puts "Checking file: #{file_location}"
