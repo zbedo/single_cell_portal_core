@@ -106,7 +106,7 @@ class ClusterGroup
       when 'study'
         # in addition to array of annotation values, we need a key to preserve the associations once we sort
         # the annotations by value
-        all_annots = self.study.study_metadata_values(annotation_name, annotation_type)
+        all_annots = self.study.cell_metadata.by_name_and_type(annotation_name, annotation_type).cell_annotations
         @annotation_key = {}
         @annotations = []
         @cells.each do |cell|
@@ -276,6 +276,7 @@ class ClusterGroup
   ##
 
   def self.generate_new_data_arrays
+    start_time = Time.now
     arrays_created = 0
     self.all.each do |cluster|
       arrays_to_save = []
@@ -290,7 +291,18 @@ class ClusterGroup
       arrays_to_save.map(&:save)
       arrays_created += arrays_to_save.size
     end
-    msg = "Cluster Group migration complete: generated #{arrays_created} new child data_array records"
+    end_time = Time.now
+    seconds_diff = (start_time - end_time).to_i.abs
+
+    hours = seconds_diff / 3600
+    seconds_diff -= hours * 3600
+
+    minutes = seconds_diff / 60
+    seconds_diff -= minutes * 60
+
+    seconds = seconds_diff
+
+    msg = "Cluster Group migration complete: generated #{arrays_created} new child data_array records; elapsed time: #{hours} hours, #{minutes} minutes, #{seconds} seconds"
     Rails.logger.info msg
     msg
   end
