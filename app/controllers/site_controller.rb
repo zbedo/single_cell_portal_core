@@ -108,11 +108,11 @@ class SiteController < ApplicationController
 
     # if only one gene was searched for, make an attempt to load it and redirect to correct page
     if @terms.size == 1
-      @gene = load_best_gene_match(@study.expression_scores.by_gene(@terms.first, @study.expression_matrix_files.map(&:id)), @terms.first)
+      @gene = load_best_gene_match(@study.genes.by_name(@terms.first, @study.expression_matrix_files.map(&:id)), @terms.first)
       if @gene.empty?
         redirect_to request.referrer, alert: "No matches found for: #{@terms.first}." and return
       else
-        redirect_to view_gene_expression_path(study_name: params[:study_name], gene: @gene['gene'], cluster: cluster, annotation: annotation, consensus: consensus, subsample: subsample, plot_type: plot_type, kernel_type: kernel_type, band_type: band_type, boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering, heatmap_size: heatmap_size) and return
+        redirect_to view_gene_expression_path(study_name: params[:study_name], gene: @gene['name'], cluster: cluster, annotation: annotation, consensus: consensus, subsample: subsample, plot_type: plot_type, kernel_type: kernel_type, band_type: band_type, boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering, heatmap_size: heatmap_size) and return
       end
     end
 
@@ -286,7 +286,7 @@ class SiteController < ApplicationController
 
   # re-renders plots when changing cluster selection
   def render_gene_expression_plots
-    matches = @study.expression_scores.by_gene(params[:gene], @study.expression_matrix_files.map(&:id))
+    matches = @study.genes.by_name(params[:gene], @study.expression_matrix_files.map(&:id))
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
     @gene = load_best_gene_match(matches, params[:gene])
     @y_axis_title = load_expression_axis_title
@@ -428,7 +428,7 @@ class SiteController < ApplicationController
     # parse and divide up genes
     terms = parse_search_terms(:genes)
     @genes, @not_found = search_expression_scores(terms)
-    @gene_list = @genes.map{|gene| gene['gene']}.join(' ')
+    @gene_list = @genes.map{|gene| gene['name']}.join(' ')
     # load dropdown options
     @options = load_cluster_group_options
     @cluster_annotations = load_cluster_group_annotations
@@ -455,7 +455,7 @@ class SiteController < ApplicationController
 
       @rows = []
       @genes.each do |gene|
-        row = [gene['gene'], ""]
+        row = [gene['name'], ""]
         case params[:row_centered]
           when 'z-score'
             vals = ExpressionScore.z_score(gene['scores'], @cells)
@@ -1864,7 +1864,7 @@ class SiteController < ApplicationController
     genes = []
     matrix_ids = @study.expression_matrix_files.map(&:id)
     terms.each do |term|
-      matches = @study.genes.by_gene(term, matrix_ids)
+      matches = @study.genes.by_name(term, matrix_ids)
       unless matches.empty?
         genes << load_best_gene_match(matches, term)
       end
@@ -1881,9 +1881,9 @@ class SiteController < ApplicationController
     known_searchable_genes = known_genes.map(&:downcase)
     terms.each do |term|
       if known_genes.include?(term) || known_searchable_genes.include?(term)
-        genes << {'gene' => term}
+        genes << {'name' => term}
       else
-        not_found << {'gene' => term}
+        not_found << {'name' => term}
       end
     end
     [genes, not_found]
@@ -1893,14 +1893,14 @@ class SiteController < ApplicationController
   def load_best_gene_match(matches, search_term)
     # iterate through all matches to see if there is an exact match
     matches.each do |match|
-      if match['gene'] == search_term
+      if match['name'] == search_term
         return match
       end
     end
     # go through a second time to see if there is a case-insensitive match by looking at searchable_gene
     # this is done after a complete iteration to ensure that there wasn't an exact match available
     matches.each do |match|
-      if match['searchable_gene'] == search_term.downcase
+      if match['searchable_name'] == search_term.downcase
         return match
       end
     end
@@ -1915,7 +1915,7 @@ class SiteController < ApplicationController
   def load_cluster_group_annotations
     grouped_options = {
         'Cluster-based' => @cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]},
-        'Study Wide' => @study.study_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
+        'Study Wide' => @study.cell_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
     }
     # load available user annotations (if any)
     if user_signed_in?
