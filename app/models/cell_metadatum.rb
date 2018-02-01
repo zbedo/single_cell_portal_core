@@ -45,6 +45,7 @@ class CellMetadatum
 
   # generate new entries based on existing StudyMetadata objects
   def self.generate_new_entries
+    start_time = Time.now
     arrays_created = 0
     # we only want to generate the list of 'All Cells' once per study, so do that first
     Study.all.each do |study|
@@ -77,7 +78,17 @@ class CellMetadatum
     end
     DataArray.create(records)
     arrays_created += records.size
-    msg = "Cell Metadata migration complete: generated #{self.count} new entries with #{arrays_created} child data_arrays"
+    end_time = Time.now
+    seconds_diff = (start_time - end_time).to_i.abs
+
+    hours = seconds_diff / 3600
+    seconds_diff -= hours * 3600
+
+    minutes = seconds_diff / 60
+    seconds_diff -= minutes * 60
+
+    seconds = seconds_diff
+    msg = "Cell Metadata migration complete: generated #{self.count} new entries with #{arrays_created} child data_arrays; elapsed time: #{hours} hours, #{minutes} minutes, #{seconds} seconds"
     Rails.logger.info msg
     msg
   end
