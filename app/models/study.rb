@@ -573,11 +573,18 @@ class Study
         vals += array.values
       end
     else
-      self.expression_matrix_files.each do |file|
-        arrays = self.data_arrays.by_name_and_type("#{file.name} Cells", 'cells').order_by(&:array_index)
-        arrays.each do |array|
-          vals += array.values
-        end
+      vals = self.all_expression_matrix_cells
+    end
+    vals
+  end
+
+  # return an array of all cell names that have been used in expression matrices (does not get cells from cell metadata file)
+  def all_expression_matrix_cells
+    vals = []
+    self.expression_matrix_files.each do |file|
+      arrays = self.data_arrays.by_name_and_type("#{file.name} Cells", 'cells').order_by(&:array_index)
+      arrays.each do |array|
+        vals += array.values
       end
     end
     vals
@@ -913,7 +920,7 @@ class Study
       end
 
       # validate that new expression matrix does not have repeated cells, raise error if repeats found
-      existing_cells = self.all_cells_array
+      existing_cells = self.all_expression_matrix_cells
       uniques = cells - existing_cells
 
       unless uniques.size == cells.size
@@ -1537,7 +1544,9 @@ class Study
 
       # add optional data arrays (z, metadata)
       if is_3d
-        @data_arrays[z_index] = self.data_arrays.build(name: 'z', cluster_name: cluster.name, array_type: 'labels', array_index: 1, study_file_id: coordinate_file._id, cluster_group_id: cluster._id, values: [])
+        @data_arrays[z_index] = self.data_arrays.build(name: 'z', cluster_name: cluster.name, array_type: 'labels',
+                                                       array_index: 1, study_file_id: coordinate_file._id, study_id: self.id,
+                                                       values: [])
       end
 
       Rails.logger.info "#{Time.now}: Headers/Metadata loaded for coordinate file initialization using #{coordinate_file.upload_file_name}:#{coordinate_file.id} for cluster: #{cluster.name} in #{self.name}"
