@@ -274,7 +274,7 @@ class AnalysisMetadatum
         when 'metadata_schema'
           value = set_value_by_type(definitions, self.version)
         when 'analysis_id'
-          value = set_value_by_type(definitions, "SCP-#{self.submission_id}")
+          value = set_value_by_type(definitions, self.submission_id)
       end
       payload[property] = value
     end

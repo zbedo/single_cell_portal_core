@@ -2108,14 +2108,14 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get non_share_public_link
 		public_alert_text = @driver.find_element(:id, 'alert-content').text
 		assert public_alert_text == 'You do not have permission to perform that action.',
-					 "did not properly redirect, expected 'You do not have permission to view the requested page.' but got #{public_alert_text}"
+					 "did not properly redirect, expected 'You do not have permission to perform that action.' but got #{public_alert_text}"
 
 		# try private route
 		@driver.get non_share_private_link
 		wait_for_modal_open('message_modal')
 		private_alert_text = @driver.find_element(:id, 'alert-content').text
-		assert private_alert_text == 'You do not have permission to view the requested page.',
-					 "did not properly redirect, expected 'You do not have permission to view the requested page.' but got #{private_alert_text}"
+		assert private_alert_text == 'You do not have permission to perform that action.',
+					 "did not properly redirect, expected 'You do not have permission to perform that action.' but got #{private_alert_text}"
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
@@ -3218,6 +3218,9 @@ class UiTestSuite < Test::Unit::TestCase
 		assert loaded_annotation['value'] == annotation_value, "did not load correct annotation; expected #{annotation_value} but loaded #{loaded_annotation['value']}"
 
 		# now check the back button in the search box to make sure it preserves values
+		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
+		search_menu.click
+		wait_for_render(:id, 'search_consensus')
 		back_btn = @driver.find_element(:id, 'clear-gene-search')
 		back_btn.click
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
@@ -3240,6 +3243,9 @@ class UiTestSuite < Test::Unit::TestCase
 		@wait.until {wait_for_morpheus_render('#heatmap-plot', 'morpheus')}
 
 		# click back button in search box
+		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
+		search_menu.click
+		wait_for_render(:id, 'search_consensus')
 		back_btn = @driver.find_element(:id, 'clear-gene-search')
 		back_btn.click
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
@@ -3253,6 +3259,9 @@ class UiTestSuite < Test::Unit::TestCase
 		assert heatmap_annot == annotation_value, "cluster was not preserved correctly from heatmap view, expected #{annotation_value} but found #{heatmap_annot}"
 
 		# show gene list in scatter mode
+		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
+		search_menu.click
+		wait_for_render(:id, 'search_consensus')
 		gene_list_panel = @driver.find_element(:id, 'gene-lists-link')
 		gene_list_panel.click
 		wait_for_render(:id, 'expression')
@@ -3268,6 +3277,9 @@ class UiTestSuite < Test::Unit::TestCase
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
 
 		# click back button in search box
+		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
+		search_menu.click
+		wait_for_render(:id, 'search_consensus')
 		back_btn = @driver.find_element(:id, 'clear-gene-search')
 		back_btn.click
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}

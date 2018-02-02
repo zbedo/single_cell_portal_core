@@ -445,11 +445,11 @@ class StudiesController < ApplicationController
       when 'Coordinate Labels'
         @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user)
       when 'Expression Matrix'
-        @study.delay.initialize_expression_scores(@study_file, current_user)
+        @study.delay.initialize_gene_expression_data(@study_file, current_user)
       when 'Gene List'
         @study.delay.initialize_precomputed_scores(@study_file, current_user)
       when 'Metadata'
-        @study.delay.initialize_study_metadata(@study_file, current_user)
+        @study.delay.initialize_cell_metadata(@study_file, current_user)
     end
     changes = ["Study file added: #{@study_file.upload_file_name}"]
     if @study.study_shares.any?
@@ -599,11 +599,11 @@ class StudiesController < ApplicationController
           when 'Coordinate Labels'
             @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user, {local: false, reparse: true})
           when 'Expression Matrix'
-            @study.delay.initialize_expression_scores(@study_file, current_user, {local: false, reparse: true})
+            @study.delay.initialize_gene_expression_data(@study_file, current_user, {local: false, reparse: true})
           when 'Gene List'
             @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false, reparse: true})
           when 'Metadata'
-            @study.delay.initialize_study_metadata(@study_file, current_user, {local: false, reparse: true})
+            @study.delay.initialize_cell_metadata(@study_file, current_user, {local: false, reparse: true})
         end
       end
 
@@ -726,12 +726,14 @@ class StudiesController < ApplicationController
         case @study_file.file_type
           when 'Cluster'
             @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false})
+          when 'Coordinate Labels'
+            @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user, {local: false})
           when 'Expression Matrix'
-            @study.delay.initialize_expression_scores(@study_file, current_user, {local: false})
+            @study.delay.initialize_gene_expression_data(@study_file, current_user, {local: false})
           when 'Gene List'
             @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false})
           when 'Metadata'
-            @study.delay.initialize_study_metadata(@study_file, current_user, {local: false})
+            @study.delay.initialize_cell_metadata(@study_file, current_user, {local: false})
         end
       end
       respond_to do |format|
@@ -770,12 +772,14 @@ class StudiesController < ApplicationController
         case @study_file.file_type
           when 'Cluster'
             @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false, reparse: true})
+          when 'Coordinate Labels'
+            @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user, {local: false, reparse: true})
           when 'Expression Matrix'
-            @study.delay.initialize_expression_scores(@study_file, current_user, {local: false, reparse: true})
+            @study.delay.initialize_gene_expression_data(@study_file, current_user, {local: false, reparse: true})
           when 'Gene List'
             @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false, reparse: true})
           when 'Metadata'
-            @study.delay.initialize_study_metadata(@study_file, current_user, {local: false, reparse: true})
+            @study.delay.initialize_cell_metadata(@study_file, current_user, {local: false, reparse: true})
         end
       end
 
@@ -899,7 +903,7 @@ class StudiesController < ApplicationController
   def load_annotation_options
     @default_cluster = @study.cluster_groups.detect {|cluster| cluster.name == params[:cluster]}
     @default_cluster_annotations = {
-        'Study Wide' => @study.study_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
+        'Study Wide' => @study.cell_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
     }
     unless @default_cluster.nil?
       @default_cluster_annotations['Cluster-based'] = @default_cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]}
