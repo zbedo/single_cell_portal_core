@@ -599,11 +599,11 @@ class StudiesController < ApplicationController
           when 'Coordinate Labels'
             @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user, {local: false, reparse: true})
           when 'Expression Matrix'
-            @study.delay.initialize_expression_scores(@study_file, current_user, {local: false, reparse: true})
+            @study.delay.initialize_gene_expression_data(@study_file, current_user, {local: false, reparse: true})
           when 'Gene List'
             @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false, reparse: true})
           when 'Metadata'
-            @study.delay.initialize_study_metadata(@study_file, current_user, {local: false, reparse: true})
+            @study.delay.initialize_cell_metadata(@study_file, current_user, {local: false, reparse: true})
         end
       end
 
@@ -726,12 +726,14 @@ class StudiesController < ApplicationController
         case @study_file.file_type
           when 'Cluster'
             @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false})
+          when 'Coordinate Labels'
+            @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user, {local: false})
           when 'Expression Matrix'
-            @study.delay.initialize_expression_scores(@study_file, current_user, {local: false})
+            @study.delay.initialize_gene_expression_data(@study_file, current_user, {local: false})
           when 'Gene List'
             @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false})
           when 'Metadata'
-            @study.delay.initialize_study_metadata(@study_file, current_user, {local: false})
+            @study.delay.initialize_cell_metadata(@study_file, current_user, {local: false})
         end
       end
       respond_to do |format|
@@ -770,12 +772,14 @@ class StudiesController < ApplicationController
         case @study_file.file_type
           when 'Cluster'
             @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false, reparse: true})
+          when 'Coordinate Labels'
+            @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user, {local: false, reparse: true})
           when 'Expression Matrix'
-            @study.delay.initialize_expression_scores(@study_file, current_user, {local: false, reparse: true})
+            @study.delay.initialize_gene_expression_data(@study_file, current_user, {local: false, reparse: true})
           when 'Gene List'
             @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false, reparse: true})
           when 'Metadata'
-            @study.delay.initialize_study_metadata(@study_file, current_user, {local: false, reparse: true})
+            @study.delay.initialize_cell_metadata(@study_file, current_user, {local: false, reparse: true})
         end
       end
 
