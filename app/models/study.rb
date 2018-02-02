@@ -1157,6 +1157,7 @@ class Study
       error_message = "file header validation failed: should be at least NAME, X, Y with second line starting with TYPE"
       Rails.logger.info Time.now.to_s + ': ' + error_message
       filename = ordinations_file.upload_file_name
+      ordinations_file.remote_local_copy
       ordinations_file.destroy
       SingleCellMailer.notify_user_parse_fail(user.email, "Cluster file: '#{filename}' parse has failed", error_message).deliver_now
       raise StandardError, error_message
@@ -1496,6 +1497,13 @@ class Study
       error_message = "file header validation failed: should be at least NAME, X, Y, LABELS"
       Rails.logger.info Time.now.to_s + ': ' + error_message
       filename = coordinate_file.upload_file_name
+      if File.exist?(@file_location)
+        File.delete(@file_location)
+        if Dir.exist?(File.join(self.data_store_path, coordinate_file.id))
+          Dir.chdir(self.data_store_path)
+          Dir.rmdir(coordinate_file.id)
+        end
+      end
       coordinate_file.destroy
       SingleCellMailer.notify_user_parse_fail(user.email, "Coordinate Labels file: '#{filename}' parse has failed", error_message).deliver_now
       raise StandardError, error_message
