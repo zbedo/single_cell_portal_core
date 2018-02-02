@@ -903,7 +903,7 @@ class StudiesController < ApplicationController
   def load_annotation_options
     @default_cluster = @study.cluster_groups.detect {|cluster| cluster.name == params[:cluster]}
     @default_cluster_annotations = {
-        'Study Wide' => @study.study_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
+        'Study Wide' => @study.cell_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
     }
     unless @default_cluster.nil?
       @default_cluster_annotations['Cluster-based'] = @default_cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]}
