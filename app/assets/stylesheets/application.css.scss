@@ -458,6 +458,10 @@ label {
   padding: 0 15px;
 }
 
+#render-target .tab-content > div > div {
+  min-width: 700px;
+}
+
 .workflow-tab {
   margin: 15px 0;
 }

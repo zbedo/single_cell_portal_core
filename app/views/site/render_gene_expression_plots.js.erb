@@ -30,6 +30,11 @@ $( window ).on('resizeEnd', function() {
     var newBoxWidth = $('#box-plot').actual('width');
     var newScatterSize = $('#scatter-plot').actual('width');
     var newReferenceSize = $('#reference-plot').actual('width');
+
+    if (newBoxWidth < minPlotAreaWidth) {
+      newBoxWidth = minPlotAreaWidth;
+    }
+
     Plotly.relayout('box-plot', {width: newBoxWidth});
     Plotly.relayout('scatter-plot', {width: newScatterSize, height: newScatterSize});
     Plotly.relayout('reference-plot', {width: newReferenceSize, height: newReferenceSize});
