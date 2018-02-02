@@ -459,7 +459,7 @@ label {
 }
 
 #render-target .tab-content > div > div {
-  min-width: 700px;
+  overflow-x: auto;
 }
 
 .workflow-tab {
