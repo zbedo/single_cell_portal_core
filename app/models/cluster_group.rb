@@ -31,9 +31,9 @@ class ClusterGroup
     end
   end
 
-  index({ name: 1, study_id: 1 }, { unique: true })
-  index({ study_id: 1 }, { unique: false })
-  index({ study_id: 1, study_file_id: 1}, { unique: false })
+  index({ name: 1, study_id: 1 }, { unique: true, background: true })
+  index({ study_id: 1 }, { unique: false, background: true })
+  index({ study_id: 1, study_file_id: 1}, { unique: false, background: true })
 
   # fixed values to subsample at
   SUBSAMPLE_THRESHOLDS = [1000, 10000, 20000].freeze

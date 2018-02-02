@@ -9,9 +9,9 @@ class CellMetadatum
   field :annotation_type, type: String
   field :values, type: Array
 
-  index({ name: 1, annotation_type: 1, study_id: 1 }, { unique: false })
-  index({ study_id: 1 }, { unique: false })
-  index({ study_id: 1, study_file_id: 1 }, { unique: false })
+  index({ name: 1, annotation_type: 1, study_id: 1 }, { unique: false, background: true })
+  index({ study_id: 1 }, { unique: false, background: true })
+  index({ study_id: 1, study_file_id: 1 }, { unique: false, background: true })
 
   validates_uniqueness_of :name, scope: [:study_id, :annotation_type]
   validates_presence_of :name, :annotation_type

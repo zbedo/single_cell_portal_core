@@ -42,7 +42,7 @@ class UserAnnotation
 
   accepts_nested_attributes_for :user_annotation_shares, allow_destroy: true, reject_if: proc { |attributes| attributes['email'].blank? }
 
-  index({ user_id: 1, study_id: 1, cluster_group_id: 1, name: 1}, { unique: true })
+  index({ user_id: 1, study_id: 1, cluster_group_id: 1, name: 1}, { unique: true, background: true })
 
   ###
   #
