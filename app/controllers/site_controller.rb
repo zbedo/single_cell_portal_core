@@ -341,7 +341,7 @@ class SiteController < ApplicationController
     @genes, @not_found = search_expression_scores(terms)
 
     consensus = params[:consensus].nil? ? 'Mean ' : params[:consensus].capitalize + ' '
-    @gene_list = @genes.map{|gene| gene['gene']}.join(' ')
+    @gene_list = @genes.map{|gene| gene['name']}.join(' ')
     @y_axis_title = consensus + ' ' + load_expression_axis_title
     # depending on annotation type selection, set up necessary partial names to use in rendering
     @options = load_cluster_group_options
@@ -366,7 +366,6 @@ class SiteController < ApplicationController
 
     terms = params[:gene_set].blank? ? parse_search_terms(:genes) : @study.precomputed_scores.by_name(params[:gene_set]).gene_list
     @genes = load_expression_scores(terms)
-    logger.info "genes: #{@genes}"
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
     consensus = params[:consensus].nil? ? 'Mean ' : params[:consensus].capitalize + ' '
     @gene_list = @genes.map{|gene| gene['gene']}.join(' ')
