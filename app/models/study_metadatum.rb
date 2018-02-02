@@ -24,6 +24,6 @@ class StudyMetadatum
   validates_presence_of :name, :annotation_type, :cell_annotations
 
 
-  MAX_ENTRIES = 100000
+  MAX_ENTRIES = 10000000
   SUBSAMPLE_THRESHOLD = 1000
 end

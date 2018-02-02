@@ -814,7 +814,7 @@ class SiteController < ApplicationController
         when 'studyfile'
           study_file = @study.study_files.by_type('Fastq').detect {|f| f.name == entry_name}
           if !study_file.nil?
-            file_list << {name: study_file.download_location, size: study_file.upload_file_size, generation: study_file.generation, gs_url: study_file.gs_url}
+            file_list << {name: study_file.bucket_location, size: study_file.upload_file_size, generation: study_file.generation, gs_url: study_file.gs_url}
           end
         else
           nil # this is called when selection is cleared out
