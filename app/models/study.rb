@@ -245,7 +245,7 @@ class Study
   after_destroy     :remove_data_dir
 
   # search definitions
-  index({"name" => "text", "description" => "text"})
+  index({"name" => "text", "description" => "text"}, {background: true})
 
   ###
   #
@@ -918,7 +918,7 @@ class Study
 
       unless uniques.size == cells.size
         repeats = cells - uniques
-        raise StandardError, "cell names validation failed; repeated cells were found: #{repeats.join(', ')}"
+        raise StandardError, "You have re-used the following cell names that were found in another expression matrix in your study (cell names must be unique across all expression matrices): #{repeats.join(', ')}"
       end
 
       # store study id for later to save memory
