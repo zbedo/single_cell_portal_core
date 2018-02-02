@@ -59,6 +59,10 @@ var PAGE_RENDERED = false;
 var OPEN_MODAL = '';
 var CLUSTER_TYPE = '3d';
 
+// Minimum width of plot + legend
+// Addresses https://github.com/broadinstitute/single_cell_portal/issues/20
+var minPlotAreaWidth = 700;
+
 $(document).on('shown.bs.modal', function(e) {
     console.log("modal " + $(e.target).attr('id') + ' opened');
     OPEN_MODAL = $(e.target).attr('id');
