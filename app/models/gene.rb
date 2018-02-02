@@ -116,6 +116,8 @@ class Gene
     arrays_created = 0
     records = []
     child_records = []
+    count = 0
+    total_records = ExpressionScore.count
     ExpressionScore.all.each do |expression_score|
       new_gene = Gene.new(study_id: expression_score.study_id, study_file_id: expression_score.study_file_id,
                              name: expression_score.gene, searchable_name: expression_score.searchable_gene)
@@ -138,6 +140,8 @@ class Gene
       end
 
       if records.size >= 1000
+        count += records.size
+        Rails.logger.info "#{Time.now} processed #{count} of #{total_records} Expression Score records"
         Gene.create(records)
         records = []
       end
