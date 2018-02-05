@@ -89,6 +89,16 @@ $(document).on('click', '[data-toggle="offcanvas"]', function () {
 
 });
 
+// scpPlotsDidRender fires after the view-specific data has been retrieved and plotted.
+// This event means that the page is ready for user interaction.
+$(document).on('scpPlotsDidRender', function() {
+
+  // Ensures that plot scrolls and doesn't get truncated at right when viewport is very horizontally narrow.
+  // Not declared in static CSS because "overflow-x: visible" is needed for proper display of loading icon.
+  $('#render-target .tab-content > div > div').css('overflow-x', 'auto');
+
+});
+
 // Ensures that position of the Explore tab's internal tabs are flush with left container border
 function setTabNavLeftMargin() {
   var tabNavLeft,
@@ -287,6 +297,7 @@ function deletePromise(event, message) {
 
 // attach various handlers to bootstrap items and turn on functionality
 function enableDefaultActions() {
+
     // need to clear previous listener to prevent conflict
     $('.panel-collapse').off('show.bs.collapse hide.bs.collapse');
 
@@ -352,6 +363,10 @@ function enableDefaultActions() {
         // use HTML5 history API to update the url without reloading the DOM
         history.pushState('', document.title, newUrl);
     });
+
+  // Remove styling set in scpPlotsDidRender
+  $('#render-target .tab-content > div').attr('style', '');
+
 }
 
 var stickyOptions = {
@@ -430,6 +445,7 @@ var smallOpts = {
 // functions to show loading modals with spinners
 // callback function will execute after modal completes opening
 function launchModalSpinner(spinnerTarget, modalTarget, callback) {
+
     // set listener to fire callback, and immediately clear listener to prevent multiple requests queueing
     $(modalTarget).on('shown.bs.modal', function() {
         $(modalTarget).off('shown.bs.modal');
@@ -441,7 +457,7 @@ function launchModalSpinner(spinnerTarget, modalTarget, callback) {
     var spinner = new Spinner(opts).spin(target);
     $(target).data('spinner', spinner);
     $(modalTarget).modal('show');
-};
+}
 
 // function to close modals with spinners launched from launchModalSpinner
 // callback function will execute after modal completes closing
