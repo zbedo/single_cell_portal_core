@@ -134,6 +134,7 @@
         drawHeatmap(newHeight);
     });
 
+    // eweitz 2018-02-07: We removed the view-fullscreen button last month.  Is this needed?
     $('#view-fullscreen').click(function() {
         $('#heatmap-plot').data('rendered', false);
         var btn = $(this);

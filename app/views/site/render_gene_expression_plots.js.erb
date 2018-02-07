@@ -1,7 +1,7 @@
 // check render status
-console.log('render status of box plot at start: ' + $('#expression-plots').data('box-rendered'));
-console.log('render status of scatter plot at start: ' + $('#expression-plots').data('scatter-rendered'));
-console.log('render status of reference plot at start: ' + $('#expression-plots').data('reference-rendered'));
+// console.log('render status of box plot at start: ' + $('#expression-plots').data('box-rendered'));
+// console.log('render status of scatter plot at start: ' + $('#expression-plots').data('scatter-rendered'));
+// console.log('render status of reference plot at start: ' + $('#expression-plots').data('reference-rendered'));
 
 $('.expression-plot').remove();
 $('#render-target .tab-content').append("<%= escape_javascript(render partial: @top_plot_partial)%>");
@@ -27,6 +27,11 @@ CLUSTER_TYPE = '<%= @cluster.cluster_type %>'
 $(window).off('resizeEnd');
 
 $(window).on('resizeEnd', function() {
+
+    if (typeof $('#box-plot')[0] === 'undefined') {
+      return;
+    }
+
     var newBoxWidth = $('#box-plot').actual('width');
     var newScatterSize = $('#scatter-plot').actual('width');
     var newReferenceSize = $('#reference-plot').actual('width');
@@ -40,9 +45,13 @@ $(window).on('resizeEnd', function() {
     staticLayout['width'] = newReferenceSize;
     staticLayout['height'] = newReferenceSize;
 
-    Plotly.relayout('box-plot', {width: newBoxWidth});
-    Plotly.relayout('scatter-plot', scatterLayout);
-    Plotly.relayout('reference-plot', staticLayout);
+    try {
+      Plotly.relayout('box-plot', {width: newBoxWidth});
+      Plotly.relayout('scatter-plot', scatterLayout);
+      Plotly.relayout('reference-plot', staticLayout);
+    } catch (e) {
+      console.log('Abort resizeEnd')
+    }
 });
 
 // attach click event for toggle switch
@@ -59,9 +68,9 @@ enableDefaultActions();
 closeUserAnnotationsForm();
 
 // check render status
-console.log('render status of box plot at end: ' + $('#expression-plots').data('box-rendered'));
-console.log('render status of scatter plot at end: ' + $('#expression-plots').data('scatter-rendered'));
-console.log('render status of reference plot at end: ' + $('#expression-plots').data('reference-rendered'));
+// console.log('render status of box plot at end: ' + $('#expression-plots').data('box-rendered'));
+// console.log('render status of scatter plot at end: ' + $('#expression-plots').data('scatter-rendered'));
+// console.log('render status of reference plot at end: ' + $('#expression-plots').data('reference-rendered'));
 
 var requestUrl = '<%= javascript_safe_url(request.fullpath) %>';
 gaTrack(requestUrl, 'Single Cell Portal');
