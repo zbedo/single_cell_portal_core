@@ -170,7 +170,7 @@ class Gene
             }
           end
 
-          if records.size >= 1000
+          if records.size >= 100
             count += records.size
             msg = "#{Time.now} processed #{count} of #{total_records} Expression Score records in #{study.name}"
             Rails.logger.info msg
@@ -179,7 +179,7 @@ class Gene
             records = []
           end
 
-          if child_records.size >= 1000
+          if child_records.size >= 100
             DataArray.create(child_records)
             arrays_created += child_records.size
             msg = "#{Time.now} created #{arrays_created} data_array records with total length of #{array_length} in #{study.name}"
