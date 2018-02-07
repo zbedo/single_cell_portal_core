@@ -109,6 +109,86 @@ class Gene
     self.array_robust_z_score(values)
   end
 
+  def self.process_batch_records(expression_score_batch, study_name)
+    Gene.clear_validators!
+    DataArray.clear_validators!
+    arrays_created = 0
+    records = []
+    child_records = []
+    count = 0
+    total_records = expression_score_batch.count
+    array_length = 0
+    start_time = Time.now
+    expression_score_batch.each do |expression_score|
+      new_gene = Gene.new(study_id: expression_score.study_id, study_file_id: expression_score.study_file_id,
+                          name: expression_score.gene, searchable_name: expression_score.searchable_gene)
+      records << new_gene.attributes
+      cells = expression_score.scores.keys
+      exp_values = expression_score.scores.values
+      cells.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
+        array_length += slice.size
+        child_records << {name: new_gene.cell_key, cluster_name: new_gene.study_file.name, array_type: 'cells',
+                          array_index: index + 1, values: slice, study_id: new_gene.study_id,
+                          study_file_id: new_gene.study_file_id, linear_data_id: new_gene.id,
+                          linear_data_type: 'Gene'
+        }
+      end
+      exp_values.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
+        array_length += slice.size
+        child_records << {name: new_gene.score_key, cluster_name: new_gene.study_file.name, array_type: 'expression',
+                          array_index: index + 1, values: slice, study_id: new_gene.study_id,
+                          study_file_id: new_gene.study_file_id, linear_data_id: new_gene.id,
+                          linear_data_type: 'Gene'
+        }
+      end
+
+      if records.size >= 100
+        count += records.size
+        msg = "#{Time.now} processed #{count} of #{total_records} Expression Score records in #{study_name}"
+        Rails.logger.info msg
+        puts msg
+        Gene.create(records)
+        records = []
+      end
+
+      if child_records.size >= 100
+        DataArray.create(child_records)
+        arrays_created += child_records.size
+        msg = "#{Time.now} created #{arrays_created} data_array records with total length of #{array_length} in #{study_name}"
+        Rails.logger.info msg
+        puts msg
+        array_length = 0
+        child_records = []
+      end
+    end
+    Gene.create(records)
+    DataArray.create(child_records)
+    count += records.size
+    arrays_created += child_records.size
+    end_time = Time.now
+    seconds_diff = (start_time - end_time).to_i.abs
+
+    hours = seconds_diff / 3600
+    seconds_diff -= hours * 3600
+
+    minutes = seconds_diff / 60
+    seconds_diff -= minutes * 60
+
+    seconds = seconds_diff
+    msg = "#{Time.now}: Gene migration for #{study_name} complete: generated #{count} new entries with #{arrays_created} child data_arrays; elapsed time: #{hours} hours, #{minutes} minutes, #{seconds} seconds"
+    Rails.logger.info msg
+    puts msg
+    reindex_msg = "#{Time.now}: Reindexing genes and data_arrays collections"
+    Rails.logger.info reindex_msg
+    puts reindex_msg
+    Gene.create_indexes
+    DataArray.create_indexes
+    reindex_msg = "#{Time.now}: Reindex complete"
+    Rails.logger.info reindex_msg
+    puts reindex_msg
+    true
+  end
+
   # generate new entries based on existing ExpressionScore objects
   def self.generate_new_entries
     Gene.clear_validators!
@@ -118,8 +198,8 @@ class Gene
     Rails.logger.info msg
     puts msg
     Study.all.each do |study|
-      expression_scores = study.expression_scores
-      genes = study.genes
+      expression_scores = ExpressionScore.where(study_id: study.id)
+      genes = Gene.where(study_id: study.id)
       if expression_scores.count == 0
         msg = "#{Time.now}: skipping #{study.name}, no expression data"
         Rails.logger.info msg
@@ -129,7 +209,6 @@ class Gene
         Rails.logger.info msg
         puts msg
       else
-        start_time = Time.now
         if genes.count != 0
           msg = "#{Time.now}: restarting #{study.name}, was not completed"
           Rails.logger.info msg
@@ -147,6 +226,7 @@ class Gene
         count = 0
         total_records = expression_scores.count
         array_length = 0
+        start_time = Time.now
         expression_scores.each do |expression_score|
           new_gene = Gene.new(study_id: expression_score.study_id, study_file_id: expression_score.study_file_id,
                               name: expression_score.gene, searchable_name: expression_score.searchable_gene)
@@ -172,7 +252,7 @@ class Gene
 
           if records.size >= 100
             count += records.size
-            msg = "#{Time.now} processed #{count} of #{total_records} Expression Score records in #{study.name}"
+            msg = "#{Time.now} processed #{count} of #{total_records} Expression Score records in #{study_name}"
             Rails.logger.info msg
             puts msg
             Gene.create(records)
@@ -182,7 +262,7 @@ class Gene
           if child_records.size >= 100
             DataArray.create(child_records)
             arrays_created += child_records.size
-            msg = "#{Time.now} created #{arrays_created} data_array records with total length of #{array_length} in #{study.name}"
+            msg = "#{Time.now} created #{arrays_created} data_array records with total length of #{array_length} in #{study_name}"
             Rails.logger.info msg
             puts msg
             array_length = 0
@@ -203,7 +283,7 @@ class Gene
         seconds_diff -= minutes * 60
 
         seconds = seconds_diff
-        msg = "#{Time.now}: Gene migration for #{study.name} complete: generated #{count} new entries with #{arrays_created} child data_arrays; elapsed time: #{hours} hours, #{minutes} minutes, #{seconds} seconds"
+        msg = "#{Time.now}: Gene migration for #{study_name} complete: generated #{count} new entries with #{arrays_created} child data_arrays; elapsed time: #{hours} hours, #{minutes} minutes, #{seconds} seconds"
         Rails.logger.info msg
         puts msg
         reindex_msg = "#{Time.now}: Reindexing genes and data_arrays collections"
