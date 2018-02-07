@@ -111,6 +111,8 @@ class Gene
 
   # generate new entries based on existing ExpressionScore objects
   def self.generate_new_entries
+    Gene.clear_validators!
+    DataArray.clear_validators!
     original_start = Time.now
     msg = "#{Time.now}: beginning gene migration, loading studies"
     Rails.logger.info msg
@@ -144,6 +146,7 @@ class Gene
         child_records = []
         count = 0
         total_records = expression_scores.count
+        array_length = 0
         expression_scores.each do |expression_score|
           new_gene = Gene.new(study_id: expression_score.study_id, study_file_id: expression_score.study_file_id,
                               name: expression_score.gene, searchable_name: expression_score.searchable_gene)
@@ -151,6 +154,7 @@ class Gene
           cells = expression_score.scores.keys
           exp_values = expression_score.scores.values
           cells.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
+            array_length += slice.size
             child_records << {name: new_gene.cell_key, cluster_name: new_gene.study_file.name, array_type: 'cells',
                               array_index: index + 1, values: slice, study_id: new_gene.study_id,
                               study_file_id: new_gene.study_file_id, linear_data_id: new_gene.id,
@@ -158,6 +162,7 @@ class Gene
             }
           end
           exp_values.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
+            array_length += slice.size
             child_records << {name: new_gene.score_key, cluster_name: new_gene.study_file.name, array_type: 'expression',
                               array_index: index + 1, values: slice, study_id: new_gene.study_id,
                               study_file_id: new_gene.study_file_id, linear_data_id: new_gene.id,
@@ -175,6 +180,8 @@ class Gene
           if child_records.size >= 1000
             DataArray.create(child_records)
             arrays_created += child_records.size
+            Rails.logger.info "#{Time.now} created #{arrays_created} data_array records with total length of #{array_length} in #{study.name}"
+            array_length = 0
             child_records = []
           end
         end
