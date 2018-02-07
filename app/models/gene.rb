@@ -252,7 +252,7 @@ class Gene
 
           if records.size >= 100
             count += records.size
-            msg = "#{Time.now} processed #{count} of #{total_records} Expression Score records in #{study_name}"
+            msg = "#{Time.now} processed #{count} of #{total_records} Expression Score records in #{study.name}"
             Rails.logger.info msg
             puts msg
             Gene.create(records)
@@ -262,7 +262,7 @@ class Gene
           if child_records.size >= 100
             DataArray.create(child_records)
             arrays_created += child_records.size
-            msg = "#{Time.now} created #{arrays_created} data_array records with total length of #{array_length} in #{study_name}"
+            msg = "#{Time.now} created #{arrays_created} data_array records with total length of #{array_length} in #{study.name}"
             Rails.logger.info msg
             puts msg
             array_length = 0
@@ -283,7 +283,7 @@ class Gene
         seconds_diff -= minutes * 60
 
         seconds = seconds_diff
-        msg = "#{Time.now}: Gene migration for #{study_name} complete: generated #{count} new entries with #{arrays_created} child data_arrays; elapsed time: #{hours} hours, #{minutes} minutes, #{seconds} seconds"
+        msg = "#{Time.now}: Gene migration for #{study.name} complete: generated #{count} new entries with #{arrays_created} child data_arrays; elapsed time: #{hours} hours, #{minutes} minutes, #{seconds} seconds"
         Rails.logger.info msg
         puts msg
         reindex_msg = "#{Time.now}: Reindexing genes and data_arrays collections"
