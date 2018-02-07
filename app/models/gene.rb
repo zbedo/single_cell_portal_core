@@ -172,7 +172,9 @@ class Gene
 
           if records.size >= 1000
             count += records.size
-            Rails.logger.info "#{Time.now} processed #{count} of #{total_records} Expression Score records in #{study.name}"
+            msg = "#{Time.now} processed #{count} of #{total_records} Expression Score records in #{study.name}"
+            Rails.logger.info msg
+            puts msg
             Gene.create(records)
             records = []
           end
@@ -180,7 +182,9 @@ class Gene
           if child_records.size >= 1000
             DataArray.create(child_records)
             arrays_created += child_records.size
-            Rails.logger.info "#{Time.now} created #{arrays_created} data_array records with total length of #{array_length} in #{study.name}"
+            msg = "#{Time.now} created #{arrays_created} data_array records with total length of #{array_length} in #{study.name}"
+            Rails.logger.info msg
+            puts msg
             array_length = 0
             child_records = []
           end
@@ -201,11 +205,15 @@ class Gene
         seconds = seconds_diff
         msg = "#{Time.now}: Gene migration for #{study.name} complete: generated #{count} new entries with #{arrays_created} child data_arrays; elapsed time: #{hours} hours, #{minutes} minutes, #{seconds} seconds"
         Rails.logger.info msg
-        msg
-        Rails.logger.info "#{Time.now}: Reindexing genes and data_arrays collections"
+        puts msg
+        reindex_msg = "#{Time.now}: Reindexing genes and data_arrays collections"
+        Rails.logger.info reindex_msg
+        puts reindex_msg
         Gene.create_indexes
         DataArray.create_indexes
-        Rails.logger.info "#{Time.now}: Reindex complete"
+        reindex_msg = "#{Time.now}: Reindex complete"
+        Rails.logger.info reindex_msg
+        puts reindex_msg
       end
     end
     final_complete = Time.now
@@ -220,6 +228,7 @@ class Gene
     seconds = seconds_diff
     msg = "Gene migration complete!  Total count: #{self.count}; elapsed time: #{hours} hours, #{minutes} minutes, #{seconds} seconds"
     Rails.logger.info msg
-    msg
+    puts msg
+    true
   end
 end

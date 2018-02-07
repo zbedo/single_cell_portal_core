@@ -24,7 +24,7 @@ class DataArray
 
 	index({ name: 1, study_id: 1, cluster_group_id: 1, linear_data_type: 1, linear_data_id: 1, cluster_name: 1,
 								array_type: 1, array_index: 1, subsample_threshold: 1, subsample_annotation: 1 },
-				{ unique: true, name: 'linear_data_arrays_index', background: true , sparse: true})
+				{ unique: true, name: 'linear_data_arrays_index', background: true })
 	index({ study_id: 1, study_file_id: 1}, { unique: false, background: true })
 
   validates_presence_of :name, :cluster_name, :array_type, :array_index, :values
