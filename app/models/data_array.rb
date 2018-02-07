@@ -17,11 +17,12 @@ class DataArray
 	field :values, type: Array
 	field :subsample_threshold, type: Integer
 	field :subsample_annotation, type: String
+  field :cluster_group_id, type: BSON::ObjectId
 	belongs_to :study
 	belongs_to :study_file
 	belongs_to :linear_data, polymorphic: true
 
-	index({ name: 1, study_id: 1, linear_data_type: 1, linear_data_id: 1, cluster_name: 1,
+	index({ name: 1, study_id: 1, cluster_group_id: 1, linear_data_type: 1, linear_data_id: 1, cluster_name: 1,
 								array_type: 1, array_index: 1, subsample_threshold: 1, subsample_annotation: 1 },
 				{ unique: true, name: 'linear_data_arrays_index', background: true , sparse: true})
 	index({ study_id: 1, study_file_id: 1}, { unique: false, background: true })
