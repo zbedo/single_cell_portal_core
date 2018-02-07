@@ -124,17 +124,11 @@ function restoreExploreMenusState() {
     toggleSearchPanel();
   }
   if (exploreMenusToggleState.right === 1 && rightIsClosed) {
-    setTabNavLeftMargin();
+    toggleViewOptionsPanel();
   }
 }
 
-
-// Toggle sidebar, e.g. for "View Options" menu in Explore tab
-$(document).on('click', '#view-option-link', function(e) {
-
-  // Prevent scroll
-  e.preventDefault();
-
+function toggleViewOptionsPanel() {
   // Expand View Options menu
   $('.row-offcanvas').toggleClass('active');
 
@@ -146,9 +140,8 @@ $(document).on('click', '#view-option-link', function(e) {
 
   // Re-render Plotly to use available space
   $(window).trigger('resize');
+}
 
-  exploreMenusToggleState.right *= -1;
-});
 
 function toggleSearchPanel() {
   var searchParent = $('#search-parent'),
@@ -170,6 +163,14 @@ function toggleSearchPanel() {
 
   $(window).trigger('resizeEnd');
 }
+
+// Toggle "View Options" menu panel in Explore tab
+$(document).on('click', '#view-option-link', function(e) {
+  e.preventDefault(); //
+  toggleViewOptionsPanel();
+  exploreMenusToggleState.right *= -1;
+});
+
 
 // Toggles search panel upon clicking burger menu to left of "Search genes"
 $(document).on('click', '#search-omnibar-menu i', function(e) {
