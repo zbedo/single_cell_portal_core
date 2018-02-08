@@ -21,7 +21,14 @@ $('#search_cluster').val("<%= params[:cluster] %>");
 // clear listener and reattach
 $(window).off('resizeEnd');
 $(window).on('resizeEnd', function() {
-    var curSize = $('#cluster-plot').actual('width') * SCATTER_RATIO;
+
+    var plot = $('#cluster-plot');
+
+    if (typeof plot[0] === 'undefined') {
+      return;
+    }
+
+    var curSize = plot.actual('width') * SCATTER_RATIO;
 
     if (curSize < minPlotAreaWidth) {
       curSize = minPlotAreaWidth;

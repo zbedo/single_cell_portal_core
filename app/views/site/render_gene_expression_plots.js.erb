@@ -27,6 +27,11 @@ CLUSTER_TYPE = '<%= @cluster.cluster_type %>'
 $(window).off('resizeEnd');
 
 $(window).on('resizeEnd', function() {
+
+    if (typeof $('#box-plot')[0] === 'undefined') {
+      return;
+    }
+
     var newBoxWidth = $('#box-plot').actual('width');
     var newScatterSize = $('#scatter-plot').actual('width');
     var newReferenceSize = $('#reference-plot').actual('width');
@@ -40,9 +45,13 @@ $(window).on('resizeEnd', function() {
     staticLayout['width'] = newReferenceSize;
     staticLayout['height'] = newReferenceSize;
 
-    Plotly.relayout('box-plot', {width: newBoxWidth});
-    Plotly.relayout('scatter-plot', scatterLayout);
-    Plotly.relayout('reference-plot', staticLayout);
+    try {
+      Plotly.relayout('box-plot', {width: newBoxWidth});
+      Plotly.relayout('scatter-plot', scatterLayout);
+      Plotly.relayout('reference-plot', staticLayout);
+    } catch (e) {
+      console.log('Abort resizeEnd')
+    }
 });
 
 // attach click event for toggle switch
