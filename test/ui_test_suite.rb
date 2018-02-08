@@ -4377,9 +4377,6 @@ class UiTestSuite < Test::Unit::TestCase
 		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
 		# change to box plot
-		view_options_panel = @driver.find_element(:id, 'view-option-link')
-		view_options_panel.click
-		wait_for_render(:id, 'view-options')
 		plot_dropdown = @driver.find_element(:id, 'plot_type')
 		plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
 		new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
