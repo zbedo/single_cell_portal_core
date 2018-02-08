@@ -1157,7 +1157,7 @@ class Study
       error_message = "file header validation failed: should be at least NAME, X, Y with second line starting with TYPE"
       Rails.logger.info Time.now.to_s + ': ' + error_message
       filename = ordinations_file.upload_file_name
-      ordinations_file.remote_local_copy
+      ordinations_file.remove_local_copy
       ordinations_file.destroy
       SingleCellMailer.notify_user_parse_fail(user.email, "Cluster file: '#{filename}' parse has failed", error_message).deliver_now
       raise StandardError, error_message
