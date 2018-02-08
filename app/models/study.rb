@@ -911,7 +911,7 @@ class Study
         expression_data = File.open(@file_location, 'rb')
       end
       raw_cells = expression_data.readline.rstrip.split(/[\t,]/).map(&:strip)
-      cells = self.sanitize_input_array(raw_cells, true)
+      cells = self.sanitize_input_array(raw_cells)
       @last_line = "#{expression_file.name}, line 1"
 
       # shift headers if first cell is blank or GENE
