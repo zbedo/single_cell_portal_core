@@ -2781,7 +2781,6 @@ class UiTestSuite < Test::Unit::TestCase
 
 		search_upload = @driver.find_element(:id, 'search_upload')
 		search_upload.send_keys(@test_data_path + 'search_genes.txt')
-		search_genes = @driver.find_element(:id, 'perform-gene-search')
 
 		assert element_present?(:id, 'plots'), 'could not find expression heatmap'
 		@wait.until {wait_for_morpheus_render('#heatmap-plot', 'morpheus')}
@@ -3209,9 +3208,6 @@ class UiTestSuite < Test::Unit::TestCase
 		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
 		# now check values
-		view_options_panel = @driver.find_element(:id, 'view-option-link')
-		view_options_panel.click
-		wait_for_render(:id, 'view-options')
 		loaded_cluster = @driver.find_element(:id, 'cluster')
 		loaded_annotation = @driver.find_element(:id, 'annotation')
 		assert loaded_cluster['value'] == cluster_name, "did not load correct cluster; expected #{cluster_name} but loaded #{loaded_cluster['value']}"
@@ -3225,9 +3221,7 @@ class UiTestSuite < Test::Unit::TestCase
 		back_btn.click
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 		sleep(1)
-		view_options_panel = @driver.find_element(:id, 'view-option-link')
-		view_options_panel.click
-		wait_for_render(:id, 'view-options')
+
 		current_cluster = @driver.find_element(:id, 'cluster')
 		current_annotation = @driver.find_element(:id, 'annotation')
 		assert current_cluster['value'] == cluster_name, "did not load correct cluster after back button; expected #{cluster_name} but loaded #{current_cluster['value']}"
@@ -3243,25 +3237,16 @@ class UiTestSuite < Test::Unit::TestCase
 		@wait.until {wait_for_morpheus_render('#heatmap-plot', 'morpheus')}
 
 		# click back button in search box
-		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
-		search_menu.click
-		wait_for_render(:id, 'search_consensus')
 		back_btn = @driver.find_element(:id, 'clear-gene-search')
 		back_btn.click
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 
-		view_options_panel = @driver.find_element(:id, 'view-option-link')
-		view_options_panel.click
-		wait_for_render(:id, 'view-options')
 		heatmap_cluster =  @driver.find_element(:id, 'cluster')['value']
 		heatmap_annot = @driver.find_element(:id, 'annotation')['value']
 		assert heatmap_cluster == cluster_name, "cluster was not preserved correctly from heatmap view, expected #{cluster_name} but found #{heatmap_cluster}"
 		assert heatmap_annot == annotation_value, "cluster was not preserved correctly from heatmap view, expected #{annotation_value} but found #{heatmap_annot}"
 
 		# show gene list in scatter mode
-		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
-		search_menu.click
-		wait_for_render(:id, 'search_consensus')
 		gene_list_panel = @driver.find_element(:id, 'gene-lists-link')
 		gene_list_panel.click
 		wait_for_render(:id, 'expression')
@@ -3277,16 +3262,10 @@ class UiTestSuite < Test::Unit::TestCase
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
 
 		# click back button in search box
-		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
-		search_menu.click
-		wait_for_render(:id, 'search_consensus')
 		back_btn = @driver.find_element(:id, 'clear-gene-search')
 		back_btn.click
 		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
 
-		view_options_panel = @driver.find_element(:id, 'view-option-link')
-		view_options_panel.click
-		wait_for_render(:id, 'view-options')
 		gene_list_cluster =  @driver.find_element(:id, 'cluster')['value']
 		gene_list_annot = @driver.find_element(:id, 'annotation')['value']
 		assert gene_list_cluster == cluster_name, "cluster was not preserved correctly from gene list scatter view, expected #{cluster_name} but found #{gene_list_cluster}"
@@ -3780,10 +3759,6 @@ class UiTestSuite < Test::Unit::TestCase
 		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
 		# change to box plot
-		view_options_panel = @driver.find_element(:id, 'view-option-link')
-		view_options_panel.click
-		wait_for_render(:id, 'view-options')
-
 		plot_dropdown = @driver.find_element(:id, 'plot_type')
 		plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
 		new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
@@ -3798,9 +3773,6 @@ class UiTestSuite < Test::Unit::TestCase
 		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
 		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
-		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
-		search_menu.click
-		wait_for_render(:id, 'search_consensus')
 		gene_list_panel = @driver.find_element(:id, 'gene-lists-link')
 		gene_list_panel.click
 		wait_for_render(:id, 'expression')
@@ -3827,9 +3799,6 @@ class UiTestSuite < Test::Unit::TestCase
 		scatter_link = @driver.find_element(:id, 'scatter-link')
 		scatter_link.click
 		wait_for_render(:id, 'scatter-plots')
-		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
-		search_menu.click
-		wait_for_render(:id, 'search_consensus')
 
 		# Click selection tabs
 		select_dropdown = @driver.find_element(:id, 'create_annotations_panel')
@@ -3932,10 +3901,6 @@ class UiTestSuite < Test::Unit::TestCase
 		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
 		# change to box plot
-		view_options_panel = @driver.find_element(:id, 'view-option-link')
-		view_options_panel.click
-		wait_for_render(:id, 'view-options')
-
 		plot_dropdown = @driver.find_element(:id, 'plot_type')
 		plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
 		new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
