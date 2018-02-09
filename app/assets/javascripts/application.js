@@ -89,29 +89,6 @@ $(document).on('scpPlotsDidRender', function() {
   $('#render-target .tab-content > div > div').css('overflow-x', 'auto');
 });
 
-// Ensures that position of the Explore tab's internal tabs are flush with left container border
-function setTabNavLeftMargin() {
-  var tabNavLeft,
-    viewOptionsIsOpen = $('#render-target > .row-offcanvas').hasClass('active'),
-    searchPanelIsVisible = $('#search-parent').is(':visible');
-
-  if (viewOptionsIsOpen) {
-    if (searchPanelIsVisible) {
-      tabNavLeft = '0px';
-    } else {
-      tabNavLeft = '22%';
-    }
-  } else {
-    if (searchPanelIsVisible) {
-      tabNavLeft = '0px';
-    } else {
-      tabNavLeft = '13px';
-    }
-  }
-  $('#view-tabs li:first-child').css('margin-left', tabNavLeft);
-}
-
-
 function restoreExploreMenusState() {
 
   var leftIsClosed = !$('#search-omnibar-menu-icon').hasClass('open'),
@@ -128,12 +105,11 @@ function restoreExploreMenusState() {
 function toggleViewOptionsPanel() {
   // Expand View Options menu
   $('.row-offcanvas').toggleClass('active');
+  $('#render-target').toggleClass('right-menu-open');
 
   // Contract main content area to make room View Options menu
   $('.row-offcanvas > .nav-tabs, .row-offcanvas > .tab-content')
     .toggleClass('contracted-for-sidebar');
-
-  setTabNavLeftMargin();
 
   // Re-render Plotly to use available space
   $(window).trigger('resize');
@@ -147,14 +123,12 @@ function toggleSearchPanel() {
   if (searchParent.is(':visible')) {
     // Search options panel is open, so close it.
     searchParent.hide();
-    $('#render-target').addClass('col-md-13').removeClass('col-md-10');
-    setTabNavLeftMargin();
+    $('#render-target').addClass('col-md-13').removeClass('col-md-10 left-menu-open');
     menuIcon.removeClass('open');
   } else {
     // Search options panel is closed, so open it.
     searchParent.show();
-    $('#render-target').removeClass('col-md-13').addClass('col-md-10');
-    setTabNavLeftMargin();
+    $('#render-target').removeClass('col-md-13').addClass('col-md-10 left-menu-open');
     menuIcon.addClass('open');
   }
 
@@ -163,7 +137,7 @@ function toggleSearchPanel() {
 
 // Toggle "View Options" menu panel in Explore tab
 $(document).on('click', '#view-option-link', function(e) {
-  e.preventDefault(); //
+  e.preventDefault();
   toggleViewOptionsPanel();
   exploreMenusToggleState.right *= -1;
 });

@@ -8,6 +8,7 @@
       <ul class="nav nav-tabs" role="tablist" id="view-tabs">
         <li role="presentation" class="study-nav active" id="plots-tab-nav"><a href="#plots-tab" data-toggle="tab">Clusters </a></li>
       </ul>
+      <%= render partial: 'view_options' %>
       <div class="tab-content">
         <div class="tab-pane active" id="plots-tab" role="tabpanel">
           <div class="panel panel-default no-top-border">
@@ -30,7 +31,6 @@
           </div>
         </div>
       </div>
-      <%= render partial: 'view_options' %>
     </div>
   </div>
 </div>
