@@ -87,9 +87,6 @@ $(document).on('scpPlotsDidRender', function() {
   // Ensures that plot scrolls and doesn't get truncated at right when viewport is very horizontally narrow.
   // Not declared in static CSS because "overflow-x: visible" is needed for proper display of loading icon.
   $('#render-target .tab-content > div > div').css('overflow-x', 'auto');
-
-  // restoreExploreMenusState();
-
 });
 
 // Ensures that position of the Explore tab's internal tabs are flush with left container border
@@ -185,6 +182,19 @@ $(document).on('change', '#panel-genes-search input, #panel-genes-search select'
   $('#perform-gene-search').click();
 });
 
+// Enables submitting gene search form by pressing 'Enter',
+// while also ensuring that pressing 'Enter' to select an autocomplete suggestion doesn't
+// trigger form submission
+var keydownIsFromAutocomplete = false;
+$(document).on('keydown', '#search_genes', function(e) {
+  if (e.keyCode === 13 && keydownIsFromAutocomplete === false) { // 13: Return / Enter key
+    $('#perform-gene-search').click();
+  }
+  keydownIsFromAutocomplete = false;
+});
+$(document).on('railsAutocomplete.select', '#search_genes', function(e) {
+  keydownIsFromAutocomplete = true;
+});
 
 jQuery.railsAutocomplete.options.noMatchesLabel = "No matches in this study";
 
