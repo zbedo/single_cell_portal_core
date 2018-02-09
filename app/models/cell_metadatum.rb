@@ -9,7 +9,7 @@ class CellMetadatum
   field :annotation_type, type: String
   field :values, type: Array
 
-  index({ name: 1, annotation_type: 1, study_id: 1 }, { unique: false, background: true })
+  index({ name: 1, annotation_type: 1, study_id: 1 }, { unique: true, background: true })
   index({ study_id: 1 }, { unique: false, background: true })
   index({ study_id: 1, study_file_id: 1 }, { unique: false, background: true })
 

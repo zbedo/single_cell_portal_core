@@ -26,6 +26,7 @@ class DataArray
 								array_type: 1, array_index: 1, subsample_threshold: 1, subsample_annotation: 1 },
 				{ unique: true, name: 'linear_data_arrays_index', background: true })
 	index({ study_id: 1, study_file_id: 1}, { unique: false, background: true })
+	index({ study_id: 1, linear_data_id: 1}, { unique: false, background: true })
 
   validates_presence_of :name, :cluster_name, :array_type, :array_index, :values
   validates_uniqueness_of :name, scope: [:study_id, :cluster_name, :linear_data_name, :linear_data_id, :array_type,
