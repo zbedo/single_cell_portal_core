@@ -33,13 +33,7 @@ class UploadCleanupJob < Struct.new(:study, :study_file)
               Rails.logger.info "#{Time.now}: generation tag for #{study_file.upload_file_name}:#{study_file.id} updated, performing cleanup"
             end
             # once everything is in sync, perform cleanup
-            File.delete(file_location)
-            # clean up file upload directory
-            subdir = study_file.remote_location.blank? ? study_file.id : study_file.remote_location.split('/').first
-            Dir.chdir(study.data_store_path)
-            if Dir.exist?(subdir)
-              Dir.delete(subdir)
-            end
+            study_file.remove_local_copy
             Rails.logger.info "#{Time.now}: cleanup for #{study_file.upload_file_name}:#{study_file.id} complete"
           else
             # remote file was not found, so attempt upload again and reschedule cleanup

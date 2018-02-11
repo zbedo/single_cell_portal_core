@@ -24,19 +24,34 @@ $('#expression-plots [data-toggle="tooltip"]').tooltip({container: 'body'});
 CLUSTER_TYPE = '<%= @cluster.cluster_type %>'
 
 // clear listeners and reattach
-$( window ).off('resizeEnd');
+$(window).off('resizeEnd');
 
-$( window ).on('resizeEnd', function() {
+$(window).on('resizeEnd', function() {
+
+    if (typeof $('#box-plot')[0] === 'undefined') {
+      return;
+    }
+
     var newBoxWidth = $('#box-plot').actual('width');
     var newScatterSize = $('#scatter-plot').actual('width');
     var newReferenceSize = $('#reference-plot').actual('width');
+
+    if (newBoxWidth < minPlotAreaWidth) {
+      newBoxWidth = minPlotAreaWidth;
+    }
+
     scatterLayout['width'] = newScatterSize;
     scatterLayout['height'] = newScatterSize;
     staticLayout['width'] = newReferenceSize;
     staticLayout['height'] = newReferenceSize;
-    Plotly.relayout('box-plot', {width: newBoxWidth});
-    Plotly.relayout('scatter-plot', scatterLayout);
-    Plotly.relayout('reference-plot', staticLayout);
+
+    try {
+      Plotly.relayout('box-plot', {width: newBoxWidth});
+      Plotly.relayout('scatter-plot', scatterLayout);
+      Plotly.relayout('reference-plot', staticLayout);
+    } catch (e) {
+      console.log('Abort resizeEnd')
+    }
 });
 
 // attach click event for toggle switch

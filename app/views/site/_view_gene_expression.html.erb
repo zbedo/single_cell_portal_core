@@ -17,10 +17,10 @@
         <li role="presentation" class="study-nav active" id="box-or-violin-tab-nav"><a href="#box-or-violin-tab" id="distribution-link" data-toggle="tab">Distribution</a></li>
         <li role="presentation" class="study-nav" id="scatter-tab-nav"><a href="#scatter-tab" id="scatter-link" data-toggle="tab">Scatter</a></li>
       </ul>
+      <%= render partial: 'view_options' %>
       <div class="tab-content">
           <%= render partial: @top_plot_partial %>
       </div>
-      <%= render partial: 'view_options' %>
     </div>
   </div>
   <div id="expression-plots"></div>

@@ -59,6 +59,17 @@ var PAGE_RENDERED = false;
 var OPEN_MODAL = '';
 var CLUSTER_TYPE = '3d';
 
+// Minimum width of plot + legend
+// Addresses https://github.com/broadinstitute/single_cell_portal/issues/20
+var minPlotAreaWidth = 700;
+
+// 1: open, -1: closed.
+// Upon clicking nav toggle, state multiples by -1, toggling this register value
+var exploreMenusToggleState = {
+  left: -1,
+  right: -1
+};
+
 $(document).on('shown.bs.modal', function(e) {
     console.log("modal " + $(e.target).attr('id') + ' opened');
     OPEN_MODAL = $(e.target).attr('id');
@@ -69,12 +80,32 @@ $(document).on('hidden.bs.modal', function(e) {
     OPEN_MODAL = '';
 });
 
-// Toggle sidebar, e.g. for "View Options" menu in Explore tab
-$(document).on('click', '[data-toggle="offcanvas"]', function () {
-  console.log('clicked "offcanvas" toggler')
+// scpPlotsDidRender fires after the view-specific data has been retrieved and plotted.
+// This event means that the page is ready for user interaction.
+$(document).on('scpPlotsDidRender', function() {
 
+  // Ensures that plot scrolls and doesn't get truncated at right when viewport is very horizontally narrow.
+  // Not declared in static CSS because "overflow-x: visible" is needed for proper display of loading icon.
+  $('#render-target .tab-content > div > div').css('overflow-x', 'auto');
+});
+
+function restoreExploreMenusState() {
+
+  var leftIsClosed = !$('#search-omnibar-menu-icon').hasClass('open'),
+      rightIsClosed = !$('#view-options-nav').parent().hasClass('active');
+
+  if (exploreMenusToggleState.left === 1 && leftIsClosed) {
+    toggleSearchPanel();
+  }
+  if (exploreMenusToggleState.right === 1 && rightIsClosed) {
+    toggleViewOptionsPanel();
+  }
+}
+
+function toggleViewOptionsPanel() {
   // Expand View Options menu
   $('.row-offcanvas').toggleClass('active');
+  $('#render-target').toggleClass('right-menu-open');
 
   // Contract main content area to make room View Options menu
   $('.row-offcanvas > .nav-tabs, .row-offcanvas > .tab-content')
@@ -82,63 +113,61 @@ $(document).on('click', '[data-toggle="offcanvas"]', function () {
 
   // Re-render Plotly to use available space
   $(window).trigger('resize');
-
-});
-
-// Ensures that position of the Explore tab's internal tabs are flush with left container border
-function setTabNavLeftMargin() {
-  var tabNavLeft,
-    viewOptionsIsOpen = $('#render-target > .row-offcanvas').hasClass('active'),
-    searchPanelIsVisible = $('#search-parent').is(':visible');
-
-  if (viewOptionsIsOpen) {
-    if (searchPanelIsVisible) {
-      tabNavLeft = '0px';
-    } else {
-      tabNavLeft = '22%';
-    }
-  } else {
-    if (searchPanelIsVisible) {
-      tabNavLeft = '0px';
-    } else {
-      tabNavLeft = '13px';
-    }
-  }
-  $('#view-tabs li:first-child').css('margin-left', tabNavLeft);
 }
 
-// Prevent scroll upon clicking View Options link
+
+function toggleSearchPanel() {
+  var searchParent = $('#search-parent'),
+      menuIcon = $('#search-omnibar-menu-icon');
+
+  if (searchParent.is(':visible')) {
+    // Search options panel is open, so close it.
+    searchParent.hide();
+    $('#render-target').addClass('col-md-13').removeClass('col-md-10 left-menu-open');
+    menuIcon.removeClass('open');
+  } else {
+    // Search options panel is closed, so open it.
+    searchParent.show();
+    $('#render-target').removeClass('col-md-13').addClass('col-md-10 left-menu-open');
+    menuIcon.addClass('open');
+  }
+
+  $(window).trigger('resizeEnd');
+}
+
+// Toggle "View Options" menu panel in Explore tab
 $(document).on('click', '#view-option-link', function(e) {
   e.preventDefault();
-  setTabNavLeftMargin();
+  toggleViewOptionsPanel();
+  exploreMenusToggleState.right *= -1;
 });
 
 
 // Toggles search panel upon clicking burger menu to left of "Search genes"
 $(document).on('click', '#search-omnibar-menu i', function(e) {
-
-  var searchParent = $('#search-parent');
-
-  if (searchParent.is(':visible')) {
-    // Search options panel is open, so close it.
-    searchParent.hide();
-    $('#render-target').addClass('col-md-13').removeClass('col-md-10');
-    setTabNavLeftMargin();
-    $(this).removeClass('open');
-  } else {
-    // Search options panel is closed, so open it.
-    searchParent.show();
-    $('#render-target').removeClass('col-md-13').addClass('col-md-10');
-    setTabNavLeftMargin();
-    $(this).addClass('open');
-  }
-  $(window).trigger('resizeEnd');
+  toggleSearchPanel();
+  exploreMenusToggleState.left *= -1; // toggle menu state register
 });
+
 
 // When a change in made in the Explore tab's "Enhance Gene Search" panel,
 // do a search with the newly-specified options.
 $(document).on('change', '#panel-genes-search input, #panel-genes-search select', function() {
   $('#perform-gene-search').click();
+});
+
+// Enables submitting gene search form by pressing 'Enter',
+// while also ensuring that pressing 'Enter' to select an autocomplete suggestion doesn't
+// trigger form submission
+var keydownIsFromAutocomplete = false;
+$(document).on('keydown', '#search_genes', function(e) {
+  if (e.keyCode === 13 && keydownIsFromAutocomplete === false) { // 13: Return / Enter key
+    $('#perform-gene-search').click();
+  }
+  keydownIsFromAutocomplete = false;
+});
+$(document).on('railsAutocomplete.select', '#search_genes', function(e) {
+  keydownIsFromAutocomplete = true;
 });
 
 jQuery.railsAutocomplete.options.noMatchesLabel = "No matches in this study";
@@ -283,6 +312,7 @@ function deletePromise(event, message) {
 
 // attach various handlers to bootstrap items and turn on functionality
 function enableDefaultActions() {
+
     // need to clear previous listener to prevent conflict
     $('.panel-collapse').off('show.bs.collapse hide.bs.collapse');
 
@@ -348,11 +378,20 @@ function enableDefaultActions() {
         // use HTML5 history API to update the url without reloading the DOM
         history.pushState('', document.title, newUrl);
     });
+
+  // Remove styling set in scpPlotsDidRender
+  $('#render-target .tab-content > div').attr('style', '');
+
+  restoreExploreMenusState();
+
 }
+
 
 var stickyOptions = {
     topPadding: 85
 };
+
+// eweitz 2018-02-08: We removed the 'view-fullscreen' button that calls this last month.  Do we still need this?
 // toggle the Search/View options panel
 function toggleSearch() {
     $('#search-target').toggleClass('col-md-3 hidden');
@@ -426,6 +465,7 @@ var smallOpts = {
 // functions to show loading modals with spinners
 // callback function will execute after modal completes opening
 function launchModalSpinner(spinnerTarget, modalTarget, callback) {
+
     // set listener to fire callback, and immediately clear listener to prevent multiple requests queueing
     $(modalTarget).on('shown.bs.modal', function() {
         $(modalTarget).off('shown.bs.modal');
@@ -437,7 +477,7 @@ function launchModalSpinner(spinnerTarget, modalTarget, callback) {
     var spinner = new Spinner(opts).spin(target);
     $(target).data('spinner', spinner);
     $(modalTarget).modal('show');
-};
+}
 
 // function to close modals with spinners launched from launchModalSpinner
 // callback function will execute after modal completes closing
@@ -797,7 +837,7 @@ function loadHistogramAnnotations(plotlyData) {
     return annotationsArray;
 }
 
-// validate uniquity of entries for various kinds of forms
+// validate uniqueness of entries for various kinds of forms
 function validateUnique(formId, textFieldClass) {
     $(formId).find(textFieldClass).change(function() {
         var textField = $(this);

@@ -8,6 +8,7 @@
       <ul class="nav nav-tabs" role="tablist" id="view-tabs">
         <li role="presentation" class="study-nav active" id="plots-tab-nav"><a href="#plots-tab" data-toggle="tab">Heatmap </a></li>
       </ul>
+      <%= render partial: 'view_options' %>
       <div class="tab-content">
         <div class="tab-pane active" id="plots-tab" role="tabpanel">
           <div class="panel panel-default no-top-border">
@@ -22,7 +23,6 @@
           </div>
         </div>
       </div>
-      <%= render partial: 'view_options' %>
     </div>
   </div>
 </div>
@@ -134,6 +134,7 @@
         drawHeatmap(newHeight);
     });
 
+    // eweitz 2018-02-07: We removed the view-fullscreen button last month.  Is this needed?
     $('#view-fullscreen').click(function() {
         $('#heatmap-plot').data('rendered', false);
         var btn = $(this);

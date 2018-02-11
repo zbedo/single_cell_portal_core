@@ -278,6 +278,16 @@ class StudyFile
     true
   end
 
+  # remove a local copy on the file system if a parse fails
+  def remove_local_copy
+    Dir.chdir(self.study.data_store_path)
+    File.delete(self.download_location)
+    subdir = self.remote_location.blank? ? self.id : self.remote_location.split('/').first
+    if Dir.exist?(subdir)
+      Dir.rmdir(subdir)
+    end
+  end
+
   private
 
   ###
