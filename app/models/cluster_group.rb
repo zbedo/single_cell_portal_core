@@ -78,7 +78,8 @@ class ClusterGroup
 
   # check if cluster has coordinate-based annotation labels
   def has_coordinate_labels?
-    self.data_arrays.where(array_type: 'labels').any?
+    DataArray.where(linear_data_id: self.id, linear_data_type: 'ClusterGroup', study_id: self.study_id,
+                    array_type: 'labels').any?
   end
 
   # retrieve font options for coordinate labels
