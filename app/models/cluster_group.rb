@@ -44,7 +44,8 @@ class ClusterGroup
   def concatenate_data_arrays(array_name, array_type, subsample_threshold=nil, subsample_annotation=nil)
     if subsample_threshold.nil?
       data_arrays = DataArray.where(name: array_name, array_type: array_type, linear_data_type: 'ClusterGroup',
-                                    cluster_name: self.name, linear_data_id: self.id).order(:array_index => 'asc')
+                                    cluster_name: self.name, linear_data_id: self.id, subsample_threshold: nil,
+                                    subsample_annotation: nil).order(:array_index => 'asc')
       all_values = []
       data_arrays.each do |array|
         all_values += array.values
