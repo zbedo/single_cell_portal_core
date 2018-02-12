@@ -582,7 +582,8 @@ class Study
   def all_expression_matrix_cells
     vals = []
     self.expression_matrix_files.each do |file|
-      arrays = self.data_arrays.by_name_and_type("#{file.name} Cells", 'cells').order_by(&:array_index)
+      arrays = DataArray.where(name: "#{file.name} Cells", array_type: 'cells', linear_data_type: 'Study',
+                               linear_data_id: self.id).order_by(&:array_index)
       arrays.each do |array|
         vals += array.values
       end
