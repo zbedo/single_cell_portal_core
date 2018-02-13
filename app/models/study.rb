@@ -1568,7 +1568,7 @@ class Study
 
       # add optional data arrays (z, metadata)
       if is_3d
-        @data_arrays[z_index] = self.data_arrays.build(name: 'z', cluster_name: cluster.name, array_type: 'labels',
+        @data_arrays[z_index] = cluster.data_arrays.build(name: 'z', cluster_name: cluster.name, array_type: 'labels',
                                                        array_index: 1, study_file_id: coordinate_file._id, study_id: self.id,
                                                        values: [])
       end
