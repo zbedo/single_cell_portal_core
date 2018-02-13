@@ -568,8 +568,9 @@ class Study
   # cell lists from individual expression matrices
   def all_cells_array
     vals = []
-    if self.data_arrays.where(name: 'All Cells').exists?
-      self.data_arrays.by_name_and_type('All Cells', 'cells').each do |array|
+    arrays = DataArray.where(study_id: self.id, linear_data_type: 'Study', linear_data_id: self.id, name: 'All Cells')
+    if arrays.any?
+      arrays.each do |array|
         vals += array.values
       end
     else
@@ -719,7 +720,8 @@ class Study
     puts "regenerating #{expression_study_file.upload_file_name} expression matrix"
 
     # load cell arrays to create headers
-    expression_cell_arrays = self.data_arrays.where(cluster_name: expression_study_file.upload_file_name).to_a
+    expression_cell_arrays = DataArray.where(study_id: self.id, linear_data_type: 'Study', linear_data_id: self.id,
+                                             array_type: 'cells').order()
     all_cells = expression_cell_arrays.map(&:values).flatten
 
     # create new file and write headers
