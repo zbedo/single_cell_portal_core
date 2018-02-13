@@ -95,5 +95,5 @@ Rails.application.configure do
   # CUSTOM CONFIGURATION
 
   # disable admin notification (like startup email)
-  config.disable_admin_notifications = false
+  config.disable_admin_notifications = true
 end
