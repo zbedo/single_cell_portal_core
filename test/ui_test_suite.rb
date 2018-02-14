@@ -2202,6 +2202,15 @@ class UiTestSuite < Test::Unit::TestCase
 		rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
 		assert rendered, "cluster plot did not finish rendering, expected true but found #{rendered}"
 
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		wait_for_render(:id, 'view-options')
+
+		# open distribution control panel as well to get toggle annotations button
+		view_options_panel = @driver.find_element(:id, 'distribution-panel-link')
+		view_options_panel.click
+		wait_for_render(:id, 'distribution-plot-controls')
+
 		# toggle traces off
 		toggle = @driver.find_element(:id, 'toggle-traces')
 		toggle.click
