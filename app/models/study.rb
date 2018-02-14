@@ -71,7 +71,7 @@ class Study
 
   has_many :expression_scores, dependent: :delete do
     def by_gene(gene, study_file_ids)
-      found_scores = any_of({gene: gene, :study_file_id.in => study_file_ids}, {searchable_gene: gene.downcase, :study_file_id.in => study_file_ids}).to_a
+      found_scores = any_of({gene: gene, :study_file_id.in => study_file_ids}, {searchable_gene: gene.downcase, :study_file_id.in => study_file_ids})
       if found_scores.empty?
         return []
       else
@@ -91,7 +91,7 @@ class Study
 
   has_many :genes, dependent: :delete do
     def by_name(gene_name, study_file_ids)
-      found_scores = any_of({name: gene_name, :study_file_id.in => study_file_ids}, {searchable_name: gene_name.downcase, :study_file_id.in => study_file_ids}).to_a
+      found_scores = any_of({name: gene_name, :study_file_id.in => study_file_ids}, {searchable_name: gene_name.downcase, :study_file_id.in => study_file_ids})
       if found_scores.empty?
         return []
       else
@@ -256,9 +256,9 @@ class Study
   # return all studies that are editable by a given user
   def self.editable(user)
     if user.admin?
-      self.where(queued_for_deletion: false).to_a
+      self.where(queued_for_deletion: false)
     else
-      studies = self.where(queued_for_deletion: false, user_id: user._id).to_a
+      studies = self.where(queued_for_deletion: false, user_id: user._id)
       shares = StudyShare.where(email: user.email, permission: 'Edit').map(&:study).select {|s| !s.queued_for_deletion }
       [studies + shares].flatten.uniq
     end
@@ -568,8 +568,9 @@ class Study
   # cell lists from individual expression matrices
   def all_cells_array
     vals = []
-    if self.data_arrays.where(name: 'All Cells').exists?
-      self.data_arrays.by_name_and_type('All Cells', 'cells').each do |array|
+    arrays = DataArray.where(study_id: self.id, linear_data_type: 'Study', linear_data_id: self.id, name: 'All Cells')
+    if arrays.any?
+      arrays.each do |array|
         vals += array.values
       end
     else
@@ -690,7 +691,7 @@ class Study
   def expression_to_mtx
     puts "Generating MTX file for #{self.name} expression data"
     puts 'Reading source data'
-    expression_scores = self.expression_scores.to_a
+    expression_scores = self.genes
     score_count = expression_scores.size
     cell_count = self.cell_count
     total_values = expression_scores.inject(0) {|total, score| total + score.scores.size}
@@ -719,8 +720,9 @@ class Study
     puts "regenerating #{expression_study_file.upload_file_name} expression matrix"
 
     # load cell arrays to create headers
-    expression_cell_arrays = self.data_arrays.where(cluster_name: expression_study_file.upload_file_name).to_a
-    all_cells = expression_cell_arrays.map(&:values).flatten
+    expression_file_cells = DataArray.where(study_id: self.id, linear_data_type: 'Study', linear_data_id: self.id,
+                                            array_type: 'cells', study_file_id: expression_study_file.id).order(:array_index => 'asc')
+    all_cells = expression_file_cells.map(&:values).flatten
 
     # create new file and write headers
     if expression_study_file.upload_content_type == 'application/gzip'
@@ -733,13 +735,14 @@ class Study
 
     # load expression scores for requested file and write
     puts "loading expression data from #{self.name}"
-    expression_scores = self.expression_scores.where(study_file_id: expression_study_file.id).to_a
-    expression_scores.each do |expression|
-      puts "writing #{expression.gene} scores"
-      @new_expression_file.write "#{expression.gene}\t"
+    genes = Gene.where(study_id: self.id, study_file_id: expression_study_file.id)
+    genes.each do |gene|
+      puts "writing #{gene.name} expression values"
+      @new_expression_file.write "#{gene.name}\t"
       vals = []
+      scores = gene.scores
       all_cells.each do |cell|
-        vals << expression.scores[cell].to_f
+        vals << scores[cell].to_f
       end
       @new_expression_file.write vals.join("\t") + "\n"
     end
@@ -754,55 +757,70 @@ class Study
   # perform a sanity check to look for any missing files in remote storage
   def self.storage_sanity_check
     puts 'Performing global storage sanity check for all studies'
+    start_time = Time.now
     @missing_files = []
-    self.where(queued_for_deletion: false).to_a.each do |study|
+    self.where(queued_for_deletion: false).each do |study|
       puts "Performing check for '#{study.name}'"
       puts "Beginning with study_files"
       # begin with study_files
       files = study.study_files.where(queued_for_deletion: false, human_data: false, :parse_status.ne => 'parsing', status: 'uploaded')
-      files.each do |file|
-        file_location = file.remote_location.blank? ? file.upload_file_name : file.remote_location
-        puts "Checking file: #{file_location}"
-        # if file has no generation tag, then we know the upload failed
-        if file.generation.blank?
-          puts "#{file_location} was never uploaded to #{study.bucket_id} (no generation tag)"
-          @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "File was never uploaded to #{study.bucket_id} (no generation tag)"}
-        else
-          begin
-            # check remote file for existence
-            remote_file = Study.firecloud_client.get_workspace_file(study.firecloud_project, study.firecloud_workspace, file_location)
-            if remote_file.nil?
+      study_remotes = []
+      # get all remotes at once, rather than individually to save time & memory
+      begin
+        remotes = Study.firecloud_client.get_workspace_files(study.firecloud_project, study.firecloud_workspace)
+        study_remotes += remotes
+        while remotes.next?
+          remotes = remotes.next
+          study_remotes += remotes
+        end
+        files.each do |file|
+          file_location = file.bucket_location
+          puts "Checking file: #{file_location}"
+          # if file has no generation tag, then we know the upload failed
+          if file.generation.blank?
+            puts "#{file_location} was never uploaded to #{study.bucket_id} (no generation tag)"
+            @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "File was never uploaded to #{study.bucket_id} (no generation tag)"}
+          else
+            match = study_remotes.detect {|remote| remote.name == file_location}
+            if match.nil?
               puts "#{file_location} not found in #{study.bucket_id}"
               @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "File missing from bucket: #{study.bucket_id}"}
+            elsif match.generation.to_s != file.generation.to_s
+              puts "#{file_location} generation tag mismatch - local: #{file.generation}, remote: #{match.generation}"
+              @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "generation tag mismatch - local: #{file.generation}, remote: #{match.generation}"}
             end
-          rescue => e
-            puts "#{Time.now}: error in performing sanity check on #{study.name}: #{e.message}"
-            @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "Error retrieving remote file: #{e.message}"}
           end
         end
-      end
-      # next check directory_listings
-      directories = study.directory_listings.are_synced
-      directories.each do |directory|
-        puts "Checking directory: #{directory.name}"
-        directory.files.each do |file|
-          file_location = file['name']
-          puts "Checking directory file: #{file_location}"
-          begin
-            # check remote file for existence
-            remote_file = Study.firecloud_client.get_workspace_file(study.firecloud_project, study.firecloud_workspace, file_location)
-            if remote_file.nil?
+        # next check directory_listings
+        directories = study.directory_listings.are_synced
+        directories.each do |directory|
+          puts "Checking directory: #{directory.name}"
+          directory.files.each do |file|
+            file_location = file['name']
+            puts "Checking directory file: #{file_location}"
+            match = study_remotes.detect {|remote| remote.name == file_location}
+            if match.nil?
               puts "#{file_location} not found in #{study.bucket_id}"
               @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "File missing from bucket: #{study.bucket_id}"}
+            elsif match.generation.to_s != file[:generation].to_s
+              puts "#{file_location} generation tag mismatch - local: #{file[:generation]}, remote: #{match.generation}"
+              @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "generation tag mismatch - local: #{file[:generation]}, remote: #{match.generation}"}
             end
-          rescue => e
-            puts "#{Time.now}: error in performing sanity check on #{study.name}: #{e.message}"
-            @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "Error retrieving remote file: #{e.message}"}
           end
         end
+      rescue => e
+        puts "#{Time.now}: error in retrieving remotes for #{study.name}: #{e.message}"
+        @missing_files << {filename: 'N/A', study: study.name, owner: study.user.email, reason: "Error retrieving remotes: #{e.message}"}
       end
     end
-    puts "Sanity check complete!"
+    end_time = Time.now
+    seconds_diff = (start_time - end_time).to_i.abs
+    hours = seconds_diff / 3600
+    seconds_diff -= hours * 3600
+    minutes = seconds_diff / 60
+    seconds_diff -= minutes * 60
+    seconds = seconds_diff
+    puts "Sanity check complete! elapsed time: #{hours} hours, #{minutes} minutes, #{seconds} seconds"
     puts "Missing files found: #{@missing_files.size}"
     if @missing_files.any?
       SingleCellMailer.sanity_check(@missing_files).deliver_now
@@ -1379,7 +1397,7 @@ class Study
       study_obj.save
 
       # create subsampled data_arrays for visualization
-      study_metadata = StudyMetadatum.where(study_id: self.id).to_a
+      study_metadata = CellMetadatum.where(study_id: self.id)
       # determine how many levels to subsample based on size of cluster_group
       required_subsamples = ClusterGroup::SUBSAMPLE_THRESHOLDS.select {|sample| sample < @cluster_group.points}
       required_subsamples.each do |sample_size|
@@ -1553,7 +1571,7 @@ class Study
 
       # add optional data arrays (z, metadata)
       if is_3d
-        @data_arrays[z_index] = self.data_arrays.build(name: 'z', cluster_name: cluster.name, array_type: 'labels',
+        @data_arrays[z_index] = cluster.data_arrays.build(name: 'z', cluster_name: cluster.name, array_type: 'labels',
                                                        array_index: 1, study_file_id: coordinate_file._id, study_id: self.id,
                                                        values: [])
       end
