@@ -288,6 +288,83 @@ class StudyFile
     end
   end
 
+  ##
+  #
+  # MISC METHODS
+  #
+  ##
+
+  def generate_expression_matrix_cells
+    begin
+      study = self.study
+      existing_array = DataArray.where(name: "#{self.name} Cells", array_type: 'cells', linear_data_type: 'Study',
+                                       linear_data_id: self.study_id).any?
+      unless existing_array
+        remote = Study.firecloud_client.get_workspace_file(study.firecloud_project, study.firecloud_workspace, self.bucket_location)
+        if remote.present?
+          study.make_data_dir
+          download_location = study.data_store_path
+          if self.remote_location.blank?
+            download_location = File.join(study.data_store_path, self.id)
+            Dir.mkdir download_location
+          elsif self.remote_location.include?('/')
+            subdir = self.remote_location.split('/').first
+            download_location = File.join(study.data_store_path, subdir)
+          end
+          msg = "#{Time.now}: localizing #{self.name} in #{study.name} to #{download_location}"
+          puts msg
+          Rails.logger.info msg
+          file_location = File.join(study.data_store_path, self.download_location)
+          Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project, study.firecloud_workspace, self.bucket_location, download_location, verify: :none)
+          content_type = self.determine_content_type
+          shift_headers = true
+          if content_type == 'application/gzip'
+            msg = "#{Time.now}: Parsing #{self.name}:#{self.id} as application/gzip"
+            puts msg
+            Rails.logger.info msg
+            file = Zlib::GzipReader.open(file_location)
+          else
+            msg = "#{Time.now}: Parsing #{self.name}:#{self.id} as text/plain"
+            puts msg
+            Rails.logger.info msg
+            file = File.open(file_location, 'rb')
+          end
+          raw_cells = file.readline.rstrip.split(/[\t,]/).map(&:strip)
+          cells = self.study.sanitize_input_array(raw_cells)
+          if shift_headers
+            cells.shift
+          end
+          # close file
+          file.close
+          # add processed cells to known cells
+          cells.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
+            msg = "#{Time.now}: Create known cells array ##{index + 1} for #{self.name}:#{self.id} in #{study.name}"
+            puts msg
+            Rails.logger.info msg
+            known_cells = study.data_arrays.build(name: "#{self.name} Cells", cluster_name: self.name,
+                                                  array_type: 'cells', array_index: index + 1, values: slice,
+                                                  study_file_id: self.id, study_id: self.study_id)
+            known_cells.save
+          end
+          msg = "#{Time.now}: removing local copy of #{download_location}"
+          self.remove_local_copy
+        else
+          msg = "#{Time.now}: skipping #{self.name} in #{study.name}; remote file no longer exists"
+          puts msg
+          Rails.logger.error msg
+        end
+      else
+        msg = "#{Time.now}: skipping #{self.name} in #{study.name}; already processed"
+        puts msg
+        Rails.logger.info msg
+      end
+    rescue => e
+      msg = "#{Time.now}: error processing #{self.name} in #{self.study.name}: #{e.message}"
+      puts msg
+      Rails.logger.error msg
+    end
+  end
+
   private
 
   ###
