@@ -688,8 +688,8 @@ class Study
   ###
 
   # transform expression data from db into mtx format
-  def expression_to_mtx(expression_file)
-    puts "Generating MTX file for #{self.name} expression data"
+  def expression_to_matrix_market(expression_file)
+    puts "Generating Matrix Market coordinate (mm) file for #{self.name} expression data"
     puts 'Reading source data...'
     genes = Gene.where(study_id: self.id, study_file_id: expression_file.id)
     puts 'Assembling counts...'
@@ -702,7 +702,6 @@ class Study
     puts 'Writing gene-level scores...'
     genes.each_with_index do |gene, gene_index|
       gene_name = gene.name
-      puts "Writing #{gene_name} scores"
       score_file.write "#{gene_index + 2}\t1\t#{gene_name}\n"
       gene.scores.each do |cell, score|
         cell_index = all_cells.index(cell)
@@ -716,9 +715,10 @@ class Study
     end
     puts 'Finished writing scores, updating significant score count...'
     score_file.close
-    output_file = File.new(self.data_store_path.to_s + "/#{expression_file.name}.mtx", 'w+')
+    output_file = File.new(self.data_store_path.to_s + "/#{expression_file.name}.mm", 'w+')
     reopened_file = File.open(self.data_store_path.to_s + "/#{expression_file.name}.tmp", 'r')
     puts 'Creating final output file and writing headers...'
+    output_file.write "%%MatrixMarket matrix coordinate double symmetric\n"
     output_file.write "#{score_count + 1}\t#{cell_count + 1}\t#{significant_values}\n"
     puts 'Headers successfully written!'
     puts 'Writing cell list...'
@@ -910,7 +910,8 @@ class Study
       cells = file.readline.split(/[\t,]/).map(&:strip)
       @last_line = "#{expression_file.name}, line 1"
       parse_type = :standard
-      if cells.size == 3 && cells.map(&:to_i).map {|i| i != 0}
+      # a MM coordinate file will have a header row like so: %%MatrixMarket matrix coordinate double symmetric
+      if cells.size == 1 && cells.first.start_with?('%%MatrixMarket')
         parse_type = :mm_sparse_matrix
       else
         if !['gene', ''].include?(cells.first.downcase) || cells.size <= 1
@@ -939,11 +940,12 @@ class Study
 
     # raise validation error if needed
     if @validation_error
-      error_message = "file header validation failed: first header should be GENE or blank followed by cell names, or be a valid Matrix Market Coordinate Format file."
+      error_message = "file header validation failed: first header should be GENE or blank followed by cell names, or be a valid Matrix Market Coordinate Format file"
       filename = expression_file.name
       expression_file.remove_local_copy
       expression_file.destroy
       Rails.logger.info Time.now.to_s + ': ' + error_message
+      user_error_message = error_message += ' (see https://math.nist.gov/MatrixMarket/formats.html#coord for more information)'
       SingleCellMailer.notify_user_parse_fail(user.email, "Expression file: '#{filename}' parse has failed", error_message).deliver_now
       raise StandardError, error_message
     end
@@ -1067,7 +1069,15 @@ class Study
           Rails.logger.info "#{Time.now}: Processed #{@child_count} child data arrays from #{expression_file.name}:#{expression_file.id} for #{self.name}"
           @child_records = nil
         when :mm_sparse_matrix
-
+          # we need to ignore any lines starting with % or # - these are comments
+          possible_data = expression_data.readline
+          while possible_data.start_with?('%') || possible_data.start_with?('#')
+            possible_data = expression_data.readline
+          end
+          control_values = possible_data
+          raw_cells = possible_data.split(/[\t,]/).map(&:strip)
+          cells = self.sanitize_input_array(raw_cells)
+          @last_line = "#{expression_file.name}, line 1"
       end
 
 

@@ -1094,7 +1094,7 @@ class StudiesController < ApplicationController
     existing_dir = all_dirs.detect {|d| d.name == directory && d.file_type == file_type}
     found_file = {'name' => file.name, 'size' => file.size, 'generation' => file.generation}
     if existing_dir.nil?
-      dir = @study.directory_listings.build(name: directory, file_type: file_type, files: [{name: file.name, size: file.size, generation: file.generation}], sync_status: false)
+      dir = @study.directory_listings.build(name: directory, file_type: file_type, files: [found_file], sync_status: false)
       @unsynced_directories << dir
     elsif existing_dir.files.detect {|f| f['generation'].to_i == file.generation }.nil?
       existing_dir.files << found_file
