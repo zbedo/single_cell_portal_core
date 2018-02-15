@@ -688,30 +688,53 @@ class Study
   ###
 
   # transform expression data from db into mtx format
-  def expression_to_mtx
+  def expression_to_mtx(expression_file)
     puts "Generating MTX file for #{self.name} expression data"
-    puts 'Reading source data'
-    expression_scores = self.genes
-    score_count = expression_scores.size
-    cell_count = self.cell_count
-    total_values = expression_scores.inject(0) {|total, score| total + score.scores.size}
-    puts 'Creating file and writing headers'
-    output_file = File.new(self.data_store_path.to_s + '/expression_matrix.mtx', 'w+')
-    output_file.write "#{score_count}\t#{cell_count}\t#{total_values}\n"
-    puts 'Headers successfully written'
+    puts 'Reading source data...'
+    genes = Gene.where(study_id: self.id, study_file_id: expression_file.id)
+    puts 'Assembling counts...'
+    score_count = genes.size
+    all_cells = self.all_cells_array
+    cell_count = all_cells.size
+    significant_values = score_count + cell_count + 1 # extra value is for GENE header
+    score_file = File.new(self.data_store_path.to_s + "/#{expression_file.name}.tmp", 'w+')
     counter = 0
-    expression_scores.each do |entry|
-      gene = entry.gene
-      entry.scores.each do |cell, score|
-        output_file.write "#{gene}\t#{cell}\t#{score}\n"
+    puts 'Writing gene-level scores...'
+    genes.each_with_index do |gene, gene_index|
+      gene_name = gene.name
+      puts "Writing #{gene_name} scores"
+      score_file.write "#{gene_index + 2}\t1\t#{gene_name}\n"
+      gene.scores.each do |cell, score|
+        cell_index = all_cells.index(cell)
+        score_file.write "#{gene_index + 2}\t#{cell_index + 2}\t#{score}\n"
+        significant_values += 1
       end
       counter += 1
       if counter % 1000 == 0
         puts "#{counter} genes written out of #{score_count}"
       end
     end
+    puts 'Finished writing scores, updating significant score count...'
+    score_file.close
+    output_file = File.new(self.data_store_path.to_s + "/#{expression_file.name}.mtx", 'w+')
+    reopened_file = File.open(self.data_store_path.to_s + "/#{expression_file.name}.tmp", 'r')
+    puts 'Creating final output file and writing headers...'
+    output_file.write "#{score_count + 1}\t#{cell_count + 1}\t#{significant_values}\n"
+    puts 'Headers successfully written!'
+    puts 'Writing cell list...'
+    output_file.write "1\t1\tGENE\n"
+    all_cells.each_with_index do |cell, index|
+      output_file.write "1\t#{index + 2}\t#{cell}\n"
+    end
+    puts 'Cell list successfully written!'
+    puts 'Concatenating files...'
+    while !reopened_file.eof?
+      output_file.write reopened_file.readline
+    end
     puts 'Finished!'
     puts "Output file: #{File.absolute_path(output_file)}"
+    reopened_file.close
+    File.delete(reopened_file.path)
     output_file.close
   end
 
@@ -883,19 +906,26 @@ class Study
         Rails.logger.info "#{Time.now}: Parsing #{expression_file.name}:#{expression_file.id} as text/plain"
         file = File.open(@file_location, 'rb')
       end
+      # first determine if this is a MM coordinate file or not
       cells = file.readline.split(/[\t,]/).map(&:strip)
       @last_line = "#{expression_file.name}, line 1"
-      if !['gene', ''].include?(cells.first.downcase) || cells.size <= 1
-        # file did not have correct header information, but may be an export from R which will have one less column
-        next_line_size = file.readline.split(/[\t,]/).size
-        if cells.size == next_line_size - 1
-          # don't shift the headers later as they are beginning with the names of cells (doesn't start with GENE or blank)
-          @shift_headers = false
-        else
-          expression_file.update(parse_status: 'failed')
-          @validation_error = true
+      parse_type = :standard
+      if cells.size == 3 && cells.map(&:to_i).map {|i| i != 0}
+        parse_type = :mm_sparse_matrix
+      else
+        if !['gene', ''].include?(cells.first.downcase) || cells.size <= 1
+          # file did not have correct header information, but may be an export from R which will have one less column
+          next_line_size = file.readline.split(/[\t,]/).size
+          if cells.size == next_line_size - 1
+            # don't shift the headers later as they are beginning with the names of cells (doesn't start with GENE or blank)
+            @shift_headers = false
+          else
+            expression_file.update(parse_status: 'failed')
+            @validation_error = true
+          end
         end
       end
+
       file.close
     rescue => e
       error_message = "Unexpected error: #{e.message}"
@@ -909,7 +939,7 @@ class Study
 
     # raise validation error if needed
     if @validation_error
-      error_message = "file header validation failed: first header should be GENE or blank followed by cell names"
+      error_message = "file header validation failed: first header should be GENE or blank followed by cell names, or be a valid Matrix Market Coordinate Format file."
       filename = expression_file.name
       expression_file.remove_local_copy
       expression_file.destroy
@@ -929,111 +959,117 @@ class Study
       else
         expression_data = File.open(@file_location, 'rb')
       end
-      raw_cells = expression_data.readline.rstrip.split(/[\t,]/).map(&:strip)
-      cells = self.sanitize_input_array(raw_cells)
-      @last_line = "#{expression_file.name}, line 1"
+      case parse_type
+        when :standard
+          raw_cells = expression_data.readline.rstrip.split(/[\t,]/).map(&:strip)
+          cells = self.sanitize_input_array(raw_cells)
+          @last_line = "#{expression_file.name}, line 1"
 
-      # shift headers if first cell is blank or GENE
-      if @shift_headers
-        cells.shift
-      end
-
-      # validate that new expression matrix does not have repeated cells, raise error if repeats found
-      existing_cells = self.all_expression_matrix_cells
-      uniques = cells - existing_cells
-
-      unless uniques.size == cells.size
-        repeats = cells - uniques
-        raise StandardError, "You have re-used the following cell names that were found in another expression matrix in your study (cell names must be unique across all expression matrices): #{repeats.join(', ')}"
-      end
-
-      # store study id for later to save memory
-      study_id = self._id
-      @records = []
-      @child_records = []
-      # keep a running record of genes already parsed to catch validation errors before they happen
-      # this is needed since we're creating records in batch and won't know which gene was responsible
-      @genes_parsed = []
-      Rails.logger.info "#{Time.now}: Expression data loaded, starting record creation for #{self.name}"
-      while !expression_data.eof?
-        # grab single row of scores, parse out gene name at beginning
-        line = expression_data.readline.strip.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
-        if line.strip.blank?
-          next
-        else
-          raw_row = line.split(/[\t,]/).map(&:strip)
-          row = self.sanitize_input_array(raw_row)
-          @last_line = "#{expression_file.name}, line #{expression_data.lineno}"
-
-          gene_name = row.shift
-          # check for duplicate genes
-          if @genes_parsed.include?(gene_name)
-            user_error_message = "You have a duplicate gene entry (#{gene_name}) in your gene list.  Please check your file and try again."
-            error_message = "Duplicate gene #{gene_name} in #{expression_file.name} (#{expression_file._id}) for study: #{self.name}"
-            Rails.logger.info error_message
-            raise StandardError, user_error_message
-          else
-            @genes_parsed << gene_name
+          # shift headers if first cell is blank or GENE
+          if @shift_headers
+            cells.shift
           end
 
-          new_gene = Gene.new(name: gene_name, searchable_name: gene_name.downcase, study_file_id: expression_file._id,
-                              study_id: self.id)
-          @records << new_gene.attributes
+          # validate that new expression matrix does not have repeated cells, raise error if repeats found
+          existing_cells = self.all_expression_matrix_cells
+          uniques = cells - existing_cells
 
-          # convert all remaining strings to floats, then store only significant values (!= 0)
-          scores = row.map(&:to_f)
-          significant_scores = {}
-          scores.each_with_index do |score, index|
-            unless score == 0.0
-              significant_scores[cells[index]] = score
+          unless uniques.size == cells.size
+            repeats = cells - uniques
+            raise StandardError, "You have re-used the following cell names that were found in another expression matrix in your study (cell names must be unique across all expression matrices): #{repeats.join(', ')}"
+          end
+
+          # store study id for later to save memory
+          study_id = self._id
+          @records = []
+          @child_records = []
+          # keep a running record of genes already parsed to catch validation errors before they happen
+          # this is needed since we're creating records in batch and won't know which gene was responsible
+          @genes_parsed = []
+          Rails.logger.info "#{Time.now}: Expression data loaded, starting record creation for #{self.name}"
+          while !expression_data.eof?
+            # grab single row of scores, parse out gene name at beginning
+            line = expression_data.readline.strip.encode('UTF-8', invalid: :replace, undef: :replace, replace: '')
+            if line.strip.blank?
+              next
+            else
+              raw_row = line.split(/[\t,]/).map(&:strip)
+              row = self.sanitize_input_array(raw_row)
+              @last_line = "#{expression_file.name}, line #{expression_data.lineno}"
+
+              gene_name = row.shift
+              # check for duplicate genes
+              if @genes_parsed.include?(gene_name)
+                user_error_message = "You have a duplicate gene entry (#{gene_name}) in your gene list.  Please check your file and try again."
+                error_message = "Duplicate gene #{gene_name} in #{expression_file.name} (#{expression_file._id}) for study: #{self.name}"
+                Rails.logger.info error_message
+                raise StandardError, user_error_message
+              else
+                @genes_parsed << gene_name
+              end
+
+              new_gene = Gene.new(name: gene_name, searchable_name: gene_name.downcase, study_file_id: expression_file._id,
+                                  study_id: self.id)
+              @records << new_gene.attributes
+
+              # convert all remaining strings to floats, then store only significant values (!= 0)
+              scores = row.map(&:to_f)
+              significant_scores = {}
+              scores.each_with_index do |score, index|
+                unless score == 0.0
+                  significant_scores[cells[index]] = score
+                end
+              end
+              signification_cells = significant_scores.keys
+              signification_exp_values = significant_scores.values
+
+              # chunk cells & values into pieces as necessary
+              signification_cells.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
+                # create array of all cells for study, send the object attributes rather than the object for bulk insertion
+                cell_array = DataArray.new(name: new_gene.cell_key, cluster_name: expression_file.name, array_type: 'cells',
+                                           array_index: index + 1, study_file_id: expression_file._id, values: slice,
+                                           linear_data_type: 'Gene', linear_data_id: new_gene.id, study_id: self.id)
+                @child_records << cell_array.attributes
+              end
+
+              signification_exp_values.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
+                # create array of all cells for study, sending the object attributes rather than the object for bulk insertion
+                score_array = DataArray.new(name: new_gene.score_key, cluster_name: expression_file.name, array_type: 'expression',
+                                            array_index: index + 1, study_file_id: expression_file._id, values: slice,
+                                            linear_data_type: 'Gene', linear_data_id: new_gene.id, study_id: self.id)
+                @child_records << score_array.attributes
+              end
+
+              # batch insert records in groups of 1000
+              if @records.size % 1000 == 0
+                Gene.create(@records)
+                @count += @records.size
+                Rails.logger.info "#{Time.now}: Processed #{@count} genes from #{expression_file.name}:#{expression_file.id} for #{self.name}"
+                @records = []
+              end
+
+              if @child_records.size >= 1000
+                DataArray.create!(@child_records)
+                @child_count += @child_records.size
+                Rails.logger.info "#{Time.now}: Processed #{@child_count} child data arrays from #{expression_file.name}:#{expression_file.id} for #{self.name}"
+                @child_records = []
+              end
             end
           end
-          signification_cells = significant_scores.keys
-          signification_exp_values = significant_scores.values
 
-          # chunk cells & values into pieces as necessary
-          signification_cells.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
-            # create array of all cells for study, send the object attributes rather than the object for bulk insertion
-            cell_array = DataArray.new(name: new_gene.cell_key, cluster_name: expression_file.name, array_type: 'cells',
-                                       array_index: index + 1, study_file_id: expression_file._id, values: slice,
-                                       linear_data_type: 'Gene', linear_data_id: new_gene.id, study_id: self.id)
-            @child_records << cell_array.attributes
-          end
+          Gene.create(@records)
+          @count += @records.size
+          Rails.logger.info "#{Time.now}: Processed #{@count} genes from #{expression_file.name}:#{expression_file.id} for #{self.name}"
+          @records = nil
 
-          signification_exp_values.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
-            # create array of all cells for study, sending the object attributes rather than the object for bulk insertion
-            score_array = DataArray.new(name: new_gene.score_key, cluster_name: expression_file.name, array_type: 'expression',
-                                        array_index: index + 1, study_file_id: expression_file._id, values: slice,
-                                        linear_data_type: 'Gene', linear_data_id: new_gene.id, study_id: self.id)
-            @child_records << score_array.attributes
-          end
+          DataArray.create(@child_records)
+          @child_count += @child_records.size
+          Rails.logger.info "#{Time.now}: Processed #{@child_count} child data arrays from #{expression_file.name}:#{expression_file.id} for #{self.name}"
+          @child_records = nil
+        when :mm_sparse_matrix
 
-          # batch insert records in groups of 1000
-          if @records.size % 1000 == 0
-            Gene.create(@records)
-            @count += @records.size
-            Rails.logger.info "#{Time.now}: Processed #{@count} genes from #{expression_file.name}:#{expression_file.id} for #{self.name}"
-            @records = []
-          end
-
-          if @child_records.size >= 1000
-            DataArray.create!(@child_records)
-            @child_count += @child_records.size
-            Rails.logger.info "#{Time.now}: Processed #{@child_count} child data arrays from #{expression_file.name}:#{expression_file.id} for #{self.name}"
-            @child_records = []
-          end
-        end
       end
 
-      Gene.create(@records)
-      @count += @records.size
-      Rails.logger.info "#{Time.now}: Processed #{@count} genes from #{expression_file.name}:#{expression_file.id} for #{self.name}"
-      @records = nil
-
-      DataArray.create(@child_records)
-      @child_count += @child_records.size
-      Rails.logger.info "#{Time.now}: Processed #{@child_count} child data arrays from #{expression_file.name}:#{expression_file.id} for #{self.name}"
-      @child_records = nil
 
       # add processed cells to known cells
       cells.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
