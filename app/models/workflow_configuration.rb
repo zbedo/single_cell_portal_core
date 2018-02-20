@@ -32,7 +32,7 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
     workflow_identifier = [workflow_namespace, workflow_name].join('-')
 
     case workflow_identifier
-      when /regev.*cell_ranger_2\.0\.2/
+      when /cell-ranger-2-0-2/
         # configure a CellRanger run using the public regev/cell_ranger_2.0.2_count WDL
         begin
 
@@ -115,7 +115,7 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
   def self.get_optional_parameters(workflow_identifier)
     opts = {}
     case workflow_identifier
-      when 'regev--cell_ranger_2.0.2_count--15'
+      when /cell-ranger-2-0-2/
         opts.merge!(
              'expectCells' => {
                  type: 'integer',
@@ -135,7 +135,7 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
   # retrieve configuration values for use in HCA metadata
   def self.get_reference_bundle(configuration)
     case configuration['methodRepoMethod']['methodName']
-      when 'cell_ranger_2.0.2_count'
+      when /cell.*ranger/
         configuration['inputs']['cellranger.transcriptomeTarGz'].gsub(/\"/, '')
       else
         # fallback to see if we can find anything that might be a 'reference'

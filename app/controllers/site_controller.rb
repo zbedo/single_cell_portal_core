@@ -1236,15 +1236,14 @@ class SiteController < ApplicationController
       else
         # no matching configurations were present, so create a blank template and configure later
         logger.info "#{Time.now}: No configurations found, creating blank template for #{workflow_namespace}/#{workflow_name}"
-        config_template = Study.firecloud_client.create_configuration_template(workflow_namespace, workflow_name, workflow_snapshot)
+        config_template = Study.firecloud_client.create_configuration_template(workflow_namespace, workflow_name, workflow_snapshot.to_i)
         # configure name, namespace and rootEntityType
         config_template['name'] = ws_config_name
         config_template['namespace'] = workflow_namespace
         config_template['rootEntityType'] = 'sample'
-        new_config = Study.firecloud_client.update_workspace_configuration(@study.firecloud_project, @study.firecloud_workspace, config_template['namespace'],
-                                                                           config_template['name'], config_template)
-        config_namespace = new_config['namespace']
-        config_name = new_config['name']
+        new_config = Study.firecloud_client.create_workspace_configuration(@study.firecloud_project, @study.firecloud_workspace, config_template)
+        config_namespace = new_config['methodConfiguration']['namespace']
+        config_name = new_config['methodConfiguration']['name']
       end
     end
     # return new configuration namespace & name
