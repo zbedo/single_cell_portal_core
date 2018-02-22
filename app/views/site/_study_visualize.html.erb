@@ -34,13 +34,13 @@
       <div class="tab-pane" id="ideogram-tab" role="tabpanel">
         <div class="panel panel-default no-top-border">
           <div id="ideogram-container" class="panel-collapse collapse in"></div>
+          <%= render partial: 'ideogram' %>
         </div>
       </div>
     </div>
   </div>
 </div>
 </div>
-<script src="https://unpkg.com/ideogram@0.15.0/dist/js/ideogram.min.js"></script>
 <script type="text/javascript">
 
     $('#cluster-plot').data('rendered', false);
@@ -128,18 +128,6 @@
                 });
             }
         });
-    });
-
-    var ideogram = new Ideogram({
-      container: '#ideogram-container',
-      organism: 'mouse',
-      chrHeight: 400,
-      annotations: [{
-        name: 'Gad2',
-        chr: '2',
-        start: 22622205,
-        stop: 22693874
-      }]
     });
 
 </script>
