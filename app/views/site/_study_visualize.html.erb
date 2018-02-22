@@ -7,6 +7,7 @@
       <div id="view-options-nav"><a href="#view-options" id="view-option-link" data-toggle="offcanvas"><i class="fa fa-cog" aria-hidden="true"></i> View Options </a></div>
       <ul class="nav nav-tabs" role="tablist" id="view-tabs">
         <li role="presentation" class="study-nav active" id="plots-tab-nav"><a href="#plots-tab" data-toggle="tab">Clusters </a></li>
+        <li role="presentation" class="study-nav" id="ideogram-tab-nav"><a href="#ideogram-tab" data-toggle="tab">Genome </a></li>
       </ul>
       <%= render partial: 'view_options' %>
       <div class="tab-content">
@@ -25,16 +26,21 @@
                     <div id="cluster-plot"></div>
                     <div id="cluster-figure-legend"></div>
                   </div>
-                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+      <div class="tab-pane" id="ideogram-tab" role="tabpanel">
+        <div class="panel panel-default no-top-border">
+          <div id="ideogram-container" class="panel-collapse collapse in"></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
-
+</div>
+<script src="https://unpkg.com/ideogram@0.15.0/dist/js/ideogram.min.js"></script>
 <script type="text/javascript">
 
     $('#cluster-plot').data('rendered', false);
@@ -122,6 +128,18 @@
                 });
             }
         });
+    });
+
+    var ideogram = new Ideogram({
+      container: '#ideogram-container',
+      organism: 'mouse',
+      chrHeight: 400,
+      annotations: [{
+        name: 'Gad2',
+        chr: '2',
+        start: 22622205,
+        stop: 22693874
+      }]
     });
 
 </script>
