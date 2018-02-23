@@ -283,7 +283,7 @@ class StudyFile
     Dir.chdir(self.study.data_store_path)
     File.delete(self.download_location)
     subdir = self.remote_location.blank? ? self.id : self.remote_location.split('/').first
-    if Dir.exist?(subdir)
+    if Dir.exist?(subdir) && Dir.entries(subdir).delete_if {|e| e.start_with?('.')}.empty?
       Dir.rmdir(subdir)
     end
   end
