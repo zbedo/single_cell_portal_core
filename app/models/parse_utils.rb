@@ -52,7 +52,7 @@ class ParseUtils
     puts 'Creating new records...'
     significant_scores.each do |gene_index, barcode_obj|
       gene_name = genes[gene_index]
-      new_gene = Gene.new(study_id: study.id, name: gene_name, searchable_name: gene_name.downcase)
+      new_gene = Gene.new(study_id: study.id, name: gene_name, searchable_name: gene_name.downcase, study_file_id: matrix_file.id)
       @genes << new_gene.attributes
       gene_barcodes = []
       gene_exp_values = []
