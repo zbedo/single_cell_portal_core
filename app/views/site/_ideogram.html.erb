@@ -2,9 +2,31 @@
 
 <script>
 
+  function getGenomicRange(annot) {
+    var chr, start, stop, startString, stopString, genomicRange;
+
+    // Get genomic range
+    chr = annot.chr;
+    start = annot.start;
+    stop = start + annot.length;
+    startString = start.toLocaleString();
+    stopString = stop.toLocaleString();
+    genomicRange = 'chr' + chr + ':' + startString + '-' + stopString;
+
+    return genomicRange;
+  }
+
+  function getEnsemblLink(annot) {
+    var url, link;
+    url = 'https://www.ensembl.org/' + annot.id;
+    link = '<a target="_blank" href="' + url + '">' + annot.name + '</a>';
+    return link;
+  }
+
   function writeAnnotsTable() {
 
-    var chr, annots, datum, row, header, table, annotsContainer, keys;
+    var chr, annots, datum, row, header, table, annotsContainer, keys,
+        genomicRange, ensemblLink, key, i, j, k, displayKeys;
 
     rows = [];
 
@@ -18,16 +40,43 @@
       for (j = 0; j < annots.length; j++) {
         annot = annots[j];
         row = [];
+
+        genomicRange = getGenomicRange(annot);
+        ensemblLink = getEnsemblLink(annot);
+
         for (k = 0; k < keys.length; k++) {
-          datum = annot[keys[k]];
+          key = keys[k];
+          if (key === 'name') {
+            datum = ensemblLink;
+          } else if (key === 'start') {
+            datum = genomicRange;
+          } else if (key === 'id') {
+            continue;
+          } else {
+            datum = annot[key];
+          }
           row.push(datum)
+
         }
         row = '<tr><td>' + row.join('</td><td>') + '</td></tr>';
         rows.push(row);
       }
     }
 
-    header = '<tr><th>' + keys.join('</th><th>') + '</th></tr>';
+    displayKeys = [];
+    for (i = 0; i < keys.length; i++) {
+      key = keys[i];
+      if (key == 'start') {
+        key = 'Genomic range';
+      } else if (key === 'id') {
+        continue;
+      } else {
+        key = key[0].toUpperCase() + key.slice(1);
+      }
+      displayKeys.push(key)
+    }
+
+    header = '<tr><th>' + displayKeys.join('</th><th>') + '</th></tr>';
 
     table =
       '<table class="table table-striped table-sm">' +
