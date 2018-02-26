@@ -483,7 +483,7 @@ class SiteController < ApplicationController
     if @selected_annotation[:scope] == 'cluster'
       @annotations = @cluster.concatenate_data_arrays(@selected_annotation[:name], 'annotations')
     else
-      study_annotations = @study.study_metadata_values(@selected_annotation[:name], @selected_annotation[:type])
+      study_annotations = @study.cell_metadata_values(@selected_annotation[:name], @selected_annotation[:type])
       @annotations = []
       @cells.each do |cell|
         @annotations << study_annotations[cell]
