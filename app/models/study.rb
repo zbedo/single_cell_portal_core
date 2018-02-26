@@ -434,8 +434,8 @@ class Study
       if !default_cluster.nil? && default_cluster.cell_annotations.any?
         annot = default_cluster.cell_annotations.first
         default_annot = "#{annot[:name]}--#{annot[:type]}--cluster"
-      elsif self.study_metadata.any?
-        metadatum = self.study_metadata.first
+      elsif self.cell_metadata.any?
+        metadatum = self.cell_metadata.first
         default_annot = "#{metadatum.name}--#{metadatum.annotation_type}--study"
       else
         # annotation won't be set yet if a user is parsing metadata without clusters, or vice versa
@@ -568,7 +568,7 @@ class Study
   # cell lists from individual expression matrices
   def all_cells_array
     vals = []
-    arrays = DataArray.where(study_id: self.id, linear_data_type: 'Study', linear_data_id: self.id, name: 'All Cells')
+    arrays = DataArray.where(study_id: self.id, linear_data_type: 'Study', linear_data_id: self.id, name: 'All Cells').order_by(&:array_index)
     if arrays.any?
       arrays.each do |array|
         vals += array.values
@@ -593,25 +593,23 @@ class Study
   end
 
   # return a hash keyed by cell name of the requested study_metadata values
-  def study_metadata_values(metadata_name, metadata_type)
-    metadata_objects = self.study_metadata.by_name_and_type(metadata_name, metadata_type)
-    vals = {}
-    metadata_objects.each do |metadata|
-      vals.merge!(metadata.cell_annotations)
+  def cell_metadata_values(metadata_name, metadata_type)
+    cell_metadatum = self.cell_metadata.by_name_and_type(metadata_name, metadata_type)
+    if cell_metadatum.present?
+      cell_metadatum.cell_annotations
+    else
+      {}
     end
-    vals
   end
 
   # return array of possible values for a given study_metadata annotation (valid only for group-based)
-  def study_metadata_keys(metadata_name, metadata_type)
-    vals = []
-    unless metadata_type == 'numeric'
-      metadata_objects = self.study_metadata.by_name_and_type(metadata_name, metadata_type)
-      metadata_objects.each do |metadata|
-        vals += metadata.values
-      end
+  def cell_metadata_keys(metadata_name, metadata_type)
+    cell_metadatum = self.cell_metadata.by_name_and_type(metadata_name, metadata_type)
+    if cell_metadatum.present?
+      cell_metadatum.values
+    else
+      []
     end
-    vals.uniq
   end
 
   ###
@@ -1405,8 +1403,8 @@ class Study
             # set a default color profile if this is a numeric annotation
             study_obj.default_options[:color_profile] = 'Reds'
           end
-        elsif study_obj.study_metadata.any?
-          metadatum = study_obj.study_metadata.first
+        elsif study_obj.cell_metadata.any?
+          metadatum = study_obj.cell_metadata.first
           study_obj.default_options[:annotation] = "#{metadatum.name}--#{metadatum.annotation_type}--study"
           if metadatum.annotation_type == 'numeric'
             # set a default color profile if this is a numeric annotation
@@ -1422,7 +1420,7 @@ class Study
       study_obj.save
 
       # create subsampled data_arrays for visualization
-      study_metadata = CellMetadatum.where(study_id: self.id)
+      cell_metadata = CellMetadatum.where(study_id: self.id)
       # determine how many levels to subsample based on size of cluster_group
       required_subsamples = ClusterGroup::SUBSAMPLE_THRESHOLDS.select {|sample| sample < @cluster_group.points}
       required_subsamples.each do |sample_size|
@@ -1433,7 +1431,7 @@ class Study
           end
         end
         # create study-based annotation subsamples
-        study_metadata.each do |metadata|
+        cell_metadata.each do |metadata|
           @cluster_group.delay.generate_subsample_arrays(sample_size, metadata.name, metadata.annotation_type, 'study')
         end
       end
@@ -1713,7 +1711,7 @@ class Study
 
       # next, check if this is a re-parse job, in which case we need to remove all existing entries first
       if opts[:reparse]
-        self.study_metadata.delete_all
+        self.cell_metadata.delete_all
         metadata_file.invalidate_cache_by_file_type
       end
 
@@ -1808,7 +1806,7 @@ class Study
           raw_vals = line.split(/[\t,]/).map(&:strip)
           vals = self.sanitize_input_array(raw_vals)
 
-          # assign values to correct study_metadata object
+          # assign values to correct cell_metadata object
           vals.each_with_index do |val, index|
             unless index == name_index
               if @metadata_data_arrays[index].values.size >= DataArray::MAX_ENTRIES
@@ -1817,9 +1815,9 @@ class Study
                 array = @metadata_data_arrays[index]
                 Rails.logger.info "#{Time.now}: Saving cell metadata data array: #{array.name}-#{array.array_index} using #{metadata_file.upload_file_name}:#{metadata_file.id} in #{self.name}"
                 array.save
-                new_array = metadata.study_metadata.build(name: metadata.name, array_type: 'annotation', cluster_name: metadata_file.name,
-                                                          array_index: array.array_index + 1, study_file_id: metadata_file._id,
-                                                          study_id: self.id, values: [])
+                new_array = metadata.data_arrays.build(name: metadata.name, array_type: 'annotations', cluster_name: metadata_file.name,
+                                                       array_index: array.array_index + 1, study_file_id: metadata_file._id,
+                                                       study_id: self.id, values: [])
                 @metadata_data_arrays[index] = new_array
               end
               # determine whether or not value needs to be cast as a float or not
