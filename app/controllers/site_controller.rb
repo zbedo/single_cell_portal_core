@@ -956,7 +956,7 @@ class SiteController < ApplicationController
 
   # retrieve any optional parameters for a selected workflow
   def get_workflow_options
-    @options = WorkflowConfiguration.get_optional_parameters(params[:workflow_identifier])
+    @options = WorkflowConfiguration.get_additional_parameters(params[:workflow_identifier])
   end
 
   # create a workspace analysis submission for a given sample

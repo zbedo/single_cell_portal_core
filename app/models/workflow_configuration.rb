@@ -35,7 +35,6 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
       when /cell-ranger-2-0-2/
         # configure a CellRanger run using the public regev/cell_ranger_2.0.2_count WDL
         begin
-
           # configure response sample
           response[:sample] = sample_name
 
@@ -53,6 +52,19 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
 
           # add input files (must cast as string for JSON encoding to work properly)
           configuration['inputs']['cellranger.fastqs'] = input_files.to_s
+
+          # set reference transcriptome (will default to mouse, so only matters if user selects human)
+          reference_workspace = AdminConfiguration.find_by(config_type: 'Reference Data Workspace')
+          ref_namespace, ref_workspace = reference_workspace.value.split('/')
+          reference_attributes = Study.firecloud_client.get_workspace(ref_namespace, ref_workspace)['workspace']['attributes']
+          case inputs['transcriptomeTarGz']
+            when 'hg38'
+              configuration['inputs']['cellranger.transcriptomeTarGz'] = reference_attributes['cell_ranger_human_ref']
+            when 'mm10'
+              configuration['inputs']['cellranger.transcriptomeTarGz'] = reference_attributes['cell_ranger_mouse_ref']
+            else
+              configuration['inputs']['cellranger.transcriptomeTarGz'] = reference_attributes['cell_ranger_mouse_ref']
+          end
 
           # add optional parameters
           configuration['inputs']['cellranger.expectCells'] = inputs['expectCells']
@@ -111,20 +123,32 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
     end
   end
 
-  # load optional parameters for a requested workflow (curated list)
-  def self.get_optional_parameters(workflow_identifier)
+  # load additional parameters for a requested workflow (curated list)
+  def self.get_additional_parameters(workflow_identifier)
     opts = {}
     case workflow_identifier
       when /cell-ranger-2-0-2/
         opts.merge!(
+             'transcriptomeTarGz' => {
+                 type: 'select',
+                 default: 'mm10',
+                 values: [
+                     %w(human hg38),
+                     %w(mouse mm10),
+                 ],
+                 required: true,
+                 help: 'Cell Ranger compatible transcriptome (human or mouse)'
+             },
              'expectCells' => {
                  type: 'integer',
                  default: 3000,
+                 required: false,
                  help: 'Expected number of recovered cells. Default: 3,000 cells.'
              },
              'secondary' => {
                  type: 'boolean',
                  default: 'true',
+                 required: false,
                  help: 'Set to false to skip secondary analysis of the gene-barcode matrix (dimensionality reduction, clustering and visualization).'
              }
         )
