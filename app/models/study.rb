@@ -636,12 +636,12 @@ class Study
 
   # helper method to directly access expression matrix files
   def expression_matrix_files
-    self.study_files.by_type('Expression Matrix')
+    self.study_files.by_type(['Expression Matrix', 'MM Coordinate Matrix'])
   end
 
   # helper method to directly access expression matrix file file by name
   def expression_matrix_file(name)
-    self.study_files.find_by(file_type:'Expression Matrix', name: name)
+    self.study_files.find_by(:file_type.in => ['Expression Matrix', 'MM Coordinate Matrix'], name: name)
   end
   # helper method to directly access metadata file
   def metadata_file
