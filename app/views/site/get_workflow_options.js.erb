@@ -1,4 +1,4 @@
-var optionsForm = $('#optional-parameters-target');
+var optionsForm = $('#additional-parameters-target');
 optionsForm.empty();
 
 var workflowOptions = <%= raw @options.to_json %>;
@@ -10,9 +10,12 @@ if (Object.keys(workflowOptions).length > 0) {
         var inputId = "workflow_optional_parameters_" + parameter;
         var paramType = workflowOptions[parameter]['type'];
         var paramDefault = workflowOptions[parameter]['default'];
-        var paramHelp = workflowOptions[parameter]['help']
+        var paramHelp = workflowOptions[parameter]['help'];
+        var required = workflowOptions[parameter]['required'];
+        console.log('param: ' + parameter + ' required?' + required);
 
-        var optionalParam = "<label for='" + inputId + "'>" + parameter + "</label><br />";
+        var optionalParam = "<label for='" + inputId + "'>" + parameter + "</label>" +
+            (required ? ' <span class="label label-danger">required</span>' : '') + "<br />";
         switch(paramType) {
             case 'integer':
                 input = "<input type='number' id='" + inputId + "' name='" + inputName + "' value='" + paramDefault + "' class='form-control'></input>";
@@ -27,7 +30,21 @@ if (Object.keys(workflowOptions).length > 0) {
                 break;
             case 'text_field':
                 input = "<input type='text' id='" + inputId + "' name='" + inputName + "' value='" + paramDefault + "' class='form-control'></input>";
-
+                break;
+            case 'select':
+                input = "<select id='" + inputId + "' name='" + inputName + "' class='form-control'>";
+                var paramOpts = workflowOptions[parameter]['values'];
+                var defaultVal = workflowOptions[parameter]['default'];
+                paramOpts.forEach(function(option) {
+                    var display = option[0];
+                    var opt = option[1];
+                    if (opt == defaultVal) {
+                        input += "<option value='" + opt + "' selected='selected'>" + display + "</option>";
+                    } else {
+                        input += "<option value='" + opt + "'>" + display + "</option>";
+                    }
+                });
+                input += "</select>";
                 break;
             default:
                 break;
@@ -39,7 +56,7 @@ if (Object.keys(workflowOptions).length > 0) {
         optionsForm.append(optionalParam);
     }
 } else {
-    optionsForm.html("<p class='help-block'>There are no optional parameters for this workflow.  " +
+    optionsForm.html("<p class='help-block'>There are no additional parameters for this workflow.  " +
         "Click 'Submit Workflow' to launch your submission.</p>");
 }
 

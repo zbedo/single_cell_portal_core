@@ -956,7 +956,7 @@ class SiteController < ApplicationController
 
   # retrieve any optional parameters for a selected workflow
   def get_workflow_options
-    @options = WorkflowConfiguration.get_optional_parameters(params[:workflow_identifier])
+    @options = WorkflowConfiguration.get_additional_parameters(params[:workflow_identifier])
   end
 
   # create a workspace analysis submission for a given sample
@@ -1115,7 +1115,11 @@ class SiteController < ApplicationController
   # export a submission analysis metadata file
   def export_submission_metadata
     @metadata = AnalysisMetadatum.find_by(study_id: @study.id, submission_id: params[:submission_id])
-    send_data JSON.pretty_generate(@metadata.payload), content_type: :json, filename: 'analysis.json'
+    respond_to do |format|
+      format.html {send_data JSON.pretty_generate(@metadata.payload), content_type: :json, filename: 'analysis.json'}
+      format.json {render json: @metadata.payload}
+    end
+
   end
 
   # delete all files from a submission
