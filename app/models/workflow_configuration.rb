@@ -59,11 +59,11 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
           reference_attributes = Study.firecloud_client.get_workspace(ref_namespace, ref_workspace)['workspace']['attributes']
           case inputs['transcriptomeTarGz']
             when 'hg38'
-              configuration['inputs']['cellranger.transcriptomeTarGz'] = reference_attributes['cell_ranger_human_ref']
+              configuration['inputs']['cellranger.transcriptomeTarGz'] = "\"#{reference_attributes['cell_ranger_human_ref']}\""
             when 'mm10'
-              configuration['inputs']['cellranger.transcriptomeTarGz'] = reference_attributes['cell_ranger_mouse_ref']
+              configuration['inputs']['cellranger.transcriptomeTarGz'] = "\"#{reference_attributes['cell_ranger_mouse_ref']}\""
             else
-              configuration['inputs']['cellranger.transcriptomeTarGz'] = reference_attributes['cell_ranger_mouse_ref']
+              configuration['inputs']['cellranger.transcriptomeTarGz'] = "\"#{reference_attributes['cell_ranger_mouse_ref']}\""
           end
 
           # add optional parameters
