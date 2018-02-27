@@ -229,6 +229,7 @@ class StudiesController < ApplicationController
     @orphaned_study_files = []
     @unsynced_primary_data_dirs = []
     @unsynced_other_dirs = []
+    configuration_name = params[:configuration_name]
     begin
       submission = Study.firecloud_client.get_workspace_submission(@study.firecloud_project, @study.firecloud_workspace, params[:submission_id])
       submission['workflows'].each do |workflow|
@@ -247,7 +248,7 @@ class StudiesController < ApplicationController
           else
             # now copy the file to a new location for syncing
             new_file = file.copy new_location
-            unsynced_output = StudyFile.new(study_id: @study.id, name: new_file.name, upload_file_name: new_file.name, upload_content_type: new_file.content_type, upload_file_size: new_file.size, generation: new_file.generation)
+            unsynced_output = StudyFile.new(study_id: @study.id, name: new_file.name, upload_file_name: new_file.name, upload_content_type: new_file.content_type, upload_file_size: new_file.size, generation: new_file.generation, remote_location: new_file.name)
             @unsynced_files << unsynced_output
           end
         end
@@ -263,6 +264,45 @@ class StudiesController < ApplicationController
         end
       end
       @available_files = @unsynced_files.map {|f| {name: f.name, generation: f.generation, size: f.upload_file_size}}
+      @special_notice = ""
+
+      # now execute any special code that is needed for further handling this submission
+      case configuration_name
+        when /cell-ranger/
+          matrix_study_file = @unsynced_files.detect {|file| file.name.split('/').last == 'matrix.mtx'}
+          if matrix_study_file.present?
+            matrix_study_file.file_type = 'MM Coordinate Matrix'
+            matrix_study_file.description = 'Matrix Market coordinate expression matrix output from CellRanger'
+          end
+
+          genes_file = @unsynced_files.detect {|file| file.name.split('/').last == 'genes.tsv'}
+          if genes_file.present?
+            genes_file.file_type = '10X Genes File'
+            genes_file.description = 'Gene ID/Names output from CellRanger'
+          end
+
+          barcodes_file = @unsynced_files.detect {|file| file.name.split('/').last == 'barcodes.tsv'}
+          if barcodes_file.present?
+            barcodes_file.file_type = '10X Barcodes File'
+            barcodes_file.description = 'Barcode sequence output from CellRanger'
+          end
+
+          metadata_file = @unsynced_files.detect {|file| file.name.split('/').last == 'metadata.txt'}
+          if metadata_file.present?
+            metadata_file.file_type = 'Metadata'
+            metadata_file.description = 'Barcode-level metadata output from CellRanger'
+          end
+
+          cluster_file = @unsynced_files.detect {|file| file.name.split('/').last == 'clusters.txt'}
+          if cluster_file.present?
+            cluster_file.file_type = 'Cluster'
+            cluster_file.description = 'tSNE coordinates production by CellRanger'
+          end
+
+        else
+          nil # no special code to execute
+      end
+
       render action: :sync_study
     rescue => e
       redirect_to request.referrer, alert: "We were unable to sync the outputs from submission #{params[:submission_id]} due to the following error: #{e.message}"
@@ -1104,5 +1144,9 @@ class StudiesController < ApplicationController
       end
       @unsynced_directories << existing_dir
     end
+  end
+
+  def process_submission_outputs
+
   end
 end

@@ -114,6 +114,13 @@
 
 <script type="text/javascript">
 
+    if (<%= @special_notice.present? %>) {
+        $('#generic-update-target').html("<%= escape_javascript(render partial: '/layouts/generic_update_modal') %>");
+        $('#generic-update-modal-title').html("Submission <%= params[:submission_id] %> Outputs");
+        $('#generic-update-modal-body').html("<%= @special_notice.html_safe %>");
+        $("#generic-update-modal").modal("show");
+    }
+
     // when changing the existing file dropdown, dynamically update the file generation value for the specified form
     $('.existing-file-select').change(function() {
         var selectedFile = $(this).val();

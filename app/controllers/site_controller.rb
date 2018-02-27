@@ -1139,7 +1139,7 @@ class SiteController < ApplicationController
       AnalysisMetadatum.where(submission_id: params[:submission_id]).delete
       logger.info "#{Time.now}: queueing submission #{params[:submission]} deletion in #{@study.firecloud_workspace}"
       submission_files = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, @study.firecloud_project, @study.firecloud_workspace, prefix: params[:submission_id])
-      DeleteQueueJob.new(submission_files).delay.perform
+      DeleteQueueJob.new(submission_files).perform
     rescue => e
       logger.error "#{Time.now}: unable to remove submission #{params[:submission_id]} files from #{@study.firecloud_workspace} due to: #{e.message}"
       @alert = "Unable to delete the outputs for #{params[:submission_id]} due to the following error: #{e.message}"

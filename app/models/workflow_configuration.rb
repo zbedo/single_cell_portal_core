@@ -58,7 +58,7 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
           ref_namespace, ref_workspace = reference_workspace.value.split('/')
           reference_attributes = Study.firecloud_client.get_workspace(ref_namespace, ref_workspace)['workspace']['attributes']
           case inputs['transcriptomeTarGz']
-            when 'hg38'
+            when 'GRh38'
               configuration['inputs']['cellranger.transcriptomeTarGz'] = "\"#{reference_attributes['cell_ranger_human_ref']}\""
             when 'mm10'
               configuration['inputs']['cellranger.transcriptomeTarGz'] = "\"#{reference_attributes['cell_ranger_mouse_ref']}\""
@@ -133,8 +133,8 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
                  type: 'select',
                  default: 'mm10',
                  values: [
-                     %w(human hg38),
-                     %w(mouse mm10),
+                     ['human (GRh38)', 'GRh38'],
+                     ['mouse (mm10)', 'mm10'],
                  ],
                  required: true,
                  help: 'Cell Ranger compatible transcriptome (human or mouse)'
