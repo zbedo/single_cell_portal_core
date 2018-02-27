@@ -1,22 +1,24 @@
 class ParseUtils
 
-  def self.cell_ranger_expression_parse(study, user, matrix_study_file, genes_study_file, barcodes_study_file)
+  def self.cell_ranger_expression_parse(study, user, matrix_study_file, genes_study_file, barcodes_study_file, opts={})
     begin
+      start_time = Time.now
       # localize files
       Rails.logger.info "#{Time.now}: Parsing 10X CellRanger source data files for #{study.name}"
       study.make_data_dir
       Rails.logger.info "#{Time.now}: Localizing output files & creating study file entries from 10X CellRanger source data for #{study.name}"
 
-      matrix_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
-                                                                 study.firecloud_workspace, matrix_study_file.remote_location,
-                                                                 study.data_store_path, verify: :none)
-      genes_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
-                                                                study.firecloud_workspace, genes_study_file.remote_location,
-                                                                study.data_store_path, verify: :none)
-      barcodes_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
-                                                                   study.firecloud_workspace, barcodes_study_file.remote_location,
+      if !opts[:local]
+        matrix_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
+                                                                   study.firecloud_workspace, matrix_study_file.remote_location,
                                                                    study.data_store_path, verify: :none)
-
+        genes_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
+                                                                  study.firecloud_workspace, genes_study_file.remote_location,
+                                                                  study.data_store_path, verify: :none)
+        barcodes_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
+                                                                     study.firecloud_workspace, barcodes_study_file.remote_location,
+                                                                     study.data_store_path, verify: :none)
+      end
       # open files and read contents
       Rails.logger.info "#{Time.now}: Reading gene/barcode/matrix file contents for #{study.name}"
       matrix = NMatrix::IO::Market.load(matrix_file.path)
@@ -80,31 +82,34 @@ class ParseUtils
       Gene.create(@genes)
       DataArray.create(@data_arrays)
       barcodes.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
-        known_cells = study.data_arrays.build(name: "#{remote_matrix_location} Cells", cluster_name: matrix_study_file.remote_location,
+        known_cells = study.data_arrays.build(name: "#{matrix_study_file.remote_location} Cells", cluster_name: matrix_study_file.remote_location,
                                               array_type: 'cells', array_index: index + 1, values: slice,
                                               study_file_id: matrix_study_file.id, study_id: study.id)
         known_cells.save
       end
       # clean up
+      matrix_study_file.update(parse_status: 'parsed')
+      genes_study_file.update(parse_status: 'parsed')
+      barcodes_study_file.update(parse_status: 'parsed')
       matrix_study_file.remove_local_copy
       genes_study_file.remove_local_copy
       barcodes_study_file.remove_local_copy
 
+      # set gene count
+      study.set_gene_count
+
       end_time = Time.now
       time = (end_time - start_time).divmod 60.0
+      @message = []
       @message << "#{Time.now}: #{study.name} 10X CellRanger expression data parse completed!"
       @message << "Gene-level entries created: #{@count}"
       @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
-      Rails.logger.info @message
+      Rails.logger.info @message.join("\n")
       begin
         SingleCellMailer.notify_user_parse_complete(user.email, "10X CellRanger expression data has completed parsing", @message).deliver_now
       rescue => e
         Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
       end
-
-      puts 'Parse complete!'
-      puts "Genes created: #{@genes.size}"
-      puts "Data Arrays created: #{@data_arrays.size}"
       true
     rescue => e
       # error has occurred, so clean up records and remove file

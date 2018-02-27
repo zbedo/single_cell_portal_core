@@ -231,24 +231,31 @@ class StudiesController < ApplicationController
     @unsynced_other_dirs = []
     configuration_name = params[:configuration_name]
     begin
-      submission = Study.firecloud_client.get_workspace_submission(@study.firecloud_project, @study.firecloud_workspace, params[:submission_id])
+      submission = Study.firecloud_client.get_workspace_submission(@study.firecloud_project, @study.firecloud_workspace,
+                                                                   params[:submission_id])
       submission['workflows'].each do |workflow|
-        workflow = Study.firecloud_client.get_workspace_submission_workflow(@study.firecloud_project, @study.firecloud_workspace, params[:submission_id], workflow['workflowId'])
+        workflow = Study.firecloud_client.get_workspace_submission_workflow(@study.firecloud_project, @study.firecloud_workspace,
+                                                                            params[:submission_id], workflow['workflowId'])
         workflow['outputs'].each do |output, file_url|
           file_location = file_url.gsub(/gs\:\/\/#{@study.bucket_id}\//, '')
           # get google instance of file
-          file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project, @study.firecloud_workspace, file_location)
+          file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project,
+                                                              @study.firecloud_workspace, file_location)
           basename = file.name.split('/').last
           new_location = "outputs_#{params[:submission_id]}/#{basename}"
           # check if file has already been synced first
           # we can only do this by md5 hash as the filename and generation will be different
-          existing_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project, @study.firecloud_workspace, new_location)
+          existing_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project,
+                                                                       @study.firecloud_workspace, new_location)
           if existing_file.present? && existing_file.md5 == file.md5
             next
           else
             # now copy the file to a new location for syncing
             new_file = file.copy new_location
-            unsynced_output = StudyFile.new(study_id: @study.id, name: new_file.name, upload_file_name: new_file.name, upload_content_type: new_file.content_type, upload_file_size: new_file.size, generation: new_file.generation, remote_location: new_file.name)
+            unsynced_output = StudyFile.new(study_id: @study.id, name: new_file.name, upload_file_name: new_file.name,
+                                            upload_content_type: new_file.content_type, upload_file_size: new_file.size,
+                                            generation: new_file.generation, remote_location: new_file.name,
+                                            options: {submission_id: params[:submission_id]})
             @unsynced_files << unsynced_output
           end
         end
@@ -264,7 +271,6 @@ class StudiesController < ApplicationController
         end
       end
       @available_files = @unsynced_files.map {|f| {name: f.name, generation: f.generation, size: f.upload_file_size}}
-      @special_notice = ""
 
       # now execute any special code that is needed for further handling this submission
       case configuration_name
@@ -272,37 +278,45 @@ class StudiesController < ApplicationController
           matrix_study_file = @unsynced_files.detect {|file| file.name.split('/').last == 'matrix.mtx'}
           if matrix_study_file.present?
             matrix_study_file.file_type = 'MM Coordinate Matrix'
-            matrix_study_file.description = 'Matrix Market coordinate expression matrix output from CellRanger'
+            matrix_study_file.description = "Matrix Market coordinate expression matrix from CellRanger run #{params[:submission_id]}"
           end
 
           genes_file = @unsynced_files.detect {|file| file.name.split('/').last == 'genes.tsv'}
           if genes_file.present?
             genes_file.file_type = '10X Genes File'
-            genes_file.description = 'Gene ID/Names output from CellRanger'
+            genes_file.description = "Gene ID/Names output from CellRanger run #{params[:submission_id]}"
+            if matrix_study_file.present?
+              genes_file.options.merge!({matrix_id: matrix_study_file.id})
+              logger.info "updating matrix_id for genes file to #{genes_file.options}"
+            end
           end
 
           barcodes_file = @unsynced_files.detect {|file| file.name.split('/').last == 'barcodes.tsv'}
           if barcodes_file.present?
             barcodes_file.file_type = '10X Barcodes File'
-            barcodes_file.description = 'Barcode sequence output from CellRanger'
+            barcodes_file.description = "Barcode sequence output from CellRanger run #{params[:submission_id]}"
+            if matrix_study_file.present?
+              barcodes_file.options.merge!({matrix_id: matrix_study_file.id})
+              logger.info "updating matrix_id for barcodes file to #{barcodes_file.options}"
+            end
           end
 
           metadata_file = @unsynced_files.detect {|file| file.name.split('/').last == 'metadata.txt'}
           if metadata_file.present?
             metadata_file.file_type = 'Metadata'
-            metadata_file.description = 'Barcode-level metadata output from CellRanger'
+            metadata_file.description = "Barcode-level metadata output from CellRanger run #{params[:submission_id]}"
           end
 
           cluster_file = @unsynced_files.detect {|file| file.name.split('/').last == 'clusters.txt'}
           if cluster_file.present?
             cluster_file.file_type = 'Cluster'
-            cluster_file.description = 'tSNE coordinates production by CellRanger'
+            cluster_file.description = "tSNE coordinates production by CellRanger run #{params[:submission_id]}"
           end
 
         else
           nil # no special code to execute
       end
-
+      logger.info "unsynced files: #{@unsynced_files}"
       render action: :sync_study
     rescue => e
       redirect_to request.referrer, alert: "We were unable to sync the outputs from submission #{params[:submission_id]} due to the following error: #{e.message}"
@@ -517,13 +531,15 @@ class StudiesController < ApplicationController
     end
     begin
       # get filesize and make sure the user is under their quota
-      requested_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project, @study.firecloud_workspace, params[:filename])
+      requested_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project,
+                                                                    @study.firecloud_workspace, params[:filename])
       if requested_file.present?
         filesize = requested_file.size
         user_quota = current_user.daily_download_quota + filesize
         # check against download quota that is loaded in ApplicationController.get_download_quota
         if user_quota <= @download_quota
-          @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_project, @study.firecloud_workspace, params[:filename], expires: 15)
+          @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_project,
+                                                                     @study.firecloud_workspace, params[:filename], expires: 15)
           current_user.update(daily_download_quota: user_quota)
         else
           redirect_to view_study_path(@study.url_safe_name), alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
@@ -640,6 +656,35 @@ class StudiesController < ApplicationController
             @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user, {local: false, reparse: true})
           when 'Expression Matrix'
             @study.delay.initialize_gene_expression_data(@study_file, current_user, {local: false, reparse: true})
+          when 'MM Coordinate Matrix'
+            barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => @study_file.id)
+            genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => @study_file.id)
+            if barcodes.present? && genes.present?
+              @study_file.update(parse_status: 'parsing')
+              genes.update(parse_status: 'parsing')
+              barcodes.update(parse_status: 'parsing')
+              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, @study_file, genes, barcodes, {local: false, reparse: true})
+            end
+          when '10X Genes File'
+            matrix_id = @study_file.options(:matrix_id)
+            matrix = StudyFile.find(matrix_id)
+            barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => matrix_id)
+            if barcodes.present? && matrix.present?
+              @study_file.update(parse_status: 'parsing')
+              matrix.update(parse_status: 'parsing')
+              barcodes.update(parse_status: 'parsing')
+              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, @study_file, barcodes, {local: false, reparse: true})
+            end
+          when '10X Barcodes File'
+            matrix_id = @study_file.options(:matrix_id)
+            matrix = StudyFile.find(matrix_id)
+            genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => matrix_id)
+            if genes.present? && matrix.present?
+              @study_file.update(parse_status: 'parsing')
+              genes.update(parse_status: 'parsing')
+              matrix.update(parse_status: 'parsing')
+              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, genes, @study_file, {local: false, reparse: true})
+            end
           when 'Gene List'
             @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false, reparse: true})
           when 'Metadata'
@@ -695,8 +740,10 @@ class StudiesController < ApplicationController
         # delete source file in FireCloud and then remove record
         begin
           # make sure file is in FireCloud first as user may be aborting the upload
-          if !Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project, @study.firecloud_workspace, @study_file.upload_file_name).nil?
-            Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, @study.firecloud_project, @study.firecloud_workspace, @study_file.upload_file_name)
+          if !Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project,
+                                                           @study.firecloud_workspace, @study_file.upload_file_name).nil?
+            Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, @study.firecloud_project,
+                                                         @study.firecloud_workspace, @study_file.upload_file_name)
           end
         rescue RuntimeError => e
           logger.error "#{Time.now}: error in deleting #{@study_file.upload_file_name} from workspace: #{@study.firecloud_workspace}; #{e.message}"
@@ -770,6 +817,36 @@ class StudiesController < ApplicationController
             @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user, {local: false})
           when 'Expression Matrix'
             @study.delay.initialize_gene_expression_data(@study_file, current_user, {local: false})
+          when 'MM Coordinate Matrix'
+            # we have to cast the study_file ID to a string, otherwise it is a BSON::ObjectID and will not match
+            barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => @study_file.id.to_s)
+            genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => @study_file.id.to_s)
+            if barcodes.present? && genes.present?
+              @study_file.update(parse_status: 'parsing')
+              genes.update(parse_status: 'parsing')
+              barcodes.update(parse_status: 'parsing')
+              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, @study_file, genes, barcodes, {local: false})
+            end
+          when '10X Genes File'
+            matrix_id = @study_file.options[:matrix_id]
+            matrix = StudyFile.find(matrix_id)
+            barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => matrix_id)
+            if barcodes.present? && matrix.present?
+              @study_file.update(parse_status: 'parsing')
+              matrix.update(parse_status: 'parsing')
+              barcodes.update(parse_status: 'parsing')
+              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, @study_file, barcodes, {local: false})
+            end
+          when '10X Barcodes File'
+            matrix_id = @study_file.options[:matrix_id]
+            matrix = StudyFile.find(matrix_id)
+            genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => matrix_id)
+            if genes.present? && matrix.present?
+              @study_file.update(parse_status: 'parsing')
+              genes.update(parse_status: 'parsing')
+              matrix.update(parse_status: 'parsing')
+              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, genes, @study_file, {local: false})
+            end
           when 'Gene List'
             @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false})
           when 'Metadata'
@@ -973,7 +1050,8 @@ class StudiesController < ApplicationController
     params.require(:study_file).permit(:_id, :study_id, :name, :upload, :upload_file_name, :upload_content_type, :upload_file_size,
                                        :remote_location, :description, :file_type, :status, :human_fastq_url, :human_data, :cluster_type,
                                        :generation, :x_axis_label, :y_axis_label, :z_axis_label, :x_axis_min, :x_axis_max, :y_axis_min,
-                                       :y_axis_max, :z_axis_min, :z_axis_max, options: [:cluster_group_id, :font_family, :font_size, :font_color])
+                                       :y_axis_max, :z_axis_min, :z_axis_max, options: [:cluster_group_id, :font_family, :font_size,
+                                                                                        :font_color, :matrix_id, :submission_id])
   end
 
   def directory_listing_params
@@ -1144,9 +1222,5 @@ class StudiesController < ApplicationController
       end
       @unsynced_directories << existing_dir
     end
-  end
-
-  def process_submission_outputs
-
   end
 end

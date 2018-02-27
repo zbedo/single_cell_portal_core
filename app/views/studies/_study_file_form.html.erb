@@ -8,6 +8,9 @@
   <%= f.hidden_field :upload_content_type %>
   <%= f.hidden_field :generation %>
   <%= f.hidden_field :remote_location %>
+  <% study_file.options.each do |key, value| %>
+    <%= hidden_field_tag "study_file_options_#{key}", value, name: "study_file[options][#{key}]" %>
+  <% end %>
   <div class="row">
     <div class="col-xs-12">
       <%= f.label :upload_file_name, "Unsynced File: #{study_file.upload_file_name}" %>
