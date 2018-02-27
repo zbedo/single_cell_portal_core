@@ -1115,7 +1115,11 @@ class SiteController < ApplicationController
   # export a submission analysis metadata file
   def export_submission_metadata
     @metadata = AnalysisMetadatum.find_by(study_id: @study.id, submission_id: params[:submission_id])
-    send_data JSON.pretty_generate(@metadata.payload), content_type: :json, filename: 'analysis.json'
+    respond_to do |format|
+      format.html {send_data JSON.pretty_generate(@metadata.payload), content_type: :json, filename: 'analysis.json'}
+      format.json {render json: @metadata.payload}
+    end
+
   end
 
   # delete all files from a submission
