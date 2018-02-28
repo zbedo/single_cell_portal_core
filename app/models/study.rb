@@ -890,7 +890,7 @@ class Study
       # next, check if this is a re-parse job, in which case we need to remove all existing entries first
       if opts[:reparse]
         self.genes.where(study_file_id: expression_file.id).delete_all
-        self.data_arrays.where(study_file_id: expression_file.id).delete_all
+        DataArray.where(study_id: self.id, study_file_id: expression_file.id).delete_all
         expression_file.invalidate_cache_by_file_type
       end
 

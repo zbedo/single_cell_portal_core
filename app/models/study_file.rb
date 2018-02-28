@@ -251,6 +251,10 @@ class StudyFile
         @cache_key = "#{study_name}.*render_cluster.*#{name_key}"
       when 'Expression Matrix'
         @cache_key = "#{study_name}.*expression"
+      when 'MM Coordinate Matrix'
+        @cache_key = "#{study_name}.*expression"
+      when /10X.*File/
+        @cache_key = "#{study_name}.*expression"
       when 'Gene List'
         name_key = self.precomputed_scores.first.name.split.join('-')
         @cache_key = "#{study_name}.*#{name_key}"
