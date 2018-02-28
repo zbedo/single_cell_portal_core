@@ -594,7 +594,7 @@ class StudiesController < ApplicationController
         @cluster.update(name: @study_file.name)
         # also update data_arrays
         @cluster.data_arrays.update_all(cluster_name: @study_file.name)
-      elsif study_file_params[:file_type] == 'Expression Matrix' && !study_file_params[:y_axis_label].blank?
+      elsif ['Expression Matrix', 'MM Coordinate Matrix'].include?(study_file_params[:file_type]) && !study_file_params[:y_axis_label].blank?
         # if user is supplying an expression axis label, update default options hash
         @study.update(default_options: @study.default_options.merge(expression_label: study_file_params[:y_axis_label]))
         @study.expression_matrix_files.first.invalidate_cache_by_file_type
@@ -726,6 +726,12 @@ class StudiesController < ApplicationController
             @partial = 'initialize_ordinations_form'
           when 'Coordinate Labels'
             @partial = 'initialize_labels_form'
+          when 'Expression Matrix'
+            @partial = 'initialize_expression_form'
+          when 'MM Coordinate Matrix'
+            @partial = 'initialize_expression_form'
+          when '10X Genes File'
+            @partial = 'initialize_expression_form'
           when 'Expression Matrix'
             @partial = 'initialize_expression_form'
           when 'Metadata'
