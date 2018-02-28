@@ -160,13 +160,10 @@
                         text: matrix[0]
                     }));
                 });
+                // set correct value and disable necessary selects to prevent user error
                 matrixSelect.val(matrixId);
-                matrixSelect.css(disabledCss);
-                matrixSelect.attr('readonly', 'readonly');
-                matrixSelect.parent().css('cursor', 'not-allowed');
-                $(fileType).css(disabledCss);
-                $(fileType).attr('readonly', 'readonly');
-                $(fileType).parent().css('cursor', 'not-allowed');
+                matrixSelect.css(disabledCss).attr('readonly', 'readonly').parent().css('cursor', 'not-allowed');
+                $(fileType).css(disabledCss).attr('readonly', 'readonly').parent().css('cursor', 'not-allowed');
                 var matrixForm = $('#study-file-' + matrixId);
                 matrixForm.find('.file-type').css(disabledCss).attr('readonly', 'readonly').parent().css('cursor', 'not-allowed');
             }
