@@ -1,4 +1,12 @@
 <h1>Sync Study Data for '<%= @study.name %>' <%= render partial: 'initialize_study_label' %></h1>
+<% if params[:configuration_name].present? %>
+  <div class="bs-callout bs-callout-default">
+    <h4>Specialized Sync for: <span class="label label-primary"><%= params[:configuration_name] %></span></h4>
+    <p class="lead">Based on the type of workflow, some output files have been configured to their correct types & associations.  You may edit descriptions,
+      but those pre-set file types and associations have been locked as changing them will result in parse failures.</p>
+  </div>
+
+<% end %>
 <% if @orphaned_study_files.any? %>
   <div class="panel panel-danger">
     <div class="panel-heading">
@@ -132,6 +140,34 @@
                 form.find('#study_file_upload_file_size').val(result.size);
             }
         }
+    });
+
+    // pre-select all MM coordinate matrix associations, if present
+    $(document).ready(function() {
+        var allMatrices = gatherCoordinateMatrices();
+        var disabledCss = {
+            'pointer-events' : 'none',
+        };
+        $('.file-type').each(function(index, fileType) {
+            if ($(fileType).val() == '10X Genes File' || $(fileType).val() == '10X Barcodes File') {
+                var form = $(fileType).closest('.unsynced-study-file');
+                var matrixSelect = $(form).find('.matrix-file-select');
+                var matrixId = $(form).find('#study_file_options_matrix_id').val();
+                $(allMatrices).each(function(index, matrix) {
+                    matrixSelect.append($('<option />', {
+                        value: matrix[1],
+                        text: matrix[0]
+                    }));
+                });
+                matrixSelect.val(matrixId);
+                matrixSelect.css(disabledCss);
+                matrixSelect.attr('readonly', 'readonly');
+                matrixSelect.parent().css('cursor', 'not-allowed');
+                $(fileType).css(disabledCss);
+                $(fileType).attr('readonly', 'readonly');
+                $(fileType).parent().css('cursor', 'not-allowed');
+            }
+        });
     });
 
 </script>

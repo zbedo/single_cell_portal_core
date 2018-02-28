@@ -122,13 +122,10 @@ class ParseUtils
       Gene.create(other_genes)
       @count += other_genes.size
 
-      # clean up
+      # finish up
       matrix_study_file.update(parse_status: 'parsed')
       genes_study_file.update(parse_status: 'parsed')
       barcodes_study_file.update(parse_status: 'parsed')
-      matrix_study_file.remove_local_copy
-      genes_study_file.remove_local_copy
-      barcodes_study_file.remove_local_copy
 
       # set gene count
       study.set_gene_count

@@ -27,7 +27,13 @@
     </div>
   </div>
   <div id="study-file-<%= study_file._id %>-extra-info">
-    <%= render partial: 'cluster_axis_fields', locals: {f: f} %>
+    <% if study_file.file_type == 'Cluster'  %>
+      <%= render partial: 'cluster_axis_fields', locals: {f: f} %>
+    <% elsif study_file.file_type == 'Expression Matrix' || study_file.file_type == 'MM Coordinate Matrix' %>
+      <%= render partial: 'expression_axis_fields', locals: {f: f} %>
+    <% elsif study_file.file_type == '10X Genes File' || study_file.file_type == '10X Barcodes File' %>
+      <%= render partial: 'mm_coordinate_association_fields', locals: {f: f} %>
+    <% end %>
   </div>
   <div class="form-group row">
     <div class="col-sm-6">
@@ -48,6 +54,7 @@
   </div>
 
   <script type="text/javascript">
+
       $('#study-file-<%= study_file._id %> #study_file_file_type').change(function() {
           var fileType = $(this).val();
           var nameField = $("#study-file-<%= study_file.id %> #study_file_name");
@@ -62,6 +69,28 @@
           } else if (fileType == 'Gene List') {
               extraInfo.empty();
               nameField.attr('readonly', false);
+          } else if (fileType == 'MM Coordinate Matrix') {
+              extraInfo.html("<%= escape_javascript(render partial: 'expression_axis_fields', locals: {f: f}) %>");
+              nameField.val('<%= study_file.name %>');
+              nameField.attr('readonly', 'readonly');
+          } else if (fileType == '10X Genes File' || fileType == '10X Barcodes File') {
+              nameField.val('<%= study_file.name %>');
+              nameField.attr('readonly', 'readonly');
+              var mtx = gatherCoordinateMatrices();
+              if (mtx.length === 0) {
+                  alert("You must first specify at least one file of type 'MM Coordinate Matrix' (10X Genes/Barcodes Files " +
+                      "must pair with a matrix before being parsed).");
+                  $(this).val('');
+              } else {
+                  extraInfo.html("<%= escape_javascript(render partial: 'mm_coordinate_association_fields', locals: {f: f}) %>");
+                  var matrixDropdown = $('#study-file-<%= study_file._id %> .matrix-file-select');
+                  $(mtx).each(function(index, matrix) {
+                      matrixDropdown.append($('<option />', {
+                          value: matrix[1],
+                          text: matrix[0]
+                      }));
+                  });
+              }
           } else {
               extraInfo.empty();
               nameField.val('<%= study_file.name %>');

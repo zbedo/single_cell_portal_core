@@ -46,6 +46,10 @@ class DeleteQueueJob < Struct.new(:object)
             Gene.where(study_file_id: object.id, study_id: study.id).delete_all
             DataArray.where(study_file_id: object.id, study_id: study.id).delete_all
             study.set_gene_count
+          when 'MM Coordinate Matrix'
+            Gene.where(study_file_id: object.id, study_id: study.id).delete_all
+            DataArray.where(study_file_id: object.id, study_id: study.id).delete_all
+            study.set_gene_count
           when 'Metadata'
             CellMetadatum.where(study_file_id: object.id, study_id: study.id).delete_all
             DataArray.where(study_file_id: object.id, study_id: study.id).delete_all
