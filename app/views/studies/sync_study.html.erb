@@ -166,6 +166,8 @@
                 $(fileType).css(disabledCss);
                 $(fileType).attr('readonly', 'readonly');
                 $(fileType).parent().css('cursor', 'not-allowed');
+                var matrixForm = $('#study-file-' + matrixId);
+                matrixForm.find('.file-type').css(disabledCss).attr('readonly', 'readonly').parent().css('cursor', 'not-allowed');
             }
         });
     });
