@@ -1,12 +1,13 @@
 <h1>Sync Study Data for '<%= @study.name %>' <%= render partial: 'initialize_study_label' %></h1>
+
 <% if params[:configuration_name].present? %>
   <div class="bs-callout bs-callout-default">
     <h4>Specialized Sync for: <span class="label label-primary"><%= params[:configuration_name] %></span></h4>
-    <p class="lead">Based on the type of workflow, some output files have been configured to their correct types & associations.  You may edit descriptions,
+    <p class="lead">Based on the type of workflow, some output files have been configured with their correct types & associations.  You may edit descriptions,
       but those pre-set file types and associations have been locked as changing them will result in parse failures.</p>
   </div>
-
 <% end %>
+
 <% if @orphaned_study_files.any? %>
   <div class="panel panel-danger">
     <div class="panel-heading">
