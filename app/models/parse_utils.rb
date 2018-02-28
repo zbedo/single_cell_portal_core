@@ -8,6 +8,7 @@ class ParseUtils
       study.make_data_dir
       Rails.logger.info "#{Time.now}: Localizing output files & creating study file entries from 10X CellRanger source data for #{study.name}"
 
+      # localize files if necessary, otherwise open newly uploaded files
       if !opts[:local]
         matrix_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
                                                                    study.firecloud_workspace, matrix_study_file.remote_location,
@@ -18,7 +19,19 @@ class ParseUtils
         barcodes_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
                                                                      study.firecloud_workspace, barcodes_study_file.remote_location,
                                                                      study.data_store_path, verify: :none)
+      else
+        matrix_file = File.open(matrix_study_file.upload.path, 'rb')
+        genes_file = File.open(genes_study_file.upload.path, 'rb')
+        barcodes_file = File.open(barcodes_study_file.upload.path, 'rb')
       end
+
+      # next, check if this is a re-parse job, in which case we need to remove all existing entries first
+      if opts[:reparse]
+        Gene.where(study_id: study.id, study_file_id: matrix_study_file.id).delete_all
+        DataArray.where(study_id: study.id, study_file_id: matrix_study_file.id).delete_all
+        matrix_study_file.invalidate_cache_by_file_type
+      end
+
       # open files and read contents
       Rails.logger.info "#{Time.now}: Reading gene/barcode/matrix file contents for #{study.name}"
       matrix = NMatrix::IO::Market.load(matrix_file.path)
@@ -35,7 +48,7 @@ class ParseUtils
       @count = 0
       @child_count = 0
 
-      Rails.logger.info "#{Time.now}: Creating new gene & data_array records from 10X CellRanger source data  for #{study.name}"
+      Rails.logger.info "#{Time.now}: Creating new gene & data_array records from 10X CellRanger source data for #{study.name}"
 
       significant_scores.each do |gene_index, barcode_obj|
         gene_name = genes[gene_index]
@@ -49,14 +62,14 @@ class ParseUtils
         end
 
         gene_barcodes.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
-          cell_array = DataArray.new(name: new_gene.cell_key, cluster_name: matrix_study_file.remote_location, array_type: 'cells',
+          cell_array = DataArray.new(name: new_gene.cell_key, cluster_name: matrix_study_file.name, array_type: 'cells',
                                      array_index: index + 1, study_file_id: matrix_study_file.id, values: slice,
                                      linear_data_type: 'Gene', linear_data_id: new_gene.id, study_id: study.id)
           @data_arrays << cell_array.attributes
         end
 
         gene_exp_values.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
-          score_array = DataArray.new(name: new_gene.score_key, cluster_name: matrix_study_file.remote_location, array_type: 'expression',
+          score_array = DataArray.new(name: new_gene.score_key, cluster_name: matrix_study_file.name, array_type: 'expression',
                                       array_index: index + 1, study_file_id: matrix_study_file.id, values: slice,
                                       linear_data_type: 'Gene', linear_data_id: new_gene.id, study_id: study.id)
           @data_arrays << score_array.attributes
@@ -64,9 +77,9 @@ class ParseUtils
 
         # batch insert records in groups of 1000
         if @genes.size % 1000 == 0
-          Gene.create!(@records)
+          Gene.create!(@genes)
           @count += @genes.size
-          Rails.logger.info "#{Time.now}: Processed #{@count} genes from 10X CellRanger source data for #{study.name}"
+          Rails.logger.info "#{Time.now}: Processed #{@count} significant genes from 10X CellRanger source data for #{study.name}"
           @records = []
         end
 
@@ -80,13 +93,35 @@ class ParseUtils
 
       # create records
       Gene.create(@genes)
+      @count += @genes.size
       DataArray.create(@data_arrays)
       barcodes.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
-        known_cells = study.data_arrays.build(name: "#{matrix_study_file.remote_location} Cells", cluster_name: matrix_study_file.remote_location,
+        known_cells = study.data_arrays.build(name: "#{matrix_study_file.name} Cells", cluster_name: matrix_study_file.name,
                                               array_type: 'cells', array_index: index + 1, values: slice,
                                               study_file_id: matrix_study_file.id, study_id: study.id)
         known_cells.save
       end
+
+      # now we have to create empty gene records for all the non-significant genes
+      # reset the count as we'll get an accurate total count from the length of the genes list
+      @count = 0
+      other_genes = []
+      other_genes_count = 0
+      genes.each do |gene|
+        other_genes << Gene.new(study_id: study.id, name: gene, searchable_name: gene.downcase, study_file_id: matrix_study_file.id).attributes
+        other_genes_count += 1
+        if other_genes.size % 1000 == 0
+          Rails.logger.info "#{Time.now}: creating #{other_genes_count} non-significant gene records in #{study.name}"
+          Gene.create(other_genes)
+          @count += other_genes.size
+          other_genes = []
+        end
+      end
+      # process last batch
+      Rails.logger.info "#{Time.now}: creating #{other_genes_count} non-significant gene records in #{study.name}"
+      Gene.create(other_genes)
+      @count += other_genes.size
+
       # clean up
       matrix_study_file.update(parse_status: 'parsed')
       genes_study_file.update(parse_status: 'parsed')
@@ -97,6 +132,20 @@ class ParseUtils
 
       # set gene count
       study.set_gene_count
+
+      # set the default expression label if the user supplied one
+      if !study.has_expression_label? && !matrix_study_file.y_axis_label.blank?
+        Rails.logger.info "#{Time.now}: Setting default expression label in #{study.name} to '#{matrix_study_file.y_axis_label}'"
+        opts = study.default_options
+        study.update!(default_options: opts.merge(expression_label: matrix_study_file.y_axis_label))
+      end
+
+      # set initialized to true if possible
+      if study.cluster_groups.any? && study.cell_metadata.any? && !study.initialized?
+        Rails.logger.info "#{Time.now}: initializing #{study.name}"
+        study.update!(initialized: true)
+        Rails.logger.info "#{Time.now}: #{study.name} successfully initialized"
+      end
 
       end_time = Time.now
       time = (end_time - start_time).divmod 60.0
@@ -109,6 +158,37 @@ class ParseUtils
         SingleCellMailer.notify_user_parse_complete(user.email, "10X CellRanger expression data has completed parsing", @message).deliver_now
       rescue => e
         Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
+      end
+
+      unless opts[:skip_upload] == true
+        [matrix_study_file, genes_study_file, barcodes_study_file].each do |study_file|
+          Rails.logger.info "#{Time.now}: determining upload status of #{study_file.file_type}: #{study_file.upload_file_name}:#{study_file.id}"
+          # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
+          # rather than relying on opts[:local], actually check if the file is already in the GCS bucket
+          destination = study_file.remote_location.blank? ? study_file.upload_file_name : study_file.remote_location
+          remote = Study.firecloud_client.get_workspace_file(study.firecloud_project, study.firecloud_workspace, destination)
+          if remote.nil?
+            begin
+              Rails.logger.info "#{Time.now}: preparing to upload expression file: #{study_file.upload_file_name}:#{study_file.id} to FireCloud"
+              self.send_to_firecloud(study_file)
+            rescue => e
+              Rails.logger.info "#{Time.now}: Expression file: #{study_file.upload_file_name}:#{study_file.id} failed to upload to FireCloud due to #{e.message}"
+              SingleCellMailer.notify_admin_upload_fail(study_file, e.message).deliver_now
+            end
+          else
+            # we have the file in FireCloud already, so just delete it
+            begin
+              Rails.logger.info "#{Time.now}: found remote version of #{study_file.upload_file_name}: #{remote.name} (#{remote.generation})"
+              run_at = 15.seconds.from_now
+              Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file), run_at: run_at)
+              Rails.logger.info "#{Time.now}: cleanup job for #{study_file.upload_file_name}:#{study_file.id} scheduled for #{run_at}"
+            rescue => e
+              # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
+              Rails.logger.error "#{Time.now}: Could not delete #{study_file.name}:#{study_file.id} in study #{self.name}; aborting"
+              SingleCellMailer.admin_notification('Local file deletion failed', nil, "The file at #{Rails.root.join(study.data_store_path, study_file.download_location)} failed to clean up after parsing, please remove.").deliver_now
+            end
+          end
+        end
       end
       true
     rescue => e

@@ -6,9 +6,17 @@
 #   cities = City.create([{ name: 'Chicago' }, { name: 'Copenhagen' }])
 #   Mayor.create(name: 'Emanuel', city: cities.first)
 
-study = Study.create!(name: 'Testing Study', description: '<p>This is the test study.</p>', data_dir: 'none')
-expression_file = StudyFile.create!(name: 'expression_matrix.txt', upload_file_name: 'expression_matrix.txt', study_id: study.id, file_type: 'Expression Matrix', y_axis_label: 'Expression Scores')
-cluster_file = StudyFile.create!(name: 'Test Cluster', upload_file_name: 'coordinates.txt', study_id: study.id, file_type: 'Cluster', x_axis_label: 'X', y_axis_label: 'Y', z_axis_label: 'Z')
+study = Study.create!(name: 'Testing Study', description: '<p>This is the test study.</p>', data_dir: 'test')
+expression_file = StudyFile.create!(name: 'expression_matrix.txt', upload_file_name: 'expression_matrix.txt', study_id: study.id,
+                                    file_type: 'Expression Matrix', y_axis_label: 'Expression Scores')
+cluster_file = StudyFile.create!(name: 'Test Cluster', upload_file_name: 'coordinates.txt', study_id: study.id,
+                                 file_type: 'Cluster', x_axis_label: 'X', y_axis_label: 'Y', z_axis_label: 'Z')
+mm_coord_file = StudyFile.create!(name: 'GRCh38/matrix.mtx', upload: File.open(Rails.root.join('test', 'test_data', 'GRCh38', 'matrix.mtx')),
+                                  file_type: 'MM Coordinate Matrix', study_id: study.id)
+genes_file = StudyFile.create!(name: 'GRCh38/genes.tsv', upload: File.open(Rails.root.join('test', 'test_data', 'GRCh38', 'genes.tsv')),
+                               file_type: '10X Genes File', study_id: study.id, options: {matrix_id: mm_coord_file.id.to_s})
+barcodes = StudyFile.create!(name: 'GRCh38/barcodes.tsv', upload: File.open(Rails.root.join('test', 'test_data', 'GRCh38', 'barcodes.tsv')),
+                               file_type: '10X Barcodes File', study_id: study.id, options: {matrix_id: mm_coord_file.id.to_s})
 
 cluster = ClusterGroup.create!(name: 'Test Cluster', study_id: study.id, study_file_id: cluster_file.id, cluster_type: '3d', cell_annotations: [
     {
