@@ -59,24 +59,6 @@
   </div>
 
   <script type="text/javascript">
-      $('#study-file-<%= study_file._id %> #study_file_file_type').change(function() {
-          var fileType = $(this).val();
-          if (fileType == 'Cluster') {
-              $("#study-file-<%= study_file._id %>-extra-info").html("<%= escape_javascript(render partial: 'cluster_axis_fields', locals: {f: f}) %>");
-          } else if (fileType == 'Expression Matrix') {
-              $("#study-file-<%= study_file._id %>-extra-info").html("<%= escape_javascript(render partial: 'expression_axis_fields', locals: {f: f}) %>");
-          } else {
-              $("#study-file-<%= study_file._id %>-extra-info").empty();
-          }
-      });
-
-      $('#sync-study-file-<%= study_file.id %>').click(function() {
-         if ($("#existing-file-<%= study_file.id%> ").val() != '') {
-             return true;
-         } else {
-             alert('You must select an existing file to sync with first');
-             return false;
-         }
-      });
+      <%= render partial: 'shared_sync_functions.js.erb', locals: {study_file: study_file, f: f} %>
   </script>
 <% end %>
