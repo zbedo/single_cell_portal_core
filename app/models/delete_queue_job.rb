@@ -78,7 +78,7 @@ class DeleteQueueJob < Struct.new(:object)
         object.user_annotation_shares.delete_all
       when 'Google::Cloud::Storage::File::List'
         # called when a user wants to delete an entire directory of files from a FireCloud submission
-        # this list could be very large, hence the background process so we don't tie the UI up
+        # this is run in the foreground as Delayed::Job cannot deserialize the list anymore
         files = object
         files.each {|f| f.delete}
         while files.next?
