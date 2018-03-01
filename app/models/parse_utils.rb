@@ -35,11 +35,28 @@ class ParseUtils
       # open files and read contents
       Rails.logger.info "#{Time.now}: Reading gene/barcode/matrix file contents for #{study.name}"
       matrix = NMatrix::IO::Market.load(matrix_file.path)
-      genes = genes_file.readlines.map {|line| line.strip.split.last }
+
+      # process the genes file to concatenate gene names and IDs together (for differentiating entries with duplicate names)
+      raw_genes = genes_file.readlines.map(&:strip)
+      genes = []
+      raw_genes.each do |row|
+        gene_id, gene_name = row.split.map(&:strip)
+        genes << "#{gene_name} (#{gene_id})"
+      end
+
       barcodes = barcodes_file.readlines.map(&:strip)
       matrix_file.close
       genes_file.close
       barcodes_file.close
+
+      # validate that barcodes list does not have any repeated values
+      existing_cells = study.all_expression_matrix_cells
+      uniques = barcodes - existing_cells
+
+      unless uniques.size == barcodes.size
+        repeats = barcodes - uniques
+        raise StandardError, "You have re-used the following cell names that were found in another expression matrix in your study (cell names must be unique across all expression matrices): #{repeats.join(', ')}"
+      end
 
       # load significant data & construct objects
       significant_scores = matrix.to_hash
@@ -79,7 +96,7 @@ class ParseUtils
         if @genes.size % 1000 == 0
           Gene.create!(@genes)
           @count += @genes.size
-          Rails.logger.info "#{Time.now}: Processed #{@count} significant genes from 10X CellRanger source data for #{study.name}"
+          Rails.logger.info "#{Time.now}: Processed #{@count} expressed genes from 10X CellRanger source data for #{study.name}"
           @records = []
         end
 
@@ -94,7 +111,10 @@ class ParseUtils
       # create records
       Gene.create(@genes)
       @count += @genes.size
+      Rails.logger.info "#{Time.now}: Processed #{@count} expressed genes from 10X CellRanger source data for #{study.name}"
       DataArray.create(@data_arrays)
+      @child_count += @data_arrays.size
+      Rails.logger.info "#{Time.now}: Processed #{@child_count} child data arrays from 10X CellRanger source data for #{study.name}"
       barcodes.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
         known_cells = study.data_arrays.build(name: "#{matrix_study_file.name} Cells", cluster_name: matrix_study_file.name,
                                               array_type: 'cells', array_index: index + 1, values: slice,
@@ -111,14 +131,14 @@ class ParseUtils
         other_genes << Gene.new(study_id: study.id, name: gene, searchable_name: gene.downcase, study_file_id: matrix_study_file.id).attributes
         other_genes_count += 1
         if other_genes.size % 1000 == 0
-          Rails.logger.info "#{Time.now}: creating #{other_genes_count} non-significant gene records in #{study.name}"
+          Rails.logger.info "#{Time.now}: creating #{other_genes_count} non-expressed gene records in #{study.name}"
           Gene.create(other_genes)
           @count += other_genes.size
           other_genes = []
         end
       end
       # process last batch
-      Rails.logger.info "#{Time.now}: creating #{other_genes_count} non-significant gene records in #{study.name}"
+      Rails.logger.info "#{Time.now}: creating #{other_genes_count} non-expressed gene records in #{study.name}"
       Gene.create(other_genes)
       @count += other_genes.size
 
