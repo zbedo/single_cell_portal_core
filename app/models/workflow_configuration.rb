@@ -66,6 +66,9 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
               configuration['inputs']['cellranger.transcriptomeTarGz'] = "\"#{reference_attributes['cell_ranger_mouse_ref']}\""
           end
 
+          # set the referenceName (configures the links to output files) - this is passed in as the genome assembly name/ID
+          configuration['inputs']['cellranger.referenceName'] = "\"#{inputs['transcriptomeTarGz']}\""
+
           # add optional parameters
           configuration['inputs']['cellranger.expectCells'] = inputs['expectCells']
           configuration['inputs']['cellranger.secondary'] = inputs['secondary']
