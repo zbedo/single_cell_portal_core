@@ -18,8 +18,10 @@ class StudyFile
   include Rails.application.routes.url_helpers # for accessing download_file_path and download_private_file_path
 
   # constants, used for statuses and file types
-  STUDY_FILE_TYPES = ['Cluster', 'Coordinate Labels' ,'Expression Matrix', 'Gene List', 'Metadata', 'Fastq', 'Documentation', 'Other']
-  PARSEABLE_TYPES = ['Cluster', 'Coordinate Labels', 'Expression Matrix', 'Gene List', 'Metadata']
+  STUDY_FILE_TYPES = ['Cluster', 'Coordinate Labels' ,'Expression Matrix', 'MM Coordinate Matrix', '10X Genes File',
+                      '10X Barcodes File', 'Gene List', 'Metadata', 'Fastq', 'Documentation', 'Other']
+  PARSEABLE_TYPES = ['Cluster', 'Coordinate Labels', 'Expression Matrix', 'MM Coordinate Matrix', '10X Genes File',
+                     '10X Barcodes File', 'Gene List', 'Metadata']
   UPLOAD_STATUSES = %w(new uploading uploaded)
   PARSE_STATUSES = %w(unparsed parsing parsed)
   PRIMARY_DATA_EXTENTIONS = %w(fastq fastq.zip fastq.gz fastq.tar.gz fq fq.zip fq.gz fq.tar.gz)
@@ -249,6 +251,10 @@ class StudyFile
         @cache_key = "#{study_name}.*render_cluster.*#{name_key}"
       when 'Expression Matrix'
         @cache_key = "#{study_name}.*expression"
+      when 'MM Coordinate Matrix'
+        @cache_key = "#{study_name}.*expression"
+      when /10X.*File/
+        @cache_key = "#{study_name}.*expression"
       when 'Gene List'
         name_key = self.precomputed_scores.first.name.split.join('-')
         @cache_key = "#{study_name}.*#{name_key}"
@@ -281,10 +287,12 @@ class StudyFile
   # remove a local copy on the file system if a parse fails
   def remove_local_copy
     Dir.chdir(self.study.data_store_path)
-    File.delete(self.download_location)
-    subdir = self.remote_location.blank? ? self.id : self.remote_location.split('/').first
-    if Dir.exist?(subdir)
-      Dir.rmdir(subdir)
+    if File.exists?(self.download_location)
+      File.delete(self.download_location)
+      subdir = self.remote_location.blank? ? self.id : self.remote_location.split('/').first
+      if Dir.exist?(subdir) && Dir.entries(subdir).delete_if {|e| e.start_with?('.')}.empty?
+        Dir.rmdir(subdir)
+      end
     end
   end
 

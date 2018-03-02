@@ -58,13 +58,16 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
           ref_namespace, ref_workspace = reference_workspace.value.split('/')
           reference_attributes = Study.firecloud_client.get_workspace(ref_namespace, ref_workspace)['workspace']['attributes']
           case inputs['transcriptomeTarGz']
-            when 'GRh38'
+            when 'GRCh38'
               configuration['inputs']['cellranger.transcriptomeTarGz'] = "\"#{reference_attributes['cell_ranger_human_ref']}\""
             when 'mm10'
               configuration['inputs']['cellranger.transcriptomeTarGz'] = "\"#{reference_attributes['cell_ranger_mouse_ref']}\""
             else
               configuration['inputs']['cellranger.transcriptomeTarGz'] = "\"#{reference_attributes['cell_ranger_mouse_ref']}\""
           end
+
+          # set the referenceName (configures the links to output files) - this is passed in as the genome assembly name/ID
+          configuration['inputs']['cellranger.referenceName'] = "\"#{inputs['transcriptomeTarGz']}\""
 
           # add optional parameters
           configuration['inputs']['cellranger.expectCells'] = inputs['expectCells']
@@ -133,7 +136,7 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
                  type: 'select',
                  default: 'mm10',
                  values: [
-                     ['human (GRh38)', 'GRh38'],
+                     ['human (GRCh38)', 'GRCh38'],
                      ['mouse (mm10)', 'mm10'],
                  ],
                  required: true,

@@ -1200,6 +1200,8 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# test validation of not allowing studies with an authorizationDomain attribute
+	# this test requires a workspace with the name of "development-authorization-domain-test-study" that is restricted
+	# by an authorization domain user group.  The portal service account must be a member of this group in order to pass.
 	test 'admin: sync-study: restricted workspace' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
