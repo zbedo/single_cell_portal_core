@@ -1,4 +1,13 @@
 <h1>Sync Study Data for '<%= @study.name %>' <%= render partial: 'initialize_study_label' %></h1>
+
+<% if params[:configuration_name].present? %>
+  <div class="bs-callout bs-callout-default">
+    <h4>Specialized Sync for: <span class="label label-primary"><%= params[:configuration_name] %></span></h4>
+    <p class="lead">Based on the type of workflow, some output files have been configured with their correct types & associations.  You may edit descriptions,
+      but those pre-set file types and associations have been locked as changing them will result in parse failures.</p>
+  </div>
+<% end %>
+
 <% if @orphaned_study_files.any? %>
   <div class="panel panel-danger">
     <div class="panel-heading">
@@ -114,6 +123,7 @@
 
 <script type="text/javascript">
 
+
     // when changing the existing file dropdown, dynamically update the file generation value for the specified form
     $('.existing-file-select').change(function() {
         var selectedFile = $(this).val();
@@ -132,6 +142,43 @@
                 form.find('#study_file_upload_file_size').val(result.size);
             }
         }
+    });
+
+    // re-enable save/synch buttons when a user selects a valid matrix association for genes/barcodes files
+    $('body').on('change', '.matrix-file-select', function(e) {
+        var select = e.target;
+        var form = $(select).closest('form');
+        var submit = form.find('.save-study-file');
+        if ( $(select).val() != '' ) {
+            submit.attr('disabled', false);
+        }
+    });
+
+    // pre-select all MM coordinate matrix associations, if present
+    $(document).ready(function() {
+        var allMatrices = gatherCoordinateMatrices();
+        var disabledCss = {
+            'pointer-events' : 'none'
+        };
+        $('.file-type').each(function(index, fileType) {
+            if ($(fileType).val() == '10X Genes File' || $(fileType).val() == '10X Barcodes File') {
+                var form = $(fileType).closest('.unsynced-study-file');
+                var matrixSelect = $(form).find('.matrix-file-select');
+                var matrixId = $(form).find('#study_file_options_matrix_id').val();
+                $(allMatrices).each(function(index, matrix) {
+                    matrixSelect.append($('<option />', {
+                        value: matrix[1],
+                        text: matrix[0]
+                    }));
+                });
+                // set correct value and disable necessary selects to prevent user error
+                matrixSelect.val(matrixId);
+                matrixSelect.css(disabledCss).attr('readonly', 'readonly').parent().css('cursor', 'not-allowed');
+                $(fileType).css(disabledCss).attr('readonly', 'readonly').parent().css('cursor', 'not-allowed');
+                var matrixForm = $('#study-file-' + matrixId);
+                matrixForm.find('.file-type').css(disabledCss).attr('readonly', 'readonly').parent().css('cursor', 'not-allowed');
+            }
+        });
     });
 
 </script>

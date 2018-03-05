@@ -1,0 +1,8 @@
+<div class="form-group row">
+  <div class="col-sm-6">
+    <%= f.fields_for :options do |opts| %>
+      <%= opts.label :matrix_id, 'MM Coordinate Matrix Pair' %>&nbsp;<span class="fa fa-question-circle" data-toggle="tooltip" data-placement="right" title="Select which MM Coordinate Matrix this file pairs with.  You cannot save this file until this is set."></span> <br />
+      <%= opts.select :matrix_id, options_for_select([]), {include_blank: 'Please select a matrix...'}, class: 'form-control matrix-file-select' %>
+    <% end %>
+  </div>
+</div>

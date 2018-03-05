@@ -911,3 +911,17 @@ function validateEmail(email) {
     var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(email);
 }
+
+// gather all MM Coordinate Matrix instances from a page
+function gatherCoordinateMatrices() {
+    var matrices = [];
+    $('.file-type').each(function(index, fileType) {
+        if ($(fileType).val() == 'MM Coordinate Matrix') {
+            var mForm = $(fileType).closest('.unsynced-study-file');
+            var mId = $(mForm).attr('id').split('-')[2];
+            var mName = $(mForm).find('.filename').val();
+            matrices.push([mName, mId]);
+        }
+    });
+    return matrices;
+}

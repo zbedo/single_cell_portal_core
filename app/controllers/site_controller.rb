@@ -956,7 +956,7 @@ class SiteController < ApplicationController
 
   # retrieve any optional parameters for a selected workflow
   def get_workflow_options
-    @options = WorkflowConfiguration.get_optional_parameters(params[:workflow_identifier])
+    @options = WorkflowConfiguration.get_additional_parameters(params[:workflow_identifier])
   end
 
   # create a workspace analysis submission for a given sample
@@ -1115,7 +1115,11 @@ class SiteController < ApplicationController
   # export a submission analysis metadata file
   def export_submission_metadata
     @metadata = AnalysisMetadatum.find_by(study_id: @study.id, submission_id: params[:submission_id])
-    send_data JSON.pretty_generate(@metadata.payload), content_type: :json, filename: 'analysis.json'
+    respond_to do |format|
+      format.html {send_data JSON.pretty_generate(@metadata.payload), content_type: :json, filename: 'analysis.json'}
+      format.json {render json: @metadata.payload}
+    end
+
   end
 
   # delete all files from a submission
@@ -1135,7 +1139,7 @@ class SiteController < ApplicationController
       AnalysisMetadatum.where(submission_id: params[:submission_id]).delete
       logger.info "#{Time.now}: queueing submission #{params[:submission]} deletion in #{@study.firecloud_workspace}"
       submission_files = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, @study.firecloud_project, @study.firecloud_workspace, prefix: params[:submission_id])
-      DeleteQueueJob.new(submission_files).delay.perform
+      DeleteQueueJob.new(submission_files).perform
     rescue => e
       logger.error "#{Time.now}: unable to remove submission #{params[:submission_id]} files from #{@study.firecloud_workspace} due to: #{e.message}"
       @alert = "Unable to delete the outputs for #{params[:submission_id]} due to the following error: #{e.message}"
@@ -1993,8 +1997,8 @@ class SiteController < ApplicationController
 
     # parellelize gets to speed up performance if there are a lot of workflows
     Parallel.map(allowed_workflows, in_threads: 100) do |workflow_opts|
-      namespace, name = workflow_opts.split('/')
-      all_workflows << Study.firecloud_client.get_methods(namespace: namespace, name: name)
+      namespace, name, snapshot = workflow_opts.split('/')
+      all_workflows << Study.firecloud_client.get_methods(namespace: namespace, name: name, snapshotId: snapshot)
     end
 
     # flatten list as it will be nested arrays
