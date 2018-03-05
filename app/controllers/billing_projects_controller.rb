@@ -53,10 +53,10 @@ class BillingProjectsController < ApplicationController
       @fire_cloud_client.create_billing_project(project_name, billing_account)
       # add portal service account to project
       @fire_cloud_client.add_user_to_billing_project(project_name, 'owner', @portal_service_account)
-      redirect_to merge_default_redirect_params(billing_projects_path, branding_project: params[:branding_project]), notice: "Your new project '#{project_name}' was successfully created using '#{billing_account}'" and return
+      redirect_to merge_default_redirect_params(billing_projects_path, branding_group: params[:branding_group]), notice: "Your new project '#{project_name}' was successfully created using '#{billing_account}'" and return
     rescue => e
       logger.error "#{Time.now}: Unable to create new billing project #{project_name} due to error: #{e.message}"
-      redirect_to merge_default_redirect_params(billing_projects_path, branding_project: params[:branding_project]), alert: "We were unable to create your new project due to the following error: #{e.message}" and return
+      redirect_to merge_default_redirect_params(billing_projects_path, branding_group: params[:branding_group]), alert: "We were unable to create your new project due to the following error: #{e.message}" and return
     end
   end
 
@@ -70,10 +70,10 @@ class BillingProjectsController < ApplicationController
     email = billing_project_user_params[:email]
     begin
       @fire_cloud_client.add_user_to_billing_project(params[:project_name], role, email)
-      redirect_to merge_default_redirect_params(billing_projects_path, branding_project: params[:branding_project]), notice: "#{email} has successfully been added to #{params[:project_name]} as #{role}" and return
+      redirect_to merge_default_redirect_params(billing_projects_path, branding_group: params[:branding_group]), notice: "#{email} has successfully been added to #{params[:project_name]} as #{role}" and return
     rescue => e
       logger.error "#{Time.now}: Unable to add #{email} to #{params[:project_name]} due to error: #{e.message}"
-      redirect_to merge_default_redirect_params(new_billing_project_user_path, branding_project: params[:branding_project]), alert: "We were unable to add #{email} to #{params[:project_name]} due to the following error: #{e.message}" and return
+      redirect_to merge_default_redirect_params(new_billing_project_user_path, branding_group: params[:branding_group]), alert: "We were unable to add #{email} to #{params[:project_name]} due to the following error: #{e.message}" and return
     end
   end
 
@@ -83,10 +83,10 @@ class BillingProjectsController < ApplicationController
     email = params[:email]
     begin
       @fire_cloud_client.delete_user_from_billing_project(params[:project_name], role, email)
-      redirect_to merge_default_redirect_params(billing_projects_path, branding_project: params[:branding_project]), notice: "#{email} has successfully been removed from #{params[:project_name]} as #{role}" and return
+      redirect_to merge_default_redirect_params(billing_projects_path, branding_group: params[:branding_group]), notice: "#{email} has successfully been removed from #{params[:project_name]} as #{role}" and return
     rescue => e
       logger.error "#{Time.now}: Unable to remove #{email} from #{params[:project_name]} due to error: #{e.message}"
-      redirect_to merge_default_redirect_params(billing_projects_path, branding_project: params[:branding_project]), alert: "We were unable to remove #{email} from #{params[:project_name]} due to the following error: #{e.message}'" and return
+      redirect_to merge_default_redirect_params(billing_projects_path, branding_group: params[:branding_group]), alert: "We were unable to remove #{email} from #{params[:project_name]} due to the following error: #{e.message}'" and return
     end
   end
 
@@ -200,7 +200,7 @@ class BillingProjectsController < ApplicationController
   def check_project_permissions
     projects = @fire_cloud_client.get_billing_projects
     unless projects.map {|project| project['projectName']}.include?(params[:project_name])
-      redirect_to merge_default_redirect_params(billing_projects_path, branding_project: params[:branding_project]), alert: 'You do not have permission to perform that action.' and return
+      redirect_to merge_default_redirect_params(billing_projects_path, branding_group: params[:branding_group]), alert: 'You do not have permission to perform that action.' and return
     end
   end
 end

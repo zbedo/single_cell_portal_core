@@ -51,7 +51,7 @@
           <p class="text-center"><%= link_to 'Instructions on creating Google billing accounts', 'https://software.broadinstitute.org/firecloud/documentation/article?id=9762', target: :_blank, class: 'btn btn-default' %></p>
         </div>
         <%= form_for(:billing_project, url: create_billing_project_path, html: {class: 'form', id: 'new-billing-project'}) do |f| %>
-          <%= hidden_field_tag :branding_project, params[:branding_project] %>
+          <%= hidden_field_tag :branding_group, params[:branding_group] %>
           <div class="form-group row">
             <div class="col-sm-6">
               <%= f.label :project_name %><br />

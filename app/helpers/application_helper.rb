@@ -1,16 +1,16 @@
 module ApplicationHelper
 
-	# overriding link_to to preserve branding_project params
+	# overriding link_to to preserve branding_group params
 	def scp_link_to(name, url, html_options={}, &block)
 		if url.start_with?('https') || url.start_with?('/')
 			current_url = request.fullpath
-			if current_url.include?('branding_project')
+			if current_url.include?('branding_group')
 				current_params = current_url.split('?').last.split('&')
-				current_project = current_params.detect {|p| p =~ /branding_project/}.gsub(/branding_project=/, '')
+				current_project = current_params.detect {|p| p =~ /branding_group/}.gsub(/branding_group=/, '')
 				if !url.include?('?')
-					url += "?branding_project=#{current_project}"
+					url += "?branding_group=#{current_project}"
 				else
-					url += "&branding_project=#{current_project}"
+					url += "&branding_group=#{current_project}"
 				end
 			end
 		end
