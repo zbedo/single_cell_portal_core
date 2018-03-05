@@ -1,5 +1,22 @@
 module ApplicationHelper
 
+	# overriding link_to to preserve branding_project params
+	def scp_link_to(name, url, html_options={}, &block)
+		if url.start_with?('https') || url.start_with?('/')
+			current_url = request.fullpath
+			if current_url.include?('branding_project')
+				current_params = current_url.split('?').last.split('&')
+				current_project = current_params.detect {|p| p =~ /branding_project/}.gsub(/branding_project=/, '')
+				if !url.include?('?')
+					url += "?branding_project=#{current_project}"
+				else
+					url += "&branding_project=#{current_project}"
+				end
+			end
+		end
+		link_to(name, url, html_options, &block)
+	end
+
 	# set gene search placeholder value based on parameters
 	def set_search_value
 		if params[:search]

@@ -11,16 +11,16 @@
 	<div class="collapse navbar-collapse">
 		<%= render partial: '/layouts/breadcrumbs' %>
 		<ul class="nav navbar-nav pull-right">
-			<li class='dropdown'><%= link_to "<span class='fa fa-question-circle'></span> Help <span class='caret'></span>".html_safe, "#", class: "dropdown-toggle", "data-toggle" => "dropdown" %>
+			<li class='dropdown'><%= scp_link_to "<span class='fa fa-question-circle'></span> Help <span class='caret'></span>".html_safe, "#", class: "dropdown-toggle", "data-toggle" => "dropdown" %>
 				<ul class="dropdown-menu dropdown-menu-right">
-          <li><%= link_to "<span class='fa fa-fw fa-lock'></span> Privacy Policy".html_safe, privacy_policy_path, class: 'check-upload' %></li>
+          <li><%= scp_link_to "<span class='fa fa-fw fa-lock'></span> Privacy Policy".html_safe, privacy_policy_path, class: 'check-upload' %></li>
           <li><%= link_to "<span class='fa fa-fw fa-info-circle'></span> Documentation/Wiki".html_safe, 'https://github.com/broadinstitute/single_cell_portal/wiki', target: '_blank' %></li>
           <li><%= link_to "<span class='fa fa-fw fa-exclamation-circle'></span> Issues".html_safe, 'https://github.com/broadinstitute/single_cell_portal/issues', target: '_blank' %></li>
           <li><%= link_to "<span class='fa fa-fw fa-github'></span> Portal Source Code".html_safe, 'https://github.com/broadinstitute/single_cell_portal_core', target: '_blank' %></li>
 				</ul>
 			</li>
 			<% if user_signed_in? %>
-				<li class="dropdown"><%= link_to "<span class='fa fa-user'></span> #{current_user.email.split('@').first} <span class='caret'></span>".html_safe, "#", class: "dropdown-toggle", "data-toggle" => "dropdown", id: 'profile-nav' %>
+				<li class="dropdown"><%= scp_link_to "<span class='fa fa-user'></span> #{current_user.email.split('@').first} <span class='caret'></span>".html_safe, "#", class: "dropdown-toggle", "data-toggle" => "dropdown", id: 'profile-nav' %>
 					<ul class="dropdown-menu dropdown-menu-right">
             <% if current_user.admin? %>
               <li><%= link_to "<span class='fa fa-lock fa-fw'></span> Admin Config".html_safe, admin_configurations_path, class: 'check-upload', id: 'admin-nav' %></li>
@@ -29,17 +29,17 @@
               <li><%= link_to "<span class='fa fa-bar-chart fa-fw'></span> Reports".html_safe, reports_path, class: 'check-upload', id: 'reports-nav' %></li>
               <li role="separator" class="divider"></li>
             <% end %>
-            <li><%= link_to "<span class='fa fa-user fa-fw'></span> My Profile".html_safe, view_profile_path(current_user.id), class: 'check-upload', id: 'my-profile' %></li>
-            <li><%= link_to "<span class='fa fa-tags fa-fw'></span> My Annotations".html_safe, user_annotations_path, class: 'check-upload', id: 'my-annotations' %></li>
-            <li><%= link_to "<span class='fa fa-book fa-fw'></span> My Studies".html_safe, studies_path, class: 'check-upload', id: 'my-studies' %>
-            <li><%= link_to "<span class='fa fa-usd fa-fw'></span> My Billing Projects".html_safe, billing_projects_path, class: 'check-upload', id: 'my-firecloud-projects' %>
-						<li><%= link_to "<span class='fa fa-plus fa-fw'></span> Add a Study".html_safe, new_study_path, class: 'check-upload' %></li>
+            <li><%= scp_link_to "<span class='fa fa-user fa-fw'></span> My Profile".html_safe, view_profile_path(current_user.id), class: 'check-upload', id: 'my-profile' %></li>
+            <li><%= scp_link_to "<span class='fa fa-tags fa-fw'></span> My Annotations".html_safe, user_annotations_path, class: 'check-upload', id: 'my-annotations' %></li>
+            <li><%= scp_link_to "<span class='fa fa-book fa-fw'></span> My Studies".html_safe, studies_path, class: 'check-upload', id: 'my-studies' %>
+            <li><%= scp_link_to "<span class='fa fa-usd fa-fw'></span> My Billing Projects".html_safe, billing_projects_path, class: 'check-upload', id: 'my-firecloud-projects' %>
+						<li><%= scp_link_to "<span class='fa fa-plus fa-fw'></span> Add a Study".html_safe, new_study_path, class: 'check-upload' %></li>
             <li role="separator" class="divider"></li>
-            <li><%= link_to "<span class='fa fa-sign-out fa-fw'></span> Logout".html_safe, destroy_user_session_path, method: :delete, class: 'check-upload', id: 'logout-nav' %></li>
+            <li><%= scp_link_to "<span class='fa fa-sign-out fa-fw'></span> Logout".html_safe, destroy_user_session_path, method: :delete, class: 'check-upload', id: 'logout-nav' %></li>
           </ul>
 				</li>
 			<% else %>
-				<li><%= link_to "<span class='fa fa-sign-in fa-fw'></span> Login".html_safe, new_user_session_path, id: 'login-nav' %></li>
+				<li><%= scp_link_to "<span class='fa fa-sign-in fa-fw'></span> Login".html_safe, user_google_oauth2_omniauth_authorize_path, id: 'login-nav' %></li>
 			<% end %>
 		</ul>
 	</div>

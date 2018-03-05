@@ -17,13 +17,13 @@
     <% end %>
   </div>
   <div class="col-md-2 col-sm-4 col-xs-12">
-    <%= link_to "<span class='fa fa-clock-o'></span> Most Recent".html_safe, get_site_path_with_params(params[:search_terms].to_s, 'recent'), class: 'btn btn-default btn-block' %>
+    <%= scp_link_to "<span class='fa fa-clock-o'></span> Most Recent".html_safe, get_site_path_with_params(params[:search_terms].to_s, 'recent'), class: 'btn btn-default btn-block' %>
   </div>
   <div class="col-md-2 col-sm-4 col-xs-12">
-    <%= link_to "<span class='fa fa-star-o'></span> Most Popular".html_safe, get_site_path_with_params(params[:search_terms].to_s, 'popular'), class: 'btn btn-default btn-block' %>
+    <%= scp_link_to "<span class='fa fa-star-o'></span> Most Popular".html_safe, get_site_path_with_params(params[:search_terms].to_s, 'popular'), class: 'btn btn-default btn-block' %>
   </div>
   <div class="col-md-2 col-sm-4 col-xs-12">
-    <%= link_to "<span class='fa fa-ban'></span> Reset Filters".html_safe, site_path, class: 'btn btn-default btn-block' %>
+    <%= scp_link_to "<span class='fa fa-ban'></span> Reset Filters".html_safe, site_path, class: 'btn btn-default btn-block' %>
   </div>
 </div>
 <div class="panel-group" id="studies">
@@ -43,11 +43,12 @@
   var currentPage = "<%= params[:page] %>";
   var order = "<%= params[:order] %>";
   var search = "<%= params[:search_terms] %>";
+  var project = "<%= params[:branding_project] %>"
 
   function bindScroll(){
     if($(window).scrollTop() + $(window).height() > $(document).height() - 1) {
       $(window).unbind('scroll');
-      paginateStudies(totalPages, order, search);
+      paginateStudies(totalPages, order, search, project);
     }
   }
 
@@ -58,7 +59,7 @@
 
   $("#pagination").click(function() {
     $(window).unbind('scroll');
-    paginateStudies(totalPages, order, search);
+    paginateStudies(totalPages, order, search, project);
   });
 
   if ( search != "" ) {

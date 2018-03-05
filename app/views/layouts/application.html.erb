@@ -21,6 +21,10 @@
         var console = { log: function() {} };
     </script>
 	<% end %>
+
+  <% if params[:branding_project].present? %>
+    <%= stylesheet_link_tag "/single_cell/branding_stylesheets/#{params[:branding_project]}.css", media: 'all' %>
+  <% end %>
 </head>
 <body>
 <%= render '/layouts/nav' %>
@@ -86,7 +90,7 @@
 
 			<%= link_to image_tag("broad-logo.png", class: "center-block img-responsive"), "http://www.broadinstitute.org" %>
 			<p class="text-muted">&copy; <%= Date.today.year %> The Broad Institute of MIT & Harvard</p>
-      <p class="text-muted"><%= link_to 'Privacy Policy', privacy_policy_path %></p>
+      <p class="text-muted"><%= scp_link_to 'Privacy Policy', privacy_policy_path %></p>
 		</div>
 	</div>
 </div>

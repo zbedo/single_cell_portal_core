@@ -110,17 +110,36 @@ class SiteController < ApplicationController
     if @terms.size == 1
       @gene = load_best_gene_match(@study.genes.by_name(@terms.first, @study.expression_matrix_files.map(&:id)), @terms.first)
       if @gene.empty?
-        redirect_to request.referrer, alert: "No matches found for: #{@terms.first}." and return
+        redirect_to merge_default_redirect_params(request.referrer, branding_project: params[:branding_project]),
+                    alert: "No matches found for: #{@terms.first}." and return
       else
-        redirect_to view_gene_expression_path(study_name: params[:study_name], gene: @gene['name'], cluster: cluster, annotation: annotation, consensus: consensus, subsample: subsample, plot_type: plot_type, kernel_type: kernel_type, band_type: band_type, boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering, heatmap_size: heatmap_size) and return
+        redirect_to merge_default_redirect_params(view_gene_expression_path(study_name: params[:study_name], gene: @gene['name'],
+                                                                            cluster: cluster, annotation: annotation, consensus: consensus,
+                                                                            subsample: subsample, plot_type: plot_type,
+                                                                            kernel_type: kernel_type, band_type: band_type,
+                                                                            boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering,
+                                                                            heatmap_size: heatmap_size),
+                                                  branding_project: params[:branding_project])  and return
       end
     end
 
     # else, determine which view to load (heatmaps vs. violin/scatter)
     if !consensus.blank?
-      redirect_to view_gene_set_expression_path(study_name: params[:study_name], search: {genes: @terms.join(' ')} , cluster: cluster, annotation: annotation, consensus: consensus, subsample: subsample, plot_type: plot_type, kernel_type: kernel_type, band_type: band_type, boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering, heatmap_size: heatmap_size)
+      redirect_to merge_default_redirect_params(view_gene_set_expression_path(study_name: params[:study_name], search: {genes: @terms.join(' ')},
+                                                                              cluster: cluster, annotation: annotation,
+                                                                              consensus: consensus, subsample: subsample,
+                                                                              plot_type: plot_type, kernel_type: kernel_type,
+                                                                              band_type: band_type, boxpoints: boxpoints,
+                                                                              heatmap_row_centering: heatmap_row_centering,
+                                                                              heatmap_size: heatmap_size),
+                                                branding_project: params[:branding_project])
     else
-      redirect_to view_gene_expression_heatmap_path(search: {genes: @terms.join(' ')}, cluster: cluster, annotation: annotation, plot_type: plot_type, kernel_type: kernel_type, band_type: band_type, boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering, heatmap_size: heatmap_size)
+      redirect_to merge_default_redirect_params(view_gene_expression_heatmap_path(search: {genes: @terms.join(' ')}, cluster: cluster,
+                                                                                  annotation: annotation, plot_type: plot_type,
+                                                                                  kernel_type: kernel_type, band_type: band_type,
+                                                                                  boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering,
+                                                                                  heatmap_size: heatmap_size),
+                                                branding_project: params[:branding_project])
     end
   end
 
@@ -353,7 +372,7 @@ class SiteController < ApplicationController
     end
     # make sure we found genes, otherwise redirect back to base view
     if @genes.empty?
-      redirect_to view_study_path, alert: "None of the requested genes were found: #{terms.join(', ')}"
+      redirect_to merge_default_redirect_params(view_study_path, branding_project: params[:branding_project]), alert: "None of the requested genes were found: #{terms.join(', ')}"
     else
       render 'view_gene_expression'
     end
@@ -436,7 +455,7 @@ class SiteController < ApplicationController
     end
     # make sure we found genes, otherwise redirect back to base view
     if @genes.empty?
-      redirect_to view_study_path, alert: "None of the requested genes were found: #{terms.join(', ')}"
+      redirect_to merge_default_redirect_params(view_study_path, branding_project: params[:branding_project]), alert: "None of the requested genes were found: #{terms.join(', ')}"
     end
   end
 
@@ -544,7 +563,9 @@ class SiteController < ApplicationController
 
   # redirect to show precomputed marker gene results
   def search_precomputed_results
-    redirect_to view_precomputed_gene_expression_heatmap_path(study_name: params[:study_name], precomputed: params[:expression])
+    redirect_to merge_default_redirect_params(view_precomputed_gene_expression_heatmap_path(study_name: params[:study_name],
+                                                                                            precomputed: params[:expression]),
+                                              branding_project: params[:branding_project])
   end
 
   # view all genes as heatmap in morpheus, will pull from pre-computed gct file
@@ -564,11 +585,14 @@ class SiteController < ApplicationController
   def download_file
     # make sure user is signed in
     if !user_signed_in?
-      redirect_to view_study_path(@study.url_safe_name), alert: 'You must be signed in to download data.' and return
+      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), branding_project: params[:branding_project]),
+                  alert: 'You must be signed in to download data.' and return
     elsif @study.embargoed?(current_user)
-      redirect_to view_study_path(@study.url_safe_name), alert: "You may not download any data from this study until #{@study.embargo.to_s(:long)}." and return
+      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), branding_project: params[:branding_project]),
+                  alert: "You may not download any data from this study until #{@study.embargo.to_s(:long)}." and return
     elsif !@study.can_download?(current_user)
-      redirect_to view_study_path(@study.url_safe_name), alert: 'You do not have permission to perform that action.' and return
+      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), branding_project: params[:branding_project]),
+                  alert: 'You do not have permission to perform that action.' and return
     end
 
     # next check if downloads have been disabled by administrator, this will abort the download
@@ -600,7 +624,8 @@ class SiteController < ApplicationController
       end
     rescue RuntimeError => e
       logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
-      redirect_to view_study_path(@study.url_safe_name), alert: "We were unable to download the file #{params[:filename]} do to an error: #{view_context.simple_format(e.message)}" and return
+      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), branding_project: params[:branding_project]),
+                  alert: "We were unable to download the file #{params[:filename]} do to an error: #{view_context.simple_format(e.message)}" and return
     end
   end
 
@@ -1170,7 +1195,7 @@ class SiteController < ApplicationController
     @study = Study.find_by(url_safe_name: params[:study_name])
     # redirect if study is not found
     if @study.nil?
-      redirect_to site_path, alert: 'Study not found.  Please check the name and try again.' and return
+      redirect_to merge_default_redirect_params(site_path, branding_project: params[:branding_project]), alert: 'Study not found.  Please check the name and try again.' and return
     end
   end
 
@@ -1271,7 +1296,7 @@ class SiteController < ApplicationController
         alert = 'You do not have permission to view the requested page.'
         respond_to do |format|
           format.js {render js: "alert('#{alert}')" and return}
-          format.html {redirect_to site_path, alert: alert and return}
+          format.html {redirect_to merge_default_redirect_params(site_path, branding_project: params[:branding_project]), alert: alert and return}
         end
       end
     end
@@ -1283,7 +1308,7 @@ class SiteController < ApplicationController
       @alert ='You do not have permission to perform that action.'
       respond_to do |format|
         format.js {render action: :notice}
-        format.html {redirect_to site_path, alert: @alert and return}
+        format.html {redirect_to merge_default_redirect_params(site_path, branding_project: params[:branding_project]), alert: @alert and return}
         format.json {head 403}
       end
     end
