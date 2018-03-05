@@ -9,6 +9,7 @@
 			</ul>
 		</div>
 	<% end %>
+  <%= hidden_field_tag :branding_project, params[:branding_project] %>
   <%= f.hidden_field :user_id, value: @study.new_record? ? current_user._id : @study.user_id %>
 	<div class="form-group row">
 		<div class="col-md-8">

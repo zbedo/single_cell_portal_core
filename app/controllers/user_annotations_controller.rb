@@ -206,7 +206,7 @@ class UserAnnotationsController < ApplicationController
     end
     if !@user_annotation.can_edit?(current_user)
       redirect_to merge_default_redirect_params(user_annotations_path, branding_project: params[:branding_project]),
-                  alert: 'You don\'t have permission to perform that action'
+                  alert: "You don't have permission to perform that action"
     end
   end
 end

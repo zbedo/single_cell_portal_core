@@ -16,6 +16,7 @@
 </div>
 <div class="well well-lg">
   <%= form_for(:billing_project_user, url: create_billing_project_user_path(project_name: params[:project_name]), html: {class: 'form'}) do |f| %>
+    <%= hidden_field_tag :branding_project, params[:branding_project] %>
     <div class="form-group row">
       <div class="col-md-6">
         <%= f.label :email %><br />
