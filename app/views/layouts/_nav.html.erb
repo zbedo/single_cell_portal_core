@@ -39,10 +39,10 @@
             <li><%= scp_link_to "<span class='fa fa-book fa-fw'></span> My Studies".html_safe, studies_path, class: 'check-upload', id: 'my-studies' %>
             <li><%= scp_link_to "<span class='fa fa-usd fa-fw'></span> My Billing Projects".html_safe, billing_projects_path, class: 'check-upload', id: 'my-firecloud-projects' %>
 						<li><%= scp_link_to "<span class='fa fa-plus fa-fw'></span> Add a Study".html_safe, new_study_path, class: 'check-upload' %></li>
-            <% if current_user.branding_groups.any? %>
+            <% if current_user.available_branding_groups.any? %>
               <li role="separator" class="divider"></li>
               <li class="dropdown-header">My Brands</li>
-              <% current_user.branding_groups.each do |branding_group| %>
+              <% current_user.available_branding_groups.each do |branding_group| %>
                 <li><%= link_to "<i class='fa fa-copyright fa-fw'></i> #{branding_group.name}".html_safe, site_path(brand: branding_group.name_as_id) %></li>
               <% end %>
             <% end %>

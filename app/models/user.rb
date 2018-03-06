@@ -218,6 +218,11 @@ class User
     self.email.gsub(/[@\.]/, '-')
   end
 
+  # return branding groups visible to user (or all for admins)
+  def available_branding_groups
+    self.admin? ? BrandingGroup.all.order_by(:name.asc) : BrandingGroup.where(user_id: self.id).order_by(:name.asc)
+  end
+
   # helper method to migrate study ownership & shares from old email to new email
   def self.migrate_studies_and_shares(existing_email, new_email)
     existing_user = self.find_by(email: existing_email)
