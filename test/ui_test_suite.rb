@@ -4492,7 +4492,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get study_page
 		wait_until_page_loads(study_page)
 
-		open_ui_tab('study-workflows')
+		open_ui_tab('study-analyses')
 		wait_for_render(:id, 'workflow_identifier')
 		samples_tab = @driver.find_element(:id, 'select-samples-nav')
 		samples_tab.click
@@ -4557,7 +4557,7 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(study_page)
 
 		# select worfklow & sample
-		open_ui_tab('study-workflows')
+		open_ui_tab('study-analyses')
 		wait_for_render(:id, 'workflow_identifier')
 		scroll_to(:bottom)
 		wdl_workdropdown = @driver.find_element(:id, 'workflow_identifier')
@@ -4632,7 +4632,7 @@ class UiTestSuite < Test::Unit::TestCase
 		study_page = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get study_page
 		wait_until_page_loads(study_page)
-		open_ui_tab('study-workflows')
+		open_ui_tab('study-analyses')
 		wait_for_render(:id, 'submissions-table')
 
 		# make sure submission has completed
@@ -4708,7 +4708,7 @@ class UiTestSuite < Test::Unit::TestCase
 		study_page = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get study_page
 		wait_until_page_loads(study_page)
-		open_ui_tab('study-workflows')
+		open_ui_tab('study-analyses')
 		wait_for_render(:id, 'submissions-table')
 
 		# find a completed submission
@@ -4757,7 +4757,7 @@ class UiTestSuite < Test::Unit::TestCase
 		study_page = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get study_page
 		wait_until_page_loads(study_page)
-		open_ui_tab('study-workflows')
+		open_ui_tab('study-analyses')
 		wait_for_render(:id, 'submissions-table')
 		submissions_table = @driver.find_element(:id, 'submissions-table')
 		submission_ids = submissions_table.find_element(:tag_name, 'tbody').find_elements(:tag_name, 'tr').map {|s| s['id']}.delete_if {|id| id.empty?}
@@ -4790,7 +4790,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get study_page
 		wait_until_page_loads(study_page)
 
-		open_ui_tab('study-workflows')
+		open_ui_tab('study-analyses')
 		wait_for_render(:id, 'workflow_identifier')
 		samples_tab = @driver.find_element(:id, 'select-samples-nav')
 		samples_tab.click

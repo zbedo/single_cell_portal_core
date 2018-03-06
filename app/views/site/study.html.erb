@@ -15,7 +15,7 @@
       <li role="presentation" class="study-nav disabled" id="study-download-nav"><a href="#study-download" data-toggle="tooltip" title="Only authenticated users with download privileges can download data">Download <i class="fa fa-fw fa-download"></i></a></li>
     <% end %>
     <% if @allow_firecloud_access && @study.can_compute?(current_user) %>
-      <li role="presentation" class="study-nav" id="study-workflows-nav"><a href="#study-workflows" data-toggle="tab">Workflows <i class="fa fa-fw fa-tasks"></i></a></li>
+      <li role="presentation" class="study-nav" id="study-analyses-nav"><a href="#study-analyses" data-toggle="tab">Workflows <i class="fa fa-fw fa-tasks"></i></a></li>
     <% end %>
     <% if @allow_firecloud_access && @study.can_edit?(current_user) %>
       <li role="presentation" class="study-nav" id="study-settings-nav"><a href="#study-settings" data-toggle="tab">Settings <i class="fa fa-fw fa-gears"></i></a></li>
@@ -36,8 +36,8 @@
       </div>
     <% end %>
     <% if @allow_firecloud_access && @study.can_compute?(current_user) %>
-      <div class="tab-pane" id="study-workflows" role="tabpanel">
-        <%= render partial: 'study_workflows' %>
+      <div class="tab-pane" id="study-analyses" role="tabpanel">
+        <%= render partial: 'study_analyses' %>
       </div>
     <% end %>
     <% if @allow_firecloud_access && @study.can_edit?(current_user) %>
