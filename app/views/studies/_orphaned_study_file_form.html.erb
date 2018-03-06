@@ -2,12 +2,15 @@
   <%= render partial: 'study_file_errors', locals: {study_file: study_file} %>
   <%= f.hidden_field :study_id, value: params[:id] %>
   <%= f.hidden_field :_id, value: study_file._id %>
-  <% if study_file.file_type == 'Cluster' || study_file.file_type == 'Gene List' %>
-    <%= f.hidden_field :upload_file_name %>
-  <% end %>
-  <%= f.hidden_field :upload_content_type %>
+  <%= f.hidden_field :upload_file_name %>
   <%= f.hidden_field :upload_file_size %>
+  <%= f.hidden_field :status, value: 'uploaded' %>
+  <%= f.hidden_field :upload_content_type %>
   <%= f.hidden_field :generation %>
+  <%= f.hidden_field :remote_location %>
+  <% study_file.options.each do |key, value| %>
+    <%= hidden_field_tag "study_file_options_#{key}", value, name: "study_file[options][#{key}]" %>
+  <% end %>
   <div class="form-group row">
     <div class="col-sm-3">
       <% if study_file.file_type == 'Cluster' || study_file.file_type == 'Gene List' %>
@@ -30,7 +33,7 @@
   <div id="study-file-<%= study_file._id %>-extra-info">
     <% if study_file.file_type == 'Cluster'  %>
       <%= render partial: 'cluster_axis_fields', locals: {f: f} %>
-    <% elsif study_file.file_type == 'Expression Matrix' %>
+    <% elsif study_file.file_type == 'Expression Matrix' || study_file.file_type == 'MM Coordinate Matrix' %>
       <%= render partial: 'expression_axis_fields', locals: {f: f} %>
     <% end %>
   </div>
@@ -57,15 +60,15 @@
   </div>
 
   <script type="text/javascript">
+      <%= render partial: 'shared_sync_functions.js.erb', locals: {study_file: study_file, f: f} %>
 
       $('#sync-study-file-<%= study_file.id %>').click(function() {
-         if ($("#existing-file-<%= study_file.id%> ").val() != '') {
-             return true;
-         } else {
-             alert('You must select an existing file to sync with first');
-             return false;
-         }
+          if ($("#existing-file-<%= study_file.id %> ").val() !== '') {
+              return true;
+          } else {
+              alert('You must select an existing file to sync with first');
+              return false;
+          }
       });
-
   </script>
 <% end %>

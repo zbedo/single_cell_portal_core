@@ -434,8 +434,8 @@ class Study
       if !default_cluster.nil? && default_cluster.cell_annotations.any?
         annot = default_cluster.cell_annotations.first
         default_annot = "#{annot[:name]}--#{annot[:type]}--cluster"
-      elsif self.study_metadata.any?
-        metadatum = self.study_metadata.first
+      elsif self.cell_metadata.any?
+        metadatum = self.cell_metadata.first
         default_annot = "#{metadatum.name}--#{metadatum.annotation_type}--study"
       else
         # annotation won't be set yet if a user is parsing metadata without clusters, or vice versa
@@ -568,7 +568,7 @@ class Study
   # cell lists from individual expression matrices
   def all_cells_array
     vals = []
-    arrays = DataArray.where(study_id: self.id, linear_data_type: 'Study', linear_data_id: self.id, name: 'All Cells')
+    arrays = DataArray.where(study_id: self.id, linear_data_type: 'Study', linear_data_id: self.id, name: 'All Cells').order_by(&:array_index)
     if arrays.any?
       arrays.each do |array|
         vals += array.values
@@ -593,25 +593,23 @@ class Study
   end
 
   # return a hash keyed by cell name of the requested study_metadata values
-  def study_metadata_values(metadata_name, metadata_type)
-    metadata_objects = self.study_metadata.by_name_and_type(metadata_name, metadata_type)
-    vals = {}
-    metadata_objects.each do |metadata|
-      vals.merge!(metadata.cell_annotations)
+  def cell_metadata_values(metadata_name, metadata_type)
+    cell_metadatum = self.cell_metadata.by_name_and_type(metadata_name, metadata_type)
+    if cell_metadatum.present?
+      cell_metadatum.cell_annotations
+    else
+      {}
     end
-    vals
   end
 
   # return array of possible values for a given study_metadata annotation (valid only for group-based)
-  def study_metadata_keys(metadata_name, metadata_type)
-    vals = []
-    unless metadata_type == 'numeric'
-      metadata_objects = self.study_metadata.by_name_and_type(metadata_name, metadata_type)
-      metadata_objects.each do |metadata|
-        vals += metadata.values
-      end
+  def cell_metadata_keys(metadata_name, metadata_type)
+    cell_metadatum = self.cell_metadata.by_name_and_type(metadata_name, metadata_type)
+    if cell_metadatum.present?
+      cell_metadatum.values
+    else
+      []
     end
-    vals.uniq
   end
 
   ###
@@ -638,12 +636,12 @@ class Study
 
   # helper method to directly access expression matrix files
   def expression_matrix_files
-    self.study_files.by_type('Expression Matrix')
+    self.study_files.by_type(['Expression Matrix', 'MM Coordinate Matrix'])
   end
 
   # helper method to directly access expression matrix file file by name
   def expression_matrix_file(name)
-    self.study_files.find_by(file_type:'Expression Matrix', name: name)
+    self.study_files.find_by(:file_type.in => ['Expression Matrix', 'MM Coordinate Matrix'], name: name)
   end
   # helper method to directly access metadata file
   def metadata_file
@@ -688,30 +686,53 @@ class Study
   ###
 
   # transform expression data from db into mtx format
-  def expression_to_mtx
-    puts "Generating MTX file for #{self.name} expression data"
-    puts 'Reading source data'
-    expression_scores = self.genes
-    score_count = expression_scores.size
-    cell_count = self.cell_count
-    total_values = expression_scores.inject(0) {|total, score| total + score.scores.size}
-    puts 'Creating file and writing headers'
-    output_file = File.new(self.data_store_path.to_s + '/expression_matrix.mtx', 'w+')
-    output_file.write "#{score_count}\t#{cell_count}\t#{total_values}\n"
-    puts 'Headers successfully written'
+  def expression_to_matrix_market(expression_file)
+    puts "Generating Matrix Market coordinate (mm) file for #{self.name} expression data"
+    puts 'Reading source data...'
+    genes = Gene.where(study_id: self.id, study_file_id: expression_file.id)
+    puts 'Assembling counts...'
+    score_count = genes.size
+    all_cells = self.all_cells_array
+    cell_count = all_cells.size
+    significant_values = score_count + cell_count + 1 # extra value is for GENE header
+    score_file = File.new(self.data_store_path.to_s + "/#{expression_file.name}.tmp", 'w+')
     counter = 0
-    expression_scores.each do |entry|
-      gene = entry.gene
-      entry.scores.each do |cell, score|
-        output_file.write "#{gene}\t#{cell}\t#{score}\n"
+    puts 'Writing gene-level scores...'
+    genes.each_with_index do |gene, gene_index|
+      gene_name = gene.name
+      score_file.write "#{gene_index + 2}\t1\t#{gene_name}\n"
+      gene.scores.each do |cell, score|
+        cell_index = all_cells.index(cell)
+        score_file.write "#{gene_index + 2}\t#{cell_index + 2}\t#{score}\n"
+        significant_values += 1
       end
       counter += 1
       if counter % 1000 == 0
         puts "#{counter} genes written out of #{score_count}"
       end
     end
+    puts 'Finished writing scores, updating significant score count...'
+    score_file.close
+    output_file = File.new(self.data_store_path.to_s + "/#{expression_file.name}.mm", 'w+')
+    reopened_file = File.open(self.data_store_path.to_s + "/#{expression_file.name}.tmp", 'r')
+    puts 'Creating final output file and writing headers...'
+    output_file.write "%%MatrixMarket matrix coordinate double symmetric\n"
+    output_file.write "#{score_count + 1}\t#{cell_count + 1}\t#{significant_values}\n"
+    puts 'Headers successfully written!'
+    puts 'Writing cell list...'
+    output_file.write "1\t1\tGENE\n"
+    all_cells.each_with_index do |cell, index|
+      output_file.write "1\t#{index + 2}\t#{cell}\n"
+    end
+    puts 'Cell list successfully written!'
+    puts 'Concatenating files...'
+    while !reopened_file.eof?
+      output_file.write reopened_file.readline
+    end
     puts 'Finished!'
     puts "Output file: #{File.absolute_path(output_file)}"
+    reopened_file.close
+    File.delete(reopened_file.path)
     output_file.close
   end
 
@@ -869,7 +890,7 @@ class Study
       # next, check if this is a re-parse job, in which case we need to remove all existing entries first
       if opts[:reparse]
         self.genes.where(study_file_id: expression_file.id).delete_all
-        self.data_arrays.where(study_file_id: expression_file.id).delete_all
+        DataArray.where(study_id: self.id, study_file_id: expression_file.id).delete_all
         expression_file.invalidate_cache_by_file_type
       end
 
@@ -883,6 +904,7 @@ class Study
         Rails.logger.info "#{Time.now}: Parsing #{expression_file.name}:#{expression_file.id} as text/plain"
         file = File.open(@file_location, 'rb')
       end
+      # first determine if this is a MM coordinate file or not
       cells = file.readline.split(/[\t,]/).map(&:strip)
       @last_line = "#{expression_file.name}, line 1"
       if !['gene', ''].include?(cells.first.downcase) || cells.size <= 1
@@ -894,8 +916,10 @@ class Study
         else
           expression_file.update(parse_status: 'failed')
           @validation_error = true
+          @validation_error_message = 'file header validation failed: first header should be GENE or blank followed by cell names'
         end
       end
+
       file.close
     rescue => e
       error_message = "Unexpected error: #{e.message}"
@@ -909,12 +933,11 @@ class Study
 
     # raise validation error if needed
     if @validation_error
-      error_message = "file header validation failed: first header should be GENE or blank followed by cell names"
       filename = expression_file.name
       expression_file.remove_local_copy
       expression_file.destroy
-      Rails.logger.info Time.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Expression file: '#{filename}' parse has failed", error_message).deliver_now
+      Rails.logger.info Time.now.to_s + ': ' + @validation_error_message
+      SingleCellMailer.notify_user_parse_fail(user.email, "Expression file: '#{filename}' parse has failed", @validation_error_message).deliver_now
       raise StandardError, error_message
     end
 
@@ -988,11 +1011,11 @@ class Study
               significant_scores[cells[index]] = score
             end
           end
-          signification_cells = significant_scores.keys
-          signification_exp_values = significant_scores.values
+          significant_cells = significant_scores.keys
+          significant_exp_values = significant_scores.values
 
           # chunk cells & values into pieces as necessary
-          signification_cells.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
+          significant_cells.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
             # create array of all cells for study, send the object attributes rather than the object for bulk insertion
             cell_array = DataArray.new(name: new_gene.cell_key, cluster_name: expression_file.name, array_type: 'cells',
                                        array_index: index + 1, study_file_id: expression_file._id, values: slice,
@@ -1000,7 +1023,7 @@ class Study
             @child_records << cell_array.attributes
           end
 
-          signification_exp_values.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
+          significant_exp_values.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
             # create array of all cells for study, sending the object attributes rather than the object for bulk insertion
             score_array = DataArray.new(name: new_gene.score_key, cluster_name: expression_file.name, array_type: 'expression',
                                         array_index: index + 1, study_file_id: expression_file._id, values: slice,
@@ -1024,7 +1047,7 @@ class Study
           end
         end
       end
-
+      # process last few records
       Gene.create(@records)
       @count += @records.size
       Rails.logger.info "#{Time.now}: Processed #{@count} genes from #{expression_file.name}:#{expression_file.id} for #{self.name}"
@@ -1380,8 +1403,8 @@ class Study
             # set a default color profile if this is a numeric annotation
             study_obj.default_options[:color_profile] = 'Reds'
           end
-        elsif study_obj.study_metadata.any?
-          metadatum = study_obj.study_metadata.first
+        elsif study_obj.cell_metadata.any?
+          metadatum = study_obj.cell_metadata.first
           study_obj.default_options[:annotation] = "#{metadatum.name}--#{metadatum.annotation_type}--study"
           if metadatum.annotation_type == 'numeric'
             # set a default color profile if this is a numeric annotation
@@ -1397,7 +1420,7 @@ class Study
       study_obj.save
 
       # create subsampled data_arrays for visualization
-      study_metadata = CellMetadatum.where(study_id: self.id)
+      cell_metadata = CellMetadatum.where(study_id: self.id)
       # determine how many levels to subsample based on size of cluster_group
       required_subsamples = ClusterGroup::SUBSAMPLE_THRESHOLDS.select {|sample| sample < @cluster_group.points}
       required_subsamples.each do |sample_size|
@@ -1408,7 +1431,7 @@ class Study
           end
         end
         # create study-based annotation subsamples
-        study_metadata.each do |metadata|
+        cell_metadata.each do |metadata|
           @cluster_group.delay.generate_subsample_arrays(sample_size, metadata.name, metadata.annotation_type, 'study')
         end
       end
@@ -1688,7 +1711,7 @@ class Study
 
       # next, check if this is a re-parse job, in which case we need to remove all existing entries first
       if opts[:reparse]
-        self.study_metadata.delete_all
+        self.cell_metadata.delete_all
         metadata_file.invalidate_cache_by_file_type
       end
 
@@ -1783,7 +1806,7 @@ class Study
           raw_vals = line.split(/[\t,]/).map(&:strip)
           vals = self.sanitize_input_array(raw_vals)
 
-          # assign values to correct study_metadata object
+          # assign values to correct cell_metadata object
           vals.each_with_index do |val, index|
             unless index == name_index
               if @metadata_data_arrays[index].values.size >= DataArray::MAX_ENTRIES
@@ -1792,9 +1815,9 @@ class Study
                 array = @metadata_data_arrays[index]
                 Rails.logger.info "#{Time.now}: Saving cell metadata data array: #{array.name}-#{array.array_index} using #{metadata_file.upload_file_name}:#{metadata_file.id} in #{self.name}"
                 array.save
-                new_array = metadata.study_metadata.build(name: metadata.name, array_type: 'annotation', cluster_name: metadata_file.name,
-                                                          array_index: array.array_index + 1, study_file_id: metadata_file._id,
-                                                          study_id: self.id, values: [])
+                new_array = metadata.data_arrays.build(name: metadata.name, array_type: 'annotations', cluster_name: metadata_file.name,
+                                                       array_index: array.array_index + 1, study_file_id: metadata_file._id,
+                                                       study_id: self.id, values: [])
                 @metadata_data_arrays[index] = new_array
               end
               # determine whether or not value needs to be cast as a float or not

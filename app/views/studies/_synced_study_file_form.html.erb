@@ -3,7 +3,14 @@
   <%= f.hidden_field :study_id, value: params[:id] %>
   <%= f.hidden_field :_id, value: study_file._id %>
   <%= f.hidden_field :upload_file_name %>
+  <%= f.hidden_field :upload_file_size %>
+  <%= f.hidden_field :status, value: 'uploaded' %>
   <%= f.hidden_field :upload_content_type %>
+  <%= f.hidden_field :generation %>
+  <%= f.hidden_field :remote_location %>
+  <% study_file.options.each do |key, value| %>
+    <%= hidden_field_tag "study_file_options_#{key}", value, name: "study_file[options][#{key}]" %>
+  <% end %>
   <div class="form-group row">
     <div class="col-sm-4">
       <%= f.label :name %><br />
@@ -17,7 +24,7 @@
   <div id="study-file-<%= study_file._id %>-extra-info">
     <% if study_file.file_type == 'Cluster'  %>
       <%= render partial: 'cluster_axis_fields', locals: {f: f} %>
-    <% elsif study_file.file_type == 'Expression Matrix' %>
+    <% elsif study_file.file_type == 'Expression Matrix' || study_file.file_type == 'MM Coordinate Matrix' %>
       <%= render partial: 'expression_axis_fields', locals: {f: f} %>
     <% end %>
   </div>
@@ -41,31 +48,17 @@
           <%= f.submit 'Update', class: 'btn btn-block btn-success save-study-file', id: "sync-study-file-#{study_file.id}" %>
         </div>
         <div class="col-xs-6">
-          <%= link_to "Delete", unsync_study_file_study_path(@study._id, study_file._id), method: :delete, title: "This will delete all database records associated with #{study_file.name} but leave the remote file in the workspace.", class: 'btn btn-block btn-danger delete-file-sync delete-study-file', data: {remote: true, toggle: 'tooltip'} %>
+          <% if study_file.parsing? %>
+            <%= link_to 'Delete', 'javascript:;', class: 'btn btn-block btn-danger disabled-delete', disabled: 'disabled', title: 'You must wait until the file has finished parsing before deleting', data: {toggle: 'tooltip'} %>
+          <% else %>
+            <%= link_to "Delete", unsync_study_file_study_path(@study._id, study_file._id), method: :delete, title: "This will delete all database records associated with #{study_file.name} but leave the remote file in the workspace.", class: 'btn btn-block btn-danger delete-file-sync delete-study-file', data: {remote: true, toggle: 'tooltip'} %>
+          <% end %>
         </div>
       </div>
     </div>
   </div>
 
   <script type="text/javascript">
-      $('#study-file-<%= study_file._id %> #study_file_file_type').change(function() {
-          var fileType = $(this).val();
-          if (fileType == 'Cluster') {
-              $("#study-file-<%= study_file._id %>-extra-info").html("<%= escape_javascript(render partial: 'cluster_axis_fields', locals: {f: f}) %>");
-          } else if (fileType == 'Expression Matrix') {
-              $("#study-file-<%= study_file._id %>-extra-info").html("<%= escape_javascript(render partial: 'expression_axis_fields', locals: {f: f}) %>");
-          } else {
-              $("#study-file-<%= study_file._id %>-extra-info").empty();
-          }
-      });
-
-      $('#sync-study-file-<%= study_file.id %>').click(function() {
-         if ($("#existing-file-<%= study_file.id%> ").val() != '') {
-             return true;
-         } else {
-             alert('You must select an existing file to sync with first');
-             return false;
-         }
-      });
+      <%= render partial: 'shared_sync_functions.js.erb', locals: {study_file: study_file, f: f} %>
   </script>
 <% end %>
