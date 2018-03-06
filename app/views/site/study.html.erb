@@ -37,7 +37,7 @@
     <% end %>
     <% if @allow_firecloud_access && @study.can_compute?(current_user) %>
       <div class="tab-pane" id="study-analysis" role="tabpanel">
-        <%= render partial: 'study_analyses' %>
+        <%= render partial: 'study_analysis' %>
       </div>
     <% end %>
     <% if @allow_firecloud_access && @study.can_edit?(current_user) %>
