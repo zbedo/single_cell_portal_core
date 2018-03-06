@@ -1228,6 +1228,22 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	##
+	## BRANDING TESTS
+	##
+
+	test 'admin: branding-groups: create a branding group' do
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+	end
+
+	test 'admin: branding-groups: view a branding group' do
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+	end
+
+	##
 	## USER PROFILE TESTS
 	## Setting email preferences, etc
 	##
