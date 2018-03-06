@@ -18,10 +18,10 @@ class BrandingGroup
                             :url => "/single_cell/branding_groups/:id/:filename"
 
   validates_attachment :splash_image,
-                       content_type: { content_type: ['image/jpeg', 'image/png'] },
+                       content_type: { content_type: ['image/jpeg', 'image/jpg', 'image/png'] },
                        size: { in: 0..10.megabytes }
 
-  validates_presence_of :name, :name_as_id, :background_color, :font_family
+  validates_presence_of :name, :name_as_id, :user_id, :background_color, :font_family
   validates_uniqueness_of :name
 
   before_validation :set_name_as_id
