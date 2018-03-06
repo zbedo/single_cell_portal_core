@@ -1,0 +1,20 @@
+
+<div id="branding-group-demo" style="font-family: <%= @branding_group.font_family %> !important; background-color: <%= @branding_group.background_color %> !important;">
+  <h1><%= @branding_group.name %> <%= link_to "<i class='fa fa-eye'></i> View Live".html_safe, site_path(brand: @branding_group.name_as_id), class: 'btn btn-success' %></h1>
+  <p class="lead"><%= @branding_group.tag_line %></p>
+  <div class="row">
+    <div class="col-md-3">
+      <p>Font Family: <%= @branding_group.font_family %></p>
+      <p>Background color: <%= @branding_group.background_color %></p>
+    </div>
+    <div class="col-md-9">
+      <p>Splash Image</p>
+      <%= image_tag @branding_group.splash_image.url, class: 'img-thumbnail' %>
+    </div>
+  </div>
+</div>
+
+<p>
+  <%= scp_link_to "<span class='fa fa-edit'></span> Edit".html_safe, edit_branding_group_path(@branding_group), class: 'btn btn-primary' %>
+  <%= scp_link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, branding_groups_path, class: 'btn btn-warning' %>
+</p>

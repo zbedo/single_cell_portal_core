@@ -4,13 +4,13 @@ module ApplicationHelper
 	def scp_link_to(name, url, html_options={}, &block)
 		if url.start_with?('https') || url.start_with?('/')
 			current_url = request.fullpath
-			if current_url.include?('branding_group')
+			if current_url.include?('brand=')
 				current_params = current_url.split('?').last.split('&')
-				current_project = current_params.detect {|p| p =~ /branding_group/}.gsub(/branding_group=/, '')
+				current_project = current_params.detect {|p| p =~ /brand=/}.gsub(/brand=/, '')
 				if !url.include?('?')
-					url += "?branding_group=#{current_project}"
+					url += "?brand=#{current_project}"
 				else
-					url += "&branding_group=#{current_project}"
+					url += "&brand=#{current_project}"
 				end
 			end
 		end

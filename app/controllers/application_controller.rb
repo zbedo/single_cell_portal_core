@@ -13,20 +13,21 @@ class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
 
   before_action :get_download_quota
+  before_action :set_selected_branding_group
 
   rescue_from ActionController::InvalidAuthenticityToken, with: :session_expired
 
   # auth action for portal admins
   def authenticate_admin
     unless current_user.admin?
-      redirect_to merge_default_redirect_params(site_path, branding_group: params[:branding_group]), alert: 'You do not have permission to access that page.' and return
+      redirect_to merge_default_redirect_params(site_path, brand: params[:brand]), alert: 'You do not have permission to access that page.' and return
     end
   end
 
   # auth action for portal reporters
   def authenticate_reporter
     unless current_user.acts_like_reporter?
-      redirect_to merge_default_redirect_params(site_path, branding_group: params[:branding_group]), alert: 'You do not have permission to access that page.' and return
+      redirect_to merge_default_redirect_params(site_path, brand: params[:brand]), alert: 'You do not have permission to access that page.' and return
     end
   end
 
@@ -46,7 +47,7 @@ class ApplicationController < ActionController::Base
     redirect = request.referrer.nil? ? site_path : request.referrer
     downloads_enabled = AdminConfiguration.firecloud_access_enabled?
     if !downloads_enabled
-      redirect_to merge_default_redirect_params(redirect, branding_group: params[:branding_group]), alert: "Study access has been temporarily disabled by the site adminsitrator.  Please contact #{view_context.mail_to('single_cell_portal@broadinstitute.org')} if you require assistance." and return
+      redirect_to merge_default_redirect_params(redirect, brand: params[:brand]), alert: "Study access has been temporarily disabled by the site adminsitrator.  Please contact #{view_context.mail_to('single_cell_portal@broadinstitute.org')} if you require assistance." and return
     end
   end
 
@@ -65,9 +66,16 @@ class ApplicationController < ActionController::Base
   def session_expired
     @alert = 'Your session has expired.  Please log in again to continue.'
     respond_to do |format|
-      format.html {redirect_to merge_default_redirect_params(site_path, branding_group: params[:branding_group]), alert: @alert}
+      format.html {redirect_to merge_default_redirect_params(site_path, brand: params[:brand]), alert: @alert}
       format.js {render template: '/layouts/session_expired'}
       format.json {head 403}
+    end
+  end
+
+  # set branding group if present
+  def set_selected_branding_group
+    if params[:brand].present?
+      @selected_branding_group = BrandingGroup.find_by(name_as_id: params[:brand])
     end
   end
 

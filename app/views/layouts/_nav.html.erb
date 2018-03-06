@@ -6,7 +6,11 @@
 			<span class="icon-bar"></span>
 			<span class="icon-bar"></span>
 		</button>
-		<%= link_to "<span class='fa fa-home'></span> Single Cell Portal<sup class='text-danger'><small> BETA</small></sup>".html_safe, site_path, class: "navbar-brand hidden-xs check-upload" %>
+    <% if @selected_branding_group.present? %>
+      <%= scp_link_to "<span class='fa fa-home'></span> #{@selected_branding_group.name}</sup>".html_safe, site_path, class: "navbar-brand hidden-xs check-upload" %>
+    <% else %>
+      <%= link_to "<span class='fa fa-home'></span> Single Cell Portal<sup class='text-danger'><small> BETA</small></sup>".html_safe, site_path, class: "navbar-brand hidden-xs check-upload" %>
+    <% end %>
 	</div>
 	<div class="collapse navbar-collapse">
 		<%= render partial: '/layouts/breadcrumbs' %>
@@ -24,6 +28,7 @@
 					<ul class="dropdown-menu dropdown-menu-right">
             <% if current_user.admin? %>
               <li><%= link_to "<span class='fa fa-lock fa-fw'></span> Admin Config".html_safe, admin_configurations_path, class: 'check-upload', id: 'admin-nav' %></li>
+              <li><%= scp_link_to "<span class='fa fa-copyright fa-fw'></span> Branding Groups".html_safe, branding_groups_path, class: 'check-upload', id: 'branding-groups-nav' %>
             <% end %>
             <% if current_user.acts_like_reporter? %>
               <li><%= link_to "<span class='fa fa-bar-chart fa-fw'></span> Reports".html_safe, reports_path, class: 'check-upload', id: 'reports-nav' %></li>
@@ -33,13 +38,24 @@
             <li><%= scp_link_to "<span class='fa fa-tags fa-fw'></span> My Annotations".html_safe, user_annotations_path, class: 'check-upload', id: 'my-annotations' %></li>
             <li><%= scp_link_to "<span class='fa fa-book fa-fw'></span> My Studies".html_safe, studies_path, class: 'check-upload', id: 'my-studies' %>
             <li><%= scp_link_to "<span class='fa fa-usd fa-fw'></span> My Billing Projects".html_safe, billing_projects_path, class: 'check-upload', id: 'my-firecloud-projects' %>
-            <li><%= scp_link_to "<span class='fa fa-copyright fa-fw'></span> My Branding Groups".html_safe, '#', class: 'check-upload', id: 'my-branding-groups' %>
 						<li><%= scp_link_to "<span class='fa fa-plus fa-fw'></span> Add a Study".html_safe, new_study_path, class: 'check-upload' %></li>
+            <% if current_user.branding_groups.any? %>
+              <li role="separator" class="divider"></li>
+              <li class="dropdown-header">My Brands</li>
+              <% current_user.branding_groups.each do |branding_group| %>
+                <li><%= link_to "<i class='fa fa-copyright fa-fw'></i> #{branding_group.name}".html_safe, site_path(brand: branding_group.name_as_id) %></li>
+              <% end %>
+            <% end %>
+            <% if @selected_branding_group.present? %>
+              <li role="separator" class="divider"></li>
+              <li><%= link_to "<i class='fa fa-ban fa-fw'></i> Disable Current Branding".html_safe, site_path %></li>
+            <% end %>
             <li role="separator" class="divider"></li>
             <li><%= scp_link_to "<span class='fa fa-sign-out fa-fw'></span> Logout".html_safe, destroy_user_session_path, method: :delete, class: 'check-upload', id: 'logout-nav' %></li>
           </ul>
 				</li>
 			<% else %>
+
 				<li><%= scp_link_to "<span class='fa fa-sign-in fa-fw'></span> Login".html_safe, user_google_oauth2_omniauth_authorize_path, id: 'login-nav' %></li>
 			<% end %>
 		</ul>

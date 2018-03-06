@@ -1,5 +1,5 @@
 <%= nested_form_for(@user_annotation, html: {multipart: true}) do |f| %>
-  <%= hidden_field_tag :branding_group, params[:branding_group] %>
+  <%= hidden_field_tag :brand, params[:brand] %>
   <% if @user_annotation.errors.any? %>
 		<div class="bs-callout bs-callout-danger">
 			<h4><%= pluralize(@user_annotation.errors.count, 'error') %> prohibited this study from being saved:</h4>

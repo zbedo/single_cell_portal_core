@@ -22,8 +22,13 @@
     </script>
 	<% end %>
 
-  <% if params[:branding_group].present? %>
-    <%= stylesheet_link_tag "/single_cell/branding_stylesheets/#{params[:branding_group]}.css", media: 'all' %>
+  <% if @selected_branding_group.present? %>
+    <style>
+      body {
+        background-color: <%= @selected_branding_group.background_color %> !important;
+        font-family: <%= @selected_branding_group.font_family %> !important;
+      }
+    </style>
   <% end %>
 </head>
 <body>
@@ -87,10 +92,12 @@
 <div class="footer container-fluid">
 	<div class="row">
 		<div class="col-md-offset-4 col-md-4 text-center">
-
 			<%= link_to image_tag("broad-logo.png", class: "center-block img-responsive"), "http://www.broadinstitute.org" %>
 			<p class="text-muted">&copy; <%= Date.today.year %> The Broad Institute of MIT & Harvard</p>
       <p class="text-muted"><%= scp_link_to 'Privacy Policy', privacy_policy_path %></p>
+      <% if @selected_branding_group.present? %>
+        <small class="text-muted"><%= link_to "<i class='fa fa-ban fa-fw'></i> Disable Current Branding".html_safe, site_path %></small>
+      <% end %>
 		</div>
 	</div>
 </div>

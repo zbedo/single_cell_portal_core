@@ -1,8 +1,4 @@
-<div class="well well-lg jumbotron" id="main-banner">
-	<h1 class="lead text-center">Single Cell Portal<sup><small> BETA</small></sup></h1>
-  <p class="lead text-center">Visualization portal for single cell RNA-seq data.</p>
-  <p class="lead text-center">Now featuring <span class="label label-primary"><%= @study_count %></span> studies with <span class="label label-success"><%= number_with_delimiter @cell_count %></span> cells.</p>
-</div>
+<%= render partial: 'main_banner_content' %>
 <h2 class="study-lead"><span class="fa fa-book"></span> Browse Studies <%= link_to "<span class='fa fa-question-circle'></span>".html_safe, 'javascript:;', class: 'text-info', title: 'Search Help', data: {toggle: 'popover', content: render(partial: 'search_help'), html: true, trigger: 'hover focus'} %></h2>
 <div class="row form-group">
   <div class="col-md-6 col-sm-12 col-xs-12">
@@ -10,6 +6,9 @@
       <div class="input-group">
         <%= text_field_tag :search_terms, nil, class: 'form-control', placeholder: 'Search Studies...' %>
         <%= hidden_field_tag :order, params[:order].nil? ? "" : params[:order] %>
+        <% if @selected_branding_group.present? %>
+          <%= hidden_field_tag :brand, @selected_branding_group.name_as_id %>
+        <% end %>
         <div class="input-group-btn">
           <button class="btn btn-info" type="submit" name="commit" id="submit-search"><span class="fa fa-search"></span></button>
         </div>
@@ -43,7 +42,7 @@
   var currentPage = "<%= params[:page] %>";
   var order = "<%= params[:order] %>";
   var search = "<%= params[:search_terms] %>";
-  var project = "<%= params[:branding_group] %>"
+  var project = "<%= params[:brand] %>";
 
   function bindScroll(){
     if($(window).scrollTop() + $(window).height() > $(document).height() - 1) {

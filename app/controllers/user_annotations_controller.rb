@@ -104,7 +104,7 @@ class UserAnnotationsController < ApplicationController
           end
         end
         #If successful, redirect back and say success
-        format.html { redirect_to merge_default_redirect_params(user_annotations_path, branding_group: params[:branding_group]),
+        format.html { redirect_to merge_default_redirect_params(user_annotations_path, brand: params[:brand]),
                                   notice: "User Annotation '#{@user_annotation.name}' was successfully updated." }
         format.json { render :index, status: :ok, location: user_annotations_path }
       else
@@ -133,7 +133,7 @@ class UserAnnotationsController < ApplicationController
     update_message = "User Annotation '#{@user_annotation.name}'was successfully destroyed. All parsed database records have been destroyed."
     respond_to do |format|
       #redirect back to page when destroy finishes
-      format.html { redirect_to merge_default_redirect_params(user_annotations_path, branding_group: params[:branding_group]),
+      format.html { redirect_to merge_default_redirect_params(user_annotations_path, brand: params[:brand]),
                                 notice: update_message }
       format.json { head :no_content }
     end
@@ -172,7 +172,7 @@ class UserAnnotationsController < ApplicationController
       # set publishing status to true so that the annotation will not show up in the list of annotations
       @user_annotation.update(publishing: true)
       # redirect back and say success
-      format.html { redirect_to merge_default_redirect_params(user_annotations_path, branding_group: params[:branding_group]),
+      format.html { redirect_to merge_default_redirect_params(user_annotations_path, brand: params[:brand]),
                                 notice: "User Annotation '#{@user_annotation.name}' will be added to the study. You will receive an email upon completion or error. If succesful, this annotation will be removed from your list of annotations." }
       format.json { render :index, status: :ok, location: user_annotations_path }
       @user_annotation.delay.publish_to_study(current_user)
@@ -205,7 +205,7 @@ class UserAnnotationsController < ApplicationController
       @user_annotation = UserAnnotation.find(params[:id])
     end
     if !@user_annotation.can_edit?(current_user)
-      redirect_to merge_default_redirect_params(user_annotations_path, branding_group: params[:branding_group]),
+      redirect_to merge_default_redirect_params(user_annotations_path, brand: params[:brand]),
                   alert: "You don't have permission to perform that action"
     end
   end

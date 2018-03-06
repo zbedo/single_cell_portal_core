@@ -70,7 +70,7 @@ class StudiesController < ApplicationController
     respond_to do |format|
       if @study.save
         path = @study.use_existing_workspace ? sync_study_path(@study) : initialize_study_path(@study)
-        format.html { redirect_to merge_default_redirect_params(path, branding_group: params[:branding_group]),
+        format.html { redirect_to merge_default_redirect_params(path, brand: params[:brand]),
                                   notice: "Your study '#{@study.name}' was successfully created." }
         format.json { render :show, status: :ok, location: @study }
       else
@@ -146,7 +146,7 @@ class StudiesController < ApplicationController
       end
     rescue => e
       logger.error "#{Time.now}: error syncing ACLs in workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
-      redirect_to merge_default_redirect_params(studies_path, branding_group: params[:branding_group]), alert: "We were unable to sync with your workspace bucket due to an error: #{view_context.simple_format(e.message)}" and return
+      redirect_to merge_default_redirect_params(studies_path, brand: params[:brand]), alert: "We were unable to sync with your workspace bucket due to an error: #{view_context.simple_format(e.message)}" and return
     end
 
     # begin determining sync status with study_files and primary or other data
@@ -162,7 +162,7 @@ class StudiesController < ApplicationController
       end
     rescue RuntimeError => e
       logger.error "#{Time.now}: error syncing files in workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
-      redirect_to merge_default_redirect_params(studies_path, branding_group: params[:branding_group]), alert: "We were unable to sync with your workspace bucket due to an error: #{view_context.simple_format(e.message)}" and return
+      redirect_to merge_default_redirect_params(studies_path, brand: params[:brand]), alert: "We were unable to sync with your workspace bucket due to an error: #{view_context.simple_format(e.message)}" and return
     end
 
     files_to_remove = []
@@ -320,7 +320,7 @@ class StudiesController < ApplicationController
       logger.info "unsynced files: #{@unsynced_files}"
       render action: :sync_study
     rescue => e
-      redirect_to merge_default_redirect_params(request.referrer, branding_group: params[:branding_group]), alert: "We were unable to sync the outputs from submission #{params[:submission_id]} due to the following error: #{e.message}"
+      redirect_to merge_default_redirect_params(request.referrer, brand: params[:brand]), alert: "We were unable to sync the outputs from submission #{params[:submission_id]} due to the following error: #{e.message}"
     end
   end
 
@@ -353,7 +353,7 @@ class StudiesController < ApplicationController
         if @study.study_shares.any?
           SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
         end
-        format.html { redirect_to merge_default_redirect_params(studies_path, branding_group: params[:branding_group]), notice: "Study '#{@study.name}' was successfully updated." }
+        format.html { redirect_to merge_default_redirect_params(studies_path, brand: params[:brand]), notice: "Study '#{@study.name}' was successfully updated." }
         format.json { render :show, status: :ok, location: @study }
       else
         format.html { render :edit }
@@ -383,7 +383,7 @@ class StudiesController < ApplicationController
           Study.firecloud_client.delete_workspace(@study.firecloud_project, @study.firecloud_workspace)
         rescue RuntimeError => e
           logger.error "#{Time.now} unable to delete workspace: #{@study.firecloud_workspace}; #{e.message}"
-          redirect_to merge_default_redirect_params(studies_path, branding_group: params[:branding_group]), alert: "We were unable to delete your study due to: #{view_context.simple_format(e.message)}.<br /><br />No files or database records have been deleted.  Please try again later" and return
+          redirect_to merge_default_redirect_params(studies_path, brand: params[:brand]), alert: "We were unable to delete your study due to: #{view_context.simple_format(e.message)}.<br /><br />No files or database records have been deleted.  Please try again later" and return
         end
       end
 
@@ -402,11 +402,11 @@ class StudiesController < ApplicationController
       update_message = "Study '#{name}'was successfully destroyed. All #{params[:workspace].nil? ? 'workspace data & ' : nil}parsed database records have been destroyed."
 
       respond_to do |format|
-        format.html { redirect_to merge_default_redirect_params(studies_path, branding_group: params[:branding_group]), notice: update_message }
+        format.html { redirect_to merge_default_redirect_params(studies_path, brand: params[:brand]), notice: update_message }
         format.json { head :no_content }
       end
     else
-      redirect_to merge_default_redirect_params(studies_path, branding_group: params[:branding_group]), alert: 'You do not have permission to perform that action' and return
+      redirect_to merge_default_redirect_params(studies_path, brand: params[:brand]), alert: 'You do not have permission to perform that action' and return
     end
   end
 
@@ -517,13 +517,13 @@ class StudiesController < ApplicationController
     @study = Study.find_by(url_safe_name: params[:study_name])
     # make sure user is signed in
     if !user_signed_in? || !@study.can_view?(current_user)
-      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), branding_group: params[:branding_group]),
+      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), brand: params[:brand]),
                   alert: 'You do not have permission to perform that action.' and return
     elsif @study.embargoed?(current_user)
-      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), branding_group: params[:branding_group]),
+      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), brand: params[:brand]),
                   alert: "You may not download any data from this study until #{@study.embargo.to_s(:long)}." and return
     elsif !@study.can_download?(current_user)
-      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), branding_group: params[:branding_group]),
+      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), brand: params[:brand]),
                   alert: 'You do not have permission to perform that action.' and return
     end
 
@@ -546,7 +546,7 @@ class StudiesController < ApplicationController
                                                                      @study.firecloud_workspace, params[:filename], expires: 15)
           current_user.update(daily_download_quota: user_quota)
         else
-          redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), branding_group: params[:branding_group]),
+          redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), brand: params[:brand]),
                       alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
         end
         # redirect directly to file to trigger download
@@ -554,12 +554,12 @@ class StudiesController < ApplicationController
       else
         # send notification to the study owner that file is missing (if notifications turned on)
         SingleCellMailer.user_download_fail_notification(@study, params[:filename]).deliver_now
-        redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), branding_group: params[:branding_group]),
+        redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), brand: params[:brand]),
                     alert: 'The file you requested is currently not available.  Please contact the study owner if you require access to this file.' and return
       end
     rescue RuntimeError => e
       logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
-      redirect_to merge_default_redirect_params(request.referrer, branding_group: params[:branding_group]),
+      redirect_to merge_default_redirect_params(request.referrer, brand: params[:brand]),
                   alert: "We were unable to download the file #{params[:filename]} do to an error: #{view_context.simple_format(e.message)}" and return
     end
   end
@@ -760,7 +760,7 @@ class StudiesController < ApplicationController
           end
         rescue RuntimeError => e
           logger.error "#{Time.now}: error in deleting #{@study_file.upload_file_name} from workspace: #{@study.firecloud_workspace}; #{e.message}"
-          redirect_to merge_default_redirect_params(request.referrer, branding_group: params[:branding_group]),
+          redirect_to merge_default_redirect_params(request.referrer, brand: params[:brand]),
                       alert: "We were unable to delete #{@study_file.upload_file_name} due to an error: #{view_context.simple_format(e.message)}.  Please try again later."
         end
         changes = ["Study file deleted: #{@study_file.upload_file_name}"]
@@ -1056,7 +1056,7 @@ class StudiesController < ApplicationController
   # study params whitelist
   def study_params
     params.require(:study).permit(:name, :description, :public, :user_id, :embargo, :use_existing_workspace, :firecloud_workspace,
-                                  :firecloud_project, study_shares_attributes: [:id, :_destroy, :email, :permission])
+                                  :firecloud_project, :branding_group_id, study_shares_attributes: [:id, :_destroy, :email, :permission])
   end
 
   # study file params whitelist
@@ -1141,7 +1141,7 @@ class StudiesController < ApplicationController
       alert = 'You do not have permission to perform that action.'
       respond_to do |format|
         format.js {render js: "alert('#{alert}')" and return}
-        format.html {redirect_to merge_default_redirect_params(studies_path, branding_group: params[:branding_group]),
+        format.html {redirect_to merge_default_redirect_params(studies_path, brand: params[:brand]),
                                  alert: alert and return}
       end
     end
@@ -1153,7 +1153,7 @@ class StudiesController < ApplicationController
       alert = 'Study workspaces are temporarily unavailable, so we cannot complete your request.  Please try again later.'
       respond_to do |format|
         format.js {render js: "$('.modal').modal('hide'); alert('#{alert}')" and return}
-        format.html {redirect_to merge_default_redirect_params(studies_path, branding_group: params[:branding_group]),
+        format.html {redirect_to merge_default_redirect_params(studies_path, brand: params[:brand]),
                                  alert: alert and return}
         format.json {head 503}
       end
