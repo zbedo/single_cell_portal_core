@@ -1,6 +1,6 @@
 
 <div id="branding-group-demo" style="font-family: <%= @branding_group.font_family %> !important; color: <%= @branding_group.font_color %> !important; background-color: <%= @branding_group.background_color %> !important;">
-  <h1><%= @branding_group.name %> <%= link_to "<i class='fa fa-eye'></i> View Live".html_safe, site_path(brand: @branding_group.name_as_id), class: 'btn btn-success' %></h1>
+  <h1><%= @branding_group.name %> <%= link_to "<i class='fa fa-eye'></i> View Live".html_safe, site_path(brand: @branding_group.name_as_id), class: 'btn btn-default' %></h1>
   <p class="lead"><%= @branding_group.tag_line %></p>
   <div class="row">
     <div class="col-md-3">

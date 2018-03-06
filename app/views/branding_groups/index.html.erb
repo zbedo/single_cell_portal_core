@@ -17,12 +17,12 @@
           <tbody>
             <% @branding_groups.each do |branding_group| %>
               <tr>
-                <td class="branding-group-name"><%= branding_group.name %></td>
+                <td class="branding-group-name"><%= scp_link_to branding_group.name, site_path(brand: branding_group.name_as_id) %></td>
                 <td><%= branding_group.user.email %></td>
                 <td><%= branding_group.studies.count %></td>
                 <td><%= branding_group.created_at.strftime('%Y-%m-%d %H:%M:%S') %></td>
                 <td class="actions">
-                  <%= scp_link_to "<i class='fa fa-search'></i> Show".html_safe, branding_group_path(branding_group), class: 'btn btn-xs btn-info' %>
+                  <%= scp_link_to "<i class='fa fa-search'></i> Info".html_safe, branding_group_path(branding_group), class: 'btn btn-xs btn-info' %>
                   <%= scp_link_to "<i class='fa fa-edit'></i> Edit".html_safe, edit_branding_group_path(branding_group), class: 'btn btn-xs btn-primary' %>
                   <%= scp_link_to "<i class='fa fa-trash'></i> Destroy".html_safe, branding_group_path(branding_group), method: :delete, class: "btn btn-xs btn-danger delete-btn #{branding_group.name_as_id}-delete" %></td>
               </tr>
