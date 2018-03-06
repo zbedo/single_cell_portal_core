@@ -8,6 +8,7 @@ class BrandingGroup
   field :tag_line, type: String
   field :background_color, type: String
   field :font_family, type: String, default: 'Helvetica Neue'
+  field :font_color, type: String, default: '#333333'
 
   has_many :studies
   belongs_to :user

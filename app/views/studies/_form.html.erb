@@ -45,9 +45,9 @@
     <div class="form-group">
       <div class="row">
         <div class="col-md-6">
-          <%= f.label :branding_group_id, 'Add to Branding Group' %><br />
+          <%= f.label :branding_group_id, 'Add to a Brand' %><br />
           <%= f.select :branding_group_id, options_from_collection_for_select(current_user.branding_groups, 'id', 'name', @study.branding_group_id),
-                       {include_blank: 'Select a Branding Group'}, class: 'form-control' %>
+                       {include_blank: 'Available Brands...'}, class: 'form-control' %>
         </div>
       </div>
     </div>

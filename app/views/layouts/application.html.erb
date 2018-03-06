@@ -23,9 +23,10 @@
 	<% end %>
 
   <% if @selected_branding_group.present? %>
-    <style>
+    <style type="text/css">
       body {
         background-color: <%= @selected_branding_group.background_color %> !important;
+        color: <%= @selected_branding_group.font_color %> !important;
         font-family: <%= @selected_branding_group.font_family %> !important;
       }
     </style>
