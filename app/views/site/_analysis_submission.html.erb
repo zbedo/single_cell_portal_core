@@ -1,0 +1,508 @@
+<h2>Submit a Workflow</h2>
+<p class="lead help-block">Configure and submit a workflow using the wizard below. You will be able to check the status of this workflow in the table above once submitted.</p>
+<%= form_for(:workflow, url: create_workspace_submission_path, html: {class: 'form', id: 'workflow-submission'}, data: {remote: true}) do |f| %>
+  <div id="workflow-wizard">
+    <ul class="nav wizard">
+      <li role="presentation" class="wizard-nav" id="select-workflow-nav"><a href="#select-workflow" data-toggle="tab">1. Select Workflow</a></li>
+      <li role="presentation" class="wizard-nav" id="select-samples-nav"><a href="#select-samples" data-toggle="tab">2. Select Samples</a></li>
+      <li role="presentation" class="wizard-nav" id="review-submission-nav"><a href="#review-submission" data-toggle="tab">3. Review & Submit</a></li>
+    </ul>
+
+    <div class="tab-content">
+      <div class="tab-pane workflow-tab" id="select-workflow">
+        <div class="form-group row">
+          <div class="col-sm-9">
+            <%= f.label :identifier, 'Workflow' %><br />
+            <%= f.select :identifier, options_for_select(@workflows_list), {include_blank: 'Please select a workflow...'}, {class: 'form-control'} %>
+          </div>
+          <div class="col-sm-3">
+            <label>View Workflow</label><br />
+            <%= link_to 'View Selected WDL', 'javascript:;', class: 'btn btn-default', id: 'view-selected-wdl', 'data-loading-text' => 'Loading... Please wait' %>
+          </div>
+        </div>
+        <div id="wdl-content-target">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <div class="panel-title">
+                <h4></h4>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane workflow-tab" id="select-samples">
+        <div class="form-group row">
+          <div class="col-sm-12">
+            <div class="bs-callout bs-callout-info">
+              <h4>Samples & Primary Data Files</h4>
+              <p class="help-block">Use the multi-selects below to choose either existing samples or primary data files/directories from this study to use as inputs for this workflow.  Paired read information is pulled
+                either from the sample metadata in this study's workspace (for known samples), or is determined by the names of the primary data files (for study files). If you wish to edit the list of sample & file pairings,
+                you can export it via the <strong>Export Sample & File Pairings</strong> button, make any desired changes, and import the new list using the <strong>Upload Sample & File Pairings</strong> button.</p>
+              <p class="help-block"><strong class="text-danger"><i class="fa fa-fw fa-exclamation-triangle"></i>You must save your samples first before continuing</strong>.  To store the sample information below back to the workspace,
+                click the <strong>Save Selected Samples</strong> button once you have populated the table with sample information (either from a file upload, or from selecting data files/directories from the above list). To remove
+                samples from your workspace, select them from the known samples list and click <strong>Delete Selected Samples</strong>.</p>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <%= f.label :samples, 'Please select known samples from the workspace (select all that apply)' %><br />
+            <%= f.select :samples, options_for_select(@samples), {}, multiple: true, class: 'form-control', size: 10 %>
+          </div>
+          <div class="col-sm-6">
+            <%= f.label :study_data, 'OR choose primary data files/directories (select all that apply)' %><br />
+            <%= f.select :study_data, options_for_select(@primary_data_locations), {}, multiple: true, class: 'form-control', size: 10 %>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-12">
+            <div class="well well-lg">
+              <h4 class="text-center">Selected Samples for Workflow Inputs</h4>
+              <div class="form-group row">
+                <div class="col-sm-6 form-inline">
+                  <%= f.file_field :sample_info, class: 'form-control' %>&nbsp;
+                  <%= f.label :sample_info, "<i class='fa fa-upload'></i> Upload Sample & File Pairings".html_safe,
+                              class: 'btn btn-default', data: {toggle: 'tooltip'}, title: 'Upload a five-column tab-delimited file of sample names and 1-4 paired primary data files (per sample).' %>
+
+                </div>
+                <div class="col-sm-3">
+                  <%= link_to "<i class='fa fa-download'></i> Export Sample & File Pairings".html_safe,
+                              'data:text/plain;base64,', class: 'btn btn-default', id: 'export-sample-info',
+                              data: {toggle: 'tooltip'}, title: 'Export the current sample & primary data file pairings as a tab-delimited text file.',
+                              download: 'sample_info.txt' %>
+                </div>
+                <div class="col-sm-3">
+                  <%= link_to "<i class='fa fa-eraser'></i> Clear Samples & Files".html_safe,
+                              'javascript:;', class: 'btn btn-default', id: 'clear-sample-info',
+                              data: {toggle: 'tooltip'}, title: 'Clear the entries from the samples table (does not alter workspace sample information).'%>
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-striped tabled-condensed" id="samples-table">
+                  <thead>
+                  <tr id="sample-attributes">
+                    <th class="col-sm-2">Sample</th>
+                    <th class="col-sm-3">Fastq 1 (R1)</th>
+                    <th class="col-sm-3">Fastq 2 (R2)</th>
+                    <th class="col-sm-2">Fastq 3 (I1)</th>
+                    <th class="col-sm-2">Fastq 4 (I2)</th>
+                  </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <p class="text-center">
+                <%= link_to "Save Selected Samples <i class='fa fa-fw fa-cloud-upload'></i>".html_safe, 'javascript:;', class: 'btn btn-primary', id: 'save-workspace-samples', data: {toggle: 'tooltip'}, title: 'Save the selected sample information back to the workspace.  This will overwrite any existing values for these samples with the information displayed.' %>
+                <%= link_to "Delete Selected Samples <i class='fa fa-fw fa-trash'></i>".html_safe, 'javascript:;', class: 'btn btn-danger', id: 'delete-workspace-samples', data: {toggle: 'tooltip'}, title: 'Remove the selected sample(s) from the workspace.' %>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane workflow-tab" id="review-submission">
+        <div class="form-group">
+          <div class="bs-callout bs-callout-default">
+            <div class="row">
+              <div class="col-sm-offset-3 col-sm-6">
+                <h4>Submission Parameters</h4>
+                <dl class="dl-horizontal">
+                  <dt>Workflow</dt>
+                  <dd id="selected-workflow"></dd>
+                  <dt>Sample(s)</dt>
+                  <dd id="selected-samples"></dd>
+                </dl>
+              </div>
+              <div class="col-sm-offset-3 col-sm-6">
+                <h4>Additional Parameters</h4>
+                <div id="additional-parameters-target">
+                  <p class="help-block">There are no additional parameters for this workflow.  Click 'Submit Workflow' to launch your submission.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group row">
+          <div class="col-sm-12 text-center">
+            <%= f.submit 'Submit Workflow', class: 'btn btn-lg btn-success', id: 'submit-workflow', disabled: true %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ul class="pager wizard">
+      <li class="previous"><a href="javascript:;" id="prev-btn">Previous</a></li>
+      <li class="next"><a href="javascript:;" id="next-btn">Next</a></li>
+    </ul>
+  </div>
+<% end %>
+
+<script type="text/javascript">
+  var submissionsTable = $('#submissions-table').DataTable({
+    pagingType: "full_numbers",
+    order: [[0, 'desc']],
+    language: {
+      search: "Filter Results By: "
+    },
+    columns: [
+      {data: 'submission_date'},
+      {data: 'submission_email'},
+      {data: 'submission_id'},
+      {data: 'submission_workflow'},
+      {data: 'submission_sample'},
+      {data: 'submission_state'},
+      {data: 'submission_status'},
+      {data: 'submission_actions'}
+    ]
+  });
+
+  // display a confirmation when a user tries to abort a submission
+  $('#submissions-table').on('click', '.abort-submission', function () {
+    $(this).tooltip('hide');
+    var submissionUrl = $(this).data('url');
+    var submissionId = $(this).data('id');
+    var submissionName = $('#submission-' + submissionId + '-name').text();
+    var submissionDate = $('#submission-' + submissionId + '-date').text();
+    if (confirm('Are you sure you want to abort this submission of ' + submissionName + ' (' + submissionId + ', submitted on ' + submissionDate + ')?  This cannot be undone.')) {
+      $('#generic-modal-title').html("Aborting Submission... Please Wait");
+      launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+        $.ajax({
+          url: submissionUrl,
+          method: 'DELETE',
+          dataType: 'script'
+        });
+      });
+
+    } else {
+      return false;
+    }
+  });
+
+  // display errors from a failed submission
+  $('#submissions-table').on('click', '.get-submission-errors', function () {
+    $(this).tooltip('hide');
+    var submissionUrl = $(this).data('url');
+    $('#generic-modal-title').html("Loading... Please Wait");
+    launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+      $.ajax({
+        url: submissionUrl,
+        dataType: 'json',
+        success: function(data) {
+          console.log('submission loaded, retrieving workflows');
+          var workflowIds = [];
+          $(data.workflows).each(function(i, workflow) {
+            workflowIds.push(workflow.workflowId);
+          });
+          console.log('getting workflow errors for workflow ids: ' + workflowIds);
+          getSubmissionErrors(submissionUrl + '/errors', workflowIds);
+        }
+      });
+    });
+  });
+
+  // get outputs from a particular submission
+  $('#submissions-table').on('click', '.get-submission-outputs', function () {
+    $(this).tooltip('hide');
+    var submissionUrl = $(this).data('url');
+    $('#generic-modal-title').html("Loading... Please Wait");
+    launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+      $.ajax({
+        url: submissionUrl,
+        dataType: 'script'
+      });
+    });
+  });
+
+  // delete outputs from a particular submission
+  $('#submissions-table').on('click', '.delete-submission-files', function () {
+    $(this).tooltip('hide');
+    var submissionUrl = $(this).data('url');
+    var submissionId = $(this).data('id');
+    var submissionName = $('#submission-' + submissionId + '-name').text();
+    var submissionDate = $('#submission-' + submissionId + '-date').text();
+    if (confirm('Are you sure you want to delete the outputs of ' + submissionName + ' (' + submissionId + ', submitted on ' + submissionDate + ')?  This cannot be undone.')) {
+      $('#generic-modal-title').html("Deleting Outputs... Please Wait");
+      launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+        $.ajax({
+          url: submissionUrl,
+          method: 'DELETE',
+          dataType: 'script'
+        });
+      });
+    } else {
+      return false;
+    }
+  });
+
+  // sync outputs from a particular submission
+  $('#submissions-table').on('click', '.sync-submission-outputs', function () {
+    console.log('sync outputs');
+    $('#generic-modal-title').html("Syncing Outputs... Please Wait");
+    launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+      return true;
+    });
+  });
+
+  // view submission metadata
+  $('#submissions-table').on('click', '.view-submission-metadata', function () {
+    console.log('view metadata');
+    var submissionUrl = $(this).data('url');
+    $('#generic-modal-title').html("Getting Run Info... Please Wait");
+    launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+      $.ajax({
+        url: submissionUrl,
+        method: 'GET',
+        dataType: 'script'
+      });
+    });
+
+  });
+
+  function getSubmissionErrors(submissionUrl, workflowIds) {
+    $.ajax({
+      url: submissionUrl + "?workflow_ids=" + workflowIds,
+      dataType: 'script'
+    });
+  }
+
+  $('#workflow_identifier').change(function() {
+    var selectedWdl = $(this).val();
+    if (selectedWdl !== '') {
+      var displayWdlText = selectedWdl.split('--').join('/');
+      $('#selected-workflow').html(displayWdlText);
+      // get any optional parameters
+      $.ajax({
+        url: "<%= get_workflow_options_path %>?workflow_identifier=" + selectedWdl,
+        dataType: 'script'
+      });
+    } else {
+      $('#selected-workflow').html('');
+      $('#optional-parameters-target').empty();
+    }
+  });
+
+  // view wdl contents of selected workflow
+  $('#view-selected-wdl').click(function () {
+    var selectedWdl = $('#workflow_identifier').val();
+    if (selectedWdl === '') {
+      alert('You must select a workflow first.')
+    } else {
+      $(this).button('loading');
+      var workflowNameSpace, workflowName, workflowSnapshotId;
+      [workflowNameSpace, workflowName, workflowSnapshotId] = selectedWdl.split('--');
+      $.ajax({
+        url: '<%= view_workflow_wdl_path %>?namespace=' + workflowNameSpace + '&workflow=' + workflowName + '&snapshot=' + workflowSnapshotId,
+        dataType: 'script'
+      });
+    }
+  });
+
+  var samplesTable = $('#samples-table').DataTable({
+    pagingType: 'full_numbers',
+    order: [[0, 'asc']],
+    autoWidth: false,
+    columnDefs: [
+      { type: 'natural', targets: '_all' }
+    ]
+  });
+
+  // redraw datatable with new rows
+  function updateSampleTable(rows) {
+    console.log('adding ' + rows.length + ' rows to samples table');
+    samplesTable.clear();
+    samplesTable.rows.add(rows);
+    samplesTable.draw();
+    console.log('samples table update complete');
+    createSampleInfo();
+  }
+
+  // update samples & files table with entries from study fastq entries
+  $('#workflow_study_data').change(function () {
+    // unselect the samples area first
+    $('#workflow_samples').val('');
+    var selected = $(this).val();
+    $.ajax({
+      url: '<%= get_fastq_files_path(study_name: @study.url_safe_name) %>?selected_entries=' + selected,
+      dataType: 'json',
+      success: function(data) {
+        updateSampleTable(data);
+      }
+    });
+  });
+
+  // retrieve sample information from study entities list
+  $('#workflow_samples').change(function () {
+    $('#workflow_study_data').val('');
+    var requestedSamples = $(this).val();
+
+    // update selected samples list
+    $('#selected-samples').html(requestedSamples.join(', '));
+
+    // update samples datatable
+    $.ajax({
+      url: '<%= get_workspace_samples_path(study_name: @study.url_safe_name) %>?samples=' + requestedSamples,
+      dataType: 'json',
+      success: function(data) {
+        updateSampleTable(data)
+      }
+    });
+  });
+
+  // delete selected samples from workspace
+  $('#delete-workspace-samples').click(function () {
+    $(this).tooltip('hide');
+    var samples = samplesTable.column(0).data().toArray();
+    if (samples.length !== 0) {
+      $('#generic-modal-title').html("Saving... Please Wait");
+      launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+        $.ajax({
+          url: '<%= delete_workspace_samples_path %>',
+          method: 'POST',
+          dataType: 'script',
+          data: {samples: samples}
+        });
+      });
+
+    } else {
+      alert('Please choose samples before continuing.');
+      return false;
+    }
+  });
+
+  // save current set of samples back to workspace
+  $('#save-workspace-samples').click(function() {
+    $(this).tooltip('hide');
+    var samples = samplesTable.rows().data();
+    if (samples.length !== 0) {
+      var sampleAttributes = ["fastq_file_1", "fastq_file_2", "fastq_file_3", "fastq_file_4"];
+      var samplePayload = {};
+      $(samples).each(function(index, row) {
+        var sample = row[0];
+        samplePayload[sample] = {};
+        $(row).each(function(i, el) {
+          if (el !== '' && el !== sample) {
+            samplePayload[sample][sampleAttributes[i - 1]] = el;
+          }
+        });
+      });
+      $('#generic-modal-title').html("Saving... Please Wait");
+      launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+        $.ajax({
+          url: '<%= update_workspace_samples_path %>',
+          method: 'POST',
+          dataType: 'script',
+          data: {samples: samplePayload}
+        });
+      });
+    } else {
+      alert('Please choose samples/files before continuing.');
+      return false;
+    }
+  });
+
+  // read uploaded file as text and update samples table
+  var sampleInfoInput = $('#workflow_sample_info')[0];
+  var reader = new FileReader();
+  $(reader).on('load', function (e) {
+    var file = e.target.result,
+      results;
+    if (file && file.length) {
+      results = file.split(/[\n]/);
+      var rows = [];
+      $(results).each(function(i, line) {
+        if (line.trim() !== '' && line.split(/\t/)[0] !== 'entity:sample_id') {
+          rows.push(line.split(/\t/));
+        }
+      });
+      updateSampleTable(rows);
+    }
+  });
+
+  // upload a tab-delimited sample info file to use as inputs
+  $('#workflow_sample_info').change(function () {
+    if (sampleInfoInput.files.length) {
+      var upload = sampleInfoInput.files[0];
+      reader.readAsText(upload);
+      $(sampleInfoInput).val('');
+    } else {
+      alert('You must select a file first before proceeding.');
+      $('#workflow_sample_info').parent().addClass('has-error');
+    }
+    $(this).tooltip('hide');
+  });
+
+  $('#clear-sample-info').click(function () {
+    $(this).tooltip('hide');
+    $('#workflow_study_data').val('');
+    $('#workflow_samples').val('');
+    updateSampleTable([])
+  });
+
+  // base64 encode form data for export via HTML5 download
+  function createSampleInfo() {
+    var rows = samplesTable.rows().data();
+    var fileContents = "entity:sample_id\tfastq_file_1\tfastq_file_2\tfastq_file_3\tfastq_file_4\n";
+    $(rows).each(function(i, row) {
+      fileContents += row.join("\t") + "\n";
+    });
+    $('#export-sample-info').attr('href', 'data:text/plain;base64,' + btoa(fileContents));
+  }
+
+  $('.refresh-submissions-table').click(function() {
+    $(this).button('loading');
+    $.ajax({
+      url: "<%= get_workspace_submissions_path(study_name: @study.url_safe_name) %>",
+      dataType: 'script'
+    });
+  });
+
+  // main workflow submit function
+  $('#submit-workflow').click(function () {
+    var selectedSamples = $('#workflow_samples').val();
+    var selectedWdl = $('#workflow_identifier').val();
+    if (selectedWdl === '') {
+      alert('You must select a workflow before continuing.');
+      $('#workflow_identifier').parent().addClass('has-error');
+      return false;
+    } else if (selectedSamples === null) {
+      alert('You must create and select a sample in your workspace before submitting a workflow.');
+      $('#workflow_samples').parent().addClass('has-error');
+      return false;
+    } else {
+      $('#generic-modal-title').html("Submitting... Please Wait");
+      launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+        return true;
+      });
+    }
+  });
+
+  // workflow submit wizard
+  $(document).ready(function() {
+    var wizard = $('#workflow-wizard');
+    wizard.bootstrapWizard({'tabClass': 'nav-tabs',
+      onTabShow: function(tab, navigation, index, clickedIndex, clickedTab) {
+        var step = $(tab[0]).attr('id');
+        if (index > 0) {
+          wizard.find('.pager .previous').removeClass('disabled');
+        }
+        if (step == 'review-submission-nav') {
+          wizard.find('.pager .next').hide();
+          var workflow = $('#workflow_identifier').val();
+          var samples = $('#workflow_samples').val();
+          if ( workflow !== '' && samples !== null ) {
+            $('#submit-workflow').attr('disabled', false);
+          } else {
+            $('#submit-workflow').attr('disabled', 'disabled');
+          }
+        } else {
+          wizard.find('.pager .next').show();
+        }
+      },
+      onNext: function(tab, navigation, index) {
+        var step = $(tab[0]).attr('id');
+        wizard.find('.pager .previous').removeClass('disabled');
+        return true;
+      }
+    });
+  });
+
+</script>
