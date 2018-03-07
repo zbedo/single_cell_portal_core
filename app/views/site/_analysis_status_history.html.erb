@@ -35,3 +35,132 @@
   </div>
 </div>
 <p class="text-center"><button type="button" id="refresh-submissions-table-bottom" class="btn btn-sm btn-default refresh-submissions-table" data-loading-text="Refreshing Submissions..."><i class='fa fa-refresh'></i> Refresh Table</button></p>
+
+<script>
+  var submissionsTable = $('#submissions-table').DataTable({
+    pagingType: "full_numbers",
+    order: [[0, 'desc']],
+    language: {
+      search: "Filter Results By: "
+    },
+    columns: [
+      {data: 'submission_date'},
+      {data: 'submission_email'},
+      {data: 'submission_id'},
+      {data: 'submission_workflow'},
+      {data: 'submission_sample'},
+      {data: 'submission_state'},
+      {data: 'submission_status'},
+      {data: 'submission_actions'}
+    ]
+  });
+
+  // display a confirmation when a user tries to abort a submission
+  $('#submissions-table').on('click', '.abort-submission', function () {
+    $(this).tooltip('hide');
+    var submissionUrl = $(this).data('url');
+    var submissionId = $(this).data('id');
+    var submissionName = $('#submission-' + submissionId + '-name').text();
+    var submissionDate = $('#submission-' + submissionId + '-date').text();
+    if (confirm('Are you sure you want to abort this submission of ' + submissionName + ' (' + submissionId + ', submitted on ' + submissionDate + ')?  This cannot be undone.')) {
+      $('#generic-modal-title').html("Aborting Submission... Please Wait");
+      launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+        $.ajax({
+          url: submissionUrl,
+          method: 'DELETE',
+          dataType: 'script'
+        });
+      });
+
+    } else {
+      return false;
+    }
+  });
+
+  // display errors from a failed submission
+  $('#submissions-table').on('click', '.get-submission-errors', function () {
+    $(this).tooltip('hide');
+    var submissionUrl = $(this).data('url');
+    $('#generic-modal-title').html("Loading... Please Wait");
+    launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+      $.ajax({
+        url: submissionUrl,
+        dataType: 'json',
+        success: function(data) {
+          console.log('submission loaded, retrieving workflows');
+          var workflowIds = [];
+          $(data.workflows).each(function(i, workflow) {
+            workflowIds.push(workflow.workflowId);
+          });
+          console.log('getting workflow errors for workflow ids: ' + workflowIds);
+          getSubmissionErrors(submissionUrl + '/errors', workflowIds);
+        }
+      });
+    });
+  });
+
+  // get outputs from a particular submission
+  $('#submissions-table').on('click', '.get-submission-outputs', function () {
+    $(this).tooltip('hide');
+    var submissionUrl = $(this).data('url');
+    $('#generic-modal-title').html("Loading... Please Wait");
+    launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+      $.ajax({
+        url: submissionUrl,
+        dataType: 'script'
+      });
+    });
+  });
+
+  // delete outputs from a particular submission
+  $('#submissions-table').on('click', '.delete-submission-files', function () {
+    $(this).tooltip('hide');
+    var submissionUrl = $(this).data('url');
+    var submissionId = $(this).data('id');
+    var submissionName = $('#submission-' + submissionId + '-name').text();
+    var submissionDate = $('#submission-' + submissionId + '-date').text();
+    if (confirm('Are you sure you want to delete the outputs of ' + submissionName + ' (' + submissionId + ', submitted on ' + submissionDate + ')?  This cannot be undone.')) {
+      $('#generic-modal-title').html("Deleting Outputs... Please Wait");
+      launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+        $.ajax({
+          url: submissionUrl,
+          method: 'DELETE',
+          dataType: 'script'
+        });
+      });
+    } else {
+      return false;
+    }
+  });
+
+  // sync outputs from a particular submission
+  $('#submissions-table').on('click', '.sync-submission-outputs', function () {
+    console.log('sync outputs');
+    $('#generic-modal-title').html("Syncing Outputs... Please Wait");
+    launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+      return true;
+    });
+  });
+
+  // view submission metadata
+  $('#submissions-table').on('click', '.view-submission-metadata', function () {
+    console.log('view metadata');
+    var submissionUrl = $(this).data('url');
+    $('#generic-modal-title').html("Getting Run Info... Please Wait");
+    launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+      $.ajax({
+        url: submissionUrl,
+        method: 'GET',
+        dataType: 'script'
+      });
+    });
+
+  });
+
+  function getSubmissionErrors(submissionUrl, workflowIds) {
+    $.ajax({
+      url: submissionUrl + "?workflow_ids=" + workflowIds,
+      dataType: 'script'
+    });
+  }
+</script>
