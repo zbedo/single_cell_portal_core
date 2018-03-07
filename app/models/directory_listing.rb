@@ -82,7 +82,7 @@ class DirectoryListing
 				return DirectoryListing::READ_PAIR_IDENTIFIERS.index(identifier)
 			end
 		end
-		0 # in case no paring info is found, return 0 for first position
+		0 # in case no pairing info is found, return 0 for first position
 	end
 
 	# method to return a mapping of samples and paired reads based on contents of a file list
