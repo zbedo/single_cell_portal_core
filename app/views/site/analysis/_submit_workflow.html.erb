@@ -17,7 +17,7 @@
           </div>
           <div class="col-sm-3">
             <label>View Workflow</label><br />
-            <%= link_to 'View Selected WDL', 'javascript:;', class: 'btn btn-default', id: 'view-selected-wdl', 'data-loading-text' => 'Loading... Please wait' %>
+            <%= link_to 'View Selected WDL', 'javascript:;', class: 'btn btn-default', id: 'view-selected-wdl', 'data-loading-text' => 'Loading... Please wait.' %>
           </div>
         </div>
         <div id="wdl-content-target">
@@ -226,7 +226,7 @@
     $(this).tooltip('hide');
     var samples = samplesTable.column(0).data().toArray();
     if (samples.length !== 0) {
-      $('#generic-modal-title').html("Saving... Please Wait");
+      $('#generic-modal-title').html('Saving... Please wait.');
       launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
         $.ajax({
           url: '<%= delete_workspace_samples_path %>',
@@ -258,7 +258,7 @@
           }
         });
       });
-      $('#generic-modal-title').html("Saving... Please Wait");
+      $('#generic-modal-title').html('Saving... Please wait.');
       launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
         $.ajax({
           url: '<%= update_workspace_samples_path %>',
@@ -342,7 +342,7 @@
       $('#workflow_samples').parent().addClass('has-error');
       return false;
     } else {
-      $('#generic-modal-title').html("Submitting... Please Wait");
+      $('#generic-modal-title').html('Submitting... Please wait.');
       launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
         return true;
       });
@@ -352,7 +352,8 @@
   // workflow submit wizard
   $(document).ready(function() {
     var wizard = $('#workflow-wizard');
-    wizard.bootstrapWizard({'tabClass': 'nav-tabs',
+    wizard.bootstrapWizard({
+      tabClass: 'nav-tabs',
       onTabShow: function(tab, navigation, index, clickedIndex, clickedTab) {
         var step = $(tab[0]).attr('id');
         if (index > 0) {
@@ -362,7 +363,7 @@
           wizard.find('.pager .next').hide();
           var workflow = $('#workflow_identifier').val();
           var samples = $('#workflow_samples').val();
-          if ( workflow !== '' && samples !== null ) {
+          if (workflow !== '' && samples !== null) {
             $('#submit-workflow').attr('disabled', false);
           } else {
             $('#submit-workflow').attr('disabled', 'disabled');
