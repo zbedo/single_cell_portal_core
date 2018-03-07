@@ -133,7 +133,7 @@ class UiTestSuite < Test::Unit::TestCase
 	##
 
 	# create basic test study
-	test 'admin: create-study: sharing: configurations: validation: download: user-annotation: workflows: user-profiles: public' do
+	test 'admin: create-study: sharing: configurations: validation: download: user-annotation: workflows: user-profiles: branding-groups: public' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in first
@@ -423,7 +423,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# create private study for testing visibility/edit restrictions
-	test 'admin: create-study: sharing: download: private' do
+	test 'admin: create-study: sharing: download: branding-groups: private' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in first
@@ -1231,14 +1231,167 @@ class UiTestSuite < Test::Unit::TestCase
 	## BRANDING TESTS
 	##
 
-	test 'admin: branding-groups: create a branding group' do
+	test 'admin: branding-groups: create' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		@driver.get @base_url
+		@driver.find_element(:id, 'login-nav').click
+		login($test_email, $test_email_password)
+		@driver.get @base_url + '/branding_groups'
+
+		new_branding_btn = @driver.find_element(:id, 'new-branding-group')
+		new_branding_btn.click
+		wait_for_render(:class, 'branding-group-form')
+
+		form = @driver.find_element(:class, 'branding-group-form')
+		name = "Branding Group #{$random_seed}"
+		tag_line = "This is the tag line."
+		bg_color = '#00ffff'
+		font_family = 'Tahoma, sans-serif'
+		font_color = '#666666'
+		splash_image = @base_path + '/app/assets/images/broad-logo.png'
+
+		# we have to set the color value via JS as webdriver can't interact with the native OS colorpicker dialog
+		@driver.execute_script("$('#branding_group_background_color').val('#{bg_color}');")
+		@driver.execute_script("$('#branding_group_font_color').val('#{font_color}');")
+
+		# the rest behave normally
+		name_field = form.find_element(:id, 'branding_group_name')
+		name_field.send_keys(name)
+		tag_line_field = form.find_element(:id, 'branding_group_tag_line')
+		tag_line_field.send_keys(tag_line)
+		font_family_field = form.find_element(:id, 'branding_group_font_family')
+		font_family_field.clear
+		font_family_field.send_keys(font_family)
+		splash_image_field = form.find_element(:id, 'branding_group_splash_image')
+		splash_image_field.send_keys(splash_image)
+		user_field = form.find_element(:id, 'branding_group_user_id')
+		user_field.send_keys($test_email)
+		save_btn = form.find_element(:id, 'save-branding-group')
+		save_btn.click
+		wait_for_render(:id, 'branding-group-demo')
+
+		saved_name = @driver.find_element(:id, 'branding_group_name').text
+		saved_tag_line = @driver.find_element(:id, 'branding_group_tag_line').text
+		saved_bg_color = @driver.find_element(:id, 'branding_group_background_color').text
+		saved_font_family = @driver.find_element(:id, 'branding_group_font_family').text
+		saved_font_color = @driver.find_element(:id, 'branding_group_font_color').text
+		saved_splash_image = @driver.find_element(:id, 'branding_group_splash_image').text
+
+		assert saved_name == name, "Name did not save correctly, expected '#{name}' but found '#{saved_name}'"
+		assert saved_tag_line == tag_line, "tag_line did not save correctly, expected '#{tag_line}' but found '#{saved_tag_line}'"
+		assert saved_bg_color == bg_color, "bg_color did not save correctly, expected '#{bg_color}' but found '#{saved_bg_color}'"
+		assert saved_font_family == font_family, "font_family did not save correctly, expected '#{font_family}' but found '#{saved_font_family}'"
+		assert saved_font_color == font_color, "font_color did not save correctly, expected '#{font_color}' but found '#{saved_font_color}'"
+		assert saved_splash_image == 'broad-logo.png', "Name did not save correctly, expected 'broad-logo.png' but found '#{saved_splash_image}'"
+
+		@driver.get @base_url + '/studies'
+		wait_for_render(:id, 'studies')
+
+		# add test study
+		edit_test = @driver.find_element(:class, "test-study-#{$random_seed}-edit")
+		edit_test.click
+		wait_for_render(:class, 'study-form')
+		brand_select = @driver.find_element(:id, 'study_branding_group_id')
+		brand_select.send_keys(name)
+		save_test = @driver.find_element(:id, 'save-study')
+		save_test.click
+		close_modal('message_modal')
+
+		# add private study
+		edit_private = @driver.find_element(:class, "private-study-#{$random_seed}-edit")
+		edit_private.click
+		wait_for_render(:class, 'study-form')
+		brand_select = @driver.find_element(:id, 'study_branding_group_id')
+		brand_select.send_keys(name)
+		save_private = @driver.find_element(:id, 'save-study')
+		save_private.click
+		close_modal('message_modal')
+
+		@driver.get @base_url + '/branding_groups'
+		wait_for_render(:id, 'branding-groups')
+		study_count = @driver.find_element(:class, 'branding-group-study-count')
+		assert study_count.text.to_i == 2, "Did not find correct number of studies, expected 2 but found #{study_count.text}"
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
 
-	test 'admin: branding-groups: view a branding group' do
+	test 'admin: branding-groups: view' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		@driver.get @base_url
+		@driver.find_element(:id, 'login-nav').click
+		login($test_email, $test_email_password)
+
+		profile_menu = @driver.find_element(:id, 'profile-nav')
+		profile_menu.click
+		brand_id = "branding-group-#{$random_seed}"
+		branding_nav = @driver.find_element(:id, brand_id + '-nav')
+		branding_nav.click
+		loaded = false
+		while !loaded
+			loaded_brand = @driver.execute_script("return $('body').data('branding-id');")
+			if loaded_brand == brand_id
+				loaded = true
+			else
+				sleep(1)
+			end
+		end
+
+		# now search for studies to make sure scoping is correct
+		search_box = @driver.find_element(:id, 'search_terms')
+		search_box.send_keys("#{$random_seed}")
+		submit = @driver.find_element(:id, 'submit-search')
+		submit.click
+		studies = @driver.find_elements(:class, 'study-panel').size
+		assert studies == 2, "Did not scope search correctly, expected 2 studies but found #{studies}"
+
+		view_link = @driver.find_element(:class, 'view-study-page')
+		view_link.click
+		wait_for_render(:class, 'study-lead')
+		open_ui_tab('study-visualize')
+
+		# assert styles have persisted
+		expected_bg = 'rgb(0, 255, 255)'
+		expected_font = 'Tahoma, sans-serif'
+		bg_color = @driver.execute_script("return $('body').css('background-color');")
+		font_family = @driver.execute_script("return $('body').css('font-family');")
+		assert bg_color == expected_bg, "Background color is incorrect, expected '#{expected_bg}' but found '#{bg_color}'"
+		assert font_family == expected_font, "Background color is incorrect, expected '#{expected_font}' but found '#{font_family}'"
+		current_url = @driver.current_url
+		assert current_url.include?("brand=#{brand_id}"), "Brand URL paramerter is not present: #{current_url}"
+
+		# search for a gene to make sure styles persist
+		gene = @genes.sample
+		search_box = @driver.find_element(:id, 'search_genes')
+		search_box.send_key(gene)
+		search_genes = @driver.find_element(:id, 'perform-gene-search')
+		search_genes.click
+		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+
+		current_bg_color = @driver.execute_script("return $('body').css('background-color');")
+		current_font_family = @driver.execute_script("return $('body').css('font-family');")
+		assert current_bg_color == expected_bg, "Background color is incorrect after search, expected '#{expected_bg}' but found '#{current_bg_color}'"
+		assert current_font_family == expected_font, "Background color is incorrect after search, expected '#{expected_font}' but found '#{current_font_family}'"
+
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+	end
+
+	test 'admin: branding-groups: delete' do
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		@driver.get @base_url
+		@driver.find_element(:id, 'login-nav').click
+		login($test_email, $test_email_password)
+		@driver.get @base_url + '/branding_groups'
+
+		delete_btn = @driver.find_element(:class, "branding-group-#{$random_seed}-delete")
+		delete_btn.click
+		accept_alert
+		close_modal('message_modal')
+
+		branding_groups = @driver.find_element(:id, 'branding-groups').find_element(:tag_name, 'tbody').find_elements(:tag_name, 'tr').map {|row| row['id']}
+		assert !branding_groups.include?("branding-group-#{$random_seed}"), "Branding group did not delete: #{branding_groups}"
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end

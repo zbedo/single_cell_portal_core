@@ -182,9 +182,6 @@ class Test::Unit::TestCase
   # helper to log into admin portion of site using supplied credentials
   # Will also approve terms if not accepted yet, waits for redirect back to site, and closes modal
   def login(email, password)
-    # determine which password to use
-    google_auth = @driver.find_element(:id, 'google-auth')
-    google_auth.click
     $verbose ? puts('logging in as ' + email) : nil
     # fill out login form
     complete_login_process(email, password)

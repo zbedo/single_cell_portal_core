@@ -47,7 +47,7 @@
         <div class="col-md-6">
           <%= f.label :branding_group_id, 'Add to a Brand' %> <span class='fa fa-question-circle' data-toggle='tooltip' title='Add this study to a brand to allow special look & feel rules when viewing in "branded" mode' data-placement='right'></span><br />
           <%= f.select :branding_group_id, options_from_collection_for_select(current_user.available_branding_groups, 'id', 'name', @study.branding_group_id),
-                       {include_blank: 'Available Brands...'}, class: 'form-control' %>
+                       {include_blank: 'No Selected Brand'}, class: 'form-control' %>
         </div>
       </div>
     </div>

@@ -63,7 +63,7 @@ class BrandingGroupsController < ApplicationController
     name = @branding_group.name
     @branding_group.destroy
     respond_to do |format|
-      format.html { redirect_to merge_default_redirect_params(branding_group_path(@branding_group), brand: params[:brand]),
+      format.html { redirect_to merge_default_redirect_params(branding_groups_path, brand: params[:brand]),
                                 notice: "Branding group '#{name}' was successfully destroyed." }
       format.json { head :no_content }
     end

@@ -25,10 +25,18 @@ class BrandingGroup
   validates_uniqueness_of :name
 
   before_validation :set_name_as_id
+  before_destroy :remove_branding_association
 
   private
 
   def set_name_as_id
     self.name_as_id = self.name.downcase.gsub(/[^a-zA-Z0-9]+/, '-').chomp('-')
+  end
+
+  # remove branding association on delete
+  def remove_branding_association
+    self.studies.each do |study|
+      study.update(branding_group_id: nil)
+    end
   end
 end
