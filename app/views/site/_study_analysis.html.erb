@@ -4,43 +4,7 @@
 <div id="render-container" class="col-md-10">
   <div class="row">
     <div class="col-md-12">
-      <h2>Submission History <span class="badge" id="submissions-count"><%= @submissions.size %></span></h2>
-      <p class="text-center"><button type="button" id="refresh-submissions-table-top" class="btn btn-sm btn-default refresh-submissions-table" data-loading-text="Refreshing Submissions..."><i class='fa fa-refresh'></i> Refresh Table</button></p>
-      <div class="well well-sm">
-        <div class="table-responsive">
-          <table class="table table-striped" id="submissions-table">
-            <thead>
-            <tr>
-              <th>Date</th>
-              <th>Submitter</th>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Sample</th>
-              <th>State</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            <% @submissions.each do |submission| %>
-              <tr id="submission-<%= submission['submissionId'] %>">
-                <td id="submission-<%= submission['submissionId'] %>-date" class="submission-date"><%= local_timestamp(submission['submissionDate']) %></td>
-                <td id="submission-<%= submission['submissionId'] %>-user" class="submission-user"><%= submission['submitter'] %></td>
-                <td id="submission-<%= submission['submissionId'] %>-id" class="submission-id"><%= link_to submission['submissionId'], @study.submission_url(submission['submissionId']), class: 'submission-bucket-link', target: :_blank, data: {toggle: 'tooltip'}, title: 'View submission directory'  %></td>
-                <td id="submission-<%= submission['submissionId'] %>-name" class="submission-name"><%= submission['methodConfigurationName'] %></td>
-                <td id="submission-<%= submission['submissionId'] %>-sample" class="submission-sample"><%= submission['submissionEntity']['entityName'] %></td>
-                <td id="submission-<%= submission['submissionId'] %>-state" class="submission-state"><%= submission_status_label(submission['status']) %></td>
-                <td id="submission-<%= submission['submissionId'] %>-status" class="submission-status"><%= workflow_status_labels(submission['workflowStatuses']) %></td>
-                <td class="actions">
-                  <%= get_submission_actions(submission, @study) %>
-                </td>
-              </tr>
-            <% end %>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <p class="text-center"><button type="button" id="refresh-submissions-table-bottom" class="btn btn-sm btn-default refresh-submissions-table" data-loading-text="Refreshing Submissions..."><i class='fa fa-refresh'></i> Refresh Table</button></p>
+      <%= render partial: 'analysis_status_history' %>
     </div>
   </div>
   <div class="row">
