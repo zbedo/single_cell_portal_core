@@ -16,7 +16,7 @@ class GeneComputation
     genes = self.get_gene_annotations
     cluster_names = scores[0].slice(1, scores[0].length)
 
-    keys =  ['name', 'start', 'length', 'id', 'type'].concat(cluster_names)
+    keys =  ['name', 'start', 'length', 'trackIndex', 'id', 'type'].concat(cluster_names)
 
     annots_by_chr = {}
 
@@ -41,7 +41,10 @@ class GeneComputation
       end
 
       cluster_scores = score.slice(1, scores.length)
-      annot = [gene_name, start, length, id, type] + cluster_scores
+
+      track_index = self.get_track_index(score[1])
+
+      annot = [gene_name, start, length, track_index, id, type] + cluster_scores
       annots_by_chr[chr].push(annot)
     end
 
@@ -51,9 +54,20 @@ class GeneComputation
       annots_list.push({chr: chr, annots: annots})
     end
 
-    ideogram_annots = {keys: keys, annots: annots_list} s
+    ideogram_annots = {keys: keys, annots: annots_list}
 
     return ideogram_annots
+  end
+
+  def self.get_track_index(score)
+    if score > 5
+      track_index = 0 # high expression
+    elsif score < 2
+      track_index = 2 # low expression
+    else
+      track_index = 1 # medium expression
+    end
+    return track_index
   end
 
   def self.compute_gene_exp_means(study)

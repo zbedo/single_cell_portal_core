@@ -87,11 +87,18 @@
     $('#ideogram-container').append(table);
   }
 
+  var annotationTracks = [
+    {'id': 'highExpressionTrack', 'displayName': 'High expression', 'color': '#FFA500'},
+    {'id': 'mediumExpressionTrack', 'displayName': 'Medium expression', 'color': '#CCC'},
+    {'id': 'lowExpressionTrack',  'displayName': 'Low expression', 'color': '#551A8B'}
+  ];
+
   var ideogram = new Ideogram({
     container: '#ideogram-container',
     organism: 'mouse',
     chrHeight: 400,
     annotationsPath: '/single_cell/example_data/public-study_exp_means.json',
+    annotationTracks: annotationTracks,
     onDrawAnnots: writeAnnotsTable
   });
 
