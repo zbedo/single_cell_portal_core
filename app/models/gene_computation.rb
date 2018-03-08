@@ -5,7 +5,7 @@ class GeneComputation
   def self.write_ideogram_annots(study)
     ideogram_annots = self.get_ideogram_annots(study)
     filename = study.url_safe_name + '_exp_means.json'
-    file = File.new(filename, 'w+')
+    file = File.new('public/single_cell/example_data/' + filename, 'w+')
     file.write ideogram_annots.to_json
     file.close
   end
