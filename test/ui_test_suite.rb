@@ -136,12 +136,11 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'admin: create-study: sharing: configurations: validation: download: user-annotation: workflows: user-profiles: branding-groups: public' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
-		# log in first
-		path = @base_url + '/studies/new'
-		@driver.get path
-		close_modal('message_modal')
+		@driver.get @base_url
+
 		# log in as user #1
 		login($test_email, $test_email_password)
+		@driver.get @base_url + '/studies/new'
 
 		# fill out study form
 		study_form = @driver.find_element(:id, 'new_study')
@@ -341,12 +340,9 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in first
-		path = @base_url + '/studies/new'
-		@driver.get path
-		close_modal('message_modal')
-		# log in as user #1
+		@driver.get @base_url
 		login($test_email, $test_email_password)
-
+		@driver.get @base_url + '/studies/new'
 		# fill out study form
 		study_form = @driver.find_element(:id, 'new_study')
 		study_form.find_element(:id, 'study_name').send_keys("twod Study #{$random_seed}")
@@ -427,10 +423,9 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in first
-		path = @base_url + '/studies/new'
-		@driver.get path
-		close_modal('message_modal')
+		@driver.get @base_url
 		login($test_email, $test_email_password)
+		@driver.get @base_url + '/studies/new'
 
 		# fill out study form
 		study_form = @driver.find_element(:id, 'new_study')
@@ -509,10 +504,9 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: #{self.method_name}"
 
 		# log in first
-		path = @base_url + '/studies/new'
-		@driver.get path
-		close_modal('message_modal')
+		@driver.get @base_url
 		login($test_email, $test_email_password)
+		@driver.get @base_url + '/studies/new'
 
 		# fill out study form
 		study_form = @driver.find_element(:id, 'new_study')
@@ -548,10 +542,9 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'admin: create-study: verify firecloud workspace' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
-		path = @base_url + '/studies'
-		@driver.get path
-		close_modal('message_modal')
+		@driver.get @base_url
 		login($test_email, $test_email_password)
+		@driver.get @base_url + '/studies'
 
 		show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
 		show_study.click
@@ -581,10 +574,10 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'admin: create-study: delete study file' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
+		@driver.get @base_url
+		login($test_email, $test_email_password)
 		path = @base_url + '/studies'
 		@driver.get path
-		close_modal('message_modal')
-		login($test_email, $test_email_password)
 
 		add_files = @driver.find_element(:class, "test-study-#{$random_seed}-upload")
 		add_files.click
@@ -635,10 +628,9 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in first
-		path = @base_url + '/studies/new'
-		@driver.get path
-		close_modal('message_modal')
+		@driver.get @base_url
 		login($test_email, $test_email_password)
+		@driver.get @base_url + '/studies/new'
 
 		# fill out study form
 		study_form = @driver.find_element(:id, 'new_study')
@@ -710,10 +702,9 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in first
-		path = @base_url + '/studies/new'
-		@driver.get path
-		close_modal('message_modal')
+		@driver.get @base_url
 		login($test_email, $test_email_password)
+		@driver.get @base_url + '/studies/new'
 
 		# fill out study form
 		study_form = @driver.find_element(:id, 'new_study')
@@ -810,13 +801,8 @@ class UiTestSuite < Test::Unit::TestCase
 		assert element_present?(:id, 'message_modal'), 'did not find alert modal'
 		close_modal('message_modal')
 
-		# log in and get study ids for use later
-		path = @base_url + '/studies'
-		@driver.get path
-		close_modal('message_modal')
-
-		# send login info
 		login($test_email, $test_email_password)
+		@driver.get @base_url + '/studies'
 
 		# get path info
 		edit = @driver.find_element(:class, "private-study-#{$random_seed}-edit")
@@ -897,10 +883,9 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'admin: sharing: reviewer permission' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
-		path = @base_url + '/studies'
-		@driver.get path
-		close_modal('message_modal')
+		@driver.get @base_url
 		login($test_email, $test_email_password)
+		@driver.get @base_url + '/studies'
 
 		edit = @driver.find_element(:class, "private-study-#{$random_seed}-edit")
 		edit.click
@@ -955,10 +940,9 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in first
-		path = @base_url + '/studies/new'
-		@driver.get path
-		close_modal('message_modal')
+		@driver.get @base_url
 		login($test_email, $test_email_password)
+		@driver.get @base_url + '/studies/new'
 
 		# create a new study using an existing workspace, also generate a random name to validate that workspace name
 		# and study name can be different
@@ -1206,10 +1190,9 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in first
-		path = @base_url + '/studies/new'
-		@driver.get path
-		close_modal('message_modal')
+		@driver.get @base_url
 		login($test_email, $test_email_password)
+		@driver.get @base_url + '/studies/new'
 
 		# attempt to create a study using a workspace with a restricted authorizationDomain
 		random_name = "Restricted Sync Test #{$random_seed}"
@@ -1404,7 +1387,7 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'user-profiles: update email preferences' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
-		@driver.get @base_url + '/users/sign_in'
+		@driver.get @base_url
 		login($test_email, $test_email_password)
 
 		# open profile page
@@ -1443,7 +1426,7 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'user-profiles: update firecloud profile' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
-		@driver.get @base_url + '/users/sign_in'
+		@driver.get @base_url
 		login($test_email, $test_email_password)
 
 		# open profile page
@@ -1484,10 +1467,9 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'admin: billing-projects: create' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
-		path = @base_url + '/billing_projects'
-		@driver.get path
-		close_modal('message_modal')
+		@driver.get @base_url
 		login($test_email, $test_email_password)
+		@driver.get @base_url + '/billing_projects'
 
 		# create new billing project
 		add_btn = @driver.find_element(:id, 'add-billing-project')
@@ -1522,10 +1504,10 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'admin: billing-projects: manage users' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
+		@driver.get @base_url
+		login($test_email, $test_email_password)
 		path = @base_url + '/billing_projects'
 		@driver.get path
-		close_modal('message_modal')
-		login($test_email, $test_email_password)
 
 		# add a user to newly created project
 		random_seed_slug = $random_seed.split('-').first
@@ -1563,10 +1545,9 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'admin: billing-projects: add a study' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
-		path = @base_url + '/studies/new'
-		@driver.get path
-		close_modal('message_modal')
+		@driver.get @base_url
 		login($test_email, $test_email_password)
+		@driver.get @base_url + '/studies/new'
 
 		# fill out study form
 		study_form = @driver.find_element(:id, 'new_study')
@@ -1640,10 +1621,9 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'admin: billing-projects: compute permissions' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
-		path = @base_url + '/billing_projects'
-		@driver.get path
-		close_modal('message_modal')
+		@driver.get @base_url
 		login($test_email, $test_email_password)
+		@driver.get @base_url + '/billing_projects'
 
 		# make sure there is a project and a workspace
 		assert element_present?(:class, 'billing-project'), 'Did not find any billing projects'
@@ -1677,10 +1657,10 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'admin: billing-projects: storage costs' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
+		@driver.get @base_url
+		login($test_email, $test_email_password)
 		path = @base_url + '/billing_projects'
 		@driver.get path
-		close_modal('message_modal')
-		login($test_email, $test_email_password)
 
 		# navigate to storage page
 		random_seed_slug = $random_seed.split('-').first
@@ -1704,10 +1684,12 @@ class UiTestSuite < Test::Unit::TestCase
 	# test the various levels of firecloud access integration (on, read-only, local-off, and off)
 	test 'configurations: firecloud access' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		@driver.get @base_url
+		login($test_email, $test_email_password)
+
 		path = @base_url + '/admin'
 		@driver.get path
-		close_modal('message_modal')
-		login($test_email, $test_email_password)
 
 		# show the 'panic' modal and disable downloads
 		panic_modal_link = @driver.find_element(:id, 'show-panic-modal')
@@ -1807,10 +1789,12 @@ class UiTestSuite < Test::Unit::TestCase
 	# validate that the download quota will prevent user downloads once reached
 	test 'configurations: quota: enforcement' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		@driver.get @base_url
+		login($test_email, $test_email_password)
+
 		path = @base_url + '/admin'
 		@driver.get path
-		close_modal('message_modal')
-		login($test_email, $test_email_password)
 
 		# find quota object or create if needed
 		if element_present?(:class, 'daily-user-download-quota-edit')
@@ -1869,8 +1853,7 @@ class UiTestSuite < Test::Unit::TestCase
 	# entire method as it require the portal to crash while in the middle of a parse, which cannot be reliably automated.
 	test 'configurations: restart locked jobs' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
-		path = @base_url + '/users/sign_in'
-		@driver.get path
+		@driver.get @base_url
 		login($test_email, $test_email_password)
 		@driver.get @base_url + '/admin'
 
@@ -1889,9 +1872,9 @@ class UiTestSuite < Test::Unit::TestCase
 	# reset user download quotas to 0 bytes
 	test 'configurations: download-quota: reset' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
-		path = @base_url + '/users/sign_in'
-		@driver.get path
+		@driver.get @base_url
 		login($test_email, $test_email_password)
+
 		@driver.get @base_url + '/admin'
 
 		actions_dropdown = @driver.find_element(:id, 'admin_action')
@@ -1910,10 +1893,11 @@ class UiTestSuite < Test::Unit::TestCase
 	# test force-refreshing the FireCloud API access tokens and storage driver connections
 	test 'configurations: refresh api connections' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		@driver.get @base_url
+		login($test_email, $test_email_password)
 		path = @base_url + '/admin'
 		@driver.get path
-		close_modal('message_modal')
-		login($test_email, $test_email_password)
 
 		actions_dropdown = @driver.find_element(:id, 'admin_action')
 		actions_dropdown.send_keys 'Refresh API Clients'
@@ -1931,10 +1915,11 @@ class UiTestSuite < Test::Unit::TestCase
 	# update a user's roles (admin or reporter)
 	test 'configurations: update user roles' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		@driver.get @base_url
+		login($test_email, $test_email_password)
 		path = @base_url + '/admin'
 		@driver.get path
-		close_modal('message_modal')
-		login($test_email, $test_email_password)
 
 		open_ui_tab('users')
 		share_email_id = $share_email.gsub(/[@.]/, '-')
@@ -1998,10 +1983,10 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'configurations: email all users' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
+		@driver.get @base_url
+		login($test_email, $test_email_password)
 		path = @base_url + '/admin'
 		@driver.get path
-		close_modal('message_modal')
-		login($test_email, $test_email_password)
 
 		email_users_btn = @driver.find_element(:id, 'email-all-users')
 		email_users_btn.click
@@ -2043,10 +2028,11 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'reports: view' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
+		@driver.get @base_url
+		login($test_email, $test_email_password)
+
 		path = @base_url + '/reports'
 		@driver.get(path)
-		close_modal('message_modal')
-		login($test_email, $test_email_password)
 
 		# check for reports
 		report_plots = @driver.find_elements(:class, 'plotly-report')
@@ -2078,10 +2064,11 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'reports: request new' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
+		@driver.get @base_url
+		login($test_email, $test_email_password)
+
 		path = @base_url + '/reports'
 		@driver.get(path)
-		close_modal('message_modal')
-		login($test_email, $test_email_password)
 
 		request_modal = @driver.find_element(:id, 'report-request')
 		request_modal.click
@@ -2187,9 +2174,6 @@ class UiTestSuite < Test::Unit::TestCase
 		end
 
 		# now test private study
-		login_path = @base_url + '/users/sign_in'
-		@driver.get login_path
-		wait_until_page_loads(login_path)
 		login($test_email, $test_email_password)
 		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
@@ -2206,10 +2190,7 @@ class UiTestSuite < Test::Unit::TestCase
 	# download a study file
 	test 'front-end: download: study file' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
-		login_path = @base_url + '/users/sign_in'
-		# downloads require login now
-		@driver.get login_path
-		wait_until_page_loads(login_path)
+		@driver.get @base_url
 		login($test_email, $test_email_password)
 
 		path = @base_url + "/study/test-study-#{$random_seed}"
@@ -2266,10 +2247,8 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'front-end: download: privacy restriction' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
-		login_path = @base_url + '/users/sign_in'
-		@driver.get login_path
-		wait_until_page_loads(login_path)
-		login($share_email, $share_email_password)
+		@driver.get @base_url
+		login($test_email, $test_email_password)
 
 		# negative test, should not be able to download private files from study without access
 		non_share_public_link = @base_url + "/data/public/private-study-#{$random_seed}?filename=README.txt"
@@ -2294,11 +2273,8 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'front-end: download: bulk data' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
-		login_path = @base_url + '/users/sign_in'
-		# downloads require login now
-		@driver.get login_path
-		wait_until_page_loads(login_path)
-		login($share_email, $share_email_password)
+		@driver.get @base_url
+		login($test_email, $test_email_password)
 
 		path = @base_url + "/study/sync-test-#{$random_seed}"
 		@driver.get(path)
@@ -2526,9 +2502,6 @@ class UiTestSuite < Test::Unit::TestCase
 
 		end
 		# now test private study
-		login_path = @base_url + '/users/sign_in'
-		@driver.get login_path
-		wait_until_page_loads(login_path)
 		login($test_email, $test_email_password)
 		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
@@ -2738,9 +2711,6 @@ class UiTestSuite < Test::Unit::TestCase
 
 		end
 		# now test private study
-		login_path = @base_url + '/users/sign_in'
-		@driver.get login_path
-		wait_until_page_loads(login_path)
 		login($test_email, $test_email_password)
 		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
@@ -2895,9 +2865,6 @@ class UiTestSuite < Test::Unit::TestCase
 		assert !search_opts_visible, "fullscreen mode did not launch correctly, expected search options visibility == false but found #{!search_opts_visible}"
 
 		# now test private study
-		login_path = @base_url + '/users/sign_in'
-		@driver.get login_path
-		wait_until_page_loads(login_path)
 		login($test_email, $test_email_password)
 		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
@@ -2946,9 +2913,6 @@ class UiTestSuite < Test::Unit::TestCase
 		assert heatmap_drawn, "heatmap plot encountered error, expected true but found #{heatmap_drawn}"
 
 		# now test private study
-		login_path = @base_url + '/users/sign_in'
-		@driver.get login_path
-		wait_until_page_loads(login_path)
 		login($test_email, $test_email_password)
 		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
@@ -3002,9 +2966,6 @@ class UiTestSuite < Test::Unit::TestCase
 		assert heatmap_drawn, "heatmap plot encountered error, expected true but found #{heatmap_drawn}"
 
 		# now test private study
-		login_path = @base_url + '/users/sign_in'
-		@driver.get login_path
-		wait_until_page_loads(login_path)
 		login($test_email, $test_email_password)
 		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
@@ -3158,9 +3119,6 @@ class UiTestSuite < Test::Unit::TestCase
 		end
 
 		# now test private study
-		login_path = @base_url + '/users/sign_in'
-		@driver.get login_path
-		wait_until_page_loads(login_path)
 		login($test_email, $test_email_password)
 		private_study_path = @base_url + "/study/private-study-#{$random_seed}"
 		@driver.get private_study_path
@@ -3577,10 +3535,10 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'front-end: validation: study default options' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
+		@driver.get @base_url
+		login($test_email, $test_email_password)
 		path = @base_url + '/studies'
 		@driver.get path
-		close_modal('message_modal')
-		login($test_email, $test_email_password)
 
 		show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
 		show_study.click
@@ -3683,9 +3641,7 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'front-end: validation: edit study settings' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
-		login_path = @base_url + '/users/sign_in'
-		@driver.get login_path
-		wait_until_page_loads(login_path)
+		@driver.get @base_url
 		login($test_email, $test_email_password)
 
 		study_page = @base_url + "/study/test-study-#{$random_seed}"
@@ -3810,9 +3766,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in
-		login_path = @base_url + '/users/sign_in'
-		@driver.get login_path
-		wait_until_page_loads(login_path)
+		@driver.get @base_url
 		login($test_email, $test_email_password)
 
 		# first confirm that you cannot create an annotation on a 3d study
@@ -4127,9 +4081,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# login
-		login_path = @base_url + '/users/sign_in'
-		@driver.get login_path
-		wait_until_page_loads(login_path)
+		@driver.get @base_url
 		login($test_email, $test_email_password)
 
 		# load annotation panel
@@ -4237,9 +4189,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# login
-		login_path = @base_url + '/users/sign_in'
-		@driver.get login_path
-		wait_until_page_loads(login_path)
+		@driver.get @base_url
 		login($test_email, $test_email_password)
 
 		# load annotation panel
@@ -4445,10 +4395,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 	test 'front-end: user-annotation: download annotation cluster file' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
-		login_path = @base_url + '/users/sign_in'
-		# downloads require login now
-		@driver.get login_path
-		wait_until_page_loads(login_path)
+		@driver.get @base_url
 		login($test_email, $test_email_password)
 
 		# load annotation panel
@@ -4477,9 +4424,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# login
-		login_path = @base_url + '/users/sign_in'
-		@driver.get login_path
-		wait_until_page_loads(login_path)
+		@driver.get @base_url
 		login($test_email, $test_email_password)
 
 		# load annotation panel
@@ -4617,9 +4562,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# login
-		login_path = @base_url + '/users/sign_in'
-		@driver.get login_path
-		wait_until_page_loads(login_path)
+		@driver.get @base_url
 		login($test_email, $test_email_password)
 
 		# load annotation panel
@@ -4652,9 +4595,7 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'front-end: workflows: import sample entities' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
-		login_path = @base_url + '/users/sign_in'
-		@driver.get login_path
-		wait_until_page_loads(login_path)
+		@driver.get @base_url
 		login($test_email, $test_email_password)
 
 		study_page = @base_url + "/study/test-study-#{$random_seed}"
@@ -4716,9 +4657,7 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'front-end: workflows: launch and cancel submissions' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
-		login_path = @base_url + '/users/sign_in'
-		@driver.get login_path
-		wait_until_page_loads(login_path)
+		@driver.get @base_url
 		login($test_email, $test_email_password)
 
 		study_page = @base_url + "/study/test-study-#{$random_seed}"
@@ -4793,9 +4732,7 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'front-end: workflows: sync outputs' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
-		login_path = @base_url + '/users/sign_in'
-		@driver.get login_path
-		wait_until_page_loads(login_path)
+		@driver.get @base_url
 		login($test_email, $test_email_password)
 
 		study_page = @base_url + "/study/test-study-#{$random_seed}"
@@ -4869,9 +4806,7 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'front-end: workflows: export metadata' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
-		login_path = @base_url + '/users/sign_in'
-		@driver.get login_path
-		wait_until_page_loads(login_path)
+		@driver.get @base_url
 		login($test_email, $test_email_password)
 
 		study_page = @base_url + "/study/test-study-#{$random_seed}"
@@ -4918,9 +4853,7 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'front-end: workflows: delete submissions' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
-		login_path = @base_url + '/users/sign_in'
-		@driver.get login_path
-		wait_until_page_loads(login_path)
+		@driver.get @base_url
 		login($test_email, $test_email_password)
 
 		study_page = @base_url + "/study/test-study-#{$random_seed}"
@@ -4950,9 +4883,7 @@ class UiTestSuite < Test::Unit::TestCase
 	test 'front-end: workflows: delete sample entities' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
-		login_path = @base_url + '/users/sign_in'
-		@driver.get login_path
-		wait_until_page_loads(login_path)
+		@driver.get @base_url
 		login($test_email, $test_email_password)
 
 		study_page = @base_url + "/study/test-study-#{$random_seed}"
@@ -4994,10 +4925,10 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in first
+		@driver.get @base_url
+		login($test_email, $test_email_password)
 		path = @base_url + '/studies'
 		@driver.get path
-		close_modal('message_modal')
-		login($test_email, $test_email_password)
 
 		study_keys = [
 				"test-study-#{$random_seed}-delete",

@@ -182,6 +182,8 @@ class Test::Unit::TestCase
   # helper to log into admin portion of site using supplied credentials
   # Will also approve terms if not accepted yet, waits for redirect back to site, and closes modal
   def login(email, password)
+    login_link = @driver.find_element(:id, 'login-nav')
+    login_link.click
     $verbose ? puts('logging in as ' + email) : nil
     # fill out login form
     complete_login_process(email, password)
@@ -221,10 +223,9 @@ class Test::Unit::TestCase
   # method to log out of google so that we can log in with a different account
   def login_as_other(email, password)
     invalidate_google_session
-    @driver.get @base_url + '/users/sign_in'
-    google_auth = @driver.find_element(:id, 'google-auth')
-    sleep(1)
-    google_auth.click
+    @driver.get @base_url
+    login_link = @driver.find_element(:id, 'login-nav')
+    login_link.click
     $verbose ? puts('logging in as ' + email) : nil
     use_new = @driver.find_element(:id, 'identifierLink')
     use_new.click

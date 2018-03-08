@@ -51,12 +51,12 @@
               <li><%= link_to "<i class='fa fa-ban fa-fw'></i> Disable Current Branding".html_safe, site_path %></li>
             <% end %>
             <li role="separator" class="divider"></li>
-            <li><%= scp_link_to "<span class='fa fa-sign-out fa-fw'></span> Logout".html_safe, destroy_user_session_path, method: :delete, class: 'check-upload', id: 'logout-nav' %></li>
+            <li><%= scp_link_to "<span class='fa fa-sign-out fa-fw'></span> Sign Out".html_safe, destroy_user_session_path, method: :delete, class: 'check-upload', id: 'logout-nav' %></li>
           </ul>
 				</li>
 			<% else %>
 
-				<li><%= scp_link_to "<span class='fa fa-sign-in fa-fw'></span> Login".html_safe, user_google_oauth2_omniauth_authorize_path, id: 'login-nav' %></li>
+				<li><%= scp_link_to "<span class='fa fa-sign-in fa-fw'></span> Sign In".html_safe, user_google_oauth2_omniauth_authorize_path, id: 'login-nav' %></li>
 			<% end %>
 		</ul>
 	</div>
