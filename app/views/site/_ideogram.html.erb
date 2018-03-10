@@ -97,9 +97,10 @@
 
   var ideogram = new Ideogram({
     container: '#ideogram-container',
-    organism: 'mouse',
+    organism: 'human',
+    assembly: 'GRCh37',
     chrHeight: 400,
-    annotationsPath: '/single_cell/example_data/public-study_exp_means.json',
+    annotationsPath: '/single_cell/example_data/infercnv-study_exp_means.json',
     annotationTracks: annotationTracks,
     onDrawAnnots: writeAnnotsTable
   });
