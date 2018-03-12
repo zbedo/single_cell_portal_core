@@ -242,23 +242,31 @@ class StudiesController < ApplicationController
           # get google instance of file
           file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project,
                                                               @study.firecloud_workspace, file_location)
-          basename = file.name.split('/').last
-          new_location = "outputs_#{params[:submission_id]}/#{basename}"
-          # check if file has already been synced first
-          # we can only do this by md5 hash as the filename and generation will be different
-          existing_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project,
-                                                                       @study.firecloud_workspace, new_location)
-          if existing_file.present? && existing_file.md5 == file.md5
-            next
+          if file.present?
+            basename = file.name.split('/').last
+            new_location = "outputs_#{params[:submission_id]}/#{basename}"
+            # check if file has already been synced first
+            # we can only do this by md5 hash as the filename and generation will be different
+            existing_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project,
+                                                                         @study.firecloud_workspace, new_location)
+            if existing_file.present? && existing_file.md5 == file.md5
+              next
+            else
+              # now copy the file to a new location for syncing
+              new_file = file.copy new_location
+              unsynced_output = StudyFile.new(study_id: @study.id, name: new_file.name, upload_file_name: new_file.name,
+                                              upload_content_type: new_file.content_type, upload_file_size: new_file.size,
+                                              generation: new_file.generation, remote_location: new_file.name,
+                                              options: {submission_id: params[:submission_id]})
+              @unsynced_files << unsynced_output
+            end
           else
-            # now copy the file to a new location for syncing
-            new_file = file.copy new_location
-            unsynced_output = StudyFile.new(study_id: @study.id, name: new_file.name, upload_file_name: new_file.name,
-                                            upload_content_type: new_file.content_type, upload_file_size: new_file.size,
-                                            generation: new_file.generation, remote_location: new_file.name,
-                                            options: {submission_id: params[:submission_id]})
-            @unsynced_files << unsynced_output
+            alert_content = "We were unable to sync the outputs from submission #{params[:submission_id]}; one or more of
+                             the declared output files have been deleted.  Please check the output directory before continuing."
+            redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
+                        alert: alert_content and return
           end
+
         end
         metadata = AnalysisMetadatum.find_by(study_id: @study.id, submission_id: params[:submission_id])
         if metadata.nil?
@@ -272,10 +280,12 @@ class StudiesController < ApplicationController
         end
       end
       @available_files = @unsynced_files.map {|f| {name: f.name, generation: f.generation, size: f.upload_file_size}}
-
+      # indication of whether or not we have custom sync code to run, defaults to false
+      @special_sync = false
       # now execute any special code that is needed for further handling this submission
       case configuration_name
         when /cell-ranger/
+          @special_sync = true
           matrix_study_file = @unsynced_files.detect {|file| file.name.split('/').last == 'matrix.mtx'}
           if matrix_study_file.present?
             matrix_study_file.file_type = 'MM Coordinate Matrix'
@@ -288,7 +298,6 @@ class StudiesController < ApplicationController
             genes_file.description = "Gene ID/Names output from CellRanger run #{params[:submission_id]}"
             if matrix_study_file.present?
               genes_file.options.merge!({matrix_id: matrix_study_file.id})
-              logger.info "updating matrix_id for genes file to #{genes_file.options}"
             end
           end
 
@@ -298,7 +307,6 @@ class StudiesController < ApplicationController
             barcodes_file.description = "Barcode sequence output from CellRanger run #{params[:submission_id]}"
             if matrix_study_file.present?
               barcodes_file.options.merge!({matrix_id: matrix_study_file.id})
-              logger.info "updating matrix_id for barcodes file to #{barcodes_file.options}"
             end
           end
 
@@ -317,7 +325,6 @@ class StudiesController < ApplicationController
         else
           nil # no special code to execute
       end
-      logger.info "unsynced files: #{@unsynced_files}"
       render action: :sync_study
     rescue => e
       redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]), alert: "We were unable to sync the outputs from submission #{params[:submission_id]} due to the following error: #{e.message}"
