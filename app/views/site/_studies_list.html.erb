@@ -9,7 +9,7 @@
       <div class="panel-body">
         <div class="row">
           <div class="col-sm-2">
-            <%= link_to "View Study".html_safe, view_study_path(study_name: study.url_safe_name), class: 'btn btn-success btn-lg btn-block' %>
+            <%= scp_link_to "View Study".html_safe, view_study_path(study_name: study.url_safe_name), class: 'btn btn-success btn-lg btn-block view-study-page' %>
           </div>
           <div class="col-sm-9">
             <%= strip_tags(study.description).truncate_words(100, omission: '... (continued)') %>

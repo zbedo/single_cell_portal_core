@@ -35,7 +35,7 @@
               <%= local_timestamp(workspace['workspace']['createdDate']) %>
             </td>
             <td class="actions">
-              <%= link_to "<i class='fa fa-fw fa-edit'></i> Computes".html_safe, edit_workspace_computes_path(params[:project_name], workspace['workspace']['name']), class: 'btn btn-xs btn-primary edit-computes' %>
+              <%= scp_link_to "<i class='fa fa-fw fa-edit'></i> Computes".html_safe, edit_workspace_computes_path(params[:project_name], workspace['workspace']['name']), class: 'btn btn-xs btn-primary edit-computes' %>
               <%= link_to "<i class='fa fa-fw fa-search'></i> Workspace".html_safe, "https://portal.firecloud.org/#workspaces/#{params[:project_name]}/#{workspace['workspace']['name']}", class: 'btn btn-xs btn-info view-workspace', target: :_blank %>
               <%= link_to "<i class='fa fa-fw fa-archive'></i> Bucket".html_safe, "https://console.cloud.google.com/storage/browser/#{workspace['workspace']['bucketName']}", class: 'btn btn-xs btn-warning view-bucket', target: :_blank %>
             </td>
@@ -46,8 +46,8 @@
   </div>
 </div>
 <p>
-  <%= link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, billing_projects_path, class: 'btn btn-warning' %>
-  <%= link_to "<span class='fa fa-usd'></span> Storage Costs".html_safe, billing_project_storage_estimate_path(project_name: params[:project_name]), class: 'btn btn-info' %>
+  <%= scp_link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, billing_projects_path, class: 'btn btn-warning' %>
+  <%= scp_link_to "<span class='fa fa-usd'></span> Storage Costs".html_safe, billing_project_storage_estimate_path(project_name: params[:project_name]), class: 'btn btn-info' %>
 
 </p>
 
