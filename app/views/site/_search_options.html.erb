@@ -8,7 +8,7 @@
   <%= f.hidden_field :band_type, value: set_band_type_value(params) %>
   <%= f.hidden_field :heatmap_row_centering, value: set_heatmap_row_centering_value(params) %>
   <%= f.hidden_field :heatmap_size, value: set_heatmap_size_value(params) %>
-  <%= hidden_field_tag :brand, params[:brand] %>
+  <%= hidden_field_tag :scpbr, params[:scpbr] %>
 
 <div id="search-omnibar">
   <div id="search-omnibar-menu">
@@ -113,7 +113,7 @@
               <%= hidden_field_tag :gene_set_cluster %>
               <%= hidden_field_tag :gene_set_annotation %>
               <%= hidden_field_tag :gene_set_subsample %>
-              <%= hidden_field_tag :brand, params[:brand] %>
+              <%= hidden_field_tag :scpbr, params[:scpbr] %>
 
             <script type="text/javascript">
                 // set default values on render
@@ -137,7 +137,7 @@
           <%= form_tag(search_precomputed_results_path(study_name: params[:study_name]), id: 'precomputed-expression', data: {remote: true}) do %>
               <%= label_tag :expression, 'Heatmaps' %><br />
               <%= select_tag :expression, options_for_select(@precomputed, params[:precomputed]), {include_blank: 'Select gene list', class: "form-control"} %>
-              <%= hidden_field_tag :brand, params[:brand] %>
+              <%= hidden_field_tag :scpbr, params[:scpbr] %>
               <% if action_name !~ /precomputed/ %>
                   <script type="text/javascript">
                     $('#expression').change(function() {

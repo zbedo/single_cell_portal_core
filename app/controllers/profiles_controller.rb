@@ -93,7 +93,7 @@ class ProfilesController < ApplicationController
   # make sure the current user is the same as the requested profile
   def check_access_settings
     if current_user.email != @user.email
-      redirect_to merge_default_redirect_params(site_path, brand: params[:brand]), alert: 'You do not have permission to perform that action.' and return
+      redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]), alert: 'You do not have permission to perform that action.' and return
     end
   end
 

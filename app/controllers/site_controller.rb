@@ -125,7 +125,7 @@ class SiteController < ApplicationController
     if @terms.size == 1
       @gene = load_best_gene_match(@study.genes.by_name(@terms.first, @study.expression_matrix_files.map(&:id)), @terms.first)
       if @gene.empty?
-        redirect_to merge_default_redirect_params(request.referrer, brand: params[:brand]),
+        redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
                     alert: "No matches found for: #{@terms.first}." and return
       else
         redirect_to merge_default_redirect_params(view_gene_expression_path(study_name: params[:study_name], gene: @gene['name'],
@@ -134,7 +134,7 @@ class SiteController < ApplicationController
                                                                             kernel_type: kernel_type, band_type: band_type,
                                                                             boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering,
                                                                             heatmap_size: heatmap_size),
-                                                  brand: params[:brand])  and return
+                                                  scpbr: params[:scpbr])  and return
       end
     end
 
@@ -147,14 +147,14 @@ class SiteController < ApplicationController
                                                                               band_type: band_type, boxpoints: boxpoints,
                                                                               heatmap_row_centering: heatmap_row_centering,
                                                                               heatmap_size: heatmap_size),
-                                                brand: params[:brand])
+                                                scpbr: params[:scpbr])
     else
       redirect_to merge_default_redirect_params(view_gene_expression_heatmap_path(search: {genes: @terms.join(' ')}, cluster: cluster,
                                                                                   annotation: annotation, plot_type: plot_type,
                                                                                   kernel_type: kernel_type, band_type: band_type,
                                                                                   boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering,
                                                                                   heatmap_size: heatmap_size),
-                                                brand: params[:brand])
+                                                scpbr: params[:scpbr])
     end
   end
 
@@ -387,7 +387,7 @@ class SiteController < ApplicationController
     end
     # make sure we found genes, otherwise redirect back to base view
     if @genes.empty?
-      redirect_to merge_default_redirect_params(view_study_path, brand: params[:brand]), alert: "None of the requested genes were found: #{terms.join(', ')}"
+      redirect_to merge_default_redirect_params(view_study_path, scpbr: params[:scpbr]), alert: "None of the requested genes were found: #{terms.join(', ')}"
     else
       render 'view_gene_expression'
     end
@@ -470,7 +470,7 @@ class SiteController < ApplicationController
     end
     # make sure we found genes, otherwise redirect back to base view
     if @genes.empty?
-      redirect_to merge_default_redirect_params(view_study_path, brand: params[:brand]), alert: "None of the requested genes were found: #{terms.join(', ')}"
+      redirect_to merge_default_redirect_params(view_study_path, scpbr: params[:scpbr]), alert: "None of the requested genes were found: #{terms.join(', ')}"
     end
   end
 
@@ -580,7 +580,7 @@ class SiteController < ApplicationController
   def search_precomputed_results
     redirect_to merge_default_redirect_params(view_precomputed_gene_expression_heatmap_path(study_name: params[:study_name],
                                                                                             precomputed: params[:expression]),
-                                              brand: params[:brand])
+                                              scpbr: params[:scpbr])
   end
 
   # view all genes as heatmap in morpheus, will pull from pre-computed gct file
@@ -600,13 +600,13 @@ class SiteController < ApplicationController
   def download_file
     # make sure user is signed in
     if !user_signed_in?
-      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), brand: params[:brand]),
+      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
                   alert: 'You must be signed in to download data.' and return
     elsif @study.embargoed?(current_user)
-      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), brand: params[:brand]),
+      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
                   alert: "You may not download any data from this study until #{@study.embargo.to_s(:long)}." and return
     elsif !@study.can_download?(current_user)
-      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), brand: params[:brand]),
+      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
                   alert: 'You do not have permission to perform that action.' and return
     end
 
@@ -639,7 +639,7 @@ class SiteController < ApplicationController
       end
     rescue RuntimeError => e
       logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
-      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), brand: params[:brand]),
+      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
                   alert: "We were unable to download the file #{params[:filename]} do to an error: #{view_context.simple_format(e.message)}" and return
     end
   end
@@ -1210,7 +1210,7 @@ class SiteController < ApplicationController
     @study = Study.find_by(url_safe_name: params[:study_name])
     # redirect if study is not found
     if @study.nil?
-      redirect_to merge_default_redirect_params(site_path, brand: params[:brand]), alert: 'Study not found.  Please check the name and try again.' and return
+      redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]), alert: 'Study not found.  Please check the name and try again.' and return
     end
   end
 
@@ -1311,7 +1311,7 @@ class SiteController < ApplicationController
         alert = 'You do not have permission to view the requested page.'
         respond_to do |format|
           format.js {render js: "alert('#{alert}')" and return}
-          format.html {redirect_to merge_default_redirect_params(site_path, brand: params[:brand]), alert: alert and return}
+          format.html {redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]), alert: alert and return}
         end
       end
     end
@@ -1323,7 +1323,7 @@ class SiteController < ApplicationController
       @alert ='You do not have permission to perform that action.'
       respond_to do |format|
         format.js {render action: :notice}
-        format.html {redirect_to merge_default_redirect_params(site_path, brand: params[:brand]), alert: @alert and return}
+        format.html {redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]), alert: @alert and return}
         format.json {head 403}
       end
     end

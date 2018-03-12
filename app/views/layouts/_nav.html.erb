@@ -48,7 +48,7 @@
             <% end %>
             <% if @selected_branding_group.present? %>
               <li role="separator" class="divider"></li>
-              <li><%= link_to "<i class='fa fa-ban fa-fw'></i> Disable Current Branding".html_safe, site_path %></li>
+              <li><%= link_to "<i class='fa fa-chevron-circle-left fa-fw'></i> Return to Single Cell Portal".html_safe, site_path %></li>
             <% end %>
             <li role="separator" class="divider"></li>
             <li><%= scp_link_to "<span class='fa fa-sign-out fa-fw'></span> Sign Out".html_safe, destroy_user_session_path, method: :delete, class: 'check-upload', id: 'logout-nav' %></li>

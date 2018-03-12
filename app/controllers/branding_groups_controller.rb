@@ -32,7 +32,7 @@ class BrandingGroupsController < ApplicationController
 
     respond_to do |format|
       if @branding_group.save
-        format.html { redirect_to merge_default_redirect_params(branding_group_path(@branding_group), brand: params[:brand]),
+        format.html { redirect_to merge_default_redirect_params(branding_group_path(@branding_group), scpbr: params[:scpbr]),
                                   notice: "Branding group '#{@branding_group.name}' was successfully created." }
         format.json { render :show, status: :created, location: @branding_group }
       else
@@ -47,7 +47,7 @@ class BrandingGroupsController < ApplicationController
   def update
     respond_to do |format|
       if @branding_group.update(branding_group_params)
-        format.html { redirect_to merge_default_redirect_params(branding_group_path(@branding_group), brand: params[:brand]),
+        format.html { redirect_to merge_default_redirect_params(branding_group_path(@branding_group), scpbr: params[:scpbr]),
                                   notice: "Branding group '#{@branding_group.name}' was successfully updated." }
         format.json { render :show, status: :ok, location: @branding_group }
       else
@@ -63,7 +63,7 @@ class BrandingGroupsController < ApplicationController
     name = @branding_group.name
     @branding_group.destroy
     respond_to do |format|
-      format.html { redirect_to merge_default_redirect_params(branding_groups_path, brand: params[:brand]),
+      format.html { redirect_to merge_default_redirect_params(branding_groups_path, scpbr: params[:scpbr]),
                                 notice: "Branding group '#{name}' was successfully destroyed." }
       format.json { head :no_content }
     end
