@@ -674,8 +674,6 @@ class UiTestSuite < Test::Unit::TestCase
 		logout_from_portal
 
 		# login as share user
-		login_link = @driver.find_element(:id, 'login-nav')
-		login_link.click
 		login_as_other($share_email, $share_email_password)
 
 		# now assert download links do not load
@@ -821,8 +819,6 @@ class UiTestSuite < Test::Unit::TestCase
 		logout_from_portal
 
 		# login as share user
-		login_link = @driver.find_element(:id, 'login-nav')
-		login_link.click
 		login_as_other($share_email, $share_email_password)
 
 		# view study
@@ -903,9 +899,6 @@ class UiTestSuite < Test::Unit::TestCase
 		close_modal('message_modal')
 		# now confirm reviewer share
 		logout_from_portal
-		login_path = @base_url + '/users/sign_in'
-		@driver.get login_path
-		wait_until_page_loads(login_path)
 		login_as_other($share_email, $share_email_password)
 		# make sure study shows up in list of 'My Studies'
 		path = @base_url + "/studies"
@@ -1172,9 +1165,6 @@ class UiTestSuite < Test::Unit::TestCase
 		logout_from_portal
 
 		# now login as share user and check workspace
-		login_path = @base_url + '/users/sign_in'
-		@driver.get login_path
-		wait_until_page_loads(login_path)
 		login_as_other($share_email, $share_email_password)
 		firecloud_workspace = "https://portal.firecloud.org/#workspaces/single-cell-portal/sync-test-#{$random_seed}"
 		@driver.get firecloud_workspace
@@ -1218,7 +1208,6 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		@driver.get @base_url
-		@driver.find_element(:id, 'login-nav').click
 		login($test_email, $test_email_password)
 		@driver.get @base_url + '/branding_groups'
 
@@ -1303,7 +1292,6 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		@driver.get @base_url
-		@driver.find_element(:id, 'login-nav').click
 		login($test_email, $test_email_password)
 
 		profile_menu = @driver.find_element(:id, 'profile-nav')
@@ -2225,8 +2213,6 @@ class UiTestSuite < Test::Unit::TestCase
 		logout_from_portal
 
 		# now login as share user and test downloads
-		@driver.get login_path
-		wait_until_page_loads(login_path)
 		login_as_other($share_email, $share_email_password)
 
 		@driver.get(path)
@@ -2248,7 +2234,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		@driver.get @base_url
-		login($test_email, $test_email_password)
+		login($share_email, $share_email_password)
 
 		# negative test, should not be able to download private files from study without access
 		non_share_public_link = @base_url + "/data/public/private-study-#{$random_seed}?filename=README.txt"
@@ -2274,7 +2260,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		@driver.get @base_url
-		login($test_email, $test_email_password)
+		login($share_email, $share_email_password)
 
 		path = @base_url + "/study/sync-test-#{$random_seed}"
 		@driver.get(path)
@@ -4764,20 +4750,6 @@ class UiTestSuite < Test::Unit::TestCase
 			}
 			i += 1
 		end
-
-		# download an output file
-		# outputs_btn = completed_submission.find_element(:class, 'get-submission-outputs')
-		# outputs_btn.click
-		# wait_for_render(:class, 'submission-output')
-		# output_download = @driver.find_element(:class, 'submission-output')
-		# filename = output_download['download']
-		# output_download.click
-		# # give the app a few seconds to initiate download request
-		# sleep(5)
-		# output_file = File.open(File.join($download_dir, filename))
-		# assert File.exist?(output_file.path), 'Did not find downloaded submission output file'
-		# File.delete(File.join($download_dir, filename))
-		# close_modal('generic-update-modal')
 
 		# sync an output file
 		sync_btn = completed_submission.find_element(:class, 'sync-submission-outputs')

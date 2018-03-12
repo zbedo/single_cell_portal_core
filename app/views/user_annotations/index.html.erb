@@ -34,7 +34,7 @@
                       <%= scp_link_to "<span class='fa fa-book'></span> Publish to Study".html_safe, publish_to_study_path(user_annotation), class: "btn btn-xs btn-warning publish-btn #{user_annotation.name_as_id}-publish", data: {toggle: 'tooltip', placement: 'top'}, title: 'Publish annotation to study (will this annotation remove from your list)' %>
                   <% end %>
                   <% if user_annotation.can_delete?(current_user) %>
-                      <%= scp_link_to "<span class='fa fa-trash'></span> Delete".html_safe, user_annotation, class: "btn btn-xs btn-danger delete-btn #{user_annotation.name_as_id}-delete", method: :delete %>
+                      <%= scp_link_to "<span class='fa fa-trash'></span> Delete".html_safe, user_annotation_path(user_annotation), class: "btn btn-xs btn-danger delete-btn #{user_annotation.name_as_id}-delete", method: :delete %>
                   <% end %>
                 </td>
               </tr>
