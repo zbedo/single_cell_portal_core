@@ -1,0 +1,17 @@
+<div class="well well-lg jumbotron" id="main-banner">
+
+  <% if @selected_branding_group.present? %>
+    <h1 class="lead text-center"><%= @selected_branding_group.name %></h1>
+    <p class="lead text-center"><%= @selected_branding_group.tag_line %></p>
+    <p class="lead text-center">Now featuring <span class="label label-primary"><%= @study_count %></span> studies with
+      <span class="label label-success"><%= number_with_delimiter @cell_count %></span> cells.</p>
+    <%= image_tag @selected_branding_group.splash_image.url, class: 'img-responsive', style: 'margin: 0 auto;' %>
+
+  <% else %>
+    <h1 class="lead text-center">Single Cell Portal<sup><small> BETA</small></sup></h1>
+    <p class="lead text-center">Visualization portal for single cell RNA-seq data.</p>
+    <p class="lead text-center">Now featuring <span class="label label-primary"><%= @study_count %></span> studies with
+      <span class="label label-success"><%= number_with_delimiter @cell_count %></span> cells.</p>
+  <% end %>
+
+</div>

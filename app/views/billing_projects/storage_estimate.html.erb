@@ -40,8 +40,8 @@
   </div>
 </div>
 <p>
-  <%= link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, billing_projects_path, class: 'btn btn-warning' %>
-  <%= link_to "<span class='fa fa-briefcase'></span> Workspaces".html_safe, billing_project_workspaces_path(project_name: params[:project_name]), class: 'btn btn-primary' %>
+  <%= scp_link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, billing_projects_path, class: 'btn btn-warning' %>
+  <%= scp_link_to "<span class='fa fa-briefcase'></span> Workspaces".html_safe, billing_project_workspaces_path(project_name: params[:project_name]), class: 'btn btn-primary' %>
 </p>
 
 <script type="text/javascript">

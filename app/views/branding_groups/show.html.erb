@@ -1,0 +1,21 @@
+
+<div id="branding-group-demo" style="font-family: <%= @branding_group.font_family %> !important; color: <%= @branding_group.font_color %> !important; background-color: <%= @branding_group.background_color %> !important;">
+  <h1><span id="branding_group_name"><%= @branding_group.name %></span> <%= link_to "<i class='fa fa-eye'></i> View Live".html_safe, site_path(brand: @branding_group.name_as_id), class: 'btn btn-default' %></h1>
+  <p class="lead" id="branding_group_tag_line"><%= @branding_group.tag_line %></p>
+  <div class="row">
+    <div class="col-md-3">
+      <p>Font Family: <span id="branding_group_font_family"><%= @branding_group.font_family %></span></p>
+      <p>Font Color: <span id="branding_group_font_color"><%= @branding_group.font_color %></span></p>
+      <p>Background color: <span id="branding_group_background_color"><%= @branding_group.background_color %></span></p>
+    </div>
+    <div class="col-md-9">
+      <p>Splash Image <span id="branding_group_splash_image"><%= @branding_group.splash_image_file_name %></span></p>
+      <%= image_tag @branding_group.splash_image.url, class: 'img-thumbnail' %>
+    </div>
+  </div>
+</div>
+
+<p>
+  <%= scp_link_to "<span class='fa fa-edit'></span> Edit".html_safe, edit_branding_group_path(@branding_group), class: 'btn btn-primary' %>
+  <%= scp_link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, branding_groups_path, class: 'btn btn-warning' %>
+</p>
