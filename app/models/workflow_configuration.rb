@@ -118,6 +118,9 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
             response[:error_message] = e.message
             return response
         end
+      when /SS2_scRNA_pipeline/
+        # GP-TAG/SS2_scRNA_pipeline (smart-seq2)
+
       else
         # return immediately as we have no special code to execute for requested workflow
         Rails.logger.info "#{Time.now}: No extra configuration present for #{configuration_namespace}/#{configuration_name}; exiting"
