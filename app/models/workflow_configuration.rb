@@ -120,7 +120,9 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
         end
       when /SS2_scRNA_pipeline/
         # GP-TAG/SS2_scRNA_pipeline (smart-seq2)
-
+        Rails.logger.info "#{Time.now}: No extra configuration present for #{configuration_namespace}/#{configuration_name}; exiting"
+        response[:complete] = true
+        return response
       else
         # return immediately as we have no special code to execute for requested workflow
         Rails.logger.info "#{Time.now}: No extra configuration present for #{configuration_namespace}/#{configuration_name}; exiting"
@@ -167,6 +169,8 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
     case configuration['methodRepoMethod']['methodName']
       when /cell.*ranger/
         configuration['inputs']['cellranger.transcriptomeTarGz'].gsub(/\"/, '')
+      when /SS2_scRNA_pipeline/
+        configuration['inputs']['SmartSeq2SingleCell.genome_ref_fasta'].gsub(/\"/, '')
       else
         # fallback to see if we can find anything that might be a 'reference'
         input = configuration['inputs'].detect {|k,v| k =~ /(reference|genome)/}
