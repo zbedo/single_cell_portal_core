@@ -128,7 +128,9 @@ class ReportsController < ApplicationController
     # get pipeline statistics
     @pipeline_submissions = {}
     @pipeline_runtimes = {}
+    @has_pipeline_stats = false
     AnalysisMetadatum.all.each do |analysis|
+      @has_pipeline_stats = true
       study = analysis.study
       comp_method = analysis.payload['computational_method']
       parts = comp_method.split('/')
@@ -141,40 +143,42 @@ class ReportsController < ApplicationController
         start_times << Time.parse(task['start_time'])
         stop_times << Time.parse(task['stop_time'])
       end
-      pipeline_start = start_times.sort.first
-      pipeline_end = stop_times.sort.last
-      runtime_in_min = (pipeline_end - pipeline_start) / 60.0
-      input_size = 0
-      @inputs = []
-      # determine how many input files there were
-      case pipeline_name
-        when /cell-ranger/
-          pipeline_inputs = analysis.payload['inputs'].detect {|input| input['name'] == 'cellranger.fastqs'}
-          @inputs = pipeline_inputs['value']
+      if start_times.any? && stop_times.any?
+        pipeline_start = start_times.sort.first
+        pipeline_end = stop_times.sort.last
+        runtime_in_min = (pipeline_end - pipeline_start) / 60.0
+        input_size = 0
+        @inputs = []
+        # determine how many input files there were
+        case pipeline_name
+          when /cell-ranger/
+            pipeline_inputs = analysis.payload['inputs'].detect {|input| input['name'] == 'cellranger.fastqs'}
+            @inputs = pipeline_inputs['value']
+          else
+            # make a guess, we have no idea
+            pipeline_inputs = analysis.payload['inputs'].select {|input| input['name'] =~ /fastq/}
+            pipeline_inputs.each do |input|
+              @inputs << input['value']
+            end
+            @inputs.flatten!
+        end
+        fastq_files = @inputs.map {|input| input.gsub(/gs:\/\/#{study.bucket_id}\//, '')}
+        # we need to now find the size of the files for the plot
+        fastq_files.each do |fastq|
+          directory = fastq.include?('/') ? fastq.split('/').first : '/'
+          study_directory = study.directory_listings.find_by(name: directory)
+          study_directory_file = study_directory.files.detect {|f| f['name'] == fastq}
+          input_size += study_directory_file['size']
+        end
+        if @pipeline_runtimes[pipeline_name].present?
+          @pipeline_runtimes[pipeline_name][:inputs] << input_size
+          @pipeline_runtimes[pipeline_name][:runtime] << runtime_in_min
         else
-          # make a guess, we have no idea
-          pipeline_inputs = analysis.payload['inputs'].select {|input| input['name'] =~ /fastq/}
-          pipeline_inputs.each do |input|
-            @inputs << input['value']
-          end
-          @inputs.flatten!
-      end
-      fastq_files = @inputs.map {|input| input.gsub(/gs:\/\/#{study.bucket_id}\//, '')}
-      # we need to now find the size of the files for the plot
-      fastq_files.each do |fastq|
-        directory = fastq.include?('/') ? fastq.split('/').first : '/'
-        study_directory = study.directory_listings.find_by(name: directory)
-        study_directory_file = study_directory.files.detect {|f| f['name'] == fastq}
-        input_size += study_directory_file['size']
-      end
-      if @pipeline_runtimes[pipeline_name].present?
-        @pipeline_runtimes[pipeline_name][:inputs] << input_size
-        @pipeline_runtimes[pipeline_name][:runtime] << runtime_in_min
-      else
-        @pipeline_runtimes[pipeline_name] = {inputs: [input_size], runtime: [runtime_in_min]}
+          @pipeline_runtimes[pipeline_name] = {inputs: [input_size], runtime: [runtime_in_min]}
+        end
       end
       # add run to count totals for this pipeline
-      date_bracket = pipeline_start.strftime('%Y-%m')
+      date_bracket = analysis.created_at.strftime('%Y-%m')
       if @pipeline_submissions[pipeline_name].present?
         if @pipeline_submissions[pipeline_name][date_bracket].present?
           @pipeline_submissions[pipeline_name][date_bracket] += 1

@@ -335,50 +335,53 @@
       });
     <% end %>
 
-    Plotly.newPlot('plotly-pipeline-submissions', pipelineSubmissions,
-        {
-            title: 'How often is each WDL run from the portal each month?',
-            titlefont: plotlyTitleFont,
-            font: plotlyLabelFont,
-            bargap: 0,
-            bargroupgap: 0.5,
-            hovermode: 'closest',
-            xaxis: {
-                title: 'Date'
-            },
-            yaxis: {
-                title: 'Number of submissions'
-            },
-            showlegend: true,
-            annotations: []
-        }
-    ).then(setRenderStatus('#plotly-pipeline-submissions', true));
+    <% if @has_pipeline_stats %>
+      Plotly.newPlot('plotly-pipeline-submissions', pipelineSubmissions,
+          {
+              title: 'How often is each WDL run from the portal each month?',
+              titlefont: plotlyTitleFont,
+              font: plotlyLabelFont,
+              bargap: 0,
+              bargroupgap: 0.5,
+              hovermode: 'closest',
+              xaxis: {
+                  title: 'Date'
+              },
+              yaxis: {
+                  title: 'Number of submissions'
+              },
+              showlegend: true,
+              annotations: []
+          }
+      ).then(setRenderStatus('#plotly-pipeline-submissions', true));
 
-    var pipelineRuntimes = [];
-    <% @pipeline_runtimes.each do |pipeline, entries| %>
-      pipelineRuntimes.push({
-          x: <%= raw entries[:inputs] %>,
-          y: <%= raw entries[:runtime] %>,
-          name: '<%= pipeline %>',
-          mode: 'markers'
-      });
+      var pipelineRuntimes = [];
+      <% @pipeline_runtimes.each do |pipeline, entries| %>
+        pipelineRuntimes.push({
+            x: <%= raw entries[:inputs] %>,
+            y: <%= raw entries[:runtime] %>,
+            name: '<%= pipeline %>',
+            mode: 'markers'
+        });
+      <% end %>
+
+      Plotly.newPlot('plotly-pipeline-runtimes', pipelineRuntimes,
+          {
+              title: 'What is the distribution of fastq size vs. runtimes for WDL submissions?',
+              titlefont: plotlyTitleFont,
+              font: plotlyLabelFont,
+              hovermode: 'closest',
+              xaxis: {
+                  title: 'Size of fastq inputs (in bytes)'
+              },
+              yaxis: {
+                  title: 'Runtime in minutes'
+              },
+              showlegend: true
+          }
+      ).then(setRenderStatus('#plotly-pipeline-runtimes', true));
+
     <% end %>
-
-    Plotly.newPlot('plotly-pipeline-runtimes', pipelineRuntimes,
-        {
-            title: 'What is the distribution of fastq size vs. runtimes for WDL submissions?',
-            titlefont: plotlyTitleFont,
-            font: plotlyLabelFont,
-            hovermode: 'closest',
-            xaxis: {
-                title: 'Size of fastq inputs (in bytes)'
-            },
-            yaxis: {
-                title: 'Runtime in minutes'
-            },
-            showlegend: true
-        }
-    ).then(setRenderStatus('#plotly-pipeline-runtimes', true));
 
     $('#toggle-column-annots').click(function() {
         // immediate set render status to false
