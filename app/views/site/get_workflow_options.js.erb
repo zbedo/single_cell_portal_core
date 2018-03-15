@@ -4,56 +4,59 @@ optionsForm.empty();
 var workflowOptions = <%= raw @options.to_json %>;
 
 if (Object.keys(workflowOptions).length > 0) {
-    for (var parameter in workflowOptions) {
-        var input = "";
-        var inputName = "workflow[optional_parameters][" + parameter + "]";
-        var inputId = "workflow_optional_parameters_" + parameter;
-        var paramType = workflowOptions[parameter]['type'];
-        var paramDefault = workflowOptions[parameter]['default'];
-        var paramHelp = workflowOptions[parameter]['help'];
-        var required = workflowOptions[parameter]['required'];
-        console.log('param: ' + parameter + ' required?' + required);
+    for (var task in workflowOptions) {
+        var options = workflowOptions[task];
+        for (var parameter in options) {
+            var input = "";
+            var inputName = "workflow[optional_parameters][" + task + "][" + parameter + "]";
+            var inputId = "workflow_optional_parameters_" + task + "_" + parameter;
+            var paramType = workflowOptions[task][parameter]['type'];
+            var paramDefault = workflowOptions[task][parameter]['default'];
+            var paramHelp = workflowOptions[task][parameter]['help'];
+            var required = workflowOptions[task][parameter]['required'];
+            console.log('param: ' + parameter + ' required?' + required);
 
-        var optionalParam = "<label for='" + inputId + "'>" + parameter + "</label>" +
-            (required ? ' <span class="label label-danger">required</span>' : '') + "<br />";
-        switch(paramType) {
-            case 'integer':
-                input = "<input type='number' id='" + inputId + "' name='" + inputName + "' value='" + paramDefault + "' class='form-control'></input>";
-                break;
-            case 'boolean':
-                input = "<select id='" + inputId + "' name='" + inputName + "' value='" + paramDefault + "' class='form-control'>";
-                if (workflowOptions[parameter]['default'] === 'true') {
-                    input += "<option value='true' selected='selected'>Yes</option><option value='false'>No</option></select>";
-                } else {
-                    input += "<option value='true'>Yes</option><option value='false' selected='selected'>No</option></select>";
-                }
-                break;
-            case 'text_field':
-                input = "<input type='text' id='" + inputId + "' name='" + inputName + "' value='" + paramDefault + "' class='form-control'></input>";
-                break;
-            case 'select':
-                input = "<select id='" + inputId + "' name='" + inputName + "' class='form-control'>";
-                var paramOpts = workflowOptions[parameter]['values'];
-                var defaultVal = workflowOptions[parameter]['default'];
-                paramOpts.forEach(function(option) {
-                    var display = option[0];
-                    var opt = option[1];
-                    if (opt == defaultVal) {
-                        input += "<option value='" + opt + "' selected='selected'>" + display + "</option>";
+            var optionalParam = "<label for='" + inputId + "'>" + task + "." + parameter + "</label>" +
+                (required ? ' <span class="label label-danger">required</span>' : '') + "<br />";
+            switch(paramType) {
+                case 'integer':
+                    input = "<input type='number' id='" + inputId + "' name='" + inputName + "' value='" + paramDefault + "' class='form-control'></input>";
+                    break;
+                case 'boolean':
+                    input = "<select id='" + inputId + "' name='" + inputName + "' value='" + paramDefault + "' class='form-control'>";
+                    if (workflowOptions[task][parameter]['default'] === 'true') {
+                        input += "<option value='true' selected='selected'>Yes</option><option value='false'>No</option></select>";
                     } else {
-                        input += "<option value='" + opt + "'>" + display + "</option>";
+                        input += "<option value='true'>Yes</option><option value='false' selected='selected'>No</option></select>";
                     }
-                });
-                input += "</select>";
-                break;
-            default:
-                break;
+                    break;
+                case 'text_field':
+                    input = "<input type='text' id='" + inputId + "' name='" + inputName + "' value='" + paramDefault + "' class='form-control'></input>";
+                    break;
+                case 'select':
+                    input = "<select id='" + inputId + "' name='" + inputName + "' class='form-control'>";
+                    var paramOpts = workflowOptions[task][parameter]['values'];
+                    var defaultVal = workflowOptions[task][parameter]['default'];
+                    paramOpts.forEach(function(option) {
+                        var display = option[0];
+                        var opt = option[1];
+                        if (opt == defaultVal) {
+                            input += "<option value='" + opt + "' selected='selected'>" + display + "</option>";
+                        } else {
+                            input += "<option value='" + opt + "'>" + display + "</option>";
+                        }
+                    });
+                    input += "</select>";
+                    break;
+                default:
+                    break;
+            }
+            optionalParam += input;
+            if (paramHelp !== '') {
+                optionalParam += "<p class='help-block'>" + paramHelp + "</p>";
+            }
+            optionsForm.append(optionalParam);
         }
-        optionalParam += input;
-        if (paramHelp !== '') {
-            optionalParam += "<p class='help-block'>" + paramHelp + "</p>";
-        }
-        optionsForm.append(optionalParam);
     }
 } else {
     optionsForm.html("<p class='help-block'>There are no additional parameters for this workflow.  " +

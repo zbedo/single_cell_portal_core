@@ -67,11 +67,11 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
           end
 
           # set the referenceName (configures the links to output files) - this is passed in as the genome assembly name/ID
-          configuration['inputs']['cellranger.referenceName'] = "\"#{inputs['transcriptomeTarGz']}\""
+          configuration['inputs']['cellranger.referenceName'] = "\"#{inputs['cellranger']['transcriptomeTarGz']}\""
 
           # add optional parameters
-          configuration['inputs']['cellranger.expectCells'] = inputs['expectCells']
-          configuration['inputs']['cellranger.secondary'] = inputs['secondary']
+          configuration['inputs']['cellranger.expectCells'] = inputs['cellranger']['expectCells']
+          configuration['inputs']['cellranger.secondary'] = inputs['cellranger']['secondary']
 
           # set workspace information
           Rails.logger.info "#{Time.now}: setting workspace info for #{configuration['name']}"
@@ -120,7 +120,15 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
         end
       when /SS2_scRNA_pipeline/
         # GP-TAG/SS2_scRNA_pipeline (smart-seq2)
-        Rails.logger.info "#{Time.now}: No extra configuration present for #{configuration_namespace}/#{configuration_name}; exiting"
+        Rails.logger.info "#{Time.now}: updating config inputs for #{configuration['name']}"
+
+        # set optional inputs
+        inputs.each do |task_name, parameters|
+          parameters.each do |param_name, param_value|
+            configuration['inputs'][task_name][param_name] = param_value
+          end
+        end
+
         response[:complete] = true
         return response
       else
@@ -137,28 +145,56 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
     case workflow_identifier
       when /cell-ranger-2-0-2/
         opts.merge!(
-             'transcriptomeTarGz' => {
-                 type: 'select',
-                 default: 'mm10',
-                 values: [
-                     ['human (GRCh38)', 'GRCh38'],
-                     ['mouse (mm10)', 'mm10'],
-                 ],
-                 required: true,
-                 help: 'Cell Ranger compatible transcriptome (human or mouse)'
-             },
-             'expectCells' => {
-                 type: 'integer',
-                 default: 3000,
-                 required: false,
-                 help: 'Expected number of recovered cells. Default: 3,000 cells.'
-             },
-             'secondary' => {
-                 type: 'boolean',
-                 default: 'true',
-                 required: false,
-                 help: 'Set to false to skip secondary analysis of the gene-barcode matrix (dimensionality reduction, clustering and visualization).'
-             }
+            'cellranger' => {
+                'transcriptomeTarGz' => {
+                    type: 'select',
+                    default: 'mm10',
+                    values: [
+                        ['human (GRCh38)', 'GRCh38'],
+                        ['mouse (mm10)', 'mm10'],
+                    ],
+                    required: true,
+                    help: 'Cell Ranger compatible transcriptome (human or mouse)'
+                },
+                'expectCells' => {
+                    type: 'integer',
+                    default: 3000,
+                    required: false,
+                    help: 'Expected number of recovered cells. Default: 3,000 cells.'
+                },
+                'secondary' => {
+                    type: 'boolean',
+                    default: 'true',
+                    required: false,
+                    help: 'Set to false to skip secondary analysis of the gene-barcode matrix (dimensionality reduction, clustering and visualization).'
+                }
+            }
+        )
+      when /SS2_scRNA_pipeline/
+        opts.merge!(
+            'SmartSeq2SingleCell' => {
+                'stranded' => {
+                    type: 'select',
+                    default: 'NONE',
+                    values: [
+                        ['NONE', 'NONE']
+                    ],
+                    required: true,
+                    help: 'Stranded/Non-stranded reads?'
+                }
+            },
+            'data' => {
+                'increase_disk_size' => {
+                    type: 'integer',
+                    help: 'Amount to increase disk size for data pipeline (in GB)'
+                }
+            },
+            'qc' => {
+                'increase_disk_size' => {
+                    type: 'integer',
+                    help: 'Amount to increase disk size for qc pipeline (in GB)'
+                }
+            }
         )
     end
     opts
