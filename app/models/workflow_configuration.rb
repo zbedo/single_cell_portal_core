@@ -122,12 +122,10 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
         # GP-TAG/SS2_scRNA_pipeline (smart-seq2)
         Rails.logger.info "#{Time.now}: updating config inputs for #{configuration['name']}"
 
-        # set optional inputs
-        inputs.each do |task_name, parameters|
-          parameters.each do |param_name, param_value|
-            configuration['inputs'][task_name][param_name] = param_value
-          end
-        end
+        # set additional inputs
+        configuration['inputs']['SmartSeq2SingleCell.stranded'] = "\"#{inputs['SmartSeq2SingleCell']['stranded']}\""
+        configuration['inputs']['SmartSeq2SingleCell.data.increase_disk_size'] = "\"#{inputs['data']['increase_disk_size']}\""
+        configuration['inputs']['SmartSeq2SingleCell.qc.increase_disk_size'] = "\"#{inputs['qc']['increase_disk_size']}\""
 
         response[:complete] = true
         return response
