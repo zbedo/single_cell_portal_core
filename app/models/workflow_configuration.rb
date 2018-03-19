@@ -124,8 +124,6 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
 
         # set additional inputs
         configuration['inputs']['SmartSeq2SingleCell.stranded'] = "\"#{inputs['SmartSeq2SingleCell']['stranded']}\""
-        configuration['inputs']['SmartSeq2SingleCell.data.increase_disk_size'] = "\"#{inputs['data']['increase_disk_size']}\""
-        configuration['inputs']['SmartSeq2SingleCell.qc.increase_disk_size'] = "\"#{inputs['qc']['increase_disk_size']}\""
 
         response[:complete] = true
         return response
@@ -164,7 +162,7 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
                     type: 'boolean',
                     default: 'true',
                     required: false,
-                    help: 'Set to false to skip secondary analysis of the gene-barcode matrix (dimensionality reduction, clustering and visualization).'
+                    help: 'Set to \'No\' to skip secondary analysis of the gene-barcode matrix (dimensionality reduction, clustering and visualization).'
                 }
             }
         )
@@ -175,22 +173,12 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
                     type: 'select',
                     default: 'NONE',
                     values: [
-                        ['NONE', 'NONE']
+                        ['NONE', 'NONE'],
+                        ['FIRST_READ_TRANSCRIPTION_STRAND', 'FIRST_READ_TRANSCRIPTION_STRAND'],
+                        ['SECOND_READ_TRANSCRIPTION_STRAND', 'SECOND_READ_TRANSCRIPTION_STRAND']
                     ],
                     required: true,
-                    help: 'Stranded/Non-stranded reads?'
-                }
-            },
-            'data' => {
-                'increase_disk_size' => {
-                    type: 'integer',
-                    help: 'Amount to increase disk size for data pipeline (in GB)'
-                }
-            },
-            'qc' => {
-                'increase_disk_size' => {
-                    type: 'integer',
-                    help: 'Amount to increase disk size for qc pipeline (in GB)'
+                    help: 'For strand-specific library prep. For unpaired reads, use FIRST_READ_TRANSCRIPTION_STRAND if the reads are expected to be on the transcription strand.'
                 }
             }
         )
