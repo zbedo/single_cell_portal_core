@@ -149,9 +149,11 @@ class AnalysisMetadatum
     begin
       call_metadata = []
       workflows.each do |workflow|
+        Rails.logger.info "#{Time.now}: processing #{workflow['workflowName']} metadata for submission #{self.submission_id}"
         # for each 'call', extract the available information as defined by the 'task' definition for this
         # version of the analysis metadata schema
         workflow['calls'].each do |task, task_attributes|
+          Rails.logger.info "#{Time.now}: processing #{task} call metadata for submission #{self.submission_id}"
           call = {
               'name' => task
           }
