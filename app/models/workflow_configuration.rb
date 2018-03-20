@@ -8,34 +8,36 @@
 # @param: configuration_name (String) => name of selected configuration
 # @param: workflow_namespace (String) => namespace of selected workflow
 # @param: workflow_name (String) => name of selected workflow
-# @param: inputs (Hash) => Hash of input parameters, including sample and other required/optional inputs
+# @param: inputs (Hash) => Hash of input parameters, including sample and other additional inputs
 #
 # @return: response (Hash) => Hash containing completion status and updated configuration attributes (if needed) or error messages (if present)
 ##
 
 class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :configuration_name, :workflow_namespace, :workflow_name, :inputs)
+  # update a FireCloud configuration with run-specific information
   def perform
-    # load requested configuration
-    configuration = Study.firecloud_client.get_workspace_configuration(study.firecloud_project, study.firecloud_workspace,
-                                                                       configuration_namespace, configuration_name)
-    # get the requested sample attributes
-    sample_name = inputs[:sample_name]
+    begin
+      # load requested configuration
+      configuration = Study.firecloud_client.get_workspace_configuration(study.firecloud_project, study.firecloud_workspace,
+                                                                         configuration_namespace, configuration_name)
+      # get the requested sample attributes
+      sample_name = inputs[:sample_name]
 
-    # pre-load response object
-    response = {
-        complete: false,
-        sample: sample_name,
-        configuration_name: configuration_name,
-        configuration_namespace: configuration_namespace
-    }
-    # create an identifier on which to branch
-    workflow_identifier = [workflow_namespace, workflow_name].join('-')
+      # pre-load response object
+      response = {
+          complete: false,
+          sample: sample_name,
+          configuration_name: configuration_name,
+          configuration_namespace: configuration_namespace
+      }
+      # create an identifier on which to branch
+      workflow_identifier = [workflow_namespace, workflow_name].join('-')
 
-    case workflow_identifier
-      when /cell-ranger-2-0-2/
-        # configure a CellRanger run using the public regev/cell_ranger_2.0.2_count WDL
-        begin
-          # configure response sample
+      Rails.logger.info "#{Time.now}: updating config inputs for #{configuration['name']}"
+
+      case workflow_identifier
+        when /cell-ranger-2-0-2/
+          # configure a CellRanger run using the public regev/cell_ranger_2.0.2_count WDL
           response[:sample] = sample_name
 
           # get workspace sample attributes
@@ -84,58 +86,71 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
           end
           configuration['name'] = sample_config_name
           # determine if we need to create a new configuration object to use for this submission
-          configs = Study.firecloud_client.get_workspace_configurations(study.firecloud_project, study.firecloud_workspace)
-          matching_conf = configs.detect {|conf| conf['methodRepoMethod'] == configuration['methodRepoMethod'] && conf['name'] == sample_config_name}
-          if matching_conf.present?
-            existing_configuration = Study.firecloud_client.get_workspace_configuration(study.firecloud_project, study.firecloud_workspace,
-                                                                                        matching_conf['namespace'], matching_conf['name'])
-            if configuration['inputs'] != existing_configuration['inputs']
-              # append an incrementing integer on the end to make this unique, but only if there is an match on the configuration name
-              # this may be the very first time this has been launched, in which case we don't have a sample-specific config yet
-              num_configs = configs.keep_if {|c| c['methodRepoMethod'] == configuration['methodRepoMethod'] && c['name'] =~ /#{sample_config_name}/}.size
-              if num_configs > 0
-                sample_config_name += "_#{num_configs + 1}"
-              end
-              configuration['name'] = sample_config_name
-              Rails.logger.info "#{Time.now}: incrementing new sample-specific configuration: #{configuration_namespace}/#{sample_config_name}"
-              Study.firecloud_client.create_workspace_configuration(study.firecloud_project, study.firecloud_workspace,
-                                                                    configuration)
-            else
-              Rails.logger.info "#{Time.now}: Found existing matching sample-specific configuration for #{sample_config_name}"
-            end
-          else
-            Rails.logger.info "#{Time.now}: creating new sample-specific configuration: #{configuration_namespace}/#{sample_config_name}"
-            Study.firecloud_client.create_workspace_configuration(study.firecloud_project, study.firecloud_workspace,
-                                                                  configuration)
-          end
-
+          self.update_matching_configs(configuration, sample_config_name)
           # update response
           response[:configuration_name] = sample_config_name
-          response[:complete] = true
-          return response
-        rescue => e
-            Rails.logger.info "#{Time.now}: Error in configuring #{configuration_namespace}/#{configuration_name} using #{inputs}: #{e.message}"
-            response[:error_message] = e.message
-            return response
-        end
-      when /SS2_scRNA_pipeline/
-        # GP-TAG/SS2_scRNA_pipeline (smart-seq2)
-        Rails.logger.info "#{Time.now}: updating config inputs for #{configuration['name']}"
+        when /SS2_scRNA_pipeline/ # GP-TAG/SS2_scRNA_pipeline (smart-seq2)
+          # set additional inputs
+          configuration['inputs']['SmartSeq2SingleCell.stranded'] = "\"#{inputs['SmartSeq2SingleCell']['stranded']}\""
+        when /inferCNV/ # InferCNV analysis
+          # assemble cluster information
+          cluster_files = []
+          cluster_names = []
+          study.cluster_groups.each do |cluster|
+            cluster_names << cluster.name
+            cluster_files << StudyFile.find(cluster.study_file_id).gs_url
+          end
+          configuration['inputs']['infercnv.ordination_names'] = cluster_names
+          configuration['inputs']['infercnv.ordination_paths'] = cluster_files
 
-        # set additional inputs
-        configuration['inputs']['SmartSeq2SingleCell.stranded'] = "\"#{inputs['SmartSeq2SingleCell']['stranded']}\""
+          # update name to include name of expression file
+          exp_file_name = configuration['inputs']['infercnv.expression_file'].split('/').last.split('.').first
+          exp_config_name = configuration_name + "_#{exp_file_name}"
+          WorkflowConfiguration.update_matching_configs(configuration, sample_config_name)
+        else
+          # return immediately as we have no special code to execute for requested workflow
+          Rails.logger.info "#{Time.now}: No extra configuration present for #{configuration_namespace}/#{configuration_name}; exiting"
+      end
 
-        response[:complete] = true
-        return response
-      else
-        # return immediately as we have no special code to execute for requested workflow
-        Rails.logger.info "#{Time.now}: No extra configuration present for #{configuration_namespace}/#{configuration_name}; exiting"
-        response[:complete] = true
-        return response
+      # update response object and return
+      response[:complete] = true
+      return response
+    rescue => e
+      # generic error catch all, will halt workflow submission and return error message to UI
+      Rails.logger.error "#{Time.now}: Error in configuring #{configuration_namespace}/#{configuration_name} using #{inputs}: #{e.message}"
+      response[:error_message] = e.message
+      return response
     end
   end
 
-  # load additional parameters for a requested workflow (curated list)
+  def update_matching_configs(configuration, current_name)
+    configs = Study.firecloud_client.get_workspace_configurations(study.firecloud_project, study.firecloud_workspace)
+    matching_conf = configs.detect {|conf| conf['methodRepoMethod'] == configuration['methodRepoMethod'] && conf['name'] == current_name}
+    if matching_conf.present?
+      existing_configuration = Study.firecloud_client.get_workspace_configuration(study.firecloud_project, study.firecloud_workspace,
+                                                                                  matching_conf['namespace'], matching_conf['name'])
+      if configuration['inputs'] != existing_configuration['inputs']
+        # append an incrementing integer on the end to make this unique, but only if there is an match on the configuration name
+        # this may be the very first time this has been launched, in which case we don't have a sample-specific config yet
+        num_configs = configs.keep_if {|c| c['methodRepoMethod'] == configuration['methodRepoMethod'] && c['name'] =~ /#{current_name}/}.size
+        if num_configs > 0
+          current_name += "_#{num_configs + 1}"
+        end
+        configuration['name'] = current_name
+        Rails.logger.info "#{Time.now}: incrementing new sample-specific configuration: #{configuration['namespace']}/#{current_name}"
+        Study.firecloud_client.create_workspace_configuration(study.firecloud_project, study.firecloud_workspace,
+                                                              configuration)
+      else
+        Rails.logger.info "#{Time.now}: Found existing matching sample-specific configuration for #{current_name}"
+      end
+    else
+      Rails.logger.info "#{Time.now}: creating new sample-specific configuration: #{configuration['namespace']}/#{current_name}"
+      Study.firecloud_client.create_workspace_configuration(study.firecloud_project, study.firecloud_workspace,
+                                                            configuration)
+    end
+  end
+
+  # return additional parameters for a requested workflow (curated list) to update UI
   def self.get_additional_parameters(workflow_identifier)
     opts = {}
     case workflow_identifier
@@ -181,6 +196,10 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
                     help: 'For strand-specific library prep. For unpaired reads, use FIRST_READ_TRANSCRIPTION_STRAND if the reads are expected to be on the transcription strand.'
                 }
             }
+        )
+      when /infercnv/
+        opts.merge!(
+
         )
     end
     opts
