@@ -1,5 +1,8 @@
 # use KDUX base Rails image, configure only project-specific items here
-FROM broadinstitute/kdux-rails-baseimage
+FROM broadinstitute/kdux-rails-baseimage:1.0
+
+# Set ruby version
+RUN bash -lc 'rvm --default use ruby-2.3.6'
 
 # Set up project dir, install gems, set up script to migrate database and precompile static assets on run
 RUN mkdir /home/app/webapp

@@ -145,8 +145,8 @@
   </div>
   <div class="form-group row">
     <div class="col-xs-12 text-center">
-      <%= link_to "<span class='fa fa-upload'></span> Upload/Edit Data".html_safe, initialize_study_path(@study), class: "btn btn-sm btn-primary #{@study.url_safe_name}-upload" %>
-      <%= link_to "<span class='fa fa-refresh'></span> Sync Workspace".html_safe, sync_study_path(@study), class: "btn btn-sm btn-warning #{@study.url_safe_name}-sync sync-button" %>
+      <%= scp_link_to "<span class='fa fa-upload'></span> Upload/Edit Data".html_safe, initialize_study_path(@study), class: "btn btn-sm btn-primary #{@study.url_safe_name}-upload" %>
+      <%= scp_link_to "<span class='fa fa-refresh'></span> Sync Workspace".html_safe, sync_study_path(@study), class: "btn btn-sm btn-warning #{@study.url_safe_name}-sync sync-button" %>
     </div>
   </div>
 <% end %>

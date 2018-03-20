@@ -10,14 +10,22 @@
 		</div>
 	<% end %>
   <%= f.hidden_field :user_id, value: @study.new_record? ? current_user._id : @study.user_id %>
+  <%= hidden_field_tag :scpbr, params[:scpbr] %>
 	<div class="form-group row">
 		<div class="col-md-8">
 			<%= f.label :name %><br/>
 			<%= f.text_field :name, class: 'form-control', autocomplete: 'off' %>
 		</div>
     <div class="col-md-4">
-      <%= f.label :firecloud_project, 'FireCloud billing project' %><br />
-      <%= f.select :firecloud_project, options_for_select(@projects, @study.firecloud_project), {include_blank: 'Please select a billing project'}, class: 'form-control' %>
+      <%= f.label :firecloud_project, 'FireCloud Billing Project' %><br />
+      <% if @study.new_record? %>
+        <%= f.select :firecloud_project, options_for_select(@projects, @study.firecloud_project),
+                     {include_blank: 'Please select a billing project'}, class: 'form-control' %>
+      <% else %>
+        <%= f.text_field :firecloud_project, class: 'form-control', readonly: true,
+                         title: 'You may not change the project of an existing study', data: {toggle: 'tooltip'} %>
+    <% end %>
+
     </div>
   </div>
   <div class="form-group row">
@@ -31,21 +39,35 @@
 		</div>
     <div class="col-md-3">
       <%= f.label :use_existing_workspace, 'Use an existing workspace?' %><br/>
-      <%= f.select :use_existing_workspace, options_for_select([['Yes',1],['No',0]], @study.use_existing_workspace ? ['Yes', 1] : ['No', 0]), {}, {class: 'form-control'} %>
+      <%= f.select :use_existing_workspace, options_for_select([['Yes',1],['No',0]],
+                                                               @study.use_existing_workspace ? ['Yes', 1] : ['No', 0]),
+                                            {}, {class: 'form-control'} %>
     </div>
     <div class="col-md-4">
       <%= f.label :firecloud_workspace, 'Existing FireCloud Workspace' %><br />
       <%= f.text_field :firecloud_workspace, class: 'form-control', disabled: !@study.use_existing_workspace %>
     </div>
 	</div>
-	<div class="form-group">
+  <% if current_user.available_branding_groups.any? %>
+    <div class="form-group">
+      <div class="row">
+        <div class="col-md-6">
+          <%= f.label :branding_group_id, 'Add to a Brand' %> <span class='fa fa-question-circle' data-toggle='tooltip' title='Add this study to a brand to allow special look & feel rules when viewing in "branded" mode' data-placement='right'></span><br />
+          <%= f.select :branding_group_id, options_from_collection_for_select(current_user.available_branding_groups, 'id', 'name', @study.branding_group_id),
+                       {include_blank: 'No Selected Brand'}, class: 'form-control' %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+  <div class="form-group">
 		<%= f.label :description %>
 		<%= f.cktext_area :description %>
 	</div>
 	<div class="form-group">
 		<h3>Sharing</h3>
 		<%= f.fields_for :study_shares %>
-		<%= f.link_to_add "<span class='fa fa-plus'></span> Share Study".html_safe, :study_shares, class: 'btn btn-primary', id: 'add-study-share' %>
+		<%= f.link_to_add "<span class='fa fa-plus'></span> Share Study".html_safe, :study_shares, class: 'btn btn-primary',
+                      id: 'add-study-share' %>
 	</div>
   <div class="form-group">
     <%= f.submit nil, class: 'btn btn-lg btn-success', id: 'save-study' %>

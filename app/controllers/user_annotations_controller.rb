@@ -104,7 +104,8 @@ class UserAnnotationsController < ApplicationController
           end
         end
         #If successful, redirect back and say success
-        format.html { redirect_to user_annotations_path, notice: "User Annotation '#{@user_annotation.name}' was successfully updated." }
+        format.html { redirect_to merge_default_redirect_params(user_annotations_path, scpbr: params[:scpbr]),
+                                  notice: "User Annotation '#{@user_annotation.name}' was successfully updated." }
         format.json { render :index, status: :ok, location: user_annotations_path }
       else
         #If an error, show it
@@ -132,7 +133,8 @@ class UserAnnotationsController < ApplicationController
     update_message = "User Annotation '#{@user_annotation.name}'was successfully destroyed. All parsed database records have been destroyed."
     respond_to do |format|
       #redirect back to page when destroy finishes
-      format.html { redirect_to user_annotations_path, notice: update_message }
+      format.html { redirect_to merge_default_redirect_params(user_annotations_path, scpbr: params[:scpbr]),
+                                notice: update_message }
       format.json { head :no_content }
     end
   end
@@ -170,7 +172,8 @@ class UserAnnotationsController < ApplicationController
       # set publishing status to true so that the annotation will not show up in the list of annotations
       @user_annotation.update(publishing: true)
       # redirect back and say success
-      format.html { redirect_to user_annotations_path, notice: "User Annotation '#{@user_annotation.name}' will be added to the study. You will receive an email upon completion or error. If succesful, this annotation will be removed from your list of annotations." }
+      format.html { redirect_to merge_default_redirect_params(user_annotations_path, scpbr: params[:scpbr]),
+                                notice: "User Annotation '#{@user_annotation.name}' will be added to the study. You will receive an email upon completion or error. If succesful, this annotation will be removed from your list of annotations." }
       format.json { render :index, status: :ok, location: user_annotations_path }
       @user_annotation.delay.publish_to_study(current_user)
     end
@@ -192,7 +195,8 @@ class UserAnnotationsController < ApplicationController
   # Never trust parameters from the scary internet, only allow the white list through.
   # whitelist parameters for creating custom user annotation
   def user_annotation_params
-    params.require(:user_annotation).permit(:_id, :name, :study_id, :user_id, :cluster_group_id, values: [], user_annotation_shares_attributes: [:id, :_destroy, :email, :permission])
+    params.require(:user_annotation).permit(:_id, :name, :study_id, :user_id, :cluster_group_id, values: [],
+                                            user_annotation_shares_attributes: [:id, :_destroy, :email, :permission])
   end
 
   # checks that current user id is the same as annotation being edited or destroyed
@@ -201,7 +205,8 @@ class UserAnnotationsController < ApplicationController
       @user_annotation = UserAnnotation.find(params[:id])
     end
     if !@user_annotation.can_edit?(current_user)
-      redirect_to user_annotations_path, alert: 'You don\'t have permission to perform that action'
+      redirect_to merge_default_redirect_params(user_annotations_path, scpbr: params[:scpbr]),
+                  alert: "You don't have permission to perform that action"
     end
   end
 end

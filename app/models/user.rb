@@ -18,6 +18,8 @@ class User
   ###
 
   has_many :studies
+  has_many :branding_groups
+
   # User annotations are owned by a user
   has_many :user_annotations do
     def owned_by(user)
@@ -214,6 +216,11 @@ class User
   # user email address as a DOM id
   def email_as_id
     self.email.gsub(/[@\.]/, '-')
+  end
+
+  # return branding groups visible to user (or all for admins)
+  def available_branding_groups
+    self.admin? ? BrandingGroup.all.order_by(:name.asc) : BrandingGroup.where(user_id: self.id).order_by(:name.asc)
   end
 
   # helper method to migrate study ownership & shares from old email to new email

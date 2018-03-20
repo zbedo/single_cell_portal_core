@@ -16,6 +16,7 @@
 /db/*.json
 /data/*
 /public/single_cell/assets
+/public/single_cell/branding_groups
 /public/single_cell/ckeditor_assets
 /config/broad-singlecellportal.json
 /config/firecloud-print-access-token.py

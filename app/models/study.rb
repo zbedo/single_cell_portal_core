@@ -51,6 +51,7 @@ class Study
 
   # associations and scopes
   belongs_to :user
+  belongs_to :branding_group
   has_many :study_files, dependent: :delete do
     def by_type(file_type)
       if file_type.is_a?(Array)
@@ -2271,6 +2272,13 @@ class Study
 
       Rails.logger.info "#{Time.now}: Study: #{self.name} creating FireCloud workspace"
       validate_name_and_url
+
+      Rails.logger.info "#{Time.now}: Study: #{self.name} checking FireCloud project permissions"
+      has_access = set_firecloud_project_permissions
+      if !has_access
+        errors.add(:firecloud_project, " is not accessible to the portal service account.  Please choose another project.")
+      end
+      Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud project permissions ok"
       unless self.errors.any?
         begin
           # create workspace
@@ -2362,6 +2370,14 @@ class Study
         errors.add(:firecloud_workspace, ': The workspace you provided is already in use by another study.  Please use another workspace.')
         return false
       end
+
+      Rails.logger.info "#{Time.now}: Study: #{self.name} checking FireCloud project permissions"
+      has_access = set_firecloud_project_permissions
+      if !has_access
+        errors.add(:firecloud_project, " is not accessible to the portal service account.  Please choose another project.")
+      end
+      Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud project permissions ok"
+
       unless self.errors.any?
         begin
           workspace = Study.firecloud_client.get_workspace(self.firecloud_project, self.firecloud_workspace)
@@ -2466,6 +2482,26 @@ class Study
     rescue RuntimeError => e
       # workspace was not found, most likely deleted already
       Rails.logger.error "#{Time.now}: #{e.message}"
+    end
+  end
+
+  # set permissions in projects that were created outside of SCP to allow the service account access
+  def set_firecloud_project_permissions
+    # only perform check if this is not the default portal project
+    if self.firecloud_project != FireCloudClient::PORTAL_NAMESPACE
+      begin
+        client = FireCloudClient.new(self.user, FireCloudClient::PORTAL_NAMESPACE)
+        project_members = client.get_billing_project_members(self.firecloud_project)
+        if project_members.detect {|member| member['email'] == client.storage_issuer && member['role'] == 'owner'}.nil?
+          added = client.add_user_to_billing_project(self.firecloud_project, 'owner', client.storage_issuer)
+          return added == 'OK'
+        end
+      rescue RuntimeError => e
+        Rails.logger.error "#{Time.now}: unable to add portal service account to #{self.firecloud_project}: #{e.message}"
+        false
+      end
+    else
+      true
     end
   end
 end

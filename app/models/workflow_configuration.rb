@@ -67,11 +67,11 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
           end
 
           # set the referenceName (configures the links to output files) - this is passed in as the genome assembly name/ID
-          configuration['inputs']['cellranger.referenceName'] = "\"#{inputs['transcriptomeTarGz']}\""
+          configuration['inputs']['cellranger.referenceName'] = "\"#{inputs['cellranger']['transcriptomeTarGz']}\""
 
           # add optional parameters
-          configuration['inputs']['cellranger.expectCells'] = inputs['expectCells']
-          configuration['inputs']['cellranger.secondary'] = inputs['secondary']
+          configuration['inputs']['cellranger.expectCells'] = inputs['cellranger']['expectCells']
+          configuration['inputs']['cellranger.secondary'] = inputs['cellranger']['secondary']
 
           # set workspace information
           Rails.logger.info "#{Time.now}: setting workspace info for #{configuration['name']}"
@@ -118,6 +118,15 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
             response[:error_message] = e.message
             return response
         end
+      when /SS2_scRNA_pipeline/
+        # GP-TAG/SS2_scRNA_pipeline (smart-seq2)
+        Rails.logger.info "#{Time.now}: updating config inputs for #{configuration['name']}"
+
+        # set additional inputs
+        configuration['inputs']['SmartSeq2SingleCell.stranded'] = "\"#{inputs['SmartSeq2SingleCell']['stranded']}\""
+
+        response[:complete] = true
+        return response
       else
         # return immediately as we have no special code to execute for requested workflow
         Rails.logger.info "#{Time.now}: No extra configuration present for #{configuration_namespace}/#{configuration_name}; exiting"
@@ -132,28 +141,46 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
     case workflow_identifier
       when /cell-ranger-2-0-2/
         opts.merge!(
-             'transcriptomeTarGz' => {
-                 type: 'select',
-                 default: 'mm10',
-                 values: [
-                     ['human (GRCh38)', 'GRCh38'],
-                     ['mouse (mm10)', 'mm10'],
-                 ],
-                 required: true,
-                 help: 'Cell Ranger compatible transcriptome (human or mouse)'
-             },
-             'expectCells' => {
-                 type: 'integer',
-                 default: 3000,
-                 required: false,
-                 help: 'Expected number of recovered cells. Default: 3,000 cells.'
-             },
-             'secondary' => {
-                 type: 'boolean',
-                 default: 'true',
-                 required: false,
-                 help: 'Set to false to skip secondary analysis of the gene-barcode matrix (dimensionality reduction, clustering and visualization).'
-             }
+            'cellranger' => {
+                'transcriptomeTarGz' => {
+                    type: 'select',
+                    default: 'mm10',
+                    values: [
+                        ['human (GRCh38)', 'GRCh38'],
+                        ['mouse (mm10)', 'mm10'],
+                    ],
+                    required: true,
+                    help: 'Cell Ranger compatible transcriptome (human or mouse)'
+                },
+                'expectCells' => {
+                    type: 'integer',
+                    default: 3000,
+                    required: false,
+                    help: 'Expected number of recovered cells. Default: 3,000 cells.'
+                },
+                'secondary' => {
+                    type: 'boolean',
+                    default: 'true',
+                    required: false,
+                    help: 'Set to \'No\' to skip secondary analysis of the gene-barcode matrix (dimensionality reduction, clustering and visualization).'
+                }
+            }
+        )
+      when /SS2_scRNA_pipeline/
+        opts.merge!(
+            'SmartSeq2SingleCell' => {
+                'stranded' => {
+                    type: 'select',
+                    default: 'NONE',
+                    values: [
+                        ['NONE', 'NONE'],
+                        ['FIRST_READ_TRANSCRIPTION_STRAND', 'FIRST_READ_TRANSCRIPTION_STRAND'],
+                        ['SECOND_READ_TRANSCRIPTION_STRAND', 'SECOND_READ_TRANSCRIPTION_STRAND']
+                    ],
+                    required: true,
+                    help: 'For strand-specific library prep. For unpaired reads, use FIRST_READ_TRANSCRIPTION_STRAND if the reads are expected to be on the transcription strand.'
+                }
+            }
         )
     end
     opts
@@ -164,6 +191,8 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
     case configuration['methodRepoMethod']['methodName']
       when /cell.*ranger/
         configuration['inputs']['cellranger.transcriptomeTarGz'].gsub(/\"/, '')
+      when /SS2_scRNA_pipeline/
+        configuration['inputs']['SmartSeq2SingleCell.genome_ref_fasta'].gsub(/\"/, '')
       else
         # fallback to see if we can find anything that might be a 'reference'
         input = configuration['inputs'].detect {|k,v| k =~ /(reference|genome)/}
