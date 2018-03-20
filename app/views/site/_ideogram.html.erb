@@ -119,10 +119,17 @@
 
   }
 
+  var annotHeight = 3.5;
+
+  var ideoAnnotShape =
+    'm0,0 l 0 ' + (2 * annotHeight) +
+    'l ' + annotHeight/2 + ' 0' +
+    'l 0 -' + (2 * annotHeight) + 'z';
+
   var annotationTracks = [
-    {'id': 'highExpressionTrack', 'displayName': 'High expression', 'color': '#FFA500'},
-    {'id': 'mediumExpressionTrack', 'displayName': 'Medium expression', 'color': '#CCC'},
-    {'id': 'lowExpressionTrack',  'displayName': 'Low expression', 'color': '#551A8B'}
+    {'id': 'highExpressionTrack', 'displayName': 'High expression', 'color': '#FFA500', 'shape': ideoAnnotShape},
+    {'id': 'mediumExpressionTrack', 'displayName': 'Medium expression', 'color': '#CCC', 'shape': ideoAnnotShape},
+    {'id': 'lowExpressionTrack',  'displayName': 'Low expression', 'color': '#551A8B', 'shape': ideoAnnotShape}
   ];
 
   var ideogram = new Ideogram({
