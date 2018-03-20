@@ -343,6 +343,7 @@ class StudiesController < ApplicationController
         end
       end
     else
+      set_user_projects
       @share_changes = false
     end
 
