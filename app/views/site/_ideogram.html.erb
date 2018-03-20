@@ -1,5 +1,3 @@
-<script src="https://unpkg.com/ideogram@0.16.0/dist/js/ideogram.min.js"></script>
-
 <script>
 
   function getGenomicRange(annot) {
@@ -87,21 +85,55 @@
     $('#ideogram-container').append(table);
   }
 
+  function deserializeAnnotTracks() {
+
+    var raContainer, chr, rawAnnots, ra,
+      newRaContainers, newRa, newRas, expressionValues,
+      keys = ideogram.rawAnnots.keys,
+      rawAnnotContainers = ideogram.rawAnnots.annots;
+
+    newRaContainers = [];
+
+    for (var i = 0; i < rawAnnotContainers.length; i++) {
+      raContainer = rawAnnotContainers[i];
+      chr = raContainer.chr;
+      rawAnnots = raContainer.annots;
+      newRas = [];
+      for (var j = 0; j < rawAnnots.length; j++) {
+        ra = rawAnnots[j]; // [name, start, length, exp_1, exp_2, ...]
+        expressionValues = ra.slice(3,)
+        console.log(expressionValues);
+        for (var k = 0; k < expressionValues.length; k++) {
+          newRa = ra.slice(0, 3); // name, start, length
+          newRa.push(k, expressionValues[k]); // track index, exp_k
+          newRas.push(newRa);
+        }
+      }
+      newRaContainers.push({chr: chr, annots: newRas});
+    }
+
+    keys.splice(3, 0, 'trackIndex');
+    ideogram.rawAnnots.keys = keys;
+    ideogram.rawAnnots.annots = newRaContainers;
+
+
+  }
+
   var annotationTracks = [
     {'id': 'highExpressionTrack', 'displayName': 'High expression', 'color': '#FFA500'},
     {'id': 'mediumExpressionTrack', 'displayName': 'Medium expression', 'color': '#CCC'},
     {'id': 'lowExpressionTrack',  'displayName': 'Low expression', 'color': '#551A8B'}
   ];
 
-
-
   var ideogram = new Ideogram({
     container: '#ideogram-container',
     organism: 'human',
     assembly: 'GRCh37',
     chrHeight: 400,
+    dataDir: 'https://unpkg.com/ideogram@0.16.0/dist/data/bands/native/',
     annotationsPath: '/single_cell/example_data/infercnv-study_exp_means.json',
     annotationTracks: annotationTracks,
+    onLoadAnnots: deserializeAnnotTracks,
     onDrawAnnots: writeAnnotsTable
   });
 

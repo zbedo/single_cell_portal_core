@@ -24,7 +24,7 @@ class GeneComputation
     cluster_names = scores[0].slice(1, scores[0].length)
 
 
-    keys =  ['name', 'start', 'length', 'trackIndex']
+    keys =  ['name', 'start', 'length']
     if release_source == 'ensembl'
       keys.concat(['id', 'type'])
     end
@@ -56,9 +56,7 @@ class GeneComputation
 
       cluster_scores = score.slice(1, scores.length)
 
-      track_index = self.get_track_index(score[1])
-
-      annot = [gene_name, start, length, track_index]
+      annot = [gene_name, start, length]
 
       if release_source == 'ensembl'
         annot.concat([id, type])
@@ -77,17 +75,6 @@ class GeneComputation
     ideogram_annots = {keys: keys, annots: annots_list}
 
     return ideogram_annots
-  end
-
-  def self.get_track_index(score)
-    if score > 5
-      track_index = 0 # high expression
-    elsif score < 2
-      track_index = 2 # low expression
-    else
-      track_index = 1 # medium expression
-    end
-    return track_index
   end
 
   def self.compute_gene_exp_means(study)
@@ -130,7 +117,7 @@ class GeneComputation
 
       scores = {}
 
-      if index > 1000
+      if index > 2000
         break
       end
 
