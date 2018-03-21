@@ -2035,8 +2035,8 @@ class SiteController < ApplicationController
     allowed_workflows = config_options.map(&:value)
     all_workflows = []
 
-    # parellelize gets to speed up performance if there are a lot of workflows
-    Parallel.map(allowed_workflows, in_threads: 100) do |workflow_opts|
+    # restrict parallelization to 3 threads to avoid spurious 401 errors
+    Parallel.map(allowed_workflows, in_threads: 3) do |workflow_opts|
       namespace, name, snapshot = workflow_opts.split('/')
       all_workflows << Study.firecloud_client.get_methods(namespace: namespace, name: name, snapshotId: snapshot)
     end

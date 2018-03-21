@@ -86,9 +86,9 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
           end
           configuration['name'] = sample_config_name
           # determine if we need to create a new configuration object to use for this submission
-          self.update_matching_configs(configuration, sample_config_name)
+          configuration = self.update_workspace_config(configuration, sample_config_name)
           # update response
-          response[:configuration_name] = sample_config_name
+          response[:configuration_name] = configuration['name']
         when /SS2_scRNA_pipeline/ # GP-TAG/SS2_scRNA_pipeline (smart-seq2)
           # set additional inputs
           configuration['inputs']['SmartSeq2SingleCell.stranded'] = "\"#{inputs['SmartSeq2SingleCell']['stranded']}\""
@@ -103,10 +103,13 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
           configuration['inputs']['infercnv.ordination_names'] = cluster_names
           configuration['inputs']['infercnv.ordination_paths'] = cluster_files
 
+          # assign expression file to configuration
+          configuration['inputs']['infercnv.expression_file'] = input['expression_file']
           # update name to include name of expression file
           exp_file_name = configuration['inputs']['infercnv.expression_file'].split('/').last.split('.').first
           exp_config_name = configuration_name + "_#{exp_file_name}"
-          WorkflowConfiguration.update_matching_configs(configuration, sample_config_name)
+          configuration = self.update_workspace_config(configuration, exp_config_name)
+          response[:configuration_name] = configuration['name']
         else
           # return immediately as we have no special code to execute for requested workflow
           Rails.logger.info "#{Time.now}: No extra configuration present for #{configuration_namespace}/#{configuration_name}; exiting"
@@ -123,7 +126,9 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
     end
   end
 
-  def update_matching_configs(configuration, current_name)
+  # determine whether or not we need to create a new input-specific configuration object in the study's workspace for
+  # this submission instance
+  def update_workspace_config(configuration, current_name)
     configs = Study.firecloud_client.get_workspace_configurations(study.firecloud_project, study.firecloud_workspace)
     matching_conf = configs.detect {|conf| conf['methodRepoMethod'] == configuration['methodRepoMethod'] && conf['name'] == current_name}
     if matching_conf.present?
@@ -148,6 +153,8 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
       Study.firecloud_client.create_workspace_configuration(study.firecloud_project, study.firecloud_workspace,
                                                             configuration)
     end
+    # return updated configuration
+    configuration
   end
 
   # return additional parameters for a requested workflow (curated list) to update UI
