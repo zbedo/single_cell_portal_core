@@ -167,7 +167,7 @@ class ReportsController < ApplicationController
         fastq_files.each do |fastq|
           directory = fastq.include?('/') ? fastq.split('/').first : '/'
           study_directory = study.directory_listings.find_by(name: directory)
-          if directory.present?
+          if study_directory.present?
             study_directory_file = study_directory.files.detect {|f| f['name'] == fastq}
             input_size += study_directory_file['size']
           else
