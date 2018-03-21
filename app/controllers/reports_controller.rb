@@ -167,8 +167,15 @@ class ReportsController < ApplicationController
         fastq_files.each do |fastq|
           directory = fastq.include?('/') ? fastq.split('/').first : '/'
           study_directory = study.directory_listings.find_by(name: directory)
-          study_directory_file = study_directory.files.detect {|f| f['name'] == fastq}
-          input_size += study_directory_file['size']
+          if directory.present?
+            study_directory_file = study_directory.files.detect {|f| f['name'] == fastq}
+            input_size += study_directory_file['size']
+          else
+            study_file = study.study_files.by_type('Fastq').detect {|f| f.name == fastq}
+            if study_file.present? && !study_file.human_data?
+              input_size += study_file.upload_file_size
+            end
+          end
         end
         if @pipeline_runtimes[pipeline_name].present?
           @pipeline_runtimes[pipeline_name][:inputs] << input_size
