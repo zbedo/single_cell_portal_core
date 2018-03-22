@@ -57,7 +57,7 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
           reference_workspace = AdminConfiguration.find_by(config_type: 'Reference Data Workspace')
           ref_namespace, ref_workspace = reference_workspace.value.split('/')
           reference_attributes = Study.firecloud_client.get_workspace(ref_namespace, ref_workspace)['workspace']['attributes']
-          case inputs['transcriptomeTarGz']
+          case inputs['cellranger']['transcriptomeTarGz']
             when 'GRCh38'
               configuration['inputs']['cellranger.transcriptomeTarGz'] = "\"#{reference_attributes['cell_ranger_human_ref']}\""
             when 'mm10'
