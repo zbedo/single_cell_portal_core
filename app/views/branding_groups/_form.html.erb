@@ -1,0 +1,58 @@
+<%= form_for(@branding_group, html: {multipart: true, class: 'branding-group-form'}) do |f| %>
+  <% if @branding_group.errors.any? %>
+    <div class="bs-callout bs-callout-danger" id="branding-group-errors-block">
+      <h4><%= pluralize(@branding_group.errors.count, "error") %> prohibited this Branding Group from being saved:</h4>
+
+      <ul>
+      <% @branding_group.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="form-group row">
+    <div class="col-md-6">
+      <%= f.label :name %><br>
+      <%= f.text_field :name, class: 'form-control' %>
+    </div>
+    <div class="col-md-6">
+      <%= f.label :tag_line, 'Tag Line' %><br>
+      <%= f.text_field :tag_line, class: 'form-control' %>
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-md-3">
+      <%= f.label :background_color, 'Background Color' %><br>
+      <%= f.color_field :background_color, class: 'form-control' %>
+    </div>
+    <div class="col-md-3">
+      <%= f.label :font_family, "Font Family #{link_to "<i class='fa fa-fw fa-eye'></i>".html_safe, 'https://www.cssfontstack.com', title: 'View Options', data: {toggle: 'tooltip'}, target: :_blank}".html_safe %><br>
+      <%= f.select :font_family, grouped_options_for_select(web_safe_fonts, @branding_group.font_family), {}, class: 'form-control' %>
+    </div>
+    <div class="col-md-3">
+      <%= f.label :font_color, 'Font Color' %><br>
+      <%= f.color_field :font_color, class: 'form-control' %>
+    </div>
+    <div class="col-md-3">
+      <%= f.label :user_id, 'Associated User' %><br />
+      <%= f.select :user_id, options_from_collection_for_select(User.all, :id, :email, @branding_group.new_record? ? nil : @branding_group.user_id),
+                   {include_blank: 'Please select a user account'}, class: 'form-control' %>
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-md-3">
+      <%= f.label :splash_image, 'Splash Image' %><br/>
+      <%= f.file_field :splash_image, class: 'btn btn-default fileinput-button' %>
+      <% if @branding_group.splash_image.present? %>
+        <p class="help-block">Current file: <%= link_to "<i class='fa fa-download'></i> #{@branding_group.splash_image_file_name} (#{ number_to_human_size @branding_group.splash_image_file_size})".html_safe,
+                                                        @branding_group.splash_image.url, download: @branding_group.splash_image_file_name,
+                                                        class: 'btn btn-xs btn-primary' %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <%= f.submit nil, class: 'btn btn-lg btn-success', id: 'save-branding-group' %>
+  </div>
+<% end %>

@@ -180,7 +180,7 @@ function elementVisible(element) {
     return $(element).is(":visible");
 }
 
-function paginateStudies(totalPages, order, searchString) {
+function paginateStudies(totalPages, order, searchString, project) {
 
     var paginationOpts = {
         lines: 11, // The number of lines to draw
@@ -210,11 +210,14 @@ function paginateStudies(totalPages, order, searchString) {
     var page = parseInt($($(".study-panel").slice(-1)[0]).attr("data-page")) + 1;
     var dataParams = {};
     dataParams["page"] = page;
-    if (order != "") {
+    if (order !== "") {
         dataParams["order"] = order;
     }
-    if (searchString != "") {
+    if (searchString !== "") {
         dataParams["search_terms"] = searchString;
+    }
+    if (project !== "") {
+        dataParams["branding_group"] = project;
     }
     $("#pagination").fadeOut("fast", function() {
             $.ajax({

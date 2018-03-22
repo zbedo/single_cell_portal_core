@@ -94,10 +94,8 @@
               data: {file: fileName, selector: '#misc_form_<%= study_file._id %>', partial: 'initialize_misc_form'},
               dataType: 'script',
               success: function() {
-                  console.log('success callback');
                   var numCompleted = $('.initialize_misc_form').length;
                   var numNew = $('.new-misc-form').length;
-                  console.log('completed: ' + numCompleted + ' new: ' + numNew);
                   if ( numCompleted - numNew == 1 ) {
                       completeWizardStep('initialize_misc_form_nav');
                       setWizardProgress(getWizardStatus());

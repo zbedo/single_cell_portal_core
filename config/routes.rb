@@ -1,5 +1,4 @@
 Rails.application.routes.draw do
-
 	scope 'single_cell' do
 
 		# portal admin actions
@@ -17,6 +16,9 @@ Rails.application.routes.draw do
 		get 'admin/create_portal_user_group', to: 'admin_configurations#create_portal_user_group', as: :create_portal_user_group
 		get 'admin/sync_portal_user_group', to: 'admin_configurations#sync_portal_user_group', as: :sync_portal_user_group
 		resources :admin_configurations, path: 'admin'
+
+    # branding groups
+    resources :branding_groups
 
     # study reporter actions
     get 'reports', to: 'reports#index', as: :reports

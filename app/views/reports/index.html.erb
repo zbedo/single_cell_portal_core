@@ -1,4 +1,4 @@
-<h1>Reports <%= link_to "<i class='fa fa-fw fa-bar-chart'></i> Request a new plot".html_safe, 'javascript:;', class: 'btn btn-lg btn-primary pull-right', id: 'report-request' %></h1>
+<h1>Reports <%= link_to "<i class='fa fa-fw fa-bar-chart'></i> Request a new plot".html_safe, 'javascript:;', class: 'btn btn-primary pull-right', id: 'report-request' %></h1>
 <h3 class="lead">Updated as of <%= DateTime.now.strftime("%A, %B %-d %Y %r") %> <%= link_to "<i class='fa fa-toggle-on'></i> Toggle Totals".html_safe, 'javascript:;', class: 'btn btn-default pull-right', id: 'toggle-column-annots' %></h3>
 <div class="row">
   <div class="col-md-6">
@@ -39,6 +39,14 @@
 <div class="row">
   <div class="col-md-12">
     <div id="plotly-returning-users-time" class="plotly-report"></div>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-6">
+    <div id="plotly-pipeline-submissions" class="plotly-report"></div>
+  </div>
+  <div class="col-md-6">
+    <div id="plotly-pipeline-runtimes" class="plotly-report"></div>
   </div>
 </div>
 <%= render partial: 'contact_modal' %>
@@ -295,7 +303,7 @@
 
     Plotly.newPlot('plotly-returning-users-time', returningUsersTime,
         {
-            title: 'How many users are active in the portal each week?',
+            title: 'How many users are active in the portal each week for last 6 months?',
             font: plotlyLabelFont,
             titlefont: plotlyTitleFont,
             bargap: 0,
@@ -316,6 +324,64 @@
             }
         }
     ).then(setRenderStatus('#plotly-returning-users-time', true));
+
+    var pipelineSubmissions = [];
+    <% @pipeline_submissions.each do |name, entries| %>
+      pipelineSubmissions.push({
+          x: <%= raw entries.keys %>,
+          y: <%= raw entries.values %>,
+          name: '<%= name %>',
+          type: 'bar'
+      });
+    <% end %>
+
+    <% if @has_pipeline_stats %>
+      Plotly.newPlot('plotly-pipeline-submissions', pipelineSubmissions,
+          {
+              title: 'How often is each WDL run from the portal each month?',
+              titlefont: plotlyTitleFont,
+              font: plotlyLabelFont,
+              bargap: 0,
+              bargroupgap: 0.5,
+              hovermode: 'closest',
+              xaxis: {
+                  title: 'Date'
+              },
+              yaxis: {
+                  title: 'Number of submissions'
+              },
+              showlegend: true,
+              annotations: []
+          }
+      ).then(setRenderStatus('#plotly-pipeline-submissions', true));
+
+      var pipelineRuntimes = [];
+      <% @pipeline_runtimes.each do |pipeline, entries| %>
+        pipelineRuntimes.push({
+            x: <%= raw entries[:inputs] %>,
+            y: <%= raw entries[:runtime] %>,
+            name: '<%= pipeline %>',
+            mode: 'markers'
+        });
+      <% end %>
+
+      Plotly.newPlot('plotly-pipeline-runtimes', pipelineRuntimes,
+          {
+              title: 'What is the distribution of fastq size vs. runtimes for WDL submissions?',
+              titlefont: plotlyTitleFont,
+              font: plotlyLabelFont,
+              hovermode: 'closest',
+              xaxis: {
+                  title: 'Size of fastq inputs (in bytes)'
+              },
+              yaxis: {
+                  title: 'Runtime in minutes'
+              },
+              showlegend: true
+          }
+      ).then(setRenderStatus('#plotly-pipeline-runtimes', true));
+
+    <% end %>
 
     $('#toggle-column-annots').click(function() {
         // immediate set render status to false

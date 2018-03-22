@@ -30,7 +30,7 @@
                 <tr>
                   <td>Study URL</td>
                   <td><%= view_study_url(@study.url_safe_name) %></td>
-                  <td><%= link_to "<span class='fa fa-area-chart'></span> View Study".html_safe, view_study_path(@study.url_safe_name), class: 'btn btn-primary', id: 'study-link' %></td>
+                  <td><%= scp_link_to "<span class='fa fa-eye'></span> View Study".html_safe, view_study_path(@study.url_safe_name), class: 'btn btn-primary', id: 'study-link' %></td>
                 </tr>
                 <tr>
                   <td>FireCloud Project & Workspace</td>
@@ -344,9 +344,9 @@
 	</div>
 </div>
 <div id="notice-target"></div>
-<p><%= link_to "<span class='fa fa-edit'></span> Edit Study".html_safe, edit_study_path(@study), class: 'btn btn-primary' %>
-	<%= link_to "<span class='fa fa-upload'></span> Upload/Edit Data".html_safe, upload_study_path(@study), class: 'btn btn-success' %>
-	<%= link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, studies_path, class: 'btn btn-warning' %></p>
+<p><%= scp_link_to "<span class='fa fa-edit'></span> Edit Study".html_safe, edit_study_path(@study), class: 'btn btn-primary' %>
+	<%= scp_link_to "<span class='fa fa-upload'></span> Upload/Edit Data".html_safe, upload_study_path(@study), class: 'btn btn-success' %>
+	<%= scp_link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, studies_path, class: 'btn btn-warning' %></p>
 
 <script type="text/javascript">
 
