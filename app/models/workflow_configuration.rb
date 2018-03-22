@@ -93,6 +93,8 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
           # set additional inputs
           configuration['inputs']['SmartSeq2SingleCell.stranded'] = "\"#{inputs['SmartSeq2SingleCell']['stranded']}\""
         when /inferCNV/ # InferCNV analysis
+          # set the gene position file
+
           # assemble cluster information
           cluster_files = []
           cluster_names = []
@@ -206,7 +208,18 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
         )
       when /infercnv/
         opts.merge!(
-
+            'infercnv' => {
+                'gen_pos_file' => {
+                    type: 'select',
+                    default: 'GRCh38',
+                    values: [
+                        ['human (GRCh38)', 'GRCh38'],
+                        ['mouse (mm10)', 'mm10'],
+                    ],
+                    required: true,
+                    help: 'Gene position annotation source (human or mouse)'
+                }
+            }
         )
     end
     opts
