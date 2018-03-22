@@ -59,7 +59,7 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
           reference_workspace = AdminConfiguration.find_by(config_type: 'Reference Data Workspace')
           ref_namespace, ref_workspace = reference_workspace.value.split('/')
           reference_attributes = Study.firecloud_client.get_workspace(ref_namespace, ref_workspace)['workspace']['attributes']
-          case inputs['transcriptomeTarGz']
+          case inputs['cellranger']['transcriptomeTarGz']
             when 'GRCh38'
               configuration['inputs']['cellranger.transcriptomeTarGz'] = "\"#{reference_attributes['cell_ranger_human_ref']}\""
             when 'mm10'
@@ -93,7 +93,19 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
           # set additional inputs
           configuration['inputs']['SmartSeq2SingleCell.stranded'] = "\"#{inputs['SmartSeq2SingleCell']['stranded']}\""
         when /inferCNV/ # InferCNV analysis
+          # get reference data workspace attributes
+          reference_workspace = AdminConfiguration.find_by(config_type: 'Reference Data Workspace')
+          ref_namespace, ref_workspace = reference_workspace.value.split('/')
+          reference_attributes = Study.firecloud_client.get_workspace(ref_namespace, ref_workspace)['workspace']['attributes']
           # set the gene position file
+          case inputs['cellranger']['transcriptomeTarGz']
+            when 'GRCh38'
+              configuration['inputs']['infercnv.gen_pos_file'] = "\"#{reference_attributes['infercnv_human_gen_pos_file']}\""
+            when 'mm10'
+              configuration['inputs']['infercnv.gen_pos_file'] = "\"#{reference_attributes['infercnv_mouse_gen_pos_file']}\""
+            else
+              configuration['inputs']['infercnv.gen_pos_file'] = "\"#{reference_attributes['infercnv_mouse_gen_pos_file']}\""
+          end
 
           # assemble cluster information
           cluster_files = []
@@ -102,11 +114,11 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
             cluster_names << cluster.name
             cluster_files << StudyFile.find(cluster.study_file_id).gs_url
           end
-          configuration['inputs']['infercnv.ordination_names'] = cluster_names
-          configuration['inputs']['infercnv.ordination_paths'] = cluster_files
+          configuration['inputs']['infercnv.cluster_names'] = cluster_names
+          configuration['inputs']['infercnv.cluster_paths'] = cluster_files
 
           # assign expression file to configuration
-          configuration['inputs']['infercnv.expression_file'] = input['expression_file']
+          configuration['inputs']['infercnv.expression_file'] = inputs['expression_file']
           # update name to include name of expression file
           exp_file_name = configuration['inputs']['infercnv.expression_file'].split('/').last.split('.').first
           exp_config_name = configuration_name + "_#{exp_file_name}"
@@ -206,7 +218,7 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
                 }
             }
         )
-      when /infercnv/
+      when /inferCNV/
         opts.merge!(
             'infercnv' => {
                 'gen_pos_file' => {
@@ -232,6 +244,8 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
         configuration['inputs']['cellranger.transcriptomeTarGz'].gsub(/\"/, '')
       when /SS2_scRNA_pipeline/
         configuration['inputs']['SmartSeq2SingleCell.genome_ref_fasta'].gsub(/\"/, '')
+      when /inferCNV/
+        configuration['inputs']['infercnv.gen_pos_file'].gsub(/\"/, '')
       else
         # fallback to see if we can find anything that might be a 'reference'
         input = configuration['inputs'].detect {|k,v| k =~ /(reference|genome)/}
