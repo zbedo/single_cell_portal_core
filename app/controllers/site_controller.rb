@@ -15,7 +15,7 @@ class SiteController < ApplicationController
 
   respond_to :html, :js, :json
 
-  before_action :set_study, except: [:index, :search, :privacy_policy, :view_workflow_wdl, :create_totat, :log_action, :get_workflow_options]
+  before_action :set_study, except: [:index, :search, :privacy_policy, :view_workflow_wdl, :create_totat, :log_action]
   before_action :set_cluster_group, only: [:study, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots,
                                            :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap,
                                            :view_precomputed_gene_expression_heatmap, :expression_query, :annotation_query,
@@ -266,15 +266,7 @@ class SiteController < ApplicationController
         end
 
         # load samples from workspace
-        all_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_project, @study.firecloud_workspace, 'sample')
-        @samples = Naturally.sort(all_samples.map {|s| s['name']})
-
-        # load locations of primary data (for new sample selection)
-        @primary_data_locations = []
-        fastq_files = @primary_study_files.select {|f| !f.human_data}
-        [fastq_files, @primary_data].flatten.each do |entry|
-          @primary_data_locations << ["#{entry.name} (#{entry.description})", "#{entry.class.name.downcase}--#{entry.name}"]
-        end
+        set_workspace_samples
 
         # load list of available workflows
         @workflows_list = load_available_workflows
@@ -997,6 +989,21 @@ class SiteController < ApplicationController
   # retrieve any optional parameters for a selected workflow
   def get_workflow_options
     @options = WorkflowConfiguration.get_additional_parameters(params[:workflow_identifier])
+    workflow_name = params[:workflow_identifier].split('--').join('/')
+    @configuration = AdminConfiguration.find_by(config_type: 'Workflow Name', value: workflow_name)
+    if @configuration.nil?
+      # gotcha in case we enabled all snapshots of a pipeline, in which case trim off snapshot Id and search again
+      new_name = workflow_name.split('/').take(2).join('/')
+      @configuration = AdminConfiguration.find_by(config_type: 'Workflow Name', value: new_name)
+    end
+    set_workspace_samples
+    if @configuration.options.any?
+      @input_configuration = @configuration.options
+      if @input_configuration[:input_select] == 'study_file' && @input_configuration[:file_type].present?
+        files = @study.study_files.valid.select {|study_file| study_file.file_type == @input_configuration[:file_type]}
+        @input_files = files.map {|file| ["#{file.name}#{file.description.present? ? " (#{file.description})" : nil}", file.gs_url]}
+      end
+    end
   end
 
   # create a workspace analysis submission for a given sample
@@ -1292,6 +1299,17 @@ class SiteController < ApplicationController
     end
     # return new configuration namespace & name
     [config_namespace, config_name]
+  end
+
+  def set_workspace_samples
+    all_samples = Study.firecloud_client.get_workspace_entities_by_type(@study.firecloud_project, @study.firecloud_workspace, 'sample')
+    @samples = Naturally.sort(all_samples.map {|s| s['name']})
+    # load locations of primary data (for new sample selection)
+    @primary_data_locations = []
+    fastq_files = @study.study_files.by_type('Fastq').select {|f| !f.human_data}
+    [fastq_files, @study.directory_listings.primary_data].flatten.each do |entry|
+      @primary_data_locations << ["#{entry.name} (#{entry.description})", "#{entry.class.name.downcase}--#{entry.name}"]
+    end
   end
 
   # whitelist parameters for updating studies on study settings tab (smaller list than in studies controller)

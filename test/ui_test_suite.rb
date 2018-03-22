@@ -4590,7 +4590,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		open_ui_tab('study-analysis')
 		wait_for_render(:id, 'workflow_identifier')
-		samples_tab = @driver.find_element(:id, 'select-samples-nav')
+		samples_tab = @driver.find_element(:id, 'select-inputs-nav')
 		samples_tab.click
 		wait_for_render(:id, 'submissions-table')
 		# select all available fastq files to create a sample entity
@@ -4658,7 +4658,7 @@ class UiTestSuite < Test::Unit::TestCase
 		wdl_workflows = wdl_workdropdown.find_elements(:tag_name, 'option')
 		wdl_workflows.last.click
 
-		samples_tab = @driver.find_element(:id, 'select-samples-nav')
+		samples_tab = @driver.find_element(:id, 'select-inputs-nav')
 		samples_tab.click
 		wait_for_render(:id, 'submissions-table')
 
@@ -4864,7 +4864,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		open_ui_tab('study-analysis')
 		wait_for_render(:id, 'workflow_identifier')
-		samples_tab = @driver.find_element(:id, 'select-samples-nav')
+		samples_tab = @driver.find_element(:id, 'select-inputs-nav')
 		samples_tab.click
 		wait_for_render(:id, 'submissions-table')
 

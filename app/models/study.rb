@@ -738,8 +738,8 @@ class Study
   end
 
   # regenerate an expression matrix from database records
-  def regenerate_expression_matrix(expression_study_file)
-    puts "regenerating #{expression_study_file.upload_file_name} expression matrix"
+  def generate_dense_matrix(expression_study_file)
+    puts "generating #{expression_study_file.upload_file_name} as dense expression matrix"
 
     # load cell arrays to create headers
     expression_file_cells = DataArray.where(study_id: self.id, linear_data_type: 'Study', linear_data_id: self.id,
@@ -747,10 +747,15 @@ class Study
     all_cells = expression_file_cells.map(&:values).flatten
 
     # create new file and write headers
+    current_name = expression_study_file.upload_file_name
+    if current_name.include?('/')
+      current_name = current_name.split('/').last
+    end
+    new_file_name = current_name.end_with?('.txt') ? current_name : current_name + '.txt'
     if expression_study_file.upload_content_type == 'application/gzip'
-      @new_expression_file = Zlib::GzipWriter.open(File.join(self.data_store_path, expression_study_file.upload_file_name))
+      @new_expression_file = Zlib::GzipWriter.open(File.join(self.data_store_path, new_file_name))
     else
-      @new_expression_file = File.new(File.join(self.data_store_path, expression_study_file.upload_file_name), 'w')
+      @new_expression_file = File.new(File.join(self.data_store_path, new_file_name), 'w+')
     end
     headers = ['GENE', all_cells].flatten.join("\t")
     @new_expression_file.write headers + "\n"
