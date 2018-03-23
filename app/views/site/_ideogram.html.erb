@@ -87,6 +87,8 @@
 
   function deserializeAnnotTracks() {
 
+    var t0 = new Date().getTime();
+
     var raContainer, chr, rawAnnots, ra,
       newRaContainers, newRa, newRas, expressionValues,
       keys = ideogram.rawAnnots.keys,
@@ -101,8 +103,7 @@
       newRas = [];
       for (var j = 0; j < rawAnnots.length; j++) {
         ra = rawAnnots[j]; // [name, start, length, exp_1, exp_2, ...]
-        expressionValues = ra.slice(3,)
-        console.log(expressionValues);
+        expressionValues = ra.slice(3,);
         for (var k = 0; k < expressionValues.length; k++) {
           newRa = ra.slice(0, 3); // name, start, length
           newRa.push(k, expressionValues[k]); // track index, exp_k
@@ -116,7 +117,11 @@
     ideogram.rawAnnots.keys = keys;
     ideogram.rawAnnots.annots = newRaContainers;
 
+    var t1 = new Date().getTime();
 
+    if (ideogram.config.debug) {
+      console.log('Time in deserializeAnnotTracks: ' + (t1 - t0) + ' ms');
+    }
   }
 
   var annotHeight = 3.5;
@@ -135,13 +140,13 @@
   var ideogram = new Ideogram({
     container: '#ideogram-container',
     organism: 'human',
-    assembly: 'GRCh37',
+    assembly: 'GRCh38',
     chrHeight: 400,
     dataDir: 'https://unpkg.com/ideogram@0.16.0/dist/data/bands/native/',
     annotationsPath: '/single_cell/example_data/infercnv-study_exp_means.json',
     annotationTracks: annotationTracks,
     onLoadAnnots: deserializeAnnotTracks,
-    onDrawAnnots: writeAnnotsTable
+    debug: true
   });
 
 
