@@ -398,7 +398,7 @@ class Study
 
   # helper to generate a URL to a study's GCP bucket
   def google_bucket_url
-    "https://console.cloud.google.com/storage/browser/#{self.bucket_id}"
+    "https://accounts.google.com/AccountChooser?continue=https://console.cloud.google.com/storage/browser/#{self.bucket_id}"
   end
 
   # helper to generate a URL to a specific FireCloud submission inside a study's GCP bucket
