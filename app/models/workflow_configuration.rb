@@ -245,7 +245,7 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
       when /SS2_scRNA_pipeline/
         configuration['inputs']['SmartSeq2SingleCell.genome_ref_fasta'].gsub(/\"/, '')
       when /inferCNV/
-        configuration['inputs']['infercnv.gen_pos_file'].gsub(/\"/, '')
+        configuration['inputs']['infercnv.gene_pos_file'].gsub(/\"/, '')
       else
         # fallback to see if we can find anything that might be a 'reference'
         input = configuration['inputs'].detect {|k,v| k =~ /(reference|genome)/}
