@@ -9,7 +9,7 @@
         <th>Submitter</th>
         <th>ID</th>
         <th>Name</th>
-        <th>Sample</th>
+        <th>Input(s)</th>
         <th>State</th>
         <th>Status</th>
         <th>Actions</th>
@@ -22,7 +22,7 @@
           <td id="submission-<%= submission['submissionId'] %>-user" class="submission-user"><%= submission['submitter'] %></td>
           <td id="submission-<%= submission['submissionId'] %>-id" class="submission-id"><%= link_to submission['submissionId'], @study.submission_url(submission['submissionId']), class: 'submission-bucket-link', target: :_blank, data: {toggle: 'tooltip'}, title: 'View submission directory'  %></td>
           <td id="submission-<%= submission['submissionId'] %>-name" class="submission-name"><%= submission['methodConfigurationName'] %></td>
-          <td id="submission-<%= submission['submissionId'] %>-sample" class="submission-sample"><%= submission['submissionEntity']['entityName'] %></td>
+          <td id="submission-<%= submission['submissionId'] %>-entity" class="submission-entity"><%= submission['submissionEntity']['entityName'] %></td>
           <td id="submission-<%= submission['submissionId'] %>-state" class="submission-state"><%= submission_status_label(submission['status']) %></td>
           <td id="submission-<%= submission['submissionId'] %>-status" class="submission-status"><%= workflow_status_labels(submission['workflowStatuses']) %></td>
           <td class="actions">
