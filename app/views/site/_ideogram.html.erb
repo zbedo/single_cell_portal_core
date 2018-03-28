@@ -90,7 +90,7 @@
     var t0 = new Date().getTime();
 
     var raContainer, chr, rawAnnots, ra,
-      newRaContainers, newRa, newRas, expressionValues,
+      newRaContainers, newRa, newRas, expressionValues, expressionValue, color,
       keys = ideogram.rawAnnots.keys,
       rawAnnotContainers = ideogram.rawAnnots.annots;
 
@@ -105,8 +105,16 @@
         ra = rawAnnots[j]; // [name, start, length, exp_1, exp_2, ...]
         expressionValues = ra.slice(3,);
         for (var k = 0; k < expressionValues.length; k++) {
+          expressionValue = expressionValues[k]
           newRa = ra.slice(0, 3); // name, start, length
-          newRa.push(k, expressionValues[k]); // track index, exp_k
+          if (expressionValue > 0) {
+            color = '#FFA500'; // orange
+          } else if (expressionValue < 0) {
+            color = '#551ABB'; // purple
+          } else {
+            color = '#CCC';
+          }
+          newRa.push(k, color, expressionValue); // track index, exp_k
           newRas.push(newRa);
         }
       }
@@ -114,6 +122,7 @@
     }
 
     keys.splice(3, 0, 'trackIndex');
+    keys.splice(4, 0, 'color');
     ideogram.rawAnnots.keys = keys;
     ideogram.rawAnnots.annots = newRaContainers;
 
@@ -145,6 +154,7 @@
     dataDir: 'https://unpkg.com/ideogram@0.16.0/dist/data/bands/native/',
     annotationsPath: '/single_cell/example_data/infercnv-study_exp_means.json',
     annotationTracks: annotationTracks,
+    showAnnotTooltip: false, // too many genes, and tooltip positioning issues; hide for now
     onLoadAnnots: deserializeAnnotTracks,
     debug: true
   });
