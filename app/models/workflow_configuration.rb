@@ -20,6 +20,11 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
       # load requested configuration
       configuration = Study.firecloud_client.get_workspace_configuration(study.firecloud_project, study.firecloud_workspace,
                                                                          configuration_namespace, configuration_name)
+
+      # set workspace information
+      Rails.logger.info "#{Time.now}: setting workspace info for #{configuration['name']}"
+      configuration['workspaceName'] = {'namespace' => study.firecloud_project, 'name' => study.firecloud_workspace}
+
       # get the requested sample attributes
       sample_name = inputs[:sample_name]
 
@@ -50,7 +55,6 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
               input_files << value
             end
           end
-          Rails.logger.info "#{Time.now}: updating config inputs for #{configuration['name']}"
 
           # add input files (must cast as string for JSON encoding to work properly)
           configuration['inputs']['cellranger.fastqs'] = input_files.to_s
@@ -75,10 +79,6 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
           configuration['inputs']['cellranger.expectCells'] = inputs['cellranger']['expectCells']
           configuration['inputs']['cellranger.secondary'] = inputs['cellranger']['secondary']
 
-          # set workspace information
-          Rails.logger.info "#{Time.now}: setting workspace info for #{configuration['name']}"
-          configuration['workspaceName'] = {'namespace' => study.firecloud_project, 'name' => study.firecloud_workspace}
-
           # to avoid continually appending sample name to the end of the configuration name, check to make sure it's not already there
           sample_config_name = configuration_name
           if !sample_config_name.end_with?(sample_name)
@@ -98,7 +98,7 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
           ref_namespace, ref_workspace = reference_workspace.value.split('/')
           reference_attributes = Study.firecloud_client.get_workspace(ref_namespace, ref_workspace)['workspace']['attributes']
           # set the gene position file
-          case inputs['cellranger']['transcriptomeTarGz']
+          case inputs['inputs']['gen_pos_file']
             when 'GRCh38'
               configuration['inputs']['infercnv.gen_pos_file'] = "\"#{reference_attributes['infercnv_human_gen_pos_file']}\""
             when 'mm10'
@@ -107,18 +107,22 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
               configuration['inputs']['infercnv.gen_pos_file'] = "\"#{reference_attributes['infercnv_mouse_gen_pos_file']}\""
           end
 
-          # assemble cluster information
-          cluster_files = []
-          cluster_names = []
+          # assemble cluster information, need to concatenate names into escaped strings, whitespace delimited (for Python)
+          cluster_names_input = ""
+          cluster_files_input = ""
           study.cluster_groups.each do |cluster|
-            cluster_names << cluster.name
-            cluster_files << StudyFile.find(cluster.study_file_id).gs_url
+            cluster_names_input += "\"#{cluster.name}\" "
+            cluster_files_input += "\"#{StudyFile.find(cluster.study_file_id).gs_url}\" "
           end
-          configuration['inputs']['infercnv.cluster_names'] = cluster_names
-          configuration['inputs']['infercnv.cluster_paths'] = cluster_files
+          configuration['inputs']['infercnv.cluster_names'] = cluster_names_input.strip
+          configuration['inputs']['infercnv.cluster_paths'] = cluster_files_input.strip
 
           # assign expression file to configuration
-          configuration['inputs']['infercnv.expression_file'] = inputs['expression_file']
+          configuration['inputs']['infercnv.expression_file'] = "#{inputs['expression_file']}"
+
+          # set delimiter for reading expression file (in R)
+          configuration['inputs']['infercnv.expression_delimiter'] = "#{inputs['infercnv']['delimiter']}"
+
           # update name to include name of expression file
           exp_file_name = configuration['inputs']['infercnv.expression_file'].split('/').last.split('.').first
           exp_config_name = configuration_name + "_#{exp_file_name}"
@@ -230,6 +234,16 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
                     ],
                     required: true,
                     help: 'Gene position annotation source (human or mouse)'
+                },
+                'delimiter' => {
+                    type: 'select',
+                    default: '\t',
+                    values: [
+                        ['tab (\t)', "\t"],
+                        ['comma (,)', ',']
+                    ],
+                    required: true,
+                    help: 'Delimiter for input expression matrix (tab or comma)'
                 }
             }
         )
