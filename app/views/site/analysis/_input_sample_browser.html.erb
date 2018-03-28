@@ -12,11 +12,11 @@
   </div>
   <div class="col-sm-6">
     <%= label_tag :workflow_samples, 'Please select known samples from the workspace (select all that apply)' %><br />
-    <%= select_tag :workflow_samples, options_for_select(@samples), multiple: true, class: 'form-control', size: 10 %>
+    <%= select_tag :workflow_samples, options_for_select(@samples), multiple: true, class: 'form-control', name: "workflow[samples][]", size: 10 %>
   </div>
   <div class="col-sm-6">
     <%= label_tag :workflow_study_data, 'OR choose primary data files/directories (select all that apply)' %><br />
-    <%= select_tag :workflow_study_data, options_for_select(@primary_data_locations), multiple: true, class: 'form-control', size: 10 %>
+    <%= select_tag :workflow_study_data, options_for_select(@primary_data_locations), multiple: true, name: "workflow[study_data]", class: 'form-control', size: 10 %>
   </div>
 </div>
 <div class="row">
