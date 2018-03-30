@@ -325,41 +325,48 @@ class StudiesController < ApplicationController
             cluster_file.options.merge!({analysis_name: 'cell-ranger'})
           end
 
-        when /inferCNV/
+        when /infercnv/
           @special_sync = true
           pre_expression_output = @unsynced_files.detect {|file| file.name.split('/').last == 'expression_pre_vis_transform.txt'}
           if pre_expression_output.present?
             pre_expression_output.file_type = 'Analysis Output'
             pre_expression_output.description = "Output expression matrix (without visualization data transform) from inferCNV run #{params[:submission_id]}"
-            pre_expression_output.options.merge!({analysis_name: 'inferCNV'})
+            pre_expression_output.options.merge!({analysis_name: 'infercnv'})
           end
 
           figure = @unsynced_files.detect {|file| file.name.split('/').last =~ /infercnv\.pdf/}
           if figure.present?
             figure.file_type = 'Analysis Output'
             figure.description = "Copy number variation inference figure from inferCNV run #{params[:submission_id]}"
-            figure.options.merge!({analysis_name: 'inferCNV'})
+            figure.options.merge!({analysis_name: 'infercnv'})
           end
 
           post_expression_output = @unsynced_files.detect {|file| file.name.split('/').last =~ /expression_post_viz_transform\.txt/}
           if post_expression_output.present?
             post_expression_output.file_type = 'Analysis Output'
             post_expression_output.description = "Output expression matrix (including visualization data transform) from inferCNV run #{params[:submission_id]}"
-            post_expression_output.options.merge!({analysis_name: 'inferCNV'})
+            post_expression_output.options.merge!({analysis_name: 'infercnv'})
           end
 
           observations_output = @unsynced_files.detect {|file| file.name.split('/').last == 'observations.txt'}
           if observations_output.present?
             observations_output.file_type = 'Analysis Output'
             observations_output.description = "All observations and associated measurements from inferCNV run #{params[:submission_id]}"
-            observations_output.options.merge!({analysis_name: 'inferCNV'})
+            observations_output.options.merge!({analysis_name: 'infercnv'})
+          end
+
+          ideogram_output = @unsynced_files.detect {|file| file.name.split('/').last == 'infercnv_exp_means.json'}
+          if ideogram_output.present?
+            ideogram_output.file_type = 'Analysis Output'
+            ideogram_output.description = "Ideogram.js formatted annotation output from inferCNV run #{params[:submission_id]}"
+            ideogram_output.options.merge!({analysis_name: 'infercnv', visualization_name: 'ideogram'})
           end
 
           logfile = @unsynced_files.detect {|file| file.name.split('/').last == 'infercnv.log'}
           if logfile.present?
             logfile.file_type = 'Analysis Output'
             logfile.description = "Log output from R for inferCNV run #{params[:submission_id]}"
-            logfile.options.merge!({analysis_name: 'inferCNV'})
+            logfile.options.merge!({analysis_name: 'infercnv'})
           end
 
         else

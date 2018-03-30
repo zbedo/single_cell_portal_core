@@ -1021,7 +1021,7 @@ class SiteController < ApplicationController
 
       # set up parameters
       workflow_namespace, workflow_name, workflow_snapshot = params[:workflow][:identifier].split('--')
-      samples = params[:workflow][:samples].keep_if {|s| !s.blank?}
+      primary_inputs = params[:workflow][:inputs].keep_if {|s| !s.blank?}
       optional_inputs = params[:workflow][:optional_parameters]
 
       # either load existing workspace configuration or copy new one into the workspace from the methods repository
@@ -1031,10 +1031,18 @@ class SiteController < ApplicationController
       client = FireCloudClient.new(current_user, @study.firecloud_project)
       @submissions = []
       @failed_submissions = []
-      samples.each do |sample|
+      primary_inputs.each do |input_name, input_value|
         logger.info "#{Time.now}: Updating configuration for #{config_namespace}/#{config_name} to run #{workflow_namespace}/#{workflow_name} in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
         # create input hash for submission
-        submission_inputs = {sample_name: sample}
+        submission_inputs = {}
+        case input_name
+          when 'samples'
+            submission_inputs = {sample_name: input_value}
+          when 'input_file'
+            submission_inputs = {input_file: input_value}
+          else
+            submission_inputs = {input_name.to_sym => input_value}
+        end
         if optional_inputs.present?
           submission_inputs.merge!(optional_inputs)
         end
@@ -1042,15 +1050,17 @@ class SiteController < ApplicationController
         configuration_response = WorkflowConfiguration.new(@study, config_namespace, config_name, workflow_namespace, workflow_name, submission_inputs).perform
         # make sure the configuration step completed without error, otherwise abort submission
         if configuration_response[:complete]
-          logger.info "#{Time.now}: Creating submission for #{sample} using #{configuration_response[:configuration_namespace]}/#{configuration_response[:configuration_name]} in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
-          @submissions << client.create_workspace_submission(@study.firecloud_project, @study.firecloud_workspace, configuration_response[:configuration_namespace], configuration_response[:configuration_name], 'sample', sample)
+          logger.info "#{Time.now}: Creating submission for #{submission_inputs} using #{configuration_response[:configuration_namespace]}/#{configuration_response[:configuration_name]} in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
+          @submissions << client.create_workspace_submission(@study.firecloud_project, @study.firecloud_workspace,
+                                                             configuration_response[:configuration_namespace], configuration_response[:configuration_name],
+                                                             configuration_response[:entity_type], configuration_response[:entity_value])
         else
-          logger.error "#{Time.now}: Unable to submit #{sample} using #{config_namespace}/#{config_name} in #{@study.firecloud_project}/#{@study.firecloud_workspace}; logging error"
+          logger.error "#{Time.now}: Unable to submit #{submission_inputs} using #{config_namespace}/#{config_name} in #{@study.firecloud_project}/#{@study.firecloud_workspace}; logging error"
           @failed_submissions << configuration_response
         end
       end
     rescue => e
-      logger.error "#{Time.now}: unable to submit workflow #{workflow_name} for sample #{samples.join(', ')} in #{@study.firecloud_workspace} due to: #{e.message}"
+      logger.error "#{Time.now}: unable to submit workflow #{workflow_name} in #{@study.firecloud_workspace} due to: #{e.message}"
       @alert = "We were unable to submit your workflow due to an error: #{e.message}"
       render action: :notice
     end
