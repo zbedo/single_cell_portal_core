@@ -134,7 +134,6 @@
   }
 
   var annotHeight = 3.5;
-
   var ideoAnnotShape =
     'm0,0 l 0 ' + (2 * annotHeight) +
     'l ' + annotHeight/2 + ' 0' +
@@ -152,7 +151,7 @@
     assembly: 'GRCh38',
     chrHeight: 400,
     dataDir: 'https://unpkg.com/ideogram@0.16.0/dist/data/bands/native/',
-    annotationsPath: '/single_cell/example_data/infercnv-study_exp_means.json',
+    annotationsPath: '<%= @analysis_outputs['ideogram.js'] %>',
     annotationTracks: annotationTracks,
     showAnnotTooltip: false, // too many genes, and tooltip positioning issues; hide for now
     onLoadAnnots: deserializeAnnotTracks,

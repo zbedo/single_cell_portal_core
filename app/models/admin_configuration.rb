@@ -13,6 +13,9 @@ class AdminConfiguration
   field :multiplier, type: String
   field :value, type: String
 
+  has_many :configuration_options, dependent: :destroy
+  accepts_nested_attributes_for :configuration_options, allow_destroy: true
+
   validates_uniqueness_of :config_type,
                           message: ": '%{value}' has already been set.  Please edit the corresponding entry to update.",
                           unless: proc {|attributes| attributes['config_type'] == 'Workflow Name'}
@@ -231,6 +234,15 @@ class AdminConfiguration
         end
       end
     end
+  end
+
+  # getter to return all configuration options as a hash
+  def options
+    opts = {}
+    self.configuration_options.each do |option|
+      opts.merge!({option.name.to_sym => option.value})
+    end
+    opts
   end
 
   private

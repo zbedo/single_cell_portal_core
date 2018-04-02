@@ -7,7 +7,9 @@
       <div id="view-options-nav"><a href="#view-options" id="view-option-link" data-toggle="offcanvas"><i class="fa fa-cog" aria-hidden="true"></i> View Options </a></div>
       <ul class="nav nav-tabs" role="tablist" id="view-tabs">
         <li role="presentation" class="study-nav active" id="plots-tab-nav"><a href="#plots-tab" data-toggle="tab">Clusters </a></li>
-        <li role="presentation" class="study-nav" id="ideogram-tab-nav"><a href="#ideogram-tab" data-toggle="tab">Genome </a></li>
+        <% if @study.has_analysis_outputs?('infercnv', 'ideogram.js') %>
+          <li role="presentation" class="study-nav" id="ideogram-tab-nav"><a href="#ideogram-tab" data-toggle="tab">Genome </a></li>
+        <% end %>
       </ul>
       <%= render partial: 'view_options' %>
       <div class="tab-content">
@@ -31,12 +33,14 @@
           </div>
         </div>
       </div>
-      <div class="tab-pane" id="ideogram-tab" role="tabpanel">
-        <div class="panel panel-default no-top-border">
-          <div id="ideogram-container" class="panel-collapse collapse in"></div>
-          <%= render partial: 'ideogram' %>
+      <% if @study.has_analysis_outputs?('infercnv', 'ideogram.js') %>
+        <div class="tab-pane" id="ideogram-tab" role="tabpanel">
+          <div class="panel panel-default no-top-border">
+            <div id="ideogram-container" class="panel-collapse collapse in"></div>
+            <%= render partial: 'ideogram' %>
+          </div>
         </div>
-      </div>
+      <% end %>
     </div>
   </div>
 </div>

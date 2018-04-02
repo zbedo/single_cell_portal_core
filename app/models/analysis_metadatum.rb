@@ -195,15 +195,20 @@ class AnalysisMetadatum
     payload = {}
     study = self.study
     # retrieve available objects pertaining to submission (submission, configuration, all workflows contained in submission)
+    Rails.logger.info "#{Time.now}: creating AnalysisMetadatum payload for submission "
     submission = Study.firecloud_client.get_workspace_submission(study.firecloud_project,
                                                                  study.firecloud_workspace,
                                                                  self.submission_id)
+    Rails.logger.info "getting config"
+
     configuration = Study.firecloud_client.get_workspace_configuration(study.firecloud_project,
                                                                        study.firecloud_workspace,
                                                                        submission['methodConfigurationNamespace'],
                                                                        submission['methodConfigurationName'])
     workflows = []
     submission['workflows'].each do |submission_workflow|
+      Rails.logger.info "getting workflow: #{submission_workflow['workflowId']}"
+
       workflows << Study.firecloud_client.get_workspace_submission_workflow(study.firecloud_project,
                                                                           study.firecloud_workspace,
                                                                           self.submission_id,

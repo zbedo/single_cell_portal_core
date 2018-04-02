@@ -290,6 +290,7 @@ class StudiesController < ApplicationController
           if matrix_study_file.present?
             matrix_study_file.file_type = 'MM Coordinate Matrix'
             matrix_study_file.description = "Matrix Market coordinate expression matrix from CellRanger run #{params[:submission_id]}"
+            matrix_study_file.options.merge!({analysis_name: 'cell-ranger'})
           end
 
           genes_file = @unsynced_files.detect {|file| file.name.split('/').last == 'genes.tsv'}
@@ -297,7 +298,7 @@ class StudiesController < ApplicationController
             genes_file.file_type = '10X Genes File'
             genes_file.description = "Gene ID/Names output from CellRanger run #{params[:submission_id]}"
             if matrix_study_file.present?
-              genes_file.options.merge!({matrix_id: matrix_study_file.id})
+              genes_file.options.merge!({matrix_id: matrix_study_file.id, analysis_name: 'cell-ranger'})
             end
           end
 
@@ -306,7 +307,7 @@ class StudiesController < ApplicationController
             barcodes_file.file_type = '10X Barcodes File'
             barcodes_file.description = "Barcode sequence output from CellRanger run #{params[:submission_id]}"
             if matrix_study_file.present?
-              barcodes_file.options.merge!({matrix_id: matrix_study_file.id})
+              barcodes_file.options.merge!({matrix_id: matrix_study_file.id, analysis_name: 'cell-ranger'})
             end
           end
 
@@ -314,12 +315,70 @@ class StudiesController < ApplicationController
           if metadata_file.present?
             metadata_file.file_type = 'Metadata'
             metadata_file.description = "Barcode-level metadata output from CellRanger run #{params[:submission_id]}"
+            metadata_file.options.merge!({analysis_name: 'cell-ranger'})
           end
 
           cluster_file = @unsynced_files.detect {|file| file.name.split('/').last == 'clusters.txt'}
           if cluster_file.present?
             cluster_file.file_type = 'Cluster'
             cluster_file.description = "tSNE coordinates production by CellRanger run #{params[:submission_id]}"
+            cluster_file.options.merge!({analysis_name: 'cell-ranger'})
+          end
+
+        when /infercnv/
+          @special_sync = true
+          metadata = AnalysisMetadatum.find_by(submission_id: params[:submission_id])
+          input_matrix_gs_url = metadata.payload['inputs'].detect {|input| input['name'] == 'infercnv.expression_file'}['value']
+          study_file_id = nil
+          # grab the study_file_id of the input matrix so we know without having to go back to the analysis_metadata object
+          @study.expression_matrix_files.each do |file|
+            if file.gs_url == input_matrix_gs_url
+              study_file_id = file.id
+              break
+            end
+          end
+          pre_expression_output = @unsynced_files.detect {|file| file.name.split('/').last == 'expression_pre_vis_transform.txt'}
+          if pre_expression_output.present?
+            pre_expression_output.file_type = 'Analysis Output'
+            pre_expression_output.description = "Output expression matrix (without visualization data transform) from inferCNV run #{params[:submission_id]}"
+            pre_expression_output.options.merge!({analysis_name: 'infercnv', matrix_id: study_file_id})
+          end
+
+          figure = @unsynced_files.detect {|file| file.name.split('/').last =~ /infercnv\.pdf/}
+          if figure.present?
+            figure.file_type = 'Analysis Output'
+            figure.description = "Copy number variation inference figure from inferCNV run #{params[:submission_id]}"
+            figure.options.merge!({analysis_name: 'infercnv', matrix_id: study_file_id})
+          end
+
+          post_expression_output = @unsynced_files.detect {|file| file.name.split('/').last =~ /expression_post_viz_transform\.txt/}
+          if post_expression_output.present?
+            post_expression_output.file_type = 'Analysis Output'
+            post_expression_output.description = "Output expression matrix (including visualization data transform) from inferCNV run #{params[:submission_id]}"
+            post_expression_output.options.merge!({analysis_name: 'infercnv', matrix_id: study_file_id})
+          end
+
+          observations_output = @unsynced_files.detect {|file| file.name.split('/').last == 'observations.txt'}
+          if observations_output.present?
+            observations_output.file_type = 'Analysis Output'
+            observations_output.description = "All observations and associated measurements from inferCNV run #{params[:submission_id]}"
+            observations_output.options.merge!({analysis_name: 'infercnv', matrix_id: study_file_id})
+          end
+
+          ideogram_output = @unsynced_files.detect {|file| file.name.split('/').last == 'infercnv_exp_means.json'}
+          if ideogram_output.present?
+            ideogram_output.file_type = 'Analysis Output'
+            ideogram_output.description = "Ideogram.js formatted annotation output from inferCNV run #{params[:submission_id]}"
+            ideogram_output.options.merge!({analysis_name: 'infercnv',
+                                            visualization_name: 'ideogram.js',
+                                            matrix_id: study_file_id})
+          end
+
+          logfile = @unsynced_files.detect {|file| file.name.split('/').last == 'infercnv.log'}
+          if logfile.present?
+            logfile.file_type = 'Analysis Output'
+            logfile.description = "Log output from R for inferCNV run #{params[:submission_id]}"
+            logfile.options.merge!({analysis_name: 'infercnv', matrix_id: study_file_id})
           end
 
         else
@@ -1072,8 +1131,9 @@ class StudiesController < ApplicationController
     params.require(:study_file).permit(:_id, :study_id, :name, :upload, :upload_file_name, :upload_content_type, :upload_file_size,
                                        :remote_location, :description, :file_type, :status, :human_fastq_url, :human_data, :cluster_type,
                                        :generation, :x_axis_label, :y_axis_label, :z_axis_label, :x_axis_min, :x_axis_max, :y_axis_min,
-                                       :y_axis_max, :z_axis_min, :z_axis_max, options: [:cluster_group_id, :font_family, :font_size,
-                                                                                        :font_color, :matrix_id, :submission_id])
+                                       :y_axis_max, :z_axis_min, :z_axis_max,
+                                       options: [:cluster_group_id, :font_family, :font_size, :font_color, :matrix_id, :submission_id,
+                                                 :analysis_name, :visualization_name])
   end
 
   def directory_listing_params

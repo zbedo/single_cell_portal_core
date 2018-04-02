@@ -15,6 +15,7 @@
                 <tr>
                   <th>Type</th>
                   <th>Value</th>
+                  <th>Options</th>
                   <th class="actions">Actions</th>
                 </tr>
                 </thead>
@@ -24,6 +25,11 @@
                   <tr>
                     <td class="config-type"><%= config.config_type %></td>
                     <td><%= config.display_value.html_safe %></td>
+                    <td>
+                      <% config.options.each do |name, val| %>
+                        <span class="label label-default"><%= name %>&nbsp;:&nbsp;<%= val %></span><br />
+                      <% end %>
+                    </td>
                     <td>
                       <%= link_to "<span class='fa fa-edit'></span> Edit".html_safe, edit_admin_configuration_path(config), class: "btn btn-xs btn-primary #{config.url_safe_name}-edit" %>
                       <%= link_to "<span class='fa fa-trash'></span> Delete".html_safe, config, method: :delete, class: "btn btn-xs btn-danger delete-btn #{config.url_safe_name}-delete" %>
