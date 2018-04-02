@@ -130,7 +130,7 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
             when "\t"
               nil # the default is \t, so do nothing
             else
-              configuration['inputs']['infercnv.delimiter'] = "#{inputs['infercnv']['delimiter']}"
+              configuration['inputs']['infercnv.delimiter'] = "\"#{inputs['infercnv']['delimiter']}\""
           end
 
           Rails.logger.info "configuration: #{configuration}"
