@@ -29,7 +29,7 @@ class SiteController < ApplicationController
                                                   :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap]
   before_action :check_view_permissions, except: [:index, :privacy_policy, :search, :precomputed_results, :expression_query,
                                                   :view_workflow_wdl, :log_action, :get_workspace_samples, :update_workspace_samples,
-                                                  :create_totat, :get_workflow_options]
+                                                  :create_totat, :get_workflow_options, :fetch_data]
   before_action :check_compute_permissions, only: [:get_fastq_files, :get_workspace_samples, :update_workspace_samples,
                                                    :delete_workspace_samples, :get_workspace_submissions, :create_workspace_submission,
                                                    :get_submission_workflow, :abort_submission_workflow, :get_submission_errors,
@@ -249,6 +249,13 @@ class SiteController < ApplicationController
       @cluster_annotations = load_cluster_group_annotations
       # call set_selected_annotation manually
       set_selected_annotation
+
+      # load data for visualization, if present
+      @analysis_outputs = {}
+      if @study.has_analysis_outputs?('infercnv', 'ideogram.js')
+        ideogram_annotations = @study.get_analysis_outputs('infercnv', 'ideogram.js').first
+        @analysis_outputs['ideogram.js'] = ideogram_annotations.bucket_location
+      end
     end
 
     # if user has permission to run workflows, load available workflows and current submissions
@@ -270,16 +277,6 @@ class SiteController < ApplicationController
 
         # load list of available workflows
         @workflows_list = load_available_workflows
-
-        # load data for visualization, if present
-        @analysis_outputs = {}
-        if @study.has_analysis_outputs?('infercnv', 'ideogram.js')
-          ideogram_annotations = @study.get_analysis_outputs('infercnv', 'ideogram.js').first
-          signed_url = Study.firecloud_client.generate_signed_url(@study.firecloud_project,
-                                                                  @study.firecloud_workspace,
-                                                                  ideogram_annotations.bucket_location)
-          @analysis_outputs['ideogram.js'] = signed_url
-        end
       end
     end
   end
@@ -740,6 +737,26 @@ class SiteController < ApplicationController
     user.update(daily_download_quota: user_quota)
 
     send_data curl_configs, type: 'text/plain', filename: 'cfg.txt'
+  end
+
+  # return contents of a file in a Google bucket (to get around CORS issues)
+  def fetch_data
+    if check_xhr_view_permissions
+      remote = Study.firecloud_client.get_workspace_file(@study.firecloud_project,
+                                                          @study.firecloud_workspace,
+                                                          params[:filename])
+      signed_url = Study.firecloud_client.generate_signed_url(@study.firecloud_project,
+                                                              @study.firecloud_workspace,
+                                                              params[:filename])
+      @response = RestClient.get(signed_url)
+      if remote.content_type == 'application/json'
+        render json: @response.body
+      else
+        render text: @response.body
+      end
+    else
+      head 403
+    end
   end
 
   ###
