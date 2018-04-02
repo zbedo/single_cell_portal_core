@@ -119,7 +119,7 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
             cluster_names << cluster.name
             cluster_files_input << StudyFile.find(cluster.study_file_id).gs_url
           end
-          configuration['inputs']['infercnv.cluster_names'] = "\"\\\"#{cluster_names.join("\\\" \\\"")}\\\"\""
+          configuration['inputs']['infercnv.cluster_names'] = cluster_names.to_s # cast array as string for JSON encoding
           configuration['inputs']['infercnv.cluster_paths'] = cluster_files_input.to_s # cast array as string for JSON encoding
 
           # assign expression file to configuration
@@ -133,7 +133,6 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
               configuration['inputs']['infercnv.delimiter'] = "\"#{inputs['infercnv']['delimiter']}\""
           end
 
-          Rails.logger.info "configuration: #{configuration}"
           # update name to include name of expression file
           exp_file_name = configuration['inputs']['infercnv.expression_file'].split('/').last.gsub(/\"/, '').gsub(/\./, '_')
           exp_config_name = configuration_name + "_#{exp_file_name}"
