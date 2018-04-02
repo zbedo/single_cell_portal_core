@@ -8,7 +8,7 @@
 # @param: configuration_name (String) => name of selected configuration
 # @param: workflow_namespace (String) => namespace of selected workflow
 # @param: workflow_name (String) => name of selected workflow
-# @param: inputs (Hash) => Hash of input parameters, including sample and other additional inputs
+# @param: inputs (Hash) => Hash of input parameters, including sample/input file(s) and other additional inputs
 #
 # @return: response (Hash) => Hash containing completion status and updated configuration attributes (if needed) or error messages (if present)
 ##

@@ -154,7 +154,7 @@ class ReportsController < ApplicationController
           when /cell-ranger/
             pipeline_inputs = analysis.payload['inputs'].detect {|input| input['name'] == 'cellranger.fastqs'}
             @inputs = pipeline_inputs['value']
-          when /inferCNV/
+          when /infercnv/
             pipeline_inputs = analysis.payload['inputs'].detect {|input| input['name'] == 'infercnv.expression_file'}
             @inputs = [pipeline_inputs['value']]
           else
@@ -169,7 +169,7 @@ class ReportsController < ApplicationController
         # we need to now find the size of the files for the plot
         input_files.each do |file|
           case pipeline_name
-            when /inferCNV/
+            when /infercnv/
               study_file = study.study_files.by_type('Expression Matrix').detect {|f| f.name == file}
               if study_file.present? && !study_file.human_data?
                 input_size += study_file.upload_file_size

@@ -270,6 +270,16 @@ class SiteController < ApplicationController
 
         # load list of available workflows
         @workflows_list = load_available_workflows
+
+        # load data for visualization, if present
+        @analysis_outputs = {}
+        if @study.has_analysis_outputs?('infercnv', 'ideogram.js')
+          ideogram_annotations = @study.get_analysis_outputs('infercnv', 'ideogram.js').first
+          signed_url = Study.firecloud_client.generate_signed_url(@study.firecloud_project,
+                                                                  @study.firecloud_workspace,
+                                                                  ideogram_annotations.bucket_location)
+          @analysis_outputs['ideogram.js'] = signed_url
+        end
       end
     end
   end

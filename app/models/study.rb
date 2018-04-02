@@ -649,6 +649,16 @@ class Study
     self.study_files.by_type('Metadata').first
   end
 
+  # check if a study has analysis output files for a given analysis
+  def has_analysis_outputs?(analysis_name, visualization_name=nil)
+    self.get_analysis_outputs(analysis_name, visualization_name).any?
+  end
+
+  # return all study files for a given analysis & visualization component
+  def get_analysis_outputs(analysis_name, visualization_name=nil)
+    self.study_files.where('options.analysis_name' => analysis_name, 'options.visualization_name' => visualization_name)
+  end
+
   ###
   #
   # DELETE METHODS
