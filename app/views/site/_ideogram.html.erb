@@ -87,8 +87,10 @@
 
   function deserializeAnnotTracks() {
 
+    var t0 = new Date().getTime();
+
     var raContainer, chr, rawAnnots, ra,
-      newRaContainers, newRa, newRas, expressionValues,
+      newRaContainers, newRa, newRas, expressionValues, expressionValue, color,
       keys = ideogram.rawAnnots.keys,
       rawAnnotContainers = ideogram.rawAnnots.annots;
 
@@ -101,11 +103,18 @@
       newRas = [];
       for (var j = 0; j < rawAnnots.length; j++) {
         ra = rawAnnots[j]; // [name, start, length, exp_1, exp_2, ...]
-        expressionValues = ra.slice(3,)
-        console.log(expressionValues);
+        expressionValues = ra.slice(3,);
         for (var k = 0; k < expressionValues.length; k++) {
+          expressionValue = expressionValues[k]
           newRa = ra.slice(0, 3); // name, start, length
-          newRa.push(k, expressionValues[k]); // track index, exp_k
+          if (expressionValue > 0) {
+            color = '#FFA500'; // orange
+          } else if (expressionValue < 0) {
+            color = '#551ABB'; // purple
+          } else {
+            color = '#CCC';
+          }
+          newRa.push(k, color, expressionValue); // track index, exp_k
           newRas.push(newRa);
         }
       }
@@ -113,34 +122,40 @@
     }
 
     keys.splice(3, 0, 'trackIndex');
+    keys.splice(4, 0, 'color');
     ideogram.rawAnnots.keys = keys;
     ideogram.rawAnnots.annots = newRaContainers;
 
+    var t1 = new Date().getTime();
 
+    if (ideogram.config.debug) {
+      console.log('Time in deserializeAnnotTracks: ' + (t1 - t0) + ' ms');
+    }
   }
 
   var annotHeight = 3.5;
   var ideoAnnotShape =
-      'm0,0 l 0 ' + (2 * annotHeight) +
-      'l ' + annotHeight/2 + ' 0' +
-      'l 0 -' + (2 * annotHeight) + 'z';
+    'm0,0 l 0 ' + (2 * annotHeight) +
+    'l ' + annotHeight/2 + ' 0' +
+    'l 0 -' + (2 * annotHeight) + 'z';
 
   var annotationTracks = [
-      {id: 'highExpressionTrack', displayName: 'High expression', color: '#FFA500', shape: ideoAnnotShape},
-      {id: 'mediumExpressionTrack', displayName: 'Medium expression', color: '#CCC', shape: ideoAnnotShape},
-      {id: 'lowExpressionTrack',  displayName: 'Low expression', color: '#551A8B', shape: ideoAnnotShape}
+    {id: 'highExpressionTrack', displayName: 'High expression', color: '#FFA500', shape: ideoAnnotShape},
+    {id: 'mediumExpressionTrack', displayName: 'Medium expression', color: '#CCC', shape: ideoAnnotShape},
+    {id: 'lowExpressionTrack',  displayName: 'Low expression', color: '#551A8B', shape: ideoAnnotShape}
   ];
 
   var ideogram = new Ideogram({
     container: '#ideogram-container',
     organism: 'human',
-    assembly: 'GRCh37',
+    assembly: 'GRCh38',
     chrHeight: 400,
     dataDir: 'https://unpkg.com/ideogram@0.16.0/dist/data/bands/native/',
-    annotationsPath: '/single_cell/infercnv_exp_means.json',
+    annotationsPath: '<%= @analysis_outputs['ideogram.js'] %>',
     annotationTracks: annotationTracks,
-    onLoadAnnots: deserializeAnnotTracks//,
-    //onDrawAnnots: writeAnnotsTable
+    showAnnotTooltip: false, // too many genes, and tooltip positioning issues; hide for now
+    onLoadAnnots: deserializeAnnotTracks,
+    debug: true
   });
 
 
