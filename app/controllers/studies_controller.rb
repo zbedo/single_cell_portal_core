@@ -118,8 +118,10 @@ class StudiesController < ApplicationController
           # determine whether permissions are incorrect or missing completely
           if !portal_permissions.has_key?(user)
             new_share = @study.study_shares.build(email: user,
-                                                 permission: StudyShare::PORTAL_ACL_MAP[permissions['accessLevel']],
-                                                 firecloud_workspace: @study.firecloud_workspace
+                                                  permission: StudyShare::PORTAL_ACL_MAP[permissions['accessLevel']],
+                                                  firecloud_project: @study.firecloud_project,
+                                                  firecloud_workspace: @study.firecloud_workspace,
+
             )
             # skip validation as we don't wont to set the acl in FireCloud as it already exists
             new_share.save(validate: false)
