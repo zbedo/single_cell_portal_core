@@ -1058,32 +1058,14 @@ class SiteController < ApplicationController
       client = FireCloudClient.new(current_user, @study.firecloud_project)
       @submissions = []
       @failed_submissions = []
+      logger.info "#{Time.now}: Updating configuration for #{config_namespace}/#{config_name} to run #{workflow_namespace}/#{workflow_name} in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
       primary_inputs.each do |input_name, input_value|
-        logger.info "#{Time.now}: Updating configuration for #{config_namespace}/#{config_name} to run #{workflow_namespace}/#{workflow_name} in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
-        # create input hash for submission
-        submission_inputs = {}
-        case input_name
-          when 'samples'
-            submission_inputs = {sample_name: input_value}
-          when 'input_file'
-            submission_inputs = {input_file: input_value}
-          else
-            submission_inputs = {input_name.to_sym => input_value}
-        end
-        if optional_inputs.present?
-          submission_inputs.merge!(optional_inputs)
-        end
-        # Run any workflow-specific extra configuration steps
-        configuration_response = WorkflowConfiguration.new(@study, config_namespace, config_name, workflow_namespace, workflow_name, submission_inputs).perform
-        # make sure the configuration step completed without error, otherwise abort submission
-        if configuration_response[:complete]
-          logger.info "#{Time.now}: Creating submission for #{submission_inputs} using #{configuration_response[:configuration_namespace]}/#{configuration_response[:configuration_name]} in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
-          @submissions << client.create_workspace_submission(@study.firecloud_project, @study.firecloud_workspace,
-                                                             configuration_response[:configuration_namespace], configuration_response[:configuration_name],
-                                                             configuration_response[:entity_type], configuration_response[:entity_value])
+        if input_value.is_a?(Array)
+          input_value.each do |val|
+            perform_workspace_submission(client, config_name, config_namespace, input_name, val, optional_inputs, workflow_name, workflow_namespace)
+          end
         else
-          logger.error "#{Time.now}: Unable to submit #{submission_inputs} using #{config_namespace}/#{config_name} in #{@study.firecloud_project}/#{@study.firecloud_workspace}; logging error"
-          @failed_submissions << configuration_response
+          perform_workspace_submission(client, config_name, config_namespace, input_name, input_value, optional_inputs, workflow_name, workflow_namespace)
         end
       end
     rescue => e
@@ -2102,6 +2084,34 @@ class SiteController < ApplicationController
     # assemble readable list for the dropdown menu
     list = all_workflows.sort_by {|w| [w['name'], w['snapshotId'].to_i]}.map {|w| ["#{w['name']} (#{w['snapshotId']})#{w['synopsis'].blank? ? nil : " -- #{w['synopsis']}"}", "#{w['namespace']}--#{w['name']}--#{w['snapshotId']}"]}
     list
+  end
+
+  # configure and submit a submission in a workspace
+  def perform_workspace_submission(client, config_name, config_namespace, input_name, input_value, optional_inputs, workflow_name, workflow_namespace)
+    submission_inputs = {}
+    case input_name
+      when 'samples'
+        submission_inputs = {sample_name: input_value}
+      when 'input_file'
+        submission_inputs = {input_file: input_value}
+      else
+        submission_inputs = {input_name.to_sym => input_value}
+    end
+    if optional_inputs.present?
+      submission_inputs.merge!(optional_inputs)
+    end
+    # Run any workflow-specific extra configuration steps
+    configuration_response = WorkflowConfiguration.new(@study, config_namespace, config_name, workflow_namespace, workflow_name, submission_inputs).perform
+    # make sure the configuration step completed without error, otherwise abort submission
+    if configuration_response[:complete]
+      logger.info "#{Time.now}: Creating submission for #{submission_inputs} using #{configuration_response[:configuration_namespace]}/#{configuration_response[:configuration_name]} in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
+      @submissions << client.create_workspace_submission(@study.firecloud_project, @study.firecloud_workspace,
+                                                         configuration_response[:configuration_namespace], configuration_response[:configuration_name],
+                                                         configuration_response[:entity_type], configuration_response[:entity_value])
+    else
+      logger.error "#{Time.now}: Unable to submit #{submission_inputs} using #{config_namespace}/#{config_name} in #{@study.firecloud_project}/#{@study.firecloud_workspace}; logging error"
+      @failed_submissions << configuration_response
+    end
   end
 
   # Helper method for download_bulk_files.  Returns file's curl config, size.
