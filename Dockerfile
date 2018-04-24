@@ -1,5 +1,5 @@
 # use KDUX base Rails image, configure only project-specific items here
-FROM broadinstitute/kdux-rails-baseimage:1.0
+FROM broadinstitute/kdux-rails-baseimage:1.1
 
 # Set ruby version
 RUN bash -lc 'rvm --default use ruby-2.3.6'
