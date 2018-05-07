@@ -2024,7 +2024,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# check for reports
 		report_plots = @driver.find_elements(:class, 'plotly-report')
-		assert report_plots.size == 9, "did not find correct number of plots, expected 9 but found #{report_plots.size}"
+		assert report_plots.size == 11, "did not find correct number of plots, expected 9 but found #{report_plots.size}"
 		report_plots.each do |plot|
 			rendered = @driver.execute_script("return $('##{plot['id']}').data('rendered')")
 			assert rendered, "#{plot['id']} rendered status was not true"

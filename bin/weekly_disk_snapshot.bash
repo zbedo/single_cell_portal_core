@@ -7,6 +7,7 @@ TODAY="$(date +%Y-%m-%d)"
 
 # create the snapshots for portal and data disk
 echo "$(gcloud compute disks snapshot singlecell-production-disk --snapshot-names portal-backup-${TODAY} --zone us-central1-a)"
+echo "$(gcloud compute disks snapshot singlecell-mongo-prod-snap-disk --snapshot-names portal-database-backup-${TODAY} --zone us-central1-a)"
 
 #
 # DELETE OLD SNAPSHOTS (OLDER THAN 1 MONTH)

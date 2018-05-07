@@ -2071,7 +2071,8 @@ class SiteController < ApplicationController
     config_options = AdminConfiguration.where(config_type: 'Workflow Name').to_a
     allowed_workflows = config_options.map(&:value)
     all_workflows = []
-
+    
+    # parellelize gets to speed up performance if there are a lot of workflows
     # restrict parallelization to 3 threads to avoid spurious 401 errors
     Parallel.map(allowed_workflows, in_threads: 3) do |workflow_opts|
       namespace, name, snapshot = workflow_opts.split('/')

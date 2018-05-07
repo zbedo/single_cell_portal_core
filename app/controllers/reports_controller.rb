@@ -99,7 +99,7 @@ class ReportsController < ApplicationController
 
     # compute time-based breakdown of returning user counts
     @returning_users_by_week = {}
-    user_timepoints = ReportTimePoint.where(name: 'Weekly Returning Users', :date.lte => today).take(26)
+    user_timepoints = ReportTimePoint.where(name: 'Weekly Returning Users', :date.lte => today).order(date: :desc).take(26)
     user_timepoints.each do |timepoint|
       @returning_users_by_week[timepoint.date.to_s] = timepoint.value[:count]
     end
