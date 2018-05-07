@@ -2350,7 +2350,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# open distribution control panel as well to get toggle annotations button
 		view_options_panel = @driver.find_element(:id, 'distribution-panel-link')
 		view_options_panel.click
-		wait_for_render(:id, 'distribution-plot-controls')
+		wait_for_render(:id, 'toggle-traces')
 
 		# toggle traces off
 		toggle = @driver.find_element(:id, 'toggle-traces')
