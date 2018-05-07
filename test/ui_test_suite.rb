@@ -563,6 +563,9 @@ class UiTestSuite < Test::Unit::TestCase
 		gcs_link = @driver.find_element(:id, 'gcs-link')
 		gcs_link.click
 		@driver.switch_to.window(@driver.window_handles.last)
+		# select the correct user
+		user_link = @driver.find_element(:xpath, "//p[@data-email='#{$test_email}']")
+		user_link.click
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
@@ -616,6 +619,9 @@ class UiTestSuite < Test::Unit::TestCase
 		gcs_link = @driver.find_element(:id, 'gcs-link')
 		gcs_link.click
 		@driver.switch_to.window(@driver.window_handles.last)
+		# select the correct user
+		user_link = @driver.find_element(:xpath, "//p[@data-email='#{$test_email}']")
+		user_link.click
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
@@ -865,9 +871,13 @@ class UiTestSuite < Test::Unit::TestCase
 		assert file_count.text == '10', "did not find correct number of files, expected 10 but found #{file_count.text}"
 		show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
 		show_study.click
+		# verify gcs bucket upload
 		gcs_link = @driver.find_element(:id, 'gcs-link')
 		gcs_link.click
 		@driver.switch_to.window(@driver.window_handles.last)
+		# select the correct user
+		user_link = @driver.find_element(:xpath, "//p[@data-email='#{$test_email}']")
+		user_link.click
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
@@ -1233,7 +1243,6 @@ class UiTestSuite < Test::Unit::TestCase
 		tag_line_field = form.find_element(:id, 'branding_group_tag_line')
 		tag_line_field.send_keys(tag_line)
 		font_family_field = form.find_element(:id, 'branding_group_font_family')
-		font_family_field.clear
 		font_family_field.send_keys(font_family)
 		splash_image_field = form.find_element(:id, 'branding_group_splash_image')
 		splash_image_field.send_keys(splash_image)
@@ -1352,7 +1361,6 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		@driver.get @base_url
-		@driver.find_element(:id, 'login-nav').click
 		login($test_email, $test_email_password)
 		@driver.get @base_url + '/branding_groups'
 
