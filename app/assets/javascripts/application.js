@@ -53,6 +53,7 @@
 //= require sheather_jones
 //= require jquery.stickyPanel
 //= require clipboard.min
+//= require ideogram.min
 
 var fileUploading = false;
 var PAGE_RENDERED = false;

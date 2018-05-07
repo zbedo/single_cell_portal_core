@@ -4588,9 +4588,9 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get study_page
 		wait_until_page_loads(study_page)
 
-		open_ui_tab('study-workflows')
+		open_ui_tab('study-analysis')
 		wait_for_render(:id, 'workflow_identifier')
-		samples_tab = @driver.find_element(:id, 'select-samples-nav')
+		samples_tab = @driver.find_element(:id, 'select-inputs-nav')
 		samples_tab.click
 		wait_for_render(:id, 'submissions-table')
 		# select all available fastq files to create a sample entity
@@ -4624,7 +4624,7 @@ class UiTestSuite < Test::Unit::TestCase
 		clear_btn.click
 
 		# now select sample
-		study_samples = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_samples'))
+		study_samples = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_inputs_samples'))
 		study_samples.select_all
 		# wait for table to populate (will have a row with sorting_1 class)
 		@wait.until {@driver.find_element(:id, 'samples-table').find_element(:class, 'sorting_1').displayed?}
@@ -4651,21 +4651,28 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(study_page)
 
 		# select worfklow & sample
-		open_ui_tab('study-workflows')
+		open_ui_tab('study-analysis')
 		wait_for_render(:id, 'workflow_identifier')
 		scroll_to(:bottom)
 		wdl_workdropdown = @driver.find_element(:id, 'workflow_identifier')
 		wdl_workflows = wdl_workdropdown.find_elements(:tag_name, 'option')
 		wdl_workflows.last.click
+		# view WDL to allow time for sample input browser to render fully
+		view_wdl = @driver.find_element(:id, 'view-selected-wdl')
+		view_wdl.click
+		wait_for_render(:id, 'wdl-contents')
+		wdl_contents = @driver.find_element(:id, 'wdl-contents').text
+		assert !wdl_contents.empty?, 'Did not find any contents for test WDL'
 
-		samples_tab = @driver.find_element(:id, 'select-samples-nav')
+		samples_tab = @driver.find_element(:id, 'select-inputs-nav')
 		samples_tab.click
-		wait_for_render(:id, 'submissions-table')
+		wait_for_render(:id, 'samples-table')
 
-		study_samples = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_samples'))
+		study_samples = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_inputs_samples'))
 		study_samples.select_all
 		# wait for table to populate (will have a row with sorting_1 class)
-		@wait.until {@driver.find_element(:id, 'samples-table').find_element(:class, 'sorting_1').displayed?}
+		sample_info = @driver.find_element(:id, 'samples-table')
+		@wait.until {sample_info.find_element(:class, 'sorting_1').displayed?}
 
 		# submit workflow
 		review_tab = @driver.find_element(:id, 'review-submission-nav')
@@ -4724,7 +4731,7 @@ class UiTestSuite < Test::Unit::TestCase
 		study_page = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get study_page
 		wait_until_page_loads(study_page)
-		open_ui_tab('study-workflows')
+		open_ui_tab('study-analysis')
 		wait_for_render(:id, 'submissions-table')
 
 		# make sure submission has completed
@@ -4784,7 +4791,7 @@ class UiTestSuite < Test::Unit::TestCase
 		study_page = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get study_page
 		wait_until_page_loads(study_page)
-		open_ui_tab('study-workflows')
+		open_ui_tab('study-analysis')
 		wait_for_render(:id, 'submissions-table')
 
 		# find a completed submission
@@ -4831,7 +4838,7 @@ class UiTestSuite < Test::Unit::TestCase
 		study_page = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get study_page
 		wait_until_page_loads(study_page)
-		open_ui_tab('study-workflows')
+		open_ui_tab('study-analysis')
 		wait_for_render(:id, 'submissions-table')
 		submissions_table = @driver.find_element(:id, 'submissions-table')
 		submission_ids = submissions_table.find_element(:tag_name, 'tbody').find_elements(:tag_name, 'tr').map {|s| s['id']}.delete_if {|id| id.empty?}
@@ -4862,14 +4869,14 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get study_page
 		wait_until_page_loads(study_page)
 
-		open_ui_tab('study-workflows')
+		open_ui_tab('study-analysis')
 		wait_for_render(:id, 'workflow_identifier')
-		samples_tab = @driver.find_element(:id, 'select-samples-nav')
+		samples_tab = @driver.find_element(:id, 'select-inputs-nav')
 		samples_tab.click
 		wait_for_render(:id, 'submissions-table')
 
 		# now select sample
-		study_samples = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_samples'))
+		study_samples = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_inputs_samples'))
 		study_samples.select_all
 		# wait for table to populate (will have a row with sorting_1 class)
 		@wait.until {@driver.find_element(:id, 'samples-table').find_element(:class, 'sorting_1').displayed?}
@@ -4882,7 +4889,7 @@ class UiTestSuite < Test::Unit::TestCase
 		empty_table = @driver.find_element(:id, 'samples-table')
 		empty_row = empty_table.find_element(:tag_name, 'tbody').find_element(:tag_name, 'tr').find_element(:tag_name, 'td')
 		assert empty_row.text == 'No data available in table', "Did not completely remove all samples, expected 'No data available in table' but found #{empty_row.text}"
-		samples_list = @driver.find_element(:id, 'workflow_samples')
+		samples_list = @driver.find_element(:id, 'workflow_inputs_samples')
 		assert samples_list['value'].empty?, "Did not delete workspace samples; samples list is not empty: ''#{samples_list['value']}''"
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"

@@ -74,6 +74,7 @@ Rails.application.routes.draw do
 		# public/private file download links (redirect to signed_urls from Google)
 		get 'data/public/:study_name', to: 'site#download_file', as: :download_file
 		get 'data/private/:study_name', to: 'studies#download_private_file', as: :download_private_file
+    get 'data/fetch/:study_name', to: 'site#fetch_data', as: :fetch_data
 
     post 'totat', to: 'site#create_totat', as: :create_totat
 		get 'bulk_data/:study_name/:download_object/:totat', to: 'site#download_bulk_files', as: :download_bulk_files, constraints: {filename: /.*/}
