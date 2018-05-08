@@ -743,8 +743,8 @@ class SiteController < ApplicationController
   def fetch_data
     if check_xhr_view_permissions
       remote = Study.firecloud_client.get_workspace_file(@study.firecloud_project,
-                                                          @study.firecloud_workspace,
-                                                          params[:filename])
+                                                         @study.firecloud_workspace,
+                                                         params[:filename])
       signed_url = Study.firecloud_client.generate_signed_url(@study.firecloud_project,
                                                               @study.firecloud_workspace,
                                                               params[:filename])
@@ -754,6 +754,18 @@ class SiteController < ApplicationController
       else
         render text: @response.body
       end
+    else
+      head 403
+    end
+  end
+
+  # return media_url to enable loading a file from GCS directly via client-side JavaScript
+  def get_media_url
+    if check_xhr_view_permissions
+      media_url = Study.firecloud_client.generate_signed_url(@study.firecloud_project,
+                                                              @study.firecloud_workspace,
+                                                              params[:filename])
+      render text: media_url
     else
       head 403
     end

@@ -146,7 +146,7 @@
   ];
 
   var requestToken = '<%= user_signed_in? ? current_user.id.to_s + ':' + current_user.authentication_token : nil %>';
-  var annotationsPath = '<%= fetch_data_path(study_name: @study.url_safe_name, filename: @analysis_outputs['ideogram.js']) %>&request_user_token=' + requestToken;
+  var annotationsPath = '<%= get_media_url_path(study_name: @study.url_safe_name, filename: @analysis_outputs['ideogram.js']) %>&request_user_token=' + requestToken;
 
   var ideogram = new Ideogram({
     container: '#ideogram-container',
