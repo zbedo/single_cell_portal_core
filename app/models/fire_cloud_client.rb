@@ -1375,14 +1375,12 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	#   - +workspace_namespace+ (String) => namespace of workspace
 	#   - +workspace_name+ (String) => name of workspace
 	#   - +filename+ (String) => name of file
-	#   - +opts+ (Hash) => extra options for media_url, see
-	#     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.9.0/google/cloud/storage/file?method=media_url-instance
 	#
 	# * *return*
 	#   - +String+ signed URL
-	def generate_media_url(workspace_namespace, workspace_name, filename, opts={})
+	def generate_media_url(workspace_namespace, workspace_name, filename)
 		file = self.get_workspace_file(workspace_namespace, workspace_name, filename)
-		file.media_url(opts)
+		file.media_url
 	end
 
 	# retrieve all files in a GCP directory

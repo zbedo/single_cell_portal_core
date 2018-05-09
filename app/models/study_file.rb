@@ -136,6 +136,13 @@ class StudyFile
     "gs://#{self.study.bucket_id}/#{self.bucket_location}"
   end
 
+  def media_url
+    Study.firecloud_client.generate_media_url(self.study.firecloud_project,
+                                              self.study.firecloud_workspace,
+                                              self.bucket_location)
+
+  end
+
   # convert all domain ranges from floats to integers
   def convert_all_ranges
     if self.file_type == 'Cluster'
