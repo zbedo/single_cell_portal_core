@@ -145,8 +145,28 @@
     {id: 'lowExpressionTrack',  displayName: 'Low expression', color: '#551A8B', shape: ideoAnnotShape}
   ];
 
-  var requestToken = '<%= user_signed_in? ? current_user.id.to_s + ':' + current_user.authentication_token : nil %>';
+  var accessToken = '<%= user_signed_in? ? current_user.access_token[:access_token] : nil %>';
   var annotationsPath = '<%=  @study.get_analysis_outputs('infercnv', 'ideogram.js').first.media_url %>';
+  annotationsPath = annotationsPath.replace('/download', '');
+
+  var constantMock = window.fetch;
+  window.fetch = function () {
+
+    var myHeaders = new Headers({
+      'Authorization': 'Bearer ' + accessToken
+    });
+
+    arguments[1] = {headers: myHeaders};
+
+    console.log('this');
+    console.log(this);
+    console.log('arguments');
+    console.log(arguments);
+
+    // Get the parameter in arguments
+    // Intercept the parameter here
+    return constantMock.apply(this, arguments)
+  }
 
   var ideogram = new Ideogram({
     container: '#ideogram-container',
