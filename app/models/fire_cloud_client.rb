@@ -1369,7 +1369,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		file.signed_url(opts)
 	end
 
-	# generate a media url to directly load a file from GCS via client-side JavaScript
+	# generate an api url to directly load a file from GCS via client-side JavaScript
 	#
 	# * *params*
 	#   - +workspace_namespace+ (String) => namespace of workspace
@@ -1378,9 +1378,9 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	#
 	# * *return*
 	#   - +String+ signed URL
-	def generate_media_url(workspace_namespace, workspace_name, filename)
+	def generate_api_url(workspace_namespace, workspace_name, filename)
 		file = self.get_workspace_file(workspace_namespace, workspace_name, filename)
-		file.media_url
+		file.api_url
 	end
 
 	# retrieve all files in a GCP directory

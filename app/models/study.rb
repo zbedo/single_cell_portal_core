@@ -2356,6 +2356,7 @@ class Study
               end
             end
           end
+
         rescue => e
           # delete workspace on any fail as this amounts to a validation fail
           Rails.logger.info "#{Time.now}: Error creating workspace: #{e.message}"

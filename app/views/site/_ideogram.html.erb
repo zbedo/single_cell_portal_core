@@ -145,9 +145,8 @@
     {id: 'lowExpressionTrack',  displayName: 'Low expression', color: '#551A8B', shape: ideoAnnotShape}
   ];
 
-  var accessToken = '<%= user_signed_in? ? current_user.access_token[:access_token] : nil %>';
-  var annotationsPath = '<%=  @study.get_analysis_outputs('infercnv', 'ideogram.js').first.media_url %>';
-  annotationsPath = annotationsPath.replace('/download', '');
+  var accessToken = '<%= user_signed_in? ? current_user.valid_access_token[:access_token] : nil %>';
+  var annotationsPath = '<%= raw @study.get_analysis_outputs('infercnv', 'ideogram.js').first.api_url %>';
 
   var constantMock = window.fetch;
   window.fetch = function () {
@@ -157,11 +156,6 @@
     });
 
     arguments[1] = {headers: myHeaders};
-
-    console.log('this');
-    console.log(this);
-    console.log('arguments');
-    console.log(arguments);
 
     // Get the parameter in arguments
     // Intercept the parameter here
