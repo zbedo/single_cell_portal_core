@@ -1200,7 +1200,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	## GOOGLE CLOUD STORAGE METHODS
 	##
 	## All methods are convenience wrappers around google-cloud-storage methods
-	## see https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2 for more detail
+	## see https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.9.0 for more detail
 	##
 	#######
 
@@ -1251,7 +1251,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	#   - +workspace_namespace+ (String) => namespace of workspace
 	#   - +workspace_name+ (String) => name of workspace
 	#   - +opts+ (Hash) => hash of optional parameters, see
-	#     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=files-instance
+	#     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.9.0/google/cloud/storage/bucket?method=files-instance
 	#
   # * *return*
   #   - +Google::Cloud::Storage::File::List+
@@ -1282,7 +1282,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	#   - +filepath+ (String) => path to file
 	#   - +filename+ (String) => name of file
 	#   - +opts+ (Hash) => extra options for create_file, see
-	#     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=create_file-instance
+	#     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.9.0/google/cloud/storage/bucket?method=create_file-instance
 	#
 	# * *return*
 	#   - +Google::Cloud::Storage::File+
@@ -1299,7 +1299,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	#   - +filename+ (String) => name of target file
 	#   - +destination_name+ (String) => destination of new file
 	#   - +opts+ (Hash) => extra options for create_file, see
-	#     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=create_file-instance
+	#     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.9.0/google/cloud/storage/bucket?method=create_file-instance
 	#
   # * *return*
   #   - +Google::Cloud::Storage::File+
@@ -1335,7 +1335,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	#   - +filename+ (String) => name of file
 	#   - +destination+ (String) => destination path for downloaded file
 	#   - +opts+ (Hash) => extra options for signed_url, see
-	#     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/file?method=signed_url-instance
+	#     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.9.0/google/cloud/storage/file?method=signed_url-instance
 	#
   # * *return*
   #   - +File+ object
@@ -1360,7 +1360,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	#   - +workspace_name+ (String) => name of workspace
 	#   - +filename+ (String) => name of file
 	#   - +opts+ (Hash) => extra options for signed_url, see
-	#     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/file?method=signed_url-instance
+	#     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.9.0/google/cloud/storage/file?method=signed_url-instance
 	#
   # * *return*
   #   - +String+ signed URL
@@ -1376,7 +1376,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	#   - +workspace_name+ (String) => name of workspace
 	#   - +filename+ (String) => name of file
 	#   - +opts+ (Hash) => extra options for media_url, see
-	#     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/file?method=media_url-instance
+	#     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.9.0/google/cloud/storage/file?method=media_url-instance
 	#
 	# * *return*
 	#   - +String+ signed URL
@@ -1392,7 +1392,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	#   - +workspace_name+ (String) => name of workspace
 	#   - +directory+ (String) => name of directory in bucket
 	#   - +opts+ (Hash) => hash of optional parameters, see
-  #     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/bucket?method=files-instance
+  #     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.9.0/google/cloud/storage/bucket?method=files-instance
 	#
   # * *return*
   #   - +Google::Cloud::Storage::File::List+
