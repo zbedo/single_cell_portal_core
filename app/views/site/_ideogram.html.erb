@@ -111,6 +111,20 @@
     return originalFetch.apply(this, arguments)
   };
 
+  function makeIdeogramOverflowScrollable() {
+    var ideoWidth, ideoContainer, ideoSvg, ideo, config;
+
+    ideo = ideogram;
+    config = ideo.config;
+
+    ideoWidth = ideo.numChromosomes * (config.chrWidth + config.chrMargin);
+    ideoContainer = d3.selectAll(ideogram.config.container);
+    ideoSvg = d3.selectAll(ideogram.config.container + ' svg#_ideogram');
+
+    ideoContainer.style({'max-width': ideoWidth + 'px', 'overflow-x': 'scroll'});
+    ideoSvg.style({'min-width': ideoWidth + 'px'});
+  }
+
   var heatmapThresholds = [
     ['-0.001', '#551ABB'], // If expression value < 0 (-0.001), color bin purple
     ['0', '#CCC'], // If value == 0, use grey
@@ -131,7 +145,8 @@
       {key: 'Cluster 1', thresholds: heatmapThresholds},
       {key: 'Cluster 2', thresholds: heatmapThresholds}
     ],
-    debug: true
+    debug: true,
+    onLoad: makeIdeogramOverflowScrollable
   });
 
 
