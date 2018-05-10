@@ -102,13 +102,13 @@
   var annotationsPath = '<%= raw @study.get_analysis_outputs('infercnv', 'ideogram.js').first.api_url %>';
 
   // Intercept requests to add bearer token, enabling direct load of files from GCS
-  var constantMock = window.fetch;
+  var originalFetch = window.fetch;
   window.fetch = function () {
     var myHeaders = new Headers({
       'Authorization': 'Bearer ' + accessToken
     });
     arguments[1] = {headers: myHeaders};
-    return constantMock.apply(this, arguments)
+    return originalFetch.apply(this, arguments)
   };
 
   var heatmapThresholds = [
