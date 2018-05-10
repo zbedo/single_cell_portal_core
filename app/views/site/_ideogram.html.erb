@@ -1,5 +1,5 @@
 <script>
-  
+
 //    Not used currently, but perhaps later.
 //   function getGenomicRange(annot) {
 //     var chr, start, stop, startString, stopString, genomicRange;
@@ -111,6 +111,12 @@
     return constantMock.apply(this, arguments)
   };
 
+  var heatmapThresholds = [
+    ['-0.001', '#551ABB'], // If expression value < 0 (-0.001), color bin purple
+    ['0', '#CCC'], // If value == 0, use grey
+    ['+', '#FFA500'] // If value > 0, use orange
+  ];
+
   var ideogram = new Ideogram({
     container: '#ideogram-container',
     organism: 'human',
@@ -123,15 +129,15 @@
     heatmaps: [
       {
         key: 'all',
-        thresholds: [['-0.001', '#551ABB'], ['0', '#CCC'], ['+', '#FFA500']]
+        thresholds: heatmapThresholds
       },
       {
         key: 'Cluster 1',
-        thresholds: [['-0.001', '#551ABB'], ['0', '#CCC'], ['+', '#FFA500']]
+        thresholds: heatmapThresholds
       },
       {
         key: 'Cluster 2',
-        thresholds: [['-0.001', '#551ABB'], ['0', '#CCC'], ['+', '#FFA500']]
+        thresholds: heatmapThresholds
       }
     ],
     debug: true
