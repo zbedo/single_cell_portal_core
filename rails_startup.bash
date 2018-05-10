@@ -28,6 +28,11 @@ if [[ -z $SERVICE_ACCOUNT_KEY ]]; then
 else
 	echo "export SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY" >> /home/app/.cron_env
 fi
+if [[ -n $READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON ]]; then
+	echo "*** WRITING READ ONLY SERVICE ACCOUNT CREDENTIALS ***"
+	echo $READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON >| /home/app/webapp/config/.read_only_service_account.json
+	chown app:app /home/app/webapp/config/.read_only_service_account.json
+fi
 chmod 400 /home/app/.cron_env
 chown app:app /home/app/.cron_env
 echo "*** COMPLETED ***"

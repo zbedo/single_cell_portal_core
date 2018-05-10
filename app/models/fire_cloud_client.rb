@@ -8,7 +8,7 @@
 #
 # Author::  Jon Bistline  (mailto:bistline@broadinstitute.org)
 
-class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :storage, :expires_at)
+class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :storage, :expires_at, :service_account_credentials)
 
 	#
   # CONSTANTS
@@ -24,6 +24,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	PORTAL_NAMESPACE = 'single-cell-portal'
 	# location of Google service account JSON (must be absolute path to file)
 	SERVICE_ACCOUNT_KEY = !ENV['SERVICE_ACCOUNT_KEY'].blank? ? File.absolute_path(ENV['SERVICE_ACCOUNT_KEY']) : ''
+	# location of Google service account JSON (must be absolute path to file)
+	READ_ONLY_SERVICE_ACCOUNT_KEY = !ENV['READ_ONLY_SERVICE_ACCOUNT_KEY'].blank? ? File.absolute_path(ENV['READ_ONLY_SERVICE_ACCOUNT_KEY']) : ''
 	# Permission values allowed for FireCloud workspace ACLs
 	WORKSPACE_PERMISSIONS = ['OWNER', 'READER', 'WRITER', 'NO ACCESS']
   # List of FireCloud user group roles
@@ -44,21 +46,23 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   #   - +project+: (String) => Default GCP Project to use (can be overridden by other parameters)
   # * *return*
   #   - +FireCloudClient+ object
-	def initialize(user=nil, project=nil)
+	def initialize(user=nil, project=nil, service_account=ENV['SERVICE_ACCOUNT_KEY'])
 		# when initializing without a user, default to base configuration
 		if user.nil?
-			self.access_token = FireCloudClient.generate_access_token
-			self.project = PORTAL_NAMESPACE
-
 			# instantiate Google Cloud Storage driver to work with files in workspace buckets
 			# if no keyfile is present, use environment variables
 			storage_attr = {
 					project: PORTAL_NAMESPACE,
 					timeout: 3600
 			}
-			if !ENV['SERVICE_ACCOUNT_KEY'].blank?
-				storage_attr.merge!(keyfile: SERVICE_ACCOUNT_KEY)
+
+			if !service_account.blank?
+				storage_attr.merge!(keyfile: service_account)
+				self.service_account_credentials = service_account
 			end
+
+			self.access_token = FireCloudClient.generate_access_token(service_account)
+			self.project = PORTAL_NAMESPACE
 
 			self.storage = Google::Cloud::Storage.new(storage_attr)
 
@@ -77,8 +81,10 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 					project: project,
 					timeout: 3600
 			}
-			if !ENV['SERVICE_ACCOUNT_KEY'].blank?
-				storage_attr.merge!(keyfile: SERVICE_ACCOUNT_KEY)
+
+			if !service_account.blank?
+				storage_attr.merge!(keyfile: service_account)
+				self.service_account_credentials = service_account
 			end
 
 			self.storage = Google::Cloud::Storage.new(storage_attr)
@@ -96,11 +102,11 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	#
 	# * *return*
 	#   - +Hash+ of Google Auth access token (contains access_token (string), token_type (string) and expires_in (integer, in seconds)
-	def self.generate_access_token
+	def self.generate_access_token(service_account)
 		# if no keyfile present, use environment variables
 		creds_attr = {scope: GOOGLE_SCOPES}
-		if !ENV['SERVICE_ACCOUNT_KEY'].blank?
-			creds_attr.merge!(json_key_io: File.open(SERVICE_ACCOUNT_KEY))
+		if !service_account.blank?
+			creds_attr.merge!(json_key_io: File.open(service_account))
 		end
 		creds = Google::Auth::ServiceAccountCredentials.make_creds(creds_attr)
 		token = creds.fetch_access_token!
@@ -113,7 +119,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	#   - +DateTime+ timestamp of new access token expiration
 	def refresh_access_token
 		if self.user.nil?
-			new_token = FireCloudClient.generate_access_token
+			new_token = FireCloudClient.generate_access_token(self.service_account_credentials)
 			new_expiry = Time.now + new_token['expires_in']
 			self.access_token = new_token
 			self.expires_at = new_expiry
