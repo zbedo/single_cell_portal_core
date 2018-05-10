@@ -85,54 +85,6 @@
     $('#ideogram-container').append(table);
   }
 
-  function deserializeAnnotTracks() {
-
-    var t0 = new Date().getTime();
-
-    var raContainer, chr, rawAnnots, ra,
-      newRaContainers, newRa, newRas, expressionValues, expressionValue, color,
-      keys = ideogram.rawAnnots.keys,
-      rawAnnotContainers = ideogram.rawAnnots.annots;
-
-    newRaContainers = [];
-
-    for (var i = 0; i < rawAnnotContainers.length; i++) {
-      raContainer = rawAnnotContainers[i];
-      chr = raContainer.chr;
-      rawAnnots = raContainer.annots;
-      newRas = [];
-      for (var j = 0; j < rawAnnots.length; j++) {
-        ra = rawAnnots[j]; // [name, start, length, exp_1, exp_2, ...]
-        expressionValues = ra.slice(3,);
-        for (var k = 0; k < expressionValues.length; k++) {
-          expressionValue = expressionValues[k]
-          newRa = ra.slice(0, 3); // name, start, length
-          if (expressionValue > 0) {
-            color = '#FFA500'; // orange
-          } else if (expressionValue < 0) {
-            color = '#551ABB'; // purple
-          } else {
-            color = '#CCC';
-          }
-          newRa.push(k, color, expressionValue); // track index, exp_k
-          newRas.push(newRa);
-        }
-      }
-      newRaContainers.push({chr: chr, annots: newRas});
-    }
-
-    keys.splice(3, 0, 'trackIndex');
-    keys.splice(4, 0, 'color');
-    ideogram.rawAnnots.keys = keys;
-    ideogram.rawAnnots.annots = newRaContainers;
-
-    var t1 = new Date().getTime();
-
-    if (ideogram.config.debug) {
-      console.log('Time in deserializeAnnotTracks: ' + (t1 - t0) + ' ms');
-    }
-  }
-
   var annotHeight = 3.5;
   var ideoAnnotShape =
     'm0,0 l 0 ' + (2 * annotHeight) +
@@ -140,27 +92,23 @@
     'l 0 -' + (2 * annotHeight) + 'z';
 
   var annotationTracks = [
-    {id: 'highExpressionTrack', displayName: 'High expression', color: '#FFA500', shape: ideoAnnotShape},
-    {id: 'mediumExpressionTrack', displayName: 'Medium expression', color: '#CCC', shape: ideoAnnotShape},
-    {id: 'lowExpressionTrack',  displayName: 'Low expression', color: '#551A8B', shape: ideoAnnotShape}
+    {id: 'all', shape: ideoAnnotShape},
+    {id: 'cluster1', shape: ideoAnnotShape},
+    {id: 'cluster2',  shape: ideoAnnotShape}
   ];
 
   var accessToken = '<%= user_signed_in? ? current_user.valid_access_token[:access_token] : nil %>';
   var annotationsPath = '<%= raw @study.get_analysis_outputs('infercnv', 'ideogram.js').first.api_url %>';
 
+  // Intercept requests to add bearer token, enabling direct load of files from GCS
   var constantMock = window.fetch;
   window.fetch = function () {
-
     var myHeaders = new Headers({
       'Authorization': 'Bearer ' + accessToken
     });
-
     arguments[1] = {headers: myHeaders};
-
-    // Get the parameter in arguments
-    // Intercept the parameter here
     return constantMock.apply(this, arguments)
-  }
+  };
 
   var ideogram = new Ideogram({
     container: '#ideogram-container',
@@ -171,7 +119,20 @@
     annotationsPath: annotationsPath,
     annotationTracks: annotationTracks,
     showAnnotTooltip: false, // too many genes, and tooltip positioning issues; hide for now
-    onLoadAnnots: deserializeAnnotTracks,
+    heatmaps: [
+      {
+        key: 'all',
+        thresholds: [['-0.001', '#551ABB'], ['0', '#CCC'], ['+', '#FFA500']]
+      },
+      {
+        key: 'Cluster 1',
+        thresholds: [['-0.001', '#551ABB'], ['0', '#CCC'], ['+', '#FFA500']]
+      },
+      {
+        key: 'Cluster 2',
+        thresholds: [['-0.001', '#551ABB'], ['0', '#CCC'], ['+', '#FFA500']]
+      }
+    ],
     debug: true
   });
 
