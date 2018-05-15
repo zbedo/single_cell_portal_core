@@ -32,7 +32,7 @@ class BillingProjectsController < ApplicationController
     billing_accounts = @fire_cloud_client.get_billing_accounts
     @accounts = billing_accounts.map {|account| [account['displayName'], account['accountName']]}
     @projects = {}
-    billing_projects = @fire_cloud_client.get_billing_projects
+    billing_projects = @fire_cloud_client.get_billing_projects.keep_if {|project| project['role'] == 'Owner'}
 
     # load user list for each project
     billing_projects.each do |project|
