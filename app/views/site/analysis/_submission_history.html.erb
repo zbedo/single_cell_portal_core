@@ -120,7 +120,7 @@
     var submissionName = $('#submission-' + submissionId + '-name').text();
     var submissionDate = $('#submission-' + submissionId + '-date').text();
     if (confirm('Are you sure you want to delete the outputs of ' + submissionName + ' (' + submissionId + ', submitted on ' + submissionDate + ')?  This cannot be undone.')) {
-      $('#generic-modal-title').html("Deleting Outputs... Please Wait");
+      $('#generic-modal-title').html("Deleting Outputs... Please Wait (this may take a few minutes)");
       launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
         $.ajax({
           url: submissionUrl,

@@ -236,6 +236,15 @@ class StudiesController < ApplicationController
     begin
       submission = Study.firecloud_client.get_workspace_submission(@study.firecloud_project, @study.firecloud_workspace,
                                                                    params[:submission_id])
+
+      # retrieve the matching AdminConfiguration object that enabled this workflow (to get special options, if present)
+      configuration_namespace = submission['methodConfigurationNamespace']
+      configuration = Study.firecloud_client.get_workspace_configuration(@study.firecloud_project, @study.firecloud_workspace,
+                                                                         configuration_namespace, configuration_name)
+      workflow_info = configuration['methodRepoMethod']
+      workflow_identifier = [workflow_info['methodNamespace'],workflow_info['methodName'],workflow_info['methodVersion'],].join('/')
+      @workflow_config = AdminConfiguration.find_by(config_type: 'Workflow Name', value: workflow_identifier)
+      filename_depth = @workflow_config.options[:filename_depth].present? ? @workflow_config.options[:filename_depth].to_i : 1
       submission['workflows'].each do |workflow|
         workflow = Study.firecloud_client.get_workspace_submission_workflow(@study.firecloud_project, @study.firecloud_workspace,
                                                                             params[:submission_id], workflow['workflowId'])
@@ -245,8 +254,12 @@ class StudiesController < ApplicationController
           file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project,
                                                               @study.firecloud_workspace, file_location)
           if file.present?
-            basename = file.name.split('/').last
-            new_location = "outputs_#{params[:submission_id]}/#{basename}"
+            # depending on the requested 'depth' of the new file (i.e. how many directories to include in the new name),
+            # construct a new filename for the file about to by synced
+            path_parts = file.name.split('/')
+            starting_index = path_parts.index(path_parts.slice(filename_depth * -1))
+            new_filename = path_parts[starting_index..path_parts.size - 1].join('_')
+            new_location = "outputs_#{params[:submission_id]}/#{new_filename}"
             # check if file has already been synced first
             # we can only do this by md5 hash as the filename and generation will be different
             existing_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project,
@@ -288,14 +301,14 @@ class StudiesController < ApplicationController
       case configuration_name
         when /cell-ranger/
           @special_sync = true
-          matrix_study_file = @unsynced_files.detect {|file| file.name.split('/').last == 'matrix.mtx'}
+          matrix_study_file = @unsynced_files.detect {|file| file.name =~ /filtered_gene_bc_matrices.*matrix\.mtx/}
           if matrix_study_file.present?
             matrix_study_file.file_type = 'MM Coordinate Matrix'
             matrix_study_file.description = "Matrix Market coordinate expression matrix from CellRanger run #{params[:submission_id]}"
             matrix_study_file.options.merge!({analysis_name: 'cell-ranger'})
           end
 
-          genes_file = @unsynced_files.detect {|file| file.name.split('/').last == 'genes.tsv'}
+          genes_file = @unsynced_files.detect {|file| file.name=~ /filtered_gene_bc_matrices.*genes\.tsv/}
           if genes_file.present?
             genes_file.file_type = '10X Genes File'
             genes_file.description = "Gene ID/Names output from CellRanger run #{params[:submission_id]}"
@@ -304,7 +317,7 @@ class StudiesController < ApplicationController
             end
           end
 
-          barcodes_file = @unsynced_files.detect {|file| file.name.split('/').last == 'barcodes.tsv'}
+          barcodes_file = @unsynced_files.detect {|file| file.name=~ /filtered_gene_bc_matrices.*barcodes\.tsv/}
           if barcodes_file.present?
             barcodes_file.file_type = '10X Barcodes File'
             barcodes_file.description = "Barcode sequence output from CellRanger run #{params[:submission_id]}"
@@ -313,18 +326,25 @@ class StudiesController < ApplicationController
             end
           end
 
-          metadata_file = @unsynced_files.detect {|file| file.name.split('/').last == 'metadata.txt'}
+          metadata_file = @unsynced_files.detect {|file| file.name.split('/').last =~ /_metadata\.txt/}
           if metadata_file.present?
             metadata_file.file_type = 'Metadata'
-            metadata_file.description = "Barcode-level metadata output from CellRanger run #{params[:submission_id]}"
+            metadata_file.description = "Merged barcode-level metadata output from CellRanger run #{params[:submission_id]}"
             metadata_file.options.merge!({analysis_name: 'cell-ranger'})
           end
 
-          cluster_file = @unsynced_files.detect {|file| file.name.split('/').last == 'clusters.txt'}
-          if cluster_file.present?
-            cluster_file.file_type = 'Cluster'
-            cluster_file.description = "tSNE coordinates production by CellRanger run #{params[:submission_id]}"
-            cluster_file.options.merge!({analysis_name: 'cell-ranger'})
+          tsne_cluster_file = @unsynced_files.detect {|file| file.name.split('/').last =~ /_tsne.txt/}
+          if tsne_cluster_file.present?
+            tsne_cluster_file.file_type = 'Cluster'
+            tsne_cluster_file.description = "tSNE 2d projection from CellRanger run #{params[:submission_id]}"
+            tsne_cluster_file.options.merge!({analysis_name: 'cell-ranger'})
+          end
+
+          tsne_cluster_file = @unsynced_files.detect {|file| file.name.split('/').last =~ /_pca.txt/}
+          if tsne_cluster_file.present?
+            tsne_cluster_file.file_type = 'Cluster'
+            tsne_cluster_file.description = "PCA 3d projection from CellRanger run #{params[:submission_id]}"
+            tsne_cluster_file.options.merge!({analysis_name: 'cell-ranger'})
           end
 
         when /infercnv/
