@@ -1292,10 +1292,10 @@ class SiteController < ApplicationController
       logger.info "#{Time.now}: No existing configuration found for #{ws_config_name} in #{@study.firecloud_workspace}; copying from repository"
       # we did not find a configuration, so we must copy the public one from the repository
       # first check for a public configuration in 'scp-pipeline-configurations'
-      existing_configs = Study.firecloud_client.get_configurations(namespace: 'scp-pipeline-configurations', name: workflow_name)
+      existing_configs = Study.firecloud_client.get_configurations(namespace: workflow_namespace, name: workflow_name)
       if existing_configs.empty?
         # check for configurations in the workflow namespace next
-        existing_configs = Study.firecloud_client.get_configurations(namespace: workflow_namespace, name: workflow_name)
+        existing_configs = Study.firecloud_client.get_configurations(namespace: 'scp-pipeline-configurations', name: workflow_name)
       end
       matching_config = existing_configs.find {|config| config['method']['name'] == workflow_name && config['method']['namespace'] == workflow_namespace && config['method']['snapshotId'] == workflow_snapshot.to_i}
       if matching_config.present?
