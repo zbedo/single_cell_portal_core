@@ -245,6 +245,7 @@ class StudiesController < ApplicationController
       workflow_identifier = [workflow_info['methodNamespace'],workflow_info['methodName'],workflow_info['methodVersion'],].join('/')
       @workflow_config = AdminConfiguration.find_by(config_type: 'Workflow Name', value: workflow_identifier)
       filename_depth = @workflow_config.options[:filename_depth].present? ? @workflow_config.options[:filename_depth].to_i : 1
+      task_names = @workflow_config.options[:task_names].to_s.split(',')
       submission['workflows'].each do |workflow|
         workflow = Study.firecloud_client.get_workspace_submission_workflow(@study.firecloud_project, @study.firecloud_workspace,
                                                                             params[:submission_id], workflow['workflowId'])
@@ -256,10 +257,16 @@ class StudiesController < ApplicationController
           if file.present?
             # depending on the requested 'depth' of the new file (i.e. how many directories to include in the new name),
             # construct a new filename for the file about to by synced
+            # this is only applied to files whose task name is in the workflow_config[:task_names] list
+            # all other files are renamed to their basename (last path part)
             path_parts = file.name.split('/')
-            starting_index = path_parts.index(path_parts.slice(filename_depth * -1))
-            new_filename = path_parts[starting_index..path_parts.size - 1].join('_')
-            new_location = "outputs_#{params[:submission_id]}/#{new_filename}"
+            basename = path_parts.last
+            new_location = "outputs_#{params[:submission_id]}/#{basename}"
+            if (path_parts & task_names).any?
+              starting_index = path_parts.index(path_parts.slice(filename_depth * -1))
+              new_filename = path_parts[starting_index..path_parts.size - 1].join('_')
+              new_location = "outputs_#{params[:submission_id]}/#{new_filename}"
+            end
             # check if file has already been synced first
             # we can only do this by md5 hash as the filename and generation will be different
             existing_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project,
@@ -267,12 +274,12 @@ class StudiesController < ApplicationController
             if existing_file.present? && existing_file.md5 == file.md5
               next
             else
-              # now copy the file to a new location for syncing
+              # now copy the file to a new location for syncing, marking as default type of 'Analysis Output'
               new_file = file.copy new_location
               unsynced_output = StudyFile.new(study_id: @study.id, name: new_file.name, upload_file_name: new_file.name,
                                               upload_content_type: new_file.content_type, upload_file_size: new_file.size,
                                               generation: new_file.generation, remote_location: new_file.name,
-                                              options: {submission_id: params[:submission_id]})
+                                              file_type: 'Analysis Output', options: {submission_id: params[:submission_id]})
               @unsynced_files << unsynced_output
             end
           else
@@ -335,16 +342,20 @@ class StudiesController < ApplicationController
 
           tsne_cluster_file = @unsynced_files.detect {|file| file.name.split('/').last =~ /_tsne.txt/}
           if tsne_cluster_file.present?
+            new_name = tsne_cluster_file.name.split('/').last.chomp('.txt')
+            tsne_cluster_file.name = new_name
             tsne_cluster_file.file_type = 'Cluster'
             tsne_cluster_file.description = "tSNE 2d projection from CellRanger run #{params[:submission_id]}"
             tsne_cluster_file.options.merge!({analysis_name: 'cell-ranger'})
           end
 
-          tsne_cluster_file = @unsynced_files.detect {|file| file.name.split('/').last =~ /_pca.txt/}
-          if tsne_cluster_file.present?
-            tsne_cluster_file.file_type = 'Cluster'
-            tsne_cluster_file.description = "PCA 3d projection from CellRanger run #{params[:submission_id]}"
-            tsne_cluster_file.options.merge!({analysis_name: 'cell-ranger'})
+          pca_cluster_file = @unsynced_files.detect {|file| file.name.split('/').last =~ /_pca.txt/}
+          if pca_cluster_file.present?
+            new_name = pca_cluster_file.name.split('/').last.chomp('.txt')
+            pca_cluster_file.name = new_name
+            pca_cluster_file.file_type = 'Cluster'
+            pca_cluster_file.description = "PCA 3d projection from CellRanger run #{params[:submission_id]}"
+            pca_cluster_file.options.merge!({analysis_name: 'cell-ranger'})
           end
 
         when /infercnv/
