@@ -136,7 +136,7 @@
   // sync outputs from a particular submission
   $('#submissions-table').on('click', '.sync-submission-outputs', function () {
     console.log('sync outputs');
-    $('#generic-modal-title').html("Syncing Outputs... Please Wait");
+    $('#generic-modal-title').html("Syncing Outputs... Please Wait<br/><small>This may take a few minutes to complete...</small>");
     launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
       return true;
     });
