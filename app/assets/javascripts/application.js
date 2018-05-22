@@ -59,6 +59,7 @@ var fileUploading = false;
 var PAGE_RENDERED = false;
 var OPEN_MODAL = '';
 var CLUSTER_TYPE = '3d';
+var UNSAFE_CHARACTERS = /[\;\/\?\:\@\=\&\'\"\<\>\#\%\{\}\|\\\^\~\[\]\`]/g;
 
 // Minimum width of plot + legend
 // Addresses https://github.com/broadinstitute/single_cell_portal/issues/20
@@ -862,6 +863,19 @@ function validateUnique(formId, textFieldClass) {
             textField.parent().removeClass('has-error');
         }
     });
+}
+
+function validateName(value, selector) {
+    if ( value.match(UNSAFE_CHARACTERS) ) {
+        alert('You have entered invalid characters for cluster/gene list names: \"' + value.match(UNSAFE_CHARACTERS).join(', ') + '\".  These have been automatically removed from the entered value.');
+        sanitizedName = value.replace(UNSAFE_CHARACTERS, '');
+        selector.val(sanitizedName);
+        selector.parent().addClass('has-error');
+        return false
+    } else {
+        selector.parent().removeClass('has-error');
+        return true
+    }
 }
 
 function validateCandidateUpload(formId, filename, classSelector) {

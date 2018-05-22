@@ -68,3 +68,7 @@ $("#sync-study-file-<%= study_file.id %>").click(function() {
     }
 });
 
+// sanitize cluster names on change
+$('#study-file-<%= study_file.id %>').on('change', '.filename', function() {
+    validateName($(this).val(), $("#study-file-<%= study_file._id %> .filename"));
+});
