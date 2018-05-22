@@ -865,6 +865,7 @@ function validateUnique(formId, textFieldClass) {
     });
 }
 
+// validate a name that will be used as a URL query string parameter (remove unsafe characters)
 function validateName(value, selector) {
     if ( value.match(UNSAFE_CHARACTERS) ) {
         alert('You have entered invalid characters for cluster/gene list names: \"' + value.match(UNSAFE_CHARACTERS).join(', ') + '\".  These have been automatically removed from the entered value.');
