@@ -554,15 +554,18 @@ class UiTestSuite < Test::Unit::TestCase
 		firecloud_url = "https://portal.firecloud.org/#workspaces/single-cell-portal/#{$env}-test-study-#{$random_seed}"
 		firecloud_link.click
 		@driver.switch_to.window(@driver.window_handles.last)
+		sleep(1) # we need a sleep to let the driver catch up, otherwise we can get stuck in an inbetween state
 		completed = @driver.find_elements(:class, 'fa-check-circle')
 		assert completed.size >= 1, 'did not provision workspace properly'
 		assert @driver.current_url == firecloud_url, 'did not open firecloud workspace'
 
 		# verify gcs bucket and uploads
 		@driver.switch_to.window(@driver.window_handles.first)
+		sleep(1)
 		gcs_link = @driver.find_element(:id, 'gcs-link')
 		gcs_link.click
 		@driver.switch_to.window(@driver.window_handles.last)
+		sleep(1)
 		# select the correct user
 		user_link = @driver.find_element(:xpath, "//p[@data-email='#{$test_email}']")
 		user_link.click
@@ -619,6 +622,7 @@ class UiTestSuite < Test::Unit::TestCase
 		gcs_link = @driver.find_element(:id, 'gcs-link')
 		gcs_link.click
 		@driver.switch_to.window(@driver.window_handles.last)
+    sleep(1)
 		# select the correct user
 		user_link = @driver.find_element(:xpath, "//p[@data-email='#{$test_email}']")
 		user_link.click
@@ -875,6 +879,7 @@ class UiTestSuite < Test::Unit::TestCase
 		gcs_link = @driver.find_element(:id, 'gcs-link')
 		gcs_link.click
 		@driver.switch_to.window(@driver.window_handles.last)
+    sleep(1)
 		# select the correct user
 		user_link = @driver.find_element(:xpath, "//p[@data-email='#{$test_email}']")
 		user_link.click
@@ -3737,6 +3742,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# check authentication challenge
 		@driver.switch_to.window(@driver.window_handles.first)
+    sleep(1)
 		open_ui_tab('study-settings')
 		public_dropdown = @driver.find_element(:id, 'study_public')
 		public_dropdown.send_keys('Yes')

@@ -27,3 +27,4 @@ ssmtp.conf
 
 # Ignore hidden macOS files
 .DS_Store
+/config/.read_only_service_account.json

@@ -62,6 +62,11 @@
 
     validateUnique("#marker_genes_form_<%= study_file._id %>", '.gene-list-name');
 
+    // sanitize cluster names on change
+    $("#marker_genes_form_<%= study_file._id %>").on('change', '.gene-list-name', function() {
+        validateName($(this).val(), $("#marker_genes_form_<%= study_file._id %> .gene-list-name"));
+    });
+
 		$(function() {
 			$('#marker_genes_form_<%= study_file._id %>').fileupload({
 				url: "<%= upload_study_path(@study._id) %>",

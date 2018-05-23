@@ -102,6 +102,11 @@
     // validate uniqueness of names before submit
     validateUnique("#ordinations_form_<%= study_file._id %>", '.cluster-name');
 
+    // sanitize cluster names on change
+    $("#ordinations_form_<%= study_file._id %>").on('change', '.cluster-name', function() {
+        validateName($(this).val(), $("#ordinations_form_<%= study_file._id %> .cluster-name"));
+    });
+
 		$(function() {
 
 			$('#ordinations_form_<%= study_file._id %>').fileupload({
