@@ -2356,7 +2356,6 @@ class Study
               end
             end
           end
-          SERVICE
 
         rescue => e
           # delete workspace on any fail as this amounts to a validation fail
