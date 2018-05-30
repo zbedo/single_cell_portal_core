@@ -631,7 +631,7 @@ class UiTestSuite < Test::Unit::TestCase
 		files = table_body.find_elements(:tag_name, 'tr')
 		assert files.size == 9, "did not find correct number of files, expected 9 but found #{files.size}"
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
-	end
+  end
 
 	# test embargo functionality
 	test 'admin: create-study: embargo' do
@@ -706,7 +706,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 	# negative tests to check file parsing & validation
 	# email delivery is disabled in development, so this just ensures that bad files are removed after parse failure
-	test 'admin: create-study: file validations' do
+	test 'admin: create-study: validation: file parsing' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in first
@@ -795,7 +795,66 @@ class UiTestSuite < Test::Unit::TestCase
 		accept_alert
 		close_modal('message_modal')
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
-	end
+  end
+
+  # test uniqueness constraints on firecloud workspace names
+  # this depends on the "development-sync-test-study" workspace being present that is used later for testing sync functionality
+  test 'admin: validation: prevent duplicate firecloud workspace' do
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    # log in first
+    @driver.get @base_url
+    login($test_email, $test_email_password)
+    @driver.get @base_url + '/studies/new'
+
+    # fill out study form
+    study_form = @driver.find_element(:id, 'new_study')
+    study_form.find_element(:id, 'study_name').send_keys('Sync Test Study')
+    # save study
+    save_study = @driver.find_element(:id, 'save-study')
+    save_study.click
+
+    wait_for_render(:id, 'study-errors-block')
+    error_message = @driver.find_element(:id, 'study_error_firecloud_workspace')
+    assert error_message.text == 'Firecloud workspace - there is already an existing workspace using this name. Please choose another name for your study.'
+
+    # verify that workspace is still there
+    firecloud_url = 'https://portal.firecloud.org/#workspaces/single-cell-portal/development-sync-test-study'
+    open_new_page(firecloud_url)
+    completed = @driver.find_elements(:class, 'fa-check-circle')
+    assert completed.size >= 1, "did not find workspace - may have been deleted; please check #{firecloud_url}"
+
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+  end
+
+  # prevent users from editing firecloud project/workspace fields on existing studies
+  test 'admin: validation: prevent editing study firecloud identifiers' do
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    # log in first
+    @driver.get @base_url
+    login($test_email, $test_email_password)
+    @driver.get @base_url + '/studies'
+
+    edit_btn = @driver.find_element(:class, "test-study-#{$random_seed}-edit")
+    edit_btn.click
+    wait_for_render(:class, 'study-form')
+
+    # find firecloud project/workspace fields and assert inability to change
+    firecloud_project = @driver.find_element(:id, 'study_firecloud_project')
+    firecloud_workspace = @driver.find_element(:id, 'study_firecloud_workspace')
+    assert firecloud_project['readonly'] == 'true', 'firecloud project form field is not readonly'
+    assert firecloud_workspace['readonly'] == 'true', 'firecloud workspace form field is not readonly'
+    current_project = firecloud_project['value']
+    current_workspace = firecloud_workspace['value']
+    bad_value = 'foo'
+    firecloud_project.send_keys(bad_value)
+    firecloud_workspace.send_keys(bad_value)
+    assert firecloud_project['value'] == current_project, "project name allowed change; expected #{current_project} but found #{firecloud_project['value']}"
+    assert firecloud_workspace['value'] == current_workspace, "workspace name allowed change; expected #{current_workspace} but found #{firecloud_workspace['value']}"
+
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+  end
 
 	# check visibility & edit restrictions as well as share access
 	# will also verify FireCloud ACL settings on shares
