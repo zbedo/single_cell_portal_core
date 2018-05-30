@@ -398,7 +398,7 @@ class Study
 
   # helper to generate a URL to a study's GCP bucket
   def google_bucket_url
-    "https://console.cloud.google.com/storage/browser/#{self.bucket_id}"
+    "https://accounts.google.com/AccountChooser?continue=https://console.cloud.google.com/storage/browser/#{self.bucket_id}"
   end
 
   # helper to generate a URL to a specific FireCloud submission inside a study's GCP bucket
@@ -649,6 +649,16 @@ class Study
     self.study_files.by_type('Metadata').first
   end
 
+  # check if a study has analysis output files for a given analysis
+  def has_analysis_outputs?(analysis_name, visualization_name=nil)
+    self.get_analysis_outputs(analysis_name, visualization_name).any?
+  end
+
+  # return all study files for a given analysis & visualization component
+  def get_analysis_outputs(analysis_name, visualization_name=nil)
+    self.study_files.where('options.analysis_name' => analysis_name, 'options.visualization_name' => visualization_name)
+  end
+
   ###
   #
   # DELETE METHODS
@@ -738,8 +748,8 @@ class Study
   end
 
   # regenerate an expression matrix from database records
-  def regenerate_expression_matrix(expression_study_file)
-    puts "regenerating #{expression_study_file.upload_file_name} expression matrix"
+  def generate_dense_matrix(expression_study_file)
+    puts "generating #{expression_study_file.upload_file_name} as dense expression matrix"
 
     # load cell arrays to create headers
     expression_file_cells = DataArray.where(study_id: self.id, linear_data_type: 'Study', linear_data_id: self.id,
@@ -747,10 +757,15 @@ class Study
     all_cells = expression_file_cells.map(&:values).flatten
 
     # create new file and write headers
+    current_name = expression_study_file.upload_file_name
+    if current_name.include?('/')
+      current_name = current_name.split('/').last
+    end
+    new_file_name = current_name.end_with?('.txt') ? current_name : current_name + '.txt'
     if expression_study_file.upload_content_type == 'application/gzip'
-      @new_expression_file = Zlib::GzipWriter.open(File.join(self.data_store_path, expression_study_file.upload_file_name))
+      @new_expression_file = Zlib::GzipWriter.open(File.join(self.data_store_path, new_file_name))
     else
-      @new_expression_file = File.new(File.join(self.data_store_path, expression_study_file.upload_file_name), 'w')
+      @new_expression_file = File.new(File.join(self.data_store_path, new_file_name), 'w+')
     end
     headers = ['GENE', all_cells].flatten.join("\t")
     @new_expression_file.write headers + "\n"
@@ -2345,13 +2360,13 @@ class Study
           # delete workspace on any fail as this amounts to a validation fail
           Rails.logger.info "#{Time.now}: Error creating workspace: #{e.message}"
           # delete firecloud workspace unless error is 409 Conflict (workspace already taken)
-          if e.message != '409 Conflict'
-            Study.firecloud_client.delete_workspace(self.firecloud_project, self.firecloud_workspace)
-            errors.add(:firecloud_workspace, " creation failed: #{e.message}; Please try again.")
-          else
+          if e.message.include?("Workspace #{self.firecloud_project}/#{self.firecloud_workspace} already exists")
             errors.add(:firecloud_workspace, ' - there is already an existing workspace using this name.  Please choose another name for your study.')
             errors.add(:name, ' - you must choose a different name for your study.')
             self.firecloud_workspace = nil
+          else
+            Study.firecloud_client.delete_workspace(self.firecloud_project, self.firecloud_workspace)
+            errors.add(:firecloud_workspace, " creation failed: #{e.message}; Please try again.")
           end
           return false
         end

@@ -1,0 +1,69 @@
+<div class="form-group row">
+  <div class="col-sm-12">
+    <div class="bs-callout bs-callout-info">
+      <h4>Samples & Primary Data Files</h4>
+      <p class="help-block">Use the multi-selects below to choose either existing samples or primary data files/directories from this study to use as inputs for this workflow.  Paired read information is pulled
+        either from the sample metadata in this study's workspace (for known samples), or is determined by the names of the primary data files (for study files). If you wish to edit the list of sample & file pairings,
+        you can export it via the <strong>Export Sample & File Pairings</strong> button, make any desired changes, and import the new list using the <strong>Upload Sample & File Pairings</strong> button.</p>
+      <p class="help-block"><strong class="text-danger"><i class="fa fa-fw fa-exclamation-triangle"></i>You must save your samples first before continuing</strong>.  To store the sample information below back to the workspace,
+        click the <strong>Save Selected Samples</strong> button once you have populated the table with sample information (either from a file upload, or from selecting data files/directories from the above list). To remove
+        samples from your workspace, select them from the known samples list and click <strong>Delete Selected Samples</strong>.</p>
+    </div>
+  </div>
+  <div class="col-sm-6">
+    <%= label_tag :workflow_inputs_samples, 'Please select known samples from the workspace (select all that apply)' %><br />
+    <%= select_tag :workflow_inputs_samples, options_for_select(@samples), multiple: true, class: 'form-control', name: "workflow[inputs][samples][]", size: 10 %>
+  </div>
+  <div class="col-sm-6">
+    <%= label_tag :workflow_study_data, 'OR choose primary data files/directories (select all that apply)' %><br />
+    <%= select_tag :workflow_study_data, options_for_select(@primary_data_locations), multiple: true, name: "workflow[study_data]", class: 'form-control', size: 10 %>
+  </div>
+</div>
+<div class="row">
+  <div class="col-sm-12">
+    <div class="well well-lg">
+      <h4 class="text-center">Selected Samples for Workflow Inputs</h4>
+      <div class="form-group row">
+        <div class="col-sm-6 form-inline">
+          <%= file_field_tag :workflow_sample_info, class: 'form-control' %>&nbsp;
+          <%= label_tag :workflow_sample_info, "<i class='fa fa-upload'></i> Upload Sample & File Pairings".html_safe,
+                      class: 'btn btn-default', data: {toggle: 'tooltip'}, title: 'Upload a five-column tab-delimited file of sample names and 1-4 paired primary data files (per sample).' %>
+
+        </div>
+        <div class="col-sm-3">
+          <%= link_to "<i class='fa fa-download'></i> Export Sample & File Pairings".html_safe,
+                      'data:text/plain;base64,', class: 'btn btn-default', id: 'export-sample-info',
+                      data: {toggle: 'tooltip'}, title: 'Export the current sample & primary data file pairings as a tab-delimited text file.',
+                      download: 'sample_info.txt' %>
+        </div>
+        <div class="col-sm-3">
+          <%= link_to "<i class='fa fa-eraser'></i> Clear Samples & Files".html_safe,
+                      'javascript:;', class: 'btn btn-default', id: 'clear-sample-info',
+                      data: {toggle: 'tooltip'}, title: 'Clear the entries from the samples table (does not alter workspace sample information).'%>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-striped tabled-condensed" id="samples-table">
+          <thead>
+          <tr id="sample-attributes">
+            <th class="col-sm-2">Sample</th>
+            <th class="col-sm-3">Fastq 1 (R1)</th>
+            <th class="col-sm-3">Fastq 2 (R2)</th>
+            <th class="col-sm-2">Fastq 3 (I1)</th>
+            <th class="col-sm-2">Fastq 4 (I2)</th>
+          </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="text-center">
+        <%= link_to "Save Selected Samples <i class='fa fa-fw fa-cloud-upload'></i>".html_safe, 'javascript:;', class: 'btn btn-primary', id: 'save-workspace-samples', data: {toggle: 'tooltip'}, title: 'Save the selected sample information back to the workspace.  This will overwrite any existing values for these samples with the information displayed.' %>
+        <%= link_to "Delete Selected Samples <i class='fa fa-fw fa-trash'></i>".html_safe, 'javascript:;', class: 'btn btn-danger', id: 'delete-workspace-samples', data: {toggle: 'tooltip'}, title: 'Remove the selected sample(s) from the workspace.' %>
+      </p>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+    <%= render partial: '/site/analysis/input_sample_browser_scripts.js' %>
+</script>

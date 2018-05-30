@@ -54,6 +54,10 @@ portal is configured and ready to use:
   * For 'Authorized Javascript Origins', enter <code>https://(your hostname)/single_cell</code>
   * For 'Authorized redirect URIs', enter <code>https://(your hostname)/single_cell/users/auth/google_oauth2/callback</code>
   * Save the client id
+* <b>Whitelisting your OAuth Audience</b>
+	* Once you have exported your OAuth credentials, you will need to have your client id whitelisted to allow it to make
+	  authenticated requests into the FireCloud API as per {OpenID Connect 1.0}[http://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation]
+	* Send an email to <b>dsp-devops@broadinstitute.org</b> with your OAuth2 client ID so it can be added to the whitelist
 * <b>GCP Service Account keys</b>: Regardless of where the portal is deployed, it requires a Google Cloud Platform Service Account in order to make authenticated calls into FireCloud and Google Cloud Storage.  Therefore, you must export the default service account key.  See https://developers.google.com/identity/protocols/OAuth2ServiceAccount for more information about service accounts.  To export the credentials:
   * Log into your new GCP project
   * Click the navigation menu in the top left and select 'IAM & Admin	' > 'Service Accounts'
@@ -71,7 +75,7 @@ portal is configured and ready to use:
   * Log in with the admin account, and select 'Admin Configurations' from the profile menu (top righthand corner)
   * At the bottom of the page, in the 'Other Tasks' dropdown, select 'Manage Service Account FireCloud Registration' and click 'Execute Task'
   * Fill out all form fields and submit
-* <b>Creating a FireCloud Project</b>: Before you can create studies, you will need to create a FireCloud project that will own all the workspaces created in the portal.  To do this:
+* <b>Creating a FireCloud Project</b>: Once your OAuth audience has been whitelisted, and before you can create studies, you will need to create a FireCloud project that will own all the workspaces created in the portal.  To do this:
   * Create a {Google Billing Project}[https://software.broadinstitute.org/firecloud/documentation/article?id=9762].
   * Using the same Google account that owns the billing project, log into the portal and select 'My Billing Projects' from the profile menu.
   * Click 'New Billing Project' at the bottom of the page

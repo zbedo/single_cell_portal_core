@@ -554,15 +554,21 @@ class UiTestSuite < Test::Unit::TestCase
 		firecloud_url = "https://portal.firecloud.org/#workspaces/single-cell-portal/#{$env}-test-study-#{$random_seed}"
 		firecloud_link.click
 		@driver.switch_to.window(@driver.window_handles.last)
+		sleep(1) # we need a sleep to let the driver catch up, otherwise we can get stuck in an inbetween state
 		completed = @driver.find_elements(:class, 'fa-check-circle')
 		assert completed.size >= 1, 'did not provision workspace properly'
 		assert @driver.current_url == firecloud_url, 'did not open firecloud workspace'
 
 		# verify gcs bucket and uploads
 		@driver.switch_to.window(@driver.window_handles.first)
+		sleep(1)
 		gcs_link = @driver.find_element(:id, 'gcs-link')
 		gcs_link.click
 		@driver.switch_to.window(@driver.window_handles.last)
+		sleep(1)
+		# select the correct user
+		user_link = @driver.find_element(:xpath, "//p[@data-email='#{$test_email}']")
+		user_link.click
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
@@ -616,6 +622,10 @@ class UiTestSuite < Test::Unit::TestCase
 		gcs_link = @driver.find_element(:id, 'gcs-link')
 		gcs_link.click
 		@driver.switch_to.window(@driver.window_handles.last)
+    sleep(1)
+		# select the correct user
+		user_link = @driver.find_element(:xpath, "//p[@data-email='#{$test_email}']")
+		user_link.click
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
@@ -865,9 +875,14 @@ class UiTestSuite < Test::Unit::TestCase
 		assert file_count.text == '10', "did not find correct number of files, expected 10 but found #{file_count.text}"
 		show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
 		show_study.click
+		# verify gcs bucket upload
 		gcs_link = @driver.find_element(:id, 'gcs-link')
 		gcs_link.click
 		@driver.switch_to.window(@driver.window_handles.last)
+    sleep(1)
+		# select the correct user
+		user_link = @driver.find_element(:xpath, "//p[@data-email='#{$test_email}']")
+		user_link.click
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
 		files = table_body.find_elements(:tag_name, 'tr')
@@ -1233,7 +1248,6 @@ class UiTestSuite < Test::Unit::TestCase
 		tag_line_field = form.find_element(:id, 'branding_group_tag_line')
 		tag_line_field.send_keys(tag_line)
 		font_family_field = form.find_element(:id, 'branding_group_font_family')
-		font_family_field.clear
 		font_family_field.send_keys(font_family)
 		splash_image_field = form.find_element(:id, 'branding_group_splash_image')
 		splash_image_field.send_keys(splash_image)
@@ -1352,7 +1366,6 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		@driver.get @base_url
-		@driver.find_element(:id, 'login-nav').click
 		login($test_email, $test_email_password)
 		@driver.get @base_url + '/branding_groups'
 
@@ -2342,7 +2355,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# open distribution control panel as well to get toggle annotations button
 		view_options_panel = @driver.find_element(:id, 'distribution-panel-link')
 		view_options_panel.click
-		wait_for_render(:id, 'distribution-plot-controls')
+		wait_for_render(:id, 'toggle-traces')
 
 		# toggle traces off
 		toggle = @driver.find_element(:id, 'toggle-traces')
@@ -2578,7 +2591,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# load random genes to search, take between 2-5, adding in bad gene to test error handling
 		genes = @genes.shuffle.take(rand(2..5))
 		search_box = @driver.find_element(:id, 'search_genes')
-		search_box.send_keys(genes.join(' ') + ' foo')
+		search_box.send_keys(genes.join(',') + ',foo')
 
 		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
 		search_menu.click
@@ -2705,7 +2718,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		new_genes = @genes.shuffle.take(rand(2..5))
 		search_box = @driver.find_element(:id, 'search_genes')
-		search_box.send_keys(new_genes.join(' '))
+		search_box.send_keys(new_genes.join(','))
 
 		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
 		search_menu.click
@@ -2806,7 +2819,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# load random genes to search, take between 2-5
 		genes = @genes.shuffle.take(rand(2..5))
 		search_box = @driver.find_element(:id, 'search_genes')
-		search_box.send_keys(genes.join(' '))
+		search_box.send_keys(genes.join(','))
 		search_genes = @driver.find_element(:id, 'perform-gene-search')
 		search_genes.click
 		wait_for_render(:id, 'heatmap-plot')
@@ -2859,7 +2872,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		new_genes = @genes.shuffle.take(rand(2..5))
 		search_box = @driver.find_element(:id, 'search_genes')
-		search_box.send_keys(new_genes.join(' '))
+		search_box.send_keys(new_genes.join(','))
 		search_genes = @driver.find_element(:id, 'perform-gene-search')
 		search_genes.click
 		assert element_present?(:id, 'plots'), 'could not find expression heatmap'
@@ -3729,6 +3742,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# check authentication challenge
 		@driver.switch_to.window(@driver.window_handles.first)
+    sleep(1)
 		open_ui_tab('study-settings')
 		public_dropdown = @driver.find_element(:id, 'study_public')
 		public_dropdown.send_keys('Yes')
@@ -4588,9 +4602,9 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get study_page
 		wait_until_page_loads(study_page)
 
-		open_ui_tab('study-workflows')
+		open_ui_tab('study-analysis')
 		wait_for_render(:id, 'workflow_identifier')
-		samples_tab = @driver.find_element(:id, 'select-samples-nav')
+		samples_tab = @driver.find_element(:id, 'select-inputs-nav')
 		samples_tab.click
 		wait_for_render(:id, 'submissions-table')
 		# select all available fastq files to create a sample entity
@@ -4624,7 +4638,7 @@ class UiTestSuite < Test::Unit::TestCase
 		clear_btn.click
 
 		# now select sample
-		study_samples = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_samples'))
+		study_samples = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_inputs_samples'))
 		study_samples.select_all
 		# wait for table to populate (will have a row with sorting_1 class)
 		@wait.until {@driver.find_element(:id, 'samples-table').find_element(:class, 'sorting_1').displayed?}
@@ -4651,21 +4665,28 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_until_page_loads(study_page)
 
 		# select worfklow & sample
-		open_ui_tab('study-workflows')
+		open_ui_tab('study-analysis')
 		wait_for_render(:id, 'workflow_identifier')
 		scroll_to(:bottom)
 		wdl_workdropdown = @driver.find_element(:id, 'workflow_identifier')
 		wdl_workflows = wdl_workdropdown.find_elements(:tag_name, 'option')
 		wdl_workflows.last.click
+		# view WDL to allow time for sample input browser to render fully
+		view_wdl = @driver.find_element(:id, 'view-selected-wdl')
+		view_wdl.click
+		wait_for_render(:id, 'wdl-contents')
+		wdl_contents = @driver.find_element(:id, 'wdl-contents').text
+		assert !wdl_contents.empty?, 'Did not find any contents for test WDL'
 
-		samples_tab = @driver.find_element(:id, 'select-samples-nav')
+		samples_tab = @driver.find_element(:id, 'select-inputs-nav')
 		samples_tab.click
-		wait_for_render(:id, 'submissions-table')
+		wait_for_render(:id, 'samples-table')
 
-		study_samples = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_samples'))
+		study_samples = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_inputs_samples'))
 		study_samples.select_all
 		# wait for table to populate (will have a row with sorting_1 class)
-		@wait.until {@driver.find_element(:id, 'samples-table').find_element(:class, 'sorting_1').displayed?}
+		sample_info = @driver.find_element(:id, 'samples-table')
+		@wait.until {sample_info.find_element(:class, 'sorting_1').displayed?}
 
 		# submit workflow
 		review_tab = @driver.find_element(:id, 'review-submission-nav')
@@ -4724,7 +4745,7 @@ class UiTestSuite < Test::Unit::TestCase
 		study_page = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get study_page
 		wait_until_page_loads(study_page)
-		open_ui_tab('study-workflows')
+		open_ui_tab('study-analysis')
 		wait_for_render(:id, 'submissions-table')
 
 		# make sure submission has completed
@@ -4784,7 +4805,7 @@ class UiTestSuite < Test::Unit::TestCase
 		study_page = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get study_page
 		wait_until_page_loads(study_page)
-		open_ui_tab('study-workflows')
+		open_ui_tab('study-analysis')
 		wait_for_render(:id, 'submissions-table')
 
 		# find a completed submission
@@ -4831,7 +4852,7 @@ class UiTestSuite < Test::Unit::TestCase
 		study_page = @base_url + "/study/test-study-#{$random_seed}"
 		@driver.get study_page
 		wait_until_page_loads(study_page)
-		open_ui_tab('study-workflows')
+		open_ui_tab('study-analysis')
 		wait_for_render(:id, 'submissions-table')
 		submissions_table = @driver.find_element(:id, 'submissions-table')
 		submission_ids = submissions_table.find_element(:tag_name, 'tbody').find_elements(:tag_name, 'tr').map {|s| s['id']}.delete_if {|id| id.empty?}
@@ -4862,14 +4883,14 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get study_page
 		wait_until_page_loads(study_page)
 
-		open_ui_tab('study-workflows')
+		open_ui_tab('study-analysis')
 		wait_for_render(:id, 'workflow_identifier')
-		samples_tab = @driver.find_element(:id, 'select-samples-nav')
+		samples_tab = @driver.find_element(:id, 'select-inputs-nav')
 		samples_tab.click
 		wait_for_render(:id, 'submissions-table')
 
 		# now select sample
-		study_samples = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_samples'))
+		study_samples = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_inputs_samples'))
 		study_samples.select_all
 		# wait for table to populate (will have a row with sorting_1 class)
 		@wait.until {@driver.find_element(:id, 'samples-table').find_element(:class, 'sorting_1').displayed?}
@@ -4882,7 +4903,7 @@ class UiTestSuite < Test::Unit::TestCase
 		empty_table = @driver.find_element(:id, 'samples-table')
 		empty_row = empty_table.find_element(:tag_name, 'tbody').find_element(:tag_name, 'tr').find_element(:tag_name, 'td')
 		assert empty_row.text == 'No data available in table', "Did not completely remove all samples, expected 'No data available in table' but found #{empty_row.text}"
-		samples_list = @driver.find_element(:id, 'workflow_samples')
+		samples_list = @driver.find_element(:id, 'workflow_inputs_samples')
 		assert samples_list['value'].empty?, "Did not delete workspace samples; samples list is not empty: ''#{samples_list['value']}''"
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"

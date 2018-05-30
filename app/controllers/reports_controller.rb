@@ -154,6 +154,9 @@ class ReportsController < ApplicationController
           when /cell-ranger/
             pipeline_inputs = analysis.payload['inputs'].detect {|input| input['name'] == 'cellranger.fastqs'}
             @inputs = pipeline_inputs['value']
+          when /infercnv/
+            pipeline_inputs = analysis.payload['inputs'].detect {|input| input['name'] == 'infercnv.expression_file'}
+            @inputs = [pipeline_inputs['value']]
           else
             # make a guess, we have no idea
             pipeline_inputs = analysis.payload['inputs'].select {|input| input['name'] =~ /fastq/}
@@ -162,19 +165,27 @@ class ReportsController < ApplicationController
             end
             @inputs.flatten!
         end
-        fastq_files = @inputs.map {|input| input.gsub(/gs:\/\/#{study.bucket_id}\//, '')}
+        input_files = @inputs.map {|input| input.gsub(/gs:\/\/#{study.bucket_id}\//, '')}
         # we need to now find the size of the files for the plot
-        fastq_files.each do |fastq|
-          directory = fastq.include?('/') ? fastq.split('/').first : '/'
-          study_directory = study.directory_listings.find_by(name: directory)
-          if study_directory.present?
-            study_directory_file = study_directory.files.detect {|f| f['name'] == fastq}
-            input_size += study_directory_file['size']
-          else
-            study_file = study.study_files.by_type('Fastq').detect {|f| f.name == fastq}
-            if study_file.present? && !study_file.human_data?
-              input_size += study_file.upload_file_size
-            end
+        input_files.each do |file|
+          case pipeline_name
+            when /infercnv/
+              study_file = study.study_files.by_type('Expression Matrix').detect {|f| f.name == file}
+              if study_file.present? && !study_file.human_data?
+                input_size += study_file.upload_file_size
+              end
+            else
+              directory = file.include?('/') ? file.split('/').first : '/'
+              study_directory = study.directory_listings.find_by(name: directory)
+              if study_directory.present?
+                study_directory_file = study_directory.files.detect {|f| f['name'] == file}
+                input_size += study_directory_file['size']
+              else
+                study_file = study.study_files.by_type('Fastq').detect {|f| f.name == file}
+                if study_file.present? && !study_file.human_data?
+                  input_size += study_file.upload_file_size
+                end
+              end
           end
         end
         if @pipeline_runtimes[pipeline_name].present?

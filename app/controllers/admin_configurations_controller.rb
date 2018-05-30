@@ -320,7 +320,7 @@ class AdminConfigurationsController < ApplicationController
 
   # Never trust parameters from the scary internet, only allow the white list through.
   def admin_configuration_params
-    params.require(:admin_configuration).permit(:config_type, :value_type, :value, :multiplier)
+    params.require(:admin_configuration).permit(:config_type, :value_type, :value, :multiplier, configuration_options_attributes: [:id, :name, :value, :_destroy])
   end
 
   def user_params

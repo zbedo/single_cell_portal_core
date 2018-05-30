@@ -32,7 +32,7 @@ class BillingProjectsController < ApplicationController
     billing_accounts = @fire_cloud_client.get_billing_accounts
     @accounts = billing_accounts.map {|account| [account['displayName'], account['accountName']]}
     @projects = {}
-    billing_projects = @fire_cloud_client.get_billing_projects
+    billing_projects = @fire_cloud_client.get_billing_projects.keep_if {|project| project['role'] == 'Owner'}
 
     # load user list for each project
     billing_projects.each do |project|
@@ -198,7 +198,7 @@ class BillingProjectsController < ApplicationController
 
   # check to make sure that the current user has access to the current project
   def check_project_permissions
-    projects = @fire_cloud_client.get_billing_projects
+    projects = @fire_cloud_client.get_billing_projects.keep_if {|project| project['role'] == 'Owner'}
     unless projects.map {|project| project['projectName']}.include?(params[:project_name])
       redirect_to merge_default_redirect_params(billing_projects_path, scpbr: params[:scpbr]), alert: 'You do not have permission to perform that action.' and return
     end
