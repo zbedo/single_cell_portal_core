@@ -2360,13 +2360,13 @@ class Study
           # delete workspace on any fail as this amounts to a validation fail
           Rails.logger.info "#{Time.now}: Error creating workspace: #{e.message}"
           # delete firecloud workspace unless error is 409 Conflict (workspace already taken)
-          if e.message != '409 Conflict'
-            Study.firecloud_client.delete_workspace(self.firecloud_project, self.firecloud_workspace)
-            errors.add(:firecloud_workspace, " creation failed: #{e.message}; Please try again.")
-          else
+          if e.message.include?("Workspace #{self.firecloud_project}/#{self.firecloud_workspace} already exists")
             errors.add(:firecloud_workspace, ' - there is already an existing workspace using this name.  Please choose another name for your study.')
             errors.add(:name, ' - you must choose a different name for your study.')
             self.firecloud_workspace = nil
+          else
+            Study.firecloud_client.delete_workspace(self.firecloud_project, self.firecloud_workspace)
+            errors.add(:firecloud_workspace, " creation failed: #{e.message}; Please try again.")
           end
           return false
         end
