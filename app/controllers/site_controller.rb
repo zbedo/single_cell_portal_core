@@ -1449,7 +1449,7 @@ class SiteController < ApplicationController
               cmax: annotation_array.max,
               cmin: annotation_array.min,
               color: color_array,
-              size: color_array.map {|a| @study.default_cluster_point_size},
+              size: @study.default_cluster_point_size,
               line: { color: 'rgb(40,40,40)', width: @study.show_cluster_point_borders? ? 0.5 : 0},
               colorscale: 'Reds',
               showscale: true,
@@ -1465,7 +1465,7 @@ class SiteController < ApplicationController
     else
       # assemble containers for each trace
       annotation[:values].each do |value|
-        coordinates[value] = {x: [], y: [], text: [], cells: [], annotations: [], name: "#{annotation[:name]}: #{value}", marker_size: []}
+        coordinates[value] = {x: [], y: [], text: [], cells: [], annotations: [], name: "#{annotation[:name]}: #{value}", marker: {size: @study.default_cluster_point_size, line: { color: 'rgb(40,40,40)', width: @study.show_cluster_point_borders? ? 0.5 : 0}}}
         if @cluster.is_3d?
           coordinates[value][:z] = []
         end
@@ -1481,7 +1481,6 @@ class SiteController < ApplicationController
           if @cluster.cluster_type == '3d'
             coordinates[annotation_value][:z] << z_array[index]
           end
-          coordinates[annotation_value][:marker_size] << @study.default_cluster_point_size
         end
         coordinates.each do |key, data|
           data[:name] << " (#{data[:x].size} points)"
@@ -1498,7 +1497,6 @@ class SiteController < ApplicationController
             if @cluster.cluster_type == '3d'
               coordinates[annotation_value][:z] << z_array[index]
             end
-            coordinates[annotation_value][:marker_size] << @study.default_cluster_point_size
           end
         end
         coordinates.each do |key, data|
@@ -1533,7 +1531,7 @@ class SiteController < ApplicationController
       annotation_hash = metadata_obj.cell_annotations
     end
     values = {}
-    values[:all] = {x: [], y: [], cells: [], annotations: [], text: [], marker_size: []}
+    values[:all] = {x: [], y: [], cells: [], annotations: [], text: [], marker: {size: @study.default_cluster_point_size, line: { color: 'rgb(40,40,40)', width: @study.show_cluster_point_borders? ? 0.5 : 0}}}
     if annotation[:scope] == 'cluster' || annotation[:scope] == 'user'
       annotation_array.each_with_index do |annot, index|
         annotation_value = annot
@@ -1545,7 +1543,6 @@ class SiteController < ApplicationController
         values[:all][:x] << annotation_value
         values[:all][:y] << expression_value
         values[:all][:cells] << cell_name
-        values[:all][:marker_size] << @study.default_cluster_point_size
       end
     else
       cells.each do |cell|
@@ -1557,7 +1554,6 @@ class SiteController < ApplicationController
           values[:all][:x] << annotation_value
           values[:all][:y] << expression_value
           values[:all][:cells] << cell
-          values[:all][:marker_size] << @study.default_cluster_point_size
         end
       end
     end
@@ -1570,7 +1566,7 @@ class SiteController < ApplicationController
     # construct annotation key to load subsample data_arrays if needed, will be identical to params[:annotation]
     subsample_annotation = "#{annotation[:name]}--#{annotation[:type]}--#{annotation[:scope]}"
     values = {}
-    values[:all] = {x: [], y: [], cells: [], annotations: [], text: [], marker_size: []}
+    values[:all] = {x: [], y: [], cells: [], annotations: [], text: [], marker: {size: @study.default_cluster_point_size, line: { color: 'rgb(40,40,40)', width: @study.show_cluster_point_borders? ? 0.5 : 0}}}
     cells = @cluster.concatenate_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     annotation_array = []
     annotation_hash = {}
@@ -1602,7 +1598,6 @@ class SiteController < ApplicationController
         values[:all][:x] << annotation_value
         values[:all][:y] << expression_value
         values[:all][:cells] << cell
-        values[:all][:marker_size] << @study.default_cluster_point_size
         end
     end
     values
@@ -1682,7 +1677,7 @@ class SiteController < ApplicationController
         annotations: [],
         text: [],
         cells: cells,
-        marker: {cmax: 0, cmin: 0, color: [], size: [], showscale: true, colorbar: {title: @y_axis_title , titleside: 'right'}}
+        marker: {cmax: 0, cmin: 0, color: [], size: @study.default_cluster_point_size, showscale: true, colorbar: {title: @y_axis_title , titleside: 'right'}}
     }
     if @cluster.is_3d?
       expression[:all][:z] = z_array
@@ -1695,7 +1690,6 @@ class SiteController < ApplicationController
       expression[:all][:annotations] << "#{annotation[:name]}: #{annotation_value}"
       expression[:all][:text] << text_value
       expression[:all][:marker][:color] << expression_score
-      expression[:all][:marker][:size] << @study.default_cluster_point_size
     end
     expression[:all][:marker][:line] = { color: 'rgb(255,255,255)', width: @study.show_cluster_point_borders? ? 0.5 : 0}
     color_minmax =  expression[:all][:marker][:color].minmax
@@ -1805,7 +1799,7 @@ class SiteController < ApplicationController
         text: [],
         annotations: [],
         cells: cells,
-        marker: {cmax: 0, cmin: 0, color: [], size: [], showscale: true, colorbar: {title: @y_axis_title , titleside: 'right'}}
+        marker: {cmax: 0, cmin: 0, color: [], size: @study.default_cluster_point_size, showscale: true, colorbar: {title: @y_axis_title , titleside: 'right'}}
     }
     if @cluster.is_3d?
       expression[:all][:z] = z_array
@@ -1827,7 +1821,6 @@ class SiteController < ApplicationController
       expression[:all][:text] << text_value
       expression[:all][:marker][:color] << expression_score
 
-      expression[:all][:marker][:size] << @study.default_cluster_point_size
     end
     expression[:all][:marker][:line] = { color: 'rgb(40,40,40)', width: @study.show_cluster_point_borders? ? 0.5 : 0}
     color_minmax =  expression[:all][:marker][:color].minmax
