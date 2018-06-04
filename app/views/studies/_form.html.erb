@@ -3,8 +3,8 @@
 		<div class="bs-callout bs-callout-danger" id="study-errors-block">
 			<h4><%= pluralize(@study.errors.count, "error") %> prohibited this study from being saved:</h4>
 			<ul>
-				<% @study.errors.full_messages.each do |message| %>
-					<li><%= message %></li>
+				<% @study.errors.keys.each do |key| %>
+					<li id="study_error_<%= key %>"><%= @study.errors.full_messages_for(key).first %></li>
 				<% end %>
 			</ul>
 		</div>
@@ -24,7 +24,7 @@
       <% else %>
         <%= f.text_field :firecloud_project, class: 'form-control', readonly: true,
                          title: 'You may not change the project of an existing study', data: {toggle: 'tooltip'} %>
-    <% end %>
+      <% end %>
 
     </div>
   </div>
@@ -37,16 +37,24 @@
 			<%= f.label :public %><br />
 			<%= f.select :public, options_for_select([['Yes',1],['No',0]], @study.public? ? 1: 0), {}, {class: 'form-control'} %>
 		</div>
-    <div class="col-md-3">
-      <%= f.label :use_existing_workspace, 'Use an existing workspace?' %><br/>
-      <%= f.select :use_existing_workspace, options_for_select([['Yes',1],['No',0]],
-                                                               @study.use_existing_workspace ? ['Yes', 1] : ['No', 0]),
-                                            {}, {class: 'form-control'} %>
-    </div>
-    <div class="col-md-4">
-      <%= f.label :firecloud_workspace, 'Existing FireCloud Workspace' %><br />
-      <%= f.text_field :firecloud_workspace, class: 'form-control', disabled: !@study.use_existing_workspace %>
-    </div>
+      <% if @study.new_record? %>
+      <div class="col-md-3">
+        <%= f.label :use_existing_workspace, 'Use an existing workspace?' %><br/>
+        <%= f.select :use_existing_workspace, options_for_select([['Yes',1],['No',0]],
+                                                                 @study.use_existing_workspace ? ['Yes', 1] : ['No', 0]),
+                     {}, {class: 'form-control'} %>
+      </div>
+      <div class="col-md-4">
+        <%= f.label :firecloud_workspace, 'Existing FireCloud Workspace' %><br />
+        <%= f.text_field :firecloud_workspace, class: 'form-control', disabled: !@study.use_existing_workspace %>
+      </div>
+      <% else %>
+        <div class="col-md-4">
+          <%= f.label :firecloud_workspace, 'FireCloud Workspace' %><br />
+          <%= f.text_field :firecloud_workspace, class: 'form-control', readonly: true, title: 'You may not change the workspace of an existing study', data: {toggle: 'tooltip'} %>
+        </div>
+      <% end %>
+
 	</div>
   <% if current_user.available_branding_groups.any? %>
     <div class="form-group">
