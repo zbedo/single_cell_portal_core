@@ -142,7 +142,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # return a valid access token
   #
   # * *return*
-  #   - +Boolean+ of token expiration
+  #   - +Hash+ of access token
   def valid_access_token
     self.access_token_expired? ? self.refresh_access_token : self.access_token
   end
