@@ -98,7 +98,12 @@
     {id: 'cluster2',  shape: ideoAnnotShape}
   ];
 
-  var accessToken = '<%= user_signed_in? ? current_user.valid_access_token[:access_token] : nil %>';
+  <% if user_signed_in? %>
+  var accessToken = '<%= current_user.valid_access_token[:access_token] %>';
+  <% else %>
+  var accessToken = '<%= Study.read_only_firecloud_client.access_token["access_token"] %>';
+  <% end %>
+
   var annotationsPath = '<%= raw @study.get_analysis_outputs('infercnv', 'ideogram.js').first.api_url %>';
 
   // Intercept requests to add bearer token, enabling direct load of files from GCS
