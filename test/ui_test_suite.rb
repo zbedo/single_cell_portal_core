@@ -531,7 +531,78 @@ class UiTestSuite < Test::Unit::TestCase
 		study_file_count = @driver.find_element(:id, "gzip-parse-#{$random_seed}-study-file-count")
 		assert study_file_count.text == '1', "found incorrect number of study files; expected 1 and found #{study_file_count.text}"
 		puts "Test method: #{self.method_name} successful!"
-	end
+  end
+
+  # test embargo functionality
+  test 'admin: create-study: embargo' do
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    # log in first
+    @driver.get @base_url
+    login($test_email, $test_email_password)
+    @driver.get @base_url + '/studies/new'
+
+    # fill out study form
+    study_form = @driver.find_element(:id, 'new_study')
+    study_form.find_element(:id, 'study_name').send_keys("Embargo Study #{$random_seed}")
+    embargo_date = (Date.today + 1).to_s
+    study_form.find_element(:id, 'study_embargo').send_keys(embargo_date)
+
+    # save study
+    save_study = @driver.find_element(:id, 'save-study')
+    save_study.click
+
+    # upload expression matrix
+    close_modal('message_modal')
+    upload_expression = @driver.find_element(:id, 'upload-expression')
+    upload_expression.send_keys(@test_data_path + 'expression_matrix_example.txt')
+    wait_for_render(:id, 'start-file-upload')
+    upload_btn = @driver.find_element(:id, 'start-file-upload')
+    upload_btn.click
+    # close modal
+    close_modal('upload-success-modal')
+
+    # verify user can still download data
+    embargo_url = @base_url + "/study/embargo-study-#{$random_seed}"
+    @driver.get embargo_url
+    @wait.until {element_present?(:id, 'study-download')}
+    open_ui_tab('study-download')
+    i = 0
+    link_present = element_present?(:class, 'dl-link')
+    while !link_present
+      sleep 1
+      @driver.get embargo_url
+      @wait.until {element_present?(:id, 'study-download')}
+      open_ui_tab('study-download')
+      link_present = element_present?(:class, 'dl-link')
+      i += 1
+    end
+    download_links = @driver.find_elements(:class, 'dl-link')
+    assert download_links.size == 1, "did not find correct number of download links, expected 1 but found #{download_links.size}"
+
+    # logout
+    logout_from_portal
+
+    # login as share user
+    login_as_other($share_email, $share_email_password)
+
+    # now assert download links do not load
+    @driver.get embargo_url
+    @wait.until {element_present?(:id, 'study-download')}
+    open_ui_tab('study-download')
+    embargo_links = @driver.find_elements(:class, 'embargoed-file')
+    assert embargo_links.size == 1, "did not find correct number of embargo links, expected 1 but found #{embargo_links.size}"
+
+    # make sure embargo redirect is in place
+    data_url = @base_url + "/data/public/embargo-study-#{$random_seed}?filename=expression_matrix_example.txt"
+    @driver.get data_url
+    wait_for_modal_open('message_modal')
+    alert_text = @driver.find_element(:id, 'alert-content').text
+    expected_alert = "You may not download any data from this study until #{(Date.today + 1).strftime("%B %-d, %Y")}."
+    assert alert_text == expected_alert, "did not find correct alert, expected '#{expected_alert}' but found '#{alert_text}'"
+
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+  end
 
 	##
 	## STUDY VALIDATION
@@ -539,7 +610,7 @@ class UiTestSuite < Test::Unit::TestCase
 	##
 
 	# verify that recently created study uploaded to firecloud
-	test 'admin: create-study: verify firecloud workspace' do
+	test 'admin: validation: verify firecloud workspace' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		@driver.get @base_url
@@ -576,137 +647,9 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
 
-	# test to verify deleting files removes them from gcs buckets
-	test 'admin: create-study: delete study file' do
-		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
-
-		@driver.get @base_url
-		login($test_email, $test_email_password)
-		path = @base_url + '/studies'
-		@driver.get path
-
-		add_files = @driver.find_element(:class, "test-study-#{$random_seed}-upload")
-		add_files.click
-		misc_tab = @driver.find_element(:id, 'initialize_misc_form_nav')
-		misc_tab.click
-
-		# test abort functionality first
-		add_misc = @driver.find_element(:class, 'add-misc')
-		add_misc.click
-		new_misc_form = @driver.find_element(:class, 'new-misc-form')
-		upload_doc = new_misc_form.find_element(:class, 'upload-misc')
-		upload_doc.send_keys(@test_data_path + 'README.txt')
-		wait_for_render(:id, 'start-file-upload')
-		cancel = @driver.find_element(:class, 'cancel')
-		cancel.click
-		sleep(3)
-		close_modal('study-file-notices')
-
-		# delete file from test study
-		form = @driver.find_element(:class, 'initialize_misc_form')
-		delete = form.find_element(:class, 'delete-file')
-		delete.click
-		accept_alert
-
-		# wait a few seconds to allow delete call to propogate all the way to FireCloud after confirmation modal
-		close_modal('study-file-notices')
-		sleep(3)
-
-		@driver.get path
-		files = @driver.find_element(:id, "test-study-#{$random_seed}-study-file-count")
-		assert files.text == '9', "did not find correct number of files, expected 9 but found #{files.text}"
-
-		# verify deletion in google
-		show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
-		show_study.click
-		gcs_link = @driver.find_element(:id, 'gcs-link')
-		gcs_link.click
-		@driver.switch_to.window(@driver.window_handles.last)
-    sleep(1)
-		# select the correct user
-		user_link = @driver.find_element(:xpath, "//p[@data-email='#{$test_email}']")
-		user_link.click
-		table = @driver.find_element(:id, 'p6n-storage-objects-table')
-		table_body = table.find_element(:tag_name, 'tbody')
-		files = table_body.find_elements(:tag_name, 'tr')
-		assert files.size == 9, "did not find correct number of files, expected 9 but found #{files.size}"
-		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
-  end
-
-	# test embargo functionality
-	test 'admin: create-study: embargo' do
-		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
-
-		# log in first
-		@driver.get @base_url
-		login($test_email, $test_email_password)
-		@driver.get @base_url + '/studies/new'
-
-		# fill out study form
-		study_form = @driver.find_element(:id, 'new_study')
-		study_form.find_element(:id, 'study_name').send_keys("Embargo Study #{$random_seed}")
-		embargo_date = (Date.today + 1).to_s
-		study_form.find_element(:id, 'study_embargo').send_keys(embargo_date)
-
-		# save study
-		save_study = @driver.find_element(:id, 'save-study')
-		save_study.click
-
-		# upload expression matrix
-		close_modal('message_modal')
-		upload_expression = @driver.find_element(:id, 'upload-expression')
-		upload_expression.send_keys(@test_data_path + 'expression_matrix_example.txt')
-		wait_for_render(:id, 'start-file-upload')
-		upload_btn = @driver.find_element(:id, 'start-file-upload')
-		upload_btn.click
-		# close modal
-		close_modal('upload-success-modal')
-
-		# verify user can still download data
-		embargo_url = @base_url + "/study/embargo-study-#{$random_seed}"
-		@driver.get embargo_url
-		@wait.until {element_present?(:id, 'study-download')}
-		open_ui_tab('study-download')
-		i = 0
-		link_present = element_present?(:class, 'dl-link')
-		while !link_present
-			sleep 1
-			@driver.get embargo_url
-			@wait.until {element_present?(:id, 'study-download')}
-			open_ui_tab('study-download')
-			link_present = element_present?(:class, 'dl-link')
-			i += 1
-		end
-		download_links = @driver.find_elements(:class, 'dl-link')
-		assert download_links.size == 1, "did not find correct number of download links, expected 1 but found #{download_links.size}"
-
-		# logout
-		logout_from_portal
-
-		# login as share user
-		login_as_other($share_email, $share_email_password)
-
-		# now assert download links do not load
-		@driver.get embargo_url
-		@wait.until {element_present?(:id, 'study-download')}
-		open_ui_tab('study-download')
-		embargo_links = @driver.find_elements(:class, 'embargoed-file')
-		assert embargo_links.size == 1, "did not find correct number of embargo links, expected 1 but found #{embargo_links.size}"
-
-		# make sure embargo redirect is in place
-		data_url = @base_url + "/data/public/embargo-study-#{$random_seed}?filename=expression_matrix_example.txt"
-		@driver.get data_url
-		wait_for_modal_open('message_modal')
-		alert_text = @driver.find_element(:id, 'alert-content').text
-		expected_alert = "You may not download any data from this study until #{(Date.today + 1).strftime("%B %-d, %Y")}."
-		assert alert_text == expected_alert, "did not find correct alert, expected '#{expected_alert}' but found '#{alert_text}'"
-
-		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
-	end
-
 	# negative tests to check file parsing & validation
 	# email delivery is disabled in development, so this just ensures that bad files are removed after parse failure
-	test 'admin: create-study: validation: file parsing' do
+	test 'admin: validation: file parsing' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in first
@@ -795,7 +738,64 @@ class UiTestSuite < Test::Unit::TestCase
 		accept_alert
 		close_modal('message_modal')
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
-  end
+	end
+
+	# test to verify deleting files removes them from gcs buckets
+	test 'admin: validation: delete study file' do
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		@driver.get @base_url
+		login($test_email, $test_email_password)
+		path = @base_url + '/studies'
+		@driver.get path
+
+		add_files = @driver.find_element(:class, "test-study-#{$random_seed}-upload")
+		add_files.click
+		misc_tab = @driver.find_element(:id, 'initialize_misc_form_nav')
+		misc_tab.click
+
+		# test abort functionality first
+		add_misc = @driver.find_element(:class, 'add-misc')
+		add_misc.click
+		new_misc_form = @driver.find_element(:class, 'new-misc-form')
+		upload_doc = new_misc_form.find_element(:class, 'upload-misc')
+		upload_doc.send_keys(@test_data_path + 'README.txt')
+		wait_for_render(:id, 'start-file-upload')
+		cancel = @driver.find_element(:class, 'cancel')
+		cancel.click
+		sleep(3)
+		close_modal('study-file-notices')
+
+		# delete file from test study
+		form = @driver.find_element(:class, 'initialize_misc_form')
+		delete = form.find_element(:class, 'delete-file')
+		delete.click
+		accept_alert
+
+		# wait a few seconds to allow delete call to propogate all the way to FireCloud after confirmation modal
+		close_modal('study-file-notices')
+		sleep(3)
+
+		@driver.get path
+		files = @driver.find_element(:id, "test-study-#{$random_seed}-study-file-count")
+		assert files.text == '9', "did not find correct number of files, expected 9 but found #{files.text}"
+
+		# verify deletion in google
+		show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
+		show_study.click
+		gcs_link = @driver.find_element(:id, 'gcs-link')
+		gcs_link.click
+		@driver.switch_to.window(@driver.window_handles.last)
+		sleep(1)
+		# select the correct user
+		user_link = @driver.find_element(:xpath, "//p[@data-email='#{$test_email}']")
+		user_link.click
+		table = @driver.find_element(:id, 'p6n-storage-objects-table')
+		table_body = table.find_element(:tag_name, 'tbody')
+		files = table_body.find_elements(:tag_name, 'tr')
+		assert files.size == 9, "did not find correct number of files, expected 9 but found #{files.size}"
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+	end
 
   # test uniqueness constraints on firecloud workspace names
   # this depends on the "development-sync-test-study" workspace being present that is used later for testing sync functionality
@@ -1003,7 +1003,7 @@ class UiTestSuite < Test::Unit::TestCase
 	# this test depends on a workspace already existing in FireCloud called development-sync-test
 	# if this study has been deleted, this test will fail until the workspace is re-created with at least
 	# 3 default files for expression, metadata, one cluster, and one fastq file (using the test data from test/test_data)
-	test 'admin: sync-study: bulk: existing workspace' do
+	test 'admin: create-study: sync-study: bulk: existing workspace' do
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
 		# log in first
