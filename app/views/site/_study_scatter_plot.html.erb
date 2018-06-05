@@ -16,21 +16,11 @@ var data = [];
 		mode: 'markers',
 		type: '<%= @plot_type %>',
     opacity: <%= @study.default_cluster_point_alpha %>,
-    <% if !data[:marker].nil? %>
-      marker: <%= raw data[:marker].to_json %>
-    <% else %>
-      marker: {
-        color: colorBrewerSet[<%= index %> % 27],
-        size: <%= raw data[:marker_size] %>,
-        line: {
-          color: plotlyDefaultLineColor,
-          width: <%= @study.show_cluster_point_borders? ? 0.5 : 0 %>
-        }
-      }
-    <% end %>
-
+    marker: <%= raw data[:marker].to_json %>
 	};
 
+  // set color
+  cluster_<%= index %>['marker']['color'] = colorBrewerSet[<%= index %> % 27];
   data.push(cluster_<%= index %>);
 <% end %>
 
