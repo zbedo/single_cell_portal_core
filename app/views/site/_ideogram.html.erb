@@ -98,11 +98,7 @@
     {id: 'cluster2',  shape: ideoAnnotShape}
   ];
 
-  <% if user_signed_in? %>
-  var accessToken = '<%= current_user.valid_access_token[:access_token] %>';
-  <% else %>
-  var accessToken = '<%= Study.read_only_firecloud_client.valid_access_token["access_token"] %>';
-  <% end %>
+  var accessToken = '<%= get_read_access_token(@study, current_user) %>';
 
   var annotationsPath = '<%= raw @study.get_analysis_outputs('infercnv', 'ideogram.js').first.api_url %>';
 
