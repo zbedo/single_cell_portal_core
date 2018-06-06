@@ -140,7 +140,7 @@ class SiteController < ApplicationController
 
     # else, determine which view to load (heatmaps vs. violin/scatter)
     if !consensus.blank?
-      redirect_to merge_default_redirect_params(view_gene_set_expression_path(study_name: params[:study_name], search: {genes: @terms.join(' ')},
+      redirect_to merge_default_redirect_params(view_gene_set_expression_path(study_name: params[:study_name], search: {genes: @terms.join(',')},
                                                                               cluster: cluster, annotation: annotation,
                                                                               consensus: consensus, subsample: subsample,
                                                                               plot_type: plot_type, kernel_type: kernel_type,
@@ -149,7 +149,7 @@ class SiteController < ApplicationController
                                                                               heatmap_size: heatmap_size),
                                                 scpbr: params[:scpbr])
     else
-      redirect_to merge_default_redirect_params(view_gene_expression_heatmap_path(search: {genes: @terms.join(' ')}, cluster: cluster,
+      redirect_to merge_default_redirect_params(view_gene_expression_heatmap_path(search: {genes: @terms.join(',')}, cluster: cluster,
                                                                                   annotation: annotation, plot_type: plot_type,
                                                                                   kernel_type: kernel_type, band_type: band_type,
                                                                                   boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering,
@@ -374,7 +374,7 @@ class SiteController < ApplicationController
     @genes, @not_found = search_expression_scores(terms)
 
     consensus = params[:consensus].nil? ? 'Mean ' : params[:consensus].capitalize + ' '
-    @gene_list = @genes.map{|gene| gene['name']}.join(' ')
+    @gene_list = @genes.map{|gene| gene['name']}.join(',')
     @y_axis_title = consensus + ' ' + load_expression_axis_title
     # depending on annotation type selection, set up necessary partial names to use in rendering
     @options = load_cluster_group_options
@@ -401,7 +401,7 @@ class SiteController < ApplicationController
     @genes = load_expression_scores(terms)
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
     consensus = params[:consensus].nil? ? 'Mean ' : params[:consensus].capitalize + ' '
-    @gene_list = @genes.map{|gene| gene['gene']}.join(' ')
+    @gene_list = @genes.map{|gene| gene['gene']}.join(',')
     @y_axis_title = consensus + ' ' + load_expression_axis_title
     # depending on annotation type selection, set up necessary partial names to use in rendering
     if @selected_annotation[:type] == 'group'
@@ -460,7 +460,7 @@ class SiteController < ApplicationController
     # parse and divide up genes
     terms = parse_search_terms(:genes)
     @genes, @not_found = search_expression_scores(terms)
-    @gene_list = @genes.map{|gene| gene['name']}.join(' ')
+    @gene_list = @genes.map{|gene| gene['name']}.join(',')
     # load dropdown options
     @options = load_cluster_group_options
     @cluster_annotations = load_cluster_group_annotations
@@ -1944,9 +1944,9 @@ class SiteController < ApplicationController
   def parse_search_terms(key)
     terms = params[:search][key]
     if terms.is_a?(Array)
-      terms.first.split(/[\s\n,]/).map(&:strip)
+      terms.first.split(/[\n,]/).map(&:strip)
     else
-      terms.split(/[\s\n,]/).map(&:strip)
+      terms.split(/[\n,]/).map(&:strip)
     end
   end
 
