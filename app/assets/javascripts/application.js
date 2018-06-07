@@ -218,7 +218,7 @@ function paginateStudies(totalPages, order, searchString, project) {
         dataParams["search_terms"] = searchString;
     }
     if (project !== "") {
-        dataParams["branding_group"] = project;
+        dataParams["scpbr"] = project;
     }
     $("#pagination").fadeOut("fast", function() {
             $.ajax({
