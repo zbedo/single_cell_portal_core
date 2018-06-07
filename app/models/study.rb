@@ -2249,9 +2249,11 @@ class Study
 
   # set access for the readonly service account if a study is public
   def set_readonly_access
-    access_level = self.public? ? 'READER' : 'NO ACCESS'
-    readonly_acl = Study.firecloud_client.create_workspace_acl(Study.read_only_firecloud_client.issuer, access_level, false, false)
-    Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, readonly_acl)
+    if self.firecloud_workspace?
+      access_level = self.public? ? 'READER' : 'NO ACCESS'
+      readonly_acl = Study.firecloud_client.create_workspace_acl(Study.read_only_firecloud_client.issuer, access_level, false, false)
+      Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, readonly_acl)
+    end
   end
 
   private
