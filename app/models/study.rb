@@ -9,6 +9,7 @@ class Study
 
   include Mongoid::Document
   include Mongoid::Timestamps
+  extend ValidationTools
 
   ###
   #
@@ -232,6 +233,10 @@ class Study
       end
     end
   end
+
+  # XSS protection
+  validate :strip_unsafe_characters_from_description
+  validates :name, format: ValidationTools::ALPHANUMERIC_WITH_WHITESPACE
 
   # update validators
   validates_uniqueness_of :name, on: :update, message: ": %{value} has already been taken.  Please choose another name."
@@ -2518,5 +2523,9 @@ class Study
     else
       true
     end
+  end
+
+  def strip_unsafe_characters_from_description
+    self.description = self.description.gsub(ValidationTools::SCRIPT_TAG_REGEX, '')
   end
 end

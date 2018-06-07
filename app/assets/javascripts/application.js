@@ -10,7 +10,7 @@
 // Read Sprockets README (https://github.com/rails/sprockets#sprockets-directives) for details
 // about supported directives.
 //
-//= require jquery2
+//= require jquery3
 //= require jquery_ujs
 //= require ckeditor/init
 //= require dataTables/jquery.dataTables
@@ -868,7 +868,7 @@ function validateUnique(formId, textFieldClass) {
 // validate a name that will be used as a URL query string parameter (remove unsafe characters)
 function validateName(value, selector) {
     if ( value.match(UNSAFE_CHARACTERS) ) {
-        alert('You have entered invalid characters for cluster/gene list names: \"' + value.match(UNSAFE_CHARACTERS).join(', ') + '\".  These have been automatically removed from the entered value.');
+        alert('You have entered invalid characters for this input: \"' + value.match(UNSAFE_CHARACTERS).join(', ') + '\".  These have been automatically removed from the entered value.');
         sanitizedName = value.replace(UNSAFE_CHARACTERS, '');
         selector.val(sanitizedName);
         selector.parent().addClass('has-error');
