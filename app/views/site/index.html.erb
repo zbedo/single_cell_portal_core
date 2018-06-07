@@ -7,7 +7,7 @@
         <%= text_field_tag :search_terms, nil, class: 'form-control', placeholder: 'Search Studies...' %>
         <%= hidden_field_tag :order, params[:order].nil? ? "" : params[:order] %>
         <% if @selected_branding_group.present? %>
-          <%= hidden_field_tag :brand, @selected_branding_group.name_as_id %>
+          <%= hidden_field_tag :scpbr, @selected_branding_group.name_as_id %>
         <% end %>
         <div class="input-group-btn">
           <button class="btn btn-info" type="submit" name="commit" id="submit-search"><span class="fa fa-search"></span></button>
