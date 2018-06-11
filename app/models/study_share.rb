@@ -23,7 +23,9 @@ class StudyShare
 	field :permission, type: String, default: 'View'
   field :deliver_emails, type: Boolean, default: true
 
-	validates_uniqueness_of :email, scope: :study_id
+  validates :email,
+            uniqueness: true, scope: :study_id,
+            format: Devise.email_regexp
 
 	index({ email: 1, study_id: 1 }, { unique: true, background: true })
 

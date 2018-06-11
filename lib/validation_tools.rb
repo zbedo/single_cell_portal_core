@@ -1,6 +1,8 @@
 module ValidationTools
   SCRIPT_TAG_REGEX = /(\<|\&lt;)script.*(\>|\&gt;).*(\<|\&lt;)\/script(\>|\&gt;)/
-  UNSAFE_URL_CHARACTERS = /[\;\/\?\:\@\=\&\'\"\<\>\#\%\{\}\|\\\^\~\[\]\`]/
-  ALPHANUMERIC_ONLY = /[^a-zA-Z0-9]+/
-  ALPHANUMERIC_WITH_WHITESPACE = /[^a-zA-Z0-9\s]+/
+  URL_SAFE_CHARS = /\A[\w+\s?]+[^\;\/\?\:\@\=\&\'\"\<\>\#\%\{\}\|\\\^\~\[\]\`]\z/
+  ALPHANUMERIC_ONLY = /\A\w*\Z/
+  ALPHANUMERIC_SPACE_DASH = /\A[\w+\s?\-]*\z/
+  # an extended regex with some slightly 'unsafe' non-word characters added in
+  ALPHANUMERIC_EXTENDED = /\A[\w+\s?[\-\!\@\#\%\^\*\(\)\.\,]+]*\z/
 end

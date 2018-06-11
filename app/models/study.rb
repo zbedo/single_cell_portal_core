@@ -236,7 +236,7 @@ class Study
 
   # XSS protection
   validate :strip_unsafe_characters_from_description
-  validates :name, format: ValidationTools::ALPHANUMERIC_WITH_WHITESPACE
+  validates :name, format: ValidationTools::ALPHANUMERIC_SPACE_DASH
 
   # update validators
   validates_uniqueness_of :name, on: :update, message: ": %{value} has already been taken.  Please choose another name."

@@ -21,7 +21,9 @@ class UserAnnotationShare
 	field :email, type: String
 	field :permission, type: String, default: 'View'
 
-	validates_uniqueness_of :email, scope: :user_annotation_id
+	validates :email, format: Devise.email_regexp
+  validates :permission, format: ValidationTools::ALPHANUMERIC_ONLY
+  validates_uniqueness_of :email, scope: :user_annotation_id
 
 	index({ email: 1, user_annotation_id: 1 }, { unique: true, background: true })
 
