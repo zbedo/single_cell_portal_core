@@ -15,8 +15,6 @@ class ApplicationController < ActionController::Base
   before_action :get_download_quota
   before_action :set_selected_branding_group
 
-  rescue_from ActionController::InvalidAuthenticityToken, with: :session_expired
-
   # auth action for portal admins
   def authenticate_admin
     unless current_user.admin?
