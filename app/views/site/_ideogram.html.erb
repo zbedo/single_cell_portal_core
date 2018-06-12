@@ -1,137 +1,90 @@
 <script>
 
-  function getGenomicRange(annot) {
-    var chr, start, stop, startString, stopString, genomicRange;
-
-    // Get genomic range
-    chr = annot.chr;
-    start = annot.start;
-    stop = start + annot.length;
-    startString = start.toLocaleString();
-    stopString = stop.toLocaleString();
-    genomicRange = 'chr' + chr + ':' + startString + '-' + stopString;
-
-    return genomicRange;
-  }
-
-  function getEnsemblLink(annot) {
-    var url, link;
-    url = 'https://www.ensembl.org/' + annot.id;
-    link = '<a target="_blank" href="' + url + '">' + annot.name + '</a>';
-    return link;
-  }
-
-  function writeAnnotsTable() {
-
-    var chr, annots, datum, row, header, table, annotsContainer, keys,
-        genomicRange, ensemblLink, key, i, j, k, displayKeys;
-
-    rows = [];
-
-    annotsContainer = ideogram.annots;
-
-    keys = ideogram.rawAnnots.keys;
-
-    for (i = 0; i < annotsContainer.length; i++) {
-      chr = annotsContainer[i].chr;
-      annots = annotsContainer[i].annots;
-      for (j = 0; j < annots.length; j++) {
-        annot = annots[j];
-        row = [];
-
-        genomicRange = getGenomicRange(annot);
-        ensemblLink = getEnsemblLink(annot);
-
-        for (k = 0; k < keys.length; k++) {
-          key = keys[k];
-          if (key === 'name') {
-            datum = ensemblLink;
-          } else if (key === 'start') {
-            datum = genomicRange;
-          } else if (key === 'id') {
-            continue;
-          } else {
-            datum = annot[key];
-          }
-          row.push(datum)
-
-        }
-        row = '<tr><td>' + row.join('</td><td>') + '</td></tr>';
-        rows.push(row);
-      }
-    }
-
-    displayKeys = [];
-    for (i = 0; i < keys.length; i++) {
-      key = keys[i];
-      if (key == 'start') {
-        key = 'Genomic range';
-      } else if (key === 'id') {
-        continue;
-      } else {
-        key = key[0].toUpperCase() + key.slice(1);
-      }
-      displayKeys.push(key)
-    }
-
-    header = '<tr><th>' + displayKeys.join('</th><th>') + '</th></tr>';
-
-    table =
-      '<table class="table table-striped table-sm">' +
-        '<thead>' + header + '</thead>' +
-        '<tbody>' + rows + '</tbody>' +
-      '</table>';
-
-    $('#ideogram-container').append(table);
-  }
-
-  function deserializeAnnotTracks() {
-
-    var t0 = new Date().getTime();
-
-    var raContainer, chr, rawAnnots, ra,
-      newRaContainers, newRa, newRas, expressionValues, expressionValue, color,
-      keys = ideogram.rawAnnots.keys,
-      rawAnnotContainers = ideogram.rawAnnots.annots;
-
-    newRaContainers = [];
-
-    for (var i = 0; i < rawAnnotContainers.length; i++) {
-      raContainer = rawAnnotContainers[i];
-      chr = raContainer.chr;
-      rawAnnots = raContainer.annots;
-      newRas = [];
-      for (var j = 0; j < rawAnnots.length; j++) {
-        ra = rawAnnots[j]; // [name, start, length, exp_1, exp_2, ...]
-        expressionValues = ra.slice(3,);
-        for (var k = 0; k < expressionValues.length; k++) {
-          expressionValue = expressionValues[k]
-          newRa = ra.slice(0, 3); // name, start, length
-          if (expressionValue > 0) {
-            color = '#FFA500'; // orange
-          } else if (expressionValue < 0) {
-            color = '#551ABB'; // purple
-          } else {
-            color = '#CCC';
-          }
-          newRa.push(k, color, expressionValue); // track index, exp_k
-          newRas.push(newRa);
-        }
-      }
-      newRaContainers.push({chr: chr, annots: newRas});
-    }
-
-    keys.splice(3, 0, 'trackIndex');
-    keys.splice(4, 0, 'color');
-    ideogram.rawAnnots.keys = keys;
-    ideogram.rawAnnots.annots = newRaContainers;
-
-    var t1 = new Date().getTime();
-
-    if (ideogram.config.debug) {
-      console.log('Time in deserializeAnnotTracks: ' + (t1 - t0) + ' ms');
-    }
-  }
+//    Not used currently, but perhaps later.
+//   function getGenomicRange(annot) {
+//     var chr, start, stop, startString, stopString, genomicRange;
+//
+//     // Get genomic range
+//     chr = annot.chr;
+//     start = annot.start;
+//     stop = start + annot.length;
+//     startString = start.toLocaleString();
+//     stopString = stop.toLocaleString();
+//     genomicRange = 'chr' + chr + ':' + startString + '-' + stopString;
+//
+//     return genomicRange;
+//   }
+//
+//   function getEnsemblLink(annot) {
+//     var url, link;
+//     url = 'https://www.ensembl.org/' + annot.id;
+//     link = '<a target="_blank" href="' + url + '">' + annot.name + '</a>';
+//     return link;
+//   }
+//
+//   function writeAnnotsTable() {
+//
+//     var chr, annots, datum, row, header, table, annotsContainer, keys,
+//         genomicRange, ensemblLink, key, i, j, k, displayKeys;
+//
+//     rows = [];
+//
+//     annotsContainer = ideogram.annots;
+//
+//     keys = ideogram.rawAnnots.keys;
+//
+//     for (i = 0; i < annotsContainer.length; i++) {
+//       chr = annotsContainer[i].chr;
+//       annots = annotsContainer[i].annots;
+//       for (j = 0; j < annots.length; j++) {
+//         annot = annots[j];
+//         row = [];
+//
+//         genomicRange = getGenomicRange(annot);
+//         ensemblLink = getEnsemblLink(annot);
+//
+//         for (k = 0; k < keys.length; k++) {
+//           key = keys[k];
+//           if (key === 'name') {
+//             datum = ensemblLink;
+//           } else if (key === 'start') {
+//             datum = genomicRange;
+//           } else if (key === 'id') {
+//             continue;
+//           } else {
+//             datum = annot[key];
+//           }
+//           row.push(datum)
+//
+//         }
+//         row = '<tr><td>' + row.join('</td><td>') + '</td></tr>';
+//         rows.push(row);
+//       }
+//     }
+//
+//     displayKeys = [];
+//     for (i = 0; i < keys.length; i++) {
+//       key = keys[i];
+//       if (key == 'start') {
+//         key = 'Genomic range';
+//       } else if (key === 'id') {
+//         continue;
+//       } else {
+//         key = key[0].toUpperCase() + key.slice(1);
+//       }
+//       displayKeys.push(key)
+//     }
+//
+//     header = '<tr><th>' + displayKeys.join('</th><th>') + '</th></tr>';
+//
+//     table =
+//       '<table class="table table-striped table-sm">' +
+//         '<thead>' + header + '</thead>' +
+//         '<tbody>' + rows + '</tbody>' +
+//       '</table>';
+//
+//     $('#ideogram-container').append(table);
+//   }
 
   var annotHeight = 3.5;
   var ideoAnnotShape =
@@ -140,25 +93,61 @@
     'l 0 -' + (2 * annotHeight) + 'z';
 
   var annotationTracks = [
-    {id: 'highExpressionTrack', displayName: 'High expression', color: '#FFA500', shape: ideoAnnotShape},
-    {id: 'mediumExpressionTrack', displayName: 'Medium expression', color: '#CCC', shape: ideoAnnotShape},
-    {id: 'lowExpressionTrack',  displayName: 'Low expression', color: '#551A8B', shape: ideoAnnotShape}
+    {id: 'all', shape: ideoAnnotShape},
+    {id: 'cluster1', shape: ideoAnnotShape},
+    {id: 'cluster2',  shape: ideoAnnotShape}
   ];
 
-  var requestToken = '<%= user_signed_in? ? current_user.id.to_s + ':' + current_user.authentication_token : nil %>';
-  var annotationsPath = '<%= fetch_data_path(study_name: @study.url_safe_name, filename: @analysis_outputs['ideogram.js']) %>&request_user_token=' + requestToken;
+  var accessToken = '<%= get_read_access_token(@study, current_user) %>';
+
+  var annotationsPath = '<%= raw @study.get_analysis_outputs('infercnv', 'ideogram.js').first.api_url %>';
+
+  // Intercept requests to add bearer token, enabling direct load of files from GCS
+  var originalFetch = window.fetch;
+  window.fetch = function () {
+    var myHeaders = new Headers({
+      'Authorization': 'Bearer ' + accessToken
+    });
+    arguments[1] = {headers: myHeaders};
+    return originalFetch.apply(this, arguments)
+  };
+
+  function makeIdeogramOverflowScrollable() {
+    var ideoWidth, ideoContainer, ideoSvg, ideo, config;
+
+    ideo = ideogram;
+    config = ideo.config;
+
+    ideoWidth = ideo.numChromosomes * (config.chrWidth + config.chrMargin);
+    ideoContainer = d3.selectAll(ideogram.config.container);
+    ideoSvg = d3.selectAll(ideogram.config.container + ' svg#_ideogram');
+
+    ideoContainer.style({'max-width': ideoWidth + 'px', 'overflow-x': 'scroll'});
+    ideoSvg.style({'min-width': ideoWidth + 'px'});
+  }
+
+  var heatmapThresholds = [
+    ['-0.001', '#551ABB'], // If expression value < 0 (-0.001), color bin purple
+    ['0', '#CCC'], // If value == 0, use grey
+    ['+', '#FFA500'] // If value > 0, use orange
+  ];
 
   var ideogram = new Ideogram({
     container: '#ideogram-container',
     organism: 'human',
     assembly: 'GRCh38',
     chrHeight: 400,
-    dataDir: 'https://unpkg.com/ideogram@0.16.0/dist/data/bands/native/',
+    dataDir: 'https://unpkg.com/ideogram@1.1.1/dist/data/bands/native/',
     annotationsPath: annotationsPath,
     annotationTracks: annotationTracks,
     showAnnotTooltip: false, // too many genes, and tooltip positioning issues; hide for now
-    onLoadAnnots: deserializeAnnotTracks,
-    debug: true
+    heatmaps: [
+      {key: 'all', thresholds: heatmapThresholds},
+      {key: 'Cluster 1', thresholds: heatmapThresholds},
+      {key: 'Cluster 2', thresholds: heatmapThresholds}
+    ],
+    debug: true,
+    onLoad: makeIdeogramOverflowScrollable
   });
 
 

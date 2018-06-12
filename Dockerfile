@@ -1,5 +1,5 @@
 # use KDUX base Rails image, configure only project-specific items here
-FROM broadinstitute/kdux-rails-baseimage:1.0
+FROM broadinstitute/kdux-rails-baseimage:1.1
 
 # Set ruby version
 RUN bash -lc 'rvm --default use ruby-2.3.6'
@@ -11,7 +11,8 @@ COPY Gemfile.lock /home/app/webapp/Gemfile.lock
 WORKDIR /home/app/webapp
 RUN bundle install
 COPY set_user_permissions.bash /etc/my_init.d/01_set_user_permissions.bash
-COPY rails_startup.bash /etc/my_init.d/02_rails_startup.bash
+COPY generate_dh_parameters.bash /etc/my_init.d/02_generate_dh_parameters.bash
+COPY rails_startup.bash /etc/my_init.d/03_rails_startup.bash
 
 # Configure NGINX
 RUN rm /etc/nginx/sites-enabled/default

@@ -128,7 +128,7 @@ production:
     default:
       database: single_cell_portal_production
       hosts:
-        - mongodb:27017
+        - <%= ENV['MONGO_LOCALHOST'] %>:27017
       options:
         user: 'single_cell'
         password: '<%= ENV['PROD_DATABASE_PASSWORD'] %>'

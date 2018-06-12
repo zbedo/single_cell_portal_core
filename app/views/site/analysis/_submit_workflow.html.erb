@@ -76,6 +76,7 @@
 
   $('#workflow_identifier').change(function() {
     var selectedWdl = $(this).val();
+    $('#selected-inputs').html('');
     if (selectedWdl !== '') {
       var displayWdlText = selectedWdl.split('--').join('/');
       $('#selected-workflow').html(displayWdlText);
@@ -118,22 +119,28 @@
 
   // main workflow submit function
   $('#submit-workflow').click(function () {
-    var selectedSamples = $('#workflow_samples').val();
-    var selectedWdl = $('#workflow_identifier').val();
-    if (selectedWdl === '') {
-      alert('You must select a workflow before continuing.');
-      $('#workflow_identifier').parent().addClass('has-error');
-      return false;
-    } else if (selectedSamples === null) {
-      alert('You must create and select a sample in your workspace before submitting a workflow.');
-      $('#workflow_samples').parent().addClass('has-error');
-      return false;
-    } else {
-      $('#generic-modal-title').html('Submitting... Please wait.');
-      launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
-        return true;
-      });
-    }
+      var inputs;
+      if ($('#workflow_inputs_samples').length == 0) {
+          inputs = $('#workflow_inputs_input_file').val()
+      } else {
+          inputs = $('#workflow_inputs_samples').val()
+      }
+      var selectedSamples = $('#workflow_input_samples').val();
+      var selectedWdl = $('#workflow_identifier').val();
+      if (selectedWdl === '') {
+          alert('You must select a workflow before continuing.');
+          $('#workflow_identifier').parent().addClass('has-error');
+          return false;
+      } else if (inputs === null || typeof inputs === 'undefined' || inputs === '') {
+          alert('You must create and select an input before submitting a workflow.');
+          $('#workflow_samples').parent().addClass('has-error');
+          return false;
+      } else {
+          $('#generic-modal-title').html('Submitting... Please wait.');
+          launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+              return true;
+          });
+      }
   });
 
   // workflow submit wizard

@@ -25,13 +25,16 @@ EOF
 # defaults
 PASSENGER_APP_ENV="development"
 COMMAND="bin/boot_docker"
-while getopts "p:s:f:c:e:bH" OPTION; do
+while getopts "p:s:r:f:c:e:bH" OPTION; do
 case $OPTION in
 	p)
 		VAULT_SECRET_PATH="$OPTARG"
 		;;
 	s)
 		SERVICE_ACCOUNT_PATH="$OPTARG"
+		;;
+	r)
+		READ_ONLY_SERVICE_ACCOUNT_PATH="$OPTARG"
 		;;
 	f)
 		CONFIG_FILE_PATH="$OPTARG"
@@ -96,6 +99,15 @@ if [ -n $SERVICE_ACCOUNT_PATH ] ; then
 	export GOOGLE_CLIENT_ID=$(echo $CREDS_VALS | jq --raw-output .data.client_id)
 	echo "setting value for GOOGLE_CLOUD_PROJECT"
 	export GOOGLE_CLOUD_PROJECT=$(echo $CREDS_VALS | jq --raw-output .data.project_id)
+fi
+
+# now load public read-only service account credentials
+if [ -n $READ_ONLY_SERVICE_ACCOUNT_PATH ] ; then
+	READ_ONLY_CREDS_VALS=`vault read -format=json $READ_ONLY_SERVICE_ACCOUNT_PATH`
+	READ_ONLY_JSON_CONTENTS=`echo $READ_ONLY_CREDS_VALS | jq --raw-output .data`
+	echo "setting value for READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON"
+	export READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON=$(echo -n $READ_ONLY_JSON_CONTENTS)
+	COMMAND=$COMMAND" -K /home/app/webapp/config/.read_only_service_account.json"
 fi
 # execute requested command
 $COMMAND -e $PASSENGER_APP_ENV

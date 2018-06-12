@@ -317,6 +317,7 @@ class Test::Unit::TestCase
     $verbose ? puts("opening new page: #{url}") : nil
     @driver.execute_script('window.open()')
     @driver.switch_to.window(@driver.window_handles.last)
+    sleep(1)
     @driver.get(url)
   end
 

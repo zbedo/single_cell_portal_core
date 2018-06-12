@@ -136,11 +136,13 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
           # update name to include name of expression file
           exp_file_name = configuration['inputs']['infercnv.expression_file'].split('/').last.gsub(/\"/, '').gsub(/\./, '_')
           exp_config_name = configuration_name + "_#{exp_file_name}"
-          Rails.logger.info "new name: #{exp_config_name}"
           configuration = self.update_workspace_config(configuration, exp_config_name)
           response[:configuration_name] = configuration['name']
         else
           # return immediately as we have no special code to execute for requested workflow
+          sample_name = inputs[:sample_name]
+          response[:entity_value] = sample_name
+          response[:entity_type] = 'sample'
           Rails.logger.info "#{Time.now}: No extra configuration present for #{configuration_namespace}/#{configuration_name}; exiting"
       end
 

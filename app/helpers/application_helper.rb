@@ -4,13 +4,13 @@ module ApplicationHelper
 	def scp_link_to(name, url, html_options={}, &block)
 		if url.start_with?('https') || url.start_with?('/')
 			current_url = request.fullpath
-			if current_url.include?('brand=')
+			if current_url.include?('scpbr=')
 				current_params = current_url.split('?').last.split('&')
-				current_project = current_params.detect {|p| p =~ /brand=/}.gsub(/brand=/, '')
+				current_project = current_params.detect {|p| p =~ /scpbr=/}.gsub(/scpbr=/, '')
 				if !url.include?('?')
-					url += "?brand=#{current_project}"
+					url += "?scpbr=#{current_project}"
 				else
-					url += "&brand=#{current_project}"
+					url += "&scpbr=#{current_project}"
 				end
 			end
 		end
@@ -23,7 +23,7 @@ module ApplicationHelper
 			if params[:search][:gene]
 				@gene
 			elsif !params[:search][:genes].nil?
-				@genes.map{|gene| gene['name']}
+				@genes.map{|gene| gene['name']}.join(',')
 			end
 		elsif params[:gene]
 			params[:gene]
@@ -307,5 +307,18 @@ module ApplicationHelper
 	# convert an email address into string that can be used as a DOM element id
 	def email_as_id(email)
 		email.gsub(/[@\.]/, '-')
+	end
+
+	# return an access token for viewing GCS objects client side, depending on study privacy
+	def get_read_access_token(study, user)
+		if study.public?
+			Study.read_only_firecloud_client.valid_access_token["access_token"]
+		else
+			if user.present?
+				user.valid_access_token[:access_token]
+      else
+        nil
+      end
+		end
 	end
 end

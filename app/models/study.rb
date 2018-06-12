@@ -21,10 +21,15 @@ class Study
 
   # instantiate one FireCloudClient to avoid creating too many tokens
   @@firecloud_client = FireCloudClient.new
+  @@read_only_client = FireCloudClient.new(nil, FireCloudClient::PORTAL_NAMESPACE, ENV['READ_ONLY_SERVICE_ACCOUNT_KEY'])
 
   # getter for FireCloudClient instance
   def self.firecloud_client
     @@firecloud_client
+  end
+
+  def self.read_only_firecloud_client
+    @@read_only_client
   end
 
   # method to renew firecloud client (forces new access token for API and reinitializes storage driver)
@@ -244,6 +249,7 @@ class Study
   # before_save       :verify_default_options
   after_create      :make_data_dir, :set_default_participant
   after_destroy     :remove_data_dir
+  after_save        :set_readonly_access
 
   # search definitions
   index({"name" => "text", "description" => "text"}, {background: true})
@@ -2241,6 +2247,15 @@ class Study
     end
   end
 
+  # set access for the readonly service account if a study is public
+  def set_readonly_access
+    if self.firecloud_workspace?
+      access_level = self.public? ? 'READER' : 'NO ACCESS'
+      readonly_acl = Study.firecloud_client.create_workspace_acl(Study.read_only_firecloud_client.issuer, access_level, false, false)
+      Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, readonly_acl)
+    end
+  end
+
   private
 
   ###
@@ -2356,17 +2371,18 @@ class Study
               end
             end
           end
+
         rescue => e
           # delete workspace on any fail as this amounts to a validation fail
           Rails.logger.info "#{Time.now}: Error creating workspace: #{e.message}"
           # delete firecloud workspace unless error is 409 Conflict (workspace already taken)
-          if e.message != '409 Conflict'
-            Study.firecloud_client.delete_workspace(self.firecloud_project, self.firecloud_workspace)
-            errors.add(:firecloud_workspace, " creation failed: #{e.message}; Please try again.")
-          else
+          if e.message.include?("Workspace #{self.firecloud_project}/#{self.firecloud_workspace} already exists")
             errors.add(:firecloud_workspace, ' - there is already an existing workspace using this name.  Please choose another name for your study.')
             errors.add(:name, ' - you must choose a different name for your study.')
             self.firecloud_workspace = nil
+          else
+            Study.firecloud_client.delete_workspace(self.firecloud_project, self.firecloud_workspace)
+            errors.add(:firecloud_workspace, " creation failed: #{e.message}; Please try again.")
           end
           return false
         end
