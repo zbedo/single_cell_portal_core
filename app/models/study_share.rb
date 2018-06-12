@@ -24,8 +24,8 @@ class StudyShare
   field :deliver_emails, type: Boolean, default: true
 
   validates :email,
-            uniqueness: true, scope: :study_id,
             format: Devise.email_regexp
+  validates_uniqueness_of :email, scope: :study_id
 
 	index({ email: 1, study_id: 1 }, { unique: true, background: true })
 

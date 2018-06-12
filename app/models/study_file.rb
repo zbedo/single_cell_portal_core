@@ -82,6 +82,7 @@ class StudyFile
 
   validates_uniqueness_of :upload_file_name, scope: :study_id, unless: Proc.new {|f| f.human_data?}
   validates_presence_of :name
+  validate :validate_name_by_file_type
 
   ###
   #
@@ -418,6 +419,33 @@ class StudyFile
       else
         # either user has not supplied ranges or is deleting them, so clear entry for cluster_group
         cluster.update(domain_ranges: nil)
+      end
+    end
+  end
+
+  def validate_name_by_file_type
+    case self.file_type
+    when 'Cluster'
+      if self.name !~ ValidationTools::OBJECT_LABELS
+        errors.add(:name, ValidationTools::OBJECT_LABELS_ERROR)
+      end
+    when 'Gene List'
+      if self.name !~ ValidationTools::OBJECT_LABELS
+        errors.add(:name, ValidationTools::OBJECT_LABELS_ERROR)
+      end
+    when 'Fastq'
+      regex = ValidationTools::FILENAME_CHARS
+      error = ValidationTools::FILENAME_CHARS_ERROR
+      if self.human_data?
+        regex = ValidationTools::OBJECT_LABELS
+        error = ValidationTools::OBJECT_LABELS_ERROR
+      end
+      if self.name !~ regex
+        errors.add(:name, error)
+      end
+    else
+      if self.name !~ ValidationTools::FILENAME_CHARS
+        errors.add(:name, ValidationTools::FILENAME_CHARS_ERROR)
       end
     end
   end
