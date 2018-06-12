@@ -627,14 +627,20 @@ class SiteController < ApplicationController
           @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_project, @study.firecloud_workspace, params[:filename], expires: 15)
           current_user.update(daily_download_quota: user_quota)
         else
-          redirect_to view_study_path(@study.url_safe_name), alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
+          redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]), alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
         end
         # redirect directly to file to trigger download
-        redirect_to @signed_url
+        # validate that the signed_url is in fact the correct URL - it must be a GCS link
+        if is_valid_signed_url?(@signed_url)
+          redirect_to @signed_url
+        else
+          redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
+                      alert: 'We are unable to process your download.  Please try again later.' and return
+        end
       else
         # send notification to the study owner that file is missing (if notifications turned on)
         SingleCellMailer.user_download_fail_notification(@study, params[:filename]).deliver_now
-        redirect_to view_study_path, alert: 'The file you requested is currently not available.  Please contact the study owner if you require access to this file.' and return
+        redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]), alert: 'The file you requested is currently not available.  Please contact the study owner if you require access to this file.' and return
       end
     rescue RuntimeError => e
       logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"

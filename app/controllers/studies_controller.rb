@@ -650,7 +650,13 @@ class StudiesController < ApplicationController
                       alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
         end
         # redirect directly to file to trigger download
-        redirect_to @signed_url
+        # validate that the signed_url is in fact the correct URL - it must be a GCS lin
+        if is_valid_signed_url?(@signed_url)
+          redirect_to @signed_url
+        else
+          redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
+                      alert: 'We are unable to process your download.  Please try again later.' and return
+        end
       else
         # send notification to the study owner that file is missing (if notifications turned on)
         SingleCellMailer.user_download_fail_notification(@study, params[:filename]).deliver_now

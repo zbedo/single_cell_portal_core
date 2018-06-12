@@ -1,4 +1,5 @@
 module ValidationTools
+  # Model Tools
   # Regex for validations
   SCRIPT_TAG_REGEX = /(\<|\&lt;)script.*(\>|\&gt;).*(\<|\&lt;)\/script(\>|\&gt;)/
   URL_SAFE_CHARS = /\A[\w+\-]+[^\;\/\?\:\@\=\&\'\"\<\>\#\%\{\}\|\\\^\~\[\]\`]\z/
@@ -15,4 +16,8 @@ module ValidationTools
   URL_SAFE_CHARS_ERROR = 'contains invalid characters. Please use only URL safe characters (e.g. aphanumeric & dashes)'
   FILENAME_CHARS_ERROR = 'contains invalid characters. Please use only alphanumeric, spaces, or the following: - _ . /'
   OBJECT_LABELS_ERROR = 'contains invalid characters. Please use only alphanumeric, spaces, or the following: - _ . / ( ) +'
+
+  # GCS tools
+  GCS_HOSTNAMES = %w(storage.googleapis.com www.googleapis.com)
+  SIGNED_URL_KEYS = %w(GoogleAccessId Expires Signature)
 end

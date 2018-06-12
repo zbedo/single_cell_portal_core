@@ -91,4 +91,12 @@ class ApplicationController < ActionController::Base
     end
     merged_redirect_url
   end
+
+  # validate that a signed_url is valid for redirect (for security purposes)
+  def is_valid_signed_url?(signed_url)
+    uri = URI.parse(signed_url)
+    parsed_query = Rack::Utils.parse_query(uri.query)
+    # return true if the scheme is https, the hostname matches a known GCS host, and the query string parameters have the correct keys
+    uri.scheme == 'https' && ValidationTools::GCS_HOSTNAMES.include?(uri.hostname) && parsed_query.keys == ValidationTools::SIGNED_URL_KEYS
+  end
 end
