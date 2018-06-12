@@ -98,6 +98,7 @@ GEM
       execjs
     backports (3.11.1)
     bcrypt (3.1.11)
+    brakeman (4.3.1)
     bson (4.3.0)
     bson_ext (1.5.1)
     builder (3.2.3)
@@ -384,6 +385,7 @@ PLATFORMS
 DEPENDENCIES
   actionpack-action_caching
   bootstrap-sass!
+  brakeman
   bson_ext
   ckeditor
   coffee-rails (~> 4.1.0)
@@ -429,4 +431,4 @@ DEPENDENCIES
   will_paginate_mongoid
 
 BUNDLED WITH
-   1.16.1
+   1.16.2
