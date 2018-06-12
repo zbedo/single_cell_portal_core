@@ -317,7 +317,7 @@
 	<div class="panel-heading">
 		<div class="panel-title">
       <% if @study.public? %>
-      <%#=% Subtract 1 from count to account for hidden read-only service account %>
+      <%#=% Subtract 1 to account for hidden read-only service account %>
       <h4><%= link_to "Sharing <span class='badge' id='share-count'>#{@study.study_shares.size - 1}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#study-shares', class: 'text-success', 'data-toggle' => 'collapse' %></h4>
       <% else %>
 			<h4><%= link_to "Sharing <span class='badge' id='share-count'>#{@study.study_shares.size}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#study-shares', class: 'text-success', 'data-toggle' => 'collapse' %></h4>
