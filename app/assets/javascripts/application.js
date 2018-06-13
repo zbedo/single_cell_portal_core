@@ -54,6 +54,7 @@
 //= require jquery.stickyPanel
 //= require clipboard.min
 //= require ideogram.min
+//= require igv.min
 
 var fileUploading = false;
 var PAGE_RENDERED = false;

@@ -1,8 +1,10 @@
 <script>
 
-  browser = igv.createBrowser(div, options);
+  var igvContainer, igvOptions, igvBrowser;
 
-  options = {
+  igvContainer = document.getElementById("igv-container");
+
+  igvOptions = {
     locus: "7:55,085,725-55,276,031",
 
     reference: {
@@ -27,4 +29,9 @@
       }
     ]
   };
+
+  igvBrowser = igv.createBrowser(igvContainer, igvContainer);
 </script>
+
+<div id="igv-container">
+</div>
