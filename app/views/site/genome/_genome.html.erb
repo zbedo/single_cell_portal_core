@@ -1,0 +1,8 @@
+<% if @study.has_analysis_outputs?('infercnv', 'ideogram.js')%>
+  <%= render partial: '/site/genome/ideogram' %>
+<% end %>
+
+<%# if @study.has_bam_files %>
+  <%= render partial: '/site/genome/igv' %>
+<%# end %>
+
