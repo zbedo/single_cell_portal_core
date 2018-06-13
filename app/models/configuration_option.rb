@@ -5,8 +5,10 @@ class ConfigurationOption
   field :name, type: String
   field :value, type: String
 
-  validates :name, format: ValidationTools::ALPHANUMERIC_ONLY
+  validates_format_of :name, with: ValidationTools::ALPHANUMERIC_ONLY,
+                      message: ValidationTools::ALPHANUMERIC_ONLY_ERROR
   validates_uniqueness_of :name, scope: :admin_configuration_id
-  validates :value, format: ValidationTools::ALPHANUMERIC_SPACE_DASH
+  validates_format_of :value, with: ValidationTools::ALPHANUMERIC_SPACE_DASH,
+                      message: ValidationTools::ALPHANUMERIC_SPACE_DASH_ERROR
 
 end

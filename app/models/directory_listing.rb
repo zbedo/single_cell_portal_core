@@ -23,6 +23,11 @@ class DirectoryListing
 	field :sync_status, type: Boolean, default: false
 
 	validates_uniqueness_of :name, scope: [:study_id, :file_type]
+	validates_format_of :name, with: ValidationTools::FILENAME_CHARS,
+                      message: ValidationTools::FILENAME_CHARS_ERROR
+  validates_format_of :description, with: ValidationTools::OBJECT_LABELS,
+            unless: proc {|attr| attr.description.blank? },
+            message: ValidationTools::OBJECT_LABELS_ERROR
 
 	index({ name: 1, study_id: 1, file_type: 1 }, { unique: true, background: true })
 

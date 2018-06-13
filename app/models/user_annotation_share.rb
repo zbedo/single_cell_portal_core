@@ -21,8 +21,9 @@ class UserAnnotationShare
 	field :email, type: String
 	field :permission, type: String, default: 'View'
 
-	validates :email, format: Devise.email_regexp
-  validates :permission, format: ValidationTools::ALPHANUMERIC_ONLY
+	validates_format_of :email, with: Devise.email_regexp, message: 'is not a valid email address.'
+	validates_format_of :permission, with: ValidationTools::ALPHANUMERIC_ONLY,
+                      message: ValidationTools::ALPHANUMERIC_ONLY_ERROR
   validates_uniqueness_of :email, scope: :user_annotation_id
 
 	index({ email: 1, user_annotation_id: 1 }, { unique: true, background: true })

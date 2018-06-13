@@ -1081,9 +1081,9 @@ class StudiesController < ApplicationController
   # synchronize a directory_listing object
   def sync_directory_listing
     @directory = DirectoryListing.find(directory_listing_params[:_id])
+    @form = "#directory-listing-#{@directory.id}"
     if @directory.update(directory_listing_params)
       @message = "Directory listing for '#{@directory.name}' successfully synced."
-      @form = "#directory-listing-#{@directory.id}"
       respond_to do |format|
         format.js {render action: 'sync_directory_listing'}
       end
@@ -1180,7 +1180,7 @@ class StudiesController < ApplicationController
   end
 
   def directory_listing_params
-    params.require(:directory_listing).permit(:_id, :name, :description, :sync_status, :file_type)
+    params.require(:directory_listing).permit(:_id, :study_id, :name, :description, :sync_status, :file_type)
   end
 
   def default_options_params

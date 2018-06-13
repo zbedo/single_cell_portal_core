@@ -82,8 +82,27 @@ class StudyFile
 
   validates_uniqueness_of :upload_file_name, scope: :study_id, unless: Proc.new {|f| f.human_data?}
   validates_presence_of :name
-  validates_presence_of :human_fastq_url, if: proc {|attributes| attributes.human_data}
+  validates_presence_of :human_fastq_url, if: proc {|f| f.human_data}
+  validates_format_of :human_fastq_url, with: URI.regexp,
+                      message: 'is not a valid URL', if: proc {|f| f.human_data}
   validate :validate_name_by_file_type
+
+  validates_format_of :description, with: ValidationTools::NO_SCRIPT_TAGS,
+                      message: ValidationTools::NO_SCRIPT_TAGS_ERROR
+
+  validates_format_of :x_axis_label, with: ValidationTools::NO_SCRIPT_TAGS,
+                      message: ValidationTools::NO_SCRIPT_TAGS_ERROR,
+                      if: proc {|f| f.x_axis_label.present?}
+  validates_format_of :y_axis_label, with: ValidationTools::NO_SCRIPT_TAGS,
+                      message: ValidationTools::NO_SCRIPT_TAGS_ERROR,
+                      if: proc {|f| f.y_axis_label.present?}
+  validates_format_of :z_axis_label, with: ValidationTools::NO_SCRIPT_TAGS,
+                      message: ValidationTools::NO_SCRIPT_TAGS_ERROR,
+                      if: proc {|f| f.z_axis_label.present?}
+
+  validates_format_of :generation, with: /\A\d+\z/, if: proc {|f| f.generation.present?}
+
+  validates_inclusion_of :file_type, in: STUDY_FILE_TYPES
 
   ###
   #

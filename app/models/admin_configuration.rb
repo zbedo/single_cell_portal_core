@@ -20,7 +20,7 @@ class AdminConfiguration
                           message: ": '%{value}' has already been set.  Please edit the corresponding entry to update.",
                           unless: proc {|attributes| attributes['config_type'] == 'Workflow Name'}
 
-  validates :value, format: ValidationTools::ALPHANUMERIC_SPACE_DASH
+  validates_format_of :value, with: ValidationTools::ALPHANUMERIC_SPACE_DASH, message: ValidationTools::ALPHANUMERIC_SPACE_DASH_ERROR
 
   FIRECLOUD_ACCESS_NAME = 'FireCloud Access'
   API_NOTIFIER_NAME = 'API Health Check Notifier'
