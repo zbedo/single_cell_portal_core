@@ -6,7 +6,7 @@ module ValidationTools
   # Model Tools
   # Regex for validations
   SCRIPT_TAG_REGEX = /(\<|\&lt;)script.*(\>|\&gt;).*(\<|\&lt;)\/script(\>|\&gt;)/
-  NO_SCRIPT_TAGS = /\A.*[^(\<|\&lt;)\/?script.*(\>|\&gt;)].*\z/
+  NO_SCRIPT_TAGS = /\A.*[^<script.*>.*<\/script>]+\z/
   NO_JS_FUNCTIONS = /\A.*javascript\:.*\z/
 
   ALPHANUMERIC_ONLY = /\A\w*\z/
