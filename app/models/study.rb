@@ -665,6 +665,16 @@ class Study
     self.study_files.where('options.analysis_name' => analysis_name, 'options.visualization_name' => visualization_name)
   end
 
+  def has_bam_files
+    has_bam = false
+    self.study_files.each do |f|
+      if f.name[-3, 3] == 'bam'
+        has_bam = true
+      end
+    end
+    has_bam
+  end
+
   ###
   #
   # DELETE METHODS
