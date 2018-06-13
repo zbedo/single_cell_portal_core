@@ -826,6 +826,7 @@ class StudiesController < ApplicationController
       if @study_file.parsing?
         render action: 'abort_delete_study_file'
       else
+        human_data = @study_file.human_data # store this reference for later
         # delete matching caches
         @study_file.invalidate_cache_by_file_type
         # queue for deletion
@@ -859,10 +860,13 @@ class StudiesController < ApplicationController
         # delete source file in FireCloud and then remove record
         begin
           # make sure file is in FireCloud first as user may be aborting the upload
-          if !Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project,
-                                                           @study.firecloud_workspace, @study_file.upload_file_name).nil?
-            Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, @study.firecloud_project,
-                                                         @study.firecloud_workspace, @study_file.upload_file_name)
+          unless human_data
+            present = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project,
+                                                                   @study.firecloud_workspace, @study_file.upload_file_name)
+            if present
+              Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, @study.firecloud_project,
+                                                           @study.firecloud_workspace, @study_file.upload_file_name)
+            end
           end
         rescue RuntimeError => e
           logger.error "#{Time.now}: error in deleting #{@study_file.upload_file_name} from workspace: #{@study.firecloud_workspace}; #{e.message}"

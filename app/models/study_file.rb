@@ -82,6 +82,7 @@ class StudyFile
 
   validates_uniqueness_of :upload_file_name, scope: :study_id, unless: Proc.new {|f| f.human_data?}
   validates_presence_of :name
+  validates_presence_of :human_fastq_url, if: proc {|attributes| attributes.human_data}
   validate :validate_name_by_file_type
 
   ###
@@ -423,30 +424,22 @@ class StudyFile
     end
   end
 
+  # depending on the file_type, configure correct sanitizer for name field
   def validate_name_by_file_type
+    regex = ValidationTools::FILENAME_CHARS
+    error = ValidationTools::FILENAME_CHARS_ERROR
     case self.file_type
-    when 'Cluster'
-      if self.name !~ ValidationTools::OBJECT_LABELS
-        errors.add(:name, ValidationTools::OBJECT_LABELS_ERROR)
-      end
-    when 'Gene List'
-      if self.name !~ ValidationTools::OBJECT_LABELS
-        errors.add(:name, ValidationTools::OBJECT_LABELS_ERROR)
-      end
+    when /(Cluster|Gene List)/
+      regex = ValidationTools::OBJECT_LABELS
+      error = ValidationTools::OBJECT_LABELS_ERROR
     when 'Fastq'
-      regex = ValidationTools::FILENAME_CHARS
-      error = ValidationTools::FILENAME_CHARS_ERROR
       if self.human_data?
         regex = ValidationTools::OBJECT_LABELS
         error = ValidationTools::OBJECT_LABELS_ERROR
       end
-      if self.name !~ regex
-        errors.add(:name, error)
-      end
-    else
-      if self.name !~ ValidationTools::FILENAME_CHARS
-        errors.add(:name, ValidationTools::FILENAME_CHARS_ERROR)
-      end
+    end
+    if self.name !~ regex
+      errors.add(:name, error)
     end
   end
 end
