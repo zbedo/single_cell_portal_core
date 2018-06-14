@@ -1,4 +1,4 @@
-<div id="ideogram-container">
+<div id="ideogram-container" style="padding: 8px;">
   <!-- Ideogram goes here -->
 </div>
 <script>
@@ -98,12 +98,8 @@
   var annotationTracks = [
     {id: 'all', shape: ideoAnnotShape},
     {id: 'cluster1', shape: ideoAnnotShape},
-    {id: 'cluster2',  shape: ideoAnnotShape}
+    {id: 'cluster2', shape: ideoAnnotShape}
   ];
-
-  var accessToken = '<%= get_read_access_token(@study, current_user) %>';
-
-  var annotationsPath = '<%= raw @study.get_analysis_outputs('infercnv', 'ideogram.js').first.api_url %>';
 
   // Intercept requests to add bearer token, enabling direct load of files from GCS
   var originalFetch = window.fetch;
@@ -143,14 +139,13 @@
     dataDir: 'https://unpkg.com/ideogram@1.1.1/dist/data/bands/native/',
     annotationsPath: annotationsPath,
     annotationTracks: annotationTracks,
-    showAnnotTooltip: false, // too many genes, and tooltip positioning issues; hide for now
+    // annotationsLayout: 'heatmap',
     heatmaps: [
       {key: 'all', thresholds: heatmapThresholds},
       {key: 'Cluster 1', thresholds: heatmapThresholds},
       {key: 'Cluster 2', thresholds: heatmapThresholds}
     ],
-    debug: true,
-    onLoad: makeIdeogramOverflowScrollable
+    debug: true
   });
 
 

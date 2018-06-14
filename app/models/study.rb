@@ -675,6 +675,30 @@ class Study
     has_bam
   end
 
+  # TODO: Make BAMs and their corresponding BAIs a tuple in among study files.
+  # We should build validation to ensure a BAM always has a matching BAI index file.
+  # Once that's implemented, refactor this.
+  def get_bam_files
+    bams = []
+
+    # For demo only, too brittle for production!
+    self.study_files.each_with_index do |file, i|
+      if file.name[-3, 3] == 'bam'
+        bam = file
+        puts 'self.study_files'
+        puts self.study_files
+
+        bai = self.study_files[i + 1]
+        bams.push({
+          'url': bam.api_url,
+          'indexUrl': bai.api_url
+        })
+      end
+    end
+
+    bams.to_json
+  end
+
   ###
   #
   # DELETE METHODS
