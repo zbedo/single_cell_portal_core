@@ -15,11 +15,11 @@
     <div class="form-group row">
       <div class="col-sm-3">
         <%= f.label :config_type, 'Configuration Type' %><br>
-        <%= f.select :config_type, options_for_select(AdminConfiguration.config_types, f.object.config_type), {}, {class: 'form-control', disabled: !@admin_configuration.new_record?} %>
+        <%= f.select :config_type, options_for_select(AdminConfiguration::CONFIG_TYPES, f.object.config_type), {}, {class: 'form-control', disabled: !@admin_configuration.new_record?} %>
       </div>
       <div class="col-sm-3">
         <%= f.label :value_type, 'Type of Value' %><br>
-        <%= f.select :value_type, options_for_select(AdminConfiguration.value_types, f.object.value_type), {}, class: 'form-control', disabled: !@admin_configuration.new_record? %>
+        <%= f.select :value_type, options_for_select(AdminConfiguration::VALUE_TYPES, f.object.value_type), {}, class: 'form-control', disabled: !@admin_configuration.new_record? %>
       </div>
       <div class="col-sm-3" id="value-options">
         <% if @admin_configuration.value_type == 'Boolean' %>

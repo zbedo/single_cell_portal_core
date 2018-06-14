@@ -15,8 +15,8 @@ class ClusterGroup
 
   validates_uniqueness_of :name, scope: :study_id
   validates_presence_of :name, :cluster_type
-  validates_format_of :name, with: ValidationTools::URL_SAFE_CHARS,
-                      message: ValidationTools::URL_SAFE_CHARS_ERROR
+  validates_format_of :name, with: ValidationTools::URL_PARAM_SAFE,
+                      message: ValidationTools::URL_PARAM_SAFE_ERROR
 
   belongs_to :study
   belongs_to :study_file

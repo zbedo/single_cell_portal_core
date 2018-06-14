@@ -16,27 +16,27 @@ class AdminConfiguration
   has_many :configuration_options, dependent: :destroy
   accepts_nested_attributes_for :configuration_options, allow_destroy: true
 
+  FIRECLOUD_ACCESS_NAME = 'FireCloud Access'
+  API_NOTIFIER_NAME = 'API Health Check Notifier'
+  NUMERIC_VALS = %w(byte kilobyte megabyte terabyte petabyte exabyte)
+  CONFIG_TYPES = ['Daily User Download Quota', 'Workflow Name', 'Portal FireCloud User Group', 'Reference Data Workspace', API_NOTIFIER_NAME]
+  ALL_CONFIG_TYPES = CONFIG_TYPES.dup << FIRECLOUD_ACCESS_NAME
+  VALUE_TYPES = %w(Numeric Boolean String)
+
   validates_uniqueness_of :config_type,
                           message: ": '%{value}' has already been set.  Please edit the corresponding entry to update.",
                           unless: proc {|attributes| attributes['config_type'] == 'Workflow Name'}
 
-  validates_format_of :value, with: ValidationTools::ALPHANUMERIC_SPACE_DASH, message: ValidationTools::ALPHANUMERIC_SPACE_DASH_ERROR
-
-  FIRECLOUD_ACCESS_NAME = 'FireCloud Access'
-  API_NOTIFIER_NAME = 'API Health Check Notifier'
-  NUMERIC_VALS = %w(byte kilobyte megabyte terabyte petabyte exabyte)
+  validates_presence_of :config_type, :value_type, :value
+  validates_inclusion_of :config_type, in: ALL_CONFIG_TYPES
+  validates_inclusion_of :value_type, in: VALUE_TYPES
+  validates_inclusion_of :multiplier, in: NUMERIC_VALS, allow_blank: true
+  validates_format_of :value, with: ValidationTools::OBJECT_LABELS,
+                      message: ValidationTools::OBJECT_LABELS_ERROR
 
   # really only used for IDs in the table...
   def url_safe_name
     self.config_type.downcase.gsub(/[^a-zA-Z0-9]+/, '-').chomp('-')
-  end
-
-  def self.config_types
-    ['Daily User Download Quota', 'Workflow Name', 'Portal FireCloud User Group', 'Reference Data Workspace', API_NOTIFIER_NAME]
-  end
-
-  def self.value_types
-    ['Numeric', 'Boolean', 'String']
   end
 
   def self.current_firecloud_access

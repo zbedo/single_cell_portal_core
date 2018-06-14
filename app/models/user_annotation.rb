@@ -54,8 +54,8 @@ class UserAnnotation
   validates_presence_of :name, :values
   # unique values are name per user, study and cluster
   validates_uniqueness_of :name, scope: [:user_id, :study_id, :cluster_group_id], message: '- \'%{value}\' has already been taken.'
-  validates_format_of :name, with: ValidationTools::URL_SAFE_CHARS,
-                      message: ValidationTools::URL_SAFE_CHARS_ERROR
+  validates_format_of :name, with: ValidationTools::URL_PARAM_SAFE,
+                      message: ValidationTools::URL_PARAM_SAFE_ERROR
 
   validate :check_source_cluster_annotations
 

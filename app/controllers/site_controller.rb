@@ -490,10 +490,10 @@ class SiteController < ApplicationController
         row = [gene['name'], ""]
         case params[:row_centered]
           when 'z-score'
-            vals = ExpressionScore.z_score(gene['scores'], @cells)
+            vals = Gene.z_score(gene['scores'], @cells)
             row += vals
           when 'robust-z-score'
-            vals = ExpressionScore.robust_z_score(gene['scores'], @cells)
+            vals = Gene.robust_z_score(gene['scores'], @cells)
             row += vals
           else
             @cells.each do |cell|

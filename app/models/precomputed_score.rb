@@ -19,6 +19,8 @@ class PrecomputedScore
 
   validates_uniqueness_of :name, scope: :study_id
   validates_presence_of :name, :clusters, :gene_scores
+  validates_format_of :name, with: ValidationTools::URL_PARAM_SAFE,
+                      message: ValidationTools::URL_PARAM_SAFE_ERROR
 
 	def gene_list
 		self.gene_scores.map(&:keys).flatten

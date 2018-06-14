@@ -30,9 +30,9 @@ class StudyFile
   # associations
   belongs_to :study, index: true
   has_many :cluster_groups, dependent: :destroy
-  has_many :expression_scores, dependent: :destroy
+  has_many :genes, dependent: :destroy
   has_many :precomputed_scores, dependent: :destroy
-  has_many :study_metadata, dependent: :destroy
+  has_many :cell_metadata, dependent: :destroy
 
   # field definitions
   field :name, type: String
@@ -88,17 +88,17 @@ class StudyFile
   validate :validate_name_by_file_type
 
   validates_format_of :description, with: ValidationTools::NO_SCRIPT_TAGS,
-                      message: ValidationTools::NO_SCRIPT_TAGS_ERROR
+                      message: ValidationTools::NO_SCRIPT_TAGS_ERROR, allow_blank: true
 
   validates_format_of :x_axis_label, with: ValidationTools::NO_SCRIPT_TAGS,
                       message: ValidationTools::NO_SCRIPT_TAGS_ERROR,
-                      if: proc {|f| f.x_axis_label.present?}
+                      allow_blank: true
   validates_format_of :y_axis_label, with: ValidationTools::NO_SCRIPT_TAGS,
                       message: ValidationTools::NO_SCRIPT_TAGS_ERROR,
-                      if: proc {|f| f.y_axis_label.present?}
+                      allow_blank: true
   validates_format_of :z_axis_label, with: ValidationTools::NO_SCRIPT_TAGS,
                       message: ValidationTools::NO_SCRIPT_TAGS_ERROR,
-                      if: proc {|f| f.z_axis_label.present?}
+                      allow_blank: true
 
   validates_format_of :generation, with: /\A\d+\z/, if: proc {|f| f.generation.present?}
 
