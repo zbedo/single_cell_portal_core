@@ -156,26 +156,6 @@ module ApplicationHelper
 		end
 	end
 
-	def set_kernel_type_value(parameters)
-		if !parameters[:gene_set_kernel_type].nil?
-			parameters[:gene_set_kernel_type]
-		elsif !parameters[:kernel_type].nil?
-			parameters[:kernel_type]
-		else
-			'gau' # Gaussian
-		end
-	end
-
-	def set_band_type_value(parameters)
-		if !parameters[:gene_set_band_type].nil?
-			parameters[:gene_set_band_type]
-		elsif !parameters[:band_type].nil?
-			parameters[:band_type]
-		else
-			'nrd0'
-		end
-	end
-
 	def set_boxpoints_value(parameters)
 		if !parameters[:gene_set_boxpoints].nil?
 			parameters[:gene_set_boxpoints]

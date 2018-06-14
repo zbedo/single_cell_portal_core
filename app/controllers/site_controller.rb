@@ -116,8 +116,6 @@ class SiteController < ApplicationController
     consensus = params[:search][:consensus]
     subsample = params[:search][:subsample]
     plot_type = params[:search][:plot_type]
-    kernel_type = params[:search][:kernel_type]
-    band_type = params[:search][:band_type]
     heatmap_row_centering = params[:search][:heatmap_row_centering]
     heatmap_size = params[:search][:heatmap_size]
 
@@ -131,7 +129,6 @@ class SiteController < ApplicationController
         redirect_to merge_default_redirect_params(view_gene_expression_path(study_name: params[:study_name], gene: @gene['name'],
                                                                             cluster: cluster, annotation: annotation, consensus: consensus,
                                                                             subsample: subsample, plot_type: plot_type,
-                                                                            kernel_type: kernel_type, band_type: band_type,
                                                                             boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering,
                                                                             heatmap_size: heatmap_size),
                                                   scpbr: params[:scpbr])  and return
@@ -143,15 +140,13 @@ class SiteController < ApplicationController
       redirect_to merge_default_redirect_params(view_gene_set_expression_path(study_name: params[:study_name], search: {genes: @terms.join(',')},
                                                                               cluster: cluster, annotation: annotation,
                                                                               consensus: consensus, subsample: subsample,
-                                                                              plot_type: plot_type, kernel_type: kernel_type,
-                                                                              band_type: band_type, boxpoints: boxpoints,
+                                                                              plot_type: plot_type,  boxpoints: boxpoints,
                                                                               heatmap_row_centering: heatmap_row_centering,
                                                                               heatmap_size: heatmap_size),
                                                 scpbr: params[:scpbr])
     else
       redirect_to merge_default_redirect_params(view_gene_expression_heatmap_path(search: {genes: @terms.join(',')}, cluster: cluster,
                                                                                   annotation: annotation, plot_type: plot_type,
-                                                                                  kernel_type: kernel_type, band_type: band_type,
                                                                                   boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering,
                                                                                   heatmap_size: heatmap_size),
                                                 scpbr: params[:scpbr])
@@ -330,8 +325,6 @@ class SiteController < ApplicationController
         @values_box_type = 'box'
       else
         @values_box_type = 'violin'
-        @values_kernel_type = params[:kernel_type]
-        @values_band_type = params[:band_type]
       end
       @top_plot_partial = 'expression_plots_view'
       @top_plot_plotly = 'expression_plots_plotly'
@@ -410,8 +403,6 @@ class SiteController < ApplicationController
         @values_box_type = 'box'
       else
         @values_box_type = 'violin'
-        @values_kernel_type = params[:kernel_type]
-        @values_band_type = params[:band_type]
       end
       @top_plot_partial = 'expression_plots_view'
       @top_plot_plotly = 'expression_plots_plotly'
@@ -2167,12 +2158,6 @@ class SiteController < ApplicationController
           params_key += "_#{params[:subsample]}"
         end
         params_key += "_#{params[:plot_type]}"
-        unless params[:kernel_type].nil?
-          params_key += "_#{params[:kernel_type]}"
-        end
-        unless params[:band_type].nil?
-          params_key += "_#{params[:band_type]}"
-        end
         render_gene_expression_plots_url(study_name: params[:study_name], gene: params[:gene]) + params_key
       when 'render_gene_set_expression_plots'
         unless params[:subsample].nil?
@@ -2186,12 +2171,6 @@ class SiteController < ApplicationController
           params_key += "_#{gene_key}"
         end
         params_key += "_#{params[:plot_type]}"
-        unless params[:kernel_type].nil?
-          params_key += "_#{params[:kernel_type]}"
-        end
-        unless params[:band_type].nil?
-          params_key += "_#{params[:band_type]}"
-        end
         unless params[:consensus].nil?
           params_key += "_#{params[:consensus]}"
         end

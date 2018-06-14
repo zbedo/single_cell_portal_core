@@ -49,11 +49,10 @@
 //= require xlsx.full.min
 //= require morpheus-latest.min
 //= require kernel-functions
-//= require simple-statistics.min
-//= require sheather_jones
 //= require jquery.stickyPanel
 //= require clipboard.min
 //= require ideogram.min
+//= require jstat.min
 
 var fileUploading = false;
 var PAGE_RENDERED = false;
@@ -505,8 +504,6 @@ function updateSearchGeneParams() {
   var consensus = $('#search_consensus').val();
   var subsample = $('#subsample').val();
   var plot_type = $('#plot_type').val() === undefined ? 'violin' : $('#plot_type').val();
-  var kernel_type = $('#kernel_type').val() === undefined ? 'gau' : $('#kernel_type').val();
-  var band_type = $('#band_type').val() === undefined ? 'nrd0' : $('#band_type').val();
   var boxpoints = $('#boxpoints_select').val() === undefined ? 'all' : $('#boxpoints_select').val();
   var heatmap_size = $('#heatmap');
   var heatmap_row_centering = $('#heatmap_row_centering').val();
@@ -517,8 +514,6 @@ function updateSearchGeneParams() {
   $("#search_annotation").val(''); // clear value first
   $("#search_annotation").val(annotation);
   $('#search_plot_type').val(plot_type);
-  $('#search_kernel_type').val(kernel_type);
-  $('#search_band_type').val(band_type);
   $('#search_boxpoints').val(boxpoints);
   $('#search_heatmap_row_centering').val(heatmap_row_centering);
   $('#search_heatmap_size').val(heatmap_size);
@@ -534,8 +529,6 @@ function getRenderUrlParams() {
   var consensus = $('#search_consensus').val();
   var subsample = $('#subsample').val();
   var plot_type = $('#plot_type').val() === undefined ? 'violin' : $('#plot_type').val();
-  var kernel_type = $('#kernel_type').val() === undefined ? 'gau' : $('#kernel_type').val();
-  var band_type = $('#band_type').val() === undefined ? 'nrd0' : $('#band_type').val();
   var boxpoints = $('#boxpoints_select').val() === undefined ? 'all' : $('#boxpoints_select').val();
   var heatmap_row_centering = $('#heatmap_row_centering').val();
   var heatmap_size = parseInt($('#heatmap_size').val());
@@ -547,8 +540,6 @@ function getRenderUrlParams() {
     '&consensus=' + consensus +
     '&subsample=' + subsample +
     '&plot_type=' + plot_type +
-    '&kernel_type=' + kernel_type +
-    '&band_type=' + band_type +
     '&heatmap_row_centering=' + heatmap_row_centering +
     '&heatmap_size=' + heatmap_size;
 
@@ -556,7 +547,7 @@ function getRenderUrlParams() {
 }
 
 // Handle changes in View Options for 'Distribution' view
-$(document).on('change', '#plot_type, #kernel_type, #band_type', function() {
+$(document).on('change', '#plot_type', function() {
   $('#expression-plots').data('box-rendered', false);
   $('#expression-plots').data('scatter-rendered', false);
   $('#expression-plots').data('reference-rendered', false);

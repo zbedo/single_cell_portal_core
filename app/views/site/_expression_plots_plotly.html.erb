@@ -155,12 +155,10 @@ var expressionData = [];
     <%= render partial: 'expression_box_layout' %>
 <% else %>
     var formatted_array = [];
-    var ker = "<%= @values_kernel_type%>";
-    var band = "<%= @values_band_type%>";
     <% @values.sort_by {|k,v| k}.each_with_index do |(cluster, data), index| %>
       var name = "<%= data[:name] %>";
       var data = <%= raw data[:y] %>;
-      var master_array = [name, data, ker, band]
+      var master_array = [name, data]
       formatted_array.push(master_array);
     <% end %>
     var title = "<%= params[:cluster]%>";

@@ -1,8 +1,9 @@
-/**
+/*
+/!**
  * Created by yanay on 6/13/17.
  * Kernel Formulas from https://github.com/jasondavies/science.js
  * Kernel formulas from https://gist.github.com/mbostock/4341954
- */
+ *!/
 
 
 //Kernel Density Estimator takes a kernel function and array of 1d data and returns a function that can create an array of density probability
@@ -14,10 +15,10 @@ function kernelDensityEstimator(kernel, X) {
     };
 }
 
-/* Advanced Rule of thumb bandwidth selector from :
+/!* Advanced Rule of thumb bandwidth selector from :
  *  https://en.wikipedia.org/wiki/Kernel_density_estimation#Bandwidth_selection
  *  and https://stat.ethz.ch/R-manual/R-devel/library/stats/html/bandwidth.html
- */
+ *!/
 
 function nrd0(X){
     var iqr = ss.quantile(X, 0.75) - ss.quantile(X, 0.25);
@@ -36,10 +37,10 @@ function nrd0(X){
     return 0.9 * min * Math.pow(X.length, -0.2)
 }
 
-/* Kernels are functions that transform a data point, used in Kernel Density Estimator
+/!* Kernels are functions that transform a data point, used in Kernel Density Estimator
  *  Kernel Formulas from https://github.com/jasondavies/science.js
  *  Kernel formulas from https://gist.github.com/mbostock/4341954
- */
+ *!/
 
 function kernelEpanechnikov(k) {
     return function(v) {
@@ -142,11 +143,11 @@ function getMinOfArray(numArray) {
     return Math.min.apply(null, numArray);
 }
 
-/* This function checks if a number is an outlier based on the simple definition of an outlier found at:
+/!* This function checks if a number is an outlier based on the simple definition of an outlier found at:
  *  http://www.itl.nist.gov/div898/handbook/prc/section1/prc16.htm
  *  lower inner fence: Q1 - 1.5*IQ
  *  upper inner fence: Q3 + 1.5*IQ
- */
+ *!/
 function isOutlier(x, l, u){
     var con = (u-l) * 1.5;
     return x >= u ? ((x - con) > u) : ((x + con) < l);
@@ -308,10 +309,10 @@ function createTracesAndLayout(arr, title){
             var upper_q = ss.quantile(pointData, 0.75);
 
             var axis = 'x';
-            /*Separate outliers from the data
+            /!*Separate outliers from the data
              * This is not desired behavior but I'm leaving it in in case it is wanted in future
              * No outlier data is actually useful, as it is used for jitter points
-             */
+             *!/
             var out_array = cutOutliers(pointData.slice(), lower_q, upper_q);
 
             //Set new arrays to the outliers and normal data-- normal data is supposed to include outliers
@@ -470,10 +471,10 @@ function createTracesAndLayout(arr, title){
                 c = scale_max;
                 //Calling random sign means that the outlier points will appear on either side of the Y axis
                 d = randomSign();
-                /*The reason for this math is to place the dot randomly within the bounds of the violin plot but offset it away from the
+                /!*The reason for this math is to place the dot randomly within the bounds of the violin plot but offset it away from the
                  * center line as to not obscure the median or quartiles
                  * The range of X values for outliers is much smaller than non outliers
-                 */
+                 *!/
                 outliers_x.push((d * c * Math.random() * 0.1 ) + x_offset + scale_max)
             }
 
@@ -507,10 +508,10 @@ function createTracesAndLayout(arr, title){
             //Shape Traces
             //Trace 4 is the center line of the violin plot
             var trace4 = {
-                /*Center the line in the middle of the plot
+                /!*Center the line in the middle of the plot
                  * because x offset tells you where the leftmost boundary of the trace should be, you must add the maximum value,
                  * aka the width of the mirrored left trace to it to get the cent of the trace
-                 */
+                 *!/
                 x: [x_offset + x_vals_max, x_offset + x_vals_max],
                 //Y values are set to the minimum and maximum of the y data, to draw a line between the top and bottom of the violin
                 y: [getMinOfArray(pointData), getMaxOfArray(pointData)],
@@ -598,10 +599,10 @@ function createTracesAndLayout(arr, title){
                 hoverinfo: 'none'
             };
 
-            /* Append the traces to the larger group of traces
+            /!* Append the traces to the larger group of traces
              * Alternate order is for overlaing
              * Order is [right violin, left violin, jitter points, center line, quartile line, median white square, top capping line, bottom capping line, outliers]
-             */
+             *!/
             dataA.push([trace1, trace2, trace3, trace4, trace5, trace6, trace8, trace9, trace7]);
 
             //Increment group number and record maximum horizontal value for offset
@@ -648,4 +649,83 @@ function createTracesAndLayout(arr, title){
     layout["xaxis"] = x_axis;
     return [dataA, layout]
 
+}*/
+
+/* Advanced Rule of thumb bandwidth selector from :
+    https://en.wikipedia.org/wiki/Kernel_density_estimation#Bandwidth_selection
+    and https://stat.ethz.ch/R-manual/R-devel/library/stats/html/bandwidth.html
+*/
+
+
+function nrd0(X){
+    var iqr = jStat.percentile(X, 0.75) - jStat.percentile(X, 0.25);
+    var iqrM = iqr /1.34;
+    var std = jStat.stdev(X,true);
+    var min = std < iqrM ? std : iqrM;
+    if(min === 0){
+        min = std
+    }
+    if(min === 0){
+        min = Math.abs(X[1])
+    }
+    if(min === 0){
+        min = 1.0
+    }
+    return 0.9 * min * Math.pow(X.length, -0.2)
 }
+
+function createTracesAndLayout(arr, title, jitterSize = 2, jitter = 'all'){
+    var data = Array();
+    for(x=0;x<arr.length;x++){
+        var dist = arr[x][1];
+        var name = arr[x][0];
+        var bandwidth = nrd0(dist);
+
+        data = data.concat([{
+            type: 'violin',
+            name: name,
+            y: dist,
+            "points": jitter,
+            "pointpos": 0,
+            "jitter": .85,
+            "spanmode": 'hard',
+            box: {
+                visible: true,
+                fillcolor: '#ffffff',
+                width: .1
+            },
+            bandwidth: bandwidth,
+            marker: {
+                size: jitterSize,
+                color: '#000000',
+                opacity: 0.8,
+            },
+            fillcolor: colorBrewerSet[x%27],
+            line: {
+                color: '#000000',
+                width: 1.5
+            },
+            meanline: {
+                visible: false
+            }
+        }]);
+
+    }
+    var layout = {
+        title: title,
+        yaxis: {
+            zeroline: true,
+            showline: true,
+            title: 'Expression'
+        },
+        margin: {
+            pad: 10,
+            b: 100
+        },
+        autosize: true,
+    };
+    return [data, layout]
+}
+
+
+

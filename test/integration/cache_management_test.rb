@@ -22,8 +22,8 @@ class CacheManagementTest < ActionDispatch::IntegrationTest
 
       # get various actions subject to caching
       xhr :get, render_cluster_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation)
-      xhr :get, render_gene_expression_plots_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation, gene: gene, plot_type: 'violin', kernel_type: 'gau', band_type: 'nrd0')
-      xhr :get, render_gene_set_expression_plots_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation, search: {genes: genes.join(' ')}, plot_type: 'violin', kernel_type: 'gau', band_type: 'nrd0' )
+      xhr :get, render_gene_expression_plots_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation, gene: gene, plot_type: 'violin')
+      xhr :get, render_gene_set_expression_plots_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation, search: {genes: genes.join(' ')}, plot_type: 'violin')
       xhr :get, render_gene_expression_plots_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation, gene: gene, plot_type: 'box')
       xhr :get, render_gene_set_expression_plots_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation, search: {genes: genes.join(' ')}, plot_type: 'box' )
       xhr :get, expression_query_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation, search: {genes: genes.join(' ')} )
