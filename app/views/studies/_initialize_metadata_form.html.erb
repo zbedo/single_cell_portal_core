@@ -86,6 +86,7 @@
 				},
 				done: function(e, data) {
 					var fileName = data.files[0].name.replace(/ /g, '_');
+          completeWizardStep('initialize_metadata_form_nav');
 					$.ajax({
 						url: "<%= update_status_study_path %>",
 						type: "PATCH",
