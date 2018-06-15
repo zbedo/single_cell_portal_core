@@ -944,3 +944,8 @@ function gatherCoordinateMatrices() {
     });
     return matrices;
 }
+
+function calculatePlotViewport(target) {
+    var viewPort = $(window).height();
+    return viewPort - 250;
+}

@@ -43,7 +43,7 @@ label {
 }
 
 #main-body {
-  min-height: 950px;
+  //min-height: 950px;
   padding-bottom: 155px;
   overflow-x: hidden;
 }
@@ -221,10 +221,6 @@ label {
   min-height: 200px;
   position: relative;
   margin: 20px 0;
-}
-
-#cluster-plot {
-  min-height: 600px;
 }
 
 .study-lead {
