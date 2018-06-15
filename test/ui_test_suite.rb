@@ -2489,7 +2489,7 @@ class UiTestSuite < Test::Unit::TestCase
 		new_queried_gene = @driver.find_element(:class, 'queried-gene')
 		assert new_queried_gene.text == new_gene, "did not load the correct gene, expected #{new_gene} but found #{new_queried_gene.text}"
 
-		# wait until box plot renders, at this point all 3 should be done
+		# wait until violin plot renders, at this point all 3 should be done
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
 		private_violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
 		assert private_violin_rendered, "private violin plot did not finish rendering, expected true but found #{private_violin_rendered}"
@@ -2497,6 +2497,11 @@ class UiTestSuite < Test::Unit::TestCase
 		assert private_scatter_rendered, "private scatter plot did not finish rendering, expected true but found #{private_scatter_rendered}"
 		private_reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
 		assert private_reference_rendered, "private reference plot did not finish rendering, expected true but found #{private_reference_rendered}"
+
+		# Open view options panel
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		wait_for_render(:id, 'view-options')
 
 		# change to box plot
 		private_plot_dropdown = @driver.find_element(:id, 'plot_type')
@@ -2656,6 +2661,15 @@ class UiTestSuite < Test::Unit::TestCase
 		assert private_scatter_rendered, "private scatter plot did not finish rendering, expected true but found #{private_scatter_rendered}"
 		private_reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
 		assert private_reference_rendered, "private reference plot did not finish rendering, expected true but found #{private_reference_rendered}"
+
+		# Open view options panel
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		wait_for_render(:id, 'view-options')
+		# open distribution control panel as well
+		view_options_panel = @driver.find_element(:id, 'distribution-panel-link')
+		view_options_panel.click
+		wait_for_render(:id, 'distribution-plot-controls')
 
 		# change to box plot
 		private_plot_dropdown = @driver.find_element(:id, 'plot_type')

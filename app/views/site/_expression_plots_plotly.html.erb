@@ -158,7 +158,7 @@ var expressionData = [];
     <% @values.sort_by {|k,v| k}.each_with_index do |(cluster, data), index| %>
       var name = "<%= data[:name] %>";
       var data = <%= raw data[:y] %>;
-      var master_array = [name, data]
+      var master_array = [name, data];
       formatted_array.push(master_array);
     <% end %>
     var title = "<%= params[:cluster]%>";
