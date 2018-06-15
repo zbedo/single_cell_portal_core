@@ -165,6 +165,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_expression.send_keys(@test_data_path + 'expression_matrix_example.txt')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
+    sleep(0.5)
 		upload_btn.click
 		# close success modal
 		close_modal('upload-success-modal')
@@ -177,6 +178,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_expression_2.send_keys(@test_data_path + 'expression_matrix_example_2.txt')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
+    sleep(0.5)
 		upload_btn.click
 		# close success modal
 		close_modal('upload-success-modal')
@@ -189,6 +191,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_metadata.send_keys(@test_data_path + 'metadata_example2.txt')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
+    sleep(0.5)
 		upload_btn.click
 		close_modal('upload-success-modal')
 
@@ -227,6 +230,7 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_for_render(:id, 'start-file-upload')
 		scroll_to(:bottom)
 		upload_btn_2 = cluster_form_2.find_element(:id, 'start-file-upload')
+		sleep(0.5)
 		upload_btn_2.click
 		close_modal('upload-success-modal')
 		next_btn = @driver.find_element(:id, 'next-btn')
@@ -243,6 +247,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_coords = coords_form.find_element(:class, 'upload-labels')
 		upload_coords.send_keys(@test_data_path + 'coordinate_labels_1.txt')
 		upload_btn = coords_form.find_element(:id, 'start-file-upload')
+		sleep(0.5)
 		upload_btn.click
 		close_modal('upload-success-modal')
 		next_btn = @driver.find_element(:id, 'next-btn')
@@ -254,6 +259,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_fastq.send_keys(@test_data_path + 'cell_1_R1_001.fastq.gz')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
+    sleep(0.5)
 		upload_btn.click
 		close_modal('upload-success-modal')
 
@@ -266,6 +272,7 @@ class UiTestSuite < Test::Unit::TestCase
 		new_upload_fastq.send_keys(@test_data_path + 'cell_1_I1_001.fastq.gz')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = new_fastq_form.find_element(:id, 'start-file-upload')
+		sleep(0.5)
 		upload_btn.click
 		close_modal('upload-success-modal')
 		next_btn = @driver.find_element(:id, 'next-btn')
@@ -280,6 +287,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_markers.send_keys(@test_data_path + 'marker_1_gene_list.txt')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = marker_form.find_element(:id, 'start-file-upload')
+		sleep(0.5)
 		upload_btn.click
 		close_modal('upload-success-modal')
 		next_btn = @driver.find_element(:id, 'next-btn')
@@ -291,6 +299,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_doc.send_keys(@test_data_path + 'table_1.xlsx')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
+    sleep(0.5)
 		upload_btn.click
 		# close success modal
 		close_modal('upload-success-modal')
@@ -366,6 +375,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_expression.send_keys(@test_data_path + 'expression_matrix_example.txt')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
+    sleep(0.5)
 		upload_btn.click
 		# close success modal
 		close_modal('upload-success-modal')
@@ -378,6 +388,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_metadata.send_keys(@test_data_path + 'metadata_example.txt')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
+    sleep(0.5)
 		upload_btn.click
 		close_modal('upload-success-modal')
 
@@ -391,6 +402,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# perform upload
 		upload_btn = cluster_form_1.find_element(:id, 'start-file-upload')
+		sleep(0.5)
 		upload_btn.click
 		close_modal('upload-success-modal')
 
@@ -405,6 +417,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_markers.send_keys(@test_data_path + 'marker_1_gene_list.txt')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = marker_form.find_element(:id, 'start-file-upload')
+		sleep(0.5)
 		upload_btn.click
 		close_modal('upload-success-modal')
 
@@ -442,6 +455,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_expression.send_keys(@test_data_path + 'expression_matrix_example.txt')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
+    sleep(0.5)
 		upload_btn.click
 		# close success modal
 		close_modal('upload-success-modal')
@@ -454,6 +468,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_metadata.send_keys(@test_data_path + 'metadata_example.txt')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
+    sleep(0.5)
 		upload_btn.click
 		close_modal('upload-success-modal')
 
@@ -465,6 +480,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_cluster.send_keys(@test_data_path + 'cluster_example.txt')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
+    sleep(0.5)
 		upload_btn.click
 		close_modal('upload-success-modal')
 
@@ -479,6 +495,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_markers.send_keys(@test_data_path + 'marker_1_gene_list.txt')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = marker_form.find_element(:id, 'start-file-upload')
+		sleep(0.5)
 		upload_btn.click
 		close_modal('upload-success-modal')
 		next_btn = @driver.find_element(:id, 'next-btn')
@@ -492,6 +509,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_doc.send_keys(@test_data_path + 'README.txt')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
+    sleep(0.5)
 		upload_btn.click
 		# close modal
 		close_modal('upload-success-modal')
@@ -521,6 +539,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_expression.send_keys(@test_data_path + 'expression_matrix_example_gzipped.txt.gz')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
+    sleep(0.5)
 		upload_btn.click
 		close_modal('upload-success-modal')
 
@@ -558,6 +577,7 @@ class UiTestSuite < Test::Unit::TestCase
     upload_expression.send_keys(@test_data_path + 'expression_matrix_example.txt')
     wait_for_render(:id, 'start-file-upload')
     upload_btn = @driver.find_element(:id, 'start-file-upload')
+    sleep(0.5)
     upload_btn.click
     # close modal
     close_modal('upload-success-modal')
@@ -670,6 +690,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_expression.send_keys(@test_data_path + 'expression_matrix_example_bad.txt')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
+    sleep(0.5)
 		upload_btn.click
 		# close modal
 		close_modal('upload-success-modal')
@@ -682,6 +703,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_expression.send_keys(@test_data_path + 'R_format_text.txt')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
+    sleep(0.5)
 		upload_btn.click
 		# close modal
 		close_modal('upload-success-modal')
@@ -699,6 +721,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_assignments.send_keys(@test_data_path + 'metadata_bad.txt')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
+    sleep(0.5)
 		upload_btn.click
 		# close modal
 		close_modal('upload-success-modal')
@@ -708,6 +731,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_clusters.send_keys(@test_data_path + 'cluster_bad.txt')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
+    sleep(0.5)
 		upload_btn.click
 		# close modal
 		close_modal('upload-success-modal')
@@ -723,6 +747,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_markers.send_keys(@test_data_path + 'marker_1_gene_list_bad.txt')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
+    sleep(0.5)
 		upload_btn.click
 		# close modal
 		close_modal('upload-success-modal')
@@ -925,6 +950,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_doc = @driver.find_element(:class, 'upload-misc')
 		upload_doc.send_keys(@test_data_path + 'README.txt')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
+    sleep(0.5)
 		upload_btn.click
 		close_modal('upload-success-modal')
 
@@ -1636,6 +1662,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_expression.send_keys(@test_data_path + 'expression_matrix_example.txt')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
+    sleep(0.5)
 		upload_btn.click
 		# close success modal
 		close_modal('upload-success-modal')
@@ -1648,6 +1675,7 @@ class UiTestSuite < Test::Unit::TestCase
 		upload_metadata.send_keys(@test_data_path + 'metadata_example2.txt')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
+    sleep(0.5)
 		upload_btn.click
 		close_modal('upload-success-modal')
 
@@ -1660,6 +1688,7 @@ class UiTestSuite < Test::Unit::TestCase
 		wait_for_render(:id, 'start-file-upload')
 		# perform upload
 		upload_btn = cluster_form_1.find_element(:id, 'start-file-upload')
+		sleep(0.5)
 		upload_btn.click
 		close_modal('upload-success-modal')
 
