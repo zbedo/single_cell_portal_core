@@ -38,34 +38,54 @@ function createTracesAndLayout(arr, title, jitter = 'all'){
         if(jitter === 'none'){
             jitter = false;
         }
-        data = data.concat([{
-            type: 'violin',
-            name: name,
-            y: dist,
-            "points": jitter,
-            "pointpos": 0,
-            "jitter": .85,
-            "spanmode": 'hard',
-            box: {
-                visible: true,
-                fillcolor: '#ffffff',
-                width: .1
-            },
-            bandwidth: bandwidth,
-            marker: {
-                size: 2,
-                color: '#000000',
-                opacity: 0.8,
-            },
-            fillcolor: colorBrewerSet[x%27],
-            line: {
-                color: '#000000',
-                width: 1.5
-            },
-            meanline: {
-                visible: false
-            }
-        }]);
+        // check if there is a distribution before adding trace
+        if(Math.max(...dist) !== Math.min(...dist)) {
+            // make a violin plot if there is a distribution
+            data = data.concat([{
+                type: 'violin',
+                name: name,
+                y: dist,
+                "points": jitter,
+                "pointpos": 0,
+                "jitter": .85,
+                "spanmode": 'hard',
+                box: {
+                    visible: true,
+                    fillcolor: '#ffffff',
+                    width: .1
+                },
+                bandwidth: bandwidth,
+                marker: {
+                    size: 2,
+                    color: '#000000',
+                    opacity: 0.8,
+                },
+                fillcolor: colorBrewerSet[x % 27],
+                line: {
+                    color: '#000000',
+                    width: 1.5
+                },
+                meanline: {
+                    visible: false
+                }
+            }])
+        } else{
+            // Make a boxplot for data with no distribution
+            data = data.concat([{
+                type: 'box',
+                name: name,
+                y: dist,
+                boxpoints: jitter,
+                marker: {
+                    color: colorBrewerSet[x % 27],
+                    size: 2,
+                    line: {
+                        color: plotlyDefaultLineColor,
+                    }
+                },
+                boxmean: true,
+            }])
+        }
 
     }
     var layout = {
