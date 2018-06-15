@@ -156,6 +156,15 @@ module ApplicationHelper
 		end
 	end
 
+	def set_distribution_jitter_value(parameters)
+		if !parameters[:gene_set_jitter].nil?
+			parameters[:gene_set_jitter]
+		elsif !parameters[:jitter].nil?
+			parameters[:jitter]
+		else
+			'all'
+		end
+	end
 	def set_boxpoints_value(parameters)
 		if !parameters[:gene_set_boxpoints].nil?
 			parameters[:gene_set_boxpoints]

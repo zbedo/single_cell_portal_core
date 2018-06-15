@@ -674,13 +674,16 @@ function nrd0(X){
     return 0.9 * min * Math.pow(X.length, -0.2)
 }
 
-function createTracesAndLayout(arr, title, jitterSize = 2, jitter = 'all'){
+function createTracesAndLayout(arr, title, jitter = 'all'){
     var data = Array();
     for(x=0;x<arr.length;x++){
         var dist = arr[x][1];
         var name = arr[x][0];
         var bandwidth = nrd0(dist);
 
+        if(jitter === 'none'){
+            jitter = false;
+        }
         data = data.concat([{
             type: 'violin',
             name: name,
@@ -696,7 +699,7 @@ function createTracesAndLayout(arr, title, jitterSize = 2, jitter = 'all'){
             },
             bandwidth: bandwidth,
             marker: {
-                size: jitterSize,
+                size: 2,
                 color: '#000000',
                 opacity: 0.8,
             },

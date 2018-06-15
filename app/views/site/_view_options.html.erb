@@ -35,15 +35,21 @@
             <div id="distribution-plot-controls" class="panel-collapse collapse <% if action_name == 'view_gene_expression' %>in<% end %>">
               <div class="panel-body">
                 <div class="row">
-                    <div class="form-group col-md-3">
-                      <%= label_tag :plot_type, 'Plot Type' %>&nbsp;<i class='fa fa-question-circle' title="Choose which distribution type to display." data-toggle="tooltip"></i>
-                      <%= select_tag :plot_type, options_for_select([['Violin Plot', "violin"], ['Box Plot', "box"]], params[:plot_type]), {class: 'form-control'} %>
-                    </div>
+                  <div class="form-group col-md-3">
+                    <%= label_tag :plot_type, 'Plot Type' %>&nbsp;<i class='fa fa-question-circle' title="Choose which distribution type to display." data-toggle="tooltip"></i>
+                    <%= select_tag :plot_type, options_for_select([['Violin Plot', "violin"], ['Box Plot', "box"]], params[:plot_type]), {class: 'form-control'} %>
+                  </div>
+                  <div class="form-group col-md-3">
+                    <% if @values_box_type == 'box' %>
+                    <% elsif action_name !~ /heatmap/ %>
+                      <%= label_tag :jitter, 'Jitter Points' %>&nbsp;<i class='fa fa-question-circle' title="Control Violin Jitter Points" data-toggle="tooltip"></i>
+                      <%= select_tag :jitter, options_for_select([['All', "all"], ['Outliers', "outliers"], ['None', "none"]], params[:jitter]), {class: 'form-control'} %>
+                    <% end %>
+                  </div>
                   <div class="form-group col-md-3">
                     <% if @values_box_type == 'box' %>
                       <%= render partial: 'boxpoints_picker' %>
                     <% elsif action_name !~ /heatmap/ %>
-
                     <% end %>
                   </div>
                   <div class="col-md-3">

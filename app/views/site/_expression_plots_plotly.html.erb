@@ -154,6 +154,7 @@ var expressionData = [];
 
     <%= render partial: 'expression_box_layout' %>
 <% else %>
+    var jitter_var = "<%= @values_jitter %>";
     var formatted_array = [];
     <% @values.sort_by {|k,v| k}.each_with_index do |(cluster, data), index| %>
       var name = "<%= data[:name] %>";
@@ -162,7 +163,7 @@ var expressionData = [];
       formatted_array.push(master_array);
     <% end %>
     var title = "<%= params[:cluster]%>";
-    var data = createTracesAndLayout(formatted_array, title);
+    var data = createTracesAndLayout(formatted_array, title, jitter_var);
     expressionData = [].concat.apply([], data[0] );
     expressionLayout = data[1];
 <% end%>
