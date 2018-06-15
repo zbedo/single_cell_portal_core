@@ -154,6 +154,7 @@ var expressionData = [];
 
     <%= render partial: 'expression_box_layout' %>
 <% else %>
+    //Using jitter_var instead of jitter because selector is called jitter, avoid confusion
     var jitter_var = "<%= @values_jitter %>";
     var formatted_array = [];
     <% @values.sort_by {|k,v| k}.each_with_index do |(cluster, data), index| %>
