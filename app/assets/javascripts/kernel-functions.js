@@ -28,10 +28,13 @@ function createTracesAndLayout(arr, title, jitter = 'all'){
     var data = Array();
     for(x=0;x<arr.length;x++){
         // plotly violin trace creation, adding to master array
+        // get inputs for plotly violin creation
         var dist = arr[x][1];
         var name = arr[x][0];
+        // if people want to change bandwidth eventually this is what we would change with a parameter
         var bandwidth = nrd0(dist);
 
+        // replace the none selection with bool false for plotly
         if(jitter === 'none'){
             jitter = false;
         }
