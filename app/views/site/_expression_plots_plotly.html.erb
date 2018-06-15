@@ -157,17 +157,15 @@ var expressionData = [];
     //Using jitter_var instead of jitter because selector is called jitter, avoid confusion
     var jitter_var = "<%= @values_jitter %>";
     var formatted_array = [];
-    <% @values.sort_by {|k,v| k}.each_with_index do |(cluster, data), index| %>
-      var name = "<%= data[:name] %>";
-      var data = <%= raw data[:y] %>;
-      var master_array = [name, data];
-      formatted_array.push(master_array);
+    <% @values.sort_by {|k,v| k}.each do |cluster, data| %>
+      formatted_array.push(["<%= cluster %>", <%= raw data[:y] %>]);
     <% end %>
     var title = "<%= params[:cluster]%>";
     var data = createTracesAndLayout(formatted_array, title, jitter_var);
     expressionData = [].concat.apply([], data[0] );
     expressionLayout = data[1];
 <% end%>
+$('#box-plot').empty();
 Plotly.newPlot('box-plot', expressionData, expressionLayout);
 
 $(document).trigger('scpPlotsDidRender');
