@@ -137,16 +137,14 @@
             // create delete button and listener, attach listener to update unselected
             var deleteButton = n === 0 ? '' :
                 '<td class="col-sm-1" style="padding-top: 27px;">' +
-                '<div class="btn btn-sm btn-danger delete-btn" id="' + id + 'Button">' +
+                '<div class="btn btn-sm btn-danger delete-btn annotation-delete-btn" id="' + id + 'Button">' +
                 '<span class="fa fa-times"></span>' +
                 '</div>' +
-                '</td>' +
-                '<script>' +
-                '$("#' + id + 'Button").click(function() {' +' selections[0] = selections[0].concat(selections['+ parseInt(n) +']);selections.splice('+ parseInt(n) +',1); updateSelection();'+ '});' + '<\/script>';
+                '</td>' ;
 
             var numCells = selections[n].length;
             // this handler remembers the alamo-- names users input to row text value for selection name
-            var textMemoryHandler = '<script>' + '$(user_annotation_user_data_arrays_attributes_'+ parseInt(n) +'_name).on(\"change paste keyup\", function(){var index = '+parseInt(n)+';array_of_names[index] = $(this).val()});'+'<\/script>';
+            //var textMemoryHandler = '<script>' + '$(user_annotation_user_data_arrays_attributes_'+ parseInt(n) +'_name).on(\"change paste keyup\", function(){var index = '+parseInt(n)+';array_of_names[index] = $(this).val()});'+'<\/script>';
 
             // rowString is the string to add, that contains all the row information
             var rowString =
@@ -155,7 +153,7 @@
                 name + ': ' + numCells + ' Cells' +
                 getSetLabelInputs(n, selections[n], array_of_names[n]) +
                 '</td>' +
-                deleteButton + textMemoryHandler+
+                deleteButton
                 '</tr>';
 
             $('#well-table').prepend(rowString);
@@ -206,4 +204,20 @@
         // after selection, update rows
         updateSelection();
     });
+
+
+    // Event listener to remember typing names in
+    $('#selection-well').on("change paste keyup",".annotation-label", function(){
+        var index = parseInt(this.id.replace('user_annotation_user_data_arrays_attributes_', '').replace('_name', ''));
+        array_of_names[index] = $(this).val();
+    });
+
+    // Event listener to handle deleting selected annotations
+    $('#selection-well').on("click","annotation-delete-btn", function(){
+        var index = parseInt(this.id.replace('Selection', '').replace('Button', ''));
+        selections[0] = selections[0].concat(selections[index]);
+        selections.splice(index,1);
+        updateSelection();
+    });
+
 </script>
