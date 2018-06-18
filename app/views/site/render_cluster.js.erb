@@ -21,22 +21,13 @@ $('#search_cluster').val("<%= params[:cluster] %>");
 // clear listener and reattach
 $(window).off('resizeEnd');
 $(window).on('resizeEnd', function() {
-
-    var plot = $('#cluster-plot');
-
-    if (typeof plot[0] === 'undefined') {
-      return;
+    var newHeight = calculatePlotViewport('#render-target');
+    if (layout.height === newHeight) {
+        Plotly.newPlot('cluster-plot', data, layout);
+    } else {
+        layout.height = newHeight;
+        Plotly.relayout('cluster-plot', layout);
     }
-
-    var curSize = plot.actual('width') * SCATTER_RATIO;
-
-    if (curSize < minPlotAreaWidth) {
-      curSize = minPlotAreaWidth;
-    }
-
-    layout['width'] = curSize;
-    layout['height'] = curSize;
-    Plotly.relayout('cluster-plot', layout);
 });
 
 // attach click event for toggle switch

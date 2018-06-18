@@ -287,9 +287,12 @@ class SiteController < ApplicationController
     if @cluster.has_coordinate_labels?
       @coordinate_labels = load_cluster_group_coordinate_labels
     end
-    @range = set_range(@coordinates.values)
-    if @cluster.is_3d? && @cluster.has_range?
-      @aspect = compute_aspect_ratios(@range)
+
+    if @cluster.is_3d?
+      @range = set_range(@coordinates.values)
+      if @cluster.has_range?
+        @aspect = compute_aspect_ratios(@range)
+      end
     end
     @axes = load_axis_labels
 
