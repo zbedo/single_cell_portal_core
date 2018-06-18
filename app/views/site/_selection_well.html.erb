@@ -143,9 +143,6 @@
                 '</td>' ;
 
             var numCells = selections[n].length;
-            // this handler remembers the alamo-- names users input to row text value for selection name
-            //var textMemoryHandler = '<script>' + '$(user_annotation_user_data_arrays_attributes_'+ parseInt(n) +'_name).on(\"change paste keyup\", function(){var index = '+parseInt(n)+';array_of_names[index] = $(this).val()});'+'<\/script>';
-
             // rowString is the string to add, that contains all the row information
             var rowString =
                 '<tr id="' + id + 'Row">' +
@@ -219,5 +216,4 @@
         selections.splice(index,1);
         updateSelection();
     });
-
 </script>
