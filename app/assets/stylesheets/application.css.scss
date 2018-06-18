@@ -480,6 +480,13 @@ h4, .h4, h5, .h5, h6, .h6 {
   margin-right: 4px;
 }
 
+#view-options-panel {
+  background-color: transparent;
+  z-index: 1000;
+  border-bottom: none;
+  box-shadow: none;
+}
+
 #search-omnibar-menu i {
   float: left;
   margin-right: 7px;

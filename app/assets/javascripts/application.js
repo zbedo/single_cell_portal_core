@@ -521,6 +521,7 @@ function getRenderUrlParams() {
   var boxpoints = $('#boxpoints_select').val() === undefined ? 'all' : $('#boxpoints_select').val();
   var heatmap_row_centering = $('#heatmap_row_centering').val();
   var heatmap_size = parseInt($('#heatmap_size').val());
+  var color_profile = $('#colorscale').val();
 
   var urlParams =
     'cluster=' + cluster +
@@ -530,7 +531,8 @@ function getRenderUrlParams() {
     '&subsample=' + subsample +
     '&plot_type=' + plot_type +
     '&heatmap_row_centering=' + heatmap_row_centering +
-    '&heatmap_size=' + heatmap_size;
+    '&heatmap_size=' + heatmap_size +
+    '&colorscale=' + color_profile;
 
   return urlParams;
 }

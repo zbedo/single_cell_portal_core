@@ -23,8 +23,7 @@ $('#expression-plots [data-toggle="tooltip"]').tooltip({container: 'body'});
 // set CLUSTER_TYPE to control annotations behavior
 CLUSTER_TYPE = '<%= @cluster.cluster_type %>'
 
-// clear listeners and reattach
-$(window).off('resizeEnd');
+// resize listener
 
 $(window).on('resizeEnd', function() {
 

@@ -35,7 +35,7 @@ function createTracesAndLayout(arr, title, jitter='all'){
         var bandwidth = nrd0(dist);
 
         // replace the none selection with bool false for plotly
-        if (jitter === 'none'){
+        if (jitter === ''){
             jitter = false;
         }
         // check if there is a distribution before adding trace

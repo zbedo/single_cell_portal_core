@@ -19,8 +19,11 @@ var data = [];
     marker: <%= raw data[:marker].to_json %>
 	};
 
-  // set color
-  cluster_<%= index %>['marker']['color'] = colorBrewerSet[<%= index %> % 27];
+  <% if @selected_annotation[:type] == 'group' %>
+    // set color
+    cluster_<%= index %>['marker']['color'] = colorBrewerSet[<%= index %> % 27];
+  <% end %>
+
   data.push(cluster_<%= index %>);
 <% end %>
 
@@ -30,14 +33,15 @@ var data = [];
 Plotly.newPlot('cluster-plot', data, layout);
 
 // listener to redraw expression scatter with new color profile
+$('#colorscale').off('change');
 $("#colorscale").change(function() {
-    <%= render 'study_scatter_layout' %>
+
     var theme = $(this).val();
     data[0].marker.colorscale = theme;
     console.log("setting colorscale to " + theme);
 
-    Plotly.newPlot('cluster-plot', data, layout);
-
+    $('#search_colorscale').val(theme);
+    Plotly.update('cluster-plot', data, layout);
 });
 
 $('#cluster-figure-legend').html("<p class='text-center help-block'><%= escape_javascript(render text: @cluster.study_file.description) %></p>");

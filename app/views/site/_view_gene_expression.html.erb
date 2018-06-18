@@ -38,6 +38,7 @@
 
       function renderGeneExpressionPlots() {
 
+          $(window).off('resizeEnd');
           <% if !params[:gene].nil? %>
           var url = '<%= render_gene_expression_plots_path(study_name: params[:study_name], gene: params[:gene]) %>';
           <% elsif !params[:gene_set].nil? %>

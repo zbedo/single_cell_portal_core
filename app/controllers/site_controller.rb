@@ -40,7 +40,7 @@ class SiteController < ApplicationController
                 :expression_query, :annotation_query, :precomputed_results,
                 cache_path: :set_cache_path
 
-  COLORSCALE_THEMES = %w(Blackbody Bluered Blues Earth Electric Greens Hot Jet Picnic Portland Rainbow RdBu Reds Viridis YlGnBu YlOrRd)
+  COLORSCALE_THEMES = %w(Greys YlGnBu Greens YlOrRd Bluered RdBu Reds Blues Picnic Rainbow Portland Jet Hot Blackbody Earth Electric Viridis Cividis)
 
   ###
   #
@@ -116,9 +116,9 @@ class SiteController < ApplicationController
     consensus = params[:search][:consensus]
     subsample = params[:search][:subsample]
     plot_type = params[:search][:plot_type]
-    jitter = params[:search][:jitter]
     heatmap_row_centering = params[:search][:heatmap_row_centering]
     heatmap_size = params[:search][:heatmap_size]
+    colorscale = params[:search][:colorscale]
 
     # if only one gene was searched for, make an attempt to load it and redirect to correct page
     if @terms.size == 1
@@ -129,9 +129,9 @@ class SiteController < ApplicationController
       else
         redirect_to merge_default_redirect_params(view_gene_expression_path(study_name: params[:study_name], gene: @gene['name'],
                                                                             cluster: cluster, annotation: annotation, consensus: consensus,
-                                                                            subsample: subsample, plot_type: plot_type, jitter: jitter,
+                                                                            subsample: subsample, plot_type: plot_type,
                                                                             boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering,
-                                                                            heatmap_size: heatmap_size),
+                                                                            heatmap_size: heatmap_size, colorscale: colorscale),
                                                   scpbr: params[:scpbr])  and return
       end
     end
@@ -141,15 +141,15 @@ class SiteController < ApplicationController
       redirect_to merge_default_redirect_params(view_gene_set_expression_path(study_name: params[:study_name], search: {genes: @terms.join(',')},
                                                                               cluster: cluster, annotation: annotation,
                                                                               consensus: consensus, subsample: subsample,
-                                                                              plot_type: plot_type,  boxpoints: boxpoints, jitter: jitter,
+                                                                              plot_type: plot_type,  boxpoints: boxpoints,
                                                                               heatmap_row_centering: heatmap_row_centering,
-                                                                              heatmap_size: heatmap_size),
+                                                                              heatmap_size: heatmap_size, colorscale: colorscale),
                                                 scpbr: params[:scpbr])
     else
       redirect_to merge_default_redirect_params(view_gene_expression_heatmap_path(search: {genes: @terms.join(',')}, cluster: cluster,
-                                                                                  annotation: annotation, plot_type: plot_type, jitter: jitter,
+                                                                                  annotation: annotation, plot_type: plot_type,
                                                                                   boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering,
-                                                                                  heatmap_size: heatmap_size),
+                                                                                  heatmap_size: heatmap_size, colorscale: colorscale),
                                                 scpbr: params[:scpbr])
     end
   end
@@ -1454,7 +1454,7 @@ class SiteController < ApplicationController
               color: color_array,
               size: @study.default_cluster_point_size,
               line: { color: 'rgb(40,40,40)', width: @study.show_cluster_point_borders? ? 0.5 : 0},
-              colorscale: 'Reds',
+              colorscale: params[:colorscale].blank? ? 'Reds' : params[:colorscale],
               showscale: true,
               colorbar: {
                   title: annotation[:name] ,
@@ -1700,7 +1700,7 @@ class SiteController < ApplicationController
     expression[:all][:marker][:line] = { color: 'rgb(255,255,255)', width: @study.show_cluster_point_borders? ? 0.5 : 0}
     color_minmax =  expression[:all][:marker][:color].minmax
     expression[:all][:marker][:cmin], expression[:all][:marker][:cmax] = color_minmax
-    expression[:all][:marker][:colorscale] = 'Reds'
+    expression[:all][:marker][:colorscale] = params[:colorscale].blank? ? 'Reds' : params[:colorscale]
     expression
   end
 
@@ -1831,7 +1831,7 @@ class SiteController < ApplicationController
     expression[:all][:marker][:line] = { color: 'rgb(40,40,40)', width: @study.show_cluster_point_borders? ? 0.5 : 0}
     color_minmax =  expression[:all][:marker][:color].minmax
     expression[:all][:marker][:cmin], expression[:all][:marker][:cmax] = color_minmax
-    expression[:all][:marker][:colorscale] = 'Reds'
+    expression[:all][:marker][:colorscale] = params[:colorscale].blank? ? 'Reds' : params[:colorscale]
     expression
   end
 
@@ -2165,8 +2165,8 @@ class SiteController < ApplicationController
         unless params[:subsample].nil?
           params_key += "_#{params[:subsample]}"
         end
-        unless params[:jitter].nil?
-          params_key += "_#{params[:jitter]}"
+        unless params[:boxpoints].nil?
+          params_key += "_#{params[:boxpoints]}"
         end
         params_key += "_#{params[:plot_type]}"
         render_gene_expression_plots_url(study_name: params[:study_name], gene: params[:gene]) + params_key
@@ -2185,8 +2185,8 @@ class SiteController < ApplicationController
         unless params[:consensus].nil?
           params_key += "_#{params[:consensus]}"
         end
-        unless params[:jitter].nil?
-          params_key += "_#{params[:jitter]}"
+        unless params[:boxpoints].nil?
+          params_key += "_#{params[:boxpoints]}"
         end
         render_gene_set_expression_plots_url(study_name: params[:study_name]) + params_key
       when 'expression_query'

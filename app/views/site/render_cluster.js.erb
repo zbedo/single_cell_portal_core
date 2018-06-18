@@ -2,10 +2,8 @@
 console.log('render status at start: ' + $('#cluster-plot').data('rendered'));
 // render colorscale picker if needed
 if (<%= @selected_annotation[:type] == 'numeric' %>) {
-    $('#colorscale-target').html("<%= escape_javascript(render partial: 'colorscale_picker') %>");
     $('#toggle-plots').html("");
 } else {
-    $('#colorscale-target').html("");
     $('#toggle-plots').html("<%= escape_javascript(render partial: 'trace_toggle') %>");
     $('#toggle-traces').tooltip({container: 'body', placement: 'left', trigger: 'hover'});
 }
@@ -18,8 +16,7 @@ CLUSTER_TYPE = '<%= @cluster.cluster_type %>'
 // set the cluster field in the search box to scope search correctly
 $('#search_cluster').val("<%= params[:cluster] %>");
 
-// clear listener and reattach
-$(window).off('resizeEnd');
+// resize listener
 $(window).on('resizeEnd', function() {
     var newHeight = calculatePlotViewport('#render-target');
     if (layout.height === newHeight) {
