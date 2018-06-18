@@ -4,8 +4,7 @@
   <%= f.hidden_field :annotation, value: set_annotation_value(@study, params) %>
   <%= f.hidden_field :subsample, value: set_subsample_value(params) %>
   <%= f.hidden_field :plot_type, value: set_distribution_plot_type_value(params) %>
-  <%= f.hidden_field :kernel_type, value: set_kernel_type_value(params) %>
-  <%= f.hidden_field :band_type, value: set_band_type_value(params) %>
+  <%= f.hidden_field :jitter, value: set_distribution_jitter_value(params) %>
   <%= f.hidden_field :heatmap_row_centering, value: set_heatmap_row_centering_value(params) %>
   <%= f.hidden_field :heatmap_size, value: set_heatmap_size_value(params) %>
   <%= hidden_field_tag :scpbr, params[:scpbr] %>
