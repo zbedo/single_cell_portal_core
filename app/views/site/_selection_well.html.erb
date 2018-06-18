@@ -210,8 +210,9 @@
     });
 
     // Event listener to handle deleting selected annotations
-    $('#selection-well').on("click","annotation-delete-btn", function(){
+    $('#selection-well').on("click",".annotation-delete-btn", function(){
         var index = parseInt(this.id.replace('Selection', '').replace('Button', ''));
+        console.log(index);
         selections[0] = selections[0].concat(selections[index]);
         selections.splice(index,1);
         updateSelection();
