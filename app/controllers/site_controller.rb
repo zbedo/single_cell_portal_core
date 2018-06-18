@@ -329,7 +329,7 @@ class SiteController < ApplicationController
         @values_box_type = 'box'
       else
         @values_box_type = 'violin'
-        @values_jitter = params[:jitter]
+        @values_jitter = params[:boxpoints]
       end
       @top_plot_partial = 'expression_plots_view'
       @top_plot_plotly = 'expression_plots_plotly'

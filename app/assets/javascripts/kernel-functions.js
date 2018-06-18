@@ -22,7 +22,7 @@ function nrd0(X){
 
 //This is the master function that creates all the plotly traces.
 //Takes an array of arrays and returns the data array of traces and the layout variable
-function createTracesAndLayout(arr, title, jitter = 'all'){
+function createTracesAndLayout(arr, title, jitter='all'){
     // Iterate through the formatted array [[name_of_trace, expression_data]...]
     // and create the response plotly objects, returning [plotly data object, plotly layout object]
     var data = Array();
@@ -35,11 +35,11 @@ function createTracesAndLayout(arr, title, jitter = 'all'){
         var bandwidth = nrd0(dist);
 
         // replace the none selection with bool false for plotly
-        if(jitter === 'none'){
+        if (jitter === 'none'){
             jitter = false;
         }
         // check if there is a distribution before adding trace
-        if(Math.max(...dist) !== Math.min(...dist)) {
+        if ( Math.max(...dist) !== Math.min(...dist) ) {
             // make a violin plot if there is a distribution
             data = data.concat([{
                 type: 'violin',
@@ -58,7 +58,7 @@ function createTracesAndLayout(arr, title, jitter = 'all'){
                 marker: {
                     size: 2,
                     color: '#000000',
-                    opacity: 0.8,
+                    opacity: 0.8
                 },
                 fillcolor: colorBrewerSet[x % 27],
                 line: {
@@ -69,7 +69,7 @@ function createTracesAndLayout(arr, title, jitter = 'all'){
                     visible: false
                 }
             }])
-        } else{
+        } else {
             // Make a boxplot for data with no distribution
             data = data.concat([{
                 type: 'box',
@@ -80,7 +80,7 @@ function createTracesAndLayout(arr, title, jitter = 'all'){
                     color: colorBrewerSet[x % 27],
                     size: 2,
                     line: {
-                        color: plotlyDefaultLineColor,
+                        color: plotlyDefaultLineColor
                     }
                 },
                 boxmean: true,
@@ -99,7 +99,7 @@ function createTracesAndLayout(arr, title, jitter = 'all'){
             pad: 10,
             b: 100
         },
-        autosize: true,
+        autosize: true
     };
     return [data, layout]
 }

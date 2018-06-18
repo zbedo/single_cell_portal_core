@@ -40,7 +40,6 @@
 //= require jquery.stickyPanel
 //= require clipboard.min
 //= require ideogram.min
-//= require jstat.min
 
 var fileUploading = false;
 var PAGE_RENDERED = false;
@@ -519,7 +518,6 @@ function getRenderUrlParams() {
   var consensus = $('#search_consensus').val();
   var subsample = $('#subsample').val();
   var plot_type = $('#plot_type').val() === undefined ? 'violin' : $('#plot_type').val();
-  var jitter = $('#jitter').val() === undefined ? 'all' : $('#jitter').val();
   var boxpoints = $('#boxpoints_select').val() === undefined ? 'all' : $('#boxpoints_select').val();
   var heatmap_row_centering = $('#heatmap_row_centering').val();
   var heatmap_size = parseInt($('#heatmap_size').val());
@@ -531,7 +529,6 @@ function getRenderUrlParams() {
     '&consensus=' + consensus +
     '&subsample=' + subsample +
     '&plot_type=' + plot_type +
-    '&jitter=' + jitter +
     '&heatmap_row_centering=' + heatmap_row_centering +
     '&heatmap_size=' + heatmap_size;
 
