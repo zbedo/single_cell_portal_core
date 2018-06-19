@@ -966,7 +966,7 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.switch_to.window(@driver.window_handles.last)
     sleep(1)
 		# select the correct user
-		user_link = @driver.find_element(:xpath, "//p[@data-email='#{$test_email}']")
+		user_link = @driver.find_element(:xpath, "//p[@data-email='#{$share_email}']")
 		user_link.click
 		table = @driver.find_element(:id, 'p6n-storage-objects-table')
 		table_body = table.find_element(:tag_name, 'tbody')
