@@ -1429,7 +1429,7 @@ class UiTestSuite < Test::Unit::TestCase
 		assert bg_color == expected_bg, "Background color is incorrect, expected '#{expected_bg}' but found '#{bg_color}'"
 		assert font_family == expected_font, "Background color is incorrect, expected '#{expected_font}' but found '#{font_family}'"
 		current_url = @driver.current_url
-		assert current_url.include?("brand=#{brand_id}"), "Brand URL paramerter is not present: #{current_url}"
+		assert current_url.include?("scpbr=#{brand_id}"), "Brand URL paramerter is not present: #{current_url}"
 
 		# search for a gene to make sure styles persist
 		gene = @genes.sample
