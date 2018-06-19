@@ -244,8 +244,17 @@ class StudiesController < ApplicationController
       workflow_info = configuration['methodRepoMethod']
       workflow_identifier = [workflow_info['methodNamespace'],workflow_info['methodName'],workflow_info['methodVersion'],].join('/')
       @workflow_config = AdminConfiguration.find_by(config_type: 'Workflow Name', value: workflow_identifier)
-      filename_depth = @workflow_config.options[:filename_depth].present? ? @workflow_config.options[:filename_depth].to_i : 1
-      task_names = @workflow_config.options[:task_names].to_s.split(',')
+      if @workflow_config.nil?
+        # check if there's a config option for the same workflow without a snapshot id on it
+        workflow_identifier.chomp!("/#{workflow_info['methodVersion']}")
+        @workflow_config = AdminConfiguration.find_by(config_type: 'Workflow Name', value: workflow_identifier)
+      end
+      filename_depth =  1
+      task_names = []
+      if @workflow_config.options[:filename_depth].present?
+        filename_depth = @workflow_config.options[:filename_depth].to_i
+        task_names = @workflow_config.options[:task_names].to_s.split(',')
+      end
       submission['workflows'].each do |workflow|
         workflow = Study.firecloud_client.get_workspace_submission_workflow(@study.firecloud_project, @study.firecloud_workspace,
                                                                             params[:submission_id], workflow['workflowId'])
