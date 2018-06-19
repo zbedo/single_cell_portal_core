@@ -1348,7 +1348,7 @@ class SiteController < ApplicationController
   def check_view_permissions
     unless @study.public?
       if (!user_signed_in? && !@study.public?) || (user_signed_in? && !@study.can_view?(current_user))
-        alert = 'You do not have permission to view the requested page.'
+        alert = 'You do not have permission to perform that action.'
         respond_to do |format|
           format.js {render js: "alert('#{alert}')" and return}
           format.html {redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]), alert: alert and return}

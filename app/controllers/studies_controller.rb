@@ -617,7 +617,7 @@ class StudiesController < ApplicationController
     @study = Study.find_by(url_safe_name: params[:study_name])
     # make sure user is signed in
     if !user_signed_in? || !@study.can_view?(current_user)
-      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
+      redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]),
                   alert: 'You do not have permission to perform that action.' and return
     elsif @study.embargoed?(current_user)
       redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
