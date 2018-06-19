@@ -34,7 +34,7 @@ class User
          :recoverable, :rememberable, :trackable, :validatable,
          :omniauthable, :omniauth_providers => [:google_oauth2]
 
-  validates_format_of :email,:with => Devise.email_regexp
+  validates_format_of :email, :with => Devise.email_regexp, message: 'is not a valid email address.'
 
   ## Database authenticatable
   field :email,              type: String, default: ""
@@ -124,23 +124,25 @@ class User
   def generate_access_token
     unless self.refresh_token.nil?
       begin
-        response = RestClient.post 'https://accounts.google.com/o/oauth2/token',
-                                   :grant_type => 'refresh_token',
-                                   :refresh_token => self.refresh_token,
-                                   :client_id => ENV['OAUTH_CLIENT_ID'],
-                                   :client_secret => ENV['OAUTH_CLIENT_SECRET']
-        token_vals = JSON.parse(response.body)
+        client = Signet::OAuth2::Client.new(
+            token_credential_uri: 'https://accounts.google.com/o/oauth2/token',
+            grant_type:'refresh_token',
+            refresh_token: self.refresh_token,
+            client_id: ENV['OAUTH_CLIENT_ID'],
+            client_secret: ENV['OAUTH_CLIENT_SECRET'],
+            expires_in: 3600
+        )
+        token_vals = client.fetch_access_token
         expires_at = DateTime.now + token_vals['expires_in'].to_i.seconds
         user_access_token = {'access_token' => token_vals['access_token'], 'expires_in' => token_vals['expires_in'], 'expires_at' => expires_at}
         self.update!(access_token: user_access_token)
         user_access_token
-      rescue RestClient::BadRequest => e
-        Rails.logger.error "#{Time.now}: Unable to generate access token for user #{self.email}; refresh token is invalid."
-        nil
       rescue => e
-        Rails.logger.error "#{Time.now}: Unable to generate access token for user #{self.email} due to unknown error; #{e.message}"
+        Rails.logger.error "#{Time.now}: Unable to generate access token for user #{self.email} due to error; #{e.message}"
+        nil
       end
     else
+      Rails.logger.error "#{Time.now}: Unable to generate access token for user #{self.email} due to missing refresh token"
       nil
     end
   end

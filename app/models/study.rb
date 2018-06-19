@@ -9,6 +9,7 @@ class Study
 
   include Mongoid::Document
   include Mongoid::Timestamps
+  extend ValidationTools
 
   ###
   #
@@ -70,26 +71,6 @@ class Study
     end
   end
 
-  has_many :expression_scores, dependent: :delete do
-    def by_gene(gene, study_file_ids)
-      found_scores = any_of({gene: gene, :study_file_id.in => study_file_ids}, {searchable_gene: gene.downcase, :study_file_id.in => study_file_ids})
-      if found_scores.empty?
-        return []
-      else
-        # since we can have duplicate genes but not cells, merge into one object for rendering
-        merged_scores = {'searchable_gene' => gene.downcase, 'gene' => gene, 'scores' => {}}
-        found_scores.each do |score|
-          merged_scores['scores'].merge!(score.scores)
-        end
-        return [merged_scores]
-      end
-    end
-
-    def unique_genes
-      pluck(:gene).uniq
-    end
-  end
-
   has_many :genes, dependent: :delete do
     def by_name(gene_name, study_file_ids)
       found_scores = any_of({name: gene_name, :study_file_id.in => study_file_ids}, {searchable_name: gene_name.downcase, :study_file_id.in => study_file_ids})
@@ -143,12 +124,6 @@ class Study
   has_many :data_arrays, as: :linear_data, dependent: :delete do
     def by_name_and_type(name, type)
       where(name: name, array_type: type).order_by(&:array_index)
-    end
-  end
-
-  has_many :study_metadata, dependent: :delete do
-    def by_name_and_type(name, type)
-      where(name: name, annotation_type: type).to_a
     end
   end
 
@@ -232,6 +207,14 @@ class Study
       end
     end
   end
+
+  # XSS protection
+  validate :strip_unsafe_characters_from_description
+  validates_format_of :name, with: ValidationTools::ALPHANUMERIC_SPACE_DASH,
+                      message: ValidationTools::ALPHANUMERIC_SPACE_DASH_ERROR
+
+  validates_format_of :firecloud_workspace, :firecloud_project, :data_dir, :bucket_id, :url_safe_name,
+                      with: ValidationTools::ALPHANUMERIC_DASH, message: ValidationTools::ALPHANUMERIC_DASH_ERROR
 
   # update validators
   validates_uniqueness_of :name, on: :update, message: ": %{value} has already been taken.  Please choose another name."
@@ -2518,5 +2501,9 @@ class Study
     else
       true
     end
+  end
+
+  def strip_unsafe_characters_from_description
+    self.description = self.description.gsub(ValidationTools::SCRIPT_TAG_REGEX, '')
   end
 end

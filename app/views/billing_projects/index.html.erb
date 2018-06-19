@@ -113,7 +113,7 @@
             $('#billing_project_project_name').parent().addClass('has-error has-feedback');
             return false;
         } else {
-            $(this).button('saving');
+            $(this).addClass('disabled');
             $(this).toggleClass('btn-success btn-warning');
             return true;
         }

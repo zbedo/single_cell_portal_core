@@ -1,23 +1,29 @@
 <div id="boxpoints-picker">
-	<%= label_tag :boxpoints_select, 'Data Points' %>
-  <%= select_tag :boxpoints_select, options_for_select([['None', ''], ['All', 'all'], ['Outliers', 'outliers'] , ['Suspected Outliers','suspectedoutliers']], params[:boxpoints].nil? ? 'all' : params[:boxpoints]), class: 'form-control' %>
+	<%= label_tag :boxpoints_select, 'Data Points' %><i class='fa fa-fw fa-question-circle' data-toggle="tooltip" title="Control rendering of data/jitter points in distribution plots."></i>
+  <%= select_tag :boxpoints_select, options_for_select([['None', ''], ['All', 'all'], ['Outliers', 'outliers'], ['Suspected Outliers', 'suspectedoutliers']], params[:boxpoints].nil? ? 'all' : params[:boxpoints]), class: 'form-control' %>
 </div>
 
 <script type="text/javascript">
 
 	$("#boxpoints_select").change(function() {
-		var mode = $(this).val();
-		$('#boxpoints').val(mode);
-		$('#selected_boxpoints').val(mode);
-		$(expressionData).each(function() {
-			this.boxpoints = mode;
-			if (this.boxpoints == '') {
-				this.boxpoints = false;
-			}
-			console.log("setting boxpoints for " + this.name + " to " + this.boxpoints);
-		});
-		<%= render partial: 'expression_box_layout' %>
-		Plotly.newPlot('box-plot', expressionData, expressionLayout);
+	    var mode = $(this).val();
+	    $('#boxpoints').val(mode);
+	    $('#selected_boxpoints').val(mode);
+	    var plotType = $('#plot_type').val();
+	    var updateMode = $(this).val() === '' ? false : $(this).val();
+	    $(expressionData).each(function() {
+	        switch (plotType) {
+              case 'violin':
+                  this.points = updateMode;
+                  break;
+              case 'box':
+                  this.boxpoints = updateMode;
+          }
+	        console.log("setting boxpoints for " + this.name + " to " + updateMode);
+	    });
+	    // call newPlot as calling update with points = false throws error
+      // TODO: revisit this when bug is fixed
+	    Plotly.newPlot('box-plot', expressionData, expressionLayout);
 	});
 
 </script>

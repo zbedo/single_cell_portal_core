@@ -1,20 +1,15 @@
-var size = $('#cluster-plot').actual('width') * SCATTER_RATIO;
-
-if (size < minPlotAreaWidth) {
-  size = minPlotAreaWidth;
-}
+var plotHeight = calculatePlotViewport('#render-target');
 
 var layout = {
     hovermode: 'closest',
     font: plotlyLabelFont,
-    width: size,
-    height: size,
     margin: {
         t: 25,
         r: 0,
         b: 20,
         l: 0
-    }
+    },
+    height: plotHeight
 }
 
 <% if @cluster.cluster_type == '3d' %>
@@ -22,31 +17,36 @@ var layout = {
   layout.scene = {
       camera: currentCamera,
       xaxis: {
-          range: <%= raw @range[:x] %>,
+          autorange: true,
           title: '<%=  @axes[:x] %>',
           showticklabels: false
       },
       yaxis: {
-          range: <%= raw @range[:y] %>,
+          autorange: true,
           title: '<%= @axes[:y] %>',
           showticklabels: false
       },
       zaxis: {
-          range: <%= raw @range[:z] %>,
+          autorange: true,
           title: '<%= @axes[:z] %>',
           showticklabels: false
       },
-      <% if @cluster.has_range? %>
-        aspectmode: '<%= @aspect[:mode] %>',
-        aspectratio: {
+      aspectmode: 'cube'
+  };
+  <% if @cluster.has_range? %>
+      layout.scene.xaxis.autorange = false;
+      layout.scene.xaxis.range = <%= raw @range[:x] %>;
+      layout.scene.yaxis.autorange = false;
+      layout.scene.yaxis.range = <%= raw @range[:y] %>;
+      layout.scene.zaxis.autorange = false;
+      layout.scene.zaxis.range = <%= raw @range[:z] %>;
+      layout.scene.aspectmode = '<%= @aspect[:mode] %>',
+      layout.scene.aspectratio = {
           x: <%= @aspect[:x] %>,
           y: <%= @aspect[:y] %>,
           z: <%= @aspect[:z] %>
-        }
-      <% else %>
-        aspectmode: 'cube'
-      <% end %>
-  };
+      }
+  <% end %>
 
   <% if @cluster.has_coordinate_labels? %>
     layout.scene.annotations = <%= raw @coordinate_labels.to_json %>
@@ -54,17 +54,25 @@ var layout = {
 
 <% else %>
   layout.xaxis = {
-      range: <%= raw @range[:x] %>,
       title: '<%=  @axes[:x] %>',
       showticklabels: false
   };
 
   layout.yaxis = {
-      range: <%= raw @range[:y] %>,
       title: '<%= @axes[:y] %>',
       showticklabels: false,
       scaleanchor: 'x' // square a 2d plot
+
   };
+
+  // if user has supplied a range, set that, otherwise let Plotly autorange
+  <% if @cluster.has_range? %>
+    layout.xaxis.range = <%= raw @cluster.domain_ranges['x'] %>;
+    layout.yaxis.range = <%= raw @cluster.domain_ranges['y'] %>;
+  <% else %>
+    layout.xaxis.autorange = true;
+    layout.yaxis.autorange = true;
+  <% end %>
 
   <% if @cluster.has_coordinate_labels? %>
     layout.annotations = <%= raw @coordinate_labels.to_json %>

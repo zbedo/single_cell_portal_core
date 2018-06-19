@@ -27,7 +27,7 @@ class SiteController < ApplicationController
   before_action :load_precomputed_options, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots,
                                                   :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression,
                                                   :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap]
-  before_action :check_view_permissions, except: [:index, :privacy_policy, :search, :precomputed_results, :expression_query,
+  before_action :check_view_permissions, except: [:index, :privacy_policy, :search, :precomputed_results, :expression_query, :annotation_query,
                                                   :view_workflow_wdl, :log_action, :get_workspace_samples, :update_workspace_samples,
                                                   :create_totat, :get_workflow_options, :fetch_data]
   before_action :check_compute_permissions, only: [:get_fastq_files, :get_workspace_samples, :update_workspace_samples,
@@ -40,7 +40,7 @@ class SiteController < ApplicationController
                 :expression_query, :annotation_query, :precomputed_results,
                 cache_path: :set_cache_path
 
-  COLORSCALE_THEMES = %w(Blackbody Bluered Blues Earth Electric Greens Hot Jet Picnic Portland Rainbow RdBu Reds Viridis YlGnBu YlOrRd)
+  COLORSCALE_THEMES = %w(Greys YlGnBu Greens YlOrRd Bluered RdBu Reds Blues Picnic Rainbow Portland Jet Hot Blackbody Earth Electric Viridis Cividis)
 
   ###
   #
@@ -116,10 +116,9 @@ class SiteController < ApplicationController
     consensus = params[:search][:consensus]
     subsample = params[:search][:subsample]
     plot_type = params[:search][:plot_type]
-    kernel_type = params[:search][:kernel_type]
-    band_type = params[:search][:band_type]
     heatmap_row_centering = params[:search][:heatmap_row_centering]
     heatmap_size = params[:search][:heatmap_size]
+    colorscale = params[:search][:colorscale]
 
     # if only one gene was searched for, make an attempt to load it and redirect to correct page
     if @terms.size == 1
@@ -131,9 +130,8 @@ class SiteController < ApplicationController
         redirect_to merge_default_redirect_params(view_gene_expression_path(study_name: params[:study_name], gene: @gene['name'],
                                                                             cluster: cluster, annotation: annotation, consensus: consensus,
                                                                             subsample: subsample, plot_type: plot_type,
-                                                                            kernel_type: kernel_type, band_type: band_type,
                                                                             boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering,
-                                                                            heatmap_size: heatmap_size),
+                                                                            heatmap_size: heatmap_size, colorscale: colorscale),
                                                   scpbr: params[:scpbr])  and return
       end
     end
@@ -143,17 +141,15 @@ class SiteController < ApplicationController
       redirect_to merge_default_redirect_params(view_gene_set_expression_path(study_name: params[:study_name], search: {genes: @terms.join(',')},
                                                                               cluster: cluster, annotation: annotation,
                                                                               consensus: consensus, subsample: subsample,
-                                                                              plot_type: plot_type, kernel_type: kernel_type,
-                                                                              band_type: band_type, boxpoints: boxpoints,
+                                                                              plot_type: plot_type,  boxpoints: boxpoints,
                                                                               heatmap_row_centering: heatmap_row_centering,
-                                                                              heatmap_size: heatmap_size),
+                                                                              heatmap_size: heatmap_size, colorscale: colorscale),
                                                 scpbr: params[:scpbr])
     else
       redirect_to merge_default_redirect_params(view_gene_expression_heatmap_path(search: {genes: @terms.join(',')}, cluster: cluster,
                                                                                   annotation: annotation, plot_type: plot_type,
-                                                                                  kernel_type: kernel_type, band_type: band_type,
                                                                                   boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering,
-                                                                                  heatmap_size: heatmap_size),
+                                                                                  heatmap_size: heatmap_size, colorscale: colorscale),
                                                 scpbr: params[:scpbr])
     end
   end
@@ -291,9 +287,12 @@ class SiteController < ApplicationController
     if @cluster.has_coordinate_labels?
       @coordinate_labels = load_cluster_group_coordinate_labels
     end
-    @range = set_range(@coordinates.values)
-    if @cluster.is_3d? && @cluster.has_range?
-      @aspect = compute_aspect_ratios(@range)
+
+    if @cluster.is_3d?
+      @range = set_range(@coordinates.values)
+      if @cluster.has_range?
+        @aspect = compute_aspect_ratios(@range)
+      end
     end
     @axes = load_axis_labels
 
@@ -330,8 +329,7 @@ class SiteController < ApplicationController
         @values_box_type = 'box'
       else
         @values_box_type = 'violin'
-        @values_kernel_type = params[:kernel_type]
-        @values_band_type = params[:band_type]
+        @values_jitter = params[:boxpoints]
       end
       @top_plot_partial = 'expression_plots_view'
       @top_plot_plotly = 'expression_plots_plotly'
@@ -410,8 +408,7 @@ class SiteController < ApplicationController
         @values_box_type = 'box'
       else
         @values_box_type = 'violin'
-        @values_kernel_type = params[:kernel_type]
-        @values_band_type = params[:band_type]
+        @values_jitter = params[:jitter]
       end
       @top_plot_partial = 'expression_plots_view'
       @top_plot_plotly = 'expression_plots_plotly'
@@ -490,10 +487,10 @@ class SiteController < ApplicationController
         row = [gene['name'], ""]
         case params[:row_centered]
           when 'z-score'
-            vals = ExpressionScore.z_score(gene['scores'], @cells)
+            vals = Gene.z_score(gene['scores'], @cells)
             row += vals
           when 'robust-z-score'
-            vals = ExpressionScore.robust_z_score(gene['scores'], @cells)
+            vals = Gene.robust_z_score(gene['scores'], @cells)
             row += vals
           else
             @cells.each do |cell|
@@ -512,24 +509,28 @@ class SiteController < ApplicationController
 
   # load annotations in tsv format for Morpheus
   def annotation_query
-    @cells = @cluster.concatenate_data_arrays('text', 'cells')
-    if @selected_annotation[:scope] == 'cluster'
-      @annotations = @cluster.concatenate_data_arrays(@selected_annotation[:name], 'annotations')
-    else
-      study_annotations = @study.cell_metadata_values(@selected_annotation[:name], @selected_annotation[:type])
-      @annotations = []
-      @cells.each do |cell|
-        @annotations << study_annotations[cell]
+    if check_xhr_view_permissions
+      @cells = @cluster.concatenate_data_arrays('text', 'cells')
+      if @selected_annotation[:scope] == 'cluster'
+        @annotations = @cluster.concatenate_data_arrays(@selected_annotation[:name], 'annotations')
+      else
+        study_annotations = @study.cell_metadata_values(@selected_annotation[:name], @selected_annotation[:type])
+        @annotations = []
+        @cells.each do |cell|
+          @annotations << study_annotations[cell]
+        end
       end
+      # assemble rows of data
+      @rows = []
+      @cells.each_with_index do |cell, index|
+        @rows << [cell, @annotations[index]].join("\t")
+      end
+      @headers = ['NAME', @selected_annotation[:name]]
+      @data = [@headers.join("\t"), @rows.join("\n")].join("\n")
+      send_data @data, type: 'text/plain'
+    else
+      head 403
     end
-    # assemble rows of data
-    @rows = []
-    @cells.each_with_index do |cell, index|
-      @rows << [cell, @annotations[index]].join("\t")
-    end
-    @headers = ['NAME', @selected_annotation[:name]]
-    @data = [@headers.join("\t"), @rows.join("\n")].join("\n")
-    send_data @data, type: 'text/plain'
   end
 
   # dynamically reload cluster-based annotations list when changing clusters
@@ -627,14 +628,20 @@ class SiteController < ApplicationController
           @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_project, @study.firecloud_workspace, params[:filename], expires: 15)
           current_user.update(daily_download_quota: user_quota)
         else
-          redirect_to view_study_path(@study.url_safe_name), alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
+          redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]), alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
         end
         # redirect directly to file to trigger download
-        redirect_to @signed_url
+        # validate that the signed_url is in fact the correct URL - it must be a GCS link
+        if is_valid_signed_url?(@signed_url)
+          redirect_to @signed_url
+        else
+          redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
+                      alert: 'We are unable to process your download.  Please try again later.' and return
+        end
       else
         # send notification to the study owner that file is missing (if notifications turned on)
         SingleCellMailer.user_download_fail_notification(@study, params[:filename]).deliver_now
-        redirect_to view_study_path, alert: 'The file you requested is currently not available.  Please contact the study owner if you require access to this file.' and return
+        redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]), alert: 'The file you requested is currently not available.  Please contact the study owner if you require access to this file.' and return
       end
     rescue RuntimeError => e
       logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
@@ -1345,7 +1352,7 @@ class SiteController < ApplicationController
   def check_view_permissions
     unless @study.public?
       if (!user_signed_in? && !@study.public?) || (user_signed_in? && !@study.can_view?(current_user))
-        alert = 'You do not have permission to view the requested page.'
+        alert = 'You do not have permission to perform that action.'
         respond_to do |format|
           format.js {render js: "alert('#{alert}')" and return}
           format.html {redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]), alert: alert and return}
@@ -1451,7 +1458,7 @@ class SiteController < ApplicationController
               color: color_array,
               size: @study.default_cluster_point_size,
               line: { color: 'rgb(40,40,40)', width: @study.show_cluster_point_borders? ? 0.5 : 0},
-              colorscale: 'Reds',
+              colorscale: params[:colorscale].blank? ? 'Reds' : params[:colorscale],
               showscale: true,
               colorbar: {
                   title: annotation[:name] ,
@@ -1697,7 +1704,7 @@ class SiteController < ApplicationController
     expression[:all][:marker][:line] = { color: 'rgb(255,255,255)', width: @study.show_cluster_point_borders? ? 0.5 : 0}
     color_minmax =  expression[:all][:marker][:color].minmax
     expression[:all][:marker][:cmin], expression[:all][:marker][:cmax] = color_minmax
-    expression[:all][:marker][:colorscale] = 'Reds'
+    expression[:all][:marker][:colorscale] = params[:colorscale].blank? ? 'Reds' : params[:colorscale]
     expression
   end
 
@@ -1828,7 +1835,7 @@ class SiteController < ApplicationController
     expression[:all][:marker][:line] = { color: 'rgb(40,40,40)', width: @study.show_cluster_point_borders? ? 0.5 : 0}
     color_minmax =  expression[:all][:marker][:color].minmax
     expression[:all][:marker][:cmin], expression[:all][:marker][:cmax] = color_minmax
-    expression[:all][:marker][:colorscale] = 'Reds'
+    expression[:all][:marker][:colorscale] = params[:colorscale].blank? ? 'Reds' : params[:colorscale]
     expression
   end
 
@@ -2162,13 +2169,10 @@ class SiteController < ApplicationController
         unless params[:subsample].nil?
           params_key += "_#{params[:subsample]}"
         end
+        unless params[:boxpoints].nil?
+          params_key += "_#{params[:boxpoints]}"
+        end
         params_key += "_#{params[:plot_type]}"
-        unless params[:kernel_type].nil?
-          params_key += "_#{params[:kernel_type]}"
-        end
-        unless params[:band_type].nil?
-          params_key += "_#{params[:band_type]}"
-        end
         render_gene_expression_plots_url(study_name: params[:study_name], gene: params[:gene]) + params_key
       when 'render_gene_set_expression_plots'
         unless params[:subsample].nil?
@@ -2182,14 +2186,11 @@ class SiteController < ApplicationController
           params_key += "_#{gene_key}"
         end
         params_key += "_#{params[:plot_type]}"
-        unless params[:kernel_type].nil?
-          params_key += "_#{params[:kernel_type]}"
-        end
-        unless params[:band_type].nil?
-          params_key += "_#{params[:band_type]}"
-        end
         unless params[:consensus].nil?
           params_key += "_#{params[:consensus]}"
+        end
+        unless params[:boxpoints].nil?
+          params_key += "_#{params[:boxpoints]}"
         end
         render_gene_set_expression_plots_url(study_name: params[:study_name]) + params_key
       when 'expression_query'

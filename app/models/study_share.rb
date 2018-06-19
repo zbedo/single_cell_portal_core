@@ -23,7 +23,10 @@ class StudyShare
 	field :permission, type: String, default: 'View'
   field :deliver_emails, type: Boolean, default: true
 
-	validates_uniqueness_of :email, scope: :study_id
+  validates_format_of :email, with: Devise.email_regexp, message: 'is not a valid email address.'
+  validates_format_of :firecloud_project, :firecloud_workspace, with: ValidationTools::ALPHANUMERIC_DASH,
+                      message: ValidationTools::ALPHANUMERIC_DASH_ERROR
+  validates_uniqueness_of :email, scope: :study_id
 
 	index({ email: 1, study_id: 1 }, { unique: true, background: true })
 

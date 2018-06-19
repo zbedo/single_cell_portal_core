@@ -16,6 +16,7 @@
 
     #main-body {
       padding-bottom: 155px;
+      overflow-x: hidden;
     }
 
     #wrap {
@@ -23,7 +24,7 @@
     }
 
     .section-pad {
-      margin-top: 80px;
+      margin-top: 50px;
       margin-bottom: 20px;
     }
 
@@ -46,27 +47,30 @@
     }
 
     .sc-navbar {
-      min-height: 70px !important;
-    }
-    .sc-navbar .navbar-header {
-      margin-top: 10px;
-    }
-    .sc-navbar .navbar-header .navbar-brand {
-      font-size: 22px;
+      min-height: 50px !important;
+
     }
     .sc-navbar .nav {
-      margin-top: 12px;
+      margin-top: 0px;
       font-size: 16px;
     }
-    .well {
-      background: none;
-      background-color: none;
+
+    .sc-navbar .navbar-header {
+      position: relative;
+      top: 8px;
     }
-    #notice {
-      background-color: #f2dede;
+
+    .sc-navbar .navbar-brand {
+      font-size: 22px;
     }
+
+    .navbar-brand {
+      padding: 6px 15px;
+    }
+
   </style>
 </head>
+
 <body>
 <nav class="navbar fluid navbar-inverse navbar-fixed-top sc-navbar" role="navigation" id="single-cell-navbar">
   <div class="navbar-header">
@@ -95,18 +99,9 @@
   <div class="row section-pad" id="main-body">
     <div class="col-md-12">
       <div class="bg-danger well well-lg" id="notice">
-        <h3 class="text-danger text-center">We're sorry, but the change you wanted was rejected.</h3>
+        <h3 class="text-danger text-center">We're sorry, but the change you wanted was rejected by the server.</h3>
         <p class="lead text-center">Please <a href="https://github.com/broadinstitute/single_cell_portal/issues">report an issue</a> if this problem persists.</p>
       </div>
-    </div>
-  </div>
-</div>
-<div class="footer container-fluid">
-  <div class="row">
-    <div class="col-md-12 text-center">
-
-      <a href="http://www.broadinstitute.org"><img class="center-block img-responsive" src="/single_cell/assets/broad-logo.png" alt="Broad logo"></a>
-      <p class="text-muted">&copy; 2017 The Broad Institute of MIT & Harvard</p>
     </div>
   </div>
 </div>

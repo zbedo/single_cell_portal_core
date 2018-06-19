@@ -98,6 +98,7 @@
 					$(data.context).find('h1').html(perc + "% uploaded");
 				},
 				done: function(e, data) {
+          completeWizardStep('initialize_marker_genes_form_nav');
 					var fileName = data.files[0].name.replace(/ /g, '_');
 					$.ajax({
 						url: "<%= update_status_study_path %>",

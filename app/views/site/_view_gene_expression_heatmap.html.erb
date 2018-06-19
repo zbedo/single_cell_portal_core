@@ -31,9 +31,9 @@
 
     // monitor status of rendering plots for tests
     $('#heatmap-plot').data('rendered', false);
-    $(window).off('resizeEnd');
 
     function drawHeatmap(height) {
+        $(window).off('resizeEnd');
         // clear out previous stored heatmap object
         $('#heatmap-plot').data('heatmap', null);
         // if height isn't specified, pull from stored value, defaults to 500
