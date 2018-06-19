@@ -2294,8 +2294,6 @@ class UiTestSuite < Test::Unit::TestCase
 		@wait.until { file_link.displayed? }
 		# perform 'Save as' action
 		download_file(file_link, basename)
-		# since we don't do HTML5 downloads, and the webdriver context menu is very unreliable...
-
 
 		# now download a file from a private study
 		private_path = @base_url + "/study/private-study-#{$random_seed}"
@@ -3091,6 +3089,11 @@ class UiTestSuite < Test::Unit::TestCase
 		assert private_reference_rendered, "private reference plot did not finish rendering, expected true but found #{private_reference_rendered}"
 
 		# change to box plot
+		view_options_panel = @driver.find_element(:id, 'view-option-link')
+		view_options_panel.click
+		dist_panel = @driver.find_element(:id, 'distribution-panel-link')
+		dist_panel.click
+		wait_for_render(:id, 'distribution-plot-controls')
 		private_plot_dropdown = @driver.find_element(:id, 'plot_type')
 		private_plot_ops = private_plot_dropdown.find_elements(:tag_name, 'option')
 		private_new_plot = private_plot_ops.select {|opt| !opt.selected?}.sample.text
@@ -3188,7 +3191,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# now search for multiple genes as a heatmap
 		genes = @genes.shuffle.take(rand(2..5))
 		search_box = @driver.find_element(:id, 'search_genes')
-		search_box.send_keys(genes.join(' '))
+		search_box.send_keys(genes.join(','))
 		search_genes = @driver.find_element(:id, 'perform-gene-search')
 		search_genes.click
 		assert element_present?(:id, 'plots'), 'could not find expression heatmap'
@@ -3232,123 +3235,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
 
-	# test that camera position is being preserved on cluster/annotation select & rotation
-	test 'front-end: validation: camera position on change' do
-		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
-
-		path = @base_url + "/study/test-study-#{$random_seed}"
-		@driver.get(path)
-		wait_until_page_loads(path)
-		open_ui_tab('study-visualize')
-
-		assert element_present?(:class, 'study-lead'), 'could not find study title'
-		assert element_present?(:id, 'cluster-plot'), 'could not find study cluster plot'
-
-		# wait until cluster finishes rendering
-		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
-		rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
-		assert rendered, "cluster plot did not finish rendering, expected true but found #{rendered}"
-
-		# get camera data
-		camera = @driver.execute_script("return $('#cluster-plot').data('camera');")
-		# set new rotation
-		camera['eye']['x'] = (Random.rand * 10 - 5).round(4)
-		camera['eye']['y'] = (Random.rand * 10 - 5).round(4)
-		camera['eye']['z'] = (Random.rand * 10 - 5).round(4)
-		# call relayout to trigger update & camera position save
-		@driver.execute_script("Plotly.relayout('cluster-plot', {'scene': {'camera' : #{camera.to_json}}});")
-
-		# wait a second for event to fire, then get new camera
-		sleep(1)
-		new_camera = @driver.execute_script("return $('#cluster-plot').data('camera');")
-		assert camera == new_camera, "camera position did not save correctly, expected #{camera.to_json}, got #{new_camera.to_json}"
-		# load annotation
-		view_options_panel = @driver.find_element(:id, 'view-option-link')
-		view_options_panel.click
-		wait_for_render(:id, 'view-options')
-		annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
-		annotations.select {|opt| opt.text == 'Sub-Cluster'}.first.click
-
-		# wait until cluster finishes rendering
-		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
-		annot_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
-		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
-
-		# verify camera position was saved
-		annot_camera = @driver.execute_script("return $('#cluster-plot').data('camera');")
-		assert camera == annot_camera, "camera position did not save correctly, expected #{camera.to_json}, got #{annot_camera.to_json}"
-
-		# load new cluster
-		clusters = @driver.find_element(:id, 'cluster').find_elements(:tag_name, 'option')
-		cluster = clusters.last
-		cluster.click
-
-		# wait until cluster finishes rendering
-		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
-		cluster_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
-		assert cluster_rendered, "cluster plot did not finish rendering on cluster change, expected true but found #{cluster_rendered}"
-
-		# verify camera position was saved
-		cluster_camera = @driver.execute_script("return $('#cluster-plot').data('camera');")
-		assert camera == cluster_camera, "camera position did not save correctly, expected #{camera.to_json}, got #{cluster_camera.to_json}"
-
-		# now check gene expression views
-		# load random gene to search
-		gene = @genes.sample
-		search_box = @driver.find_element(:id, 'search_genes')
-		search_box.send_key(gene)
-		search_genes = @driver.find_element(:id, 'perform-gene-search')
-		search_genes.click
-
-		# wait until box plot renders, at this point all 3 should be done
-		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
-
-		# get camera data
-		scatter_camera = @driver.execute_script("return $('#expression-plots').data('scatter-camera');")
-		# set new rotation
-		scatter_camera['eye']['x'] = (Random.rand * 10 - 5).round(4)
-		scatter_camera['eye']['y'] = (Random.rand * 10 - 5).round(4)
-		scatter_camera['eye']['z'] = (Random.rand * 10 - 5).round(4)
-		# call relayout to trigger update & camera position save
-		@driver.execute_script("Plotly.relayout('scatter-plot', {'scene': {'camera' : #{scatter_camera.to_json}}});")
-
-		# wait a second for event to fire, then get new camera
-		sleep(1)
-		new_scatter_camera = @driver.execute_script("return $('#expression-plots').data('scatter-camera');")
-		assert scatter_camera == new_scatter_camera, "scatter camera position did not save correctly, expected #{scatter_camera.to_json}, got #{new_scatter_camera.to_json}"
-
-		# load annotation
-		exp_annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
-		exp_annotations.select {|opt| opt.text == 'Cluster'}.first.click
-
-		# wait until cluster finishes rendering
-		@wait.until {wait_for_plotly_render('#expression-plots', 'scatter-rendered')}
-		annot_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
-		assert annot_rendered, "cluster plot did not finish rendering on annotation change, expected true but found #{annot_rendered}"
-
-		# verify camera position was saved
-		exp_annot_camera = @driver.execute_script("return $('#expression-plots').data('scatter-camera');")
-		assert scatter_camera == exp_annot_camera, "camera position did not save correctly, expected #{scatter_camera.to_json}, got #{exp_annot_camera.to_json}"
-
-		# load new cluster
-		view_options_panel = @driver.find_element(:id, 'view-option-link')
-		view_options_panel.click
-		wait_for_render(:id, 'view-options')
-		clusters = @driver.find_element(:id, 'cluster').find_elements(:tag_name, 'option')
-		cluster = clusters.first
-		cluster.click
-
-		# wait until cluster finishes rendering
-		@wait.until {wait_for_plotly_render('#expression-plots', 'scatter-rendered')}
-		exp_cluster_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
-		assert exp_cluster_rendered, "cluster plot did not finish rendering on cluster change, expected true but found #{exp_cluster_rendered}"
-
-		# verify camera position was saved
-		exp_cluster_camera = @driver.execute_script("return $('#expression-plots').data('scatter-camera');")
-		assert scatter_camera == exp_cluster_camera, "camera position did not save correctly, expected #{scatter_camera.to_json}, got #{exp_cluster_camera.to_json}"
-
-		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
-	end
+	# REMOVED scatter plot camera test as manually calling Plotly.relayout does not emit the event
 
 	# change the default study options and verify they are being preserved across views
 	# this is a blend of admin and front-end tests and is run last as has the potential to break previous tests
@@ -3417,7 +3304,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# assert values have persisted
 		loaded_cluster = @driver.find_element(:id, 'cluster')['value']
 		loaded_annotation = @driver.find_element(:id, 'annotation')['value']
-		cluster_point_size = @driver.execute_script("return data[0].marker.size[0];")
+		cluster_point_size = @driver.execute_script("return data[0].marker.size;")
 		cluster_border = @driver.execute_script("return data[0].marker.line.width;").to_f
 		cluster_alpha_val = @driver.execute_script("return data[0].opacity;").to_f
 		assert new_cluster == loaded_cluster, "default cluster incorrect, expected #{new_cluster} but found #{loaded_cluster}"
@@ -3541,7 +3428,7 @@ class UiTestSuite < Test::Unit::TestCase
 		open_ui_tab('study-visualize')
 		loaded_cluster = @driver.find_element(:id, 'cluster')['value']
 		loaded_annotation = @driver.find_element(:id, 'annotation')['value']
-		cluster_point_size = @driver.execute_script("return data[0].marker.size[0];")
+		cluster_point_size = @driver.execute_script("return data[0].marker.size;")
 		cluster_border = @driver.execute_script("return data[0].marker.line.width;").to_f
 		cluster_alpha_val = @driver.execute_script("return data[0].opacity;").to_f
 		assert new_cluster == loaded_cluster, "default cluster incorrect, expected #{new_cluster} but found #{loaded_cluster}"
@@ -3571,7 +3458,7 @@ class UiTestSuite < Test::Unit::TestCase
 		update_btn.click
 		wait_for_modal_open('message_modal')
 		alert_text = @driver.find_element(:id, 'alert-content').text
-		assert alert_text == 'Your session has expired. Please log in again to continue.', "incorrect alert text - expected 'Your session has expired.  Please log in again to continue.' but found #{alert_text}"
+		assert alert_text == "We're sorry, but the change you wanted was rejected by the server.", "incorrect alert text - expected 'We're sorry, but the change you wanted was rejected by the server' but found #{alert_text}"
 		close_modal('message_modal')
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
