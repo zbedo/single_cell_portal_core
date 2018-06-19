@@ -23,8 +23,11 @@ class BrandingGroup
 
   validates_presence_of :name, :name_as_id, :user_id, :background_color, :font_family
   validates_uniqueness_of :name
-  validates_format_of :name, :name_as_id, :tag_line,
+  validates_format_of :name, :name_as_id,
             with: ValidationTools::ALPHANUMERIC_SPACE_DASH, message: ValidationTools::ALPHANUMERIC_SPACE_DASH_ERROR
+
+  validates_format_of :tag_line,
+                      with: ValidationTools::OBJECT_LABELS, message: ValidationTools::OBJECT_LABELS_ERROR
   validates_format_of :font_color, :font_family, :background_color, with: ValidationTools::ALPHANUMERIC_EXTENDED,
                       message: ValidationTools::ALPHANUMERIC_EXTENDED_ERROR
 
