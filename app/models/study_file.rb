@@ -102,7 +102,7 @@ class StudyFile
 
   validates_format_of :generation, with: /\A\d+\z/, if: proc {|f| f.generation.present?}
 
-  validates_inclusion_of :file_type, in: STUDY_FILE_TYPES
+  validates_inclusion_of :file_type, in: STUDY_FILE_TYPES, unless: proc {|f| f.file_type == 'DELETE'}
 
   ###
   #
