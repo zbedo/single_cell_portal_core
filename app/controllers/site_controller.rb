@@ -27,7 +27,7 @@ class SiteController < ApplicationController
   before_action :load_precomputed_options, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots,
                                                   :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression,
                                                   :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap]
-  before_action :check_view_permissions, except: [:index, :privacy_policy, :search, :precomputed_results, :expression_query,
+  before_action :check_view_permissions, except: [:index, :privacy_policy, :search, :precomputed_results, :expression_query, :annotation_query,
                                                   :view_workflow_wdl, :log_action, :get_workspace_samples, :update_workspace_samples,
                                                   :create_totat, :get_workflow_options, :fetch_data]
   before_action :check_compute_permissions, only: [:get_fastq_files, :get_workspace_samples, :update_workspace_samples,
@@ -509,24 +509,28 @@ class SiteController < ApplicationController
 
   # load annotations in tsv format for Morpheus
   def annotation_query
-    @cells = @cluster.concatenate_data_arrays('text', 'cells')
-    if @selected_annotation[:scope] == 'cluster'
-      @annotations = @cluster.concatenate_data_arrays(@selected_annotation[:name], 'annotations')
-    else
-      study_annotations = @study.cell_metadata_values(@selected_annotation[:name], @selected_annotation[:type])
-      @annotations = []
-      @cells.each do |cell|
-        @annotations << study_annotations[cell]
+    if check_xhr_view_permissions
+      @cells = @cluster.concatenate_data_arrays('text', 'cells')
+      if @selected_annotation[:scope] == 'cluster'
+        @annotations = @cluster.concatenate_data_arrays(@selected_annotation[:name], 'annotations')
+      else
+        study_annotations = @study.cell_metadata_values(@selected_annotation[:name], @selected_annotation[:type])
+        @annotations = []
+        @cells.each do |cell|
+          @annotations << study_annotations[cell]
+        end
       end
+      # assemble rows of data
+      @rows = []
+      @cells.each_with_index do |cell, index|
+        @rows << [cell, @annotations[index]].join("\t")
+      end
+      @headers = ['NAME', @selected_annotation[:name]]
+      @data = [@headers.join("\t"), @rows.join("\n")].join("\n")
+      send_data @data, type: 'text/plain'
+    else
+      head 403
     end
-    # assemble rows of data
-    @rows = []
-    @cells.each_with_index do |cell, index|
-      @rows << [cell, @annotations[index]].join("\t")
-    end
-    @headers = ['NAME', @selected_annotation[:name]]
-    @data = [@headers.join("\t"), @rows.join("\n")].join("\n")
-    send_data @data, type: 'text/plain'
   end
 
   # dynamically reload cluster-based annotations list when changing clusters
