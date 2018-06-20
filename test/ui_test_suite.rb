@@ -3523,6 +3523,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# click box select button
 		select_button = @driver.find_element(:xpath, "//a[@data-val='select']")
 		select_button.click
+		assert select_button['class'] == 'modebar-btn active', "Did not properly select box mode, expected class value of 'modebar-btn active' but found #{select_button['class']}"
 
 		# get the points in the plotly trace
 		points = @driver.find_elements(:class, 'point')
@@ -3641,6 +3642,7 @@ class UiTestSuite < Test::Unit::TestCase
 		scatter_link = @driver.find_element(:id, 'scatter-link')
 		scatter_link.click
 		wait_for_render(:id, 'scatter-plots')
+		@wait.until {wait_for_plotly_render('#expression-plots', 'scatter-rendered')}
 
 		# Click selection tabs
 		select_dropdown = @driver.find_element(:id, 'create_annotations_panel')
@@ -3652,16 +3654,16 @@ class UiTestSuite < Test::Unit::TestCase
 		enable_select_button.click
 		wait_for_render(:id, 'selection-well')
 
+		# click box select button
+		scroll_to(:bottom)
+		select_button = @driver.find_element(:xpath, "//div[@id='scatter-plot']//a[@data-val='select']")
+		select_button.click
+		assert select_button['class'] == 'modebar-btn active', "Did not properly select box mode, expected class value of 'modebar-btn active' but found #{select_button['class']}"
+
+		# get the points in the plotly trace
 		# select the scatter plot
 		plot = @driver.find_element(:id, 'scatter-plot')
 
-		# click box select button
-		scroll_to(:bottom)
-		@wait.until {wait_for_plotly_render('#expression-plots', 'scatter-rendered')}
-		select_button = @driver.find_elements(:xpath, "//a[@data-val='select']")[1]
-		select_button.click
-
-		# get the points in the plotly trace
 		points = plot.find_elements(:class, 'point')
 		el1 = points[0]
 
