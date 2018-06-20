@@ -66,8 +66,17 @@
                               var file = e.target.result,
                                   results;
                               if (file && file.length) {
-                                  results = file.split(/[,\n]/).join(',');
-                                  $('#search_genes').val(results);
+                                  lines = file.split(/[,\n]/);
+                                  sanitizedContent = [];
+                                  $(lines).each(function(i, line) {
+                                      // scrub quotes if present
+                                      line = line.replace(/(\'|\")/g, '');
+                                      if (!line.match(UNSAFE_CHARACTERS)) {
+                                          sanitizedContent.push(line);
+                                      }
+                                  });
+                                  searchString = sanitizedContent.join(',');
+                                  $('#search_genes').val(searchString);
                                   $(fileInput).val("").change(submitGeneSearch());
                               }
                           });
