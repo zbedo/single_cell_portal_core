@@ -693,13 +693,20 @@ class StudiesController < ApplicationController
   # update an existing study file via upload wizard; cannot be called until file is uploaded, so there is no create
   # if adding an external fastq file link, will create entry from scratch to update
   def update_study_file
-    @study_file = StudyFile.where(study_id: study_file_params[:study_id], _id: study_file_params[:_id]).first
-    if @study_file.nil?
-      # don't use helper as we're about to mass-assign params
-      @study_file = @study.study_files.build
-    end
+    @study_file = StudyFile.find_by(study_id: study_file_params[:study_id], _id: study_file_params[:_id])
     @selector = params[:selector]
     @partial = params[:partial]
+    if @study_file.nil?
+      if study_file_params[:file_type] === 'Fastq' && study_file_params[:human_data].to_s === 'true'
+        # only build new study file if this is an external human fastq
+        @study_file = @study.study_files.build
+      else
+        logger.error "#{Time.now}: Aborting study file save for file id #{study_file_params[:_id]} - file not found"
+        # we get here if a user uploads a file, the parse fails, and they click 'Save' before refreshing the page
+        @alert = "The study file in question has already been deleted (likely due to a parse failure).  The page will be refreshed to reflect the current status - please upload the file again before continuing."
+        render js: "window.location.reload(); alert('#{@alert}');" and return
+      end
+    end
 
     # invalidate caches (even if transaction rolls back, the user wants to update so clearing is safe)
     if ['Cluster', 'Coordinate Labels', 'Gene List'].include?(@study_file.file_type) && @study_file.valid?
