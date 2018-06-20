@@ -74,6 +74,7 @@ class SiteController < ApplicationController
 
     # if search params are present, filter accordingly
     if !params[:search_terms].blank?
+      params[:search_terms] = sanitize_search_values(params[:search_terms])
       @studies = @viewable.where({:$text => {:$search => params[:search_terms]}}).paginate(page: params[:page], per_page: Study.per_page)
     else
       @studies = @viewable.paginate(page: params[:page], per_page: Study.per_page)
@@ -90,6 +91,7 @@ class SiteController < ApplicationController
 
   # search for matching studies
   def search
+    params[:search_terms] = sanitize_search_values(params[:search_terms])
     # use built-in MongoDB text index (supports quoting terms & case sensitivity)
     @studies = Study.where({'$text' => {'$search' => params[:search_terms]}})
 
@@ -1934,10 +1936,11 @@ class SiteController < ApplicationController
   # generic search term parser
   def parse_search_terms(key)
     terms = params[:search][key]
-    if terms.is_a?(Array)
-      terms.first.split(/[\n,]/).map(&:strip)
+    sanitized_terms = sanitize_search_values(terms)
+    if sanitized_terms.is_a?(Array)
+      sanitized_terms.map(&:strip)
     else
-      terms.split(/[\n,]/).map(&:strip)
+      sanitized_terms.split(/[\n,]/).map(&:strip)
     end
   end
 
@@ -2007,6 +2010,16 @@ class SiteController < ApplicationController
       end
     end
     grouped_options
+  end
+
+  # sanitize search values
+  def sanitize_search_values(terms)
+    if terms.is_a?(Array)
+      sanitized = terms.map {|t| view_context.sanitize(t)}
+      sanitized.join(',')
+    else
+      view_context.sanitize(terms)
+    end
   end
 
   ###

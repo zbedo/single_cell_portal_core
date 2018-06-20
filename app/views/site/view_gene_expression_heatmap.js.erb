@@ -6,6 +6,6 @@ closeModalSpinner('#spinner_target', '#loading-modal', function () {
     // clear any resize listeners
     $(window).off('resizeEnd');
     enableDefaultActions();
-    var requestUrl = '<%= javascript_safe_url(request.fullpath) %>';
+    var requestUrl = "<%= javascript_safe_url(request.fullpath) %>";
     gaTrack(requestUrl, 'Single Cell Portal');
 });
