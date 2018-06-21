@@ -685,9 +685,6 @@ class Study
     self.study_files.each_with_index do |file, i|
       if file.name[-3, 3] == 'bam'
         bam = file
-        puts 'self.study_files'
-        puts self.study_files
-
         bai = self.study_files[i + 1]
         bams.push({
           'url': bam.api_url,
