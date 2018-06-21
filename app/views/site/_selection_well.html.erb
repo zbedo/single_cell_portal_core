@@ -27,15 +27,16 @@
 
     if ($('#cluster-plot').length === 0) {
         var targetPlotString = 'scatter-plot';
-        var layout = scatterLayout;
-        var data = clusterData;
     } else {
         var targetPlotString = 'cluster-plot';
     }
 
-    layout.dragmode = 'lasso';
+    var target = document.getElementById(targetPlotString);
 
-    var target = $(('#' + targetPlotString))[0];
+    target.layout.dragmode = 'lasso';
+
+    // change to lasso mode
+    Plotly.relayout(targetPlotString, target.layout);
 
     var selectionWell = $('#selection-well');
     var selectionTable = $('#selection-table');
@@ -45,43 +46,24 @@
     var selections = [];
     var array_of_names = [''];
 
-    $(target).on('plotly_afterplot', function() {
-        if($(target).data('spinner') !== undefined){
-            $(target).off('plotly_afterplot');
-            $(target).data('spinner').stop();
+    // show the selection well and submit button
+    selectionWell.css('visibility', 'visible');
+    selectionButton.css('visibility', 'visible');
 
-            // scatter instead of scattergl means selection is enabled
-            if (newType === 'scatter') {
-                // show the selection well and submit button
-                selectionWell.css('visibility', 'visible');
-                selectionButton.css('visibility', 'visible');
+    // Set the initial unselected array
+    var unselected_cell_name = [];
 
-                // Set the initial unselected array
-                var unselected_cell_name = [];
+    // set initial unselected
+    for (var m = 0; m < target.data.length; m++){
+        unselected_cell_name.push(target.data[m].cells);
+    }
 
-                // plot data is used for unselected array
-                var plot_data = target.data;
+    // flatten array
+    unselected_cell_name = [].concat.apply([], unselected_cell_name);
 
-                // set initial unselected
-                for (var m = 0; m < plot_data.length; m++){
-                    unselected_cell_name.push(plot_data[m].cells);
-                }
+    var unselected = unselected_cell_name;
+    selections.push(unselected);
 
-                // flatten array
-                unselected_cell_name = [].concat.apply([], unselected_cell_name);
-
-                var unselected = unselected_cell_name;
-                selections.push(unselected);
-                // create selection creates the first row in the table
-                createSelection();
-            } else {
-                // if new type is scatter gl blow everything up and empty it
-                selectionTable.empty();
-                selectionButton.css('visibility', 'hidden');
-                selectionWell.css('visibility', 'hidden');
-            }
-        }
-    });
 
     // Each annotation has a "Set label" text input.  This retrieves that HTML.
     function getSetLabelInputs(rowIndex, selectionValue, text_val) {
@@ -93,6 +75,7 @@
 
     // create selection creates the first row, unselected. only called at creation of selection well
     function createSelection() {
+        console.log('createSelection');
         // make sure table is empty
         selectionTable.empty();
         // add a well and table to div
@@ -159,28 +142,17 @@
         validateUnique('#create_annotations', '.annotation-label');
     }
 
-    // launch spinner
-    var spinner = new Spinner(opts).spin(target);
-    $(target).data('spinner', spinner);
-    var newType = data[0].type === 'scattergl' ? 'scatter' : 'scattergl';
-
-    // set new type
-    data[0].type = newType;
-    // re-render reference plot if showing numeric annotations
-    for(var i = 0; i < data.length; i ++){
-        data[i].type = newType;
-    }
-    Plotly.newPlot(targetPlotString, data, layout);
-
     // attach selection listener
-    $(('#' + targetPlotString))[0].on('plotly_selected', function(eventData) {
+    target.on('plotly_selected', function(eventData) {
 
         var selection =[];
+
+        console.log(eventData);
 
         // get selected cells curve number and point number
         // plotly only giver x and y values per point, so we have to use point id to get annotation and cell name
         eventData.points.forEach(function (pt) {
-            selection.push(data[pt.curveNumber].cells[pt.pointNumber]);
+            selection.push(target.data[pt.curveNumber].cells[pt.pointNumber]);
         });
 
         // update previous selections to make sure they don't include duplicate cell names
@@ -217,4 +189,6 @@
         selections.splice(index,1);
         updateSelection();
     });
+
+    createSelection();
 </script>
