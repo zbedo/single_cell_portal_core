@@ -123,7 +123,7 @@
               <span class="fa fa-exclamation-triangle text-danger" data-toggle="tooltip" data-placement="right" title="Editing share emails is not permitted.  If the email is incorrect, please delete the share and create a new one."></span>
             <% end %>
             <br />
-            <%= share.text_field :email, class: 'form-control share-email', readonly: !share.object.new_record? %>
+            <%= share.text_field :email, class: 'form-control share-email', readonly: !share.object.new_record?, autocomplete: 'no' %>
           </div>
           <div class="col-sm-5">
             <%= share.label :permission %><br />

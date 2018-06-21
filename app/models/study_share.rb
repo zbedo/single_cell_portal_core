@@ -55,6 +55,11 @@ class StudyShare
 		self.email.gsub(/[@\.]/, '-')
 	end
 
+  # determine if a share is with a FireCloud group
+  def is_group_share?
+		self.email.match(/.*@firecloud\.org/).present?
+	end
+
 	private
 
   ###
