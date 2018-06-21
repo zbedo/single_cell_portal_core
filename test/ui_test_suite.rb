@@ -3525,34 +3525,24 @@ class UiTestSuite < Test::Unit::TestCase
 		select_button.click
 		assert select_button['class'] == 'modebar-btn active', "Did not properly select box mode, expected class value of 'modebar-btn active' but found #{select_button['class']}"
 
-		# get the points in the plotly trace
-		points = @driver.find_elements(:class, 'point')
-		el1 = points[0]
-
-		# click on the first point
-		@driver.action.click_and_hold(el1).perform
-
-		# wait for web driver
-		sleep 0.5
-
-		# drag the cursor to another point and release it
-		el2 = points[-1]
-		@driver.action.move_to(el2).release.perform
-
-		# wait for plotly and webdriver
-		sleep 1.0
+		# calculate the position of the plot and perform the click & drag event (move by 25% of plot size down & right)
+		plot = @driver.find_element(:id, 'cluster-plot')
+		@driver.action.move_to(plot, plot.size.width / 4, plot.size.height / 4 ).click_and_hold.perform
+		@driver.action.move_by(plot.size.width / 4 , plot.size.height / 4).release.perform
 
 		# send the keys for the name of the annotation
 		annotation_name = @driver.find_element(:class, 'annotation-name')
 		name = "user-#{$random_seed}"
 		annotation_name.send_keys(name)
-		# send keys to the labels of the annotation
+
+		# make sure we have two classes now
 		annotation_labels = @driver.find_elements(:class, 'annotation-label')
+		assert annotation_labels.size == 2, "Did not find correct number of annotation label fields, expecte 2 but found #{annotation_labels.size}"
+		# send keys to the labels of the annotation
+
 		annotation_labels.each_with_index do |annot, i|
 			annot.send_keys("group#{i}")
 		end
-
-		sleep 0.5
 
 		# create the annotation
 		submit_button = @driver.find_element(:id, 'selection-submit')
@@ -3628,6 +3618,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# wait until violin plot renders, at this point all 3 should be done
 		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+		@wait.until {wait_for_plotly_render('#expression-plots', 'scatter-rendered')}
 		violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
 		assert violin_rendered, "violin plot did not finish rendering, expected true but found #{violin_rendered}"
 		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
@@ -3642,7 +3633,6 @@ class UiTestSuite < Test::Unit::TestCase
 		scatter_link = @driver.find_element(:id, 'scatter-link')
 		scatter_link.click
 		wait_for_render(:id, 'scatter-plots')
-		@wait.until {wait_for_plotly_render('#expression-plots', 'scatter-rendered')}
 
 		# Click selection tabs
 		select_dropdown = @driver.find_element(:id, 'create_annotations_panel')
@@ -3660,37 +3650,25 @@ class UiTestSuite < Test::Unit::TestCase
 		select_button.click
 		assert select_button['class'] == 'modebar-btn active', "Did not properly select box mode, expected class value of 'modebar-btn active' but found #{select_button['class']}"
 
-		# get the points in the plotly trace
-		# select the scatter plot
+
+		# calculate the position of the plot and perform the click & drag event (move by 25% down & right)
 		plot = @driver.find_element(:id, 'scatter-plot')
-
-		points = plot.find_elements(:class, 'point')
-		el1 = points[0]
-
-		# click on the first point
-		@driver.action.click_and_hold(el1).perform
-
-		# wait for web driver
-		sleep 0.5
-
-		# drag the cursor to another point and release it
-		el2 = points[-1]
-		@driver.action.move_to(el2).release.perform
-
-		# wait for plotly and webdriver
-		sleep 1.0
+		@driver.action.move_to(plot, plot.size.width / 4, plot.size.height / 4 ).click_and_hold.perform
+		@driver.action.move_by(plot.size.width / 4 , plot.size.height / 4).release.perform
 
 		# send the keys for the name of the annotation
 		annotation_name = @driver.find_element(:class, 'annotation-name')
 		name = "user-#{$random_seed}-exp"
 		annotation_name.send_keys(name)
-		# send keys to the labels of the annotation
+
+		# make sure we have two classes now
 		annotation_labels = @driver.find_elements(:class, 'annotation-label')
+		assert annotation_labels.size == 2, "Did not find correct number of annotation label fields, expecte 2 but found #{annotation_labels.size}"
+
+		# send keys to the labels of the annotation
 		annotation_labels.each_with_index do |annot, i|
 			annot.send_keys("group#{i}")
 		end
-
-		sleep 0.5
 
 		# create the annotation
 		submit_button = @driver.find_element(:id, 'selection-submit')
@@ -3729,8 +3707,6 @@ class UiTestSuite < Test::Unit::TestCase
 		assert element_present?(:id, 'box-controls'), 'could not find expression violin plot'
 		assert element_present?(:id, 'scatter-plots'), 'could not find expression scatter plots'
 
-		sleep 0.50
-
 		# confirm queried gene is the one returned
 		queried_gene = @driver.find_element(:class, 'queried-gene')
 		assert queried_gene.text == gene, "did not load the correct gene, expected #{gene} but found #{queried_gene.text}"
@@ -3758,8 +3734,6 @@ class UiTestSuite < Test::Unit::TestCase
 		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
 		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
 		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
-
-		sleep 0.5
 
 		search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
 		search_menu.click
