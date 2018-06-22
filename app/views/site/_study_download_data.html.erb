@@ -162,6 +162,9 @@
         <td><%= study_file.description %></td>
         <td>
           <% if @allow_downloads %>
+            <% if study_file.name[-3, 3] == 'bam' %>
+              <a class="btn btn-primary dl-link other-file" style="margin-bottom: 3px;">Browse in genome</a>
+            <% end %>
             <%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %>
           <% else %>
             <%= button_to 'Currently Unavailable', 'javascript:;', class: 'btn btn-danger disabled-download', disabled: true %>
