@@ -12,8 +12,7 @@
 <% if @study.has_bam_files %>
   <script>
     var bamAndBaiFiles = <%= raw @study.get_bam_files %>;
-    console.log('bamAndBaiFiles')
-    console.log(bamAndBaiFiles)
+    var bamsToViewInIgv = [];
   </script>
   <%= render partial: '/site/genome/igv' %>
 <% end %>

@@ -10,9 +10,21 @@
       return;
     }
 
-    var igvContainer, igvOptions, igvBrowser;
+    var igvContainer, igvOptions, igvBrowser, igvTracks, i, bam;
 
     igvContainer = document.getElementById('igv-container');
+
+    igvTracks = [];
+
+    for (i = 0; i < bamsToViewInIgv.length; i++) {
+      bam = bamsToViewInIgv[i];
+      igvTracks.push({
+        url: bam.url,
+        indexURL: bam.indexUrl,
+        oauthToken: accessToken,
+        label: bam.url.split('/o/')[1].split('?')[0]
+      })
+    }
 
     igvOptions = {
       // showChromosomeWidget: true,
@@ -20,26 +32,7 @@
       // locus: "all",
       locus: ['myc'],
       // apiKey: 'AIzaSyDUUAUFpQEN4mumeMNIRWXSiTh5cPtUAD0',
-      tracks: [
-        {
-          url: bamAndBaiFiles[1].url,
-          indexURL: bamAndBaiFiles[1].indexUrl,
-          oauthToken: accessToken,
-          label: 'Demo!'
-        }
-        // ,{
-        //   name: "Genes",
-        //   type: "annotation",
-        //   format: "bed",
-        //   sourceType: "file",
-        //   url: "https://s3.amazonaws.com/igv.broadinstitute.org/annotations/hg19/genes/refGene.hg19.bed.gz",
-        //   indexURL: "https://s3.amazonaws.com/igv.broadinstitute.org/annotations/hg19/genes/refGene.hg19.bed.gz.tbi",
-        //   // order: Number.MAX_VALUE,
-        //   // visibilityWindow: 300000000,
-        //   // displayMode: "EXPANDED",
-        //   autoHeight: true
-        // }
-      ],
+      tracks: igvTracks,
       supportQueryParameters: true
     };
 
