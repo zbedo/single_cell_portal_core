@@ -1,8 +1,8 @@
 # use KDUX base Rails image, configure only project-specific items here
-FROM broadinstitute/kdux-rails-baseimage:1.1
+FROM broadinstitute/kdux-rails-baseimage:1.3
 
 # Set ruby version
-RUN bash -lc 'rvm --default use ruby-2.3.6'
+RUN bash -lc 'rvm --default use ruby-2.3.7'
 
 # Set up project dir, install gems, set up script to migrate database and precompile static assets on run
 RUN mkdir /home/app/webapp
@@ -20,5 +20,5 @@ COPY webapp.conf /etc/nginx/sites-enabled/webapp.conf
 COPY nginx.conf /etc/nginx/nginx.conf
 RUN rm -f /etc/service/nginx/down
 
-# Compile native support for passenger for Ruby 2.2
+# Compile native support for passenger for Ruby 2.3
 RUN passenger-config build-native-support

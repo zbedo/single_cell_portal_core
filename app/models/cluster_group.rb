@@ -15,6 +15,8 @@ class ClusterGroup
 
   validates_uniqueness_of :name, scope: :study_id
   validates_presence_of :name, :cluster_type
+  validates_format_of :name, with: ValidationTools::URL_PARAM_SAFE,
+                      message: ValidationTools::URL_PARAM_SAFE_ERROR
 
   belongs_to :study
   belongs_to :study_file
@@ -37,6 +39,10 @@ class ClusterGroup
 
   # fixed values to subsample at
   SUBSAMPLE_THRESHOLDS = [1000, 10000, 20000].freeze
+
+  COLORBREWER_SET = %w(#e41a1c #377eb8 #4daf4a #984ea3 #ff7f00 #a65628 #f781bf #999999
+    #66c2a5 #fc8d62 #8da0cb #e78ac3 #a6d854 #ffd92f #e5c494 #b3b3b3 #8dd3c7
+    #bebada #fb8072 #80b1d3 #fdb462 #b3de69 #fccde5 #d9d9d9 #bc80bd #ccebc5 #ffed6f)
 
   # method to return a single data array of values for a given data array name, annotation name, and annotation value
   # gathers all matching data arrays and orders by index, then concatenates into single array

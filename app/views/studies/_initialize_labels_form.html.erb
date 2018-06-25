@@ -104,6 +104,7 @@
 					$(data.context).find('h1').html(perc + "% uploaded");
 				},
 				done: function(e, data) {
+          completeWizardStep('initialize_labels_form_nav');
 					var fileName = data.files[0].name.replace(/ /g, '_');
 					// update upload status
 					$.ajax({

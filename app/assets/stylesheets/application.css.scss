@@ -43,7 +43,6 @@ label {
 }
 
 #main-body {
-  min-height: 950px;
   padding-bottom: 155px;
   overflow-x: hidden;
 }
@@ -221,10 +220,6 @@ label {
   min-height: 200px;
   position: relative;
   margin: 20px 0;
-}
-
-#cluster-plot {
-  min-height: 600px;
 }
 
 .study-lead {
@@ -482,6 +477,13 @@ h4, .h4, h5, .h5, h6, .h6 {
   float: right;
   margin-top: 16px;
   margin-right: 4px;
+}
+
+#view-options-panel {
+  background-color: transparent;
+  z-index: 1000;
+  border-bottom: none;
+  box-shadow: none;
 }
 
 #search-omnibar-menu i {

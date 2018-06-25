@@ -66,7 +66,7 @@
     <div class="form-group row">
       <div class="col-xs-12 text-center">
         <br />
-        <%= link_to 'Update Profile', 'javascript:;', class: 'btn btn-lg btn-success', id: 'update-user-firecloud-profile', data: {'saving-text' => 'Saving Profile...'} %>
+        <%= link_to 'Update Profile', 'javascript:;', class: 'btn btn-lg btn-success', id: 'update-user-firecloud-profile' %>
       </div>
     </div>
   </div>
@@ -88,7 +88,7 @@
             alert('You have not filled out all required fields.');
         } else {
             var btn = $('#update-user-firecloud-profile');
-            btn.button('saving');
+            btn.addClass('disabled');
             $('#firecloud-profile').submit();
         }
     });

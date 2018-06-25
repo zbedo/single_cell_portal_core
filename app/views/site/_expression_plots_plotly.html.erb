@@ -47,7 +47,7 @@ var dataRef = [];
       opacity: <%= @study.default_cluster_point_alpha %>,
       marker: {
         color: colorBrewerSet[<%= index %> % 27],
-        size: <%= raw @coordinates[key][:marker_size] %>,
+        size: <%= raw @coordinates[key][:marker][:size] %>,
         line: {
           color: plotlyDefaultLineColor,
           width: <%= @study.show_cluster_point_borders? ? 0.5 : 0 %>
@@ -73,7 +73,7 @@ var dataRef = [];
       opacity: <%= @study.default_cluster_point_alpha %>,
       marker: {
         color: colorBrewerSet[<%= index %> % 27],
-        size: <%= raw @coordinates[key][:marker_size] %>,
+        size: <%= raw @coordinates[key][:marker][:size] %>,
         line: {
           color: plotlyDefaultLineColor,
           width: <%= @study.show_cluster_point_borders? ? 0.5 : 0 %>
@@ -105,19 +105,19 @@ $('#cluster-figure-legend').html("<p class='text-center help-block'><%= escape_j
 
 // listener to redraw expression scatter with new color profile
 // will also redraw reference plot if needed
+$('#colorscale').off('change');
 $("#colorscale").change(function() {
 
-    <%= render partial: 'expression_scatter_layout' %>
 	  var theme = $(this).val();
     clusterData[0].marker.colorscale = theme;
 	  console.log("setting colorscale to " + theme);
-	  Plotly.newPlot('scatter-plot', clusterData, scatterLayout);
+    $('#search_colorscale').val(theme);
+	  Plotly.update('scatter-plot', clusterData, scatterLayout);
 
     // re-render reference plot if showing numeric annotations
     if (<%= @selected_annotation[:type] == 'numeric' %>) {
-        <%= render partial: 'static_scatter_layout' %>
         dataRef[0].marker.colorscale = theme;
-        Plotly.newPlot('reference-plot', dataRef, staticLayout);
+        Plotly.update('reference-plot', dataRef, staticLayout);
     }
 });
 
@@ -154,20 +154,18 @@ var expressionData = [];
 
     <%= render partial: 'expression_box_layout' %>
 <% else %>
+    //Using jitter_var instead of jitter because selector is called jitter, avoid confusion
+    var jitter_var = "<%= @values_jitter %>";
     var formatted_array = [];
-    var ker = "<%= @values_kernel_type%>";
-    var band = "<%= @values_band_type%>";
-    <% @values.sort_by {|k,v| k}.each_with_index do |(cluster, data), index| %>
-      var name = "<%= data[:name] %>";
-      var data = <%= raw data[:y] %>;
-      var master_array = [name, data, ker, band]
-      formatted_array.push(master_array);
+    <% @values.sort_by {|k,v| k}.each do |cluster, data| %>
+      formatted_array.push(["<%= cluster %>", <%= raw data[:y] %>]);
     <% end %>
     var title = "<%= params[:cluster]%>";
-    var data = createTracesAndLayout(formatted_array, title);
+    var data = createTracesAndLayout(formatted_array, title, jitter_var);
     expressionData = [].concat.apply([], data[0] );
     expressionLayout = data[1];
 <% end%>
+$('#box-plot').empty();
 Plotly.newPlot('box-plot', expressionData, expressionLayout);
 
 $(document).trigger('scpPlotsDidRender');

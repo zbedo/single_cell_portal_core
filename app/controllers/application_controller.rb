@@ -15,7 +15,7 @@ class ApplicationController < ActionController::Base
   before_action :get_download_quota
   before_action :set_selected_branding_group
 
-  rescue_from ActionController::InvalidAuthenticityToken, with: :session_expired
+  rescue_from ActionController::InvalidAuthenticityToken, with: :invalid_csrf
 
   # auth action for portal admins
   def authenticate_admin
@@ -62,13 +62,13 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  # rescue from an invalid csrf token (if user logged out in another window)
-  def session_expired
-    @alert = 'Your session has expired.  Please log in again to continue.'
+  # rescue from an invalid csrf token (if user logged out in another window, or some kind of spoofing attack)
+  def invalid_csrf
+    @alert = "We're sorry, but the change you wanted was rejected by the server."
     respond_to do |format|
-      format.html {redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]), alert: @alert}
-      format.js {render template: '/layouts/session_expired'}
-      format.json {head 403}
+      format.html {render template: '/layouts/422', status: 422}
+      format.js {render template: '/layouts/session_expired', status: 422}
+      format.json {render json: {error: @alert}, status: 422}
     end
   end
 
@@ -92,5 +92,13 @@ class ApplicationController < ActionController::Base
       end
     end
     merged_redirect_url
+  end
+
+  # validate that a signed_url is valid for redirect (for security purposes)
+  def is_valid_signed_url?(signed_url)
+    uri = URI.parse(signed_url)
+    parsed_query = Rack::Utils.parse_query(uri.query)
+    # return true if the scheme is https, the hostname matches a known GCS host, and the query string parameters have the correct keys
+    uri.scheme == 'https' && ValidationTools::GCS_HOSTNAMES.include?(uri.hostname) && parsed_query.keys == ValidationTools::SIGNED_URL_KEYS
   end
 end

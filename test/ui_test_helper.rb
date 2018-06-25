@@ -341,7 +341,7 @@ class Test::Unit::TestCase
     end
   end
 
-  # perform as right-click 'Save Link As...' action in Chrome
+  # load file either in browser or download and check for existence
   def download_file(link, basename)
     link.click
     if @driver.current_url.include?('https://storage.googleapis.com/')

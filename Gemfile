@@ -43,6 +43,7 @@ group :development do
 	gem 'ruby-debug-ide'
 	gem 'debase'
   gem 'test-unit'
+  gem 'brakeman', :require => false
 end
 
 gem 'devise'

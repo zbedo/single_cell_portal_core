@@ -60,9 +60,9 @@ class DeleteQueueJob < Struct.new(:object)
             nil
         end
 
-        # queue study file object for deletion
+        # queue study file object for deletion, set file_type to DELETE to prevent it from being picked up in any queries
         new_name = "DELETE-#{SecureRandom.uuid}"
-        object.update!(queued_for_deletion: true, upload_file_name: new_name, name: new_name, file_type: nil)
+        object.update!(queued_for_deletion: true, upload_file_name: new_name, name: new_name, file_type: 'DELETE')
 
         # reset initialized if needed
         if study.cluster_groups.empty? || study.genes.empty? || study.cell_metadata.empty?

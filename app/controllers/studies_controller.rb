@@ -244,8 +244,17 @@ class StudiesController < ApplicationController
       workflow_info = configuration['methodRepoMethod']
       workflow_identifier = [workflow_info['methodNamespace'],workflow_info['methodName'],workflow_info['methodVersion'],].join('/')
       @workflow_config = AdminConfiguration.find_by(config_type: 'Workflow Name', value: workflow_identifier)
-      filename_depth = @workflow_config.options[:filename_depth].present? ? @workflow_config.options[:filename_depth].to_i : 1
-      task_names = @workflow_config.options[:task_names].to_s.split(',')
+      if @workflow_config.nil?
+        # check if there's a config option for the same workflow without a snapshot id on it
+        workflow_identifier.chomp!("/#{workflow_info['methodVersion']}")
+        @workflow_config = AdminConfiguration.find_by(config_type: 'Workflow Name', value: workflow_identifier)
+      end
+      filename_depth =  1
+      task_names = []
+      if @workflow_config.options[:filename_depth].present?
+        filename_depth = @workflow_config.options[:filename_depth].to_i
+        task_names = @workflow_config.options[:task_names].to_s.split(',')
+      end
       submission['workflows'].each do |workflow|
         workflow = Study.firecloud_client.get_workspace_submission_workflow(@study.firecloud_project, @study.firecloud_workspace,
                                                                             params[:submission_id], workflow['workflowId'])
@@ -617,7 +626,7 @@ class StudiesController < ApplicationController
     @study = Study.find_by(url_safe_name: params[:study_name])
     # make sure user is signed in
     if !user_signed_in? || !@study.can_view?(current_user)
-      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
+      redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]),
                   alert: 'You do not have permission to perform that action.' and return
     elsif @study.embargoed?(current_user)
       redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
@@ -650,7 +659,13 @@ class StudiesController < ApplicationController
                       alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
         end
         # redirect directly to file to trigger download
-        redirect_to @signed_url
+        # validate that the signed_url is in fact the correct URL - it must be a GCS lin
+        if is_valid_signed_url?(@signed_url)
+          redirect_to @signed_url
+        else
+          redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
+                      alert: 'We are unable to process your download.  Please try again later.' and return
+        end
       else
         # send notification to the study owner that file is missing (if notifications turned on)
         SingleCellMailer.user_download_fail_notification(@study, params[:filename]).deliver_now
@@ -678,13 +693,20 @@ class StudiesController < ApplicationController
   # update an existing study file via upload wizard; cannot be called until file is uploaded, so there is no create
   # if adding an external fastq file link, will create entry from scratch to update
   def update_study_file
-    @study_file = StudyFile.where(study_id: study_file_params[:study_id], _id: study_file_params[:_id]).first
-    if @study_file.nil?
-      # don't use helper as we're about to mass-assign params
-      @study_file = @study.study_files.build
-    end
+    @study_file = StudyFile.find_by(study_id: study_file_params[:study_id], _id: study_file_params[:_id])
     @selector = params[:selector]
     @partial = params[:partial]
+    if @study_file.nil?
+      if study_file_params[:file_type] === 'Fastq' && study_file_params[:human_data].to_s === 'true'
+        # only build new study file if this is an external human fastq
+        @study_file = @study.study_files.build
+      else
+        logger.error "#{Time.now}: Aborting study file save for file id #{study_file_params[:_id]} - file not found"
+        # we get here if a user uploads a file, the parse fails, and they click 'Save' before refreshing the page
+        @alert = "The study file in question has already been deleted (likely due to a parse failure).  The page will be refreshed to reflect the current status - please upload the file again before continuing."
+        render js: "window.location.reload(); alert('#{@alert}');" and return
+      end
+    end
 
     # invalidate caches (even if transaction rolls back, the user wants to update so clearing is safe)
     if ['Cluster', 'Coordinate Labels', 'Gene List'].include?(@study_file.file_type) && @study_file.valid?
@@ -820,6 +842,7 @@ class StudiesController < ApplicationController
       if @study_file.parsing?
         render action: 'abort_delete_study_file'
       else
+        human_data = @study_file.human_data # store this reference for later
         # delete matching caches
         @study_file.invalidate_cache_by_file_type
         # queue for deletion
@@ -853,10 +876,13 @@ class StudiesController < ApplicationController
         # delete source file in FireCloud and then remove record
         begin
           # make sure file is in FireCloud first as user may be aborting the upload
-          if !Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project,
-                                                           @study.firecloud_workspace, @study_file.upload_file_name).nil?
-            Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, @study.firecloud_project,
-                                                         @study.firecloud_workspace, @study_file.upload_file_name)
+          unless human_data
+            present = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project,
+                                                                   @study.firecloud_workspace, @study_file.upload_file_name)
+            if present
+              Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, @study.firecloud_project,
+                                                           @study.firecloud_workspace, @study_file.upload_file_name)
+            end
           end
         rescue RuntimeError => e
           logger.error "#{Time.now}: error in deleting #{@study_file.upload_file_name} from workspace: #{@study.firecloud_workspace}; #{e.message}"
@@ -1071,9 +1097,9 @@ class StudiesController < ApplicationController
   # synchronize a directory_listing object
   def sync_directory_listing
     @directory = DirectoryListing.find(directory_listing_params[:_id])
+    @form = "#directory-listing-#{@directory.id}"
     if @directory.update(directory_listing_params)
       @message = "Directory listing for '#{@directory.name}' successfully synced."
-      @form = "#directory-listing-#{@directory.id}"
       respond_to do |format|
         format.js {render action: 'sync_directory_listing'}
       end
@@ -1170,7 +1196,7 @@ class StudiesController < ApplicationController
   end
 
   def directory_listing_params
-    params.require(:directory_listing).permit(:_id, :name, :description, :sync_status, :file_type)
+    params.require(:directory_listing).permit(:_id, :study_id, :name, :description, :sync_status, :file_type)
   end
 
   def default_options_params

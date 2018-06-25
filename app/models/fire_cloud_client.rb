@@ -1322,7 +1322,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		begin
 			file.delete
 		rescue => e
-			logger.info("#{Time.now}: failed to delete workspace file #{filename} with error #{e.message}")
+			Rails.logger.info("#{Time.now}: failed to delete workspace file #{filename} with error #{e.message}")
 			false
 		end
 	end

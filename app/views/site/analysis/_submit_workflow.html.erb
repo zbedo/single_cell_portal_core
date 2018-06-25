@@ -97,7 +97,6 @@
     if (selectedWdl === '') {
       alert('You must select a workflow first.')
     } else {
-      $(this).button('loading');
       var workflowNameSpace, workflowName, workflowSnapshotId;
       [workflowNameSpace, workflowName, workflowSnapshotId] = selectedWdl.split('--');
       $.ajax({
@@ -110,7 +109,7 @@
 
 
   $('.refresh-submissions-table').click(function() {
-    $(this).button('loading');
+    $(this).addClass('disabled');
     $.ajax({
       url: "<%= get_workspace_submissions_path(study_name: @study.url_safe_name) %>",
       dataType: 'script'
