@@ -210,8 +210,8 @@ class Study
 
   # XSS protection
   validate :strip_unsafe_characters_from_description
-  validates_format_of :name, with: ValidationTools::STUDY_NAMES,
-                      message: ValidationTools::STUDY_NAMES_ERROR
+  validates_format_of :name, with: ValidationTools::OBJECT_LABELS,
+                      message: ValidationTools::OBJECT_LABELS_ERROR
 
   validates_format_of :firecloud_workspace, :firecloud_project, :data_dir, :bucket_id, :url_safe_name,
                       with: ValidationTools::ALPHANUMERIC_DASH, message: ValidationTools::ALPHANUMERIC_DASH_ERROR
