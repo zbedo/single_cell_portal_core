@@ -13,7 +13,7 @@ module ValidationTools
   ALPHANUMERIC_DASH = /\A[\w+\-?]*\z/
   ALPHANUMERIC_SPACE_DASH = /\A[\w+\s?\-]*\z/
   FILENAME_CHARS = /\A[\w+[\s\-\.\/]?]+\z/
-  OBJECT_LABELS = /\A[\w+\s*[\-\.\/\(\)\+\,]?]+\z/
+  OBJECT_LABELS = /\A[\w+\s*[\-\.\/\(\)\+\,\:]?]+\z/
   # an extended regex with some slightly 'unsafe' non-word characters added in
   ALPHANUMERIC_EXTENDED = /\A[\w+\s?[\-\!\@\#\%\^\*\(\)\.\,]+]*\z/
   URL_PARAM_SAFE = /\A.*[^\"\<\>\#\%\{\}\|\\\^\~\[\]\`]\z/
@@ -23,7 +23,7 @@ module ValidationTools
   ALPHANUMERIC_DASH_ERROR = 'contains invalid characters. Please use only alphanumeric characters or dashes.'
   ALPHANUMERIC_SPACE_DASH_ERROR = 'contains invalid characters. Please use only alphanumeric characters, spaces, or dashes.'
   FILENAME_CHARS_ERROR = 'contains invalid characters. Please use only alphanumeric, spaces, or the following: - _ . /'
-  OBJECT_LABELS_ERROR = 'contains invalid characters. Please use only alphanumeric, spaces, or the following: - _ . / ( ) + ,'
+  OBJECT_LABELS_ERROR = 'contains invalid characters. Please use only alphanumeric, spaces, or the following: - _ . / ( ) + , :'
   ALPHANUMERIC_EXTENDED_ERROR = 'contains invalid characters. Please use only alphanumeric characters, spaces, dashes, or the following: ! @ # % ( ) . ,'
   NO_SCRIPT_TAGS_ERROR = 'contains invalid characters (inline javascript).  Please remove these before continuing.'
   URL_PARAM_SAFE_ERROR = 'contains invalid characters.  Please do not use any of the following: " < > # % { } | \ ^ ~ [ ] `'
