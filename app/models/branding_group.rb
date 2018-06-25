@@ -27,7 +27,8 @@ class BrandingGroup
             with: ValidationTools::ALPHANUMERIC_SPACE_DASH, message: ValidationTools::ALPHANUMERIC_SPACE_DASH_ERROR
 
   validates_format_of :tag_line,
-                      with: ValidationTools::OBJECT_LABELS, message: ValidationTools::OBJECT_LABELS_ERROR
+                      with: ValidationTools::OBJECT_LABELS, message: ValidationTools::OBJECT_LABELS_ERROR,
+                      allow_blank: true
   validates_format_of :font_color, :font_family, :background_color, with: ValidationTools::ALPHANUMERIC_EXTENDED,
                       message: ValidationTools::ALPHANUMERIC_EXTENDED_ERROR
 
