@@ -75,10 +75,6 @@
     display: block;
 }
 
-.slick-table:not (.slick-stacked) .slick-visible-not-stacked {
-    display: block;
-}
-
 .slick-visible-not-stacked {
     display: none;
 }
