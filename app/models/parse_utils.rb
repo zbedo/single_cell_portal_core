@@ -8,17 +8,30 @@ class ParseUtils
       study.make_data_dir
       Rails.logger.info "#{Time.now}: Localizing output files & creating study file entries from 10X CellRanger source data for #{study.name}"
 
-      # localize files if necessary, otherwise open newly uploaded files
+      # localize files if necessary, otherwise open newly uploaded files. check to make sure a local copy doesn't already exists
+      # as we may be uploading files piecemeal from upload wizard
       if !opts[:local]
-        matrix_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
-                                                                   study.firecloud_workspace, matrix_study_file.remote_location,
-                                                                   study.data_store_path, verify: :none)
-        genes_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
-                                                                  study.firecloud_workspace, genes_study_file.remote_location,
-                                                                  study.data_store_path, verify: :none)
-        barcodes_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
-                                                                     study.firecloud_workspace, barcodes_study_file.remote_location,
+        if File.exists?(matrix_study_file.upload.path)
+          matrix_file = File.open(matrix_study_file.upload.path, 'rb')
+        else
+          matrix_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
+                                                                     study.firecloud_workspace, matrix_study_file.remote_location,
                                                                      study.data_store_path, verify: :none)
+        end
+        if File.exists?(genes_study_file.upload.path)
+          genes_file = File.open(genes_study_file.upload.path, 'rb')
+        else
+          genes_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
+                                                                    study.firecloud_workspace, genes_study_file.remote_location,
+                                                                    study.data_store_path, verify: :none)
+        end
+        if File.exists?(barcodes_study_file.upload.path)
+          barcodes_file = File.open(barcodes_study_file.upload.path, 'rb')
+        else
+          barcodes_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
+                                                                       study.firecloud_workspace, barcodes_study_file.remote_location,
+                                                                       study.data_store_path, verify: :none)
+        end
       else
         matrix_file = File.open(matrix_study_file.upload.path, 'rb')
         genes_file = File.open(genes_study_file.upload.path, 'rb')
@@ -187,7 +200,7 @@ class ParseUtils
           if remote.nil?
             begin
               Rails.logger.info "#{Time.now}: preparing to upload expression file: #{study_file.upload_file_name}:#{study_file.id} to FireCloud"
-              self.send_to_firecloud(study_file)
+              study.send_to_firecloud(study_file)
             rescue => e
               Rails.logger.info "#{Time.now}: Expression file: #{study_file.upload_file_name}:#{study_file.id} failed to upload to FireCloud due to #{e.message}"
               SingleCellMailer.notify_admin_upload_fail(study_file, e.message).deliver_now

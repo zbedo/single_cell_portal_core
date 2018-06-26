@@ -592,10 +592,29 @@ class StudiesController < ApplicationController
 
   # retrieve study file by filename during initializer wizard
   def retrieve_wizard_upload
-    @study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
+    @study_file = StudyFile.find_by(study_id: params[:id], upload_file_name: params[:file])
     if @study_file.nil?
       head 404 and return
     end
+    @bundled_files = {}
+    # check if there are 'bundled' files that need to be added
+    case @study_file.file_type
+    when 'MM Coordinate Matrix'
+      file_opts = {matrix_id: @study_file.id}
+      @bundled_files[:expressions_target] = []
+      unless StudyFile.where(study_id: @study.id, file_type: '10X Genes File', 'options.matrix_id' => @study_file.id).exists?
+        @bundled_files[:expressions_target] << @study.build_study_file(file_type: '10X Genes File', options: file_opts)
+      end
+      unless StudyFile.where(study_id: @study.id, file_type: '10X Barcodes File', 'options.matrix_id' => @study_file.id).exists?
+        @bundled_files[:expressions_target] << @study.build_study_file(file_type: '10X Barcodes File', options: file_opts)
+      end
+    when 'BAM'
+      file_opts = {bam_id: @study_file.id}
+      unless StudyFile.where(study_id: @study.id, file_type: 'BAM Index', 'options.bam_id' => @study_file.id).exists?
+        @bundled_files[:primary_data_target] << @study.build_study_file(file_type: 'BAM Index', options: file_opts)
+      end
+    end
+    logger.info "bundled files #{@bundled_files}"
   end
 
   # parses file in foreground to maintain UI state for immediate messaging
@@ -610,6 +629,46 @@ class StudiesController < ApplicationController
         @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user)
       when 'Expression Matrix'
         @study.delay.initialize_gene_expression_data(@study_file, current_user)
+      when 'MM Coordinate Matrix'
+        @study_file.update(parse_status: 'unparsed') # we need to back this out unless we have all necessary files
+        barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => @study_file.id)
+        genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => @study_file.id)
+        if barcodes.present? && genes.present?
+          @study_file.update(parse_status: 'parsing')
+          genes.update(parse_status: 'parsing')
+          barcodes.update(parse_status: 'parsing')
+          ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, @study_file, genes, barcodes, {local: false})
+        else
+          logger.info "#{Time.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
+        end
+      when '10X Genes File'
+        @study_file.update(parse_status: 'unparsed') # we need to back this out unless we have all necessary files
+        matrix_id = @study_file.options[:matrix_id]
+        matrix = @study_file.matrix_target
+        barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => matrix_id)
+        if barcodes.present? && matrix.present?
+          @study_file.update(parse_status: 'parsing')
+          matrix.update(parse_status: 'parsing')
+          barcodes.update(parse_status: 'parsing')
+          ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, @study_file, barcodes, {local: false})
+        else
+          # we can only get here if we have a matrix and no barcodes, which means the barcodes form is already rendered
+          logger.info "#{Time.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
+        end
+      when '10X Barcodes File'
+        @study_file.update(parse_status: 'unparsed') # we need to back this out unless we have all necessary files
+        matrix_id = @study_file.options[:matrix_id]
+        matrix = @study_file.matrix_target
+        genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => matrix_id)
+        if genes.present? && matrix.present?
+          @study_file.update(parse_status: 'parsing')
+          genes.update(parse_status: 'parsing')
+          matrix.update(parse_status: 'parsing')
+          ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, genes, @study_file, {local: false})
+        else
+          # we can only get here if we have a matrix and no genes, which means the genes form is already rendered
+          logger.info "#{Time.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
+        end
       when 'Gene List'
         @study.delay.initialize_precomputed_scores(@study_file, current_user)
       when 'Metadata'
@@ -1215,7 +1274,7 @@ class StudiesController < ApplicationController
 
   # set up variables for wizard
   def initialize_wizard_files
-    @expression_files = @study.study_files.by_type('Expression Matrix')
+    @expression_files = @study.study_files.by_type(['Expression Matrix', 'MM Coordinate Matrix'])
     @metadata_file = @study.metadata_file
     @cluster_ordinations = @study.study_files.by_type('Cluster')
     @coordinate_labels = @study.study_files.by_type('Coordinate Labels')

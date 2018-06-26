@@ -19,12 +19,13 @@ class StudyFile
 
   # constants, used for statuses and file types
   STUDY_FILE_TYPES = ['Cluster', 'Coordinate Labels' ,'Expression Matrix', 'MM Coordinate Matrix', '10X Genes File',
-                      '10X Barcodes File', 'Gene List', 'Metadata', 'Fastq', 'Documentation', 'Other', 'Analysis Output']
+                      '10X Barcodes File', 'Gene List', 'Metadata', 'Fastq', 'BAM', 'BAM Index', 'Documentation',
+                      'Other', 'Analysis Output']
   PARSEABLE_TYPES = ['Cluster', 'Coordinate Labels', 'Expression Matrix', 'MM Coordinate Matrix', '10X Genes File',
                      '10X Barcodes File', 'Gene List', 'Metadata']
   UPLOAD_STATUSES = %w(new uploading uploaded)
   PARSE_STATUSES = %w(unparsed parsing parsed)
-  PRIMARY_DATA_EXTENTIONS = %w(fastq fastq.zip fastq.gz fastq.tar.gz fq fq.zip fq.gz fq.tar.gz)
+  PRIMARY_DATA_EXTENTIONS = %w(fastq fastq.zip fastq.gz fastq.tar.gz fq fq.zip fq.gz fq.tar.gz bam bam.gz bam.bai bam.gz.bai)
   GZIP_MAGIC_NUMBER = "\x1f\x8b".force_encoding(Encoding::ASCII_8BIT)
 
   # associations
@@ -147,6 +148,26 @@ class StudyFile
     self.parse_status == 'parsing'
   end
 
+  # determine whether we have all necessary files to parse this file.  Mainly applies to MM Coordinate Matrices and associated 10X files
+  def able_to_parse?
+    if !self.parseable?
+      false
+    else
+      case self.file_type
+      when 'MM Coordinate Matrix'
+        StudyFile.where(file_type: '10X Genes File', 'options.matrix_id' => self.id.to_s).exists? && StudyFile.where(file_type: '10X Barcodes File', 'options.matrix_id' => self.id.to_s).exists?
+      when '10X Genes File'
+        parent_matrix = self.matrix_target
+        parent_matrix.present? && StudyFile.where(file_type: '10X Barcodes File', 'options.matrix_id' => parent_matrix.id.to_s).exists?
+      when '10X Barcodes File'
+        parent_matrix = self.matrix_target
+        parent_matrix.present? && StudyFile.where(file_type: '10X Genes File', 'options.matrix_id' => parent_matrix.id.to_s).exists?
+      else
+        true # the file is parseable and a singleton
+      end
+    end
+  end
+
   # file type as a css class
   def file_type_class
     self.file_type.downcase.split.join('-') + '-file'
@@ -198,6 +219,24 @@ class StudyFile
     self.remote_location.blank? ? self.upload_file_name : self.remote_location
   end
 
+  # retrieve the target expression matrix for a bundled file (e.g. 10X Genes File)
+  def matrix_target
+    if self.options[:matrix_id].blank?
+      nil
+    else
+      StudyFile.find(self.options[:matrix_id])
+    end
+  end
+
+  # retrieve the target BAM file for a bundled file (e.g. BAM Index)
+  def bam_target
+    if self.options[:bam_id].blank?
+      nil
+    else
+      StudyFile.find(self.options[:bam_id])
+    end
+  end
+
   # retrieve the target cluster group from the options hash for a cluster labels file
   def coordinate_labels_target
     if self.options[:cluster_group_id].blank?
@@ -232,6 +271,19 @@ class StudyFile
     else
       self.options[:font_color]
     end
+  end
+
+  # get any 'bundled' files that correspond to this file
+  def get_bundled_files
+    # base 'selector' for query, used to search study_file.options hash
+    selector = 'options'
+    case self.file_type
+    when 'MM Coordinate Matrix'
+      selector += '.matrix_id'
+    when 'BAM'
+      selector += '.bam_id'
+    end
+    StudyFile.where(selector => self.id.to_s)
   end
 
   # determine a file's content type by reading the first 2 bytes and comparing to known magic numbers

@@ -1,12 +1,9 @@
-<%= form_for(study_file, url: update_study_file_study_path(@study._id), html: {id: "expression_form_#{study_file._id}", class: "bs-callout bs-callout-info initialize_expression_form #{study_file.new_record? ? 'new-expression-form' : nil}", data: {remote: true}}) do |f| %>
+<%= form_for(study_file, url: update_study_file_study_path(@study._id), html: {id: "bundled_file_form_#{study_file._id}", class: "bs-callout bs-callout-info initialize_bundled_file_form #{study_file.new_record? ? 'new-expression-form' : nil}", data: {remote: true}}) do |f| %>
 	<%= render partial: 'study_file_errors', locals: {study_file: study_file} %>
   <%= f.hidden_field :study_id, value: params[:id] %>
   <%= f.hidden_field :_id, value: study_file._id %>
-  <%= hidden_field_tag :selector, "#expression_form_#{study_file._id}" %>
-  <%= hidden_field_tag :partial, 'initialize_expression_form' %>
-  <% study_file.options.each do |key, value| %>
-    <%= hidden_field_tag "study_file_options_#{key}", value, name: "study_file[options][#{key}]" %>
-  <% end %>
+  <%= hidden_field_tag :selector, "#bundled_file_form_#{study_file._id}" %>
+  <%= hidden_field_tag :partial, 'initialize_bundled_file_form' %>
 	<div class="form-group row">
 		<div class="col-sm-4">
 			<%= f.label :name %><br />
@@ -18,16 +15,25 @@
 		</div>
 	</div>
   <div class="form-group row">
-    <div class="col-sm-12">
-      <%= f.label :y_axis_label, 'Expression Axis Label' %>&nbsp;<span class="fa fa-question-circle expression-label-tooltip" data-toggle="tooltip" data-placement="right" title="This is displayed as the axis label for box & scatter plots showing expression values.  This label is global to all expression values.<%= @study.has_expression_label? ? ' Please use the study default options form to update this value.' : '' %>"></span> <br />
-      <%= f.text_field :y_axis_label, value: @study.has_expression_label? ? @study.default_expression_label : study_file.y_axis_label, placeholder: @study.default_expression_label, class: 'form-control expression-label', disabled: @study.has_expression_label? %>
-    </div>
+    <%= f.fields_for :options do |opts| %>
+      <% if ['10X Genes File', '10X Barcodes File'].include?(study_file.file_type) %>
+        <div class="col-sm-4">
+          <%= opts.label :matrix_id, 'Select the associated expression matrix' %><br />
+          <%= opts.select :matrix_id, options_for_select(@study.study_files.by_type('MM Coordinate Matrix').map {|sf| [sf.name, sf.id]}, f.object.matrix_target.id), {}, class: 'form-control' %>
+        </div>
+      <% elsif study_file.file_type == 'BAM' %>
+        <div class="col-sm-4">
+          <%= opts.label :bam_id, 'Select the associated BAM file' %><br />
+          <%= opts.select :bam_id, options_for_select(@study.study_files.by_type('BAM').map {|sf| [sf.name, sf.id]}, f.object.bam_target.id), {}, class: 'form-control' %>
+        </div>
+      <% end %>
+    <% end %>
   </div>
 	<div class="form-group row">
-		<div class="col-sm-4">
-			<%= f.label :file_type %><br />
-			<%= f.select :file_type, options_for_select(['Expression Matrix', 'MM Coordinate Matrix'], selected: study_file.file_type), {}, class: 'form-control' %>
-		</div>
+    <div class="col-sm-4">
+      <%= f.label :file_type %><br />
+      <%= f.text_field :file_type, readonly: true, class: 'form-control' %>
+    </div>
 		<div class="col-sm-5 upload-field">
       <% if !study_file.upload_file_name.nil? %>
         <p><label>Link to file </label><br /><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></p>
@@ -47,7 +53,7 @@
           <% if study_file.parsing? || study_file.upload_file_name.nil? %>
             <%= link_to 'Delete', 'javascript:;', class: 'btn btn-block btn-danger disabled-delete', disabled: 'disabled', title: 'You must wait until the file has finished uploading & parsing before deleting', data: {toggle: 'tooltip'} %>
           <% else %>
-            <%= link_to 'Delete', delete_study_file_study_path(@study._id, study_file._id, target: "#expression_form_#{study_file._id}"), method: :delete, class: 'btn btn-block btn-danger delete-file', data: {remote: true} %>
+            <%= link_to 'Delete', delete_study_file_study_path(@study._id, study_file._id, target: "#bundled_file_form_#{study_file._id}"), method: :delete, class: 'btn btn-block btn-danger delete-file', data: {remote: true} %>
           <% end %>
 				</div>
 			</div>
@@ -63,17 +69,17 @@
 
 		$(function() {
 
-			$('#expression_form_<%= study_file._id %>').fileupload({
+			$('#bundled_file_form_<%= study_file._id %>').fileupload({
 				url: "<%= upload_study_path(@study._id) %>",
 				maxChunkSize: 10000000,
 				type: 'PATCH',
-				acceptFileTypes: /(\.|\/)(txt|text|mm|mtx|tsv|csv)(\.gz)?$/i,
+				acceptFileTypes: /(\.|\/)(txt|text|mm|mtx|tsv|csv|bam)(\.gz(\.bai)?)?$/i,
 				add: function (e, data) {
 					fileUploading = true;
 					var that = this;
 					var fileName = data.files[0].name.replace(/ /g, '_');
-          $('#expression_form_<%= study_file._id %> .filename').val(fileName);
-          canUpload = validateCandidateUpload("#expression_form_<%= study_file._id %>", fileName, $('.initialize_expression_form .filename'));
+          $('#bundled_file_form_<%= study_file._id %> .filename').val(fileName);
+          canUpload = validateCandidateUpload("#bundled_file_form_<%= study_file._id %>", fileName, $('.initialize_bundled_file_form .filename'));
           if ( canUpload ) {
               $.getJSON("<%= resume_upload_study_path %>", { file: fileName }, function (result) {
                   var file = result.file;
@@ -86,7 +92,7 @@
                   }
               });
           } else {
-              $('#expression_form_<%= study_file._id %> .filename').val('');
+              $('#bundled_file_form_<%= study_file._id %> .filename').val('');
           }
 				},
 				chunkdone: function(e, data) {
@@ -94,7 +100,6 @@
 					$(data.context).find('h1').html(perc + "% uploaded");
 				},
 				done: function(e, data) {
-          completeWizardStep('initialize_expression_form_nav');
 					var fileName = data.files[0].name.replace(/ /g, '_');
 					$.ajax({
 						url: "<%= update_status_study_path %>",
@@ -108,8 +113,8 @@
               data: {
                   file: fileName,
                   modal_target: '#expression-parse-modal',
-                  partial: 'initialize_expression_form',
-                  selector: "#expression_form_<%= study_file._id %>"
+                  partial: 'initialize_bundled_file_form',
+                  selector: "#bundled_file_form_<%= study_file._id %>"
               },
               dataType: 'script'
           });
@@ -125,7 +130,7 @@
             console.log('Aborting upload on study_file: <%= study_file.id %>');
             launchModalSpinner('#delete-modal-spinner','#delete-modal', function() {
                 $.ajax({
-                    url: "<%= delete_study_file_study_path(@study._id, study_file._id, target: "#expression_form_#{study_file._id}") %>",
+                    url: "<%= delete_study_file_study_path(@study._id, study_file._id, target: "#bundled_file_form_#{study_file._id}") %>",
                     type: 'DELETE',
                     dataType: 'script'
                 });
