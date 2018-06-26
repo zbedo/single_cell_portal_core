@@ -256,9 +256,12 @@ class Study
       public = self.where(public: true, queued_for_deletion: false).map(&:id)
       owned = self.where(user_id: user._id, public: false, queued_for_deletion: false).map(&:id)
       shares = StudyShare.where(email: user.email).map(&:study).select {|s| !s.queued_for_deletion }.map(&:id)
-      user_client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
-      user_groups = user_client.get_user_groups.map {|g| g['groupEmail']}
-      group_shares = StudyShare.where(:email.in => user_groups).map(&:study).select {|s| !s.queued_for_deletion }.map(&:id)
+      group_shares = []
+      if user.registered_for_firecloud
+        user_client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
+        user_groups = user_client.get_user_groups.map {|g| g['groupEmail']}
+        group_shares = StudyShare.where(:email.in => user_groups).map(&:study).select {|s| !s.queued_for_deletion }.map(&:id)
+      end
       intersection = public + owned + shares + group_shares
       # return Mongoid criterion object to use with pagination
       Study.in(:_id => intersection)
@@ -272,9 +275,12 @@ class Study
     else
       owned = self.where(user_id: user._id, queued_for_deletion: false).map(&:_id)
       shares = StudyShare.where(email: user.email).map(&:study).select {|s| !s.queued_for_deletion }.map(&:_id)
-      user_client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
-      user_groups = user_client.get_user_groups.map {|g| g['groupEmail']}
-      group_shares = StudyShare.where(:email.in => user_groups).map(&:study).select {|s| !s.queued_for_deletion }.map(&:id)
+      group_shares = []
+      if user.registered_for_firecloud
+        user_client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
+        user_groups = user_client.get_user_groups.map {|g| g['groupEmail']}
+        group_shares = StudyShare.where(:email.in => user_groups).map(&:study).select {|s| !s.queued_for_deletion }.map(&:id)
+      end
       intersection = owned + shares + group_shares
       Study.in(:_id => intersection)
     end
@@ -329,12 +335,16 @@ class Study
 
   # check if a user has access to a study via a user group
   def user_in_group_share?(user, *permissions)
-    group_shares = self.study_shares.keep_if {|share| share.is_group_share?}.select {|share| permissions.include?(share.permission)}.map(&:email)
-    # get user's FC groups
-    client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
-    user_groups = client.get_user_groups.map {|g| g['groupEmail']}
-    # use native array intersection to determine if any of the user's groups have been shared with this study at the correct permission
-    (user_groups & group_shares).any?
+    if user.registered_for_firecloud
+      group_shares = self.study_shares.keep_if {|share| share.is_group_share?}.select {|share| permissions.include?(share.permission)}.map(&:email)
+      # get user's FC groups
+      client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
+      user_groups = client.get_user_groups.map {|g| g['groupEmail']}
+      # use native array intersection to determine if any of the user's groups have been shared with this study at the correct permission
+      (user_groups & group_shares).any?
+    else
+      false # if user is not registered for firecloud, default to false
+    end
   end
 
   # list of emails for accounts that can edit this study
