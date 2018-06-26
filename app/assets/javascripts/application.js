@@ -152,6 +152,7 @@ $(document).on('click', '.bam-browse-genome', function(e) {
     }
   }
 
+  $('#genome-tab-nav').css('display', ''); // Show Genome tab
   $('#study-visualize-nav > a').click();
   $('#genome-tab-nav > a').click();
 });
