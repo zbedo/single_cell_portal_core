@@ -4,12 +4,10 @@
 <script>
 
   $(document).on('click', '#genome-tab-nav', function (e) {
+    initializeIgv();
+  });
 
-    if (typeof igv.browser !== 'undefined') {
-      // If IGV has already been created, then bail
-      return;
-    }
-
+  function initializeIgv() {
     var igvContainer, igvOptions, igvBrowser, igvTracks, i, bam;
 
     igvContainer = document.getElementById('igv-container');
@@ -37,7 +35,6 @@
     };
 
     igvBrowser = igv.createBrowser(igvContainer, igvOptions);
-
-  });
+  }
 
 </script>
