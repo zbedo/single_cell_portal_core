@@ -7,7 +7,7 @@
       <div id="view-options-nav"><a href="#view-options" id="view-option-link" data-toggle="offcanvas"><i class="fa fa-cog" aria-hidden="true"></i> View Options </a></div>
       <ul class="nav nav-tabs" role="tablist" id="view-tabs">
         <li role="presentation" class="study-nav active" id="plots-tab-nav"><a href="#plots-tab" data-toggle="tab">Clusters </a></li>
-        <% if @study.has_analysis_outputs?('infercnv', 'ideogram.js') or @study.has_bam_files%>
+        <% if @study.has_analysis_outputs?('infercnv', 'ideogram.js') or @study.has_bam_files? %>
           <% if @study.has_analysis_outputs?('infercnv', 'ideogram.js') %>
           <li role="presentation" class="study-nav" id="genome-tab-nav">
           <% else %>
@@ -40,7 +40,7 @@
           </div>
         </div>
       </div>
-      <% if @study.has_analysis_outputs?('infercnv', 'ideogram.js') or @study.has_bam_files%>
+      <% if @study.has_analysis_outputs?('infercnv', 'ideogram.js') or @study.has_bam_files? %>
         <div class="tab-pane" id="genome-tab" role="tabpanel" >
           <div class="panel panel-default no-top-border">
             <div id="genome-container" class="panel-collapse collapse in"></div>

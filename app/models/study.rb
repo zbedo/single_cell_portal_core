@@ -417,7 +417,7 @@ class Study
   #
   ###
 
-  # helper to return default cluster to load, will fall back to first cluster if no preference has been set
+  # helper to return default cluster to load, will fall back to first cluster if no pf has been set
   # or default cluster cannot be loaded
   def default_cluster
     default = self.cluster_groups.first
@@ -664,7 +664,7 @@ class Study
     self.study_files.where('options.analysis_name' => analysis_name, 'options.visualization_name' => visualization_name)
   end
 
-  def has_bam_files
+  def has_bam_files?
     has_bam = false
     self.study_files.each do |f|
       if f.name[-3, 3] == 'bam'

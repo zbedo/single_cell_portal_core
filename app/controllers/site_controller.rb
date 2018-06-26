@@ -254,6 +254,29 @@ class SiteController < ApplicationController
         ideogram_annotations = @study.get_analysis_outputs('infercnv', 'ideogram.js').first
         @analysis_outputs['ideogram.js'] = ideogram_annotations.bucket_location
       end
+
+      if @study.has_bam_files?
+        reference_workspace = AdminConfiguration.find_by(config_type: 'Reference Data Workspace')
+        opts = reference_workspace.options
+        namespace, name = reference_workspace.value.split('/')
+
+        # We'll generalize later, e.g. take in (genome assembly) reference_name as a URL parameter
+        # to this 'study' method's endpoint
+        reference_name = 'mm10'
+
+        @bed_files = {
+            mm10: {}
+        }
+
+        reference_bed_key = opts.keys.find {|o| o =~ /^#{reference_name}.*_bed$/}
+        reference_bed = opts[reference_bed_key]
+        @bed_files[:mm10][:url] = Study.firecloud_client.generate_api_url(namespace, name, reference_bed)
+
+        reference_bed_index_key = opts.keys.find {|o| o =~ /^#{reference_name}.*_bed_index$/}
+        reference_bed_index = opts[reference_bed_index_key]
+        @bed_files[:mm10][:indexUrl] = Study.firecloud_client.generate_api_url(namespace, name, reference_bed_index)
+
+      end
     end
 
     # if user has permission to run workflows, load available workflows and current submissions
