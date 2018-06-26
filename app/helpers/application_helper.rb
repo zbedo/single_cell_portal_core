@@ -156,26 +156,15 @@ module ApplicationHelper
 		end
 	end
 
-	def set_kernel_type_value(parameters)
-		if !parameters[:gene_set_kernel_type].nil?
-			parameters[:gene_set_kernel_type]
-		elsif !parameters[:kernel_type].nil?
-			parameters[:kernel_type]
+	def set_distribution_jitter_value(parameters)
+		if !parameters[:gene_set_jitter].nil?
+			parameters[:gene_set_jitter]
+		elsif !parameters[:jitter].nil?
+			parameters[:jitter]
 		else
-			'gau' # Gaussian
+			'all'
 		end
 	end
-
-	def set_band_type_value(parameters)
-		if !parameters[:gene_set_band_type].nil?
-			parameters[:gene_set_band_type]
-		elsif !parameters[:band_type].nil?
-			parameters[:band_type]
-		else
-			'nrd0'
-		end
-	end
-
 	def set_boxpoints_value(parameters)
 		if !parameters[:gene_set_boxpoints].nil?
 			parameters[:gene_set_boxpoints]

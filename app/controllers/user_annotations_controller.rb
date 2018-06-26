@@ -97,12 +97,6 @@ class UserAnnotationsController < ApplicationController
 
         end
 
-        #Update the names of the user data arrays
-        @user_annotation.user_data_arrays.to_a.each do |annot|
-          if !annot.subsample_annotation.nil?
-            annot.update(subsample_annotation: user_annotation_params.to_h['name'] + '--group--user')
-          end
-        end
         #If successful, redirect back and say success
         format.html { redirect_to merge_default_redirect_params(user_annotations_path, scpbr: params[:scpbr]),
                                   notice: "User Annotation '#{@user_annotation.name}' was successfully updated." }

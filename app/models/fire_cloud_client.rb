@@ -1331,26 +1331,26 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   #
   # * *return*
   #   - +Boolean+ indication of file deletion
-  def delete_workspace_file(workspace_namespace, workspace_name, filename)
-    file = self.get_workspace_file(workspace_namespace, workspace_name, filename)
-    begin
-      file.delete
-    rescue => e
-      logger.info("#{Time.now}: failed to delete workspace file #{filename} with error #{e.message}")
-      false
-    end
-  end
+	def delete_workspace_file(workspace_namespace, workspace_name, filename)
+		file = self.get_workspace_file(workspace_namespace, workspace_name, filename)
+		begin
+			file.delete
+		rescue => e
+			Rails.logger.info("#{Time.now}: failed to delete workspace file #{filename} with error #{e.message}")
+			false
+		end
+	end
 
-  # retrieve single file in a GCP bucket of a workspace and download locally to portal (likely for parsing)
-  #
-  # * *params*
-  #   - +workspace_namespace+ (String) => namespace of workspace
-  #   - +workspace_name+ (String) => name of workspace
-  #   - +filename+ (String) => name of file
-  #   - +destination+ (String) => destination path for downloaded file
-  #   - +opts+ (Hash) => extra options for signed_url, see
-  #     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.9.0/google/cloud/storage/file?method=signed_url-instance
-  #
+	# retrieve single file in a GCP bucket of a workspace and download locally to portal (likely for parsing)
+	#
+	# * *params*
+	#   - +workspace_namespace+ (String) => namespace of workspace
+	#   - +workspace_name+ (String) => name of workspace
+	#   - +filename+ (String) => name of file
+	#   - +destination+ (String) => destination path for downloaded file
+	#   - +opts+ (Hash) => extra options for signed_url, see
+	#     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/file?method=signed_url-instance
+	#
   # * *return*
   #   - +File+ object
   def download_workspace_file(workspace_namespace, workspace_name, filename, destination, opts={})

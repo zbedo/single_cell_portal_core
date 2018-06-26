@@ -208,6 +208,8 @@
 			},
 			onNext: function(tab, navigation, index) {
 				var step = $(tab[0]).attr('id');
+				console.log('step: ' + step);
+				console.log('completed' + JSON.stringify(completed));
 				if (showSkipWarning(step) && !requiredDialogShow && !completed[step]) {
 					$('#required-modal').modal({show: true, backdrop: 'static'});
 					requiredDialogShow = true;

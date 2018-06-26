@@ -3,5 +3,3 @@ $('#wdl-content-target').html("<%= escape_javascript(render partial: 'wdl_conten
 $('#wdl-contents').on('show.bs.collapse hide.bs.collapse', function() {
     toggleGlyph($(this).prev().find('span.toggle-glyph'));
 });
-
-$('#view-selected-wdl').button('reset');

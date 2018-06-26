@@ -91,49 +91,51 @@
           // Get a time-based one time authentication token (totat),
           // then show the download command
           $.ajax({
-            url: '/single_cell/totat',
-            type: 'post'
-          }).success(function (response) {
-            var totat = response.totat;
-            var timeInterval = response.time_interval; // token expires after this many seconds
+              url: '/single_cell/totat',
+              type: 'post',
+              dataType: 'json',
+              success: function (response) {
+                  var totat = response.totat;
+                  var timeInterval = response.time_interval; // token expires after this many seconds
 
-            var expiresMinutes = timeInterval / 60;
+                  var expiresMinutes = timeInterval / 60;
 
-            // Gets a curl configuration ("cfg.txt") containing signed
-            // URLs and output names for all files in the download object.
-            var url = (
-              window.location.origin +
-              '/single_cell/bulk_data' +
-              '/<%= @study.url_safe_name %>' +
-              '/' + downloadObject +
-              '/' + totat
-            );
+                  // Gets a curl configuration ("cfg.txt") containing signed
+                  // URLs and output names for all files in the download object.
+                  var url = (
+                      window.location.origin +
+                      '/single_cell/bulk_data' +
+                      '/<%= @study.url_safe_name %>' +
+                      '/' + downloadObject +
+                      '/' + totat
+                  );
 
-            var flag = (window.location.host === 'localhost') ? 'k' : ''; // "-k" === "--insecure"
+                  var flag = (window.location.host === 'localhost') ? 'k' : ''; // "-k" === "--insecure"
 
-            // This is what the user will run in their terminal to download the data.
-            var downloadCommand = (
-              'curl &quot;' + url + '&quot; -' + flag + 'o cfg.txt; ' +
-              'curl -K cfg.txt'
-            );
+                  // This is what the user will run in their terminal to download the data.
+                  var downloadCommand = (
+                      'curl &quot;' + url + '&quot; -' + flag + 'o cfg.txt; ' +
+                      'curl -K cfg.txt'
+                  );
 
-            var commandID = 'command-' + totat;
-            var commandContainer = $('#command-container-' + downloadObject);
-            var countdownValue = '<span class="countdown" id="countdown-' + totat + '">' + expiresMinutes + '</span>';
+                  var commandID = 'command-' + totat;
+                  var commandContainer = $('#command-container-' + downloadObject);
+                  var countdownValue = '<span class="countdown" id="countdown-' + totat + '">' + expiresMinutes + '</span>';
 
-            commandContainer.html(
-              '<div class="input-group">' +
-                '<input id="' + commandID + '" class="form-control curl-download-command" value="' + downloadCommand + '" readonly/>' +
-                '<span class="input-group-btn">' +
-                  '<button id="copy-button-' + totat + '" class="btn btn-default btn-copy" data-clipboard-target="#' + commandID + '" data-toggle="tooltip" title="Copy to clipboard">' +
-                    '<img src="/single_cell/assets/clippy.svg" width="16px" alt="Copy to clipboard">' +
-                  '</button>' +
-                  '<button id="refresh-button-' + totat + '" class="btn btn-default btn-refresh glyphicon glyphicon-refresh" data-toggle="tooltip" style="top: -0.5px;" title="Refresh download command">' +
-                  '</button>' +
-                '</span>' +
-              '</div>' +
-              '<div style="font-size: 12px">Valid for one use within ' + countdownValue + ' minutes.  Paste into Mac/Linux/Unix terminal and execute to download.</div>'
-            );
+                  commandContainer.html(
+                      '<div class="input-group">' +
+                      '<input id="' + commandID + '" class="form-control curl-download-command" value="' + downloadCommand + '" readonly/>' +
+                      '<span class="input-group-btn">' +
+                      '<button id="copy-button-' + totat + '" class="btn btn-default btn-copy" data-clipboard-target="#' + commandID + '" data-toggle="tooltip" title="Copy to clipboard">' +
+                      '<img src="/single_cell/assets/clippy.svg" width="16px" alt="Copy to clipboard">' +
+                      '</button>' +
+                      '<button id="refresh-button-' + totat + '" class="btn btn-default btn-refresh glyphicon glyphicon-refresh" data-toggle="tooltip" style="top: -0.5px;" title="Refresh download command">' +
+                      '</button>' +
+                      '</span>' +
+                      '</div>' +
+                      '<div style="font-size: 12px">Valid for one use within ' + countdownValue + ' minutes.  Paste into Mac/Linux/Unix terminal and execute to download.</div>'
+                  );
+              }
           });
         }
 

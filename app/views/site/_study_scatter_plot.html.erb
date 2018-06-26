@@ -19,8 +19,11 @@ var data = [];
     marker: <%= raw data[:marker].to_json %>
 	};
 
-  // set color
-  cluster_<%= index %>['marker']['color'] = colorBrewerSet[<%= index %> % 27];
+  <% if @selected_annotation[:type] == 'group' %>
+    // set color
+    cluster_<%= index %>['marker']['color'] = colorBrewerSet[<%= index %> % 27];
+  <% end %>
+
   data.push(cluster_<%= index %>);
 <% end %>
 
@@ -30,27 +33,16 @@ var data = [];
 Plotly.newPlot('cluster-plot', data, layout);
 
 // listener to redraw expression scatter with new color profile
+$('#colorscale').off('change');
 $("#colorscale").change(function() {
-    <%= render 'study_scatter_layout' %>
+
     var theme = $(this).val();
     data[0].marker.colorscale = theme;
     console.log("setting colorscale to " + theme);
 
-    Plotly.newPlot('cluster-plot', data, layout);
-
+    $('#search_colorscale').val(theme);
+    Plotly.update('cluster-plot', data, layout);
 });
-
-// now that we have the legend size, recalculate adding this to the overall size
-var legendW = parseInt($('#cluster-plot g.legend rect.bg').attr('width'));
-var curSize = $('#cluster-plot').actual('width') * SCATTER_RATIO;
-var newWidth = legendW + curSize;
-
-if (newWidth < minPlotAreaWidth) {
-  newWidth = minPlotAreaWidth;
-}
-
-var updatedLayout = {width: newWidth};
-Plotly.relayout('cluster-plot', updatedLayout);
 
 $('#cluster-figure-legend').html("<p class='text-center help-block'><%= escape_javascript(render text: @cluster.study_file.description) %></p>");
 

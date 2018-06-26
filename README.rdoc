@@ -3,7 +3,7 @@
 == SETUP
 
 This application is built and deployed using Docker[https://www.docker.com], specifically native {Docker for Mac OSX}[https://docs.docker.com/docker-for-mac/].
-Please refer to their online documentation for instructions on installing and creating a default VM for managing Docker images.
+Please refer to their online documentation for instructions on installing Docker.
 
 == BUILDING THE DOCKER IMAGE
 
@@ -102,7 +102,7 @@ than <code>--rm -it</code>.</em>
 
 Broad Institute project members can load all project secrets from Vault and boot the portal directly by using the <code>bin/load_env_secrets.sh</code> script.
 
-  bin/load_env_secrets.sh -p (path/to/service/account) -f (path/to/portal/config) -e (environment)
+  bin/load_env_secrets.sh -p (path/to/service/account) -s (path/to/portal/config) -e (environment)
 
 This script takes three parameters:
 

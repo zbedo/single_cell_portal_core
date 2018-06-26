@@ -54,6 +54,9 @@ class UserAnnotation
   validates_presence_of :name, :values
   # unique values are name per user, study and cluster
   validates_uniqueness_of :name, scope: [:user_id, :study_id, :cluster_group_id], message: '- \'%{value}\' has already been taken.'
+  validates_format_of :name, with: ValidationTools::URL_PARAM_SAFE,
+                      message: ValidationTools::URL_PARAM_SAFE_ERROR
+
   validate :check_source_cluster_annotations
 
   # populate specific errors for user annotation shares since they share the same form
@@ -184,7 +187,7 @@ class UserAnnotation
       if !threshold.nil?
         Rails.logger.info "#{Time.now}: Creating user annotation user data arrays without threshold for name: #{name}"
         # Create annotation array
-        UserDataArray.create(name: name, array_type: 'annotations', values: val, cluster_name: cluster.name, array_index: i+1, subsample_threshold: threshold, subsample_annotation: sub_an, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id)
+        UserDataArray.create(name: self.name, array_type: 'annotations', values: val, cluster_name: cluster.name, array_index: i+1, subsample_threshold: threshold, subsample_annotation: sub_an, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id)
         # Create X
         UserDataArray.create(name: 'x', array_type: 'coordinates', values: x_arrays[i], cluster_name: cluster.name, array_index: i+1, subsample_threshold: threshold, subsample_annotation: sub_an, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id )
         # Create Y
@@ -196,7 +199,7 @@ class UserAnnotation
       else
         Rails.logger.info "#{Time.now}: Creating user annotation user data arrays with threshold: #{threshold} for name: #{name}"
         # Create annotation array
-        UserDataArray.create(name: name, array_type: 'annotations', values: val, cluster_name: cluster.name, array_index: i+1, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id)
+        UserDataArray.create(name: self.name, array_type: 'annotations', values: val, cluster_name: cluster.name, array_index: i+1, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id)
         # Create X
         UserDataArray.create(name: 'x', array_type: 'coordinates', values: x_arrays[i], cluster_name: cluster.name, array_index: i+1, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id )
         # Create Y
@@ -246,6 +249,7 @@ class UserAnnotation
     # create data arrays at this threshold as long as the threshold isn't bigger than the size of full data, because that would be impossible
     thresholds.each do |threshold|
       if threshold < max_length
+        Rails.logger.info "Creating subsample for #{cluster.name} with #{annotation} at #{threshold}"
         create_array(cluster, threshold, annotation, data)
       end
     end

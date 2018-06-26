@@ -4,10 +4,9 @@
   <%= f.hidden_field :annotation, value: set_annotation_value(@study, params) %>
   <%= f.hidden_field :subsample, value: set_subsample_value(params) %>
   <%= f.hidden_field :plot_type, value: set_distribution_plot_type_value(params) %>
-  <%= f.hidden_field :kernel_type, value: set_kernel_type_value(params) %>
-  <%= f.hidden_field :band_type, value: set_band_type_value(params) %>
   <%= f.hidden_field :heatmap_row_centering, value: set_heatmap_row_centering_value(params) %>
   <%= f.hidden_field :heatmap_size, value: set_heatmap_size_value(params) %>
+  <%= f.hidden_field :colorscale, value: set_colorscale_value(@study, params) %>
   <%= hidden_field_tag :scpbr, params[:scpbr] %>
 
 <div id="search-omnibar">
@@ -67,8 +66,17 @@
                               var file = e.target.result,
                                   results;
                               if (file && file.length) {
-                                  results = file.split(/[,\n]/).join(',');
-                                  $('#search_genes').val(results);
+                                  lines = file.split(/[,\n]/);
+                                  sanitizedContent = [];
+                                  $(lines).each(function(i, line) {
+                                      // scrub quotes if present
+                                      line = line.replace(/(\'|\")/g, '');
+                                      if (!line.match(UNSAFE_CHARACTERS)) {
+                                          sanitizedContent.push(line);
+                                      }
+                                  });
+                                  searchString = sanitizedContent.join(',');
+                                  $('#search_genes').val(searchString);
                                   $(fileInput).val("").change(submitGeneSearch());
                               }
                           });
@@ -81,6 +89,7 @@
                           alert('You must specify at least one gene or upload a list of genes to search');
                           setErrorOnBlank($('.search-genes-input'));
                       } else {
+                          $(window).off('resizeEnd');
                           launchModalSpinner('#spinner_target', '#loading-modal', function() {
                               var form = $('#search-genes-form');
                               $.ajax({

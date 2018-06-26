@@ -1,6 +1,6 @@
 public/single_cell/*
-tmp
-data
-log
+tmp/*
+data/*
+log/*
 data_bak
-/config/.read_only_service_account.json
+/config/*.json

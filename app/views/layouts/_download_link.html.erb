@@ -1,7 +1,7 @@
 <% if @study.embargoed?(current_user) %>
     <span class="label label-warning embargoed-file"><i class="fa fa-ban"></i> Not available until <%= @study.embargo.to_s(:long) %></span>
 <% else %>
-  <% if study_file.upload_file_name.nil? %>
+  <% if study_file.upload_file_name.nil? && study_file.human_data %>
       <%= link_to "<span class='fa fa-cloud-download'></span> External".html_safe, study_file.download_path, class: 'btn btn-primary', target: :_blank %>
   <% else %>
       <% if study_file.generation and current_user.daily_download_quota + study_file.upload_file_size <= @download_quota %>

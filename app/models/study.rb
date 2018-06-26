@@ -9,6 +9,7 @@ class Study
 
   include Mongoid::Document
   include Mongoid::Timestamps
+  extend ValidationTools
 
   ###
   #
@@ -75,26 +76,6 @@ class Study
     end
   end
 
-  has_many :expression_scores, dependent: :delete do
-    def by_gene(gene, study_file_ids)
-      found_scores = any_of({gene: gene, :study_file_id.in => study_file_ids}, {searchable_gene: gene.downcase, :study_file_id.in => study_file_ids})
-      if found_scores.empty?
-        return []
-      else
-        # since we can have duplicate genes but not cells, merge into one object for rendering
-        merged_scores = {'searchable_gene' => gene.downcase, 'gene' => gene, 'scores' => {}}
-        found_scores.each do |score|
-          merged_scores['scores'].merge!(score.scores)
-        end
-        return [merged_scores]
-      end
-    end
-
-    def unique_genes
-      pluck(:gene).uniq
-    end
-  end
-
   has_many :genes, dependent: :delete do
     def by_name(gene_name, study_file_ids)
       found_scores = any_of({name: gene_name, :study_file_id.in => study_file_ids}, {searchable_name: gene_name.downcase, :study_file_id.in => study_file_ids})
@@ -148,12 +129,6 @@ class Study
   has_many :data_arrays, as: :linear_data, dependent: :delete do
     def by_name_and_type(name, type)
       where(name: name, array_type: type).order_by(&:array_index)
-    end
-  end
-
-  has_many :study_metadata, dependent: :delete do
-    def by_name_and_type(name, type)
-      where(name: name, annotation_type: type).to_a
     end
   end
 
@@ -238,6 +213,14 @@ class Study
     end
   end
 
+  # XSS protection
+  validate :strip_unsafe_characters_from_description
+  validates_format_of :name, with: ValidationTools::OBJECT_LABELS,
+                      message: ValidationTools::OBJECT_LABELS_ERROR
+
+  validates_format_of :firecloud_workspace, :firecloud_project, :data_dir, :bucket_id, :url_safe_name,
+                      with: ValidationTools::ALPHANUMERIC_DASH, message: ValidationTools::ALPHANUMERIC_DASH_ERROR
+
   # update validators
   validates_uniqueness_of :name, on: :update, message: ": %{value} has already been taken.  Please choose another name."
   validates_presence_of   :name, on: :update
@@ -276,10 +259,13 @@ class Study
     if user.admin?
       self.where(queued_for_deletion: false)
     else
-      public = self.where(public: true, queued_for_deletion: false).map(&:_id)
-      owned = self.where(user_id: user._id, public: false, queued_for_deletion: false).map(&:_id)
-      shares = StudyShare.where(email: user.email).map(&:study).select {|s| !s.queued_for_deletion }.map(&:_id)
-      intersection = public + owned + shares
+      public = self.where(public: true, queued_for_deletion: false).map(&:id)
+      owned = self.where(user_id: user._id, public: false, queued_for_deletion: false).map(&:id)
+      shares = StudyShare.where(email: user.email).map(&:study).select {|s| !s.queued_for_deletion }.map(&:id)
+      user_client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
+      user_groups = user_client.get_user_groups.map {|g| g['groupEmail']}
+      group_shares = StudyShare.where(:email.in => user_groups).map(&:study).select {|s| !s.queued_for_deletion }.map(&:id)
+      intersection = public + owned + shares + group_shares
       # return Mongoid criterion object to use with pagination
       Study.in(:_id => intersection)
     end
@@ -292,14 +278,17 @@ class Study
     else
       owned = self.where(user_id: user._id, queued_for_deletion: false).map(&:_id)
       shares = StudyShare.where(email: user.email).map(&:study).select {|s| !s.queued_for_deletion }.map(&:_id)
-      intersection = owned + shares
+      user_client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
+      user_groups = user_client.get_user_groups.map {|g| g['groupEmail']}
+      group_shares = StudyShare.where(:email.in => user_groups).map(&:study).select {|s| !s.queued_for_deletion }.map(&:id)
+      intersection = owned + shares + group_shares
       Study.in(:_id => intersection)
     end
   end
 
   # check if a give use can edit study
   def can_edit?(user)
-    user.nil? ? false : self.admins.include?(user.email)
+    user.nil? ? false : self.admins.include?(user.email) || self.user_in_group_share?(user, 'Edit')
   end
 
   # check if a given user can view study by share (does not take public into account - use Study.viewable(user) instead)
@@ -307,7 +296,7 @@ class Study
     if user.nil?
       false
     else
-      self.can_edit?(user) || self.study_shares.can_view.include?(user.email)
+      self.can_edit?(user) || self.study_shares.can_view.include?(user.email) || self.user_in_group_share?(user, 'View', 'Reviewer')
     end
   end
 
@@ -325,7 +314,7 @@ class Study
     if user.nil?
       false
     else
-      self.public? || self.can_edit?(user) || self.study_shares.non_reviewers.include?(user.email)
+      self.public? || self.can_edit?(user) || self.study_shares.non_reviewers.include?(user.email) || self.user_in_group_share?(user, 'View')
     end
   end
 
@@ -342,6 +331,16 @@ class Study
       workspace_acl = Study.firecloud_client.get_workspace_acl(self.firecloud_project, self.firecloud_workspace)
       workspace_acl['acl'][user.email].nil? ? false : workspace_acl['acl'][user.email]['canCompute']
     end
+  end
+
+  # check if a user has access to a study via a user group
+  def user_in_group_share?(user, *permissions)
+    group_shares = self.study_shares.keep_if {|share| share.is_group_share?}.select {|share| permissions.include?(share.permission)}.map(&:email)
+    # get user's FC groups
+    client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
+    user_groups = client.get_user_groups.map {|g| g['groupEmail']}
+    # use native array intersection to determine if any of the user's groups have been shared with this study at the correct permission
+    (user_groups & group_shares).any?
   end
 
   # list of emails for accounts that can edit this study
@@ -2577,5 +2576,9 @@ class Study
     else
       true
     end
+  end
+
+  def strip_unsafe_characters_from_description
+    self.description = self.description.gsub(ValidationTools::SCRIPT_TAG_REGEX, '')
   end
 end
