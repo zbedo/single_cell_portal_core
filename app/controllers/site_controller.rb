@@ -1046,14 +1046,7 @@ class SiteController < ApplicationController
   def create_workspace_submission
     begin
       # before creating submission, we need to make sure that the user is on the 'all-portal' user group list if it exists
-      user_group_config = AdminConfiguration.find_by(config_type: 'Portal FireCloud User Group')
-      if user_group_config.present? && !current_user.registered_for_firecloud
-        group_name = user_group_config.value
-        logger.info "#{Time.now}: adding #{current_user.email} to #{group_name} user group"
-        Study.firecloud_client.add_user_to_group(group_name, 'member', current_user.email)
-        logger.info "#{Time.now}: user group registration complete"
-        current_user.update(registered_for_firecloud: true)
-      end
+      current_user.add_to_portal_user_group
 
       # set up parameters
       workflow_namespace, workflow_name, workflow_snapshot = params[:workflow][:identifier].split('--')
