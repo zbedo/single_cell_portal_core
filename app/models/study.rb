@@ -694,7 +694,7 @@ class Study
       if file.name[-3, 3] == 'bai'
         bai = file
         raw_bams.each do |bam|
-          if bai.name.split('.')[0] == bam.name.split('.')[0]
+          if bai.name.split('.')[0].include?(bam.name.split('.')[0])
             bams.push({
               'url': bam.api_url,
               'indexUrl': bai.api_url
