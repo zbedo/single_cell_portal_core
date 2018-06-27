@@ -156,7 +156,7 @@
 
     // pre-select all MM coordinate matrix associations, if present
     $(document).ready(function() {
-        var allMatrices = gatherCoordinateMatrices();
+        var allMatrices = gatherFilesByType('MM Coordinate Matrix', '.unsynced-study-file');
         var disabledCss = {
             'pointer-events' : 'none'
         };

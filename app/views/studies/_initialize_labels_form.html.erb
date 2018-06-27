@@ -18,7 +18,7 @@
     <%= f.fields_for :options do |opts| %>
       <div class="col-sm-4">
         <%= opts.label :cluster_group_id, 'Select the cluster to apply labels to' %><br />
-        <%= opts.select :cluster_group_id, options_for_select(@study.cluster_groups.map {|cluster_group| [cluster_group.name, cluster_group.id]}, f.object.new_record? ? nil : f.object.coordinate_labels_target.id), {}, class: 'form-control' %>
+        <%= opts.select :cluster_group_id, options_for_select(@study.cluster_groups.map {|cluster_group| [cluster_group.name, cluster_group.id]}, f.object.new_record? ? nil : f.object.bundle_parent.id), {}, class: 'form-control' %>
       </div>
       <div class="col-sm-3">
         <%= opts.label :font_family, 'Display font for labels' %><br />
@@ -37,7 +37,7 @@
 	<div class="form-group row">
 		<div class="col-sm-4">
 			<%= f.label :file_type %><br />
-			<%= f.text_field :file_type, readonly: true, class: 'form-control' %>
+			<%= f.text_field :file_type, readonly: true, class: 'form-control file-type' %>
 		</div>
 		<div class="col-sm-5 upload-field">
       <% if !study_file.upload_file_name.nil? %>

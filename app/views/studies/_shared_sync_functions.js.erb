@@ -25,7 +25,7 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
     } else if (fileType === '10X Genes File' || fileType === '10X Barcodes File') {
         nameField.val(fileName);
         nameField.attr('readonly', 'readonly');
-        var mtx = gatherCoordinateMatrices();
+        var mtx = gatherFilesByType();
         if (mtx.length === 0) {
             alert("You must first specify at least one file of type 'MM Coordinate Matrix' (10X Genes/Barcodes Files " +
                 "must pair with a matrix before being parsed).");

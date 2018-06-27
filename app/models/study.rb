@@ -1571,7 +1571,7 @@ class Study
     @message = []
     begin
       # load target cluster
-      cluster = coordinate_file.coordinate_labels_target
+      cluster = coordinate_file.bundle_parent
 
       Rails.logger.info "#{Time.now}: Beginning coordinate label initialization using #{coordinate_file.upload_file_name}:#{coordinate_file.id} for cluster: #{cluster.name} in #{self.name}"
       coordinate_file.update(parse_status: 'parsing')

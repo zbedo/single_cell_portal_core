@@ -157,10 +157,10 @@ class StudyFile
       when 'MM Coordinate Matrix'
         StudyFile.where(file_type: '10X Genes File', 'options.matrix_id' => self.id.to_s).exists? && StudyFile.where(file_type: '10X Barcodes File', 'options.matrix_id' => self.id.to_s).exists?
       when '10X Genes File'
-        parent_matrix = self.matrix_target
+        parent_matrix = self.bundle_parent
         parent_matrix.present? && StudyFile.where(file_type: '10X Barcodes File', 'options.matrix_id' => parent_matrix.id.to_s).exists?
       when '10X Barcodes File'
-        parent_matrix = self.matrix_target
+        parent_matrix = self.bundle_parent
         parent_matrix.present? && StudyFile.where(file_type: '10X Genes File', 'options.matrix_id' => parent_matrix.id.to_s).exists?
       else
         true # the file is parseable and a singleton
@@ -219,31 +219,34 @@ class StudyFile
     self.remote_location.blank? ? self.upload_file_name : self.remote_location
   end
 
-  # retrieve the target expression matrix for a bundled file (e.g. 10X Genes File)
-  def matrix_target
-    if self.options[:matrix_id].blank?
-      nil
-    else
-      StudyFile.find(self.options[:matrix_id])
+  # get any 'bundled' files that correspond to this file
+  def bundled_files
+    # base 'selector' for query, used to search study_file.options hash
+    selector = 'options'
+    case self.file_type
+    when 'MM Coordinate Matrix'
+      selector += '.matrix_id'
+    when 'BAM'
+      selector += '.bam_id'
+    when 'Cluster'
+      selector += '.cluster_group_id'
     end
+    StudyFile.where(selector => self.id.to_s) # return Mongoid::Criteria to lazy-load, better performance
   end
 
-  # retrieve the target BAM file for a bundled file (e.g. BAM Index)
-  def bam_target
-    if self.options[:bam_id].blank?
-      nil
-    else
-      StudyFile.find(self.options[:bam_id])
+  # get the bundle 'parent' file for a bundled file (e.g. MM Coordinate Matrix that is bundled with a 10X Genes File)
+  # inverse of study_file.bundled_files
+  def bundle_parent
+    case self.file_type
+    when /10X/
+      selector = :matrix_id
+    when 'BAM Index'
+      selector = :bam_id
+    when 'Coordinate Labels'
+      selector = :cluster_group_id
     end
-  end
-
-  # retrieve the target cluster group from the options hash for a cluster labels file
-  def coordinate_labels_target
-    if self.options[:cluster_group_id].blank?
-      nil
-    else
-      ClusterGroup.find(self.options[:cluster_group_id])
-    end
+    # call find_by(id: ) to avoid Mongoid::Errors::InvalidFind
+    StudyFile.find_by(id: self.options[selector])
   end
 
   # retrieve the cluster group id from the options hash for a cluster labels file
@@ -271,19 +274,6 @@ class StudyFile
     else
       self.options[:font_color]
     end
-  end
-
-  # get any 'bundled' files that correspond to this file
-  def get_bundled_files
-    # base 'selector' for query, used to search study_file.options hash
-    selector = 'options'
-    case self.file_type
-    when 'MM Coordinate Matrix'
-      selector += '.matrix_id'
-    when 'BAM'
-      selector += '.bam_id'
-    end
-    StudyFile.where(selector => self.id.to_s)
   end
 
   # determine a file's content type by reading the first 2 bytes and comparing to known magic numbers
@@ -320,7 +310,7 @@ class StudyFile
         name_key = self.cluster_groups.first.name.split.join('-')
         @cache_key = "#{study_name}.*render_cluster.*#{name_key}"
       when 'Coordinate Labels'
-        name_key = self.coordinate_labels_target.name.split.join('-')
+        name_key = self.bundle_parent.name.split.join('-')
         @cache_key = "#{study_name}.*render_cluster.*#{name_key}"
       when 'Expression Matrix'
         @cache_key = "#{study_name}.*expression"
