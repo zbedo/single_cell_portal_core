@@ -1,0 +1,8 @@
+<div class="form-group row">
+  <div class="col-sm-6">
+    <%= f.fields_for :options do |opts| %>
+      <%= opts.label :bam_id, 'BAM Target' %>&nbsp;<span class="fa fa-question-circle" data-toggle="tooltip" data-placement="right" title="Select which BAM file this index pairs with.  You cannot save this file until this is set."></span> <br />
+      <%= opts.select :bam_id, options_for_select([]), {include_blank: 'Please select a BAM file...'}, class: 'form-control bam-file-select bundle-select' %>
+    <% end %>
+  </div>
+</div>

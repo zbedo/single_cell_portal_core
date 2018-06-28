@@ -914,11 +914,11 @@ function validateEmail(email) {
 }
 
 // gather all MM Coordinate Matrix instances from a page
-function gatherFilesByType(fileType, formSelector) {
+function gatherFilesByType(fileType) {
     var matchingfiles = [];
     $('.file-type').each(function(index, type) {
         if ($(type).val() == fileType) {
-            var mForm = $(type).closest(formSelector);
+            var mForm = $(type).closest('form');
             var mId = $(mForm).find('#study_file__id').val();
             var mName = $(mForm).find('.filename').val();
             matchingfiles.push([mName, mId]);

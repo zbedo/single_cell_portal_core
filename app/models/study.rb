@@ -63,7 +63,11 @@ class Study
     end
 
     def non_primary_data
-      where(queued_for_deletion: false).not_in(file_type: 'Fastq').to_a
+      where(queued_for_deletion: false).not_in(file_type: StudyFile::PRIMARY_DATA_TYPES).to_a
+    end
+
+    def primary_data
+      where(queued_for_deletion: false).in(file_type: StudyFile::PRIMARY_DATA_TYPES).to_a
     end
 
     def valid
@@ -528,7 +532,7 @@ class Study
 
   # return a count of the number of fastq files both uploaded and referenced via directory_listings for a study
   def primary_data_file_count
-    study_file_count = self.study_files.by_type('Fastq').size
+    study_file_count = self.study_files.primary_data.size
     directory_listing_count = self.directory_listings.primary_data.map {|d| d.files.size}.reduce(0, :+)
     study_file_count + directory_listing_count
   end

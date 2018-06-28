@@ -26,6 +26,7 @@ class StudyFile
   UPLOAD_STATUSES = %w(new uploading uploaded)
   PARSE_STATUSES = %w(unparsed parsing parsed)
   PRIMARY_DATA_EXTENTIONS = %w(fastq fastq.zip fastq.gz fastq.tar.gz fq fq.zip fq.gz fq.tar.gz bam bam.gz bam.bai bam.gz.bai)
+  PRIMARY_DATA_TYPES = ['Fastq', 'BAM', 'BAM Index']
   GZIP_MAGIC_NUMBER = "\x1f\x8b".force_encoding(Encoding::ASCII_8BIT)
 
   # associations

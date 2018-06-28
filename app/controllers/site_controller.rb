@@ -231,7 +231,7 @@ class SiteController < ApplicationController
   def study
     @study.update(view_count: @study.view_count + 1)
     @study_files = @study.study_files.non_primary_data.sort_by(&:name)
-    @primary_study_files = @study.study_files.by_type('Fastq')
+    @primary_study_files = @study.study_files.primary_data
     @directories = @study.directory_listings.are_synced
     @primary_data = @study.directory_listings.primary_data
     @other_data = @study.directory_listings.non_primary_data

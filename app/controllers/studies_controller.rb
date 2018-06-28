@@ -39,7 +39,7 @@ class StudiesController < ApplicationController
   # GET /studies/1
   # GET /studies/1.json
   def show
-    @study_fastq_files = @study.study_files.by_type('Fastq')
+    @study_fastq_files = @study.study_files.primary_data
     @directories = @study.directory_listings.are_synced
     @primary_data = @study.directory_listings.primary_data
     @other_data = @study.directory_listings.non_primary_data
@@ -1019,7 +1019,7 @@ class StudiesController < ApplicationController
       # only grab id after update as it will change on new entries
       @form = "#study-file-#{@study_file.id}"
 
-      if @study_file.parseable?
+      if @study_file.parseable? && @study_file.able_to_parse?
         logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
         @message += " You will receive an email at #{current_user.email} when the parse has completed."
         # parse file as appropriate type

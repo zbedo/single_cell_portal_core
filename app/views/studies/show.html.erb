@@ -242,8 +242,9 @@
       <table class="table table-striped tabled-condensed" id="fastq-table">
         <thead>
         <tr>
-          <th class="col-sm-5">Filename</th>
-          <th class="col-sm-6">Description</th>
+          <th class="col-sm-4">Filename</th>
+          <th class="col-sm-4">Description</th>
+          <th class="col-sm-3">File Type</th>
           <th class="col-sm-1">Download</th>
         </tr>
         </thead>
@@ -252,6 +253,7 @@
             <tr class="fastq-entry">
               <td><%= file.name %></td>
               <td class="dl-description"><%= file.description %></td>
+              <td><%= file.file_type %></td>
               <td>
                 <% if @allow_downloads %>
                   <%= render partial: '/layouts/download_link', locals: {study: @study, study_file: file} %>
@@ -267,6 +269,7 @@
               <tr class="<%= directory.file_type %>-entry">
                 <td><%= basename %></td>
                 <td class="dl-description"><%= directory.description %></td>
+                <td class="dl-description"><%= directory.file_type %></td>
                 <td><%= link_to("<span class='fa fa-download'></span> #{number_to_human_size(file[:size], prefix: :si)}".html_safe, directory.download_path(file[:name]), class: "btn btn-primary dl-link fastq", download: basename) %></td>
               </tr>
             <% end %>

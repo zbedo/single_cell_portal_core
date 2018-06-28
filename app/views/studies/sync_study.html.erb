@@ -8,108 +8,110 @@
   </div>
 <% end %>
 
-<% if @orphaned_study_files.any? %>
-  <div class="panel panel-danger">
-    <div class="panel-heading">
-      <div class="panel-title">
-        <h4><%= link_to "<i class='fa fa-exclamation'></i> Orphaned Study Files <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#orphaned-study-files', class: 'red', 'data-toggle' => 'collapse' %></h4>
+<div id="sync-files-target">
+  <% if @orphaned_study_files.any? %>
+    <div class="panel panel-danger">
+      <div class="panel-heading">
+        <div class="panel-title">
+          <h4><%= link_to "<i class='fa fa-exclamation'></i> Orphaned Study Files <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#orphaned-study-files', class: 'red', 'data-toggle' => 'collapse' %></h4>
+        </div>
       </div>
-    </div>
-    <div id="orphaned-study-files" class="panel-collapse collapse in unsynced">
-      <div class="panel-body">
-        <p class="text-danger">The following study files entries no longer have a corresponding file in your study workspace and may need to be deleted or re-parsed.</p>
-        <div id="orphaned-study-files-forms" class="unsynced-content">
-          <% @orphaned_study_files.each do |study_file| %>
-            <%= render partial: 'orphaned_study_file_form', locals: {study_file: study_file} %>
-          <% end %>
+      <div id="orphaned-study-files" class="panel-collapse collapse in unsynced">
+        <div class="panel-body">
+          <p class="text-danger">The following study files entries no longer have a corresponding file in your study workspace and may need to be deleted or re-parsed.</p>
+          <div id="orphaned-study-files-forms" class="unsynced-content">
+            <% @orphaned_study_files.each do |study_file| %>
+              <%= render partial: 'orphaned_study_file_form', locals: {study_file: study_file} %>
+            <% end %>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-<% end %>
+  <% end %>
 
-<% if @unsynced_files.any? %>
-  <div class="panel panel-info">
-    <div class="panel-heading">
-      <div class="panel-title">
-        <h4><%= link_to "<i class='fa fa-question'></i> Unsynced Study Files <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#unsynced-study-files', 'data-toggle' => 'collapse' %></h4>
+  <% if @unsynced_files.any? %>
+    <div class="panel panel-info">
+      <div class="panel-heading">
+        <div class="panel-title">
+          <h4><%= link_to "<i class='fa fa-question'></i> Unsynced Study Files <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#unsynced-study-files', 'data-toggle' => 'collapse' %></h4>
+        </div>
       </div>
-    </div>
-    <div id="unsynced-study-files" class="panel-collapse collapse in unsynced">
-      <div class="panel-body">
-        <p class="help-block">These are files that are possibly new and are ready to sync with your study.</p>
-        <div id="unsynced-study-files-forms" class="unsynced-content">
-          <% @unsynced_files.each do |study_file| %>
-            <%= render partial: 'study_file_form', locals: {study_file: study_file} %>
-          <% end %>
+      <div id="unsynced-study-files" class="panel-collapse collapse in unsynced">
+        <div class="panel-body">
+          <p class="help-block">These are files that are possibly new and are ready to sync with your study.</p>
+          <div id="unsynced-study-files-forms" class="unsynced-content">
+            <% @unsynced_files.each do |study_file| %>
+              <%= render partial: 'study_file_form', locals: {study_file: study_file} %>
+            <% end %>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-<% end %>
+  <% end %>
 
-<% if @unsynced_primary_data_dirs.any? %>
-  <div class="panel panel-warning">
-    <div class="panel-heading">
-      <div class="panel-title">
-        <h4><%= link_to "<i class='fa fa-question'></i> Unsynced Primary Data Directories <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#unsynced-directories', 'data-toggle' => 'collapse' %></h4>
+  <% if @unsynced_primary_data_dirs.any? %>
+    <div class="panel panel-warning">
+      <div class="panel-heading">
+        <div class="panel-title">
+          <h4><%= link_to "<i class='fa fa-question'></i> Unsynced Primary Data Directories <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#unsynced-directories', 'data-toggle' => 'collapse' %></h4>
+        </div>
       </div>
-    </div>
-    <div id="unsynced-directories" class="panel-collapse collapse in unsynced">
-      <div class="panel-body">
-        <p class="help-block">These are directories containing new or updated primary data (fastq) for which you can supply a block description.</p>
-        <div id="unsynced-primary-dirs-forms" class="unsynced-content">
-          <% @unsynced_primary_data_dirs.each do |directory| %>
-            <%= render partial: 'directory_listing_form', locals: {directory: directory} %>
-          <% end %>
+      <div id="unsynced-directories" class="panel-collapse collapse in unsynced">
+        <div class="panel-body">
+          <p class="help-block">These are directories containing new or updated primary data (fastq) for which you can supply a block description.</p>
+          <div id="unsynced-primary-dirs-forms" class="unsynced-content">
+            <% @unsynced_primary_data_dirs.each do |directory| %>
+              <%= render partial: 'directory_listing_form', locals: {directory: directory} %>
+            <% end %>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-<% end %>
+  <% end %>
 
-<% if @unsynced_other_dirs.any? %>
-  <div class="panel panel-default">
-    <div class="panel-heading">
-      <div class="panel-title">
-        <h4><%= link_to "<i class='fa fa-question'></i> Unsynced Miscellaneous Data Directories <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#unsynced-directories', 'data-toggle' => 'collapse' %></h4>
+  <% if @unsynced_other_dirs.any? %>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <div class="panel-title">
+          <h4><%= link_to "<i class='fa fa-question'></i> Unsynced Miscellaneous Data Directories <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#unsynced-directories', 'data-toggle' => 'collapse' %></h4>
+        </div>
       </div>
-    </div>
-    <div id="unsynced-directories" class="panel-collapse collapse in unsynced">
-      <div class="panel-body">
-        <p class="help-block">These are directories containing groups of 10 or more files of the same extension (20+ for text files) for which you can supply a block description.</p>
-        <div id="unsynced-misc-dirs-forms" class="unsynced-content">
-          <% @unsynced_other_dirs.each do |directory| %>
-            <%= render partial: 'directory_listing_form', locals: {directory: directory} %>
-          <% end %>
+      <div id="unsynced-directories" class="panel-collapse collapse in unsynced">
+        <div class="panel-body">
+          <p class="help-block">These are directories containing groups of 10 or more files of the same extension (20+ for text files) for which you can supply a block description.</p>
+          <div id="unsynced-misc-dirs-forms" class="unsynced-content">
+            <% @unsynced_other_dirs.each do |directory| %>
+              <%= render partial: 'directory_listing_form', locals: {directory: directory} %>
+            <% end %>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-<% end %>
+  <% end %>
 
-<hr class="divider" />
-<div class="panel panel-success">
-  <div class="panel-heading">
-    <div class="panel-title">
-      <h4><%= link_to "<i class='fa fa-check'></i> Synced Data <span class='fa fa-chevron-right toggle-glyph'></span>".html_safe, '#synced-data', 'data-toggle' => 'collapse', id: 'synced-data-panel-toggle' %></h4>
-    </div>
-  </div>
-  <div id="synced-data" class="panel-collapse collapse">
-    <div class="panel-body">
-      <h4>Study Files</h4>
-      <div id="synced-study-files">
-        <% @synced_study_files.each do |sf| %>
-          <%= render partial: 'synced_study_file_form', locals: {study_file: sf} %>
-        <% end %>
+  <hr class="divider" />
+  <div class="panel panel-success">
+    <div class="panel-heading">
+      <div class="panel-title">
+        <h4><%= link_to "<i class='fa fa-check'></i> Synced Data <span class='fa fa-chevron-right toggle-glyph'></span>".html_safe, '#synced-data', 'data-toggle' => 'collapse', id: 'synced-data-panel-toggle' %></h4>
       </div>
-      <h4>Primary Data & Other Directories</h4>
-      <div id="synced-directory-listings">
-        <% @synced_directories.each do |dir| %>
-          <%= render partial: 'directory_listing_form', locals: {directory: dir} %>
-        <% end %>
+    </div>
+    <div id="synced-data" class="panel-collapse collapse">
+      <div class="panel-body">
+        <h4>Study Files</h4>
+        <div id="synced-study-files">
+          <% @synced_study_files.each do |sf| %>
+            <%= render partial: 'synced_study_file_form', locals: {study_file: sf} %>
+          <% end %>
+        </div>
+        <h4>Primary Data & Other Directories</h4>
+        <div id="synced-directory-listings">
+          <% @synced_directories.each do |dir| %>
+            <%= render partial: 'directory_listing_form', locals: {directory: dir} %>
+          <% end %>
+        </div>
       </div>
     </div>
   </div>
@@ -145,26 +147,31 @@
     });
 
     // re-enable save/synch buttons when a user selects a valid matrix association for genes/barcodes files
-    $('body').on('change', '.matrix-file-select', function(e) {
+    $('#sync-files-target').on('change', '.bundle-select', function(e) {
         var select = e.target;
         var form = $(select).closest('form');
         var submit = form.find('.save-study-file');
-        if ( $(select).val() != '' ) {
+        if ( $(select).val() !== '' ) {
+            console.log('enabling submit');
             submit.attr('disabled', false);
+        } else {
+            console.log('disabling submit');
+            submit.attr('disabled', 'disabled');
         }
     });
 
-    // pre-select all MM coordinate matrix associations, if present
+    // pre-select all MM coordinate matrix & BAM associations, if present
     $(document).ready(function() {
-        var allMatrices = gatherFilesByType('MM Coordinate Matrix', '.unsynced-study-file');
+        var allMatrices = gatherFilesByType('MM Coordinate Matrix');
+        var allBams = gatherFilesByType('BAM');
         var disabledCss = {
             'pointer-events' : 'none'
         };
         $('.file-type').each(function(index, fileType) {
-            if ($(fileType).val() == '10X Genes File' || $(fileType).val() == '10X Barcodes File') {
-                var form = $(fileType).closest('.unsynced-study-file');
-                var matrixSelect = $(form).find('.matrix-file-select');
-                var matrixId = $(form).find('#study_file_options_matrix_id').val();
+            if ($(fileType).val() === '10X Genes File' || $(fileType).val() === '10X Barcodes File') {
+                var assocForm = $(fileType).closest('form');
+                var matrixSelect = $(assocForm).find('.matrix-file-select');
+                var matrixId = $(assocForm).find('#study_file_options_matrix_id').val();
                 $(allMatrices).each(function(index, matrix) {
                     matrixSelect.append($('<option />', {
                         value: matrix[1],
@@ -177,6 +184,22 @@
                 $(fileType).css(disabledCss).attr('readonly', 'readonly').parent().css('cursor', 'not-allowed');
                 var matrixForm = $('#study-file-' + matrixId);
                 matrixForm.find('.file-type').css(disabledCss).attr('readonly', 'readonly').parent().css('cursor', 'not-allowed');
+            } else if ( $(fileType).val() === 'BAM Index') {
+                var bamIdxForm = $(fileType).closest('form');
+                var bamSelect = $(bamIdxForm).find('.bam-file-select');
+                var bamId = $(bamIdxForm).find('#study_file_options_bam_id').val();
+                $(allBams).each(function(index, bam) {
+                    bamSelect.append($('<option />', {
+                        value: bam[1],
+                        text: bam[0]
+                    }));
+                });
+                // set correct value and disable necessary selects to prevent user error
+                bamSelect.val(bamId);
+                bamSelect.css(disabledCss).attr('readonly', 'readonly').parent().css('cursor', 'not-allowed');
+                $(fileType).css(disabledCss).attr('readonly', 'readonly').parent().css('cursor', 'not-allowed');
+                var bamForm = $('#study-file-' + bamId);
+                bamForm.find('.file-type').css(disabledCss).attr('readonly', 'readonly').parent().css('cursor', 'not-allowed');
             }
         });
     });
