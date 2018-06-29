@@ -550,7 +550,81 @@ class UiTestSuite < Test::Unit::TestCase
 		study_file_count = @driver.find_element(:id, "gzip-parse-#{$random_seed}-study-file-count")
 		assert study_file_count.text == '1', "found incorrect number of study files; expected 1 and found #{study_file_count.text}"
 		puts "Test method: #{self.method_name} successful!"
-  end
+	end
+
+	# test bundling process for file uploads
+	test 'admin: create-study: file bundles' do
+		puts "Test method: #{self.method_name}"
+
+		# log in first
+		@driver.get @base_url
+		login($test_email, $test_email_password)
+		@driver.get @base_url + '/studies/new'
+
+		# fill out study form
+		study_form = @driver.find_element(:id, 'new_study')
+		study_form.find_element(:id, 'study_name').send_keys("File Bundle #{$random_seed}")
+		# save study
+		save_study = @driver.find_element(:id, 'save-study')
+		save_study.click
+
+		# upload coordinate expression matrix
+		close_modal('message_modal')
+		matrix_form = @driver.find_element(:class, 'initialize_expression_form')
+		matrix_type = matrix_form.find_element(:id, 'study_file_file_type')
+		matrix_type.send_keys('MM Coordinate Matrix')
+		upload_expression = matrix_form.find_element(:id, 'upload-expression')
+		upload_expression.send_keys(@test_data_path + 'GRCh38/matrix.mtx')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = @driver.find_element(:id, 'start-file-upload')
+		sleep(0.5)
+		upload_btn.click
+		close_modal('upload-success-modal')
+
+		# upload genes & barcodes files
+		genes_file_form = @driver.find_element(:class, 'new-10x-genes-file-file-form')
+		upload_genes = genes_file_form.find_element(:id, 'upload-bundled-file')
+		upload_genes.send_keys(@test_data_path + 'GRCh38/genes.tsv')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = genes_file_form.find_element(:id, 'start-file-upload')
+		sleep(0.5)
+		upload_btn.click
+		close_modal('upload-success-modal')
+
+		barcodes_file_form = @driver.find_element(:class, 'new-10x-barcodes-file-file-form')
+		upload_barcodes = barcodes_file_form.find_element(:id, 'upload-bundled-file')
+		upload_barcodes.send_keys(@test_data_path + 'GRCh38/barcodes.tsv')
+		wait_for_render(:id, 'start-file-upload')
+		upload_btn = barcodes_file_form.find_element(:id, 'start-file-upload')
+		sleep(0.5)
+		upload_btn.click
+		close_modal('upload-success-modal')
+
+		# verify parse has initiated
+		sleep(5) # give it 5 seconds to kick off before checking
+		studies_path = @base_url + '/studies'
+		@driver.get studies_path
+		wait_until_page_loads(studies_path)
+		study_file_count = @driver.find_element(:id, "file-bundle-#{$random_seed}-study-file-count")
+		assert study_file_count.text == '3', "found incorrect number of study files; expected 3 and found #{study_file_count.text}"
+		show_study = @driver.find_element(:class, "file-bundle-#{$random_seed}-show")
+		show_study.click
+		gene_count = @driver.find_element(:id, 'gene-count').text.chomp(' genes').to_i
+		i = 0
+		while gene_count == 0 && i < 12 # give parse 2 minutes to complete, should be enough
+			sleep 10
+			@driver.navigate.refresh
+			gene_count = @driver.find_element(:id, 'gene-count').text.chomp(' genes').to_i
+			i += 1
+		end
+		assert gene_count == 33694, "Did not properly parse coordinate matrix triplet, expected 33694 genes but found #{gene_count}"
+		@driver.get @base_url + '/studies'
+		delete = @driver.find_element(:class, "file-bundle-#{$random_seed}-delete")
+		delete.click
+		accept_alert
+		close_modal('message_modal')
+		puts "Test method: #{self.method_name} successful!"
+	end
 
   # test embargo functionality
   test 'admin: create-study: embargo' do
