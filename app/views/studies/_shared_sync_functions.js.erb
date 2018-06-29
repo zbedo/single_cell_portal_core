@@ -25,7 +25,7 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
     } else if (fileType === '10X Genes File' || fileType === '10X Barcodes File') {
         nameField.val(fileName);
         nameField.attr('readonly', 'readonly');
-        var mtx = gatherCoordinateMatrices();
+        var mtx = gatherFilesByType('MM Coordinate Matrix');
         if (mtx.length === 0) {
             alert("You must first specify at least one file of type 'MM Coordinate Matrix' (10X Genes/Barcodes Files " +
                 "must pair with a matrix before being parsed).");
@@ -33,7 +33,7 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
         } else {
             extraInfo.html("<%= escape_javascript(render partial: 'mm_coordinate_association_fields', locals: {f: f}) %>");
             var matrixDropdown = $('#study-file-<%= study_file.id %> .matrix-file-select');
-            $(mtx).each(function(index, matrix) {
+            $(mtx).each(function (index, matrix) {
                 matrixDropdown.append($('<option />', {
                     value: matrix[1],
                     text: matrix[0]
@@ -42,14 +42,33 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
         }
         // disable sync button until user has selected a matrix pair
         submitBtn.attr('disabled', 'disabled');
+    } else if (fileType === 'BAM Index') {
+        nameField.val(fileName);
+        nameField.attr('readonly', 'readonly');
+        var bams = gatherFilesByType('BAM');
+        if (bams.length === 0) {
+            alert("You must first specify at least one file of type 'BAM' (BAM Index files " +
+                "must pair with a BAM before being saved).");
+            $(this).val('');
+        } else {
+            extraInfo.html("<%= escape_javascript(render partial: 'bam_association_fields', locals: {f: f}) %>");
+            var bamDropdown = $('#study-file-<%= study_file.id %> .bam-file-select');
+            $(bams).each(function (index, bam) {
+                bamDropdown.append($('<option />', {
+                    value: bam[1],
+                    text: bam[0]
+                }));
+            });
+        }
+        // disable sync button until user has selected a BAM file
+        submitBtn.attr('disabled', 'disabled');
     } else {
         extraInfo.empty();
         nameField.val('<%= study_file.name %>');
         nameField.attr('readonly', 'readonly');
     }
     // re-enable submit button if it was previously disabled
-
-    if (fileType !== '10X Genes File' && fileType !== '10X Barcodes File') {
+    if ( typeof ['10X Genes File', '10X Barcodes File', 'BAM Index'].find(fileType) === 'undefined') {
         if (submitBtn.attr('disabled') === 'disabled') {
             submitBtn.attr('disabled', false);
         }

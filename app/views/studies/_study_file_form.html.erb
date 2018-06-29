@@ -33,6 +33,8 @@
       <%= render partial: 'expression_axis_fields', locals: {f: f} %>
     <% elsif study_file.file_type == '10X Genes File' || study_file.file_type == '10X Barcodes File' %>
       <%= render partial: 'mm_coordinate_association_fields', locals: {f: f} %>
+    <% elsif study_file.file_type == 'BAM' %>
+      <%= render partial: 'bam_association_fields', locals: {f: f} %>
     <% end %>
   </div>
   <div class="form-group row">

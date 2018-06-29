@@ -16,10 +16,32 @@
       <%= f.label :name %><br />
       <%= f.text_field :name, class: 'form-control filename', readonly: !['Cluster', 'Gene List'].include?(study_file.file_type) , placeholder: 'Please provide a name for this entity...', autocomplete: 'off' %>
     </div>
-    <div class="col-sm-8">
-      <%= f.label :description, 'Description' %><br />
-      <%= f.text_field :description, class: 'form-control' %>
-    </div>
+    <% if study_file.bundle_parent.present? %>
+      <div class="col-sm-4" style="cursor: not-allowed;">
+        <%= f.fields_for :options do |opts| %>
+          <% if ['10X Genes File', '10X Barcodes File'].include?(study_file.file_type) %>
+            <%= opts.label :matrix_id, 'Associated expression matrix' %><br />
+            <%= opts.select :matrix_id, options_for_select([[study_file.bundle_parent.name, study_file.bundle_parent.id]], f.object.bundle_parent.id), {}, class: 'form-control', style: 'pointer-events: none;', disabled: true %>
+          <% elsif study_file.file_type == 'BAM Index' %>
+            <%= opts.label :bam_id, 'Associated BAM file' %><br />
+            <%= opts.select :bam_id, options_for_select([[study_file.bundle_parent.name, study_file.bundle_parent.id]], f.object.bundle_parent.id), {}, class: 'form-control', style: 'pointer-events: none;', disabled: true %>
+          <% elsif study_file.file_type == 'Coordinate Labels' %>
+            <%= opts.label :cluster_group_id, 'Associated Cluster' %><br />
+            <%= opts.select :cluster_group_id, options_for_select(@study.cluster_groups.map {|cluster_group| [cluster_group.name, cluster_group.id]}, f.object.bundle_parent.id), {}, class: 'form-control', style: 'pointer-events: none;', disabled: true %>
+          <% end %>
+        <% end %>
+      </div>
+      <div class="col-sm-4">
+        <%= f.label :description, 'Description' %><br />
+        <%= f.text_field :description, class: 'form-control' %>
+      </div>
+
+    <% else %>
+      <div class="col-sm-8">
+        <%= f.label :description, 'Description' %><br />
+        <%= f.text_field :description, class: 'form-control' %>
+      </div>
+    <% end %>
   </div>
   <div id="study-file-<%= study_file._id %>-extra-info">
     <% if study_file.file_type == 'Cluster'  %>
@@ -31,7 +53,7 @@
   <div class="form-group row">
     <div class="col-sm-3">
       <%= f.label :file_type %><br />
-      <%= f.select :file_type, options_for_select(@file_types, study_file.file_type), {}, class: 'form-control' %>
+      <%= f.select :file_type, options_for_select(@file_types, study_file.file_type), {}, class: 'form-control file-type' %>
     </div>
     <div class="col-sm-2">
       <%= f.label :upload, 'Download' %><br />

@@ -914,17 +914,17 @@ function validateEmail(email) {
 }
 
 // gather all MM Coordinate Matrix instances from a page
-function gatherCoordinateMatrices() {
-    var matrices = [];
-    $('.file-type').each(function(index, fileType) {
-        if ($(fileType).val() == 'MM Coordinate Matrix') {
-            var mForm = $(fileType).closest('.unsynced-study-file');
-            var mId = $(mForm).attr('id').split('-')[2];
+function gatherFilesByType(fileType) {
+    var matchingfiles = [];
+    $('.file-type').each(function(index, type) {
+        if ($(type).val() == fileType) {
+            var mForm = $(type).closest('form');
+            var mId = $(mForm).find('#study_file__id').val();
             var mName = $(mForm).find('.filename').val();
-            matrices.push([mName, mId]);
+            matchingfiles.push([mName, mId]);
         }
     });
-    return matrices;
+    return matchingfiles;
 }
 
 function calculatePlotViewport(target) {

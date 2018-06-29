@@ -8,22 +8,44 @@ class ParseUtils
       study.make_data_dir
       Rails.logger.info "#{Time.now}: Localizing output files & creating study file entries from 10X CellRanger source data for #{study.name}"
 
-      # localize files if necessary, otherwise open newly uploaded files
-      if !opts[:local]
-        matrix_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
-                                                                   study.firecloud_workspace, matrix_study_file.remote_location,
-                                                                   study.data_store_path, verify: :none)
-        genes_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
-                                                                  study.firecloud_workspace, genes_study_file.remote_location,
-                                                                  study.data_store_path, verify: :none)
-        barcodes_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
-                                                                     study.firecloud_workspace, barcodes_study_file.remote_location,
-                                                                     study.data_store_path, verify: :none)
+      # localize files if necessary, otherwise open newly uploaded files. check to make sure a local copy doesn't already exists
+      # as we may be uploading files piecemeal from upload wizard
+      # Note: matrix files must always be pulled from the bucket to ensure that we get a plain-text version due to race
+      # conditions during the upload process.  It is possible to have a local copy that is waiting to be cleaned up that has
+      # been gzipped, and nmatrix cannot open compressed files.  Due to the relatively small size of MEX files, the download
+      # is cheap and fast
+      matrix_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
+                                                                 study.firecloud_workspace, matrix_study_file.bucket_location,
+                                                                 study.data_store_path, verify: :none)
+      if File.exists?(genes_study_file.upload.path)
+        genes_content_type = genes_study_file.determine_content_type
+        if genes_content_type == 'application/gzip'
+          Rails.logger.info "#{Time.now}: Parsing #{genes_study_file.name}:#{genes_study_file.id} as application/gzip"
+          genes_file = Zlib::GzipReader.open(genes_study_file.upload.path)
+        else
+          Rails.logger.info "#{Time.now}: Parsing #{genes_study_file.name}:#{genes_study_file.id} as text/plain"
+          genes_file = File.open(genes_study_file.upload.path, 'rb')
+        end
       else
-        matrix_file = File.open(matrix_study_file.upload.path, 'rb')
-        genes_file = File.open(genes_study_file.upload.path, 'rb')
-        barcodes_file = File.open(barcodes_study_file.upload.path, 'rb')
+        genes_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
+                                                                  study.firecloud_workspace, genes_study_file.bucket_location,
+                                                                  study.data_store_path, verify: :none)
       end
+      if File.exists?(barcodes_study_file.upload.path)
+        barcodes_content_type = barcodes_study_file.determine_content_type
+        if barcodes_content_type == 'application/gzip'
+          Rails.logger.info "#{Time.now}: Parsing #{barcodes_study_file.name}:#{barcodes_study_file.id} as application/gzip"
+          barcodes_file = Zlib::GzipReader.open(barcodes_study_file.upload.path)
+        else
+          Rails.logger.info "#{Time.now}: Parsing #{barcodes_study_file.name}:#{barcodes_study_file.id} as text/plain"
+          barcodes_file = File.open(barcodes_study_file.upload.path, 'rb')
+        end
+      else
+        barcodes_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
+                                                                     study.firecloud_workspace, barcodes_study_file.bucket_location,
+                                                                     study.data_store_path, verify: :none)
+      end
+
 
       # next, check if this is a re-parse job, in which case we need to remove all existing entries first
       if opts[:reparse]
@@ -187,7 +209,7 @@ class ParseUtils
           if remote.nil?
             begin
               Rails.logger.info "#{Time.now}: preparing to upload expression file: #{study_file.upload_file_name}:#{study_file.id} to FireCloud"
-              self.send_to_firecloud(study_file)
+              study.send_to_firecloud(study_file)
             rescue => e
               Rails.logger.info "#{Time.now}: Expression file: #{study_file.upload_file_name}:#{study_file.id} failed to upload to FireCloud due to #{e.message}"
               SingleCellMailer.notify_admin_upload_fail(study_file, e.message).deliver_now

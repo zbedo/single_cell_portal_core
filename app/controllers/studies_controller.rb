@@ -39,7 +39,7 @@ class StudiesController < ApplicationController
   # GET /studies/1
   # GET /studies/1.json
   def show
-    @study_fastq_files = @study.study_files.by_type('Fastq')
+    @study_fastq_files = @study.study_files.primary_data
     @directories = @study.directory_listings.are_synced
     @primary_data = @study.directory_listings.primary_data
     @other_data = @study.directory_listings.non_primary_data
@@ -592,9 +592,28 @@ class StudiesController < ApplicationController
 
   # retrieve study file by filename during initializer wizard
   def retrieve_wizard_upload
-    @study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
+    @study_file = StudyFile.find_by(study_id: params[:id], upload_file_name: params[:file])
     if @study_file.nil?
       head 404 and return
+    end
+    @bundled_files = {}
+    # check if there are 'bundled' files that need to be added
+    case @study_file.file_type
+    when 'MM Coordinate Matrix'
+      file_opts = {matrix_id: @study_file.id}
+      @bundled_files['expressions-target'] = []
+      if StudyFile.where(study_id: @study.id, file_type: '10X Genes File', 'options.matrix_id' => @study_file.id).empty?
+        @bundled_files['expressions-target'] << @study.build_study_file(file_type: '10X Genes File', options: file_opts)
+      end
+      if StudyFile.where(study_id: @study.id, file_type: '10X Barcodes File', 'options.matrix_id' => @study_file.id).empty?
+        @bundled_files['expressions-target'] << @study.build_study_file(file_type: '10X Barcodes File', options: file_opts)
+      end
+    when 'BAM'
+      file_opts = {bam_id: @study_file.id}
+      @bundled_files['primary-data-target'] = []
+      if StudyFile.where(study_id: @study.id, file_type: 'BAM Index', 'options.bam_id' => @study_file.id).empty?
+        @bundled_files['primary-data-target'] << @study.build_study_file(file_type: 'BAM Index', options: file_opts)
+      end
     end
   end
 
@@ -602,18 +621,65 @@ class StudiesController < ApplicationController
   def parse
     @study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
     logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name}"
-    @study_file.update(parse_status: 'parsing')
     case @study_file.file_type
-      when 'Cluster'
-        @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user)
-      when 'Coordinate Labels'
-        @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user)
-      when 'Expression Matrix'
-        @study.delay.initialize_gene_expression_data(@study_file, current_user)
-      when 'Gene List'
-        @study.delay.initialize_precomputed_scores(@study_file, current_user)
-      when 'Metadata'
-        @study.delay.initialize_cell_metadata(@study_file, current_user)
+    when 'Cluster'
+      @study_file.update(parse_status: 'parsing')
+      @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user)
+    when 'Coordinate Labels'
+      @study_file.update(parse_status: 'parsing')
+      @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user)
+    when 'Expression Matrix'
+      @study_file.update(parse_status: 'parsing')
+      @study.delay.initialize_gene_expression_data(@study_file, current_user)
+    when 'MM Coordinate Matrix'
+      barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => @study_file.id)
+      genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => @study_file.id)
+      if barcodes.present? && genes.present?
+        @study_file.update(parse_status: 'parsing')
+        genes.update(parse_status: 'parsing')
+        barcodes.update(parse_status: 'parsing')
+        ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, @study_file, genes, barcodes)
+      else
+        logger.info "#{Time.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
+        # send file directly to firecloud, will pull down to parse later as needed
+        @study.delay.send_to_firecloud(@study_file)
+      end
+    when '10X Genes File'
+      matrix_id = @study_file.options[:matrix_id]
+      matrix = @study_file.bundle_parent
+      barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => matrix_id)
+      if barcodes.present? && matrix.present?
+        @study_file.update(parse_status: 'parsing')
+        matrix.update(parse_status: 'parsing')
+        barcodes.update(parse_status: 'parsing')
+        ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, @study_file, barcodes)
+      else
+        # we can only get here if we have a matrix and no barcodes, which means the barcodes form is already rendered
+        logger.info "#{Time.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
+        # send file directly to firecloud, will pull down to parse later as needed
+        @study.delay.send_to_firecloud(@study_file)
+      end
+    when '10X Barcodes File'
+      matrix_id = @study_file.options[:matrix_id]
+      matrix = @study_file.bundle_parent
+      genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => matrix_id)
+      if genes.present? && matrix.present?
+        @study_file.update(parse_status: 'parsing')
+        genes.update(parse_status: 'parsing')
+        matrix.update(parse_status: 'parsing')
+        ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, genes, @study_file)
+      else
+        # we can only get here if we have a matrix and no genes, which means the genes form is already rendered
+        logger.info "#{Time.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
+        # send file directly to firecloud, will pull down to parse later as needed
+        @study.delay.send_to_firecloud(@study_file)
+      end
+    when 'Gene List'
+      @study_file.update(parse_status: 'parsing')
+      @study.delay.initialize_precomputed_scores(@study_file, current_user)
+    when 'Metadata'
+      @study_file.update(parse_status: 'parsing')
+      @study.delay.initialize_cell_metadata(@study_file, current_user)
     end
     changes = ["Study file added: #{@study_file.upload_file_name}"]
     if @study.study_shares.any?
@@ -792,7 +858,7 @@ class StudiesController < ApplicationController
               @study_file.update(parse_status: 'parsing')
               genes.update(parse_status: 'parsing')
               barcodes.update(parse_status: 'parsing')
-              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, @study_file, genes, barcodes, {local: false, reparse: true})
+              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, @study_file, genes, barcodes, {reparse: true})
             end
           when '10X Genes File'
             matrix_id = @study_file.options(:matrix_id)
@@ -802,7 +868,7 @@ class StudiesController < ApplicationController
               @study_file.update(parse_status: 'parsing')
               matrix.update(parse_status: 'parsing')
               barcodes.update(parse_status: 'parsing')
-              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, @study_file, barcodes, {local: false, reparse: true})
+              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, @study_file, barcodes, {reparse: true})
             end
           when '10X Barcodes File'
             matrix_id = @study_file.options(:matrix_id)
@@ -812,7 +878,7 @@ class StudiesController < ApplicationController
               @study_file.update(parse_status: 'parsing')
               genes.update(parse_status: 'parsing')
               matrix.update(parse_status: 'parsing')
-              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, genes, @study_file, {local: false, reparse: true})
+              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, genes, @study_file, {reparse: true})
             end
           when 'Gene List'
             @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false, reparse: true})
@@ -852,26 +918,30 @@ class StudiesController < ApplicationController
         @message = "'#{@study_file.name}' has been successfully deleted."
         # clean up records before removing file (for memory optimization)
         case @file_type
-          when 'Cluster'
-            @partial = 'initialize_ordinations_form'
-          when 'Coordinate Labels'
-            @partial = 'initialize_labels_form'
-          when 'Expression Matrix'
-            @partial = 'initialize_expression_form'
-          when 'MM Coordinate Matrix'
-            @partial = 'initialize_expression_form'
-          when '10X Genes File'
-            @partial = 'initialize_expression_form'
-          when 'Expression Matrix'
-            @partial = 'initialize_expression_form'
-          when 'Metadata'
-            @partial = 'initialize_metadata_form'
-          when 'Fastq'
-            @partial = 'initialize_primary_data_form'
-          when 'Gene List'
-            @partial = 'initialize_marker_genes_form'
-          else
-            @partial = 'initialize_misc_form'
+        when 'Cluster'
+          @partial = 'initialize_ordinations_form'
+        when 'Coordinate Labels'
+          @partial = 'initialize_labels_form'
+        when 'Expression Matrix'
+          @partial = 'initialize_expression_form'
+        when 'MM Coordinate Matrix'
+          @partial = 'initialize_expression_form'
+        when '10X Genes File'
+          @partial = 'initialize_expression_form'
+        when 'Expression Matrix'
+          @partial = 'initialize_expression_form'
+        when 'Metadata'
+          @partial = 'initialize_metadata_form'
+        when 'Fastq'
+          @partial = 'initialize_primary_data_form'
+        when 'BAM'
+          @partial = 'initialize_primary_data_form'
+        when 'BAM Index'
+          @partial = 'initialize_primary_data_form'
+        when 'Gene List'
+          @partial = 'initialize_marker_genes_form'
+        else
+          @partial = 'initialize_misc_form'
         end
         # delete source file in FireCloud and then remove record
         begin
@@ -898,24 +968,27 @@ class StudiesController < ApplicationController
       # user most likely aborted upload before it began, so determine file type based on form target
       @message = "Upload sucessfully cancelled."
       case params[:target]
-        when /expression/
-          @file_type = 'Expression Matrix'
-          @partial = 'initialize_expression_form'
-        when /metadata/
-          @file_type = 'Metadata'
-          @partial = 'initialize_metadata_form'
-        when /ordinations/
-          @file_type = 'Cluster'
-          @partial = 'initialize_ordinations_form'
-        when /fastq/
-          @file_type = 'Fastq'
-          @partial = 'initialize_primary_data_form'
-        when /marker/
-          @file_type = 'Gene List'
-          @partial = 'initialize_marker_genes_form'
-        else
-          @file_type = 'Other'
-          @partial = 'initialize_misc_form'
+      when /expression/
+        @file_type = 'Expression Matrix'
+        @partial = 'initialize_expression_form'
+      when /metadata/
+        @file_type = 'Metadata'
+        @partial = 'initialize_metadata_form'
+      when /ordinations/
+        @file_type = 'Cluster'
+        @partial = 'initialize_ordinations_form'
+      when /labels/
+        @file_type = 'Coordinate Labels'
+        @partial = 'initialize_labels_form'
+      when /marker/
+        @file_type = 'Gene List'
+        @partial = 'initialize_marker_genes_form'
+      when /primary/
+        @file_type = 'Fastq'
+        @partial = 'initialize_primary_data_form'
+      else
+        @file_type = 'Other'
+        @partial = 'initialize_misc_form'
       end
     end
 
@@ -946,7 +1019,7 @@ class StudiesController < ApplicationController
       # only grab id after update as it will change on new entries
       @form = "#study-file-#{@study_file.id}"
 
-      if @study_file.parseable?
+      if @study_file.parseable? && @study_file.able_to_parse?
         logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
         @message += " You will receive an email at #{current_user.email} when the parse has completed."
         # parse file as appropriate type
@@ -965,7 +1038,7 @@ class StudiesController < ApplicationController
               @study_file.update(parse_status: 'parsing')
               genes.update(parse_status: 'parsing')
               barcodes.update(parse_status: 'parsing')
-              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, @study_file, genes, barcodes, {local: false})
+              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, @study_file, genes, barcodes)
             end
           when '10X Genes File'
             matrix_id = @study_file.options[:matrix_id]
@@ -975,7 +1048,7 @@ class StudiesController < ApplicationController
               @study_file.update(parse_status: 'parsing')
               matrix.update(parse_status: 'parsing')
               barcodes.update(parse_status: 'parsing')
-              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, @study_file, barcodes, {local: false})
+              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, @study_file, barcodes)
             end
           when '10X Barcodes File'
             matrix_id = @study_file.options[:matrix_id]
@@ -985,7 +1058,7 @@ class StudiesController < ApplicationController
               @study_file.update(parse_status: 'parsing')
               genes.update(parse_status: 'parsing')
               matrix.update(parse_status: 'parsing')
-              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, genes, @study_file, {local: false})
+              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, genes, @study_file)
             end
           when 'Gene List'
             @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false})
@@ -1192,7 +1265,7 @@ class StudiesController < ApplicationController
                                        :generation, :x_axis_label, :y_axis_label, :z_axis_label, :x_axis_min, :x_axis_max, :y_axis_min,
                                        :y_axis_max, :z_axis_min, :z_axis_max,
                                        options: [:cluster_group_id, :font_family, :font_size, :font_color, :matrix_id, :submission_id,
-                                                 :analysis_name, :visualization_name])
+                                                 :bam_id, :analysis_name, :visualization_name])
   end
 
   def directory_listing_params
@@ -1215,12 +1288,12 @@ class StudiesController < ApplicationController
 
   # set up variables for wizard
   def initialize_wizard_files
-    @expression_files = @study.study_files.by_type('Expression Matrix')
+    @expression_files = @study.study_files.by_type(['Expression Matrix', 'MM Coordinate Matrix'])
     @metadata_file = @study.metadata_file
     @cluster_ordinations = @study.study_files.by_type('Cluster')
     @coordinate_labels = @study.study_files.by_type('Coordinate Labels')
     @marker_lists = @study.study_files.by_type('Gene List')
-    @fastq_files = @study.study_files.by_type('Fastq')
+    @fastq_files = @study.study_files.by_type(['Fastq', 'BAM'])
     @other_files = @study.study_files.by_type(['Documentation', 'Other'])
 
     # if files don't exist, build them for use later (excluding coordinate labels as we need the data to be current)
