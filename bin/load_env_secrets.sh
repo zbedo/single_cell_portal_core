@@ -55,14 +55,14 @@ case $OPTION in
     ;;
 	esac
 done
-if [ -z $SERVICE_ACCOUNT_PATH ] && [ -z $VAULT_SECRET_PATH ] ; then
+if [[ -z $SERVICE_ACCOUNT_PATH ]] && [[ -z $VAULT_SECRET_PATH ]] ; then
 	echo "You must supply the SERVICE_ACCOUNT_PATH [-c] & VAULT_SECRET_PATH [-p] (or CONFIG_PATH_PATH [-f]) to use this script."
 	echo ""
 	echo "$usage"
 	exit 1
 fi
 # if user supplies a path to a configuration file, use that first
-if [ -z $VAULT_SECRET_PATH ] && [ -n $CONFIG_FILE_PATH ] ; then
+if [[ -z $VAULT_SECRET_PATH ]] && [[ -n $CONFIG_FILE_PATH ]] ; then
 	# load raw secrets from config JSON file
 	VALS=`echo -n $(cat $CONFIG_FILE_PATH)`
 	# for each key in the secrets config, export the value
@@ -73,7 +73,7 @@ if [ -z $VAULT_SECRET_PATH ] && [ -n $CONFIG_FILE_PATH ] ; then
 		export $key=$curr_val
 	done
 
-elif [ -n $VAULT_SECRET_PATH ] ; then
+elif [[ -n $VAULT_SECRET_PATH ]] ; then
 	# load raw secrets from vault
 	VALS=`vault read -format=json $VAULT_SECRET_PATH`
 
@@ -86,7 +86,7 @@ elif [ -n $VAULT_SECRET_PATH ] ; then
 	done
 fi
 # now load service account credentials
-if [ -n $SERVICE_ACCOUNT_PATH ] ; then
+if [[ -n $SERVICE_ACCOUNT_PATH ]] ; then
 	CREDS_VALS=`vault read -format=json $SERVICE_ACCOUNT_PATH`
 	JSON_CONTENTS=`echo $CREDS_VALS | jq --raw-output .data`
 	echo "setting value for GOOGLE_CLOUD_KEYFILE_JSON"
@@ -102,10 +102,10 @@ if [ -n $SERVICE_ACCOUNT_PATH ] ; then
 fi
 
 # now load public read-only service account credentials
-if [ -n $READ_ONLY_SERVICE_ACCOUNT_PATH ] ; then
+if [[ -n $READ_ONLY_SERVICE_ACCOUNT_PATH ]] ; then
+	echo "setting value for READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON"
 	READ_ONLY_CREDS_VALS=`vault read -format=json $READ_ONLY_SERVICE_ACCOUNT_PATH`
 	READ_ONLY_JSON_CONTENTS=`echo $READ_ONLY_CREDS_VALS | jq --raw-output .data`
-	echo "setting value for READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON"
 	export READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON=$(echo -n $READ_ONLY_JSON_CONTENTS)
 	COMMAND=$COMMAND" -K /home/app/webapp/config/.read_only_service_account.json"
 fi

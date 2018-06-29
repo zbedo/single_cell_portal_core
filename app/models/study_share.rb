@@ -60,6 +60,15 @@ class StudyShare
 		self.email.match(/.*@firecloud\.org/).present?
 	end
 
+  # control for rendering share fields (will not render if the readonly service account)
+  def show_share?
+		if Study.read_only_firecloud_client.nil?
+			true
+		else
+			self.email != Study.read_only_firecloud_client.issuer
+		end
+	end
+
 	private
 
   ###

@@ -4630,8 +4630,6 @@ class UiTestSuite < Test::Unit::TestCase
 			filename = form.find_element(:id, 'study_file_name')['value']
 			if filename == 'cluster_1.txt' or filename == 'expression_matrix_example.txt' or filename == 'metadata.txt'
 				file_type = form.find_element(:id, 'study_file_file_type')
-				puts 'file_type'
-				puts file_type
 				case filename
 					when 'cluster_1.txt'
 						file_type.send_keys('Cluster')
@@ -4664,13 +4662,61 @@ class UiTestSuite < Test::Unit::TestCase
 		@driver.get(sync_study_path)
 		wait_until_page_loads(sync_study_path)
 		open_ui_tab('study-analysis')
+		wait_for_render(:id, 'submissions-table')
 
-		# This block hasn't been tried yet.  U
-		# # sync submission outputs, to pull in Ideogram.js annots JSON
-		# sync_submission_outputs = @driver.find_element(:class, 'sync-submission-outputs')
-		# # sync_submission_outputs_path = sync_submission_outputs.attribute('href')
-		# sync_submission_outputs.click
-		# @wait_until {element_present?(:id, 'synced-data-panel-toggle')
+		submissions_table = @driver.find_element(:id, 'submissions-table')
+		submissions = submissions_table.find_element(:tag_name, 'tbody').find_elements(:tag_name, 'tr')
+		completed_submission = submissions.find {|sub|
+			sub.find_element(:class, "submission-state").text == 'Done' &&
+					sub.find_element(:class, "submission-status").text == 'Succeeded'
+		}
+
+		sync_btn = completed_submission.find_element(:class, 'sync-submission-outputs')
+		sync_btn.click
+		wait_for_render(:class, 'unsynced-study-file')
+		study_file_forms = @driver.find_elements(:class, 'unsynced-study-file')
+		study_file_forms.each do |form|
+			filename = form.find_element(:id, 'study_file_name')
+			if filename['value'].end_with?('infercnv_exp_means.json') # for the purpose of the test, we only need this file
+				sync_button = form.find_element(:class, 'save-study-file')
+				sync_button.click
+				close_modal('sync-notice-modal')
+			else
+				next # skip all other outputs
+			end
+		end
+
+		# now make sure we're able to load Ideogram
+		@driver.get(sync_study_path)
+		wait_until_page_loads(sync_study_path)
+		open_ui_tab('study-visualize')
+		wait_for_render(:id, 'plots-tab')
+		# open the 'genome' tab
+		open_ui_tab('genome-tab')
+		wait_for_render(:id, 'ideogram-container')
+		user_ideogram = @driver.execute_script("return $('#_ideogram .annot').length > 0")
+		assert user_ideogram, "Ideogram did not render using user token: '$('#_ideogram .annot').length > 0' returned #{user_ideogram}"
+
+		# now log out and validate that we can use the read-only service account to load results
+		logout_from_portal
+		@driver.get(sync_study_path)
+		wait_until_page_loads(sync_study_path)
+		open_ui_tab('study-visualize')
+		wait_for_render(:id, 'plots-tab')
+		# open the 'genome' tab
+		open_ui_tab('genome-tab')
+		wait_for_render(:id, 'ideogram-container')
+		public_ideogram = @driver.execute_script("return $('#_ideogram .annot').length > 0")
+		assert public_ideogram, "Ideogram did not render using service account token: '$('#_ideogram .annot').length > 0' returned #{public_ideogram}"
+
+		# clean up
+		login_as_other($test_email, $test_email_password)
+		@driver.get studies_path
+		wait_until_page_loads(studies_path)
+		delete = @driver.find_element(:class, "load-from-gcs-#{$random_seed}-delete-local")
+		delete.click
+		accept_alert
+		close_modal('message_modal')
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end

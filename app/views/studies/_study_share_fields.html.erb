@@ -1,4 +1,4 @@
-<% if f.object.email != Study.read_only_firecloud_client.issuer %>
+<% if f.object.show_share? %>
 <div class="well well-sm study-share-form" id="<%= f.object.new_record? ? 'new-share-form' : "#{f.object.email_as_id}-share-form" %>">
 	<div class="form-group row">
 		<div class="col-sm-6">

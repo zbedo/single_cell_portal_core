@@ -15,6 +15,7 @@ Rails.application.routes.draw do
 		get 'admin/firecloud_api_status', to: 'admin_configurations#firecloud_api_status', as: :firecloud_api_status
 		get 'admin/create_portal_user_group', to: 'admin_configurations#create_portal_user_group', as: :create_portal_user_group
 		get 'admin/sync_portal_user_group', to: 'admin_configurations#sync_portal_user_group', as: :sync_portal_user_group
+
 		resources :admin_configurations, path: 'admin'
 
     # branding groups

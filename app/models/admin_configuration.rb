@@ -19,7 +19,7 @@ class AdminConfiguration
   FIRECLOUD_ACCESS_NAME = 'FireCloud Access'
   API_NOTIFIER_NAME = 'API Health Check Notifier'
   NUMERIC_VALS = %w(byte kilobyte megabyte terabyte petabyte exabyte)
-  CONFIG_TYPES = ['Daily User Download Quota', 'Workflow Name', 'Portal FireCloud User Group', 'Reference Data Workspace', API_NOTIFIER_NAME]
+  CONFIG_TYPES = ['Daily User Download Quota', 'Workflow Name', 'Portal FireCloud User Group', 'Reference Data Workspace', 'Read-Only Access Control', API_NOTIFIER_NAME]
   ALL_CONFIG_TYPES = CONFIG_TYPES.dup << FIRECLOUD_ACCESS_NAME
   VALUE_TYPES = %w(Numeric Boolean String)
 
@@ -33,6 +33,8 @@ class AdminConfiguration
   validates_inclusion_of :multiplier, in: NUMERIC_VALS, allow_blank: true
   validates_format_of :value, with: ValidationTools::OBJECT_LABELS,
                       message: ValidationTools::OBJECT_LABELS_ERROR
+
+  validate :manage_readonly_access
 
   # really only used for IDs in the table...
   def url_safe_name
@@ -236,6 +238,20 @@ class AdminConfiguration
     end
   end
 
+  # set/revoke readonly access on public workspaces for READ_ONLY_SERVICE_ACCOUNT
+  def self.set_readonly_service_account_permissions(grant_access)
+    if Study.read_only_firecloud_client.present? && Study.read_only_firecloud_client.registered?
+      study_count = 0
+      Study.where(queued_for_deletion: false).each do |study|
+        study.set_readonly_access(grant_access)
+        study_count += 1
+      end
+      [true, "Permissions successfully set on #{study_count} studies."]
+    else
+      [false, 'You have not enabled the read-only service account yet.  You must create and register a read-only service account first before continuing.']
+    end
+  end
+
   # getter to return all configuration options as a hash
   def options
     opts = {}
@@ -256,6 +272,19 @@ class AdminConfiguration
       else
         # for booleans, we use a select box so values are constrained.  for strings, any value is valid
         return true
+    end
+  end
+
+  # grant/revoke access on setting change, will raise error if readonly account is not instantiated
+  def manage_readonly_access
+    if self.config_type == 'Read-Only Access Control'
+      if Study.read_only_firecloud_client.present?
+        if self.value_changed?
+          AdminConfiguration.set_readonly_service_account_permissions(self.convert_value_by_type)
+        end
+      else
+        errors.add(:config_type, '- You have not enabled the read-only service account yet.  You must enable this account first before continuing.  Please see https://github.com/broadinstitute/single_cell_portal_core#running-the-container#read-only-service-account for more information.')
+      end
     end
   end
 end

@@ -338,7 +338,7 @@
 				<tbody>
 				<% @study.study_shares.each do |study_share| %>
           <%#=% Don't show entry for read-only service account %>
-          <% if study_share.email != Study.read_only_firecloud_client.issuer %>
+          <% if study_share.show_share? %>
 					<tr id="study-share-<%= study_share.email.gsub(/[@.]/, '-') %>">
 						<td class="share-email"><%= study_share.email %></td>
 						<td class="share-permission"><%= study_share.permission %></td>
