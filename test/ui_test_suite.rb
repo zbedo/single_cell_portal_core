@@ -4607,7 +4607,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# create a new study using an existing workspace, also generate a random name to validate that workspace name
 		# and study name can be different
-		random_name = "InferCNV Sync #{$random_seed}"
+		random_name = "Load from GCS #{$random_seed}"
 		study_form = @driver.find_element(:id, 'new_study')
 		study_form.find_element(:id, 'study_name').send_keys(random_name)
 		study_form.find_element(:id, 'study_use_existing_workspace').send_keys('Yes')
@@ -4628,215 +4628,49 @@ class UiTestSuite < Test::Unit::TestCase
 		study_file_forms = @driver.find_elements(:class, 'unsynced-study-file')
 		study_file_forms.each do |form|
 			filename = form.find_element(:id, 'study_file_name')['value']
-			file_type = form.find_element(:id, 'study_file_file_type')
-			case filename
-			when 'cluster_example.txt'
-				file_type.send_keys('Cluster')
-			when 'subfolder/expression_matrix_example.txt'
-				file_type.send_keys('Expression Matrix')
-			when 'metadata_example.txt'
-				file_type.send_keys('Metadata')
-			else
-				file_type.send_keys('Other')
+			if filename == 'cluster_1.txt' or filename == 'expression_matrix_example.txt' or filename == 'metadata.txt'
+				file_type = form.find_element(:id, 'study_file_file_type')
+				puts 'file_type'
+				puts file_type
+				case filename
+					when 'cluster_1.txt'
+						file_type.send_keys('Cluster')
+					when 'expression_matrix_example.txt'
+						file_type.send_keys('Expression Matrix')
+					when 'metadata.txt'
+						file_type.send_keys('Metadata')
+				end
+				sync_button = form.find_element(:class, 'save-study-file')
+				sync_button.click
+				close_modal('sync-notice-modal')
 			end
-			sync_button = form.find_element(:class, 'save-study-file')
-			sync_button.click
-			close_modal('sync-notice-modal')
-		end
-
-		# sync directory listings
-		directory_forms = @driver.find_elements(:class, 'unsynced-directory-listing')
-		directory_forms.each do |form|
-			sync_button = form.find_element(:class, 'save-directory-listing')
-			sync_button.click
-			close_modal('sync-notice-modal')
 		end
 
 		# now assert that forms were re-rendered in synced data panel
 		sync_panel = @driver.find_element(:id, 'synced-data-panel-toggle')
 		sync_panel.click
-		# wait a second for panel to open
-		sleep(1)
-		synced_files_div = @driver.find_element(:id, 'synced-study-files')
-		synced_files = synced_files_div.find_elements(:tag_name, 'form')
-		assert synced_files.size == study_file_forms.size, "did not find correct number of synced files, expected #{study_file_forms.size} but found #{synced_files.size}"
-
-		synced_dirs_div = @driver.find_element(:id, 'synced-directory-listings')
-		synced_dirs = synced_dirs_div.find_elements(:tag_name, 'form')
-		assert synced_dirs.size == directory_forms.size, "did not find correct number of synced files, expected #{directory_forms.size} but found #{synced_dirs.size}"
-
-		updated_files = {}
-		# now use synced data forms to update entries and keep track of changes for comparison later
-		synced_files.each do |sync_form|
-			file_type = sync_form.find_element(:id, 'study_file_file_type')[:value]
-			name = sync_form.find_element(:id, 'study_file_name')[:value]
-			description = "Description for #{file_type}"
-			description_field = sync_form.find_element(:id, 'study_file_description')
-			description_field.send_keys(description)
-			updated_files["#{sync_form[:id]}"] = {
-					name: name,
-					file_type: file_type,
-					description: description,
-					parsed: file_type != 'Other'
-			}
-			sync_button = sync_form.find_element(:class, 'save-study-file')
-			sync_button.click
-			close_modal('sync-notice-modal')
-		end
-
-		# update directory listings too
-		updated_dirs = {}
-		synced_dirs.each do |sync_form|
-			name = sync_form.find_element(:id, 'directory_listing_name')[:value]
-			description = "Description for #{name}"
-			description_field = sync_form.find_element(:id, 'directory_listing_description')
-			description_field.send_keys(description)
-			updated_dirs["#{sync_form[:id]}"] = {
-					description: description,
-					file_type: sync_form.find_element(:id, 'directory_listing_file_type')[:value]
-			}
-			sync_button = sync_form.find_element(:class, 'save-directory-listing')
-			sync_button.click
-			close_modal('sync-notice-modal')
-		end
 
 		# lastly, check info page to make sure everything did in fact parse and complete
 		studies_path = @base_url + '/studies'
 		@driver.get studies_path
 		wait_until_page_loads(studies_path)
 
-		show_button = @driver.find_element(:class, "sync-test-#{$random_seed}-show")
+		show_button = @driver.find_element(:class, "load-from-gcs-#{$random_seed}-show")
 		show_button.click
 		@wait.until {element_present?(:id, 'info-panel')}
 
-		# assert number of files using the count badges (faster than counting table rows)
-		study_file_count = @driver.find_element(:id, 'study-file-count').text.to_i
-		primary_data_count = @driver.find_element(:id, 'primary-data-count').text.to_i
-		other_data_count = @driver.find_element(:id, 'other-data-count').text.to_i
-		assert study_file_count == study_file_forms.size, "did not find correct number of study files, expected #{study_file_forms.size} but found #{study_file_count}"
-		assert primary_data_count == 1, "did not find correct number of primary data files, expected 1 but found #{primary_data_count}"
-		assert other_data_count == 19, "did not find correct number of other data files, expected 19 but found #{primary_data_count}"
-
-		# make sure edits saved by going through updated list of synced files and comparing values
-		updated_files.each do |id, values|
-			study_file_table_row = @driver.find_element(:id, id)
-			entry_name = study_file_table_row.find_element(:class, 'study-file-name').text
-			entry_file_type = study_file_table_row.find_element(:class, 'study-file-file-type').text
-			entry_description = study_file_table_row.find_element(:class, 'study-file-description').text
-			entry_parsed = study_file_table_row.find_element(:class, 'study-file-parsed')['data-parsed'] == 'true'
-			assert values[:name] == entry_name, "study file entry #{id} name incorrect, expected #{values[:name]} but found #{entry_name}"
-			assert values[:file_type] == entry_file_type, "study file entry #{id} file type incorrect, expected #{values[:file_type]} but found #{entry_file_type}"
-			assert values[:description] == entry_description, "study file entry #{id} description incorrect, expected #{values[:description]} but found #{entry_description}"
-			assert values[:parsed] == entry_parsed, "study file entry #{id} parse incorrect, expected #{values[:parsed]} but found #{entry_parsed}"
-		end
-
-		# now check directory listings datatables - we only need to match the first found row as all rows will have identical descriptions
-		updated_dirs.each_value do |values|
-			directory_listing_row = @driver.find_element(:class, values[:file_type] + '-entry')
-			found_description = directory_listing_row.find_element(:class, 'dl-description')
-			assert values[:description] == found_description.text, "directory listing description incorrect, expected #{values[:description]} but found #{found_description.text}"
-		end
-
-		# assert share was added
-		share_email_id = 'study-share-' + $share_email.gsub(/[@.]/, '-')
-		assert element_present?(:id, share_email_id), 'did not find proper share entry'
-		share_row = @driver.find_element(:id, share_email_id)
-		shared_email = share_row.find_element(:class, 'share-email').text
-		assert shared_email == $share_email, "did not find correct email for share, expected #{$share_email} but found #{shared_email}"
-		shared_permission = share_row.find_element(:class, 'share-permission').text
-		assert shared_permission == 'View', "did not find correct share permissions, expected View but found #{shared_permission}"
-
 		# make sure parsing succeeded
-		sync_study_path = @base_url + "/study/sync-test-#{$random_seed}"
+		sync_study_path = @base_url + "/study/load-from-gcs-#{$random_seed}"
 		@driver.get(sync_study_path)
 		wait_until_page_loads(sync_study_path)
-		open_ui_tab('study-visualize')
+		open_ui_tab('study-analysis')
 
-		assert element_present?(:class, 'study-lead'), 'could not find study title'
-		assert element_present?(:id, 'cluster-plot'), 'could not find study cluster plot'
-
-		# wait until cluster finishes rendering
-		@wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
-		rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
-		assert rendered, "cluster plot did not finish rendering, expected true but found #{rendered}"
-
-		# search for a gene
-		gene = @genes.sample
-		search_box = @driver.find_element(:id, 'search_genes')
-		search_box.send_key(gene)
-		search_genes = @driver.find_element(:id, 'perform-gene-search')
-		search_genes.click
-
-		@wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
-		violin_rendered = @driver.execute_script("return $('#expression-plots').data('box-rendered')")
-		assert violin_rendered, "violin plot did not finish rendering, expected true but found #{violin_rendered}"
-		scatter_rendered = @driver.execute_script("return $('#expression-plots').data('scatter-rendered')")
-		assert scatter_rendered, "scatter plot did not finish rendering, expected true but found #{scatter_rendered}"
-		reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
-		assert reference_rendered, "reference plot did not finish rendering, expected true but found #{reference_rendered}"
-
-		# now test removing items
-		@driver.get(@base_url + '/studies')
-		sync_button_class = random_name.split.map(&:downcase).join('-') + '-sync'
-		sync_button = @driver.find_element(:class, sync_button_class)
-		sync_button.click
-		@wait.until {element_present?(:id, 'synced-study-files')}
-
-		sync_panel = @driver.find_element(:id, 'synced-data-panel-toggle')
-		sync_panel.click
-		sleep(1)
-		synced_files = @driver.find_elements(:class, 'synced-study-file')
-		synced_directory_listing = @driver.find_element(:class, 'synced-directory-listing')
-
-		# delete random file
-		file_to_delete = synced_files.sample
-		delete_file_btn = file_to_delete.find_element(:class, 'delete-study-file')
-		delete_file_btn.click
-		accept_alert
-		close_modal('sync-notice-modal')
-
-		# delete directory listing
-		delete_dir_btn = synced_directory_listing.find_element(:class, 'delete-directory-listing')
-		delete_dir_btn.click
-		accept_alert
-		close_modal('sync-notice-modal')
-		# give DelayedJob one second to fire the DeleteQueueJob to remove the deleted entries
-		sleep(1)
-
-		# confirm files were removed
-		@driver.get studies_path
-		wait_until_page_loads(studies_path)
-		study_file_count = @driver.find_element(:id, "sync-test-#{$random_seed}-study-file-count").text.to_i
-		assert study_file_count == 4, "did not remove files, expected 4 but found #{study_file_count}"
-
-		# remove share and resync
-		edit_button = @driver.find_element(:class, "sync-test-#{$random_seed}-edit")
-		edit_button.click
-		wait_for_render(:class, 'study-share-form')
-		# we need an extra sleep here to allow the javascript handlers to attach so that the remove_nested_fields event will fire
-		sleep(0.5)
-		share_id = $share_email.gsub(/[@\.]/, '-') + '-share-form'
-		share_form = @driver.find_element(:id, share_id)
-		remove_share = share_form.find_element(:class, 'remove_nested_fields')
-		remove_share.click
-		accept_alert
-		# let the form remove from the page
-		sleep (0.25)
-		save_study = @driver.find_element(:id, 'save-study')
-		save_study.click
-		close_modal('message_modal')
-		sync_button = @driver.find_element(:class, "sync-test-#{$random_seed}-sync")
-		sync_button.click
-		wait_for_render(:id, 'synced-data-panel-toggle')
-
-		# now confirm share was removed at FireCloud level
-		logout_from_portal
-
-		# now login as share user and check workspace
-		login_as_other($share_email, $share_email_password)
-		firecloud_workspace = "https://portal.firecloud.org/#workspaces/single-cell-portal/sync-test-#{$random_seed}"
-		@driver.get firecloud_workspace
-		assert !element_present?(:class, 'fa-check-circle'), 'did not revoke access - study workspace still loads'
+		# This block hasn't been tried yet.  U
+		# # sync submission outputs, to pull in Ideogram.js annots JSON
+		# sync_submission_outputs = @driver.find_element(:class, 'sync-submission-outputs')
+		# # sync_submission_outputs_path = sync_submission_outputs.attribute('href')
+		# sync_submission_outputs.click
+		# @wait_until {element_present?(:id, 'synced-data-panel-toggle')
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
