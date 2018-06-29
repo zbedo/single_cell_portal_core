@@ -270,11 +270,11 @@ class StudiesController < ApplicationController
             # all other files are renamed to their basename (last path part)
             path_parts = file.name.split('/')
             basename = path_parts.last
-            new_location = "outputs_#{params[:submission_id]}/#{basename}"
+            new_location = "outputs_#{@study.id}_#{params[:submission_id]}/#{basename}"
             if (path_parts & task_names).any?
               starting_index = path_parts.index(path_parts.slice(filename_depth * -1))
               new_filename = path_parts[starting_index..path_parts.size - 1].join('_')
-              new_location = "outputs_#{params[:submission_id]}/#{new_filename}"
+              new_location = "outputs_#{@study.id}_#{params[:submission_id]}/#{new_filename}"
             end
             # check if file has already been synced first
             # we can only do this by md5 hash as the filename and generation will be different

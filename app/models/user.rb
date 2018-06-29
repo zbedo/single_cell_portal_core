@@ -225,6 +225,30 @@ class User
     self.admin? ? BrandingGroup.all.order_by(:name.asc) : BrandingGroup.where(user_id: self.id).order_by(:name.asc)
   end
 
+  # check if a user is registered for FireCloud and update status as necessary
+  def update_firecloud_status
+    if self.registered_for_firecloud
+      nil
+    else
+      client = FireCloudClient.new(self, FireCloudClient::PORTAL_NAMESPACE)
+      if client.registered?
+        Rails.logger.info "#{Time.now} - setting user firecloud registrations status for #{self.email} to true"
+        self.update(registered_for_firecloud: true)
+        self.add_to_portal_user_group
+      end
+    end
+  end
+
+  def add_to_portal_user_group
+    user_group_config = AdminConfiguration.find_by(config_type: 'Portal FireCloud User Group')
+    if user_group_config.present?
+      group_name = user_group_config.value
+      Rails.logger.info "#{Time.now}: adding #{self.email} to #{group_name} user group"
+      Study.firecloud_client.add_user_to_group(group_name, 'member', self.email)
+      Rails.logger.info "#{Time.now}: user group registration complete"
+    end
+  end
+
   # helper method to migrate study ownership & shares from old email to new email
   def self.migrate_studies_and_shares(existing_email, new_email)
     existing_user = self.find_by(email: existing_email)

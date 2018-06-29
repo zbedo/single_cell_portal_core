@@ -4667,6 +4667,134 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
 
+	# Test loading data directly into web browser from Google Cloud Storage (GCS).
+	# This test depends on a workspace already existing in FireCloud called development-infercnv-sync-test
+	# if this study has been deleted, this test will fail until the workspace is re-created with at least
+	# 3 default files for expression, metadata, one cluster, and a file for Ideogram.js annotations
+	test 'front-end: workflows: load from gcs' do
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+		# log in first
+		@driver.get @base_url
+		login($test_email, $test_email_password)
+		@driver.get @base_url + '/studies/new'
+
+		# create a new study using an existing workspace, also generate a random name to validate that workspace name
+		# and study name can be different
+		random_name = "Load from GCS #{$random_seed}"
+		study_form = @driver.find_element(:id, 'new_study')
+		study_form.find_element(:id, 'study_name').send_keys(random_name)
+		study_form.find_element(:id, 'study_use_existing_workspace').send_keys('Yes')
+		study_form.find_element(:id, 'study_firecloud_workspace').send_keys("development-infercnv-sync-test")
+		share = @driver.find_element(:id, 'add-study-share')
+		@wait.until {share.displayed?}
+		share.click
+		share_email = study_form.find_element(:class, 'share-email')
+		share_email.send_keys($share_email)
+
+		# save study
+		save_study = @driver.find_element(:id, 'save-study')
+		save_study.click
+		@wait.until {element_present?(:id, 'unsynced-study-files')}
+		close_modal('message_modal')
+
+		# sync each file
+		study_file_forms = @driver.find_elements(:class, 'unsynced-study-file')
+		study_file_forms.each do |form|
+			filename = form.find_element(:id, 'study_file_name')['value']
+			if filename == 'cluster_1.txt' or filename == 'expression_matrix_example.txt' or filename == 'metadata.txt'
+				file_type = form.find_element(:id, 'study_file_file_type')
+				case filename
+					when 'cluster_1.txt'
+						file_type.send_keys('Cluster')
+					when 'expression_matrix_example.txt'
+						file_type.send_keys('Expression Matrix')
+					when 'metadata.txt'
+						file_type.send_keys('Metadata')
+				end
+				sync_button = form.find_element(:class, 'save-study-file')
+				sync_button.click
+				close_modal('sync-notice-modal')
+			end
+		end
+
+		# now assert that forms were re-rendered in synced data panel
+		sync_panel = @driver.find_element(:id, 'synced-data-panel-toggle')
+		sync_panel.click
+
+		# lastly, check info page to make sure everything did in fact parse and complete
+		studies_path = @base_url + '/studies'
+		@driver.get studies_path
+		wait_until_page_loads(studies_path)
+
+		show_button = @driver.find_element(:class, "load-from-gcs-#{$random_seed}-show")
+		show_button.click
+		@wait.until {element_present?(:id, 'info-panel')}
+
+		# make sure parsing succeeded
+		sync_study_path = @base_url + "/study/load-from-gcs-#{$random_seed}"
+		@driver.get(sync_study_path)
+		wait_until_page_loads(sync_study_path)
+		open_ui_tab('study-analysis')
+		wait_for_render(:id, 'submissions-table')
+
+		submissions_table = @driver.find_element(:id, 'submissions-table')
+		submissions = submissions_table.find_element(:tag_name, 'tbody').find_elements(:tag_name, 'tr')
+		completed_submission = submissions.find {|sub|
+			sub.find_element(:class, "submission-state").text == 'Done' &&
+					sub.find_element(:class, "submission-status").text == 'Succeeded'
+		}
+
+		sync_btn = completed_submission.find_element(:class, 'sync-submission-outputs')
+		sync_btn.click
+		wait_for_render(:class, 'unsynced-study-file')
+		study_file_forms = @driver.find_elements(:class, 'unsynced-study-file')
+		study_file_forms.each do |form|
+			filename = form.find_element(:id, 'study_file_name')
+			if filename['value'].end_with?('infercnv_exp_means.json') # for the purpose of the test, we only need this file
+				sync_button = form.find_element(:class, 'save-study-file')
+				sync_button.click
+				close_modal('sync-notice-modal')
+			else
+				next # skip all other outputs
+			end
+		end
+
+		# now make sure we're able to load Ideogram
+		@driver.get(sync_study_path)
+		wait_until_page_loads(sync_study_path)
+		open_ui_tab('study-visualize')
+		wait_for_render(:id, 'plots-tab')
+		# open the 'genome' tab
+		open_ui_tab('genome-tab')
+		wait_for_render(:id, 'ideogram-container')
+		user_ideogram = @driver.execute_script("return $('#_ideogram .annot').length > 0")
+		assert user_ideogram, "Ideogram did not render using user token: '$('#_ideogram .annot').length > 0' returned #{user_ideogram}"
+
+		# now log out and validate that we can use the read-only service account to load results
+		logout_from_portal
+		@driver.get(sync_study_path)
+		wait_until_page_loads(sync_study_path)
+		open_ui_tab('study-visualize')
+		wait_for_render(:id, 'plots-tab')
+		# open the 'genome' tab
+		open_ui_tab('genome-tab')
+		wait_for_render(:id, 'ideogram-container')
+		public_ideogram = @driver.execute_script("return $('#_ideogram .annot').length > 0")
+		assert public_ideogram, "Ideogram did not render using service account token: '$('#_ideogram .annot').length > 0' returned #{public_ideogram}"
+
+		# clean up
+		login_as_other($test_email, $test_email_password)
+		@driver.get studies_path
+		wait_until_page_loads(studies_path)
+		delete = @driver.find_element(:class, "load-from-gcs-#{$random_seed}-delete-local")
+		delete.click
+		accept_alert
+		close_modal('message_modal')
+
+		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+	end
+
 	##
 	## CLEANUP
 	## Delete all studies created during the regrssion suite

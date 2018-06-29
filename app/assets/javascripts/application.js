@@ -40,6 +40,7 @@
 //= require jquery.stickyPanel
 //= require clipboard.min
 //= require ideogram.min
+//= require igv.min
 
 var fileUploading = false;
 var PAGE_RENDERED = false;
@@ -122,6 +123,25 @@ function toggleSearchPanel() {
 
   $(window).trigger('resizeEnd');
 }
+
+$(document).on('click', '.bam-browse-genome', function(e) {
+
+  var selectedBam, thisBam, i;
+
+  selectedBam = $(this).attr('data-filename');
+
+  // bamAndBaiFiles declared in _genome.html.erb
+  for (i = 0; i < bamAndBaiFiles.length; i++) {
+    thisBam = bamAndBaiFiles[i].url.split('\/o/')[1].split('?')[0];
+    if (thisBam === selectedBam) {
+      bamsToViewInIgv.push(bamAndBaiFiles[i]);
+    }
+  }
+
+  $('#genome-tab-nav').css('display', ''); // Show Genome tab
+  $('#study-visualize-nav > a').click();
+  $('#genome-tab-nav > a').click();
+});
 
 // Toggle "View Options" menu panel in Explore tab
 $(document).on('click', '#view-option-link', function(e) {

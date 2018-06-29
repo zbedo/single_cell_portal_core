@@ -67,16 +67,7 @@ class ProfilesController < ApplicationController
       end
       @notice = "Your FireCloud profile has been successfully updated."
       # now check if user is part of 'all-portal' user group
-      user_group_config = AdminConfiguration.find_by(config_type: 'Portal FireCloud User Group')
-      if user_group_config.present?
-        group_name = user_group_config.value
-        user_group = Study.firecloud_client.get_user_group(group_name)
-        unless user_group['membersEmails'].include?(current_user.email)
-          logger.info "#{Time.now}: adding #{current_user.email} to #{group_name} user group"
-          Study.firecloud_client.add_user_to_group(group_name, 'member', current_user.email)
-          logger.info "#{Time.now}: user group registration complete"
-        end
-      end
+      current_user.add_to_portal_user_group
     rescue => e
       logger.info "#{Time.now}: unable to update FireCloud profile for #{current_user.email}: #{e.message}"
       @alert = "An error occurred when trying to update your FireCloud profile: #{e.message}"

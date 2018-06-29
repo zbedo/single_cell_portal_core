@@ -319,7 +319,12 @@
 <div class="panel panel-success" id="study-shares-panel">
 	<div class="panel-heading">
 		<div class="panel-title">
+      <% if @study.public? and @study.study_shares.size > 0 %>
+      <%#=% Subtract 1 to account for hidden read-only service account %>
+      <h4><%= link_to "Sharing <span class='badge' id='share-count'>#{@study.study_shares.size - 1}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#study-shares', class: 'text-success', 'data-toggle' => 'collapse' %></h4>
+      <% else %>
 			<h4><%= link_to "Sharing <span class='badge' id='share-count'>#{@study.study_shares.size}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#study-shares', class: 'text-success', 'data-toggle' => 'collapse' %></h4>
+      <% end %>
 		</div>
 	</div>
 
@@ -335,11 +340,14 @@
 				</thead>
 				<tbody>
 				<% @study.study_shares.each do |study_share| %>
+          <%#=% Don't show entry for read-only service account %>
+          <% if study_share.show_share? %>
 					<tr id="study-share-<%= study_share.email.gsub(/[@.]/, '-') %>">
 						<td class="share-email"><%= study_share.email %></td>
 						<td class="share-permission"><%= study_share.permission %></td>
 						<td><%= study_share.updated_at.to_s(:long) %></td>
 					</tr>
+          <% end %>
 				<% end %>
 				</tbody>
 			</table>

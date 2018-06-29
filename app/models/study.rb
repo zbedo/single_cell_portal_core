@@ -22,10 +22,15 @@ class Study
 
   # instantiate one FireCloudClient to avoid creating too many tokens
   @@firecloud_client = FireCloudClient.new
+  @@read_only_client = ENV['READ_ONLY_SERVICE_ACCOUNT_KEY'].present? ? FireCloudClient.new(nil, FireCloudClient::PORTAL_NAMESPACE, ENV['READ_ONLY_SERVICE_ACCOUNT_KEY']) : nil
 
   # getter for FireCloudClient instance
   def self.firecloud_client
     @@firecloud_client
+  end
+
+  def self.read_only_firecloud_client
+    @@read_only_client
   end
 
   # method to renew firecloud client (forces new access token for API and reinitializes storage driver)
@@ -231,6 +236,7 @@ class Study
   # before_save       :verify_default_options
   after_create      :make_data_dir, :set_default_participant
   after_destroy     :remove_data_dir
+  after_save        :set_readonly_access
 
   # search definitions
   index({"name" => "text", "description" => "text"}, {background: true})
@@ -260,9 +266,12 @@ class Study
       public = self.where(public: true, queued_for_deletion: false).map(&:id)
       owned = self.where(user_id: user._id, public: false, queued_for_deletion: false).map(&:id)
       shares = StudyShare.where(email: user.email).map(&:study).select {|s| !s.queued_for_deletion }.map(&:id)
-      user_client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
-      user_groups = user_client.get_user_groups.map {|g| g['groupEmail']}
-      group_shares = StudyShare.where(:email.in => user_groups).map(&:study).select {|s| !s.queued_for_deletion }.map(&:id)
+      group_shares = []
+      if user.registered_for_firecloud
+        user_client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
+        user_groups = user_client.get_user_groups.map {|g| g['groupEmail']}
+        group_shares = StudyShare.where(:email.in => user_groups).map(&:study).select {|s| !s.queued_for_deletion }.map(&:id)
+      end
       intersection = public + owned + shares + group_shares
       # return Mongoid criterion object to use with pagination
       Study.in(:_id => intersection)
@@ -276,9 +285,12 @@ class Study
     else
       owned = self.where(user_id: user._id, queued_for_deletion: false).map(&:_id)
       shares = StudyShare.where(email: user.email).map(&:study).select {|s| !s.queued_for_deletion }.map(&:_id)
-      user_client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
-      user_groups = user_client.get_user_groups.map {|g| g['groupEmail']}
-      group_shares = StudyShare.where(:email.in => user_groups).map(&:study).select {|s| !s.queued_for_deletion }.map(&:id)
+      group_shares = []
+      if user.registered_for_firecloud
+        user_client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
+        user_groups = user_client.get_user_groups.map {|g| g['groupEmail']}
+        group_shares = StudyShare.where(:email.in => user_groups).map(&:study).select {|s| !s.queued_for_deletion }.map(&:id)
+      end
       intersection = owned + shares + group_shares
       Study.in(:_id => intersection)
     end
@@ -333,12 +345,16 @@ class Study
 
   # check if a user has access to a study via a user group
   def user_in_group_share?(user, *permissions)
-    group_shares = self.study_shares.keep_if {|share| share.is_group_share?}.select {|share| permissions.include?(share.permission)}.map(&:email)
-    # get user's FC groups
-    client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
-    user_groups = client.get_user_groups.map {|g| g['groupEmail']}
-    # use native array intersection to determine if any of the user's groups have been shared with this study at the correct permission
-    (user_groups & group_shares).any?
+    if user.registered_for_firecloud
+      group_shares = self.study_shares.keep_if {|share| share.is_group_share?}.select {|share| permissions.include?(share.permission)}.map(&:email)
+      # get user's FC groups
+      client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
+      user_groups = client.get_user_groups.map {|g| g['groupEmail']}
+      # use native array intersection to determine if any of the user's groups have been shared with this study at the correct permission
+      (user_groups & group_shares).any?
+    else
+      false # if user is not registered for firecloud, default to false
+    end
   end
 
   # list of emails for accounts that can edit this study
@@ -415,7 +431,7 @@ class Study
   #
   ###
 
-  # helper to return default cluster to load, will fall back to first cluster if no preference has been set
+  # helper to return default cluster to load, will fall back to first cluster if no pf has been set
   # or default cluster cannot be loaded
   def default_cluster
     default = self.cluster_groups.first
@@ -660,6 +676,49 @@ class Study
   # return all study files for a given analysis & visualization component
   def get_analysis_outputs(analysis_name, visualization_name=nil)
     self.study_files.where('options.analysis_name' => analysis_name, 'options.visualization_name' => visualization_name)
+  end
+
+  def has_bam_files?
+    has_bam = false
+    self.study_files.each do |f|
+      if f.name[-3, 3] == 'bam'
+        has_bam = true
+      end
+    end
+    has_bam
+  end
+
+  # Get a JSON list of BAM file objects where each object has a URL for the BAM
+  # itself and index URL for its matching BAI file.
+  def get_bam_files
+
+    bams = []
+    raw_bams = []
+
+    # Get a list of BAM files
+    self.study_files.each do |file|
+      if file.name[-3, 3] == 'bam'
+        raw_bams.push(file)
+      end
+    end
+
+    # Map BAI files to BAM files that have matching file name stems,
+    # and construct our list of BAMs only from ones that have BAIs.
+    self.study_files.each do |file|
+      if file.name[-3, 3] == 'bai'
+        bai = file
+        raw_bams.each do |bam|
+          if bai.name.split('.')[0].include?(bam.name.split('.')[0])
+            bams.push({
+              'url': bam.api_url,
+              'indexUrl': bai.api_url
+            })
+          end
+        end
+      end
+    end
+
+    bams.to_json
   end
 
   ###
@@ -2244,6 +2303,19 @@ class Study
     end
   end
 
+  # set access for the readonly service account if a study is public
+  def set_readonly_access(grant_access)
+    if self.firecloud_workspace.present? && self.firecloud_project.present? && Study.read_only_firecloud_client.present?
+      access_level = self.public? ? 'READER' : 'NO ACCESS'
+      if !grant_access # revoke all access
+        access_level = 'NO ACCESS'
+      end
+      Rails.logger.info "#{Time.now}: setting readonly access on #{self.name} to #{access_level}"
+      readonly_acl = Study.firecloud_client.create_workspace_acl(Study.read_only_firecloud_client.issuer, access_level, false, false)
+      Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, readonly_acl)
+    end
+  end
+
   private
 
   ###
@@ -2359,6 +2431,7 @@ class Study
               end
             end
           end
+
         rescue => e
           # delete workspace on any fail as this amounts to a validation fail
           Rails.logger.info "#{Time.now}: Error creating workspace: #{e.message}"

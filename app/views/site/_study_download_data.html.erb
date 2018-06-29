@@ -153,7 +153,12 @@
     <thead>
     <tr>
       <th class="col-sm-5">Filename</th>
-      <th class="col-sm-6">Description</th>
+      <% if @study.has_bam_files? %>
+      <th class="col-sm-4">Description</th>
+      <th class="col-sm-1">Browse</th>
+      <% else %>
+        <th class="col-sm-5">Description</th>
+      <% end %>
       <th class="col-sm-1">Download</th>
     </tr>
     </thead>
@@ -162,6 +167,14 @@
       <tr>
         <td><%= study_file.upload_file_name.nil? ? study_file.name : study_file.upload_file_name %> <%= study_file.file_type == 'Cluster' ? "<strong>(#{study_file.name})</strong>".html_safe : nil %></td>
         <td><%= study_file.description %></td>
+        <% if @study.has_bam_files? %>
+        <td>
+          <% if study_file.name[-3, 3] == 'bam' %>
+            <a class="bam-browse-genome btn btn-primary dl-link other-file" style="margin-bottom: 3px;" data-filename="<%= study_file.upload_file_name %>">Browse
+              in genome</a>
+          <% end %>
+        </td>
+        <% end %>
         <td>
           <% if @allow_downloads %>
             <%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %>
