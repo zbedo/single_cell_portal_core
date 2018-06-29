@@ -236,7 +236,7 @@ class Study
   # before_save       :verify_default_options
   after_create      :make_data_dir, :set_default_participant
   after_destroy     :remove_data_dir
-  after_save        :set_readonly_access
+  before_save        :set_readonly_access
 
   # search definitions
   index({"name" => "text", "description" => "text"}, {background: true})
@@ -679,46 +679,23 @@ class Study
   end
 
   def has_bam_files?
-    has_bam = false
-    self.study_files.each do |f|
-      if f.name[-3, 3] == 'bam'
-        has_bam = true
-      end
-    end
-    has_bam
+    self.study_files.by_type('BAM').any?
   end
 
   # Get a JSON list of BAM file objects where each object has a URL for the BAM
   # itself and index URL for its matching BAI file.
   def get_bam_files
 
+    bam_files = self.study_files.by_type('BAM')
     bams = []
-    raw_bams = []
 
-    # Get a list of BAM files
-    self.study_files.each do |file|
-      if file.name[-3, 3] == 'bam'
-        raw_bams.push(file)
-      end
+    bam_files.each do |bam_file|
+      bams << {
+          'url' => bam_file.api_url,
+          'indexUrl' => bam_file.bundled_files.first.api_url
+      }
     end
-
-    # Map BAI files to BAM files that have matching file name stems,
-    # and construct our list of BAMs only from ones that have BAIs.
-    self.study_files.each do |file|
-      if file.name[-3, 3] == 'bai'
-        bai = file
-        raw_bams.each do |bam|
-          if bai.name.split('.')[0].include?(bam.name.split('.')[0])
-            bams.push({
-              'url': bam.api_url,
-              'indexUrl': bai.api_url
-            })
-          end
-        end
-      end
-    end
-
-    bams.to_json
+    bams
   end
 
   ###
@@ -2304,15 +2281,17 @@ class Study
   end
 
   # set access for the readonly service account if a study is public
-  def set_readonly_access(grant_access)
-    if self.firecloud_workspace.present? && self.firecloud_project.present? && Study.read_only_firecloud_client.present?
-      access_level = self.public? ? 'READER' : 'NO ACCESS'
-      if !grant_access # revoke all access
-        access_level = 'NO ACCESS'
+  def set_readonly_access(grant_access=true, manual_set=false)
+    if manual_set || self.public_changed? || self.new_record?
+      if self.firecloud_workspace.present? && self.firecloud_project.present? && Study.read_only_firecloud_client.present?
+        access_level = self.public? ? 'READER' : 'NO ACCESS'
+        if !grant_access # revoke all access
+          access_level = 'NO ACCESS'
+        end
+        Rails.logger.info "#{Time.now}: setting readonly access on #{self.name} to #{access_level}"
+        readonly_acl = Study.firecloud_client.create_workspace_acl(Study.read_only_firecloud_client.issuer, access_level, false, false)
+        Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, readonly_acl)
       end
-      Rails.logger.info "#{Time.now}: setting readonly access on #{self.name} to #{access_level}"
-      readonly_acl = Study.firecloud_client.create_workspace_acl(Study.read_only_firecloud_client.issuer, access_level, false, false)
-      Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, readonly_acl)
     end
   end
 

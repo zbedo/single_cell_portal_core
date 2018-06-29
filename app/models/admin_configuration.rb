@@ -243,7 +243,7 @@ class AdminConfiguration
     if Study.read_only_firecloud_client.present? && Study.read_only_firecloud_client.registered?
       study_count = 0
       Study.where(queued_for_deletion: false).each do |study|
-        study.set_readonly_access(grant_access)
+        study.set_readonly_access(grant_access, true) # pass true for 'manual_set' option to force change
         study_count += 1
       end
       [true, "Permissions successfully set on #{study_count} studies."]

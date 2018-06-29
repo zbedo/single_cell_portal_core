@@ -68,7 +68,7 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
         nameField.attr('readonly', 'readonly');
     }
     // re-enable submit button if it was previously disabled
-    if ( typeof ['10X Genes File', '10X Barcodes File', 'BAM Index'].find(fileType) === 'undefined') {
+    if ( ['10X Genes File', '10X Barcodes File', 'BAM Index'].includes(fileType) ) {
         if (submitBtn.attr('disabled') === 'disabled') {
             submitBtn.attr('disabled', false);
         }
