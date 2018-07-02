@@ -3888,7 +3888,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# assert labels are correct
 		plot_labels = @driver.find_elements(:class, "legendtext").map(&:text)
-		assert (plot_labels.include? "user-#{$random_seed}new: group0new (3 points)"), "labels are incorrect: '#{plot_labels}' should include 'user-#{$random_seed}new: group0new'"
+		assert plot_labels.grep(/user-#{$random_seed}new:.group0new/).any?, "labels are incorrect: '#{plot_labels}' should include 'user-#{$random_seed}new: group0new'"
 
 		# revert the annotation to old name and labels
 		@driver.get annot_path
@@ -3937,7 +3937,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# assert labels are correct
 		plot_labels = @driver.find_elements(:class, "legendtext").map(&:text)
-		assert (plot_labels.include? "user-#{$random_seed}: group0 (3 points)"), "labels are incorrect: '#{plot_labels}' should include 'user-#{$random_seed}: group0'"
+		assert plot_labels.grep(/user-#{$random_seed}new:.group0/).any?, "labels are incorrect: '#{plot_labels}' should include 'user-#{$random_seed}: group0'"
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end
@@ -4090,7 +4090,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# assert labels are correct
 		plot_labels = @driver.find_elements(:class, "legendtext").map(&:text)
-		assert plot_labels.include?("user-#{$random_seed}-exp-Share: group0 (3 points)"), "labels are incorrect: '#{plot_labels}' should include 'user-#{$random_seed}-exp-Share: group0'"
+		assert plot_labels.grep(/user-#{$random_seed}-exp-Share:.group0/).any?, "labels are incorrect: '#{plot_labels}' should include 'user-#{$random_seed}-exp-Share: group0'"
 
 		# logout
 		logout_from_portal

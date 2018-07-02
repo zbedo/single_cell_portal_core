@@ -105,7 +105,7 @@
           <p class="lead"><strong>Non-human Data</strong>: If you have a few, small (under 2GB) non-human sequence files, they can be uploaded here. For uploading many or larger files, please refer to the instructions <%= link_to 'on our wiki', 'https://github.com/broadinstitute/single_cell_portal/wiki/Uploading-Files-Using-Gsutil-Tool', target: :_blank %>.</p>
           <p class="lead">If you already have <code>gsutil</code> installed you can upload files directly using the following command:</p>
           <pre class="lead">gsutil -m cp /path/to/files gs://<%= @study.bucket_id %></pre>
-          <p class="lead"><strong class="text-danger">If you are uploading sequence files through the wizard, they must be compressed first using gzip.</strong></p>
+          <p class="lead"><strong class="text-danger">If you are uploading sequence files through the wizard, we recommend that they be compressed first using gzip.</strong></p>
           <p><%= link_to "FASTQ File Format <span class='fa fa-info-circle'></span>".html_safe, 'https://en.wikipedia.org/wiki/FASTQ_format#Format', class: 'btn btn-default', target: :_blank %>&nbsp;<%= link_to "BAM File Format <span class='fa fa-info-circle'></span>".html_safe, 'https://www.ncbi.nlm.nih.gov/sra/docs/submitformats/#bam-files', class: 'btn btn-default', target: :_blank %>&nbsp;<%= link_to "gzip Documentation <span class='fa fa-info-circle'></span>".html_safe, 'http://www.gnu.org/software/gzip/manual/gzip.html', class: 'btn btn-default', target: :_blank %></p>
         </div>
         <% @fastq_files.each do |study_file| %>

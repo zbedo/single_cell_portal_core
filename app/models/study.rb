@@ -122,6 +122,14 @@ class Study
     def reviewers
       where(permission: 'Reviewer').map(&:email)
     end
+
+    def visible
+      if Study.read_only_firecloud_client.present?
+        where(:email.not => /Study.read_only_firecloud_client.issuer/).map(&:email)
+      else
+        all.to_a.map(&:email)
+      end
+    end
   end
 
   has_many :cluster_groups, dependent: :delete do

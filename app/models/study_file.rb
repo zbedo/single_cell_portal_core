@@ -243,8 +243,9 @@ class StudyFile
   end
 
   # get the bundle 'parent' file for a bundled file (e.g. MM Coordinate Matrix that is bundled with a 10X Genes File)
-  # inverse of study_file.bundled_files
+  # inverse of study_file.bundled_files.  In the case of Coordinate Labels, this returns the cluster, not the file
   def bundle_parent
+    model = StudyFile
     case self.file_type
     when /10X/
       selector = :matrix_id
@@ -252,9 +253,10 @@ class StudyFile
       selector = :bam_id
     when 'Coordinate Labels'
       selector = :cluster_group_id
+      model = ClusterGroup
     end
     # call find_by(id: ) to avoid Mongoid::Errors::InvalidFind
-    StudyFile.find_by(id: self.options[selector])
+    model.find_by(id: self.options[selector])
   end
 
   # retrieve the cluster group id from the options hash for a cluster labels file
