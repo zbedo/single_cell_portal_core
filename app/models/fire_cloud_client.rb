@@ -1394,7 +1394,11 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   #   - +String+ signed URL
   def generate_api_url(workspace_namespace, workspace_name, filename)
     file = self.get_workspace_file(workspace_namespace, workspace_name, filename)
-    file.api_url
+    if file
+      file.api_url
+    else
+      ''
+    end
   end
 
   # retrieve all files in a GCP directory
