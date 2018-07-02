@@ -244,7 +244,7 @@ class Study
   # before_save       :verify_default_options
   after_create      :make_data_dir, :set_default_participant
   after_destroy     :remove_data_dir
-  before_save        :set_readonly_access
+  before_save       :set_readonly_access
 
   # search definitions
   index({"name" => "text", "description" => "text"}, {background: true})
@@ -2290,15 +2290,17 @@ class Study
 
   # set access for the readonly service account if a study is public
   def set_readonly_access(grant_access=true, manual_set=false)
-    if manual_set || self.public_changed? || self.new_record?
-      if self.firecloud_workspace.present? && self.firecloud_project.present? && Study.read_only_firecloud_client.present?
-        access_level = self.public? ? 'READER' : 'NO ACCESS'
-        if !grant_access # revoke all access
-          access_level = 'NO ACCESS'
+    unless Rails.env == 'test'
+      if manual_set || self.public_changed? || self.new_record?
+        if self.firecloud_workspace.present? && self.firecloud_project.present? && Study.read_only_firecloud_client.present?
+          access_level = self.public? ? 'READER' : 'NO ACCESS'
+          if !grant_access # revoke all access
+            access_level = 'NO ACCESS'
+          end
+          Rails.logger.info "#{Time.now}: setting readonly access on #{self.name} to #{access_level}"
+          readonly_acl = Study.firecloud_client.create_workspace_acl(Study.read_only_firecloud_client.issuer, access_level, false, false)
+          Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, readonly_acl)
         end
-        Rails.logger.info "#{Time.now}: setting readonly access on #{self.name} to #{access_level}"
-        readonly_acl = Study.firecloud_client.create_workspace_acl(Study.read_only_firecloud_client.issuer, access_level, false, false)
-        Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, readonly_acl)
       end
     end
   end

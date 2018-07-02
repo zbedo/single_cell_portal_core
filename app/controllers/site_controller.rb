@@ -2093,7 +2093,7 @@ class SiteController < ApplicationController
 
   # create a unique hex digest of a list of genes for use in set_cache_path
   def construct_gene_list_hash(query_list)
-    genes = query_list.split.map(&:strip).sort.join
+    genes = query_list.split(',').map(&:strip).sort.join
     Digest::SHA256.hexdigest genes
   end
 
