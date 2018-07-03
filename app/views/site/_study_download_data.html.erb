@@ -153,7 +153,8 @@
     <thead>
     <tr>
       <th class="col-sm-5">Filename</th>
-      <th class="col-sm-6">Description</th>
+      <th class="col-sm-5">Description</th>
+      <th class="col-sm-1">Browse</th>
       <th class="col-sm-1">Download</th>
     </tr>
     </thead>
@@ -162,6 +163,11 @@
       <tr>
         <td><%= study_file.upload_file_name.nil? ? study_file.name : study_file.upload_file_name %> <%= study_file.file_type == 'Cluster' ? "<strong>(#{study_file.name})</strong>".html_safe : nil %></td>
         <td><%= study_file.description %></td>
+        <td>
+          <% if study_file.file_type == 'BAM' %>
+            <%= render partial: '/site/genome/browse_igv_link', locals: {study_file: study_file} %>
+          <% end %>
+        </td>
         <td>
           <% if @allow_downloads %>
             <%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %>
@@ -175,12 +181,13 @@
   </table>
   <% if @primary_study_files.any? || @primary_data.any? %>
     <div class="well well-sm">
-      <h2>Primary Data <span class="badge"><%= @study.primary_data_file_count %></span> </h2>
+      <h2>Sequence Data <span class="badge"><%= @study.primary_data_file_count %></span> </h2>
       <table class="table table-striped tabled-condensed study-data-table" id="fastq-table">
         <thead>
         <tr>
           <th class="col-sm-5">Filename</th>
-          <th class="col-sm-6">Description</th>
+          <th class="col-sm-5">Description</th>
+          <th class="col-sm-1">Browse</th>
           <th class="col-sm-1">Download</th>
         </tr>
         </thead>
@@ -189,6 +196,11 @@
             <tr>
               <td><%= file.name %></td>
               <td><%= file.description %></td>
+              <td>
+                <% if file.file_type == 'BAM' %>
+                  <%= render partial: '/site/genome/browse_igv_link', locals: {study_file: file} %>
+                <% end %>
+              </td>
               <td>
                 <% if @allow_downloads %>
                   <%= render partial: '/layouts/download_link', locals: {study: @study, study_file: file} %>
@@ -204,6 +216,11 @@
               <tr>
                 <td><%= file[:name] %></td>
                 <td><%= directory.description %></td>
+                <td>
+                  <% if directory.file_type == 'BAM' %>
+                    <%= render partial: '/site/genome/browse_igv_link', locals: {study_file: file} %>
+                  <% end %>
+                </td>
                 <td><%= link_to("<span class='fa fa-download'></span> #{number_to_human_size(file[:size], prefix: :si)}".html_safe, directory.download_path(file[:name]), class: "btn btn-primary dl-link fastq", data: {filename: basename}) %></td>
               </tr>
             <% end %>

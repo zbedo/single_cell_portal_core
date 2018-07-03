@@ -22,10 +22,15 @@ class Study
 
   # instantiate one FireCloudClient to avoid creating too many tokens
   @@firecloud_client = FireCloudClient.new
+  @@read_only_client = ENV['READ_ONLY_SERVICE_ACCOUNT_KEY'].present? ? FireCloudClient.new(nil, FireCloudClient::PORTAL_NAMESPACE, ENV['READ_ONLY_SERVICE_ACCOUNT_KEY']) : nil
 
   # getter for FireCloudClient instance
   def self.firecloud_client
     @@firecloud_client
+  end
+
+  def self.read_only_firecloud_client
+    @@read_only_client
   end
 
   # method to renew firecloud client (forces new access token for API and reinitializes storage driver)
@@ -63,7 +68,11 @@ class Study
     end
 
     def non_primary_data
-      where(queued_for_deletion: false).not_in(file_type: 'Fastq').to_a
+      where(queued_for_deletion: false).not_in(file_type: StudyFile::PRIMARY_DATA_TYPES).to_a
+    end
+
+    def primary_data
+      where(queued_for_deletion: false).in(file_type: StudyFile::PRIMARY_DATA_TYPES).to_a
     end
 
     def valid
@@ -112,6 +121,14 @@ class Study
 
     def reviewers
       where(permission: 'Reviewer').map(&:email)
+    end
+
+    def visible
+      if Study.read_only_firecloud_client.present?
+        where(:email.not => /Study.read_only_firecloud_client.issuer/).map(&:email)
+      else
+        all.to_a.map(&:email)
+      end
     end
   end
 
@@ -227,6 +244,7 @@ class Study
   # before_save       :verify_default_options
   after_create      :make_data_dir, :set_default_participant
   after_destroy     :remove_data_dir
+  before_save       :set_readonly_access
 
   # search definitions
   index({"name" => "text", "description" => "text"}, {background: true})
@@ -421,7 +439,7 @@ class Study
   #
   ###
 
-  # helper to return default cluster to load, will fall back to first cluster if no preference has been set
+  # helper to return default cluster to load, will fall back to first cluster if no pf has been set
   # or default cluster cannot be loaded
   def default_cluster
     default = self.cluster_groups.first
@@ -538,7 +556,7 @@ class Study
 
   # return a count of the number of fastq files both uploaded and referenced via directory_listings for a study
   def primary_data_file_count
-    study_file_count = self.study_files.by_type('Fastq').size
+    study_file_count = self.study_files.primary_data.size
     directory_listing_count = self.directory_listings.primary_data.map {|d| d.files.size}.reduce(0, :+)
     study_file_count + directory_listing_count
   end
@@ -666,6 +684,26 @@ class Study
   # return all study files for a given analysis & visualization component
   def get_analysis_outputs(analysis_name, visualization_name=nil)
     self.study_files.where('options.analysis_name' => analysis_name, 'options.visualization_name' => visualization_name)
+  end
+
+  def has_bam_files?
+    self.study_files.by_type('BAM').any?
+  end
+
+  # Get a JSON list of BAM file objects where each object has a URL for the BAM
+  # itself and index URL for its matching BAI file.
+  def get_bam_files
+
+    bam_files = self.study_files.by_type('BAM')
+    bams = []
+
+    bam_files.each do |bam_file|
+      bams << {
+          'url' => bam_file.api_url,
+          'indexUrl' => bam_file.bundled_files.first.api_url
+      }
+    end
+    bams
   end
 
   ###
@@ -1581,7 +1619,7 @@ class Study
     @message = []
     begin
       # load target cluster
-      cluster = coordinate_file.coordinate_labels_target
+      cluster = coordinate_file.bundle_parent
 
       Rails.logger.info "#{Time.now}: Beginning coordinate label initialization using #{coordinate_file.upload_file_name}:#{coordinate_file.id} for cluster: #{cluster.name} in #{self.name}"
       coordinate_file.update(parse_status: 'parsing')
@@ -2250,6 +2288,23 @@ class Study
     end
   end
 
+  # set access for the readonly service account if a study is public
+  def set_readonly_access(grant_access=true, manual_set=false)
+    unless Rails.env == 'test'
+      if manual_set || self.public_changed? || self.new_record?
+        if self.firecloud_workspace.present? && self.firecloud_project.present? && Study.read_only_firecloud_client.present?
+          access_level = self.public? ? 'READER' : 'NO ACCESS'
+          if !grant_access # revoke all access
+            access_level = 'NO ACCESS'
+          end
+          Rails.logger.info "#{Time.now}: setting readonly access on #{self.name} to #{access_level}"
+          readonly_acl = Study.firecloud_client.create_workspace_acl(Study.read_only_firecloud_client.issuer, access_level, false, false)
+          Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, readonly_acl)
+        end
+      end
+    end
+  end
+
   private
 
   ###
@@ -2365,6 +2420,7 @@ class Study
               end
             end
           end
+
         rescue => e
           # delete workspace on any fail as this amounts to a validation fail
           Rails.logger.info "#{Time.now}: Error creating workspace: #{e.message}"

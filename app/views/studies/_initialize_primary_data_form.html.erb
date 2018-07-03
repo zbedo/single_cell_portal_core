@@ -4,6 +4,9 @@
   <%= f.hidden_field :_id, value: study_file._id %>
   <%= hidden_field_tag :selector, "#primary_data_form_#{study_file._id}" %>
   <%= hidden_field_tag :partial, 'initialize_primary_data_form' %>
+  <% study_file.options.each do |key, value| %>
+    <%= hidden_field_tag "study_file_options_#{key}", value, name: "study_file[options][#{key}]" %>
+  <% end %>
 	<div class="form-group row">
 		<div class="col-sm-4">
 			<%= f.label :name %><br />
@@ -17,7 +20,7 @@
 	<div class="form-group row">
 		<div class="col-sm-1">
 			<%= f.label :file_type %><br />
-			<%= f.text_field :file_type, readonly: true, class: 'form-control' %>
+			<%= f.select :file_type, options_for_select(['Fastq', 'BAM'], f.object.file_type), {}, class: 'form-control file-type' %>
 		</div>
 		<div class="col-sm-2">
 			<%= f.label :human_data, "Primary Human Data?" %><br />
@@ -40,7 +43,7 @@
 			<%= f.label :actions %>
 			<div class="row">
 				<div class="col-xs-6">
-					<%= f.submit 'Save', class: 'btn btn-block btn-success save-study-file', disabled: !study_file.human_data? %>
+					<%= f.submit 'Save', class: 'btn btn-block btn-success save-study-file', disabled: !study_file.human_data? && study_file.upload_file_name.blank? %>
 				</div>
 				<div class="col-xs-6">
           <% if study_file.generation.blank? && !study_file.human_data? %>
@@ -68,8 +71,7 @@
 				url: "<%= upload_study_path(@study._id) %>",
 				maxChunkSize: 10000000,
 				type: 'PATCH',
-				acceptFileTypes: /\.(fq|fastq)(\.tar)?\.gz$/i,
-        maxFileSize: 2000000000,
+				acceptFileTypes: /((\.(fq|fastq)(\.tar)?\.gz$)|\.bam)/i,
 				add: function (e, data) {
 					  fileUploading = true;
 					  var that = this;

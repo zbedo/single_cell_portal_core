@@ -185,10 +185,12 @@ class AdminConfigurationsController < ApplicationController
   # retrieve the firecloud registration for the portal service account
   def get_service_account_profile
     @profile_info = {}
-    @portal_service_account = Study.firecloud_client.issuer
+    @client = params[:account] == 'readonly' ? Study.read_only_firecloud_client : Study.firecloud_client
+    @portal_service_account = @client.issuer
+
     begin
-      if Study.firecloud_client.registered?
-        profile = Study.firecloud_client.get_profile
+      if @client.registered?
+        profile = @client.get_profile
         profile['keyValuePairs'].each do |attribute|
           @profile_info[attribute['key']] = attribute['value']
         end
@@ -200,8 +202,10 @@ class AdminConfigurationsController < ApplicationController
 
   # register or update the FireCloud profile of the portal service account
   def update_service_account_profile
+    @client = params[:account] == 'readonly' ? Study.read_only_firecloud_client : Study.firecloud_client
+
     begin
-      Study.firecloud_client.set_profile(profile_params)
+      @client.set_profile(profile_params)
       @notice = "The portal service account FireCloud profile has been successfully updated."
     rescue => e
       logger.error "#{Time.now}: unable to update service account FireCloud registration: #{e.message}"
@@ -257,6 +261,24 @@ class AdminConfigurationsController < ApplicationController
       end
     else
       @alert = "You have not specified a portal-wide user group yet.  Please create a 'Portal FireCloud User Group' configuration first."
+    end
+  end
+
+  def select_readonly_access
+    @config = AdminConfiguration.find_or_create_by(config_type: 'Read-Only Access Control', value_type: 'Boolean')
+  end
+
+  def manage_readonly_access
+    @config = AdminConfiguration.find_or_create_by(config_type: 'Read-Only Access Control', value_type: 'Boolean')
+    revoke_access = readonly_settings_params[:access_level] == '0'
+    if @config.update(value: readonly_settings_params[:access_level])
+      begin
+        @success, @alert = AdminConfiguration.set_readonly_service_account_permissions(revoke_access)
+      rescue => e
+        @alert = "An error occurred while trying to set the access for the readonly service account: #{e.message}"
+      end
+    else
+      @alert = "We were unable to process your request: #{@config.errors.full_messages.join(', ')}"
     end
   end
 
@@ -339,6 +361,10 @@ class AdminConfigurationsController < ApplicationController
     params.require(:email).permit(:subject, :from, :contents, :preview)
   end
 
+  def readonly_settings_params
+    params.require(:readonly_settings).permit(:access_level)
+  end
+
   # list of available actions to perform
   def available_admin_actions
     [
@@ -361,9 +387,15 @@ class AdminConfigurationsController < ApplicationController
             method: 'POST'
         },
         {
-            name: 'Manage Service Account FireCloud Registration',
-            description: 'Create or update the FireCloud registration of the portal service account.',
-            url: get_service_account_profile_path,
+            name: 'Manage Main Service Account FireCloud Registration',
+            description: 'Create or update the FireCloud registration of the main portal service account.',
+            url: get_service_account_profile_path(account: 'main'),
+            method: 'GET'
+        },
+        {
+            name: 'Manage Read-Only Service Account FireCloud Registration',
+            description: 'Create or update the FireCloud registration of the read-only portal service account.',
+            url: get_service_account_profile_path(account: 'readonly'),
             method: 'GET'
         },
         {

@@ -22,6 +22,7 @@
 /config/firecloud-print-access-token.py
 /single-cell-staging.broadinstitute.org.*
 /config/client_secret*.json
+/config/.read_only_service_account.json
 ssmtp.conf
 
 # Ignore hidden macOS files

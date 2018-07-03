@@ -6,7 +6,7 @@
     <li role="presentation" class="wizard-nav" id="initialize_metadata_form_nav"><a href="#metadata" data-toggle="tab">2. Metadata <span id="initialize_metadata_form_nav_completed"></span></a></li>
     <li role="presentation" class="wizard-nav" id="initialize_ordinations_form_nav"><a href="#ordinations" data-toggle="tab">3. Clusters <span id="initialize_ordinations_form_nav_completed"></span></a></li>
     <li role="presentation" class="wizard-nav" id="initialize_labels_form_nav"><a href="#labels" data-toggle="tab">4. Coordinate Labels <span id="initialize_labels_form_nav_completed"></span></a></li>
-		<li role="presentation" class="wizard-nav" id="initialize_primary_data_form_nav"><a href="#primary-data" data-toggle="tab">5. Primary Data <span id="initialize_primary_data_form_nav_completed"></span></a></li>
+		<li role="presentation" class="wizard-nav" id="initialize_primary_data_form_nav"><a href="#primary-data" data-toggle="tab">5. Sequence Data <span id="initialize_primary_data_form_nav_completed"></span></a></li>
     <li role="presentation" class="wizard-nav" id="initialize_marker_genes_form_nav"><a href="#marker-genes" data-toggle="tab">6. Gene Lists <span id="initialize_marker_genes_form_nav_completed"></span></a></li>
 		<li role="presentation" class="wizard-nav" id="initialize_misc_form_nav"><a href="#misc" data-toggle="tab">7. Miscellaneous <span id="initialize_misc_form_nav_completed"></span></a></li>
 	</ul>
@@ -19,12 +19,17 @@
       <div id="expressions-target">
         <div class="well well-sm">
           <h2>Step 1. Upload Expression Matrix File <small class="initialize-label" id="initialize_expression_form_completed"><span class="label label-danger">Required</span></small></h2>
-          <p class="lead">Upload a tab- or comma-delimited text file containing gene expression scores for cells in your study.  The file must be a plain text (.txt) or <%= link_to 'gzipped', 'http://www.gnu.org/software/gzip/manual/gzip.html' %> (.txt.gz) file with with a header row containing the value '<strong>GENE</strong>' in the first column, and single cell names in each successive column.</p>
+          <p class="lead">Upload a tab- or comma-delimited text file containing gene expression scores for cells in your study.  The file must be a plain text (.txt) or <%= link_to 'gzipped', 'http://www.gnu.org/software/gzip/manual/gzip.html' %> (.txt.gz) file and can take one of two formats:</p>
+          <p class="lead"><strong>1)</strong> A dense (square) matrix with with a header row containing the value '<strong>GENE</strong>' in the first column, and single cell names in each successive column, or<br />
+            <strong>2)</strong> A <%= link_to 'Matrix Market Coordinate Matrix', 'https://math.nist.gov/MatrixMarket/formats.html#coord', target: :_blank %> output from <%= link_to '10X Genomics', 'https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/output/matrices', target: :_blank %>.  You will be asked to upload the genes and barcodes files separately.</p>
           <p class="lead">You may upload multiple expression matrix files for your study, provided that the list of cell names in each file is unique to each file (you may not repeat cells in successive expression matrices).</p>
           <p><%= link_to "Example Expression Matrix <span class='fa fa-download'></span>".html_safe, 'https://raw.githubusercontent.com/broadinstitute/single_cell_portal/master/demo_data/expression_example.txt', class: 'btn btn-default', download: 'expression_matrix_example.txt' %></p>
         </div>
         <% @expression_files.each do |study_file| %>
           <%= render partial: 'initialize_expression_form', locals: {study_file: study_file} %>
+          <% study_file.bundled_files.each do |bundled_file| %>
+            <%= render partial: 'initialize_bundled_file_form', locals: {study_file: bundled_file} %>
+          <% end %>
         <% end %>
         <script type="text/javascript">
             if (<%= !@expression_files.first.new_record? %>) {
@@ -73,7 +78,7 @@
     <div class="tab-pane" id="labels">
       <div id="labels-target">
         <div class="well well-sm">
-          <h2>Step 3. Upload Coordinate Labels <small class="initialize-label" id="initialize_labels_form_completed"><span class="label label-info">Optional</span></small></h2>
+          <h2>Step 4. Upload Coordinate Labels <small class="initialize-label" id="initialize_labels_form_completed"><span class="label label-info">Optional</span></small></h2>
           <p class="lead">Upload a tab- or comma-delimited text file containing any 2d or 3d spatial coordinates and labels to display.  The file must be a plain text (.txt) file with at least 3 columns and a header row containing the values '<strong>X</strong>', '<strong>Y</strong>', and '<strong>LABELS</strong>'.  The file may have an optional column of '<strong>Z</strong>' (for 3d clusters).  The last column must contain text labels to display at the specified coordinates.</p>
           <p class="lead"><i class="fa fa-fw fa-exclamation-triangle text-warning"></i> The coordinates of the labels must fall inside the ranges of the cluster they are associated with for them to render.</p>
           <p><%= link_to "Example Coordinate Label File <span class='fa fa-download'></span>".html_safe, 'https://raw.githubusercontent.com/broadinstitute/single_cell_portal/master/demo_data/coordinate_labels_example.txt', class: 'btn btn-default', download: 'coordinates_example.txt' %></p>
@@ -95,16 +100,19 @@
     <div class="tab-pane" id="primary-data">
       <div id="primary-data-target">
         <div class="well well-sm">
-          <h2>Step 4. Upload Primary Data Files <small class="initialize-label" id="initialize_primary_data_form_completed"><span class="label label-info">Optional</span></small></h2>
+          <h2>Step 5. Upload Sequence Data Files <small class="initialize-label" id="initialize_primary_data_form_completed"><span class="label label-info">Optional</span></small></h2>
           <p class="lead"><strong>Primary Human Data</strong>: Primary sequence data derived from humans should be stored in other biological databases and can be linked here by selecting 'Yes' for 'Primary Human Data' and then providing a link in the text field.</p>
-          <p class="lead"><strong>Non-human Data</strong>: If you have a few, small (under 2GB) non-human fastq.gz files, they can be uploaded here. For uploading many or larger files, please refer to the instructions <%= link_to 'on our wiki', 'https://github.com/broadinstitute/single_cell_portal/wiki/Uploading-Files-Using-Gsutil-Tool', target: :_blank %>.</p>
+          <p class="lead"><strong>Non-human Data</strong>: If you have a few, small (under 2GB) non-human sequence files, they can be uploaded here. For uploading many or larger files, please refer to the instructions <%= link_to 'on our wiki', 'https://github.com/broadinstitute/single_cell_portal/wiki/Uploading-Files-Using-Gsutil-Tool', target: :_blank %>.</p>
           <p class="lead">If you already have <code>gsutil</code> installed you can upload files directly using the following command:</p>
-          <pre class="lead">gsutil -m cp *.fastq.gz gs://<%= @study.bucket_id %></pre>
-          <p class="lead"><strong class="text-danger">If you are uploading fastq files through the wizard, they must be compressed first using gzip.</strong></p>
-          <p><%= link_to "FASTQ File Format <span class='fa fa-info-circle'></span>".html_safe, 'https://en.wikipedia.org/wiki/FASTQ_format#Format', class: 'btn btn-default', target: :_blank %>&nbsp;<%= link_to "gzip Documentation <span class='fa fa-info-circle'></span>".html_safe, 'http://www.gnu.org/software/gzip/manual/gzip.html', class: 'btn btn-default', target: :_blank %></p>
+          <pre class="lead">gsutil -m cp /path/to/files gs://<%= @study.bucket_id %></pre>
+          <p class="lead"><strong class="text-danger">If you are uploading sequence files through the wizard, we recommend that they be compressed first using gzip.</strong></p>
+          <p><%= link_to "FASTQ File Format <span class='fa fa-info-circle'></span>".html_safe, 'https://en.wikipedia.org/wiki/FASTQ_format#Format', class: 'btn btn-default', target: :_blank %>&nbsp;<%= link_to "BAM File Format <span class='fa fa-info-circle'></span>".html_safe, 'https://www.ncbi.nlm.nih.gov/sra/docs/submitformats/#bam-files', class: 'btn btn-default', target: :_blank %>&nbsp;<%= link_to "gzip Documentation <span class='fa fa-info-circle'></span>".html_safe, 'http://www.gnu.org/software/gzip/manual/gzip.html', class: 'btn btn-default', target: :_blank %></p>
         </div>
         <% @fastq_files.each do |study_file| %>
           <%= render partial: 'initialize_primary_data_form', locals: {study_file: study_file} %>
+          <% study_file.bundled_files.each do |bundled_file| %>
+            <%= render partial: 'initialize_bundled_file_form', locals: {study_file: bundled_file} %>
+          <% end %>
         <% end %>
         <script type="text/javascript">
           if (<%= !@fastq_files.first.new_record? %>) {
@@ -121,7 +129,7 @@
 		<div class="tab-pane" id="marker-genes">
 			<div id="marker-genes-target">
 				<div class="well well-sm">
-					<h2>Step 5. Upload Gene List File <small class="initialize-label" id="initialize_marker_genes_form_completed"><span class="label label-info">Optional</span></small></h2>
+					<h2>Step 6. Upload Gene List File <small class="initialize-label" id="initialize_marker_genes_form_completed"><span class="label label-info">Optional</span></small></h2>
 					<p class="lead">Upload a tab- or comma-delimited text file containing a list of genes and their mean expression values across any clusters.  The file must be a plain text (.txt) with the value 'GENE NAMES' in the first column, and cluster names in each successive column.</p>
 					<p><%= link_to "Example Gene List <span class='fa fa-download'></span>".html_safe, 'https://raw.githubusercontent.com/broadinstitute/single_cell_portal/master/demo_data/marker_gene_list_example.txt', class: 'btn btn-default', download: 'marker_gene_list_example.txt' %></p>
 				</div>
@@ -143,7 +151,7 @@
 		<div class="tab-pane" id="misc">
 			<div id="misc-target">
 				<div class="well well-sm">
-					<h2>Step 6. Upload Documentation/Other Files <small class="initialize-label" id="initialize_misc_form_completed"><span class="label label-info">Optional</span></small></h2>
+					<h2>Step 7. Upload Documentation/Other Files <small class="initialize-label" id="initialize_misc_form_completed"><span class="label label-info">Optional</span></small></h2>
 					<p class="lead">Upload any documentation or other support files you have.</p>
 				</div>
 				<% @other_files.each do |study_file| %>

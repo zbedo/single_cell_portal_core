@@ -25,6 +25,13 @@ if ('<%= params[:partial] %>' == 'initialize_metadata_form' && getWizardStatus()
 $("#initialized").replaceWith("<%= escape_javascript(render partial: 'initialize_study_label') %>");
 $('.initialize-label').tooltip({container: 'body'});
 
+// render any 'bundled' file forms, unless already present
+<% @bundled_files.each do |target, study_files| %>
+  <% study_files.each do |study_file| %>
+    $("#<%= target %>").append("<%= escape_javascript(render partial: 'initialize_bundled_file_form', locals: {study_file: study_file }) %>");
+  <% end %>
+<% end %>
+
 // show success modal
 $('#study-files-notice-target').html("<%= escape_javascript(render partial: 'upload_success_modal_content', locals: {study_file: @study_file}) %>");
 setTimeout(function() {

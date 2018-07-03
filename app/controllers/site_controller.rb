@@ -231,7 +231,7 @@ class SiteController < ApplicationController
   def study
     @study.update(view_count: @study.view_count + 1)
     @study_files = @study.study_files.non_primary_data.sort_by(&:name)
-    @primary_study_files = @study.study_files.by_type('Fastq')
+    @primary_study_files = @study.study_files.primary_data
     @directories = @study.directory_listings.are_synced
     @primary_data = @study.directory_listings.primary_data
     @other_data = @study.directory_listings.non_primary_data
@@ -253,6 +253,29 @@ class SiteController < ApplicationController
       if @study.has_analysis_outputs?('infercnv', 'ideogram.js')
         ideogram_annotations = @study.get_analysis_outputs('infercnv', 'ideogram.js').first
         @analysis_outputs['ideogram.js'] = ideogram_annotations.bucket_location
+      end
+
+      if @study.has_bam_files?
+        reference_workspace = AdminConfiguration.find_by(config_type: 'Reference Data Workspace')
+        opts = reference_workspace.options
+        namespace, name = reference_workspace.value.split('/')
+
+        # We'll generalize later, e.g. take in (genome assembly) reference_name as a URL parameter
+        # to this 'study' method's endpoint
+        reference_name = 'mm10'
+
+        @bed_files = {
+            mm10: {}
+        }
+
+        reference_bed_key = opts.keys.find {|o| o =~ /^#{reference_name}.*_bed$/}
+        reference_bed = opts[reference_bed_key]
+        @bed_files[:mm10][:url] = Study.firecloud_client.generate_api_url(namespace, name, reference_bed)
+
+        reference_bed_index_key = opts.keys.find {|o| o =~ /^#{reference_name}.*_bed_index$/}
+        reference_bed_index = opts[reference_bed_index_key]
+        @bed_files[:mm10][:indexUrl] = Study.firecloud_client.generate_api_url(namespace, name, reference_bed_index)
+
       end
     end
 
@@ -752,8 +775,8 @@ class SiteController < ApplicationController
   def fetch_data
     if check_xhr_view_permissions
       remote = Study.firecloud_client.get_workspace_file(@study.firecloud_project,
-                                                          @study.firecloud_workspace,
-                                                          params[:filename])
+                                                         @study.firecloud_workspace,
+                                                         params[:filename])
       signed_url = Study.firecloud_client.generate_signed_url(@study.firecloud_project,
                                                               @study.firecloud_workspace,
                                                               params[:filename])
@@ -763,6 +786,18 @@ class SiteController < ApplicationController
       else
         render text: @response.body
       end
+    else
+      head 403
+    end
+  end
+
+  # return media_url to enable loading a file from GCS directly via client-side JavaScript
+  def get_media_url
+    if check_xhr_view_permissions
+      media_url = Study.firecloud_client.generate_signed_url(@study.firecloud_project,
+                                                              @study.firecloud_workspace,
+                                                              params[:filename])
+      render text: media_url
     else
       head 403
     end
@@ -2058,7 +2093,7 @@ class SiteController < ApplicationController
 
   # create a unique hex digest of a list of genes for use in set_cache_path
   def construct_gene_list_hash(query_list)
-    genes = query_list.split.map(&:strip).sort.join
+    genes = query_list.split(',').map(&:strip).sort.join
     Digest::SHA256.hexdigest genes
   end
 

@@ -55,14 +55,15 @@ portal is configured and ready to use:
   * For 'Authorized redirect URIs', enter <code>https://(your hostname)/single_cell/users/auth/google_oauth2/callback</code>
   * Save the client id
 * <b>Whitelisting your OAuth Audience</b>
-	* Once you have exported your OAuth credentials, you will need to have your client id whitelisted to allow it to make
-	  authenticated requests into the FireCloud API as per {OpenID Connect 1.0}[http://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation]
-	* Send an email to <b>dsp-devops@broadinstitute.org</b> with your OAuth2 client ID so it can be added to the whitelist
+  * Once you have exported your OAuth credentials, you will need to have your client id whitelisted to allow it to make authenticated requests into the FireCloud API as per {OpenID Connect 1.0}[http://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation]
+  * Send an email to <b>dsp-devops@broadinstitute.org</b> with your OAuth2 client ID so it can be added to the whitelist
 * <b>GCP Service Account keys</b>: Regardless of where the portal is deployed, it requires a Google Cloud Platform Service Account in order to make authenticated calls into FireCloud and Google Cloud Storage.  Therefore, you must export the default service account key.  See https://developers.google.com/identity/protocols/OAuth2ServiceAccount for more information about service accounts.  To export the credentials:
   * Log into your new GCP project
   * Click the navigation menu in the top left and select 'IAM & Admin	' > 'Service Accounts'
   * On entry 'Compute Engine default service account', click the 'Options' menu (far right) and select 'Create key'
   * Select 'JSON' and export and save the key locally
+  * Additionally, a 'read-only' service account is now used for streaming GCS assets to the client in some instances, so create a second service account and set the role to 'Storage Object Viewer' (see READ-ONLY SERVICE ACCOUNT at the bottom for a more detailed explanation on the role of this service account)
+  * Save this additional account locally next to the main service account.
 * <b>Enable GCP APIs</b>: The following Google Cloud Platform APIs must be enabled:
   * Google Compute Engine API
   * Google Cloud APIs
@@ -73,8 +74,9 @@ portal is configured and ready to use:
   * Launch an instance of your portal (see RUNNING THE CONTAINER below)
   * Create an admin user account (see ADMIN USER ACCOUNTS below)
   * Log in with the admin account, and select 'Admin Configurations' from the profile menu (top righthand corner)
-  * At the bottom of the page, in the 'Other Tasks' dropdown, select 'Manage Service Account FireCloud Registration' and click 'Execute Task'
+  * At the bottom of the page, in the 'Other Tasks' dropdown, select 'Manage Main Service Account FireCloud Registration' and click 'Execute Task'
   * Fill out all form fields and submit
+  * This must be done for both the 'main' and 'read-only' service accounts
 * <b>Creating a FireCloud Project</b>: Once your OAuth audience has been whitelisted, and before you can create studies, you will need to create a FireCloud project that will own all the workspaces created in the portal.  To do this:
   * Create a {Google Billing Project}[https://software.broadinstitute.org/firecloud/documentation/article?id=9762].
   * Using the same Google account that owns the billing project, log into the portal and select 'My Billing Projects' from the profile menu.
@@ -86,7 +88,7 @@ portal is configured and ready to use:
 == RUNNING THE CONTAINER
 
 Once the image has successfully built and the database container is running, use the following command to start the container:
-  bin/boot_docker -u (sendgrid username) -P (sendgrid password) -k (service account key path) -o (oauth client id) -S (oauth client secret)
+  bin/boot_docker -u (sendgrid username) -P (sendgrid password) -k (service account key path) -K (read-only service account key path) -o (oauth client id) -S (oauth client secret)
 
 This sets up several environment variables in your shell and then runs the following command:
   docker run --rm -it --name $CONTAINER_NAME -p 80:80 -p 443:443 -p 587:587 --link mongodb:mongodb -h localhost -v $PROJECT_DIR:/home/app/webapp:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e SENDGRID_USERNAME=$SENDGRID_USERNAME -e SENDGRID_PASSWORD=$SENDGRID_PASSWORD -e SECRET_KEY_BASE=$SECRET_KEY_BASE -e SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY -e OAUTH_CLIENT_ID=$OAUTH_CLIENT_ID -e OAUTH_CLIENT_SECRET=$OAUTH_CLIENT_SECRET single_cell_docker
@@ -102,12 +104,13 @@ than <code>--rm -it</code>.</em>
 
 Broad Institute project members can load all project secrets from Vault and boot the portal directly by using the <code>bin/load_env_secrets.sh</code> script.
 
-  bin/load_env_secrets.sh -p (path/to/service/account) -s (path/to/portal/config) -e (environment)
+  bin/load_env_secrets.sh -p (path/to/service/account.json) -s (path/to/portal/config) -r (path/to/readonly/service/account.json) -e (environment)
 
-This script takes three parameters:
+This script takes four parameters:
 
 1. *VAULT_SECRET_PATH* (passed with -p): Path to portal configuration JSON inside Vault.
-2. *SERVICE_ACCOUNT_PATH* (passed with -c): Path to GCP service account configuration JSON inside Vault.
+2. *SERVICE_ACCOUNT_PATH* (passed with -c): Path to GCP main service account configuration JSON inside Vault.
+2. *READ_ONLY_SERVICE_ACCOUNT_PATH* (passed with -c): Path to GCP read-only service account configuration JSON inside Vault.
 3. *PASSENGER_APP_ENV* (passed with -e; optional): Environment to boot portal in.  Defaults to 'development'.
 
 The script requires two command line utilities: vault[https://www.vaultproject.io] and jq[https://stedolan.github.io/jq/].  Please refer to their respective sites for installation instructions.
@@ -122,8 +125,9 @@ There are several variables that need to be passed to the Docker container in or
 7. *SENDGRID_PASSWORD* (passed with -e): The password associated with a Sendgrid account (for sending emails).
 8. *SECRET_KEY_BASE* (passed with -e): Sets the Rails SECRET_KEY_BASE environment variable, used mostly by Devise in authentication for cookies.
 9. *SERVICE_ACCOUNT_KEY* (passed with -e): Sets the SERVICE_ACCOUNT_KEY environment variable, used for making authenticated API calls to FireCloud & GCP.
-10. *OAUTH_CLIENT_ID* (passed with -e): Sets the OAUTH_CLIENT_ID environment variable, used for Google OAuth2 integration.
-11. *OAUTH_CLIENT_SECRET* (passed with -e): Sets the OAUTH_CLIENT_SECRET environment variable, used for Google OAuth2 integration.
+10. *READ_ONLY_SERVICE_ACCOUNT_KEY* (passed with -e): Sets the READ_ONLY_SERVICE_ACCOUNT_KEY environment variable, used for making authenticated API calls to GCP for streaming assets to the client.
+11. *OAUTH_CLIENT_ID* (passed with -e): Sets the OAUTH_CLIENT_ID environment variable, used for Google OAuth2 integration.
+12. *OAUTH_CLIENT_SECRET* (passed with -e): Sets the OAUTH_CLIENT_SECRET environment variable, used for Google OAuth2 integration.
 
 === RUN COMMAND IN DETAIL
 The run command explained in its entirety:
@@ -140,6 +144,7 @@ The run command explained in its entirety:
 * <b>-e SENDGRID_USERNAME= [SENDGRID_USERNAME] -e SENDGRID_PASSWORD= [SENDGRID_PASSWORD]:</b> The credentials for Sendgrid to send emails.  Alternatively, you could decide to not use Sendgrid and configure the application to use a different SMTP server (would be done inside your environment's config file).
 * <b>-e SECRET_KEY_BASE= [SECRET_KEY_BASE]:</b> Setting the SECRET_KEY_BASE variable is necessary for creating secure cookies for authentication.  This variable automatically resets every time we restart the container.
 * <b>-e SERVICE_ACCOUNT_KEY= [SERVICE_ACCOUNT_KEY]:</b> Setting the SERVICE_ACCOUNT_KEY variable is necessary for making authenticated API calls to FireCloud and GCP.  This should be a file path <b>relative to the app root</b> that points to the JSON service account key file you exported from GCP.
+* <b>-e READ_ONLY_SERVICE_ACCOUNT_KEY= [READ_ONLY_SERVICE_ACCOUNT_KEY]:</b> Setting the READ_ONLY_SERVICE_ACCOUNT_KEY variable is necessary for making authenticated API calls to GCP.  This should be a file path <b>relative to the app root</b> that points to the JSON read-only service account key file you exported from GCP.
 * <b>-e OAUTH_CLIENT_ID= [OAUTH_CLIENT_ID] -e OAUTH_CLIENT_SECRET= [OAUTH_CLIENT_SECRET]:</b> Setting the OAUTH_CLIENT_ID and OAUTH_CLIENT_SECRET variables are necessary for allowing Google user authentication.  For instructions on creating OAuth 2.0 Client IDs, refer to the {Google OAuth 2.0 documentation}[https://support.google.com/cloud/answer/6158849].
 * *single_cell_docker*: This is the name of the image we created earlier.  If you chose a different name, please use that here.
 
@@ -260,7 +265,7 @@ the following command after attaching to the running instance (with <code>docker
 
 For instance, to run the FireCloudClient unit test suite:
 
-  ruby -I test test/models/fire_cloud_client_test.rb
+  ruby -I test test/integration/fire_cloud_client_test.rb
 
 == GOOGLE DEPLOYMENT
 
@@ -303,7 +308,7 @@ project directory as <code>root</code>:
 2. Stop the portal: <code>docker stop single_cell</code>
 3. Remove the container instance: <code>docker rm single_cell</code>
 4. Launch a new instance of the portal with the updated container:
-  bin/boot_docker -u (sendgrid username) -P (sendgrid password) -e production -p (prod database password) -h (production hostname) -k (service account key path) -o (oauth client id) -S (oauth client secret)
+  bin/boot_docker -u (sendgrid username) -P (sendgrid password) -e production -p (prod database password) -h (production hostname) -k (service account key path) -K (read-only service account key path) -o (oauth client id) -S (oauth client secret)
 
 <b>You will need to rebuild the docker image if you do any of the following:</b>
 * Edit the Dockerfile
@@ -311,6 +316,7 @@ project directory as <code>root</code>:
   - Gemfile (including Gemfile.lock if versions have changed)
   - set_user_permissions.bash
   - rails_startup.bash
+  - generate_dh_parameters.bash
   - nginx.conf
   - webapp.conf
 
@@ -357,13 +363,43 @@ files and permissions.
 All portal users are required to authenticate before downloading data as we implement daily per-user quotas.  These are configurable
 through the admin control panel which can be accessed only by portal admin accounts (available through the profile menu or at /single_cell/admin).
 
-There are currently 5 configuration options:
+There are currently 7 configuration actions:
 
 * Daily download quota limit (defaults to 2 terabytes, but is configurable to any amount, including 0)
 * Manage FireCloud access (can disable local access, compute access, or all access)
 * Unlock orphaned jobs (any background jobs that were running during a portal restart are locked until this option is used)
 * Refresh API clients (force the FireCloudClient class to renew all access tokens)
-* Manage service account FireCloud profile (register or update the FireCloud profile associated with the portal service account).
+* Manage both service account FireCloud profiles (register or update the FireCloud profile associated with the main & readonly portal service accounts).
+* See the current FireCloud API status (for all services)
+* Synchronize the portal user group (if set, will add all users to user group)
+
+==== READ-ONLY SERVICE ACCOUNT
+
+The read-only service account is a GCP service account that is used to grant access to GCS objects from 'public' studies so that they can be rendered
+client-side for the user.  Normally, a user would not have access to these objects directly in GCS as access is federated by the main service account on
+public studies (private studies have explicit grants, and therefore user access tokens are used).  However, access tokens granted from the main service
+account would have project owner permissions, so they cannot be used safely in the client.  Therefore, a read-only account is used in this instance for operational
+security.
+
+This account is not required for main portal functionality to work, but certain visualizations (Ideogram.js & IGV.js) will not be enabled unless this account is enabled.
+
+To enable the read-only service account:
+
+1. Create a new service account in your GCP project and grant it 'Storage Object Viewer' permission (see 'GCP Service Account keys' under
+'DEPLOYING A PRIVATE INSTANCE' above for more information)
+2. Export the JSON credentials to a file and save inside the portal home directory.
+3. When booting your instance (via <code>bin/boot_docker</code>), make sure to pass <code>-K (/path/to/readonly/credentials.json)</code>
+4. Once the portal is running, navigate to the Admin Control Panel with an admin user account
+5. Select 'Manage Read-Only Service Account FireCloud Registration' from the 'Other Tasks' menu and click 'Execute'
+6. Fill out all form fields and submit.
+7. Once your new service account is registered, create a Config Option of the type 'Read-Only Access Control'
+8. Set the type of value to 'Boolean', and set the value to 'Yes', and save
+
+This will have the effect of adding shares to all public studies in your instance of the portal for the read-only service account with 'View' permission.  This will
+then enable the portal to stream certain kinds of files (BAM files, for instance) back to the client for visualization without the need for setting up
+and external proxy server.
+
+To revoke this access, simply edit the configuration setting and set the value to 'No'.
 
 ==== FIRECLOUD ACCESS SETTINGS
 
