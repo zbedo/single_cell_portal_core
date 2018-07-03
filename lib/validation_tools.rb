@@ -12,6 +12,8 @@ module ValidationTools
   ALPHANUMERIC_ONLY = /\A\w*\z/
   ALPHANUMERIC_DASH = /\A[\w+\-?]*\z/
   ALPHANUMERIC_SPACE_DASH = /\A[\w+\s?\-]*\z/
+  NAME_CHARS = /\A[\w+\s]*\z/
+  NAME_EXT_CHARS = /\A[\w+\s*[\.,]?]+\z/
   FILENAME_CHARS = /\A[\w+[\s\-\.\/\(\)]?]+\z/
   OBJECT_LABELS = /\A[\w+\s*[\-\.\/\(\)\+\,\:\%]?]+\z/
   # an extended regex with some slightly 'unsafe' non-word characters added in
@@ -21,6 +23,8 @@ module ValidationTools
   # Error messages for custom validators
   ALPHANUMERIC_ONLY_ERROR = 'contains invalid characters. Please use only alphanumeric characters.'
   ALPHANUMERIC_DASH_ERROR = 'contains invalid characters. Please use only alphanumeric characters or dashes.'
+  NAME_CHARS_ERROR = 'contains invalid characters. Please use only alphanumeric characters or spaces'
+  NAME_EXT_CHARS_ERROR = 'contains invalid characters. Please use only alphanumeric characters, spaces, commas, or periods.'
   ALPHANUMERIC_SPACE_DASH_ERROR = 'contains invalid characters. Please use only alphanumeric characters, spaces, or dashes.'
   FILENAME_CHARS_ERROR = 'contains invalid characters. Please use only alphanumeric, spaces, or the following: - _ . / ( )'
   OBJECT_LABELS_ERROR = 'contains invalid characters. Please use only alphanumeric, spaces, or the following: - _ . / ( ) + , : %'
