@@ -14,7 +14,7 @@
     var bamAndBaiFiles = <%= raw @study.get_bam_files.to_json %>;
     var bamsToViewInIgv = [];
 
-    var bedFiles = <%= raw @bed_files.to_json %>;
+    var bedFiles = <%= raw @study.get_gene_tracks.to_json %>;
 
   </script>
   <%= render partial: '/site/genome/igv' %>

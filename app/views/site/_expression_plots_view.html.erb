@@ -28,3 +28,11 @@
     </div>
   </div>
 </div>
+<% if @study.has_analysis_outputs?('infercnv', 'ideogram.js') or @study.has_bam_files? %>
+  <div class="tab-pane" id="genome-tab" role="tabpanel" >
+    <div class="panel panel-default no-top-border">
+      <div id="genome-container" class="panel-collapse collapse in"></div>
+      <%= render partial: '/site/genome/genome' %>
+    </div>
+  </div>
+<% end %>

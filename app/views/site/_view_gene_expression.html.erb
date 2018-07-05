@@ -16,6 +16,16 @@
       <ul class="nav nav-tabs" role="tablist" id="view-tabs">
         <li role="presentation" class="study-nav active" id="box-or-violin-tab-nav"><a href="#box-or-violin-tab" id="distribution-link" data-toggle="tab">Distribution</a></li>
         <li role="presentation" class="study-nav" id="scatter-tab-nav"><a href="#scatter-tab" id="scatter-link" data-toggle="tab">Scatter</a></li>
+        <% if @study.has_analysis_outputs?('infercnv', 'ideogram.js') or @study.has_bam_files? %>
+          <% if @study.has_analysis_outputs?('infercnv', 'ideogram.js') %>
+            <li role="presentation" class="study-nav" id="genome-tab-nav">
+          <% else %>
+            <%# If study has BAMs but not Ideogram annotations, then hide Genome tab until user clicks 'Browse in genome' button in Download tab. %>
+            <li role="presentation" class="study-nav" id="genome-tab-nav" style="display: none">
+          <% end %>
+          <a href="#genome-tab" data-toggle="tab">Genome </a>
+          </li>
+        <% end %>
       </ul>
       <%= render partial: 'view_options' %>
       <div class="tab-content">
