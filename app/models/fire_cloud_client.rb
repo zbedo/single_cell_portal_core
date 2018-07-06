@@ -980,8 +980,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   #
   # * *return*
   #   - +Array+ of groups
-  def get_user_group
-    s
+  def get_user_groups
     path = self.api_root + "/api/groups"
     process_firecloud_request(:get, path)
   end
