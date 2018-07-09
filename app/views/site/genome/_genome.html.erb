@@ -1,5 +1,8 @@
 <script>
-  var accessToken = '<%= @study.read_access_token(current_user) %>';
+
+  if (typeof accessToken === 'undefined') {
+    var accessToken = '<%= get_read_access_token(@study, current_user) %>';
+  }
 </script>
 
 <% if @study.has_analysis_outputs?('infercnv', 'ideogram.js')%>
