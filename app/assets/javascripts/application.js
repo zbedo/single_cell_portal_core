@@ -951,3 +951,50 @@ function calculatePlotViewport(target) {
     var viewPort = $(window).height();
     return viewPort - 250;
 }
+
+
+$(document).on('click', '#genome-tab-nav', function (e) {
+  initializeIgv();
+});
+
+function initializeIgv() {
+  var igvContainer, igvOptions, igvBrowser, igvTracks, i, bam, genome,
+    genesTrackName;
+
+  igvContainer = document.getElementById('igv-container');
+
+  genome = 'mm10';
+  genesTrackName = 'Genes | GENCODE M17';
+
+  igvTracks = [{
+    name: genesTrackName,
+    url: bedFiles[genome].url + '?alt=media',
+    indexURL: bedFiles[genome].indexUrl + '?alt=media',
+    type: 'annotation',
+    format: 'bed',
+    sourceType: 'file',
+    order: 0,
+    visibilityWindow: 300000000,
+    displayMode: 'EXPANDED',
+    oauthToken: accessToken
+  }];
+
+  for (i = 0; i < bamsToViewInIgv.length; i++) {
+    bam = bamsToViewInIgv[i];
+    igvTracks.push({
+      url: bam.url,
+      indexURL: bam.indexUrl,
+      oauthToken: accessToken,
+      label: bam.url.split('/o/')[1].split('?')[0]
+    })
+  }
+
+  igvOptions = {
+    genome: genome,
+    locus: ['myc'],
+    tracks: igvTracks,
+    supportQueryParameters: true
+  };
+
+  igvBrowser = igv.createBrowser(igvContainer, igvOptions);
+}

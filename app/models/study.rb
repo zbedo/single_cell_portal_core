@@ -576,19 +576,6 @@ class Study
     self.cluster_groups.map {|c| c.cell_annotations.size}.reduce(0, :+)
   end
 
-  # return an access token for viewing GCS objects client side, depending on study privacy
-  def read_access_token(user)
-    if self.public? && Study.read_only_firecloud_client.present?
-      Study.read_only_firecloud_client.valid_access_token["access_token"]
-    else
-      if user.present?
-        user.valid_access_token[:access_token]
-      else
-        nil
-      end
-    end
-  end
-
   ###
   #
   # METADATA METHODS
