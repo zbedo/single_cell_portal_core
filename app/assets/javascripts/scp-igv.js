@@ -22,8 +22,9 @@ $(document).on('click', '#genome-tab-nav', function (e) {
 });
 
 function initializeIgv() {
-  var igvContainer, igvOptions, igvBrowser, igvTracks, i, bam, genome,
-    genesTrack, bamTrack, genesTrackName, queryGenes, defaultGenomeLocation;
+  var igvContainer, igvOptions, igvTracks, i, bam, genome,
+    genesTrack, bamTrack, genesTrackName, queriedGenes, gene,
+    defaultGenomeLocation;
 
   igvContainer = document.getElementById('igv-container');
 
@@ -57,19 +58,27 @@ function initializeIgv() {
     igvTracks.push(bamTrack);
   }
 
-  if ($('.queried-gene').length > 0) {
-    defaultGenomeLocation = [$('.queried-gene').text()];
-  } else {
+  queriedGenes = $('.queried-gene');
+
+  if (queriedGenes.length === 0) {
+    // TODO: Use highest-weighted gene in expression matrix
+    // Will require improved back-end gene model, and/or client-side API calls to NCBI EUtils
     defaultGenomeLocation = ['myc'];
+  } else {
+    defaultGenomeLocation =
+      queriedGenes.toArray()
+        .map(gene => $(gene).text()) // Get name of each gene
+        .slice(0, 3); // Only show up to three genes
   }
 
   igvOptions = {
     genome: genome,
+    showIdeogram: false,
     locus: defaultGenomeLocation,
     tracks: igvTracks,
     supportQueryParameters: true
   };
 
-  igvBrowser = igv.createBrowser(igvContainer, igvOptions);
+  igv.createBrowser(igvContainer, igvOptions);
 
 }
