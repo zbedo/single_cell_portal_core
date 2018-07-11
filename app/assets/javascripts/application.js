@@ -959,7 +959,7 @@ $(document).on('click', '#genome-tab-nav', function (e) {
 
 function initializeIgv() {
   var igvContainer, igvOptions, igvBrowser, igvTracks, i, bam, genome,
-    genesTrackName;
+    genesTrackName, defaultGenomeLocation;
 
   igvContainer = document.getElementById('igv-container');
 
@@ -989,12 +989,19 @@ function initializeIgv() {
     })
   }
 
+  if ($('.queried-gene').length > 0) {
+    defaultGenomeLocation = [$('.queried-gene').text()];
+  } else {
+    defaultGenomeLocation = ['myc'];
+  }
+
   igvOptions = {
     genome: genome,
-    locus: ['myc'],
+    locus: defaultGenomeLocation,
     tracks: igvTracks,
     supportQueryParameters: true
   };
 
   igvBrowser = igv.createBrowser(igvContainer, igvOptions);
+
 }
