@@ -41,6 +41,7 @@
 //= require clipboard.min
 //= require ideogram.min
 //= require igv.min
+//= require scp-igv
 
 var fileUploading = false;
 var PAGE_RENDERED = false;
@@ -123,25 +124,6 @@ function toggleSearchPanel() {
 
   $(window).trigger('resizeEnd');
 }
-
-$(document).on('click', '.bam-browse-genome', function(e) {
-
-  var selectedBam, thisBam, i;
-
-  selectedBam = $(this).attr('data-filename');
-
-  // bamAndBaiFiles declared in _genome.html.erb
-  for (i = 0; i < bamAndBaiFiles.length; i++) {
-    thisBam = bamAndBaiFiles[i].url.split('\/o/')[1].split('?')[0];
-    if (thisBam === selectedBam) {
-      bamsToViewInIgv.push(bamAndBaiFiles[i]);
-    }
-  }
-
-  $('#genome-tab-nav').css('display', ''); // Show Genome tab
-  $('#study-visualize-nav > a').click();
-  $('#genome-tab-nav > a').click();
-});
 
 // Toggle "View Options" menu panel in Explore tab
 $(document).on('click', '#view-option-link', function(e) {
@@ -950,58 +932,4 @@ function gatherFilesByType(fileType) {
 function calculatePlotViewport(target) {
     var viewPort = $(window).height();
     return viewPort - 250;
-}
-
-
-$(document).on('click', '#genome-tab-nav', function (e) {
-  initializeIgv();
-});
-
-function initializeIgv() {
-  var igvContainer, igvOptions, igvBrowser, igvTracks, i, bam, genome,
-    genesTrackName, defaultGenomeLocation;
-
-  igvContainer = document.getElementById('igv-container');
-
-  genome = 'mm10';
-  genesTrackName = 'Genes | GENCODE M17';
-
-  igvTracks = [{
-    name: genesTrackName,
-    url: bedFiles[genome].url + '?alt=media',
-    indexURL: bedFiles[genome].indexUrl + '?alt=media',
-    type: 'annotation',
-    format: 'bed',
-    sourceType: 'file',
-    order: 0,
-    visibilityWindow: 300000000,
-    displayMode: 'EXPANDED',
-    oauthToken: accessToken
-  }];
-
-  for (i = 0; i < bamsToViewInIgv.length; i++) {
-    bam = bamsToViewInIgv[i];
-    igvTracks.push({
-      url: bam.url,
-      indexURL: bam.indexUrl,
-      oauthToken: accessToken,
-      label: bam.url.split('/o/')[1].split('?')[0]
-    })
-  }
-
-  if ($('.queried-gene').length > 0) {
-    defaultGenomeLocation = [$('.queried-gene').text()];
-  } else {
-    defaultGenomeLocation = ['myc'];
-  }
-
-  igvOptions = {
-    genome: genome,
-    locus: defaultGenomeLocation,
-    tracks: igvTracks,
-    supportQueryParameters: true
-  };
-
-  igvBrowser = igv.createBrowser(igvContainer, igvOptions);
-
 }
