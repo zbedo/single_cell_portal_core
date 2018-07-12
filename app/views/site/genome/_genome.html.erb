@@ -7,7 +7,7 @@ See partials referenced below and scp-igv.js for larger bodies of code.
     window.accessToken = '<%= get_read_access_token(@study, current_user) %>';
   }
 </script>
-<% if @study.has_analysis_outputs?('infercnv', 'ideogram.js')%>
+<% if @study.has_analysis_outputs?('infercnv', 'ideogram.js') and action_name == 'study' %>
 <script>
   window.annotationsPath = '<%= raw @study.get_analysis_outputs('infercnv', 'ideogram.js').first.api_url %>';
 </script>
