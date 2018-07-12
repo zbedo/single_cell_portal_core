@@ -1,10 +1,14 @@
-$(document).on('click', '.bam-browse-genome', function(e) {
+/**
+ * @fileoverview Functions and event handlers for igv.js genome browser.
+ * Provides a way to view nucleotide sequencing reads in genomic context.
+ */
 
+$(document).on('click', '.bam-browse-genome', function(e) {
   var selectedBam, thisBam, i;
 
   selectedBam = $(this).attr('data-filename');
 
-  // bamAndBaiFiles declared in _genome.html.erb
+  // bamAndBaiFiles assigned in _genome.html.erb
   for (i = 0; i < bamAndBaiFiles.length; i++) {
     thisBam = bamAndBaiFiles[i].url.split('\/o/')[1].split('?')[0];
     if (thisBam === selectedBam) {
@@ -12,7 +16,7 @@ $(document).on('click', '.bam-browse-genome', function(e) {
     }
   }
 
-  $('#genome-tab-nav').css('display', ''); // Show Genome tab
+  $('#genome-tab-nav').css('display', ''); // Show 'Genome' tab
   $('#study-visualize-nav > a').click();
   $('#genome-tab-nav > a').click();
 });
@@ -21,61 +25,85 @@ $(document).on('click', '#genome-tab-nav', function (e) {
   initializeIgv();
 });
 
-function initializeIgv() {
-  var igvContainer, igvOptions, igvTracks, i, bam, genome,
-    genesTrack, bamTrack, genesTrackName, queriedGenes, gene,
-    genes, defaultGenomeLocation;
+/**
+ * Get tracks for selected BAM files, to show sequencing reads
+ */
+function getBamTracks() {
+  var bam, bamTrack, bamTracks, i, bamFileName;
 
-  igvContainer = document.getElementById('igv-container');
+  bamTracks = [];
 
-  // TODO: Remove hard-coding
-  genome = 'mm10';
-  genesTrackName = 'Genes | GENCODE M17';
+  for (i = 0; i < bamsToViewInIgv.length; i++) {
+    bam = bamsToViewInIgv[i];
+
+    // Extracts BAM file name from its GCS API URL
+    bamFileName = bam.url.split('/o/')[1].split('?')[0];
+
+    bamTrack = {
+      url: bam.url,
+      indexURL: bam.indexUrl,
+      oauthToken: accessToken,
+      label: bamFileName
+    };
+    bamTracks.push(bamTrack);
+  }
+
+  return bamTracks;
+}
+
+/**
+ * Gets the track of genes and transcripts from the genome's BED file
+ */
+function getGenesTrack(genome, genesTrackName) {
+  var bedFile, genesTrack;
+
+  // bedFiles assigned in _genome.html.erb
+  bedFile = bedFiles[genome];
 
   genesTrack = {
     name: genesTrackName,
-    url: bedFiles[genome].url + '?alt=media',
-    indexURL: bedFiles[genome].indexUrl + '?alt=media',
+    url: bedFile.url + '?alt=media',
+    indexURL: bedFile.indexUrl + '?alt=media',
     type: 'annotation',
     format: 'bed',
     sourceType: 'file',
     order: 0,
     visibilityWindow: 300000000,
     displayMode: 'EXPANDED',
-    oauthToken: accessToken
+    oauthToken: accessToken // Assigned in _genome.html.erb
   };
 
-  igvTracks = [genesTrack];
+  return genesTrack;
+}
 
-  for (i = 0; i < bamsToViewInIgv.length; i++) {
-    bam = bamsToViewInIgv[i];
-    bamTrack = {
-      url: bam.url,
-      indexURL: bam.indexUrl,
-      oauthToken: accessToken,
-      label: bam.url.split('/o/')[1].split('?')[0]
-    };
-    igvTracks.push(bamTrack);
-  }
+/**
+ * Instantiates and renders igv.js widget on the page
+ */
+function initializeIgv() {
+  var igvContainer, igvOptions, tracks, genome, genesTrack, bamTracks,
+    genesTrackName, genes, locus;
 
-  queriedGenes = $('.queried-gene');
+  igvContainer = document.getElementById('igv-container');
 
-  if (queriedGenes.length === 0) {
-    // TODO: Use highest-weighted gene in expression matrix
-    // Will require improved back-end gene model, and/or client-side API calls to NCBI EUtils
-    defaultGenomeLocation = ['myc'];
-  } else {
-    defaultGenomeLocation = queriedGenes.first().text();
-  }
+  // TODO: Remove hard-coding of genome after SCP species integration
+  genome = 'mm10';
+  genesTrackName = 'Genes | GENCODE M17';
+  genesTrack = getGenesTrack(genome, genesTrackName);
+
+  bamTracks = getBamTracks();
+
+  tracks = [genesTrack].concat(bamTracks);
+
+  genes = $('.queried-gene');
+
+  locus = (genes.length === 0) ? 'myc' : genes.first().text();
 
   igvOptions = {
     genome: genome,
-    showIdeogram: false,
-    locus: defaultGenomeLocation,
-    tracks: igvTracks,
+    locus: locus,
+    tracks: tracks,
     supportQueryParameters: true
   };
 
   igv.createBrowser(igvContainer, igvOptions);
-
 }
