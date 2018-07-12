@@ -3,6 +3,11 @@
  * Provides a way to view nucleotide sequencing reads in genomic context.
  */
 
+// Persists 'Genome' tab and IGV embed across view states.
+// Ensures that IGV doesn't disappear when user clicks 'Browse in genome' in
+// default view, then searches a gene.
+window.hasDisplayedIgv = false;
+
 $(document).on('click', '.bam-browse-genome', function(e) {
   var selectedBam, thisBam, i;
 
@@ -19,6 +24,8 @@ $(document).on('click', '.bam-browse-genome', function(e) {
   $('#genome-tab-nav').css('display', ''); // Show 'Genome' tab
   $('#study-visualize-nav > a').click();
   $('#genome-tab-nav > a').click();
+
+  hasDisplayedIgv = true;
 });
 
 $(document).on('click', '#genome-tab-nav', function (e) {
@@ -86,7 +93,7 @@ function initializeIgv() {
   igvContainer = document.getElementById('igv-container');
 
   genes = $('.queried-gene');
-  locus = (genes.length === 0) ? 'myc' : genes.first().text();
+  locus = (genes.length === 0) ? ['myc'] : [genes.first().text()];
 
   // TODO: Remove hard-coding of genome after SCP species integration
   genome = 'mm10';
