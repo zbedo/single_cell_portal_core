@@ -85,18 +85,15 @@ function initializeIgv() {
 
   igvContainer = document.getElementById('igv-container');
 
+  genes = $('.queried-gene');
+  locus = (genes.length === 0) ? 'myc' : genes.first().text();
+
   // TODO: Remove hard-coding of genome after SCP species integration
   genome = 'mm10';
   genesTrackName = 'Genes | GENCODE M17';
   genesTrack = getGenesTrack(genome, genesTrackName);
-
   bamTracks = getBamTracks();
-
   tracks = [genesTrack].concat(bamTracks);
-
-  genes = $('.queried-gene');
-
-  locus = (genes.length === 0) ? 'myc' : genes.first().text();
 
   igvOptions = {
     genome: genome,
