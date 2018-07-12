@@ -1,3 +1,3 @@
 $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {notice: @notice, alert: @alert}) %>");
 $('#message_modal').modal('show')
-$('#update-user-firecloud-profile').removeClass('disabled');
+$('#profile-firecloud').html("<%= escape_javascript(render partial: 'user_firecloud_profile') %>")

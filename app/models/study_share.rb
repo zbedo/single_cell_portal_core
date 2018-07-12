@@ -26,6 +26,7 @@ class StudyShare
   validates_format_of :email, with: Devise.email_regexp, message: 'is not a valid email address.'
   validates_format_of :firecloud_project, :firecloud_workspace, with: ValidationTools::ALPHANUMERIC_DASH,
                       message: ValidationTools::ALPHANUMERIC_DASH_ERROR
+  validates_inclusion_of :permission, in: PERMISSION_TYPES, message: 'is not a valid permission setting.'
   validates_uniqueness_of :email, scope: :study_id
 
 	index({ email: 1, study_id: 1 }, { unique: true, background: true })

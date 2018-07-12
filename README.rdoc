@@ -308,7 +308,7 @@ project directory as <code>root</code>:
 2. Stop the portal: <code>docker stop single_cell</code>
 3. Remove the container instance: <code>docker rm single_cell</code>
 4. Launch a new instance of the portal with the updated container:
-  bin/boot_docker -u (sendgrid username) -P (sendgrid password) -e production -p (prod database password) -h (production hostname) -k (service account key path) -o (oauth client id) -S (oauth client secret)
+  bin/boot_docker -u (sendgrid username) -P (sendgrid password) -e production -p (prod database password) -h (production hostname) -k (service account key path) -K (read-only service account key path) -o (oauth client id) -S (oauth client secret)
 
 <b>You will need to rebuild the docker image if you do any of the following:</b>
 * Edit the Dockerfile
@@ -316,6 +316,7 @@ project directory as <code>root</code>:
   - Gemfile (including Gemfile.lock if versions have changed)
   - set_user_permissions.bash
   - rails_startup.bash
+  - generate_dh_parameters.bash
   - nginx.conf
   - webapp.conf
 

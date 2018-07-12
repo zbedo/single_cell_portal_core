@@ -13,10 +13,15 @@ class ParseUtils
       # Note: matrix files must always be pulled from the bucket to ensure that we get a plain-text version due to race
       # conditions during the upload process.  It is possible to have a local copy that is waiting to be cleaned up that has
       # been gzipped, and nmatrix cannot open compressed files.  Due to the relatively small size of MEX files, the download
-      # is cheap and fast
-      matrix_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
-                                                                 study.firecloud_workspace, matrix_study_file.bucket_location,
-                                                                 study.data_store_path, verify: :none)
+      # is cheap and fast.  In test mode, we are running an integration test and we know the file is local, so use that.
+      if Rails.env == 'test'
+        matrix_file = File.open(matrix_study_file.upload.path, 'rb')
+      else
+        matrix_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
+                                                                   study.firecloud_workspace, matrix_study_file.bucket_location,
+                                                                   study.data_store_path, verify: :none)
+      end
+
       if File.exists?(genes_study_file.upload.path)
         genes_content_type = genes_study_file.determine_content_type
         if genes_content_type == 'application/gzip'

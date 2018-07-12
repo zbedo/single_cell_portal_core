@@ -3937,7 +3937,7 @@ class UiTestSuite < Test::Unit::TestCase
 
 		# assert labels are correct
 		plot_labels = @driver.find_elements(:class, "legendtext").map(&:text)
-		assert plot_labels.grep(/user-#{$random_seed}new:.group0/).any?, "labels are incorrect: '#{plot_labels}' should include 'user-#{$random_seed}: group0'"
+		assert plot_labels.grep(/user-#{$random_seed}:.group0/).any?, "labels are incorrect: '#{plot_labels}' should include 'user-#{$random_seed}: group0'"
 
 		puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
 	end

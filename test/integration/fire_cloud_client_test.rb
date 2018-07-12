@@ -29,8 +29,8 @@ class FireCloudClientTest < ActiveSupport::TestCase
 
     expires_at = @fire_cloud_client.expires_at
     assert !@fire_cloud_client.access_token_expired?, 'Token should not be expired for new clients'
-    new_expiry = @fire_cloud_client.refresh_access_token
-    assert new_expiry > expires_at, "Expiration date did not update, #{new_expiry} is not greater than #{expires_at}"
+    @fire_cloud_client.refresh_access_token
+    assert @fire_cloud_client.expires_at > expires_at, "Expiration date did not update, #{@fire_cloud_client.expires_at} is not greater than #{expires_at}"
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
@@ -119,7 +119,7 @@ class FireCloudClientTest < ActiveSupport::TestCase
     puts 'deleting workspace...'
     delete_message = @fire_cloud_client.delete_workspace(@fire_cloud_client.project, workspace_name)
     assert delete_message.has_key?('message'), 'Did not receive a delete confirmation'
-    expected_confirmation = "The workspace #{@fire_cloud_client.project}:#{workspace_name} has been un-published."
+    expected_confirmation = "Your Google bucket #{workspace['bucketName']} will be deleted within 24h."
     assert delete_message['message'].include?(expected_confirmation), "Did not receive correct confirmation, expected '#{expected_confirmation}' but found '#{delete_message['message']}'"
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"

@@ -25,11 +25,11 @@ class ParseUtilsTest < ActiveSupport::TestCase
     barcodes = @study.study_files.by_type('10X Barcodes File').first
     user = User.first
     puts 'Parsing 10X GRCh38 output (this will take a few minutes)...'
-    ParseUtils.cell_ranger_expression_parse(@study, user, matrix, genes, barcodes, {skip_upload: true, local: true})
+    ParseUtils.cell_ranger_expression_parse(@study, user, matrix, genes, barcodes, {skip_upload: true})
     puts 'Parse of 10X GRCh38 complete'
     # validate that the expected significant values have been created
     @expected_genes.each do |gene|
-      gene = @study.genes.where(name: gene).first
+      gene = @study.genes.where(name: /#{gene}/).first
       cell_name = gene.scores.keys.first
       value = gene.scores.values.first
       assert value == 1, "Did not find correct score value, expected 1 but found #{value}"
