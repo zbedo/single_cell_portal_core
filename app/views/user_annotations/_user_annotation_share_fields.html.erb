@@ -3,7 +3,7 @@
 		<div class="col-sm-6">
 			<%= f.label :email %>
         <% if !f.object.new_record? %>
-          <span class="fa fa-exclamation-triangle text-danger" data-toggle="tooltip" data-placement="right" title="Editing share emails is not permitted.  If the email is incorrect, please delete the share and create a new one."></span>
+          <span class="fas fa-exclamation-triangle text-danger" data-toggle="tooltip" data-placement="right" title="Editing share emails is not permitted.  If the email is incorrect, please delete the share and create a new one."></span>
         <% end %>
       <br />
 			<%= f.text_field :email, class: 'form-control share-email', readonly: !f.object.new_record? %>
@@ -14,7 +14,7 @@
 		</div>
 		<div class="col-sm-1">
 			<%= f.label :delete, "&nbsp;".html_safe %><br />
-			<%= f.link_to_remove "<span class='btn btn-sm btn-danger'><span class='fa fa-times'></span></span>".html_safe, data: {confirm: 'Are you sure?  This cannot be undone unless you reload the page before saving.'} %>
+			<%= f.link_to_remove "<span class='btn btn-sm btn-danger'><span class='fas fa-times'></span></span>".html_safe, data: {confirm: 'Are you sure?  This cannot be undone unless you reload the page before saving.'} %>
 		</div>
 	</div>
 </div>

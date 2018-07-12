@@ -25,13 +25,13 @@
               <td id="<%= study.url_safe_name %>-study-file-count"><%= study.total_file_count %></td>
 							<td>
                 <% if study.can_edit?(current_user) %>
-                  <%= scp_link_to "<span class='fa fa-info-circle'></span> Show Details".html_safe, study_path(study), class: "btn btn-xs btn-info #{study.url_safe_name}-show" %>
-                  <%= scp_link_to "<span class='fa fa-upload'></span> Upload/Edit Data".html_safe, initialize_study_path(study), class: "btn btn-xs btn-success #{study.url_safe_name}-upload" %>
-                  <%= scp_link_to "<span class='fa fa-refresh'></span> Sync Workspace".html_safe, sync_study_path(study), class: "btn btn-xs btn-warning #{study.url_safe_name}-sync sync-button" %>
-                  <%= scp_link_to "<span class='fa fa-edit'></span> Edit Study".html_safe, edit_study_path(study), class: "btn btn-xs btn-primary #{study.url_safe_name}-edit" %>
+                  <%= scp_link_to "<span class='fas fa-info-circle'></span> Show Details".html_safe, study_path(study), class: "btn btn-xs btn-info #{study.url_safe_name}-show" %>
+                  <%= scp_link_to "<span class='fas fa-upload'></span> Upload/Edit Data".html_safe, initialize_study_path(study), class: "btn btn-xs btn-success #{study.url_safe_name}-upload" %>
+                  <%= scp_link_to "<span class='fas fa-refresh'></span> Sync Workspace".html_safe, sync_study_path(study), class: "btn btn-xs btn-warning #{study.url_safe_name}-sync sync-button" %>
+                  <%= scp_link_to "<span class='fas fa-edit'></span> Edit Study".html_safe, edit_study_path(study), class: "btn btn-xs btn-primary #{study.url_safe_name}-edit" %>
                   <% if study.can_delete?(current_user) %>
-                    <%= scp_link_to "<span class='fa fa-trash'></span> Delete All".html_safe, study_path(study), class: "btn btn-xs btn-danger delete-btn #{study.url_safe_name}-delete", title: 'Delete everything including FireCloud workspace' , method: :delete, data: {toggle: 'tooltip', placement: 'top'} %>
-                    <%= scp_link_to "<span class='fa fa-trash'></span> Delete Local Only".html_safe, study_path(id: study.id, workspace: 'persist'), class: "btn btn-xs btn-danger delete-btn #{study.url_safe_name}-delete-local", title: 'Delete all database records but keep FireCloud workspace' , method: :delete, data: {toggle: 'tooltip', placement: 'top'} %>
+                    <%= scp_link_to "<span class='fas fa-trash'></span> Delete All".html_safe, study_path(study), class: "btn btn-xs btn-danger delete-btn #{study.url_safe_name}-delete", title: 'Delete everything including FireCloud workspace' , method: :delete, data: {toggle: 'tooltip', placement: 'top'} %>
+                    <%= scp_link_to "<span class='fas fa-trash'></span> Delete Local Only".html_safe, study_path(id: study.id, workspace: 'persist'), class: "btn btn-xs btn-danger delete-btn #{study.url_safe_name}-delete-local", title: 'Delete all database records but keep FireCloud workspace' , method: :delete, data: {toggle: 'tooltip', placement: 'top'} %>
                   <% end %>
                 <% end %>
               </td>
@@ -42,7 +42,7 @@
 			</div>
 		</div>
 		<p>
-      <%= scp_link_to "<span class='fa fa-fw fa-plus'></span> New Study".html_safe, new_study_path, class: 'btn btn-lg btn-success', id: 'create-new-study' %>
+      <%= scp_link_to "<span class='fas fa-fw fa-plus'></span> New Study".html_safe, new_study_path, class: 'btn btn-lg btn-success', id: 'create-new-study' %>
     </p>
 	</div>
 </div>

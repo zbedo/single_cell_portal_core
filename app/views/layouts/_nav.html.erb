@@ -7,56 +7,56 @@
 			<span class="icon-bar"></span>
 		</button>
     <% if @selected_branding_group.present? %>
-      <%= scp_link_to "<span class='fa fa-home'></span> #{@selected_branding_group.name}</sup>".html_safe, site_path, class: "navbar-brand hidden-xs check-upload" %>
+      <%= scp_link_to "<span class='fas fa-home'></span> #{@selected_branding_group.name}</sup>".html_safe, site_path, class: "navbar-brand hidden-xs check-upload" %>
     <% else %>
-      <%= link_to "<span class='fa fa-home'></span> Single Cell Portal<sup class='text-danger'><small> BETA</small></sup>".html_safe, site_path, class: "navbar-brand hidden-xs check-upload" %>
+      <%= link_to "<span class='fas fa-home'></span> Single Cell Portal<sup class='text-danger'><small> BETA</small></sup>".html_safe, site_path, class: "navbar-brand hidden-xs check-upload" %>
     <% end %>
 	</div>
 	<div class="collapse navbar-collapse">
 		<%= render partial: '/layouts/breadcrumbs' %>
 		<ul class="nav navbar-nav pull-right">
-			<li class='dropdown'><%= scp_link_to "<span class='fa fa-question-circle'></span> Help <span class='caret'></span>".html_safe, "#", class: "dropdown-toggle", "data-toggle" => "dropdown" %>
+			<li class='dropdown'><%= scp_link_to "<span class='fas fa-question-circle'></span> Help <span class='caret'></span>".html_safe, "#", class: "dropdown-toggle", "data-toggle" => "dropdown" %>
 				<ul class="dropdown-menu dropdown-menu-right">
-          <li><%= scp_link_to "<span class='fa fa-fw fa-lock'></span> Privacy Policy".html_safe, privacy_policy_path, class: 'check-upload' %></li>
-          <li><%= link_to "<span class='fa fa-fw fa-info-circle'></span> Documentation/Wiki".html_safe, 'https://github.com/broadinstitute/single_cell_portal/wiki', target: '_blank' %></li>
-          <li><%= link_to "<span class='fa fa-fw fa-exclamation-circle'></span> Issues".html_safe, 'https://github.com/broadinstitute/single_cell_portal/issues', target: '_blank' %></li>
-          <li><%= link_to "<span class='fa fa-fw fa-github'></span> Portal Source Code".html_safe, 'https://github.com/broadinstitute/single_cell_portal_core', target: '_blank' %></li>
+          <li><%= scp_link_to "<span class='fas fa-fw fa-lock'></span> Privacy Policy".html_safe, privacy_policy_path, class: 'check-upload' %></li>
+          <li><%= link_to "<span class='fas fa-fw fa-info-circle'></span> Documentation/Wiki".html_safe, 'https://github.com/broadinstitute/single_cell_portal/wiki', target: '_blank' %></li>
+          <li><%= link_to "<span class='fas fa-fw fa-exclamation-circle'></span> Issues".html_safe, 'https://github.com/broadinstitute/single_cell_portal/issues', target: '_blank' %></li>
+          <li><%= link_to "<span class='fab fa-fw fa-github'></span> Portal Source Code".html_safe, 'https://github.com/broadinstitute/single_cell_portal_core', target: '_blank' %></li>
 				</ul>
 			</li>
 			<% if user_signed_in? %>
-				<li class="dropdown"><%= scp_link_to "<span class='fa fa-user'></span> #{current_user.email.split('@').first} <span class='caret'></span>".html_safe, "#", class: "dropdown-toggle", "data-toggle" => "dropdown", id: 'profile-nav' %>
+				<li class="dropdown"><%= scp_link_to "<span class='fas fa-user'></span> #{current_user.email.split('@').first} <span class='caret'></span>".html_safe, "#", class: "dropdown-toggle", "data-toggle" => "dropdown", id: 'profile-nav' %>
 					<ul class="dropdown-menu dropdown-menu-right">
             <% if current_user.admin? %>
-              <li><%= link_to "<span class='fa fa-lock fa-fw'></span> Admin Config".html_safe, admin_configurations_path, class: 'check-upload', id: 'admin-nav' %></li>
-              <li><%= scp_link_to "<span class='fa fa-copyright fa-fw'></span> Branding Groups".html_safe, branding_groups_path, class: 'check-upload', id: 'branding-groups-nav' %>
+              <li><%= link_to "<span class='fas fa-lock fa-fw'></span> Admin Config".html_safe, admin_configurations_path, class: 'check-upload', id: 'admin-nav' %></li>
+              <li><%= scp_link_to "<span class='fas fa-copyright fa-fw'></span> Branding Groups".html_safe, branding_groups_path, class: 'check-upload', id: 'branding-groups-nav' %>
             <% end %>
             <% if current_user.acts_like_reporter? %>
-              <li><%= link_to "<span class='fa fa-bar-chart fa-fw'></span> Reports".html_safe, reports_path, class: 'check-upload', id: 'reports-nav' %></li>
+              <li><%= link_to "<span class='fas fa-chart-area fa-fw'></span> Reports".html_safe, reports_path, class: 'check-upload', id: 'reports-nav' %></li>
               <li role="separator" class="divider"></li>
             <% end %>
-            <li><%= scp_link_to "<span class='fa fa-user fa-fw'></span> My Profile".html_safe, view_profile_path(current_user.id), class: 'check-upload', id: 'my-profile' %></li>
-            <li><%= scp_link_to "<span class='fa fa-tags fa-fw'></span> My Annotations".html_safe, user_annotations_path, class: 'check-upload', id: 'my-annotations' %></li>
-            <li><%= scp_link_to "<span class='fa fa-book fa-fw'></span> My Studies".html_safe, studies_path, class: 'check-upload', id: 'my-studies' %>
-            <li><%= scp_link_to "<span class='fa fa-usd fa-fw'></span> My Billing Projects".html_safe, billing_projects_path, class: 'check-upload', id: 'my-firecloud-projects' %>
-						<li><%= scp_link_to "<span class='fa fa-plus fa-fw'></span> Add a Study".html_safe, new_study_path, class: 'check-upload' %></li>
+            <li><%= scp_link_to "<span class='fas fa-user fa-fw'></span> My Profile".html_safe, view_profile_path(current_user.id), class: 'check-upload', id: 'my-profile' %></li>
+            <li><%= scp_link_to "<span class='fas fa-tags fa-fw'></span> My Annotations".html_safe, user_annotations_path, class: 'check-upload', id: 'my-annotations' %></li>
+            <li><%= scp_link_to "<span class='fas fa-book fa-fw'></span> My Studies".html_safe, studies_path, class: 'check-upload', id: 'my-studies' %>
+            <li><%= scp_link_to "<span class='fas fa-dollar-sign fa-fw'></span> My Billing Projects".html_safe, billing_projects_path, class: 'check-upload', id: 'my-firecloud-projects' %>
+						<li><%= scp_link_to "<span class='fas fa-plus fa-fw'></span> Add a Study".html_safe, new_study_path, class: 'check-upload' %></li>
             <% if current_user.available_branding_groups.any? %>
               <li role="separator" class="divider"></li>
               <li class="dropdown-header">My Brands</li>
               <% current_user.available_branding_groups.each do |branding_group| %>
-                <li id="<%= branding_group.name_as_id %>-nav"><%= link_to "<i class='fa fa-copyright fa-fw'></i> #{branding_group.name}".html_safe, site_path(scpbr: branding_group.name_as_id) %></li>
+                <li id="<%= branding_group.name_as_id %>-nav"><%= link_to "<i class='fas fa-copyright fa-fw'></i> #{branding_group.name}".html_safe, site_path(scpbr: branding_group.name_as_id) %></li>
               <% end %>
             <% end %>
             <% if @selected_branding_group.present? %>
               <li role="separator" class="divider"></li>
-              <li><%= link_to "<i class='fa fa-chevron-circle-left fa-fw'></i> Return to Single Cell Portal".html_safe, site_path %></li>
+              <li><%= link_to "<i class='fas fa-chevron-circle-left fa-fw'></i> Return to Single Cell Portal".html_safe, site_path %></li>
             <% end %>
             <li role="separator" class="divider"></li>
-            <li><%= scp_link_to "<span class='fa fa-sign-out fa-fw'></span> Sign Out".html_safe, destroy_user_session_path, method: :delete, class: 'check-upload', id: 'logout-nav' %></li>
+            <li><%= scp_link_to "<span class='fas fa-sign-out-alt fa-fw'></span> Sign Out".html_safe, destroy_user_session_path, method: :delete, class: 'check-upload', id: 'logout-nav' %></li>
           </ul>
 				</li>
 			<% else %>
 
-				<li><%= scp_link_to "<span class='fa fa-sign-in fa-fw'></span> Sign In".html_safe, user_google_oauth2_omniauth_authorize_path, id: 'login-nav' %></li>
+				<li><%= scp_link_to "<span class='fas fa-sign-in-alt fa-fw'></span> Sign In".html_safe, user_google_oauth2_omniauth_authorize_path, id: 'login-nav' %></li>
 			<% end %>
 		</ul>
 	</div>

@@ -117,7 +117,7 @@
                         setWizardProgress(getWizardStatus());
                         console.log('incrementing status for primary data upload');
                         $('#initialize_primary_data_form_completed').replaceWith("<%= escape_javascript(render partial: 'step_completed', locals: {id: 'initialize_primary_data_form_completed'}) %>");
-                        $('#initialize_primary_data_form_nav_completed').html("<span class='fa fa-check text-success'></span>");
+                        $('#initialize_primary_data_form_nav_completed').html("<span class='fas fa-check text-success'></span>");
                     }
                 }
             });

@@ -11,13 +11,13 @@
 
 <div id="search-omnibar">
   <div id="search-omnibar-menu">
-    <i id="search-omnibar-menu-icon" class="fa fa-bars" aria-hidden="true"></i>
+    <i id="search-omnibar-menu-icon" class="fas fa-bars" aria-hidden="true"></i>
   </div>
   <div class="input-group">
     <%= f.autocomplete_field :genes, autocomplete_gene_name_gene_index_path(study_id: @study._id), {multiple: true, class: 'form-control search-genes-input', placeholder: 'Search genes', value: set_search_value, data: {delimiter: ','}} %>
     <span class="input-group-btn">
       <button class="btn btn-default" id="perform-gene-search" type="button">
-        <span class="fa fa-search"></span>
+        <span class="fas fa-search"></span>
       </button>
     </span>
   </div>
@@ -27,7 +27,7 @@
   <div class="panel panel-info" id="search-options-panel">
     <div class="panel-heading">
       <div class="panel-title">
-        <h4><a href="#panel-genes-search" data-toggle="collapse" data-parent="#search-parent" id="search-genes-link"><span class='fa fa-search'></span> Advanced Gene Search</a></h4>
+        <h4><a href="#panel-genes-search" data-toggle="collapse" data-parent="#search-parent" id="search-genes-link"><span class='fas fa-search'></span> Advanced Gene Search</a></h4>
       </div>
     </div>
     <div class="panel-body collapse in" id="panel-genes-search">
@@ -38,10 +38,10 @@
                 <%= f.file_field :upload, class: 'form-control', accept: '.txt,text/plain' %>
               </div>
               <div class="form-group">
-                <%= f.label :consensus, "Collapse genes by <i class='fa fa-question-circle'></i>".html_safe, title: "Multiple genes only: Collapse expression scores of multiple genes for each cell using this metric.  Selecting 'None' will view genes individually as a heatmap.", data: {toggle: 'tooltip', placement: 'right'} %><br/>
+                <%= f.label :consensus, "Collapse genes by <i class='fas fa-question-circle'></i>".html_safe, title: "Multiple genes only: Collapse expression scores of multiple genes for each cell using this metric.  Selecting 'None' will view genes individually as a heatmap.", data: {toggle: 'tooltip', placement: 'right'} %><br/>
                 <%= f.select :consensus, options_for_select([['Mean', 'mean'],['Median', 'median']], params[:consensus]), {include_blank: 'None'}, {class: 'form-control'} %>
               </div>
-              <%= link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, "javascript:", class: "btn pull-right #{action_name == 'study' ? 'btn-default disabled' : 'btn-warning'}", id: 'clear-gene-search', title: 'Clear gene search and return to cluster scatter plots', data: {toggle: 'tooltip'} %>
+              <%= link_to "<span class='fas fa-chevron-left'></span> Back".html_safe, "javascript:", class: "btn pull-right #{action_name == 'study' ? 'btn-default disabled' : 'btn-warning'}", id: 'clear-gene-search', title: 'Clear gene search and return to cluster scatter plots', data: {toggle: 'tooltip'} %>
               <script type="text/javascript">
                   $('#clear-gene-search').click(function(){
                       clearForm('search_genes');
@@ -110,7 +110,7 @@
   <div class="panel panel-info" id="gene-lists-panel">
     <div class="panel-heading">
       <div class="panel-title">
-        <h4><a href="#panel-gene-lists" data-toggle="collapse" data-parent="#search-parent" id="gene-lists-link"><span class='fa fa-file-text-o'></span> View Gene Lists</a></h4>
+        <h4><a href="#panel-gene-lists" data-toggle="collapse" data-parent="#search-parent" id="gene-lists-link"><span class='fas fa-file-text-o'></span> View Gene Lists</a></h4>
       </div>
     </div>
     <div class="panel-body collapse" id="panel-gene-lists">
@@ -167,7 +167,7 @@
     <div class="panel panel-<%= user_signed_in? ? 'info' : 'default' %>" id="annotations-panel">
       <div class="panel-heading">
         <div class="panel-title">
-          <h4><a href="#panel-selection" data-toggle="<%= user_signed_in? ? 'collapse' : 'tooltip'%>" data-parent="#search-parent" id="create_annotations_panel" title="<%= user_signed_in? ? '' : 'Sign in to create custom annotations.'%>"><span class='fa fa-tags'></span> Create Annotations</a></h4>
+          <h4><a href="#panel-selection" data-toggle="<%= user_signed_in? ? 'collapse' : 'tooltip'%>" data-parent="#search-parent" id="create_annotations_panel" title="<%= user_signed_in? ? '' : 'Sign in to create custom annotations.'%>"><span class='fas fa-tags'></span> Create Annotations</a></h4>
         </div>
       </div>
       <div class="panel-body collapse" id="panel-selection">
@@ -175,7 +175,7 @@
           <div class="col-sm-12">
             <div id="scattergl_div" class="text-center">
               <% if user_signed_in? %>
-                <%= link_to "Select Cells <i class='fa fa-toggle-off'></i>".html_safe, 'javascript:;', class: 'btn btn-default btn-sm', id: 'toggle-scatter', data: {toggle: 'tooltip', placement: 'right', trigger: 'hover'}, title: 'Enable cell selection for creating custom annotations (may hurt performance on large clusters).  Only available on 2d data.' %>
+                <%= link_to "Select Cells <i class='fas fa-toggle-off'></i>".html_safe, 'javascript:;', class: 'btn btn-default btn-sm', id: 'toggle-scatter', data: {toggle: 'tooltip', placement: 'right', trigger: 'hover'}, title: 'Enable cell selection for creating custom annotations (may hurt performance on large clusters).  Only available on 2d data.' %>
                 <script type="text/javascript">
                     $('#toggle-scatter').click(function() {
                         if (CLUSTER_TYPE === '2d') {
@@ -196,7 +196,7 @@
                 </script>
 
               <% else %>
-                <%= link_to "Select Cells <i class='fa fa-toggle-off '></i>".html_safe, 'javascript:;', class: 'btn btn-default btn-disabled btn-sm', id: 'disabled', data: {toggle: 'tooltip', placement: 'right', trigger: 'hover'}, title: 'Log in to enable cell selection.' %>
+                <%= link_to "Select Cells <i class='fas fa-toggle-off '></i>".html_safe, 'javascript:;', class: 'btn btn-default btn-disabled btn-sm', id: 'disabled', data: {toggle: 'tooltip', placement: 'right', trigger: 'hover'}, title: 'Log in to enable cell selection.' %>
               <% end %>
             </div>
           </div>

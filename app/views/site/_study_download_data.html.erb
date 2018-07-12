@@ -1,6 +1,6 @@
 <div class="row">
   <div class="col-xs-12">
-    <h2>Study Files <span class="badge"><%= @study_files.count %></span>  <%= link_to "<i class='fa fa-question-circle'></i> Bulk Download".html_safe, 'javascript:;', class: 'btn btn-default pull-right', id: 'download-help' %></h2>
+    <h2>Study Files <span class="badge"><%= @study_files.count %></span>  <%= link_to "<i class='fas fa-question-circle'></i> Bulk Download".html_safe, 'javascript:;', class: 'btn btn-default pull-right', id: 'download-help' %></h2>
     <div class="modal fade" id="download-help-modal" role="dialog" aria-labelledby="download-help-modal" aria-hidden="true">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -30,7 +30,7 @@
               <% end %>
             <% elsif @study.public? && !@study.embargoed?(current_user) %>
                 <p class="lead">To download all files using <code>curl</code>, click the button below to get the download command:</p>
-                <p class="lead command-container" id="command-container-all"><%= link_to "<i class='fa fa-download'></i> Get download command for all study data".html_safe, 'javascript:;', class: 'btn btn-default get-download-command', id: 'get-download-command_all' %></p>
+                <p class="lead command-container" id="command-container-all"><%= link_to "<i class='fas fa-download'></i> Get download command for all study data".html_safe, 'javascript:;', class: 'btn btn-default get-download-command', id: 'get-download-command_all' %></p>
                 <% if @directories.any? %>
                     <p class="lead">To download all data files in a specific folder, use the following commands:</p>
                     <table class="table table-condensed table-striped">
@@ -43,7 +43,7 @@
                           <tr>
                             <td><%= directory.name %></td>
                             <td class="command-container" id="command-container-<%= directory.name %>">
-                              <%= link_to "<i class='fa fa-download'></i> Get download command".html_safe, 'javascript:;', class: 'btn btn-default get-download-command', id: "get-download-command_#{directory.name}" %>
+                              <%= link_to "<i class='fas fa-download'></i> Get download command".html_safe, 'javascript:;', class: 'btn btn-default get-download-command', id: "get-download-command_#{directory.name}" %>
                             </td>
                           </tr>
                       <% end %>
@@ -221,7 +221,7 @@
                     <%= render partial: '/site/genome/browse_igv_link', locals: {study_file: file} %>
                   <% end %>
                 </td>
-                <td><%= link_to("<span class='fa fa-download'></span> #{number_to_human_size(file[:size], prefix: :si)}".html_safe, directory.download_path(file[:name]), class: "btn btn-primary dl-link fastq", data: {filename: basename}) %></td>
+                <td><%= link_to("<span class='fas fa-download'></span> #{number_to_human_size(file[:size], prefix: :si)}".html_safe, directory.download_path(file[:name]), class: "btn btn-primary dl-link fastq", data: {filename: basename}) %></td>
               </tr>
             <% end %>
           <% end %>
@@ -249,7 +249,7 @@
               <td><%= basename %></td>
               <td><%= directory.file_type %></td>
               <td><%= directory.description %></td>
-              <td><%= link_to("<span class='fa fa-download'></span> #{number_to_human_size(file[:size], prefix: :si)}".html_safe, directory.download_path(file[:name]), class: "btn btn-primary dl-link fastq", download: basename) %></td>
+              <td><%= link_to("<span class='fas fa-download'></span> #{number_to_human_size(file[:size], prefix: :si)}".html_safe, directory.download_path(file[:name]), class: "btn btn-primary dl-link fastq", download: basename) %></td>
             </tr>
           <% end %>
         <% end %>

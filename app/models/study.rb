@@ -57,7 +57,7 @@ class Study
 
   # associations and scopes
   belongs_to :user
-  belongs_to :branding_group
+  belongs_to :branding_group, optional: true
   has_many :study_files, dependent: :delete do
     def by_type(file_type)
       if file_type.is_a?(Array)

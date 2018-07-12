@@ -8,7 +8,7 @@ class ProfilesController < ApplicationController
   ##
 
   before_action :set_user
-  before_filter do
+  before_action do
     authenticate_user!
     check_access_settings
   end

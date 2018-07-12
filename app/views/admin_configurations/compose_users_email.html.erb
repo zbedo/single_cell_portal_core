@@ -24,12 +24,12 @@
   </div>
   <div class="form-group row">
     <div class="col-md-12">
-      <%= link_to "<i class='fa fa-fw fa-envelope'></i> Deliver Email".html_safe, 'javascript:;', class: 'btn btn-lg btn-success', id: 'deliver-users-email' %>
-      <%= link_to "<i class='fa fa-fw fa-eye'></i> Preview Email".html_safe, 'javascript:;', class: 'btn btn-lg btn-primary', id: 'deliver-preview-email', data: {toggle: 'tooltip'}, title: "Send a preview of this email to #{current_user.email}" %>
+      <%= link_to "<i class='fas fa-fw fa-envelope'></i> Deliver Email".html_safe, 'javascript:;', class: 'btn btn-lg btn-success', id: 'deliver-users-email' %>
+      <%= link_to "<i class='fas fa-fw fa-eye'></i> Preview Email".html_safe, 'javascript:;', class: 'btn btn-lg btn-primary', id: 'deliver-preview-email', data: {toggle: 'tooltip'}, title: "Send a preview of this email to #{current_user.email}" %>
     </div>
   </div>
 <% end %>
-<p><%= link_to "<i class='fa fa-fw fa-chevron-left'></i> Back".html_safe, admin_configurations_path, class: 'btn btn-warning' %></p>
+<p><%= link_to "<i class='fas fa-fw fa-chevron-left'></i> Back".html_safe, admin_configurations_path, class: 'btn btn-warning' %></p>
 
 <script type="text/javascript">
 

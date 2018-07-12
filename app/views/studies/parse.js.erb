@@ -9,7 +9,7 @@ $('<%= params[:modal_target]%>').modal('hide');
 	setWizardProgress(status);
 	console.log('incrementing status for ' + step + ' upload');
 	$('#' + step + '_completed').replaceWith("<%= escape_javascript(render partial: 'step_completed', locals: {id: params[:partial] + '_completed'}) %>");
-	$('#' + step + '_nav_completed').html("<span class='fa fa-check text-success'></span>");
+	$('#' + step + '_nav_completed').html("<span class='fas fa-check text-success'></span>");
 <% end %>
 
 // re-render form upload to get download button and increment completed status
