@@ -16,13 +16,13 @@ class StudiesController < ApplicationController
 
   before_action :set_study, except: [:index, :new, :create, :download_private_file]
   before_action :set_file_types, only: [:sync_study, :sync_submission_outputs, :sync_study_file, :sync_orphaned_study_file, :update_study_file_from_sync]
-  before_filter :check_edit_permissions, except: [:index, :new, :create, :download_private_file]
-  before_filter do
+  before_action :check_edit_permissions, except: [:index, :new, :create, :download_private_file]
+  before_action do
     authenticate_user!
     check_access_settings
   end
-  # special before_filter to make sure FireCloud is available and pre-empt any calls when down
-  before_filter :check_firecloud_status, except: [:index, :do_upload, :resume_upload, :update_status, :retrieve_wizard_upload, :parse ]
+  # special before_action to make sure FireCloud is available and pre-empt any calls when down
+  before_action :check_firecloud_status, except: [:index, :do_upload, :resume_upload, :update_status, :retrieve_wizard_upload, :parse ]
 
   ###
   #
@@ -1207,7 +1207,7 @@ class StudiesController < ApplicationController
 
   # update the default_options field for a study
   def update_default_options
-    @study.default_options = default_options_params
+    @study.default_options = default_options_params.to_h
     # get new annotation type from parameters
     new_annotation_type = default_options_params[:annotation].split('--')[1]
     # clean up color profile if changing from numeric- to group-based annotation

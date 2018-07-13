@@ -27,7 +27,7 @@
       <%= f.color_field :background_color, class: 'form-control' %>
     </div>
     <div class="col-md-3">
-      <%= f.label :font_family, "Font Family #{link_to "<i class='fa fa-fw fa-eye'></i>".html_safe, 'https://www.cssfontstack.com', title: 'View Options', data: {toggle: 'tooltip'}, target: :_blank}".html_safe %><br>
+      <%= f.label :font_family, "Font Family #{link_to "<i class='fas fa-fw fa-eye'></i>".html_safe, 'https://www.cssfontstack.com', title: 'View Options', data: {toggle: 'tooltip'}, target: :_blank}".html_safe %><br>
       <%= f.select :font_family, grouped_options_for_select(web_safe_fonts, @branding_group.font_family), {}, class: 'form-control' %>
     </div>
     <div class="col-md-3">
@@ -45,7 +45,7 @@
       <%= f.label :splash_image, 'Splash Image' %><br/>
       <%= f.file_field :splash_image, class: 'btn btn-default fileinput-button' %>
       <% if @branding_group.splash_image.present? %>
-        <p class="help-block">Current file: <%= link_to "<i class='fa fa-download'></i> #{@branding_group.splash_image_file_name} (#{ number_to_human_size @branding_group.splash_image_file_size})".html_safe,
+        <p class="help-block">Current file: <%= link_to "<i class='fas fa-download'></i> #{@branding_group.splash_image_file_name} (#{ number_to_human_size @branding_group.splash_image_file_size})".html_safe,
                                                         @branding_group.splash_image.url, download: @branding_group.splash_image_file_name,
                                                         class: 'btn btn-xs btn-primary' %></p>
       <% end %>

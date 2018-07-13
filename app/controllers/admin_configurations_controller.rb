@@ -7,7 +7,7 @@ class AdminConfigurationsController < ApplicationController
   ###
 
   before_action :set_admin_configuration, only: [:show, :edit, :update, :destroy]
-  before_filter do
+  before_action do
     authenticate_user!
     authenticate_admin
   end
@@ -26,16 +26,16 @@ class AdminConfigurationsController < ApplicationController
     case @current_firecloud_status
       when 'on'
         @download_status = true
-        @download_status_label = "<span class='label label-success'><i class='fa fa-check'></i> Enabled</span>".html_safe
+        @download_status_label = "<span class='label label-success'><i class='fas fa-check'></i> Enabled</span>".html_safe
       when 'readonly'
         @download_status = true
-        @download_status_label = "<span class='label label-warning'><i class='fa fa-exclamation-circle'></i> Read Only</span>".html_safe
+        @download_status_label = "<span class='label label-warning'><i class='fas fa-exclamation-circle'></i> Read Only</span>".html_safe
       when 'off'
         @download_status = false
-        @download_status_label = "<span class='label label-danger'><i class='fa fa-times'></i> Disabled</span>".html_safe
+        @download_status_label = "<span class='label label-danger'><i class='fas fa-times'></i> Disabled</span>".html_safe
       when 'local-off'
         @download_status = false
-        @download_status_label = "<span class='label label-danger'><i class='fa fa-times'></i> Disabled Locally</span>".html_safe
+        @download_status_label = "<span class='label label-danger'><i class='fas fa-times'></i> Disabled Locally</span>".html_safe
     end
     @users = User.all.to_a
 

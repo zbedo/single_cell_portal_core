@@ -1,3 +1,3 @@
 var button = $("[data-study-share-id='<%= params[:study_share_id] %>']");
-var newText = "<%= @share.deliver_emails ? "On <i class='fa fa-fw fa-toggle-on'></i>".html_safe : "Off <i class='fa fa-fw fa-toggle-off'></i>".html_safe %>";
+var newText = "<%= @share.deliver_emails ? "On <i class='fas fa-fw fa-toggle-on'></i>".html_safe : "Off <i class='fas fa-fw fa-toggle-off'></i>".html_safe %>";
 button.html(newText);

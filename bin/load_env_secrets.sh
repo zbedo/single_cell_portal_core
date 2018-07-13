@@ -18,6 +18,7 @@ $0
 -f VALUE	set the path to the local JSON configuration file (optional, is overridden by -p)
 -c VALUE	command to execute after loading secrets (defaults to bin/boot_docker, please wrap command in 'quotes' to ensure proper execution)
 -e VALUE	set the environment to boot the portal in (defaults to development)
+-v VALUE  set the version of the Docker image to load (defaults to latest)
 -H COMMAND	print this text
 EOF
 )
@@ -25,7 +26,7 @@ EOF
 # defaults
 PASSENGER_APP_ENV="development"
 COMMAND="bin/boot_docker"
-while getopts "p:s:r:f:c:e:bH" OPTION; do
+while getopts "p:s:r:f:c:e:Hv:" OPTION; do
 case $OPTION in
 	p)
 		VAULT_SECRET_PATH="$OPTARG"
@@ -42,6 +43,9 @@ case $OPTION in
 	c)
 		COMMAND="$OPTARG"
 		;;
+	v)
+	  COMMAND=$COMMAND" -D $OPTARG"
+	  ;;
 	e)
 		PASSENGER_APP_ENV="$OPTARG"
 		;;

@@ -13,12 +13,12 @@
     wish to run computes, then you must <%= scp_link_to 'create a billing project', billing_projects_path %> (using a Google billing account that you own) first before creating this study.
     <strong>By selecting a project for your study other than the default project, you will be granting the Single Cell Portal access to your project if it does not already have access
       (projects created through the portal do by default).</strong></p>
-  <strong><p class="text-danger"><i class="fa fa-fw fa-exclamation-triangle"></i> You cannot change the billing project of a workspace once it has been created.</p></strong>
+  <strong><p class="text-danger"><i class="fas fa-fw fa-exclamation-triangle"></i> You cannot change the billing project of a workspace once it has been created.</p></strong>
 </div>
 
 <%= render 'form' %>
 
-<%= scp_link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, studies_path, class: 'btn btn-warning' %>
+<%= scp_link_to "<span class='fas fa-chevron-left'></span> Back".html_safe, studies_path, class: 'btn btn-warning' %>
 
 <div class="modal fade" id="create-modal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">

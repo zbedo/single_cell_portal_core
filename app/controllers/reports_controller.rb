@@ -6,7 +6,7 @@ class ReportsController < ApplicationController
   #
   ###
 
-  before_filter do
+  before_action do
     authenticate_user!
     authenticate_reporter
   end

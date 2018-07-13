@@ -29,7 +29,7 @@
           <% end %>
       </div>
       <div class="col-sm-3" id="extra-info" style="display: <%= @admin_configuration.value_type == 'Numeric' || @admin_configuration.value_type.nil? ? 'block' : 'none' %>;">
-        <%= f.label :multiplier, "Byte Operator <i class='fa fa-question-circle'></i>".html_safe, title: 'Convert a numeric value into a byte value using this multiplier', data: {toggle: 'tooltip'} %><br/>
+        <%= f.label :multiplier, "Byte Operator <i class='fas fa-question-circle'></i>".html_safe, title: 'Convert a numeric value into a byte value using this multiplier', data: {toggle: 'tooltip'} %><br/>
         <%= f.select :multiplier, options_for_select(AdminConfiguration::NUMERIC_VALS, f.object.multiplier), {include_blank: 'None/As Typed'}, class: 'form-control'%>
       </div>
     </div>
@@ -41,7 +41,7 @@
     </div>
     <div class="form-group row">
       <div class="col-sm-12">
-        <%= f.link_to_add "<span class='fa fa-plus'></span> Add options".html_safe, :configuration_options, class: 'btn btn-sm btn-primary',
+        <%= f.link_to_add "<span class='fas fa-plus'></span> Add options".html_safe, :configuration_options, class: 'btn btn-sm btn-primary',
                           id: 'add-configuration-option' %>
       </div>
     </div>
