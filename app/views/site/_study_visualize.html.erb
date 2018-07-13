@@ -11,7 +11,7 @@
           <% if @study.has_analysis_outputs?('infercnv', 'ideogram.js') %>
           <li role="presentation" class="study-nav" id="genome-tab-nav">
           <% else %>
-          <%# If study has BAMs but not Ideogram annotations, then hide Genome tab only user clicks 'Browser in genome' button in Download tab. %>
+          <%# If study has BAMs but not Ideogram annotations, then hide Genome tab until user clicks 'Browse in genome' button in Download tab. %>
           <li role="presentation" class="study-nav" id="genome-tab-nav" style="display: none">
           <% end %>
             <a href="#genome-tab" data-toggle="tab">Genome </a>

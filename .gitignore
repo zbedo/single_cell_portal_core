@@ -28,3 +28,6 @@ ssmtp.conf
 # Ignore hidden macOS files
 .DS_Store
 /config/.read_only_service_account.json
+
+# Ignore files used only in development (TODO: Use webpack to remove need for this)
+/app/assets/javascripts/igv.js
