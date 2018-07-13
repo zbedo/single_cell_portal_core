@@ -172,7 +172,7 @@
           <% if @allow_downloads %>
             <%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %>
           <% else %>
-            <%= button_to 'Currently Unavailable', 'javascript:;', class: 'btn btn-danger disabled-download', disabled: true %>
+            <%= link_to 'Currently Unavailable', 'javascript:;', class: 'btn btn-danger disabled-download', disabled: true %>
           <% end %>
         </td>
       </tr>
@@ -205,7 +205,7 @@
                 <% if @allow_downloads %>
                   <%= render partial: '/layouts/download_link', locals: {study: @study, study_file: file} %>
                 <% else %>
-                  <%= button_to 'Currently Unavailable', 'javascript:;', class: 'btn btn-danger disabled-download', disabled: true %>
+                  <%= link_to 'Currently Unavailable', 'javascript:;', class: 'btn btn-danger disabled-download', disabled: true %>
                 <% end %>
               </td>
             </tr>

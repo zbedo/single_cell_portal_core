@@ -1207,7 +1207,7 @@ class StudiesController < ApplicationController
 
   # update the default_options field for a study
   def update_default_options
-    @study.default_options = default_options_params
+    @study.default_options = default_options_params.to_h
     # get new annotation type from parameters
     new_annotation_type = default_options_params[:annotation].split('--')[1]
     # clean up color profile if changing from numeric- to group-based annotation

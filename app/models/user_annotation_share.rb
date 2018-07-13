@@ -22,8 +22,8 @@ class UserAnnotationShare
 	field :permission, type: String, default: 'View'
 
 	validates_format_of :email, with: Devise.email_regexp, message: 'is not a valid email address.'
-	validates_format_of :permission, with: ValidationTools::ALPHANUMERIC_ONLY,
-                      message: ValidationTools::ALPHANUMERIC_ONLY_ERROR
+	validates_inclusion_of :permission, in: %w(Edit View),
+                      message: 'is not a valid permission.  Only View/Edit is allowed.'
   validates_uniqueness_of :email, scope: :user_annotation_id
 
 	index({ email: 1, user_annotation_id: 1 }, { unique: true, background: true })
@@ -31,7 +31,7 @@ class UserAnnotationShare
 	PERMISSION_TYPES = %w(Edit View)
 
 	before_save					:clean_email
-  before_create				:set_study_id
+  before_validation		:set_study_id, on: :create
 	after_create				:send_notification
 	after_update				:check_updated_permissions
 
