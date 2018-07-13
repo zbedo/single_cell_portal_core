@@ -22,7 +22,7 @@ class Study
 
   # instantiate one FireCloudClient to avoid creating too many tokens
   @@firecloud_client = FireCloudClient.new
-  @@read_only_client = ENV['READ_ONLY_SERVICE_ACCOUNT_KEY'].present? ? FireCloudClient.new(nil, FireCloudClient::PORTAL_NAMESPACE, ENV['READ_ONLY_SERVICE_ACCOUNT_KEY']) : nil
+  @@read_only_client = ENV['READ_ONLY_SERVICE_ACCOUNT_KEY'].present? ? FireCloudClient.new(nil, FireCloudClient::PORTAL_NAMESPACE, File.absolute_path(ENV['READ_ONLY_SERVICE_ACCOUNT_KEY'])) : nil
 
   # getter for FireCloudClient instance
   def self.firecloud_client
@@ -690,7 +690,7 @@ class Study
     self.study_files.by_type('BAM').any?
   end
 
-  # Get a JSON list of BAM file objects where each object has a URL for the BAM
+  # Get a list of BAM file objects where each object has a URL for the BAM
   # itself and index URL for its matching BAI file.
   def get_bam_files
 
@@ -704,6 +704,34 @@ class Study
       }
     end
     bams
+  end
+
+  # Get gene annotations tracks for igv.js,
+  # as reference-genome keyed list of GCS API URLs for BED and BED index files
+  def get_gene_tracks
+    gene_tracks = {}
+    if self.has_bam_files?
+      reference_workspace = AdminConfiguration.find_by(config_type: 'Reference Data Workspace')
+      opts = reference_workspace.options
+      namespace, name = reference_workspace.value.split('/')
+
+      # We'll generalize later, e.g. take in (genome assembly) reference_name as a URL parameter
+      # to this 'study' method's endpoint
+      reference_name = 'mm10'
+
+      gene_tracks = {
+          mm10: {}
+      }
+
+      reference_bed_key = opts.keys.find {|o| o =~ /^#{reference_name}.*_bed$/}
+      reference_bed = opts[reference_bed_key]
+      gene_tracks[:mm10][:url] = Study.firecloud_client.generate_api_url(namespace, name, reference_bed)
+
+      reference_bed_index_key = opts.keys.find {|o| o =~ /^#{reference_name}.*_bed_index$/}
+      reference_bed_index = opts[reference_bed_index_key]
+      gene_tracks[:mm10][:indexUrl] = Study.firecloud_client.generate_api_url(namespace, name, reference_bed_index)
+    end
+    gene_tracks
   end
 
   ###

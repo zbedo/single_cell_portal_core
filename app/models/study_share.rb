@@ -23,25 +23,26 @@ class StudyShare
 	field :permission, type: String, default: 'View'
   field :deliver_emails, type: Boolean, default: true
 
-  validates_format_of :email, with: Devise.email_regexp, message: 'is not a valid email address.'
-  validates_format_of :firecloud_project, :firecloud_workspace, with: ValidationTools::ALPHANUMERIC_DASH,
-                      message: ValidationTools::ALPHANUMERIC_DASH_ERROR
-  validates_uniqueness_of :email, scope: :study_id
-
-	index({ email: 1, study_id: 1 }, { unique: true, background: true })
-
 	PERMISSION_TYPES = %w(Edit View Reviewer)
 	FIRECLOUD_ACLS = ['WRITER', 'READER', 'NO ACCESS']
-  PERMISSION_DESCRIPTIONS = [
-      'This user will have read/write access to both this study and FireCloud workspace',
-      'This user will have read access to both this study and FireCloud workspace (cannot edit)',
-      'This user will only have read access to this study (cannot download data or view FireCloud workspace)'
-  ]
+	PERMISSION_DESCRIPTIONS = [
+			'This user will have read/write access to both this study and FireCloud workspace',
+			'This user will have read access to both this study and FireCloud workspace (cannot edit)',
+			'This user will only have read access to this study (cannot download data or view FireCloud workspace)'
+	]
 
 	# hashes that represent ACL mapping between the portal & firecloud and the inverse
 	FIRECLOUD_ACL_MAP = Hash[PERMISSION_TYPES.zip(FIRECLOUD_ACLS)]
 	PORTAL_ACL_MAP = Hash[FIRECLOUD_ACLS.zip(PERMISSION_TYPES)]
-  PERMISSION_DESCRIPTION_MAP = Hash[PERMISSION_TYPES.zip(PERMISSION_DESCRIPTIONS)]
+	PERMISSION_DESCRIPTION_MAP = Hash[PERMISSION_TYPES.zip(PERMISSION_DESCRIPTIONS)]
+
+  validates_format_of :email, with: Devise.email_regexp, message: 'is not a valid email address.'
+  validates_format_of :firecloud_project, :firecloud_workspace, with: ValidationTools::ALPHANUMERIC_DASH,
+                      message: ValidationTools::ALPHANUMERIC_DASH_ERROR
+  validates_inclusion_of :permission, in: PERMISSION_TYPES, message: 'is not a valid permission setting.'
+  validates_uniqueness_of :email, scope: :study_id
+
+	index({ email: 1, study_id: 1 }, { unique: true, background: true })
 
 	before_validation		:set_firecloud_workspace_and_project, on: :create
 	before_save					:clean_email
