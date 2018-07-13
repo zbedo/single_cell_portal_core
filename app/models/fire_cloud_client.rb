@@ -46,7 +46,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   #   - +project+: (String) => Default GCP Project to use (can be overridden by other parameters)
   # * *return*
   #   - +FireCloudClient+ object
-  def initialize(user=nil, project=nil, service_account=ENV['SERVICE_ACCOUNT_KEY'])
+  def initialize(user=nil, project=nil, service_account=SERVICE_ACCOUNT_KEY)
     # when initializing without a user, default to base configuration
     if user.nil?
       # instantiate Google Cloud Storage driver to work with files in workspace buckets
@@ -1394,7 +1394,11 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   #   - +String+ signed URL
   def generate_api_url(workspace_namespace, workspace_name, filename)
     file = self.get_workspace_file(workspace_namespace, workspace_name, filename)
-    file.api_url
+    if file
+      file.api_url
+    else
+      ''
+    end
   end
 
   # retrieve all files in a GCP directory
