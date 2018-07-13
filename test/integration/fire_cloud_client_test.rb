@@ -505,7 +505,6 @@ class FireCloudClientTest < ActiveSupport::TestCase
     workspace = @fire_cloud_client.create_workspace(@fire_cloud_client.project, workspace_name)
     assert workspace.present?, 'Did not create workspace'
 
-
     puts 'uploading files...'
     # upload files
     participant_upload = File.open(Rails.root.join('test', 'test_data', 'default_participant.tsv'))
@@ -551,10 +550,10 @@ class FireCloudClientTest < ActiveSupport::TestCase
     # generate a signed URL for a file
     puts 'getting signed URL for file...'
     signed_url = @fire_cloud_client.generate_signed_url(@fire_cloud_client.project, workspace_name, participant_filename, expires: 3)
-    response = RestClient.get signed_url
-    assert response.code == 200, "Did not receive correct response code on signed_url, expected 200 but found #{response.code}"
+    signed_url_response = RestClient.get signed_url
+    assert signed_url_response.code == 200, "Did not receive correct response code on signed_url, expected 200 but found #{signed_url_response.code}"
     participant_contents = participant_upload.read
-    assert participant_contents == response.body, "Response body contents are incorrect, expected '#{participant_contents}' but found '#{response.body}'"
+    assert participant_contents == signed_url_response.body, "Response body contents are incorrect, expected '#{participant_contents}' but found '#{signed_url_response.body}'"
 
     # check timeout
     sleep(3)
@@ -566,6 +565,14 @@ class FireCloudClientTest < ActiveSupport::TestCase
       assert timeout.message == expected_message, "Did not receive correct error message, expected '#{expected_message}' but found '#{timeout.message}'"
       assert timeout.class == expected_error_class, "Did not receive correct error class, expected '#{expected_error_class}' but found '#{timeout.class}'"
     end
+
+    # generate a media URL for a file
+    puts 'getting API URL for file...'
+    api_url = @fire_cloud_client.generate_api_url(@fire_cloud_client.project, workspace_name, participant_filename)
+    api_url_response = RestClient.get api_url
+    assert api_url_response.code == 200, "Did not receive correct response code on api_url, expected 200 but found #{api_url_response.code}"
+    participant_contents = participant_upload.read
+    assert participant_contents == api_url_response.body, "Response body contents are incorrect, expected '#{participant_contents}' but found '#{api_url_response.body}'"
 
     # close upload files
     participant_upload.close
@@ -592,5 +599,4 @@ class FireCloudClientTest < ActiveSupport::TestCase
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
-
 end

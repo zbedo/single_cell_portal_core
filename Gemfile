@@ -29,13 +29,8 @@ gem 'sdoc', '~> 0.4.0', group: :doc
 # gem 'capistrano-rails', group: :development
 
 gem 'bootsnap', '>= 1.1.0', require: false
-
-group :test do
-  # Call 'byebug' anywhere in the code to stop execution and get a debugger console
-
-  gem 'minitest-rails'
-  gem 'minitest-reporters'
-end
+gem 'minitest-rails'
+gem 'minitest-reporters'
 
 group :development do
   # Access an IRB console on exception pages or by using <%= console %> in views
