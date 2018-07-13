@@ -298,10 +298,8 @@ module ApplicationHelper
 		email.gsub(/[@\.]/, '-')
 	end
 
-
 	# return an access token for viewing GCS objects client side, depending on study privacy
 	def get_read_access_token(study, user)
-		puts "user!!!"
 		if study.public? && Study.read_only_firecloud_client.present?
 			Study.read_only_firecloud_client.valid_access_token["access_token"]
 		else
@@ -312,5 +310,4 @@ module ApplicationHelper
 			end
 		end
 	end
-
 end
