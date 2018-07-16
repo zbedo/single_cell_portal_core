@@ -34,7 +34,7 @@
   <% end %>
 </div>
 
-<script type="text/javascript">
+<%= javascript_tag type: 'text/javascript', nonce: true do %>
 
     $('#add-billing-project-user').click(function () {
         $('#generic-modal-title').html("Adding User... Please Wait");
@@ -61,4 +61,4 @@
         }
     });
 
-</script>
+<% end %>

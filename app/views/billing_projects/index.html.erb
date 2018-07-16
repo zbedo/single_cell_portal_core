@@ -76,7 +76,7 @@
   </div>
 </div>
 
-<script type="text/javascript">
+<%= javascript_tag type: 'text/javascript', nonce: true do %>
     var projectsTable = $('#firecloud-billing').DataTable({
         pagingType: "full_numbers",
         order: [[0, 'asc']],
@@ -124,4 +124,4 @@
         deletePromise(event, 'Are you sure you want to remove ' + email + ' from this project?');
     });
 
-</script>
+<% end %>

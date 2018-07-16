@@ -6,9 +6,9 @@
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
   <%= stylesheet_link_tag    'application', media: 'all' %>
-  <script src="//cdn.plot.ly/plotly-1.38.3.min.js"></script>
+  <script src="//cdn.plot.ly/plotly-1.38.3.min.js" nonce="<%= content_security_policy_script_nonce %>"></script>
   <%= javascript_include_tag 'application' %>
-  <script src="//cdn.datatables.net/plug-ins/1.10.15/sorting/natural.js"></script>
+  <script src="//cdn.datatables.net/plug-ins/1.10.15/sorting/natural.js" nonce="<%= content_security_policy_script_nonce %>"></script>
 
   <script type="text/javascript">
       <%= render '/layouts/ga_script.js' %>

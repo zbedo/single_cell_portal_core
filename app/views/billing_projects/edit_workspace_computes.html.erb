@@ -8,10 +8,10 @@
 </div>
 <p><%= scp_link_to "<span class='fas fa-chevron-left'></span> Back".html_safe, billing_project_workspaces_path(project_name: params[:project_name]), class: 'btn btn-warning' %></p>
 
-<script type="text/javascript">
+<%= javascript_tag type: 'text/javascript', nonce: true do %>
     $('#user-computes').on('click', '.update-compute-permissions', function () {
         var btn = $(this);
         btn.addClass('disabled');
     });
-</script>
+<% end %>
 

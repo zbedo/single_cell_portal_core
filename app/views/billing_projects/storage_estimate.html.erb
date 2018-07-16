@@ -44,7 +44,7 @@
   <%= scp_link_to "<span class='fas fa-briefcase'></span> Workspaces".html_safe, billing_project_workspaces_path(project_name: params[:project_name]), class: 'btn btn-primary' %>
 </p>
 
-<script type="text/javascript">
+<%= javascript_tag type: 'text/javascript', nonce: true do %>
     var costTable = $('#workspace-costs').DataTable({
         columns: [
             {data: 'workspace_name'},
@@ -69,4 +69,4 @@
         $('#selected-count').html(rows.data().length);
     });
 
-</script>
+<% end %>

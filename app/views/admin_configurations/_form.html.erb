@@ -51,7 +51,7 @@
       </div>
     </div>
 
-    <script type="text/javascript">
+    <%= javascript_tag type: 'text/javascript', nonce: true do %>
 
         $('#admin_configuration_value_type').change(function() {
             var val = $(this).val();
@@ -68,7 +68,7 @@
                 $('#value-options').html("<%= escape_javascript(render partial: 'config_value_text', locals: {f: f}) %>")
             }
         });
-    </script>
+    <% end %>
   <% end %>
 </div>
 

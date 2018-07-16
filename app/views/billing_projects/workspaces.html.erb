@@ -51,7 +51,7 @@
 
 </p>
 
-<script type="text/javascript">
+<%= javascript_tag type: 'text/javascript', nonce: true do %>
     var workspacesTable = $('#workspaces').DataTable({
         pagingType: "full_numbers",
         order: [[0, 'asc']],
@@ -60,4 +60,4 @@
         }
     });
 
-</script>
+<% end %>
