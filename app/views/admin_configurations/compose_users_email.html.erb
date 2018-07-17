@@ -31,7 +31,7 @@
 <% end %>
 <p><%= link_to "<i class='fas fa-fw fa-chevron-left'></i> Back".html_safe, admin_configurations_path, class: 'btn btn-warning' %></p>
 
-<%= javascript_tag type: 'text/javascript', nonce: true do %>
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
     $(document).ready(function() {
         CKEDITOR.instances['email_contents'].setData("<p>-- MESSAGE TEXT HERE --</p><hr /><p>To Unsubscribe from Single Cell Portal messages:</p>" +
@@ -68,4 +68,4 @@
         validateEmail();
     });
 
-<% end %>
+</script>

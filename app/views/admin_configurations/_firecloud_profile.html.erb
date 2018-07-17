@@ -74,7 +74,7 @@
 
 <% end %>
 
-<%= javascript_tag type: 'text/javascript', nonce: true do %>
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
     $('#update-profile').click(function(event) {
         var formElements = $('#firecloud-profile .form-control');
         var valid = true;
@@ -92,4 +92,4 @@
             $('#generic-update-modal').modal('hide');
         }
     });
-<% end %>
+</script>

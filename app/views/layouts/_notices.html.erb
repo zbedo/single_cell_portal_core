@@ -13,7 +13,7 @@
 		</div>
 	</div>
 
-  <%= javascript_tag type: 'text/javascript', nonce: true do %>
+  <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 		$("#message_modal").modal("show");
 
 		// don't timeout alert messages
@@ -23,6 +23,6 @@
         }, 3000);
     }
 
-	<% end %>
+	</script>
 
 <% end %>

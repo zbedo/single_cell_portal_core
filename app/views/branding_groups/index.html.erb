@@ -35,7 +35,7 @@
   </div>
 </div>
 
-<%= javascript_tag type: 'text/javascript', nonce: true do %>
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
         $('#branding-groups').dataTable({
             pagingType: "full_numbers",
@@ -60,5 +60,5 @@
             }
         });
 
-<% end %>
+</script>
 

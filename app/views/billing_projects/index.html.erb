@@ -29,7 +29,7 @@
             <% unless project_attributes[:status] == 'Error' %>
               <%= scp_link_to "<i class='fas fa-fw fa-plus'></i> Add User".html_safe, new_billing_project_user_path(project_name), class: 'btn btn-xs btn-success add-billing-project-user' %>
               <%= scp_link_to "<i class='fas fa-fw fa-briefcase'></i> Workspaces".html_safe, billing_project_workspaces_path(project_name), class: 'btn btn-xs btn-primary view-workspaces' %>
-              <%= scp_link_to "<i class='fas fa-fw fa-usd'></i> Storage Costs".html_safe, billing_project_storage_estimate_path(project_name), class: 'btn btn-xs btn-info storage-estimate' %>
+              <%= scp_link_to "<i class='fas fa-fw fa-dollar-sign'></i> Storage Costs".html_safe, billing_project_storage_estimate_path(project_name), class: 'btn btn-xs btn-info storage-estimate' %>
             <% end %>
           </td>
         </tr>
@@ -76,7 +76,7 @@
   </div>
 </div>
 
-<%= javascript_tag type: 'text/javascript', nonce: true do %>
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
     var projectsTable = $('#firecloud-billing').DataTable({
         pagingType: "full_numbers",
         order: [[0, 'asc']],
@@ -124,4 +124,4 @@
         deletePromise(event, 'Are you sure you want to remove ' + email + ' from this project?');
     });
 
-<% end %>
+</script>
