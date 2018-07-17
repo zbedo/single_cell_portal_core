@@ -38,7 +38,7 @@ Rails.application.routes.draw do
     post 'billing_projects/:project_name/workspaces/:study_name', to: 'billing_projects#update_workspace_computes', as: :update_workspace_computes
 
     # study admin actions
-    mount Ckeditor::Engine => 'ckeditor'
+    # mount Ckeditor::Engine => 'ckeditor'
     devise_for :users, :controllers => { :omniauth_callbacks => 'users/omniauth_callbacks' }
     resources :studies do
       member do

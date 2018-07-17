@@ -12,7 +12,7 @@
 //
 //= require jquery3
 //= require jquery_ujs
-//= require ckeditor/init
+//= require ckeditor
 //= require dataTables/jquery.dataTables
 //= require dataTables/bootstrap/3/jquery.dataTables.bootstrap
 //= require jquery.bootstrap.wizard
