@@ -4,18 +4,6 @@
 # For further information see the following documentation
 # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy
 
-#Rails.application.config.content_security_policy do |policy|
-
-#end
-
-# If you are using UJS then enable automatic nonce generation
-# Rails.application.config.content_security_policy_nonce_generator = -> request { SecureRandom.base64(16) }
-
-# Report CSP violations to a specified URI
-# For further information see the following documentation:
-# https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy-Report-Only
-# Rails.application.config.content_security_policy_report_only = true
-
 SecureHeaders::Configuration.default do |config|
   config.cookies = {
       secure: true # mark all cookies as "Secure"
@@ -38,6 +26,7 @@ SecureHeaders::Configuration.default do |config|
       frame_src: %w('self'), # if child-src isn't supported, the value for frame-src will be set.
       font_src: %w('self' data:),
       form_action: %w('self'),
+      connect_src: %w('self' https://www.google-analytics.com),
       img_src: %w('self' data: https://www.google-analytics.com),
       manifest_src: %w('self'),
       object_src: %w('none'),
