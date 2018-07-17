@@ -123,7 +123,7 @@
 
 <%= scp_link_to "<i class='fas fa-chevron-left'></i> Back".html_safe, studies_path, class: 'btn btn-warning back-btn' %>
 
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
 
     // when changing the existing file dropdown, dynamically update the file generation value for the specified form

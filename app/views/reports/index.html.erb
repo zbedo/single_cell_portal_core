@@ -50,7 +50,7 @@
   </div>
 </div>
 <%= render partial: 'contact_modal' %>
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
     $('#report-request').click(function() {
        $('#contact-modal').modal('show');

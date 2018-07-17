@@ -10,7 +10,7 @@ module StudiesHelper
 			when 'unparsed'
 				"<span class='fas fa-times text-danger' title='Unparsed' data-toggle='tooltip'></span>".html_safe
 			when 'parsing'
-				"<span class='fas fa-refresh text-warning' title='Parsing' data-toggle='tooltip'></span>".html_safe
+				"<span class='fas fa-sync-alt text-warning' title='Parsing' data-toggle='tooltip'></span>".html_safe
 			when 'parsed'
 				"<span class='fas fa-check text-success' title='Parsed' data-toggle='tooltip'></span>".html_safe
 			else

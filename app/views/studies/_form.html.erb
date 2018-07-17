@@ -82,7 +82,7 @@
   </div>
 <% end %>
 
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
     $('#study_use_existing_workspace').change(function() {
         if ($(this).val() == '1') {
             $('#study_firecloud_workspace').attr('disabled', false);

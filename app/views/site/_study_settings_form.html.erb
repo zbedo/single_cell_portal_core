@@ -72,7 +72,7 @@
         </div>
       <% end %>
     </div>
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
         $('#study_default_options_annotation').change(function() {
             var annotType = $(this).val().split('--')[1];
             var colorProfile = $('#study_default_options_color_profile');
@@ -146,12 +146,12 @@
   <div class="form-group row">
     <div class="col-xs-12 text-center">
       <%= scp_link_to "<span class='fas fa-upload'></span> Upload/Edit Data".html_safe, initialize_study_path(@study), class: "btn btn-sm btn-primary #{@study.url_safe_name}-upload" %>
-      <%= scp_link_to "<span class='fas fa-refresh'></span> Sync Workspace".html_safe, sync_study_path(@study), class: "btn btn-sm btn-warning #{@study.url_safe_name}-sync sync-button" %>
+      <%= scp_link_to "<span class='fas fa-sync-alt'></span> Sync Workspace".html_safe, sync_study_path(@study), class: "btn btn-sm btn-warning #{@study.url_safe_name}-sync sync-button" %>
     </div>
   </div>
 <% end %>
 
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
     $('#update-study-settings').click( function() {
         launchModalSpinner('#update-study-settings-spinner', '#update-study-settings-modal', function() {
             var updateForm = $('#update-study-settings-form');

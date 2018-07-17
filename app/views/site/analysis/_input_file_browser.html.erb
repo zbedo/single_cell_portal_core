@@ -18,7 +18,7 @@
   </div>
 </div>
 
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
     $('#workflow_inputs_input_file').change(function() {
        inputFile = $(this).val();
        $('#selected-inputs').html(inputFile);

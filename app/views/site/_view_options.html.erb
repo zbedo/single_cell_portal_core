@@ -96,7 +96,7 @@
                       <div class="input-group">
                         <%= number_field_tag :heatmap_size, params[:heatmap_size], class: 'form-control' %>
                         <div class="input-group-btn">
-                          <button type="submit" id="resize-heatmap" class="btn btn-success"><i class="fas fa-fw fa-refresh"></i></button>
+                          <button type="submit" id="resize-heatmap" class="btn btn-success"><i class="fas fa-fw fa-sync-alt"></i></button>
                         </div>
                       </div>
                     </div>
@@ -110,8 +110,8 @@
                   </div>
                   <div class="row">
                     <div class="col-xs-12">
-                      <%= link_to "<i class='fas fa-fw fa-arrows-v'></i> Fit Rows".html_safe, 'javascript:;', id: 'fit-rows', class: 'btn btn-default fit-btn', title: 'Rescale heatmap to fit all rows in plot area', data: {fit: 'rows', active: 'off', toggle: 'tooltip' } %>
-                      <%= link_to "<i class='fas fa-fw fa-arrows-h'></i> Fit Columns".html_safe, 'javascript:;', id: 'fit-cols', class: 'btn btn-default fit-btn', title: 'Rescale heatmap to fit all columns in plot area', data: {fit: 'cols', active: 'off', toggle: 'tooltip' } %>
+                      <%= link_to "<i class='fas fa-fw fa-arrows-alt-v'></i> Fit Rows".html_safe, 'javascript:;', id: 'fit-rows', class: 'btn btn-default fit-btn', title: 'Rescale heatmap to fit all rows in plot area', data: {fit: 'rows', active: 'off', toggle: 'tooltip' } %>
+                      <%= link_to "<i class='fas fa-fw fa-arrows-alt-h'></i> Fit Columns".html_safe, 'javascript:;', id: 'fit-cols', class: 'btn btn-default fit-btn', title: 'Rescale heatmap to fit all columns in plot area', data: {fit: 'cols', active: 'off', toggle: 'tooltip' } %>
                       <%= link_to "<i class='fas fa-fw fa-arrows-alt'></i> Toggle Fullscreen".html_safe, 'javascript:;', id: 'view-fullscreen', class: 'btn btn-default', title: 'Close all options panels and redraw heatmap at full zoom to use available area', data: {active: 'off', toggle: 'tooltip' } %>
                     </div>
                   </div>
