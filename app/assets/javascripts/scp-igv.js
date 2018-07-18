@@ -80,6 +80,21 @@ function getGenesTrack(genome, genesTrackName) {
     oauthToken: accessToken // Assigned in _genome.html.erb
   };
 
+  genesTrack = {
+    name: genesTrackName,
+    // url: bedFile.url + '?alt=media',
+    // indexURL: bedFile.indexUrl + '?alt=media',
+    url: 'https://www.googleapis.com/storage/v1/b/fc-bcc55e6c-bec3-4b2e-9fb2-5e1526ddfcd2/o/reference_data%2Fmouse%2Fmm10%2Fgencode.vM17.annotation.possorted.gtf.gz?alt=media',
+    indexURL: 'https://www.googleapis.com/storage/v1/b/fc-bcc55e6c-bec3-4b2e-9fb2-5e1526ddfcd2/o/reference_data%2Fmouse%2Fmm10%2Fgencode.vM17.annotation.possorted.gtf.gz.tbi?alt=media',
+    type: 'annotation',
+    format: 'gtf',
+    sourceType: 'file',
+    order: 0,
+    visibilityWindow: 300000000,
+    displayMode: 'EXPANDED',
+    oauthToken: accessToken // Assigned in _genome.html.erb
+  };
+
   return genesTrack;
 }
 

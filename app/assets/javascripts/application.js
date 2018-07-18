@@ -40,7 +40,7 @@
 //= require jquery.stickyPanel
 //= require clipboard.min
 //= require ideogram.min
-//= require igv.min
+//= require igv
 //= require scp-igv
 
 var fileUploading = false;
