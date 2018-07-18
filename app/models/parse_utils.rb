@@ -87,6 +87,7 @@ class ParseUtils
 
       # load significant data & construct objects
       significant_scores = matrix.to_hash
+      matrix = nil # unload matrix to reduce memory load
       @genes = []
       @data_arrays = []
       @count = 0
