@@ -61,7 +61,37 @@ class ParseUtils
 
       # open files and read contents
       Rails.logger.info "#{Time.now}: Reading gene/barcode/matrix file contents for #{study.name}"
-      matrix = NMatrix::IO::Market.load(matrix_file.path)
+      significant_scores = {}
+      m_header_1 = matrix_file.readline.strip
+      valid_header = '%%MatrixMarket matrix coordinate real general'
+      unless m_header_1 == valid_header
+        raise StandardError, "Your input matrix is not a Matrix Market Coordinate Matrix (header validation failed).  The first line should read: #{valid_header}"
+      end
+
+      scores_header = matrix_file.readline.strip
+      while scores_header.start_with?('%')
+        # discard empty comment lines
+        scores_header = matrix_file.readline.strip
+      end
+      num_genes, num_barcodes, num_scores = scores_header.split.map(&:to_i)
+      # read coordinate matrix and construct hash of significant scores
+      while !matrix_file.eof?
+        line = matrix_file.readline.strip
+        raw_gene_idx, raw_barcode_idx, raw_expression_score = line.split.map(&:strip)
+        gene_idx = raw_gene_idx.to_i - 1 # since arrays are zero based, we need to offset by 1
+        barcode_idx = raw_barcode_idx.to_i - 1 # since arrays are zero based, we need to offset by 1
+        expression_score = raw_expression_score.to_f.round(3) # only keep 3 significant digits
+        significant_scores[gene_idx] ||= {}
+        significant_scores[gene_idx][barcode_idx] = expression_score
+        if matrix_file.lineno % 1000 == 0
+          Rails.logger.info "#{Time.now} processed #{matrix_file.lineno} lines from #{matrix_study_file.upload_file_name} in #{study.name}"
+        end
+      end
+
+      found_genes = significant_scores.keys.size
+      unless found_genes == num_genes
+        raise StandardError, "Did not find the correct number of expression scores, expected #{num_genes} but found #{found_genes}"
+      end
 
       # process the genes file to concatenate gene names and IDs together (for differentiating entries with duplicate names)
       raw_genes = genes_file.readlines.map(&:strip)
@@ -86,8 +116,6 @@ class ParseUtils
       end
 
       # load significant data & construct objects
-      significant_scores = matrix.to_hash
-      matrix = nil # unload matrix to reduce memory load
       @genes = []
       @data_arrays = []
       @count = 0
