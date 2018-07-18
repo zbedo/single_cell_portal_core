@@ -10,12 +10,16 @@ class ParseUtils
 
       # localize files if necessary, otherwise open newly uploaded files. check to make sure a local copy doesn't already exists
       # as we may be uploading files piecemeal from upload wizard
-      # Note: matrix files must always be pulled from the bucket to ensure that we get a plain-text version due to race
-      # conditions during the upload process.  It is possible to have a local copy that is waiting to be cleaned up that has
-      # been gzipped, and nmatrix cannot open compressed files.  Due to the relatively small size of MEX files, the download
-      # is cheap and fast.  In test mode, we are running an integration test and we know the file is local, so use that.
-      if Rails.env == 'test'
-        matrix_file = File.open(matrix_study_file.upload.path, 'rb')
+
+      if File.exists?(matrix_study_file.upload.path)
+        matrix_content_type = matrix_study_file.determine_content_type
+        if matrix_content_type == 'application/gzip'
+          Rails.logger.info "#{Time.now}: Parsing #{matrix_study_file.name}:#{matrix_study_file.id} as application/gzip"
+          matrix_file = Zlib::GzipReader.open(matrix_study_file.upload.path)
+        else
+          Rails.logger.info "#{Time.now}: Parsing #{matrix_study_file.name}:#{matrix_study_file.id} as text/plain"
+          matrix_file = File.open(matrix_study_file.upload.path, 'rb')
+        end
       else
         matrix_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
                                                                    study.firecloud_workspace, matrix_study_file.bucket_location,
@@ -51,6 +55,7 @@ class ParseUtils
                                                                      study.data_store_path, verify: :none)
       end
 
+      Rails.logger.info "Files exists? matrix: #{File.exists?(matrix_file.path)}, genes: #{File.exists?(genes_file.path)}, barcodes: #{File.exists?(barcodes_file.path)}, "
 
       # next, check if this is a re-parse job, in which case we need to remove all existing entries first
       if opts[:reparse]
@@ -62,10 +67,10 @@ class ParseUtils
       # open files and read contents
       Rails.logger.info "#{Time.now}: Reading gene/barcode/matrix file contents for #{study.name}"
       significant_scores = {}
-      m_header_1 = matrix_file.readline.strip
-      valid_header = '%%MatrixMarket matrix coordinate real general'
-      unless m_header_1 == valid_header
-        raise StandardError, "Your input matrix is not a Matrix Market Coordinate Matrix (header validation failed).  The first line should read: #{valid_header}"
+      m_header_1 = matrix_file.readline.split.map(&:strip)
+      valid_headers = %w(%%MatrixMarket matrix coordinate)
+      unless m_header_1.first == valid_headers.first && m_header_1[1] == valid_headers[1] && m_header_1[2] == valid_headers[2]
+        raise StandardError, "Your input matrix is not a Matrix Market Coordinate Matrix (header validation failed).  The first line should read: #{valid_headers.join}, but found #{m_header_1}"
       end
 
       scores_header = matrix_file.readline.strip
@@ -73,7 +78,7 @@ class ParseUtils
         # discard empty comment lines
         scores_header = matrix_file.readline.strip
       end
-      num_genes, num_barcodes, num_scores = scores_header.split.map(&:to_i)
+
       # read coordinate matrix and construct hash of significant scores
       while !matrix_file.eof?
         line = matrix_file.readline.strip
@@ -83,14 +88,6 @@ class ParseUtils
         expression_score = raw_expression_score.to_f.round(3) # only keep 3 significant digits
         significant_scores[gene_idx] ||= {}
         significant_scores[gene_idx][barcode_idx] = expression_score
-        if matrix_file.lineno % 1000 == 0
-          Rails.logger.info "#{Time.now} processed #{matrix_file.lineno} lines from #{matrix_study_file.upload_file_name} in #{study.name}"
-        end
-      end
-
-      found_genes = significant_scores.keys.size
-      unless found_genes == num_genes
-        raise StandardError, "Did not find the correct number of expression scores, expected #{num_genes} but found #{found_genes}"
       end
 
       # process the genes file to concatenate gene names and IDs together (for differentiating entries with duplicate names)
