@@ -23,7 +23,8 @@ Rails.application.routes.draw do
 
     # study reporter actions
     get 'reports', to: 'reports#index', as: :reports
-    post 'reports/report_request', to: 'reports#report_request', as: :report_request
+    get 'reports/report_request', to: 'reports#report_request', as: :report_request
+    post 'reports/report_request', to: 'reports#submit_report_request', as: :submit_report_request
 
     # firecloud billing project actions
     get 'billing_projects', to: 'billing_projects#index', as: :billing_projects

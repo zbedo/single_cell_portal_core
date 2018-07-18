@@ -25,7 +25,7 @@
                 <td><%= user_annotation.subsampled_at %></td>
                 <td><%= user_annotation.user.email %></td>
                 <td>
-                  <%= scp_link_to "<span class='fas fa-bar-chart'></span> Plot Annotation".html_safe, view_study_path(user_annotation.study.url_safe_name, cluster: user_annotation.cluster_group.name, annotation: user_annotation.formatted_annotation_identifier) + '#study-visualize', class: "btn btn-xs btn-info #{user_annotation.name_as_id}-show"  %>
+                  <%= scp_link_to "<span class='fas fa-chart-bar'></span> Plot Annotation".html_safe, view_study_path(user_annotation.study.url_safe_name, cluster: user_annotation.cluster_group.name, annotation: user_annotation.formatted_annotation_identifier) + '#study-visualize', class: "btn btn-xs btn-info #{user_annotation.name_as_id}-show"  %>
                   <% if user_annotation.can_edit?(current_user) %>
                     <%= scp_link_to "<span class='fas fa-edit'></span> Edit".html_safe, edit_user_annotation_path(user_annotation), class: "btn btn-xs btn-primary #{user_annotation.name_as_id}-edit" %>
                   <% end %>
