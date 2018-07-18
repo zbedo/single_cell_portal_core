@@ -62,30 +62,15 @@ function getBamTracks() {
  * Gets the track of genes and transcripts from the genome's BED file
  */
 function getGenesTrack(genome, genesTrackName) {
-  var bedFile, genesTrack;
+  var gtfFile, genesTrack;
 
-  // bedFiles assigned in _genome.html.erb
-  bedFile = bedFiles[genome];
-
-  genesTrack = {
-    name: genesTrackName,
-    url: bedFile.url + '?alt=media',
-    indexURL: bedFile.indexUrl + '?alt=media',
-    type: 'annotation',
-    format: 'bed',
-    sourceType: 'file',
-    order: 0,
-    visibilityWindow: 300000000,
-    displayMode: 'EXPANDED',
-    oauthToken: accessToken // Assigned in _genome.html.erb
-  };
+  // gtfFiles assigned in _genome.html.erb
+  gtfFile = gtfFiles[genome];
 
   genesTrack = {
     name: genesTrackName,
-    // url: bedFile.url + '?alt=media',
-    // indexURL: bedFile.indexUrl + '?alt=media',
-    url: 'https://www.googleapis.com/storage/v1/b/fc-bcc55e6c-bec3-4b2e-9fb2-5e1526ddfcd2/o/reference_data%2Fmouse%2Fmm10%2Fgencode.vM17.annotation.possorted.gtf.gz?alt=media',
-    indexURL: 'https://www.googleapis.com/storage/v1/b/fc-bcc55e6c-bec3-4b2e-9fb2-5e1526ddfcd2/o/reference_data%2Fmouse%2Fmm10%2Fgencode.vM17.annotation.possorted.gtf.gz.tbi?alt=media',
+    url: gtfFile.url + '?alt=media',
+    indexURL: gtfFile.indexUrl + '?alt=media',
     type: 'annotation',
     format: 'gtf',
     sourceType: 'file',
