@@ -2,13 +2,13 @@ source 'https://rubygems.org'
 
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '4.2.10'
+gem 'rails', '5.2.0'
 # Use SCSS for stylesheets
 gem 'sass-rails', '~> 5.0', '>= 5.0.6'
 # Use Uglifier as compressor for JavaScript assets
 gem 'uglifier', '>= 1.3.0'
 # Use CoffeeScript for .coffee assets and views
-gem 'coffee-rails', '~> 4.1.0'
+gem 'coffee-rails'
 # See https://github.com/rails/execjs#readme for more supported runtimes
 # gem 'therubyracer', platforms: :ruby
 
@@ -28,12 +28,9 @@ gem 'sdoc', '~> 0.4.0', group: :doc
 # Use Capistrano for deployment
 # gem 'capistrano-rails', group: :development
 
-group :test do
-  # Call 'byebug' anywhere in the code to stop execution and get a debugger console
-
-  gem 'minitest-rails', '~> 2.0'
-  gem 'minitest-reporters'
-end
+gem 'bootsnap', '>= 1.1.0', require: false
+gem 'minitest-rails'
+gem 'minitest-reporters'
 
 group :development do
   # Access an IRB console on exception pages or by using <%= console %> in views
@@ -44,6 +41,7 @@ group :development do
 	gem 'debase'
   gem 'test-unit'
   gem 'brakeman', :require => false
+  gem 'listen'
 end
 
 gem 'devise'
@@ -78,4 +76,3 @@ gem 'gibberish'
 gem 'parallel'
 gem 'ruby_native_statistics'
 gem 'mongoid_rails_migrations'
-gem 'nmatrix'

@@ -553,6 +553,7 @@ class UiTestSuite < Test::Unit::TestCase
 	end
 
 	# test bundling process for file uploads
+	# also tests ParseUtils.cell_ranger_expression_parse on small 100x25 gene-barcode matrix
 	test 'admin: create-study: file bundles' do
 		puts "Test method: #{self.method_name}"
 
@@ -574,7 +575,7 @@ class UiTestSuite < Test::Unit::TestCase
 		matrix_type = matrix_form.find_element(:id, 'study_file_file_type')
 		matrix_type.send_keys('MM Coordinate Matrix')
 		upload_expression = matrix_form.find_element(:id, 'upload-expression')
-		upload_expression.send_keys(@test_data_path + 'GRCh38/matrix.mtx')
+		upload_expression.send_keys(@test_data_path + 'GRCh38/test_matrix.mtx')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = @driver.find_element(:id, 'start-file-upload')
 		sleep(0.5)
@@ -584,7 +585,7 @@ class UiTestSuite < Test::Unit::TestCase
 		# upload genes & barcodes files
 		genes_file_form = @driver.find_element(:class, 'new-10x-genes-file-file-form')
 		upload_genes = genes_file_form.find_element(:id, 'upload-bundled-file')
-		upload_genes.send_keys(@test_data_path + 'GRCh38/genes.tsv')
+		upload_genes.send_keys(@test_data_path + 'GRCh38/test_genes.tsv')
 		wait_for_render(:id, 'start-file-upload')
 		upload_btn = genes_file_form.find_element(:id, 'start-file-upload')
 		sleep(0.5)
@@ -611,13 +612,13 @@ class UiTestSuite < Test::Unit::TestCase
 		show_study.click
 		gene_count = @driver.find_element(:id, 'gene-count').text.chomp(' genes').to_i
 		i = 0
-		while gene_count == 0 && i < 12 # give parse 2 minutes to complete, should be enough
-			sleep 10
+		while gene_count == 0 && i < 12 # give parse 1 minute to complete, should be enough
+			sleep 5
 			@driver.navigate.refresh
 			gene_count = @driver.find_element(:id, 'gene-count').text.chomp(' genes').to_i
 			i += 1
 		end
-		assert gene_count == 33694, "Did not properly parse coordinate matrix triplet, expected 33694 genes but found #{gene_count}"
+		assert gene_count == 100, "Did not properly parse coordinate matrix triplet, expected 100 genes but found #{gene_count}"
 		@driver.get @base_url + '/studies'
 		delete = @driver.find_element(:class, "file-bundle-#{$random_seed}-delete")
 		delete.click

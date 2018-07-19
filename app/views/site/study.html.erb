@@ -3,22 +3,22 @@
 </div>
 <div id="tab-root">
   <ul class="nav nav-tabs" role="tablist" id="study-tabs">
-    <li role="presentation" class="study-nav active" id="study-summary-nav"><a href="#study-summary" data-toggle="tab">Summary <i class="fa fa-fw fa-file-text-o"></i></a></li>
+    <li role="presentation" class="study-nav active" id="study-summary-nav"><a href="#study-summary" data-toggle="tab">Summary <i class="far fa-fw fa-file-alt"></i></a></li>
     <% if @study.initialized? %>
-      <li role="presentation" class="study-nav" id="study-visualize-nav"><a href="#study-visualize" data-toggle="tab">Explore <i class="fa fa-fw fa-eye"></i></a></li>
+      <li role="presentation" class="study-nav" id="study-visualize-nav"><a href="#study-visualize" data-toggle="tab">Explore <i class="fas fa-fw fa-eye"></i></a></li>
     <% else %>
-      <li role="presentation" class="study-nav disabled" id="study-visualize-nav"><a href="#study-visualize" data-toggle="tooltip" title="This study has no data to view">Explore <i class="fa fa-fw fa-eye"></i></a></li>
+      <li role="presentation" class="study-nav disabled" id="study-visualize-nav"><a href="#study-visualize" data-toggle="tooltip" title="This study has no data to view">Explore <i class="fas fa-fw fa-eye"></i></a></li>
     <% end %>
     <% if @study.can_download?(current_user) %>
-      <li role="presentation" class="study-nav" id="study-download-nav"><a href="#study-download" data-toggle="tab">Download <i class="fa fa-fw fa-download"></i></a></li>
+      <li role="presentation" class="study-nav" id="study-download-nav"><a href="#study-download" data-toggle="tab">Download <i class="fas fa-fw fa-download"></i></a></li>
     <% else %>
-      <li role="presentation" class="study-nav disabled" id="study-download-nav"><a href="#study-download" data-toggle="tooltip" title="Only authenticated users with download privileges can download data">Download <i class="fa fa-fw fa-download"></i></a></li>
+      <li role="presentation" class="study-nav disabled" id="study-download-nav"><a href="#study-download" data-toggle="tooltip" title="Only authenticated users with download privileges can download data">Download <i class="fas fa-fw fa-download"></i></a></li>
     <% end %>
     <% if @allow_firecloud_access && @study.can_compute?(current_user) %>
-      <li role="presentation" class="study-nav" id="study-analysis-nav"><a href="#study-analysis" data-toggle="tab">Analysis <i class="fa fa-fw fa-tasks"></i></a></li>
+      <li role="presentation" class="study-nav" id="study-analysis-nav"><a href="#study-analysis" data-toggle="tab">Analysis <i class="fas fa-fw fa-tasks"></i></a></li>
     <% end %>
     <% if @allow_firecloud_access && @study.can_edit?(current_user) %>
-      <li role="presentation" class="study-nav" id="study-settings-nav"><a href="#study-settings" data-toggle="tab">Settings <i class="fa fa-fw fa-gears"></i></a></li>
+      <li role="presentation" class="study-nav" id="study-settings-nav"><a href="#study-settings" data-toggle="tab">Settings <i class="fas fa-fw fa-cogs"></i></a></li>
     <% end %>
   </ul>
   <div class="tab-content top-pad">

@@ -2,7 +2,7 @@
   <div class="panel panel-primary study-panel" data-page="<%= params[:page].nil? ? 1 : params[:page] %>">
     <div class="panel-heading">
       <div class="panel-title">
-        <h4><%= link_to "#{study.name} <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, "#study-#{study.url_safe_name}", "data-toggle" => "collapse", 'data-parent' => '#downloads', style: 'color: white;'  %></h4>
+        <h4><%= link_to "#{study.name} <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, "#study-#{study.url_safe_name}", "data-toggle" => "collapse", 'data-parent' => '#downloads', style: 'color: white;'  %></h4>
       </div>
     </div>
     <div id="study-<%= study.url_safe_name %>" class="panel-collapse collapse in">

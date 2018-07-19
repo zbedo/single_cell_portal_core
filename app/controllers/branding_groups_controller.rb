@@ -1,6 +1,6 @@
 class BrandingGroupsController < ApplicationController
   before_action :set_branding_group, only: [:show, :edit, :update, :destroy]
-  before_filter do
+  before_action do
     authenticate_user!
     authenticate_admin
   end

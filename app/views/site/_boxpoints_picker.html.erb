@@ -1,5 +1,5 @@
 <div id="boxpoints-picker">
-	<%= label_tag :boxpoints_select, 'Data Points' %><i class='fa fa-fw fa-question-circle' data-toggle="tooltip" title="Control rendering of data/jitter points in distribution plots."></i>
+	<%= label_tag :boxpoints_select, 'Data Points' %><i class='fas fa-fw fa-question-circle' data-toggle="tooltip" title="Control rendering of data/jitter points in distribution plots."></i>
   <%= select_tag :boxpoints_select, options_for_select([['None', ''], ['All', 'all'], ['Outliers', 'outliers'], ['Suspected Outliers', 'suspectedoutliers']], params[:boxpoints].nil? ? 'all' : params[:boxpoints]), class: 'form-control' %>
 </div>
 

@@ -325,7 +325,7 @@ this is the instance ID of the new container.  Once the container is running, yo
 command and perform various Rails-specific actions, like:
 
 * Re-index the database: <code>bin/rake RAILS_ENV=production db:mongoid:create_indexes</code>
-* Launch the Rails console (to inspect database records, for instance): <code>bin/rails console production</code>
+* Launch the Rails console (to inspect database records, for instance): <code>bin/rails console -e production</code>
 
 === STAGING
 

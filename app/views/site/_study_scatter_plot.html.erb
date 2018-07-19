@@ -44,7 +44,7 @@ $("#colorscale").change(function() {
     Plotly.update('cluster-plot', data, layout);
 });
 
-$('#cluster-figure-legend').html("<p class='text-center help-block'><%= escape_javascript(render text: @cluster.study_file.description) %></p>");
+$('#cluster-figure-legend').html("<p class='text-center help-block'><%= escape_javascript(render plain: @cluster.study_file.description) %></p>");
 
 // access actual target div, not jQuery object wrapper for relayout event
 var clusterPlotDiv = document.getElementById('cluster-plot');

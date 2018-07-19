@@ -19,11 +19,11 @@
       <%= f.text_field :email, class: 'form-control', disabled: true %>
     </div>
     <div class="col-md-3">
-      <%= f.label :admin, "Admin Access <i class='fa fa-question-circle'></i>".html_safe, title: 'Grant administrative access.  Admins have access to all site functionality and can view all studies.', data: {toggle: 'tooltip'} %><br/>
+      <%= f.label :admin, "Admin Access <i class='fas fa-question-circle'></i>".html_safe, title: 'Grant administrative access.  Admins have access to all site functionality and can view all studies.', data: {toggle: 'tooltip'} %><br/>
       <%= f.select :admin, options_for_select([['Yes',1],['No',0]], @user.admin? ? 1 : 0), {}, class: 'form-control' %>
     </div>
     <div class="col-md-3">
-      <%= f.label :reporter, "Reporter Access <i class='fa fa-question-circle'></i>".html_safe, title: 'Grant access to reports section.  Admins have access by default.', data: {toggle: 'tooltip'} %><br/>
+      <%= f.label :reporter, "Reporter Access <i class='fas fa-question-circle'></i>".html_safe, title: 'Grant access to reports section.  Admins have access by default.', data: {toggle: 'tooltip'} %><br/>
       <%= f.select :reporter, options_for_select([['Yes',1],['No',0]], @user.reporter? ? 1 : 0), {}, class: 'form-control' %>
     </div>
   </div>
@@ -36,6 +36,6 @@
 <% end %>
 <div class="row">
   <div class="col-md-12">
-    <%= link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, admin_configurations_path, class: 'btn btn-warning' %>
+    <%= link_to "<span class='fas fa-chevron-left'></span> Back".html_safe, admin_configurations_path, class: 'btn btn-warning' %>
   </div>
 </div>

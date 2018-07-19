@@ -7,7 +7,7 @@ class UserAnnotationsController < ApplicationController
   ###
 
   before_action :set_user_annotation, only: [:edit, :update, :destroy]
-  before_filter :authenticate_user!
+  before_action :authenticate_user!
   before_action :check_permission, except: :index
 
   ###

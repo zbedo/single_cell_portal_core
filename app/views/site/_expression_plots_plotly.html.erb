@@ -101,7 +101,7 @@ var dataRef = [];
 
 Plotly.newPlot('reference-plot', dataRef, staticLayout);
 
-$('#cluster-figure-legend').html("<p class='text-center help-block'><%= escape_javascript(render text: @cluster.study_file.description) %></p>");
+$('#cluster-figure-legend').html("<p class='text-center help-block'><%= escape_javascript(render plain: @cluster.study_file.description) %></p>");
 
 // listener to redraw expression scatter with new color profile
 // will also redraw reference plot if needed

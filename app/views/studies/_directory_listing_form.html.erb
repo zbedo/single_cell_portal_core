@@ -29,7 +29,7 @@
       <%= f.text_field :file_type, class: 'form-control', readonly: true %>
     </div>
     <div class="col-sm-2">
-      <%= label_tag :human_data, 'Human Data?' %> <i class="fa fa-fw fa-question-circle" data-toggle="tooltip" title="Primary sequence data derived from humans should be stored in other biological databases.  If this directory contains human data, you will not be able to synchronize it with your study."></i> <br/>
+      <%= label_tag :human_data, 'Human Data?' %> <i class="fas fa-fw fa-question-circle" data-toggle="tooltip" title="Primary sequence data derived from humans should be stored in other biological databases.  If this directory contains human data, you will not be able to synchronize it with your study."></i> <br/>
       <%= select_tag :human_data, options_for_select(['Yes', 'No'], 'No'), {class: 'form-control human-data', data: {id: "directory-listing-#{directory.id}"}} %>
     </div>
     <div class="col-sm-2">
