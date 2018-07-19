@@ -11,6 +11,9 @@ window.hasDisplayedIgv = false;
 window.bamsToViewInIgv = [];
 window.selectedBams = {};
 
+/**
+ * Upon clicking 'Browse in genome', show selected BAM in igv.js in Genome tab.
+ */
 $(document).on('click', '.bam-browse-genome', function(e) {
   var selectedBam, thisBam, i;
 
