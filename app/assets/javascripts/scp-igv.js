@@ -8,6 +8,9 @@
 // default view, then searches a gene.
 window.hasDisplayedIgv = false;
 
+window.bamsToViewInIgv = [];
+window.selectedBams = {};
+
 $(document).on('click', '.bam-browse-genome', function(e) {
   var selectedBam, thisBam, i;
 
@@ -16,9 +19,10 @@ $(document).on('click', '.bam-browse-genome', function(e) {
   // bamAndBaiFiles assigned in _genome.html.erb
   for (i = 0; i < bamAndBaiFiles.length; i++) {
     thisBam = bamAndBaiFiles[i].url.split('\/o/')[1].split('?')[0];
-    if (thisBam === selectedBam) {
+    if (thisBam === selectedBam && selectedBam in selectedBams === false) {
       bamsToViewInIgv.push(bamAndBaiFiles[i]);
     }
+    selectedBams[thisBam] = 1;
   }
 
   $('#genome-tab-nav').css('display', ''); // Show 'Genome' tab

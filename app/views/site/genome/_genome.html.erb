@@ -18,8 +18,6 @@ See partials referenced below and scp-igv.js for larger bodies of code.
   <script>
   if (typeof bamAndBaiFiles === 'undefined') {
     window.bamAndBaiFiles = <%= raw @study.get_bam_files.to_json %>;
-    window.bamsToViewInIgv = [];
-
     window.gtfFiles = <%= raw @study.get_gene_tracks.to_json %>;
   }
   </script>
