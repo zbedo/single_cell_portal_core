@@ -74,6 +74,7 @@ function getGenesTrack(genome, genesTrackName) {
     type: 'annotation',
     format: 'gtf',
     sourceType: 'file',
+    height: 102,
     order: 0,
     visibilityWindow: 300000000,
     displayMode: 'EXPANDED',
