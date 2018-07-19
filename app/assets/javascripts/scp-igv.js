@@ -83,6 +83,23 @@ function getGenesTrack(genome, genesTrackName) {
   return genesTrack;
 }
 
+// Monkey patch getKnownGenome to remove baked-in genes track.
+// We use a different gene annotation source, in a different track order,
+// so removing this default gives our genome browser instance a more
+// polished feel.
+var originalGetKnownGenomes = igv.GenomeUtils.getKnownGenomes;
+igv.GenomeUtils.getKnownGenomes = function () {
+  return originalGetKnownGenomes.apply(this).then(function(reference) {
+    var key,
+        newRef = {};
+    for (key in reference) {
+      delete reference[key].tracks;
+      newRef[key] = reference[key];
+    }
+    return newRef;
+  })
+};
+
 /**
  * Instantiates and renders igv.js widget on the page
  */
@@ -105,8 +122,7 @@ function initializeIgv() {
   igvOptions = {
     genome: genome,
     locus: locus,
-    tracks: tracks,
-    supportQueryParameters: true
+    tracks: tracks
   };
 
   igv.createBrowser(igvContainer, igvOptions);
