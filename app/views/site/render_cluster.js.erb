@@ -31,6 +31,140 @@ $(window).on('resizeEnd', function() {
 $('#toggle-traces').click(function() {
     togglePlotlyTraces('cluster-plot');
 });
+var splitable = !Object.keys(data[0]).includes("z")
+if(splitable){
+    // attach click event for toggle switch
+    // generate split cluster plot traces
+    // convert data to split data
+    var c_data = JSON.parse(JSON.stringify(data));
+    // grid row and column params
+    var num_traces = c_data.length;
+    var width = Math.min(5, num_traces);
+    var height = Math.ceil(num_traces / width);
+
+    // x and y axis domain padding
+    var padding = 1.05;
+
+    // make sure each split plot has same size, domain = [padding * min x, padding * max x], range = [padding * min y, padding * max y]
+    var domainC = [Math.min.apply(null, [].concat.apply([], c_data.map(function (x) {
+        return x["x"]
+    }))) * padding, Math.max.apply(null, [].concat.apply([], c_data.map(function (x) {
+        return x["x"]
+    }))) * padding];
+    var rangeC = [Math.min.apply(null, [].concat.apply([], c_data.map(function (y) {
+        return y["y"]
+    }))) * padding, Math.max.apply(null, [].concat.apply([], c_data.map(function (y) {
+        return y["y"]
+    }))) * padding];
+
+    // copy all layout params, but add grid layout
+    var c_layout = $.extend({
+        grid: {
+            rows: height,
+            columns: width,
+            pattern: "independent",
+            xgap: 0,
+            ygap: 0
+
+        }
+    }, layout);
+
+    // reset the x axis, y axis, margin and add gridwidth
+    c_layout["xaxis"] = {
+        showticklabels: false,
+        range: domainC,
+        linecolor: 'black',
+        mirror: true,
+        showgrid: false,
+        zeroline: false
+    };
+    c_layout["yaxis"] = {
+        showticklabels: false,
+        range: rangeC,
+        linecolor: 'black',
+        mirror: true,
+        showgrid: false,
+        zeroline: false
+    };
+    c_layout["margin"] = {t: 25, r: 25, b: 20, l: 25};
+    c_layout["gridwidth"] = 2;
+
+    // add the new x and y axis to layout
+    for (i = 2; i <= num_traces; i++) {
+        c_layout["xaxis" + String(i)] = {
+            showticklabels: false,
+            range: domainC,
+            linecolor: 'black',
+            mirror: true,
+            showgrid: false,
+            zeroline: false
+        }
+        c_layout["yaxis" + String(i)] = {
+            showticklabels: false,
+            range: rangeC,
+            linecolor: 'black',
+            mirror: true,
+            showgrid: false,
+            zeroline: false
+        }
+    }
+
+    // add the new x and y axis to data
+    for (i = 1; i < num_traces; i++) {
+        c_data[i]["xaxis"] = "x" + String(i + 1)
+        c_data[i]["yaxis"] = "y" + String(i + 1)
+    }
+
+    // placeholder variables and tracker variable to make sure we can switch between split and not split easily
+    var switched = false;
+    var data_placeholder = c_data;
+    var layout_placeholder = c_layout;
+
+    // function to split clusters view for scatter plot and replot
+    function toggleSplitClusters(div) {
+        // we always replot
+        Plotly.newPlot(div, data_placeholder, layout_placeholder);
+        if (switched) {
+            // data and layout are universal var names, we always move the new values in after replotting from the placeholder
+            data = data_placeholder
+            layout = layout_placeholder
+            data_placeholder = c_data;
+            layout_placeholder = c_layout;
+        } else {
+            // data and layout are universal var names, we need to make sure they're set correctely
+            data_placeholder = data;
+            layout_placeholder = layout;
+            data = c_data
+            layout = c_layout
+        }
+        // reset switched
+        switched = !switched
+
+        // reset annotation clicker state
+        $('#toggle-scatter').click()
+        $('#toggle-scatter').click()
+    }
+
+}
+// on load we have to get rid of previous listeners
+$('#toggle-split_clusters').unbind();
+// on load make sure the toggle is set to off
+$('#toggle-split_clusters').children().removeClass('fa-toggle-on');
+$('#toggle-split_clusters').children().addClass('fa-toggle-off');
+// set toggle click listener
+$('#toggle-split_clusters').click(function () {
+    // call replotting function
+    if(splitable){
+        toggleSplitClusters('cluster-plot');
+        // toggle button
+        $('#toggle-split_clusters').children().toggleClass('fa-toggle-on fa-toggle-off');
+    }
+    else {
+        alert('You may not split clusters on 3d data.  Please select a different cluster before continuing.');
+    }
+});
+
+
 
 // attach click event for toggle violin
 $('#toggle-violin').click(function() {

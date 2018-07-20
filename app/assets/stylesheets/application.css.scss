@@ -226,17 +226,13 @@ label {
   font-weight: 200;
 }
 
-.navigation-form {
-  display: inline-block;
-  margin-right: 15px;
-}
-
-#colorscale-picker{
-  display: inline-block;
-  float: left;
-}
 
 #toggle-plots {
+  display: inline-block;
+  float: right;
+}
+
+#toggle-split_cluster {
   display: inline-block;
   float: right;
 }

@@ -60,9 +60,16 @@
           <div id="original-view-controls" class="panel-collapse collapse">
             <div class="panel-body">
               <div class="row">
-                <div class="col-xs-12">
+                <div class="form-group col-md-12">
                   <%= render partial: 'colorscale_picker' %>
                 </div>
+                <% if action_name != 'view_gene_expression' %>
+                  <div class="col-md-3">
+                    <div id="toggle-split_cluster">
+                      <%= render partial: 'split_cluster_button' %>
+                    </div>
+                  </div>
+                <% end %>
               </div>
             </div>
           </div>
