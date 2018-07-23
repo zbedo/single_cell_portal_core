@@ -31,9 +31,9 @@ $(window).on('resizeEnd', function() {
 $('#toggle-traces').click(function() {
     togglePlotlyTraces('cluster-plot');
 });
+// If it's 3d data we don't want to do a bunch of extra data processing
 var splitable = !Object.keys(data[0]).includes("z")
 if(splitable){
-    // attach click event for toggle switch
     // generate split cluster plot traces
     // convert data to split data
     var c_data = JSON.parse(JSON.stringify(data));
@@ -151,7 +151,7 @@ $('#toggle-split_clusters').unbind();
 // on load make sure the toggle is set to off
 $('#toggle-split_clusters').children().removeClass('fa-toggle-on');
 $('#toggle-split_clusters').children().addClass('fa-toggle-off');
-// set toggle click listener
+// attach click event for toggle switch
 $('#toggle-split_clusters').click(function () {
     // call replotting function
     if(splitable){
