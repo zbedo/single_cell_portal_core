@@ -59,7 +59,7 @@
     </div>
   </div>
 
-  <script type="text/javascript">
+  <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
       <%= render partial: 'shared_sync_functions.js.erb', locals: {study_file: study_file, f: f} %>
 
       $('#sync-study-file-<%= study_file.id %>').click(function() {

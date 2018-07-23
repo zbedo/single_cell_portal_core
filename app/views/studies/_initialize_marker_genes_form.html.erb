@@ -51,7 +51,7 @@
 			<tbody class="files"></tbody>
 		</table>
 	</div>
-	<script type="text/javascript">
+	<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
     $("#marker_genes_form_<%= study_file._id %>").find('.upload-marker-genes').click(function() {
         if ($("#marker_genes_form_<%= study_file._id %>").find('#study_file_name').val() == '') {

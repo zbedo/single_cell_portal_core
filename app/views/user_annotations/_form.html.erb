@@ -54,7 +54,7 @@
   </div>
   <div class="form-group">
     <%= f.button 'Submit', {class: 'btn btn-lg btn-success', id: 'submit-button', type: 'button'} %>
-    <script>
+    <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
       var form_id = '#edit_user_annotation_' + "<%= raw @user_annotation.id.to_s %>";
       validateUnique(form_id, '.label-name');
       $('#submit-button').click(function() {

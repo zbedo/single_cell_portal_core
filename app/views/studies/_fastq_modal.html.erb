@@ -15,7 +15,7 @@
 	</div>
 </div>
 
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 	$("#fastq-modal").modal({show: true, backdrop: 'static'});
 	$('#human-data').click(function() {
 		// if user is supplying human data, hide file uploader and show text field for link

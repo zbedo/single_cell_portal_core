@@ -31,7 +31,7 @@
             <%= render partial: 'initialize_bundled_file_form', locals: {study_file: bundled_file} %>
           <% end %>
         <% end %>
-        <script type="text/javascript">
+        <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
             if (<%= !@expression_files.first.new_record? %>) {
                 completeWizardStep('initialize_expression_form_nav');
                 console.log('incrementing status for expression files upload');
@@ -64,7 +64,7 @@
 				<% @cluster_ordinations.each do |study_file| %>
 					<%= render partial: 'initialize_ordinations_form', locals: {study_file: study_file} %>
 				<% end %>
-				<script type="text/javascript">
+				<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 					if (<%= !@cluster_ordinations.first.new_record? %>) {
 						completeWizardStep('initialize_ordinations_form_nav');
 						console.log('incrementing status for cluster ordinations upload');
@@ -86,7 +86,7 @@
         <% @coordinate_labels.each do |study_file| %>
           <%= render partial: 'initialize_labels_form', locals: {study_file: study_file} %>
         <% end %>
-        <script type="text/javascript">
+        <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
             if (<%= @coordinate_labels.any? && !@coordinate_labels.first.new_record? %>) {
                 completeWizardStep('initialize_labels_form_nav');
                 console.log('incrementing status for coordinate labels upload');
@@ -114,7 +114,7 @@
             <%= render partial: 'initialize_bundled_file_form', locals: {study_file: bundled_file} %>
           <% end %>
         <% end %>
-        <script type="text/javascript">
+        <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
           if (<%= !@fastq_files.first.new_record? %>) {
             completeWizardStep('initialize_primary_data_form_nav');
             console.log('incrementing status for fastq upload');
@@ -136,7 +136,7 @@
 				<% @marker_lists.each do |study_file| %>
 					<%= render partial: 'initialize_marker_genes_form', locals: {study_file: study_file} %>
 				<% end %>
-				<script type="text/javascript">
+				<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 					if (<%= !@marker_lists.first.new_record? %>) {
 						completeWizardStep('initialize_marker_genes_form_nav');
 						console.log('incrementing status for marker gene upload');
@@ -157,7 +157,7 @@
 				<% @other_files.each do |study_file| %>
 					<%= render partial: 'initialize_misc_form', locals: {study_file: study_file} %>
 				<% end %>
-				<script type="text/javascript">
+				<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 					if (<%= !@other_files.first.new_record? %>) {
 						completeWizardStep('initialize_misc_form_nav');
 						console.log('incrementing status for other upload');
@@ -180,7 +180,7 @@
 <%= render 'fileupload_templates' %>
 <%= render 'required_modal' %>
 
-<script>
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 	$(document).ready(function() {
 		var wizard = $('#rootwizard');
 		var requiredDialogShow = false;

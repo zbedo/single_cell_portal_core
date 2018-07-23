@@ -17,6 +17,17 @@ require "rails/test_unit/railtie"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
+class StripXForwardedHost
+  def initialize(app)
+    @app = app
+  end
+
+  def call(env)
+    env.delete('HTTP_X_FORWARDED_HOST')
+    @app.call(env)
+  end
+end
+
 module SingleCellPortal
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
@@ -28,6 +39,8 @@ module SingleCellPortal
     config.time_zone = 'Eastern Time (US & Canada)'
 
     config.middleware.use Rack::Deflater
+
+    config.middleware.use StripXForwardedHost
 
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration can go into files in config/initializers

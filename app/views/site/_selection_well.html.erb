@@ -23,7 +23,7 @@
 <div id="submit_script">
   <%= render 'selection_submit' %>
 </div>
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
     if ($('#cluster-plot').length === 0) {
         var targetPlotString = 'scatter-plot';

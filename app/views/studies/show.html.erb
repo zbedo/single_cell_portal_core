@@ -354,7 +354,7 @@
 	<%= scp_link_to "<span class='fas fa-upload'></span> Upload/Edit Data".html_safe, upload_study_path(@study), class: 'btn btn-success' %>
 	<%= scp_link_to "<span class='fas fa-chevron-left'></span> Back".html_safe, studies_path, class: 'btn btn-warning' %></p>
 
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
 		$('#clusters, #precomputed').dataTable({
 			pagingType: "simple",

@@ -71,6 +71,10 @@ Rails.application.configure do
   # Use default logging formatter so that PID and timestamp are not suppressed.
   config.log_formatter = ::Logger::Formatter.new
 
+  # Mitigate X-Forwarded-Host injection attacks
+  config.action_controller.default_url_options = { :host => ENV['PROD_HOSTNAME'], protocol: 'https' }
+  config.action_controller.asset_host = ENV['PROD_HOSTNAME']
+
   # Use a different logger for distributed setups.
   # require 'syslog/logger'
   # config.logger = ActiveSupport::TaggedLogging.new(Syslog::Logger.new 'app-name')

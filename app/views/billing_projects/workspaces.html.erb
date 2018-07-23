@@ -47,11 +47,11 @@
 </div>
 <p>
   <%= scp_link_to "<span class='fas fa-chevron-left'></span> Back".html_safe, billing_projects_path, class: 'btn btn-warning' %>
-  <%= scp_link_to "<span class='fas fa-usd'></span> Storage Costs".html_safe, billing_project_storage_estimate_path(project_name: params[:project_name]), class: 'btn btn-info' %>
+  <%= scp_link_to "<span class='fas fa-dollar-sign'></span> Storage Costs".html_safe, billing_project_storage_estimate_path(project_name: params[:project_name]), class: 'btn btn-info' %>
 
 </p>
 
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
     var workspacesTable = $('#workspaces').DataTable({
         pagingType: "full_numbers",
         order: [[0, 'asc']],

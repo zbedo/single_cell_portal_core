@@ -58,7 +58,7 @@
         </div>
       </div>
     </div>
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
         $('#download-help').click(function() {
             $('#download-help-modal').modal('show');
         });
@@ -259,7 +259,7 @@
   <% end %>
 </div>
 
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
 
     $('#fastq-table').dataTable({

@@ -122,7 +122,7 @@
         </div>
       </div>
 
-      <script type="text/javascript">
+      <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
           $('#config').dataTable({
               pagingType: "full_numbers",
@@ -220,7 +220,7 @@
           </table>
         </div>
       </div>
-      <script type="text/javascript">
+      <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
           $('#user-table').dataTable({
               pagingType: "full_numbers",
               order: [[0, 'asc']],
