@@ -26,7 +26,7 @@ SecureHeaders::Configuration.default do |config|
       frame_src: %w('self'), # if child-src isn't supported, the value for frame-src will be set.
       font_src: %w('self' data:),
       form_action: %w('self'),
-      connect_src: %w('self' https://www.google-analytics.com),
+      connect_src: %w('self' https://www.google-analytics.com https://unpkg.com https://www.googleapis.com),
       img_src: %w('self' data: https://www.google-analytics.com),
       manifest_src: %w('self'),
       object_src: %w('none'),
