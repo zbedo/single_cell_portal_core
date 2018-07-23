@@ -1,3 +1,15 @@
 $('#study-summary').html("<%= escape_javascript(render partial: 'study_description_edit') %>");
 
-CKEDITOR.replace('study_description')
+ClassicEditor
+    .create( document.querySelector( '#study_description' ),
+        {
+            toolbar: ["heading", '|',  "bold", "italic", "link", "bulletedList", "numberedList", "blockQuote", '|', "undo", "redo"]
+        }
+    )
+    .then( function(editor) {
+        console.log('Editor inserted');
+    } )
+    .catch( function(error) {
+            console.error( error );
+        }
+    );
