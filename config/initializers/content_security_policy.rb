@@ -30,7 +30,6 @@ SecureHeaders::Configuration.default do |config|
       img_src: %w('self' data: https://www.google-analytics.com),
       manifest_src: %w('self'),
       object_src: %w('none'),
-      plugin_types: %w(application/x-shockwave-flash),
       script_src: %w('self' blob: 'unsafe-eval' 'strict-dynamic' https://cdn.plot.ly https://cdn.datatables.net https://www.google-analytics.com
                       https://cdnjs.cloudflare.com https://maxcdn.bootstrapcdn.com https://use.fontawesome.com),
       style_src: %w('self' https://maxcdn.bootstrapcdn.com 'unsafe-inline'),
