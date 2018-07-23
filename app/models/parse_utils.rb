@@ -146,14 +146,11 @@ class ParseUtils
         end
 
         # batch insert records in groups of 1000
-        if @genes.size % 1000 == 0
-          Gene.create!(@genes)
+        if @data_arrays.size >= 1000
+          Gene.create!(@genes) # genes must be saved first, otherwise the linear data polymorphic association is invalid and will cause a parse fail
           @count += @genes.size
           Rails.logger.info "#{Time.now}: Processed #{@count} expressed genes from 10X CellRanger source data for #{study.name}"
-          @records = []
-        end
-
-        if @data_arrays.size >= 1000
+          @genes = []
           DataArray.create!(@data_arrays)
           @child_count += @data_arrays.size
           Rails.logger.info "#{Time.now}: Processed #{@child_count} child data arrays from 10X CellRanger source data for #{study.name}"
