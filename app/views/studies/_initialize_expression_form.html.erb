@@ -74,7 +74,7 @@
 					var fileName = data.files[0].name.replace(/ /g, '_');
 					// auto-select MM Coordinate Matrix if applicable
           fileExt = fileName.split('.').slice(-1)[0];
-          if (fileExt == 'mtx') {
+          if (fileExt === 'mtx') {
               $('#expression_form_<%= study_file._id %> .file-type').val('MM Coordinate Matrix');
           }
           $('#expression_form_<%= study_file._id %> .filename').val(fileName);
