@@ -50,7 +50,7 @@
 		</table>
 	</div>
 
-	<script type="text/javascript">
+	<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
 		$(function() {
 			if (<%= !study_file.upload_file_name.nil? %>) {

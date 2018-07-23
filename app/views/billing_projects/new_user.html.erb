@@ -34,7 +34,7 @@
   <% end %>
 </div>
 
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
     $('#add-billing-project-user').click(function () {
         $('#generic-modal-title').html("Adding User... Please Wait");

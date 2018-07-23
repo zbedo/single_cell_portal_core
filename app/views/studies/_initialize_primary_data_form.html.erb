@@ -60,7 +60,7 @@
 			<tbody class="files"></tbody>
 		</table>
 	</div>
-	<script type="text/javascript">
+	<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
 		$('#primary_data_form_<%= study_file._id %>').find('.human-data').change(function() {
 			toggleFastqFields('primary_data_form_<%= study_file._id %>');

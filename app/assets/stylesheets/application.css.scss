@@ -599,3 +599,9 @@ h4, .h4, h5, .h5, h6, .h6 {
 .bam-browse-genome {
   margin-bottom: 3px;
 }
+
+.ck-editor__editable {
+  min-height: 300px;
+  max-height: 700px;
+  min-width: 100%;
+}

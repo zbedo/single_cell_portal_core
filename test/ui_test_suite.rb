@@ -1787,7 +1787,8 @@ class UiTestSuite < Test::Unit::TestCase
 
 		@driver.get @base_url
 		login($test_email, $test_email_password)
-		@driver.get @base_url + '/billing_projects'
+		path =  @base_url + '/billing_projects'
+		@driver.get path
 
 		# make sure there is a project and a workspace
 		assert element_present?(:class, 'billing-project'), 'Did not find any billing projects'
@@ -2158,11 +2159,9 @@ class UiTestSuite < Test::Unit::TestCase
 
 		subject = @driver.find_element(:id, 'email_subject')
 		subject.send_keys('This is the subject')
-		@driver.switch_to.frame(@driver.find_element(:tag_name, 'iframe'))
-		message = @driver.find_element(:class, 'cke_editable')
+		message = @driver.find_element(:class, 'ck-editor__editable')
 		message_content = "This is an email to all users."
 		message.send_keys(message_content)
-		@driver.switch_to.default_content
 
 		# send preview email
 		preview_btn = @driver.find_element(:id, 'deliver-preview-email')
@@ -2238,11 +2237,9 @@ class UiTestSuite < Test::Unit::TestCase
 		request_modal.click
 		wait_for_modal_open('contact-modal')
 
-		@driver.switch_to.frame(@driver.find_element(:tag_name, 'iframe'))
-		message = @driver.find_element(:class, 'cke_editable')
+		message = @driver.find_element(:class, 'ck-editor__editable')
 		message_content = "This is a report request."
 		message.send_keys(message_content)
-		@driver.switch_to.default_content
 		send_request = @driver.find_element(:id, 'send-report-request')
 		send_request.click
 		wait_for_modal_open('message_modal')
@@ -3434,13 +3431,10 @@ class UiTestSuite < Test::Unit::TestCase
 		edit_btn = @driver.find_element(:id, 'edit-study-description')
 		edit_btn.click
 		wait_for_render(:id, 'update-study-description')
-		# since ckeditor is a seperate DOM, we need to switch to the iframe containing it
-		@driver.switch_to.frame(@driver.find_element(:tag_name, 'iframe'))
-		description = @driver.find_element(:class, 'cke_editable')
+		description = @driver.find_element(:class, 'ck-editor__editable')
 		description.clear
 		new_description = "This is the description with a random element: #{SecureRandom.uuid}."
 		description.send_keys(new_description)
-		@driver.switch_to.default_content
 		update_btn = @driver.find_element(:id, 'update-study-description')
 		update_btn.click
 		wait_for_render(:id, 'edit-study-description')

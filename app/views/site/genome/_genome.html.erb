@@ -2,20 +2,20 @@
 Minimal DOM scaffolding and server-side data for genomic visualizations.
 See partials referenced below and scp-igv.js for larger bodies of code.
 -->
-<script>
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
   if (typeof accessToken === 'undefined') {
     window.accessToken = '<%= get_read_access_token(@study, current_user) %>';
   }
 </script>
 <% if @study.has_analysis_outputs?('infercnv', 'ideogram.js') and action_name == 'study' %>
-<script>
+  <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
   window.annotationsPath = '<%= raw @study.get_analysis_outputs('infercnv', 'ideogram.js').first.api_url %>';
 </script>
   <%= render partial: '/site/genome/ideogram' %>
 <% end %>
 
 <% if @study.has_bam_files? %>
-  <script>
+  <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
   if (typeof bamAndBaiFiles === 'undefined') {
     window.bamAndBaiFiles = <%= raw @study.get_bam_files.to_json %>;
     window.gtfFiles = <%= raw @study.get_gene_tracks.to_json %>;
@@ -24,7 +24,7 @@ See partials referenced below and scp-igv.js for larger bodies of code.
   <%= render partial: '/site/genome/igv' %>
 <% end %>
 
-<script>
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
   if (hasDisplayedIgv === true) {
     $('#genome-tab-nav').css('display', ''); // Show 'Genome' tab
   }

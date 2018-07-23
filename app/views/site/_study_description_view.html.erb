@@ -4,13 +4,20 @@
 <% if user_signed_in? && @study.can_edit?(current_user) %>
   <p><%= link_to "<i class='fas fa-fw fa-edit'></i> Edit Description".html_safe, 'javascript:;', class: 'btn btn-primary', id: 'edit-study-description' %></p>
 
-  <script type="text/javascript">
+  <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
-      $('#edit-study-description').click(function() {
+      $('#edit-study-description').on('click', function() {
           $.ajax({
               method: 'GET',
               url: '<%= edit_study_description_path(study_name: @study.url_safe_name) %>',
               dataType: 'script'
+          });
+      });
+
+
+      $('#study-description-content').on('click', '#update-study-description', function() {
+          launchModalSpinner('#update-study-settings-spinner', '#update-study-settings-modal', function() {
+              return true;
           });
       });
 

@@ -1,5 +1,5 @@
 <h2>Submission History <span class="badge" id="submissions-count"><%= @submissions.size %></span></h2>
-<p class="text-center"><button type="button" id="refresh-submissions-table-top" class="btn btn-sm btn-default refresh-submissions-table" data-loading-text="Refreshing Submissions..."><i class='fas fa-refresh'></i> Refresh Table</button></p>
+<p class="text-center"><button type="button" id="refresh-submissions-table-top" class="btn btn-sm btn-default refresh-submissions-table" data-loading-text="Refreshing Submissions..."><i class='fas fa-sync-alt'></i> Refresh Table</button></p>
 <div class="well well-sm">
   <div class="table-responsive">
     <table class="table table-striped" id="submissions-table">
@@ -34,9 +34,9 @@
     </table>
   </div>
 </div>
-<p class="text-center"><button type="button" id="refresh-submissions-table-bottom" class="btn btn-sm btn-default refresh-submissions-table" data-loading-text="Refreshing Submissions..."><i class='fas fa-refresh'></i> Refresh Table</button></p>
+<p class="text-center"><button type="button" id="refresh-submissions-table-bottom" class="btn btn-sm btn-default refresh-submissions-table" data-loading-text="Refreshing Submissions..."><i class='fas fa-sync-alt'></i> Refresh Table</button></p>
 
-<script>
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
   var submissionsTable = $('#submissions-table').DataTable({
     pagingType: "full_numbers",
     order: [[0, 'desc']],

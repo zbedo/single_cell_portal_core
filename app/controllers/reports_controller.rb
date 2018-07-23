@@ -209,13 +209,18 @@ class ReportsController < ApplicationController
     end
   end
 
-  # send a message to the site administrator requesting a new report plot
   def report_request
+
+  end
+
+  # send a message to the site administrator requesting a new report plot
+  def submit_report_request
     @subject = report_request_params[:subject]
     @requester = report_request_params[:requester]
     @message = report_request_params[:message]
 
     SingleCellMailer.admin_notification(@subject, @requestor, @message).deliver_now
+    redirect_to reports_path, notice: 'Your request has been submitted.' and return
   end
 
   private

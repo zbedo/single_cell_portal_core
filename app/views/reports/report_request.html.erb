@@ -1,0 +1,33 @@
+<h1>Send a request for a new plot</h1>
+<%= form_for(:report_request, url: submit_report_request_path, html: {class: 'form', id: 'report-request-form'}) do |f| %>
+  <div class="form-group">
+    <%= f.hidden_field :requester, value: current_user.email %>
+    <%= f.label :subject %><br />
+    <%= f.text_field :subject, value: 'Request for a new report plot', class: 'form-control' %>
+  </div>
+  <div class="form-group">
+    <%= f.text_area :message %>
+  </div>
+  <div class="form-group">
+    <%= f.submit 'Send Request', class: 'btn btn-lg btn-success', id: 'send-report-request' %>
+    <%= link_to 'Cancel', reports_path, class: 'btn btn-lg btn-warning pull-right' %>
+  </div>
+<% end %>
+
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+
+    ClassicEditor
+        .create( document.querySelector( '#report_request_message' ),
+            {
+                toolbar: ["heading", '|',  "bold", "italic", 'link', "bulletedList", "numberedList", "blockQuote", '|', "undo", "redo"]
+            }
+        )
+        .then( function(editor) {
+            console.log('Report request initialized');
+        } )
+        .catch( function(error) {
+                console.error( error );
+            }
+        );
+
+</script>

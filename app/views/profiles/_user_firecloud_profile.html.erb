@@ -83,7 +83,7 @@
 
 <% end %>
 
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
     $('#update-user-firecloud-profile').click(function(event) {
         var formElements = $('#firecloud-profile .form-control');
         var valid = true;

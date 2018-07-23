@@ -69,7 +69,7 @@
   <% end %>
   <div class="form-group">
 		<%= f.label :description %>
-		<%= f.cktext_area :description %>
+		<%= f.text_area :description %>
 	</div>
 	<div class="form-group">
 		<h3>Sharing</h3>
@@ -82,7 +82,7 @@
   </div>
 <% end %>
 
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
     $('#study_use_existing_workspace').change(function() {
         if ($(this).val() == '1') {
             $('#study_firecloud_workspace').attr('disabled', false);
@@ -110,5 +110,19 @@
         var descField = $(this).next('.share-description');
         descField.html(permissionText[newPermission])
     });
+
+    ClassicEditor
+      .create( document.querySelector( '#study_description' ),
+          {
+              toolbar: ["heading", '|',  "bold", "italic", "link", "bulletedList", "numberedList", "blockQuote", '|', "undo", "redo"]
+          }
+      )
+      .then( function(editor) {
+          console.log(Array.from( editor.ui.componentFactory.names() ));
+      } )
+      .catch( function(error) {
+          console.error( error );
+      }
+    );
 
 </script>

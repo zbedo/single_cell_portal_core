@@ -35,7 +35,7 @@
 </div>
 
 <%= link_to "<span class='fas fa-chevron-up'></span>".html_safe, "#", class: "btn btn-default btn-xs" %>
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
   $(window).scroll(bindScroll);
 
   var totalPages = <%= @studies.total_pages %>;
