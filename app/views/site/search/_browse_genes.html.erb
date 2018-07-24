@@ -7,7 +7,7 @@
           <%= hidden_field_tag :scpbr, @selected_branding_group.name_as_id %>
         <% end %>
         <div class="input-group-btn">
-          <button class="btn btn-info" type="submit" name="commit" id="submit-search"><span class="fas fa-search"></span></button>
+          <button class="btn btn-info" type="submit" name="commit" id="submit-gene-search"><span class="fas fa-search"></span></button>
         </div>
       </div>
     <% end %>
@@ -23,3 +23,13 @@
     </div>
   </div>
 </div>
+
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+
+    $('#submit-gene-search').on('click', function() {
+        launchModalSpinner('#spinner_target', '#loading-modal', function() {
+            return true;
+        });
+    });
+
+</script>
