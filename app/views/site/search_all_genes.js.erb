@@ -1,0 +1,7 @@
+$("#gene-search-results").empty();
+$('#gene-search-results-count').html(<%= @matches.size %>)
+<% @results.each_with_index do |results, rindex| %>
+  <% results.each_with_index do |gene, gindex| %>
+    $("#gene-search-results").append("<%= escape_javascript(render partial: '/site/search/gene_result', locals: {gene: gene, study: gene.study, identifier: gene.id}) %>")
+  <% end %>
+<% end %>

@@ -436,6 +436,14 @@ label {
   z-index: 500;
 }
 
+.gene-panel {
+  margin-bottom: 25px !important;
+}
+
+.gene-result-view-plot {
+  min-height: 400px;
+}
+
 #perform-gene-search {
   background-color: #337ab7;
   color: white;

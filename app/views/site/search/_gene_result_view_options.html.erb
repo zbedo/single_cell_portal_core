@@ -1,0 +1,16 @@
+<div id="<%= @target %>-view-options" class="top-pad">
+  <div class="form-group">
+    <%= label_tag "#{@target}-cluster".to_sym, 'Load cluster' %><br />
+    <%= select_tag "#{@target}-cluster".to_sym, options_for_select(@options, set_cluster_value(@study, params)), class: 'form-control' %>
+  </div>
+
+  <div class="form-group">
+    <%= label_tag "#{@target}-annotation".to_sym, 'Select annotation' %><br />
+    <%= select_tag "#{@target}-annotation".to_sym, grouped_options_for_select(@cluster_annotations, set_annotation_value(@study, params)), class: 'form-control' %>
+  </div>
+
+  <div class="form-group">
+    <%= label_tag "#{@target}-subsample".to_sym, 'Subsampling threshold' %>&nbsp;<i class='fas fa-question-circle' title="Take a representative subsample of the current cluster.  Choosing all cells may dramatically increase rendering time." data-toggle="tooltip"></i><br />
+    <%= select_tag "#{@target}-subsample".to_sym, options_for_select(subsampling_options(@cluster.points), set_subsample_value(params) ), {include_blank: 'All Cells', class: 'form-control'} %>
+  </div>
+</div>
