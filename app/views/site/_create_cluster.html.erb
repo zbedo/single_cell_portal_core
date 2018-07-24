@@ -1,0 +1,123 @@
+<div class="modal fade" id="clusterModal" tabindex="-1" role="dialog" aria-labelledby="clusterModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="clusterModallabel">Create Cluster</h2>
+      </div>
+      <div class="modal-body row">
+        <div class="col-md-1"></div>
+        <div class="form form-group col-md-10" id="create_cluster_form">
+          <label for="name">Name</label>
+          <input class="form-control" type="text" placeholder="Lower Case Letters Only" name="name" id="name"/>
+          <p>
+            <a data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+              <span class="fa-caret-right fa fa-fw"></span>Optional Settings
+            </a>
+          </p>
+          <div class="collapse" id="collapseExample">
+            <div class="card card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <label for="master-machine-type-select">Master Machine Type</label>
+                  <select name="master-machine-type-select" id="master-machine-type-select" class="form-control">
+                    <option value="n1-standard-1">n1-standard-1</option>
+                    <option value="n1-standard-2">n1-standard-2</option>
+                    <option value="n1-standard-4" selected="">n1-standard-4</option>
+                    <option value="n1-standard-8">n1-standard-8</option>
+                    <option value="n1-standard-16">n1-standard-16</option>
+                    <option value="n1-standard-32">n1-standard-32</option>
+                    <option value="n1-standard-64">n1-standard-64</option>
+                    <option value="n1-standard-96">n1-standard-96</option>
+                    <option value="n1-highcpu-4">n1-highcpu-4</option>
+                    <option value="n1-highcpu-8">n1-highcpu-8</option>
+                    <option value="n1-highcpu-16">n1-highcpu-16</option>
+                    <option value="n1-highcpu-32">n1-highcpu-32</option>
+                    <option value="n1-highcpu-64">n1-highcpu-64</option>
+                    <option value="n1-highcpu-96">n1-highcpu-96</option>
+                    <option value="n1-highmem-2">n1-highmem-2</option>
+                    <option value="n1-highmem-4">n1-highmem-4</option>
+                    <option value="n1-highmem-8">n1-highmem-8</option>
+                    <option value="n1-highmem-16">n1-highmem-16</option>
+                    <option value="n1-highmem-32">n1-highmem-32</option>
+                    <option value="n1-highmem-64">n1-highmem-64</option>
+                    <option value="n1-highmem-96">n1-highmem-96</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label for="master-disk-size">Master Disk Size (GB)</label>
+                  <input class="form-control" type="number" value="500" name="master-disk-size" id ="master-disk-size"/>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <label for="workers">Workers</label>
+                  <input class="form-control" type="number" value="0" name="workers" id="workers"/>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <label for="worker-local-ssds">Worker Local SSDs</label>
+                  <input class="form-control" type="number" value="0" name="worker-local-ssds" id ="worker-local-ssds"/>
+                </div>
+                <div class="col-md-6">
+                  <label for="preemptible-workers">Preemptible Workers</label>
+                  <input class="form-control" type="number" value="0" name="preemptible-workers" id ="preemptible-workers"/>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <label for="worker-machine-type-select">Worker Machine Type</label>
+                  <select name="worker-machine-type-select" id="worker-machine-type-select" class="form-control">
+                    <option value="n1-standard-1">n1-standard-1</option>
+                    <option value="n1-standard-2">n1-standard-2</option>
+                    <option value="n1-standard-4" selected="">n1-standard-4</option>
+                    <option value="n1-standard-8">n1-standard-8</option>
+                    <option value="n1-standard-16">n1-standard-16</option>
+                    <option value="n1-standard-32">n1-standard-32</option>
+                    <option value="n1-standard-64">n1-standard-64</option>
+                    <option value="n1-standard-96">n1-standard-96</option>
+                    <option value="n1-highcpu-4">n1-highcpu-4</option>
+                    <option value="n1-highcpu-8">n1-highcpu-8</option>
+                    <option value="n1-highcpu-16">n1-highcpu-16</option>
+                    <option value="n1-highcpu-32">n1-highcpu-32</option>
+                    <option value="n1-highcpu-64">n1-highcpu-64</option>
+                    <option value="n1-highcpu-96">n1-highcpu-96</option>
+                    <option value="n1-highmem-2">n1-highmem-2</option>
+                    <option value="n1-highmem-4">n1-highmem-4</option>
+                    <option value="n1-highmem-8">n1-highmem-8</option>
+                    <option value="n1-highmem-16">n1-highmem-16</option>
+                    <option value="n1-highmem-32">n1-highmem-32</option>
+                    <option value="n1-highmem-64">n1-highmem-64</option>
+                    <option value="n1-highmem-96">n1-highmem-96</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label for="worker_disk_size">Worker Disk Size (GB)</label>
+                  <input class="form-control" type="number" value="500" name="worker_disk_size" id ="worker_disk_size"/>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <label for="extension-uri">Extension Uri</label>
+                  <input class="form-control" type="text" name="extension-uri" id="extension-uri"/>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <label for="custom-script-uri">Custom Script Uri</label>
+                  <input class="form-control" type="text" name="custom-script-uri" id="custom-script-uri"/>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-1"></div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary">Create</button>
+      </div>
+    </div>
+  </div>
+</div>

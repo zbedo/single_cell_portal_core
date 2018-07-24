@@ -16,6 +16,7 @@
     <% end %>
     <% if @allow_firecloud_access && @study.can_compute?(current_user) %>
       <li role="presentation" class="study-nav" id="study-analysis-nav"><a href="#study-analysis" data-toggle="tab">Analysis <i class="fas fa-fw fa-tasks"></i></a></li>
+      <li role="presentation" class="study-nav" id="study-notebooks-nav"><a href="#study-notebooks" data-toggle="tab">Notebooks (BETA) <i class="fas fa-fw fa-server"></i></a></li>
     <% end %>
     <% if @allow_firecloud_access && @study.can_edit?(current_user) %>
       <li role="presentation" class="study-nav" id="study-settings-nav"><a href="#study-settings" data-toggle="tab">Settings <i class="fas fa-fw fa-cogs"></i></a></li>
@@ -38,6 +39,9 @@
     <% if @allow_firecloud_access && @study.can_compute?(current_user) %>
       <div class="tab-pane" id="study-analysis" role="tabpanel">
         <%= render partial: 'study_analysis' %>
+      </div>
+      <div class="tab-pane" id="study-notebooks" role="tabpanel">
+        <%= render partial: 'study_notebooks' %>
       </div>
     <% end %>
     <% if @allow_firecloud_access && @study.can_edit?(current_user) %>
