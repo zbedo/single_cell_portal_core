@@ -181,7 +181,10 @@ class SiteController < ApplicationController
       matrix_ids = study.expression_matrix_files.map(&:id)
       @genes.each do |gene|
         # determine if study contains requested gene
-        matches = study.genes.where(searchable_name: /#{gene.downcase}/, :study_file_id.in => matrix_ids)
+        matches = study.genes.any_of({name: gene, :study_file_id.in => matrix_ids},
+                                     {searchable_name: gene.downcase, :study_file_id.in => matrix_ids},
+                                     {name: /$#{gene} (.*)/, :study_file_id.in => matrix_ids},
+                                     {searchable_name: /$#{gene.downcase} (.*)/, :study_file_id.in => matrix_ids})
         if matches.present?
           matches.each do |match|
             # gotcha where you can have duplicate genes that came from different matrices - ignore these as data is merged on load
@@ -195,7 +198,6 @@ class SiteController < ApplicationController
         end
       end
     end
-    logger.info "found #{@results.size} matches, ids: #{@results.map(&:id)}"
   end
 
   ###
