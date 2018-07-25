@@ -183,8 +183,8 @@ class SiteController < ApplicationController
         # determine if study contains requested gene
         matches = study.genes.any_of({name: gene, :study_file_id.in => matrix_ids},
                                      {searchable_name: gene.downcase, :study_file_id.in => matrix_ids},
-                                     {name: /$#{gene} (.*)/, :study_file_id.in => matrix_ids},
-                                     {searchable_name: /$#{gene.downcase} (.*)/, :study_file_id.in => matrix_ids})
+                                     {name: /\A#{gene} (.*)/, :study_file_id.in => matrix_ids},
+                                     {searchable_name: /\A#{gene.downcase} (.*)/, :study_file_id.in => matrix_ids})
         if matches.present?
           matches.each do |match|
             # gotcha where you can have duplicate genes that came from different matrices - ignore these as data is merged on load
