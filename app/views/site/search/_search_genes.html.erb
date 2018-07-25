@@ -1,0 +1,35 @@
+<div class="row">
+  <div class="col-md-6 col-sm-12 col-xs-12">
+    <%= form_with(url: search_all_genes_path, local: false, class: 'form', id: 'global-search-genes-form') do |f| %>
+      <div class="input-group">
+        <%= f.text_field :search_genes, id: :search_genes, name: 'search[genes]', class: 'form-control', placeholder: 'Search for genes across all studies...' %>
+        <% if @selected_branding_group.present? %>
+          <%= hidden_field_tag :scpbr, @selected_branding_group.name_as_id %>
+        <% end %>
+        <div class="input-group-btn">
+          <button class="btn btn-info" type="submit" name="commit" id="submit-gene-search"><span class="fas fa-search"></span></button>
+        </div>
+      </div>
+    <% end %>
+  </div>
+  <div class="col-md-6 col-sm-12 col-xs-12">
+    <p class="lead">Results Found: <span id="gene-search-results-count" class="badge">0</span></p>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
+    <div class="panel-group" id="gene-search-results">
+
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+
+    $('#submit-gene-search').on('click', function() {
+        launchModalSpinner('#spinner_target', '#loading-modal', function() {
+            return true;
+        });
+    });
+
+</script>

@@ -1,0 +1,7 @@
+closeModalSpinner('#spinner_target', '#loading-modal', function () {
+  $("#gene-search-results").empty();
+  $('#gene-search-results-count').html(<%= @matches %>)
+  <% @results.each do |gene| %>
+      $("#gene-search-results").append("<%= escape_javascript(render partial: '/site/search/gene_result', locals: {gene: gene, study: gene.study, identifier: gene.id}) %>")
+  <% end %>
+});

@@ -1,0 +1,101 @@
+var exp_target_<%= @identifier %> = '<%= @target %>' + '-plot'
+$('#' + exp_target_<%= @identifier %>).empty();
+$('#<%= @target %>-options').html("<%= escape_javascript(render partial: '/site/search/gene_result_view_options') %>");
+var expressionData_<%= @identifier %> = [];
+<% if @selected_annotation[:type] == 'group' %>
+
+    // Using jitter_var instead of jitter because selector is called jitter, avoid confusion
+    var jitter_var_<%= @identifier %> = "<%= @values_jitter %>";
+    var formatted_array_<%= @identifier %> = [];
+    <% @values.sort_by {|k,v| k}.each do |cluster, data| %>
+    formatted_array_<%= @identifier %>.push(["<%= cluster %>", <%= raw data[:y] %>]);
+    <% end %>
+    var title_<%= @identifier %>= "<%= params[:cluster]%>";
+    var data_<%= @identifier %> = createTracesAndLayout(formatted_array_<%= @identifier %>, title_<%= @identifier %>, jitter_var_<%= @identifier %>);
+    expressionData_<%= @identifier %> = [].concat.apply([], data_<%= @identifier %>[0] );
+    expressionLayout_<%= @identifier %> = data_<%= @identifier %>[1];
+
+    Plotly.newPlot(exp_target_<%= @identifier %>, expressionData_<%= @identifier %>, expressionLayout_<%= @identifier %>);
+<% else %>
+    <% @values.each do |cluster, data| %>
+      expressionData_<%= @identifier %>.push(
+          {
+              x: <%= raw data[:x] %>,
+              y: <%= raw data[:y] %>,
+              text: <%= raw data[:text] %>,
+              name: "<%= data[:name] %>",
+              mode: 'markers',
+              type: 'scattergl',
+              hoverinfo: 'text'
+          }
+      );
+    <% end %>
+
+    var expressionLayout_<%= @identifier %> = {
+        hovermode: 'closest',
+        font: plotlyLabelFont,
+        xaxis:{
+            title: '<%= @selected_annotation[:name] %>'
+        },
+        yaxis: {
+            title: '<%= @y_axis_title %>'
+        }
+    }
+
+    Plotly.newPlot(exp_target_<%= @identifier %>, expressionData_<%= @identifier %>, expressionLayout_<%= @identifier %>);
+<% end %>
+
+
+function renderDistribution<%= @identifier %>() {
+    var target = document.getElementById('study-<%= @study.url_safe_name %>-gene-<%= params[:gene] %>-plot');
+    $(target).data('rendered', false);
+    // no need to store spinners in data attribute as entire plot div will be re-rendered
+    new Spinner(opts).spin(target);
+
+    var url = '<%= render_global_gene_expression_plots_path(study_name: @study.url_safe_name, gene: params[:gene]) %>?';
+    var cluster = $('#<%= @target %>-cluster').val();
+    var annotation = $('#<%= @target %>-annotation').val();
+    var subsample = $('#<%= @target %>-subsample').val();
+    var identifier = '<%= @identifier %>'
+    url += 'cluster=' + cluster + '&annotation=' + annotation + '&subsample=' + subsample + '&identifier=' + identifier;
+    // append request token to validate XHR requests
+    var requestToken = '<%= params[:request_user_token] %>'
+    url += '&request_user_token=' + requestToken;
+
+    // make call to load distribution plot
+    $.ajax({
+        url: url,
+        method: 'GET',
+        dataType: 'script'
+    });
+}
+
+// listener for cluster nav, specific to study page
+$("#<%= @target %>-annotation, #<%= @target %>-subsample").change(function() {
+    renderDistribution<%= @identifier %>()
+});
+
+$("#<%= @target %>-cluster").change(function() {
+    $('#cluster-plot').data('rendered', false);
+    var newCluster = $(this).val();
+    var currAnnot = $('#<%= @target %>-annotation').val();
+    // get new annotation options and re-render
+    $.ajax({
+        url: "<%= get_new_annotations_path(study_name: @study.url_safe_name)%>?cluster=" + newCluster + '&target=<%= @target %>',
+        method: 'GET',
+        dataType: 'script',
+        success: function (data) {
+            // parse response as a string and see if currently selected annotation exists in new annotations
+            if (data.indexOf(currAnnot) >= 0) {
+                $('#<%= @target %>-annotation').val(currAnnot);
+            }
+            $(document).ready(function () {
+                // since we now have new annotations, we need to set them in the search form for persistence
+                var an = $('#annotation').val();
+                renderDistribution<%= @identifier %>()
+            });
+        }
+    });
+});
+
+$('#' + exp_target_<%= @identifier %>).data('rendered', true)

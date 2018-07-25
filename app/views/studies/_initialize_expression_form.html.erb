@@ -102,9 +102,10 @@
           completeWizardStep('initialize_expression_form_nav');
 					var fileName = data.files[0].name.replace(/ /g, '_');
 					$.ajax({
-						url: "<%= update_status_study_path %>",
-						type: "PATCH",
-						data: { status: 'uploaded', file: fileName}
+						  url: "<%= update_status_study_path %>",
+						  type: "PATCH",
+              dataType: 'script',
+						  data: { status: 'uploaded', file: fileName}
 					});
 					fileUploading = false;
 					$.ajax({

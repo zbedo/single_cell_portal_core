@@ -76,7 +76,6 @@ Rails.application.routes.draw do
     # public/private file download links (redirect to signed_urls from Google)
     get 'data/public/:study_name', to: 'site#download_file', as: :download_file
     get 'data/private/:study_name', to: 'studies#download_private_file', as: :download_private_file
-    get 'data/media_url/:study_name', to: 'site#get_media_url', as: :get_media_url
 
     post 'totat', to: 'site#create_totat', as: :create_totat
     get 'bulk_data/:study_name/:download_object/:totat', to: 'site#download_bulk_files', as: :download_bulk_files, constraints: {filename: /.*/}
@@ -102,6 +101,7 @@ Rails.application.routes.draw do
     post 'study/:study_name/search', to: 'site#search_genes', as: :search_genes
     get 'study/:study_name/gene_expression/:gene/', to: 'site#view_gene_expression', as: :view_gene_expression, constraints: {gene: /.*/}
     get 'study/:study_name/render_gene_expression_plots/:gene/', to: 'site#render_gene_expression_plots', as: :render_gene_expression_plots, constraints: {gene: /.*/}
+    get 'study/:study_name/render_global_gene_expression_plots/:gene/', to: 'site#render_global_gene_expression_plots', as: :render_global_gene_expression_plots, constraints: {gene: /.*/}
     get 'study/:study_name/gene_expression', to: 'site#view_gene_expression_heatmap', as: :view_gene_expression_heatmap
     get 'study/:study_name/gene_set_expression', to: 'site#view_gene_set_expression', as: :view_gene_set_expression
     get 'study/:study_name/render_gene_set_expression_plots', to: 'site#render_gene_set_expression_plots', as: :render_gene_set_expression_plots
@@ -135,6 +135,7 @@ Rails.application.routes.draw do
 
     # base actions
     get 'search', to: 'site#search', as: :search
+    post 'search_all_genes', to: 'site#search_all_genes', as: :search_all_genes
     get 'log_action', to: 'site#log_action', as: :log_action
     get 'privacy_policy', to: 'site#privacy_policy', as: :privacy_policy
     get '/', to: 'site#index', as: :site
