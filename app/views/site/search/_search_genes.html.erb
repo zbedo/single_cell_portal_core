@@ -1,6 +1,6 @@
 <div class="row">
   <div class="col-md-6 col-sm-12 col-xs-12">
-    <%= form_with(url: search_all_genes_path, local: false, class: 'form', id: 'global-search-genes-form') do |f| %>
+    <%= form_with(url: get_viewable_studies_path, local: false, class: 'form', id: 'global-search-genes-form') do |f| %>
       <div class="input-group">
         <%= f.text_field :search_genes, id: :search_genes, name: 'search[genes]', class: 'form-control', placeholder: 'Search for genes across all studies...' %>
         <% if @selected_branding_group.present? %>

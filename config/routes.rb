@@ -135,6 +135,7 @@ Rails.application.routes.draw do
 
     # base actions
     get 'search', to: 'site#search', as: :search
+    post 'get_viewable_studies', to: 'site#get_viewable_studies', as: :get_viewable_studies
     post 'search_all_genes', to: 'site#search_all_genes', as: :search_all_genes
     get 'log_action', to: 'site#log_action', as: :log_action
     get 'privacy_policy', to: 'site#privacy_policy', as: :privacy_policy

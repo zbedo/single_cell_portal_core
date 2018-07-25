@@ -31,7 +31,7 @@
     var identifier = '<%= identifier %>';
     url += 'cluster=' + cluster + '&annotation=' + annotation + '&identifier=' + identifier;
     // append request token to validate XHR requests
-    var requestToken = '<%= user_signed_in? ? current_user.id.to_s + ':' + current_user.authentication_token : nil %>'
+    var requestToken = '<%= user_signed_in? ? current_user.id.to_s + ':' + current_user.authentication_token : nil %>';
     url += '&request_user_token=' + requestToken;
     // subsample if necessary
     if (<%= study.default_cluster.points >= 10000 %>) {
