@@ -18,9 +18,7 @@ See partials referenced below and scp-igv.js for larger bodies of code.
   <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
   if (typeof bamAndBaiFiles === 'undefined') {
     window.bamAndBaiFiles = <%= raw @study.get_bam_files.to_json %>;
-    window.bamsToViewInIgv = [];
-
-    window.bedFiles = <%= raw @study.get_gene_tracks.to_json %>;
+    window.gtfFiles = <%= raw @study.get_gene_tracks.to_json %>;
   }
   </script>
   <%= render partial: '/site/genome/igv' %>

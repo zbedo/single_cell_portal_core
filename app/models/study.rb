@@ -723,13 +723,13 @@ class Study
           mm10: {}
       }
 
-      reference_bed_key = opts.keys.find {|o| o =~ /^#{reference_name}.*_bed$/}
-      reference_bed = opts[reference_bed_key]
-      gene_tracks[:mm10][:url] = Study.firecloud_client.generate_api_url(namespace, name, reference_bed)
+      reference_gtf_key = opts.keys.find {|o| o =~ /^#{reference_name}.*_gtf$/}
+      reference_gtf = opts[reference_gtf_key]
+      gene_tracks[:mm10][:url] = Study.firecloud_client.generate_api_url(namespace, name, reference_gtf)
 
-      reference_bed_index_key = opts.keys.find {|o| o =~ /^#{reference_name}.*_bed_index$/}
-      reference_bed_index = opts[reference_bed_index_key]
-      gene_tracks[:mm10][:indexUrl] = Study.firecloud_client.generate_api_url(namespace, name, reference_bed_index)
+      reference_gtf_index_key = opts.keys.find {|o| o =~ /^#{reference_name}.*_gtf_index$/}
+      reference_gtf_index = opts[reference_gtf_index_key]
+      gene_tracks[:mm10][:indexUrl] = Study.firecloud_client.generate_api_url(namespace, name, reference_gtf_index)
     end
     gene_tracks
   end
