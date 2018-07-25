@@ -1,4 +1,5 @@
 $("#gene-search-results").empty();
+$('#gene-search-results-count').html('Loading...');
 closeModalSpinner('#spinner_target', '#loading-modal', function () {
     var target = document.getElementById('gene-search-results');
     var spinner = new Spinner(opts).spin(target);
