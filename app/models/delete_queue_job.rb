@@ -13,7 +13,7 @@ class DeleteQueueJob < Struct.new(:object)
       when 'Study'
         # mark for deletion, rename study to free up old name for use, and restrict access by removing owner
         new_name = "DELETE-#{object.data_dir}"
-        object.update!(public: false, user_id: nil, name: new_name, url_safe_name: new_name)
+        object.update!(public: false, name: new_name, url_safe_name: new_name)
       when 'StudyFile'
         file_type = object.file_type
         study = object.study
