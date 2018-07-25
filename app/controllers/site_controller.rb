@@ -16,18 +16,18 @@ class SiteController < ApplicationController
   respond_to :html, :js, :json
 
   before_action :set_study, except: [:index, :search, :search_all_genes, :privacy_policy, :view_workflow_wdl, :create_totat, :log_action]
-  before_action :set_cluster_group, only: [:study, :render_cluster, :render_gene_expression_plots, :render_default_gene_expression_plots,
+  before_action :set_cluster_group, only: [:study, :render_cluster, :render_gene_expression_plots, :render_global_gene_expression_plots,
                                            :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression,
                                            :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :expression_query,
                                            :annotation_query, :get_new_annotations, :annotation_values, :show_user_annotations_form]
-  before_action :set_selected_annotation, only: [:render_cluster, :render_gene_expression_plots, :render_default_gene_expression_plots,
+  before_action :set_selected_annotation, only: [:render_cluster, :render_gene_expression_plots, :render_global_gene_expression_plots,
                                                  :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression,
                                                  :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :annotation_query,
                                                  :annotation_values, :show_user_annotations_form]
   before_action :load_precomputed_options, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots,
                                                   :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression,
                                                   :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap]
-  before_action :check_view_permissions, except: [:index, :search_all_genes, :render_default_gene_expression_plots, :privacy_policy,
+  before_action :check_view_permissions, except: [:index, :search_all_genes, :render_global_gene_expression_plots, :privacy_policy,
                                                   :search, :precomputed_results, :expression_query, :annotation_query, :view_workflow_wdl,
                                                   :log_action, :get_workspace_samples, :update_workspace_samples, :create_totat, :get_workflow_options]
   before_action :check_compute_permissions, only: [:get_fastq_files, :get_workspace_samples, :update_workspace_samples,
@@ -388,31 +388,20 @@ class SiteController < ApplicationController
     end
   end
 
-  # renders gene expression plots, but from global gene search. uses default annotations
-  def render_default_gene_expression_plots
+  # renders gene expression plots, but from global gene search. uses default annotations on first render, but takes URL parameters after that
+  def render_global_gene_expression_plots
     if check_xhr_view_permissions
       matches = @study.genes.by_name(params[:gene], @study.expression_matrix_files.map(&:id))
       subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
       @gene = load_best_gene_match(matches, params[:gene])
-      @identifier = params[:identifier]
+      @identifier = params[:identifier] # unique identifer for each plot for namespacing JS variables/functions (@gene.id)
       @target = 'study-' + @study.url_safe_name + '-gene-' + params[:gene].gsub(/\W/, '-')
       @y_axis_title = load_expression_axis_title
-      # depending on annotation type selection, set up necessary partial names to use in rendering
       if @selected_annotation[:type] == 'group'
         @values = load_expression_boxplot_data_array_scores(@selected_annotation, subsample)
-        if params[:plot_type] == 'box'
-          @values_box_type = 'box'
-        else
-          @values_box_type = 'violin'
-          @values_jitter = params[:boxpoints]
-        end
-        @top_plot_plotly = 'expression_plots_plotly'
-        @top_plot_layout = 'expression_box_layout'
+        @values_jitter = params[:boxpoints]
       else
         @values = load_annotation_based_data_array_scatter(@selected_annotation, subsample)
-        @top_plot_plotly = 'expression_annotation_plots_plotly'
-        @top_plot_layout = 'expression_annotation_scatter_layout'
-        @annotation_scatter_range = set_range(@values.values)
       end
       @options = load_cluster_group_options
       @cluster_annotations = load_cluster_group_annotations
