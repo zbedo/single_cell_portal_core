@@ -305,6 +305,11 @@ function deletePromise(event, message) {
 
 // attach various handlers to bootstrap items and turn on functionality
 function enableDefaultActions() {
+    // detect Safari and alert user of deprecation
+    if (navigator.userAgent.indexOf('Safari') != -1 && navigator.userAgent.indexOf('Chrome') == -1) {
+        alert('WARNING: The Single Cell Portal no longer supports the Safari browser, and most functionality will be disabled.  ' +
+            'Please use either Chrome or FireFox instead.');
+    }
 
     // need to clear previous listener to prevent conflict
     $('.panel-collapse').off('show.bs.collapse hide.bs.collapse');

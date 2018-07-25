@@ -1,7 +1,7 @@
 <div class="panel panel-default gene-panel">
   <div class="panel-heading">
     <div class="panel-title">
-      <h4><%= link_to "#{study.name}: #{gene.name} <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, "#study-#{study.url_safe_name}", "data-toggle" => "collapse", 'data-parent' => '#search-genes' %></h4>
+      <h4><%= link_to "#{gene.name} <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, "#study-#{study.url_safe_name}-gene-#{gene.name.gsub(/\W/, '-')}", "data-toggle" => "collapse", 'data-parent' => '#search-genes' %></h4>
     </div>
   </div>
   <div class="panel-collapse collapse in" id="study-<%= study.url_safe_name %>-gene-<%= gene.name.gsub(/\W/, '-') %>">

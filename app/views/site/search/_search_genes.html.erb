@@ -27,9 +27,12 @@
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
     $('#submit-gene-search').on('click', function() {
-        launchModalSpinner('#spinner_target', '#loading-modal', function() {
-            return true;
-        });
+        $("#gene-search-results").empty();
+        $('#gene-search-results-count').html('Loading...');
+        var target = document.getElementById('gene-search-results');
+        var spinner = new Spinner(opts).spin(target);
+        $(target).data('spinner', spinner);
+        return true;
     });
 
 </script>

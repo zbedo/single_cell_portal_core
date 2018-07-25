@@ -1,5 +1,13 @@
 <% @results.each do |gene| %>
-    $("#gene-search-results").append("<%= escape_javascript(render partial: '/site/search/gene_result', locals: {gene: gene, study: @study, identifier: gene.id}) %>")
+    $("#<%= gene.study.id %>").append("<%= escape_javascript(render partial: '/site/search/gene_result', locals: {gene: gene, study: @study, identifier: gene.id}) %>")
 <% end %>
-$('#gene-search-results').data('spinner').stop();
-$('#gene-search-results-count').html($('.gene-panel').length);
+if ($('.gene-panel').length > 0) {
+    $('#gene-search-results').data('spinner').stop();
+    $('#gene-search-results-count').html($('.gene-panel').length);
+}
+
+$('.panel-collapse').off('show.bs.collapse hide.bs.collapse');
+
+$('.panel-collapse').on('show.bs.collapse hide.bs.collapse', function () {
+    toggleGlyph($(this).prev().find('span.toggle-glyph'));
+});

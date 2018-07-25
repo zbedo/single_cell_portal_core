@@ -1,24 +1,19 @@
-$("#gene-search-results").empty();
-$('#gene-search-results-count').html('Loading...');
-closeModalSpinner('#spinner_target', '#loading-modal', function () {
-    var target = document.getElementById('gene-search-results');
-    var spinner = new Spinner(opts).spin(target);
-    $(target).data('spinner', spinner);
-    var genes = $('#search_genes').val()
-    <% @studies.each do |study| %>
+var genes = $('#search_genes').val()
+<% @studies.each do |study| %>
 
-      $.ajax({
-          url: '<%= search_all_genes_path %>',
-          method: 'POST',
-          dataType: 'script',
-          data: {
-              search: {
-                  genes: genes
-              },
-              id: '<%= study.id %>',
-              request_user_token: '<%= user_signed_in? ? current_user.id.to_s + ':' + current_user.authentication_token : nil %>'
-          }
-      });
+  $("#gene-search-results").append("<%= escape_javascript(render partial: '/site/search/gene_search_panel', locals: {study: study}) %>")
 
-    <% end %>
-});
+  $.ajax({
+      url: '<%= search_all_genes_path %>',
+      method: 'POST',
+      dataType: 'script',
+      data: {
+          search: {
+              genes: genes
+          },
+          id: '<%= study.id %>',
+          request_user_token: '<%= user_signed_in? ? current_user.id.to_s + ':' + current_user.authentication_token : nil %>'
+      }
+  });
+
+<% end %>
