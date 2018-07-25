@@ -171,6 +171,9 @@ class SiteController < ApplicationController
       @studies = @studies.where(branding_group_id: @selected_branding_group.id)
     end
 
+    # restrict studies to initialized only
+    @studies = @studies.where(initialized: true)
+
     # find matches in each study
     @results = []
     @matches = 0
@@ -192,6 +195,7 @@ class SiteController < ApplicationController
         end
       end
     end
+    logger.info "found #{@results.size} matches, ids: #{@results.map(&:id)}"
   end
 
   ###
