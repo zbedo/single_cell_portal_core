@@ -47,9 +47,10 @@ var expressionData_<%= @identifier %> = [];
 
 
 function renderDistribution<%= @identifier %>() {
-    var target1 = document.getElementById('study-<%= @study.url_safe_name %>-gene-<%= params[:gene] %>-plot');
+    var target = document.getElementById('study-<%= @study.url_safe_name %>-gene-<%= params[:gene] %>-plot');
+    $(target).data('rendered', false);
     // no need to store spinners in data attribute as entire plot div will be re-rendered
-    new Spinner(opts).spin(target1);
+    new Spinner(opts).spin(target);
 
     var url = '<%= render_global_gene_expression_plots_path(study_name: @study.url_safe_name, gene: params[:gene]) %>?';
     var cluster = $('#<%= @target %>-cluster').val();
@@ -96,3 +97,5 @@ $("#<%= @target %>-cluster").change(function() {
         }
     });
 });
+
+$('#' + exp_target_<%= @identifier %>).data('rendered', true)

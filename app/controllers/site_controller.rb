@@ -165,6 +165,13 @@ class SiteController < ApplicationController
     @genes = sanitize_search_values(raw_genes).split(',').map(&:strip)
     # load viewable studies
     @studies = user_signed_in? ? Study.viewable(current_user) : Study.where(queued_for_deletion: false, public: true)
+
+    # restrict to branding group if present
+    if @selected_branding_group.present?
+      @studies = @studies.where(branding_group_id: @selected_branding_group.id)
+    end
+
+    # find matches in each study
     @results = []
     @matches = 0
     @studies.each do |study|
@@ -173,8 +180,15 @@ class SiteController < ApplicationController
         # determine if study contains requested gene
         matches = study.genes.where(searchable_name: /#{gene.downcase}/, :study_file_id.in => matrix_ids)
         if matches.present?
-          @results << matches
-          @matches += matches.size
+          matches.each do |match|
+            # gotcha where you can have duplicate genes that came from different matrices - ignore these as data is merged on load
+            if @results.detect {|r| r.study == match.study && r.searchable_name == match.searchable_name}
+              next
+            else
+              @results << match
+              @matches += 1
+            end
+          end
         end
       end
     end

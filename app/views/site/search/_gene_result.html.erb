@@ -23,6 +23,8 @@
 
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
+    $('#study-<%= study.url_safe_name %>-gene-<%= gene.name.gsub(/\W/, '-') %>-plot').data('rendered', false);
+
     var url = '<%= render_global_gene_expression_plots_path(study_name: study.url_safe_name, gene: gene.name) %>?';
     var cluster = '<%= study.default_cluster.name %>';
     var annotation = '<%= study.default_annotation %>';
