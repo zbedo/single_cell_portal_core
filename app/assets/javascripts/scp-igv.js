@@ -8,6 +8,12 @@
 // default view, then searches a gene.
 window.hasDisplayedIgv = false;
 
+window.bamsToViewInIgv = [];
+window.selectedBams = {};
+
+/**
+ * Upon clicking 'Browse in genome', show selected BAM in igv.js in Genome tab.
+ */
 $(document).on('click', '.bam-browse-genome', function(e) {
   var selectedBam, thisBam, i;
 
@@ -16,9 +22,10 @@ $(document).on('click', '.bam-browse-genome', function(e) {
   // bamAndBaiFiles assigned in _genome.html.erb
   for (i = 0; i < bamAndBaiFiles.length; i++) {
     thisBam = bamAndBaiFiles[i].url.split('\/o/')[1].split('?')[0];
-    if (thisBam === selectedBam) {
+    if (thisBam === selectedBam && selectedBam in selectedBams === false) {
       bamsToViewInIgv.push(bamAndBaiFiles[i]);
     }
+    selectedBams[thisBam] = 1;
   }
 
   $('#genome-tab-nav').css('display', ''); // Show 'Genome' tab
@@ -62,18 +69,19 @@ function getBamTracks() {
  * Gets the track of genes and transcripts from the genome's BED file
  */
 function getGenesTrack(genome, genesTrackName) {
-  var bedFile, genesTrack;
+  var gtfFile, genesTrack;
 
-  // bedFiles assigned in _genome.html.erb
-  bedFile = bedFiles[genome];
+  // gtfFiles assigned in _genome.html.erb
+  gtfFile = gtfFiles[genome];
 
   genesTrack = {
     name: genesTrackName,
-    url: bedFile.url + '?alt=media',
-    indexURL: bedFile.indexUrl + '?alt=media',
+    url: gtfFile.url + '?alt=media',
+    indexURL: gtfFile.indexUrl + '?alt=media',
     type: 'annotation',
-    format: 'bed',
+    format: 'gtf',
     sourceType: 'file',
+    height: 102,
     order: 0,
     visibilityWindow: 300000000,
     displayMode: 'EXPANDED',
@@ -82,6 +90,23 @@ function getGenesTrack(genome, genesTrackName) {
 
   return genesTrack;
 }
+
+// Monkey patch getKnownGenome to remove baked-in genes track.
+// We use a different gene annotation source, in a different track order,
+// so removing this default gives our genome browser instance a more
+// polished feel.
+var originalGetKnownGenomes = igv.GenomeUtils.getKnownGenomes;
+igv.GenomeUtils.getKnownGenomes = function () {
+  return originalGetKnownGenomes.apply(this).then(function(reference) {
+    var key,
+        newRef = {};
+    for (key in reference) {
+      delete reference[key].tracks;
+      newRef[key] = reference[key];
+    }
+    return newRef;
+  })
+};
 
 /**
  * Instantiates and renders igv.js widget on the page
@@ -105,8 +130,7 @@ function initializeIgv() {
   igvOptions = {
     genome: genome,
     locus: locus,
-    tracks: tracks,
-    supportQueryParameters: true
+    tracks: tracks
   };
 
   igv.createBrowser(igvContainer, igvOptions);

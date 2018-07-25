@@ -4857,6 +4857,99 @@ class UiTestSuite < Test::Unit::TestCase
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
+  
+  # Test viewing BAM files in igv.js
+  test 'front-end: igv bam' do
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    # log in first
+    @driver.get @base_url
+    login($test_email, $test_email_password)
+    @driver.get @base_url + '/studies/new'
+
+    # create a new study using an existing workspace, also generate a random name to validate that workspace name
+    # and study name can be different
+    random_name = "igv.js UI test #{$random_seed}"
+    study_form = @driver.find_element(:id, 'new_study')
+    study_form.find_element(:id, 'study_name').send_keys(random_name)
+    study_form.find_element(:id, 'study_use_existing_workspace').send_keys('Yes')
+    study_form.find_element(:id, 'study_firecloud_workspace').send_keys("development-igv-js-ui-test")
+    share = @driver.find_element(:id, 'add-study-share')
+    @wait.until {share.displayed?}
+    share.click
+    share_email = study_form.find_element(:class, 'share-email')
+    share_email.send_keys($share_email)
+
+    # save study
+    save_study = @driver.find_element(:id, 'save-study')
+    save_study.click
+    @wait.until {element_present?(:id, 'unsynced-study-files')}
+    close_modal('message_modal')
+
+    # sync each file
+    study_file_forms = @driver.find_elements(:class, 'unsynced-study-file')
+    bam_file = 'fixed_neurons_6days_2000_possorted_genome_bam_test_data.bam'
+    study_file_forms.each do |form|
+      filename = form.find_element(:id, 'study_file_name')['value']
+      if filename == 'cluster_example.txt' or filename == 'expression_matrix_example.txt' or filename == 'metadata_example.txt' or filename == bam_file or bam_file + '.bai'
+        file_type = form.find_element(:id, 'study_file_file_type')
+        case filename
+        when 'cluster_example.txt'
+          file_type.send_keys('Cluster')
+        when 'expression_matrix_example.txt'
+          file_type.send_keys('Expression Matrix')
+        when 'metadata_example.txt'
+          file_type.send_keys('Metadata')
+        when bam_file
+          file_type.send_keys('BAM')
+        when bam_file + '.bai'
+          file_type.send_keys('BAM Index')
+          bam_target_menu = form.find_element(:id, 'study_file_options_bam_id')
+          bam_target_menu.send_keys(bam_file)
+        end
+        sync_button = form.find_element(:class, 'save-study-file')
+        sync_button.click
+        close_modal('sync-notice-modal')
+      end
+    end
+
+    # now assert that forms were re-rendered in synced data panel
+    sync_panel = @driver.find_element(:id, 'synced-data-panel-toggle')
+    sync_panel.click
+
+    # lastly, check info page to make sure everything did in fact parse and complete
+    studies_path = @base_url + '/studies'
+    @driver.get studies_path
+    wait_until_page_loads(studies_path)
+
+    show_button = @driver.find_element(:class, "igv-js-ui-test-#{$random_seed}-show")
+    show_button.click
+    @wait.until {element_present?(:id, 'info-panel')}
+
+    # Go to study, click 'Browse genome' in Downloads tab
+    study_path = @base_url + "/study/igv-js-ui-test-#{$random_seed}"
+    @driver.get(study_path)
+    wait_until_page_loads(study_path)
+    open_ui_tab('study-download')
+    browse_genome_button = @driver.find_element(:class, "bam-browse-genome")
+    browse_genome_button.click
+
+    wait_for_render(:class, 'igv-track-div')
+    igv_displayed = @driver.execute_script("return $('.igv-track-div').length === 4")
+    assert igv_displayed, "igv.js did not display 4 tracks"
+
+    # clean up
+    logout_from_portal
+    login_as_other($test_email, $test_email_password)
+    @driver.get studies_path
+    wait_until_page_loads(studies_path)
+    delete = @driver.find_element(:class, "igv-js-ui-test-#{$random_seed}-delete-local")
+    delete.click
+    accept_alert
+    close_modal('message_modal')
+
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+  end
 
   ##
   ## CLEANUP
