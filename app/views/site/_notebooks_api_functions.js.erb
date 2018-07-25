@@ -2,14 +2,19 @@
 var base_url = "https://notebooks.firecloud.org/";
 
 // function to make synchronous api requests
-function syncApiRequest(endpoint, base_url, method, headers){
+function syncApiRequest(endpoint, base_url, method, headers, body){
     var request = new XMLHttpRequest();
     var url = base_url + endpoint;
     request.open(method, url, false);
     for(var header in headers){
         request.setRequestHeader(header, headers[header])
     }
-    request.send();
+    if(body){
+        request.setRequestHeader('Content-type', "application/json");
+        request.send(JSON.stringify(body));
+    } else{
+        request.send(body);
+    }
     return request
 }
 
@@ -25,10 +30,10 @@ function clusterOptions(googleProject, clusterName, headers){
     return(syncApiRequest(endpoint, base_url, method, headers))
 }
 
-function createCluster(googleProject, clusterName, headers){
+function createCluster(googleProject, clusterName, headers, body){
     var endpoint = "api/cluster/" + googleProject + "/" + clusterName;
     var method = "PUT";
-    return(syncApiRequest(endpoint, base_url, method, headers))
+    return(syncApiRequest(endpoint, base_url, method, headers, body))
 }
 
 function deleteCluster(googleProject, clusterName, headers){

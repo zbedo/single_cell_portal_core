@@ -29,7 +29,6 @@
   </div>
 </div>
 <span></span>
-<button id="activate_datatable">Switch to datatable</button>
 
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
     <%= render partial: 'notebooks_api_functions.js.erb'%>
@@ -47,48 +46,63 @@
           //var p = ping(headers);
       //console.log(p.responseText);
       var clusterList = listClusters(workspace, headers);
-      var clusterArr = JSON.parse(clusterList.response);
+      if(clusterList.status === 200){
+        var clusterArr = JSON.parse(clusterList.response);
+        if (clusterArr.length > 0) {
+          var tableArr = [];
+          for(var i = 0; i < clusterArr.length; i++){
+            var clusterResponse = clusterArr[i];
+            var status = clusterResponse.status ? clusterResponse.status : "";
+            var createdDate = clusterResponse.createdDate ? clusterResponse.createdDate : "";
+            var masterMachineType = clusterResponse.machineConfig.masterMachineType ? clusterResponse.machineConfig.masterMachineType : "";
+            var masterDiskSize = clusterResponse.machineConfig.masterDiskSize ? clusterResponse.machineConfig.masterDiskSize : "";
+            var clusterName = clusterResponse.clusterName ? clusterResponse.clusterName : "";
+            var numberOfWorkers = clusterResponse.machineConfig.numberOfWorkers ? clusterResponse.machineConfig.numberOfWorkers : "";
+            var workerMachineType = clusterResponse.machineConfig.workerMachineType ? clusterResponse.machineConfig.workerMachineType : "";
+            var workerDiskSize = clusterResponse.machineConfig.workerDiskSize ? clusterResponse.machineConfig.workerDiskSize : "";
+            var numberOfWorkerLocalSSDs = clusterResponse.machineConfig.numberOfWorkerLocalSSDs ? clusterResponse.machineConfig.numberOfWorkerLocalSSDs : "";
+            var numberOfPreemptibleWorkers = clusterResponse.machineConfig.numberOfPreemptibleWorkers ? clusterResponse.machineConfig.numberOfPreemptibleWorkers : "";
+            var creator = clusterResponse.labels.creator ?  clusterResponse.labels.creator : "";
+            if(status === "Running" ){
+                var notebookLink = base_url + "notebooks/" + clusterResponse.googleProject + "/" + clusterName;
+                var delete_button = "<div class='btn btn-sm btn-danger cluster-delete' id='" + clusterName + "'>Delete</div>";
+                clusterName = delete_button + "<a href=\"" + notebookLink + "\" target=\"_blank\">" + clusterName + "</a>";
+            } else if (status === "Stopped"){
+                var delete_button = "<div class='btn btn-sm btn-danger cluster-delete' id='" + clusterName + "'>Delete</div>";
+                clusterName = delete_button + clusterName;
+            }
 
-      var tableArr = [];
-      for(var i = 0; i < clusterArr.length; i++){
-          var clusterResponse = clusterArr[i];
-          var status = clusterResponse.status ? clusterResponse.status : "";
-          var createdDate = clusterResponse.createdDate ? clusterResponse.createdDate : "";
-          var masterMachineType = clusterResponse.machineConfig.masterMachineType ? clusterResponse.machineConfig.masterMachineType : "";
-          var masterDiskSize = clusterResponse.machineConfig.masterDiskSize ? clusterResponse.machineConfig.masterDiskSize : "";
-          var clusterName = clusterResponse.clusterName ? clusterResponse.clusterName : "";
-          var numberOfWorkers = clusterResponse.machineConfig.numberOfWorkers ? clusterResponse.machineConfig.numberOfWorkers : "";
-          var workerMachineType = clusterResponse.machineConfig.workerMachineType ? clusterResponse.machineConfig.workerMachineType : "";
-          var workerDiskSize = clusterResponse.machineConfig.workerDiskSize ? clusterResponse.machineConfig.workerDiskSize : "";
-          var numberOfWorkerLocalSSDs = clusterResponse.machineConfig.numberOfWorkerLocalSSDs ? clusterResponse.machineConfig.numberOfWorkerLocalSSDs : "";
-          var numberOfPreemptibleWorkers = clusterResponse.machineConfig.numberOfPreemptibleWorkers ? clusterResponse.machineConfig.numberOfPreemptibleWorkers : "";
-          var creator = clusterResponse.labels.creator ?  clusterResponse.labels.creator : "";
+            tableArr.push([status, createdDate, masterMachineType, masterDiskSize, clusterName, numberOfWorkers, workerMachineType, workerDiskSize, numberOfWorkerLocalSSDs, numberOfPreemptibleWorkers, creator])
+          }
 
-          tableArr.push([status, createdDate, masterMachineType, masterDiskSize, clusterName, numberOfWorkers, workerMachineType, workerDiskSize, numberOfWorkerLocalSSDs, numberOfPreemptibleWorkers, creator])
+          $('#spark-clusters-table').DataTable( {
+              data: tableArr,
+              columns: [
+                  { title: "Status" },
+                  { title: "Create Date" },
+                  { title: "master Machine Type" },
+                  { title: "Master Disk Size (GB)" },
+                  { title: "Name" },
+                  { title: "Workers" },
+                  { title: "Worker Machine Type" },
+                  { title: "Worker Disk Size (GB)" },
+                  { title: "Worker Local SSDs" },
+                  { title: "Preemptible Workers" },
+                  { title: "Creator Email"}
+              ],
+              autoWidth: false,
+              paging: true,
+              buttons: [{ extend: 'columnsToggle', className: 'btn btn-large btn-primary' }, {extend: 'filter', className: 'excelButton' }]
+          } );
+          $('#no_clusters_well').hide()
+        }
       }
-      console.log(clusterArr);
-    <% end %>
 
-    $('#activate_datatable').click(function () {
-        $('#spark-clusters-table').DataTable( {
-            data: tableArr,
-            columns: [
-                { title: "Status" },
-                { title: "Create Date" },
-                { title: "master Machine Type" },
-                { title: "Master Disk Size (GB)" },
-                { title: "Name" },
-                { title: "Workers" },
-                { title: "Worker Machine Type" },
-                { title: "Worker Disk Size (GB)" },
-                { title: "Worker Local SSDs" },
-                { title: "Preemptible Workers" },
-                { title: "Creator Email"}
-            ],
-            autoWidth: false,
-            paging: true,
-            buttons: [{ extend: 'columnsToggle', className: 'btn btn-large btn-primary' }, {extend: 'filter', className: 'excelButton' }]
-        } );
-        $('#no_clusters_well').hide()
-    });
+      $(".cluster-delete").click(function(){
+          var clusterName = this.attr('id');
+          var deleteRequest = deleteCluster(workspace, clusterName, headers);
+          console.log(deleteRequest);
+          // update table
+      });
+    <% end %>
 </script>

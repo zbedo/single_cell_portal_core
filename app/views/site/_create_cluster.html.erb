@@ -18,8 +18,8 @@
             <div class="card card-body">
               <div class="row">
                 <div class="col-md-6">
-                  <label for="master-machine-type-select">Master Machine Type</label>
-                  <select name="master-machine-type-select" id="master-machine-type-select" class="form-control">
+                  <label for="masterMachineType">Master Machine Type</label>
+                  <select name="masterMachineType" id="masterMachineType" class="form-control">
                     <option value="n1-standard-1">n1-standard-1</option>
                     <option value="n1-standard-2">n1-standard-2</option>
                     <option value="n1-standard-4" selected="">n1-standard-4</option>
@@ -44,30 +44,30 @@
                   </select>
                 </div>
                 <div class="col-md-6">
-                  <label for="master-disk-size">Master Disk Size (GB)</label>
-                  <input class="form-control" type="number" value="500" name="master-disk-size" id ="master-disk-size"/>
+                  <label for="masterDiskSize">Master Disk Size (GB)</label>
+                  <input class="form-control" type="number" value="500" name="masterDiskSize" id ="masterDiskSize"/>
                 </div>
               </div>
               <div class="row">
                 <div class="col-md-12">
-                  <label for="workers">Workers</label>
-                  <input class="form-control" type="number" value="0" name="workers" id="workers"/>
+                  <label for="numberOfWorkers">Workers</label>
+                  <input class="form-control" type="number" value="0" name="numberOfWorkers" id="numberOfWorkers"/>
                 </div>
               </div>
               <div class="row">
                 <div class="col-md-6">
-                  <label for="worker-local-ssds">Worker Local SSDs</label>
-                  <input class="form-control" type="number" value="0" name="worker-local-ssds" id ="worker-local-ssds"/>
+                  <label for="numberOfWorkerLocalSSDs">Worker Local SSDs</label>
+                  <input class="form-control" type="number" value="0" name="numberOfWorkerLocalSSDs" id ="numberOfWorkerLocalSSDs"/>
                 </div>
                 <div class="col-md-6">
-                  <label for="preemptible-workers">Preemptible Workers</label>
-                  <input class="form-control" type="number" value="0" name="preemptible-workers" id ="preemptible-workers"/>
+                  <label for="numberOfPreemptibleWorkers">Preemptible Workers</label>
+                  <input class="form-control" type="number" value="0" name="numberOfPreemptibleWorkers" id ="numberOfPreemptibleWorkers"/>
                 </div>
               </div>
               <div class="row">
                 <div class="col-md-6">
-                  <label for="worker-machine-type-select">Worker Machine Type</label>
-                  <select name="worker-machine-type-select" id="worker-machine-type-select" class="form-control">
+                  <label for="workerMachineType">Worker Machine Type</label>
+                  <select name="workerMachineType" id="workerMachineType" class="form-control">
                     <option value="n1-standard-1">n1-standard-1</option>
                     <option value="n1-standard-2">n1-standard-2</option>
                     <option value="n1-standard-4" selected="">n1-standard-4</option>
@@ -92,20 +92,20 @@
                   </select>
                 </div>
                 <div class="col-md-6">
-                  <label for="worker_disk_size">Worker Disk Size (GB)</label>
-                  <input class="form-control" type="number" value="500" name="worker_disk_size" id ="worker_disk_size"/>
+                  <label for="workerDiskSize">Worker Disk Size (GB)</label>
+                  <input class="form-control" type="number" value="500" name="workerDiskSize" id ="workerDiskSize"/>
                 </div>
               </div>
               <div class="row">
                 <div class="col-md-12">
-                  <label for="extension-uri">Extension Uri</label>
-                  <input class="form-control" type="text" name="extension-uri" id="extension-uri"/>
+                  <label for="extensionUri">Extension Uri</label>
+                  <input class="form-control" type="text" name="extensionUri" id="extensionUri"/>
                 </div>
               </div>
               <div class="row">
                 <div class="col-md-12">
-                  <label for="custom-script-uri">Custom Script Uri</label>
-                  <input class="form-control" type="text" name="custom-script-uri" id="custom-script-uri"/>
+                  <label for="customScriptUri">Custom Script Uri</label>
+                  <input class="form-control" type="text" name="customScriptUri" id="customScriptUri"/>
                 </div>
               </div>
             </div>
@@ -134,7 +134,7 @@
 
     console.log(access_token);
     // render api scripts
-    var headers = {"Authorization": access_token};
+    var headers = {"Authorization": access_token, "Content-Type":"application/json"};
 
     $('#create-cluster-button').click(function(){
         $('#create-cluster-form').submit();
@@ -142,23 +142,27 @@
 
     $('#create-cluster-form').submit(function (event) {
         event.preventDefault();
-        var createHeaders = $(this).serializeArray().reduce((map, obj) => (map[obj.name] = obj.value, map), {});
-        var clusterName = createHeaders.name;
+        var createParams = $(this).serializeArray().reduce((map, obj) => (map[obj.name] = obj.value, map), {});
+        var parsedCreateParams = {"labels" : {}, "machineConfig" : {"numberOfWorkers":parseInt(createParams.numberOfWorkers),"masterMachineType":createParams.masterMachineType,
+                "masterDiskSize":parseInt(createParams.masterDiskSize), "workerMachineType":createParams.workerMachineType,"workerDiskSize":parseInt(createParams.workerDiskSize),
+                "numberOfWorkerLocalSSDs":parseInt(createParams.numberOfWorkerLocalSSDs),"numberOfPreemptibleWorkers":parseInt(createParams.numberOfPreemptibleWorkers)}};
+        var clusterName = createParams.name;
 
         //var p = ping(headers);
         //console.log(p.responseText);
-        var options = clusterOptions(workspace, clusterName, headers);
-        if (options.status === 404){
-          console.log("Cluster does not exist")
+        // exaple payload
+        /*
+        {"labels":{},"machineConfig":{"numberOfWorkers":0,"masterMachineType":"n1-standard-4","masterDiskSize":500,"workerMachineType":"n1-standard-4","workerDiskSize":500,"numberOfWorkerLocalSSDs":0,"numberOfPreemptibleWorkers":0}}
+        */
+
+        var create = createCluster(workspace, clusterName, headers, parsedCreateParams);
+        if (create.status === 200){
+          console.log("Cluster Created");
+          $('#clusterModal').modal('toggle');
         }
-        console.log(options);
-        // options api call
+        console.log(JSON.stringify(parsedCreateParams));
+        console.log(createParams);
 
-
-        // if 404 then
-        // create cluster event call
-        // if 200 then close modal
-        $('#clusterModal').modal('toggle');
     });
   <% end %>
 
