@@ -2973,7 +2973,7 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: '#{self.method_name}' successful!"
 	end
 
-	# perform a global gene search
+	# perform a global gene search for public & private studies
 	test 'front-end: search-genes: global' do
 		puts "Test method: '#{self.method_name}'"
 
