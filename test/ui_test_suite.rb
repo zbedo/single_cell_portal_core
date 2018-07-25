@@ -2973,6 +2973,74 @@ class UiTestSuite < Test::Unit::TestCase
 		puts "Test method: '#{self.method_name}' successful!"
 	end
 
+	# perform a global gene search
+	test 'front-end: search-genes: global' do
+		puts "Test method: '#{self.method_name}'"
+
+		@driver.get @base_url
+		wait_until_page_loads(@base_url)
+		open_ui_tab('search-genes')
+    wait_for_render(:id, 'global-search-genes-form')
+
+    gene = @genes.sample
+    search_genes_form = @driver.find_element(:id, 'search_genes')
+    search_genes_form.send_keys(gene)
+    submit = @driver.find_element(:id, 'submit-gene-search')
+    submit.click
+    # wait until the plot has rendered
+    panel_id = "study-test-study-#{$random_seed}-gene-#{gene}"
+    plot_id = panel_id + '-plot'
+    @wait.until {wait_for_plotly_render('#' + plot_id, 'rendered')}
+    panel_div = @driver.find_element(:id, panel_id)
+    assert !panel_div.find_element(:class, 'cluster-select').nil?, 'Did not render cluster controls for gene results'
+    assert !panel_div.find_element(:class, 'annotation-select').nil?, 'Did not render annotation controls for gene results'
+    assert !panel_div.find_element(:class, 'subsample-select').nil?, 'Did not render subsample controls for gene results'
+    # get plot data to validate violin type
+    plot_data = @driver.execute_script("return document.getElementById('#{plot_id}').data")
+    plot_data.each do |trace|
+      assert %w(box violin).include?(trace['type']), "Incorrect plot type on trace #{trace['name']}, expected violin/box but found '#{trace['type']}'"
+    end
+    # load numeric annotation to test 2d scatter feature
+    annotation_select = panel_div.find_element(:class, 'annotation-select')
+    annotation_select.send_key('Average Intensity')
+    # wait half second for event to fire
+    sleep(0.5)
+    @wait.until {wait_for_plotly_render('#' + plot_id, 'rendered')}
+    updated_data = @driver.execute_script("return document.getElementById('#{plot_id}').data")
+    new_plot_type = updated_data.first['type']
+    assert new_plot_type == 'scattergl', "Did not correctly update plot to 2d scatter, expected 'scattergl' but found '#{new_plot_type}'"
+
+		# now test private data
+		login($test_email, $test_email_password)
+		open_ui_tab('search-genes')
+		wait_for_render(:id, 'global-search-genes-form')
+		second_search_genes_form = @driver.find_element(:id, 'search_genes')
+		second_search_genes_form.send_keys(gene)
+		submit = @driver.find_element(:id, 'submit-gene-search')
+		submit.click
+		# wait until the plot has rendered
+		private_panel_id = "study-private-study-#{$random_seed}-gene-#{gene}"
+		private_plot_id = private_panel_id + '-plot'
+		@wait.until {wait_for_plotly_render('#' + private_plot_id, 'rendered')}
+		private_panel_div = @driver.find_element(:id, private_panel_id)
+		# get plot data to validate violin type
+		private_plot_data = @driver.execute_script("return document.getElementById('#{private_plot_id}').data")
+		private_plot_data.each do |trace|
+			assert %w(box violin).include?(trace['type']), "Incorrect private plot type on trace #{trace['name']}, expected violin/box but found '#{trace['type']}'"
+		end
+		# load numeric annotation to test 2d scatter feature
+		private_annotation_select = private_panel_div.find_element(:class, 'annotation-select')
+		private_annotation_select.send_key('Average Intensity')
+		# wait half second for event to fire
+		sleep(0.5)
+		@wait.until {wait_for_plotly_render('#' + private_plot_id, 'rendered')}
+		private_updated_data = @driver.execute_script("return document.getElementById('#{private_plot_id}').data")
+		private_new_plot_type = private_updated_data.first['type']
+		assert private_new_plot_type == 'scattergl', "Did not correctly update private plot to 2d scatter, expected 'scattergl' but found '#{private_new_plot_type}'"
+
+		puts "Test method: '#{self.method_name}' successful!"
+	end
+
 	# view a list of marker genes as a heatmap
 	test 'front-end: marker-gene: heatmap' do
 		puts "Test method: '#{self.method_name}'"
