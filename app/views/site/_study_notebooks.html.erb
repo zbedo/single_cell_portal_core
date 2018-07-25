@@ -30,13 +30,51 @@
 </div>
 <span></span>
 <button id="activate_datatable">Switch to datatable</button>
+
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+    <%= render partial: 'notebooks_api_functions.js.erb'%>
+</script>
+
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+    <% if user_signed_in? %>
+      var workspace =  "<%= @study.firecloud_project %>";
+
+      var access_token = "Bearer <%= current_user.access_token['access_token']%>";
+
+      console.log(access_token);
+      // render api scripts
+      var headers = {"Authorization": access_token};
+          //var p = ping(headers);
+      //console.log(p.responseText);
+      var clusterList = listClusters(workspace, headers);
+      var clusterArr = JSON.parse(clusterList.response);
+
+      var tableArr = [];
+      for(var i = 0; i < clusterArr.length; i++){
+          var clusterResponse = clusterArr[i];
+          var status = clusterResponse.status ? clusterResponse.status : "";
+          var createdDate = clusterResponse.createdDate ? clusterResponse.createdDate : "";
+          var masterMachineType = clusterResponse.machineConfig.masterMachineType ? clusterResponse.machineConfig.masterMachineType : "";
+          var masterDiskSize = clusterResponse.machineConfig.masterDiskSize ? clusterResponse.machineConfig.masterDiskSize : "";
+          var clusterName = clusterResponse.clusterName ? clusterResponse.clusterName : "";
+          var numberOfWorkers = clusterResponse.machineConfig.numberOfWorkers ? clusterResponse.machineConfig.numberOfWorkers : "";
+          var workerMachineType = clusterResponse.machineConfig.workerMachineType ? clusterResponse.machineConfig.workerMachineType : "";
+          var workerDiskSize = clusterResponse.machineConfig.workerDiskSize ? clusterResponse.machineConfig.workerDiskSize : "";
+          var numberOfWorkerLocalSSDs = clusterResponse.machineConfig.numberOfWorkerLocalSSDs ? clusterResponse.machineConfig.numberOfWorkerLocalSSDs : "";
+          var numberOfPreemptibleWorkers = clusterResponse.machineConfig.numberOfPreemptibleWorkers ? clusterResponse.machineConfig.numberOfPreemptibleWorkers : "";
+          var creator = clusterResponse.labels.creator ?  clusterResponse.labels.creator : "";
+
+          tableArr.push([status, createdDate, masterMachineType, masterDiskSize, clusterName, numberOfWorkers, workerMachineType, workerDiskSize, numberOfWorkerLocalSSDs, numberOfPreemptibleWorkers, creator])
+      }
+      console.log(clusterArr);
+    <% end %>
+
     $('#activate_datatable').click(function () {
         $('#spark-clusters-table').DataTable( {
-            data: [],
+            data: tableArr,
             columns: [
                 { title: "Status" },
-                { title: "Create Data" },
+                { title: "Create Date" },
                 { title: "master Machine Type" },
                 { title: "Master Disk Size (GB)" },
                 { title: "Name" },
@@ -45,7 +83,7 @@
                 { title: "Worker Disk Size (GB)" },
                 { title: "Worker Local SSDs" },
                 { title: "Preemptible Workers" },
-                { title: "Labels" }
+                { title: "Creator Email"}
             ],
             autoWidth: false,
             paging: true,

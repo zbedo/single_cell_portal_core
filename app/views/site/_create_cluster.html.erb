@@ -6,7 +6,7 @@
       </div>
       <div class="modal-body row">
         <div class="col-md-1"></div>
-        <div class="form form-group col-md-10" id="create_cluster_form">
+        <form class="form form-group col-md-10" id="create-cluster-form">
           <label for="name">Name</label>
           <input class="form-control" type="text" placeholder="Lower Case Letters Only" name="name" id="name"/>
           <p>
@@ -110,14 +110,56 @@
               </div>
             </div>
           </div>
-        </div>
+        </form>
         <div class="col-md-1"></div>
 
       </div>
       <div class="modal-footer">
         <button type="button" class="btn" data-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary">Create</button>
+        <button type="button" id="create-cluster-button" class="btn btn-primary">Create</button>
       </div>
     </div>
   </div>
 </div>
+
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+    <%= render partial: 'notebooks_api_functions.js.erb'%>
+</script>
+
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+  <% if user_signed_in? %>
+    var workspace =  "<%= @study.firecloud_project %>";
+
+    var access_token = "Bearer <%= current_user.access_token['access_token']%>";
+
+    console.log(access_token);
+    // render api scripts
+    var headers = {"Authorization": access_token};
+
+    $('#create-cluster-button').click(function(){
+        $('#create-cluster-form').submit();
+    });
+
+    $('#create-cluster-form').submit(function (event) {
+        event.preventDefault();
+        var createHeaders = $(this).serializeArray().reduce((map, obj) => (map[obj.name] = obj.value, map), {});
+        var clusterName = createHeaders.name;
+
+        //var p = ping(headers);
+        //console.log(p.responseText);
+        var options = clusterOptions(workspace, clusterName, headers);
+        if (options.status === 404){
+          console.log("Cluster does not exist")
+        }
+        console.log(options);
+        // options api call
+
+
+        // if 404 then
+        // create cluster event call
+        // if 200 then close modal
+        $('#clusterModal').modal('toggle');
+    });
+  <% end %>
+
+</script>

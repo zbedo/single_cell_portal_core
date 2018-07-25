@@ -1,0 +1,65 @@
+// shared JS functions for sync forms
+var base_url = "https://notebooks.firecloud.org/";
+
+// function to make synchronous api requests
+function syncApiRequest(endpoint, base_url, method, headers){
+    var request = new XMLHttpRequest();
+    var url = base_url + endpoint;
+    request.open(method, url, false);
+    for(var header in headers){
+        request.setRequestHeader(header, headers[header])
+    }
+    request.send();
+    return request
+}
+
+function ping(headers){
+    var endpoint = "ping";
+    var method = "GET";
+    return(syncApiRequest(endpoint, base_url, method, headers))
+}
+
+function clusterOptions(googleProject, clusterName, headers){
+    var endpoint = "api/cluster/" + googleProject + "/" + clusterName;
+    var method = "GET";
+    return(syncApiRequest(endpoint, base_url, method, headers))
+}
+
+function createCluster(googleProject, clusterName, headers){
+    var endpoint = "api/cluster/" + googleProject + "/" + clusterName;
+    var method = "PUT";
+    return(syncApiRequest(endpoint, base_url, method, headers))
+}
+
+function deleteCluster(googleProject, clusterName, headers){
+    var endpoint = "api/cluster/" + googleProject + "/" + clusterName;
+    var method = "DELETE";
+    return(syncApiRequest(endpoint, base_url, method, headers))
+}
+
+function startCluster(googleProject, clusterName, headers){
+    var endpoint = "api/cluster/" + googleProject + "/" + clusterName + "/start";
+    var method = "POST";
+    return(syncApiRequest(endpoint, base_url, method, headers))
+}
+
+function stopCluster(googleProject, clusterName, headers){
+    var endpoint = "api/cluster/" + googleProject + "/" + clusterName + "/stop";
+    var method = "POST";
+    return(syncApiRequest(endpoint, base_url, method, headers))
+}
+
+function listClusters(clusterName, headers){
+    var endpoint = "api/clusters";
+    var method = "GET";
+    return(syncApiRequest(endpoint, base_url, method, headers))
+}
+
+function setCookie(headers){
+    return(syncApiRequest(endpoint, base_url, method, headers))
+}
+
+function clickCluster(){
+    // open cluster in new tab
+}
+
