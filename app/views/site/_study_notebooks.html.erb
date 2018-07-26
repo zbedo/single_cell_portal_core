@@ -141,6 +141,8 @@
             table.draw();
             clearAndAttachListeners()
         }
+        // on initial page load we want listeners to be set
+        clearAndAttachListeners();
         // 20 second timer for table refresh
         window.setInterval(refreshTable, 20000);
         // TODO potentially use this when signing out?
