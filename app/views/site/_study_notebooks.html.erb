@@ -35,140 +35,120 @@
 </script>
 
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
-    function generateDataTable(workspace, headers){
-      console.log("generating data table");
-      var clusterList = listClusters(workspace, headers);
-      if(clusterList.status === 200) {
-          var clusterArr = JSON.parse(clusterList.response);
-      } else {
-          alert("Failed to get get list of clusters")
-      }
-
-      var tableArr = [];
-      for(var i = 0; i < clusterArr.length; i++){
-        var clusterResponse = clusterArr[i];
-        var status = clusterResponse.status ? clusterResponse.status : "";
-        var createdDate = clusterResponse.createdDate ? clusterResponse.createdDate : "";
-        var masterMachineType = clusterResponse.machineConfig.masterMachineType ? clusterResponse.machineConfig.masterMachineType : "";
-        var masterDiskSize = clusterResponse.machineConfig.masterDiskSize ? clusterResponse.machineConfig.masterDiskSize : "";
-        var clusterName = clusterResponse.clusterName ? clusterResponse.clusterName : "";
-        var numberOfWorkers = clusterResponse.machineConfig.numberOfWorkers ? clusterResponse.machineConfig.numberOfWorkers : "";
-        var workerMachineType = clusterResponse.machineConfig.workerMachineType ? clusterResponse.machineConfig.workerMachineType : "";
-        var workerDiskSize = clusterResponse.machineConfig.workerDiskSize ? clusterResponse.machineConfig.workerDiskSize : "";
-        var numberOfWorkerLocalSSDs = clusterResponse.machineConfig.numberOfWorkerLocalSSDs ? clusterResponse.machineConfig.numberOfWorkerLocalSSDs : "";
-        var numberOfPreemptibleWorkers = clusterResponse.machineConfig.numberOfPreemptibleWorkers ? clusterResponse.machineConfig.numberOfPreemptibleWorkers : "";
-        var creator = clusterResponse.labels.creator ?  clusterResponse.labels.creator : "";
-        if(status === "Running" ){
-          // if it is running add the delete button and link to notebook in the name column
-          var notebookLink = base_url + "notebooks/" + clusterResponse.googleProject + "/" + clusterName;
-          var delete_button = "<div class='btn btn-sm btn-danger cluster-delete' id='" + clusterName + "'>Delete</div>";
-          // add stop button to status
-          var stop_button = "<div class='btn btn-sm btn-warning cluster-stop' id='" + clusterName + "'>Stop</div>";
-          status = stop_button + status;
-
-          clusterName = delete_button + "<a class='notebook-link' id='" + clusterName + "' href=\"" + notebookLink + "\" target=\"_blank\">" + clusterName + "</a>";
-
-        } else if (status === "Stopped"){
-          // if it is stopped add start button to status
-          var start_button = "<div class='btn btn-sm btn-success cluster-start' id='" + clusterName + "'>Start</div>";
-          status = start_button + status;
-
-          // if it is stopped add delete button
-          var delete_button = "<div class='btn btn-sm btn-danger cluster-delete' id='" + clusterName + "'>Delete</div>";
-          clusterName = delete_button + clusterName;
-        }
-        tableArr.push([status, createdDate, masterMachineType, masterDiskSize, clusterName, numberOfWorkers, workerMachineType, workerDiskSize, numberOfWorkerLocalSSDs, numberOfPreemptibleWorkers, creator])
-      }
-      $('#no_clusters_well').hide()
-      return tableArr
-    }
-
+    // only want to do all this work when we know the user is logged in
+    // TODO change to correct firecloud permission
     <% if user_signed_in? %>
-      var workspace =  "<%= @study.firecloud_project %>";
-      var access_token = "Bearer <%= current_user.access_token['access_token']%>";
-      // render api scripts
-      var headers = {"Authorization": access_token};
-
-      var table = $('#spark-clusters-table').DataTable( {
-          data: generateDataTable(workspace, headers),
-          columns: [
-              { title: "Status" },
-              { title: "Create Date" },
-              { title: "master Machine Type" },
-              { title: "Master Disk Size (GB)" },
-              { title: "Name" },
-              { title: "Workers" },
-              { title: "Worker Machine Type" },
-              { title: "Worker Disk Size (GB)" },
-              { title: "Worker Local SSDs" },
-              { title: "Preemptible Workers" },
-              { title: "Creator Email"}
-          ],
-          autoWidth: false,
-          paging: true,
-          buttons: [{ extend: 'columnsToggle', className: 'btn btn-large btn-primary' }, {extend: 'filter', className: 'excelButton' }]
-      });
-
-      function clearAndAttachListeners(){
-        // Detach delete cluster listeners and reattach new ones
-        $(".cluster-delete").off();
-        $(".cluster-delete").click(function(){
-            var clusterName = this.id;
-            var deleteRequest = deleteCluster(workspace, clusterName, headers);
-            console.log(deleteRequest);
-            refreshTable()
-            // update table
+        // api call params
+        var workspace = "<%= @study.firecloud_project %>";
+        var access_token = "Bearer <%= current_user.access_token['access_token']%>";
+        // api header setup
+        var headers = {
+            "Authorization": access_token
+        };
+        // create the data table object
+        var table = $('#spark-clusters-table').DataTable({
+            data: generateDataTable(workspace, headers),
+            columns: [{
+                title: "Status"
+            },
+                {
+                    title: "Create Date"
+                },
+                {
+                    title: "master Machine Type"
+                },
+                {
+                    title: "Master Disk Size (GB)"
+                },
+                {
+                    title: "Name"
+                },
+                {
+                    title: "Workers"
+                },
+                {
+                    title: "Worker Machine Type"
+                },
+                {
+                    title: "Worker Disk Size (GB)"
+                },
+                {
+                    title: "Worker Local SSDs"
+                },
+                {
+                    title: "Preemptible Workers"
+                },
+                {
+                    title: "Creator Email"
+                }
+            ],
+            autoWidth: false,
+            paging: true,
+            buttons: [{
+                extend: 'columnsToggle',
+                className: 'btn btn-large btn-primary'
+            }, {
+                extend: 'filter',
+                className: 'excelButton'
+            }]
         });
+        // function to reset all listeners for buttons and links and attach new ones
+        function clearAndAttachListeners() {
+            // Detach delete cluster listeners and reattach new ones
+            $(".cluster-delete").off();
+            $(".cluster-delete").click(function () {
+                var clusterName = this.id;
+                var deleteRequest = deleteCluster(workspace, clusterName, headers);
+                console.log(deleteRequest);
+                refreshTable()
+            });
 
-        // Detach start cluster listeners and reattach new ones
-        $(".cluster-start").off();
-        $(".cluster-start").click(function(){
-            var clusterName = this.id;
-            var stopRequest = startCluster(workspace, clusterName, headers);
-            console.log(stopRequest);
-            refreshTable()
+            // Detach start cluster listeners and reattach new ones
+            $(".cluster-start").off();
+            $(".cluster-start").click(function () {
+                var clusterName = this.id;
+                var stopRequest = startCluster(workspace, clusterName, headers);
+                console.log(stopRequest);
+                refreshTable()
+            });
+
+            // Detach stop cluster listeners and reattach new ones
+            $(".cluster-stop").off();
+            $(".cluster-stop").click(function () {
+                var clusterName = this.id;
+                var startRequest = stopCluster(workspace, clusterName, headers);
+                console.log(startRequest);
+                refreshTable()
+            });
+
+            // Detach notebook link listeners and reattach new ones
+            $(".notebook-link").off();
+            $(".notebook-link").click(function () {
+                var clusterName = this.id;
+                $.cookie('LeoToken', "<%= current_user.access_token['access_token']%>", {
+                    path: '/'
+                });
+                var setCookieRequest = setCookie(workspace, clusterName, headers);
+                console.log(setCookieRequest);
+                refreshTable()
+            });
+        }
+
+        // redraw the table and reset listeners
+        function refreshTable() {
+            table.clear();
+            table.rows.add(generateDataTable(workspace, headers));
+            table.draw();
+            clearAndAttachListeners()
+        }
+        // 20 second timer for table refresh
+        window.setInterval(refreshTable, 20000);
+        // TODO potentially use this when signing out?
+        function invalidateToken() {
+            var invalidateCookieRequest = invalidateCookie(headers);
+            console.log(headers);
+            console.log(invalidateCookieRequest);
             // update table
-        });
-
-        // Detach stop cluster listeners and reattach new ones
-        $(".cluster-stop").off();
-        $(".cluster-stop").click(function(){
-            var clusterName = this.id;
-            var startRequest = stopCluster(workspace, clusterName, headers);
-            console.log(startRequest);
-            refreshTable()
-            // update table
-        });
-
-        // Detach notebook link listeners and reattach new ones
-        $(".notebook-link").off();
-        $(".notebook-link").click(function(){
-            var clusterName = this.id;
-            $.cookie('LeoToken', "<%= current_user.access_token['access_token']%>", { path: '/' });
-            var setCookieRequest = setCookie(workspace, clusterName, headers);
-            console.log(setCookieRequest);
-            refreshTable()
-            // update table
-        });
-      }
-
-      function refreshTable(){
-          console.log("refreshing table");
-          table.clear();
-          table.rows.add(generateDataTable(workspace, headers));
-          table.draw();
-          clearAndAttachListeners()
-      }
-
-      window.setInterval(refreshTable, 20000);
-
-
-
-      function invalidateToken(){
-          var invalidateCookieRequest = invalidateCookie(headers);
-          console.log(headers);
-          console.log(invalidateCookieRequest);
-          // update table
-      }
+        }
     <% end %>
 </script>

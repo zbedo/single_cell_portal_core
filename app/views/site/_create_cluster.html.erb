@@ -112,7 +112,6 @@
           </div>
         </form>
         <div class="col-md-1"></div>
-
       </div>
       <div class="modal-footer">
         <button type="button" class="btn" data-dismiss="modal">Cancel</button>
@@ -127,44 +126,51 @@
 </script>
 
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
-  <% if user_signed_in? %>
-    var workspace =  "<%= @study.firecloud_project %>";
+    <% if user_signed_in? %>
+        // headers and api parametrs
+        var workspace = "<%= @study.firecloud_project %>";
+        var access_token = "Bearer <%= current_user.access_token['access_token']%>";
 
-    var access_token = "Bearer <%= current_user.access_token['access_token']%>";
+        // api headers
+        var headers = {
+            "Authorization": access_token,
+            "Content-Type": "application/json"
+        };
 
-    console.log(access_token);
-    // render api scripts
-    var headers = {"Authorization": access_token, "Content-Type":"application/json"};
+        // bind create button to form submit
+        $('#create-cluster-button').click(function () {
+            $('#create-cluster-form').submit();
+        });
 
-    $('#create-cluster-button').click(function(){
-        $('#create-cluster-form').submit();
-    });
+        $('#create-cluster-form').submit(function (event) {
+            // stop submit to nothing
+            event.preventDefault();
+            // get form inputs
+            var createParams = $(this).serializeArray().reduce((map, obj) => (map[obj.name] = obj.value, map), {});
+            // format payload for api call
+            var parsedCreateParams = {
+                "labels": {},
+                "machineConfig": {
+                    "numberOfWorkers": parseInt(createParams.numberOfWorkers),
+                    "masterMachineType": createParams.masterMachineType,
+                    "masterDiskSize": parseInt(createParams.masterDiskSize),
+                    "workerMachineType": createParams.workerMachineType,
+                    "workerDiskSize": parseInt(createParams.workerDiskSize),
+                    "numberOfWorkerLocalSSDs": parseInt(createParams.numberOfWorkerLocalSSDs),
+                    "numberOfPreemptibleWorkers": parseInt(createParams.numberOfPreemptibleWorkers)
+                }
+            };
+            // need the cluster name for api call
+            var clusterName = createParams.name;
+            // createCluster api call
+            var create = createCluster(workspace, clusterName, headers, parsedCreateParams);
+            // if call was successful close the modal
+            if (create.status === 200) {
+                $('#clusterModal').modal('toggle');
+            }
 
-    $('#create-cluster-form').submit(function (event) {
-        event.preventDefault();
-        var createParams = $(this).serializeArray().reduce((map, obj) => (map[obj.name] = obj.value, map), {});
-        var parsedCreateParams = {"labels" : {}, "machineConfig" : {"numberOfWorkers":parseInt(createParams.numberOfWorkers),"masterMachineType":createParams.masterMachineType,
-                "masterDiskSize":parseInt(createParams.masterDiskSize), "workerMachineType":createParams.workerMachineType,"workerDiskSize":parseInt(createParams.workerDiskSize),
-                "numberOfWorkerLocalSSDs":parseInt(createParams.numberOfWorkerLocalSSDs),"numberOfPreemptibleWorkers":parseInt(createParams.numberOfPreemptibleWorkers)}};
-        var clusterName = createParams.name;
+            refreshTable()
 
-        //var p = ping(headers);
-        //console.log(p.responseText);
-        // exaple payload
-        /*
-        {"labels":{},"machineConfig":{"numberOfWorkers":0,"masterMachineType":"n1-standard-4","masterDiskSize":500,"workerMachineType":"n1-standard-4","workerDiskSize":500,"numberOfWorkerLocalSSDs":0,"numberOfPreemptibleWorkers":0}}
-        */
-
-        var create = createCluster(workspace, clusterName, headers, parsedCreateParams);
-        if (create.status === 200){
-          console.log("Cluster Created");
-          $('#clusterModal').modal('toggle');
-        }
-        console.log(JSON.stringify(parsedCreateParams));
-        console.log(createParams);
-        refreshTable()
-
-    });
-  <% end %>
-
+        });
+    <% end %>
 </script>

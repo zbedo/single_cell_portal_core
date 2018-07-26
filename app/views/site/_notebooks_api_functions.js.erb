@@ -2,82 +2,142 @@
 var base_url = "https://notebooks.firecloud.org/";
 
 // function to make synchronous api requests
-function syncApiRequest(endpoint, base_url, method, headers, body, includeCookies){
+// TODO make this asynchronous, change last param of open to true instead of false and change handling of return for all calls
+function syncApiRequest(endpoint, base_url, method, headers, body, includeCookies) {
+    // create the request
     var request = new XMLHttpRequest();
+    // format the api url
     var url = base_url + endpoint;
+    // open the request to get inital params
     request.open(method, url, false);
-    if(includeCookies){
+    // TODO make sure this works
+    // if includeCookies (used for setCookie) enable xmlhttprequest with credential option
+    if (includeCookies) {
         request.withCredentials = true;
-        console.log("Cookies Included")
     }
-    for(var header in headers){
+    // add the headers to the request
+    for (var header in headers) {
         request.setRequestHeader(header, headers[header])
     }
-    if(body){
+    // payload handling
+    if (body) {
+        // if a payload exists I pass it in as a dictionary, set the content type
+        // and add the parsed payload to the request
         request.setRequestHeader('Content-type', "application/json");
         request.send(JSON.stringify(body));
-    } else{
-        request.send(body);
+    } else {
+        // if no body exists we can skip parsing it
+        request.send();
     }
+    // return the request object
     return request
 }
 
-function ping(headers){
+// may have to use this function in the future to test if api is working
+function ping(headers) {
     var endpoint = "ping";
     var method = "GET";
-    return(syncApiRequest(endpoint, base_url, method, headers))
+    return (syncApiRequest(endpoint, base_url, method, headers))
 }
 
-function clusterOptions(googleProject, clusterName, headers){
+function clusterOptions(googleProject, clusterName, headers) {
     var endpoint = "api/cluster/" + googleProject + "/" + clusterName;
     var method = "GET";
-    return(syncApiRequest(endpoint, base_url, method, headers))
+    return (syncApiRequest(endpoint, base_url, method, headers))
 }
 
-function createCluster(googleProject, clusterName, headers, body){
+function createCluster(googleProject, clusterName, headers, body) {
     var endpoint = "api/cluster/" + googleProject + "/" + clusterName;
     var method = "PUT";
-    return(syncApiRequest(endpoint, base_url, method, headers, body))
+    return (syncApiRequest(endpoint, base_url, method, headers, body))
 }
 
-function deleteCluster(googleProject, clusterName, headers){
+function deleteCluster(googleProject, clusterName, headers) {
     var endpoint = "api/cluster/" + googleProject + "/" + clusterName;
     var method = "DELETE";
-    return(syncApiRequest(endpoint, base_url, method, headers))
+    return (syncApiRequest(endpoint, base_url, method, headers))
 }
 
-function startCluster(googleProject, clusterName, headers){
+function startCluster(googleProject, clusterName, headers) {
     var endpoint = "api/cluster/" + googleProject + "/" + clusterName + "/start";
     var method = "POST";
-    return(syncApiRequest(endpoint, base_url, method, headers))
+    return (syncApiRequest(endpoint, base_url, method, headers))
 }
 
-function stopCluster(googleProject, clusterName, headers){
+function stopCluster(googleProject, clusterName, headers) {
     var endpoint = "api/cluster/" + googleProject + "/" + clusterName + "/stop";
     var method = "POST";
-    return(syncApiRequest(endpoint, base_url, method, headers))
+    return (syncApiRequest(endpoint, base_url, method, headers))
 }
 
-function listClusters(clusterName, headers){
+function listClusters(clusterName, headers) {
     var endpoint = "api/clusters";
     var method = "GET";
-    return(syncApiRequest(endpoint, base_url, method, headers))
+    return (syncApiRequest(endpoint, base_url, method, headers))
 }
 
-function setCookie(googleProject, clusterName, headers){
+function setCookie(googleProject, clusterName, headers) {
     var endpoint = "notebooks/" + googleProject + "/" + clusterName + "/setCookie";
     var method = "GET";
-    return(syncApiRequest(endpoint, base_url, method, headers, undefined, true))
+    return (syncApiRequest(endpoint, base_url, method, headers, undefined, true))
 }
 
-function invalidateCookie(headers){
+function invalidateCookie(headers) {
     var endpoint = "notebooks/invalidateToken";
     var method = "GET";
-    return(syncApiRequest(endpoint, base_url, method, headers))
+    return (syncApiRequest(endpoint, base_url, method, headers))
 }
 
+// function to generate datatables object from listCluster api call
+function generateDataTable(workspace, headers) {
+    // make the api call
+    var clusterList = listClusters(workspace, headers);
+    var clusterArr = [];
+    // if the call was successful parse the json response
+    if (clusterList.status === 200) {
+        clusterArr = JSON.parse(clusterList.response);
+    } else {
+        alert("Failed to get get list of clusters")
+    }
+    // create the data array object
+    var tableArr = [];
+    for (var i = 0; i < clusterArr.length; i++) {
+        // parse the [{}] response, replacing undefined with empty string
+        var clusterResponse = clusterArr[i];
+        var status = clusterResponse.status ? clusterResponse.status : "";
+        var createdDate = clusterResponse.createdDate ? clusterResponse.createdDate : "";
+        var masterMachineType = clusterResponse.machineConfig.masterMachineType ? clusterResponse.machineConfig.masterMachineType : "";
+        var masterDiskSize = clusterResponse.machineConfig.masterDiskSize ? clusterResponse.machineConfig.masterDiskSize : "";
+        var clusterName = clusterResponse.clusterName ? clusterResponse.clusterName : "";
+        var numberOfWorkers = clusterResponse.machineConfig.numberOfWorkers ? clusterResponse.machineConfig.numberOfWorkers : "";
+        var workerMachineType = clusterResponse.machineConfig.workerMachineType ? clusterResponse.machineConfig.workerMachineType : "";
+        var workerDiskSize = clusterResponse.machineConfig.workerDiskSize ? clusterResponse.machineConfig.workerDiskSize : "";
+        var numberOfWorkerLocalSSDs = clusterResponse.machineConfig.numberOfWorkerLocalSSDs ? clusterResponse.machineConfig.numberOfWorkerLocalSSDs : "";
+        var numberOfPreemptibleWorkers = clusterResponse.machineConfig.numberOfPreemptibleWorkers ? clusterResponse.machineConfig.numberOfPreemptibleWorkers : "";
+        var creator = clusterResponse.labels.creator ? clusterResponse.labels.creator : "";
+        // add special buttons
+        if (status === "Running") {
+            // if it is running add the delete button and link to notebook in the name column
+            var notebookLink = base_url + "notebooks/" + clusterResponse.googleProject + "/" + clusterName;
+            var delete_button = "<div class='btn btn-sm btn-danger cluster-delete' id='" + clusterName + "'>Delete</div>";
+            // add stop button to status
+            var stop_button = "<div class='btn btn-sm btn-warning cluster-stop' id='" + clusterName + "'>Stop</div>";
+            status = stop_button + status;
+            // add delete button and link to name
+            clusterName = delete_button + "<a class='notebook-link' id='" + clusterName + "' href=\"" + notebookLink + "\" target=\"_blank\">" + clusterName + "</a>";
 
-function clickCluster(){
-    // open cluster in new tab
+        } else if (status === "Stopped") {
+            // if it is stopped add start button to status
+            var start_button = "<div class='btn btn-sm btn-success cluster-start' id='" + clusterName + "'>Start</div>";
+            status = start_button + status;
+            // if it is stopped add delete button to name
+            var delete_button = "<div class='btn btn-sm btn-danger cluster-delete' id='" + clusterName + "'>Delete</div>";
+            clusterName = delete_button + clusterName;
+        }
+        // add the formatted row to the data array
+        tableArr.push([status, createdDate, masterMachineType, masterDiskSize, clusterName, numberOfWorkers, workerMachineType, workerDiskSize, numberOfWorkerLocalSSDs, numberOfPreemptibleWorkers, creator])
+    }
+    // hide the no columns ui element
+    $('#no_clusters_well').hide()
+    return tableArr
 }
-
