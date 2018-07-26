@@ -17,17 +17,6 @@ require "rails/test_unit/railtie"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
-class StripXForwardedHost
-  def initialize(app)
-    @app = app
-  end
-
-  def call(env)
-    env.delete('HTTP_X_FORWARDED_HOST')
-    @app.call(env)
-  end
-end
-
 module SingleCellPortal
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
