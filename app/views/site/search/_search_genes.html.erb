@@ -13,7 +13,7 @@
     <% end %>
   </div>
   <div class="col-md-6 col-sm-12 col-xs-12">
-    <p class="lead">Total Results Found: <label id="gene-search-results-count" class="label label-default">0</label></p>
+    <p class="lead">Results: <label id="gene-search-results-count" class="label label-default">0</label> across <label id="gene-search-studies-count" class="label label-default">0</label> studies</p>
   </div>
 </div>
 <div class="row">
@@ -28,7 +28,8 @@
 
     $('#submit-gene-search').on('click', function() {
         $("#gene-search-results").empty();
-        $('#gene-search-results-count').html('Loading...');
+        $('#gene-search-results-count').html($('div.gene-panel').length);
+        $('#gene-search-studies-count').html($('div.has-gene-results').length);
         var target = document.getElementById('gene-search-results');
         var spinner = new Spinner(opts).spin(target);
         $(target).data('spinner', spinner);

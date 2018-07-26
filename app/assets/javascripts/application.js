@@ -934,7 +934,16 @@ function gatherFilesByType(fileType) {
     return matchingfiles;
 }
 
+// calculate the current viewport to use for rendering cluster plots
 function calculatePlotViewport(target) {
     var viewPort = $(window).height();
-    return viewPort - 250;
+    return viewPort - 250; //
 }
+
+// garbage collector to clear the search animation on global gene search (in case no results are found)
+window.clearGeneSearchLoading = function() {
+    console.log('Clearing global gene search message');
+    $('#searching-message').remove();
+    $('#gene-search-results').data('spinner').stop();
+    $('#gene-search-results-count').html($('.gene-panel').length);
+};
