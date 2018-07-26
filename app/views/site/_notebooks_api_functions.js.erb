@@ -2,10 +2,14 @@
 var base_url = "https://notebooks.firecloud.org/";
 
 // function to make synchronous api requests
-function syncApiRequest(endpoint, base_url, method, headers, body){
+function syncApiRequest(endpoint, base_url, method, headers, body, includeCookies){
     var request = new XMLHttpRequest();
     var url = base_url + endpoint;
     request.open(method, url, false);
+    if(includeCookies){
+        request.withCredentials = true;
+        console.log("Cookies Included")
+    }
     for(var header in headers){
         request.setRequestHeader(header, headers[header])
     }
@@ -60,9 +64,18 @@ function listClusters(clusterName, headers){
     return(syncApiRequest(endpoint, base_url, method, headers))
 }
 
-function setCookie(headers){
+function setCookie(googleProject, clusterName, headers){
+    var endpoint = "notebooks/" + googleProject + "/" + clusterName + "/setCookie";
+    var method = "GET";
+    return(syncApiRequest(endpoint, base_url, method, headers, undefined, true))
+}
+
+function invalidateCookie(headers){
+    var endpoint = "notebooks/invalidateToken";
+    var method = "GET";
     return(syncApiRequest(endpoint, base_url, method, headers))
 }
+
 
 function clickCluster(){
     // open cluster in new tab
