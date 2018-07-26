@@ -1,4 +1,5 @@
-var genes = $('#search_genes').val()
+var genes = $('#search_genes').val();
+$("#gene-search-results").append("<h3 id='searching-message'>Searching <%= @studies.size %> studies...");
 <% @studies.each do |study| %>
 
   $("#gene-search-results").append("<%= escape_javascript(render partial: '/site/search/gene_search_panel', locals: {study: study}) %>")

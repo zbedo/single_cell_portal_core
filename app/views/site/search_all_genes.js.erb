@@ -1,7 +1,10 @@
 <% @results.each do |gene| %>
+    $('#<%= gene.study.id %>-panel').removeClass('hidden');
     $("#<%= gene.study.id %>").append("<%= escape_javascript(render partial: '/site/search/gene_result', locals: {gene: gene, study: @study, identifier: gene.id}) %>")
+    $("#<%= gene.study.id %>-count").html($('#<%= gene.study.id %>-body .gene-panel').length)
 <% end %>
 if ($('.gene-panel').length > 0) {
+    $('#searching-message').remove();
     $('#gene-search-results').data('spinner').stop();
     $('#gene-search-results-count').html($('.gene-panel').length);
 }

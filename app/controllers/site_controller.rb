@@ -37,7 +37,7 @@ class SiteController < ApplicationController
                                                    :get_submission_outputs, :delete_submission_files, :get_submission_metadata]
 
   # caching
-  caches_action :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots,
+  caches_action :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :render_global_gene_expression_plots,
                 :expression_query, :annotation_query, :precomputed_results,
                 cache_path: :set_cache_path
 
@@ -158,7 +158,6 @@ class SiteController < ApplicationController
   end
 
   def get_viewable_studies
-    logger.info "user signed in: #{user_signed_in?}"
     @studies = user_signed_in? ? Study.viewable(current_user) : Study.where(queued_for_deletion: false, public: true)
 
     # restrict to branding group if present
@@ -815,7 +814,7 @@ class SiteController < ApplicationController
     @log_message = ["#{Time.now}: #{@study.url_safe_name} curl configs generated!"]
     @log_message << "Signed URLs generated: #{curl_configs.size}"
     @log_message << "Total time in get_curl_config: #{time.first} minutes, #{time.last} seconds"
-    Rails.logger.info @log_message.join("\n")
+    logger.info @log_message.join("\n")
 
     curl_configs = curl_configs.join("\n\n")
 
@@ -2222,49 +2221,58 @@ class SiteController < ApplicationController
   def set_cache_path
     params_key = "_#{params[:cluster].to_s.split.join('-')}_#{params[:annotation]}"
     case action_name
-      when 'render_cluster'
-        unless params[:subsample].nil?
-          params_key += "_#{params[:subsample]}"
-        end
-        render_cluster_url(study_name: params[:study_name]) + params_key
-      when 'render_gene_expression_plots'
-        unless params[:subsample].nil?
-          params_key += "_#{params[:subsample]}"
-        end
-        unless params[:boxpoints].nil?
-          params_key += "_#{params[:boxpoints]}"
-        end
-        params_key += "_#{params[:plot_type]}"
-        render_gene_expression_plots_url(study_name: params[:study_name], gene: params[:gene]) + params_key
-      when 'render_gene_set_expression_plots'
-        unless params[:subsample].nil?
-          params_key += "_#{params[:subsample]}"
-        end
-        if params[:gene_set]
-          params_key += "_#{params[:gene_set].split.join('-')}"
-        else
-          gene_list = params[:search][:genes]
-          gene_key = construct_gene_list_hash(gene_list)
-          params_key += "_#{gene_key}"
-        end
-        params_key += "_#{params[:plot_type]}"
-        unless params[:consensus].nil?
-          params_key += "_#{params[:consensus]}"
-        end
-        unless params[:boxpoints].nil?
-          params_key += "_#{params[:boxpoints]}"
-        end
-        render_gene_set_expression_plots_url(study_name: params[:study_name]) + params_key
-      when 'expression_query'
-        params_key += "_#{params[:row_centered]}"
+    when 'render_cluster'
+      unless params[:subsample].blank?
+        params_key += "_#{params[:subsample]}"
+      end
+      render_cluster_url(study_name: params[:study_name]) + params_key
+    when 'render_gene_expression_plots'
+      unless params[:subsample].blank?
+        params_key += "_#{params[:subsample]}"
+      end
+      unless params[:boxpoints].blank?
+        params_key += "_#{params[:boxpoints]}"
+      end
+      params_key += "_#{params[:plot_type]}"
+      render_gene_expression_plots_url(study_name: params[:study_name], gene: params[:gene]) + params_key
+    when 'render_global_gene_expression_plots'
+      unless params[:subsample].blank?
+        params_key += "_#{params[:subsample]}"
+      end
+      unless params[:identifier].blank?
+        params_key += "_#{params[:identifier]}"
+      end
+      params_key += "_#{params[:plot_type]}"
+      render_global_gene_expression_plots_url(study_name: params[:study_name], gene: params[:gene]) + params_key
+    when 'render_gene_set_expression_plots'
+      unless params[:subsample].blank?
+        params_key += "_#{params[:subsample]}"
+      end
+      if params[:gene_set]
+        params_key += "_#{params[:gene_set].split.join('-')}"
+      else
         gene_list = params[:search][:genes]
         gene_key = construct_gene_list_hash(gene_list)
         params_key += "_#{gene_key}"
-        expression_query_url(study_name: params[:study_name]) + params_key
-      when 'annotation_query'
-        annotation_query_url(study_name: params[:study_name]) + params_key
-      when 'precomputed_results'
-        precomputed_results_url(study_name: params[:study_name], precomputed: params[:precomputed].split.join('-'))
+      end
+      params_key += "_#{params[:plot_type]}"
+      unless params[:consensus].blank?
+        params_key += "_#{params[:consensus]}"
+      end
+      unless params[:boxpoints].blank?
+        params_key += "_#{params[:boxpoints]}"
+      end
+      render_gene_set_expression_plots_url(study_name: params[:study_name]) + params_key
+    when 'expression_query'
+      params_key += "_#{params[:row_centered]}"
+      gene_list = params[:search][:genes]
+      gene_key = construct_gene_list_hash(gene_list)
+      params_key += "_#{gene_key}"
+      expression_query_url(study_name: params[:study_name]) + params_key
+    when 'annotation_query'
+      annotation_query_url(study_name: params[:study_name]) + params_key
+    when 'precomputed_results'
+      precomputed_results_url(study_name: params[:study_name], precomputed: params[:precomputed].split.join('-'))
     end
   end
 end

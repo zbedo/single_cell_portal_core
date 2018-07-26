@@ -1,21 +1,19 @@
-<div class="panel panel-default gene-panel">
+<div class="panel panel-default gene-panel" id="study-<%= study.url_safe_name %>-gene-<%= gene.name.gsub(/\W/, '-') %>">
   <div class="panel-heading">
     <div class="panel-title">
-      <h4><%= link_to "#{gene.name} <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, "#study-#{study.url_safe_name}-gene-#{gene.name.gsub(/\W/, '-')}", "data-toggle" => "collapse", 'data-parent' => '#search-genes' %></h4>
+      <h4><%= gene.name %></h4>
     </div>
   </div>
-  <div class="panel-collapse collapse in" id="study-<%= study.url_safe_name %>-gene-<%= gene.name.gsub(/\W/, '-') %>">
-    <div class="panel-body">
-      <div class="row">
-        <div class="col-md-10 gene-result-view-plot" id="study-<%= study.url_safe_name %>-gene-<%= gene.name.gsub(/\W/, '-') %>-plot"></div>
-        <div class="col-md-2">
-          <div id="study-<%= study.url_safe_name %>-gene-<%= gene.name.gsub(/\W/, '-') %>-options" class="top-pad"></div>
-        </div>
+  <div class="panel-body">
+    <div class="row">
+      <div class="col-md-10 gene-result-view-plot" id="study-<%= study.url_safe_name %>-gene-<%= gene.name.gsub(/\W/, '-') %>-plot"></div>
+      <div class="col-md-2">
+        <div id="study-<%= study.url_safe_name %>-gene-<%= gene.name.gsub(/\W/, '-') %>-options" class="top-pad"></div>
       </div>
-      <div class="row">
-        <div class="col-xs-12">
-          <p class="text-center"><%= scp_link_to "Explore Study <i class='fas fa-fw fa-eye'></i>".html_safe, view_study_path(study_name: study.url_safe_name) + "#study-visualize", class: 'btn btn-lg btn-success' %></p>
-        </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12">
+        <p class="text-center"><%= scp_link_to "Explore Study <i class='fas fa-fw fa-eye'></i>".html_safe, view_study_path(study_name: study.url_safe_name) + "#study-visualize", class: 'btn btn-lg btn-success' %></p>
       </div>
     </div>
   </div>
