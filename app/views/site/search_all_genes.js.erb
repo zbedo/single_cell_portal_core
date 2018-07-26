@@ -1,0 +1,29 @@
+<% @results.each do |gene| %>
+$('#<%= gene.study.id %>-panel').removeClass('hidden');
+$('#<%= gene.study.id %>-panel').addClass('has-gene-results');
+$("#<%= gene.study.id %>").append("<%= escape_javascript(render partial: '/site/search/gene_result', locals: {gene: gene, study: @study, identifier: gene.id}) %>")
+$("#<%= gene.study.id %>-count").html($('#<%= gene.study.id %>-body .gene-panel').length)
+<% end %>
+
+if ($('.gene-panel').length > 0) {
+    $('#searching-message').remove();
+    $('#gene-search-results').data('spinner').stop();
+    $('#gene-search-results-count').html($('div.gene-panel').length);
+    $('#gene-search-studies-count').html($('div.has-gene-results').length);
+    window.clearTimeout(window.clearGeneSearchTimeoutID);
+} else {
+    var numGenes = $('#search_genes').val().split(' ').length
+    if (typeof window.clearGeneSearchTimeoutID === 'undefined') {
+        window.clearGeneSearchTimeoutID = window.setTimeout(window.clearGeneSearchLoading, numGenes * 1000);
+    } else {
+        window.clearTimeout(window.clearGeneSearchTimeoutID);
+        window.clearGeneSearchTimeoutID = window.setTimeout(window.clearGeneSearchLoading, numGenes * 1000);
+    }
+
+}
+
+$('.panel-collapse').off('show.bs.collapse hide.bs.collapse');
+
+$('.panel-collapse').on('show.bs.collapse hide.bs.collapse', function () {
+    toggleGlyph($(this).prev().find('span.toggle-glyph'));
+});

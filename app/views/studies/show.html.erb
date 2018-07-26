@@ -1,6 +1,6 @@
 <h1>
   <%= @study.name %> <%= get_initialized_icon(@study.initialized) %> <%= @study.visibility %> <span class="badge" id="cell-count"><%= @study.cell_count %> cells</span> <span class="badge" id="gene-count"><%= @study.gene_count %> genes</span>
-  <%= link_to "Toggle All Panels <i class='fa fa-toggle-on'></i>".html_safe, 'javascript:;', class: 'btn btn-default btn-sm pull-right', id: 'toggle-panels' %>
+  <%= link_to "Toggle All Panels <i class='fas fa-toggle-on'></i>".html_safe, 'javascript:;', class: 'btn btn-default btn-sm pull-right', id: 'toggle-panels' %>
 </h1>
 <% if @study.check_embargo? %>
   <p class="lead text-danger">Embargoed until: <%= @study.embargo.to_s(:long) %></p>
@@ -10,7 +10,7 @@
 <div class="panel panel-default top-pad" id="info-panel">
   <div class="panel-heading">
     <div class="panel-title">
-      <h4><%= link_to "General Info & Defaults <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#info', 'data-toggle' => 'collapse' %></h4>
+      <h4><%= link_to "General Info & Defaults <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#info', 'data-toggle' => 'collapse' %></h4>
     </div>
   </div>
   <div class="panel-collapse collapse in" id="info">
@@ -30,18 +30,18 @@
                 <tr>
                   <td>Study URL</td>
                   <td><%= view_study_url(@study.url_safe_name) %></td>
-                  <td><%= scp_link_to "<span class='fa fa-eye'></span> View Study".html_safe, view_study_path(@study.url_safe_name), class: 'btn btn-primary', id: 'study-link' %></td>
+                  <td><%= scp_link_to "<span class='fas fa-eye'></span> View Study".html_safe, view_study_path(@study.url_safe_name), class: 'btn btn-primary', id: 'study-link' %></td>
                 </tr>
                 <tr>
                   <td>FireCloud Project & Workspace</td>
                   <td><%= @study.firecloud_project %>/<%= @study.firecloud_workspace %></td>
-                  <td><%= link_to_if !@study.firecloud_workspace.nil?, "<span class='fa fa-cloud'></span> View FireCloud Workspace".html_safe, @study.workspace_url, class: 'btn btn-info', id: 'firecloud-link', target: :_blank %>
+                  <td><%= link_to_if !@study.firecloud_workspace.nil?, "<span class='fas fa-cloud'></span> View FireCloud Workspace".html_safe, @study.workspace_url, class: 'btn btn-info', id: 'firecloud-link', target: :_blank %>
                   </td>
                 </tr>
                 <tr>
                   <td>Google Storage Bucket</td>
                   <td><%= @study.bucket_id %></td>
-                  <td><%= link_to_if !@study.bucket_id.nil?, "<span class='fa fa-database'></span> View Google Bucket".html_safe, @study.google_bucket_url, class: 'btn btn-success', id: 'gcs-link', target: :_blank %>
+                  <td><%= link_to_if !@study.bucket_id.nil?, "<span class='fas fa-database'></span> View Google Bucket".html_safe, @study.google_bucket_url, class: 'btn btn-success', id: 'gcs-link', target: :_blank %>
                   </td>
                 </tr>
               </tbody>
@@ -56,7 +56,7 @@
 <div class="panel panel-info top-pad" id="stats-panel">
 	<div class="panel-heading">
 		<div class="panel-title">
-			<h4><%= link_to "Statistics <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#stats', 'data-toggle' => 'collapse' %></h4>
+			<h4><%= link_to "Statistics <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#stats', 'data-toggle' => 'collapse' %></h4>
 		</div>
 	</div>
 	<div class="panel-collapse collapse in" id="stats">
@@ -117,7 +117,7 @@
 <div class="panel panel-info" id="metadata-annotations-panel">
   <div class="panel-heading">
     <div class="panel-title">
-      <h4><%= link_to "Cell Metadata <span class='badge' id='metadata-count'>#{@study.cell_metadata.count}</span> & Cluster Annotations <span class='badge' id='cluster-annotation-count'>#{@study.cluster_annotation_count}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#metadata-annotations', 'data-toggle' => 'collapse' %></h4>
+      <h4><%= link_to "Cell Metadata <span class='badge' id='metadata-count'>#{@study.cell_metadata.count}</span> & Cluster Annotations <span class='badge' id='cluster-annotation-count'>#{@study.cluster_annotation_count}</span> <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#metadata-annotations', 'data-toggle' => 'collapse' %></h4>
     </div>
   </div>
 
@@ -163,7 +163,7 @@
 <div class="panel panel-info" id="analysis-metadata-panel">
   <div class="panel-heading">
     <div class="panel-title">
-      <h4><%= link_to "Submission Info <span class='badge' id='analysis-count'>#{@analysis_metadata.size}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#analysis-metadata', 'data-toggle' => 'collapse' %></h4>
+      <h4><%= link_to "Submission Info <span class='badge' id='analysis-count'>#{@analysis_metadata.size}</span> <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#analysis-metadata', 'data-toggle' => 'collapse' %></h4>
     </div>
   </div>
 
@@ -185,7 +185,7 @@
               <td><%= link_to analysis.submission_id, @study.submission_url(analysis.submission_id), target: :_blank %></td>
               <td><%= analysis.created_at.strftime("%F %R") %></td>
               <td class="actions">
-                <%= link_to("<i class='fa fa-fw fa-code'></i> View Run Info".html_safe, 'javascript:;', class: 'btn btn-xs btn-info view-submission-metadata', title: 'View HCA-formatted analysis metadata', data: {toggle: 'tooltip', id: analysis.submission_id, url: get_submission_metadata_path(study_name: @study.url_safe_name, submission_id: analysis.submission_id)}) %>
+                <%= link_to("<i class='fas fa-fw fa-code'></i> View Run Info".html_safe, 'javascript:;', class: 'btn btn-xs btn-info view-submission-metadata', title: 'View HCA-formatted analysis metadata', data: {toggle: 'tooltip', id: analysis.submission_id, url: get_submission_metadata_path(study_name: @study.url_safe_name, submission_id: analysis.submission_id)}) %>
               </td>
             </tr>
           <% end %>
@@ -198,7 +198,7 @@
 <div class="panel panel-primary" id="study-files-panel">
 	<div class="panel-heading">
 		<div class="panel-title">
-			<h4><%= link_to "Study Files <span class='badge' id='study-file-count'>#{@study.study_files.non_primary_data.size}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#study-files', 'data-toggle' => 'collapse', class: 'white' %></h4>
+			<h4><%= link_to "Study Files <span class='badge' id='study-file-count'>#{@study.study_files.non_primary_data.size}</span> <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#study-files', 'data-toggle' => 'collapse', class: 'white' %></h4>
 		</div>
 	</div>
 
@@ -233,7 +233,7 @@
 <div class="panel panel-warning" id="fastq-files-panel">
   <div class="panel-heading">
     <div class="panel-title">
-      <h4><%= link_to "Sequence Data <span class='badge' id='primary-data-count'>#{@study.primary_data_file_count}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#fastq-files', 'data-toggle' => 'collapse' %></h4>
+      <h4><%= link_to "Sequence Data <span class='badge' id='primary-data-count'>#{@study.primary_data_file_count}</span> <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#fastq-files', 'data-toggle' => 'collapse' %></h4>
     </div>
   </div>
 
@@ -270,7 +270,7 @@
                 <td><%= basename %></td>
                 <td class="dl-description"><%= directory.description %></td>
                 <td class="dl-description"><%= directory.file_type %></td>
-                <td><%= link_to("<span class='fa fa-download'></span> #{number_to_human_size(file[:size], prefix: :si)}".html_safe, directory.download_path(file[:name]), class: "btn btn-primary dl-link fastq", download: basename) %></td>
+                <td><%= link_to("<span class='fas fa-download'></span> #{number_to_human_size(file[:size], prefix: :si)}".html_safe, directory.download_path(file[:name]), class: "btn btn-primary dl-link fastq", download: basename) %></td>
               </tr>
             <% end %>
           <% end %>
@@ -283,7 +283,7 @@
 <div class="panel panel-warning" id="other-files-panel">
   <div class="panel-heading">
     <div class="panel-title">
-      <h4><%= link_to "Other Data <span class='badge' id='other-data-count'>#{@study.misc_directory_file_count}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#other-files', 'data-toggle' => 'collapse' %></h4>
+      <h4><%= link_to "Other Data <span class='badge' id='other-data-count'>#{@study.misc_directory_file_count}</span> <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#other-files', 'data-toggle' => 'collapse' %></h4>
     </div>
   </div>
 
@@ -306,7 +306,7 @@
               <td><%= basename %></td>
               <td><%= directory.file_type %></td>
               <td class="dl-description"><%= directory.description %></td>
-              <td><%= link_to("<span class='fa fa-download'></span> #{number_to_human_size(file[:size], prefix: :si)}".html_safe, directory.download_path(file[:name]), class: "btn btn-primary dl-link fastq", download: basename) %></td>
+              <td><%= link_to("<span class='fas fa-download'></span> #{number_to_human_size(file[:size], prefix: :si)}".html_safe, directory.download_path(file[:name]), class: "btn btn-primary dl-link fastq", download: basename) %></td>
             </tr>
           <% end %>
         <% end %>
@@ -319,7 +319,7 @@
 <div class="panel panel-success" id="study-shares-panel">
 	<div class="panel-heading">
 		<div class="panel-title">
-			<h4><%= link_to "Sharing <span class='badge' id='share-count'>#{@study.study_shares.visible.size}</span> <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#study-shares', class: 'text-success', 'data-toggle' => 'collapse' %></h4>
+			<h4><%= link_to "Sharing <span class='badge' id='share-count'>#{@study.study_shares.visible.size}</span> <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#study-shares', class: 'text-success', 'data-toggle' => 'collapse' %></h4>
 		</div>
 	</div>
 
@@ -350,11 +350,11 @@
 	</div>
 </div>
 <div id="notice-target"></div>
-<p><%= scp_link_to "<span class='fa fa-edit'></span> Edit Study".html_safe, edit_study_path(@study), class: 'btn btn-primary' %>
-	<%= scp_link_to "<span class='fa fa-upload'></span> Upload/Edit Data".html_safe, upload_study_path(@study), class: 'btn btn-success' %>
-	<%= scp_link_to "<span class='fa fa-chevron-left'></span> Back".html_safe, studies_path, class: 'btn btn-warning' %></p>
+<p><%= scp_link_to "<span class='fas fa-edit'></span> Edit Study".html_safe, edit_study_path(@study), class: 'btn btn-primary' %>
+	<%= scp_link_to "<span class='fas fa-upload'></span> Upload/Edit Data".html_safe, upload_study_path(@study), class: 'btn btn-success' %>
+	<%= scp_link_to "<span class='fas fa-chevron-left'></span> Back".html_safe, studies_path, class: 'btn btn-warning' %></p>
 
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
 		$('#clusters, #precomputed').dataTable({
 			pagingType: "simple",

@@ -12,7 +12,7 @@
     <dt>owner</dt>
     <dd>User will have <strong>read/write access</strong> to all workspaces in this project, and can create & delete workspaces in FireCloud</dd>
   </dl>
-  <p class="text-primary"><i class="fa fa-fw fa-exclamation-triangle"></i> The user you are adding must already be a FireCloud user in order to add them to the project.</p>
+  <p class="text-primary"><i class="fas fa-fw fa-exclamation-triangle"></i> The user you are adding must already be a FireCloud user in order to add them to the project.</p>
 </div>
 <div class="well well-lg">
   <%= form_for(:billing_project_user, url: create_billing_project_user_path(project_name: params[:project_name]), html: {class: 'form'}) do |f| %>
@@ -34,7 +34,7 @@
   <% end %>
 </div>
 
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
     $('#add-billing-project-user').click(function () {
         $('#generic-modal-title').html("Adding User... Please Wait");

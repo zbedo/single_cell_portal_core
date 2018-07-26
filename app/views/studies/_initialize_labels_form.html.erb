@@ -69,7 +69,7 @@
 			<tbody class="files"></tbody>
 		</table>
 	</div>
-	<script type="text/javascript">
+	<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
 		$(function() {
 
@@ -108,9 +108,10 @@
 					var fileName = data.files[0].name.replace(/ /g, '_');
 					// update upload status
 					$.ajax({
-						url: "<%= update_status_study_path %>",
-						type: "PATCH",
-						data: { status: 'uploaded', file: fileName}
+						  url: "<%= update_status_study_path %>",
+						  type: "PATCH",
+              dataType: 'script',
+						  data: { status: 'uploaded', file: fileName}
 					});
 					fileUploading = false;
             $.ajax({

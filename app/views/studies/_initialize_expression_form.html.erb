@@ -19,7 +19,7 @@
 	</div>
   <div class="form-group row">
     <div class="col-sm-12">
-      <%= f.label :y_axis_label, 'Expression Axis Label' %>&nbsp;<span class="fa fa-question-circle expression-label-tooltip" data-toggle="tooltip" data-placement="right" title="This is displayed as the axis label for box & scatter plots showing expression values.  This label is global to all expression values.<%= @study.has_expression_label? ? ' Please use the study default options form to update this value.' : '' %>"></span> <br />
+      <%= f.label :y_axis_label, 'Expression Axis Label' %>&nbsp;<span class="fas fa-question-circle expression-label-tooltip" data-toggle="tooltip" data-placement="right" title="This is displayed as the axis label for box & scatter plots showing expression values.  This label is global to all expression values.<%= @study.has_expression_label? ? ' Please use the study default options form to update this value.' : '' %>"></span> <br />
       <%= f.text_field :y_axis_label, value: @study.has_expression_label? ? @study.default_expression_label : study_file.y_axis_label, placeholder: @study.default_expression_label, class: 'form-control expression-label', disabled: @study.has_expression_label? %>
     </div>
   </div>
@@ -59,7 +59,7 @@
 		</table>
 	</div>
 
-	<script type="text/javascript">
+	<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
 		$(function() {
 
@@ -72,6 +72,11 @@
 					fileUploading = true;
 					var that = this;
 					var fileName = data.files[0].name.replace(/ /g, '_');
+					// auto-select MM Coordinate Matrix if applicable
+          fileExt = fileName.split('.').slice(-1)[0];
+          if (fileExt === 'mtx') {
+              $('#expression_form_<%= study_file._id %> .file-type').val('MM Coordinate Matrix');
+          }
           $('#expression_form_<%= study_file._id %> .filename').val(fileName);
           canUpload = validateCandidateUpload("#expression_form_<%= study_file._id %>", fileName, $('.initialize_expression_form .filename'));
           if ( canUpload ) {
@@ -97,9 +102,10 @@
           completeWizardStep('initialize_expression_form_nav');
 					var fileName = data.files[0].name.replace(/ /g, '_');
 					$.ajax({
-						url: "<%= update_status_study_path %>",
-						type: "PATCH",
-						data: { status: 'uploaded', file: fileName}
+						  url: "<%= update_status_study_path %>",
+						  type: "PATCH",
+              dataType: 'script',
+						  data: { status: 'uploaded', file: fileName}
 					});
 					fileUploading = false;
 					$.ajax({

@@ -13,7 +13,7 @@
     <div class="panel panel-danger">
       <div class="panel-heading">
         <div class="panel-title">
-          <h4><%= link_to "<i class='fa fa-exclamation'></i> Orphaned Study Files <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#orphaned-study-files', class: 'red', 'data-toggle' => 'collapse' %></h4>
+          <h4><%= link_to "<i class='fas fa-exclamation'></i> Orphaned Study Files <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#orphaned-study-files', class: 'red', 'data-toggle' => 'collapse' %></h4>
         </div>
       </div>
       <div id="orphaned-study-files" class="panel-collapse collapse in unsynced">
@@ -33,7 +33,7 @@
     <div class="panel panel-info">
       <div class="panel-heading">
         <div class="panel-title">
-          <h4><%= link_to "<i class='fa fa-question'></i> Unsynced Study Files <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#unsynced-study-files', 'data-toggle' => 'collapse' %></h4>
+          <h4><%= link_to "<i class='fas fa-question'></i> Unsynced Study Files <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#unsynced-study-files', 'data-toggle' => 'collapse' %></h4>
         </div>
       </div>
       <div id="unsynced-study-files" class="panel-collapse collapse in unsynced">
@@ -53,7 +53,7 @@
     <div class="panel panel-warning">
       <div class="panel-heading">
         <div class="panel-title">
-          <h4><%= link_to "<i class='fa fa-question'></i> Unsynced Primary Data Directories <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#unsynced-directories', 'data-toggle' => 'collapse' %></h4>
+          <h4><%= link_to "<i class='fas fa-question'></i> Unsynced Primary Data Directories <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#unsynced-directories', 'data-toggle' => 'collapse' %></h4>
         </div>
       </div>
       <div id="unsynced-directories" class="panel-collapse collapse in unsynced">
@@ -74,7 +74,7 @@
     <div class="panel panel-default">
       <div class="panel-heading">
         <div class="panel-title">
-          <h4><%= link_to "<i class='fa fa-question'></i> Unsynced Miscellaneous Data Directories <span class='fa fa-chevron-down toggle-glyph'></span>".html_safe, '#unsynced-directories', 'data-toggle' => 'collapse' %></h4>
+          <h4><%= link_to "<i class='fas fa-question'></i> Unsynced Miscellaneous Data Directories <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#unsynced-directories', 'data-toggle' => 'collapse' %></h4>
         </div>
       </div>
       <div id="unsynced-directories" class="panel-collapse collapse in unsynced">
@@ -95,7 +95,7 @@
   <div class="panel panel-success">
     <div class="panel-heading">
       <div class="panel-title">
-        <h4><%= link_to "<i class='fa fa-check'></i> Synced Data <span class='fa fa-chevron-right toggle-glyph'></span>".html_safe, '#synced-data', 'data-toggle' => 'collapse', id: 'synced-data-panel-toggle' %></h4>
+        <h4><%= link_to "<i class='fas fa-check'></i> Synced Data <span class='fas fa-chevron-right toggle-glyph'></span>".html_safe, '#synced-data', 'data-toggle' => 'collapse', id: 'synced-data-panel-toggle' %></h4>
       </div>
     </div>
     <div id="synced-data" class="panel-collapse collapse">
@@ -121,9 +121,9 @@
 
 </div>
 
-<%= scp_link_to "<i class='fa fa-chevron-left'></i> Back".html_safe, studies_path, class: 'btn btn-warning back-btn' %>
+<%= scp_link_to "<i class='fas fa-chevron-left'></i> Back".html_safe, studies_path, class: 'btn btn-warning back-btn' %>
 
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
 
     // when changing the existing file dropdown, dynamically update the file generation value for the specified form

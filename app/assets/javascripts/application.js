@@ -12,7 +12,7 @@
 //
 //= require jquery3
 //= require jquery_ujs
-//= require ckeditor/init
+//= require ckeditor
 //= require dataTables/jquery.dataTables
 //= require dataTables/bootstrap/3/jquery.dataTables.bootstrap
 //= require jquery.bootstrap.wizard
@@ -41,6 +41,7 @@
 //= require clipboard.min
 //= require ideogram.min
 //= require igv.min
+//= require scp-igv
 
 var fileUploading = false;
 var PAGE_RENDERED = false;
@@ -123,25 +124,6 @@ function toggleSearchPanel() {
 
   $(window).trigger('resizeEnd');
 }
-
-$(document).on('click', '.bam-browse-genome', function(e) {
-
-  var selectedBam, thisBam, i;
-
-  selectedBam = $(this).attr('data-filename');
-
-  // bamAndBaiFiles declared in _genome.html.erb
-  for (i = 0; i < bamAndBaiFiles.length; i++) {
-    thisBam = bamAndBaiFiles[i].url.split('\/o/')[1].split('?')[0];
-    if (thisBam === selectedBam) {
-      bamsToViewInIgv.push(bamAndBaiFiles[i]);
-    }
-  }
-
-  $('#genome-tab-nav').css('display', ''); // Show Genome tab
-  $('#study-visualize-nav > a').click();
-  $('#genome-tab-nav > a').click();
-});
 
 // Toggle "View Options" menu panel in Explore tab
 $(document).on('click', '#view-option-link', function(e) {
@@ -323,6 +305,11 @@ function deletePromise(event, message) {
 
 // attach various handlers to bootstrap items and turn on functionality
 function enableDefaultActions() {
+    // detect Safari and alert user of deprecation
+    if (navigator.userAgent.indexOf('Safari') != -1 && navigator.userAgent.indexOf('Chrome') == -1) {
+        alert('WARNING: The Single Cell Portal no longer supports the Safari browser, and most functionality will be disabled.  ' +
+            'Please use either Chrome or FireFox instead.');
+    }
 
     // need to clear previous listener to prevent conflict
     $('.panel-collapse').off('show.bs.collapse hide.bs.collapse');
@@ -947,7 +934,16 @@ function gatherFilesByType(fileType) {
     return matchingfiles;
 }
 
+// calculate the current viewport to use for rendering cluster plots
 function calculatePlotViewport(target) {
     var viewPort = $(window).height();
-    return viewPort - 250;
+    return viewPort - 250; //
 }
+
+// garbage collector to clear the search animation on global gene search (in case no results are found)
+window.clearGeneSearchLoading = function() {
+    console.log('Clearing global gene search message');
+    $('#searching-message').remove();
+    $('#gene-search-results').data('spinner').stop();
+    $('#gene-search-results-count').html($('.gene-panel').length);
+};

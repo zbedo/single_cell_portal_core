@@ -57,7 +57,7 @@ class Study
 
   # associations and scopes
   belongs_to :user
-  belongs_to :branding_group
+  belongs_to :branding_group, optional: true
   has_many :study_files, dependent: :delete do
     def by_type(file_type)
       if file_type.is_a?(Array)
@@ -690,7 +690,7 @@ class Study
     self.study_files.by_type('BAM').any?
   end
 
-  # Get a JSON list of BAM file objects where each object has a URL for the BAM
+  # Get a list of BAM file objects where each object has a URL for the BAM
   # itself and index URL for its matching BAI file.
   def get_bam_files
 
@@ -704,6 +704,34 @@ class Study
       }
     end
     bams
+  end
+
+  # Get gene annotations tracks for igv.js,
+  # as reference-genome keyed list of GCS API URLs for BED and BED index files
+  def get_gene_tracks
+    gene_tracks = {}
+    if self.has_bam_files?
+      reference_workspace = AdminConfiguration.find_by(config_type: 'Reference Data Workspace')
+      opts = reference_workspace.options
+      namespace, name = reference_workspace.value.split('/')
+
+      # We'll generalize later, e.g. take in (genome assembly) reference_name as a URL parameter
+      # to this 'study' method's endpoint
+      reference_name = 'mm10'
+
+      gene_tracks = {
+          mm10: {}
+      }
+
+      reference_gtf_key = opts.keys.find {|o| o =~ /^#{reference_name}.*_gtf$/}
+      reference_gtf = opts[reference_gtf_key]
+      gene_tracks[:mm10][:url] = Study.firecloud_client.generate_api_url(namespace, name, reference_gtf)
+
+      reference_gtf_index_key = opts.keys.find {|o| o =~ /^#{reference_name}.*_gtf_index$/}
+      reference_gtf_index = opts[reference_gtf_index_key]
+      gene_tracks[:mm10][:indexUrl] = Study.firecloud_client.generate_api_url(namespace, name, reference_gtf_index)
+    end
+    gene_tracks
   end
 
   ###
@@ -1095,14 +1123,11 @@ class Study
           end
 
           # batch insert records in groups of 1000
-          if @records.size % 1000 == 0
-            Gene.create(@records)
+          if @child_records.size >= 1000
+            Gene.create(@records) # genes must be saved first, otherwise the linear data polymorphic association is invalid and will cause a parse fail
             @count += @records.size
             Rails.logger.info "#{Time.now}: Processed #{@count} genes from #{expression_file.name}:#{expression_file.id} for #{self.name}"
             @records = []
-          end
-
-          if @child_records.size >= 1000
             DataArray.create!(@child_records)
             @child_count += @child_records.size
             Rails.logger.info "#{Time.now}: Processed #{@child_count} child data arrays from #{expression_file.name}:#{expression_file.id} for #{self.name}"

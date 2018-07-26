@@ -15,28 +15,29 @@ class SiteController < ApplicationController
 
   respond_to :html, :js, :json
 
-  before_action :set_study, except: [:index, :search, :privacy_policy, :view_workflow_wdl, :create_totat, :log_action]
-  before_action :set_cluster_group, only: [:study, :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots,
-                                           :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap,
-                                           :view_precomputed_gene_expression_heatmap, :expression_query, :annotation_query,
-                                           :get_new_annotations, :annotation_values, :show_user_annotations_form]
-  before_action :set_selected_annotation, only: [:render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots,
-                                                 :view_gene_expression, :view_gene_set_expression, :view_gene_expression_heatmap,
-                                                 :view_precomputed_gene_expression_heatmap, :annotation_query, :annotation_values,
-                                                 :show_user_annotations_form]
+  before_action :set_study, except: [:index, :search, :get_viewable_studies, :search_all_genes, :privacy_policy, :view_workflow_wdl,
+                                     :create_totat, :log_action]
+  before_action :set_cluster_group, only: [:study, :render_cluster, :render_gene_expression_plots, :render_global_gene_expression_plots,
+                                           :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression,
+                                           :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :expression_query,
+                                           :annotation_query, :get_new_annotations, :annotation_values, :show_user_annotations_form]
+  before_action :set_selected_annotation, only: [:render_cluster, :render_gene_expression_plots, :render_global_gene_expression_plots,
+                                                 :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression,
+                                                 :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :annotation_query,
+                                                 :annotation_values, :show_user_annotations_form]
   before_action :load_precomputed_options, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots,
                                                   :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression,
                                                   :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap]
-  before_action :check_view_permissions, except: [:index, :privacy_policy, :search, :precomputed_results, :expression_query, :annotation_query,
-                                                  :view_workflow_wdl, :log_action, :get_workspace_samples, :update_workspace_samples,
-                                                  :create_totat, :get_workflow_options, :fetch_data]
+  before_action :check_view_permissions, except: [:index, :get_viewable_studies, :search_all_genes, :render_global_gene_expression_plots, :privacy_policy,
+                                                  :search, :precomputed_results, :expression_query, :annotation_query, :view_workflow_wdl,
+                                                  :log_action, :get_workspace_samples, :update_workspace_samples, :create_totat, :get_workflow_options]
   before_action :check_compute_permissions, only: [:get_fastq_files, :get_workspace_samples, :update_workspace_samples,
                                                    :delete_workspace_samples, :get_workspace_submissions, :create_workspace_submission,
                                                    :get_submission_workflow, :abort_submission_workflow, :get_submission_errors,
                                                    :get_submission_outputs, :delete_submission_files, :get_submission_metadata]
 
   # caching
-  caches_action :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots,
+  caches_action :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :render_global_gene_expression_plots,
                 :expression_query, :annotation_query, :precomputed_results,
                 cache_path: :set_cache_path
 
@@ -156,6 +157,57 @@ class SiteController < ApplicationController
     end
   end
 
+  def get_viewable_studies
+    @studies = user_signed_in? ? Study.viewable(current_user) : Study.where(queued_for_deletion: false, public: true)
+
+    # restrict to branding group if present
+    if @selected_branding_group.present?
+      @studies = @studies.where(branding_group_id: @selected_branding_group.id)
+    end
+
+    # restrict studies to initialized only
+    @studies = @studies.where(initialized: true)
+  end
+
+  # global gene search, will return a list of studies that contain the requested gene(s)
+  # results will be visualized on a per-gene basis (not merged)
+  def search_all_genes
+    # set study
+    @study = Study.find(params[:id])
+    if check_xhr_view_permissions
+      # parse and sanitize gene terms
+      delim = params[:search][:genes].include?(',') ? ',' : ' '
+      raw_genes = params[:search][:genes].split(delim)
+      @genes = sanitize_search_values(raw_genes).split(',').map(&:strip)
+
+      @results = []
+      if !@study.initialized?
+        head 422
+      else
+        matrix_ids = @study.expression_matrix_files.map(&:id)
+        @genes.each do |gene|
+          # determine if study contains requested gene
+          matches = @study.genes.any_of({name: gene, :study_file_id.in => matrix_ids},
+                                        {searchable_name: gene.downcase, :study_file_id.in => matrix_ids},
+                                        {name: /\A#{gene} (.*)/, :study_file_id.in => matrix_ids},
+                                        {searchable_name: /\A#{gene.downcase} (.*)/, :study_file_id.in => matrix_ids})
+          if matches.present?
+            matches.each do |match|
+              # gotcha where you can have duplicate genes that came from different matrices - ignore these as data is merged on load
+              if @results.detect {|r| r.study == match.study && r.searchable_name == match.searchable_name}
+                next
+              else
+                @results << match
+              end
+            end
+          end
+        end
+      end
+    else
+      head 403
+    end
+  end
+
   ###
   #
   # STUDY SETTINGS
@@ -253,29 +305,6 @@ class SiteController < ApplicationController
       if @study.has_analysis_outputs?('infercnv', 'ideogram.js')
         ideogram_annotations = @study.get_analysis_outputs('infercnv', 'ideogram.js').first
         @analysis_outputs['ideogram.js'] = ideogram_annotations.bucket_location
-      end
-
-      if @study.has_bam_files?
-        reference_workspace = AdminConfiguration.find_by(config_type: 'Reference Data Workspace')
-        opts = reference_workspace.options
-        namespace, name = reference_workspace.value.split('/')
-
-        # We'll generalize later, e.g. take in (genome assembly) reference_name as a URL parameter
-        # to this 'study' method's endpoint
-        reference_name = 'mm10'
-
-        @bed_files = {
-            mm10: {}
-        }
-
-        reference_bed_key = opts.keys.find {|o| o =~ /^#{reference_name}.*_bed$/}
-        reference_bed = opts[reference_bed_key]
-        @bed_files[:mm10][:url] = Study.firecloud_client.generate_api_url(namespace, name, reference_bed)
-
-        reference_bed_index_key = opts.keys.find {|o| o =~ /^#{reference_name}.*_bed_index$/}
-        reference_bed_index = opts[reference_bed_index_key]
-        @bed_files[:mm10][:indexUrl] = Study.firecloud_client.generate_api_url(namespace, name, reference_bed_index)
-
       end
     end
 
@@ -384,6 +413,28 @@ class SiteController < ApplicationController
     if params[:annotation] == @study.default_annotation && @study.default_annotation_type == 'numeric' && !@study.default_color_profile.nil?
       @expression[:all][:marker][:colorscale] = @study.default_color_profile
       @coordinates[:all][:marker][:colorscale] = @study.default_color_profile
+    end
+  end
+
+  # renders gene expression plots, but from global gene search. uses default annotations on first render, but takes URL parameters after that
+  def render_global_gene_expression_plots
+    if check_xhr_view_permissions
+      matches = @study.genes.by_name(params[:gene], @study.expression_matrix_files.map(&:id))
+      subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
+      @gene = load_best_gene_match(matches, params[:gene])
+      @identifier = params[:identifier] # unique identifer for each plot for namespacing JS variables/functions (@gene.id)
+      @target = 'study-' + @study.url_safe_name + '-gene-' + params[:gene].gsub(/\W/, '-')
+      @y_axis_title = load_expression_axis_title
+      if @selected_annotation[:type] == 'group'
+        @values = load_expression_boxplot_data_array_scores(@selected_annotation, subsample)
+        @values_jitter = params[:boxpoints]
+      else
+        @values = load_annotation_based_data_array_scatter(@selected_annotation, subsample)
+      end
+      @options = load_cluster_group_options
+      @cluster_annotations = load_cluster_group_annotations
+    else
+      head 403
     end
   end
 
@@ -561,6 +612,7 @@ class SiteController < ApplicationController
   # dynamically reload cluster-based annotations list when changing clusters
   def get_new_annotations
     @cluster_annotations = load_cluster_group_annotations
+    @target = params[:target].blank? ? nil : params[:target] + '-'
   end
 
   # return JSON representation of selected annotation
@@ -762,45 +814,13 @@ class SiteController < ApplicationController
     @log_message = ["#{Time.now}: #{@study.url_safe_name} curl configs generated!"]
     @log_message << "Signed URLs generated: #{curl_configs.size}"
     @log_message << "Total time in get_curl_config: #{time.first} minutes, #{time.last} seconds"
-    Rails.logger.info @log_message.join("\n")
+    logger.info @log_message.join("\n")
 
     curl_configs = curl_configs.join("\n\n")
 
     user.update(daily_download_quota: user_quota)
 
     send_data curl_configs, type: 'text/plain', filename: 'cfg.txt'
-  end
-
-  # return contents of a file in a Google bucket (to get around CORS issues)
-  def fetch_data
-    if check_xhr_view_permissions
-      remote = Study.firecloud_client.get_workspace_file(@study.firecloud_project,
-                                                         @study.firecloud_workspace,
-                                                         params[:filename])
-      signed_url = Study.firecloud_client.generate_signed_url(@study.firecloud_project,
-                                                              @study.firecloud_workspace,
-                                                              params[:filename])
-      @response = RestClient.get(signed_url)
-      if remote.content_type == 'application/json'
-        render json: @response.body
-      else
-        render text: @response.body
-      end
-    else
-      head 403
-    end
-  end
-
-  # return media_url to enable loading a file from GCS directly via client-side JavaScript
-  def get_media_url
-    if check_xhr_view_permissions
-      media_url = Study.firecloud_client.generate_signed_url(@study.firecloud_project,
-                                                              @study.firecloud_workspace,
-                                                              params[:filename])
-      render text: media_url
-    else
-      head 403
-    end
   end
 
   ###
@@ -2201,49 +2221,58 @@ class SiteController < ApplicationController
   def set_cache_path
     params_key = "_#{params[:cluster].to_s.split.join('-')}_#{params[:annotation]}"
     case action_name
-      when 'render_cluster'
-        unless params[:subsample].nil?
-          params_key += "_#{params[:subsample]}"
-        end
-        render_cluster_url(study_name: params[:study_name]) + params_key
-      when 'render_gene_expression_plots'
-        unless params[:subsample].nil?
-          params_key += "_#{params[:subsample]}"
-        end
-        unless params[:boxpoints].nil?
-          params_key += "_#{params[:boxpoints]}"
-        end
-        params_key += "_#{params[:plot_type]}"
-        render_gene_expression_plots_url(study_name: params[:study_name], gene: params[:gene]) + params_key
-      when 'render_gene_set_expression_plots'
-        unless params[:subsample].nil?
-          params_key += "_#{params[:subsample]}"
-        end
-        if params[:gene_set]
-          params_key += "_#{params[:gene_set].split.join('-')}"
-        else
-          gene_list = params[:search][:genes]
-          gene_key = construct_gene_list_hash(gene_list)
-          params_key += "_#{gene_key}"
-        end
-        params_key += "_#{params[:plot_type]}"
-        unless params[:consensus].nil?
-          params_key += "_#{params[:consensus]}"
-        end
-        unless params[:boxpoints].nil?
-          params_key += "_#{params[:boxpoints]}"
-        end
-        render_gene_set_expression_plots_url(study_name: params[:study_name]) + params_key
-      when 'expression_query'
-        params_key += "_#{params[:row_centered]}"
+    when 'render_cluster'
+      unless params[:subsample].blank?
+        params_key += "_#{params[:subsample]}"
+      end
+      render_cluster_url(study_name: params[:study_name]) + params_key
+    when 'render_gene_expression_plots'
+      unless params[:subsample].blank?
+        params_key += "_#{params[:subsample]}"
+      end
+      unless params[:boxpoints].blank?
+        params_key += "_#{params[:boxpoints]}"
+      end
+      params_key += "_#{params[:plot_type]}"
+      render_gene_expression_plots_url(study_name: params[:study_name], gene: params[:gene]) + params_key
+    when 'render_global_gene_expression_plots'
+      unless params[:subsample].blank?
+        params_key += "_#{params[:subsample]}"
+      end
+      unless params[:identifier].blank?
+        params_key += "_#{params[:identifier]}"
+      end
+      params_key += "_#{params[:plot_type]}"
+      render_global_gene_expression_plots_url(study_name: params[:study_name], gene: params[:gene]) + params_key
+    when 'render_gene_set_expression_plots'
+      unless params[:subsample].blank?
+        params_key += "_#{params[:subsample]}"
+      end
+      if params[:gene_set]
+        params_key += "_#{params[:gene_set].split.join('-')}"
+      else
         gene_list = params[:search][:genes]
         gene_key = construct_gene_list_hash(gene_list)
         params_key += "_#{gene_key}"
-        expression_query_url(study_name: params[:study_name]) + params_key
-      when 'annotation_query'
-        annotation_query_url(study_name: params[:study_name]) + params_key
-      when 'precomputed_results'
-        precomputed_results_url(study_name: params[:study_name], precomputed: params[:precomputed].split.join('-'))
+      end
+      params_key += "_#{params[:plot_type]}"
+      unless params[:consensus].blank?
+        params_key += "_#{params[:consensus]}"
+      end
+      unless params[:boxpoints].blank?
+        params_key += "_#{params[:boxpoints]}"
+      end
+      render_gene_set_expression_plots_url(study_name: params[:study_name]) + params_key
+    when 'expression_query'
+      params_key += "_#{params[:row_centered]}"
+      gene_list = params[:search][:genes]
+      gene_key = construct_gene_list_hash(gene_list)
+      params_key += "_#{gene_key}"
+      expression_query_url(study_name: params[:study_name]) + params_key
+    when 'annotation_query'
+      annotation_query_url(study_name: params[:study_name]) + params_key
+    when 'precomputed_results'
+      precomputed_results_url(study_name: params[:study_name], precomputed: params[:precomputed].split.join('-'))
     end
   end
 end

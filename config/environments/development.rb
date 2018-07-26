@@ -9,13 +9,19 @@ Rails.application.configure do
   # Do not eager load code on boot.
   config.eager_load = false
 
-  # Show full error reports and disable caching.
+  # Show full error reports.
   config.consider_all_requests_local = true
 
+  # Enable/disable caching. By default caching is disabled.
+  # Run rails dev:cache to toggle caching.
   config.action_controller.perform_caching = true
 
-  # Don't care if the mailer can't send.
-  config.action_mailer.raise_delivery_errors = false
+  config.public_file_server.headers = {
+    'Cache-Control' => "public, max-age=#{2.days.to_i}"
+  }
+
+
+  config.action_mailer.perform_caching = false
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
@@ -25,21 +31,19 @@ Rails.application.configure do
   # number of complex assets.
   config.assets.debug = true
 
-  # Asset digests allow you to set far-future HTTP expiration dates on all assets,
-  # yet still be able to expire them through the digest params.
-  config.assets.digest = true
-  config.assets.prefix = '/single_cell/assets'
-
-  # Adds additional error checking when serving assets at runtime.
-  # Checks for improperly declared sprockets dependencies.
-  # Raises helpful error messages.
-  config.assets.raise_runtime_errors = true
+  # Suppress logger output for asset requests.
+  config.assets.quiet = true
 
   # Raises error for missing translations
   # config.action_view.raise_on_missing_translations = true
 
-  config.force_ssl = false
-  config.action_dispatch.x_sendfile_header = 'X-Accel-Redirect' # for NGINX
+  # Mitigate X-Forwarded-Host injection attacks
+  config.action_controller.default_url_options = { :host => 'localhost', protocol: 'https' }
+  config.action_controller.asset_host = 'localhost'
+
+  # Use an evented file watcher to asynchronously detect changes in source code,
+  # routes, locales, etc. This feature depends on the listen gem.
+  config.file_watcher = ActiveSupport::EventedFileUpdateChecker
 
   config.action_mailer.default_url_options = { :host => 'localhost', protocol: 'https' }
   config.action_mailer.delivery_method = :smtp

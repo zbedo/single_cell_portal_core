@@ -1,0 +1,20 @@
+var genes = $('#search_genes').val();
+$("#gene-search-results").append("<h3 id='searching-message'>Searching <%= @studies.size %> studies...");
+<% @studies.each do |study| %>
+
+  $("#gene-search-results").append("<%= escape_javascript(render partial: '/site/search/gene_search_panel', locals: {study: study}) %>")
+
+  $.ajax({
+      url: '<%= search_all_genes_path %>',
+      method: 'POST',
+      dataType: 'script',
+      data: {
+          search: {
+              genes: genes
+          },
+          id: '<%= study.id %>',
+          request_user_token: '<%= user_signed_in? ? current_user.id.to_s + ':' + current_user.authentication_token : nil %>'
+      }
+  });
+
+<% end %>

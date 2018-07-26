@@ -30,7 +30,7 @@
   </div>
   <div class="form-group row">
 		<div class="col-md-3">
-			<%= f.label :embargo, 'No Data Download Until?' %>&nbsp;<span class='fa fa-question-circle' data-toggle='tooltip' title='Prevent data file downloads until date specified below (leave blank to allow downloads)' data-placement='right'></span><br />
+			<%= f.label :embargo, 'No Data Download Until?' %>&nbsp;<span class='fas fa-question-circle' data-toggle='tooltip' title='Prevent data file downloads until date specified below (leave blank to allow downloads)' data-placement='right'></span><br />
 			<%= f.text_field :embargo, class: 'form-control datepicker' %>
 		</div>
 		<div class="col-md-2">
@@ -60,7 +60,7 @@
     <div class="form-group">
       <div class="row">
         <div class="col-md-6">
-          <%= f.label :branding_group_id, 'Add to a Brand' %> <span class='fa fa-question-circle' data-toggle='tooltip' title='Add this study to a brand to allow special look & feel rules when viewing in "branded" mode' data-placement='right'></span><br />
+          <%= f.label :branding_group_id, 'Add to a Brand' %> <span class='fas fa-question-circle' data-toggle='tooltip' title='Add this study to a brand to allow special look & feel rules when viewing in "branded" mode' data-placement='right'></span><br />
           <%= f.select :branding_group_id, options_from_collection_for_select(current_user.available_branding_groups, 'id', 'name', @study.branding_group_id),
                        {include_blank: 'No Selected Brand'}, class: 'form-control' %>
         </div>
@@ -69,12 +69,12 @@
   <% end %>
   <div class="form-group">
 		<%= f.label :description %>
-		<%= f.cktext_area :description %>
+		<%= f.text_area :description %>
 	</div>
 	<div class="form-group">
 		<h3>Sharing</h3>
 		<%= f.fields_for :study_shares %>
-		<%= f.link_to_add "<span class='fa fa-plus'></span> Share Study".html_safe, :study_shares, class: 'btn btn-primary',
+		<%= f.link_to_add "<span class='fas fa-plus'></span> Share Study".html_safe, :study_shares, class: 'btn btn-primary',
                       id: 'add-study-share' %>
 	</div>
   <div class="form-group">
@@ -82,7 +82,7 @@
   </div>
 <% end %>
 
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
     $('#study_use_existing_workspace').change(function() {
         if ($(this).val() == '1') {
             $('#study_firecloud_workspace').attr('disabled', false);
@@ -110,5 +110,19 @@
         var descField = $(this).next('.share-description');
         descField.html(permissionText[newPermission])
     });
+
+    ClassicEditor
+      .create( document.querySelector( '#study_description' ),
+          {
+              toolbar: ["heading", '|',  "bold", "italic", "link", "bulletedList", "numberedList", "blockQuote", '|', "undo", "redo"]
+          }
+      )
+      .then( function(editor) {
+          console.log(Array.from( editor.ui.componentFactory.names() ));
+      } )
+      .catch( function(error) {
+          console.error( error );
+      }
+    );
 
 </script>

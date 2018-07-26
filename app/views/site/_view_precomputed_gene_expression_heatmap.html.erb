@@ -4,7 +4,7 @@
   </div>
   <div class="col-md-13" id="render-target">
     <div class="row-offcanvas row-offcanvas-right">
-      <div id="view-options-nav"><a href="#view-options" id="view-option-link" data-toggle="offcanvas"><i class="fa fa-cog" aria-hidden="true"></i> View Options </a></div>
+      <div id="view-options-nav"><a href="#view-options" id="view-option-link" data-toggle="offcanvas"><i class="fas fa-cog" aria-hidden="true"></i> View Options </a></div>
       <ul class="nav nav-tabs" role="tablist" id="view-tabs">
         <li role="presentation" class="study-nav active" id="plots-tab-nav"><a href="#plots-tab" data-toggle="tab">Heatmap </a></li>
       </ul>
@@ -29,7 +29,7 @@
 
 
 
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
     // monitor status of rendering plots for tests
     $('#heatmap-plot').data('rendered', false);
@@ -42,7 +42,7 @@
             var precomputed = $('#expression').val();
             var heatmap_row_centering = $('#heatmap_row_centering').val();
             var requestToken = '<%= user_signed_in? ? current_user.id.to_s + ':' + current_user.authentication_token : nil %>';
-            newDataPath += '?precomputed=' + precomputed + '&row_centered=' + heatmap_row_centering + '&request_token=' + requestToken;
+            newDataPath += '?precomputed=' + precomputed + '&row_centered=' + heatmap_row_centering + '&request_user_token=' + requestToken;
 
             var colorScalingMode = 'relative';
             // determine whether to scale row colors globally or by row

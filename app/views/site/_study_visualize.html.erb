@@ -4,14 +4,14 @@
   </div>
   <div class="col-md-13" id="render-target">
     <div class="row-offcanvas row-offcanvas-right">
-      <div id="view-options-nav"><a href="#view-options" id="view-option-link" data-toggle="offcanvas"><i class="fa fa-cog" aria-hidden="true"></i> View Options </a></div>
+      <div id="view-options-nav"><a href="#view-options" id="view-option-link" data-toggle="offcanvas"><i class="fas fa-cog" aria-hidden="true"></i> View Options </a></div>
       <ul class="nav nav-tabs" role="tablist" id="view-tabs">
         <li role="presentation" class="study-nav active" id="plots-tab-nav"><a href="#plots-tab" data-toggle="tab">Clusters </a></li>
         <% if @study.has_analysis_outputs?('infercnv', 'ideogram.js') or @study.has_bam_files? %>
           <% if @study.has_analysis_outputs?('infercnv', 'ideogram.js') %>
           <li role="presentation" class="study-nav" id="genome-tab-nav">
           <% else %>
-          <%# If study has BAMs but not Ideogram annotations, then hide Genome tab only user clicks 'Browser in genome' button in Download tab. %>
+          <%# If study has BAMs but not Ideogram annotations, then hide Genome tab until user clicks 'Browse in genome' button in Download tab. %>
           <li role="presentation" class="study-nav" id="genome-tab-nav" style="display: none">
           <% end %>
             <a href="#genome-tab" data-toggle="tab">Genome </a>
@@ -52,7 +52,7 @@
   </div>
 </div>
 </div>
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
     $('#cluster-plot').data('rendered', false);
 

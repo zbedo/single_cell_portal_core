@@ -11,7 +11,7 @@
     </div>
   <% end %>
   <div class="form-group">
-    <%= f.cktext_area :description %>
+    <%= f.text_area :description %>
   </div>
 
   <div class="form-group row">
@@ -21,11 +21,3 @@
   </div>
 
 <% end %>
-
-<script type="text/javascript">
-    $('#update-study-description').click( function() {
-        launchModalSpinner('#update-study-settings-spinner', '#update-study-settings-modal', function() {
-            return true;
-        });
-    });
-</script>

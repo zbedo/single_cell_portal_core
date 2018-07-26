@@ -1,7 +1,7 @@
 <%= form_for(@fire_cloud_profile, url: update_user_firecloud_profile_path, html: {class: 'form', id: 'firecloud-profile', data: {remote: true}}) do |f| %>
   <%= f.hidden_field :email %>
   <div class="bs-callout bs-callout-primary">
-    <p class="text-primary">Use this form to register or update your FireCloud profile. <span class="text-danger"><i class="fa fa-fw fa-exclamation-triangle"></i> All fields are required.</span></p>
+    <p class="text-primary">Use this form to register or update your FireCloud profile. <span class="text-danger"><i class="fas fa-fw fa-exclamation-triangle"></i> All fields are required.</span></p>
   </div>
   <% if @fire_cloud_profile.errors.any? %>
     <div class="bs-callout bs-callout-danger" id="study-errors-block">
@@ -83,7 +83,7 @@
 
 <% end %>
 
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
     $('#update-user-firecloud-profile').click(function(event) {
         var formElements = $('#firecloud-profile .form-control');
         var valid = true;

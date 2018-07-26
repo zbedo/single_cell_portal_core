@@ -436,6 +436,14 @@ label {
   z-index: 500;
 }
 
+.gene-panel {
+  margin-bottom: 25px !important;
+}
+
+.gene-result-view-plot {
+  min-height: 400px;
+}
+
 #perform-gene-search {
   background-color: #337ab7;
   color: white;
@@ -598,4 +606,10 @@ h4, .h4, h5, .h5, h6, .h6 {
 
 .bam-browse-genome {
   margin-bottom: 3px;
+}
+
+.ck-editor__editable {
+  min-height: 300px;
+  max-height: 700px;
+  min-width: 100%;
 }

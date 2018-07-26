@@ -12,10 +12,15 @@
   </div>
   <div class="col-md-13" id="render-target">
     <div class="row-offcanvas row-offcanvas-right">
-      <div id="view-options-nav"><a href="#view-options" id="view-option-link" data-toggle="offcanvas"><i class="fa fa-cog" aria-hidden="true"></i> View Options </a></div>
+      <div id="view-options-nav"><a href="#view-options" id="view-option-link" data-toggle="offcanvas"><i class="fas fa-cog" aria-hidden="true"></i> View Options </a></div>
       <ul class="nav nav-tabs" role="tablist" id="view-tabs">
         <li role="presentation" class="study-nav active" id="box-or-violin-tab-nav"><a href="#box-or-violin-tab" id="distribution-link" data-toggle="tab">Distribution</a></li>
         <li role="presentation" class="study-nav" id="scatter-tab-nav"><a href="#scatter-tab" id="scatter-link" data-toggle="tab">Scatter</a></li>
+        <% if @study.has_bam_files? %>
+            <li role="presentation" class="study-nav" id="genome-tab-nav" style="display: none">
+            <a href="#genome-tab" data-toggle="tab">Genome </a>
+          </li>
+        <% end %>
       </ul>
       <%= render partial: 'view_options' %>
       <div class="tab-content">
@@ -24,7 +29,7 @@
     </div>
   </div>
   <div id="expression-plots"></div>
-  <script type="text/javascript">
+  <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
       var baseCamera = {
           "up":{"x":0,"y":0,"z":1},

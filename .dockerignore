@@ -4,3 +4,4 @@ data/*
 log/*
 data_bak
 /config/*.json
+node_modules/*

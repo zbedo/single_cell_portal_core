@@ -60,7 +60,7 @@
 			<tbody class="files"></tbody>
 		</table>
 	</div>
-	<script type="text/javascript">
+	<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
 		$('#primary_data_form_<%= study_file._id %>').find('.human-data').change(function() {
 			toggleFastqFields('primary_data_form_<%= study_file._id %>');
@@ -100,9 +100,10 @@
 				done: function(e, data) {
 					var fileName = data.files[0].name.replace(/ /g, '_');
 					$.ajax({
-						url: "<%= update_status_study_path %>",
-						type: "PATCH",
-						data: { status: 'uploaded', file: fileName}
+						  url: "<%= update_status_study_path %>",
+						  type: "PATCH",
+              dataType: 'script',
+						  data: { status: 'uploaded', file: fileName}
 					});
 					fileUploading = false;
             $.ajax({
@@ -117,7 +118,7 @@
                         setWizardProgress(getWizardStatus());
                         console.log('incrementing status for primary data upload');
                         $('#initialize_primary_data_form_completed').replaceWith("<%= escape_javascript(render partial: 'step_completed', locals: {id: 'initialize_primary_data_form_completed'}) %>");
-                        $('#initialize_primary_data_form_nav_completed').html("<span class='fa fa-check text-success'></span>");
+                        $('#initialize_primary_data_form_nav_completed').html("<span class='fas fa-check text-success'></span>");
                     }
                 }
             });

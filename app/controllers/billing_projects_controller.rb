@@ -19,7 +19,7 @@ class BillingProjectsController < ApplicationController
   before_action :create_firecloud_client
   before_action :check_project_permissions, except: [:index, :create]
   before_action :load_service_account, except: [:new_user, :create_user, :delete_user, :storage_estimate]
-  before_filter :authenticate_user!
+  before_action :authenticate_user!
 
   ##
   #

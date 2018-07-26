@@ -1,6 +1,6 @@
 <div class="form-group row">
   <div class="col-sm-12">
-    <%= f.label :y_axis_label, 'Expression Axis Label' %>&nbsp;<span class="fa fa-question-circle" data-toggle="tooltip" data-placement="right" title="This is displayed as the axis label for box & scatter plots showing expression values.  This label is global to all expression values.<%= @study.has_expression_label? ? ' Please use the study default options form to update this value.' : '' %>"></span> <br />
+    <%= f.label :y_axis_label, 'Expression Axis Label' %>&nbsp;<span class="fas fa-question-circle" data-toggle="tooltip" data-placement="right" title="This is displayed as the axis label for box & scatter plots showing expression values.  This label is global to all expression values.<%= @study.has_expression_label? ? ' Please use the study default options form to update this value.' : '' %>"></span> <br />
     <%= f.text_field :y_axis_label, value: @study.has_expression_label? ? @study.default_expression_label : f.object.y_axis_label, placeholder: @study.default_expression_label, class: 'form-control', disabled: @study.has_expression_label? %>
   </div>
 </div>

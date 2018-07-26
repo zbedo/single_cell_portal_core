@@ -1,0 +1,39 @@
+<div class="row">
+  <div class="col-md-6 col-sm-12 col-xs-12">
+    <%= form_with(url: get_viewable_studies_path, local: false, class: 'form', id: 'global-search-genes-form') do |f| %>
+      <div class="input-group">
+        <%= f.text_field :search_genes, id: :search_genes, name: 'search[genes]', class: 'form-control', placeholder: 'Search for genes across all studies...' %>
+        <% if @selected_branding_group.present? %>
+          <%= hidden_field_tag :scpbr, @selected_branding_group.name_as_id %>
+        <% end %>
+        <div class="input-group-btn">
+          <button class="btn btn-info" type="submit" name="commit" id="submit-gene-search"><span class="fas fa-search"></span></button>
+        </div>
+      </div>
+    <% end %>
+  </div>
+  <div class="col-md-6 col-sm-12 col-xs-12">
+    <p class="lead">Results: <label id="gene-search-results-count" class="label label-default">0</label> across <label id="gene-search-studies-count" class="label label-default">0</label> studies</p>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
+    <div class="panel-group" id="gene-search-results">
+
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+
+    $('#submit-gene-search').on('click', function() {
+        $("#gene-search-results").empty();
+        $('#gene-search-results-count').html($('div.gene-panel').length);
+        $('#gene-search-studies-count').html($('div.has-gene-results').length);
+        var target = document.getElementById('gene-search-results');
+        var spinner = new Spinner(opts).spin(target);
+        $(target).data('spinner', spinner);
+        return true;
+    });
+
+</script>

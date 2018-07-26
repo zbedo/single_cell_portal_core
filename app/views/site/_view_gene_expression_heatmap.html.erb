@@ -4,9 +4,14 @@
   </div>
   <div class="col-md-13" id="render-target">
     <div class="row-offcanvas row-offcanvas-right">
-      <div id="view-options-nav"><a href="#view-options" id="view-option-link" data-toggle="offcanvas"><i class="fa fa-cog" aria-hidden="true"></i> View Options </a></div>
+      <div id="view-options-nav"><a href="#view-options" id="view-option-link" data-toggle="offcanvas"><i class="fas fa-cog" aria-hidden="true"></i> View Options </a></div>
       <ul class="nav nav-tabs" role="tablist" id="view-tabs">
         <li role="presentation" class="study-nav active" id="plots-tab-nav"><a href="#plots-tab" data-toggle="tab">Heatmap </a></li>
+        <% if @study.has_bam_files? %>
+          <li role="presentation" class="study-nav" id="genome-tab-nav" style="display: none">
+            <a href="#genome-tab" data-toggle="tab">Genome </a>
+          </li>
+        <% end %>
       </ul>
       <%= render partial: 'view_options' %>
       <div class="tab-content">
@@ -22,12 +27,20 @@
             </div>
           </div>
         </div>
+        <% if @study.has_bam_files? %>
+          <div class="tab-pane" id="genome-tab" role="tabpanel">
+            <div class="panel panel-default no-top-border">
+              <div id="genome-container" class="panel-collapse collapse in"></div>
+              <%= render partial: '/site/genome/genome' %>
+            </div>
+          </div>
+        <% end %>
       </div>
     </div>
   </div>
 </div>
 
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
     // monitor status of rendering plots for tests
     $('#heatmap-plot').data('rendered', false);

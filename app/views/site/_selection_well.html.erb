@@ -23,7 +23,7 @@
 <div id="submit_script">
   <%= render 'selection_submit' %>
 </div>
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
     if ($('#cluster-plot').length === 0) {
         var targetPlotString = 'scatter-plot';
@@ -121,7 +121,7 @@
             var deleteButton = n === 0 ? '' :
                 '<td class="col-sm-1" style="padding-top: 27px;">' +
                 '<div class="btn btn-sm btn-danger delete-btn annotation-delete-btn" id="' + id + 'Button">' +
-                '<span class="fa fa-times"></span>' +
+                '<span class="fas fa-times"></span>' +
                 '</div>' +
                 '</td>' ;
 

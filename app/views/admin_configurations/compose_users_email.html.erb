@@ -19,25 +19,19 @@
   </div>
   <div class="form-group row">
     <div class="col-md-12">
-      <%= f.cktext_area :contents, ckeditor: {toolbar: 'mini'} %>
+      <%= f.text_area :contents %>
     </div>
   </div>
   <div class="form-group row">
     <div class="col-md-12">
-      <%= link_to "<i class='fa fa-fw fa-envelope'></i> Deliver Email".html_safe, 'javascript:;', class: 'btn btn-lg btn-success', id: 'deliver-users-email' %>
-      <%= link_to "<i class='fa fa-fw fa-eye'></i> Preview Email".html_safe, 'javascript:;', class: 'btn btn-lg btn-primary', id: 'deliver-preview-email', data: {toggle: 'tooltip'}, title: "Send a preview of this email to #{current_user.email}" %>
+      <%= link_to "<i class='fas fa-fw fa-envelope'></i> Deliver Email".html_safe, 'javascript:;', class: 'btn btn-lg btn-success', id: 'deliver-users-email' %>
+      <%= link_to "<i class='fas fa-fw fa-eye'></i> Preview Email".html_safe, 'javascript:;', class: 'btn btn-lg btn-primary', id: 'deliver-preview-email', data: {toggle: 'tooltip'}, title: "Send a preview of this email to #{current_user.email}" %>
     </div>
   </div>
 <% end %>
-<p><%= link_to "<i class='fa fa-fw fa-chevron-left'></i> Back".html_safe, admin_configurations_path, class: 'btn btn-warning' %></p>
+<p><%= link_to "<i class='fas fa-fw fa-chevron-left'></i> Back".html_safe, admin_configurations_path, class: 'btn btn-warning' %></p>
 
-<script type="text/javascript">
-
-    $(document).ready(function() {
-        CKEDITOR.instances['email_contents'].setData("<p>-- MESSAGE TEXT HERE --</p><hr /><p>To Unsubscribe from Single Cell Portal messages:</p>" +
-            "<ol><li><a href='<%= new_user_session_url %>'>Sign in</a> the portal with your Google account</li><li>Click 'My Profile' from the top-right dropdown</li>" +
-            "<li>Set 'Admin Email Delivery' to 'Off'</li></ol>");
-    });
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
     function validateEmail() {
         var subject = $('#email_subject').val();
@@ -67,5 +61,18 @@
         $('#email_preview').val(1);
         validateEmail();
     });
+
+    ClassicEditor
+        .create( document.querySelector( '#email_contents' ),
+            {
+                toolbar: ["heading", '|',  "bold", "italic", "link", "bulletedList", "numberedList", "blockQuote", '|', "undo", "redo"]
+            }
+        )
+        .then( function(editor) {
+            console.log(Array.from( editor.ui.componentFactory.names() ));
+    } )
+    .catch( function(error) {
+        console.error( error );
+    } );
 
 </script>

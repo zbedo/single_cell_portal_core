@@ -2,7 +2,7 @@
 
 cd /home/app/webapp
 echo "*** CLEARING TMP CACHE ***"
-sudo -E -u app -H bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV tmp:clear
+sudo -E -u app -H bin/rails RAILS_ENV=$PASSENGER_APP_ENV tmp:clear
 echo "*** COMPLETED ***"
 echo "*** ROLLING OVER LOGS ***"
 ruby /home/app/webapp/bin/cycle_logs.rb
@@ -89,6 +89,10 @@ echo "*** COMPLETED ***"
 
 echo "*** ADDING DAILY RESET OF USER DOWNLOAD QUOTAS ***"
 (crontab -u app -l ; echo "@daily . /home/app/.cron_env ; cd /home/app/webapp/; /home/app/webapp/bin/rails runner -e $PASSENGER_APP_ENV \"User.update_all(daily_download_quota: 0)\" >> /home/app/webapp/log/cron_out.log 2>&1") | crontab -u app -
+echo "*** COMPLETED ***"
+
+echo "*** CLEARING CACHED USER OAUTH TOKENS ***"
+/home/app/webapp/bin/rails runner -e $PASSENGER_APP_ENV "User.update_all(refresh_token: nil, access_token: nil)"
 echo "*** COMPLETED ***"
 
 echo "*** ADDING REPORTING CRONS ***"

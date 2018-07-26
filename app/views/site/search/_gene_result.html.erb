@@ -1,0 +1,51 @@
+<div class="panel panel-default gene-panel" id="study-<%= study.url_safe_name %>-gene-<%= gene.name.gsub(/\W/, '-') %>">
+  <div class="panel-heading">
+    <div class="panel-title">
+      <h4><%= gene.name %></h4>
+    </div>
+  </div>
+  <div class="panel-body">
+    <div class="row">
+      <div class="col-md-10 gene-result-view-plot" id="study-<%= study.url_safe_name %>-gene-<%= gene.name.gsub(/\W/, '-') %>-plot"></div>
+      <div class="col-md-2">
+        <div id="study-<%= study.url_safe_name %>-gene-<%= gene.name.gsub(/\W/, '-') %>-options" class="top-pad"></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12">
+        <p class="text-center"><%= scp_link_to "Explore Study <i class='fas fa-fw fa-eye'></i>".html_safe, view_study_path(study_name: study.url_safe_name) + "#study-visualize", class: 'btn btn-lg btn-success' %></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+
+    $('#study-<%= study.url_safe_name %>-gene-<%= gene.name.gsub(/\W/, '-') %>-plot').data('rendered', false);
+
+    var url = '<%= render_global_gene_expression_plots_path(study_name: study.url_safe_name, gene: gene.name) %>?';
+    var cluster = '<%= study.default_cluster.name %>';
+    var annotation = '<%= study.default_annotation %>';
+    var identifier = '<%= identifier %>';
+    url += 'cluster=' + cluster + '&annotation=' + annotation + '&identifier=' + identifier;
+    // append request token to validate XHR requests
+    var requestToken = '<%= user_signed_in? ? current_user.id.to_s + ':' + current_user.authentication_token : nil %>';
+    url += '&request_user_token=' + requestToken;
+    // subsample if necessary
+    if (<%= study.default_cluster.points >= 10000 %>) {
+        url += '&subsample=10000'
+    }
+
+    var target1 = document.getElementById('study-<%= study.url_safe_name %>-gene-<%= gene.name %>-plot');
+
+    // no need to store spinners in data attribute as entire plot div will be re-rendered
+    new Spinner(opts).spin(target1);
+
+    // make call to load distribution plot
+    $.ajax({
+        url: url,
+        method: 'GET',
+        dataType: 'script'
+    });
+
+</script>

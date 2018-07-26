@@ -19,7 +19,7 @@
   </div>
   <div class="form-group row">
     <div class="col-md-4">
-      <%= f.label :embargo, 'No Data Download Until?' %>&nbsp;<span class='fa fa-question-circle' data-toggle='tooltip' title='Prevent data file downloads until date specified below (leave blank to allow downloads)' data-placement='right'></span><br />
+      <%= f.label :embargo, 'No Data Download Until?' %>&nbsp;<span class='fas fa-question-circle' data-toggle='tooltip' title='Prevent data file downloads until date specified below (leave blank to allow downloads)' data-placement='right'></span><br />
       <%= f.text_field :embargo, class: 'form-control datepicker' %>
     </div>
     <div class="col-md-4">
@@ -46,13 +46,13 @@
             <%= opts.select :annotation, grouped_options_for_select(@default_cluster_annotations, @study.default_annotation), {},class: 'form-control' %>
           </div>
           <div class="col-sm-4">
-            <%= opts.label :color_profile, "Default Color Profile <i class='fa fa-info-circle' title='The default color profile only applies to the selected annotation (if the type is numeric)' data-toggle='tooltip'></i>".html_safe %><br />
+            <%= opts.label :color_profile, "Default Color Profile <i class='fas fa-info-circle' title='The default color profile only applies to the selected annotation (if the type is numeric)' data-toggle='tooltip'></i>".html_safe %><br />
             <%= opts.select :color_profile, options_for_select(SiteController::COLORSCALE_THEMES, @study.default_color_profile), {include_blank: 'N/A'} , class: 'form-control', disabled: @study.default_annotation_type == 'group' %>
           </div>
         </div>
         <div class="form-group row">
           <div class="col-sm-4">
-            <%= opts.label :cluster_point_size, "Size of cluster points (in px) <i class='fa fa-fw fa-question-circle' data-toggle='tooltip' title='Global value for the size of all cluster points, in pixels.'></i>".html_safe %><br />
+            <%= opts.label :cluster_point_size, "Size of cluster points (in px) <i class='fas fa-fw fa-question-circle' data-toggle='tooltip' title='Global value for the size of all cluster points, in pixels.'></i>".html_safe %><br />
             <%= opts.number_field :cluster_point_size, value: @study.default_cluster_point_size, class: 'form-control' %>
           </div>
           <div class="col-sm-4">
@@ -60,19 +60,19 @@
             <%= opts.select :cluster_point_border, options_for_select([['Yes', true],['No', false]], @study.show_cluster_point_borders?), {}, class: 'form-control' %>
           </div>
           <div class="col-sm-4">
-            <%= opts.label :cluster_point_alpha, "Cluster point opacity <i class='fa fa-fw fa-question-circle' data-toggle='tooltip' title='Global value for the transparency (alpha) of all cluster points.  Only values between 0 and 1 are accepted.'></i>".html_safe %><br />
+            <%= opts.label :cluster_point_alpha, "Cluster point opacity <i class='fas fa-fw fa-question-circle' data-toggle='tooltip' title='Global value for the transparency (alpha) of all cluster points.  Only values between 0 and 1 are accepted.'></i>".html_safe %><br />
             <%= opts.number_field :cluster_point_alpha, value: @study.default_cluster_point_alpha, in: 0.0..1.0, step: 0.05, class: 'form-control' %>
           </div>
         </div>
         <div class="form-group row">
           <div class="col-sm-12">
-            <%= opts.label :expression_label, 'Expression Axis Label' %>&nbsp;<span class="fa fa-question-circle" data-toggle="tooltip" data-placement="right" title='This is displayed as the axis label for box & scatter plots showing expression values.  This label is global to all expression values.'></span> <br />
+            <%= opts.label :expression_label, 'Expression Axis Label' %>&nbsp;<span class="fas fa-question-circle" data-toggle="tooltip" data-placement="right" title='This is displayed as the axis label for box & scatter plots showing expression values.  This label is global to all expression values.'></span> <br />
             <%= opts.text_field :expression_label, value: @study.default_options[:expression_label], placeholder: @study.default_expression_label, class: 'form-control' %>
           </div>
         </div>
       <% end %>
     </div>
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
         $('#study_default_options_annotation').change(function() {
             var annotType = $(this).val().split('--')[1];
             var colorProfile = $('#study_default_options_color_profile');
@@ -120,7 +120,7 @@
           <div class="col-sm-6">
             <%= share.label :email %>
             <% if !share.object.new_record? %>
-              <span class="fa fa-exclamation-triangle text-danger" data-toggle="tooltip" data-placement="right" title="Editing share emails is not permitted.  If the email is incorrect, please delete the share and create a new one."></span>
+              <span class="fas fa-exclamation-triangle text-danger" data-toggle="tooltip" data-placement="right" title="Editing share emails is not permitted.  If the email is incorrect, please delete the share and create a new one."></span>
             <% end %>
             <br />
             <%= share.text_field :email, class: 'form-control share-email', readonly: !share.object.new_record?, autocomplete: 'no' %>
@@ -131,12 +131,12 @@
           </div>
           <div class="col-sm-1">
             <%= share.label :delete, "&nbsp;".html_safe %><br />
-            <%= share.link_to_remove "<span class='btn btn-sm btn-danger'><span class='fa fa-times'></span></span>".html_safe, data: {confirm: 'Are you sure?  This cannot be undone unless you reload the page before saving.'} %>
+            <%= share.link_to_remove "<span class='btn btn-sm btn-danger'><span class='fas fa-times'></span></span>".html_safe, data: {confirm: 'Are you sure?  This cannot be undone unless you reload the page before saving.'} %>
           </div>
         </div>
       </div>
     <% end %>
-    <%= f.link_to_add "<span class='fa fa-plus'></span> Share Study".html_safe, :study_shares, class: 'btn btn-primary', id: 'add-study-share' %>
+    <%= f.link_to_add "<span class='fas fa-plus'></span> Share Study".html_safe, :study_shares, class: 'btn btn-primary', id: 'add-study-share' %>
   </div>
   <div class="form-group row">
     <div class="col-xs-12 text-center">
@@ -145,13 +145,13 @@
   </div>
   <div class="form-group row">
     <div class="col-xs-12 text-center">
-      <%= scp_link_to "<span class='fa fa-upload'></span> Upload/Edit Data".html_safe, initialize_study_path(@study), class: "btn btn-sm btn-primary #{@study.url_safe_name}-upload" %>
-      <%= scp_link_to "<span class='fa fa-refresh'></span> Sync Workspace".html_safe, sync_study_path(@study), class: "btn btn-sm btn-warning #{@study.url_safe_name}-sync sync-button" %>
+      <%= scp_link_to "<span class='fas fa-upload'></span> Upload/Edit Data".html_safe, initialize_study_path(@study), class: "btn btn-sm btn-primary #{@study.url_safe_name}-upload" %>
+      <%= scp_link_to "<span class='fas fa-sync-alt'></span> Sync Workspace".html_safe, sync_study_path(@study), class: "btn btn-sm btn-warning #{@study.url_safe_name}-sync sync-button" %>
     </div>
   </div>
 <% end %>
 
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
     $('#update-study-settings').click( function() {
         launchModalSpinner('#update-study-settings-spinner', '#update-study-settings-modal', function() {
             var updateForm = $('#update-study-settings-form');

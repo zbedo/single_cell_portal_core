@@ -17,7 +17,7 @@
 
                 <!-- if action_name !~ /heatmap/ -->
                 <div class="form-group col-sm-4">
-                  <%= label_tag :subsample, 'Subsampling threshold' %>&nbsp;<i class='fa fa-question-circle' title="Take a representative subsample of the current cluster.  Choosing all cells may dramatically increase rendering time." data-toggle="tooltip"></i><br />
+                  <%= label_tag :subsample, 'Subsampling threshold' %>&nbsp;<i class='fas fa-question-circle' title="Take a representative subsample of the current cluster.  Choosing all cells may dramatically increase rendering time." data-toggle="tooltip"></i><br />
                   <%= select_tag :subsample, options_for_select(subsampling_options(@cluster.points), set_subsample_value(params) ), {include_blank: 'All Cells', class: 'form-control'} %>
                 </div>
                 <!-- end -->
@@ -29,14 +29,14 @@
         <div id="expression-options-panel" class="panel <%= /view_gene_(set_)?expression$/.match(action_name) ? "panel-info" : "panel-default" %>">
             <div class="panel-heading">
               <div class="panel-title">
-                <a data-toggle="collapse" id="distribution-panel-link" data-parent="#view-options-accordion" href="#distribution-plot-controls"><span class="fa fa-chevron-<%= action_name == 'view_gene_expression' ? 'down' : 'right' %> toggle-glyph"></span> Distribution</a>
+                <a data-toggle="collapse" id="distribution-panel-link" data-parent="#view-options-accordion" href="#distribution-plot-controls"><span class="fas fa-chevron-<%= action_name == 'view_gene_expression' ? 'down' : 'right' %> toggle-glyph"></span> Distribution</a>
               </div>
             </div>
             <div id="distribution-plot-controls" class="panel-collapse collapse <% if action_name == 'view_gene_expression' %>in<% end %>">
               <div class="panel-body">
                 <div class="row">
                   <div class="form-group col-md-3">
-                    <%= label_tag :plot_type, 'Plot Type' %>&nbsp;<i class='fa fa-question-circle' title="Choose which distribution type to display." data-toggle="tooltip"></i>
+                    <%= label_tag :plot_type, 'Plot Type' %>&nbsp;<i class='fas fa-question-circle' title="Choose which distribution type to display." data-toggle="tooltip"></i>
                     <%= select_tag :plot_type, options_for_select([['Violin Plot', "violin"], ['Box Plot', "box"]], params[:plot_type]), {class: 'form-control'} %>
                   </div>
                   <div class="form-group col-md-3">
@@ -54,7 +54,7 @@
         <div id="original-view-panel" class="panel <%= /view_gene_(set_)?expression$/.match(action_name) ? "panel-info" : "panel-default" %>">
           <div class="panel-heading">
             <div class="panel-title">
-              <a data-toggle="collapse" id="scatter-panel-link" data-parent="#view-options-accordion" href="#original-view-controls"><span class="fa fa-chevron-right toggle-glyph"></span> Scatter</a>
+              <a data-toggle="collapse" id="scatter-panel-link" data-parent="#view-options-accordion" href="#original-view-controls"><span class="fas fa-chevron-right toggle-glyph"></span> Scatter</a>
             </div>
           </div>
           <div id="original-view-controls" class="panel-collapse collapse">
@@ -71,14 +71,14 @@
         <div id="heatmap-panel" class="panel <%= action_name =~ /heatmap/ ? 'panel-info' : 'panel-default' %>">
           <div class="panel-heading">
             <div class="panel-title">
-              <a data-toggle="collapse" id="heatmap-panel-link" data-parent="#view-options-accordion" href="#heatmap-controls"><span class="fa fa-chevron-<%= action_name =~ /heatmap/ ? 'down' : 'right' %> toggle-glyph"></span> Heatmap</a>
+              <a data-toggle="collapse" id="heatmap-panel-link" data-parent="#view-options-accordion" href="#heatmap-controls"><span class="fas fa-chevron-<%= action_name =~ /heatmap/ ? 'down' : 'right' %> toggle-glyph"></span> Heatmap</a>
             </div>
           </div>
           <div id="heatmap-controls" class="panel-collapse collapse <% if action_name =~ /heatmap/ %>in<% end %>">
             <div class="panel-body">
               <div class="form-group row">
                 <div class="col-sm-4">
-                  <%= label_tag :heatmap_row_centering, 'Row centering' %> <span class="fa fa-question-circle" data-toggle="tooltip" title="Row-center expression data using the selected metric.  Selecting a value other than none will enforce global color values."></span><br />
+                  <%= label_tag :heatmap_row_centering, 'Row centering' %> <span class="fas fa-question-circle" data-toggle="tooltip" title="Row-center expression data using the selected metric.  Selecting a value other than none will enforce global color values."></span><br />
                   <%= select_tag :heatmap_row_centering, options_for_select([['Z-score [(v - mean) / stdev]','z-score'],['Robust z-score [(v - median) / MAD]', 'robust-z-score']], params[:heatmap_row_centering]), {include_blank: 'None', class: 'form-control'} %>
                 </div>
 
@@ -88,7 +88,7 @@
                 <div class="col-sm-4">
                   <div class="row">
                     <div class="col-xs-12">
-                      <%= label_tag :heatmap_size, 'Heatmap size (in pixels)', class: 'control-label' %><i class="fa fa-fw fa-question-circle" title="Redraw heatmap plot to specified size in pixels.  Leaving this blank will show all rows at 100% zoom." data-toggle="tooltip"></i>
+                      <%= label_tag :heatmap_size, 'Heatmap size (in pixels)', class: 'control-label' %><i class="fas fa-fw fa-question-circle" title="Redraw heatmap plot to specified size in pixels.  Leaving this blank will show all rows at 100% zoom." data-toggle="tooltip"></i>
                     </div>
                   </div>
                   <div class="row">
@@ -96,7 +96,7 @@
                       <div class="input-group">
                         <%= number_field_tag :heatmap_size, params[:heatmap_size], class: 'form-control' %>
                         <div class="input-group-btn">
-                          <button type="submit" id="resize-heatmap" class="btn btn-success"><i class="fa fa-fw fa-refresh"></i></button>
+                          <button type="submit" id="resize-heatmap" class="btn btn-success"><i class="fas fa-fw fa-sync-alt"></i></button>
                         </div>
                       </div>
                     </div>
@@ -105,14 +105,14 @@
                 <div class="form-group col-sm-8">
                   <div class="row">
                     <div class="col-xs-12">
-                      <%= label_tag :fit_options, 'Fit Options', class: 'control-label' %><i class="fa fa-fw fa-question-circle" title="Use these buttons to rescale the contents of the heatmap plot.  Each option is can be toggled and combined with other options." data-toggle="tooltip"></i>
+                      <%= label_tag :fit_options, 'Fit Options', class: 'control-label' %><i class="fas fa-fw fa-question-circle" title="Use these buttons to rescale the contents of the heatmap plot.  Each option is can be toggled and combined with other options." data-toggle="tooltip"></i>
                     </div>
                   </div>
                   <div class="row">
                     <div class="col-xs-12">
-                      <%= link_to "<i class='fa fa-fw fa-arrows-v'></i> Fit Rows".html_safe, 'javascript:;', id: 'fit-rows', class: 'btn btn-default fit-btn', title: 'Rescale heatmap to fit all rows in plot area', data: {fit: 'rows', active: 'off', toggle: 'tooltip' } %>
-                      <%= link_to "<i class='fa fa-fw fa-arrows-h'></i> Fit Columns".html_safe, 'javascript:;', id: 'fit-cols', class: 'btn btn-default fit-btn', title: 'Rescale heatmap to fit all columns in plot area', data: {fit: 'cols', active: 'off', toggle: 'tooltip' } %>
-                      <%= link_to "<i class='fa fa-fw fa-arrows-alt'></i> Toggle Fullscreen".html_safe, 'javascript:;', id: 'view-fullscreen', class: 'btn btn-default', title: 'Close all options panels and redraw heatmap at full zoom to use available area', data: {active: 'off', toggle: 'tooltip' } %>
+                      <%= link_to "<i class='fas fa-fw fa-arrows-alt-v'></i> Fit Rows".html_safe, 'javascript:;', id: 'fit-rows', class: 'btn btn-default fit-btn', title: 'Rescale heatmap to fit all rows in plot area', data: {fit: 'rows', active: 'off', toggle: 'tooltip' } %>
+                      <%= link_to "<i class='fas fa-fw fa-arrows-alt-h'></i> Fit Columns".html_safe, 'javascript:;', id: 'fit-cols', class: 'btn btn-default fit-btn', title: 'Rescale heatmap to fit all columns in plot area', data: {fit: 'cols', active: 'off', toggle: 'tooltip' } %>
+                      <%= link_to "<i class='fas fa-fw fa-arrows-alt'></i> Toggle Fullscreen".html_safe, 'javascript:;', id: 'view-fullscreen', class: 'btn btn-default', title: 'Close all options panels and redraw heatmap at full zoom to use available area', data: {active: 'off', toggle: 'tooltip' } %>
                     </div>
                   </div>
                 </div>
