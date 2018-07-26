@@ -4934,9 +4934,21 @@ class UiTestSuite < Test::Unit::TestCase
     browse_genome_button = @driver.find_element(:class, "bam-browse-genome")
     browse_genome_button.click
 
+    # Verify igv.js displays tracks in Explore tab's default view
     wait_for_render(:class, 'igv-track-div')
     igv_displayed = @driver.execute_script("return $('.igv-track-div').length === 4")
-    assert igv_displayed, "igv.js did not display 4 tracks"
+    assert igv_displayed, "igv.js did not display 4 tracks in Explore tab's default view"
+
+    # Search for a gene
+    gene = @genes.sample
+    search_box = @driver.find_element(:id, 'search_genes')
+    search_box.send_key(gene)
+    search_box.click
+
+    # Verify igv.js displays tracks in Explore tab's single-gene view
+    wait_for_render(:class, 'igv-track-div')
+    igv_displayed = @driver.execute_script("return $('.igv-track-div').length === 4")
+    assert igv_displayed, "igv.js did not display 4 tracks in Explore tab's single-gene view"
 
     # clean up
     logout_from_portal
