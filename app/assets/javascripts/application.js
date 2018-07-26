@@ -305,6 +305,11 @@ function deletePromise(event, message) {
 
 // attach various handlers to bootstrap items and turn on functionality
 function enableDefaultActions() {
+    // detect Safari and alert user of deprecation
+    if (navigator.userAgent.indexOf('Safari') != -1 && navigator.userAgent.indexOf('Chrome') == -1) {
+        alert('WARNING: The Single Cell Portal no longer supports the Safari browser, and most functionality will be disabled.  ' +
+            'Please use either Chrome or FireFox instead.');
+    }
 
     // need to clear previous listener to prevent conflict
     $('.panel-collapse').off('show.bs.collapse hide.bs.collapse');
@@ -929,7 +934,16 @@ function gatherFilesByType(fileType) {
     return matchingfiles;
 }
 
+// calculate the current viewport to use for rendering cluster plots
 function calculatePlotViewport(target) {
     var viewPort = $(window).height();
-    return viewPort - 250;
+    return viewPort - 250; //
 }
+
+// garbage collector to clear the search animation on global gene search (in case no results are found)
+window.clearGeneSearchLoading = function() {
+    console.log('Clearing global gene search message');
+    $('#searching-message').remove();
+    $('#gene-search-results').data('spinner').stop();
+    $('#gene-search-results-count').html($('.gene-panel').length);
+};
