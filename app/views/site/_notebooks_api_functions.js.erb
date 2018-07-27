@@ -50,10 +50,10 @@ function ping(headers) {
     return (syncApiRequest(endpoint, base_url, method, headers))
 }
 
-function clusterOptions(googleProject, clusterName, headers) {
+function clusterOptions(googleProject, clusterName, headers, body, includesCookies, async) {
     var endpoint = "api/cluster/" + googleProject + "/" + clusterName;
     var method = "GET";
-    return (syncApiRequest(endpoint, base_url, method, headers))
+    return (syncApiRequest(endpoint, base_url, method, headers, body, includesCookies, async))
 }
 
 function createCluster(googleProject, clusterName, headers, body) {
@@ -68,10 +68,10 @@ function deleteCluster(googleProject, clusterName, headers) {
     return (syncApiRequest(endpoint, base_url, method, headers))
 }
 
-function startCluster(googleProject, clusterName, headers) {
+function startCluster(googleProject, clusterName, headers, body, includesCookies, async) {
     var endpoint = "api/cluster/" + googleProject + "/" + clusterName + "/start";
     var method = "POST";
-    return (syncApiRequest(endpoint, base_url, method, headers))
+    return (syncApiRequest(endpoint, base_url, method, headers, body, includesCookies, async))
 }
 
 function stopCluster(googleProject, clusterName, headers) {
@@ -109,8 +109,6 @@ function invalidateCookie(headers) {
     var method = "GET";
     return (syncApiRequest(endpoint, base_url, method, headers))
 }
-
-
 
 // function to generate datatables object from listCluster api call
 function generateDataTable(workspace, headers) {
@@ -166,4 +164,88 @@ function generateDataTable(workspace, headers) {
     // hide the no columns ui element
     $('#no_clusters_well').hide()
     return tableArr
+}
+
+function localizeNotebook(googleProject, clusterName, headers, parsedLocalizeCommands){
+    // get the notebook gsurl
+    // localize the notebook and other files to the cluster
+    // return the link to the notebook
+    console.log("Localizing")
+    return localizeFiles(googleProject, clusterName, headers, parsedLocalizeCommands)
+}
+
+function waitTillRunning(googleProject, clusterName, headers, parsedCreateParams){
+    function sleep(delay) {
+        var start = new Date().getTime();
+        while (new Date().getTime() < start + delay);
+    }
+    console.log("In Wait till Running")
+    var clusterInfo = clusterOptions(googleProject, clusterName, headers, undefined, undefined, false)
+    console.log(clusterInfo)
+    var i = 0;
+    while(clusterInfo){
+        if(i>30){
+            console.log(clusterInfo)
+            return
+        }
+        console.log("In clusterInfo")
+        if (clusterInfo.readyState === 4) {
+            if (clusterInfo.status === 200) {
+                console.log("200 response")
+                // we have the cluster info
+                var clusterState = JSON.parse(clusterInfo.response).status;
+                console.log("Cluster State" + clusterState);
+                if(clusterState === "Running"){
+                    // continue
+                    return "Running"
+                } else if (clusterState === "Stopped") {
+                    // start cluster
+                    var startRequest = startCluster(workspace, clusterName, headers, undefined, undefined, false);
+                    startRequest.onload = function (e) {
+                        if (clusterInfo.readyState === 4) {
+                            if (clusterInfo.status !== 200) {
+                                console.log("Error starting cluster")
+                            }
+                        }
+                    }
+                }  else if (clusterState === "Deleting"){
+                    // STOP
+                    alert("Cannot run notebook on deleting Cluster");
+                    return "Deleting"
+                }
+            } else {
+                console.log("Error opening notebook in cluster, trying to create it")
+                var create = createCluster(googleProject, clusterName, headers, parsedCreateParams);
+                return "Error"
+            }
+
+        }
+
+        sleep(20000);
+        console.log("getting new cluster info")
+        clusterInfo = clusterOptions(googleProject, clusterName, headers);
+        i ++;
+    }
+  console.log(clusterInfo);
+  return "Error"
+}
+
+function openNotebook(googleProject, clusterName, headers, notebook, parsedCreateParams, parsedLocalizeCommands){
+    // first get the cluster info to make sure it is running
+    console.log("In Open Notebook")
+    var status = waitTillRunning(googleProject, clusterName, headers, parsedCreateParams)
+    console.log("No Longer Waiting")
+    if(status === "Running"){
+        console.log("In Running")
+        var localize = localizeNotebook(googleProject, clusterName, headers, parsedLocalizeCommands)
+        if(localize.status === 200){
+            // notebooks/single-cell-portal/iframescp/notebooks/cellranger_orchestra_pipeline.ipynb
+            $('#notebookModal').modal('toggle');
+            return "notebooks/" + googleProject + "/" + clusterName + "/notebooks/" + notebook;
+        }
+    } else{
+        console.log(status)
+        alert("Error starting notebook")
+    }
+
 }
