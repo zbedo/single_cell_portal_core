@@ -41,6 +41,7 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
             });
         }
         // disable sync button until user has selected a matrix pair
+        console.log('disabling sync button on ' + submitBtn.attr('id'));
         submitBtn.attr('disabled', 'disabled');
     } else if (fileType === 'BAM Index') {
         nameField.val(fileName);
@@ -69,7 +70,7 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
     }
     // re-enable submit button if it was previously disabled
     if ( ['10X Genes File', '10X Barcodes File', 'BAM Index'].includes(fileType) ) {
-        if (submitBtn.attr('disabled') === 'disabled') {
+        if (submitBtn.attr('disabled') === 'disabled' && $('#study-file-<%= study_file.id %> .bundle-select').val() !== '') {
             submitBtn.attr('disabled', false);
         }
     }
