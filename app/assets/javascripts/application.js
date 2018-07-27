@@ -42,6 +42,7 @@
 //= require ideogram.min
 //= require igv.min
 //= require scp-igv
+//= require notebook_scripts
 
 var fileUploading = false;
 var PAGE_RENDERED = false;

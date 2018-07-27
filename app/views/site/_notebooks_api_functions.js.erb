@@ -3,13 +3,18 @@ var base_url = "https://notebooks.firecloud.org/";
 
 // function to make synchronous api requests
 // TODO make this asynchronous, change last param of open to true instead of false and change handling of return for all calls
-function syncApiRequest(endpoint, base_url, method, headers, body, includeCookies) {
+function syncApiRequest(endpoint, base_url, method, headers, body, includeCookies, async) {
     // create the request
     var request = new XMLHttpRequest();
     // format the api url
     var url = base_url + endpoint;
     // open the request to get inital params
-    request.open(method, url, false);
+    if(async){
+        request.open(method, url, true);
+    } else {
+        request.open(method, url, false);
+    }
+
     // TODO make sure this works
     // if includeCookies (used for setCookie) enable xmlhttprequest with credential option
     if (includeCookies) {
@@ -27,7 +32,12 @@ function syncApiRequest(endpoint, base_url, method, headers, body, includeCookie
         request.send(JSON.stringify(body));
     } else {
         // if no body exists we can skip parsing it
-        request.send();
+        if(async){
+
+        } else {
+            request.send();
+        }
+
     }
     // return the request object
     return request
@@ -76,6 +86,18 @@ function listClusters(clusterName, headers) {
     return (syncApiRequest(endpoint, base_url, method, headers))
 }
 
+function localizeFiles(googleProject, clusterName, headers, body) {
+    var endpoint = "notebooks/"+ googleProject + "/" + clusterName + "/api/localize";
+    var method = "POST";
+    return (syncApiRequest(endpoint, base_url, method, headers, body))
+}
+
+function getNotebook(googleProject, clusterName, headers) {
+    var endpoint = "notebooks/" + googleProject + "/" + clusterName ;
+    var method = "GET";
+    return (syncApiRequest(endpoint, base_url, method, headers, undefined, undefined, true))
+}
+
 function setCookie(googleProject, clusterName, headers) {
     var endpoint = "notebooks/" + googleProject + "/" + clusterName + "/setCookie";
     var method = "GET";
@@ -87,6 +109,8 @@ function invalidateCookie(headers) {
     var method = "GET";
     return (syncApiRequest(endpoint, base_url, method, headers))
 }
+
+
 
 // function to generate datatables object from listCluster api call
 function generateDataTable(workspace, headers) {
@@ -119,20 +143,22 @@ function generateDataTable(workspace, headers) {
         if (status === "Running") {
             // if it is running add the delete button and link to notebook in the name column
             var notebookLink = base_url + "notebooks/" + clusterResponse.googleProject + "/" + clusterName;
-            var delete_button = "<div class='btn btn-sm btn-danger cluster-delete' id='" + clusterName + "'>Delete</div>";
+            var deleteButton = "<div class='btn btn-sm btn-danger cluster-delete' id='" + clusterName + "'>Delete</div>";
             // add stop button to status
-            var stop_button = "<div class='btn btn-sm btn-warning cluster-stop' id='" + clusterName + "'>Stop</div>";
-            status = stop_button + status;
+            var stopButton = "<div class='btn btn-sm btn-warning cluster-stop' id='" + clusterName + "'>Stop</div>";
+            status = stopButton + status;
+
+            var localizeButton = "<div class='btn btn-sm btn-warning cluster-localize' id='" + clusterName + "'>Localize</div>";
             // add delete button and link to name
-            clusterName = delete_button + "<a class='notebook-link' id='" + clusterName + "' href=\"" + notebookLink + "\" target=\"_blank\">" + clusterName + "</a>";
+            clusterName = deleteButton + "<a class='notebook-link' id='" + clusterName + "' href=\"" + notebookLink + "\" target=\"_blank\">\t" + clusterName + "</a>\t"+localizeButton;
 
         } else if (status === "Stopped") {
             // if it is stopped add start button to status
-            var start_button = "<div class='btn btn-sm btn-success cluster-start' id='" + clusterName + "'>Start</div>";
-            status = start_button + status;
+            var startButton = "<div class='btn btn-sm btn-success cluster-start' id='" + clusterName + "'>Start</div>";
+            status = startButton + status;
             // if it is stopped add delete button to name
-            var delete_button = "<div class='btn btn-sm btn-danger cluster-delete' id='" + clusterName + "'>Delete</div>";
-            clusterName = delete_button + clusterName;
+            var deleteButton = "<div class='btn btn-sm btn-danger cluster-delete' id='" + clusterName + "'>Delete</div>";
+            clusterName = deleteButton + clusterName;
         }
         // add the formatted row to the data array
         tableArr.push([status, createdDate, masterMachineType, masterDiskSize, clusterName, numberOfWorkers, workerMachineType, workerDiskSize, numberOfWorkerLocalSSDs, numberOfPreemptibleWorkers, creator])

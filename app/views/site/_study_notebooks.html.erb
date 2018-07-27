@@ -1,34 +1,79 @@
 <%= render "create_cluster.html.erb"%>
 <div class="row">
-  <div class="col-md-12">
-    <div>
-      <h2 id="spark-clusters-title">Spark Clusters</h2>
-    </div>
-
-    <table id="spark-clusters-table" class="table table-striped table-condensed">
-      <div class="row form-group">
-        <div class="col-xs-7">
-          <span>
-            Launch an interactive analysis environment based on Jupyter notebooks, Spark, and Hail. This beta feature is under active development. See documentation <a href="https://software.broadinstitute.org/firecloud/documentation/quickstart?page=notebooks" target="_blank">here<span class="fa-external-link fa "></span></a>
-          </span>
-        </div>
-        <div class="col-xs-3">
-        </div>
-        <div class="col-xs-2">
-          <a id="create-modal-button" state="enabled" class="pull-right button btn btn-md btn-primary" href="javascript:;" data-toggle="modal" data-target="#clusterModal"><span>Create Cluster</span></a>
+  <div class="col-md-1"></div>
+  <div class="col-md-10">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <div class="panel-title">
+          <a data-toggle="collapse" href="#collapseNotebook" role="button" aria-expanded="true" aria-controls="collapseNotebook">
+            <span class="fa-caret-right fa fa-fw"></span>Notebook
+          </a>
         </div>
       </div>
-      <div class="row" id="no_clusters_well">
-        <div class="col-lg-12">
-          <div id="message-well" class="well">
-            <h4 class="text-center">There are no clusters to display.</h4>
+      <div class="collapse in" id="collapseNotebook">
+        <div class="card card-body">
+          <div class="row">
+            <div class="col-sm-1"></div>
+            <iframe id="notebook-iframe" class="col-sm-10">
+            </iframe>
+            <div class="col-sm-1"></div>
           </div>
         </div>
       </div>
-    </table>
+    </div>
   </div>
+  <div class="col-md-1"></div>
 </div>
-<span></span>
+<div class="row">
+  <div class="col-md-1"></div>
+  <div class="col-md-10">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <div class="panel-title">
+          <a data-toggle="collapse" href="#collapseMachines" role="button" aria-expanded="true" aria-controls="collapseMachines">
+            <span class="fa-caret-right fa fa-fw"></span>Machines
+          </a>
+        </div>
+      </div>
+      <div class="collapse in" id="collapseMachines">
+        <div class="card card-body">
+          <div class="row">
+            <div class="col-sm-1"></div>
+            <div class="col-sm-10">
+              <div>
+                <h2 id="spark-clusters-title">Spark Clusters</h2>
+              </div>
+              <table id="spark-clusters-table" class="table table-striped table-condensed">
+                <div class="row form-group">
+                  <div class="col-xs-7">
+                    <span>
+                      Launch an interactive analysis environment based on Jupyter notebooks, Spark, and Hail. This beta feature is under active development. See documentation <a href="https://software.broadinstitute.org/firecloud/documentation/quickstart?page=notebooks" target="_blank">here<span class="fa-external-link fa "></span></a>
+                    </span>
+                  </div>
+                  <div class="col-xs-3">
+                  </div>
+                  <div class="col-xs-2">
+                    <a id="create-modal-button" state="enabled" class="pull-right button btn btn-md btn-primary" href="javascript:;" data-toggle="modal" data-target="#clusterModal"><span>Create Cluster</span></a>
+                  </div>
+                </div>
+                <div class="row" id="no_clusters_well">
+                  <div class="col-lg-12">
+                    <div id="message-well" class="well">
+                      <h4 class="text-center">There are no clusters to display.</h4>
+                    </div>
+                  </div>
+                </div>
+              </table>
+            </div>
+            <div class="col-sm-1"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-1"></div>
+</div>
+
 
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
     <%= render partial: 'notebooks_api_functions.js.erb'%>
@@ -123,15 +168,54 @@
 
             // Detach notebook link listeners and reattach new ones
             $(".notebook-link").off();
-            $(".notebook-link").click(function () {
+            $(".notebook-link").click(function (event) {
+                event.preventDefault();
                 var clusterName = this.id;
+
                 $.cookie('LeoToken', "<%= current_user.access_token['access_token']%>", {
                     path: '/'
                 });
                 var setCookieRequest = setCookie(workspace, clusterName, headers);
-                console.log(setCookieRequest);
+                var notebookRequest = getNotebook(workspace, clusterName, headers);
+                notebookRequest.onload = function (e) {
+                    if (notebookRequest.readyState === 4) {
+                        if (notebookRequest.status === 200) {
+                            var iframe = $('#notebook-iframe');
+                            var notebookHtml = notebookRequest.responseText;
+                            var filtered = notebookHtml.split("\n").map(function(line){
+                                if(line.indexOf("img") !== -1){
+                                    return "<img src='/assets/jupyter_logo.png' alt='Jupyter' />"
+                                }
+                                return line
+                            });
+                            filtered = filtered.join("\n");
+
+                            iframe.contents().empty().find('body').append($.parseHTML(filtered));
+
+                        } else {
+                            console.error(notebookRequest.statusText);
+                        }
+                    }
+                };
+                notebookRequest.onerror = function (e) {
+                    console.error(xhr.statusText);
+                };
+                notebookRequest.send(null);
+
                 refreshTable()
             });
+
+            // Detach start cluster listeners and reattach new ones
+            $(".cluster-localize").off();
+            $(".cluster-localize").click(function () {
+                var clusterName = this.id;
+                var bucket = "gs://<%= @study.bucket_id %>/*";
+                var body = {".":bucket};
+                var localizeRequest = localizeFiles(workspace, clusterName, headers, body);
+                console.log(localizeRequest);
+                refreshTable()
+            });
+
         }
 
         // redraw the table and reset listeners
@@ -144,7 +228,7 @@
         // on initial page load we want listeners to be set
         clearAndAttachListeners();
         // 20 second timer for table refresh
-        window.setInterval(refreshTable, 20000);
+        window.setInterval(refreshTable, 60000);
         // TODO potentially use this when signing out?
         function invalidateToken() {
             var invalidateCookieRequest = invalidateCookie(headers);

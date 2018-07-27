@@ -23,7 +23,7 @@ SecureHeaders::Configuration.default do |config|
       # directive values: these values will directly translate into source directives
       default_src: %w('self'),
       block_all_mixed_content: true, # see http://www.w3.org/TR/mixed-content/
-      frame_src: %w('self'), # if child-src isn't supported, the value for frame-src will be set.
+      frame_src: %w('self' https://notebooks.firecloud.org/), # if child-src isn't supported, the value for frame-src will be set.
       font_src: %w('self' data:),
       form_action: %w('self'),
       connect_src: %w('self' https://www.google-analytics.com https://unpkg.com https://www.googleapis.com https://notebooks.firecloud.org/),
