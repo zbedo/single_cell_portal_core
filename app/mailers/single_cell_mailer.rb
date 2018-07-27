@@ -54,9 +54,10 @@ class SingleCellMailer < ApplicationMailer
   def delayed_job_email(message)
     @users = User.where(admin: true).map(&:email)
 
-    mail(to: @users, subject: 'Single Cell Portal DelayedJob workers automatically restarted') do |format|
-      format.text {render text: message}
-    end
+    mail(to: @users, subject: 'Single Cell Portal DelayedJob workers automatically restarted',
+         body: message,
+         content_type: 'text/plain'
+    )
   end
 
   def share_notification(user, share)
