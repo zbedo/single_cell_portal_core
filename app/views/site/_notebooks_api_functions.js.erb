@@ -93,7 +93,7 @@ function localizeFiles(googleProject, clusterName, headers, body) {
 }
 
 function getNotebook(googleProject, clusterName, headers) {
-    var endpoint = "notebooks/" + googleProject + "/" + clusterName ;
+    var endpoint = "notebooks/" + googleProject + "/" + clusterName + "/tree?" ;
     var method = "GET";
     return (syncApiRequest(endpoint, base_url, method, headers, undefined, undefined, true))
 }

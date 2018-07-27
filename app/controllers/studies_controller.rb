@@ -1294,7 +1294,7 @@ class StudiesController < ApplicationController
     @coordinate_labels = @study.study_files.by_type('Coordinate Labels')
     @marker_lists = @study.study_files.by_type('Gene List')
     @fastq_files = @study.study_files.by_type(['Fastq', 'BAM'])
-    @other_files = @study.study_files.by_type(['Documentation', 'Other'])
+    @other_files = @study.study_files.by_type(['Documentation', 'Other', 'Notebook'])
 
     # if files don't exist, build them for use later (excluding coordinate labels as we need the data to be current)
     if @expression_files.empty?
