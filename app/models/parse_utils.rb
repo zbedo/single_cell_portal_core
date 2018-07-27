@@ -11,7 +11,7 @@ class ParseUtils
       # localize files if necessary, otherwise open newly uploaded files. check to make sure a local copy doesn't already exists
       # as we may be uploading files piecemeal from upload wizard
 
-      if File.exists?(matrix_study_file.upload.path)
+      if File.exists?(matrix_study_file.upload.path) || File.exists?(Rails.root.join(study.data_dir, matrix_study_file.download_location))
         matrix_content_type = matrix_study_file.determine_content_type
         if matrix_content_type == 'application/gzip'
           Rails.logger.info "#{Time.now}: Parsing #{matrix_study_file.name}:#{matrix_study_file.id} as application/gzip"
@@ -26,7 +26,7 @@ class ParseUtils
                                                                    study.data_store_path, verify: :none)
       end
 
-      if File.exists?(genes_study_file.upload.path)
+      if File.exists?(genes_study_file.upload.path) || File.exists?(Rails.root.join(study.data_dir, genes_study_file.download_location))
         genes_content_type = genes_study_file.determine_content_type
         if genes_content_type == 'application/gzip'
           Rails.logger.info "#{Time.now}: Parsing #{genes_study_file.name}:#{genes_study_file.id} as application/gzip"
@@ -40,7 +40,7 @@ class ParseUtils
                                                                   study.firecloud_workspace, genes_study_file.bucket_location,
                                                                   study.data_store_path, verify: :none)
       end
-      if File.exists?(barcodes_study_file.upload.path)
+      if File.exists?(barcodes_study_file.upload.path) || File.exists?(Rails.root.join(study.data_dir, barcodes_study_file.download_location))
         barcodes_content_type = barcodes_study_file.determine_content_type
         if barcodes_content_type == 'application/gzip'
           Rails.logger.info "#{Time.now}: Parsing #{barcodes_study_file.name}:#{barcodes_study_file.id} as application/gzip"
@@ -54,8 +54,6 @@ class ParseUtils
                                                                      study.firecloud_workspace, barcodes_study_file.bucket_location,
                                                                      study.data_store_path, verify: :none)
       end
-
-      Rails.logger.info "Files exists? matrix: #{File.exists?(matrix_file.path)}, genes: #{File.exists?(genes_file.path)}, barcodes: #{File.exists?(barcodes_file.path)}, "
 
       # next, check if this is a re-parse job, in which case we need to remove all existing entries first
       if opts[:reparse]
