@@ -292,7 +292,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # determine if FireCloud api is currently up/available
   #
   # * *return*
-  #   - +Boolean+ indication of FireCloud current status
+  #   - +Boolean+ indication of FireCloud current root status
   def api_available?
     begin
       response = self.api_status
@@ -326,6 +326,31 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
     rescue RestClient::ExceptionWithResponse => e
       Rails.logger.error "#{Time.now}: FireCloud status error: #{e.message}"
       e.response
+    end
+  end
+
+  # get health check on individual FireCloud services by name from FireCloudClient#api_status
+  # Should not be used to assess overall API health, but rather a quick thumbs up/down on a specific service
+  #
+  # * *params*
+  #   #   - +services+ (Array) => array of service names (from api_status['systems']), passed with splat operator, so should not be an actual array
+  # * *return*
+  #   - +Boolean+ indication of availability of requested FireCloud service
+  def services_available?(*services)
+    api_status = self.api_status
+    if api_status.is_a?(Hash)
+      api_ok = true
+      services.each do |service|
+        if api_status['systems'].present? && api_status['systems'][service].present? && api_status['systems'][service]['ok']
+          next
+        else
+          api_ok = false
+          break
+        end
+      end
+      api_ok
+    else
+      false
     end
   end
 

@@ -259,7 +259,7 @@ class SiteController < ApplicationController
 
           # double check on download availability: first, check if administrator has disabled downloads
           # then check if FireCloud is available and disable download links if either is true
-          @allow_downloads = AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
+          @allow_downloads = Study.firecloud_client.services_available?('GoogleBuckets')
         else
           set_study_default_options
         end
