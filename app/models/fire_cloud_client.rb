@@ -314,9 +314,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   def api_status
     path = self.api_root + '/status'
     # make sure access token is still valid
-    self.access_token_expired? ? self.refresh_access_token : nil
     headers = {
-        'Authorization' => "Bearer #{self.access_token['access_token']}",
+        'Authorization' => "Bearer #{self.valid_access_token['access_token']}",
         'Content-Type' => 'application/json',
         'Accept' => 'application/json'
     }

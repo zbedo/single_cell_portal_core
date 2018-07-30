@@ -44,8 +44,8 @@ class ApplicationController < ActionController::Base
   # check whether downloads/study editing has been revoked and prevent user access
   def check_access_settings
     redirect = request.referrer.nil? ? site_path : request.referrer
-    downloads_enabled = AdminConfiguration.firecloud_access_enabled?
-    if !downloads_enabled
+    access = AdminConfiguration.firecloud_access_enabled?
+    if !access
       redirect_to merge_default_redirect_params(redirect, scpbr: params[:scpbr]), alert: "Study access has been temporarily disabled by the site adminsitrator.  Please contact #{view_context.mail_to('single_cell_portal@broadinstitute.org')} if you require assistance." and return
     end
   end

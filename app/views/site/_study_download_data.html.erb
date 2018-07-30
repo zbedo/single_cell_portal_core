@@ -1,6 +1,7 @@
 <div class="row">
   <div class="col-xs-12">
-    <h2>Study Files <span class="badge"><%= @study_files.count %></span>  <%= link_to "<i class='fas fa-question-circle'></i> Bulk Download".html_safe, 'javascript:;', class: 'btn btn-default pull-right', id: 'download-help' %></h2>
+    <h2>Study Files <span class="badge"><%= @study_files.count %></span>  <%= link_to "<i class='fas fa-question-circle'></i> Bulk Download".html_safe, 'javascript:;', class: "btn btn-default pull-right #{!@allow_downloads ? 'disabled' : nil}", id: 'download-help' %></h2>
+    <% if @allow_downloads %>
     <div class="modal fade" id="download-help-modal" role="dialog" aria-labelledby="download-help-modal" aria-hidden="true">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -146,6 +147,7 @@
           writeDownloadCommand(downloadObject);
         });
     </script>
+    <% end %>
   </div>
 </div>
 <div class="table-responsive">

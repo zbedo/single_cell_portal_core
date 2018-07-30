@@ -195,7 +195,21 @@ class SingleCellMailer < ApplicationMailer
       @admins = User.where(admin: true).map(&:email)
 
       unless @admins.empty?
-        mail(to: @admins, reply_to: @requester, subject: "[Single Cell Portal Admin Notification#{Rails.env != 'production' ? " (#{Rails.env})" : nil}]: #{@subject}") do |format|
+        mail(to: @admins, reply_to: @requester, subject: "[Single Cell Portal Admin Notification #{Rails.env != 'production' ? " (#{Rails.env})" : nil}]: #{@subject}") do |format|
+          format.html
+        end
+      end
+    end
+  end
+
+  # notifier of FireCloud API service interruptions
+  def firecloud_api_notification(current_status, requester)
+    unless Rails.application.config.disable_admin_notifications == true
+      @admins = User.where(admin: true).map(&:email)
+      @requester = requester.nil? ? 'no-reply@broadinstitute.org' : requester
+      @current_status = current_status
+      unless @admins.empty?
+        mail(to: @admins, reply_to: @requester, subject: "[Single Cell Portal Admin Notification #{Rails.env != 'production' ? " (#{Rails.env})" : nil}]: ALERT: FIRECLOUD API SERVICE INTERRUPTION") do |format|
           format.html
         end
       end
@@ -217,7 +231,7 @@ class SingleCellMailer < ApplicationMailer
     @missing_files = missing_files
     @admins = User.where(admin: true).map(&:email)
 
-    mail(to: @admins, subject: "[Single Cell Portal Admin Notification#{Rails.env != 'production' ? " (#{Rails.env})" : nil}]: Sanity check results: #{@missing_files.size} files missing") do |format|
+    mail(to: @admins, subject: "[Single Cell Portal Admin Notification #{Rails.env != 'production' ? " (#{Rails.env})" : nil}]: Sanity check results: #{@missing_files.size} files missing") do |format|
       format.html
     end
   end
