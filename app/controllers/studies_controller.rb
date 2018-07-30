@@ -704,7 +704,7 @@ class StudiesController < ApplicationController
 
     # next check if downloads have been disabled by administrator, this will abort the download
     # download links shouldn't be rendered in any case, this just catches someone doing a straight GET on a file
-    # also check if FireCloud is unavailable and abort if so as well
+    # also check if workspace google buckets are available
     if !AdminConfiguration.firecloud_access_enabled? || !Study.firecloud_client.services_available?('GoogleBuckets')
       head 503 and return
     end

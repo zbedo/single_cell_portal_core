@@ -41,7 +41,7 @@ class ApplicationController < ActionController::Base
     end
   end
 
-  # check whether downloads/study editing has been revoked and prevent user access
+  # check whether the portal has been put in 'safe-mode'
   def check_access_settings
     redirect = request.referrer.nil? ? site_path : request.referrer
     access = AdminConfiguration.firecloud_access_enabled?

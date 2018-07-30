@@ -289,7 +289,7 @@ class SiteController < ApplicationController
     @other_data = @study.directory_listings.non_primary_data
 
     # double check on download availability: first, check if administrator has disabled downloads
-    # then check if FireCloud is available and disable download links if either is true
+    # then check individual statuses to see what to enable/disable
     @allow_firecloud_access = AdminConfiguration.firecloud_access_enabled?
     @allow_downloads = Study.firecloud_client.services_available?('GoogleBuckets')
     @allow_computes = Study.firecloud_client.services_available?('Agora', 'Rawls')
@@ -692,7 +692,7 @@ class SiteController < ApplicationController
 
     # next check if downloads have been disabled by administrator, this will abort the download
     # download links shouldn't be rendered in any case, this just catches someone doing a straight GET on a file
-    # also check if FireCloud is unavailable and abort if so as well
+    # also check if workspace google buckets are available
     if !AdminConfiguration.firecloud_access_enabled? || !Study.firecloud_client.services_available?('GoogleBuckets')
       head 503 and return
     end
