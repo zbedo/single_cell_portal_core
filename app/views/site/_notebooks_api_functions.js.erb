@@ -216,7 +216,6 @@ function waitTillRunning(googleProject, clusterName, headers, parsedCreateParams
             } else {
                 console.log("Error opening notebook in cluster, trying to create it")
                 var create = createCluster(googleProject, clusterName, headers, parsedCreateParams);
-                return "Error"
             }
 
         }

@@ -200,8 +200,8 @@
             var formParams = $(this).serializeArray().reduce((map, obj) => (map[obj.name] = obj.value, map), {});
 
             var clusterName = formParams.clusterSelect;
-            if(cluster  === "create_new"){
-                clusterName = createParams.name;
+            if(clusterName  === "create_new"){
+                clusterName = formParams.name;
             }
 
             // format payload for api call
