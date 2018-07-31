@@ -104,6 +104,9 @@ case $OPTION in
 	esac
 done
 
+# rebuild the docker image if necessary
+docker build -t single_cell_docker:$DOCKER_IMAGE_VERSION -f Dockerfile .
+
 if [[ $PASSENGER_APP_ENV = "production" ]]
 then
 	# generate random secret key for secure cookies
