@@ -587,8 +587,6 @@ class FireCloudClientTest < ActiveSupport::TestCase
     puts 'getting API URL for file...'
     api_url = @fire_cloud_client.generate_api_url(@fire_cloud_client.project, workspace_name, participant_filename)
     assert api_url.start_with?("https://www.googleapis.com/storage"), "Did not receive correctly formatted api_url, expected to start with 'https://www.googleapis.com/storage' but found #{api_url}"
-    participant_contents = participant_upload.read
-    assert participant_contents == api_url_response.body, "Response body contents are incorrect, expected '#{participant_contents}' but found '#{api_url_response.body}'"
 
     # close upload files
     participant_upload.close
