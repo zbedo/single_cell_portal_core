@@ -1599,7 +1599,7 @@ class UiTestSuite < Test::Unit::TestCase
 
     open_ui_tab('profile-firecloud')
 
-    job_title_field = @driver.find_element(:id, 'firecloud_profile_title')
+    job_title_field = @driver.find_element(:id, 'fire_cloud_profile_title')
     job_title_field.clear
     new_title = "Random Title #{$random_seed}"
     job_title_field.send_keys(new_title)
@@ -1612,7 +1612,7 @@ class UiTestSuite < Test::Unit::TestCase
     wait_for_render(:id, 'profile-header')
     open_ui_tab('profile-firecloud')
 
-    job_title = @driver.find_element(:id, 'firecloud_profile_title')['value']
+    job_title = @driver.find_element(:id, 'fire_cloud_profile_title')['value']
     assert job_title == new_title, "Did not update job title correctly, expected '#{new_title}' but found '#{job_title}'"
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
