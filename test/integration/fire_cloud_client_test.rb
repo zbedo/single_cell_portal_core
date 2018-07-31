@@ -73,7 +73,7 @@ class FireCloudClientTest < ActiveSupport::TestCase
     services = %w(Rawls Agora Sam Thurloe)
     services.each do |service|
       assert status['systems'][service].present?, "Did not find required service: #{service}"
-      assert [true, false].include?(status['systems'][serivce]['ok']), "Did not find expected 'ok' message of true/false; found: #{status['systems'][serivce]['ok']}"
+      assert [true, false].include?(status['systems'][service]['ok']), "Did not find expected 'ok' message of true/false; found: #{status['systems'][service]['ok']}"
     end
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
@@ -586,8 +586,7 @@ class FireCloudClientTest < ActiveSupport::TestCase
     # generate a media URL for a file
     puts 'getting API URL for file...'
     api_url = @fire_cloud_client.generate_api_url(@fire_cloud_client.project, workspace_name, participant_filename)
-    api_url_response = RestClient.get api_url
-    assert api_url_response.code == 200, "Did not receive correct response code on api_url, expected 200 but found #{api_url_response.code}"
+    assert api_url.start_with?("https://www.googleapis.com/storage"), "Did not receive correctly formatted api_url, expected to start with 'https://www.googleapis.com/storage' but found #{api_url}"
     participant_contents = participant_upload.read
     assert participant_contents == api_url_response.body, "Response body contents are incorrect, expected '#{participant_contents}' but found '#{api_url_response.body}'"
 
