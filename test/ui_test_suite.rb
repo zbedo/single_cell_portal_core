@@ -2245,7 +2245,7 @@ class UiTestSuite < Test::Unit::TestCase
     wait_for_modal_open('message_modal')
     assert element_visible?(:id, 'message_modal'), 'confirmation modal did not show.'
     notice_content = @driver.find_element(:id, 'notice-content')
-    confirmation_message = 'Your message has been successfully delivered.'
+    confirmation_message = 'Your request has been submitted.'
     assert notice_content.text == confirmation_message, "did not find confirmation message, expected #{confirmation_message} but found #{notice_content.text}"
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
