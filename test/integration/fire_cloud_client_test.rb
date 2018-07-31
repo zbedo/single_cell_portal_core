@@ -51,13 +51,31 @@ class FireCloudClientTest < ActiveSupport::TestCase
   end
 
   # assert FireCloud is responding
-  def test_firecloud_status
+  def test_firecloud_api_available
     puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     # check that API is up
     assert @fire_cloud_client.api_available?, 'FireCloud API is not available'
     firecloud_status = @fire_cloud_client.api_status
     assert firecloud_status['ok'], 'Detailed FireCloud API status is not available'
+
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+  end
+
+  # get the current FireCloud API status
+  def test_firecloud_api_status
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    status = @fire_cloud_client.api_status
+    assert status.is_a?(Hash), "Did not get expected status Hash object; found #{status.class.name}"
+    assert status['ok'].present?, 'Did not find root status message'
+    assert status['systems'].present?, 'Did not find system statuses'
+    # look for presence of systems that SCP depends on
+    services = %w(Rawls Agora Sam Thurloe)
+    services.each do |service|
+      assert status['systems'][service].present?, "Did not find required service: #{service}"
+      assert [true, false].include?(status['systems'][serivce]['ok']), "Did not find expected 'ok' message of true/false; found: #{status['systems'][serivce]['ok']}"
+    end
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
