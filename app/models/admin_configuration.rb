@@ -184,10 +184,7 @@ class AdminConfiguration
       pid = pid_str.split(':').last
       # check if current job worker has matching pid; if not, then the job is orphaned and should be unlocked
       unless pids[worker] == pid
-        # deserialize handler object to get attributes for logging
-        deserialized_handler = YAML::load(job.handler)
-        job_method = deserialized_handler.method_name.to_s
-        Rails.logger.info "#{Time.now}: Restarting orphaned process #{job.id}:#{job_method} initially queued on #{job.created_at.to_s(:long)}"
+        Rails.logger.info "#{Time.now}: Restarting orphaned process #{job.id} initially queued on #{job.created_at.to_s(:long)}"
         job.update(locked_by: nil, locked_at: nil)
         job_count += 1
       end
