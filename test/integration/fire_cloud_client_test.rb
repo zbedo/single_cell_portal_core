@@ -50,14 +50,31 @@ class FireCloudClientTest < ActiveSupport::TestCase
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
 
-  # assert FireCloud is responding
-  def test_firecloud_status
+  # assert status health check is returning true/false
+  def test_firecloud_api_available
     puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     # check that API is up
-    assert @fire_cloud_client.api_available?, 'FireCloud API is not available'
-    firecloud_status = @fire_cloud_client.api_status
-    assert firecloud_status['ok'], 'Detailed FireCloud API status is not available'
+    api_available = @fire_cloud_client.api_available?
+    assert [true, false].include?(api_available), 'Did not receive corret boolean response'
+
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+  end
+
+  # get the current FireCloud API status
+  def test_firecloud_api_status
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    status = @fire_cloud_client.api_status
+    assert status.is_a?(Hash), "Did not get expected status Hash object; found #{status.class.name}"
+    assert status['ok'].present?, 'Did not find root status message'
+    assert status['systems'].present?, 'Did not find system statuses'
+    # look for presence of systems that SCP depends on
+    services = %w(Rawls Agora Sam Thurloe)
+    services.each do |service|
+      assert status['systems'][service].present?, "Did not find required service: #{service}"
+      assert [true, false].include?(status['systems'][service]['ok']), "Did not find expected 'ok' message of true/false; found: #{status['systems'][service]['ok']}"
+    end
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
@@ -569,10 +586,7 @@ class FireCloudClientTest < ActiveSupport::TestCase
     # generate a media URL for a file
     puts 'getting API URL for file...'
     api_url = @fire_cloud_client.generate_api_url(@fire_cloud_client.project, workspace_name, participant_filename)
-    api_url_response = RestClient.get api_url
-    assert api_url_response.code == 200, "Did not receive correct response code on api_url, expected 200 but found #{api_url_response.code}"
-    participant_contents = participant_upload.read
-    assert participant_contents == api_url_response.body, "Response body contents are incorrect, expected '#{participant_contents}' but found '#{api_url_response.body}'"
+    assert api_url.start_with?("https://www.googleapis.com/storage"), "Did not receive correctly formatted api_url, expected to start with 'https://www.googleapis.com/storage' but found #{api_url}"
 
     # close upload files
     participant_upload.close

@@ -43,7 +43,7 @@ class StudiesController < ApplicationController
     @directories = @study.directory_listings.are_synced
     @primary_data = @study.directory_listings.primary_data
     @other_data = @study.directory_listings.non_primary_data
-    @allow_downloads = AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
+    @allow_downloads = Study.firecloud_client.services_available?('GoogleBuckets')
     @analysis_metadata = @study.analysis_metadata.to_a
     # load study default options
     set_study_default_options
@@ -704,8 +704,8 @@ class StudiesController < ApplicationController
 
     # next check if downloads have been disabled by administrator, this will abort the download
     # download links shouldn't be rendered in any case, this just catches someone doing a straight GET on a file
-    # also check if FireCloud is unavailable and abort if so as well
-    if !AdminConfiguration.firecloud_access_enabled? || !Study.firecloud_client.api_available?
+    # also check if workspace google buckets are available
+    if !AdminConfiguration.firecloud_access_enabled? || !Study.firecloud_client.services_available?('GoogleBuckets')
       head 503 and return
     end
     begin
@@ -1349,7 +1349,7 @@ class StudiesController < ApplicationController
 
   # check on FireCloud API status and respond accordingly
   def check_firecloud_status
-    unless Study.firecloud_client.api_available?
+    unless Study.firecloud_client.services_available?('Sam', 'Rawls')
       alert = 'Study workspaces are temporarily unavailable, so we cannot complete your request.  Please try again later.'
       respond_to do |format|
         format.js {render js: "$('.modal').modal('hide'); alert('#{alert}')" and return}

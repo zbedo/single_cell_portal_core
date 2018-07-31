@@ -16,10 +16,11 @@ class BillingProjectsController < ApplicationController
   ##
 
   respond_to :html, :js, :json
+  before_action :authenticate_user!
+  before_action :check_firecloud_status
   before_action :create_firecloud_client
   before_action :check_project_permissions, except: [:index, :create]
   before_action :load_service_account, except: [:new_user, :create_user, :delete_user, :storage_estimate]
-  before_action :authenticate_user!
 
   ##
   #
@@ -201,6 +202,19 @@ class BillingProjectsController < ApplicationController
     projects = @fire_cloud_client.get_billing_projects.keep_if {|project| project['role'] == 'Owner'}
     unless projects.map {|project| project['projectName']}.include?(params[:project_name])
       redirect_to merge_default_redirect_params(billing_projects_path, scpbr: params[:scpbr]), alert: 'You do not have permission to perform that action.' and return
+    end
+  end
+
+  # check on FireCloud API status and respond accordingly
+  def check_firecloud_status
+    unless Study.firecloud_client.services_available?('Thurloe')
+      alert = 'Billing projects are temporarily unavailable, so we cannot complete your request.  Please try again later.'
+      respond_to do |format|
+        format.js {render js: "$('.modal').modal('hide'); alert('#{alert}')" and return}
+        format.html {redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]),
+                                 alert: alert and return}
+        format.json {head 503}
+      end
     end
   end
 end

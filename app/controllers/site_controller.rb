@@ -259,7 +259,7 @@ class SiteController < ApplicationController
 
           # double check on download availability: first, check if administrator has disabled downloads
           # then check if FireCloud is available and disable download links if either is true
-          @allow_downloads = AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
+          @allow_downloads = Study.firecloud_client.services_available?('GoogleBuckets')
         else
           set_study_default_options
         end
@@ -289,9 +289,11 @@ class SiteController < ApplicationController
     @other_data = @study.directory_listings.non_primary_data
 
     # double check on download availability: first, check if administrator has disabled downloads
-    # then check if FireCloud is available and disable download links if either is true
+    # then check individual statuses to see what to enable/disable
     @allow_firecloud_access = AdminConfiguration.firecloud_access_enabled?
-    @allow_downloads = @allow_firecloud_access && Study.firecloud_client.api_available?
+    @allow_downloads = Study.firecloud_client.services_available?('GoogleBuckets')
+    @allow_computes = Study.firecloud_client.services_available?('Agora', 'Rawls')
+    @allow_edits = Study.firecloud_client.services_available?('Sam', 'Rawls')
     set_study_default_options
     # load options and annotations
     if @study.initialized?
@@ -310,7 +312,8 @@ class SiteController < ApplicationController
 
     # if user has permission to run workflows, load available workflows and current submissions
 
-    if @allow_firecloud_access
+
+    if @allow_firecloud_access && @allow_computes
       if user_signed_in? && @study.can_compute?(current_user)
         # load list of previous submissions
         workspace = Study.firecloud_client.get_workspace(@study.firecloud_project, @study.firecloud_workspace)
@@ -689,8 +692,8 @@ class SiteController < ApplicationController
 
     # next check if downloads have been disabled by administrator, this will abort the download
     # download links shouldn't be rendered in any case, this just catches someone doing a straight GET on a file
-    # also check if FireCloud is unavailable and abort if so as well
-    if !AdminConfiguration.firecloud_access_enabled? || !Study.firecloud_client.api_available?
+    # also check if workspace google buckets are available
+    if !AdminConfiguration.firecloud_access_enabled? || !Study.firecloud_client.services_available?('GoogleBuckets')
       head 503 and return
     end
 
@@ -1413,12 +1416,21 @@ class SiteController < ApplicationController
 
   # check compute permissions for study
   def check_compute_permissions
-    if !user_signed_in? || !@study.can_compute?(current_user)
-      @alert ='You do not have permission to perform that action.'
+    if Study.firecloud_client.services_available?('Rawls')
+      if !user_signed_in? || !@study.can_compute?(current_user)
+        @alert ='You do not have permission to perform that action.'
+        respond_to do |format|
+          format.js {render action: :notice}
+          format.html {redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]), alert: @alert and return}
+          format.json {head 403}
+        end
+      end
+    else
+      @alert ='Compute services are currently unavailable - please check back later.'
       respond_to do |format|
         format.js {render action: :notice}
         format.html {redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]), alert: @alert and return}
-        format.json {head 403}
+        format.json {head 503}
       end
     end
   end
