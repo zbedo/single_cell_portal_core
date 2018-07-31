@@ -2163,7 +2163,7 @@ class SiteController < ApplicationController
         submission_inputs = {input_name.to_sym => input_value}
     end
     if optional_inputs.present?
-      submission_inputs.merge!(optional_inputs)
+      submission_inputs.merge!(optional_inputs.to_unsafe_hash)
     end
     # Run any workflow-specific extra configuration steps
     configuration_response = WorkflowConfiguration.new(@study, config_namespace, config_name, workflow_namespace, workflow_name, submission_inputs).perform
