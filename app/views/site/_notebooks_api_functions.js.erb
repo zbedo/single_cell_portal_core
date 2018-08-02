@@ -32,12 +32,9 @@ function syncApiRequest(endpoint, base_url, method, headers, body, includeCookie
         request.send(JSON.stringify(body));
     } else {
         // if no body exists we can skip parsing it
-        if(async){
-
-        } else {
+        if(!async){
             request.send();
         }
-
     }
     // return the request object
     return request
