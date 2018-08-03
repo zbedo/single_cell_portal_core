@@ -317,19 +317,19 @@ class StudiesController < ApplicationController
       case configuration_name
         when /cell-ranger/
           @special_sync = true
-          matrix_study_file = @unsynced_files.detect {|file| file.name =~ /filtered_gene_bc_matrices.*matrix\.mtx/}
-          if matrix_study_file.present?
-            matrix_study_file.file_type = 'MM Coordinate Matrix'
-            matrix_study_file.description = "Matrix Market coordinate expression matrix from CellRanger run #{params[:submission_id]}"
-            matrix_study_file.options.merge!({analysis_name: 'cell-ranger'})
+          sorted_matrix_study_file = @unsynced_files.detect {|file| file.name =~ /sorted_matrix\.mtx/}
+          if sorted_matrix_study_file.present?
+            sorted_matrix_study_file.file_type = 'MM Coordinate Matrix'
+            sorted_matrix_study_file.description = "Matrix Market coordinate expression matrix from CellRanger run #{params[:submission_id]}"
+            sorted_matrix_study_file.options.merge!({analysis_name: 'cell-ranger'})
           end
 
           genes_file = @unsynced_files.detect {|file| file.name=~ /filtered_gene_bc_matrices.*genes\.tsv/}
           if genes_file.present?
             genes_file.file_type = '10X Genes File'
             genes_file.description = "Gene ID/Names output from CellRanger run #{params[:submission_id]}"
-            if matrix_study_file.present?
-              genes_file.options.merge!({matrix_id: matrix_study_file.id, analysis_name: 'cell-ranger'})
+            if sorted_matrix_study_file.present?
+              genes_file.options.merge!({matrix_id: sorted_matrix_study_file.id, analysis_name: 'cell-ranger'})
             end
           end
 
@@ -337,8 +337,8 @@ class StudiesController < ApplicationController
           if barcodes_file.present?
             barcodes_file.file_type = '10X Barcodes File'
             barcodes_file.description = "Barcode sequence output from CellRanger run #{params[:submission_id]}"
-            if matrix_study_file.present?
-              barcodes_file.options.merge!({matrix_id: matrix_study_file.id, analysis_name: 'cell-ranger'})
+            if sorted_matrix_study_file.present?
+              barcodes_file.options.merge!({matrix_id: sorted_matrix_study_file.id, analysis_name: 'cell-ranger'})
             end
           end
 
@@ -365,6 +365,13 @@ class StudiesController < ApplicationController
             pca_cluster_file.file_type = 'Cluster'
             pca_cluster_file.description = "PCA 3d projection from CellRanger run #{params[:submission_id]}"
             pca_cluster_file.options.merge!({analysis_name: 'cell-ranger'})
+          end
+
+          other_matrices = @unsynced_files.select {|file| file.name.split('/').last =~ /\.mtx/ && file.name != sorted_matrix_study_file.name}
+          other_matrices.each do |matrix|
+            matrix.file_type = 'Analysis Output'
+            matrix.description = "Secondary expression matrix output from CellRanger run #{params[:submission_id]}"
+            matrix.options.merge!({analysis_name: 'cell-ranger'})
           end
 
         when /infercnv/
