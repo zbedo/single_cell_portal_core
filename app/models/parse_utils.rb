@@ -1,5 +1,6 @@
 class ParseUtils
 
+  # parse a 10X gene-barcode matrix file triplet (input matrix must be sorted by gene indices)
   def self.cell_ranger_expression_parse(study, user, matrix_study_file, genes_study_file, barcodes_study_file, opts={})
     begin
       start_time = Time.now
@@ -10,50 +11,9 @@ class ParseUtils
 
       # localize files if necessary, otherwise open newly uploaded files. check to make sure a local copy doesn't already exists
       # as we may be uploading files piecemeal from upload wizard
-
-      if File.exists?(matrix_study_file.upload.path) || File.exists?(Rails.root.join(study.data_dir, matrix_study_file.download_location))
-        matrix_content_type = matrix_study_file.determine_content_type
-        if matrix_content_type == 'application/gzip'
-          Rails.logger.info "#{Time.now}: Parsing #{matrix_study_file.name}:#{matrix_study_file.id} as application/gzip"
-          matrix_file = Zlib::GzipReader.open(matrix_study_file.upload.path)
-        else
-          Rails.logger.info "#{Time.now}: Parsing #{matrix_study_file.name}:#{matrix_study_file.id} as text/plain"
-          matrix_file = File.open(matrix_study_file.upload.path, 'rb')
-        end
-      else
-        matrix_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
-                                                                   study.firecloud_workspace, matrix_study_file.bucket_location,
-                                                                   study.data_store_path, verify: :none)
-      end
-
-      if File.exists?(genes_study_file.upload.path) || File.exists?(Rails.root.join(study.data_dir, genes_study_file.download_location))
-        genes_content_type = genes_study_file.determine_content_type
-        if genes_content_type == 'application/gzip'
-          Rails.logger.info "#{Time.now}: Parsing #{genes_study_file.name}:#{genes_study_file.id} as application/gzip"
-          genes_file = Zlib::GzipReader.open(genes_study_file.upload.path)
-        else
-          Rails.logger.info "#{Time.now}: Parsing #{genes_study_file.name}:#{genes_study_file.id} as text/plain"
-          genes_file = File.open(genes_study_file.upload.path, 'rb')
-        end
-      else
-        genes_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
-                                                                  study.firecloud_workspace, genes_study_file.bucket_location,
-                                                                  study.data_store_path, verify: :none)
-      end
-      if File.exists?(barcodes_study_file.upload.path) || File.exists?(Rails.root.join(study.data_dir, barcodes_study_file.download_location))
-        barcodes_content_type = barcodes_study_file.determine_content_type
-        if barcodes_content_type == 'application/gzip'
-          Rails.logger.info "#{Time.now}: Parsing #{barcodes_study_file.name}:#{barcodes_study_file.id} as application/gzip"
-          barcodes_file = Zlib::GzipReader.open(barcodes_study_file.upload.path)
-        else
-          Rails.logger.info "#{Time.now}: Parsing #{barcodes_study_file.name}:#{barcodes_study_file.id} as text/plain"
-          barcodes_file = File.open(barcodes_study_file.upload.path, 'rb')
-        end
-      else
-        barcodes_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
-                                                                     study.firecloud_workspace, barcodes_study_file.bucket_location,
-                                                                     study.data_store_path, verify: :none)
-      end
+      matrix_file = localize_study_file(matrix_study_file, study)
+      genes_file = localize_study_file(genes_study_file, study)
+      barcodes_file = localize_study_file(barcodes_study_file, study)
 
       # next, check if this is a re-parse job, in which case we need to remove all existing entries first
       if opts[:reparse]
@@ -62,9 +22,32 @@ class ParseUtils
         matrix_study_file.invalidate_cache_by_file_type
       end
 
-      # open files and read contents
+      # process the genes file to concatenate gene names and IDs together (for differentiating entries with duplicate names)
+      raw_genes = genes_file.readlines.map(&:strip)
+      @genes = []
+      raw_genes.each do |row|
+        gene_id, gene_name = row.split.map(&:strip)
+        @genes << "#{gene_name} (#{gene_id})"
+      end
+
+      # read barcodes file
+      @barcodes = barcodes_file.readlines.map(&:strip)
+
+      # close files
+      genes_file.close
+      barcodes_file.close
+
+      # validate that barcodes list does not have any repeated values
+      existing_cells = study.all_expression_matrix_cells
+      uniques = @barcodes - existing_cells
+
+      unless uniques.size == @barcodes.size
+        repeats = @barcodes - uniques
+        raise StandardError, "You have re-used the following cell names that were found in another expression matrix in your study (cell names must be unique across all expression matrices): #{repeats.join(', ')}"
+      end
+
+      # open matrix file and read contents
       Rails.logger.info "#{Time.now}: Reading gene/barcode/matrix file contents for #{study.name}"
-      significant_scores = {}
       m_header_1 = matrix_file.readline.split.map(&:strip)
       valid_headers = %w(%%MatrixMarket matrix coordinate)
       unless m_header_1.first == valid_headers.first && m_header_1[1] == valid_headers[1] && m_header_1[2] == valid_headers[2]
@@ -77,93 +60,39 @@ class ParseUtils
         scores_header = matrix_file.readline.strip
       end
 
-      # read coordinate matrix and construct hash of significant scores
-      while !matrix_file.eof?
-        line = matrix_file.readline.strip
-        raw_gene_idx, raw_barcode_idx, raw_expression_score = line.split.map(&:strip)
-        gene_idx = raw_gene_idx.to_i - 1 # since arrays are zero based, we need to offset by 1
-        barcode_idx = raw_barcode_idx.to_i - 1 # since arrays are zero based, we need to offset by 1
-        expression_score = raw_expression_score.to_f.round(3) # only keep 3 significant digits
-        significant_scores[gene_idx] ||= {}
-        significant_scores[gene_idx][barcode_idx] = expression_score
-      end
-
-      # process the genes file to concatenate gene names and IDs together (for differentiating entries with duplicate names)
-      raw_genes = genes_file.readlines.map(&:strip)
-      genes = []
-      raw_genes.each do |row|
-        gene_id, gene_name = row.split.map(&:strip)
-        genes << "#{gene_name} (#{gene_id})"
-      end
-
-      barcodes = barcodes_file.readlines.map(&:strip)
-      matrix_file.close
-      genes_file.close
-      barcodes_file.close
-
-      # validate that barcodes list does not have any repeated values
-      existing_cells = study.all_expression_matrix_cells
-      uniques = barcodes - existing_cells
-
-      unless uniques.size == barcodes.size
-        repeats = barcodes - uniques
-        raise StandardError, "You have re-used the following cell names that were found in another expression matrix in your study (cell names must be unique across all expression matrices): #{repeats.join(', ')}"
-      end
-
-      # load significant data & construct objects
-      @genes = []
+      # containers for holding data yet to be saved to database
+      @gene_documents = []
       @data_arrays = []
       @count = 0
       @child_count = 0
 
+      # read first line manually and initialize containers for storing temporary data yet to be added to documents
       Rails.logger.info "#{Time.now}: Creating new gene & data_array records from 10X CellRanger source data for #{study.name}"
+      line = matrix_file.readline.strip
+      gene_index, barcode_index, expression_score = parse_line(line)
+      @last_gene_index, @current_gene = initialize_new_gene(study, gene_index, matrix_study_file)
+      @current_barcodes = [@barcodes[barcode_index]]
+      @current_expression = [expression_score]
 
-      significant_scores.each do |gene_index, barcode_obj|
-        gene_name = genes[gene_index]
-        new_gene = Gene.new(study_id: study.id, name: gene_name, searchable_name: gene_name.downcase, study_file_id: matrix_study_file.id)
-        @genes << new_gene.attributes
-        gene_barcodes = []
-        gene_exp_values = []
-        barcode_obj.each do |barcode_index, expression_value|
-          gene_barcodes << barcodes[barcode_index]
-          gene_exp_values << expression_value
-        end
+      # now process all lines
+      process_matrix_data(study, matrix_file, matrix_study_file)
 
-        gene_barcodes.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
-          cell_array = DataArray.new(name: new_gene.cell_key, cluster_name: matrix_study_file.name, array_type: 'cells',
-                                     array_index: index + 1, study_file_id: matrix_study_file.id, values: slice,
-                                     linear_data_type: 'Gene', linear_data_id: new_gene.id, study_id: study.id)
-          @data_arrays << cell_array.attributes
-        end
+      # create last batch of arrays
+      create_data_arrays(@current_barcodes, matrix_study_file, 'cells', @current_gene, @data_arrays)
+      create_data_arrays(@current_expression, matrix_study_file, 'expression', @current_gene, @data_arrays)
 
-        gene_exp_values.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
-          score_array = DataArray.new(name: new_gene.score_key, cluster_name: matrix_study_file.name, array_type: 'expression',
-                                      array_index: index + 1, study_file_id: matrix_study_file.id, values: slice,
-                                      linear_data_type: 'Gene', linear_data_id: new_gene.id, study_id: study.id)
-          @data_arrays << score_array.attributes
-        end
+      # close file and clean up
+      matrix_file.close
 
-        # batch insert records in groups of 1000
-        if @data_arrays.size >= 1000
-          Gene.create!(@genes) # genes must be saved first, otherwise the linear data polymorphic association is invalid and will cause a parse fail
-          @count += @genes.size
-          Rails.logger.info "#{Time.now}: Processed #{@count} expressed genes from 10X CellRanger source data for #{study.name}"
-          @genes = []
-          DataArray.create!(@data_arrays)
-          @child_count += @data_arrays.size
-          Rails.logger.info "#{Time.now}: Processed #{@child_count} child data arrays from 10X CellRanger source data for #{study.name}"
-          @data_arrays = []
-        end
-      end
-
-      # create records
-      Gene.create(@genes)
-      @count += @genes.size
+      # write last records to database
+      Gene.create(@gene_documents)
+      @count += @gene_documents.size
       Rails.logger.info "#{Time.now}: Processed #{@count} expressed genes from 10X CellRanger source data for #{study.name}"
       DataArray.create(@data_arrays)
       @child_count += @data_arrays.size
       Rails.logger.info "#{Time.now}: Processed #{@child_count} child data arrays from 10X CellRanger source data for #{study.name}"
-      barcodes.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
+      # create array of known cells for this expression matrix
+      @barcodes.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
         known_cells = study.data_arrays.build(name: "#{matrix_study_file.name} Cells", cluster_name: matrix_study_file.name,
                                               array_type: 'cells', array_index: index + 1, values: slice,
                                               study_file_id: matrix_study_file.id, study_id: study.id)
@@ -175,7 +104,7 @@ class ParseUtils
       @count = 0
       other_genes = []
       other_genes_count = 0
-      genes.each do |gene|
+      @genes.each do |gene|
         other_genes << Gene.new(study_id: study.id, name: gene, searchable_name: gene.downcase, study_file_id: matrix_study_file.id).attributes
         other_genes_count += 1
         if other_genes.size % 1000 == 0
@@ -201,8 +130,8 @@ class ParseUtils
       # set the default expression label if the user supplied one
       if !study.has_expression_label? && !matrix_study_file.y_axis_label.blank?
         Rails.logger.info "#{Time.now}: Setting default expression label in #{study.name} to '#{matrix_study_file.y_axis_label}'"
-        opts = study.default_options
-        study.update!(default_options: opts.merge(expression_label: matrix_study_file.y_axis_label))
+        study_opts = study.default_options
+        study.update!(default_options: study_opts.merge(expression_label: matrix_study_file.y_axis_label))
       end
 
       # set initialized to true if possible
@@ -225,36 +154,14 @@ class ParseUtils
         Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
       end
 
+      # determine what to do with local files
       unless opts[:skip_upload] == true
-        [matrix_study_file, genes_study_file, barcodes_study_file].each do |study_file|
-          Rails.logger.info "#{Time.now}: determining upload status of #{study_file.file_type}: #{study_file.upload_file_name}:#{study_file.id}"
-          # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
-          # rather than relying on opts[:local], actually check if the file is already in the GCS bucket
-          destination = study_file.remote_location.blank? ? study_file.upload_file_name : study_file.remote_location
-          remote = Study.firecloud_client.get_workspace_file(study.firecloud_project, study.firecloud_workspace, destination)
-          if remote.nil?
-            begin
-              Rails.logger.info "#{Time.now}: preparing to upload expression file: #{study_file.upload_file_name}:#{study_file.id} to FireCloud"
-              study.send_to_firecloud(study_file)
-            rescue => e
-              Rails.logger.info "#{Time.now}: Expression file: #{study_file.upload_file_name}:#{study_file.id} failed to upload to FireCloud due to #{e.message}"
-              SingleCellMailer.notify_admin_upload_fail(study_file, e.message).deliver_now
-            end
-          else
-            # we have the file in FireCloud already, so just delete it
-            begin
-              Rails.logger.info "#{Time.now}: found remote version of #{study_file.upload_file_name}: #{remote.name} (#{remote.generation})"
-              run_at = 15.seconds.from_now
-              Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file), run_at: run_at)
-              Rails.logger.info "#{Time.now}: cleanup job for #{study_file.upload_file_name}:#{study_file.id} scheduled for #{run_at}"
-            rescue => e
-              # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
-              Rails.logger.error "#{Time.now}: Could not delete #{study_file.name}:#{study_file.id} in study #{self.name}; aborting"
-              SingleCellMailer.admin_notification('Local file deletion failed', nil, "The file at #{Rails.root.join(study.data_store_path, study_file.download_location)} failed to clean up after parsing, please remove.").deliver_now
-            end
-          end
-        end
+        upload_or_remove_study_file(matrix_study_file, study)
+        upload_or_remove_study_file(genes_study_file, study)
+        upload_or_remove_study_file(barcodes_study_file, study)
       end
+
+      # finished, so return true
       true
     rescue => e
       # error has occurred, so clean up records and remove file
@@ -268,8 +175,132 @@ class ParseUtils
       genes_study_file.destroy
       barcodes_study_file.destroy
       error_message = e.message
-      Rails.logger.error "#{Time.now}: #{error_message}"
+      Rails.logger.error "#{Time.now}: #{error_message}, #{@last_line}"
       SingleCellMailer.notify_user_parse_fail(user.email, "10X CellRanger expression data in #{study.name} parse has failed", error_message).deliver_now
+      false
+    end
+  end
+
+  private
+
+  # read a single line of a coordinate matrix and return parsed indices and expression value
+  def self.parse_line(line)
+    raw_gene_idx, raw_barcode_idx, raw_expression_score = line.split.map(&:strip)
+    gene_idx = raw_gene_idx.to_i - 1 # since arrays are zero based, we need to offset by 1
+    barcode_idx = raw_barcode_idx.to_i - 1 # since arrays are zero based, we need to offset by 1
+    expression_score = raw_expression_score.to_f.round(3) # only keep 3 significant digits
+    [gene_idx, barcode_idx, expression_score]
+  end
+
+  # process a single line from a coordinate matrix and initialize a new gene object to use for associations
+  # stores new values for barcodes and expression scores in containers to be converted into data_arrays later
+  # returns current gene index and new gene object
+  def self.initialize_new_gene(study, gene_idx, matrix_file)
+    gene_name = @genes[gene_idx]
+    new_gene = Gene.new(study_id: study.id, name: gene_name, searchable_name: gene_name.downcase, study_file_id: matrix_file.id)
+    @gene_documents << new_gene.attributes
+    [gene_idx, new_gene]
+  end
+
+  # main parser method, will iterate through lines and create documents as necessary
+  def self.process_matrix_data(study, matrix_data, matrix_file)
+    while !matrix_data.eof?
+      line = matrix_data.readline.strip
+      if line.strip.blank?
+        break # would be the end of the file (hopefully)
+      else
+        gene_idx, barcode_idx, expression_score = parse_line(line)
+        if @last_gene_index == gene_idx
+          @current_barcodes << @barcodes[barcode_idx]
+          @current_expression << expression_score
+        else
+          # we need to validate that the file is sorted correctly.  if our gene index has gone down from what it was before,
+          # then we must abort and throw an error as the parse will not complete properly.  we will have all the genes,
+          # but not all of the expression data
+          if gene_idx < @last_gene_index
+            Rails.logger.error "Error in parsing #{matrix_file.bucket_location} in #{study.name}: incorrect sort order; #{gene_idx + 1} is less than #{@last_gene_idx + 1} at line #{matrix_file.lineno}"
+            error_message = "Your input matrix is not sorted in the correct order.  The data must be sorted by gene index first, then barcode index: #{gene_idx + 1} is less than #{@last_gene_idx + 1} at #{matrix_file.lineno}"
+            raise StandardError, error_message
+          end
+          # create data_arrays and move to the next gene
+          create_data_arrays(@current_barcodes, matrix_file, 'cells', @current_gene, @data_arrays)
+          create_data_arrays(@current_expression, matrix_file, 'expression', @current_gene, @data_arrays)
+          @last_gene_index, @current_gene = initialize_new_gene(study, gene_idx, matrix_file)
+          @current_barcodes = [@barcodes[barcode_idx]]
+          @current_expression = [expression_score]
+
+          # batch insert records in groups of 1000
+          if @data_arrays.size >= 1000
+            Gene.create(@gene_documents) # genes must be saved first, otherwise the linear data polymorphic association is invalid and will cause a parse fail
+            @count += @gene_documents.size
+            Rails.logger.info "#{Time.now}: Processed #{@count} expressed genes from 10X CellRanger source data for #{study.name}"
+            @gene_documents = []
+            DataArray.create(@data_arrays)
+            @child_count += @data_arrays.size
+            Rails.logger.info "#{Time.now}: Processed #{@child_count} child data arrays from 10X CellRanger source data for #{study.name}"
+            @data_arrays = []
+          end
+        end
+      end
+    end
+  end
+
+  # slice up arrays of barcodes and expression scores and create data arrays, storing them in a container for saving later
+  def self.create_data_arrays(source_data, study_file, data_array_type, parent_gene, data_arrays_container)
+    data_array_name = data_array_type == 'cells' ? parent_gene.cell_key : parent_gene.score_key
+    source_data.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
+      array = DataArray.new(name: data_array_name, cluster_name: study_file.name, array_type: data_array_type,
+                                 array_index: index + 1, study_file_id: study_file.id, values: slice,
+                                 linear_data_type: 'Gene', linear_data_id: parent_gene.id, study_id: parent_gene.study_id)
+      data_arrays_container << array.attributes
+    end
+  end
+
+  # localize a file for parsing and return opened file handler
+  def self.localize_study_file(study_file, study)
+    if File.exists?(study_file.upload.path) || File.exists?(Rails.root.join(study.data_dir, study_file.download_location))
+      content_type = study_file.determine_content_type
+      if content_type == 'application/gzip'
+        Rails.logger.info "#{Time.now}: Parsing #{study_file.name}:#{study_file.id} as application/gzip"
+        local_file = Zlib::GzipReader.open(study_file.upload.path)
+      else
+        Rails.logger.info "#{Time.now}: Parsing #{study_file.name}:#{study_file.id} as text/plain"
+        local_file = File.open(study_file.upload.path, 'rb')
+      end
+    else
+      local_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
+                                                                 study.firecloud_workspace, study_file.bucket_location,
+                                                                 study.data_store_path, verify: :none)
+    end
+    local_file
+  end
+
+  # determine if local files need to be pushed to GCS bucket, or if they can be removed safely
+  def self.upload_or_remove_study_file(study_file, study)
+    Rails.logger.info "#{Time.now}: determining upload status of #{study_file.file_type}: #{study_file.bucket_location}:#{study_file.id}"
+    # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
+    # rather than relying on opts[:local], actually check if the file is already in the GCS bucket
+    remote = Study.firecloud_client.get_workspace_file(study.firecloud_project, study.firecloud_workspace, study_file.bucket_location)
+    if remote.nil?
+      begin
+        Rails.logger.info "#{Time.now}: preparing to upload expression file: #{study_file.bucket_location}:#{study_file.id} to FireCloud"
+        study.send_to_firecloud(study_file)
+      rescue => e
+        Rails.logger.info "#{Time.now}: Expression file: #{study_file.bucket_location}:#{study_file.id} failed to upload to FireCloud due to #{e.message}"
+        SingleCellMailer.notify_admin_upload_fail(study_file, e.message).deliver_now
+      end
+    else
+      # we have the file in FireCloud already, so just delete it
+      begin
+        Rails.logger.info "#{Time.now}: found remote version of #{study_file.bucket_location}: #{remote.name} (#{remote.generation})"
+        run_at = 15.seconds.from_now
+        Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file), run_at: run_at)
+        Rails.logger.info "#{Time.now}: cleanup job for #{study_file.bucket_location}:#{study_file.id} scheduled for #{run_at}"
+      rescue => e
+        # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
+        Rails.logger.error "#{Time.now}: Could not delete #{study_file.bucket_location}:#{study_file.id} in study #{self.name}; aborting"
+        SingleCellMailer.admin_notification('Local file deletion failed', nil, "The file at #{Rails.root.join(study.data_store_path, study_file.download_location)} failed to clean up after parsing, please remove.").deliver_now
+      end
     end
   end
 end

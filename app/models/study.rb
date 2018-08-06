@@ -2315,7 +2315,7 @@ class Study
 
   # set access for the readonly service account if a study is public
   def set_readonly_access(grant_access=true, manual_set=false)
-    unless Rails.env == 'test'
+    unless Rails.env == 'test' || self.queued_for_deletion
       if manual_set || self.public_changed? || self.new_record?
         if self.firecloud_workspace.present? && self.firecloud_project.present? && Study.read_only_firecloud_client.present?
           access_level = self.public? ? 'READER' : 'NO ACCESS'
