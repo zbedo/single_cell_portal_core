@@ -7,8 +7,10 @@ class Gene
 
   field :name, type: String
   field :searchable_name, type: String
+  field :gene_id, type: String
 
   index({ name: 1, study_id: 1, study_file_id: 1 }, { unique: true, background: true})
+  index({ gene_id: 1, study_id: 1, study_file_id: 1 }, { unique: true, background: true})
   index({ searchable_name: 1, study_id: 1, study_file_id: 1 }, { unique: false, background: true })
   index({ study_id: 1, study_file_id: 1} , { unique: false, background: true })
 
