@@ -122,6 +122,7 @@ class Gene
 
   # tease out gene IDs from names, where present
   def self.add_gene_ids_to_genes
+    Rails.logger.info "Migrating genes - adding gene_id"
     study_files = StudyFile.where(file_type: 'MM Coordinate Matrix')
     study_file_count = study_files.count
     study_files.each_with_index do |study_file, study_file_index|
@@ -136,11 +137,15 @@ class Gene
         end
       end
     end
+    Rails.logger.info "Data reformatting complete, reindexing Gene collection"
+    Gene.remove_indexes
+    Gene.create_indexes
     Rails.logger.info "Migration complete"
   end
 
   # revert back to combined gene names/ids
   def self.remove_gene_ids_from_genes
+    Rails.logger.info "Rolling back migration - removing gene_id"
     genes = Gene.where(:gene_id.nin => [nil])
     gene_count = genes.count
     genes.each_with_index do |gene, gene_index|
@@ -150,6 +155,9 @@ class Gene
         Rails.logger.info "Processed #{gene_index + 1}/#{gene_count} records"
       end
     end
+    Rails.logger.info "Data reformatting complete, reindexing Gene collection"
+    Gene.remove_indexes
+    Gene.create_indexes
     Rails.logger.info "Rollback complete"
   end
 end
