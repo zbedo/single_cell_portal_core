@@ -141,7 +141,7 @@ class SiteController < ApplicationController
 
     # else, determine which view to load (heatmaps vs. violin/scatter)
     if !consensus.blank?
-      redirect_to merge_default_redirect_params(view_gene_set_expression_path(study_name: params[:study_name], search: {genes: @terms.join(',')},
+      redirect_to merge_default_redirect_params(view_gene_set_expression_path(study_name: params[:study_name], search: {genes: @terms.join(' ')},
                                                                               cluster: cluster, annotation: annotation,
                                                                               consensus: consensus, subsample: subsample,
                                                                               plot_type: plot_type,  boxpoints: boxpoints,
@@ -451,7 +451,7 @@ class SiteController < ApplicationController
     @genes, @not_found = search_expression_scores(terms)
 
     consensus = params[:consensus].nil? ? 'Mean ' : params[:consensus].capitalize + ' '
-    @gene_list = @genes.map{|gene| gene['name']}.join(',')
+    @gene_list = @genes.map{|gene| gene['name']}.join(' ')
     @y_axis_title = consensus + ' ' + load_expression_axis_title
     # depending on annotation type selection, set up necessary partial names to use in rendering
     @options = load_cluster_group_options
@@ -478,7 +478,7 @@ class SiteController < ApplicationController
     @genes = load_expression_scores(terms)
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
     consensus = params[:consensus].nil? ? 'Mean ' : params[:consensus].capitalize + ' '
-    @gene_list = @genes.map{|gene| gene['gene']}.join(',')
+    @gene_list = @genes.map{|gene| gene['gene']}.join(' ')
     @y_axis_title = consensus + ' ' + load_expression_axis_title
     # depending on annotation type selection, set up necessary partial names to use in rendering
     if @selected_annotation[:type] == 'group'
@@ -2125,7 +2125,7 @@ class SiteController < ApplicationController
 
   # create a unique hex digest of a list of genes for use in set_cache_path
   def construct_gene_list_hash(query_list)
-    genes = query_list.split(',').map(&:strip).sort.join
+    genes = query_list.split(' ').map(&:strip).sort.join
     Digest::SHA256.hexdigest genes
   end
 

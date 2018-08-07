@@ -75,7 +75,7 @@
                                           sanitizedContent.push(line);
                                       }
                                   });
-                                  searchString = sanitizedContent.join(',');
+                                  searchString = sanitizedContent.join(' ');
                                   $('#search_genes').val(searchString);
                                   $(fileInput).val("").change(submitGeneSearch());
                               }
