@@ -23,10 +23,10 @@ class CacheManagementTest < ActionDispatch::IntegrationTest
       # get various actions subject to caching
       get render_cluster_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation), xhr: true
       get render_gene_expression_plots_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation, gene: gene, plot_type: 'violin'), xhr: true
-      get render_gene_set_expression_plots_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation, search: {genes: genes.join(',')}, plot_type: 'violin', 'boxpoints':'all'), xhr: true
+      get render_gene_set_expression_plots_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation, search: {genes: genes.join(' ')}, plot_type: 'violin', 'boxpoints':'all'), xhr: true
       get render_gene_expression_plots_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation, gene: gene, plot_type: 'box'), xhr: true
-      get render_gene_set_expression_plots_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation, search: {genes: genes.join(',')}, plot_type: 'box','boxpoints':'all'), xhr: true
-      get expression_query_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation, search: {genes: genes.join(',')} ), xhr: true
+      get render_gene_set_expression_plots_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation, search: {genes: genes.join(' ')}, plot_type: 'box','boxpoints':'all'), xhr: true
+      get expression_query_path(study_name: study.url_safe_name, cluster: cluster.name, annotation: annotation, search: {genes: genes.join(' ')} ), xhr: true
       get annotation_query_path(study_name: study.url_safe_name, annotation: annotation, cluster: cluster.name), xhr: true
 
       # construct various cache keys for direct lookup (cannot lookup via regex)
