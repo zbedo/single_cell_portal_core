@@ -125,7 +125,7 @@ class SiteController < ApplicationController
 
     # if only one gene was searched for, make an attempt to load it and redirect to correct page
     if @terms.size == 1
-      @gene = load_best_gene_match(@study.genes.by_name(@terms.first, @study.expression_matrix_files.map(&:id)), @terms.first)
+      @gene = load_best_gene_match(@study.genes.by_name_or_id(@terms.first, @study.expression_matrix_files.map(&:id)), @terms.first)
       if @gene.empty?
         redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
                     alert: "No matches found for: #{@terms.first}." and return
@@ -149,7 +149,7 @@ class SiteController < ApplicationController
                                                                               heatmap_size: heatmap_size, colorscale: colorscale),
                                                 scpbr: params[:scpbr])
     else
-      redirect_to merge_default_redirect_params(view_gene_expression_heatmap_path(search: {genes: @terms.join(',')}, cluster: cluster,
+      redirect_to merge_default_redirect_params(view_gene_expression_heatmap_path(search: {genes: @terms.join(' ')}, cluster: cluster,
                                                                                   annotation: annotation, plot_type: plot_type,
                                                                                   boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering,
                                                                                   heatmap_size: heatmap_size, colorscale: colorscale),
@@ -375,7 +375,7 @@ class SiteController < ApplicationController
 
   # re-renders plots when changing cluster selection
   def render_gene_expression_plots
-    matches = @study.genes.by_name(params[:gene], @study.expression_matrix_files.map(&:id))
+    matches = @study.genes.by_name_or_id(params[:gene], @study.expression_matrix_files.map(&:id))
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
     @gene = load_best_gene_match(matches, params[:gene])
     @y_axis_title = load_expression_axis_title
@@ -422,7 +422,7 @@ class SiteController < ApplicationController
   # renders gene expression plots, but from global gene search. uses default annotations on first render, but takes URL parameters after that
   def render_global_gene_expression_plots
     if check_xhr_view_permissions
-      matches = @study.genes.by_name(params[:gene], @study.expression_matrix_files.map(&:id))
+      matches = @study.genes.by_name_or_id(params[:gene], @study.expression_matrix_files.map(&:id))
       subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
       @gene = load_best_gene_match(matches, params[:gene])
       @identifier = params[:identifier] # unique identifer for each plot for namespacing JS variables/functions (@gene.id)
@@ -536,7 +536,7 @@ class SiteController < ApplicationController
     # parse and divide up genes
     terms = parse_search_terms(:genes)
     @genes, @not_found = search_expression_scores(terms)
-    @gene_list = @genes.map{|gene| gene['name']}.join(',')
+    @gene_list = @genes.map{|gene| gene['name']}.join(' ')
     # load dropdown options
     @options = load_cluster_group_options
     @cluster_annotations = load_cluster_group_annotations
@@ -2000,7 +2000,7 @@ class SiteController < ApplicationController
     if sanitized_terms.is_a?(Array)
       sanitized_terms.map(&:strip)
     else
-      sanitized_terms.split(/[\n,]/).map(&:strip)
+      sanitized_terms.split(/[\n\s]/).map(&:strip)
     end
   end
 
@@ -2009,7 +2009,7 @@ class SiteController < ApplicationController
     genes = []
     matrix_ids = @study.expression_matrix_files.map(&:id)
     terms.each do |term|
-      matches = @study.genes.by_name(term, matrix_ids)
+      matches = @study.genes.by_name_or_id(term, matrix_ids)
       unless matches.empty?
         genes << load_best_gene_match(matches, term)
       end
