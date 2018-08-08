@@ -18,6 +18,6 @@ $("#gene-search-results").append("<h3 id='searching-message'>Searching <%= @stud
   });
 
 <% end %>
-
-var requestUrl = '<%= javascript_safe_url("/single_cell/search_all_genes?genes=#{params[:search][:genes].split.join('+')}") %>';
+<% search_genes = params[:search][:genes].split %>
+var requestUrl = '<%= javascript_safe_url("/single_cell/search_all_genes?genes=#{search_genes.join('+')}&num_genes=#{search_genes.size}") %>';
 gaTrack(requestUrl, 'Single Cell Portal | Global Gene Search');
