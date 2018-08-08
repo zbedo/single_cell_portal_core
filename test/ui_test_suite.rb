@@ -2235,7 +2235,6 @@ class UiTestSuite < Test::Unit::TestCase
 
     request_modal = @driver.find_element(:id, 'report-request')
     request_modal.click
-    wait_for_modal_open('contact-modal')
 
     message = @driver.find_element(:class, 'ck-editor__editable')
     message_content = "This is a report request."
@@ -3018,6 +3017,8 @@ class UiTestSuite < Test::Unit::TestCase
     second_search_genes_form.send_keys(gene)
     submit = @driver.find_element(:id, 'submit-gene-search')
     submit.click
+    @wait.until {wait_for_plotly_render('#' + plot_id, 'rendered')}
+    scroll_to(:bottom) # also tests pagination
     # wait until the plot has rendered
     private_panel_id = "study-private-study-#{$random_seed}-gene-#{gene}"
     private_plot_id = private_panel_id + '-plot'
@@ -3500,15 +3501,16 @@ class UiTestSuite < Test::Unit::TestCase
     edit_btn.click
     wait_for_render(:id, 'update-study-description')
     description = @driver.find_element(:class, 'ck-editor__editable')
-    description.clear
-    new_description = "This is the description with a random element: #{SecureRandom.uuid}."
+    random = SecureRandom.uuid
+    new_description = "This is the description with a random element: #{random}."
     description.send_keys(new_description)
     update_btn = @driver.find_element(:id, 'update-study-description')
     update_btn.click
     wait_for_render(:id, 'edit-study-description')
 
-    study_description = @driver.find_element(:id, 'study-description-content').text
-    assert study_description == new_description, "study description did not update correctly, expected #{new_description} but found #{study_description}"
+    study_description = @driver.find_element(:id, 'study-description-content')
+    updated_text = study_description.text
+    assert updated_text.include?(new_description), "study description did not update correctly, expected #{new_description} but found #{updated_text}"
 
     # update default options
     close_modal('message_modal')
