@@ -166,7 +166,7 @@ class SiteController < ApplicationController
     end
 
     # restrict studies to initialized only
-    @studies = @studies.where(initialized: true)
+    @studies = @studies.where(initialized: true).paginate(page: params[:page], per_page: Study.per_page)
   end
 
   # global gene search, will return a list of studies that contain the requested gene(s)

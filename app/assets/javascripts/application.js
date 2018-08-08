@@ -60,6 +60,77 @@ var exploreMenusToggleState = {
   right: -1
 };
 
+
+// options for Spin.js
+var opts = {
+    lines: 13, // The number of lines to draw
+    length: 56, // The length of each line
+    width: 14, // The line thickness
+    radius: 42, // The radius of the inner circle
+    scale: 1, // Scales overall size of the spinner
+    corners: 1, // Corner roundness (0..1)
+    color: '#000', // #rgb or #rrggbb or array of colors
+    opacity: 0.25, // Opacity of the lines
+    rotate: 0, // The rotation offset
+    direction: 1, // 1: clockwise, -1: counterclockwise
+    speed: 1, // Rounds per second
+    trail: 60, // Afterglow percentage
+    fps: 20, // Frames per second when using setTimeout() as a fallback for CSS
+    zIndex: 2e9, // The z-index (defaults to 2000000000)
+    className: 'spinner', // The CSS class to assign to the spinner
+    top: '50%', // Top position relative to parent
+    left: '50%', // Left position relative to parent
+    shadow: false, // Whether to render a shadow
+    hwaccel: false, // Whether to use hardware acceleration
+    position: 'absolute' // Element positioning
+};
+
+var smallOpts = {
+    lines: 11, // The number of lines to draw
+    length: 9, // The length of each line
+    width: 3, // The line thickness
+    radius: 4, // The radius of the inner circle
+    scale: 1,  // Scales overall size of the spinner
+    corners: 1, // Corner roundness (0..1)
+    color: '#000',  // #rgb or #rrggbb or array of colors
+    opacity: 0.25,  // Opacity of the lines
+    rotate: 0, // The rotation offset
+    direction: 1, // 1: clockwise, -1: counterclockwise
+    speed: 1, // Rounds per second
+    trail: 60, // Afterglow percentage
+    fps: 20,  // Frames per second when using setTimeout() as a fallback for CSS
+    zIndex: 2e9,  // The z-index (defaults to 2000000000)
+    className: 'spinner',  // The CSS class to assign to the spinner
+    top: '7px',  // Top position relative to parent
+    left: '50%',  // Left position relative to parent
+    shadow: false,  // Whether to render a shadow
+    hwaccel: false,  // Whether to use hardware acceleration
+    position: 'relative' // Element positioning
+};
+
+var paginationOpts = {
+    lines: 11, // The number of lines to draw
+    length: 15, // The length of each line
+    width: 5, // The line thickness
+    radius: 10, // The radius of the inner circle
+    scale: 1, // Scales overall size of the spinner
+    corners: 1, // Corner roundness (0..1)
+    color: '#000', // #rgb or #rrggbb or array of colors
+    opacity: 0.25, // Opacity of the lines
+    rotate: 0, // The rotation offset
+    direction: 1, // 1: clockwise, -1: counterclockwise
+    speed: 1, // Rounds per second
+    trail: 60, // Afterglow percentage
+    fps: 20, // Frames per second when using setTimeout() as a fallback for CSS
+    zIndex: 2e9, // The z-index (defaults to 2000000000)
+    className: 'spinner', // The CSS class to assign to the spinner
+    top: '12px',  // Top position relative to parent
+    left: '50%',  // Left position relative to parent
+    shadow: false, // Whether to render a shadow
+    hwaccel: false, // Whether to use hardware acceleration
+    position: 'relative' // Element positioning
+};
+
 $(document).on('shown.bs.modal', function(e) {
     console.log("modal " + $(e.target).attr('id') + ' opened');
     OPEN_MODAL = $(e.target).attr('id');
@@ -170,29 +241,6 @@ function elementVisible(element) {
 }
 
 function paginateStudies(totalPages, order, searchString, project) {
-
-    var paginationOpts = {
-        lines: 11, // The number of lines to draw
-        length: 15, // The length of each line
-        width: 5, // The line thickness
-        radius: 10, // The radius of the inner circle
-        scale: 1, // Scales overall size of the spinner
-        corners: 1, // Corner roundness (0..1)
-        color: '#000', // #rgb or #rrggbb or array of colors
-        opacity: 0.25, // Opacity of the lines
-        rotate: 0, // The rotation offset
-        direction: 1, // 1: clockwise, -1: counterclockwise
-        speed: 1, // Rounds per second
-        trail: 60, // Afterglow percentage
-        fps: 20, // Frames per second when using setTimeout() as a fallback for CSS
-        zIndex: 2e9, // The z-index (defaults to 2000000000)
-        className: 'spinner', // The CSS class to assign to the spinner
-        top: '12px',  // Top position relative to parent
-        left: '50%',  // Left position relative to parent
-        shadow: false, // Whether to render a shadow
-        hwaccel: false, // Whether to use hardware acceleration
-        position: 'relative' // Element positioning
-    };
 
     var target = document.getElementById("pagination");
     var spinner = new Spinner(paginationOpts).spin(target);
@@ -412,53 +460,6 @@ function toggleSearch() {
         }
     }
 }
-
-// options for Spin.js
-var opts = {
-    lines: 13, // The number of lines to draw
-    length: 56, // The length of each line
-    width: 14, // The line thickness
-    radius: 42, // The radius of the inner circle
-    scale: 1, // Scales overall size of the spinner
-    corners: 1, // Corner roundness (0..1)
-    color: '#000', // #rgb or #rrggbb or array of colors
-    opacity: 0.25, // Opacity of the lines
-    rotate: 0, // The rotation offset
-    direction: 1, // 1: clockwise, -1: counterclockwise
-    speed: 1, // Rounds per second
-    trail: 60, // Afterglow percentage
-    fps: 20, // Frames per second when using setTimeout() as a fallback for CSS
-    zIndex: 2e9, // The z-index (defaults to 2000000000)
-    className: 'spinner', // The CSS class to assign to the spinner
-    top: '50%', // Top position relative to parent
-    left: '50%', // Left position relative to parent
-    shadow: false, // Whether to render a shadow
-    hwaccel: false, // Whether to use hardware acceleration
-    position: 'absolute' // Element positioning
-};
-
-var smallOpts = {
-    lines: 11, // The number of lines to draw
-    length: 9, // The length of each line
-    width: 3, // The line thickness
-    radius: 4, // The radius of the inner circle
-    scale: 1,  // Scales overall size of the spinner
-    corners: 1, // Corner roundness (0..1)
-    color: '#000',  // #rgb or #rrggbb or array of colors
-    opacity: 0.25,  // Opacity of the lines
-    rotate: 0, // The rotation offset
-    direction: 1, // 1: clockwise, -1: counterclockwise
-    speed: 1, // Rounds per second
-    trail: 60, // Afterglow percentage
-    fps: 20,  // Frames per second when using setTimeout() as a fallback for CSS
-    zIndex: 2e9,  // The z-index (defaults to 2000000000)
-    className: 'spinner',  // The CSS class to assign to the spinner
-    top: '7px',  // Top position relative to parent
-    left: '50%',  // Left position relative to parent
-    shadow: false,  // Whether to render a shadow
-    hwaccel: false,  // Whether to use hardware acceleration
-    position: 'relative' // Element positioning
-};
 
 // functions to show loading modals with spinners
 // callback function will execute after modal completes opening
