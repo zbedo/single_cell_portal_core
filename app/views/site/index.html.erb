@@ -20,10 +20,10 @@
     $(window).scroll(bindScroll);
 
     var totalPages = <%= @studies.total_pages %>;
-    var currentPage = "<%= params[:page] %>";
-    var order = "<%= params[:order] %>";
-    var search = "<%= params[:search_terms] %>";
-    var project = "<%= params[:scpbr] %>";
+    var currentPage = '<%= params[:page] %>';
+    var order = '<%= params[:order] %>';
+    var search = '<%= params[:search_terms] %>';
+    var project = '<%= params[:scpbr] %>';
     var activeTab = 'search-studies';
 
     $('.home-nav-tab').on('shown.bs.tab', function(el) {
@@ -43,18 +43,18 @@
         }
     }
 
-    if ( currentPage == "" && totalPages == 1) {
+    if ( currentPage === '' && totalPages == 1) {
         $(window).unbind('scroll');
         $("#pagination").toggle();
     }
 
-    $("#pagination").click(function(e) {
+    $('#pagination').click(function(e) {
         e.preventDefault();
         $(window).unbind('scroll');
         paginateStudies(totalPages, order, search, project);
     });
 
-    if ( search != "" ) {
-        $("#search_terms").val($('<div/>').html(search).text());
+    if ( search !== '' ) {
+        $('#search_terms').val($('<div/>').html(search).text());
     }
 </script>
