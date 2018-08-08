@@ -16,10 +16,14 @@ class GeneController < ApplicationController
   def show
   end
 
-  def get_autocomplete_items(parameters)
-    all_genes = mongoid_get_autocomplete_items(parameters)
-    genes = all_genes.where(:study_id => params[:study_id]).to_a.uniq{|e| e.name}
-    genes
+  def autocomplete_gene_name
+    study_genes = Gene.where(study_id: params[:study_id])
+    matching_genes = study_genes.any_of(
+        {name: /#{params[:term]}/},
+        {searchable_name: /#{params[:term].downcase}/},
+        {gene_id: /#{params[:term]}/i}
+    ).limit(10)
+   render json: matching_genes.map {|gene| {id: gene.id, label: gene.autocomplete_label, value: gene.name}}
   end
 
   private

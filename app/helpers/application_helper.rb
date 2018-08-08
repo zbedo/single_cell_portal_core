@@ -23,7 +23,7 @@ module ApplicationHelper
 			if params[:search][:gene]
 				@gene
 			elsif !params[:search][:genes].nil?
-				@genes.map{|gene| gene['name']}.join(',')
+				@genes.map{|gene| gene['name']}.join(' ')
 			end
 		elsif params[:gene]
 			params[:gene]

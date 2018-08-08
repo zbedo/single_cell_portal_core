@@ -639,8 +639,8 @@ class StudiesController < ApplicationController
       @study_file.update(parse_status: 'parsing')
       @study.delay.initialize_gene_expression_data(@study_file, current_user)
     when 'MM Coordinate Matrix'
-      barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => @study_file.id)
-      genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => @study_file.id)
+      barcodes = @study_file.bundled_files.detect {|f| f.file_type == '10X Barcodes File'}
+      genes = @study_file.bundled_files.detect {|f| f.file_type == '10X Genes File'}
       if barcodes.present? && genes.present?
         @study_file.update(parse_status: 'parsing')
         genes.update(parse_status: 'parsing')
@@ -859,33 +859,41 @@ class StudiesController < ApplicationController
           when 'Expression Matrix'
             @study.delay.initialize_gene_expression_data(@study_file, current_user, {local: false, reparse: true})
           when 'MM Coordinate Matrix'
-            barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => @study_file.id)
-            genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => @study_file.id)
+            barcodes = @study_file.bundled_files.detect {|f| f.file_type == '10X Barcodes File'}
+            genes = @study_file.bundled_files.detect {|f| f.file_type == '10X Genes File'}
             if barcodes.present? && genes.present?
               @study_file.update(parse_status: 'parsing')
               genes.update(parse_status: 'parsing')
               barcodes.update(parse_status: 'parsing')
-              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, @study_file, genes, barcodes, {reparse: true})
+              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, @study_file, genes, barcodes)
+            else
+              logger.info "#{Time.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
             end
           when '10X Genes File'
-            matrix_id = @study_file.options(:matrix_id)
-            matrix = StudyFile.find(matrix_id)
+            matrix_id = @study_file.options[:matrix_id]
+            matrix = @study_file.bundle_parent
             barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => matrix_id)
             if barcodes.present? && matrix.present?
               @study_file.update(parse_status: 'parsing')
               matrix.update(parse_status: 'parsing')
               barcodes.update(parse_status: 'parsing')
-              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, @study_file, barcodes, {reparse: true})
+              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, @study_file, barcodes)
+            else
+              # we can only get here if we have a matrix and no barcodes, which means the barcodes form is already rendered
+              logger.info "#{Time.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
             end
           when '10X Barcodes File'
-            matrix_id = @study_file.options(:matrix_id)
-            matrix = StudyFile.find(matrix_id)
+            matrix_id = @study_file.options[:matrix_id]
+            matrix = @study_file.bundle_parent
             genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => matrix_id)
             if genes.present? && matrix.present?
               @study_file.update(parse_status: 'parsing')
               genes.update(parse_status: 'parsing')
               matrix.update(parse_status: 'parsing')
-              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, genes, @study_file, {reparse: true})
+              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, genes, @study_file)
+            else
+              # we can only get here if we have a matrix and no genes, which means the genes form is already rendered
+              logger.info "#{Time.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
             end
           when 'Gene List'
             @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false, reparse: true})

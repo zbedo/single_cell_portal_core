@@ -81,13 +81,15 @@ class Study
   end
 
   has_many :genes, dependent: :delete do
-    def by_name(gene_name, study_file_ids)
-      found_scores = any_of({name: gene_name, :study_file_id.in => study_file_ids}, {searchable_name: gene_name.downcase, :study_file_id.in => study_file_ids})
+    def by_name_or_id(term, study_file_ids)
+      found_scores = any_of({name: term, :study_file_id.in => study_file_ids},
+                            {searchable_name: term.downcase, :study_file_id.in => study_file_ids},
+                            {gene_id: term, :study_file_id.in => study_file_ids})
       if found_scores.empty?
         return []
       else
         # since we can have duplicate genes but not cells, merge into one object for rendering
-        merged_scores = {'searchable_name' => gene_name.downcase, 'name' => gene_name, 'scores' => {}}
+        merged_scores = {'searchable_name' => term.downcase, 'name' => term, 'scores' => {}}
         found_scores.each do |score|
           merged_scores['scores'].merge!(score.scores)
         end

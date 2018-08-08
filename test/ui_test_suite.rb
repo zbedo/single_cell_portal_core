@@ -2691,7 +2691,7 @@ class UiTestSuite < Test::Unit::TestCase
     # load random genes to search, take between 2-5, adding in bad gene to test error handling
     genes = @genes.shuffle.take(rand(2..5))
     search_box = @driver.find_element(:id, 'search_genes')
-    search_box.send_keys(genes.join(',') + ',foo')
+    search_box.send_keys(genes.join(' ') + ' foo')
 
     search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
     search_menu.click
@@ -2788,7 +2788,7 @@ class UiTestSuite < Test::Unit::TestCase
 
     new_genes = @genes.shuffle.take(rand(2..5))
     search_box = @driver.find_element(:id, 'search_genes')
-    search_box.send_keys(new_genes.join(','))
+    search_box.send_keys(new_genes.join(' '))
 
     search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
     search_menu.click
@@ -2859,7 +2859,7 @@ class UiTestSuite < Test::Unit::TestCase
     # load random genes to search, take between 2-5
     genes = @genes.shuffle.take(rand(2..5))
     search_box = @driver.find_element(:id, 'search_genes')
-    search_box.send_keys(genes.join(','))
+    search_box.send_keys(genes.join(' '))
     search_genes = @driver.find_element(:id, 'perform-gene-search')
     search_genes.click
     wait_for_render(:id, 'heatmap-plot')
@@ -2912,7 +2912,7 @@ class UiTestSuite < Test::Unit::TestCase
 
     new_genes = @genes.shuffle.take(rand(2..5))
     search_box = @driver.find_element(:id, 'search_genes')
-    search_box.send_keys(new_genes.join(','))
+    search_box.send_keys(new_genes.join(' '))
     search_genes = @driver.find_element(:id, 'perform-gene-search')
     search_genes.click
     assert element_present?(:id, 'plots'), 'could not find expression heatmap'
@@ -3331,7 +3331,7 @@ class UiTestSuite < Test::Unit::TestCase
     # now search for multiple genes as a heatmap
     genes = @genes.shuffle.take(rand(2..5))
     search_box = @driver.find_element(:id, 'search_genes')
-    search_box.send_keys(genes.join(','))
+    search_box.send_keys(genes.join(' '))
     search_genes = @driver.find_element(:id, 'perform-gene-search')
     search_genes.click
     assert element_present?(:id, 'plots'), 'could not find expression heatmap'
