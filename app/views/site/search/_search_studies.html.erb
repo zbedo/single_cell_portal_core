@@ -29,38 +29,8 @@
 </div>
 <div class="row">
   <div class="col-sm-offset-4 col-sm-4">
-    <%= link_to "Load More Studies", "javascript:void(0);", class: "btn btn-lg btn-block btn-default", id: "pagination" %>
+    <%= link_to "Load More Studies", "#", class: "btn btn-lg btn-block btn-default", id: "pagination" %>
   </div>
 </div>
 
 <%= link_to "<span class='fas fa-chevron-up'></span>".html_safe, "#", class: "btn btn-default btn-xs" %>
-<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
-    $(window).scroll(bindScroll);
-
-    var totalPages = <%= @studies.total_pages %>;
-    var currentPage = "<%= params[:page] %>";
-    var order = "<%= params[:order] %>";
-    var search = "<%= params[:search_terms] %>";
-    var project = "<%= params[:scpbr] %>";
-
-    function bindScroll(){
-        if($(window).scrollTop() + $(window).height() > $(document).height() - 1) {
-            $(window).unbind('scroll');
-            paginateStudies(totalPages, order, search, project);
-        }
-    }
-
-    if ( currentPage == "" && totalPages == 1) {
-        $(window).unbind('scroll');
-        $("#pagination").toggle();
-    }
-
-    $("#pagination").click(function() {
-        $(window).unbind('scroll');
-        paginateStudies(totalPages, order, search, project);
-    });
-
-    if ( search != "" ) {
-        $("#search_terms").val($('<div/>').html(search).text());
-    }
-</script>

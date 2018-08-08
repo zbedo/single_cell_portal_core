@@ -1,10 +1,10 @@
 <%= render partial: 'main_banner_content' %>
 <ul class="nav nav-tabs" role="tablist" id="home-page-tabs">
   <li role="presentation" class="home-nav active" id="search-studies-nav">
-    <a href="#search-studies" data-toggle="tab"><span class="fas fa-book"></span> Search Studies</a>
+    <a href="#search-studies" class="home-nav-tab" data-toggle="tab"><span class="fas fa-book"></span> Search Studies</a>
   </li>
   <li role="presentation" class="home-nav" id="search-genes-nav">
-    <a href="#search-genes" data-toggle="tab"><span class="fas fa-dna"></span> Search Genes</a>
+    <a href="#search-genes" class="home-nav-tab" data-toggle="tab"><span class="fas fa-dna"></span> Search Genes</a>
   </li>
 </ul>
 <div class="tab-content top-pad">
@@ -15,3 +15,46 @@
     <%= render partial: '/site/search/search_genes' %>
   </div>
 </div>
+
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+    $(window).scroll(bindScroll);
+
+    var totalPages = <%= @studies.total_pages %>;
+    var currentPage = '<%= params[:page] %>';
+    var order = '<%= params[:order] %>';
+    var search = '<%= params[:search_terms] %>';
+    var project = '<%= params[:scpbr] %>';
+    var activeTab = 'search-studies';
+
+    $('.home-nav-tab').on('shown.bs.tab', function(el) {
+        activeTab = el.target.toString().split('#')[1];
+        console.log('active-tab: ' + activeTab );
+    });
+
+    function bindScroll(){
+        if($(window).scrollTop() + $(window).height() > $(document).height() - 1) {
+            if ( activeTab === 'search-studies') {
+                $(window).unbind('scroll');
+                paginateStudies(totalPages, order, search, project);
+            } else {
+                // event used to submit global gene search form, not attached until search is performed
+                $(window).trigger('paginateGeneSearch');
+            }
+        }
+    }
+
+    if ( currentPage === '' && totalPages == 1) {
+        $(window).unbind('scroll');
+        $("#pagination").toggle();
+    }
+
+    $('#pagination').click(function(e) {
+        e.preventDefault();
+        $(window).unbind('scroll');
+        paginateStudies(totalPages, order, search, project);
+    });
+
+    if ( search !== '' ) {
+        $('#search_terms').val($('<div/>').html(search).text());
+    }
+</script>
