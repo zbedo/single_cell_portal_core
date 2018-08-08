@@ -320,14 +320,14 @@ class StudiesController < ApplicationController
           sorted_matrix_study_file = @unsynced_files.detect {|file| file.name =~ /sorted_matrix\.mtx/}
           if sorted_matrix_study_file.present?
             sorted_matrix_study_file.file_type = 'MM Coordinate Matrix'
-            sorted_matrix_study_file.description = "Matrix Market coordinate expression matrix from CellRanger run #{params[:submission_id]}"
+            sorted_matrix_study_file.description = "Matrix Market coordinate expression matrix from Cell Ranger run #{params[:submission_id]}"
             sorted_matrix_study_file.options.merge!({analysis_name: 'cell-ranger'})
           end
 
           genes_file = @unsynced_files.detect {|file| file.name=~ /filtered_gene_bc_matrices.*genes\.tsv/}
           if genes_file.present?
             genes_file.file_type = '10X Genes File'
-            genes_file.description = "Gene ID/Names output from CellRanger run #{params[:submission_id]}"
+            genes_file.description = "Gene ID/Names output from Cell Ranger run #{params[:submission_id]}"
             if sorted_matrix_study_file.present?
               genes_file.options.merge!({matrix_id: sorted_matrix_study_file.id, analysis_name: 'cell-ranger'})
             end
@@ -336,7 +336,7 @@ class StudiesController < ApplicationController
           barcodes_file = @unsynced_files.detect {|file| file.name=~ /filtered_gene_bc_matrices.*barcodes\.tsv/}
           if barcodes_file.present?
             barcodes_file.file_type = '10X Barcodes File'
-            barcodes_file.description = "Barcode sequence output from CellRanger run #{params[:submission_id]}"
+            barcodes_file.description = "Barcode sequence output from Cell Ranger run #{params[:submission_id]}"
             if sorted_matrix_study_file.present?
               barcodes_file.options.merge!({matrix_id: sorted_matrix_study_file.id, analysis_name: 'cell-ranger'})
             end
@@ -345,7 +345,7 @@ class StudiesController < ApplicationController
           metadata_file = @unsynced_files.detect {|file| file.name.split('/').last =~ /_metadata\.txt/}
           if metadata_file.present?
             metadata_file.file_type = 'Metadata'
-            metadata_file.description = "Merged barcode-level metadata output from CellRanger run #{params[:submission_id]}"
+            metadata_file.description = "Merged barcode-level metadata output from Cell Ranger run #{params[:submission_id]}"
             metadata_file.options.merge!({analysis_name: 'cell-ranger'})
           end
 
@@ -354,7 +354,7 @@ class StudiesController < ApplicationController
             new_name = tsne_cluster_file.name.split('/').last.chomp('.txt')
             tsne_cluster_file.name = new_name
             tsne_cluster_file.file_type = 'Cluster'
-            tsne_cluster_file.description = "tSNE 2d projection from CellRanger run #{params[:submission_id]}"
+            tsne_cluster_file.description = "tSNE 2d projection from Cell Ranger run #{params[:submission_id]}"
             tsne_cluster_file.options.merge!({analysis_name: 'cell-ranger'})
           end
 
@@ -363,14 +363,14 @@ class StudiesController < ApplicationController
             new_name = pca_cluster_file.name.split('/').last.chomp('.txt')
             pca_cluster_file.name = new_name
             pca_cluster_file.file_type = 'Cluster'
-            pca_cluster_file.description = "PCA 3d projection from CellRanger run #{params[:submission_id]}"
+            pca_cluster_file.description = "PCA 3d projection from Cell Ranger run #{params[:submission_id]}"
             pca_cluster_file.options.merge!({analysis_name: 'cell-ranger'})
           end
 
           other_matrices = @unsynced_files.select {|file| file.name.split('/').last =~ /\.mtx/ && file.name != sorted_matrix_study_file.name}
           other_matrices.each do |matrix|
             matrix.file_type = 'Analysis Output'
-            matrix.description = "Secondary expression matrix output from CellRanger run #{params[:submission_id]}"
+            matrix.description = "Secondary expression matrix output from Cell Ranger run #{params[:submission_id]}"
             matrix.options.merge!({analysis_name: 'cell-ranger'})
           end
 
