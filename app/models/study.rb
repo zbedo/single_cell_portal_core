@@ -513,7 +513,7 @@ class Study
   # default size for cluster points
   def default_cluster_point_size
     if self.default_options[:cluster_point_size].blank?
-      6
+      3
     else
       self.default_options[:cluster_point_size].to_i
     end
@@ -522,7 +522,7 @@ class Study
   # default size for cluster points
   def show_cluster_point_borders?
     if self.default_options[:cluster_point_border].blank?
-      true
+      false
     else
       self.default_options[:cluster_point_border] == 'true'
     end
