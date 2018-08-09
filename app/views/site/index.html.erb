@@ -27,8 +27,10 @@
     var activeTab = 'search-studies';
 
     $('.home-nav-tab').on('shown.bs.tab', function(el) {
+        $(window).unbind('scroll');
         activeTab = el.target.toString().split('#')[1];
         console.log('active-tab: ' + activeTab );
+        $(window).scroll(bindScroll);
     });
 
     function bindScroll(){
@@ -57,4 +59,27 @@
     if ( search !== '' ) {
         $('#search_terms').val($('<div/>').html(search).text());
     }
+
+    $('#submit-gene-search').on('click', function() {
+        if ( $('#search_genes').val() === '' ) {
+            alert('Please enter a term before searching.');
+            return false;
+        } else {
+            $(window).unbind('scroll');
+            $("#gene-search-results").empty();
+            $('#gene-search-results-count').html($('div.gene-panel').length);
+            $('#gene-search-studies-count').html($('div.has-gene-results').length);
+            var target = document.getElementById('gene-search-results');
+            var spinner = new Spinner(opts).spin(target);
+            $(target).data('spinner', spinner);
+            var requestUrl = '<%= javascript_safe_url("/single_cell/search_all_genes") %>';
+            var genes = $('#search_genes').val().split(' ');
+            var numGenes = genes.length;
+            requestUrl += '?genes=' + genes.join('+') + '&num_genes=' + numGenes;
+            gaTrack(requestUrl, 'Single Cell Portal | Global Gene Search');
+            $(window).scroll(bindScroll);
+            return true;
+        }
+    });
+
 </script>

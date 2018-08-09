@@ -944,7 +944,6 @@ function calculatePlotViewport(target) {
 // garbage collector to clear the search animation on global gene search (in case no results are found)
 window.clearGeneSearchLoading = function() {
     console.log('Clearing global gene search message');
-    $('#searching-message').remove();
     $('#gene-search-results').data('spinner').stop();
     $('#gene-search-results-count').html($('.gene-panel').length);
 };

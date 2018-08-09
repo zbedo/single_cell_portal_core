@@ -37,6 +37,7 @@
             alert('Please enter a term before searching.');
             return false;
         } else {
+            $('#page').val('1');
             $("#gene-search-results").empty();
             $('#gene-search-results-count').html($('div.gene-panel').length);
             $('#gene-search-studies-count').html($('div.has-gene-results').length);
