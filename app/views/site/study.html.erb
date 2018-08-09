@@ -15,10 +15,18 @@
       <li role="presentation" class="study-nav disabled" id="study-download-nav"><a href="#study-download" data-toggle="tooltip" title="Only authenticated users with download privileges can download data">Download <i class="fas fa-fw fa-download"></i></a></li>
     <% end %>
     <% if @allow_firecloud_access && @study.can_compute?(current_user) %>
-      <li role="presentation" class="study-nav" id="study-analysis-nav"><a href="#study-analysis" data-toggle="tab">Analysis <i class="fas fa-fw fa-tasks"></i></a></li>
+      <% if @allow_computes %>
+        <li role="presentation" class="study-nav" id="study-analysis-nav"><a href="#study-analysis" data-toggle="tab">Analysis <i class="fas fa-fw fa-tasks"></i></a></li>
+      <% else %>
+        <li role="presentation" class="study-nav disabled" id="study-analysis-nav"><a href="#study-analysis" data-toggle="tooltip" title="Study workspaces are currently unavailable - please try again later.">Analysis <i class="fas fa-fw fa-tasks"></i></a></li>
+  <% end %>
     <% end %>
     <% if @allow_firecloud_access && @study.can_edit?(current_user) %>
-      <li role="presentation" class="study-nav" id="study-settings-nav"><a href="#study-settings" data-toggle="tab">Settings <i class="fas fa-fw fa-cogs"></i></a></li>
+      <% if @allow_edits %>
+        <li role="presentation" class="study-nav" id="study-settings-nav"><a href="#study-settings" data-toggle="tab">Settings <i class="fas fa-fw fa-cogs"></i></a></li>
+      <% else %>
+        <li role="presentation" class="study-nav disabled" id="study-settings-nav"><a href="#study-settings" data-toggle="tooltip" title="Study workspaces are currently unavailable - please try again later.">Settings <i class="fas fa-fw fa-cogs"></i></a></li>
+      <% end %>
     <% end %>
   </ul>
   <div class="tab-content top-pad">
@@ -35,12 +43,12 @@
         <%= render partial: 'study_download_data' %>
       </div>
     <% end %>
-    <% if @allow_firecloud_access && @study.can_compute?(current_user) %>
+    <% if @allow_firecloud_access && @allow_computes && @study.can_compute?(current_user) %>
       <div class="tab-pane" id="study-analysis" role="tabpanel">
         <%= render partial: 'study_analysis' %>
       </div>
     <% end %>
-    <% if @allow_firecloud_access && @study.can_edit?(current_user) %>
+    <% if @allow_firecloud_access && @allow_edits && @study.can_edit?(current_user) %>
       <div class="tab-pane" id="study-settings" role="tabpanel">
         <div class="row">
           <div class="col-xs-12" id="study-settings-form-target">

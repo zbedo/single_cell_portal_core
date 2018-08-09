@@ -10,23 +10,27 @@ class ProfilesController < ApplicationController
   before_action :set_user
   before_action do
     authenticate_user!
-    check_access_settings
+    check_profile_access
   end
 
   def show
     @study_shares = StudyShare.where(email: @user.email)
     @studies = Study.where(user_id: @user.id)
     @fire_cloud_profile = FireCloudProfile.new
-    begin
-      user_client = FireCloudClient.new(current_user, FireCloudClient::PORTAL_NAMESPACE)
-      profile = user_client.get_profile
-      profile['keyValuePairs'].each do |attribute|
-        if @fire_cloud_profile.respond_to?("#{attribute['key']}=")
-          @fire_cloud_profile.send("#{attribute['key']}=", attribute['value'])
+    # check if profile services are available
+    @profiles_available = Study.firecloud_client.services_available?('Thurloe')
+    if @profiles_available
+      begin
+        user_client = FireCloudClient.new(current_user, FireCloudClient::PORTAL_NAMESPACE)
+        profile = user_client.get_profile
+        profile['keyValuePairs'].each do |attribute|
+          if @fire_cloud_profile.respond_to?("#{attribute['key']}=")
+            @fire_cloud_profile.send("#{attribute['key']}=", attribute['value'])
+          end
         end
+      rescue => e
+        logger.info "#{Time.now}: unable to retrieve FireCloud profile for #{current_user.email}: #{e.message}"
       end
-    rescue => e
-      logger.info "#{Time.now}: unable to retrieve FireCloud profile for #{current_user.email}: #{e.message}"
     end
   end
 
@@ -92,7 +96,7 @@ class ProfilesController < ApplicationController
   end
 
   # make sure the current user is the same as the requested profile
-  def check_access_settings
+  def check_profile_access
     if current_user.email != @user.email
       redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]), alert: 'You do not have permission to perform that action.' and return
     end

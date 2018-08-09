@@ -125,7 +125,7 @@ class SiteController < ApplicationController
 
     # if only one gene was searched for, make an attempt to load it and redirect to correct page
     if @terms.size == 1
-      @gene = load_best_gene_match(@study.genes.by_name(@terms.first, @study.expression_matrix_files.map(&:id)), @terms.first)
+      @gene = load_best_gene_match(@study.genes.by_name_or_id(@terms.first, @study.expression_matrix_files.map(&:id)), @terms.first)
       if @gene.empty?
         redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
                     alert: "No matches found for: #{@terms.first}." and return
@@ -141,7 +141,7 @@ class SiteController < ApplicationController
 
     # else, determine which view to load (heatmaps vs. violin/scatter)
     if !consensus.blank?
-      redirect_to merge_default_redirect_params(view_gene_set_expression_path(study_name: params[:study_name], search: {genes: @terms.join(',')},
+      redirect_to merge_default_redirect_params(view_gene_set_expression_path(study_name: params[:study_name], search: {genes: @terms.join(' ')},
                                                                               cluster: cluster, annotation: annotation,
                                                                               consensus: consensus, subsample: subsample,
                                                                               plot_type: plot_type,  boxpoints: boxpoints,
@@ -149,7 +149,7 @@ class SiteController < ApplicationController
                                                                               heatmap_size: heatmap_size, colorscale: colorscale),
                                                 scpbr: params[:scpbr])
     else
-      redirect_to merge_default_redirect_params(view_gene_expression_heatmap_path(search: {genes: @terms.join(',')}, cluster: cluster,
+      redirect_to merge_default_redirect_params(view_gene_expression_heatmap_path(search: {genes: @terms.join(' ')}, cluster: cluster,
                                                                                   annotation: annotation, plot_type: plot_type,
                                                                                   boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering,
                                                                                   heatmap_size: heatmap_size, colorscale: colorscale),
@@ -166,7 +166,7 @@ class SiteController < ApplicationController
     end
 
     # restrict studies to initialized only
-    @studies = @studies.where(initialized: true)
+    @studies = @studies.where(initialized: true).paginate(page: params[:page], per_page: Study.per_page)
   end
 
   # global gene search, will return a list of studies that contain the requested gene(s)
@@ -189,8 +189,7 @@ class SiteController < ApplicationController
           # determine if study contains requested gene
           matches = @study.genes.any_of({name: gene, :study_file_id.in => matrix_ids},
                                         {searchable_name: gene.downcase, :study_file_id.in => matrix_ids},
-                                        {name: /\A#{gene} (.*)/, :study_file_id.in => matrix_ids},
-                                        {searchable_name: /\A#{gene.downcase} (.*)/, :study_file_id.in => matrix_ids})
+                                        {gene_id: gene, :study_file.in => matrix_ids})
           if matches.present?
             matches.each do |match|
               # gotcha where you can have duplicate genes that came from different matrices - ignore these as data is merged on load
@@ -259,7 +258,7 @@ class SiteController < ApplicationController
 
           # double check on download availability: first, check if administrator has disabled downloads
           # then check if FireCloud is available and disable download links if either is true
-          @allow_downloads = AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
+          @allow_downloads = Study.firecloud_client.services_available?('GoogleBuckets')
         else
           set_study_default_options
         end
@@ -289,9 +288,11 @@ class SiteController < ApplicationController
     @other_data = @study.directory_listings.non_primary_data
 
     # double check on download availability: first, check if administrator has disabled downloads
-    # then check if FireCloud is available and disable download links if either is true
+    # then check individual statuses to see what to enable/disable
     @allow_firecloud_access = AdminConfiguration.firecloud_access_enabled?
-    @allow_downloads = @allow_firecloud_access && Study.firecloud_client.api_available?
+    @allow_downloads = Study.firecloud_client.services_available?('GoogleBuckets')
+    @allow_computes = Study.firecloud_client.services_available?('Agora', 'Rawls')
+    @allow_edits = Study.firecloud_client.services_available?('Sam', 'Rawls')
     set_study_default_options
     # load options and annotations
     if @study.initialized?
@@ -310,7 +311,8 @@ class SiteController < ApplicationController
 
     # if user has permission to run workflows, load available workflows and current submissions
 
-    if @allow_firecloud_access
+
+    if @allow_firecloud_access && @allow_computes
       if user_signed_in? && @study.can_compute?(current_user)
         # load list of previous submissions
         workspace = Study.firecloud_client.get_workspace(@study.firecloud_project, @study.firecloud_workspace)
@@ -372,7 +374,7 @@ class SiteController < ApplicationController
 
   # re-renders plots when changing cluster selection
   def render_gene_expression_plots
-    matches = @study.genes.by_name(params[:gene], @study.expression_matrix_files.map(&:id))
+    matches = @study.genes.by_name_or_id(params[:gene], @study.expression_matrix_files.map(&:id))
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
     @gene = load_best_gene_match(matches, params[:gene])
     @y_axis_title = load_expression_axis_title
@@ -419,7 +421,7 @@ class SiteController < ApplicationController
   # renders gene expression plots, but from global gene search. uses default annotations on first render, but takes URL parameters after that
   def render_global_gene_expression_plots
     if check_xhr_view_permissions
-      matches = @study.genes.by_name(params[:gene], @study.expression_matrix_files.map(&:id))
+      matches = @study.genes.by_name_or_id(params[:gene], @study.expression_matrix_files.map(&:id))
       subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
       @gene = load_best_gene_match(matches, params[:gene])
       @identifier = params[:identifier] # unique identifer for each plot for namespacing JS variables/functions (@gene.id)
@@ -448,7 +450,7 @@ class SiteController < ApplicationController
     @genes, @not_found = search_expression_scores(terms)
 
     consensus = params[:consensus].nil? ? 'Mean ' : params[:consensus].capitalize + ' '
-    @gene_list = @genes.map{|gene| gene['name']}.join(',')
+    @gene_list = @genes.map{|gene| gene['name']}.join(' ')
     @y_axis_title = consensus + ' ' + load_expression_axis_title
     # depending on annotation type selection, set up necessary partial names to use in rendering
     @options = load_cluster_group_options
@@ -475,7 +477,7 @@ class SiteController < ApplicationController
     @genes = load_expression_scores(terms)
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
     consensus = params[:consensus].nil? ? 'Mean ' : params[:consensus].capitalize + ' '
-    @gene_list = @genes.map{|gene| gene['gene']}.join(',')
+    @gene_list = @genes.map{|gene| gene['gene']}.join(' ')
     @y_axis_title = consensus + ' ' + load_expression_axis_title
     # depending on annotation type selection, set up necessary partial names to use in rendering
     if @selected_annotation[:type] == 'group'
@@ -533,7 +535,7 @@ class SiteController < ApplicationController
     # parse and divide up genes
     terms = parse_search_terms(:genes)
     @genes, @not_found = search_expression_scores(terms)
-    @gene_list = @genes.map{|gene| gene['name']}.join(',')
+    @gene_list = @genes.map{|gene| gene['name']}.join(' ')
     # load dropdown options
     @options = load_cluster_group_options
     @cluster_annotations = load_cluster_group_annotations
@@ -689,8 +691,8 @@ class SiteController < ApplicationController
 
     # next check if downloads have been disabled by administrator, this will abort the download
     # download links shouldn't be rendered in any case, this just catches someone doing a straight GET on a file
-    # also check if FireCloud is unavailable and abort if so as well
-    if !AdminConfiguration.firecloud_access_enabled? || !Study.firecloud_client.api_available?
+    # also check if workspace google buckets are available
+    if !AdminConfiguration.firecloud_access_enabled? || !Study.firecloud_client.services_available?('GoogleBuckets')
       head 503 and return
     end
 
@@ -1413,12 +1415,21 @@ class SiteController < ApplicationController
 
   # check compute permissions for study
   def check_compute_permissions
-    if !user_signed_in? || !@study.can_compute?(current_user)
-      @alert ='You do not have permission to perform that action.'
+    if Study.firecloud_client.services_available?('Rawls')
+      if !user_signed_in? || !@study.can_compute?(current_user)
+        @alert ='You do not have permission to perform that action.'
+        respond_to do |format|
+          format.js {render action: :notice}
+          format.html {redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]), alert: @alert and return}
+          format.json {head 403}
+        end
+      end
+    else
+      @alert ='Compute services are currently unavailable - please check back later.'
       respond_to do |format|
         format.js {render action: :notice}
         format.html {redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]), alert: @alert and return}
-        format.json {head 403}
+        format.json {head 503}
       end
     end
   end
@@ -1988,7 +1999,7 @@ class SiteController < ApplicationController
     if sanitized_terms.is_a?(Array)
       sanitized_terms.map(&:strip)
     else
-      sanitized_terms.split(/[\n,]/).map(&:strip)
+      sanitized_terms.split(/[\n\s]/).map(&:strip)
     end
   end
 
@@ -1997,7 +2008,7 @@ class SiteController < ApplicationController
     genes = []
     matrix_ids = @study.expression_matrix_files.map(&:id)
     terms.each do |term|
-      matches = @study.genes.by_name(term, matrix_ids)
+      matches = @study.genes.by_name_or_id(term, matrix_ids)
       unless matches.empty?
         genes << load_best_gene_match(matches, term)
       end
@@ -2113,7 +2124,7 @@ class SiteController < ApplicationController
 
   # create a unique hex digest of a list of genes for use in set_cache_path
   def construct_gene_list_hash(query_list)
-    genes = query_list.split(',').map(&:strip).sort.join
+    genes = query_list.split(' ').map(&:strip).sort.join
     Digest::SHA256.hexdigest genes
   end
 
@@ -2163,7 +2174,7 @@ class SiteController < ApplicationController
         submission_inputs = {input_name.to_sym => input_value}
     end
     if optional_inputs.present?
-      submission_inputs.merge!(optional_inputs)
+      submission_inputs.merge!(optional_inputs.to_unsafe_hash)
     end
     # Run any workflow-specific extra configuration steps
     configuration_response = WorkflowConfiguration.new(@study, config_namespace, config_name, workflow_namespace, workflow_name, submission_inputs).perform

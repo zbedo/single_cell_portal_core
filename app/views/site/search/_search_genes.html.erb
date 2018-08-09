@@ -6,6 +6,7 @@
         <% if @selected_branding_group.present? %>
           <%= hidden_field_tag :scpbr, @selected_branding_group.name_as_id %>
         <% end %>
+        <input name="page" id="page" type="hidden" value="1">
         <div class="input-group-btn">
           <button class="btn btn-info" type="submit" name="commit" id="submit-gene-search"><span class="fas fa-search"></span></button>
         </div>
@@ -13,7 +14,9 @@
     <% end %>
   </div>
   <div class="col-md-6 col-sm-12 col-xs-12">
-    <p class="lead">Results: <label id="gene-search-results-count" class="label label-default">0</label> across <label id="gene-search-studies-count" class="label label-default">0</label> studies</p>
+    <p class="lead">Results: <label id="gene-search-results-count" class="label label-default">0</label>
+      across <label id="gene-search-studies-count" class="label label-default">0</label> studies
+    </p>
   </div>
 </div>
 <div class="row">
@@ -22,18 +25,32 @@
 
     </div>
   </div>
+  <div class="col-md-12">
+    <div id="load-more-genes-target"></div>
+  </div>
 </div>
 
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
     $('#submit-gene-search').on('click', function() {
-        $("#gene-search-results").empty();
-        $('#gene-search-results-count').html($('div.gene-panel').length);
-        $('#gene-search-studies-count').html($('div.has-gene-results').length);
-        var target = document.getElementById('gene-search-results');
-        var spinner = new Spinner(opts).spin(target);
-        $(target).data('spinner', spinner);
-        return true;
+        if ( $('#search_genes').val() === '' ) {
+            alert('Please enter a term before searching.');
+            return false;
+        } else {
+            $('#page').val('1');
+            $("#gene-search-results").empty();
+            $('#gene-search-results-count').html($('div.gene-panel').length);
+            $('#gene-search-studies-count').html($('div.has-gene-results').length);
+            var target = document.getElementById('gene-search-results');
+            var spinner = new Spinner(opts).spin(target);
+            $(target).data('spinner', spinner);
+            var requestUrl = '<%= javascript_safe_url("/single_cell/search_all_genes") %>';
+            var genes = $('#search_genes').val().split(' ');
+            var numGenes = genes.length;
+            requestUrl += '?genes=' + genes.join('+') + '&num_genes=' + numGenes;
+            gaTrack(requestUrl, 'Single Cell Portal | Global Gene Search');
+            return true;
+        }
     });
 
 </script>

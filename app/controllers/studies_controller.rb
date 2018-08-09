@@ -43,7 +43,7 @@ class StudiesController < ApplicationController
     @directories = @study.directory_listings.are_synced
     @primary_data = @study.directory_listings.primary_data
     @other_data = @study.directory_listings.non_primary_data
-    @allow_downloads = AdminConfiguration.firecloud_access_enabled? && Study.firecloud_client.api_available?
+    @allow_downloads = Study.firecloud_client.services_available?('GoogleBuckets')
     @analysis_metadata = @study.analysis_metadata.to_a
     # load study default options
     set_study_default_options
@@ -317,35 +317,35 @@ class StudiesController < ApplicationController
       case configuration_name
         when /cell-ranger/
           @special_sync = true
-          matrix_study_file = @unsynced_files.detect {|file| file.name =~ /filtered_gene_bc_matrices.*matrix\.mtx/}
-          if matrix_study_file.present?
-            matrix_study_file.file_type = 'MM Coordinate Matrix'
-            matrix_study_file.description = "Matrix Market coordinate expression matrix from CellRanger run #{params[:submission_id]}"
-            matrix_study_file.options.merge!({analysis_name: 'cell-ranger'})
+          sorted_matrix_study_file = @unsynced_files.detect {|file| file.name =~ /sorted_matrix\.mtx/}
+          if sorted_matrix_study_file.present?
+            sorted_matrix_study_file.file_type = 'MM Coordinate Matrix'
+            sorted_matrix_study_file.description = "Matrix Market coordinate expression matrix from Cell Ranger run #{params[:submission_id]}"
+            sorted_matrix_study_file.options.merge!({analysis_name: 'cell-ranger'})
           end
 
           genes_file = @unsynced_files.detect {|file| file.name=~ /filtered_gene_bc_matrices.*genes\.tsv/}
           if genes_file.present?
             genes_file.file_type = '10X Genes File'
-            genes_file.description = "Gene ID/Names output from CellRanger run #{params[:submission_id]}"
-            if matrix_study_file.present?
-              genes_file.options.merge!({matrix_id: matrix_study_file.id, analysis_name: 'cell-ranger'})
+            genes_file.description = "Gene ID/Names output from Cell Ranger run #{params[:submission_id]}"
+            if sorted_matrix_study_file.present?
+              genes_file.options.merge!({matrix_id: sorted_matrix_study_file.id, analysis_name: 'cell-ranger'})
             end
           end
 
           barcodes_file = @unsynced_files.detect {|file| file.name=~ /filtered_gene_bc_matrices.*barcodes\.tsv/}
           if barcodes_file.present?
             barcodes_file.file_type = '10X Barcodes File'
-            barcodes_file.description = "Barcode sequence output from CellRanger run #{params[:submission_id]}"
-            if matrix_study_file.present?
-              barcodes_file.options.merge!({matrix_id: matrix_study_file.id, analysis_name: 'cell-ranger'})
+            barcodes_file.description = "Barcode sequence output from Cell Ranger run #{params[:submission_id]}"
+            if sorted_matrix_study_file.present?
+              barcodes_file.options.merge!({matrix_id: sorted_matrix_study_file.id, analysis_name: 'cell-ranger'})
             end
           end
 
           metadata_file = @unsynced_files.detect {|file| file.name.split('/').last =~ /_metadata\.txt/}
           if metadata_file.present?
             metadata_file.file_type = 'Metadata'
-            metadata_file.description = "Merged barcode-level metadata output from CellRanger run #{params[:submission_id]}"
+            metadata_file.description = "Merged barcode-level metadata output from Cell Ranger run #{params[:submission_id]}"
             metadata_file.options.merge!({analysis_name: 'cell-ranger'})
           end
 
@@ -354,7 +354,7 @@ class StudiesController < ApplicationController
             new_name = tsne_cluster_file.name.split('/').last.chomp('.txt')
             tsne_cluster_file.name = new_name
             tsne_cluster_file.file_type = 'Cluster'
-            tsne_cluster_file.description = "tSNE 2d projection from CellRanger run #{params[:submission_id]}"
+            tsne_cluster_file.description = "tSNE 2d projection from Cell Ranger run #{params[:submission_id]}"
             tsne_cluster_file.options.merge!({analysis_name: 'cell-ranger'})
           end
 
@@ -363,8 +363,15 @@ class StudiesController < ApplicationController
             new_name = pca_cluster_file.name.split('/').last.chomp('.txt')
             pca_cluster_file.name = new_name
             pca_cluster_file.file_type = 'Cluster'
-            pca_cluster_file.description = "PCA 3d projection from CellRanger run #{params[:submission_id]}"
+            pca_cluster_file.description = "PCA 3d projection from Cell Ranger run #{params[:submission_id]}"
             pca_cluster_file.options.merge!({analysis_name: 'cell-ranger'})
+          end
+
+          other_matrices = @unsynced_files.select {|file| file.name.split('/').last =~ /\.mtx/ && file.name != sorted_matrix_study_file.name}
+          other_matrices.each do |matrix|
+            matrix.file_type = 'Analysis Output'
+            matrix.description = "Secondary expression matrix output from Cell Ranger run #{params[:submission_id]}"
+            matrix.options.merge!({analysis_name: 'cell-ranger'})
           end
 
         when /infercnv/
@@ -632,8 +639,8 @@ class StudiesController < ApplicationController
       @study_file.update(parse_status: 'parsing')
       @study.delay.initialize_gene_expression_data(@study_file, current_user)
     when 'MM Coordinate Matrix'
-      barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => @study_file.id)
-      genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => @study_file.id)
+      barcodes = @study_file.bundled_files.detect {|f| f.file_type == '10X Barcodes File'}
+      genes = @study_file.bundled_files.detect {|f| f.file_type == '10X Genes File'}
       if barcodes.present? && genes.present?
         @study_file.update(parse_status: 'parsing')
         genes.update(parse_status: 'parsing')
@@ -704,8 +711,8 @@ class StudiesController < ApplicationController
 
     # next check if downloads have been disabled by administrator, this will abort the download
     # download links shouldn't be rendered in any case, this just catches someone doing a straight GET on a file
-    # also check if FireCloud is unavailable and abort if so as well
-    if !AdminConfiguration.firecloud_access_enabled? || !Study.firecloud_client.api_available?
+    # also check if workspace google buckets are available
+    if !AdminConfiguration.firecloud_access_enabled? || !Study.firecloud_client.services_available?('GoogleBuckets')
       head 503 and return
     end
     begin
@@ -852,33 +859,41 @@ class StudiesController < ApplicationController
           when 'Expression Matrix'
             @study.delay.initialize_gene_expression_data(@study_file, current_user, {local: false, reparse: true})
           when 'MM Coordinate Matrix'
-            barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => @study_file.id)
-            genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => @study_file.id)
+            barcodes = @study_file.bundled_files.detect {|f| f.file_type == '10X Barcodes File'}
+            genes = @study_file.bundled_files.detect {|f| f.file_type == '10X Genes File'}
             if barcodes.present? && genes.present?
               @study_file.update(parse_status: 'parsing')
               genes.update(parse_status: 'parsing')
               barcodes.update(parse_status: 'parsing')
-              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, @study_file, genes, barcodes, {reparse: true})
+              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, @study_file, genes, barcodes)
+            else
+              logger.info "#{Time.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
             end
           when '10X Genes File'
-            matrix_id = @study_file.options(:matrix_id)
-            matrix = StudyFile.find(matrix_id)
+            matrix_id = @study_file.options[:matrix_id]
+            matrix = @study_file.bundle_parent
             barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => matrix_id)
             if barcodes.present? && matrix.present?
               @study_file.update(parse_status: 'parsing')
               matrix.update(parse_status: 'parsing')
               barcodes.update(parse_status: 'parsing')
-              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, @study_file, barcodes, {reparse: true})
+              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, @study_file, barcodes)
+            else
+              # we can only get here if we have a matrix and no barcodes, which means the barcodes form is already rendered
+              logger.info "#{Time.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
             end
           when '10X Barcodes File'
-            matrix_id = @study_file.options(:matrix_id)
-            matrix = StudyFile.find(matrix_id)
+            matrix_id = @study_file.options[:matrix_id]
+            matrix = @study_file.bundle_parent
             genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => matrix_id)
             if genes.present? && matrix.present?
               @study_file.update(parse_status: 'parsing')
               genes.update(parse_status: 'parsing')
               matrix.update(parse_status: 'parsing')
-              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, genes, @study_file, {reparse: true})
+              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, genes, @study_file)
+            else
+              # we can only get here if we have a matrix and no genes, which means the genes form is already rendered
+              logger.info "#{Time.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
             end
           when 'Gene List'
             @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false, reparse: true})
@@ -1349,7 +1364,7 @@ class StudiesController < ApplicationController
 
   # check on FireCloud API status and respond accordingly
   def check_firecloud_status
-    unless Study.firecloud_client.api_available?
+    unless Study.firecloud_client.services_available?('Sam', 'Rawls')
       alert = 'Study workspaces are temporarily unavailable, so we cannot complete your request.  Please try again later.'
       respond_to do |format|
         format.js {render js: "$('.modal').modal('hide'); alert('#{alert}')" and return}

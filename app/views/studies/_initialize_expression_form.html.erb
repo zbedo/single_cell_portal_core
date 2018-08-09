@@ -60,10 +60,18 @@
 	</div>
 
 	<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+      var form = $('#expression_form_<%= study_file._id %>');
+      form.find($('.file-type')).on('change', function() {
+          if ($(this).val() === 'MM Coordinate Matrix') {
+              form.append("<%= j render partial: 'sort_warning' %>")
+          } else {
+              form.find($('.sort-warning')).remove();
+          }
+      });
 
 		$(function() {
 
-			$('#expression_form_<%= study_file._id %>').fileupload({
+			form.fileupload({
 				url: "<%= upload_study_path(@study._id) %>",
 				maxChunkSize: 10000000,
 				type: 'PATCH',

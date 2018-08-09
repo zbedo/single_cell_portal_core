@@ -184,10 +184,7 @@ class AdminConfiguration
       pid = pid_str.split(':').last
       # check if current job worker has matching pid; if not, then the job is orphaned and should be unlocked
       unless pids[worker] == pid
-        # deserialize handler object to get attributes for logging
-        deserialized_handler = YAML::load(job.handler)
-        job_method = deserialized_handler.method_name.to_s
-        Rails.logger.info "#{Time.now}: Restarting orphaned process #{job.id}:#{job_method} initially queued on #{job.created_at.to_s(:long)}"
+        Rails.logger.info "#{Time.now}: Restarting orphaned process #{job.id} initially queued on #{job.created_at.to_s(:long)}"
         job.update(locked_by: nil, locked_at: nil)
         job_count += 1
       end
@@ -195,46 +192,16 @@ class AdminConfiguration
     job_count
   end
 
-  # method to be called from cron to check the health status of the FireCloud API and set access if an outage is detected
+  # method to be called from cron to check the health status of the FireCloud API
+  # This method no longer disables access as we now do realtime checks on routes that depend on certain services being up
+  # 'local-off' mode can now be used to manually put the portal in read-only mode
   def self.check_api_health
-    notifier_config = AdminConfiguration.find_or_create_by(config_type: AdminConfiguration::API_NOTIFIER_NAME, value_type: 'Boolean')
-    firecloud_access = AdminConfiguration.find_or_create_by(config_type: AdminConfiguration::FIRECLOUD_ACCESS_NAME, value_type: 'String')
-    api_available = Study.firecloud_client.api_available?
+    api_ok = Study.firecloud_client.api_available?
 
-    # gotcha for very first time this is ever called
-    if firecloud_access.value.nil?
-      firecloud_access.update(value: 'on')
-    end
-
-    if notifier_config.value.nil?
-      notifier_config.update(value: 1)
-    end
-
-    # if api is down...
-    if !api_available
-      # if access is still enabled, set to local-off and send notification to admins (if enabled)
-      if firecloud_access.value == 'on'
-        Rails.logger.error "#{Time.now}: ALERT: FIRECLOUD API UNAVAILABLE -- setting FireCloud access to 'local-off'"
-        firecloud_access.update(value: 'local-off')
-        if notifier_config.value == '1'
-          current_time = Time.now.strftime('%D %r')
-          SingleCellMailer.admin_notification('ALERT: FIRECLOUD API UNAVAILABLE', nil, "<p>The FireCloud API was found to be unavailable at #{current_time}.  Access has been disabled locally until API access is manually turned back on or the next automatic check returns positive.").deliver_now
-          notifier_config.update(value: '0')
-        end
-      end
-    # if api is up...
-    else
-      if firecloud_access.value == 'local-off'
-        # local-off is currently used exclusively for API outages, so if the API is up and the portal is set to local-off,
-        # then we can assume that the portal was put in this mode by AdminConfiguration.check_api_health and should
-        # automatically recover.  This will not affect disabling compute or all access settings.
-        firecloud_access.update(value: 'on')
-        if notifier_config.value == '0'
-          current_time = Time.now.strftime('%D %r')
-          SingleCellMailer.admin_notification('ALERT: FireCloud API recovery', nil, "<p>The FireCloud API has recovered as of #{current_time}.  Access has been automatically restored.").deliver_now
-          notifier_config.update(value: '1')
-        end
-      end
+    if !api_ok
+      current_status = Study.firecloud_client.api_status
+      Rails.logger.error "#{Time.now}: ALERT: FIRECLOUD API SERVICE INTERRUPTION -- current status: #{current_status}"
+      SingleCellMailer.firecloud_api_notification(current_status).deliver_now
     end
   end
 

@@ -1,4 +1,4 @@
-$('#study-summary').html("<%= escape_javascript(render partial: 'study_description_edit') %>");
+$('#study-description-content').html("<%= escape_javascript(render partial: 'study_description_edit') %>");
 
 ClassicEditor
     .create( document.querySelector( '#study_description' ),

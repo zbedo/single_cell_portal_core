@@ -81,13 +81,15 @@ class Study
   end
 
   has_many :genes, dependent: :delete do
-    def by_name(gene_name, study_file_ids)
-      found_scores = any_of({name: gene_name, :study_file_id.in => study_file_ids}, {searchable_name: gene_name.downcase, :study_file_id.in => study_file_ids})
+    def by_name_or_id(term, study_file_ids)
+      found_scores = any_of({name: term, :study_file_id.in => study_file_ids},
+                            {searchable_name: term.downcase, :study_file_id.in => study_file_ids},
+                            {gene_id: term, :study_file_id.in => study_file_ids})
       if found_scores.empty?
         return []
       else
         # since we can have duplicate genes but not cells, merge into one object for rendering
-        merged_scores = {'searchable_name' => gene_name.downcase, 'name' => gene_name, 'scores' => {}}
+        merged_scores = {'searchable_name' => term.downcase, 'name' => term, 'scores' => {}}
         found_scores.each do |score|
           merged_scores['scores'].merge!(score.scores)
         end
@@ -511,7 +513,7 @@ class Study
   # default size for cluster points
   def default_cluster_point_size
     if self.default_options[:cluster_point_size].blank?
-      6
+      3
     else
       self.default_options[:cluster_point_size].to_i
     end
@@ -520,7 +522,7 @@ class Study
   # default size for cluster points
   def show_cluster_point_borders?
     if self.default_options[:cluster_point_border].blank?
-      true
+      false
     else
       self.default_options[:cluster_point_border] == 'true'
     end
@@ -2315,7 +2317,7 @@ class Study
 
   # set access for the readonly service account if a study is public
   def set_readonly_access(grant_access=true, manual_set=false)
-    unless Rails.env == 'test'
+    unless Rails.env == 'test' || self.queued_for_deletion
       if manual_set || self.public_changed? || self.new_record?
         if self.firecloud_workspace.present? && self.firecloud_project.present? && Study.read_only_firecloud_client.present?
           access_level = self.public? ? 'READER' : 'NO ACCESS'

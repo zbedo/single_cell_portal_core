@@ -1,5 +1,6 @@
 var genes = $('#search_genes').val();
-$("#gene-search-results").append("<h3 id='searching-message'>Searching <%= @studies.size %> studies...");
+$(window).off('paginateGeneSearch');
+
 <% @studies.each do |study| %>
 
   $("#gene-search-results").append("<%= escape_javascript(render partial: '/site/search/gene_search_panel', locals: {study: study}) %>")
@@ -17,4 +18,19 @@ $("#gene-search-results").append("<h3 id='searching-message'>Searching <%= @stud
       }
   });
 
+<% end %>
+
+<% if @studies.total_pages == @studies.current_page.to_i %>
+    $(window).off('paginateGeneSearch');
+    $(window).unbind('scroll');
+    $("#load-gene-search").toggle();
+<% else %>
+    $('#page').val("<%= @studies.current_page.to_i + 1 %>");
+    $('#load-more-genes-target').html("<%= j render partial: 'site/search/gene_search_next_btn', locals: {page: @studies.current_page.to_i, pages: @studies.total_pages} %>")
+
+    $(window).on('paginateGeneSearch', function() {
+        var target = document.getElementById('load-gene-search');
+        new Spinner(paginationOpts).spin(target);
+        $('#global-search-genes-form').submit();
+    });
 <% end %>

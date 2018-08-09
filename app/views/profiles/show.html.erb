@@ -3,7 +3,11 @@
 <div id="profile-tab-root">
   <ul class="nav nav-tabs" role="tablist" id="profile-tabs">
     <li role="presentation" class="profile-nav active" id="profile-emails-nav"><a href="#profile-emails" data-toggle="tab">Email Delivery</a></li>
-    <li role="presentation" class="profile-nav" id="profile-firecloud-nav"><a href="#profile-firecloud" data-toggle="tab">FireCloud Profile</a></li>
+    <% if @profiles_available %>
+      <li role="presentation" class="profile-nav" id="profile-firecloud-nav"><a href="#profile-firecloud" data-toggle="tab">FireCloud Profile</a></li>
+    <% else %>
+      <li role="presentation" class="profile-nav disabled" id="profile-firecloud-nav"><a href="#profile-firecloud" data-toggle="tooltip" title="FireCloud profiles are currently unavailable, please check back later.">FireCloud Profile</a></li>
+    <% end %>
   </ul>
 
   <div class="tab-content top-pad">
@@ -68,9 +72,11 @@
         </tbody>
       </table>
     </div>
-    <div class="tab-pane" id="profile-firecloud" role="tabpanel">
-      <%= render partial: 'user_firecloud_profile' %>
-    </div>
+    <% if @profiles_available %>
+      <div class="tab-pane" id="profile-firecloud" role="tabpanel">
+        <%= render partial: 'user_firecloud_profile' %>
+      </div>
+    <% end %>
   </div>
 </div>
 

@@ -1599,7 +1599,7 @@ class UiTestSuite < Test::Unit::TestCase
 
     open_ui_tab('profile-firecloud')
 
-    job_title_field = @driver.find_element(:id, 'firecloud_profile_title')
+    job_title_field = @driver.find_element(:id, 'fire_cloud_profile_title')
     job_title_field.clear
     new_title = "Random Title #{$random_seed}"
     job_title_field.send_keys(new_title)
@@ -1612,7 +1612,7 @@ class UiTestSuite < Test::Unit::TestCase
     wait_for_render(:id, 'profile-header')
     open_ui_tab('profile-firecloud')
 
-    job_title = @driver.find_element(:id, 'firecloud_profile_title')['value']
+    job_title = @driver.find_element(:id, 'fire_cloud_profile_title')['value']
     assert job_title == new_title, "Did not update job title correctly, expected '#{new_title}' but found '#{job_title}'"
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
@@ -2235,7 +2235,6 @@ class UiTestSuite < Test::Unit::TestCase
 
     request_modal = @driver.find_element(:id, 'report-request')
     request_modal.click
-    wait_for_modal_open('contact-modal')
 
     message = @driver.find_element(:class, 'ck-editor__editable')
     message_content = "This is a report request."
@@ -2245,7 +2244,7 @@ class UiTestSuite < Test::Unit::TestCase
     wait_for_modal_open('message_modal')
     assert element_visible?(:id, 'message_modal'), 'confirmation modal did not show.'
     notice_content = @driver.find_element(:id, 'notice-content')
-    confirmation_message = 'Your message has been successfully delivered.'
+    confirmation_message = 'Your request has been submitted.'
     assert notice_content.text == confirmation_message, "did not find confirmation message, expected #{confirmation_message} but found #{notice_content.text}"
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
@@ -2691,7 +2690,7 @@ class UiTestSuite < Test::Unit::TestCase
     # load random genes to search, take between 2-5, adding in bad gene to test error handling
     genes = @genes.shuffle.take(rand(2..5))
     search_box = @driver.find_element(:id, 'search_genes')
-    search_box.send_keys(genes.join(',') + ',foo')
+    search_box.send_keys(genes.join(' ') + ' foo')
 
     search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
     search_menu.click
@@ -2788,7 +2787,7 @@ class UiTestSuite < Test::Unit::TestCase
 
     new_genes = @genes.shuffle.take(rand(2..5))
     search_box = @driver.find_element(:id, 'search_genes')
-    search_box.send_keys(new_genes.join(','))
+    search_box.send_keys(new_genes.join(' '))
 
     search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
     search_menu.click
@@ -2859,7 +2858,7 @@ class UiTestSuite < Test::Unit::TestCase
     # load random genes to search, take between 2-5
     genes = @genes.shuffle.take(rand(2..5))
     search_box = @driver.find_element(:id, 'search_genes')
-    search_box.send_keys(genes.join(','))
+    search_box.send_keys(genes.join(' '))
     search_genes = @driver.find_element(:id, 'perform-gene-search')
     search_genes.click
     wait_for_render(:id, 'heatmap-plot')
@@ -2912,7 +2911,7 @@ class UiTestSuite < Test::Unit::TestCase
 
     new_genes = @genes.shuffle.take(rand(2..5))
     search_box = @driver.find_element(:id, 'search_genes')
-    search_box.send_keys(new_genes.join(','))
+    search_box.send_keys(new_genes.join(' '))
     search_genes = @driver.find_element(:id, 'perform-gene-search')
     search_genes.click
     assert element_present?(:id, 'plots'), 'could not find expression heatmap'
@@ -3018,6 +3017,8 @@ class UiTestSuite < Test::Unit::TestCase
     second_search_genes_form.send_keys(gene)
     submit = @driver.find_element(:id, 'submit-gene-search')
     submit.click
+    @wait.until {wait_for_plotly_render('#' + plot_id, 'rendered')}
+    scroll_to(:bottom) # also tests pagination
     # wait until the plot has rendered
     private_panel_id = "study-private-study-#{$random_seed}-gene-#{gene}"
     private_plot_id = private_panel_id + '-plot'
@@ -3331,7 +3332,7 @@ class UiTestSuite < Test::Unit::TestCase
     # now search for multiple genes as a heatmap
     genes = @genes.shuffle.take(rand(2..5))
     search_box = @driver.find_element(:id, 'search_genes')
-    search_box.send_keys(genes.join(','))
+    search_box.send_keys(genes.join(' '))
     search_genes = @driver.find_element(:id, 'perform-gene-search')
     search_genes.click
     assert element_present?(:id, 'plots'), 'could not find expression heatmap'
@@ -3500,15 +3501,16 @@ class UiTestSuite < Test::Unit::TestCase
     edit_btn.click
     wait_for_render(:id, 'update-study-description')
     description = @driver.find_element(:class, 'ck-editor__editable')
-    description.clear
-    new_description = "This is the description with a random element: #{SecureRandom.uuid}."
+    random = SecureRandom.uuid
+    new_description = "This is the description with a random element: #{random}."
     description.send_keys(new_description)
     update_btn = @driver.find_element(:id, 'update-study-description')
     update_btn.click
     wait_for_render(:id, 'edit-study-description')
 
-    study_description = @driver.find_element(:id, 'study-description-content').text
-    assert study_description == new_description, "study description did not update correctly, expected #{new_description} but found #{study_description}"
+    study_description = @driver.find_element(:id, 'study-description-content')
+    updated_text = study_description.text
+    assert updated_text.include?(new_description), "study description did not update correctly, expected #{new_description} but found #{updated_text}"
 
     # update default options
     close_modal('message_modal')
