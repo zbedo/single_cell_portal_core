@@ -32,3 +32,8 @@ node_modules/*
 
 # Ignore files used only in development (TODO: Use webpack to remove need for this)
 /app/assets/javascripts/igv.js
+/public/packs
+/public/packs-test
+/node_modules
+yarn-debug.log*
+.yarn-integrity
