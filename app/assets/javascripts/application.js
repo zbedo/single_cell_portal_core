@@ -10,7 +10,6 @@
 // Read Sprockets README (https://github.com/rails/sprockets#sprockets-directives) for details
 // about supported directives.
 //
-//= require jquery3
 //= require jquery_ujs
 //= require ckeditor
 //= require dataTables/jquery.dataTables
@@ -39,7 +38,6 @@
 //= require kernel-functions
 //= require jquery.stickyPanel
 //= require clipboard.min
-//= require ideogram.min
 //= require igv.min
 //= require scp-igv
 

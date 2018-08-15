@@ -8,10 +8,21 @@
 // layout file, like app/views/layouts/application.html.erb
 
 import Ideogram from 'ideogram';
+import $ from 'jquery';
+import jQuery from 'jquery';
 
 console.log('Hello World from Webpacker');
 
 console.log('Ideogram.version:');
 console.log(Ideogram.version);
 
-export default Ideogram;
+window.$ = $;
+window.jQuery = jQuery;
+
+console.log('$')
+console.log($)
+
+console.log('jQuery')
+console.log(jQuery)
+
+export {$, jQuery, Ideogram};
