@@ -7,4 +7,11 @@
 // To reference this file, add <%= javascript_pack_tag 'application' %> to the appropriate
 // layout file, like app/views/layouts/application.html.erb
 
-console.log('Hello World from Webpacker')
+import Ideogram from 'ideogram';
+
+console.log('Hello World from Webpacker');
+
+console.log('Ideogram.version:');
+console.log(Ideogram.version);
+
+export default Ideogram;
