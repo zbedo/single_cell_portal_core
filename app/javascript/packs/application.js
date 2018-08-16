@@ -7,22 +7,22 @@
 // To reference this file, add <%= javascript_pack_tag 'application' %> to the appropriate
 // layout file, like app/views/layouts/application.html.erb
 
-import Ideogram from 'ideogram';
 import $ from 'jquery';
 import jQuery from 'jquery';
+import {Spinner} from 'spin.js';
 
-console.log('Hello World from Webpacker');
+// Per https://ckeditor.com/docs/ckeditor5/latest/builds/guides/integration/advanced-setup.html#scenario-1-integrating-existing-builds
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
-console.log('Ideogram.version:');
-console.log(Ideogram.version);
+// Per https://github.com/rails/jquery-ujs#installation-using-rails-and-webpacker
+// import {} from 'jquery-ujs';
+// Above seems causes errors like "jQuery is not defined" to be thrown, so use Sprockets for this for now.
+
+import Ideogram from 'ideogram';
 
 window.$ = $;
 window.jQuery = jQuery;
+window.ClassicEditor = ClassicEditor;
+window.Spinner = Spinner;
 
-console.log('$')
-console.log($)
-
-console.log('jQuery')
-console.log(jQuery)
-
-export {$, jQuery, Ideogram};
+export {$, jQuery, ClassicEditor, Ideogram, Spinner};

@@ -1,8 +1,11 @@
 {
   "dependencies": {
+    "@ckeditor/ckeditor5-build-classic": "^11.0.1",
     "@rails/webpacker": "3.5",
+    "ideogram": "1.2.0",
     "jquery": "3.3.1",
-    "ideogram": "1.2.0"
+    "jquery-ujs": "^1.2.2",
+    "spin.js": "^4.0.0"
   },
   "devDependencies": {
     "webpack-dev-server": "2.11.2"
