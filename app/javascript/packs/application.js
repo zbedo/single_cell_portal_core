@@ -10,6 +10,12 @@
 import $ from 'jquery';
 import jQuery from 'jquery';
 import {Spinner} from 'spin.js';
+import 'jquery-ui/ui/widgets/datepicker';
+import 'jquery-ui/ui/widgets/autocomplete';
+import 'jquery-ui/ui/widgets/sortable';
+import 'jquery-ui/ui/widgets/dialog';
+import 'jquery-ui/ui/effects/effect-highlight';
+
 
 // Per https://ckeditor.com/docs/ckeditor5/latest/builds/guides/integration/advanced-setup.html#scenario-1-integrating-existing-builds
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
