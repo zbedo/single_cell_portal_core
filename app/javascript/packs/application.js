@@ -15,6 +15,7 @@ import 'jquery-ui/ui/widgets/autocomplete';
 import 'jquery-ui/ui/widgets/sortable';
 import 'jquery-ui/ui/widgets/dialog';
 import 'jquery-ui/ui/effects/effect-highlight';
+import morpheus from 'morpheus-app';
 
 
 // Per https://ckeditor.com/docs/ckeditor5/latest/builds/guides/integration/advanced-setup.html#scenario-1-integrating-existing-builds
@@ -30,5 +31,6 @@ window.$ = $;
 window.jQuery = jQuery;
 window.ClassicEditor = ClassicEditor;
 window.Spinner = Spinner;
+window.morpheus = morpheus;
 
-export {$, jQuery, ClassicEditor, Ideogram, Spinner};
+export {$, jQuery, ClassicEditor, Spinner, morpheus, Ideogram};
