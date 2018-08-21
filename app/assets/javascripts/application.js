@@ -25,7 +25,6 @@
 //= require tsne
 //= require StackBlur
 //= require morpheus-external-r
-//= require morpheus-latest.min
 //= require kernel-functions
 //= require jquery.stickyPanel
 //= require clipboard.min
