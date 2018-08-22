@@ -15,8 +15,9 @@ import 'jquery-ui/ui/widgets/autocomplete';
 import 'jquery-ui/ui/widgets/sortable';
 import 'jquery-ui/ui/widgets/dialog';
 import 'jquery-ui/ui/effects/effect-highlight';
+import igv from 'tmp_es6_igv';
 import morpheus from 'morpheus-app';
-
+import Ideogram from 'ideogram';
 
 // Per https://ckeditor.com/docs/ckeditor5/latest/builds/guides/integration/advanced-setup.html#scenario-1-integrating-existing-builds
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
@@ -25,12 +26,14 @@ import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 // import {} from 'jquery-ujs';
 // Above seems causes errors like "jQuery is not defined" to be thrown, so use Sprockets for this for now.
 
-import Ideogram from 'ideogram';
-
+// SCP expects variables to be available globally, so do that.
 window.$ = $;
 window.jQuery = jQuery;
 window.ClassicEditor = ClassicEditor;
 window.Spinner = Spinner;
 window.morpheus = morpheus;
+window.igv = igv;
+window.Ideogram = Ideogram;
 
-export {$, jQuery, ClassicEditor, Spinner, morpheus, Ideogram};
+// For down the road, when we use ES6 imports in SCP JS app code
+// export {$, jQuery, ClassicEditor, Spinner, morpheus, igv, Ideogram};

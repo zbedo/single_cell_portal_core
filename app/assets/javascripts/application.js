@@ -29,7 +29,6 @@
 //= require kernel-functions
 //= require jquery.stickyPanel
 //= require clipboard.min
-//= require igv.min
 //= require scp-igv
 
 var fileUploading = false;

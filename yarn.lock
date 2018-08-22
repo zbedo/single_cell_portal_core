@@ -5585,6 +5585,10 @@ timers-browserify@^2.0.4:
   dependencies:
     setimmediate "^1.0.4"
 
+tmp_es6_igv@0.0.4:
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/tmp_es6_igv/-/tmp_es6_igv-0.0.4.tgz#ae337081f0e92f02de5bbe0f2bae1ef4f230e3ed"
+
 to-arraybuffer@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/to-arraybuffer/-/to-arraybuffer-1.0.1.tgz#7d229b1fcc637e466ca081180836a7aabff83f43"
