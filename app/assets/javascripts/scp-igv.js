@@ -115,6 +115,10 @@ function initializeIgv() {
   var igvContainer, igvOptions, tracks, genome, genesTrack, bamTracks,
     genesTrackName, genes, locus;
 
+  if (hasDisplayedIgv) {
+    return;
+  }
+
   igvContainer = document.getElementById('igv-container');
 
   genes = $('.queried-gene');
