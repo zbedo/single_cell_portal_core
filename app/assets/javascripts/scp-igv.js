@@ -15,13 +15,18 @@ window.selectedBams = {};
  * Upon clicking 'Browse in genome', show selected BAM in igv.js in Genome tab.
  */
 $(document).on('click', '.bam-browse-genome', function(e) {
-  var selectedBam, thisBam, i;
+  var selectedBam, thisBam, url, i;
 
   selectedBam = $(this).attr('data-filename');
 
   // bamAndBaiFiles assigned in _genome.html.erb
   for (i = 0; i < bamAndBaiFiles.length; i++) {
-    thisBam = bamAndBaiFiles[i].url.split('\/o/')[1].split('?')[0];
+    url = bamAndBaiFiles[i].url;
+    if (typeof url === 'undefined' || url === '?alt=media') {
+      // Accounts for "Awaiting remote file"
+      continue;
+    }
+    thisBam = url.split('\/o/')[1].split('?')[0];
     if (thisBam === selectedBam && selectedBam in selectedBams === false) {
       bamsToViewInIgv.push(bamAndBaiFiles[i]);
     }
