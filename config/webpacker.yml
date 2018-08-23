@@ -65,6 +65,9 @@ staging:
   # Production depends on precompilation of packs prior to booting for performance.
   compile: false
 
+  source_entry_path: /single_cell/packs
+  public_output_path: /single_cell/packs
+
   # Cache manifest.json for performance
   cache_manifest: true
 
@@ -73,6 +76,9 @@ production:
 
   # Production depends on precompilation of packs prior to booting for performance.
   compile: false
+
+  source_entry_path: /single_cell/packs
+  public_output_path: /single_cell/packs
 
   # Cache manifest.json for performance
   cache_manifest: true
