@@ -227,7 +227,7 @@ class Test::Unit::TestCase
     login_link = @driver.find_element(:id, 'login-nav')
     login_link.click
     $verbose ? puts('logging in as ' + email) : nil
-    use_new = @driver.find_element(:id, 'identifierLink')
+    use_new = @driver.find_element(:xpath, "//div[contains(text(), 'Use another account')]")
     use_new.click
     wait_for_render(:id, 'identifierId')
     sleep(1)
