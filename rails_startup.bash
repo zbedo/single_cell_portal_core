@@ -7,14 +7,18 @@ echo "*** COMPLETED ***"
 echo "*** ROLLING OVER LOGS ***"
 ruby /home/app/webapp/bin/cycle_logs.rb
 echo "*** COMPLETED ***"
+echo "*** COMPILING NODE MODULES ***"
+sudo -E -u app -H bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE yarn:install
+echo "*** COMPLETED ***"
 if [[ $PASSENGER_APP_ENV = "production" ]] || [[ $PASSENGER_APP_ENV = "staging" ]]
 then
     echo "*** PRECOMPILING ASSETS ***"
     sudo -E -u app -H bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE assets:clean
     sudo -E -u app -H bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE assets:precompile
-    sudo -E -u app -H bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE yarn:install
     sudo -E -u app -H bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE webpacker:compile
     echo "*** COMPLETED ***"
+elif [[ $PASSENGER_APP_ENV = "development" ]]; then
+    sudo -E -u app -H /home/app/webapp/bin/webpack
 fi
 
 echo "*** CREATING CRON ENV FILES ***"
