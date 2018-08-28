@@ -10,22 +10,13 @@
 // Read Sprockets README (https://github.com/rails/sprockets#sprockets-directives) for details
 // about supported directives.
 //
-//= require jquery3
 //= require jquery_ujs
-//= require ckeditor
 //= require dataTables/jquery.dataTables
 //= require dataTables/bootstrap/3/jquery.dataTables.bootstrap
 //= require jquery.bootstrap.wizard
 //= require jquery-fileupload
 //= require jquery-fileupload/basic-plus
 //= require jquery_nested_form
-//= require spin.min
-//= require jquery-ui/core
-//= require jquery-ui/widgets/datepicker
-//= require jquery-ui/widgets/autocomplete
-//= require jquery-ui/widgets/sortable
-//= require jquery-ui/widgets/dialog
-//= require jquery-ui/effects/effect-highlight
 //= require bootstrap-sprockets
 //= require jquery.actual.min
 //= require autocomplete-rails
@@ -35,12 +26,9 @@
 //= require tsne
 //= require StackBlur
 //= require morpheus-external-r
-//= require morpheus-latest.min
 //= require kernel-functions
 //= require jquery.stickyPanel
 //= require clipboard.min
-//= require ideogram.min
-//= require igv.min
 //= require scp-igv
 
 var fileUploading = false;
