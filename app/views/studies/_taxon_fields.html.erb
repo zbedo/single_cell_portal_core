@@ -1,0 +1,2 @@
+<%= f.label :taxon_id, 'Species/Taxon' %><br />
+<%= f.select :taxon_id, options_from_collection_for_select(Taxon.sorted, :id, :selection_name, f.object.taxon_id), {prompt: 'None selected...'}, {class: 'form-control'} %>

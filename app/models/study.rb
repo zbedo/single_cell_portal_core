@@ -736,6 +736,12 @@ class Study
     gene_tracks
   end
 
+  def taxons
+    taxons = self.study_files.where(:file_type.in => StudyFile::TAXON_REQUIRED_TYPES).map(&:taxon)
+    taxons.compact!
+    taxons.uniq
+  end
+
   ###
   #
   # DELETE METHODS

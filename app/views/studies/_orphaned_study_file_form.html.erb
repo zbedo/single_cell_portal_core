@@ -34,7 +34,7 @@
     <% if study_file.file_type == 'Cluster'  %>
       <%= render partial: 'cluster_axis_fields', locals: {f: f} %>
     <% elsif study_file.file_type == 'Expression Matrix' || study_file.file_type == 'MM Coordinate Matrix' %>
-      <%= render partial: 'expression_axis_fields', locals: {f: f} %>
+      <%= render partial: 'expression_file_fields', locals: {f: f} %>
     <% end %>
   </div>
   <div class="form-group row">
@@ -42,11 +42,16 @@
       <%= f.label :file_type %><br />
       <%= f.text_field :file_type, class: 'form-control file-type', readonly: true %>
     </div>
+    <div class="col-sm-3 taxon-select-target">
+      <% if study_file.file_type == 'BAM' || study_file.file_type == 'Fastq' %>
+        <%= render partial: 'taxon_fields', locals: {f: f} %>
+      <% end %>
+    </div>
     <div class="col-sm-2">
       <%= label_tag :reparse, 'Reparse File?' %><br/>
       <%= select_tag :reparse, options_for_select(%w(Yes No)), {class: 'form-control'} %>
     </div>
-    <div class="col-sm-6">
+    <div class="col-sm-3">
       <%= f.label :actions %>
       <div class="row">
         <div class="col-xs-6">

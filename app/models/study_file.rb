@@ -27,6 +27,7 @@ class StudyFile
   PARSE_STATUSES = %w(unparsed parsing parsed)
   PRIMARY_DATA_EXTENTIONS = %w(fastq fastq.zip fastq.gz fastq.tar.gz fq fq.zip fq.gz fq.tar.gz bam bam.gz bam.bai bam.gz.bai)
   PRIMARY_DATA_TYPES = ['Fastq', 'BAM', 'BAM Index']
+  TAXON_REQUIRED_TYPES = ['Fastq', 'BAM', 'Expression Matrix', 'MM Coordinate Matrix']
   GZIP_MAGIC_NUMBER = "\x1f\x8b".force_encoding(Encoding::ASCII_8BIT)
 
   # associations
@@ -35,6 +36,7 @@ class StudyFile
   has_many :genes, dependent: :destroy
   has_many :precomputed_scores, dependent: :destroy
   has_many :cell_metadata, dependent: :destroy
+  belongs_to :taxon, optional: true
 
   # field definitions
   field :name, type: String
@@ -105,6 +107,8 @@ class StudyFile
   validates_format_of :generation, with: /\A\d+\z/, if: proc {|f| f.generation.present?}
 
   validates_inclusion_of :file_type, in: STUDY_FILE_TYPES, unless: proc {|f| f.file_type == 'DELETE'}
+
+  validate :check_taxons, on: :create
 
   ###
   #
@@ -511,6 +515,13 @@ class StudyFile
     end
     if self.name !~ regex
       errors.add(:name, error)
+    end
+  end
+
+  # if this file is expression or sequence data, validate that the user has supplied a species/taxon
+  def check_taxons
+    if Taxon.present? && TAXON_REQUIRED_TYPES.include?(self.file_type) && self.taxon_id.blank?
+      errors.add(:taxon_id, 'You must supply a species/taxon identifier for this file type: ' + self.file_type)
     end
   end
 end
