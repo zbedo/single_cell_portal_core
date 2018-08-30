@@ -280,13 +280,20 @@ To access the production instance for maintenance purposes:
 * Select "Compute Engine" from the top-left nav dropdown
 * At the bottom of the page is the entry for the production VM (called singlecell-production)
 * Click the SSH button under the Connect heading (this will launch an SSH tunnel in a browser window)
-
-Once you have connected, the portal is running in this directory: <code>/home/docker-user/single_cell_portal</code>.
-All source files are owned by <code>docker-user</code>, so if you need to pull from git, make sure you
-<code>sudo -u docker-user -Hs</code> first to preserve the correct file permissions.  Any docker commands need to be run
-as <code>root</code>, so exit out of the shell before running them.
-
-The production URL is: https://portals.broadinstitute.org/single_cell
+* Once connected, switch to root via <code>sudo -i</code>.
+* Change directory to where the portal is running: <code>cd /home/docker-user/single_cell_portal</code>
+* Switch to the Docker user: <code>sudo -u docker-user -Hs</code>
+* Get latest source code from GitHub: <code>git pull origin master</code>
+* Exit Docker user to return to root: <code>exit</code>
+* Ensure no uploads or parses are occuring: <code>tail -n 1000 log/production.log</code>
+* Put the portal in maintenance mode: <code>bin/enable_maintenance.sh on</code>
+* Stop the portal: <code>docker stop single_cell</code>
+* Remove the container instance: <code>docker rm single_cell</code>
+* Launch a new instance of the portal with the updated container:
+<code>bin/boot_docker -u (sendgrid username) -P (sendgrid password) -e production -p (prod database password) -h (production hostname) -k (service account key path) -K (read-only service account key path) -o (oauth client id) -S (oauth client secret)</code>
+* View Docker logs: <code>docker logs -f single_cell</code>
+* Once Nginx is running again (i.e. you see "Passenger core online" in Docker logs), take off maintanence mode via <code>bin/enable_maintenance.sh off</code>
+* Check https://portals.broadinstitute.org/single_cell to verify that deployment succeeded
 
 If you are deploying your own production instance in a different project, the following VM/OS configurations are recommended:
 * VM: n1-highmem-4 (4 vCPUs, 26 GB memory)
