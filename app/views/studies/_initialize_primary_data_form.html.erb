@@ -28,7 +28,7 @@
     </div>
     <div class="col-sm-2">
       <%= f.label :taxon_id, 'Species/Taxon' %><br />
-      <%= f.select :taxon_id, options_from_collection_for_select(Taxon.sorted, :id, :selection_name, study_file.taxon_id), {prompt: 'None selected...'}, {class: 'form-control'} %>
+      <%= f.select :taxon_id, options_from_collection_for_select(Taxon.sorted, :id, :display_name, study_file.taxon_id), {prompt: 'None selected...'}, {class: 'form-control'} %>
     </div>
 		<div class="col-sm-4 upload-field <%= study_file.human_data? ? 'hidden' : nil %>">
       <% if !study_file.upload_file_name.nil? %>

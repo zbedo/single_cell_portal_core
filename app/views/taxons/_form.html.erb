@@ -1,0 +1,55 @@
+<%= form_with(model: taxon, local: true) do |form| %>
+  <% if taxon.errors.any? %>
+    <div class="bs-callout bs-callout-danger">
+      <h4><%= pluralize(taxon.errors.count, "error") %> prohibited this Admin Configuration from being saved:</h4>
+
+      <ul>
+        <% taxon.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+  <div class="form-group row">
+    <div class="col-sm-4">
+      <%= form.label :common_name %><br />
+      <%= form.text_field :common_name, class: 'form-control' %>
+    </div>
+    <div class="col-sm-4">
+      <%= form.label :scientific_name %><br />
+      <%= form.text_field :scientific_name, class: 'form-control' %>
+    </div>
+    <div class="col-sm-4">
+      <%= form.label :taxon_id, 'NCBI Taxon ID' %><br />
+      <%= form.number_field :taxon_id, class: 'form-control' %>
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-sm-4">
+      <%= form.label :genome_assembly %><br />
+      <%= form.text_field :genome_assembly, class: 'form-control' %>
+    </div>
+    <div class="col-sm-4">
+      <%= form.label :genome_annotation %><br />
+      <%= form.text_field :genome_annotation, class: 'form-control' %>
+    </div>
+    <div class="col-sm-4">
+      <%= form.label :genome_annotation_link %><br />
+      <%= form.text_field :genome_annotation_link, class: 'form-control' %>
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-sm-4">
+      <%= form.label :genome_assembly_alias %><br />
+      <%= form.text_field :genome_assembly_alias, class: 'form-control' %>
+    </div>
+    <div class="col-sm-4">
+      <%= form.label :aliases %><br />
+      <%= form.text_field :aliases, class: 'form-control' %>
+    </div>
+    <div class="col-sm-4">
+      <label>&nbsp;</label><br />
+      <%= form.submit 'Save', class: 'btn btn-success', id: 'save-taxon'%>
+    </div>
+  </div>
+<% end %>

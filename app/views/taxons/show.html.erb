@@ -1,0 +1,37 @@
+<h1><%= @taxon.display_name %></h1>
+<div class="row">
+  <div class="col-sm-3">
+    <dl>
+      <dt>Common Name (aliases)</dt>
+      <dd><%= @taxon.common_name %> <%= @taxon.aliases.any? ? "(#{@taxon.aliases.join(', ')})" : nil %></dd>
+    </dl>
+  </div>
+  <div class="col-sm-2">
+      <dl>
+      <dt>Scientific Name</dt>
+      <dd><%= @taxon.scientific_name %></dd>
+    </dl>
+  </div>
+  <div class="col-sm-2">
+    <dl>
+      <dt>NCBI Taxon ID</dt>
+      <dd><%= link_to "#{@taxon.taxon_id} <i class='fas fa-external-link-alt'></i>".html_safe, "https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=#{@taxon.taxon_id}" %></dd>
+    </dl>
+  </div>
+  <div class="col-sm-3">
+    <dl>
+      <dt>Genome Assembly (alias)</dt>
+      <dd><%= @taxon.genome_assembly %> <%= @taxon.genome_assembly_alias.present? ? "(#{@taxon.genome_assembly_alias})" : nil %></dd>
+    </dl>
+  </div>
+  <div class="col-sm-2">
+    <dl>
+      <dt>Genome Annotation</dt>
+      <dd><%= link_to "#{@taxon.genome_annotation} <i class='fas fa-download'></i>".html_safe, download_genome_annotation_path(@taxon) %></dd>
+    </dl>
+  </div>
+</div>
+<p>
+  <%= link_to "<span class='fas fa-edit'></span> Edit".html_safe, edit_taxon_path(@taxon), class: 'btn btn-info' %>
+  <%= link_to "<span class='fas fa-chevron-left'></span> Back".html_safe, taxons_path, class: 'btn btn-warning' %>
+</p>

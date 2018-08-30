@@ -18,6 +18,9 @@ Rails.application.routes.draw do
 
     resources :admin_configurations, path: 'admin'
 
+    resources :taxons, path: 'species'
+    get 'species/:id/view_genome_annotation', to: 'taxons#view_genome_annotation', as: :download_genome_annotation
+
     # branding groups
     resources :branding_groups
 

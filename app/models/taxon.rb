@@ -27,8 +27,8 @@ class Taxon
     self.all.order_by(common_name: :asc, genome_annotation: :asc)
   end
 
-  def selection_name
-    "#{self.common_name} (#{self.genome_annotation})"
+  def display_name
+    "#{self.common_name} (#{self.genome_assembly}, #{self.genome_annotation})"
   end
 
   private
