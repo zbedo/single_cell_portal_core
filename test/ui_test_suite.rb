@@ -2989,6 +2989,9 @@ class UiTestSuite < Test::Unit::TestCase
     # wait until the plot has rendered
     panel_id = "study-test-study-#{$random_seed}-gene-#{gene}"
     plot_id = panel_id + '-plot'
+    while !element_present?(:id, plot_id)
+      scroll_to(:bottom) # pagination test
+    end
     @wait.until {wait_for_plotly_render('#' + plot_id, 'rendered')}
     panel_div = @driver.find_element(:id, panel_id)
     assert !panel_div.find_element(:class, 'cluster-select').nil?, 'Did not render cluster controls for gene results'
@@ -3003,7 +3006,6 @@ class UiTestSuite < Test::Unit::TestCase
     annotation_select = panel_div.find_element(:class, 'annotation-select')
     annotation_select.send_key('Average Intensity')
     # wait half second for event to fire
-    sleep(0.5)
     @wait.until {wait_for_plotly_render('#' + plot_id, 'rendered')}
     updated_data = @driver.execute_script("return document.getElementById('#{plot_id}').data")
     new_plot_type = updated_data.first['type']
@@ -3017,8 +3019,10 @@ class UiTestSuite < Test::Unit::TestCase
     second_search_genes_form.send_keys(gene)
     submit = @driver.find_element(:id, 'submit-gene-search')
     submit.click
+    while !element_present?(:id, plot_id)
+      scroll_to(:bottom)
+    end
     @wait.until {wait_for_plotly_render('#' + plot_id, 'rendered')}
-    scroll_to(:bottom) # also tests pagination
     # wait until the plot has rendered
     private_panel_id = "study-private-study-#{$random_seed}-gene-#{gene}"
     private_plot_id = private_panel_id + '-plot'

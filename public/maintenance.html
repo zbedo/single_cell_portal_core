@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-  <script src="https://use.fontawesome.com/b3ed42fe0f.js"></script>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js" ></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
   <style>
@@ -85,8 +85,9 @@
     <ul class="nav navbar-nav pull-right">
       <li class='dropdown'><a href="#" class=dropdown-toggle" data-toggle="dropdown"><span class='fas fa-question-circle'></span> Help <span class='caret'></span></a>
         <ul class="dropdown-menu dropdown-menu-right">
-          <li><a href="https://github.com/broadinstitute/single_cell_portal/wiki" class='check-upload', target='_blank'><span class='fas fa-info-circle fa-fw'></span> Documentation/Wiki</a></li>
-          <li><a href="https://github.com/broadinstitute/single_cell_portal/issues" class='check-upload', target='_blank'><span class='fas fa-github fa-fw'></span> Issues</a></li>
+          <li><a href="https://github.com/broadinstitute/single_cell_portal/wiki" class='check-upload' target='_blank'><span class='fas fa-info-circle fa-fw'></span> Documentation/Wiki</a></li>
+          <li><a target="_blank" href="https://github.com/broadinstitute/single_cell_portal/issues"><span class="fas fa-fw fa-exclamation-circle"></span> Issues</a></li>
+          <li><a target="_blank" href="https://github.com/broadinstitute/single_cell_portal_core"><span class="fab fa-fw fa-github"></span> Portal Source Code</a></li>
         </ul>
       </li>
       <li class='disabled'><a href="#" id='login-nav'><span class='fas fa-sign-in fa-fw'></span> Login</a></li>
@@ -99,7 +100,7 @@
     <div class="col-md-12">
       <div class="bg-warning well well-lg" id="maintenance-notice">
         <h1 class="text-warning text-center"><span class="fas fa-exclamation-triangle"></span>&nbsp;SITE UNDER MAINTENANCE&nbsp;<span class="fas fa-exclamation-triangle"></span></h1>
-        <p class="lead text-center hidden" id="regular-maintenance">The Single Cell Portal is currently under regularly scheduled maintenance.  Normal maintenance windows run from 9:30-10:30AM EST every week.</p>
+        <p class="lead text-center hidden" id="regular-maintenance">The Single Cell Portal is currently under regularly scheduled maintenance.  Normal maintenance windows run from 12-2PM EST every other Thursday.</p>
         <p class="lead text-center" id="special-maintenance">The Single Cell Portal is currently under maintenance, and will be available again shortly.  Please try back later.</p>
         <p class="lead text-center">Please contact the <a href="mailto:single_cell_portal@broadinstitute.org">webmaster</a> if you have an urgent issue.</p>
       </div>
@@ -119,21 +120,21 @@
 
 <script type="text/javascript">
 
-  // determine which maintenance message to display
-  $(document).ready(function() {
-      // get current time
-      var now = new Date();
-      var day = now.getDay();
-      var hour = now.getHours();
-      var min = now.getMinutes();
-      // if monday, check time
-      if (day == 1) {
-          if ((hour == 9 && min >= 30) || (hour == 10 && min <= 30)) {
-              $('#special-maintenance').addClass('hidden');
-              $('#regular-maintenance').removeClass('hidden');
-          }
-      }
+    // determine which maintenance message to display
+    $(document).ready(function() {
+        // get current time
+        var now = new Date();
+        var day = now.getDay();
+        var hour = now.getHours();
+        var min = now.getMinutes();
+        // if monday, check time
+        if (day == 4) {
+            if ((hour == 12 && min >= 0) || (hour == 14 && min <= 59)) {
+                $('#special-maintenance').addClass('hidden');
+                $('#regular-maintenance').removeClass('hidden');
+            }
+        }
 
-  });
+    });
 </script>
 </html>
