@@ -18,7 +18,7 @@ class TaxonsController < ApplicationController
 
   # GET /taxons/new
   def new
-    @taxon = Taxon.new
+    @taxon = Taxon.new(user_id: current_user.id)
   end
 
   # GET /taxons/1/edit
@@ -67,14 +67,11 @@ class TaxonsController < ApplicationController
   end
 
   def download_genome_annotation
-    begin
-      reference_workspace = AdminConfiguration.find_by(config_type: 'Reference Data Workspace')
-      ref_namespace, ref_workspace = reference_workspace.value.split('/')
-      annotation_link = Study.firecloud_client.generate_signed_url(ref_namespace, ref_workspace,
-                                                                   @taxon.genome_annotation_link, expires: 15)
+    annotation_link = @taxon.public_genome_annotation_link
+    if annotation_link.present?
       redirect_to annotation_link and return
-    rescue => e
-      redirect_to taxons_path, alert: "Unable to load genome annotation for #{@taxon.display_name}: #{e.message}" and return
+    else
+      redirect_to request.referrer, alert: "Unable to generate a public link for '#{@taxon.genome_annotation_link}'.  Please try again."
     end
   end
 
@@ -87,6 +84,6 @@ class TaxonsController < ApplicationController
     # Never trust parameters from the scary internet, only allow the white list through.
     def taxon_params
       params.require(:taxon).permit(:common_name, :scientific_name, :taxon_id, :genome_assembly, :genome_assembly_alias,
-                                    :genome_annotation, :genome_annotation_link, :aliases => [])
+                                    :genome_annotation, :genome_annotation_link, :user_id, :notes, :aliases => [])
     end
 end

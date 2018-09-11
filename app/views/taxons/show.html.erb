@@ -1,4 +1,5 @@
 <h1><%= @taxon.display_name %></h1>
+<p class="lead help-block">Added by: <span class="label label-default"><%= @taxon.user.email %></span></p>
 <div class="row">
   <div class="col-sm-3">
     <dl>
@@ -29,6 +30,12 @@
       <dt>Genome Annotation</dt>
       <dd><%= link_to "#{@taxon.genome_annotation} <i class='fas fa-download'></i>".html_safe, download_genome_annotation_path(@taxon) %></dd>
     </dl>
+  </div>
+</div>
+<div class="row">
+  <div class="col-sm-12">
+    <p><strong>Notes</strong></p>
+    <p><%= @taxon.notes %></p>
   </div>
 </div>
 <p>
