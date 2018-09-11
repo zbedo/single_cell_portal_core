@@ -1,5 +1,5 @@
 class TaxonsController < ApplicationController
-  before_action :set_taxon, except: [:index, :new, :create]
+  before_action :set_taxon, except: [:index, :new, :create, :download_genome_annotation]
   before_action do
     authenticate_user!
     authenticate_admin
@@ -32,7 +32,7 @@ class TaxonsController < ApplicationController
 
     respond_to do |format|
       if @taxon.save
-        format.html { redirect_to taxon_path(@taxon), notice: "Species: '#{@taxon.display_name}' was successfully created." }
+        format.html { redirect_to taxon_path(@taxon), notice: "Species: '#{@taxon.common_name}' was successfully created." }
         format.json { render :show, status: :created, location: @taxon }
       else
         format.html { render :new }
@@ -46,7 +46,7 @@ class TaxonsController < ApplicationController
   def update
     respond_to do |format|
       if @taxon.update(taxon_params)
-        format.html { redirect_to taxons_path, notice: "Species: '#{@taxon.display_name}' was successfully updated." }
+        format.html { redirect_to taxons_path, notice: "Species: '#{@taxon.common_name}' was successfully updated." }
         format.json { render :show, status: :ok, location: @taxon }
       else
         format.html { render :edit }
@@ -58,16 +58,17 @@ class TaxonsController < ApplicationController
   # DELETE /taxons/1
   # DELETE /taxons/1.json
   def destroy
-    display_name = @taxon.display_name
+    common_name = @taxon.common_name
     @taxon.destroy
     respond_to do |format|
-      format.html { redirect_to taxons_path, notice: "Species: '#{display_name}' was successfully destroyed." }
+      format.html { redirect_to taxons_path, notice: "Species: '#{common_name}' was successfully destroyed." }
       format.json { head :no_content }
     end
   end
 
   def download_genome_annotation
-    annotation_link = @taxon.public_genome_annotation_link
+    genome_annotation = GenomeAnnotation.find(params[:id])
+    annotation_link = genome_annotation.public_annotation_link
     if annotation_link.present?
       redirect_to annotation_link and return
     else
@@ -83,7 +84,9 @@ class TaxonsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def taxon_params
-      params.require(:taxon).permit(:common_name, :scientific_name, :taxon_id, :genome_assembly, :genome_assembly_alias,
-                                    :genome_annotation, :genome_annotation_link, :user_id, :notes, :aliases => [])
+      params.require(:taxon).permit(:common_name, :scientific_name, :taxon_identifier, :user_id, :notes, :aliases,
+                                    genome_assemblies_attributes: [:id, :name, :alias, :release_date, :_destroy,
+                                    genome_annotations_attributes: [:id, :name, :link, :release_date,
+                                    :_destroy]])
     end
 end

@@ -10,8 +10,8 @@
               <th>Added By</th>
               <th>Common Name</th>
               <th>Scientific Name</th>
-              <th>Genome Assembly</th>
-              <th>Genome Annotation</th>
+              <th>Genome Assemblies</th>
+              <th>Genome Annotations</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -21,8 +21,14 @@
                 <td><%= taxon.user.email %></td>
                 <td><%= taxon.common_name %></td>
                 <td><%= taxon.scientific_name %></td>
-                <td><%= taxon.genome_assembly %></td>
-                <td><%= link_to "#{taxon.genome_annotation} <i class='fas fa-download'></i>".html_safe, download_genome_annotation_path(taxon), class: 'btn btn-xs btn-warning' %></td>
+                <td><%= taxon.genome_assemblies.map(&:name).join(',') %></td>
+                <td>
+                  <% taxon.genome_assemblies.each do |assembly| %>
+                    <% assembly.genome_annotations.each do |annotation| %>
+                      <%= link_to "#{annotation.display_name} <i class='fas fa-download'></i>".html_safe, download_genome_annotation_path(id: annotation.id) %>
+                    <% end %>
+                  <% end %>
+                </td>
                 <td class="actions">
                   <%= link_to "<span class='fas fa-search'></span> Details".html_safe, taxon_path(taxon), class: "btn btn-xs btn-info taxon-show" %>
                   <%= link_to "<span class='fas fa-edit'></span> Edit".html_safe, edit_taxon_path(taxon), class: "btn btn-xs btn-primary taxon-edit" %>

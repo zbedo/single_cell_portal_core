@@ -1,0 +1,28 @@
+<div class="well well-sm">
+  <div class="form-group row">
+    <div class="col-sm-4">
+      <%= f.label :name %><br />
+      <%= f.text_field :name, autocomplete: 'off', class: 'form-control' %>
+    </div>
+    <div class="col-sm-4">
+      <%= f.label :release_date %><br />
+      <%= f.date_field :release_date, class: 'form-control' %>
+    </div>
+    <div class="col-sm-3">
+      <%= f.label :alias %><br />
+      <%= f.text_field :alias, class: 'form-control' %>
+    </div>
+    <div class="col-sm-1">
+      <label>&nbsp;</label><br />
+      <%= f.link_to_remove "<span class='btn btn-sm btn-danger'><span class='fas fa-times'></span></span>".html_safe, data: {confirm: 'Are you sure?  This cannot be undone unless you reload the page before saving.'} %>
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-sm-12">
+      <h4>Genome Annotations</h4>
+      <%= f.fields_for :genome_annotations %>
+    </div>
+  </div>
+  <p><%= f.link_to_add "<span class='fas fa-plus'></span> Add an Annotation".html_safe, :genome_annotations,
+                       class: 'btn btn-sm btn-warning', id: 'add-genome-annotation' %></p>
+</div>
