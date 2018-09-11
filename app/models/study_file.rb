@@ -37,7 +37,7 @@ class StudyFile
   has_many :precomputed_scores, dependent: :destroy
   has_many :cell_metadata, dependent: :destroy
   belongs_to :taxon, optional: true
-  belongs_to :genome_annotation, optional: true
+  belongs_to :genome_assembly, optional: true
 
   # field definitions
   field :name, type: String

@@ -44,7 +44,12 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
         // disable sync button until user has selected a matrix pair
         console.log('disabling sync button on ' + submitBtn.attr('id'));
         submitBtn.attr('disabled', 'disabled');
-    } else if (fileType === 'BAM' || fileType === 'Fastq') {
+    } else if (fileType === 'BAM') {
+        taxonTarget = form.find('.taxon-select-target');
+        taxonTarget.html("<%= j(render partial: 'taxon_fields', locals: {f: f}) %>");
+        assemblySelect = form.find('.genome-assembly-association');
+        assemblySelect.removeClass('hidden')
+    } else if (fileType === 'Fastq') {
         taxonTarget = form.find('.taxon-select-target');
         taxonTarget.html("<%= j(render partial: 'taxon_fields', locals: {f: f}) %>");
     } else if (fileType === 'BAM Index') {

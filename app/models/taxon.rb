@@ -21,7 +21,7 @@ class Taxon
 
 
   def self.sorted
-    self.all.order_by(common_name: :asc, genome_annotation: :asc)
+    self.all.order_by(common_name: :asc)
   end
 
   def display_name

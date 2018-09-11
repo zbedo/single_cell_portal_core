@@ -1,2 +1,35 @@
-<%= f.label :taxon_id, 'Species/Taxon' %><br />
-<%= f.select :taxon_id, options_from_collection_for_select(Taxon.sorted, :id, :display_name, f.object.taxon_id), {prompt: 'None selected...'}, {class: 'form-control'} %>
+<div class="row">
+  <div class="col-xs-6">
+    <%= f.label :taxon_id, 'Species' %><br />
+    <%= f.select :taxon_id, options_from_collection_for_select(Taxon.sorted, :id, :display_name, f.object.taxon_id), {prompt: 'None selected...'}, {class: 'form-control taxon-select'} %>
+  </div>
+  <div class="col-xs-6 genome-assembly-association hidden">
+    <%= f.label :taxon_id, 'Genome Assembly' %><br />
+    <%= f.select :taxon_id, options_for_select([]), {prompt: 'Please select species...'}, {class: 'form-control genome-assembly-select'} %>
+  </div>
+</div>
+
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+
+    var taxonSelect = $('#study-file-<%= f.object.id %>').find('.taxon-select');
+    var assemblyDropdown = $('#study-file-<%= f.object.id %>').find('.genome-assembly-select');
+    taxonSelect.change(function() {
+        var selectedTaxon = $(this).val();
+        if (selectedTaxon !== '') {
+            $.getJSON('<%= get_taxon_assemblies_path %>?taxon=' + selectedTaxon, function(data) {
+                    assemblyDropdown.empty();
+                    $(data).each(function (index, assembly) {
+                        assemblyDropdown.append($('<option />', {
+                            value: assembly[1],
+                            text: assembly[0]
+                        }));
+                    });
+                }
+            )
+        } else {
+            assemblyDropdown.empty();
+            assemblyDropdown.append('<option value="">Please select species...</option>');
+        }
+    });
+
+</script>

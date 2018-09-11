@@ -29,9 +29,8 @@ class GenomeAnnotation
       if config.present?
         begin
           reference_project, reference_workspace = config.value.split('/')
-          Study.read_only_firecloud_client.execute_gcloud_method(:generate_signed_url, reference_project,
-                                                                 reference_workspace, self.link,
-                                                                 expires: 1.hour)
+          Study.read_only_firecloud_client.execute_gcloud_method(:generate_api_url, reference_project,
+                                                                 reference_workspace, self.link)
         rescue => e
           Rails.logger.error "Cannot generate public genome annotation link for #{self.link}: #{e.message}"
           ''

@@ -59,7 +59,7 @@
       <%= f.label :upload, 'Download' %><br />
       <%= render partial: 'layouts/download_link', locals: {study_file: study_file} %>
     </div>
-    <div class="col-sm-3 taxon-select-target">
+    <div class="col-sm-4 taxon-select-target">
       <% if study_file.file_type == 'BAM' || study_file.file_type == 'Fastq' %>
         <%= render partial: 'taxon_fields', locals: {f: f} %>
       <% end %>
@@ -68,7 +68,7 @@
       <%= label_tag :reparse, 'Reparse File?' %><br/>
       <%= select_tag :reparse, options_for_select(%w(Yes No), 'No'), {class: 'form-control'} %>
     </div>
-    <div class="col-sm-3">
+    <div class="col-sm-2">
       <%= f.label :actions %>
       <div class="row">
         <div class="col-xs-6">
