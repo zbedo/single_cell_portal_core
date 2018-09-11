@@ -159,8 +159,15 @@ class UiTestSuite < Test::Unit::TestCase
     save_study = @driver.find_element(:id, 'save-study')
     save_study.click
 
-    # upload expression matrix
     close_modal('message_modal')
+    # set species info if available
+    species_dropdown = @driver.find_element(:id, 'study_file_taxon_id')
+    opts = species_dropdown.find_elements(:tag_name, 'option')
+    available_species = opts.delete_if {|opt| opt['value'] == ''}
+    if available_species.any?
+      species_dropdown.send_key(available_species.sample.text)
+    end
+    # upload expression matrix
     upload_expression = @driver.find_element(:id, 'upload-expression')
     upload_expression.send_keys(@test_data_path + 'expression_matrix_example.txt')
     wait_for_render(:id, 'start-file-upload')
@@ -174,7 +181,14 @@ class UiTestSuite < Test::Unit::TestCase
     new_expression = @driver.find_element(:class, 'add-expression')
     new_expression.click
     scroll_to(:bottom)
-    upload_expression_2 = @driver.find_element(:id, 'upload-expression')
+    exp_2_form = @driver.find_element(:class, 'new-expression-form')
+    species_dropdown = exp_2_form.find_element(:id, 'study_file_taxon_id')
+    opts = species_dropdown.find_elements(:tag_name, 'option')
+    available_species = opts.delete_if {|opt| opt['value'] == ''}
+    if available_species.any?
+      species_dropdown.send_key(available_species.sample.text)
+    end
+    upload_expression_2 = exp_2_form.find_element(:id, 'upload-expression')
     upload_expression_2.send_keys(@test_data_path + 'expression_matrix_example_2.txt')
     wait_for_render(:id, 'start-file-upload')
     upload_btn = @driver.find_element(:id, 'start-file-upload')
@@ -255,10 +269,17 @@ class UiTestSuite < Test::Unit::TestCase
 
     # upload right fastq
     wait_for_render(:class, 'initialize_primary_data_form')
-    upload_fastq = @driver.find_element(:class, 'upload-fastq')
+    fastq_form = @driver.find_element(:class, 'new-fastq-form')
+    species_dropdown = fastq_form.find_element(:id, 'study_file_taxon_id')
+    opts = species_dropdown.find_elements(:tag_name, 'option')
+    available_species = opts.delete_if {|opt| opt['value'] == ''}
+    if available_species.any?
+      species_dropdown.send_key(available_species.sample.text)
+    end
+    upload_fastq = fastq_form.find_element(:class, 'upload-fastq')
     upload_fastq.send_keys(@test_data_path + 'cell_1_R1_001.fastq.gz')
     wait_for_render(:id, 'start-file-upload')
-    upload_btn = @driver.find_element(:id, 'start-file-upload')
+    upload_btn = fastq_form.find_element(:id, 'start-file-upload')
     sleep(0.5)
     upload_btn.click
     close_modal('upload-success-modal')
@@ -268,6 +289,12 @@ class UiTestSuite < Test::Unit::TestCase
     add_fastq.click
     wait_for_render(:class, 'new-fastq-form')
     new_fastq_form = @driver.find_element(class: 'new-fastq-form')
+    species_dropdown = new_fastq_form.find_element(:id, 'study_file_taxon_id')
+    opts = species_dropdown.find_elements(:tag_name, 'option')
+    available_species = opts.delete_if {|opt| opt['value'] == ''}
+    if available_species.any?
+      species_dropdown.send_key(available_species.sample.text)
+    end
     new_upload_fastq = new_fastq_form.find_element(:class, 'upload-fastq')
     new_upload_fastq.send_keys(@test_data_path + 'cell_1_I1_001.fastq.gz')
     wait_for_render(:id, 'start-file-upload')
