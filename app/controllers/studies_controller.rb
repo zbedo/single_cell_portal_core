@@ -189,24 +189,37 @@ class StudiesController < ApplicationController
     # now remove files that we found that were supposed to be in directory_listings
     @unsynced_files.delete_if {|file| files_to_remove.include?(file.generation)}
 
-    # now check against latest list of files by directory vs. what was just found to see if we are missing anything and add directory to unsynced list
+    # now check against latest list of files by directory vs. what was just found to see if we are missing anything and
+    # add directory to unsynced list. also check if an existing directory is now 'orphaned' because it was moved and
+    # store that reference for removal after the check is complete
+    orphaned_directories = []
     @directories.each do |directory|
       synced = true
-      directory.files.each do |file|
-        if @files_by_dir[directory.name].detect {|f| f['generation'].to_s == file['generation'].to_s}.nil?
-          synced = false
-          directory.files.delete(file)
-        else
-          next
+      if @files_by_dir[directory.name].present?
+        directory.files.each do |file|
+          if @files_by_dir[directory.name].detect {|f| f['generation'].to_s == file['generation'].to_s}.nil?
+            synced = false
+            directory.files.delete(file)
+          else
+            next
+          end
         end
+        # if no longer synced, check if already in the list and remove as files list has changed
+        if !synced
+          @unsynced_directories.delete_if {|dir| dir.name == directory.name}
+          @unsynced_directories << directory
+        elsif directory.sync_status
+          @synced_directories << directory
+        end
+      else
+        # directory did not exist in @files_by_dir, so this directory_listing is orphaned and should be removed
+        orphaned_directories << directory
       end
-      # if no longer synced, check if already in the list and remove as files list has changed
-      if !synced
-        @unsynced_directories.delete_if {|dir| dir.name == directory.name}
-        @unsynced_directories << directory
-      elsif directory.sync_status
-        @synced_directories << directory
-      end
+    end
+
+    # remove orphaned directories
+    orphaned_directories.each do |orphan|
+      orphan.destroy
     end
 
     # provisionally save unsynced directories so we don't have to pass huge arrays of filenames/sizes in the form
@@ -214,6 +227,9 @@ class StudiesController < ApplicationController
     @unsynced_directories.each do |directory|
       directory.save
     end
+
+    # reload unsynced directories to remove any that were orphaned
+    @unsynced_directories = @study.directory_listings.unsynced
 
     # split directories into primary data types and 'others'
     @unsynced_primary_data_dirs = @unsynced_directories.select {|dir| dir.file_type == 'fastq'}
