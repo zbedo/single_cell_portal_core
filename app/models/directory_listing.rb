@@ -11,13 +11,13 @@ class DirectoryListing
 	include Mongoid::Timestamps
 	include Rails.application.routes.url_helpers # for accessing download_file_path and download_private_file_path
 
-	PRIMARY_DATA_TYPES = %w(fq fastq bam).freeze
+	PRIMARY_DATA_TYPES = %w(fq fastq).freeze
 	READ_PAIR_IDENTIFIERS = %w(_R1 _R2 _I1 _I2).freeze
-  TAXON_REQUIRED_REGEX = /(fastq|fq|bam)/
+	TAXON_REQUIRED_REGEX = /\.(fastq|fq)/
+	ASSEMBLY_REQUIRED_REGEX = /\.bam/
 
 	belongs_to :study
   belongs_to :taxon, optional: true
-  belongs_to :genome_assembly, optional: true
 
 	field :name, type: String
 	field :description, type: String
@@ -33,6 +33,8 @@ class DirectoryListing
             message: ValidationTools::OBJECT_LABELS_ERROR, allow_blank: true
   validates_format_of :file_type, with: ValidationTools::FILENAME_CHARS,
 											message: ValidationTools::FILENAME_CHARS_ERROR
+
+	validate :check_taxon, on: :update
 
 	index({ name: 1, study_id: 1, file_type: 1 }, { unique: true, background: true })
 
@@ -93,7 +95,7 @@ class DirectoryListing
     else
       nil
     end
-  end
+	end
 
 	# return sample name based on filename (everything to the left of _(R|I)(1|2) string in file basename)
   # will also transform periods into underscores as these are unallowed in FireCloud
@@ -181,5 +183,16 @@ class DirectoryListing
 	# get the 'folder' of a file in a bucket based on its pathname
 	def self.get_folder_name(filepath)
 		filepath.include?('/') ? filepath.split('/').first : '/'
-	end
+  end
+
+  private
+
+  # if this directory is sequence data, validate that the user has supplied a species and assembly (only if syncing)
+  def check_taxon
+    if Taxon.present? && self.file_type.match(TAXON_REQUIRED_REGEX).present? && self.sync_status
+      if self.taxon_id.nil?
+        errors.add(:taxon_id, 'You must supply a species for this file type: ' + self.file_type)
+      end
+    end
+  end
 end
