@@ -1284,7 +1284,7 @@ class StudiesController < ApplicationController
   end
 
   def directory_listing_params
-    params.require(:directory_listing).permit(:_id, :study_id, :name, :description, :sync_status, :file_type)
+    params.require(:directory_listing).permit(:_id, :study_id, :name, :description, :sync_status, :file_type, :taxon_id, :genome_assembly_id)
   end
 
   def default_options_params

@@ -302,6 +302,21 @@ class StudyFile
     end
   end
 
+  # helper method for retrieving species common name
+  def species_name
+    self.taxon.common_name
+  end
+
+  # helper to return assembly name
+  def genome_assembly_name
+    self.genome_assembly.present? ? self.genome_assembly.name : nil
+  end
+
+  # helper to return annotation, if present
+  def genome_annotation
+    self.genome_assembly.present? ? self.genome_assembly.current_annotation : nil
+  end
+
   ###
   #
   # CACHING METHODS
@@ -522,7 +537,7 @@ class StudyFile
   # if this file is expression or sequence data, validate that the user has supplied a species/taxon
   def check_taxons
     if Taxon.present? && TAXON_REQUIRED_TYPES.include?(self.file_type) && self.taxon_id.blank?
-      errors.add(:taxon_id, 'You must supply a species/taxon identifier for this file type: ' + self.file_type)
+      errors.add(:taxon_id, 'You must supply a species for this file type: ' + self.file_type)
     end
   end
 end

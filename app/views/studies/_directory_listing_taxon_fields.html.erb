@@ -3,7 +3,7 @@
     <%= f.label :taxon_id, 'Species' %><br />
     <%= f.select :taxon_id, options_from_collection_for_select(Taxon.sorted, :id, :display_name, f.object.taxon_id), {prompt: 'None selected...'}, {class: 'form-control taxon-select'} %>
   </div>
-  <div class="col-xs-6 genome-assembly-association hidden">
+  <div class="col-xs-6 genome-assembly-association">
     <%= f.label :genome_assembly_id, 'Genome Assembly' %><br />
     <%= f.select :genome_assembly_id, options_for_select([]), {prompt: 'Please select species...'}, {class: 'form-control genome-assembly-select'} %>
   </div>
@@ -11,8 +11,8 @@
 
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
-    var taxonSelect = $('#study-file-<%= f.object.id %>').find('.taxon-select');
-    var assemblyDropdown = $('#study-file-<%= f.object.id %>').find('.genome-assembly-select');
+    var taxonSelect = $('#directory-listing-<%= f.object.id %>').find('.taxon-select');
+    var assemblyDropdown = $('#directory-listing-<%= f.object.id %>').find('.genome-assembly-select');
     taxonSelect.change(function() {
         var selectedTaxon = $(this).val();
         if (selectedTaxon !== '') {

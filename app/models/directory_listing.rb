@@ -11,10 +11,13 @@ class DirectoryListing
 	include Mongoid::Timestamps
 	include Rails.application.routes.url_helpers # for accessing download_file_path and download_private_file_path
 
-	PRIMARY_DATA_TYPES = %w(fq fastq).freeze
+	PRIMARY_DATA_TYPES = %w(fq fastq bam).freeze
 	READ_PAIR_IDENTIFIERS = %w(_R1 _R2 _I1 _I2).freeze
+  TAXON_REQUIRED_REGEX = /(fastq|fq|bam)/
 
 	belongs_to :study
+  belongs_to :taxon, optional: true
+  belongs_to :genome_assembly, optional: true
 
 	field :name, type: String
 	field :description, type: String
@@ -66,7 +69,31 @@ class DirectoryListing
 		if self.has_file?(filename)
 			"gs://#{self.study.bucket_id}/#{filename}"
 		end
-	end
+  end
+
+  # helper method for retrieving species common name
+  def species_name
+    self.taxon.common_name
+  end
+
+  # helper to return assembly name
+  def genome_assembly_name
+    self.genome_assembly.present? ? self.genome_assembly.name : nil
+  end
+
+  # helper to return genome annotation, if present
+  def genome_annotation
+    self.genome_assembly.present? ? self.genome_assembly.current_annotation : nil
+  end
+
+  # helper to return public link to genome annotation, if present
+  def genome_annotation_link
+    if self.genome_assembly.present? && self.genome_assembly.current_annotation.present?
+      self.genome_assembly.current_annotation.public_annotation_link
+    else
+      nil
+    end
+  end
 
 	# return sample name based on filename (everything to the left of _(R|I)(1|2) string in file basename)
   # will also transform periods into underscores as these are unallowed in FireCloud
@@ -155,5 +182,4 @@ class DirectoryListing
 	def self.get_folder_name(filepath)
 		filepath.include?('/') ? filepath.split('/').first : '/'
 	end
-
 end

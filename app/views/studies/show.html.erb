@@ -209,7 +209,8 @@
 					<tr>
 						<th>Name</th>
 						<th>Description</th>
-						<th>File Type</th>
+            <th>File Type</th>
+            <th>Species/Assembly</th>
 						<th>Parse Status</th>
 						<th>Download</th>
 					</tr>
@@ -219,7 +220,12 @@
 						<tr id="study-file-<%= study_file.id %>">
 							<td class="study-file-name"><%= study_file.name %></td>
 							<td class="study-file-description"><%= study_file.description %></td>
-							<td class="study-file-file-type"><%= study_file.file_type %></td>
+              <td class="study-file-file-type"><%= study_file.file_type %></td>
+              <td class="study-file-species-info">
+                <% if study_file.taxon.present? %>
+                  <%= study_file.species_name %> <%= study_file.genome_assembly.present? ? " (#{study_file.genome_assembly_name})" : nil %>
+                <% end %>
+              </td>
 							<td class="study-file-parsed" data-parsed="<%= study_file.parsed? %>"><%= study_file.parseable? ? get_parse_label(study_file.parse_status) : get_na_label %></td>
 							<td><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></td>
 						</tr>
@@ -242,9 +248,10 @@
       <table class="table table-striped tabled-condensed" id="fastq-table">
         <thead>
         <tr>
-          <th class="col-sm-4">Filename</th>
-          <th class="col-sm-4">Description</th>
+          <th class="col-sm-3">Filename</th>
+          <th class="col-sm-3">Description</th>
           <th class="col-sm-3">File Type</th>
+          <th class="col-sm-2">Species/Assembly</th>
           <th class="col-sm-1">Download</th>
         </tr>
         </thead>
@@ -254,6 +261,13 @@
               <td><%= file.name %></td>
               <td class="dl-description"><%= file.description %></td>
               <td><%= file.file_type %></td>
+              <td>
+              <td>
+                <% if file.taxon.present? %>
+                  <%= file.species_name %> <%= file.genome_assembly.present? ? " (#{file.genome_assembly_name})" : nil %>
+                <% end %>
+              </td>
+              </td>
               <td>
                 <% if @allow_downloads %>
                   <%= render partial: '/layouts/download_link', locals: {study: @study, study_file: file} %>
@@ -270,6 +284,11 @@
                 <td><%= basename %></td>
                 <td class="dl-description"><%= directory.description %></td>
                 <td class="dl-description"><%= directory.file_type %></td>
+                <td class="dl-description">
+                  <% if directory.taxon.present? %>
+                    <%= directory.species_name %> <%= directory.genome_assembly.present? ? " (#{directory.genome_assembly_name})" : nil %>
+                  <% end %>
+                </td>
                 <td><%= link_to("<span class='fas fa-download'></span> #{number_to_human_size(file[:size], prefix: :si)}".html_safe, directory.download_path(file[:name]), class: "btn btn-primary dl-link fastq", download: basename) %></td>
               </tr>
             <% end %>

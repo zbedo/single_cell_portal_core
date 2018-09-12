@@ -154,8 +154,9 @@
   <table class="table table-striped table-condensed">
     <thead>
     <tr>
-      <th class="col-sm-5">Filename</th>
-      <th class="col-sm-5">Description</th>
+      <th class="col-sm-4">Filename</th>
+      <th class="col-sm-4">Description</th>
+      <th class="col-sm-2">Species/Assembly</th>
       <th class="col-sm-1">Browse</th>
       <th class="col-sm-1">Download</th>
     </tr>
@@ -165,6 +166,11 @@
       <tr>
         <td><%= study_file.upload_file_name.nil? ? study_file.name : study_file.upload_file_name %> <%= study_file.file_type == 'Cluster' ? "<strong>(#{study_file.name})</strong>".html_safe : nil %></td>
         <td><%= study_file.description %></td>
+        <td>
+          <% if study_file.taxon.present? %>
+            <%= study_file.species_name %> <%= study_file.genome_assembly.present? ? " (#{study_file.genome_assembly_name})" : nil %>
+          <% end %>
+        </td>
         <td>
           <% if study_file.file_type == 'BAM' %>
             <%= render partial: '/site/genome/browse_igv_link', locals: {study_file: study_file} %>
@@ -187,8 +193,9 @@
       <table class="table table-striped tabled-condensed study-data-table" id="fastq-table">
         <thead>
         <tr>
-          <th class="col-sm-5">Filename</th>
-          <th class="col-sm-5">Description</th>
+          <th class="col-sm-4">Filename</th>
+          <th class="col-sm-4">Description</th>
+          <th class="col-sm-2">Species/Assembly</th>
           <th class="col-sm-1">Browse</th>
           <th class="col-sm-1">Download</th>
         </tr>
@@ -218,6 +225,11 @@
               <tr>
                 <td><%= file[:name] %></td>
                 <td><%= directory.description %></td>
+                <td>
+                  <% if directory.taxon.present? %>
+                    <%= directory.species_name %> <%= directory.genome_assembly.present? ? " (#{directory.genome_assembly_name})" : nil %>
+                  <% end %>
+                </td>
                 <td>
                   <% if directory.file_type == 'BAM' %>
                     <%= render partial: '/site/genome/browse_igv_link', locals: {study_file: file} %>

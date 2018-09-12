@@ -24,12 +24,13 @@ class GenomeAnnotation
     if self.link.starts_with?('http')
       self.link
     else
-      # assume the link is a relative path to a file in a GCS bucket, then use the Read-Only client to generate a signed URL
+      # assume the link is a relative path to a file in a GCS bucket, then use service account to generate api url
+      # will then need to use user or read-only service account access_token to render in client
       config = AdminConfiguration.find_by(config_type: 'Reference Data Workspace')
       if config.present?
         begin
           reference_project, reference_workspace = config.value.split('/')
-          Study.read_only_firecloud_client.execute_gcloud_method(:generate_api_url, reference_project,
+          Study.firecloud_client.execute_gcloud_method(:generate_api_url, reference_project,
                                                                  reference_workspace, self.link)
         rescue => e
           Rails.logger.error "Cannot generate public genome annotation link for #{self.link}: #{e.message}"
