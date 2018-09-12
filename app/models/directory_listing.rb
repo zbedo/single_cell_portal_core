@@ -13,8 +13,7 @@ class DirectoryListing
 
 	PRIMARY_DATA_TYPES = %w(fq fastq).freeze
 	READ_PAIR_IDENTIFIERS = %w(_R1 _R2 _I1 _I2).freeze
-	TAXON_REQUIRED_REGEX = /\.(fastq|fq)/
-	ASSEMBLY_REQUIRED_REGEX = /\.bam/
+	TAXON_REQUIRED_REGEX = /(fastq|fq)/
 
 	belongs_to :study
   belongs_to :taxon, optional: true
