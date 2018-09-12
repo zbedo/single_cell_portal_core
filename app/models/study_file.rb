@@ -319,6 +319,15 @@ class StudyFile
     self.genome_assembly.present? ? self.genome_assembly.current_annotation : nil
   end
 
+  # helper to return public link to genome annotation, if present
+  def genome_annotation_link
+    if self.genome_assembly.present? && self.genome_assembly.current_annotation.present?
+      self.genome_assembly.current_annotation.public_annotation_link
+    else
+      nil
+    end
+  end
+
   ###
   #
   # CACHING METHODS
