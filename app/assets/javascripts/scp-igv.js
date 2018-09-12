@@ -36,13 +36,22 @@ $(document).on('click', '.bam-browse-genome', function(e) {
   $('#genome-tab-nav').css('display', ''); // Show 'Genome' tab
   $('#study-visualize-nav > a').click();
   $('#genome-tab-nav > a').click();
-
-  hasDisplayedIgv = true;
 });
 
 $(document).on('click', '#genome-tab-nav', function (e) {
   initializeIgv();
+  hasDisplayedIgv = true;
 });
+
+function showGenomeTab() {
+
+  // Bail if no BAMs are available
+  if (typeof bamAndBaiFiles === 'undefined') return;
+
+  bamsToViewInIgv.push(bamAndBaiFiles[0]);
+
+  $('#genome-tab-nav').css('display', ''); // Show 'Genome' tab
+}
 
 /**
  * Get tracks for selected BAM files, to show sequencing reads
@@ -144,3 +153,8 @@ function initializeIgv() {
 
   igv.createBrowser(igvContainer, igvOptions);
 }
+
+$(document).ready(function() {
+  // Show a default BAM upon page load
+  showGenomeTab();
+});
