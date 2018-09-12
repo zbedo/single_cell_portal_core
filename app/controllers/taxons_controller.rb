@@ -68,7 +68,7 @@ class TaxonsController < ApplicationController
 
   def download_genome_annotation
     genome_annotation = GenomeAnnotation.find(params[:id])
-    annotation_link = genome_annotation.public_annotation_link
+    annotation_link = genome_annotation.annotation_download_link
     if annotation_link.present?
       redirect_to annotation_link and return
     else

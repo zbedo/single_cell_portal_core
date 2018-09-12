@@ -42,6 +42,28 @@ class GenomeAnnotation
     end
   end
 
+  # generate a URL that can be used to download this annotation
+  def annotation_download_link
+    if self.link.starts_with?('http')
+      self.link
+    else
+      # assume the link is a relative path to a file in a GCS bucket, then use service account to generate api url
+      # will then need to use user or read-only service account access_token to render in client
+      config = AdminConfiguration.find_by(config_type: 'Reference Data Workspace')
+      if config.present?
+        begin
+          reference_project, reference_workspace = config.value.split('/')
+          Study.firecloud_client.execute_gcloud_method(:generate_signed_url, reference_project,
+                                                       reference_workspace, self.link, expires: 15)
+        rescue => e
+          Rails.logger.error "Cannot generate genome annotation download link for #{self.link}: #{e.message}"
+          ''
+        end
+      else
+        ''
+      end
+    end
+  end
 
   private
 
