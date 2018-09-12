@@ -306,7 +306,7 @@ class StudyFile
 
   # helper method for retrieving species common name
   def species_name
-    self.taxon.common_name
+    self.taxon.present? ? self.taxon.common_name : nil
   end
 
   # helper to return assembly name
