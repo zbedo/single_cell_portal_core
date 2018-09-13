@@ -10,8 +10,7 @@
               <th>Added By</th>
               <th>Common Name</th>
               <th>Scientific Name</th>
-              <th>Genome Assemblies</th>
-              <th>Genome Annotations</th>
+              <th>Genome Assemblies (Genome Annotations)</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -21,12 +20,13 @@
                 <td><%= taxon.user.email %></td>
                 <td><%= taxon.common_name %></td>
                 <td><%= taxon.scientific_name %></td>
-                <td><%= taxon.genome_assemblies.map(&:name).join(',') %></td>
                 <td>
                   <% taxon.genome_assemblies.each do |assembly| %>
+                    <%= assembly.name %>&nbsp;
                     <% assembly.genome_annotations.each do |annotation| %>
-                      <%= link_to "#{annotation.display_name} <i class='fas fa-download'></i>".html_safe, download_genome_annotation_path(id: annotation.id) %>
+                      <%= link_to "#{annotation.display_name} <i class='fas fa-download'></i>".html_safe, download_genome_annotation_path(id: annotation.id), class: 'btn btn-xs btn-warning' %>
                     <% end %>
+                    <br />
                   <% end %>
                 </td>
                 <td class="actions">

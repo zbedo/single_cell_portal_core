@@ -20,6 +20,7 @@ class Taxon
 
   before_destroy :remove_study_file_associations
 
+  RESTRICTED_NCBI_TAXON_IDS = [9606]
 
   def self.sorted
     self.all.order_by(common_name: :asc)

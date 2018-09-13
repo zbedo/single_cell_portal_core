@@ -263,9 +263,7 @@
               <td><%= file.file_type %></td>
               <td>
               <td>
-                <% if file.taxon.present? %>
-                  <%= file.species_name %> <%= file.genome_assembly.present? ? " (#{file.genome_assembly_name})" : nil %>
-                <% end %>
+                <%= file.species_name %> <%= file.genome_assembly.present? ? " (#{file.genome_assembly_name})" : nil %>
               </td>
               </td>
               <td>
@@ -285,9 +283,7 @@
                 <td class="dl-description"><%= directory.description %></td>
                 <td class="dl-description"><%= directory.file_type %></td>
                 <td class="dl-description">
-                  <% if directory.taxon.present? %>
-                    <%= directory.species_name %> <%= directory.genome_assembly.present? ? " (#{directory.genome_assembly_name})" : nil %>
-                  <% end %>
+                  <%= directory.species_name %>
                 </td>
                 <td><%= link_to("<span class='fas fa-download'></span> #{number_to_human_size(file[:size], prefix: :si)}".html_safe, directory.download_path(file[:name]), class: "btn btn-primary dl-link fastq", download: basename) %></td>
               </tr>

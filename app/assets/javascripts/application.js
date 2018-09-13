@@ -667,23 +667,32 @@ function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, t
 }
 
 // toggles visibility and disabled status of file upload and fastq url fields
-function toggleFastqFields(target) {
+function toggleFastqFields(target, state) {
     var selector = $("#" + target);
     var fileField = selector.find('.upload-field');
-    $(fileField).toggleClass('hidden');
     var fastqField = selector.find('.fastq-field');
-    $(fastqField).toggleClass('hidden');
-    // toggle disabled status by returning inverse of current state
-    $(fastqField).find('input').attr('disabled', !$(fastqField).find('input').is('[disabled=disabled]'));
-    // set human data attr to true
     var humanData = $(fastqField).find('input[type=hidden]');
-    $(humanData).val($(humanData).val() === 'true' ? 'false' : 'true' );
-    // enable name field & update button to allow saving
     var saveBtn = selector.find('.save-study-file');
-    $(saveBtn).attr('disabled', !$(saveBtn).is('[disabled=disabled]'));
     var nameField = selector.find('.filename');
-    $(nameField).attr('readonly', !$(nameField).is('[readonly=readonly]'));
-    $(nameField).attr('placeholder', '');
+    if (state === 'true') {
+        $(fileField).addClass('hidden');
+        $(fastqField).removeClass('hidden');
+        $(fastqField).find('input').attr('disabled', false);
+        $(humanData).val('true' );
+        $(saveBtn).attr('disabled', false);
+        $(nameField).attr('readonly', false);
+        $(nameField).attr('placeholder', '');
+    } else {
+        $(fileField).removeClass('hidden');
+        $(fastqField).addClass('hidden');
+        $(fastqField).find('input').attr('disabled', 'disabled');
+        $(humanData).val('false');
+        if ( selector.find('.upload-fastq').length !== 0 ) {
+            $(saveBtn).attr('disabled', true); // disable save only if file hasn't been uploaded
+        }
+        $(nameField).attr('readonly', true);
+        $(nameField).attr('placeholder', 'Filename is taken from uploaded file...');
+    }
     // animate highlight effect to show fields that need changing
     $(nameField).parent().effect('highlight', 1200);
     $(fastqField).effect('highlight', 1200);

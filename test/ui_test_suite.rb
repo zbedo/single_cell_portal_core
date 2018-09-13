@@ -1237,7 +1237,7 @@ class UiTestSuite < Test::Unit::TestCase
     directory_forms.each do |form|
       file_type = form.find_element(:id, 'directory_listing_file_type')
       # specify a species for fastq data
-      if file_type == 'fastq'
+      if file_type['value'] == 'fastq'
         species_dropdown = form.find_element(:id, 'directory_listing_taxon_id')
         opts = species_dropdown.find_elements(:tag_name, 'option')
         available_species = opts.delete_if {|opt| opt['value'] == ''}
@@ -5068,6 +5068,8 @@ class UiTestSuite < Test::Unit::TestCase
     assert igv_displayed, "igv.js did not display 4 tracks in Explore tab's single-gene view"
 
     # clean up
+    logout_from_portal
+    login_as_other($test_email, $test_email_password)
     @driver.get studies_path
     wait_until_page_loads(studies_path)
     delete = @driver.find_element(:class, "igv-js-ui-test-#{$random_seed}-delete-local")

@@ -37,7 +37,7 @@
               <td><%= assembly.release_date.strftime("%D") %></td>
               <td>
                 <% assembly.genome_annotations.each do |annotation| %>
-                  <%= link_to "#{annotation.display_name} <i class='fas fa-download'></i>".html_safe, download_genome_annotation_path(id: annotation.id) %>
+                  <%= link_to "#{annotation.display_name} <i class='fas fa-download'></i>".html_safe, download_genome_annotation_path(id: annotation.id), class: 'btn btn-sm btn-warning' %>
                 <% end %>
               </td>
             </tr>

@@ -6,6 +6,7 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
     var fileType = $(this).val();
     var nameField = $('#study-file-<%= study_file.id %> #study_file_name');
     var extraInfo = $('#study-file-<%= study_file.id %>-extra-info');
+    var taxonTarget = form.find('.taxon-select-target');
     var submitBtn = $('#sync-study-file-<%= study_file.id %>');
     // render fields & process entries based on file type
     if (fileType === 'Cluster') {
@@ -45,14 +46,16 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
         console.log('disabling sync button on ' + submitBtn.attr('id'));
         submitBtn.attr('disabled', 'disabled');
     } else if (fileType === 'BAM') {
-        taxonTarget = form.find('.taxon-select-target');
+        extraInfo.empty();
         taxonTarget.html("<%= j(render partial: 'taxon_fields', locals: {f: f}) %>");
         assemblySelect = form.find('.genome-assembly-association');
         assemblySelect.removeClass('hidden')
     } else if (fileType === 'Fastq') {
-        taxonTarget = form.find('.taxon-select-target');
-        taxonTarget.html("<%= j(render partial: 'taxon_fields', locals: {f: f}) %>");
+        extraInfo.empty();
+        alert('Fastq files are stored in Sequence Data Directories (see below).  Please select another file type.');
+        $(this).val('');
     } else if (fileType === 'BAM Index') {
+        extraInfo.empty();
         nameField.val(fileName);
         nameField.attr('readonly', 'readonly');
         var bams = gatherFilesByType('BAM');
@@ -74,6 +77,7 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
         submitBtn.attr('disabled', 'disabled');
     } else {
         extraInfo.empty();
+        taxonTarget.empty();
         nameField.val('<%= study_file.name %>');
         nameField.attr('readonly', 'readonly');
         form.find('.taxon-select-target').empty();

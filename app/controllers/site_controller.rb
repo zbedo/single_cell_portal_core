@@ -16,7 +16,7 @@ class SiteController < ApplicationController
   respond_to :html, :js, :json
 
   before_action :set_study, except: [:index, :search, :get_viewable_studies, :search_all_genes, :privacy_policy, :view_workflow_wdl,
-                                     :create_totat, :log_action, :get_taxon_assemblies]
+                                     :create_totat, :log_action, :get_taxon, :get_taxon_assemblies]
   before_action :set_cluster_group, only: [:study, :render_cluster, :render_gene_expression_plots, :render_global_gene_expression_plots,
                                            :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression,
                                            :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap, :expression_query,
@@ -31,7 +31,7 @@ class SiteController < ApplicationController
   before_action :check_view_permissions, except: [:index, :get_viewable_studies, :search_all_genes, :render_global_gene_expression_plots, :privacy_policy,
                                                   :search, :precomputed_results, :expression_query, :annotation_query, :view_workflow_wdl,
                                                   :log_action, :get_workspace_samples, :update_workspace_samples, :create_totat,
-                                                  :get_workflow_options, :get_taxon_assemblies]
+                                                  :get_workflow_options, :get_taxon, :get_taxon_assemblies]
   before_action :check_compute_permissions, only: [:get_fastq_files, :get_workspace_samples, :update_workspace_samples,
                                                    :delete_workspace_samples, :get_workspace_submissions, :create_workspace_submission,
                                                    :get_submission_workflow, :abort_submission_workflow, :get_submission_errors,
@@ -1282,6 +1282,12 @@ class SiteController < ApplicationController
   # route that is used to log actions in Google Analytics that would otherwise be ignored due to redirects or response types
   def log_action
     @action_to_log = params[:url_string]
+  end
+
+  # get taxon info
+  def get_taxon
+    @taxon = Taxon.find(params[:taxon])
+    render json: @taxon.attributes
   end
 
   # get GenomeAssembly information for a given Taxon for StudyFile associations and other menu actions
