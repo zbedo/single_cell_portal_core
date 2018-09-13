@@ -42,12 +42,6 @@ $(document).on('click', '#genome-tab-nav', function (e) {
   hasDisplayedIgv = true;
 });
 
-function showGenomeTab() {
-  // Bail if no BAMs are available
-  if (typeof bamAndBaiFiles === 'undefined') return;
-  bamsToViewInIgv.push(bamAndBaiFiles[0]);
-}
-
 /**
  * Get tracks for selected BAM files, to show sequencing reads
  */
@@ -151,6 +145,5 @@ function initializeIgv() {
 }
 
 $(document).ready(function() {
-  // Show a default BAM upon page load
-  showGenomeTab();
+  bamsToViewInIgv.push(bamAndBaiFiles[0]); // Show first BAM by default
 });
