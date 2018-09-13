@@ -33,7 +33,6 @@ $(document).on('click', '.bam-browse-genome', function(e) {
     selectedBams[thisBam] = 1;
   }
 
-  $('#genome-tab-nav').css('display', ''); // Show 'Genome' tab
   $('#study-visualize-nav > a').click();
   $('#genome-tab-nav > a').click();
 });
@@ -44,13 +43,9 @@ $(document).on('click', '#genome-tab-nav', function (e) {
 });
 
 function showGenomeTab() {
-
   // Bail if no BAMs are available
   if (typeof bamAndBaiFiles === 'undefined') return;
-
   bamsToViewInIgv.push(bamAndBaiFiles[0]);
-
-  $('#genome-tab-nav').css('display', ''); // Show 'Genome' tab
 }
 
 /**
