@@ -129,9 +129,7 @@ function initializeIgv() {
   var igvContainer, igvOptions, tracks, genome, genesTrack, bamTracks,
     genesTrackName, genes, locus;
 
-  if (hasDisplayedIgv) {
-    return;
-  }
+  if (hasDisplayedIgv) return;
 
   igvContainer = document.getElementById('igv-container');
 
@@ -152,6 +150,9 @@ function initializeIgv() {
   };
 
   igv.createBrowser(igvContainer, igvOptions);
+
+  // Log igv.js initialization in Google Analytics
+  ga('send', 'event', 'igv', 'initialize');
 }
 
 $(document).ready(function() {
