@@ -18,10 +18,9 @@ module Api
 
         # method to authenticate a user via Authorization Bearer tokens
         def current_api_user
-          @current_api_user = nil
           api_access_token = extract_bearer_token(request)
           if api_access_token.present?
-            @current_api_user = User.find_by(api_access_token: api_access_token)
+            user = User.find_by(api_access_token: api_access_token)
             if @current_api_user.nil?
               # extract user info from access_token
               begin
@@ -29,15 +28,15 @@ module Api
                 response = RestClient.get token_url
                 credentials = JSON.parse response.body
                 email = credentials['email']
-                @current_api_user = User.find_by(email: email)
+                user = User.find_by(email: email)
                 # store api_access_token to speed up retrieval next time
-                @current_api_user.update(api_access_token: api_access_token)
+                user.update(api_access_token: api_access_token)
               rescue => e
-                Rails.logger.error "Error retrieving user api credentials: #{e.message}"
+                Rails.logger.error "Error retrieving user api credentials: #{e.class.name} #{e.message}"
               end
             end
+            user
           end
-          @current_api_user
         end
 
         private
