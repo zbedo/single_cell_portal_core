@@ -2613,6 +2613,6 @@ class Study
   end
 
   def strip_unsafe_characters_from_description
-    self.description = self.description.gsub(ValidationTools::SCRIPT_TAG_REGEX, '')
+    self.description = self.description.to_s.gsub(ValidationTools::SCRIPT_TAG_REGEX, '')
   end
 end

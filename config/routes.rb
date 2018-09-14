@@ -1,6 +1,13 @@
 Rails.application.routes.draw do
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
   scope 'single_cell' do
+    # API Routes
+    namespace :api do
+      namespace :v1 do
+        resources :studies, only: [:index, :show, :create, :update, :destroy]
+      end
+    end
+
     # portal admin actions
     post 'admin/reset_user_download_quotas', to: 'admin_configurations#reset_user_download_quotas', as: :reset_user_download_quotas
     post 'admin/restart_locked_jobs', to: 'admin_configurations#restart_locked_jobs', as: :restart_locked_jobs
