@@ -29,8 +29,12 @@ module Api
                 credentials = JSON.parse response.body
                 email = credentials['email']
                 user = User.find_by(email: email)
-                # store api_access_token to speed up retrieval next time
-                user.update(api_access_token: api_access_token)
+                if user.present?
+                  # store api_access_token to speed up retrieval next time
+                  user.update(api_access_token: api_access_token)
+                else
+                  Rails.logger.error "Unable to retrieve user info from access token: #{api_access_token}"
+                end
               rescue => e
                 Rails.logger.error "Error retrieving user api credentials: #{e.class.name} #{e.message}"
               end
