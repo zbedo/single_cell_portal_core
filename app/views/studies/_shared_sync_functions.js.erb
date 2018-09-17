@@ -45,7 +45,7 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
         // disable sync button until user has selected a matrix pair
         console.log('disabling sync button on ' + submitBtn.attr('id'));
         submitBtn.attr('disabled', 'disabled');
-    } else if (fileType === 'BAM') {
+    } else if (fileType === 'BAM' || fileType === 'Analysis Output') {
         extraInfo.empty();
         taxonTarget.html("<%= j(render partial: 'taxon_fields', locals: {f: f}) %>");
         assemblySelect = form.find('.genome-assembly-association');
@@ -73,7 +73,7 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
                 }));
             });
         }
-        // disable sync button until user has selected a BAM file
+        // disable app/views/studies/_synced_study_file_form.html.erb button until user has selected a BAM file
         submitBtn.attr('disabled', 'disabled');
     } else {
         extraInfo.empty();
