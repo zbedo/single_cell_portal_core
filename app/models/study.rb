@@ -688,7 +688,7 @@ class Study
     self.study_files.where('options.analysis_name' => analysis_name, 'options.visualization_name' => visualization_name)
   end
 
-  # return all study files for a given analysis & visualization component
+  # Return settings for this study's inferCNV ideogram visualization
   def get_ideogram_infercnv_settings
     exp_file = self.get_analysis_outputs('infercnv', 'ideogram.js').first
     {
