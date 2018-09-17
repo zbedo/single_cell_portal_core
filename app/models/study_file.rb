@@ -38,7 +38,6 @@ class StudyFile
 
   # field definitions
   field :name, type: String
-  field :path, type: String
   field :description, type: String
   field :file_type, type: String
   field :status, type: String

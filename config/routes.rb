@@ -4,7 +4,11 @@ Rails.application.routes.draw do
     # API Routes
     namespace :api do
       namespace :v1 do
-        resources :studies, only: [:index, :show, :create, :update, :destroy]
+        resources :studies, only: [:index, :show, :create, :update, :destroy] do
+          resources :study_files, only: [:index, :show, :create, :update, :destroy]
+          resources :study_shares, only: [:index, :show, :create, :update, :destroy]
+          resources :directory_listings, only: [:index, :show, :create, :update, :destroy]
+        end
       end
     end
 

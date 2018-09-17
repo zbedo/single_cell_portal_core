@@ -30,7 +30,7 @@ module Api
         end
       end
 
-      # PATCH /single_cell/api/v1/studies
+      # PATCH /single_cell/api/v1/studies/:id
       def update
         if @study.update(study_params)
           if @study.previous_changes.keys.include?('name')
@@ -44,7 +44,7 @@ module Api
         end
       end
 
-      # DELETE /single_cell/api/v1/studies
+      # DELETE /single_cell/api/v1/studies/:id
       def destroy
         # check if user is allowed to delete study
         if @study.can_delete?(current_api_user)
@@ -78,8 +78,8 @@ module Api
       private
 
       def set_study
-        @study = Study.find(params[:id])
-        if @study.nil?
+        @study = Study.find_by(id: params[:id])
+        if @study.nil? || @study.queued_for_deletion?
           head 404 and return
         end
       end
