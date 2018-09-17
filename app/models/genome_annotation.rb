@@ -44,8 +44,8 @@ class GenomeAnnotation
     end
   end
 
-  # generate a URL that can be accessed publicly for this genome annotation
-  def public_annotation_link
+  # generate a URL that can be accessed publicly for this genome annotation's index
+  def public_annotation_index_link
     if self.index_link.starts_with?('http')
       self.index_link
     else
@@ -157,5 +157,4 @@ def check_genome_annotation_index_link
       errors.add(:index_link, '- you have not specified a Reference Data Workspace.  Please add this via the Admin Config panel before registering a taxon.')
     end
   end
-end
 end
