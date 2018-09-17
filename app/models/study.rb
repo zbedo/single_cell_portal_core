@@ -702,7 +702,10 @@ class Study
     bam_files.each do |bam_file|
       bams << {
           'url' => bam_file.api_url,
-          'indexUrl' => bam_file.bundled_files.first.api_url
+          'indexUrl' => bam_file.bundled_files.first.api_url,
+          'genomeAssembly' => bam_file.genome_assembly_name,
+          'genomeAnnotation' => bam_file.genome_annotation,
+          'genomeAnnotationLink' => bam_file.genome_annotation_link
       }
     end
     bams
