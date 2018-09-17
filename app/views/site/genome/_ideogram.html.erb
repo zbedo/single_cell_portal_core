@@ -133,11 +133,11 @@
 
   var ideogram = new Ideogram({
     container: '#ideogram-container',
-    organism: 'human',
-    assembly: 'GRCh38',
+    organism: ideogramOrganism.toLowerCase(),
+    assembly: ideogramAssembly,
     chrHeight: 400,
     dataDir: 'https://unpkg.com/ideogram@1.1.1/dist/data/bands/native/',
-    annotationsPath: annotationsPath,
+    annotationsPath: ideogramAnnotsPath,
     annotationTracks: annotationTracks,
     // annotationsLayout: 'heatmap',
     heatmaps: [
