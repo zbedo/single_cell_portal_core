@@ -9,9 +9,7 @@ See partials referenced below and scp-igv.js for larger bodies of code.
 </script>
 <% if @study.has_analysis_outputs?('infercnv', 'ideogram.js') and action_name == 'study' %>
   <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
-  window.ideogramOrganism = '<%= raw @study.get_analysis_outputs('infercnv', 'ideogram.js').first.species_name %>';
-  window.ideogramAssembly = '<%= raw @study.get_analysis_outputs('infercnv', 'ideogram.js').first.genome_assembly.name %>';
-  window.ideogramAnnotsPath = '<%= raw @study.get_analysis_outputs('infercnv', 'ideogram.js').first.api_url %>';
+  window.ideogramInferCnvSettings = <%= raw @study.get_ideogram_infercnv_settings.to_json %>;
 </script>
   <%= render partial: '/site/genome/ideogram' %>
 <% end %>

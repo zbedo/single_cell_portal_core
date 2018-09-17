@@ -688,6 +688,16 @@ class Study
     self.study_files.where('options.analysis_name' => analysis_name, 'options.visualization_name' => visualization_name)
   end
 
+  # return all study files for a given analysis & visualization component
+  def get_ideogram_infercnv_settings
+    exp_file = self.get_analysis_outputs('infercnv', 'ideogram.js').first
+    {
+      'organism': exp_file.species_name,
+      'assembly': exp_file.genome_assembly['name'],
+      'annotationsPath': exp_file.api_url
+    }
+  end
+
   def has_bam_files?
     self.study_files.by_type('BAM').any?
   end
