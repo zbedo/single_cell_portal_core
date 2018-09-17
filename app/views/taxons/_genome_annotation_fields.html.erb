@@ -12,6 +12,10 @@
       <%= f.label :link %><br />
       <%= f.text_field :link, class: 'form-control' %>
     </div>
+    <div class="col-sm-7">
+      <%= f.label :index_link %><br/>
+      <%= f.text_field :index_link, class: 'form-control' %>
+    </div>
     <div class="col-sm-1">
       <label>&nbsp;</label><br />
       <%= f.link_to_remove "<span class='btn btn-sm btn-danger'><span class='fas fa-times'></span></span>".html_safe, data: {confirm: 'Are you sure?  This cannot be undone unless you reload the page before saving.'} %>
