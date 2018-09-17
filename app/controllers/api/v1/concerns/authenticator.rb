@@ -21,7 +21,7 @@ module Api
           api_access_token = extract_bearer_token(request)
           if api_access_token.present?
             user = User.find_by(api_access_token: api_access_token)
-            if @current_api_user.nil?
+            if user.nil?
               # extract user info from access_token
               begin
                 token_url = "https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=#{api_access_token}"

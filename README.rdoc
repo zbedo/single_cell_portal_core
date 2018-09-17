@@ -254,7 +254,7 @@ created records to clean up after running.
 
 To run the unit & integration test suite, the <code>boot_docker</code> script can be used:
 
-  bin/boot_docker -e test -k (service account key path)
+  bin/boot_docker -e test -k (service account key path) -K (read-only service account path)
 
 This will boot a new instance of the portal in test mode and run all associated tests, <em>not including the UI test suite</em>.
 
