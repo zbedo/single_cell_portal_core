@@ -1,6 +1,6 @@
 require 'api_test_helper'
 
-class StudiesControllerControllerTest < ActionDispatch::IntegrationTest
+class StudyFilesControllerControllerTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
   include Requests::JsonHelpers
   include Requests::HttpHelpers
@@ -8,6 +8,7 @@ class StudiesControllerControllerTest < ActionDispatch::IntegrationTest
   setup do
     @user = User.first
     @study = Study.find_by(name: 'API Test Study')
+    @study_file = @study.study_files.first
     OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new({
                                                                            :provider => 'google_oauth2',
                                                                            :uid => '123545',
@@ -18,18 +19,18 @@ class StudiesControllerControllerTest < ActionDispatch::IntegrationTest
 
   test 'should get index' do
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
-    execute_http_request(:get, api_v1_studies_path)
+    execute_http_request(:get, api_v1_study_study_files_path(@study))
     assert_response :success
-    assert json.size >= 1, 'Did not find any studies'
+    assert json.size >= 1, 'Did not find any study_files'
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 
-  test 'should get study' do
+  test 'should get study file' do
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
-    execute_http_request(:get, api_v1_study_path(@study))
+    execute_http_request(:get, api_v1_study_study_file_path(study_id: @study.id, id: @study_file.id))
     assert_response :success
     # check all attributes against database
-    @study.attributes.each do |attribute, value|
+    @study_file.attributes.each do |attribute, value|
       if attribute =~ /_id/
         assert json[attribute] == JSON.parse(value.to_json), "Attribute mismatch: #{attribute} is incorrect, expected #{JSON.parse(value.to_json)} but found #{json[attribute.to_s]}"
       elsif attribute =~ /_at/
@@ -41,30 +42,34 @@ class StudiesControllerControllerTest < ActionDispatch::IntegrationTest
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 
-  # create, update & delete tested together to use new object rather than main testing study
-  test 'should create then update then delete study' do
+  # create, update & delete tested together to use new object to avoid delete/update running before create
+  test 'should create then update then delete study file' do
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
     # create study
-    study_attributes = {
-        study: {
-            name: "New Study #{SecureRandom.uuid}"
-    }}
-    execute_http_request(:post, api_v1_studies_path, study_attributes)
+    study_file_attributes = {
+        study_file: {
+            upload_file_name: 'table_1.xlsx',
+            upload_content_type: 'application/octet-stream',
+            upload_file_size: 41692,
+            file_type: 'Other'
+        }
+    }
+    execute_http_request(:post, api_v1_study_study_files_path(study_id: @study.id), study_file_attributes)
     assert_response :success
-    assert json['name'] == study_attributes[:study][:name], "Did not set name correctly, expected #{study_attributes[:study][:name]} but found #{json['name']}"
+    assert json['name'] == study_file_attributes[:study_file][:upload_file_name], "Did not set name correctly, expected #{study_file_attributes[:study_file][:upload_file_name]} but found #{json['name']}"
     # update study
-    study_id = json['_id']['$oid']
+    study_file_id = json['_id']['$oid']
     update_attributes = {
-        study: {
+        study_file: {
             description: "Test description #{SecureRandom.uuid}"
         }
     }
-    execute_http_request(:patch, api_v1_study_path(id: study_id), update_attributes)
+    execute_http_request(:patch, api_v1_study_study_file_path(study_id: @study.id, id: study_file_id), update_attributes)
     assert_response :success
-    assert json['description'] == update_attributes[:study][:description], "Did not set name correctly, expected #{update_attributes[:study][:description]} but found #{json['description']}"
+    assert json['description'] == update_attributes[:study_file][:description], "Did not set name correctly, expected #{update_attributes[:study_file][:description]} but found #{json['description']}"
     # delete study, passing ?workspace=persist to skip FireCloud workspace deletion
-    execute_http_request(:delete, api_v1_study_path(id: study_id, workspace: 'persist'))
-    assert_response 204, "Did not successfully delete study, expected response of 204 but found #{@response.response_code}"
+    execute_http_request(:delete, api_v1_study_study_file_path(study_id: @study.id, id: study_file_id))
+    assert_response 204, "Did not successfully delete study file, expected response of 204 but found #{@response.response_code}"
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 end

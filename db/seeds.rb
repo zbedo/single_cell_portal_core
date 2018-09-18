@@ -8,6 +8,8 @@
 #
 user = User.create!(email:'testing.user@gmail.com', password:'password', api_access_token: 'test-api-token')
 study = Study.create!(name: 'Testing Study', description: '<p>This is the test study.</p>', data_dir: 'test', user_id: user.id)
+api_study = Study.create!(name: 'API Test Study', data_dir: 'api_test_study', user_id: user.id)
+readme = StudyFile.create!(name: 'README.txt', upload_file_name: 'README.txt', study_id: api_study.id, file_type: 'Documentation')
 expression_file = StudyFile.create!(name: 'expression_matrix.txt', upload_file_name: 'expression_matrix.txt', study_id: study.id,
                                     file_type: 'Expression Matrix', y_axis_label: 'Expression Scores')
 cluster_file = StudyFile.create!(name: 'Test Cluster', upload_file_name: 'coordinates.txt', study_id: study.id,

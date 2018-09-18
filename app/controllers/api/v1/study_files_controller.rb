@@ -23,7 +23,7 @@ module Api
         @study_file = @study.study_files.build(study_file_params)
 
         if @study_file.save
-          @study.send_to_firecloud(@study_file)
+          @study.delay.send_to_firecloud(@study_file)
           render json: @study_file.attributes, status: :ok
         else
           render json: {errors: @study_file.errors}, status: :unprocessable_entity
@@ -66,7 +66,7 @@ module Api
         DeleteQueueJob.new(@study_file).delay.perform
         begin
           # make sure file is in FireCloud first
-          unless human_data
+          unless human_data || @study_file.generation.blank?
             present = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project,
                                                                    @study.firecloud_workspace, @study_file.upload_file_name)
             if present
@@ -79,7 +79,6 @@ module Api
           logger.error "#{Time.now}: error in deleting #{@study_file.upload_file_name} from workspace: #{@study.firecloud_workspace}; #{e.message}"
           render json: {error: "Error deleting remote file in bucket: #{e.message}"}, status: 500
         end
-
       end
 
       private
