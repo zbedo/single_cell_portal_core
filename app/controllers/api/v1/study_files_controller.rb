@@ -4,13 +4,17 @@ module Api
 
       before_action :set_study
       before_action :check_study_permission
-      before_action :set_study_file, except: [:index, :create]
+      before_action :set_study_file, except: [:index, :create, :schema]
       before_action :check_firecloud_status, except: [:index, :show]
 
       # GET /single_cell/api/v1/studies/:study_id
       def index
-        @study_files = @study.study_files
+        @study_files = @study.study_files.where(queued_for_deletion: false)
         render json: @study_files.map(&:attributes)
+      end
+
+      def schema
+
       end
 
       # GET /single_cell/api/v1/studies/:study_id/study_files/:id
