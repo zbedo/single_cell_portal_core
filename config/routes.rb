@@ -10,6 +10,7 @@ Rails.application.routes.draw do
           get 'study_shares'
           get 'directory_listings'
         end
+        resources :taxons, only: [:index, :show]
         resources :studies, only: [:index, :show, :create, :update, :destroy] do
           resources :study_files, only: [:index, :show, :create, :update, :destroy]
           resources :study_shares, only: [:index, :show, :create, :update, :destroy]
