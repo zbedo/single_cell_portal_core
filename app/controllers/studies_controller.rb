@@ -506,6 +506,9 @@ class StudiesController < ApplicationController
       # set queued_for_deletion manually - gotcha due to race condition on page reloading and how quickly delayed_job can process jobs
       @study.update(queued_for_deletion: true)
 
+      # Remove the analysis.json before enqueuing the delete job
+      AnalysisMetadatum.where(study_id: @study.id).delete_all
+
       # queue jobs to delete study caches & study itself
       CacheRemovalJob.new(@study.url_safe_name).delay.perform
       DeleteQueueJob.new(@study).delay.perform
