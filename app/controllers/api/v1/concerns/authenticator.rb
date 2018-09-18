@@ -5,7 +5,7 @@ module Api
         extend ActiveSupport::Concern
 
         included do
-          before_action :authenticate_api_user!
+          before_action :authenticate_api_user!, unless: proc {controller_name == 'schemas'}
         end
 
         def authenticate_api_user!
