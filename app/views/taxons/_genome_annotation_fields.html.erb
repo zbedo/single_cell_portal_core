@@ -1,0 +1,20 @@
+<div class="bs-callout bs-callout-primary">
+  <div class="row">
+    <div class="col-sm-2">
+      <%= f.label :name %><br />
+      <%= f.text_field :name, autocomplete: 'off', class: 'form-control' %>
+    </div>
+    <div class="col-sm-2">
+      <%= f.label :release_date %><br />
+      <%= f.date_field :release_date, class: 'form-control' %>
+    </div>
+    <div class="col-sm-7">
+      <%= f.label :link %><br />
+      <%= f.text_field :link, class: 'form-control' %>
+    </div>
+    <div class="col-sm-1">
+      <label>&nbsp;</label><br />
+      <%= f.link_to_remove "<span class='btn btn-sm btn-danger'><span class='fas fa-times'></span></span>".html_safe, data: {confirm: 'Are you sure?  This cannot be undone unless you reload the page before saving.'} %>
+    </div>
+  </div>
+</div>

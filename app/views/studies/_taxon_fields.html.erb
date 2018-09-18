@@ -1,0 +1,54 @@
+<div class="row">
+  <div class="col-xs-6">
+    <%= f.label :taxon_id, 'Species' %><br />
+    <%= f.select :taxon_id, options_from_collection_for_select(Taxon.sorted, :id, :display_name, f.object.taxon_id), {prompt: 'None selected...'}, {class: 'form-control taxon-select'} %>
+  </div>
+  <div class="col-xs-6 genome-assembly-association hidden">
+    <%= f.label :genome_assembly_id, 'Genome Assembly' %><br />
+    <%= f.select :genome_assembly_id, options_for_select([]), {prompt: 'Please select species...'}, {class: 'form-control genome-assembly-select'} %>
+  </div>
+</div>
+
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+
+    var restrictedTaxons = <%= raw Taxon::RESTRICTED_NCBI_TAXON_IDS %>;
+    $('#study-file-<%= f.object.id %>').find('.taxon-select').on('change', function() {
+        var select = $(this);
+        var assemblyDropdown = $('#study-file-<%= f.object.id %>').find('.genome-assembly-select');
+        var selectedTaxon = $(this).val();
+        if (selectedTaxon !== '') {
+            // perform check to see if human was selected
+            var fileType = $('#study-file-<%= f.object.id %>').find('#study_file_file_type').val();
+            $.getJSON('<%= get_taxon_path %>?taxon=' + selectedTaxon, function(taxon) {
+                if ( (fileType === 'BAM' || fileType === 'Fastq' ) && restrictedTaxons.includes(taxon.taxon_identifier) ) {
+                    var restrictedData = confirm('Is this ' + fileType + ' file ' + taxon.common_name + ' data?\n\n' +
+                        'The Single Cell Portal does not currently permit storing ' + taxon.common_name + ' sequence data.  ' +
+                        'Selecting "OK" will remove this list from your study (source data files will be unaffected).');
+                    if (restrictedData) {
+                        $('#study-file-<%= f.object.id %>').remove();
+                    } else {
+                        select.val('');
+                        assemblyDropdown.empty();
+                        assemblyDropdown.append('<option value="">Please select species...</option>');
+                    }
+                } else {
+                    $.getJSON('<%= get_taxon_assemblies_path %>?taxon=' + selectedTaxon, function (data) {
+                            assemblyDropdown.empty();
+                            $(data).each(function (index, assembly) {
+                                assemblyDropdown.append($('<option />', {
+                                    value: assembly[1],
+                                    text: assembly[0]
+                                }));
+                            });
+                        }
+                    )
+                }
+            })
+
+        } else {
+            assemblyDropdown.empty();
+            assemblyDropdown.append('<option value="">Please select species...</option>');
+        }
+    });
+
+</script>
