@@ -13,6 +13,12 @@ class DirectoryListing
 
 	PRIMARY_DATA_TYPES = %w(fq fastq).freeze
 	READ_PAIR_IDENTIFIERS = %w(_R1 _R2 _I1 _I2).freeze
+  FILE_ARRAY_ATTRIBUTES = {
+      name: 'String',
+      size: 'Integer',
+      generation: 'String'
+  }
+  REQUIRED_ATTRIBUTES = %w(study_id name file_type files)
 
 	belongs_to :study
 

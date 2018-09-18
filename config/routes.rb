@@ -4,12 +4,15 @@ Rails.application.routes.draw do
     # API Routes
     namespace :api do
       namespace :v1 do
+        namespace :schemas do
+          get 'studies'
+          get 'study_files'
+          get 'study_shares'
+          get 'directory_listings'
+        end
         resources :studies, only: [:index, :show, :create, :update, :destroy] do
-          get 'study_files/schema', to: 'study_files#schema'
           resources :study_files, only: [:index, :show, :create, :update, :destroy]
-          get 'study_shares/schema', to: 'study_shares#schema'
           resources :study_shares, only: [:index, :show, :create, :update, :destroy]
-          get 'directory_listings/schema', to: 'directory_listings#schema'
           resources :directory_listings, only: [:index, :show, :create, :update, :destroy]
         end
       end

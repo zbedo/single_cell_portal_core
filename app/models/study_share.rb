@@ -35,6 +35,7 @@ class StudyShare
 	FIRECLOUD_ACL_MAP = Hash[PERMISSION_TYPES.zip(FIRECLOUD_ACLS)]
 	PORTAL_ACL_MAP = Hash[FIRECLOUD_ACLS.zip(PERMISSION_TYPES)]
 	PERMISSION_DESCRIPTION_MAP = Hash[PERMISSION_TYPES.zip(PERMISSION_DESCRIPTIONS)]
+	REQUIRED_ATTRIBUTES = %w(email permission study_id)
 
   validates_format_of :email, with: Devise.email_regexp, message: 'is not a valid email address.'
   validates_format_of :firecloud_project, :firecloud_workspace, with: ValidationTools::ALPHANUMERIC_DASH,

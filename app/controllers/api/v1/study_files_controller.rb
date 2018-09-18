@@ -13,10 +13,6 @@ module Api
         render json: @study_files.map(&:attributes)
       end
 
-      def schema
-
-      end
-
       # GET /single_cell/api/v1/studies/:study_id/study_files/:id
       def show
         render json: @study_file.attributes
