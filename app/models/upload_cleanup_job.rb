@@ -46,7 +46,7 @@ class UploadCleanupJob < Struct.new(:study, :study_file)
           end
         rescue => e
           Rails.logger.error "#{Time.now}: error in UploadCleanupJob for #{study.name}:#{study_file.bucket_location}:#{study_file.id}; #{e.message}"
-          SingleCellMailer.admin_notification('UploadCleanupJob failure', nil, "<p>The following failure occurred when attempting to clean up #{study_file.upload.path}: #{e.message}</p>")
+          SingleCellMailer.admin_notification('UploadCleanupJob failure', nil, "<p>The following failure occurred when attempting to clean up #{study_file.upload.path}: #{e.message}</p>").deliver_now
         end
       end
     end
