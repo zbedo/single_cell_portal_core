@@ -14,6 +14,7 @@ class StudyFileBundle
   validates_presence_of :bundle_type, :original_file_list
   validates_inclusion_of :bundle_type, in: BUNDLE_TYPES
   validate :validate_file_list_contents, on: :create
+  after_validation :initialize_study_file_associations, on: :create
 
   before_destroy :remove_bundle_associations
 
@@ -61,8 +62,8 @@ class StudyFileBundle
 
   # make sure the original_file_list is in the correct format for extracting file information
   def validate_file_list_contents
-    keys = self.original_file_list.map(&:keys).uniq.sort
-    unless keys == FILE_LIST_KEYS
+    keys = self.original_file_list.map(&:keys).flatten.uniq.sort
+    unless (keys & FILE_LIST_KEYS) == keys
       errors.add(:original_file_list, ' is formatted incorrectly.  This must be an array of Hashes with the keys ' + FILE_LIST_KEYS.join(', ') + '.' )
     end
     self.original_file_list.each do |file|
@@ -75,6 +76,36 @@ class StudyFileBundle
     end
     if match_bundle_type.size > 1
       errors.add(:original_file_types, ' contains files of incompatible types: ' + match_bundle_type.join(', '))
+    end
+  end
+
+  def initialize_study_file_associations
+    self.original_file_list.each do |file_entry|
+      filename = file_entry['name']
+      file_type = file_entry['file_type']
+      species_name = file_entry['species']
+      assembly_name = file_entry['assembly']
+      study_file = StudyFile.find_by(file_type: file_type, upload_file_name: filename, study_id: self.study_id)
+      if study_file.present?
+        study_file.update(study_file_bundle_id: self.id)
+      else
+        study_file = self.study.study_files.build(file_type: file_type, upload_file_name: filename, study_file_bundle_id: self.id)
+        if StudyFile::TAXON_REQUIRED_TYPES.include?(file_type) && Taxon.present?
+          study_file.taxon_id = Taxon.first.id # temporarily set arbitrary taxon association
+          if species_name.present?
+            taxon = Taxon.where(common_name: /#{species_name}/i).first
+            taxon.present? ? study_file.taxon_id : nil # set requested taxon if we find it
+          end
+        end
+        if StudyFile::ASSEMBLY_REQUIRED_TYPES.include?(file_type) && GenomeAssembly.present?
+          study_file.genome_assembly_id = GenomeAssembly.first.id # temporarily set arbitrary assembly association
+          if species_name.present?
+            assembly = GenomeAssembly.where(name: /#{assembly_name}/i).first
+            assembly.present? ? study_file.genome_assembly_id : nil # set requested assembly if we find it
+          end
+        end
+        study_file.save!
+      end
     end
   end
 
