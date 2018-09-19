@@ -11,6 +11,7 @@ ruby -I test test/integration/cache_management_test.rb
 ruby -I test test/api/studies_controller_test.rb
 ruby -I test test/api/study_files_controller_test.rb
 ruby -I test test/api/study_shares_controller_test.rb
+ruby -I test test/api/directory_listings_controller_test.rb
 ruby -I test test/models/cluster_group_test.rb
 ruby -I test test/models/user_annotation_test.rb
 ruby -I test test/models/parse_utils_test.rb

@@ -8,9 +8,6 @@
 #
 user = User.create!(email:'testing.user@gmail.com', password:'password', api_access_token: 'test-api-token')
 study = Study.create!(name: 'Testing Study', description: '<p>This is the test study.</p>', data_dir: 'test', user_id: user.id)
-api_study = Study.create!(name: 'API Test Study', data_dir: 'api_test_study', user_id: user.id, firecloud_project: 'scp', firecloud_workspace: 'test-api-test-study')
-share = StudyShare.create!(email: 'fake.email@gmail.com', permission: 'Reviewer', study_id: api_study.id)
-readme = StudyFile.create!(name: 'README.txt', upload_file_name: 'README.txt', study_id: api_study.id, file_type: 'Documentation')
 expression_file = StudyFile.create!(name: 'expression_matrix.txt', upload_file_name: 'expression_matrix.txt', study_id: study.id,
                                     file_type: 'Expression Matrix', y_axis_label: 'Expression Scores')
 cluster_file = StudyFile.create!(name: 'Test Cluster', upload_file_name: 'coordinates.txt', study_id: study.id,
@@ -88,3 +85,9 @@ gene2_vals.save!
 gene2_cells = gene_2.data_arrays.build(name: gene_2.cell_key, array_type: 'cells', cluster_name: expression_file.name,
                                        array_index: 1, study_id: study.id, study_file_id: expression_file.id, values: all_cell_array)
 gene2_cells.save!
+
+# API TEST SEEDS
+api_study = Study.create!(name: 'API Test Study', data_dir: 'api_test_study', user_id: user.id, firecloud_project: 'scp', firecloud_workspace: 'test-api-test-study')
+StudyShare.create!(email: 'fake.email@gmail.com', permission: 'Reviewer', study_id: api_study.id)
+StudyFile.create!(name: 'README.txt', upload_file_name: 'README.txt', study_id: api_study.id, file_type: 'Documentation')
+DirectoryListing.create!(name: 'csvs', file_type: 'csv', files: [{name: 'foo.csv', size: 100, generation: '12345'}], sync_status: true, study_id: api_study.id)

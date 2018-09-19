@@ -40,6 +40,7 @@ class DirectoryListing
 											message: ValidationTools::FILENAME_CHARS_ERROR
 
 	validate :check_taxon, on: :update
+	validate :check_files_array_format
 
 	index({ name: 1, study_id: 1, file_type: 1 }, { unique: true, background: true })
 
@@ -199,5 +200,20 @@ class DirectoryListing
         errors.add(:taxon_id, 'You must supply a species for this file type: ' + self.file_type)
       end
     end
-  end
+	end
+
+	# make sure that the files array is in the correct format
+	def check_files_array_format
+		error_msg = 'has invalid entries.  Each entry must be a hash with the keys of name (String), size (Integer), and '\
+ 								'generation (String).  The following entries are invalid: '
+		has_error = false
+		self.files.each do |file|
+			unless file.keys.map(&:to_s).sort == %w(generation name size)
+				error_msg += "#{file}"
+			end
+		end
+		if has_error
+			errors.add(:files, error_msg)
+		end
+	end
 end
