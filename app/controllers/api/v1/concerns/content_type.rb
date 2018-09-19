@@ -10,7 +10,6 @@ module Api
 
         # force all requests to be application/json
         def validate_content_type!
-          logger.info "content type: #{request.headers['Content-Type']}"
           if request.headers['Content-Type'] =~ /multipart\/form-data/
             head 406 unless request.headers['Content-Range'].present? &&
                 request.headers['Accept'] === 'application/json'
