@@ -45,7 +45,7 @@ class StudyFilesControllerControllerTest < ActionDispatch::IntegrationTest
   # create, update & delete tested together to use new object to avoid delete/update running before create
   test 'should create then update then delete study file' do
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
-    # create study
+    # create study file
     study_file_attributes = {
         study_file: {
             upload_file_name: 'table_1.xlsx',
@@ -57,7 +57,7 @@ class StudyFilesControllerControllerTest < ActionDispatch::IntegrationTest
     execute_http_request(:post, api_v1_study_study_files_path(study_id: @study.id), study_file_attributes)
     assert_response :success
     assert json['name'] == study_file_attributes[:study_file][:upload_file_name], "Did not set name correctly, expected #{study_file_attributes[:study_file][:upload_file_name]} but found #{json['name']}"
-    # update study
+    # update study file
     study_file_id = json['_id']['$oid']
     update_attributes = {
         study_file: {
@@ -66,8 +66,8 @@ class StudyFilesControllerControllerTest < ActionDispatch::IntegrationTest
     }
     execute_http_request(:patch, api_v1_study_study_file_path(study_id: @study.id, id: study_file_id), update_attributes)
     assert_response :success
-    assert json['description'] == update_attributes[:study_file][:description], "Did not set name correctly, expected #{update_attributes[:study_file][:description]} but found #{json['description']}"
-    # delete study, passing ?workspace=persist to skip FireCloud workspace deletion
+    assert json['description'] == update_attributes[:study_file][:description], "Did not set description correctly, expected #{update_attributes[:study_file][:description]} but found #{json['description']}"
+    # delete study file
     execute_http_request(:delete, api_v1_study_study_file_path(study_id: @study.id, id: study_file_id))
     assert_response 204, "Did not successfully delete study file, expected response of 204 but found #{@response.response_code}"
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
