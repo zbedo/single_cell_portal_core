@@ -21,21 +21,21 @@
       window.isTaxonSelectHandlerDefined = true;
 
       $(document).on('change', '.taxon-select', function () {
-        var speciesDropown = $(this);
-        var assemblyDropdown = speciesDropown.find('.genome-assembly-select');
-        var selectedTaxon = speciesDropown.val();
+        var speciesDropdown = $(this);
+        var assemblyDropdown = speciesDropdown.parentsUntil('.taxon-select-target').find('.genome-assembly-select');
+        var selectedTaxon = speciesDropdown.val();
         if (selectedTaxon !== '') {
           // perform check to see if human was selected
-          var fileType = speciesDropown.find('#study_file_file_type').val();
+          var fileType = speciesDropdown.find('#study_file_file_type').val();
           $.getJSON('<%= get_taxon_path %>?taxon=' + selectedTaxon, function (taxon) {
             if ((fileType === 'BAM' || fileType === 'Fastq') && restrictedTaxons.includes(taxon.taxon_identifier)) {
               var restrictedData = confirm('Is this ' + fileType + ' file ' + taxon.common_name + ' data?\n\n' +
                 'The Single Cell Portal does not currently permit storing ' + taxon.common_name + ' sequence data.  ' +
                 'Selecting "OK" will remove this list from your study (source data files will be unaffected).');
               if (restrictedData) {
-                speciesDropown.remove();
+                speciesDropdown.remove();
               } else {
-                speciesDropown.val('');
+                speciesDropdown.val('');
                 assemblyDropdown.empty();
                 assemblyDropdown.append('<option value="">Please select species...</option>');
               }
