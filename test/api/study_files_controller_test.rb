@@ -72,4 +72,26 @@ class StudyFilesControllerControllerTest < ActionDispatch::IntegrationTest
     assert_response 204, "Did not successfully delete study file, expected response of 204 but found #{@response.response_code}"
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
+
+  # create a study file bundle using the study_files_controller method
+  test 'should create study file bundle' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+
+    study_file_bundle_attributes = {
+        'files' => [
+            {'name' => 'cluster.tsv', 'file_type' => 'Cluster' },
+            {'name' => 'labels.tsv', 'file_type' => 'Coordinate Labels' }
+        ]
+    }
+    execute_http_request(:post, api_v1_study_study_files_bundle_files_path(study_id: @study.id), study_file_bundle_attributes)
+    assert_response :success
+    assert json['original_file_list'] == study_file_bundle_attributes['files'],
+           "Did not set name correctly, expected #{study_file_bundle_attributes['files']} but found #{json['original_file_list']}"
+    # delete study file bundle
+    study_file_bundle_id = json['_id']['$oid']
+    execute_http_request(:delete, api_v1_study_study_file_bundle_path(study_id: @study.id, id: study_file_bundle_id))
+    assert_response 204, "Did not successfully delete study file bundle, expected response of 204 but found #{@response.response_code}"
+
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
 end

@@ -7,13 +7,22 @@ class StudyFileBundle
   belongs_to :study
   has_many :study_files
 
+  # allowed bundle types
   BUNDLE_TYPES = ['MM Coordinate Matrix', 'BAM', 'Cluster']
+  # required keys for file list
   FILE_LIST_KEYS = %w(name file_type)
+  # child file type requirements by bundle type
+  BUNDLE_REQUIREMENTS = {
+      'MM Coordinate Matrix' => ['10X Genes File', '10X Barcodes File'],
+      'BAM' => ['BAM Index'],
+      'Cluster' => ['Coordinate Labels']
+  }
 
   before_validation :set_bundle_type, on: :create
   validates_presence_of :bundle_type, :original_file_list
   validates_inclusion_of :bundle_type, in: BUNDLE_TYPES
   validate :validate_file_list_contents, on: :create
+  validate :validate_bundle_by_type
   after_validation :initialize_study_file_associations, on: :create
 
   before_destroy :remove_bundle_associations
@@ -64,21 +73,36 @@ class StudyFileBundle
   def validate_file_list_contents
     keys = self.original_file_list.map(&:keys).flatten.uniq.sort
     unless (keys & FILE_LIST_KEYS) == keys
-      errors.add(:original_file_list, ' is formatted incorrectly.  This must be an array of Hashes with the keys ' + FILE_LIST_KEYS.join(', ') + '.' )
+      errors.add(:original_file_list, " is formatted incorrectly.  This must be an array of Hashes with the keys #{FILE_LIST_KEYS.join(', ')}." )
     end
     self.original_file_list.each do |file|
       unless StudyFile::STUDY_FILE_TYPES.include?(file['file_type'])
-        errors.add(:original_file_list, ' contains a file of an invalid type: ' + file['file_type'])
+        errors.add(:original_file_list, " contains a file of an invalid type: #{file['file_type']}")
       end
     end
     unless match_bundle_type.any?
-      errors.add(:original_file_list, ' does not contain a file of the specified bundle type: ' + self.bundle_type)
+      errors.add(:original_file_list, " does not contain a file of the specified bundle type: #{self.bundle_type}")
     end
     if match_bundle_type.size > 1
-      errors.add(:original_file_types, ' contains files of incompatible types: ' + match_bundle_type.join(', '))
+      errors.add(:original_file_types, " contains files of incompatible types: #{match_bundle_type.join(', ')}")
     end
   end
 
+  # validate that the supplied files are of the correct type for the given bundle
+  def validate_bundle_by_type
+    parent_file = self.original_file_list.detect {|file| file['file_type'] == self.bundle_type}
+    child_files = self.original_file_list.select {|file| file != parent_file}
+    child_file_types = child_files.map {|file| file['file_type']}
+    if child_file_types.size < BUNDLE_REQUIREMENTS[self.bundle_type].size || ( (child_file_types.size == BUNDLE_REQUIREMENTS[self.bundle_type].size) &&
+        (child_file_types & BUNDLE_REQUIREMENTS[self.bundle_type] != child_file_types))
+      errors.add(:original_file_list, " is missing a file of the required type: #{(StudyFileBundle::BUNDLE_REQUIREMENTS[self.bundle_type] - child_file_types).join(', ')}")
+    end
+    if child_file_types.size > BUNDLE_REQUIREMENTS[self.bundle_type].size
+      errors.add(:original_file_list, " has a file of an invalid file type: #{(child_file_types - StudyFileBundle::BUNDLE_REQUIREMENTS[self.bundle_type]).join(', ')}")
+    end
+  end
+
+  # set study_file associations after successful validation
   def initialize_study_file_associations
     self.original_file_list.each do |file_entry|
       filename = file_entry['name']
@@ -109,6 +133,7 @@ class StudyFileBundle
     end
   end
 
+  # unset all associations on delete
   def remove_bundle_associations
     self.study_files.update_all(study_file_bundle_id: nil)
   end

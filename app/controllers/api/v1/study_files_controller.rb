@@ -2,20 +2,22 @@ module Api
   module V1
     class StudyFilesController < ApiBaseController
 
+      include Concerns::FireCloudStatus
+
       before_action :set_study
       before_action :check_study_permission
-      before_action :set_study_file, except: [:index, :create, :schema, :bundle]
-      before_action :check_firecloud_status, except: [:index, :show]
+      before_action :set_study_file, except: [:index, :create, :bundle]
+
+      respond_to :json
 
       # GET /single_cell/api/v1/studies/:study_id
       def index
         @study_files = @study.study_files.where(queued_for_deletion: false)
-        render json: @study_files.map(&:attributes)
       end
 
       # GET /single_cell/api/v1/studies/:study_id/study_files/:id
       def show
-        render json: @study_file.attributes
+
       end
 
       # POST /single_cell/api/v1/studies/:study_id/study_files
@@ -24,7 +26,7 @@ module Api
 
         if @study_file.save
           @study.delay.send_to_firecloud(@study_file)
-          render json: @study_file.attributes, status: :ok
+          render :show
         else
           render json: {errors: @study_file.errors}, status: :unprocessable_entity
         end
@@ -50,7 +52,7 @@ module Api
             @study.update(default_options: @study.default_options.merge(expression_label: study_file_params[:y_axis_label]))
             @study.expression_matrix_files.first.invalidate_cache_by_file_type
           end
-          render json: @study_file.attributes, status: :ok
+          render :show
         else
           render json: {errors: @study_file.errors}, status: :unprocessable_entity
         end
@@ -84,12 +86,13 @@ module Api
       # POST /single_cell/api/v1/studies/:study_id/study_files/bundle
       # Create a StudyFileBundle from a list of files
       def bundle
-        if params[:files].present?
-          @study_file_bundle = StudyFileBundle.new(original_file_list: params[:files])
+        # must convert to an unsafe hash re: https://github.com/rails/rails/pull/28734
+        unsafe_params = params.to_unsafe_hash
+        file_params = unsafe_params[:files]
+        if file_params.present?
+          @study_file_bundle = StudyFileBundle.new(original_file_list: file_params, study_id: params[:study_id])
           if @study_file_bundle.save
-            respond_to do |format|
-              format.json
-            end
+            render 'api/v1/study_file_bundles/show'
           else
             render json: @study_file_bundle.errors, status: :unprocessable_entity
           end
@@ -127,14 +130,6 @@ module Api
                                            :y_axis_max, :z_axis_min, :z_axis_max,
                                            options: [:cluster_group_id, :font_family, :font_size, :font_color, :matrix_id, :submission_id,
                                                      :bam_id, :analysis_name, :visualization_name])
-      end
-
-      # check on FireCloud API status and respond accordingly
-      def check_firecloud_status
-        unless Study.firecloud_client.services_available?('Sam', 'Rawls')
-          alert = 'Study workspaces are temporarily unavailable, so we cannot complete your request.  Please try again later.'
-          render json: {error: alert}, status: 503
-        end
       end
     end
   end
