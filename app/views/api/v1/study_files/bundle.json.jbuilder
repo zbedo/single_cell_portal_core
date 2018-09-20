@@ -1,0 +1,1 @@
+json.array! @study_file_bundle.study_files.to_a, as: study_file, partial: 'api/v1/study_files/study_file'

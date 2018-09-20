@@ -4,7 +4,7 @@ module Api
 
       before_action :set_study
       before_action :check_study_permission
-      before_action :set_study_file, except: [:index, :create, :schema]
+      before_action :set_study_file, except: [:index, :create, :schema, :bundle]
       before_action :check_firecloud_status, except: [:index, :show]
 
       # GET /single_cell/api/v1/studies/:study_id
@@ -78,6 +78,24 @@ module Api
         rescue RuntimeError => e
           logger.error "#{Time.now}: error in deleting #{@study_file.upload_file_name} from workspace: #{@study.firecloud_workspace}; #{e.message}"
           render json: {error: "Error deleting remote file in bucket: #{e.message}"}, status: 500
+        end
+      end
+
+      # POST /single_cell/api/v1/studies/:study_id/study_files/bundle
+      # Create a StudyFileBundle from a list of files
+      def bundle
+        if params[:files].present?
+          @study_file_bundle = StudyFileBundle.new(original_file_list: params[:files])
+          if @study_file_bundle.save
+            respond_to do |format|
+              format.json
+            end
+          else
+            render json: @study_file_bundle.errors, status: :unprocessable_entity
+          end
+        else
+          render json: {error: "Malformed request: payload must be formatted as {files: [{name: 'filename', file_type: 'file_type'}]}"},
+                 status: :bad_request
         end
       end
 

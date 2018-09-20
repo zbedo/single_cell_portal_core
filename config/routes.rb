@@ -12,6 +12,7 @@ Rails.application.routes.draw do
         end
         resources :taxons, only: [:index, :show]
         resources :studies, only: [:index, :show, :create, :update, :destroy] do
+          post 'study_files/bundle', to: 'study_files#bundle', as: :study_files_bundle
           resources :study_files, only: [:index, :show, :create, :update, :destroy]
           resources :study_shares, only: [:index, :show, :create, :update, :destroy]
           resources :directory_listings, only: [:index, :show, :create, :update, :destroy]

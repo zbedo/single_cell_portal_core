@@ -1,0 +1,1 @@
+json.(study_file, study_file.attributes)
