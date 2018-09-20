@@ -87,7 +87,12 @@ gene2_cells = gene_2.data_arrays.build(name: gene_2.cell_key, array_type: 'cells
 gene2_cells.save!
 
 # API TEST SEEDS
-api_study = Study.create!(name: 'API Test Study', data_dir: 'api_test_study', user_id: user.id, firecloud_project: 'scp', firecloud_workspace: 'test-api-test-study')
+api_study = Study.create!(name: 'API Test Study', data_dir: 'api_test_study', user_id: user.id, firecloud_project: 'scp',
+                          firecloud_workspace: 'test-api-test-study')
 StudyShare.create!(email: 'fake.email@gmail.com', permission: 'Reviewer', study_id: api_study.id)
 StudyFile.create!(name: 'README.txt', upload_file_name: 'README.txt', study_id: api_study.id, file_type: 'Documentation')
-DirectoryListing.create!(name: 'csvs', file_type: 'csv', files: [{name: 'foo.csv', size: 100, generation: '12345'}], sync_status: true, study_id: api_study.id)
+DirectoryListing.create!(name: 'csvs', file_type: 'csv', files: [{name: 'foo.csv', size: 100, generation: '12345'}],
+                         sync_status: true, study_id: api_study.id)
+StudyFileBundle.create!(bundle_type: 'BAM', original_file_list: [{'name' => 'sample_1.bam', 'file_type' => 'BAM'},
+                                                                 {'name' => 'sample_1.bam.bai', 'file_type' => 'BAM Index'}],
+                        study_id: api_study.id)
