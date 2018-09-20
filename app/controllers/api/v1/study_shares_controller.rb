@@ -2,43 +2,45 @@ module Api
   module V1
     class StudySharesController < ApiBaseController
 
+      include Concerns::FireCloudStatus
+
       before_action :set_study
       before_action :check_study_permission
-      before_action :set_study_share, except: [:index, :create, :schema]
-      before_action :check_firecloud_status, except: [:index, :show]
+      before_action :set_study_share, except: [:index, :create]
+
+      respond_to :json
 
       # GET /single_cell/api/v1/studies/:study_id
       def index
         @study_shares = @study.study_shares
-        render json: @study_shares.map(&:attributes)
       end
 
-      # GET /single_cell/api/v1/studies/:study_id/study_files/:id
+      # GET /single_cell/api/v1/studies/:study_id/study_shares/:id
       def show
-        render json: @study_share.attributes
+
       end
 
-      # POST /single_cell/api/v1/studies/:study_id/study_files
+      # POST /single_cell/api/v1/studies/:study_id/study_shares
       def create
         @study_share = @study.study_shares.build(study_share_params)
 
         if @study_share.save
-          render json: @study_share.attributes, status: :ok
+          render :show
         else
           render json: {errors: @study_share.errors}, status: :unprocessable_entity
         end
       end
 
-      # PATCH /single_cell/api/v1/studies/:study_id/study_files/:id
+      # PATCH /single_cell/api/v1/studies/:study_id/study_shares/:id
       def update
         if @study_share.update(study_share_params)
-          render json: @study_share.attributes, status: :ok
+          render :show
         else
           render json: {errors: @study_share.errors}, status: :unprocessable_entity
         end
       end
 
-      # DELETE /single_cell/api/v1/studies/:study_id/study_files/:id
+      # DELETE /single_cell/api/v1/studies/:study_id/study_shares/:id
       def destroy
         begin
           @study_share.destroy
@@ -71,14 +73,6 @@ module Api
       # study file params whitelist
       def study_share_params
         params.require(:study_share).permit(:id, :study_id, :email, :permission, :deliver_emails)
-      end
-
-      # check on FireCloud API status and respond accordingly
-      def check_firecloud_status
-        unless Study.firecloud_client.services_available?('Sam', 'Rawls')
-          alert = 'Study workspaces are temporarily unavailable, so we cannot complete your request.  Please try again later.'
-          render json: {error: alert}, status: 503
-        end
       end
     end
   end

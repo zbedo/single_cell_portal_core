@@ -4,45 +4,44 @@ module Api
 
       before_action :set_study
       before_action :check_study_permission
-      before_action :set_directory_listing, except: [:index, :create, :schema]
-      before_action :check_firecloud_status, except: [:index, :show]
+      before_action :set_directory_listing, except: [:index, :create]
+
+      respond_to :json
 
       # GET /single_cell/api/v1/studies/:study_id
       def index
         @directory_listings = @study.directory_listings
-        render json: @directory_listings.map(&:attributes)
       end
 
-      # GET /single_cell/api/v1/studies/:study_id/study_files/:id
+      # GET /single_cell/api/v1/studies/:study_id/directory_listings/:id
       def show
-        render json: @directory_listing.attributes
       end
 
-      # POST /single_cell/api/v1/studies/:study_id/study_files
+      # POST /single_cell/api/v1/studies/:study_id/directory_listings
       def create
         @directory_listing = @study.directory_listings.build(directory_listing_params)
 
         if @directory_listing.save
           # set sync_status to true if directory saved, unless this was manually set
           set_sync_status
-          render json: @directory_listing.attributes, status: :ok
+          render :show
         else
           render json: {errors: @directory_listing.errors}, status: :unprocessable_entity
         end
       end
 
-      # PATCH /single_cell/api/v1/studies/:study_id/study_files/:id
+      # PATCH /single_cell/api/v1/studies/:study_id/directory_listings/:id
       def update
         if @directory_listing.update(directory_listing_params)
           # set sync_status to true if directory saved, unless this was manually set
           set_sync_status
-          render json: @directory_listing.attributes, status: :ok
+          render :show
         else
           render json: {errors: @directory_listing.errors}, status: :unprocessable_entity
         end
       end
 
-      # DELETE /single_cell/api/v1/studies/:study_id/study_files/:id
+      # DELETE /single_cell/api/v1/studies/:study_id/directory_listings/:id
       def destroy
         begin
           @directory_listing.destroy
@@ -84,14 +83,6 @@ module Api
           @directory_listing.update(sync_status: true)
         else
           @directory_listing.update(sync_status: sync_status)
-        end
-      end
-
-      # check on FireCloud API status and respond accordingly
-      def check_firecloud_status
-        unless Study.firecloud_client.services_available?('Sam', 'Rawls')
-          alert = 'Study workspaces are temporarily unavailable, so we cannot complete your request.  Please try again later.'
-          render json: {error: alert}, status: 503
         end
       end
     end

@@ -2,19 +2,20 @@ module Api
   module V1
     class StudiesController < ApiBaseController
 
+      include Concerns::FireCloudStatus
+
       before_action :set_study, except: [:index, :create]
       before_action :check_study_permission, except: [:index, :create]
-      before_action :check_firecloud_status, except: [:index, :show]
+
+      respond_to :json
 
       # GET /single_cell/api/v1/studies
       def index
         @studies = Study.editable(current_api_user)
-        render json: @studies.map(&:attributes)
       end
 
       # GET /single_cell/api/v1/studies/:id
       def show
-        render json: @study.attributes
       end
 
       # POST /single_cell/api/v1/studies
@@ -24,7 +25,7 @@ module Api
 
 
         if @study.save
-          render json: @study.attributes, status: :ok
+          render :show
         else
           render json: {errors: @study.errors}, status: :unprocessable_entity
         end
@@ -38,7 +39,7 @@ module Api
             old_name = @study.previous_changes['url_safe_name'].first
             CacheRemovalJob.new(old_name).delay.perform
           end
-          render json: @study.attributes, status: :ok
+          render :show
         else
           render json: {errors: @study.errors}, status: :unprocessable_entity
         end
@@ -92,14 +93,6 @@ module Api
       def study_params
         params.require(:study).permit(:name, :description, :public, :embargo, :use_existing_workspace, :firecloud_workspace,
                                       :firecloud_project, :branding_group_id, study_shares_attributes: [:id, :_destroy, :email, :permission])
-      end
-
-      # check on FireCloud API status and respond accordingly
-      def check_firecloud_status
-        unless Study.firecloud_client.services_available?('Sam', 'Rawls')
-          alert = 'Study workspaces are temporarily unavailable, so we cannot complete your request.  Please try again later.'
-          render json: {error: alert}, status: 503
-        end
       end
     end
   end
