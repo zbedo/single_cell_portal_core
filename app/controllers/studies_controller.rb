@@ -280,7 +280,7 @@ class StudiesController < ApplicationController
             # we can only do this by md5 hash as the filename and generation will be different
             existing_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project,
                                                                          @study.firecloud_workspace, new_location)
-            if existing_file.present? && existing_file.md5 == file.md5
+            if existing_file.present? && existing_file.md5 == file.md5 && StudyFile.where(study_id: @study.id, upload_file_name: new_location).exists?
               next
             else
               # now copy the file to a new location for syncing, marking as default type of 'Analysis Output'
