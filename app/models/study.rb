@@ -990,11 +990,11 @@ class Study
       @shift_headers = true
 
       # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
-      if !opts[:local]
+      if !opts[:local] || !expression_file.is_local?
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, expression_file.remote_location, self.data_store_path, verify: :none)
-        @file_location = File.join(self.data_store_path, expression_file.remote_location)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, expression_file.bucket_location, self.data_store_path, verify: :none)
+        @file_location = File.join(self.data_store_path, expression_file.bucket_location)
       end
 
       # next, check if this is a re-parse job, in which case we need to remove all existing entries first
@@ -1209,7 +1209,7 @@ class Study
       Rails.logger.info "#{Time.now}: determining upload status of expression file: #{expression_file.upload_file_name}:#{expression_file.id}"
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       # rather than relying on opts[:local], actually check if the file is already in the GCS bucket
-      destination = expression_file.remote_location.blank? ? expression_file.upload_file_name : expression_file.remote_location
+      destination = expression_file.bucket_location
       remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
       if remote.nil?
         begin
@@ -1253,11 +1253,12 @@ class Study
     begin
       @file_location = ordinations_file.upload.path
       # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
-      if !opts[:local]
+      if !opts[:local] || !ordinations_file.is_local?
         # make sure data dir exists first
+        Rails.logger.info "Localizing file: #{ordinations_file.upload_file_name} in #{self.data_store_path}"
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, ordinations_file.remote_location, self.data_store_path, verify: :none)
-        @file_location = File.join(self.data_store_path, ordinations_file.remote_location)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, ordinations_file.bucket_location, self.data_store_path, verify: :none)
+        @file_location = File.join(self.data_store_path, ordinations_file.bucket_location)
       end
 
       # next, check if this is a re-parse job, in which case we need to remove all existing entries first
@@ -1552,7 +1553,7 @@ class Study
       Rails.logger.info "#{Time.now}: determining upload status of ordinations file: #{ordinations_file.upload_file_name}:#{ordinations_file.id}"
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
-      destination = ordinations_file.remote_location.blank? ? ordinations_file.upload_file_name : ordinations_file.remote_location
+      destination = ordinations_file.bucket_location
       remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
       if remote.nil?
         begin
@@ -1595,11 +1596,11 @@ class Study
     begin
       @file_location = coordinate_file.upload.path
       # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
-      if !opts[:local]
+      if !opts[:local] || !coordinate_file.is_local?
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, coordinate_file.remote_location, self.data_store_path, verify: :none)
-        @file_location = File.join(self.data_store_path, coordinate_file.remote_location)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, coordinate_file.bucket_location, self.data_store_path, verify: :none)
+        @file_location = File.join(self.data_store_path, coordinate_file.bucket_location)
       end
 
       # next, check if this is a re-parse job, in which case we need to remove all existing entries first
@@ -1723,8 +1724,11 @@ class Study
               # of same name & type with array_index incremented by 1
               current_data_array_index = @data_arrays[index].array_index
               data_array = @data_arrays[index]
-              Rails.logger.info "#{Time.now}: Saving full-lenght data array: #{data_array.name}-#{data_array.array_type}-#{data_array.array_index} using #{coordinate_file.upload_file_name}:#{coordinate_file.id} for cluster: #{cluster.name} in #{self.name}; initializing new array index #{current_data_array_index + 1}"
+              Rails.logger.info "#{Time.now}: Saving full-length data array: #{data_array.name}-#{data_array.array_type}-#{data_array.array_index} using #{coordinate_file.upload_file_name}:#{coordinate_file.id} for cluster: #{cluster.name} in #{self.name}; initializing new array index #{current_data_array_index + 1}"
               data_array.save
+              if data_array.array_type == 'labels'
+                @labels_created << data_array
+              end
               new_data_array = cluster.data_arrays.build(name: data_array.name, cluster_name: data_array.cluster_name,
                                                          array_type: data_array.array_type, array_index: current_data_array_index + 1,
                                                          study_file_id: coordinate_file._id, study_id: self.id, values: [])
@@ -1768,7 +1772,7 @@ class Study
       Rails.logger.info "#{Time.now}: determining upload status of coordinate labels file: #{coordinate_file.upload_file_name}:#{coordinate_file.id}"
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
-      destination = coordinate_file.remote_location.blank? ? coordinate_file.upload_file_name : coordinate_file.remote_location
+      destination = coordinate_file.bucket_location
       remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
       if remote.nil?
         begin
@@ -1809,11 +1813,11 @@ class Study
     begin
       @file_location = metadata_file.upload.path
       # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
-      if !opts[:local]
+      if !opts[:local] || !metadata_file.is_local?
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, metadata_file.remote_location, self.data_store_path, verify: :none)
-        @file_location = File.join(self.data_store_path, metadata_file.remote_location)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, metadata_file.bucket_location, self.data_store_path, verify: :none)
+        @file_location = File.join(self.data_store_path, metadata_file.bucket_location)
       end
 
       # next, check if this is a re-parse job, in which case we need to remove all existing entries first
@@ -2040,7 +2044,7 @@ class Study
       Rails.logger.info "#{Time.now}: determining upload status of metadata file: #{metadata_file.upload_file_name}:#{metadata_file.id}"
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
-      destination = metadata_file.remote_location.blank? ? metadata_file.upload_file_name : metadata_file.remote_location
+      destination = metadata_file.bucket_location
       remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
       if remote.nil?
         begin
@@ -2082,11 +2086,11 @@ class Study
     begin
       @file_location = marker_file.upload.path
       # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
-      if !opts[:local]
+      if !opts[:local] || !marker_file.is_local?
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, marker_file.remote_location, self.data_store_path, verify: :none)
-        @file_location = File.join(self.data_store_path, marker_file.remote_location)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, marker_file.bucket_location, self.data_store_path, verify: :none)
+        @file_location = File.join(self.data_store_path, marker_file.bucket_location)
       end
 
       # next, check if this is a re-parse job, in which case we need to remove all existing entries first
@@ -2212,7 +2216,7 @@ class Study
       Rails.logger.info "#{Time.now}: determining upload status of gene list file: #{marker_file.upload_file_name}"
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
-      destination = marker_file.remote_location.blank? ? marker_file.upload_file_name : marker_file.remote_location
+      destination = marker_file.bucket_location
       remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
       if remote.nil?
         begin

@@ -238,36 +238,49 @@ class StudyFile
     self.remote_location.blank? ? self.upload_file_name : self.remote_location
   end
 
+  def is_local?
+    File.exists?(Rails.root.join(self.study.data_store_path, self.download_location)) ||
+        File.exists?(Rails.root.join(self.study.data_store_path, self.bucket_location))
+  end
+
   # get any 'bundled' files that correspond to this file
   def bundled_files
-    # base 'selector' for query, used to search study_file.options hash
-    selector = 'options'
-    case self.file_type
-    when 'MM Coordinate Matrix'
-      selector += '.matrix_id'
-    when 'BAM'
-      selector += '.bam_id'
-    when 'Cluster'
-      selector += '.cluster_group_id'
+    if self.study_file_bundle.present?
+      self.study_file_bundle.bundled_files
+    else
+      # base 'selector' for query, used to search study_file.options hash
+      selector = 'options'
+      case self.file_type
+      when 'MM Coordinate Matrix'
+        selector += '.matrix_id'
+      when 'BAM'
+        selector += '.bam_id'
+      when 'Cluster'
+        selector += '.cluster_group_id'
+      end
+      StudyFile.where(selector => self.id.to_s) # return Mongoid::Criteria to lazy-load, better performance
     end
-    StudyFile.where(selector => self.id.to_s) # return Mongoid::Criteria to lazy-load, better performance
   end
 
   # get the bundle 'parent' file for a bundled file (e.g. MM Coordinate Matrix that is bundled with a 10X Genes File)
   # inverse of study_file.bundled_files.  In the case of Coordinate Labels, this returns the cluster, not the file
   def bundle_parent
-    model = StudyFile
-    case self.file_type
-    when /10X/
-      selector = :matrix_id
-    when 'BAM Index'
-      selector = :bam_id
-    when 'Coordinate Labels'
-      selector = :cluster_group_id
-      model = ClusterGroup
+    if self.study_file_bundle.present?
+      self.study_file_bundle.bundle_target
+    else
+      model = StudyFile
+      case self.file_type
+      when /10X/
+        selector = :matrix_id
+      when 'BAM Index'
+        selector = :bam_id
+      when 'Coordinate Labels'
+        selector = :cluster_group_id
+        model = ClusterGroup
+      end
+      # call find_by(id: ) to avoid Mongoid::Errors::InvalidFind
+      model.find_by(id: self.options[selector])
     end
-    # call find_by(id: ) to avoid Mongoid::Errors::InvalidFind
-    model.find_by(id: self.options[selector])
   end
 
   # retrieve the cluster group id from the options hash for a cluster labels file
@@ -300,6 +313,9 @@ class StudyFile
   # determine a file's content type by reading the first 2 bytes and comparing to known magic numbers
   def determine_content_type
     location = File.join(self.study.data_store_path, self.download_location)
+    if !File.exists?(location)
+      location = File.join(self.study.data_store_path, self.bucket_location)
+    end
     signature = File.open(location).read(2)
     if signature == StudyFile::GZIP_MAGIC_NUMBER
       'application/gzip'
@@ -401,6 +417,8 @@ class StudyFile
       if Dir.exist?(subdir) && Dir.entries(subdir).delete_if {|e| e.start_with?('.')}.empty?
         Dir.rmdir(subdir)
       end
+    elsif File.exists?(self.bucket_location)
+      File.delete(self.bucket_location)
     end
   end
 
