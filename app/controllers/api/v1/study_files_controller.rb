@@ -25,7 +25,10 @@ module Api
         @study_file = @study.study_files.build(study_file_params)
 
         if @study_file.save
-          @study.delay.send_to_firecloud(@study_file)
+          # send data to FireCloud if upload was performed
+          if study_file_params[:upload].present?
+            @study.delay.send_to_firecloud(@study_file)
+          end
           render :show
         else
           render json: {errors: @study_file.errors}, status: :unprocessable_entity
@@ -128,10 +131,9 @@ module Api
                                            :remote_location, :description, :file_type, :status, :human_fastq_url, :human_data, :cluster_type,
                                            :generation, :x_axis_label, :y_axis_label, :z_axis_label, :x_axis_min, :x_axis_max, :y_axis_min,
                                            :y_axis_max, :z_axis_min, :z_axis_max,
-                                           options: [:cluster_group_id, :font_family, :font_size, :font_color, :matrix_id, :submission_id,
-                                                     :bam_id, :analysis_name, :visualization_name])
+                                           options: [:cluster_group_id, :font_family, :font_size, :font_color, :matrix_id,
+                                                     :submission_id, :bam_id, :analysis_name, :visualization_name])
       end
     end
   end
 end
-

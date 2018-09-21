@@ -17,6 +17,9 @@ Rails.application.routes.draw do
           resources :study_file_bundles, only: [:index, :show, :create, :destroy]
           resources :study_shares, only: [:index, :show, :create, :update, :destroy]
           resources :directory_listings, only: [:index, :show, :create, :update, :destroy]
+          member do
+            get 'sync', to: 'studies#sync_study', as: :sync
+          end
         end
       end
     end

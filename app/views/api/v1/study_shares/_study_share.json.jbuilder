@@ -1,3 +1,5 @@
 study_share.attributes.each do |name, value|
-  json.set! name, value
+  unless name == '_id' && !study_share.persisted?
+    json.set! name, value
+  end
 end
