@@ -94,4 +94,11 @@ class StudyFilesControllerControllerTest < ActionDispatch::IntegrationTest
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
+
+  test 'should parse study file' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}!"
+    execute_http_request(:post, parse_api_v1_study_study_file_path(study_id: @study.id, id: @study_file.id))
+    assert_response 204
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
 end
