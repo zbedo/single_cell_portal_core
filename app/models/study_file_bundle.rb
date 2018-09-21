@@ -17,6 +17,7 @@ class StudyFileBundle
       'BAM' => ['BAM Index'],
       'Cluster' => ['Coordinate Labels']
   }
+  PARSEABLE_BUNDLE_REQUIREMENTS = BUNDLE_REQUIREMENTS.dup.keep_if {|k,v| k != 'BAM'}
 
   before_validation :set_bundle_type, on: :create
   validates_presence_of :bundle_type, :original_file_list
