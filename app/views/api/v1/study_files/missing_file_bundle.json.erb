@@ -1,0 +1,4 @@
+{
+  "error" : "Files of type '<%= @study_file.file_type %>' require other files of the following types to be parsed.  Please create a bundle at: <%= api_v1_study_study_files_bundle_files_path(@study.id) %>",
+  "bundle_types" : <%= raw StudyFileBundle::PARSEABLE_BUNDLE_REQUIREMENTS.to_json %>
+}
