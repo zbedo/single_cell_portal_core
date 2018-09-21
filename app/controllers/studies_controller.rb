@@ -624,7 +624,7 @@ class StudiesController < ApplicationController
     end
   end
 
-  # parses file in foreground to maintain UI state for immediate messaging
+  # parses happen in background to prevent UI blocking
   def parse
     @study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
     logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name}"
