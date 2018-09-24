@@ -97,3 +97,4 @@ DirectoryListing.create!(name: 'csvs', file_type: 'csv', files: [{name: 'foo.csv
 StudyFileBundle.create!(bundle_type: 'BAM', original_file_list: [{'name' => 'sample_1.bam', 'file_type' => 'BAM'},
                                                                  {'name' => 'sample_1.bam.bai', 'file_type' => 'BAM Index'}],
                         study_id: api_study.id)
+User.create!(email:'testing.user.2@gmail.com', password:'someotherpassword', api_access_token: 'test-api-token-2')
