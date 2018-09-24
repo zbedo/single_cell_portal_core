@@ -14,10 +14,8 @@ module Api
             head 406 unless request.headers['Content-Range'].present? &&
                 request.headers['Accept'] === 'application/json'
           else
-            head 406 unless ['application/x-www-form-urlencoded', 'application/json'].include?(request.headers['Content-Type']) &&
-                request.headers['Accept'] === 'application/json'
+            head 406 unless request.headers['Accept'] === 'application/json'
           end
-
         end
       end
     end

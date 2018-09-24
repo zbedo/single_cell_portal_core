@@ -368,6 +368,10 @@ GEM
       actionpack (>= 4.0)
       activesupport (>= 4.0)
       sprockets (>= 3.0.0)
+    swagger-blocks (2.0.2)
+    swagger_ui_engine (1.1.2)
+      rails (>= 4.2)
+      sass-rails
     terrapin (0.6.0)
       climate_control (>= 0.0.3, < 1.0)
     test-unit (3.2.8)
@@ -445,6 +449,8 @@ DEPENDENCIES
   secure_headers
   selenium-webdriver
   spring
+  swagger-blocks
+  swagger_ui_engine
   test-unit
   truncate_html
   uglifier (>= 1.3.0)

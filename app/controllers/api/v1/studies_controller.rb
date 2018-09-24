@@ -3,11 +3,30 @@ module Api
     class StudiesController < ApiBaseController
 
       include Concerns::FireCloudStatus
+      include Swagger::Blocks
 
       before_action :set_study, except: [:index, :create]
       before_action :check_study_permission, except: [:index, :create]
 
       respond_to :json
+
+      swagger_path '/v1/studies' do
+        operation :get do
+          key :summary, 'Find all Studies'
+          key :description, 'Returns all Studies editable by the current user'
+          key :operationId, 'studies_path'
+          response 200 do
+            key :description, 'Array of Study objects'
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+        end
+      end
+
 
       # GET /single_cell/api/v1/studies
       def index
