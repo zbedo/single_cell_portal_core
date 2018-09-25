@@ -10,13 +10,24 @@ module Api
 
       respond_to :json
 
-      swagger_path '/v1/studies' do
+      swagger_path '/studies' do
         operation :get do
+          key :tags, [
+              'Studies'
+          ]
           key :summary, 'Find all Studies'
           key :description, 'Returns all Studies editable by the current user'
           key :operationId, 'studies_path'
           response 200 do
             key :description, 'Array of Study objects'
+            schema do
+              key :type, :array
+              key :title, 'Array'
+              items do
+                key :title, 'Study'
+                key :'$ref', :Study
+              end
+            end
           end
           response 401 do
             key :description, 'User is not authenticated'
@@ -27,14 +38,83 @@ module Api
         end
       end
 
-
       # GET /single_cell/api/v1/studies
       def index
         @studies = Study.editable(current_api_user)
       end
 
+      swagger_path '/studies/{id}' do
+        operation :get do
+          key :tags, [
+              'Studies'
+          ]
+          key :summary, 'Find a Study'
+          key :description, 'Finds a single Study'
+          key :operationId, 'study_path'
+          parameter do
+            key :name, :id
+            key :in, :path
+            key :description, 'ID of Study to fetch'
+            key :required, true
+            key :type, :string
+          end
+          response 200 do
+            key :description, 'Study object'
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
+          response 403 do
+            key :description, 'User is not authorized to edit Study'
+          end
+          response 404 do
+            key :description, 'Study is not found'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+        end
+      end
+
       # GET /single_cell/api/v1/studies/:id
       def show
+      end
+
+      swagger_path '/studies' do
+        operation :post do
+          key :tags, [
+              'Studies'
+          ]
+          key :summary, 'Create a Study'
+          key :description, 'Creates and returns a single Study'
+          key :operationId, 'create_study_path'
+          key :consumes, ['application/x-www-form-urlencoded']
+          key :produces, ['application/json']
+          parameter do
+            key :name, :study
+            key :in, :body
+            key :description, 'Study object'
+            key :required, true
+            schema do
+              key :'$ref', :StudyInput
+            end
+          end
+          response 200 do
+            key :description, 'Successful creation of Study object'
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
+          response 403 do
+            key :description, 'User is not authorized to edit Study'
+          end
+          response 404 do
+            key :description, 'Study is not found'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+        end
       end
 
       # POST /single_cell/api/v1/studies
@@ -50,6 +130,50 @@ module Api
         end
       end
 
+      swagger_path '/studies/{id}' do
+        operation :patch do
+          key :tags, [
+              'Studies'
+          ]
+          key :summary, 'Update a Study'
+          key :description, 'Creates and returns a single Study'
+          key :operationId, 'update_study_path'
+          key :consumes, ['application/x-www-form-urlencoded']
+          key :produces, ['application/json']
+          parameter do
+            key :name, :id
+            key :in, :path
+            key :description, 'ID of Study to update'
+            key :required, true
+            key :type, :string
+          end
+          parameter do
+            key :name, :study
+            key :in, :body
+            key :description, 'Study object'
+            key :required, true
+            schema do
+              key :'$ref', :StudyInput
+            end
+          end
+          response 200 do
+            key :description, 'Successful update of Study object'
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
+          response 403 do
+            key :description, 'User is not authorized to edit Study'
+          end
+          response 404 do
+            key :description, 'Study is not found'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+        end
+      end
+
       # PATCH /single_cell/api/v1/studies/:id
       def update
         if @study.update(study_params)
@@ -61,6 +185,47 @@ module Api
           render :show
         else
           render json: {errors: @study.errors}, status: :unprocessable_entity
+        end
+      end
+
+      swagger_path '/studies/{id}' do
+        operation :delete do
+          key :tags, [
+              'Studies'
+          ]
+          key :summary, 'Delete a Study'
+          key :description, 'Deletes a single Study'
+          key :operationId, 'delete_study_path'
+          parameter do
+            key :name, :id
+            key :in, :path
+            key :description, 'ID of Study to delete'
+            key :required, true
+            key :type, :string
+          end
+          parameter do
+            key :name, :workspace
+            key :in, :query
+            key :description, 'Keep FireCloud workspace after study deletion?'
+            key :required, false
+            key :type, :string
+            key :enum, ['persist']
+          end
+          response 204 do
+            key :description, 'Successful Study deletion'
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
+          response 403 do
+            key :description, 'User is not authorized to delete Study'
+          end
+          response 404 do
+            key :description, 'Study is not found'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
         end
       end
 

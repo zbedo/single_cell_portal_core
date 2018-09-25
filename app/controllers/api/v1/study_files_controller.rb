@@ -3,6 +3,7 @@ module Api
     class StudyFilesController < ApiBaseController
 
       include Concerns::FireCloudStatus
+      include Swagger::Blocks
 
       before_action :set_study
       before_action :check_study_permission
@@ -10,14 +11,139 @@ module Api
 
       respond_to :json
 
+      swagger_path '/studies/{study_id}/study_files' do
+        operation :get do
+          key :tags, [
+              'StudyFiles'
+          ]
+          key :summary, 'Find all Studies'
+          key :description, 'Returns all Studies editable by the current user'
+          key :operationId, 'study_study_files_path'
+          parameter do
+            key :name, :study_id
+            key :in, :path
+            key :description, 'ID of Study'
+            key :required, true
+            key :type, :string
+          end
+          response 200 do
+            key :description, 'Array of Study objects'
+            schema do
+              key :type, :array
+              key :title, 'Array'
+              items do
+                key :title, 'StudyFile'
+                key :'$ref', :StudyFile
+              end
+            end
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
+          response 403 do
+            key :description, 'User is not authorized to edit Study'
+          end
+          response 404 do
+            key :description, 'Study or StudyFile is not found'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+        end
+      end
+
       # GET /single_cell/api/v1/studies/:study_id
       def index
         @study_files = @study.study_files.where(queued_for_deletion: false)
       end
 
+      swagger_path '/studies/{study_id}/study_files/{id}' do
+        operation :get do
+          key :tags, [
+              'StudyFiles'
+          ]
+          key :summary, 'Find a StudyFile'
+          key :description, 'Finds a single Study'
+          key :operationId, 'study_study_file_path'
+          parameter do
+            key :name, :study_id
+            key :in, :path
+            key :description, 'ID of Study'
+            key :required, true
+            key :type, :string
+          end
+          parameter do
+            key :name, :id
+            key :in, :path
+            key :description, 'ID of StudyFile to fetch'
+            key :required, true
+            key :type, :string
+          end
+          response 200 do
+            key :description, 'StudyFile object'
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
+          response 403 do
+            key :description, 'User is not authorized to edit Study'
+          end
+          response 404 do
+            key :description, 'Study or StudyFile is not found'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+        end
+      end
+
       # GET /single_cell/api/v1/studies/:study_id/study_files/:id
       def show
 
+      end
+
+      swagger_path '/studies/{study_id}/study_files' do
+        operation :post do
+          key :tags, [
+              'StudyFiles'
+          ]
+          key :summary, 'Create a StudyFile'
+          key :description, 'Creates and returns a single StudyFile'
+          key :operationId, 'create_study_path'
+          key :consumes, ['application/x-www-form-urlencoded']
+          key :produces, ['application/json']
+          parameter do
+            key :name, :study_id
+            key :in, :path
+            key :description, 'ID of Study'
+            key :required, true
+            key :type, :string
+          end
+          parameter do
+            key :name, :study_file
+            key :in, :body
+            key :description, 'StudyFile object'
+            key :required, true
+            schema do
+              key :'$ref', :StudyFileInput
+            end
+          end
+          response 200 do
+            key :description, 'Successful creation of StudyFile object'
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
+          response 403 do
+            key :description, 'User is not authorized to edit Study'
+          end
+          response 404 do
+            key :description, 'Study or StudyFile is not found'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+        end
       end
 
       # POST /single_cell/api/v1/studies/:study_id/study_files
@@ -33,6 +159,57 @@ module Api
           render :show
         else
           render json: {errors: @study_file.errors}, status: :unprocessable_entity
+        end
+      end
+
+      swagger_path '/studies/{study_id}/study_files/{id}' do
+        operation :patch do
+          key :tags, [
+              'StudyFiles'
+          ]
+          key :summary, 'Update a StudyFile'
+          key :description, 'Creates and returns a single StudyFile'
+          key :operationId, 'update_study_study_file_path'
+          key :consumes, ['application/x-www-form-urlencoded']
+          key :produces, ['application/json']
+          parameter do
+            key :name, :study_id
+            key :in, :path
+            key :description, 'ID of Study'
+            key :required, true
+            key :type, :string
+          end
+          parameter do
+            key :name, :id
+            key :in, :path
+            key :description, 'ID of StudyFile to update'
+            key :required, true
+            key :type, :string
+          end
+          parameter do
+            key :name, :study_file
+            key :in, :body
+            key :description, 'StudyFile object'
+            key :required, true
+            schema do
+              key :'$ref', :StudyFileInput
+            end
+          end
+          response 200 do
+            key :description, 'Successful update of Study object'
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
+          response 403 do
+            key :description, 'User is not authorized to edit Study'
+          end
+          response 404 do
+            key :description, 'Study or StudyFile is not found'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
         end
       end
 
@@ -59,6 +236,46 @@ module Api
           render :show
         else
           render json: {errors: @study_file.errors}, status: :unprocessable_entity
+        end
+      end
+
+      swagger_path '/studies/{study_id}/study_files/{id}' do
+        operation :delete do
+          key :tags, [
+              'StudyFiles'
+          ]
+          key :summary, 'Delete a StudyFile'
+          key :description, 'Deletes a single StudyFile'
+          key :operationId, 'delete_study_study_file_path'
+          parameter do
+            key :name, :study_id
+            key :in, :path
+            key :description, 'ID of Study'
+            key :required, true
+            key :type, :string
+          end
+          parameter do
+            key :name, :id
+            key :in, :path
+            key :description, 'ID of StudyFile to delete'
+            key :required, true
+            key :type, :string
+          end
+          response 204 do
+            key :description, 'Successful StudyFile deletion'
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
+          response 403 do
+            key :description, 'User is not authorized to delete Study'
+          end
+          response 404 do
+            key :description, 'Study or StudyFile is not found'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
         end
       end
 

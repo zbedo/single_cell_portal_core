@@ -10,6 +10,7 @@ class Study
   include Mongoid::Document
   include Mongoid::Timestamps
   extend ValidationTools
+  include Swagger::Blocks
 
   ###
   #
@@ -217,6 +218,129 @@ class Study
 
   accepts_nested_attributes_for :study_files, allow_destroy: true
   accepts_nested_attributes_for :study_shares, allow_destroy: true, reject_if: proc { |attributes| attributes['email'].blank? }
+
+  ##
+  #
+  # SWAGGER DEFINITIONS
+  #
+  ##
+
+  swagger_schema :Study do
+    key :required, [:name]
+    key :name, 'Study'
+    property :id do
+      key :type, :string
+    end
+    property :name do
+      key :type, :string
+    end
+    property :embargo do
+      key :type, :string
+      key :format, :date
+    end
+    property :description do
+      key :type, :string
+    end
+    property :url_safe_name do
+      key :type, :string
+    end
+    property :firecloud_project do
+      key :type, :string
+      key :default, FireCloudClient::PORTAL_NAMESPACE
+    end
+    property :firecloud_workspace do
+      key :type, :string
+    end
+    property :use_existing_workspace do
+      key :type, :boolean
+      key :default, false
+    end
+    property :bucket_id do
+      key :type, :string
+    end
+    property :data_dir do
+      key :type, :string
+    end
+    property :public do
+      key :type, :boolean
+      key :default, true
+    end
+    property :queued_for_deletion do
+      key :type, :boolean
+      key :default, false
+    end
+    property :branding_group_id do
+      key :type, :string
+    end
+    property :initialized do
+      key :type, :boolean
+      key :default, false
+    end
+    property :view_count do
+      key :type, :number
+      key :format, :integer
+      key :default, 0
+    end
+    property :cell_count do
+      key :type, :number
+      key :format, :integer
+      key :default, 0
+    end
+    property :gene_count do
+      key :type, :number
+      key :format, :integer
+      key :default, 0
+    end
+    property :view_order do
+      key :type, :number
+      key :format, :float
+      key :default, 100.0
+    end
+    property :default_options do
+      key :type, :object
+      key :default, Hash.new
+    end
+    property :created_at do
+      key :type, :string
+      key :format, :date_time
+    end
+    property :updated_at do
+      key :type, :string
+      key :format, :date_time
+    end
+  end
+
+  swagger_schema :StudyInput do
+    allOf do
+      schema do
+        property :study do
+          key :type, :object
+          property :name do
+            key :type, :string
+          end
+          property :description do
+            key :type, :string
+          end
+          property :firecloud_project do
+            key :type, :string
+            key :default, FireCloudClient::PORTAL_NAMESPACE
+          end
+          property :use_existing_workspace do
+            key :type, :boolean
+            key :default, false
+          end
+          property :firecloud_workspace do
+            key :type, :string
+          end
+          property :branding_group_id do
+            key :type, :string
+          end
+          key :required, [:name]
+        end
+      end
+    end
+  end
+
 
   ###
   #

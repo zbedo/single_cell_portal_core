@@ -3,9 +3,9 @@ Rails.application.routes.draw do
   scope 'single_cell' do
     # API Routes
     namespace :api do
-      resources :api_docs, only: :index
       mount SwaggerUiEngine::Engine, at: '/'
       namespace :v1 do
+        resources :api_docs, only: :index
         namespace :schemas do
           get 'studies'
           get 'study_files'

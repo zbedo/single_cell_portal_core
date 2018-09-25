@@ -16,6 +16,7 @@ class StudyFile
   include Mongoid::Timestamps
   include Mongoid::Paperclip
   include Rails.application.routes.url_helpers # for accessing download_file_path and download_private_file_path
+  include Swagger::Blocks
 
   # constants, used for statuses and file types
   STUDY_FILE_TYPES = ['Cluster', 'Coordinate Labels' ,'Expression Matrix', 'MM Coordinate Matrix', '10X Genes File',
@@ -69,6 +70,126 @@ class StudyFile
 
   Paperclip.interpolates :data_dir do |attachment, style|
     attachment.instance.data_dir
+  end
+
+  ##
+  #
+  # SWAGGER DEFINITIONS
+  #
+  ##
+
+  swagger_schema :StudyFile do
+    key :required, [:file_type, :name]
+    key :name, 'StudyFile'
+    property :id do
+      key :type, :string
+    end
+    property :study_id do
+      key :type, :string
+    end
+    property :taxon_id do
+      key :type, :string
+    end
+    property :genome_assembly_id do
+      key :type, :string
+    end
+    property :study_file_bundle_id do
+      key :type, :string
+    end
+    property :name do
+      key :type, :string
+    end
+    property :description do
+      key :type, :string
+    end
+    property :upload do
+      key :type, :file
+    end
+    property :file_type do
+      key :type, :string
+      key :enum, STUDY_FILE_TYPES
+    end
+    property :status do
+      key :type, :string
+      key :enum, UPLOAD_STATUSES
+    end
+    property :parse_status do
+      key :type, :string
+      key :enum, PARSE_STATUSES
+    end
+    property :data_dir do
+      key :type, :string
+    end
+    property :human_fastq_url do
+      key :type, :string
+      key :format, :url
+    end
+    property :human_data do
+      key :type, :boolean
+      key :default, false
+    end
+    property :generation do
+      key :type, :string
+    end
+    property :x_axis_label do
+      key :type, :string
+    end
+    property :y_axis_label do
+      key :type, :string
+    end
+    property :z_axis_label do
+      key :type, :string
+    end
+    property :x_axis_min do
+      key :type, :integer
+    end
+    property :x_axis_max do
+      key :type, :integer
+    end
+    property :y_axis_min do
+      key :type, :integer
+    end
+    property :y_axis_max do
+      key :type, :integer
+    end
+    property :z_axis_min do
+      key :type, :integer
+    end
+    property :z_axis_max do
+      key :type, :integer
+    end
+    property :x_axis_min do
+      key :type, :integer
+    end
+    property :queued_for_deletion do
+      key :type, :boolean
+      key :default, false
+    end
+    property :z_axis_label do
+      key :type, :remote_location
+    end
+    property :options do
+      key :type, :object
+      key :default, {}
+    end
+    property :created_at do
+      key :type, :string
+      key :format, :date_time
+    end
+    property :updated_at do
+      key :type, :string
+      key :format, :date_time
+    end
+  end
+
+  swagger_schema :StudyFileInput do
+    allOf do
+      schema do
+        property :study_file do
+          key :'$ref', :StudyFile
+        end
+      end
+    end
   end
 
   ###
