@@ -280,7 +280,7 @@ class StudiesController < ApplicationController
             # we can only do this by md5 hash as the filename and generation will be different
             existing_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project,
                                                                          @study.firecloud_workspace, new_location)
-            if existing_file.present? && existing_file.md5 == file.md5
+            if existing_file.present? && existing_file.md5 == file.md5 && StudyFile.where(study_id: @study.id, upload_file_name: new_location).exists?
               next
             else
               # now copy the file to a new location for syncing, marking as default type of 'Analysis Output'
@@ -505,6 +505,9 @@ class StudiesController < ApplicationController
 
       # set queued_for_deletion manually - gotcha due to race condition on page reloading and how quickly delayed_job can process jobs
       @study.update(queued_for_deletion: true)
+
+      # Remove the analysis.json before enqueuing the delete job
+      AnalysisMetadatum.where(study_id: @study.id).delete_all
 
       # queue jobs to delete study caches & study itself
       CacheRemovalJob.new(@study.url_safe_name).delay.perform

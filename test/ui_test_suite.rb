@@ -4872,6 +4872,7 @@ class UiTestSuite < Test::Unit::TestCase
           when 'expression_matrix_example.txt'
             file_type.send_keys('Expression Matrix')
             species_dropdown = form.find_element(:id, 'study_file_taxon_id')
+            @wait.until {file_type.displayed?}
             opts = species_dropdown.find_elements(:tag_name, 'option')
             available_species = opts.delete_if {|opt| opt['value'] == ''}
             if available_species.any?
@@ -4917,16 +4918,45 @@ class UiTestSuite < Test::Unit::TestCase
     sync_btn.click
     wait_for_render(:class, 'unsynced-study-file')
     study_file_forms = @driver.find_elements(:class, 'unsynced-study-file')
+    ideogram_annots_form = nil
     study_file_forms.each do |form|
       filename = form.find_element(:id, 'study_file_name')
-      if filename['value'].end_with?('infercnv_exp_means.json') # for the purpose of the test, we only need this file
-        sync_button = form.find_element(:class, 'save-study-file')
-        sync_button.click
-        close_modal('sync-notice-modal')
-      else
-        next # skip all other outputs
+      if filename['value'].end_with?('infercnv_exp_means.json')
+        # for the purpose of the test, we only need one such file
+        ideogram_annots_form = form
       end
     end
+
+    # file_type = form.find_element(:id, 'study_file_file_type')
+    # file_type.send_keys('Analysis Output')
+    dropdown = ideogram_annots_form.find_element(:id, 'study_file_file_type')
+    opts = dropdown.find_elements(:tag_name, 'option')
+    opt = opts.detect {|opt| opt.text == 'Analysis Output'}
+    opt.click
+
+    puts "Selected 'Analysis Output' file type in this sync form"
+    puts "Waiting for element with ID 'study_file_taxon_id'"
+    @wait.until {element_present?(:id, 'study_file_taxon_id')}
+    puts "Found element with ID 'study_file_taxon_id'"
+    species_dropdown = ideogram_annots_form.find_element(:id, 'study_file_taxon_id')
+    @wait.until {species_dropdown.displayed?}
+    opts = species_dropdown.find_elements(:tag_name, 'option')
+    available_species = opts.delete_if {|opt| opt['value'] == ''}
+    if available_species.any?
+      species_dropdown.send_key(available_species.sample.text)
+    end
+
+    assemblies_dropdown = ideogram_annots_form.find_element(:id, 'study_file_genome_assembly_id')
+    opts = assemblies_dropdown.find_elements(:tag_name, 'option')
+    available_assemblies = opts.delete_if {|opt| opt['value'] == ''}
+    if available_assemblies.any?
+      assemblies_dropdown.send_key(available_assemblies.sample.text)
+    end
+
+    sync_button = ideogram_annots_form.find_element(:class, 'save-study-file')
+    sync_button.click
+    close_modal('sync-notice-modal')
+
 
     # now make sure we're able to load Ideogram
     @driver.get(sync_study_path)

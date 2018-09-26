@@ -688,6 +688,16 @@ class Study
     self.study_files.where('options.analysis_name' => analysis_name, 'options.visualization_name' => visualization_name)
   end
 
+  # Return settings for this study's inferCNV ideogram visualization
+  def get_ideogram_infercnv_settings
+    exp_file = self.get_analysis_outputs('infercnv', 'ideogram.js').first
+    {
+      'organism': exp_file.species_name,
+      'assembly': exp_file.genome_assembly['name'],
+      'annotationsPath': exp_file.api_url
+    }
+  end
+
   def has_bam_files?
     self.study_files.by_type('BAM').any?
   end
@@ -702,38 +712,35 @@ class Study
     bam_files.each do |bam_file|
       bams << {
           'url' => bam_file.api_url,
-          'indexUrl' => bam_file.bundled_files.first.api_url
+          'indexUrl' => bam_file.bundled_files.first.api_url,
+          'genomeAssembly' => bam_file.genome_assembly_name,
+          'genomeAnnotation' => bam_file.genome_annotation
       }
     end
     bams
   end
 
-  # Get gene annotations tracks for igv.js,
-  # as reference-genome keyed list of GCS API URLs for BED and BED index files
-  def get_gene_tracks
-    gene_tracks = {}
-    if self.has_bam_files?
-      reference_workspace = AdminConfiguration.find_by(config_type: 'Reference Data Workspace')
-      opts = reference_workspace.options
-      namespace, name = reference_workspace.value.split('/')
+  def get_genome_annotations_by_assembly
+    genome_annotations = {}
+    bam_files = self.study_files.by_type('BAM')
+    bam_files.each do |bam_file|
+      assembly = bam_file.genome_assembly_name
+      if !genome_annotations.key?(assembly)
+        genome_annotations[assembly] = {}
+      end
+      genome_annotation = bam_file.genome_annotation
+      if !genome_annotations[assembly].key?(genome_annotation)
 
-      # We'll generalize later, e.g. take in (genome assembly) reference_name as a URL parameter
-      # to this 'study' method's endpoint
-      reference_name = 'mm10'
-
-      gene_tracks = {
-          mm10: {}
-      }
-
-      reference_gtf_key = opts.keys.find {|o| o =~ /^#{reference_name}.*_gtf$/}
-      reference_gtf = opts[reference_gtf_key]
-      gene_tracks[:mm10][:url] = Study.firecloud_client.generate_api_url(namespace, name, reference_gtf)
-
-      reference_gtf_index_key = opts.keys.find {|o| o =~ /^#{reference_name}.*_gtf_index$/}
-      reference_gtf_index = opts[reference_gtf_index_key]
-      gene_tracks[:mm10][:indexUrl] = Study.firecloud_client.generate_api_url(namespace, name, reference_gtf_index)
+        # Only handle one annotation per genome assembly for now;
+        # enhance to support multiple annotations when UI supports it
+        genome_annotations[assembly]['genome_annotations'] = {
+          'name': genome_annotation,
+          'url': bam_file.genome_annotation_link,
+          'indexUrl': bam_file.genome_annotation_index_link
+        }
+      end
     end
-    gene_tracks
+    genome_annotations
   end
 
   def taxons

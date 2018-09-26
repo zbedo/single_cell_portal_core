@@ -8,6 +8,7 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
     var extraInfo = $('#study-file-<%= study_file.id %>-extra-info');
     var taxonTarget = form.find('.taxon-select-target');
     var submitBtn = $('#sync-study-file-<%= study_file.id %>');
+
     // render fields & process entries based on file type
     if (fileType === 'Cluster') {
         extraInfo.html("<%= j(render partial: 'cluster_axis_fields', locals: {f: f}) %>");
@@ -45,11 +46,11 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
         // disable sync button until user has selected a matrix pair
         console.log('disabling sync button on ' + submitBtn.attr('id'));
         submitBtn.attr('disabled', 'disabled');
-    } else if (fileType === 'BAM') {
+    } else if (fileType === 'BAM' || fileType === 'Analysis Output') {
         extraInfo.empty();
         taxonTarget.html("<%= j(render partial: 'taxon_fields', locals: {f: f}) %>");
         assemblySelect = form.find('.genome-assembly-association');
-        assemblySelect.removeClass('hidden')
+        assemblySelect.removeClass('hidden');
     } else if (fileType === 'Fastq') {
         extraInfo.empty();
         alert('Fastq files are stored in Sequence Data Directories (see below).  Please select another file type.');
@@ -111,3 +112,27 @@ $("#sync-study-file-<%= study_file.id %>").click(function() {
 $('#study-file-<%= study_file.id %>').on('change', '.filename', function() {
     validateName($(this).val(), $("#study-file-<%= study_file._id %> .filename"));
 });
+
+$(document).ready(function() {
+  var extraInfo, taxonFields;
+
+  extraInfo = $('#study-file-<%= study_file.id %>-extra-info');
+  taxonFields = "<%= j(render partial: 'taxon_fields', locals: {f: f}) %>";
+
+  // Creates "Species" and "Genome assembly" drop-down menu inputs
+  // for "Analysis Output" study files
+  $('.unsynced-study-file #study_file_file_type').each(function(i, el) {
+    var taxonTarget, assemblySelect, form,
+      fileTypeInput = $(el);
+
+    if (fileTypeInput.val() !== 'Analysis Output') return;
+
+    extraInfo.empty();
+    form = fileTypeInput.closest('form');
+    taxonTarget = form.find('.taxon-select-target');
+    taxonTarget.html(taxonFields)
+
+    assemblySelect = form.find('.genome-assembly-association');
+    assemblySelect.removeClass('hidden');
+  });
+})
