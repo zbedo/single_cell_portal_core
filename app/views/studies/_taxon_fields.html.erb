@@ -1,35 +1,63 @@
 <div class="row">
   <div class="col-xs-6">
     <%= f.label :taxon_id, 'Species' %><br />
-    <%= f.select :taxon_id, options_from_collection_for_select(Taxon.sorted, :id, :display_name, f.object.taxon_id), {prompt: 'None selected...'}, {class: 'form-control taxon-select'} %>
+    <%= f.select :taxon_id, options_from_collection_for_select(Taxon.sorted, :id, :display_name, f.object.taxon_id), {include_blank: 'None selected...'}, {class: 'form-control taxon-select'} %>
   </div>
-  <div class="col-xs-6 genome-assembly-association hidden">
-    <%= f.label :genome_assembly_id, 'Genome Assembly' %><br />
-    <%= f.select :genome_assembly_id, options_for_select([]), {prompt: 'Please select species...'}, {class: 'form-control genome-assembly-select'} %>
+  <div class="col-xs-6 <%= f.object.file_type == 'BAM' || f.object.file_type == 'Analysis Output' ? nil : 'hidden' %> genome-assembly-association">
+    <%= f.label :genome_assembly_id, 'Genome Assembly' %><br/>
+    <% assemblies = f.object.genome_assembly.present? ? f.object.genome_assembly.taxon.genome_assemblies.map {|a| [a.name, a.id]} : [] %>
+    <%= f.select :genome_assembly_id, options_for_select(assemblies, f.object.genome_assembly.present? ? f.object.genome_assembly.id : nil), {prompt: 'Please select species...'}, {class: 'form-control genome-assembly-select'} %>
   </div>
 </div>
 
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
-    var taxonSelect = $('#study-file-<%= f.object.id %>').find('.taxon-select');
-    var assemblyDropdown = $('#study-file-<%= f.object.id %>').find('.genome-assembly-select');
-    taxonSelect.change(function() {
-        var selectedTaxon = $(this).val();
+    var restrictedTaxons = <%= raw Taxon::RESTRICTED_NCBI_TAXON_IDS %>;
+
+    if (typeof isTaxonSelectHandlerDefined === 'undefined') {
+
+      // Ensures event handler is attached only once;
+      // needed for e.g. _share_sync_functions.js.erb
+      window.isTaxonSelectHandlerDefined = true;
+
+      $(document).on('change', '.taxon-select', function () {
+        var speciesDropdown = $(this);
+        var assemblyDropdown = speciesDropdown.parentsUntil('.taxon-select-target').find('.genome-assembly-select');
+        var selectedTaxon = speciesDropdown.val();
         if (selectedTaxon !== '') {
-            $.getJSON('<%= get_taxon_assemblies_path %>?taxon=' + selectedTaxon, function(data) {
-                    assemblyDropdown.empty();
-                    $(data).each(function (index, assembly) {
-                        assemblyDropdown.append($('<option />', {
-                            value: assembly[1],
-                            text: assembly[0]
-                        }));
-                    });
+          // perform check to see if human was selected
+          var fileType = speciesDropdown.find('#study_file_file_type').val();
+          $.getJSON('<%= get_taxon_path %>?taxon=' + selectedTaxon, function (taxon) {
+            if ((fileType === 'BAM' || fileType === 'Fastq') && restrictedTaxons.includes(taxon.taxon_identifier)) {
+              var restrictedData = confirm('Is this ' + fileType + ' file ' + taxon.common_name + ' data?\n\n' +
+                'The Single Cell Portal does not currently permit storing ' + taxon.common_name + ' sequence data.  ' +
+                'Selecting "OK" will remove this list from your study (source data files will be unaffected).');
+              if (restrictedData) {
+                speciesDropdown.remove();
+              } else {
+                speciesDropdown.val('');
+                assemblyDropdown.empty();
+                assemblyDropdown.append('<option value="">Please select species...</option>');
+              }
+            } else {
+              $.getJSON('<%= get_taxon_assemblies_path %>?taxon=' + selectedTaxon, function (data) {
+                  assemblyDropdown.empty();
+                  $(data).each(function (index, assembly) {
+                    assemblyDropdown.append($('<option />', {
+                      value: assembly[1],
+                      text: assembly[0]
+                    }));
+                  });
                 }
-            )
+              )
+            }
+          })
+
         } else {
-            assemblyDropdown.empty();
-            assemblyDropdown.append('<option value="">Please select species...</option>');
+          assemblyDropdown.empty();
+          assemblyDropdown.append('<option value="">Please select species...</option>');
         }
-    });
+      });
+    }
 
 </script>

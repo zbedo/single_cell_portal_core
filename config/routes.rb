@@ -136,6 +136,7 @@ Rails.application.routes.draw do
     get 'view_workflow_wdl', to: 'site#view_workflow_wdl', as: :view_workflow_wdl
     get 'workflow_options', to: 'site#get_workflow_options', as: :get_workflow_options
     get 'genome_assemblies', to: 'site#get_taxon_assemblies', as: :get_taxon_assemblies
+    get 'taxon', to: 'site#get_taxon', as: :get_taxon
 
     # base actions
     get 'search', to: 'site#search', as: :search

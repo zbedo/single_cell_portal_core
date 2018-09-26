@@ -206,6 +206,11 @@
               <td><%= file.name %></td>
               <td><%= file.description %></td>
               <td>
+                <% if file.taxon.present? %>
+                  <%= file.species_name %> <%= file.genome_assembly.present? ? " (#{file.genome_assembly_name})" : nil %>
+                <% end %>
+              </td>
+              <td>
                 <% if file.file_type == 'BAM' %>
                   <%= render partial: '/site/genome/browse_igv_link', locals: {study_file: file} %>
                 <% end %>
@@ -225,11 +230,7 @@
               <tr>
                 <td><%= file[:name] %></td>
                 <td><%= directory.description %></td>
-                <td>
-                  <% if directory.taxon.present? %>
-                    <%= directory.species_name %> <%= directory.genome_assembly.present? ? " (#{directory.genome_assembly_name})" : nil %>
-                  <% end %>
-                </td>
+                <td><%= directory.species_name %></td>
                 <td>
                   <% if directory.file_type == 'BAM' %>
                     <%= render partial: '/site/genome/browse_igv_link', locals: {study_file: file} %>

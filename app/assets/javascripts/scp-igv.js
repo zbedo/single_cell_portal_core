@@ -11,6 +11,8 @@ window.hasDisplayedIgv = false;
 window.bamsToViewInIgv = [];
 window.selectedBams = {};
 
+window.genomeAssemblyInView = '';
+
 /**
  * Upon clicking 'Browse in genome', show selected BAM in igv.js in Genome tab.
  */
@@ -82,7 +84,7 @@ function getGenesTrack(genome, genesTrackName) {
   var gtfFile, genesTrack;
 
   // gtfFiles assigned in _genome.html.erb
-  gtfFile = gtfFiles[genome];
+  gtfFile = gtfFiles[genome].genome_annotations;
 
   genesTrack = {
     name: genesTrackName,
@@ -110,6 +112,7 @@ igv.GenomeUtils.getKnownGenomes = function () {
   return originalGetKnownGenomes.apply(this).then(function(reference) {
     var key,
         newRef = {};
+    newRef['GRCm38'] = reference['mm10']; // Fix name
     for (key in reference) {
       delete reference[key].tracks;
       newRef[key] = reference[key];
@@ -132,9 +135,8 @@ function initializeIgv() {
   genes = $('.queried-gene');
   locus = (genes.length === 0) ? ['myc'] : [genes.first().text()];
 
-  // TODO: Remove hard-coding of genome after SCP species integration
-  genome = 'mm10';
-  genesTrackName = 'Genes | GENCODE M17';
+  genome = bamsToViewInIgv[0].genomeAssembly;
+  genesTrackName = 'Genes | ' + bamsToViewInIgv[0].genomeAnnotation.name;
   genesTrack = getGenesTrack(genome, genesTrackName);
   bamTracks = getBamTracks();
   tracks = [genesTrack].concat(bamTracks);

@@ -53,7 +53,7 @@
     <div class="panel panel-warning">
       <div class="panel-heading">
         <div class="panel-title">
-          <h4><%= link_to "<i class='fas fa-question'></i> Unsynced Primary Data Directories <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#unsynced-directories', 'data-toggle' => 'collapse' %></h4>
+          <h4><%= link_to "<i class='fas fa-question'></i> Unsynced Sequence Data Directories <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#unsynced-directories', 'data-toggle' => 'collapse' %></h4>
         </div>
       </div>
       <div id="unsynced-directories" class="panel-collapse collapse in unsynced">
@@ -106,7 +106,7 @@
             <%= render partial: 'synced_study_file_form', locals: {study_file: sf} %>
           <% end %>
         </div>
-        <h4>Primary Data & Other Directories</h4>
+        <h4>Sequence Data & Other Directories</h4>
         <div id="synced-directory-listings">
           <% @synced_directories.each do |dir| %>
             <%= render partial: 'directory_listing_form', locals: {directory: dir} %>

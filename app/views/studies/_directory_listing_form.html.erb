@@ -56,6 +56,9 @@
   </div>
 
   <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+
+      var restrictedTaxons = <%= raw Taxon::RESTRICTED_NCBI_TAXON_IDS %>;
+
       $("#delete-directory-<%= directory.id %>").click(function() {
           launchModalSpinner('#delete-modal-spinner', '#delete-modal', function() {
               $.ajax({
@@ -69,7 +72,9 @@
       $('#directory-listing-<%= directory.id %> .human-data').change(function() {
           var hDSelect = $(this);
           if ( hDSelect.val() === 'Yes' ) {
-              var humanData = confirm("Does this directory contain human data?\n\nThe Single Cell Portal does not currently permit storing human data.  Selecting 'OK' will remove this list from your study (source data files will be unaffected).")
+              var humanData = confirm('Does this directory contain human data?\n\nThe Single Cell Portal does not ' +
+                  'currently permit storing human data.  Selecting "OK" will remove this list from your study (source ' +
+                  'data files will be unaffected).');
               if (humanData) {
                   launchModalSpinner('#delete-modal-spinner', '#delete-modal', function() {
                       $.ajax({
@@ -81,6 +86,31 @@
               } else {
                   hDSelect.val('No');
               }
+          }
+      });
+
+      $('#directory-listing-<%= directory.id %>').find('.taxon-select').change(function() {
+          var taxonSelect = $(this);
+          var selectedTaxon = $(this).val();
+          if (selectedTaxon !== '') {
+              $.getJSON('<%= get_taxon_path %>?taxon=' + selectedTaxon, function(taxon) {
+                  if ( restrictedTaxons.includes(taxon.taxon_identifier) ) {
+                      var humanData = confirm('Does this directory contain ' + taxon.common_name + ' data?\n\nThe Single ' +
+                          'Cell Portal does not currently permit storing ' + taxon.common_name + ' sequence data.  ' +
+                          'Selecting "OK" will remove this list from your study (source data files will be unaffected).');
+                      if (humanData) {
+                          launchModalSpinner('#delete-modal-spinner', '#delete-modal', function() {
+                              $.ajax({
+                                  url: "<%= delete_directory_listing_study_path(@study.id, directory.id) %>",
+                                  method: 'DELETE',
+                                  dataType: 'script'
+                              });
+                          });
+                      } else {
+                          taxonSelect.val('');
+                      }
+                  }
+              })
           }
       });
   </script>
