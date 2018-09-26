@@ -9,8 +9,6 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
     var taxonTarget = form.find('.taxon-select-target');
     var submitBtn = $('#sync-study-file-<%= study_file.id %>');
 
-    console.log("Selected file type: " + fileType);
-
     // render fields & process entries based on file type
     if (fileType === 'Cluster') {
         extraInfo.html("<%= j(render partial: 'cluster_axis_fields', locals: {f: f}) %>");
@@ -49,7 +47,6 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
         console.log('disabling sync button on ' + submitBtn.attr('id'));
         submitBtn.attr('disabled', 'disabled');
     } else if (fileType === 'BAM' || fileType === 'Analysis Output') {
-        alert('Selected "Analysis Output"!')
         extraInfo.empty();
         taxonTarget.html("<%= j(render partial: 'taxon_fields', locals: {f: f}) %>");
         assemblySelect = form.find('.genome-assembly-association');
@@ -77,7 +74,7 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
                 }));
             });
         }
-        // disable app/views/studies/_synced_study_file_form.html.erb button until user has selected a BAM file
+        // disable sync button until user has selected a BAM file
         submitBtn.attr('disabled', 'disabled');
     } else {
         extraInfo.empty();
