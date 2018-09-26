@@ -1135,14 +1135,9 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
     begin
       self.get_registration
       true
-    rescue RuntimeError => e
-      # if user isn't registered, error message should beging with '404 Not Found'
-      if e.message.starts_with?('404')
-        false
-      else
-        # something else happened, so raise exception
-        raise e
-      end
+    rescue => e
+      # any error should be treated as the user not being registered
+      false
     end
   end
 
