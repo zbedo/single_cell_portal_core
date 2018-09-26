@@ -272,7 +272,7 @@ class UiTestSuite < Test::Unit::TestCase
     fastq_form = @driver.find_element(:class, 'new-fastq-form')
     species_dropdown = fastq_form.find_element(:id, 'study_file_taxon_id')
     opts = species_dropdown.find_elements(:tag_name, 'option')
-    available_species = opts.delete_if {|opt| opt['value'] == '' && opt.text.downcase != 'human' }
+    available_species = opts.delete_if {|opt| opt['value'] == '' || opt.text.downcase == 'human' }
     if available_species.any?
       species_dropdown.send_key(available_species.sample.text)
     end
@@ -291,7 +291,7 @@ class UiTestSuite < Test::Unit::TestCase
     new_fastq_form = @driver.find_element(class: 'new-fastq-form')
     species_dropdown = new_fastq_form.find_element(:id, 'study_file_taxon_id')
     opts = species_dropdown.find_elements(:tag_name, 'option')
-    available_species = opts.delete_if {|opt| opt['value'] == '' && opt.text.downcase != 'human' }
+    available_species = opts.delete_if {|opt| opt['value'] == '' || opt.text.downcase == 'human' }
     if available_species.any?
       species_dropdown.send_key(available_species.sample.text)
     end
@@ -4939,7 +4939,7 @@ class UiTestSuite < Test::Unit::TestCase
     species_dropdown = ideogram_annots_form.find_element(:id, 'study_file_taxon_id')
     @wait.until {species_dropdown.displayed?}
     opts = species_dropdown.find_elements(:tag_name, 'option')
-    available_species = opts.delete_if {|opt| opt['value'] == '' && opt.text.downcase == 'human'} # need human data
+    available_species = opts.keep_if {|opt| opt.text.downcase == 'human'} # need human data
     if available_species.any?
       species_dropdown.send_key(available_species.sample.text)
     end
@@ -5044,7 +5044,7 @@ class UiTestSuite < Test::Unit::TestCase
           file_type.send_keys('BAM')
           species_dropdown = form.find_element(:id, 'study_file_taxon_id')
           opts = species_dropdown.find_elements(:tag_name, 'option')
-          available_species = opts.delete_if {|opt| opt['value'] == '' && opt.text.downcase != 'human'}
+          available_species = opts.delete_if {|opt| opt['value'] == '' || opt.text.downcase == 'human'}
           if available_species.any?
             species_dropdown.send_key(available_species.sample.text)
           end
