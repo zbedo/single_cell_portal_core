@@ -669,33 +669,33 @@ function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, t
 // toggles visibility and disabled status of file upload and fastq url fields
 function toggleFastqFields(target, state) {
     var selector = $("#" + target);
-    var fileField = selector.find('.upload-field');
-    var fastqField = selector.find('.fastq-field');
-    var humanData = $(fastqField).find('input[type=hidden]');
-    var saveBtn = selector.find('.save-study-file');
-    var nameField = selector.find('.filename');
-    if (state === 'true') {
-        $(fileField).addClass('hidden');
-        $(fastqField).removeClass('hidden');
-        $(fastqField).find('input').attr('disabled', false);
-        $(humanData).val('true' );
-        $(saveBtn).attr('disabled', false);
-        $(nameField).attr('readonly', false);
-        $(nameField).attr('placeholder', '');
+    var fileField = $(selector.find('.upload-field'));
+    var fastqField = $(selector.find('.fastq-field'));
+    var humanData = $(fastqField.find('input[type=hidden]'));
+    var saveBtn = $(selector.find('.save-study-file'));
+    var nameField = $(selector.find('.filename'));
+    if (state) {
+        fileField.addClass('hidden');
+        fastqField.removeClass('hidden');
+        fastqField.find('input').attr('disabled', false);
+        humanData.val('true' );
+        saveBtn.attr('disabled', false);
+        nameField.attr('readonly', false);
+        nameField.attr('placeholder', '');
     } else {
-        $(fileField).removeClass('hidden');
-        $(fastqField).addClass('hidden');
-        $(fastqField).find('input').attr('disabled', 'disabled');
-        $(humanData).val('false');
+        fileField.removeClass('hidden');
+        fastqField.addClass('hidden');
+        fastqField.find('input').attr('disabled', 'disabled');
+        humanData.val('false');
         if ( selector.find('.upload-fastq').length !== 0 ) {
-            $(saveBtn).attr('disabled', true); // disable save only if file hasn't been uploaded
+            saveBtn.attr('disabled', true); // disable save only if file hasn't been uploaded
         }
-        $(nameField).attr('readonly', true);
-        $(nameField).attr('placeholder', 'Filename is taken from uploaded file...');
+        nameField.attr('readonly', true);
+        nameField.attr('placeholder', 'Filename is taken from uploaded file...');
     }
     // animate highlight effect to show fields that need changing
-    $(nameField).parent().effect('highlight', 1200);
-    $(fastqField).effect('highlight', 1200);
+    nameField.parent().effect('highlight', 1200);
+    fastqField.effect('highlight', 1200);
 }
 
 // function to toggle all traces in a Plotly div

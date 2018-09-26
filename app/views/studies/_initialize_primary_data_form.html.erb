@@ -87,7 +87,7 @@
                   }
               })
           }
-          toggleFastqFields('primary_data_form_<%= study_file._id %>', $(this).val());
+          toggleFastqFields('primary_data_form_<%= study_file._id %>', $(this).val() === 'true');
       });
 
       $('#primary_data_form_<%= study_file._id %>').find('.file-type').change(function() {
@@ -126,7 +126,7 @@
                           }
                       )
                   }
-                  toggleFastqFields('primary_data_form_<%= study_file._id %>', humanDataSelect.val());
+                  toggleFastqFields('primary_data_form_<%= study_file._id %>', humanDataSelect.val() === 'true');
               })
           } else {
               assemblyDropdown.empty();
