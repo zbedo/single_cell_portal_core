@@ -9,6 +9,7 @@ class DirectoryListing
 
 	include Mongoid::Document
 	include Mongoid::Timestamps
+  include Swagger::Blocks
 	include Rails.application.routes.url_helpers # for accessing download_file_path and download_private_file_path
 
 	PRIMARY_DATA_TYPES = %w(fq fastq).freeze
@@ -29,6 +30,55 @@ class DirectoryListing
 	field :file_type, type: String
 	field :files, type: Array
 	field :sync_status, type: Boolean, default: false
+
+	swagger_schema :DirectoryListing do
+		key :required, [:name, :file_type, :files]
+		key :name, 'DirectoryListing'
+		property :id do
+			key :type, :string
+		end
+		property :study_id do
+			key :type, :string
+			key :description, 'ID of Study this StudyShare belongs to'
+		end
+		property :taxon_id do
+			key :type, :string
+			key :description, 'ID of Taxon (species) this DirectoryListing belongs to'
+		end
+		property :description do
+			key :type, :string
+			key :format, :email
+			key :description, 'Block description for all files contained in DirectoryListing'
+		end
+		property :file_type do
+			key :type, :string
+			key :description, 'File type (i.e. extension) of all files contained in DirectoryListing'
+		end
+		property :files do
+			key :type, :array
+			key :description, 'Array of file objects'
+			items type: :object do
+        key :title, 'GCS File object'
+        key :required, [:name, :size, :generation]
+        property :name do
+			    key :type, :string
+					key :description, 'name of File'
+				end
+				property :size do
+					key :type, :integer
+					key :description, 'size of File'
+				end
+				property :generation do
+					key :type, :string
+					key :description, 'GCS generation tag of File'
+				end
+			end
+		end
+		property :sync_status do
+			key :type, :boolean
+			key :description, 'Boolean indication whether this DirectoryListing has been synced (and made available for download)'
+		end
+	end
 
 	validates_uniqueness_of :name, scope: [:study_id, :file_type]
   validates_presence_of :name, :file_type, :files

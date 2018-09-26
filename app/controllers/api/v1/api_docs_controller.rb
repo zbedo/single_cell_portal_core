@@ -46,6 +46,8 @@ module Api
           self,
           Study,
           StudyFile,
+          DirectoryListing,
+          StudyShare,
           Api::V1::StudiesController,
           Api::V1::StudyFilesController
       ].freeze

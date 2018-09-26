@@ -264,6 +264,101 @@ module Api
         end
       end
 
+      swagger_path '/studies/{id}/sync' do
+        operation :post do
+          key :tags, [
+              'Studies'
+          ]
+          key :summary, 'Sync a Study'
+          key :description, 'Synchronize a single Study against its FireCloud workspace & GCS bucket'
+          key :operationId, 'sync_study_path'
+          parameter do
+            key :name, :id
+            key :in, :path
+            key :description, 'ID of Study to sync'
+            key :required, true
+            key :type, :string
+          end
+          response 200 do
+            key :description, 'StudyShares, StudyFiles, and DirectoryListings'
+            schema do
+              key :title, 'JSON object of StudyShares, StudyFiles, and DirectoryListings'
+              property :study_shares do
+                key :type, :array
+                key :title, 'StudyShare array'
+                items do
+                  key :title, 'StudyShare'
+                  key :'$ref', :StudyShare
+                end
+              end
+              property :study_files do
+                key :type, :object
+                key :title, 'JSON object of synced, unsynced, and orphaned StudyFiles'
+                property :unsynced do
+                  key :title, 'Unsynced StudyFile array'
+                  key :type, :array
+                  items do
+                    key :title, 'StudyFile'
+                    key :'$ref', :StudyFile
+                  end
+                end
+                property :synced do
+                  key :title, 'Synced StudyFile array'
+                  key :type, :array
+                  items do
+                    key :title, 'StudyFile'
+                    key :'$ref', :StudyFile
+                  end
+                end
+                property :orphaned do
+                  key :title, 'Orphaned StudyFile array'
+                  key :type, :array
+                  items do
+                    key :title, 'StudyFile'
+                    key :'$ref', :StudyFile
+                  end
+                end
+              end
+              property :directory_listings do
+                key :type, :object
+                key :title, 'JSON object of synced and unsynced DirectoryListings'
+                property :unsynced do
+                  key :type, :array
+                  key :title, 'Unsynced DirectoryListing array'
+                  items do
+                    key :title, 'DirectoryListing'
+                    key :'$ref', :DirectoryListing
+                  end
+                end
+                property :synced do
+                  key :type, :array
+                  key :title, 'Synced DirectoryListing array'
+                  items do
+                    key :title, 'DirectoryListing'
+                    key :'$ref', :DirectoryListing
+                  end
+                end
+              end
+            end
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
+          response 403 do
+            key :description, 'User is not authorized to edit Study'
+          end
+          response 404 do
+            key :description, 'Study is not found'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+          response 500 do
+            key :description, 'Server error when attempting to synchronize FireCloud workspace or access GCS objects'
+          end
+        end
+      end
+
       def sync_study
         @study_files = @study.study_files.valid
         @directories = @study.directory_listings.to_a

@@ -16,7 +16,7 @@ module Api
           key :tags, [
               'StudyFiles'
           ]
-          key :summary, 'Find all Studies'
+          key :summary, 'Find all StudyFiles in a Study'
           key :description, 'Returns all Studies editable by the current user'
           key :operationId, 'study_study_files_path'
           parameter do

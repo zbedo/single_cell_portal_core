@@ -24,7 +24,7 @@ Rails.application.routes.draw do
           resources :study_shares, only: [:index, :show, :create, :update, :destroy]
           resources :directory_listings, only: [:index, :show, :create, :update, :destroy]
           member do
-            get 'sync', to: 'studies#sync_study'
+            post 'sync', to: 'studies#sync_study'
           end
         end
       end
