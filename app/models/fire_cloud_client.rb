@@ -1233,7 +1233,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   ## GOOGLE CLOUD STORAGE METHODS
   ##
   ## All methods are convenience wrappers around google-cloud-storage methods
-  ## see https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.9.0 for more detail
+  ## see https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.13.0 for more detail
   ##
   #######
 
@@ -1284,7 +1284,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   #   - +workspace_namespace+ (String) => namespace of workspace
   #   - +workspace_name+ (String) => name of workspace
   #   - +opts+ (Hash) => hash of optional parameters, see
-  #     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.9.0/google/cloud/storage/bucket?method=files-instance
+  #     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.13.0/google/cloud/storage/bucket?method=files-instance
   #
   # * *return*
   #   - +Google::Cloud::Storage::File::List+
@@ -1315,7 +1315,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   #   - +filepath+ (String) => path to file
   #   - +filename+ (String) => name of file
   #   - +opts+ (Hash) => extra options for create_file, see
-  #     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.9.0/google/cloud/storage/bucket?method=create_file-instance
+  #     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.13.0/google/cloud/storage/bucket?method=create_file-instance
   #
   # * *return*
   #   - +Google::Cloud::Storage::File+
@@ -1332,7 +1332,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   #   - +filename+ (String) => name of target file
   #   - +destination_name+ (String) => destination of new file
   #   - +opts+ (Hash) => extra options for create_file, see
-  #     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.9.0/google/cloud/storage/bucket?method=create_file-instance
+  #     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.13.0/google/cloud/storage/bucket?method=create_file-instance
   #
   # * *return*
   #   - +Google::Cloud::Storage::File+
@@ -1361,7 +1361,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 	end
 
 	# retrieve single file in a GCP bucket of a workspace and download locally to portal.  will perform a chunked download
-  # on files larger that 100 MB
+  # on files larger that 50 MB
   #
   # * *params*
   #   - +workspace_namespace+ (String) => namespace of workspace
@@ -1369,7 +1369,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   #   - +filename+ (String) => name of file
   #   - +destination+ (String) => destination path for downloaded file
   #   - +opts+ (Hash) => extra options for signed_url, see
-  #     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v0.23.2/google/cloud/storage/file?method=signed_url-instance
+  #     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.13.0/google/cloud/storage/file?method=signed_url-instance
   #
   # * *return*
   #   - +File+ object
@@ -1385,18 +1385,19 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
       FileUtils.mkdir_p directory
     end
     # determine if a chunked download is needed
-    if file.size > 100.megabytes
+    if file.size > 50.megabytes
+      Rails.logger.info "Performing chunked download for #{filename} from #{workspace_namespace}/#{workspace_name}"
       size_range = 0..file.size
-      local = File.new(end_path, 'a+')
-      size_range.each_slice(10000000) do |range|
+      local = File.new(end_path, 'wb')
+      size_range.each_slice(50.megabytes) do |range|
         range_req = range.first..range.last
         merged_opts = opts.merge(range: range_req)
         buffer = file.download merged_opts
         buffer.rewind
         local.write buffer.read
-        Rails.logger.info "Downloaded #{range_req.last} of #{file.size} bytes (#{(range_req.last / file.size.to_f * 100).round(2)}%) for #{filename} from #{workspace_namespace}/#{workspace_name}"
       end
-      # return newly-opened file
+      Rails.logger.info "Chunked download for #{filename} from #{workspace_namespace}/#{workspace_name} complete"
+      # return newly-opened file (will need to check content type before attempting to parse)
       File.open end_path
     else
       file.download end_path, opts
@@ -1410,7 +1411,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   #   - +workspace_name+ (String) => name of workspace
   #   - +filename+ (String) => name of file
   #   - +opts+ (Hash) => extra options for signed_url, see
-  #     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.9.0/google/cloud/storage/file?method=signed_url-instance
+  #     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.13.0/google/cloud/storage/file?method=signed_url-instance
   #
   # * *return*
   #   - +String+ signed URL
@@ -1444,7 +1445,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   #   - +workspace_name+ (String) => name of workspace
   #   - +directory+ (String) => name of directory in bucket
   #   - +opts+ (Hash) => hash of optional parameters, see
-  #     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.9.0/google/cloud/storage/bucket?method=files-instance
+  #     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.13.0/google/cloud/storage/bucket?method=files-instance
   #
   # * *return*
   #   - +Google::Cloud::Storage::File::List+
