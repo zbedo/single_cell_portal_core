@@ -110,7 +110,7 @@ module Api
           key :summary, 'Create a StudyFile'
           key :description, 'Creates and returns a single StudyFile'
           key :operationId, 'create_study_path'
-          key :consumes, ['application/x-www-form-urlencoded']
+          key :consumes, ['multipart/form-data', 'application/json']
           key :produces, ['application/json']
           parameter do
             key :name, :study_id
@@ -127,6 +127,12 @@ module Api
             schema do
               key :'$ref', :StudyFileInput
             end
+          end
+          parameter do
+            key :name, 'study_file[upload]'
+            key :type, :file
+            key :in, :formData
+            key :description, 'File object upload'
           end
           response 200 do
             key :description, 'Successful creation of StudyFile object'
@@ -304,6 +310,55 @@ module Api
         end
       end
 
+      swagger_path '/studies/{study_id}/study_files/{id}/parse' do
+        operation :post do
+          key :tags, [
+              'StudyFiles'
+          ]
+          key :summary, 'Parse a StudyFile'
+          key :description, 'Parses a single StudyFile.  Will perform parse in a background process and email the requester upon completion'
+          key :operationId, 'parse_study_study_file_path'
+          parameter do
+            key :name, :study_id
+            key :in, :path
+            key :description, 'ID of Study'
+            key :required, true
+            key :type, :string
+          end
+          parameter do
+            key :name, :id
+            key :in, :path
+            key :description, 'ID of StudyFile to parse'
+            key :required, true
+            key :type, :string
+          end
+          response 204 do
+            key :description, 'Successful StudyFile parse launch'
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
+          response 403 do
+            key :description, 'User is not authorized to edit Study'
+          end
+          response 404 do
+            key :description, 'Study or StudyFile is not found'
+          end
+          response 405 do
+            key :description, 'StudyFile is already parsing'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+          response 412 do
+            key :description, 'StudyFile can only be parsed when bundled in a StudyFileBundle along with other required files, such as MM Coordinate Matrices and 10X Genes/Barcodes files'
+          end
+          response 422 do
+            key :description, 'StudyFile is not parseable'
+          end
+        end
+      end
+
       # POST /single_cell/api/v1/studies/:study_id/study_files/:id/parse
       def parse
         logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name}"
@@ -357,6 +412,62 @@ module Api
           render json: {error: "File is already parsing"}, status: 405
         end
 
+      end
+
+      swagger_path '/studies/{study_id}/study_files/bundle' do
+        operation :post do
+          key :tags, [
+              'StudyFiles'
+          ]
+          key :summary, 'Bundle multiple StudyFiles'
+          key :description, "Create a StudyFileBundle to associate multiple StudyFiles of dependent types: ```#{StudyFileBundle.swagger_requirements.html_safe}```"
+          key :operationId, 'parse_study_study_file_path'
+          parameter do
+            key :name, :study_id
+            key :in, :path
+            key :description, 'ID of Study'
+            key :required, true
+            key :type, :string
+          end
+          parameter do
+            key :name, :files
+            key :in, :body
+            key :description, 'List of files to bundle together'
+            key :required, true
+            schema do
+              key :type, :array
+              key :title, 'Array'
+              items do
+                key :title, 'StudyFile'
+                key :'$ref', :FileBundleInput
+              end
+            end
+          end
+          response 204 do
+            key :description, 'Successful StudyFile parse launch'
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
+          response 403 do
+            key :description, 'User is not authorized to edit Study'
+          end
+          response 404 do
+            key :description, 'Study or StudyFile is not found'
+          end
+          response 405 do
+            key :description, 'StudyFile is already parsing'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+          response 412 do
+            key :description, 'StudyFile can only be parsed when bundled in a StudyFileBundle along with other required files, such as MM Coordinate Matrices and 10X Genes/Barcodes files'
+          end
+          response 422 do
+            key :description, 'StudyFile is not parseable'
+          end
+        end
       end
 
       # POST /single_cell/api/v1/studies/:study_id/study_files/bundle

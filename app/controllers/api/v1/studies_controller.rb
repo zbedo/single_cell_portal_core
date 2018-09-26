@@ -60,6 +60,10 @@ module Api
           end
           response 200 do
             key :description, 'Study object'
+            schema do
+              key :title, 'Study'
+              key :'$ref', :Study
+            end
           end
           response 401 do
             key :description, 'User is not authenticated'

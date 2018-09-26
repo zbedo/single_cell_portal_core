@@ -86,99 +86,146 @@ class StudyFile
     end
     property :study_id do
       key :type, :string
+      key :description, 'ID of Study to which StudyFile belongs'
     end
     property :taxon_id do
       key :type, :string
+      key :description, 'ID of Taxon (species) to which StudyFile belongs, if required/present'
     end
     property :genome_assembly_id do
       key :type, :string
+      key :description, 'ID of GenomeAssembly to which StudyFile belongs, if required/present'
     end
     property :study_file_bundle_id do
       key :type, :string
+      key :description, 'ID of StudyFileBundle to which StudyFile belongs, if present'
     end
     property :name do
       key :type, :string
+      key :description, 'Name of StudyFile (either filename or name of Cluster/Gene List)'
     end
     property :description do
       key :type, :string
+      key :description, 'StudyFile description, used in download views'
     end
     property :upload do
-      key :type, :file
+      key :type, :string
+      key :format, :binary
+      key :description, 'File object that StudyFile represents (will auto-set all upload_* attributes from File headers)'
+    end
+    property :upload_file_name do
+      key :type, :string
+      key :description, 'Filename of upload File object'
+    end
+    property :upload_content_type do
+      key :type, :string
+      key :description, 'Content-Type of upload File object'
+    end
+    property :upload_file_size do
+      key :type, :integer
+      key :description, 'Size (in bytes) of upload File object'
+    end
+    property :upload_fingerprint do
+      key :type, :string
+      key :description, 'Checksum of upload File object'
+    end
+    property :upload_updated_at do
+      key :type, :string
+      key :format, :date_time
+      key :description, 'Last update timestamp of upload File object'
     end
     property :file_type do
       key :type, :string
       key :enum, STUDY_FILE_TYPES
+      key :description, 'Type of file, governs parsing/caching behavior'
     end
     property :status do
       key :type, :string
       key :enum, UPLOAD_STATUSES
+      key :description, 'Status of File object upload (new, uploading, or uploaded)'
     end
     property :parse_status do
       key :type, :string
       key :enum, PARSE_STATUSES
+      key :description, 'Parse status of StudyFile (unparsed, parsing, or parsed)'
     end
     property :data_dir do
       key :type, :string
+      key :description, 'Local directory where File object is localized to (for parsing)'
+    end
+    property :remote_location do
+      key :type, :string
+      key :description, 'Location in GCS bucket of File object'
     end
     property :human_fastq_url do
       key :type, :string
       key :format, :url
+      key :description, 'External URL for human sequence data (if required)'
     end
     property :human_data do
       key :type, :boolean
       key :default, false
+      key :description, 'Boolean indication whether StudyFile represents human data'
     end
     property :generation do
       key :type, :string
+      key :description, 'GCS generation tag of File in bucket'
     end
     property :x_axis_label do
       key :type, :string
+      key :description, 'Label to use on X axis of plots (for Clusters)'
     end
     property :y_axis_label do
       key :type, :string
+      key :description, 'Label to use on Y axis of plots (for Clusters, Expression Matrix, MM Coordinate Matrix)'
     end
     property :z_axis_label do
       key :type, :string
+      key :description, 'Label to use on Z axis of plots (for Clusters)'
     end
     property :x_axis_min do
       key :type, :integer
+      key :description, 'X axis domain minimum (for Clusters)'
     end
     property :x_axis_max do
       key :type, :integer
+      key :description, 'X axis domain maximum (for Clusters)'
     end
     property :y_axis_min do
       key :type, :integer
+      key :description, 'Y axis domain minimum (for Clusters)'
     end
     property :y_axis_max do
       key :type, :integer
+      key :description, 'Y axis domain maximum (for Clusters)'
     end
     property :z_axis_min do
       key :type, :integer
+      key :description, 'Z axis domain minimum (for Clusters)'
     end
     property :z_axis_max do
       key :type, :integer
-    end
-    property :x_axis_min do
-      key :type, :integer
+      key :description, 'Z axis domain maximum (for Clusters)'
     end
     property :queued_for_deletion do
       key :type, :boolean
       key :default, false
-    end
-    property :z_axis_label do
-      key :type, :remote_location
+      key :description, 'Boolean indication whether file is queued for garbage collection'
     end
     property :options do
       key :type, :object
       key :default, {}
+      key :description, 'Key/Value storage of extra file options'
     end
     property :created_at do
       key :type, :string
       key :format, :date_time
+      key :description, 'Creation timestamp'
     end
     property :updated_at do
       key :type, :string
       key :format, :date_time
+      key :description, 'Last update timestamp'
     end
   end
 
@@ -187,6 +234,22 @@ class StudyFile
       schema do
         property :study_file do
           key :'$ref', :StudyFile
+        end
+      end
+    end
+  end
+
+  swagger_schema :FileBundleInput do
+    allOf do
+      schema do
+        property :name do
+          key :type, :string
+          key :description, 'Filename of File object'
+        end
+        property :file_type do
+          key :type, :string
+          key :enum, STUDY_FILE_TYPES
+          key :description, 'File type of File object'
         end
       end
     end

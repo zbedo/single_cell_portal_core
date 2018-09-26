@@ -233,80 +233,100 @@ class Study
     end
     property :name do
       key :type, :string
+      key :description, 'Name of Study'
     end
     property :embargo do
       key :type, :string
       key :format, :date
+      key :description, 'Date used for restricting download access to StudyFiles in Study'
     end
     property :description do
       key :type, :string
+      key :description, 'HTML description blob for Study'
     end
     property :url_safe_name do
       key :type, :string
+      key :description, 'URL-encoded version of Study name'
     end
     property :firecloud_project do
       key :type, :string
       key :default, FireCloudClient::PORTAL_NAMESPACE
+      key :description, 'FireCloud billing project to which Study firecloud_workspace belongs'
     end
     property :firecloud_workspace do
       key :type, :string
+      key :description, 'FireCloud workspace that corresponds to this Study'
     end
     property :use_existing_workspace do
       key :type, :boolean
       key :default, false
+      key :description, 'Boolean indication whether this Study used an existing FireCloud workspace when created'
     end
     property :bucket_id do
       key :type, :string
+      key :description, 'GCS Bucket name where uploaded files are stored'
     end
     property :data_dir do
       key :type, :string
+      key :description, 'Local directory where uploaded files are localized to (for parsing)'
     end
     property :public do
       key :type, :boolean
       key :default, true
+      key :description, 'Boolean indication of whether Study is publicly readable'
     end
     property :queued_for_deletion do
       key :type, :boolean
       key :default, false
+      key :description, 'Boolean indication whether Study is queued for garbage collection'
     end
     property :branding_group_id do
       key :type, :string
+      key :description, 'ID of BrandingGroup to which Study belongs, if present'
     end
     property :initialized do
       key :type, :boolean
       key :default, false
+      key :description, 'Boolean indication of whether Study has at least one of all required StudyFile types parsed to enable visualizations (Expression Matrix, Metadata, Cluster)'
     end
     property :view_count do
       key :type, :number
       key :format, :integer
       key :default, 0
+      key :description, 'Number of times Study has been viewed in the portal'
     end
     property :cell_count do
       key :type, :number
       key :format, :integer
       key :default, 0
+      key :description, 'Number of unique cell names in Study (set from Metadata StudyFile)'
     end
     property :gene_count do
       key :type, :number
       key :format, :integer
       key :default, 0
+      key :description, 'Number of unique gene names in Study (set from Expression Matrix or 10X Genes File)'
     end
     property :view_order do
       key :type, :number
       key :format, :float
       key :default, 100.0
+      key :description, 'Number used to control sort order in which Studies are returned when searching/browsing'
     end
     property :default_options do
       key :type, :object
-      key :default, Hash.new
+      key :default, {}
+      key :description, 'Key/Value storage of additional options'
     end
     property :created_at do
       key :type, :string
       key :format, :date_time
+      key :description, 'Creation timestamp'
     end
     property :updated_at do
       key :type, :string
       key :format, :date_time
+      key :description, 'Last update timestamp'
     end
   end
 

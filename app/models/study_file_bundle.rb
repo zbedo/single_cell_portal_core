@@ -55,6 +55,11 @@ class StudyFileBundle
     self.original_file_list.map {|file| file['file_type']}
   end
 
+  # helper to format requirements from constants into pretty-printed messages
+  def self.swagger_requirements
+    JSON.pretty_generate(BUNDLE_REQUIREMENTS)
+  end
+
   private
 
   # from the original_file_types list, find the file that matches the bundle type

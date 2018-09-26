@@ -21,7 +21,7 @@ module Api
           key :description, 'Study operations'
         end
         tag do
-          key :name, 'StudiesFiles'
+          key :name, 'StudyFiles'
           key :description, 'StudyFile operations'
         end
         key :host, "#{ENV['HOSTNAME']}"
