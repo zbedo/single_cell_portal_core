@@ -1,6 +1,7 @@
 class StudyFileBundle
   include Mongoid::Document
   include Mongoid::Timestamps
+  include Swagger::Blocks
   field :bundle_type, type: String
   field :original_file_list, type: Array, default: []
 
@@ -18,6 +19,93 @@ class StudyFileBundle
       'Cluster' => ['Coordinate Labels']
   }
   PARSEABLE_BUNDLE_REQUIREMENTS = BUNDLE_REQUIREMENTS.dup.keep_if {|k,v| k != 'BAM'}
+  FILE_ARRAY_ATTRIBUTES = {
+      name: 'String',
+      file_type: {
+          values: StudyFile::STUDY_FILE_TYPES
+      }
+  }
+  REQUIRED_ATTRIBUTES = %w(bundle_type original_file_list)
+
+  swagger_schema :StudyFileBundle do
+    key :required, [:bundle_type, :original_file_list]
+    key :name, 'StudyFileBundle'
+    property :id do
+      key :type, :string
+    end
+    property :study_id do
+      key :type, :string
+      key :description, 'ID of Study this StudyFileBundle belongs to'
+    end
+    property :bundle_type do
+      key :type, :string
+      key :enum, BUNDLE_TYPES
+      key :description, 'Type of StudyFileBundle'
+    end
+    property :original_file_list do
+      key :type, :array
+      key :description, 'Original array of files to bundle together'
+      items type: :object do
+        key :required, [:name, :file_type]
+        key :title, 'File object'
+        property :name do
+          key :type, :string
+        end
+        property :file_type do
+          key :type, :string
+          key :enum, StudyFile::STUDY_FILE_TYPES
+        end
+      end
+    end
+    property :study_files do
+      key :type, :array
+      key :description, 'Array of StudyFiles in this StudyFileBundle'
+      items do
+        key :title, 'StudyFile'
+        key :'$ref', :StudyFile
+      end
+    end
+    property :created_at do
+      key :type, :string
+      key :format, :date_time
+      key :description, 'Creation timestamp'
+    end
+    property :updated_at do
+      key :type, :string
+      key :format, :date_time
+      key :description, 'Last update timestamp'
+    end
+  end
+
+  swagger_schema :StudyFileBundleInput do
+    allOf do
+      schema do
+        property :study_file_bundle do
+          key :type, :object
+          property :bundle_type do
+            key :type, :string
+            key :enum, BUNDLE_TYPES
+            key :description, 'Type of StudyFileBundle'
+          end
+          property :original_file_list do
+            key :type, :array
+            key :description, 'Array of StudyFiles to bundle together'
+            items type: :object do
+              key :required, [:name, :file_type]
+              key :title, 'File object'
+              property :name do
+                key :type, :string
+              end
+              property :file_type do
+                key :type, :string
+                key :enum, StudyFile::STUDY_FILE_TYPES
+              end
+            end
+          end
+        end
+      end
+    end
+  end
 
   before_validation :set_bundle_type, on: :create
   validates_presence_of :bundle_type, :original_file_list

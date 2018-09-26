@@ -24,6 +24,18 @@ module Api
           key :name, 'StudyFiles'
           key :description, 'StudyFile operations'
         end
+        tag do
+          key :name, 'StudyFileBundles'
+          key :description, 'StudyFileBundle operations'
+        end
+        tag do
+          key :name, 'StudyShares'
+          key :description, 'StudyShare operations'
+        end
+        tag do
+          key :name, 'DirectoryListings'
+          key :description, 'DirectoryListing operations'
+        end
         key :host, "#{ENV['HOSTNAME']}"
         key :basePath, '/single_cell/api/v1'
         key :consumes, ['application/json']
@@ -48,8 +60,15 @@ module Api
           StudyFile,
           DirectoryListing,
           StudyShare,
+          StudyFileBundle,
+          Taxon,
           Api::V1::StudiesController,
-          Api::V1::StudyFilesController
+          Api::V1::StudyFilesController,
+          Api::V1::StudyFileBundlesController,
+          Api::V1::StudySharesController,
+          Api::V1::DirectoryListingsController,
+          Api::V1::SchemasController,
+          Api::V1::TaxonsController
       ].freeze
 
       def index

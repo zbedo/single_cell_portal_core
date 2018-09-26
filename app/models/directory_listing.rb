@@ -77,8 +77,28 @@ class DirectoryListing
 		property :sync_status do
 			key :type, :boolean
 			key :description, 'Boolean indication whether this DirectoryListing has been synced (and made available for download)'
-		end
-	end
+    end
+    property :created_at do
+      key :type, :string
+      key :format, :date_time
+      key :description, 'Creation timestamp'
+    end
+    property :updated_at do
+      key :type, :string
+      key :format, :date_time
+      key :description, 'Last update timestamp'
+    end
+  end
+
+  swagger_schema :DirectoryListingInput do
+    allOf do
+      schema do
+        property :directory_listing do
+          key :'$ref', :DirectoryListing
+        end
+      end
+    end
+  end
 
 	validates_uniqueness_of :name, scope: [:study_id, :file_type]
   validates_presence_of :name, :file_type, :files

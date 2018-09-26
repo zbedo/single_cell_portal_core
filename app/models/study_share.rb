@@ -71,6 +71,40 @@ class StudyShare
       key :type, :boolean
       key :description, 'Boolean indication whether to email user with updates to Study'
     end
+    property :created_at do
+      key :type, :string
+      key :format, :date_time
+      key :description, 'Creation timestamp'
+    end
+    property :updated_at do
+      key :type, :string
+      key :format, :date_time
+      key :description, 'Last update timestamp'
+    end
+  end
+
+  swagger_schema :StudyShareInput do
+    allOf do
+      schema do
+        property :study_share do
+          key :type, :object
+          property :email do
+            key :type, :string
+            key :format, :email
+            key :description, 'Email of share user'
+          end
+          property :permission do
+            key :type, :string
+            key :enum, PERMISSION_TYPES
+            key :description, 'Permission granted by StudyShare'
+          end
+          property :deliver_emails do
+            key :type, :boolean
+            key :description, 'Boolean indication whether to email user with updates to Study'
+          end
+        end
+      end
+    end
   end
 
   validates_format_of :email, with: Devise.email_regexp, message: 'is not a valid email address.'

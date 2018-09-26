@@ -44,7 +44,7 @@ module Api
             key :description, 'User is not authorized to edit Study'
           end
           response 404 do
-            key :description, 'Study or StudyFile is not found'
+            key :description, 'Study is not found'
           end
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
@@ -81,6 +81,10 @@ module Api
           end
           response 200 do
             key :description, 'StudyFile object'
+            schema do
+              key :title, 'StudyFile'
+              key :'$ref', :StudyFile
+            end
           end
           response 401 do
             key :description, 'User is not authenticated'
@@ -136,6 +140,10 @@ module Api
           end
           response 200 do
             key :description, 'Successful creation of StudyFile object'
+            schema do
+              key :title, 'StudyFile'
+              key :'$ref', :StudyFile
+            end
           end
           response 401 do
             key :description, 'User is not authenticated'
@@ -148,6 +156,9 @@ module Api
           end
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+          response 422 do
+            key :description, 'StudyFile validation failed'
           end
         end
       end
@@ -203,6 +214,10 @@ module Api
           end
           response 200 do
             key :description, 'Successful update of Study object'
+            schema do
+              key :title, 'StudyFile'
+              key :'$ref', :StudyFile
+            end
           end
           response 401 do
             key :description, 'User is not authenticated'
@@ -215,6 +230,9 @@ module Api
           end
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+          response 422 do
+            key :description, 'StudyFile validation failed'
           end
         end
       end
@@ -443,8 +461,12 @@ module Api
               end
             end
           end
-          response 204 do
-            key :description, 'Successful StudyFile parse launch'
+          response 200 do
+            key :description, 'Successful StudyFileBundle creation'
+            schema do
+              key :title, 'StudyFileBundle'
+              key :'$ref', :StudyFileBundle
+            end
           end
           response 401 do
             key :description, 'User is not authenticated'

@@ -9,6 +9,7 @@ Rails.application.routes.draw do
         namespace :schemas do
           get 'studies'
           get 'study_files'
+          get 'study_file_bundles'
           get 'study_shares'
           get 'directory_listings'
         end

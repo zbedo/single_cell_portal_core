@@ -105,6 +105,10 @@ module Api
           end
           response 200 do
             key :description, 'Successful creation of Study object'
+            schema do
+              key :title, 'Study'
+              key :'$ref', :Study
+            end
           end
           response 401 do
             key :description, 'User is not authenticated'
@@ -162,6 +166,10 @@ module Api
           end
           response 200 do
             key :description, 'Successful update of Study object'
+            schema do
+              key :title, 'Study'
+              key :'$ref', :Study
+            end
           end
           response 401 do
             key :description, 'User is not authenticated'
@@ -174,6 +182,9 @@ module Api
           end
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+          response 422 do
+            key :description, 'Study validation failed'
           end
         end
       end
@@ -229,6 +240,9 @@ module Api
           end
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+          response 422 do
+            key :description, 'Study validation failed'
           end
         end
       end

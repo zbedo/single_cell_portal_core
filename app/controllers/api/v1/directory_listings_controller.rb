@@ -1,6 +1,7 @@
 module Api
   module V1
     class DirectoryListingsController < ApiBaseController
+      include Swagger::Blocks
 
       before_action :set_study
       before_action :check_study_permission
@@ -8,13 +9,149 @@ module Api
 
       respond_to :json
 
-      # GET /single_cell/api/v1/studies/:study_id
+      swagger_path '/studies/{study_id}/directory_listings' do
+        operation :get do
+          key :tags, [
+              'DirectoryListings'
+          ]
+          key :summary, 'Find all DirectoryListings in a Study'
+          key :description, 'Returns all DirectoryListings for the given Study'
+          key :operationId, 'study_directory_listings_path'
+          parameter do
+            key :name, :study_id
+            key :in, :path
+            key :description, 'ID of Study'
+            key :required, true
+            key :type, :string
+          end
+          response 200 do
+            key :description, 'Array of DirectoryListing objects'
+            schema do
+              key :type, :array
+              key :title, 'Array'
+              items do
+                key :title, 'DirectoryListing'
+                key :'$ref', :DirectoryListing
+              end
+            end
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
+          response 403 do
+            key :description, 'User is not authorized to edit Study'
+          end
+          response 404 do
+            key :description, 'Study is not found'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+        end
+      end
+
+      # GET /single_cell/api/v1/studies/:study_id/directory_listings
       def index
         @directory_listings = @study.directory_listings
       end
 
+      swagger_path '/studies/{study_id}/directory_listings/{id}' do
+        operation :get do
+          key :tags, [
+              'DirectoryListings'
+          ]
+          key :summary, 'Find a DirectoryListing'
+          key :description, 'Finds a single Study'
+          key :operationId, 'study_directory_listing_path'
+          parameter do
+            key :name, :study_id
+            key :in, :path
+            key :description, 'ID of Study'
+            key :required, true
+            key :type, :string
+          end
+          parameter do
+            key :name, :id
+            key :in, :path
+            key :description, 'ID of DirectoryListing to fetch'
+            key :required, true
+            key :type, :string
+          end
+          response 200 do
+            key :description, 'DirectoryListing object'
+            schema do
+              key :title, 'DirectoryListing'
+              key :'$ref', :DirectoryListing
+            end
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
+          response 403 do
+            key :description, 'User is not authorized to edit Study'
+          end
+          response 404 do
+            key :description, 'Study or DirectoryListing is not found'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+        end
+      end
+      
       # GET /single_cell/api/v1/studies/:study_id/directory_listings/:id
       def show
+      end
+
+      swagger_path '/studies/{study_id}/directory_listings' do
+        operation :post do
+          key :tags, [
+              'DirectoryListings'
+          ]
+          key :summary, 'Create a DirectoryListing'
+          key :description, 'Creates and returns a single DirectoryListing'
+          key :operationId, 'create_study_path'
+          key :consumes, ['application/x-www-form-urlencoded']
+          key :produces, ['application/json']
+          parameter do
+            key :name, :study_id
+            key :in, :path
+            key :description, 'ID of Study'
+            key :required, true
+            key :type, :string
+          end
+          parameter do
+            key :name, :directory_listing
+            key :in, :body
+            key :description, 'DirectoryListing object'
+            key :required, true
+            schema do
+              key :'$ref', :DirectoryListingInput
+            end
+          end
+          response 200 do
+            key :description, 'Successful creation of DirectoryListing object'
+            schema do
+              key :title, 'DirectoryListing'
+              key :'$ref', :DirectoryListing
+            end
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
+          response 403 do
+            key :description, 'User is not authorized to edit Study'
+          end
+          response 404 do
+            key :description, 'Study is not found'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+          response 422 do
+            key :description, 'DirectoryListing validation failed'
+          end
+        end
       end
 
       # POST /single_cell/api/v1/studies/:study_id/directory_listings
@@ -30,6 +167,64 @@ module Api
         end
       end
 
+      swagger_path '/studies/{study_id}/directory_listings/{id}' do
+        operation :patch do
+          key :tags, [
+              'DirectoryListings'
+          ]
+          key :summary, 'Update a DirectoryListing'
+          key :description, 'Creates and returns a single DirectoryListing'
+          key :operationId, 'update_study_directory_listing_path'
+          key :consumes, ['application/x-www-form-urlencoded']
+          key :produces, ['application/json']
+          parameter do
+            key :name, :study_id
+            key :in, :path
+            key :description, 'ID of Study'
+            key :required, true
+            key :type, :string
+          end
+          parameter do
+            key :name, :id
+            key :in, :path
+            key :description, 'ID of DirectoryListing to update'
+            key :required, true
+            key :type, :string
+          end
+          parameter do
+            key :name, :directory_listing
+            key :in, :body
+            key :description, 'DirectoryListing object'
+            key :required, true
+            schema do
+              key :'$ref', :DirectoryListingInput
+            end
+          end
+          response 200 do
+            key :description, 'Successful update of DirectoryListing object'
+            schema do
+              key :title, 'DirectoryListing'
+              key :'$ref', :DirectoryListing
+            end
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
+          response 403 do
+            key :description, 'User is not authorized to edit Study'
+          end
+          response 404 do
+            key :description, 'Study or DirectoryListing is not found'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+          response 422 do
+            key :description, 'DirectoryListing validation failed'
+          end
+        end
+      end
+
       # PATCH /single_cell/api/v1/studies/:study_id/directory_listings/:id
       def update
         if @directory_listing.update(directory_listing_params)
@@ -38,6 +233,46 @@ module Api
           render :show
         else
           render json: {errors: @directory_listing.errors}, status: :unprocessable_entity
+        end
+      end
+
+      swagger_path '/studies/{study_id}/directory_listings/{id}' do
+        operation :delete do
+          key :tags, [
+              'DirectoryListings'
+          ]
+          key :summary, 'Delete a DirectoryListing'
+          key :description, 'Deletes a single DirectoryListing'
+          key :operationId, 'delete_study_directory_listing_path'
+          parameter do
+            key :name, :study_id
+            key :in, :path
+            key :description, 'ID of Study'
+            key :required, true
+            key :type, :string
+          end
+          parameter do
+            key :name, :id
+            key :in, :path
+            key :description, 'ID of DirectoryListing to delete'
+            key :required, true
+            key :type, :string
+          end
+          response 204 do
+            key :description, 'Successful DirectoryListing deletion'
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
+          response 403 do
+            key :description, 'User is not authorized to delete Study'
+          end
+          response 404 do
+            key :description, 'Study or DirectoryListing is not found'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
         end
       end
 

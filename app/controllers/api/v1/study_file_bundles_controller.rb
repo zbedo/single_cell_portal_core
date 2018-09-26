@@ -1,6 +1,7 @@
 module Api
   module V1
     class StudyFileBundlesController < ApiBaseController
+      include Swagger::Blocks
 
       before_action :set_study
       before_action :check_study_permission
@@ -8,16 +9,152 @@ module Api
 
       respond_to :json
 
+      swagger_path '/studies/{study_id}/study_file_bundles' do
+        operation :get do
+          key :tags, [
+              'StudyFileBundles'
+          ]
+          key :summary, 'Find all StudyFileBundles in a Study'
+          key :description, "Returns all StudyFileBundles for the given Study.  A StudyFileBundle is an object that is used to associate multiple StudyFiles that are only valid when used together:  ```#{StudyFileBundle.swagger_requirements.html_safe}```"
+          key :operationId, 'study_study_file_bundles_path'
+          parameter do
+            key :name, :study_id
+            key :in, :path
+            key :description, 'ID of Study'
+            key :required, true
+            key :type, :string
+          end
+          response 200 do
+            key :description, 'Array of StudyFileBundle objects'
+            schema do
+              key :type, :array
+              key :title, 'Array'
+              items do
+                key :title, 'StudyFileBundle'
+                key :'$ref', :StudyFileBundle
+              end
+            end
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
+          response 403 do
+            key :description, 'User is not authorized to edit Study'
+          end
+          response 404 do
+            key :description, 'Study is not found'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+        end
+      end
+
       # GET /single_cell/api/v1/studies/:study_id/study_file_bundles
       def index
         @study_file_bundles = @study.study_file_bundles
+      end
 
+      swagger_path '/studies/{study_id}/study_file_bundles/{id}' do
+        operation :get do
+          key :tags, [
+              'StudyFileBundles'
+          ]
+          key :summary, 'Find a StudyFileBundle'
+          key :description, 'Finds a single Study'
+          key :operationId, 'study_study_file_bundle_path'
+          parameter do
+            key :name, :study_id
+            key :in, :path
+            key :description, 'ID of Study'
+            key :required, true
+            key :type, :string
+          end
+          parameter do
+            key :name, :id
+            key :in, :path
+            key :description, 'ID of StudyFileBundle to fetch'
+            key :required, true
+            key :type, :string
+          end
+          response 200 do
+            key :description, 'StudyFileBundle object'
+            schema do
+              key :title, 'StudyFileBundle'
+              key :'$ref', :StudyFileBundle
+            end
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
+          response 403 do
+            key :description, 'User is not authorized to edit Study'
+          end
+          response 404 do
+            key :description, 'Study or StudyFileBundle is not found'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+        end
       end
 
       # GET /single_cell/api/v1/studies/:study_id/study_file_bundles/:id
       def show
 
       end
+
+      swagger_path '/studies/{study_id}/study_file_bundles' do
+        operation :post do
+          key :tags, [
+              'StudyFileBundles'
+          ]
+          key :summary, 'Create a StudyFileBundle'
+          key :description, 'Creates and returns a single StudyFileBundle'
+          key :operationId, 'create_study_path'
+          key :consumes, ['application/x-www-form-urlencoded']
+          key :produces, ['application/json']
+          parameter do
+            key :name, :study_id
+            key :in, :path
+            key :description, 'ID of Study'
+            key :required, true
+            key :type, :string
+          end
+          parameter do
+            key :name, :study_file_bundle
+            key :in, :body
+            key :description, 'StudyFileBundle object'
+            key :required, true
+            schema do
+              key :'$ref', :StudyFileBundleInput
+            end
+          end
+          response 200 do
+            key :description, 'Successful creation of StudyFileBundle object'
+            schema do
+              key :title, 'StudyFileBundle'
+              key :'$ref', :StudyFileBundle
+            end
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
+          response 403 do
+            key :description, 'User is not authorized to edit Study'
+          end
+          response 404 do
+            key :description, 'Study is not found'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+          response 422 do
+            key :description, 'StudyFileBundle validation failed'
+          end
+        end
+      end
+      
 
       # POST /single_cell/api/v1/studies/:study_id/study_file_bundles
       def create
@@ -27,6 +164,46 @@ module Api
           render :show
         else
           render json: {errors: @study_file_bundle.errors}, status: :unprocessable_entity
+        end
+      end
+
+      swagger_path '/studies/{study_id}/study_file_bundles/{id}' do
+        operation :delete do
+          key :tags, [
+              'StudyFileBundles'
+          ]
+          key :summary, 'Delete a StudyFileBundle'
+          key :description, 'Deletes a single StudyFileBundle'
+          key :operationId, 'delete_study_study_file_bundle_path'
+          parameter do
+            key :name, :study_id
+            key :in, :path
+            key :description, 'ID of Study'
+            key :required, true
+            key :type, :string
+          end
+          parameter do
+            key :name, :id
+            key :in, :path
+            key :description, 'ID of StudyFileBundle to delete'
+            key :required, true
+            key :type, :string
+          end
+          response 204 do
+            key :description, 'Successful StudyFileBundle deletion'
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
+          response 403 do
+            key :description, 'User is not authorized to delete Study'
+          end
+          response 404 do
+            key :description, 'Study or StudyFileBundle is not found'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
         end
       end
 
