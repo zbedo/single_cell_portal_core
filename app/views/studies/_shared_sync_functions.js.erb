@@ -6,13 +6,15 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
     var fileType = $(this).val();
     var nameField = $('#study-file-<%= study_file.id %> #study_file_name');
     var extraInfo = $('#study-file-<%= study_file.id %>-extra-info');
+    var taxonTarget = form.find('.taxon-select-target');
     var submitBtn = $('#sync-study-file-<%= study_file.id %>');
+
     // render fields & process entries based on file type
     if (fileType === 'Cluster') {
-        extraInfo.html("<%= escape_javascript(render partial: 'cluster_axis_fields', locals: {f: f}) %>");
+        extraInfo.html("<%= j(render partial: 'cluster_axis_fields', locals: {f: f}) %>");
         nameField.attr('readonly', false);
     } else if (fileType === 'Expression Matrix') {
-        extraInfo.html("<%= escape_javascript(render partial: 'expression_axis_fields', locals: {f: f}) %>");
+        extraInfo.html("<%= j(render partial: 'expression_file_fields', locals: {f: f}) %>");
         nameField.val(fileName);
         nameField.attr('readonly', 'readonly');
     } else if (fileType === 'Gene List') {
@@ -20,7 +22,7 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
         nameField.attr('readonly', false);
     } else if (fileType === 'MM Coordinate Matrix') {
         form.append("<%= j render partial: 'sort_warning' %>")
-        extraInfo.html("<%= escape_javascript(render partial: 'expression_axis_fields', locals: {f: f}) %>");
+        extraInfo.html("<%= j(render partial: 'expression_file_fields', locals: {f: f}) %>");
         nameField.val(fileName);
         nameField.attr('readonly', 'readonly');
     } else if (fileType === '10X Genes File' || fileType === '10X Barcodes File') {
@@ -32,7 +34,7 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
                 "must pair with a matrix before being parsed).");
             $(this).val('');
         } else {
-            extraInfo.html("<%= escape_javascript(render partial: 'mm_coordinate_association_fields', locals: {f: f}) %>");
+            extraInfo.html("<%= j(render partial: 'mm_coordinate_association_fields', locals: {f: f}) %>");
             var matrixDropdown = $('#study-file-<%= study_file.id %> .matrix-file-select');
             $(mtx).each(function (index, matrix) {
                 matrixDropdown.append($('<option />', {
@@ -44,7 +46,17 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
         // disable sync button until user has selected a matrix pair
         console.log('disabling sync button on ' + submitBtn.attr('id'));
         submitBtn.attr('disabled', 'disabled');
+    } else if (fileType === 'BAM' || fileType === 'Analysis Output') {
+        extraInfo.empty();
+        taxonTarget.html("<%= j(render partial: 'taxon_fields', locals: {f: f}) %>");
+        assemblySelect = form.find('.genome-assembly-association');
+        assemblySelect.removeClass('hidden');
+    } else if (fileType === 'Fastq') {
+        extraInfo.empty();
+        alert('Fastq files are stored in Sequence Data Directories (see below).  Please select another file type.');
+        $(this).val('');
     } else if (fileType === 'BAM Index') {
+        extraInfo.empty();
         nameField.val(fileName);
         nameField.attr('readonly', 'readonly');
         var bams = gatherFilesByType('BAM');
@@ -53,7 +65,7 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
                 "must pair with a BAM before being saved).");
             $(this).val('');
         } else {
-            extraInfo.html("<%= escape_javascript(render partial: 'bam_association_fields', locals: {f: f}) %>");
+            extraInfo.html("<%= j(render partial: 'bam_association_fields', locals: {f: f}) %>");
             var bamDropdown = $('#study-file-<%= study_file.id %> .bam-file-select');
             $(bams).each(function (index, bam) {
                 bamDropdown.append($('<option />', {
@@ -66,8 +78,10 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
         submitBtn.attr('disabled', 'disabled');
     } else {
         extraInfo.empty();
+        taxonTarget.empty();
         nameField.val('<%= study_file.name %>');
         nameField.attr('readonly', 'readonly');
+        form.find('.taxon-select-target').empty();
     }
     // re-enable submit button if it was previously disabled
     if ( ['10X Genes File', '10X Barcodes File', 'BAM Index'].includes(fileType) ) {
@@ -98,3 +112,27 @@ $("#sync-study-file-<%= study_file.id %>").click(function() {
 $('#study-file-<%= study_file.id %>').on('change', '.filename', function() {
     validateName($(this).val(), $("#study-file-<%= study_file._id %> .filename"));
 });
+
+$(document).ready(function() {
+  var extraInfo, taxonFields;
+
+  extraInfo = $('#study-file-<%= study_file.id %>-extra-info');
+  taxonFields = "<%= j(render partial: 'taxon_fields', locals: {f: f}) %>";
+
+  // Creates "Species" and "Genome assembly" drop-down menu inputs
+  // for "Analysis Output" study files
+  $('.unsynced-study-file #study_file_file_type').each(function(i, el) {
+    var taxonTarget, assemblySelect, form,
+      fileTypeInput = $(el);
+
+    if (fileTypeInput.val() !== 'Analysis Output') return;
+
+    extraInfo.empty();
+    form = fileTypeInput.closest('form');
+    taxonTarget = form.find('.taxon-select-target');
+    taxonTarget.html(taxonFields)
+
+    assemblySelect = form.find('.genome-assembly-association');
+    assemblySelect.removeClass('hidden');
+  });
+})

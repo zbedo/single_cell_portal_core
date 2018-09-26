@@ -1,0 +1,59 @@
+<%= nested_form_for(taxon, html: {multipart: true, id: 'taxon-form'}) do |f| %>
+  <% if taxon.errors.any? %>
+    <div class="bs-callout bs-callout-danger">
+      <h4><%= pluralize(taxon.errors.count, "error") %> prohibited this Admin Configuration from being saved:</h4>
+      <ul>
+        <% taxon.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+  <div class="form-group row">
+    <div class="col-sm-4">
+      <%= f.label :common_name %><br />
+      <%= f.text_field :common_name, class: 'form-control' %>
+    </div>
+    <div class="col-sm-4">
+      <%= f.label :scientific_name %><br />
+      <%= f.text_field :scientific_name, class: 'form-control' %>
+    </div>
+    <div class="col-sm-4">
+      <%= f.label :taxon_identifier, 'NCBI Taxon ID' %><br />
+      <%= f.number_field :taxon_identifier, class: 'form-control' %>
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-sm-8">
+      <%= f.label :aliases, 'Aliases (comma-delimited)' %><br />
+      <%= f.text_field :aliases, class: 'form-control' %>
+    </div>
+    <div class="col-sm-4">
+      <%= f.label :user_id, 'Added By' %><br />
+      <%= f.select :user_id, options_for_select([[current_user.email, current_user.id]]), {}, class: 'form-control' %>
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-sm-12">
+      <%= f.label :notes %><br />
+      <%= f.text_area :notes, rows: 4, class: 'form-control' %>
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-sm-12">
+      <h4>Genome Assemblies</h4>
+      <%= f.fields_for :genome_assemblies %>
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-sm-12">
+      <%= f.link_to_add "<span class='fas fa-plus'></span> Add an Assembly".html_safe, :genome_assemblies, class: 'btn btn-sm btn-primary',
+                        id: 'add-genome-assembly' %>
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-sm-12">
+      <%= f.submit 'Save', class: 'btn btn-lg btn-success', id: 'save-taxon' %>
+    </div>
+  </div>
+<% end %>

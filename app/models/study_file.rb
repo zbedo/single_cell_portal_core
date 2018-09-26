@@ -23,10 +23,13 @@ class StudyFile
                       'Other', 'Analysis Output']
   PARSEABLE_TYPES = ['Cluster', 'Coordinate Labels', 'Expression Matrix', 'MM Coordinate Matrix', '10X Genes File',
                      '10X Barcodes File', 'Gene List', 'Metadata']
+  DISALLOWED_SYNC_TYPES = ['Fastq']
   UPLOAD_STATUSES = %w(new uploading uploaded)
   PARSE_STATUSES = %w(unparsed parsing parsed)
   PRIMARY_DATA_EXTENTIONS = %w(fastq fastq.zip fastq.gz fastq.tar.gz fq fq.zip fq.gz fq.tar.gz bam bam.gz bam.bai bam.gz.bai)
   PRIMARY_DATA_TYPES = ['Fastq', 'BAM', 'BAM Index']
+  TAXON_REQUIRED_TYPES = ['Fastq', 'BAM', 'Expression Matrix', 'MM Coordinate Matrix']
+  ASSEMBLY_REQUIRED_TYPES = ['BAM']
   GZIP_MAGIC_NUMBER = "\x1f\x8b".force_encoding(Encoding::ASCII_8BIT)
 
   # associations
@@ -35,6 +38,8 @@ class StudyFile
   has_many :genes, dependent: :destroy
   has_many :precomputed_scores, dependent: :destroy
   has_many :cell_metadata, dependent: :destroy
+  belongs_to :taxon, optional: true
+  belongs_to :genome_assembly, optional: true
 
   # field definitions
   field :name, type: String
@@ -105,6 +110,9 @@ class StudyFile
   validates_format_of :generation, with: /\A\d+\z/, if: proc {|f| f.generation.present?}
 
   validates_inclusion_of :file_type, in: STUDY_FILE_TYPES, unless: proc {|f| f.file_type == 'DELETE'}
+
+  validate :check_taxon, on: :create
+  validate :check_assembly, on: :create
 
   ###
   #
@@ -297,6 +305,39 @@ class StudyFile
     end
   end
 
+  # helper method for retrieving species common name
+  def species_name
+    self.taxon.present? ? self.taxon.common_name : nil
+  end
+
+  # helper to return assembly name
+  def genome_assembly_name
+    self.genome_assembly.present? ? self.genome_assembly.name : nil
+  end
+
+  # helper to return annotation, if present
+  def genome_annotation
+    self.genome_assembly.present? ? self.genome_assembly.current_annotation : nil
+  end
+
+  # helper to return public link to genome annotation, if present
+  def genome_annotation_link
+    if self.genome_assembly.present? && self.genome_assembly.current_annotation.present?
+      self.genome_assembly.current_annotation.public_annotation_link
+    else
+      nil
+    end
+  end
+
+  # helper to return public link to genome annotation index, if present
+  def genome_annotation_index_link
+    if self.genome_assembly.present? && self.genome_assembly.current_annotation.present?
+      self.genome_assembly.current_annotation.public_annotation_index_link
+    else
+      nil
+    end
+  end
+
   ###
   #
   # CACHING METHODS
@@ -317,7 +358,7 @@ class StudyFile
     study_name = self.study.url_safe_name
     case self.file_type
       when 'Cluster'
-        name_key = self.cluster_groups.first.name.split.join('-')
+        name_key = self.name.split.join('-')
         @cache_key = "#{study_name}.*render_cluster.*#{name_key}"
       when 'Coordinate Labels'
         name_key = self.bundle_parent.name.split.join('-')
@@ -511,6 +552,19 @@ class StudyFile
     end
     if self.name !~ regex
       errors.add(:name, error)
+    end
+  end
+
+  # if this file is expression or sequence data, validate that the user has supplied a species/taxon
+  def check_taxon
+    if Taxon.present? && TAXON_REQUIRED_TYPES.include?(self.file_type) && self.taxon_id.blank?
+      errors.add(:taxon_id, 'You must supply a species for this file type: ' + self.file_type)
+    end
+  end
+
+  def check_assembly
+    if GenomeAssembly.present? && ASSEMBLY_REQUIRED_TYPES.include?(self.file_type) && self.genome_assembly_id.nil?
+      errors.add(:genome_assembly_id, 'You must supply a genome assembly for this file type: ' + self.file_type)
     end
   end
 end

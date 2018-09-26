@@ -18,6 +18,9 @@ Rails.application.routes.draw do
 
     resources :admin_configurations, path: 'admin'
 
+    resources :taxons, path: 'species'
+    get 'species/:id/download_genome_annotation', to: 'taxons#download_genome_annotation', as: :download_genome_annotation
+
     # branding groups
     resources :branding_groups
 
@@ -132,6 +135,8 @@ Rails.application.routes.draw do
     post 'study/:study_name/delete_workspace_samples', to: 'site#delete_workspace_samples', as: :delete_workspace_samples
     get 'view_workflow_wdl', to: 'site#view_workflow_wdl', as: :view_workflow_wdl
     get 'workflow_options', to: 'site#get_workflow_options', as: :get_workflow_options
+    get 'genome_assemblies', to: 'site#get_taxon_assemblies', as: :get_taxon_assemblies
+    get 'taxon', to: 'site#get_taxon', as: :get_taxon
 
     # base actions
     get 'search', to: 'site#search', as: :search

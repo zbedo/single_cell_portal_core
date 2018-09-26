@@ -1,0 +1,8 @@
+<h1>Editing '<%= @taxon.common_name %>'</h1>
+
+<%= render 'form', taxon: @taxon %>
+
+<p>
+  <%= link_to "<span class='fas fa-search'></span> Details".html_safe, taxon_path(@taxon), class: 'btn btn-info' %>
+  <%= link_to "<span class='fas fa-chevron-left'></span> Back".html_safe, taxons_path, class: 'btn btn-warning' %>
+</p>

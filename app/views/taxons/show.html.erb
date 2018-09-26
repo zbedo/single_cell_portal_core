@@ -1,0 +1,53 @@
+<h1><%= @taxon.common_name %> <%= @taxon.aliases.present? ? "(#{@taxon.aliases})" : nil %></h1>
+<p class="lead help-block">Added by: <span class="label label-default"><%= @taxon.user.email %></span></p>
+<div class="row">
+  <div class="col-sm-3">
+      <dl>
+      <dt>Scientific Name</dt>
+      <dd><%= @taxon.scientific_name %></dd>
+    </dl>
+  </div>
+  <div class="col-sm-3">
+    <dl>
+      <dt>NCBI Taxon ID</dt>
+      <dd><%= link_to "#{@taxon.taxon_identifier} <i class='fas fa-external-link-alt'></i>".html_safe, "https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=#{@taxon.taxon_identifier}" %></dd>
+    </dl>
+  </div>
+  <div class="col-sm-6">
+    <p><strong>Notes</strong></p>
+    <p><%= @taxon.notes %></p>
+  </div>
+</div>
+<div class="row">
+  <div class="col-sm-12">
+    <h4>Genome Assemblies</h4>
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Name (alias)</th>
+            <th>Release Date</th>
+            <th>Annotations</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @taxon.genome_assemblies.each do |assembly| %>
+            <tr>
+              <td><%= assembly.name %> (<%= assembly.alias %>)</td>
+              <td><%= assembly.release_date.strftime("%D") %></td>
+              <td>
+                <% assembly.genome_annotations.each do |annotation| %>
+                  <%= link_to "#{annotation.display_name} <i class='fas fa-download'></i>".html_safe, download_genome_annotation_path(id: annotation.id), class: 'btn btn-sm btn-warning' %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<p>
+  <%= link_to "<span class='fas fa-edit'></span> Edit".html_safe, edit_taxon_path(@taxon), class: 'btn btn-info' %>
+  <%= link_to "<span class='fas fa-chevron-left'></span> Back".html_safe, taxons_path, class: 'btn btn-warning' %>
+</p>

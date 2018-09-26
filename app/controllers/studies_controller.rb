@@ -296,7 +296,7 @@ class StudiesController < ApplicationController
             # we can only do this by md5 hash as the filename and generation will be different
             existing_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project,
                                                                          @study.firecloud_workspace, new_location)
-            if existing_file.present? && existing_file.md5 == file.md5
+            if existing_file.present? && existing_file.md5 == file.md5 && StudyFile.where(study_id: @study.id, upload_file_name: new_location).exists?
               next
             else
               # now copy the file to a new location for syncing, marking as default type of 'Analysis Output'
@@ -521,6 +521,9 @@ class StudiesController < ApplicationController
 
       # set queued_for_deletion manually - gotcha due to race condition on page reloading and how quickly delayed_job can process jobs
       @study.update(queued_for_deletion: true)
+
+      # Remove the analysis.json before enqueuing the delete job
+      AnalysisMetadatum.where(study_id: @study.id).delete_all
 
       # queue jobs to delete study caches & study itself
       CacheRemovalJob.new(@study.url_safe_name).delay.perform
@@ -1294,13 +1297,13 @@ class StudiesController < ApplicationController
     params.require(:study_file).permit(:_id, :study_id, :name, :upload, :upload_file_name, :upload_content_type, :upload_file_size,
                                        :remote_location, :description, :file_type, :status, :human_fastq_url, :human_data, :cluster_type,
                                        :generation, :x_axis_label, :y_axis_label, :z_axis_label, :x_axis_min, :x_axis_max, :y_axis_min,
-                                       :y_axis_max, :z_axis_min, :z_axis_max,
+                                       :y_axis_max, :z_axis_min, :z_axis_max, :taxon_id, :genome_assembly_id,
                                        options: [:cluster_group_id, :font_family, :font_size, :font_color, :matrix_id, :submission_id,
                                                  :bam_id, :analysis_name, :visualization_name])
   end
 
   def directory_listing_params
-    params.require(:directory_listing).permit(:_id, :study_id, :name, :description, :sync_status, :file_type)
+    params.require(:directory_listing).permit(:_id, :study_id, :name, :description, :sync_status, :file_type, :taxon_id, :genome_assembly_id)
   end
 
   def default_options_params
