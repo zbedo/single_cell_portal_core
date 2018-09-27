@@ -128,6 +128,9 @@ function initializeIgv() {
   var igvContainer, igvOptions, tracks, genome, genesTrack, bamTracks,
     genesTrackName, genes, locus;
 
+  // Bail if already initialized or not signed in
+  if (hasDisplayedIgv || accessToken === null) return;
+
   bamsToViewInIgv.push(bamAndBaiFiles[0]); // show first BAM by default
 
   igvContainer = document.getElementById('igv-container');
@@ -149,24 +152,37 @@ function initializeIgv() {
   ga('send', 'event', 'igv', 'initialize');
 }
 
-$(document).ready(function() {
+$(document).on('click', '#genome-tab-nav > a', function(event) {
   initializeIgv();
+});
 
-  // Remove metrics token if present
+$(document).ready(function() {
+
+  // Bail if on a page without genome visualization support
+  if (typeof accessToken === 'undefined') return;
+
   if (window.location.hash === '#genome-tab') {
-    $('#genome-tab-nav > a').click();
+    $('#study-visualize-nav > a').click();
+
+    // Reload igv if refreshing, but not upon clicking back button in sign-in
+    if (accessToken !== null) $('#genome-tab-nav > a').click();
   }
 
   var signedInViaGenomeTab = localStorage.getItem('signed-in-via-genome-tab');
-  if (signedInViaGenomeTab === true) {
+  if (signedInViaGenomeTab === 'true') {
     ga('send', 'event', 'genome', 'sign_in_end_success');
+
+    // Remove usage analysis token
     localStorage.removeItem('signed-in-via-genome-tab');
+
+    // Load igv
+    $('#study-visualize-nav > a').click();
+    $('#genome-tab-nav > a').click();
   }
 
   if (accessToken === null) {
-    $('#genome-tab')
+    $('#genome-tab-nav')
       .attr('title', 'Click to sign in; only authenticated users can visualize genomes')
       .attr('data-toogle', 'tooltip');
   }
-
 });
