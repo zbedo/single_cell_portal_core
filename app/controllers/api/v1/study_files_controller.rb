@@ -113,8 +113,8 @@ module Api
           ]
           key :summary, 'Create a StudyFile'
           key :description, 'Creates and returns a single StudyFile'
-          key :operationId, 'create_study_path'
-          key :consumes, ['multipart/form-data', 'application/json']
+          key :operationId, 'create_study_study_file_path'
+          key :consumes, ['multipart/form-data']
           key :produces, ['application/json']
           parameter do
             key :name, :study_id
@@ -124,19 +124,18 @@ module Api
             key :type, :string
           end
           parameter do
-            key :name, :study_file
-            key :in, :body
-            key :description, 'StudyFile object'
+            key :name, 'study_file[file_type]'
+            key :in, :formData
             key :required, true
             schema do
-              key :'$ref', :StudyFileInput
+              key :type, :string
+              key :enum, StudyFile::STUDY_FILE_TYPES
             end
           end
           parameter do
             key :name, 'study_file[upload]'
             key :type, :file
             key :in, :formData
-            key :description, 'File object upload'
           end
           response 200 do
             key :description, 'Successful creation of StudyFile object'
@@ -439,7 +438,7 @@ module Api
           ]
           key :summary, 'Bundle multiple StudyFiles'
           key :description, "Create a StudyFileBundle to associate multiple StudyFiles of dependent types: ```#{StudyFileBundle.swagger_requirements.html_safe}```"
-          key :operationId, 'parse_study_study_file_path'
+          key :operationId, 'bundle_study_study_file_path'
           parameter do
             key :name, :study_id
             key :in, :path
