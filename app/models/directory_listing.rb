@@ -44,7 +44,11 @@ class DirectoryListing
 		property :taxon_id do
 			key :type, :string
 			key :description, 'ID of Taxon (species) this DirectoryListing belongs to'
-		end
+    end
+    property :name do
+      key :type, :string
+      key :description, 'Name of remote GCS directory containing files'
+    end
 		property :description do
 			key :type, :string
 			key :format, :email
