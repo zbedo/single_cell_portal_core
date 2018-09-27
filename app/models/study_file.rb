@@ -90,7 +90,7 @@ class StudyFile
     end
     property :taxon_id do
       key :type, :string
-      key :description, 'ID of Taxon (species) to which StudyFile belongs, if required/present'
+      key :description, 'Database ID of Taxon entry (species) to which StudyFile belongs, if required/present.  THIS IS NOT THE NCBI TAXON ID.'
     end
     property :genome_assembly_id do
       key :type, :string

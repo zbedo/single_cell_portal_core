@@ -11,11 +11,11 @@ class Taxon
 
   field :common_name, type: String
   field :scientific_name, type: String
-  field :taxon_identifier, type: Integer
+  field :ncbi_taxid, type: Integer
   field :aliases, type: String
   field :notes, type: String
 
-  validates_presence_of :common_name, :scientific_name, :taxon_identifier, :notes
+  validates_presence_of :common_name, :scientific_name, :ncbi_taxid, :notes
   validates_format_of :common_name, :scientific_name, with: ALPHANUMERIC_SPACE_DASH,
                       message: ALPHANUMERIC_SPACE_DASH_ERROR
 
@@ -24,7 +24,7 @@ class Taxon
   RESTRICTED_NCBI_TAXON_IDS = [9606]
 
   swagger_schema :Taxon do
-    key :required, [:common_name, :scientific_name, :taxon_identifier]
+    key :required, [:common_name, :scientific_name, :ncbi_taxid]
     key :name, 'Taxon'
     property :id do
       key :type, :string
@@ -37,7 +37,7 @@ class Taxon
       key :type, :string
       key :description, 'Scientific name of this taxon/specie'
     end
-    property :taxon_identifier do
+    property :ncbi_taxid do
       key :type, :integer
       key :description, 'NCBI Taxon ID'
     end

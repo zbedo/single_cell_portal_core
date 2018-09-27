@@ -84,7 +84,7 @@ class TaxonsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def taxon_params
-      params.require(:taxon).permit(:common_name, :scientific_name, :taxon_identifier, :user_id, :notes, :aliases,
+      params.require(:taxon).permit(:common_name, :scientific_name, :ncbi_taxid, :user_id, :notes, :aliases,
                                     genome_assemblies_attributes: [:id, :name, :alias, :release_date, :_destroy,
                                     genome_annotations_attributes: [:id, :name, :link, :release_date,
                                     :_destroy]])
