@@ -10,7 +10,6 @@ module Api
 
         # disable all CSP headers for API responses
         def exclude_csp_headers!
-          Rails.logger.info "bypassing csp"
           SecureHeaders.opt_out_of_all_protection(request)
         end
       end

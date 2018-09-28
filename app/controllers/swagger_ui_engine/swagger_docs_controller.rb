@@ -2,6 +2,7 @@ module SwaggerUiEngine
   class SwaggerDocsController < ApplicationController
     include SwaggerUiEngine::ConfigParser
     include SwaggerUiEngine::OauthConfigParser
+    include Api::V1::Concerns::CspHeaderBypass
 
     add_template_helper SwaggerUiEngine::TranslationHelper
     layout 'swagger_ui_engine/layouts/swagger', except: %w(oauth2)
@@ -9,18 +10,16 @@ module SwaggerUiEngine
     before_action :set_configs, :set_oauth_configs
 
     def oauth2
-      SecureHeaders.opt_out_of_all_protection(request)
+
     end
 
     def index
-      SecureHeaders.opt_out_of_all_protection(request)
       # backward compatibility for defining single doc url in strings
       redirect_to single_swagger_doc_path if single_doc_url?
       redirect_to swagger_doc_path(@swagger_url.keys.first) if single_doc_url_hash?
     end
 
     def show
-      SecureHeaders.opt_out_of_all_protection(request)
       @single_doc_url = single_doc_url? || single_doc_url_hash?
       @swagger_url = @swagger_url[params[:id].to_sym] unless single_doc_url?
     end
