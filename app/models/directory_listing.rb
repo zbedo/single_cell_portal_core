@@ -21,6 +21,8 @@ class DirectoryListing
   }
   REQUIRED_ATTRIBUTES = %w(study_id name file_type files)
 	TAXON_REQUIRED_REGEX = /(fastq|fq)/
+	IGNORED_EXTENTIONS = %w(txt) # other file extentions to ignore
+  MIN_SIZE = 10 # threshold of like file types required for creating DirectoryListing
 
 	belongs_to :study
   belongs_to :taxon, optional: true
@@ -224,7 +226,9 @@ class DirectoryListing
 				path = self.get_folder_name(name)
 				ext = self.file_extension(name)
 				# don't store primary data filetypes in map as these are handled separately
-				if !DirectoryListing::PRIMARY_DATA_TYPES.any? {|e| ext.include?(e)}
+        # also ignore any file types in IGNORED_EXTENTIONS
+				unless DirectoryListing::PRIMARY_DATA_TYPES.any? {|e| ext.include?(e)} ||
+            DirectoryListing::IGNORED_EXTENTIONS.include?(ext)
 					if map[path].nil?
 						map[path] = {"#{ext}" => 1}
 					elsif map[path][ext].nil?

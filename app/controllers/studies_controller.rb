@@ -1416,8 +1416,8 @@ class StudiesController < ApplicationController
       # check first if file type is in file map in a group larger than 10 (or 20 for text files)
       file_extension = DirectoryListing.file_extension(file.name)
       directory_name = DirectoryListing.get_folder_name(file.name)
-      max_size = file_extension == 'txt' ? 20 : 10
-      if @file_extension_map.has_key?(directory_name) && !@file_extension_map[directory_name][file_extension].nil? && @file_extension_map[directory_name][file_extension] >= max_size
+      if @file_extension_map.has_key?(directory_name) && !@file_extension_map[directory_name][file_extension].nil? &&
+          @file_extension_map[directory_name][file_extension] >= DirectoryListing::MIN_SIZE
         process_directory_listing_file(file, file_extension)
       else
         # we are now dealing with singleton files or fastqs, so process accordingly (making sure to ignore directories)
