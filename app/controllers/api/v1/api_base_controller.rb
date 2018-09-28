@@ -3,6 +3,7 @@ module Api
     class ApiBaseController < ActionController::API
       include Concerns::Authenticator
       include Concerns::ContentType
+      include Concerns::CspHeaderBypass
       include ActionController::MimeResponds
 
       rescue_from ActionController::ParameterMissing do |exception|
