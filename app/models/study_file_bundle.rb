@@ -26,6 +26,7 @@ class StudyFileBundle
       }
   }
   REQUIRED_ATTRIBUTES = %w(bundle_type original_file_list)
+  TEMP_FILENAME_BASE = 'BUNDLE_PLACEHOLDER_'
 
   swagger_schema :StudyFileBundle do
     key :required, [:bundle_type, :original_file_list]
@@ -143,9 +144,24 @@ class StudyFileBundle
     self.original_file_list.map {|file| file['file_type']}
   end
 
+  # determine if this is a completed bundle
+  def completed?
+    self.study_files.each do |study_file|
+      if study_file.upload_file_name.starts_with? TEMP_FILENAME_BASE
+        return false
+      end
+    end
+    return true
+  end
+
   # helper to format requirements from constants into pretty-printed messages
   def self.swagger_requirements
     JSON.pretty_generate(BUNDLE_REQUIREMENTS)
+  end
+
+  # helper to generate a bogus filename when creating a new instance of StudyFileBundle
+  def self.temp_bundle_filename
+    "#{TEMP_FILENAME_BASE}#{SecureRandom.uuid}"
   end
 
   private
@@ -207,7 +223,7 @@ class StudyFileBundle
       if study_file.present?
         study_file.update(study_file_bundle_id: self.id)
       else
-        study_file = self.study.study_files.build(file_type: file_type, upload_file_name: filename, study_file_bundle_id: self.id)
+        study_file = self.study.study_files.build(file_type: file_type, upload_file_name: filename, study_file_bundle_id: self.id, name: filename)
         if StudyFile::TAXON_REQUIRED_TYPES.include?(file_type) && Taxon.present?
           study_file.taxon_id = Taxon.first.id # temporarily set arbitrary taxon association
           if species_name.present?

@@ -453,13 +453,11 @@ class StudyFile
     else
       case self.file_type
       when 'MM Coordinate Matrix'
-        StudyFile.where(file_type: '10X Genes File', 'options.matrix_id' => self.id.to_s).exists? && StudyFile.where(file_type: '10X Barcodes File', 'options.matrix_id' => self.id.to_s).exists?
+        self.study_file_bundle.present? && self.study_file_bundle.completed?
       when '10X Genes File'
-        parent_matrix = self.bundle_parent
-        parent_matrix.present? && StudyFile.where(file_type: '10X Barcodes File', 'options.matrix_id' => parent_matrix.id.to_s).exists?
+        self.study_file_bundle.present? && self.study_file_bundle.completed?
       when '10X Barcodes File'
-        parent_matrix = self.bundle_parent
-        parent_matrix.present? && StudyFile.where(file_type: '10X Genes File', 'options.matrix_id' => parent_matrix.id.to_s).exists?
+        self.study_file_bundle.present? && self.study_file_bundle.completed?
       else
         true # the file is parseable and a singleton
       end
@@ -536,6 +534,7 @@ class StudyFile
     else
       # base 'selector' for query, used to search study_file.options hash
       selector = 'options'
+      query_id = self.id.to_s
       case self.file_type
       when 'MM Coordinate Matrix'
         selector += '.matrix_id'
@@ -543,8 +542,9 @@ class StudyFile
         selector += '.bam_id'
       when 'Cluster'
         selector += '.cluster_group_id'
+        query_id = self.cluster_groups.first.id.to_s
       end
-      StudyFile.where(selector => self.id.to_s) # return Mongoid::Criteria to lazy-load, better performance
+      StudyFile.where(selector => query_id) # return Mongoid::Criteria to lazy-load, better performance
     end
   end
 

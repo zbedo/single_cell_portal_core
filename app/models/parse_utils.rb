@@ -167,6 +167,8 @@ class ParseUtils
       # finished, so return true
       true
     rescue => e
+      error_message = e.message
+      Rails.logger.error "#{Time.now}: #{e.class.name}:#{error_message}, #{@last_line}"
       # error has occurred, so clean up records and remove file
       Gene.where(study_id: study.id, study_file_id: matrix_study_file.id).delete_all
       DataArray.where(study_id: study.id, study_file_id: matrix_study_file.id).delete_all
@@ -174,11 +176,12 @@ class ParseUtils
       matrix_study_file.remove_local_copy
       genes_study_file.remove_local_copy
       barcodes_study_file.remove_local_copy
+      delete_remote_file_on_fail(matrix_study_file, study)
+      delete_remote_file_on_fail(genes_study_file, study)
+      delete_remote_file_on_fail(barcodes_study_file, study)
       matrix_study_file.destroy
       genes_study_file.destroy
       barcodes_study_file.destroy
-      error_message = e.message
-      Rails.logger.error "#{Time.now}: #{error_message}, #{@last_line}"
       SingleCellMailer.notify_user_parse_fail(user.email, "10X CellRanger expression data in #{study.name} parse has failed", error_message).deliver_now
       false
     end
@@ -262,6 +265,7 @@ class ParseUtils
 
   # localize a file for parsing and return opened file handler
   def self.localize_study_file(study_file, study)
+    Rails.logger.info "#{Time.now}: Attempting to localize #{study_file.upload_file_name}"
     if File.exists?(study_file.upload.path) || File.exists?(Rails.root.join(study.data_dir, study_file.download_location))
       content_type = study_file.determine_content_type
       if content_type == 'application/gzip'
@@ -272,6 +276,7 @@ class ParseUtils
         local_file = File.open(study_file.upload.path, 'rb')
       end
     else
+
       local_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
                                                                  study.firecloud_workspace, study_file.bucket_location,
                                                                  study.data_store_path, verify: :none)
@@ -305,6 +310,14 @@ class ParseUtils
         Rails.logger.error "#{Time.now}: Could not delete #{study_file.bucket_location}:#{study_file.id} in study #{self.name}; aborting"
         SingleCellMailer.admin_notification('Local file deletion failed', nil, "The file at #{Rails.root.join(study.data_store_path, study_file.download_location)} failed to clean up after parsing, please remove.").deliver_now
       end
+    end
+  end
+
+  # delete a file from the bucket on fail
+  def self.delete_remote_file_on_fail(study_file, study)
+    remote = Study.firecloud_client.get_workspace_file(study.firecloud_project, study.firecloud_workspace, study_file.bucket_location)
+    if remote.present?
+      Study.firecloud_client.delete_workspace_file(study.firecloud_project, study.firecloud_workspace, study_file.bucket_location)
     end
   end
 end

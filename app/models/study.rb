@@ -977,6 +977,7 @@ class Study
       UserAnnotationShare.where(study_id: study.id).delete_all
       UserDataArray.where(study_id: study.id).delete_all
       AnalysisMetadatum.where(study_id: study.id).delete_all
+      StudyFileBundle.where(study_id: study.id).delete_all
       # now destroy study to ensure everything is removed
       study.destroy
       Rails.logger.info "#{Time.now}: delete of #{study.name} completed"
@@ -2493,7 +2494,7 @@ class Study
       file.update(upload_file_size: remote_file.size)
       Rails.logger.info "#{Time.now}: Upload of #{file.upload_file_name}:#{file.id} complete, scheduling cleanup job"
       # schedule the upload cleanup job to run in two minutes
-      run_at = 15.seconds.from_now
+      run_at = 2.minutes.from_now
       Delayed::Job.enqueue(UploadCleanupJob.new(file.study, file), run_at: run_at)
       Rails.logger.info "#{Time.now}: cleanup job for #{file.upload_file_name}:#{file.id} scheduled for #{run_at}"
     rescue RuntimeError => e
