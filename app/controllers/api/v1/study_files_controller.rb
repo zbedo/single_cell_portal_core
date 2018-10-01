@@ -17,7 +17,7 @@ module Api
               'StudyFiles'
           ]
           key :summary, 'Find all StudyFiles in a Study'
-          key :description, 'Returns all Studies editable by the current user'
+          key :description, 'Returns all StudyFiles in a given Study'
           key :operationId, 'study_study_files_path'
           parameter do
             key :name, :study_id
@@ -63,7 +63,7 @@ module Api
               'StudyFiles'
           ]
           key :summary, 'Find a StudyFile'
-          key :description, 'Finds a single Study'
+          key :description, 'Finds a single StudyFile'
           key :operationId, 'study_study_file_path'
           parameter do
             key :name, :study_id
@@ -203,7 +203,7 @@ module Api
               'StudyFiles'
           ]
           key :summary, 'Update a StudyFile'
-          key :description, 'Creates and returns a single StudyFile'
+          key :description, 'Updates and returns a single StudyFile'
           key :operationId, 'update_study_study_file_path'
           parameter do
             key :name, :study_id
