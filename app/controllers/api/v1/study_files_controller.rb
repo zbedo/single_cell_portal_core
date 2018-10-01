@@ -264,6 +264,11 @@ module Api
         update_params.delete(:assembly)
         set_taxon_and_assembly_by_name({species: species_name, assembly: assembly_name})
         if @study_file.update(update_params)
+          # send data to FireCloud if upload was performed
+          if study_file_params[:upload].present?
+            @study.delay.send_to_firecloud(@study_file)
+            @study_file.update(status: 'uploaded') # set status to uploaded on full create
+          end
 
           if ['Cluster', 'Coordinate Labels', 'Gene List'].include?(@study_file.file_type) && @study_file.valid?
             @study_file.invalidate_cache_by_file_type
