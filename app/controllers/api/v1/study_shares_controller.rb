@@ -113,9 +113,7 @@ module Api
           ]
           key :summary, 'Create a StudyShare'
           key :description, 'Creates and returns a single StudyShare'
-          key :operationId, 'create_study_path'
-          key :consumes, ['application/x-www-form-urlencoded']
-          key :produces, ['application/json']
+          key :operationId, 'create_study_study_share_path'
           parameter do
             key :name, :study_id
             key :in, :path
@@ -174,10 +172,8 @@ module Api
               'StudyShares'
           ]
           key :summary, 'Update a StudyShare'
-          key :description, 'Creates and returns a single StudyShare'
+          key :description, 'Updates and returns a single StudyShare.  Email address of share cannot be changed (you must create a new StudyShare for that).'
           key :operationId, 'update_study_study_share_path'
-          key :consumes, ['application/x-www-form-urlencoded']
-          key :produces, ['application/json']
           parameter do
             key :name, :study_id
             key :in, :path
@@ -198,7 +194,7 @@ module Api
             key :description, 'StudyShare object'
             key :required, true
             schema do
-              key :'$ref', :StudyShareInput
+              key :'$ref', :StudyShareUpdateInput
             end
           end
           response 200 do

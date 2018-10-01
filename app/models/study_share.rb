@@ -107,6 +107,25 @@ class StudyShare
     end
   end
 
+	swagger_schema :StudyShareUpdateInput do
+		allOf do
+			schema do
+				property :study_share do
+					key :type, :object
+					property :permission do
+						key :type, :string
+						key :enum, PERMISSION_TYPES
+						key :description, 'Permission granted by StudyShare'
+					end
+					property :deliver_emails do
+						key :type, :boolean
+						key :description, 'Boolean indication whether to email user with updates to Study'
+					end
+				end
+			end
+		end
+	end
+
   validates_format_of :email, with: Devise.email_regexp, message: 'is not a valid email address.'
   validates_format_of :firecloud_project, :firecloud_workspace, with: ValidationTools::ALPHANUMERIC_DASH,
                       message: ValidationTools::ALPHANUMERIC_DASH_ERROR

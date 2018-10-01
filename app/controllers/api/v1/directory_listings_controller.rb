@@ -110,9 +110,7 @@ module Api
           ]
           key :summary, 'Create a DirectoryListing'
           key :description, 'Creates and returns a single DirectoryListing'
-          key :operationId, 'create_study_path'
-          key :consumes, ['application/x-www-form-urlencoded']
-          key :produces, ['application/json']
+          key :operationId, 'create_study_directory_listing_path'
           parameter do
             key :name, :study_id
             key :in, :path
@@ -173,10 +171,8 @@ module Api
               'DirectoryListings'
           ]
           key :summary, 'Update a DirectoryListing'
-          key :description, 'Creates and returns a single DirectoryListing'
+          key :description, 'Updates and returns a single DirectoryListing'
           key :operationId, 'update_study_directory_listing_path'
-          key :consumes, ['application/x-www-form-urlencoded']
-          key :produces, ['application/json']
           parameter do
             key :name, :study_id
             key :in, :path

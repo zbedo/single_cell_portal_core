@@ -133,6 +133,18 @@ module Api
             end
           end
           parameter do
+            key :name, 'study_file[species]'
+            key :description, '(optional) Common name of a species registered in the portal to set taxon_id association manually'
+            key :type, :string
+            key :in, :formData
+          end
+          parameter do
+            key :name, 'study_file[assembly]'
+            key :description, '(optional) Name of a genome assembly registered in the portal to set genome_assembly_id association manually'
+            key :type, :string
+            key :in, :formData
+          end
+          parameter do
             key :name, 'study_file[upload]'
             key :type, :file
             key :in, :formData
@@ -164,8 +176,15 @@ module Api
 
       # POST /single_cell/api/v1/studies/:study_id/study_files
       def create
-        @study_file = @study.study_files.build(study_file_params)
-
+        # since there is no species/assembly attribute for study_files, we need to prune that from study_file_params
+        create_params = study_file_params.to_unsafe_hash
+        # manually check first if species/assembly was supplied by name
+        species_name = create_params[:species]
+        create_params.delete(:species)
+        assembly_name = create_params[:assembly]
+        create_params.delete(:assembly)
+        @study_file = @study.study_files.build(create_params)
+        set_taxon_and_assembly_by_name({species: species_name, assembly: assembly_name})
         if @study_file.save
           # send data to FireCloud if upload was performed
           if study_file_params[:upload].present?
@@ -186,8 +205,6 @@ module Api
           key :summary, 'Update a StudyFile'
           key :description, 'Creates and returns a single StudyFile'
           key :operationId, 'update_study_study_file_path'
-          key :consumes, ['application/x-www-form-urlencoded']
-          key :produces, ['application/json']
           parameter do
             key :name, :study_id
             key :in, :path
@@ -238,7 +255,16 @@ module Api
 
       # PATCH /single_cell/api/v1/studies/:study_id/study_files/:id
       def update
-        if @study_file.update(study_file_params)
+        # since there is no species/assembly attribute for study_files, we need to prune that from study_file_params
+        update_params = study_file_params.to_unsafe_hash
+        # manually check first if species/assembly was supplied by name
+        species_name = update_params[:species]
+        update_params.delete(:species)
+        assembly_name = update_params[:assembly]
+        update_params.delete(:assembly)
+        set_taxon_and_assembly_by_name({species: species_name, assembly: assembly_name})
+        if @study_file.update(update_params)
+
           if ['Cluster', 'Coordinate Labels', 'Gene List'].include?(@study_file.file_type) && @study_file.valid?
             @study_file.invalidate_cache_by_file_type
           end
@@ -428,7 +454,6 @@ module Api
         else
           render json: {error: "File is already parsing"}, status: 405
         end
-
       end
 
       swagger_path '/studies/{study_id}/study_files/bundle' do
@@ -512,6 +537,20 @@ module Api
 
       private
 
+      # manual check to see if user supplied taxon/assembly by name
+      def set_taxon_and_assembly_by_name(param_list)
+        species_name = param_list[:species]
+        assembly_name = param_list[:assembly]
+        matching_taxon = Taxon.find_by(common_name: /#{species_name}/i)
+        matching_assembly = GenomeAssembly.find_by(name: /#{assembly_name}/i)
+        if matching_taxon.present?
+          @study_file.taxon_id = matching_taxon.id
+        end
+        if matching_assembly.present?
+          @study_file.genome_assembly_id = matching_assembly.id
+        end
+      end
+
       def set_study
         @study = Study.find_by(id: params[:study_id])
         if @study.nil? || @study.queued_for_deletion?
@@ -532,10 +571,11 @@ module Api
 
       # study file params whitelist
       def study_file_params
-        params.require(:study_file).permit(:_id, :study_id, :name, :upload, :upload_file_name, :upload_content_type, :upload_file_size,
-                                           :remote_location, :description, :file_type, :status, :human_fastq_url, :human_data, :cluster_type,
-                                           :generation, :x_axis_label, :y_axis_label, :z_axis_label, :x_axis_min, :x_axis_max, :y_axis_min,
-                                           :y_axis_max, :z_axis_min, :z_axis_max,
+        params.require(:study_file).permit(:_id, :study_id, :taxon_id, :genome_assembly_id, :study_file_bundle_id, :name,
+                                           :upload, :upload_file_name, :upload_content_type, :upload_file_size, :remote_location,
+                                           :description, :file_type, :status, :human_fastq_url, :human_data, :cluster_type,
+                                           :generation, :x_axis_label, :y_axis_label, :z_axis_label, :x_axis_min, :x_axis_max,
+                                           :y_axis_min, :y_axis_max, :z_axis_min, :z_axis_max, :species, :assembly,
                                            options: [:cluster_group_id, :font_family, :font_size, :font_color, :matrix_id,
                                                      :submission_id, :bam_id, :analysis_name, :visualization_name])
       end

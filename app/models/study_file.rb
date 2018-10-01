@@ -92,9 +92,17 @@ class StudyFile
       key :type, :string
       key :description, 'Database ID of Taxon entry (species) to which StudyFile belongs, if required/present.  THIS IS NOT THE NCBI TAXON ID.'
     end
+    property :species do
+      key :type, :string
+      key :description, '(optional) Common name of a species registered in the portal to set taxon_id association manually'
+    end
     property :genome_assembly_id do
       key :type, :string
       key :description, 'ID of GenomeAssembly to which StudyFile belongs, if required/present'
+    end
+    property :assembly do
+      key :type, :string
+      key :description, '(optional) Common name of a genome assembly registered in the portal to set genome_assembly_id association manually'
     end
     property :study_file_bundle_id do
       key :type, :string
@@ -232,8 +240,102 @@ class StudyFile
   swagger_schema :StudyFileInput do
     allOf do
       schema do
-        property :study_file do
-          key :'$ref', :StudyFile
+        property :taxon_id do
+          key :type, :string
+          key :description, 'Database ID of Taxon entry (species) to which StudyFile belongs, if required/present.  THIS IS NOT THE NCBI TAXON ID.'
+        end
+        property :species do
+          key :type, :string
+          key :description, '(optional) Common name of a species registered in the portal to set taxon_id association manually'
+        end
+        property :genome_assembly_id do
+          key :type, :string
+          key :description, 'ID of GenomeAssembly to which StudyFile belongs, if required/present'
+        end
+        property :assembly do
+          key :type, :string
+          key :description, '(optional) Common name of a genome assembly registered in the portal to set genome_assembly_id association manually'
+        end
+        property :study_file_bundle_id do
+          key :type, :string
+          key :description, 'ID of StudyFileBundle to which StudyFile belongs, if present'
+        end
+        property :name do
+          key :type, :string
+          key :description, 'Name of StudyFile (either filename or name of Cluster/Gene List)'
+        end
+        property :description do
+          key :type, :string
+          key :description, 'StudyFile description, used in download views'
+        end
+        property :file_type do
+          key :type, :string
+          key :enum, STUDY_FILE_TYPES
+          key :description, 'Type of file, governs parsing/caching behavior'
+        end
+        property :status do
+          key :type, :string
+          key :enum, UPLOAD_STATUSES
+          key :description, 'Status of File object upload (new, uploading, or uploaded)'
+        end
+        property :remote_location do
+          key :type, :string
+          key :description, 'Location in GCS bucket of File object'
+        end
+        property :human_fastq_url do
+          key :type, :string
+          key :format, :url
+          key :description, 'External URL for human sequence data (if required)'
+        end
+        property :human_data do
+          key :type, :boolean
+          key :default, false
+          key :description, 'Boolean indication whether StudyFile represents human data'
+        end
+        property :generation do
+          key :type, :string
+          key :description, 'GCS generation tag of File in bucket'
+        end
+        property :x_axis_label do
+          key :type, :string
+          key :description, 'Label to use on X axis of plots (for Clusters)'
+        end
+        property :y_axis_label do
+          key :type, :string
+          key :description, 'Label to use on Y axis of plots (for Clusters, Expression Matrix, MM Coordinate Matrix)'
+        end
+        property :z_axis_label do
+          key :type, :string
+          key :description, 'Label to use on Z axis of plots (for Clusters)'
+        end
+        property :x_axis_min do
+          key :type, :integer
+          key :description, 'X axis domain minimum (for Clusters)'
+        end
+        property :x_axis_max do
+          key :type, :integer
+          key :description, 'X axis domain maximum (for Clusters)'
+        end
+        property :y_axis_min do
+          key :type, :integer
+          key :description, 'Y axis domain minimum (for Clusters)'
+        end
+        property :y_axis_max do
+          key :type, :integer
+          key :description, 'Y axis domain maximum (for Clusters)'
+        end
+        property :z_axis_min do
+          key :type, :integer
+          key :description, 'Z axis domain minimum (for Clusters)'
+        end
+        property :z_axis_max do
+          key :type, :integer
+          key :description, 'Z axis domain maximum (for Clusters)'
+        end
+        property :options do
+          key :type, :object
+          key :default, {}
+          key :description, 'Key/Value storage of extra file options'
         end
       end
     end

@@ -111,9 +111,7 @@ module Api
           ]
           key :summary, 'Create a StudyFileBundle'
           key :description, 'Creates and returns a single StudyFileBundle'
-          key :operationId, 'create_study_path'
-          key :consumes, ['application/x-www-form-urlencoded']
-          key :produces, ['application/json']
+          key :operationId, 'create_study_study_file_bundle_path'
           parameter do
             key :name, :study_id
             key :in, :path

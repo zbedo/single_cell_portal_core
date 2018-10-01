@@ -92,8 +92,6 @@ module Api
           key :summary, 'Create a Study'
           key :description, 'Creates and returns a single Study'
           key :operationId, 'create_study_path'
-          key :consumes, ['application/x-www-form-urlencoded']
-          key :produces, ['application/json']
           parameter do
             key :name, :study
             key :in, :body
@@ -144,10 +142,8 @@ module Api
               'Studies'
           ]
           key :summary, 'Update a Study'
-          key :description, 'Creates and returns a single Study'
+          key :description, 'Updates and returns a single Study.  FireCloud project/workspace attributes cannot be changed.'
           key :operationId, 'update_study_path'
-          key :consumes, ['application/x-www-form-urlencoded']
-          key :produces, ['application/json']
           parameter do
             key :name, :id
             key :in, :path
@@ -161,7 +157,7 @@ module Api
             key :description, 'Study object'
             key :required, true
             schema do
-              key :'$ref', :StudyInput
+              key :'$ref', :StudyUpdateInput
             end
           end
           response 200 do

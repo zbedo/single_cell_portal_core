@@ -337,23 +337,79 @@ class Study
           key :type, :object
           property :name do
             key :type, :string
+            key :description, 'Name of Study'
+          end
+          property :embargo do
+            key :type, :string
+            key :format, :date
+            key :description, 'Date used for restricting download access to StudyFiles in Study'
           end
           property :description do
             key :type, :string
+            key :description, 'HTML description blob for Study'
           end
           property :firecloud_project do
             key :type, :string
             key :default, FireCloudClient::PORTAL_NAMESPACE
+            key :description, 'FireCloud billing project to which Study firecloud_workspace belongs'
+          end
+          property :firecloud_workspace do
+            key :type, :string
+            key :description, 'FireCloud workspace that corresponds to this Study'
           end
           property :use_existing_workspace do
             key :type, :boolean
             key :default, false
+            key :description, 'Boolean indication whether this Study used an existing FireCloud workspace when created'
           end
-          property :firecloud_workspace do
+          key :required, [:name]
+        end
+      end
+    end
+  end
+
+  swagger_schema :StudyUpdateInput do
+    allOf do
+      schema do
+        property :study do
+          key :type, :object
+          property :name do
             key :type, :string
+          end
+          property :description do
+            key :type, :string
+          end
+          property :embargo do
+            key :type, :string
+            key :format, :date
+            key :description, 'Date used for restricting download access to StudyFiles in Study'
+          end
+          property :cell_count do
+            key :type, :number
+            key :format, :integer
+            key :default, 0
+            key :description, 'Number of unique cell names in Study (set from Metadata StudyFile)'
+          end
+          property :gene_count do
+            key :type, :number
+            key :format, :integer
+            key :default, 0
+            key :description, 'Number of unique gene names in Study (set from Expression Matrix or 10X Genes File)'
+          end
+          property :view_order do
+            key :type, :number
+            key :format, :float
+            key :default, 100.0
+            key :description, 'Number used to control sort order in which Studies are returned when searching/browsing'
+          end
+          property :default_options do
+            key :type, :object
+            key :default, {}
+            key :description, 'Key/Value storage of additional options'
           end
           property :branding_group_id do
             key :type, :string
+            key :description, 'ID of branding group object to assign Study to (if present)'
           end
           key :required, [:name]
         end
