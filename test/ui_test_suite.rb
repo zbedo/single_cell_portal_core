@@ -272,7 +272,7 @@ class UiTestSuite < Test::Unit::TestCase
     fastq_form = @driver.find_element(:class, 'new-fastq-form')
     species_dropdown = fastq_form.find_element(:id, 'study_file_taxon_id')
     opts = species_dropdown.find_elements(:tag_name, 'option')
-    available_species = opts.delete_if {|opt| opt['value'] == ''}
+    available_species = opts.delete_if {|opt| opt['value'] == '' || opt.text.downcase == 'human' }
     if available_species.any?
       species_dropdown.send_key(available_species.sample.text)
     end
@@ -291,7 +291,7 @@ class UiTestSuite < Test::Unit::TestCase
     new_fastq_form = @driver.find_element(class: 'new-fastq-form')
     species_dropdown = new_fastq_form.find_element(:id, 'study_file_taxon_id')
     opts = species_dropdown.find_elements(:tag_name, 'option')
-    available_species = opts.delete_if {|opt| opt['value'] == ''}
+    available_species = opts.delete_if {|opt| opt['value'] == '' || opt.text.downcase == 'human' }
     if available_species.any?
       species_dropdown.send_key(available_species.sample.text)
     end
@@ -4833,6 +4833,7 @@ class UiTestSuite < Test::Unit::TestCase
   # This test depends on a workspace already existing in FireCloud called development-infercnv-sync-test
   # if this study has been deleted, this test will fail until the workspace is re-created with at least
   # 3 default files for expression, metadata, one cluster, and a file for Ideogram.js annotations
+  # Also requires an administrator to register a taxon of 'human' with at least one genome assembly
   test 'front-end: workflows: load from gcs' do
     puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
@@ -4934,21 +4935,18 @@ class UiTestSuite < Test::Unit::TestCase
     opt = opts.detect {|opt| opt.text == 'Analysis Output'}
     opt.click
 
-    puts "Selected 'Analysis Output' file type in this sync form"
-    puts "Waiting for element with ID 'study_file_taxon_id'"
     @wait.until {element_present?(:id, 'study_file_taxon_id')}
-    puts "Found element with ID 'study_file_taxon_id'"
     species_dropdown = ideogram_annots_form.find_element(:id, 'study_file_taxon_id')
     @wait.until {species_dropdown.displayed?}
     opts = species_dropdown.find_elements(:tag_name, 'option')
-    available_species = opts.delete_if {|opt| opt['value'] == ''}
+    available_species = opts.keep_if {|opt| opt.text.downcase == 'human'} # need human data
     if available_species.any?
       species_dropdown.send_key(available_species.sample.text)
     end
-
+    sleep(2) # this is required as the assemblies dropdown is about to get re-rendered, so we don't want a stale reference
     assemblies_dropdown = ideogram_annots_form.find_element(:id, 'study_file_genome_assembly_id')
-    opts = assemblies_dropdown.find_elements(:tag_name, 'option')
-    available_assemblies = opts.delete_if {|opt| opt['value'] == ''}
+    assembly_opts = assemblies_dropdown.find_elements(:tag_name, 'option')
+    available_assemblies = assembly_opts.delete_if {|opt| opt['value'] == ''}
     if available_assemblies.any?
       assemblies_dropdown.send_key(available_assemblies.sample.text)
     end
@@ -4963,6 +4961,7 @@ class UiTestSuite < Test::Unit::TestCase
     wait_until_page_loads(sync_study_path)
     open_ui_tab('study-visualize')
     wait_for_render(:id, 'plots-tab')
+    @wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')} # this also gives
     # open the 'genome' tab
     open_ui_tab('genome-tab')
     wait_for_render(:id, 'ideogram-container')
@@ -5045,7 +5044,7 @@ class UiTestSuite < Test::Unit::TestCase
           file_type.send_keys('BAM')
           species_dropdown = form.find_element(:id, 'study_file_taxon_id')
           opts = species_dropdown.find_elements(:tag_name, 'option')
-          available_species = opts.delete_if {|opt| opt['value'] == ''}
+          available_species = opts.delete_if {|opt| opt['value'] == '' || opt.text.downcase == 'human'}
           if available_species.any?
             species_dropdown.send_key(available_species.sample.text)
           end
