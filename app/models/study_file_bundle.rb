@@ -26,7 +26,6 @@ class StudyFileBundle
       }
   }
   REQUIRED_ATTRIBUTES = %w(bundle_type original_file_list)
-  TEMP_FILENAME_BASE = 'BUNDLE_PLACEHOLDER_'
 
   swagger_schema :StudyFileBundle do
     key :required, [:bundle_type, :original_file_list]
@@ -112,7 +111,6 @@ class StudyFileBundle
   validates_presence_of :bundle_type, :original_file_list
   validates_inclusion_of :bundle_type, in: BUNDLE_TYPES
   validate :validate_file_list_contents, on: :create
-  validate :validate_bundle_by_type
   after_validation :initialize_study_file_associations, on: :create
 
   before_destroy :remove_bundle_associations
@@ -146,12 +144,28 @@ class StudyFileBundle
 
   # determine if this is a completed bundle
   def completed?
-    self.study_files.each do |study_file|
-      if study_file.upload_file_name.starts_with? TEMP_FILENAME_BASE
-        return false
-      end
+    child_files = self.bundled_files
+    child_file_types = child_files.map {|file| file['file_type']}
+    if child_file_types.size < BUNDLE_REQUIREMENTS[self.bundle_type].size || ( (child_file_types.size == BUNDLE_REQUIREMENTS[self.bundle_type].size) &&
+        (child_file_types & BUNDLE_REQUIREMENTS[self.bundle_type] != child_file_types))
+      return false
     end
-    return true
+    if child_file_types.size > BUNDLE_REQUIREMENTS[self.bundle_type].size
+      return false
+    end
+    true
+  end
+
+  # add files to an existing bundle if they meet requirements
+  def add_files(*files)
+    Rails.logger.info "Adding #{files.map(&:upload_file_name).join(', ')} to bundle #{self.bundle_type}:#{self.id} in #{self.study.name}"
+    files.each do |file|
+      file.update!(study_file_bundle_id: self.id)
+    end
+    additional_files = StudyFileBundle.generate_file_list(*files)
+    self.original_file_list += additional_files
+    self.save!
+    Rails.logger.info "File addition to bundle #{self.bundle_type}:#{self.id} successful"
   end
 
   # helper to format requirements from constants into pretty-printed messages
@@ -159,9 +173,23 @@ class StudyFileBundle
     JSON.pretty_generate(BUNDLE_REQUIREMENTS)
   end
 
-  # helper to generate a bogus filename when creating a new instance of StudyFileBundle
-  def self.temp_bundle_filename
-    "#{TEMP_FILENAME_BASE}#{SecureRandom.uuid}"
+  # helper to generate a file list from input study files
+  def self.generate_file_list(*files)
+    files.map {|file| {'name' => file.upload_file_name, 'file_type' => file.file_type}}
+  end
+
+  def self.initialize_from_parent(study, parent_file)
+    Rails.logger.info "Initializing study file bundle in #{study.name} from #{parent_file.upload_file_name}:#{parent_file.file_type}"
+    possible_bundles = study.study_file_bundles.by_type(parent_file.file_type)
+    study_file_bundle = possible_bundles.detect {|bundle| bundle.parent == parent_file}
+    if study_file_bundle.present?
+      Rails.logger.info "Found existing bundle: #{study_file_bundle.id}"
+      study_file_bundle
+    else
+      Rails.logger.info "No bundle present, initializing new"
+      file_list = [{'name' => parent_file.upload_file_name, 'file_type' => parent_file.file_type}]
+      self.create(study_id: study.id, bundle_type: parent_file.file_type, original_file_list: file_list)
+    end
   end
 
   private
@@ -195,20 +223,6 @@ class StudyFileBundle
     end
     if match_bundle_type.size > 1
       errors.add(:original_file_types, " contains files of incompatible types: #{match_bundle_type.join(', ')}")
-    end
-  end
-
-  # validate that the supplied files are of the correct type for the given bundle
-  def validate_bundle_by_type
-    parent_file = self.original_file_list.detect {|file| file['file_type'] == self.bundle_type}
-    child_files = self.original_file_list.select {|file| file != parent_file}
-    child_file_types = child_files.map {|file| file['file_type']}
-    if child_file_types.size < BUNDLE_REQUIREMENTS[self.bundle_type].size || ( (child_file_types.size == BUNDLE_REQUIREMENTS[self.bundle_type].size) &&
-        (child_file_types & BUNDLE_REQUIREMENTS[self.bundle_type] != child_file_types))
-      errors.add(:original_file_list, " is missing a file of the required type: #{(StudyFileBundle::BUNDLE_REQUIREMENTS[self.bundle_type] - child_file_types).join(', ')}")
-    end
-    if child_file_types.size > BUNDLE_REQUIREMENTS[self.bundle_type].size
-      errors.add(:original_file_list, " has a file of an invalid file type: #{(child_file_types - StudyFileBundle::BUNDLE_REQUIREMENTS[self.bundle_type]).join(', ')}")
     end
   end
 

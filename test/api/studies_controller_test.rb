@@ -80,7 +80,7 @@ class StudiesControllerControllerTest < ActionDispatch::IntegrationTest
         }
     }
     workspace_name = 'test-' + study_attributes[:study][:name].downcase.gsub(/[^a-zA-Z0-9]+/, '-').chomp('-')
-    puts 'creating workspac...'
+    puts 'creating workspace...'
     workspace = Study.firecloud_client.create_workspace(FireCloudClient::PORTAL_NAMESPACE, workspace_name)
     assert workspace_name = workspace['name'], "Did not set workspace name correctly, expected #{workspace_name} but found #{workspace['name']}"
     # update study_attributes
@@ -116,7 +116,7 @@ class StudiesControllerControllerTest < ActionDispatch::IntegrationTest
     sync_study = Study.create!(study_attributes[:study])
     # call sync
     puts 'syncing study...'
-    execute_http_request(:get, sync_api_v1_study_path(id: sync_study.id))
+    execute_http_request(:post, sync_api_v1_study_path(id: sync_study.id))
     assert json['study_shares'].detect {|share| share['email'] == share_user.email}.present?, "Did not create share for #{share_user.email}"
     assert json['study_files']['unsynced'].detect {|file| file['name'] == metadata_filename},
            "Did not find unsynced study file for #{metadata_filename}"

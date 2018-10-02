@@ -4,7 +4,8 @@
   <%= f.hidden_field :_id, value: study_file._id %>
   <%= hidden_field_tag :selector, "#labels_form_#{study_file._id}" %>
   <%= hidden_field_tag :partial, 'initialize_labels_form' %>
-	<div class="form-group row">
+  <%= f.hidden_field :study_file_bundle_id %>
+  <div class="form-group row">
     <div class="col-sm-4">
       <%= f.label :name %><br />
       <%= f.text_field :name, class: 'form-control filename', readonly: true, placeholder: 'Filename is taken from uploaded file...', autocomplete: 'off' %>

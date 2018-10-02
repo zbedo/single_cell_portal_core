@@ -5,7 +5,6 @@
   <%= f.hidden_field :study_file_bundle_id, value: study_file.study_file_bundle_id.to_s %>
   <%= hidden_field_tag :selector, "#bundled_file_form_#{study_file._id}" %>
   <%= hidden_field_tag :partial, 'initialize_bundled_file_form' %>
-  <% study_file.name.starts_with? StudyFileBundle::TEMP_FILENAME_BASE ? study_file.name = '' : nil %>
 	<div class="form-group row">
 		<div class="col-sm-4">
 			<%= f.label :name %><br />

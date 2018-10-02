@@ -4,6 +4,7 @@
   <%= f.hidden_field :_id, value: study_file._id %>
   <%= hidden_field_tag :selector, "#primary_data_form_#{study_file._id}" %>
   <%= hidden_field_tag :partial, 'initialize_primary_data_form' %>
+  <%= f.hidden_field :study_file_bundle_id %>
   <% study_file.options.each do |key, value| %>
     <%= hidden_field_tag "study_file_options_#{key}", value, name: "study_file[options][#{key}]" %>
   <% end %>

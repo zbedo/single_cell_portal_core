@@ -542,30 +542,23 @@ class StudiesController < ApplicationController
   def do_upload
     upload = get_upload
     filename = upload.original_filename
-    if study_file_params[:study_file_bundle_id].present?
-      # we're processing a bundled upload, which means there might be a placeholder file entry we need to find
-      study_file_bundle = StudyFileBundle.find_by(study_id: @study.id, id: study_file_params[:study_file_bundle_id])
-      file_type = study_file_params[:file_type]
-      # ignore if this is the parent file
-      unless file_type == study_file_bundle.bundle_type
-        # find the matching temporary study_file and update it with the correct parameters
-        study_file = study_file_bundle.study_files.detect {|f| f.file_type == file_type}
-        study_file.update(study_file_params)
-        # update the study_file_bundle.original_file_list with the new correct information
-        original_file_list = study_file_bundle.original_file_list.dup
-        original_file_list.delete_if {|file| file['file_type'] == file_type}
-        original_file_list << {'name' => filename, 'file_type' => file_type}
-        study_file_bundle.update(original_file_list: original_file_list)
-      end
-    else
-      study_file = @study.study_files.detect {|sf| sf.upload_file_name == filename}
-    end
+    study_file = @study.study_files.detect {|sf| sf.upload_file_name == filename}
     # If no file has been uploaded or the uploaded file has a different filename,
     # do a new upload from scratch
     if study_file.nil?
       # don't use helper as we're about to mass-assign params
       study_file = @study.study_files.build
       if study_file.update(study_file_params)
+        # we need to add this file to a study_file_bundle if it was assigned
+        if study_file_params[:study_file_bundle_id].present?
+          # we're processing a bundled upload, which means there might be a placeholder file entry we need to find
+          study_file_bundle = StudyFileBundle.find_by(study_id: @study.id, id: study_file_params[:study_file_bundle_id])
+          file_type = study_file.file_type
+          # ignore if this is the parent file
+          unless file_type == study_file_bundle.bundle_type
+            study_file_bundle.add_files(study_file)
+          end
+        end
         render json: { file: { name: study_file.upload_file_name,size: upload.size } } and return
       else
         logger.error "#{Time.now} #{study_file.errors.full_messages.join(", ")}"
@@ -626,45 +619,30 @@ class StudiesController < ApplicationController
     # determine if we need to make a StudyFileBundle.  Cluster files are ignored as they're handled separately
     if StudyFileBundle::BUNDLE_TYPES.include?(@study_file.file_type) && @study_file.file_type != 'Cluster'
       @study_file_bundle = @study_file.study_file_bundle.present? ? @study_file.study_file_bundle : @study.study_file_bundles.build(bundle_type: @study_file.file_type)
+      if @study_file_bundle.new_record?
+        bundle_payload = StudyFileBundle.generate_file_list(@study_file)
+        @study_file_bundle.original_file_list = bundle_payload
+        @study_file_bundle.save! # saving the study_file_bundle will create new placeholder entries for the bundled study_files
+      end
       # check if there are 'bundled' files that need to be added
       case @study_file.file_type
       when 'MM Coordinate Matrix'
-        if @study_file_bundle.new_record?
-          bundle_payload = [
-              {
-                  'name' => @study_file.upload_file_name,
-                  'file_type' => @study_file.file_type
-              },
-              {
-                  'name' => StudyFileBundle.temp_bundle_filename,
-                  'file_type' => '10X Genes File'
-              },
-              {
-                  'name' => StudyFileBundle.temp_bundle_filename,
-                  'file_type' => '10X Barcodes File'
-              }
+        if @study_file_bundle.bundled_files.empty?
+          @bundled_files['expressions-target'] = [
+              @study.study_files.build(file_type: '10X Genes File', study_file_bundle_id: @study_file_bundle.id),
+              @study.study_files.build(file_type: '10X Barcodes File', study_file_bundle_id: @study_file_bundle.id)
           ]
-          @study_file_bundle.original_file_list = bundle_payload
-          @study_file_bundle.save! # saving the study_file_bundle will create new placeholder entries for the bundled study_files
+        else
+          @bundled_files['expressions-target'] = @study_file_bundle.bundled_files.to_a
         end
-        @bundled_files['expressions-target'] = @study_file_bundle.bundled_files.to_a
       when 'BAM'
-        if @study_file_bundle.new_record?
-          bundle_payload = [
-              {
-                  'name' => @study_file.upload_file_name,
-                  'file_type' => @study_file.file_type
-              },
-              {
-                  'name' => StudyFileBundle.temp_bundle_filename,
-                  'file_type' => 'BAM Index'
-              }
+        if @study_file_bundle.bundled_files.empty?
+          @bundled_files['primary-data-target'] = [
+              @study.study_files.build(file_type: 'BAM Index', study_file_bundle_id: @study_file_bundle.id)
           ]
-          @study_file_bundle.original_file_list = bundle_payload
-          @study_file_bundle.save # saving the study_file_bundle will create new placeholder entries for the bundled study_files
-
+        else
+          @bundled_files['primary-data-target'] = @study_file_bundle.bundled_files.to_a
         end
-        @bundled_files['primary-data-target'] = @study_file_bundle.bundled_files.to_a
       end
     end
   end
@@ -679,6 +657,10 @@ class StudiesController < ApplicationController
       @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user)
     when 'Coordinate Labels'
       @study_file.update(parse_status: 'parsing')
+      # we need to create the bundle here as it doesn't exist yet
+      parent_cluster_file = ClusterGroup.find_by(@study_file.options[:cluster_group_id]).study_file
+      file_list = StudyFileBundle.generate_file_list(parent_cluster_file, @study_file)
+      StudyFileBundle.create(study_id: @study.id, bundle_type: parent_cluster_file.file_type, original_file_list: file_list)
       @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user)
     when 'Expression Matrix'
       @study_file.update(parse_status: 'parsing')
@@ -1080,7 +1062,7 @@ class StudiesController < ApplicationController
       # only grab id after update as it will change on new entries
       @form = "#study-file-#{@study_file.id}"
 
-      if @study_file.parseable? && @study_file.able_to_parse?
+      if @study_file.parseable?
         logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
         @message += " You will receive an email at #{current_user.email} when the parse has completed."
         # parse file as appropriate type
@@ -1095,7 +1077,12 @@ class StudiesController < ApplicationController
             # we have to cast the study_file ID to a string, otherwise it is a BSON::ObjectID and will not match
             barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => @study_file.id.to_s)
             genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => @study_file.id.to_s)
+            # create a study_file_bundle if it doesn't already exist
+            @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, @study_file)
             if barcodes.present? && genes.present?
+              if !@study_file_bundle.completed?
+                @study_file_bundle.add_files(genes, barcodes)
+              end
               @study_file.update(parse_status: 'parsing')
               genes.update(parse_status: 'parsing')
               barcodes.update(parse_status: 'parsing')
@@ -1105,7 +1092,11 @@ class StudiesController < ApplicationController
             matrix_id = @study_file.options[:matrix_id]
             matrix = StudyFile.find(matrix_id)
             barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => matrix_id)
+            @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, matrix)
             if barcodes.present? && matrix.present?
+              if !@study_file_bundle.completed?
+                @study_file_bundle.add_files(barcodes, @study_file)
+              end
               @study_file.update(parse_status: 'parsing')
               matrix.update(parse_status: 'parsing')
               barcodes.update(parse_status: 'parsing')
@@ -1115,7 +1106,11 @@ class StudiesController < ApplicationController
             matrix_id = @study_file.options[:matrix_id]
             matrix = StudyFile.find(matrix_id)
             genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => matrix_id)
+            @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, matrix)
             if genes.present? && matrix.present?
+              if !@study_file_bundle.completed?
+                @study_file_bundle.add_files(genes, @study_file)
+              end
               @study_file.update(parse_status: 'parsing')
               genes.update(parse_status: 'parsing')
               matrix.update(parse_status: 'parsing')
@@ -1125,6 +1120,20 @@ class StudiesController < ApplicationController
             @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false})
           when 'Metadata'
             @study.delay.initialize_cell_metadata(@study_file, current_user, {local: false})
+        end
+      elsif @study_file.file_type == 'BAM'
+        # we need to check if we have a study_file_bundle here
+        @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, @study_file)
+        index_file = @study.study_files.find_by('options.bam_id' => @study_file.id.to_s)
+        if index_file.present?
+          @study_file_bundle.add_files(index_file)
+        end
+      elsif @study_file.file_type == 'BAM Index'
+        # add this index to the study_file_bundle, which should already be present
+        bam_file = @study.study_files.find_by(id: @study_file.options[:bam_id])
+        @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, bam_file)
+        if @study_file_bundle.bundled_files.detect {|f| f.upload_file_name == @study_file.upload_file_name}.nil?
+          @study_file_bundle.add_files(@study_file)
         end
       end
       respond_to do |format|
@@ -1161,16 +1170,73 @@ class StudiesController < ApplicationController
         logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
         @message += " You will receive an email at #{current_user.email} when the parse has completed."
         case @study_file.file_type
-          when 'Cluster'
-            @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false, reparse: true})
-          when 'Coordinate Labels'
-            @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user, {local: false, reparse: true})
-          when 'Expression Matrix'
-            @study.delay.initialize_gene_expression_data(@study_file, current_user, {local: false, reparse: true})
-          when 'Gene List'
-            @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false, reparse: true})
-          when 'Metadata'
-            @study.delay.initialize_cell_metadata(@study_file, current_user, {local: false, reparse: true})
+        when 'Cluster'
+          @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false, reparse: true})
+        when 'Coordinate Labels'
+          @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user, {local: false, reparse: true})
+        when 'Expression Matrix'
+          @study.delay.initialize_gene_expression_data(@study_file, current_user, {local: false, reparse: true})
+        when 'MM Coordinate Matrix'
+          # we have to cast the study_file ID to a string, otherwise it is a BSON::ObjectID and will not match
+          barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => @study_file.id.to_s)
+          genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => @study_file.id.to_s)
+          # create a study_file_bundle if it doesn't already exist
+          @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, @study_file)
+          if barcodes.present? && genes.present?
+            if !@study_file_bundle.completed?
+              @study_file_bundle.add_files(genes, barcodes)
+            end
+            @study_file.update(parse_status: 'parsing')
+            genes.update(parse_status: 'parsing')
+            barcodes.update(parse_status: 'parsing')
+            ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, @study_file, genes, barcodes, {reparse: true})
+          end
+        when '10X Genes File'
+          matrix_id = @study_file.options[:matrix_id]
+          matrix = StudyFile.find(matrix_id)
+          barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => matrix_id)
+          @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, matrix)
+          if barcodes.present? && matrix.present?
+            if !@study_file_bundle.completed?
+              @study_file_bundle.add_files(barcodes, @study_file)
+            end
+            @study_file.update(parse_status: 'parsing')
+            matrix.update(parse_status: 'parsing')
+            barcodes.update(parse_status: 'parsing')
+            ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, @study_file, barcodes, {reparse: true})
+          end
+        when '10X Barcodes File'
+          matrix_id = @study_file.options[:matrix_id]
+          matrix = StudyFile.find(matrix_id)
+          genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => matrix_id)
+          @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, matrix)
+          if genes.present? && matrix.present?
+            if !@study_file_bundle.completed?
+              @study_file_bundle.add_files(genes, @study_file)
+            end
+            @study_file.update(parse_status: 'parsing')
+            genes.update(parse_status: 'parsing')
+            matrix.update(parse_status: 'parsing')
+            ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, genes, @study_file, {reparse: true})
+          end
+        when 'Gene List'
+          @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false, reparse: true})
+        when 'Metadata'
+          @study.delay.initialize_cell_metadata(@study_file, current_user, {local: false, reparse: true})
+        end
+      elsif @study_file.file_type == 'BAM'
+        # we need to check if we have a study_file_bundle here
+        @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, @study_file)
+        index_file = @study.study_files.find_by('options.bam_id' => @study_file.id.to_s)
+        if index_file.present?
+          @study_file_bundle.add_files(index_file)
+        end
+      elsif @study_file.file_type == 'BAM Index'
+        # add this index to the study_file_bundle, which should already be present
+        bam_file = @study.study_files.find_by(id: @study_file.options[:bam_id])
+        @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, bam_file)
+        if @study_file_bundle.bundled_files.detect {|f| f.upload_file_name == @study_file.upload_file_name}.nil?
+          @study_file_bundle.add_files(@study_file)
         end
       end
 

@@ -5,7 +5,8 @@
   <%= hidden_field_tag :selector, "#ordinations_form_#{study_file._id}" %>
   <%= hidden_field_tag :partial, 'initialize_ordinations_form' %>
   <%= hidden_field_tag :filename_to_upload, '', class: 'filename-to-upload' %>
-	<div class="form-group row">
+  <%= f.hidden_field :study_file_bundle_id %>
+  <div class="form-group row">
 		<div class="col-sm-4">
 			<%= f.label :name %><br />
 			<%= f.text_field :name, class: 'form-control filename cluster-name', placeholder: 'Please provide a name for this group of ordinations...', autocomplete: 'off' %>
