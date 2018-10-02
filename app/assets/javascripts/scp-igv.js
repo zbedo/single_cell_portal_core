@@ -39,7 +39,6 @@ $(document).on('click', '.bam-browse-genome', function(e) {
   $('#genome-tab-nav > a').click();
 });
 
-
 $(document).on('click', '#genome-tab-nav', function (e) {
   window.location.hash = '#genome-tab';
 
@@ -121,6 +120,10 @@ igv.GenomeUtils.getKnownGenomes = function () {
   })
 };
 
+function igvIsDisplayed() {
+  return $('#igvRootDiv').length === 1;
+}
+
 /**
  * Instantiates and renders igv.js widget on the page
  */
@@ -128,10 +131,14 @@ function initializeIgv() {
   var igvContainer, igvOptions, tracks, genome, genesTrack, bamTracks,
     genesTrackName, genes, locus;
 
-  // Bail if already initialized or not signed in
-  if (hasDisplayedIgv || accessToken === null) return;
+  // Bail if already displayed or not signed in
+  if (igvIsDisplayed() || accessToken === null) return;
 
-  bamsToViewInIgv.push(bamAndBaiFiles[0]); // show first BAM by default
+  delete igv.browser;
+
+  if (bamsToViewInIgv.includes(bamAndBaiFiles[0]) === false) {
+    bamsToViewInIgv.push(bamAndBaiFiles[0]);
+  }
 
   igvContainer = document.getElementById('igv-container');
 

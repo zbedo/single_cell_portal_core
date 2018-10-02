@@ -25,9 +25,3 @@ See partials referenced below and scp-igv.js for larger bodies of code.
   </script>
   <%= render partial: '/site/genome/igv' %>
 <% end %>
-
-<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
-  if (hasDisplayedIgv === true) {
-    $('#genome-tab-nav').css('display', ''); // Show 'Genome' tab
-  }
-</script>
