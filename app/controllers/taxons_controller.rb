@@ -1,5 +1,5 @@
 class TaxonsController < ApplicationController
-  before_action :set_taxon, except: [:index, :new, :create, :download_genome_annotation]
+  before_action :set_taxon, except: [:index, :new, :create, :download_genome_annotation, :upload_species_list]
   before_action do
     authenticate_user!
     authenticate_admin
@@ -73,6 +73,18 @@ class TaxonsController < ApplicationController
       redirect_to annotation_link and return
     else
       redirect_to request.referrer, alert: "Unable to generate a public link for '#{@taxon.genome_annotation_link}'.  Please try again."
+    end
+  end
+
+  # upload a file of species/assemblies to auto-populate
+  def upload_species_list
+    begin
+      species_upload = params[:upload]
+      new_records = Taxon.parse_from_file(species_upload, current_user)
+      redirect_to taxons_path, notice: "Upload successful - new species added: #{new_records[:new_species]}, new assemblies added: #{new_records[:new_assemblies]}"
+    rescue => e
+      Rails.logger.error "Error parsing uploaded species file: #{e.message}"
+      redirect_to taxons_path, alert: "An error occurred while parsing the uploaded file: #{e.message}"
     end
   end
 

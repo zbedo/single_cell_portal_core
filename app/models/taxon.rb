@@ -119,6 +119,42 @@ class Taxon
     "#{self.common_name}"
   end
 
+  # parser to auto-add taxons, and assemblies from an uploaded file, returning number of new entities
+  def self.parse_from_file(tempfile_upload, user)
+    file = File.open(tempfile_upload.tempfile.path)
+    num_species = 0
+    num_assemblies = 0
+    headers = file.readline.split("\t").map(&:strip)
+    if headers.first.starts_with?('#')
+      headers.first.gsub!(/#\s/, '') # remove hash sign if present
+    end
+    common_name_idx = headers.index('common_name')
+    scientific_name_idx = headers.index('scientific_name')
+    taxid_idx = headers.index('taxid')
+    assembly_name_idx = headers.index('assembly_name')
+    release_date_idx = headers.index('release_date')
+    while !file.eof?
+      vals = file.readline.split("\t").map(&:strip)
+      # check if all we're adding is another assembly
+      taxon = Taxon.find_or_create_by(common_name: vals[common_name_idx])
+      if taxon.new_record?
+        taxon.common_name = vals[common_name_idx]
+        taxon.scientific_name = vals[scientific_name_idx]
+        taxon.ncbi_taxid = vals[taxid_idx]
+        taxon.user = user
+        taxon.notes = "Uploaded from #{tempfile_upload.original_filename} on #{Date.today}"
+        taxon.save!
+        num_species += 1
+      end
+      assembly = taxon.genome_assemblies.build
+      assembly.name = vals[assembly_name_idx]
+      assembly.release_date = vals[release_date_idx]
+      assembly.save!
+      num_assemblies += 1
+    end
+    {new_species: num_species, new_assemblies: num_assemblies}
+  end
+
   private
 
   def remove_study_file_associations

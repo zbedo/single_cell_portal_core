@@ -50,6 +50,7 @@ Rails.application.routes.draw do
 
     resources :taxons, path: 'species'
     get 'species/:id/download_genome_annotation', to: 'taxons#download_genome_annotation', as: :download_genome_annotation
+    post 'species/upload/from_file', to: 'taxons#upload_species_list', as: :upload_species_list
 
     # branding groups
     resources :branding_groups
