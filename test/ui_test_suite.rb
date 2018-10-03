@@ -4854,12 +4854,12 @@ class UiTestSuite < Test::Unit::TestCase
     share.click
     share_email = study_form.find_element(:class, 'share-email')
     share_email.send_keys($share_email)
-
     # save study
     save_study = @driver.find_element(:id, 'save-study')
     save_study.click
     @wait.until {element_present?(:id, 'unsynced-study-files')}
     close_modal('message_modal')
+    puts 'Created Load from GCS... study'
 
     # sync each file
     study_file_forms = @driver.find_elements(:class, 'unsynced-study-file')
@@ -4908,15 +4908,18 @@ class UiTestSuite < Test::Unit::TestCase
     open_ui_tab('study-analysis')
     wait_for_render(:id, 'submissions-table')
 
+    # Go to Sync Submission Outputs page
     submissions_table = @driver.find_element(:id, 'submissions-table')
     submissions = submissions_table.find_element(:tag_name, 'tbody').find_elements(:tag_name, 'tr')
     completed_submission = submissions.find {|sub|
       sub.find_element(:class, "submission-state").text == 'Done' &&
           sub.find_element(:class, "submission-status").text == 'Succeeded'
     }
-
     sync_btn = completed_submission.find_element(:class, 'sync-submission-outputs')
     sync_btn.click
+    puts "Went to Sync Submission Outputs page"
+
+    # Sync annotation data for Ideogram.js
     wait_for_render(:class, 'unsynced-study-file')
     study_file_forms = @driver.find_elements(:class, 'unsynced-study-file')
     ideogram_annots_form = nil
@@ -4927,14 +4930,10 @@ class UiTestSuite < Test::Unit::TestCase
         ideogram_annots_form = form
       end
     end
-
-    # file_type = form.find_element(:id, 'study_file_file_type')
-    # file_type.send_keys('Analysis Output')
     dropdown = ideogram_annots_form.find_element(:id, 'study_file_file_type')
     opts = dropdown.find_elements(:tag_name, 'option')
     opt = opts.detect {|opt| opt.text == 'Analysis Output'}
     opt.click
-
     @wait.until {element_present?(:id, 'study_file_taxon_id')}
     species_dropdown = ideogram_annots_form.find_element(:id, 'study_file_taxon_id')
     @wait.until {species_dropdown.displayed?}
@@ -4950,13 +4949,12 @@ class UiTestSuite < Test::Unit::TestCase
     if available_assemblies.any?
       assemblies_dropdown.send_key(available_assemblies.sample.text)
     end
-
     sync_button = ideogram_annots_form.find_element(:class, 'save-study-file')
     sync_button.click
     close_modal('sync-notice-modal')
+    puts "Synced annotation data for Ideogram.js"
 
-
-    # now make sure we're able to load Ideogram
+    # Ensure we can load Ideogram and render its annotations
     @driver.get(sync_study_path)
     wait_until_page_loads(sync_study_path)
     open_ui_tab('study-visualize')
@@ -4967,18 +4965,21 @@ class UiTestSuite < Test::Unit::TestCase
     wait_for_render(:id, 'ideogram-container')
     user_ideogram = @driver.execute_script("return $('#_ideogram .annot').length > 0")
     assert user_ideogram, "Ideogram did not render using user token: '$('#_ideogram .annot').length > 0' returned #{user_ideogram}"
+    puts "Ensured we can load Ideogram and render its annotations"
 
-    # now log out and validate that we can use the read-only service account to load results
+    # Log out and validate that we can *not* use the read-only service account to load results (SCP-1158)
     logout_from_portal
+    puts "Logged out"
     @driver.get(sync_study_path)
     wait_until_page_loads(sync_study_path)
     open_ui_tab('study-visualize')
     wait_for_render(:id, 'plots-tab')
-    # open the 'genome' tab
-    open_ui_tab('genome-tab')
-    wait_for_render(:id, 'ideogram-container')
-    public_ideogram = @driver.execute_script("return $('#_ideogram .annot').length > 0")
-    assert public_ideogram, "Ideogram did not render using service account token: '$('#_ideogram .annot').length > 0' returned #{public_ideogram}"
+
+    # Click 'Genome' tab and verify that anonymous user is brought to sign-in page
+    tab = @driver.find_element(:id, "genome-tab-nav")
+    tab.click
+    @wait.until { @driver.current_url.include?('https://accounts.google.com/signin') }
+    puts "Verified no public access to genome visualization"
 
     # clean up
     login_as_other($test_email, $test_email_password)
