@@ -1,0 +1,1 @@
+json.partial! 'api/v1/taxons/taxon', locals: {taxon: @taxon}

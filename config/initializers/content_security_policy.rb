@@ -28,10 +28,10 @@ SecureHeaders::Configuration.default do |config|
       form_action: %w('self'),
       connect_src: %w('self' https://www.google-analytics.com https://unpkg.com https://www.googleapis.com https://s3.amazonaws.com
                       https://portals.broadinstitute.org https://data.broadinstitute.org),
-      img_src: %w('self' data: https://www.google-analytics.com),
+      img_src: %w('self' data: https://www.google-analytics.com https://online.swagger.io),
       manifest_src: %w('self'),
       object_src: %w('none'),
-      script_src: %w('self' blob: 'unsafe-eval' 'strict-dynamic' 'unsafe-inline' https://cdn.plot.ly https://cdn.datatables.net
+      script_src: %w('self' blob: 'unsafe-eval' 'unsafe-inline' 'strict-dynamic' https://cdn.plot.ly https://cdn.datatables.net
                       https://www.google-analytics.com https://cdnjs.cloudflare.com https://maxcdn.bootstrapcdn.com https://use.fontawesome.com),
       style_src: %w('self' https://maxcdn.bootstrapcdn.com 'unsafe-inline'),
       upgrade_insecure_requests: true, # see https://www.w3.org/TR/upgrade-insecure-requests/

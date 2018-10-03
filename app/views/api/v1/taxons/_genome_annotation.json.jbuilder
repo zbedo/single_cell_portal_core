@@ -1,0 +1,1 @@
+json.(genome_annotation, :id, :name, :link, :release_date)

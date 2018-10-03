@@ -6,7 +6,7 @@
 #   cities = City.create([{ name: 'Chicago' }, { name: 'Copenhagen' }])
 #   Mayor.create(name: 'Emanuel', city: cities.first)
 #
-user = User.create!(email:'fake@fake.gov', password:'password')
+user = User.create!(email:'testing.user@gmail.com', password:'password', api_access_token: 'test-api-token')
 study = Study.create!(name: 'Testing Study', description: '<p>This is the test study.</p>', data_dir: 'test', user_id: user.id)
 expression_file = StudyFile.create!(name: 'expression_matrix.txt', upload_file_name: 'expression_matrix.txt', study_id: study.id,
                                     file_type: 'Expression Matrix', y_axis_label: 'Expression Scores')
@@ -85,3 +85,16 @@ gene2_vals.save!
 gene2_cells = gene_2.data_arrays.build(name: gene_2.cell_key, array_type: 'cells', cluster_name: expression_file.name,
                                        array_index: 1, study_id: study.id, study_file_id: expression_file.id, values: all_cell_array)
 gene2_cells.save!
+
+# API TEST SEEDS
+api_study = Study.create!(name: 'API Test Study', data_dir: 'api_test_study', user_id: user.id, firecloud_project: 'scp',
+                          firecloud_workspace: 'test-api-test-study')
+StudyShare.create!(email: 'fake.email@gmail.com', permission: 'Reviewer', study_id: api_study.id)
+StudyFile.create!(name: 'cluster_example.txt', upload: File.open(Rails.root.join('test', 'test_data', 'cluster_example.txt')),
+                  study_id: api_study.id, file_type: 'Cluster')
+DirectoryListing.create!(name: 'csvs', file_type: 'csv', files: [{name: 'foo.csv', size: 100, generation: '12345'}],
+                         sync_status: true, study_id: api_study.id)
+StudyFileBundle.create!(bundle_type: 'BAM', original_file_list: [{'name' => 'sample_1.bam', 'file_type' => 'BAM'},
+                                                                 {'name' => 'sample_1.bam.bai', 'file_type' => 'BAM Index'}],
+                        study_id: api_study.id)
+User.create!(email:'testing.user.2@gmail.com', password:'someotherpassword', api_access_token: 'test-api-token-2')

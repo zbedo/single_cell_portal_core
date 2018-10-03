@@ -2,6 +2,7 @@
 	<%= render partial: 'study_file_errors', locals: {study_file: study_file} %>
   <%= f.hidden_field :study_id, value: params[:id] %>
   <%= f.hidden_field :_id, value: study_file._id %>
+  <%= f.hidden_field :study_file_bundle_id, value: study_file.study_file_bundle_id.to_s %>
   <%= hidden_field_tag :selector, "#bundled_file_form_#{study_file._id}" %>
   <%= hidden_field_tag :partial, 'initialize_bundled_file_form' %>
 	<div class="form-group row">
@@ -15,18 +16,16 @@
 		</div>
 	</div>
   <div class="form-group row">
-    <%= f.fields_for :options do |opts| %>
-      <% if ['10X Genes File', '10X Barcodes File'].include?(study_file.file_type) %>
-        <div class="col-sm-4">
-          <%= opts.label :matrix_id, 'Associated expression matrix' %><br />
-          <%= opts.select :matrix_id, options_for_select([[study_file.bundle_parent.name, study_file.bundle_parent.id]], f.object.bundle_parent.id), {}, class: 'form-control' %>
-        </div>
-      <% elsif study_file.file_type == 'BAM Index' %>
-        <div class="col-sm-4">
-          <%= opts.label :bam_id, 'Associated BAM file' %><br />
-          <%= opts.select :bam_id, options_for_select([[study_file.bundle_parent.name, study_file.bundle_parent.id]], f.object.bundle_parent.id), {}, class: 'form-control' %>
-        </div>
-      <% end %>
+    <% if ['10X Genes File', '10X Barcodes File'].include?(study_file.file_type) %>
+      <div class="col-sm-4">
+        <%= label_tag :matrix_id, 'Associated expression matrix' %><br />
+        <p class="form-control" disabled="disabled"><%= study_file.bundle_parent.name %></p>
+      </div>
+    <% elsif study_file.file_type == 'BAM Index' %>
+      <div class="col-sm-4">
+        <%= label_tag :bam_id, 'Associated BAM file' %><br />
+        <p class="form-control" disabled="disabled"><%= study_file.bundle_parent.name %></p>
+      </div>
     <% end %>
   </div>
 	<div class="form-group row">
@@ -35,7 +34,7 @@
       <%= f.text_field :file_type, readonly: true, class: 'form-control file-type' %>
     </div>
 		<div class="col-sm-5 upload-field">
-      <% if !study_file.upload_file_name.nil? %>
+      <% if !study_file.upload_file_name.nil? && study_file.upload_file_name !~ /BUNDLE_PLACEHOLDER/ %>
         <p><label>Link to file </label><br /><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></p>
       <% else %>
         <%= f.label :upload, 'Upload Data File' %><br />

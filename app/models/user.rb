@@ -88,6 +88,7 @@ class User
   field :daily_download_quota, type: Integer, default: 0
   field :admin_email_delivery, type: Boolean, default: true
   field :registered_for_firecloud, type: Boolean, default: false
+  field :api_access_token, type: String
 
   ###
   #

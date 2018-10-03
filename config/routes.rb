@@ -1,6 +1,36 @@
 Rails.application.routes.draw do
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
   scope 'single_cell' do
+    # API Routes
+    namespace :api do
+      mount SwaggerUiEngine::Engine, at: '/'
+      namespace :v1 do
+        resources :api_docs, only: :index
+        namespace :schemas do
+          get 'studies'
+          get 'study_files'
+          get 'study_file_bundles'
+          get 'study_shares'
+          get 'directory_listings'
+        end
+        resources :taxons, only: [:index, :show]
+        resources :studies, only: [:index, :show, :create, :update, :destroy] do
+          post 'study_files/bundle', to: 'study_files#bundle', as: :study_files_bundle_files
+          resources :study_files, only: [:index, :show, :create, :update, :destroy] do
+            member do
+              post 'parse', to: 'study_files#parse'
+            end
+          end
+          resources :study_file_bundles, only: [:index, :show, :create, :destroy]
+          resources :study_shares, only: [:index, :show, :create, :update, :destroy]
+          resources :directory_listings, only: [:index, :show, :create, :update, :destroy]
+          member do
+            post 'sync', to: 'studies#sync_study'
+          end
+        end
+      end
+    end
+
     # portal admin actions
     post 'admin/reset_user_download_quotas', to: 'admin_configurations#reset_user_download_quotas', as: :reset_user_download_quotas
     post 'admin/restart_locked_jobs', to: 'admin_configurations#restart_locked_jobs', as: :restart_locked_jobs
@@ -20,6 +50,7 @@ Rails.application.routes.draw do
 
     resources :taxons, path: 'species'
     get 'species/:id/download_genome_annotation', to: 'taxons#download_genome_annotation', as: :download_genome_annotation
+    post 'species/upload/from_file', to: 'taxons#upload_species_list', as: :upload_species_list
 
     # branding groups
     resources :branding_groups

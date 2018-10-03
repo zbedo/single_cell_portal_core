@@ -1,5 +1,5 @@
 class TaxonsController < ApplicationController
-  before_action :set_taxon, except: [:index, :new, :create, :download_genome_annotation]
+  before_action :set_taxon, except: [:index, :new, :create, :download_genome_annotation, :upload_species_list]
   before_action do
     authenticate_user!
     authenticate_admin
@@ -76,6 +76,18 @@ class TaxonsController < ApplicationController
     end
   end
 
+  # upload a file of species/assemblies to auto-populate
+  def upload_species_list
+    begin
+      species_upload = params[:upload]
+      new_records = Taxon.parse_from_file(species_upload, current_user)
+      redirect_to taxons_path, notice: "Upload successful - new species added: #{new_records[:new_species]}, new assemblies added: #{new_records[:new_assemblies]}"
+    rescue => e
+      Rails.logger.error "Error parsing uploaded species file: #{e.message}"
+      redirect_to taxons_path, alert: "An error occurred while parsing the uploaded file: #{e.message}"
+    end
+  end
+
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_taxon
@@ -84,7 +96,7 @@ class TaxonsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def taxon_params
-      params.require(:taxon).permit(:common_name, :scientific_name, :taxon_identifier, :user_id, :notes, :aliases,
+      params.require(:taxon).permit(:common_name, :scientific_name, :ncbi_taxid, :user_id, :notes, :aliases,
                                     genome_assemblies_attributes: [:id, :name, :alias, :release_date, :_destroy,
                                     genome_annotations_attributes: [:id, :name, :link, :index_link, :release_date,
                                     :_destroy]])

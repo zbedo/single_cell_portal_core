@@ -1,0 +1,1 @@
+json.partial! 'api/v1/study_shares/study_share', locals: {study_share: @study_share}

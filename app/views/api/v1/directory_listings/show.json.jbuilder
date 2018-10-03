@@ -1,0 +1,1 @@
+json.partial! 'api/v1/directory_listings/directory_listing', locals: {directory_listing: @directory_listing}

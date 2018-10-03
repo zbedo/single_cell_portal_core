@@ -10,6 +10,7 @@ class Study
   include Mongoid::Document
   include Mongoid::Timestamps
   extend ValidationTools
+  include Swagger::Blocks
 
   ###
   #
@@ -19,6 +20,7 @@ class Study
 
   # prefix for FireCloud workspaces, defaults to blank in production
   WORKSPACE_NAME_PREFIX = Rails.env != 'production' ? Rails.env + '-' : ''
+  REQUIRED_ATTRIBUTES = %w(name)
 
   # instantiate one FireCloudClient to avoid creating too many tokens
   @@firecloud_client = FireCloudClient.new
@@ -77,6 +79,16 @@ class Study
 
     def valid
       where(queued_for_deletion: false, :generation.ne => nil).to_a
+    end
+  end
+
+  has_many :study_file_bundles, dependent: :destroy do
+    def by_type(file_type)
+      if file_type.is_a?(Array)
+        where(:bundle_type.in => file_type)
+      else
+        where(bundle_type: file_type)
+      end
     end
   end
 
@@ -206,6 +218,205 @@ class Study
 
   accepts_nested_attributes_for :study_files, allow_destroy: true
   accepts_nested_attributes_for :study_shares, allow_destroy: true, reject_if: proc { |attributes| attributes['email'].blank? }
+
+  ##
+  #
+  # SWAGGER DEFINITIONS
+  #
+  ##
+
+  swagger_schema :Study do
+    key :required, [:name]
+    key :name, 'Study'
+    property :id do
+      key :type, :string
+    end
+    property :name do
+      key :type, :string
+      key :description, 'Name of Study'
+    end
+    property :embargo do
+      key :type, :string
+      key :format, :date
+      key :description, 'Date used for restricting download access to StudyFiles in Study'
+    end
+    property :description do
+      key :type, :string
+      key :description, 'HTML description blob for Study'
+    end
+    property :url_safe_name do
+      key :type, :string
+      key :description, 'URL-encoded version of Study name'
+    end
+    property :firecloud_project do
+      key :type, :string
+      key :default, FireCloudClient::PORTAL_NAMESPACE
+      key :description, 'FireCloud billing project to which Study firecloud_workspace belongs'
+    end
+    property :firecloud_workspace do
+      key :type, :string
+      key :description, 'FireCloud workspace that corresponds to this Study'
+    end
+    property :use_existing_workspace do
+      key :type, :boolean
+      key :default, false
+      key :description, 'Boolean indication whether this Study used an existing FireCloud workspace when created'
+    end
+    property :bucket_id do
+      key :type, :string
+      key :description, 'GCS Bucket name where uploaded files are stored'
+    end
+    property :data_dir do
+      key :type, :string
+      key :description, 'Local directory where uploaded files are localized to (for parsing)'
+    end
+    property :public do
+      key :type, :boolean
+      key :default, true
+      key :description, 'Boolean indication of whether Study is publicly readable'
+    end
+    property :queued_for_deletion do
+      key :type, :boolean
+      key :default, false
+      key :description, 'Boolean indication whether Study is queued for garbage collection'
+    end
+    property :branding_group_id do
+      key :type, :string
+      key :description, 'ID of BrandingGroup to which Study belongs, if present'
+    end
+    property :initialized do
+      key :type, :boolean
+      key :default, false
+      key :description, 'Boolean indication of whether Study has at least one of all required StudyFile types parsed to enable visualizations (Expression Matrix, Metadata, Cluster)'
+    end
+    property :view_count do
+      key :type, :number
+      key :format, :integer
+      key :default, 0
+      key :description, 'Number of times Study has been viewed in the portal'
+    end
+    property :cell_count do
+      key :type, :number
+      key :format, :integer
+      key :default, 0
+      key :description, 'Number of unique cell names in Study (set from Metadata StudyFile)'
+    end
+    property :gene_count do
+      key :type, :number
+      key :format, :integer
+      key :default, 0
+      key :description, 'Number of unique gene names in Study (set from Expression Matrix or 10X Genes File)'
+    end
+    property :view_order do
+      key :type, :number
+      key :format, :float
+      key :default, 100.0
+      key :description, 'Number used to control sort order in which Studies are returned when searching/browsing'
+    end
+    property :default_options do
+      key :type, :object
+      key :default, {}
+      key :description, 'Key/Value storage of additional options'
+    end
+    property :created_at do
+      key :type, :string
+      key :format, :date_time
+      key :description, 'Creation timestamp'
+    end
+    property :updated_at do
+      key :type, :string
+      key :format, :date_time
+      key :description, 'Last update timestamp'
+    end
+  end
+
+  swagger_schema :StudyInput do
+    allOf do
+      schema do
+        property :study do
+          key :type, :object
+          property :name do
+            key :type, :string
+            key :description, 'Name of Study'
+          end
+          property :embargo do
+            key :type, :string
+            key :format, :date
+            key :description, 'Date used for restricting download access to StudyFiles in Study'
+          end
+          property :description do
+            key :type, :string
+            key :description, 'HTML description blob for Study'
+          end
+          property :firecloud_project do
+            key :type, :string
+            key :default, FireCloudClient::PORTAL_NAMESPACE
+            key :description, 'FireCloud billing project to which Study firecloud_workspace belongs'
+          end
+          property :firecloud_workspace do
+            key :type, :string
+            key :description, 'FireCloud workspace that corresponds to this Study'
+          end
+          property :use_existing_workspace do
+            key :type, :boolean
+            key :default, false
+            key :description, 'Boolean indication whether this Study used an existing FireCloud workspace when created'
+          end
+          key :required, [:name]
+        end
+      end
+    end
+  end
+
+  swagger_schema :StudyUpdateInput do
+    allOf do
+      schema do
+        property :study do
+          key :type, :object
+          property :name do
+            key :type, :string
+          end
+          property :description do
+            key :type, :string
+          end
+          property :embargo do
+            key :type, :string
+            key :format, :date
+            key :description, 'Date used for restricting download access to StudyFiles in Study'
+          end
+          property :cell_count do
+            key :type, :number
+            key :format, :integer
+            key :default, 0
+            key :description, 'Number of unique cell names in Study (set from Metadata StudyFile)'
+          end
+          property :gene_count do
+            key :type, :number
+            key :format, :integer
+            key :default, 0
+            key :description, 'Number of unique gene names in Study (set from Expression Matrix or 10X Genes File)'
+          end
+          property :view_order do
+            key :type, :number
+            key :format, :float
+            key :default, 100.0
+            key :description, 'Number used to control sort order in which Studies are returned when searching/browsing'
+          end
+          property :default_options do
+            key :type, :object
+            key :default, {}
+            key :description, 'Key/Value storage of additional options'
+          end
+          property :branding_group_id do
+            key :type, :string
+            key :description, 'ID of branding group object to assign Study to (if present)'
+          end
+          key :required, [:name]
+        end
+      end
+    end
+  end
+
 
   ###
   #
@@ -773,6 +984,7 @@ class Study
       UserAnnotationShare.where(study_id: study.id).delete_all
       UserDataArray.where(study_id: study.id).delete_all
       AnalysisMetadatum.where(study_id: study.id).delete_all
+      StudyFileBundle.where(study_id: study.id).delete_all
       # now destroy study to ensure everything is removed
       study.destroy
       Rails.logger.info "#{Time.now}: delete of #{study.name} completed"
@@ -986,11 +1198,11 @@ class Study
       @shift_headers = true
 
       # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
-      if !opts[:local]
+      if !opts[:local] || !expression_file.is_local?
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, expression_file.remote_location, self.data_store_path, verify: :none)
-        @file_location = File.join(self.data_store_path, expression_file.remote_location)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, expression_file.bucket_location, self.data_store_path, verify: :none)
+        @file_location = File.join(self.data_store_path, expression_file.bucket_location)
       end
 
       # next, check if this is a re-parse job, in which case we need to remove all existing entries first
@@ -1205,7 +1417,7 @@ class Study
       Rails.logger.info "#{Time.now}: determining upload status of expression file: #{expression_file.upload_file_name}:#{expression_file.id}"
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       # rather than relying on opts[:local], actually check if the file is already in the GCS bucket
-      destination = expression_file.remote_location.blank? ? expression_file.upload_file_name : expression_file.remote_location
+      destination = expression_file.bucket_location
       remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
       if remote.nil?
         begin
@@ -1249,11 +1461,12 @@ class Study
     begin
       @file_location = ordinations_file.upload.path
       # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
-      if !opts[:local]
+      if !opts[:local] || !ordinations_file.is_local?
         # make sure data dir exists first
+        Rails.logger.info "Localizing file: #{ordinations_file.upload_file_name} in #{self.data_store_path}"
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, ordinations_file.remote_location, self.data_store_path, verify: :none)
-        @file_location = File.join(self.data_store_path, ordinations_file.remote_location)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, ordinations_file.bucket_location, self.data_store_path, verify: :none)
+        @file_location = File.join(self.data_store_path, ordinations_file.bucket_location)
       end
 
       # next, check if this is a re-parse job, in which case we need to remove all existing entries first
@@ -1548,7 +1761,7 @@ class Study
       Rails.logger.info "#{Time.now}: determining upload status of ordinations file: #{ordinations_file.upload_file_name}:#{ordinations_file.id}"
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
-      destination = ordinations_file.remote_location.blank? ? ordinations_file.upload_file_name : ordinations_file.remote_location
+      destination = ordinations_file.bucket_location
       remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
       if remote.nil?
         begin
@@ -1591,11 +1804,11 @@ class Study
     begin
       @file_location = coordinate_file.upload.path
       # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
-      if !opts[:local]
+      if !opts[:local] || !coordinate_file.is_local?
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, coordinate_file.remote_location, self.data_store_path, verify: :none)
-        @file_location = File.join(self.data_store_path, coordinate_file.remote_location)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, coordinate_file.bucket_location, self.data_store_path, verify: :none)
+        @file_location = File.join(self.data_store_path, coordinate_file.bucket_location)
       end
 
       # next, check if this is a re-parse job, in which case we need to remove all existing entries first
@@ -1719,8 +1932,11 @@ class Study
               # of same name & type with array_index incremented by 1
               current_data_array_index = @data_arrays[index].array_index
               data_array = @data_arrays[index]
-              Rails.logger.info "#{Time.now}: Saving full-lenght data array: #{data_array.name}-#{data_array.array_type}-#{data_array.array_index} using #{coordinate_file.upload_file_name}:#{coordinate_file.id} for cluster: #{cluster.name} in #{self.name}; initializing new array index #{current_data_array_index + 1}"
+              Rails.logger.info "#{Time.now}: Saving full-length data array: #{data_array.name}-#{data_array.array_type}-#{data_array.array_index} using #{coordinate_file.upload_file_name}:#{coordinate_file.id} for cluster: #{cluster.name} in #{self.name}; initializing new array index #{current_data_array_index + 1}"
               data_array.save
+              if data_array.array_type == 'labels'
+                @labels_created << data_array
+              end
               new_data_array = cluster.data_arrays.build(name: data_array.name, cluster_name: data_array.cluster_name,
                                                          array_type: data_array.array_type, array_index: current_data_array_index + 1,
                                                          study_file_id: coordinate_file._id, study_id: self.id, values: [])
@@ -1764,7 +1980,7 @@ class Study
       Rails.logger.info "#{Time.now}: determining upload status of coordinate labels file: #{coordinate_file.upload_file_name}:#{coordinate_file.id}"
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
-      destination = coordinate_file.remote_location.blank? ? coordinate_file.upload_file_name : coordinate_file.remote_location
+      destination = coordinate_file.bucket_location
       remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
       if remote.nil?
         begin
@@ -1805,11 +2021,11 @@ class Study
     begin
       @file_location = metadata_file.upload.path
       # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
-      if !opts[:local]
+      if !opts[:local] || !metadata_file.is_local?
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, metadata_file.remote_location, self.data_store_path, verify: :none)
-        @file_location = File.join(self.data_store_path, metadata_file.remote_location)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, metadata_file.bucket_location, self.data_store_path, verify: :none)
+        @file_location = File.join(self.data_store_path, metadata_file.bucket_location)
       end
 
       # next, check if this is a re-parse job, in which case we need to remove all existing entries first
@@ -2036,7 +2252,7 @@ class Study
       Rails.logger.info "#{Time.now}: determining upload status of metadata file: #{metadata_file.upload_file_name}:#{metadata_file.id}"
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
-      destination = metadata_file.remote_location.blank? ? metadata_file.upload_file_name : metadata_file.remote_location
+      destination = metadata_file.bucket_location
       remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
       if remote.nil?
         begin
@@ -2078,11 +2294,11 @@ class Study
     begin
       @file_location = marker_file.upload.path
       # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
-      if !opts[:local]
+      if !opts[:local] || !marker_file.is_local?
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, marker_file.remote_location, self.data_store_path, verify: :none)
-        @file_location = File.join(self.data_store_path, marker_file.remote_location)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, marker_file.bucket_location, self.data_store_path, verify: :none)
+        @file_location = File.join(self.data_store_path, marker_file.bucket_location)
       end
 
       # next, check if this is a re-parse job, in which case we need to remove all existing entries first
@@ -2208,7 +2424,7 @@ class Study
       Rails.logger.info "#{Time.now}: determining upload status of gene list file: #{marker_file.upload_file_name}"
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
-      destination = marker_file.remote_location.blank? ? marker_file.upload_file_name : marker_file.remote_location
+      destination = marker_file.bucket_location
       remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
       if remote.nil?
         begin
@@ -2285,7 +2501,7 @@ class Study
       file.update(upload_file_size: remote_file.size)
       Rails.logger.info "#{Time.now}: Upload of #{file.upload_file_name}:#{file.id} complete, scheduling cleanup job"
       # schedule the upload cleanup job to run in two minutes
-      run_at = 15.seconds.from_now
+      run_at = 2.minutes.from_now
       Delayed::Job.enqueue(UploadCleanupJob.new(file.study, file), run_at: run_at)
       Rails.logger.info "#{Time.now}: cleanup job for #{file.upload_file_name}:#{file.id} scheduled for #{run_at}"
     rescue RuntimeError => e
@@ -2627,6 +2843,6 @@ class Study
   end
 
   def strip_unsafe_characters_from_description
-    self.description = self.description.gsub(ValidationTools::SCRIPT_TAG_REGEX, '')
+    self.description = self.description.to_s.gsub(ValidationTools::SCRIPT_TAG_REGEX, '')
   end
 end

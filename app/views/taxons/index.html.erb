@@ -7,9 +7,10 @@
         <table class="table table-striped" id="species">
           <thead>
             <tr>
-              <th>Added By</th>
               <th>Common Name</th>
               <th>Scientific Name</th>
+              <th>Restricted?</th>
+              <th>NCBI Taxon ID</th>
               <th>Genome Assemblies (Genome Annotations)</th>
               <th>Actions</th>
             </tr>
@@ -17,12 +18,13 @@
           <tbody>
             <% @taxons.each do |taxon| %>
               <tr>
-                <td><%= taxon.user.email %></td>
                 <td><%= taxon.common_name %></td>
                 <td><%= taxon.scientific_name %></td>
+                <td><%= taxon.restricted? ? "<span class='label label-danger'>Restricted</span>".html_safe : "<span class='label label-success'>Unrestricted</span>".html_safe %></td>
+                <td><%= link_to taxon.ncbi_taxid, "https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=#{taxon.ncbi_taxid}", target: :_blank %></td>
                 <td>
                   <% taxon.genome_assemblies.each do |assembly| %>
-                    <%= assembly.name %>&nbsp;
+                    <%= link_to assembly.name, "https://www.ncbi.nlm.nih.gov/assembly/?term=#{assembly.name}", target: :_blank %>&nbsp;
                     <% assembly.genome_annotations.each do |annotation| %>
                       <%= link_to "#{annotation.display_name} <i class='fas fa-download'></i>".html_safe, download_genome_annotation_path(id: annotation.id), class: 'btn btn-xs btn-warning' %>
                     <% end %>
@@ -39,7 +41,23 @@
         </table>
       </div>
     </div>
-    <p><%= link_to "Register a new Species", new_taxon_path, class: 'btn btn-lg btn-success' %></p>
+    <div class="form-group row">
+      <div class="col-sm-2">
+        <%= link_to "<i class='fas fa-plus'></i> Manually Register Species".html_safe, new_taxon_path, class: 'btn btn-success' %>
+      </div>
+      <div class="col-sm-4">
+        <%= form_tag(upload_species_list_path, id: 'upload-species-list-form', multipart: true) do %>
+          <div class="input-group">
+            <span class="input-group-btn">
+              <button type="submit" class="btn btn-primary" id="submit-species-list-form">
+                <i class="fas fa-upload"></i> Upload Species List
+              </button>
+            </span>
+            <%= file_field_tag :upload, class: 'form-control', id: 'upload-species-file' %>
+          </div>
+        <% end %>
+      </div>
+    </div>
   </div>
   <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
@@ -51,6 +69,14 @@
               search: "Filter Results By: "
           }
       });
+
+      $('#submit-species-list-form').click(function() {
+          $('#generic-modal-title').html('Parsing Upload... Please Wait');
+          launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+              return true;
+          });
+      });
+
   </script>
 </div>
 
