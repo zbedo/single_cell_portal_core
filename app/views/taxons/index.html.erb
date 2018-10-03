@@ -7,9 +7,9 @@
         <table class="table table-striped" id="species">
           <thead>
             <tr>
-              <th>Added By</th>
               <th>Common Name</th>
               <th>Scientific Name</th>
+              <th>Restricted?</th>
               <th>NCBI Taxon ID</th>
               <th>Genome Assemblies (Genome Annotations)</th>
               <th>Actions</th>
@@ -18,9 +18,9 @@
           <tbody>
             <% @taxons.each do |taxon| %>
               <tr>
-                <td><%= taxon.user.email %></td>
                 <td><%= taxon.common_name %></td>
                 <td><%= taxon.scientific_name %></td>
+                <td><%= taxon.restricted? ? "<i class='fas fa-check text-success'></i>".html_safe : "<i class='fas fa-times text-danger'></i>".html_safe %></td>
                 <td><%= link_to taxon.ncbi_taxid, "https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=#{taxon.ncbi_taxid}", target: :_blank %></td>
                 <td>
                   <% taxon.genome_assemblies.each do |assembly| %>

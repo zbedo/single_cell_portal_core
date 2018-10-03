@@ -73,16 +73,16 @@
 	</div>
 	<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
-      var restrictedTaxons = <%= raw Taxon::RESTRICTED_NCBI_TAXON_IDS %>;
-
       $('#primary_data_form_<%= study_file._id %>').find('.human-data').change(function() {
+          var that = $(this);
           var taxonSelect = $('#primary_data_form_<%= study_file._id %>').find('.taxon-select');
           var selectedTaxon = taxonSelect.val();
           if (selectedTaxon !== '') {
               $.getJSON('<%= get_taxon_path %>?taxon=' + selectedTaxon, function (taxon) {
-                  if (restrictedTaxons.includes(taxon.ncbi_taxid)) {
-                      if ($(this).val() !== 'true') {
+                  if (taxon.restricted) {
+                      if (that.val() !== 'true') {
                           taxonSelect.val('');
+                          $('#primary_data_form_<%= study_file._id %>').find('.genome-assembly-select').empty();
                       }
                   }
               })
@@ -108,24 +108,23 @@
           if (selectedTaxon !== '') {
               $.getJSON('<%= get_taxon_path %>?taxon=' + selectedTaxon, function(taxon) {
                   var humanDataSelect = $('#primary_data_form_<%= study_file.id %>').find('.human-data');
-                  if ( restrictedTaxons.includes(taxon.ncbi_taxid) ) {
+                  if ( taxon.restricted ) {
                       if (humanDataSelect.val() !== 'true') {
                           $('#primary_data_form_<%= study_file.id %>').find('.human-data').val('true');
                       }
-
                   } else {
                       $('#primary_data_form_<%= study_file.id %>').find('.human-data').val('false');
-                      $.getJSON('<%= get_taxon_assemblies_path %>?taxon=' + selectedTaxon, function (data) {
-                              assemblyDropdown.empty();
-                              $(data).each(function (index, assembly) {
-                                  assemblyDropdown.append($('<option />', {
-                                      value: assembly[1],
-                                      text: assembly[0]
-                                  }));
-                              });
-                          }
-                      )
                   }
+                  $.getJSON('<%= get_taxon_assemblies_path %>?taxon=' + selectedTaxon, function (data) {
+                          assemblyDropdown.empty();
+                          $(data).each(function (index, assembly) {
+                              assemblyDropdown.append($('<option />', {
+                                  value: assembly[1],
+                                  text: assembly[0]
+                              }));
+                          });
+                      }
+                  )
                   toggleFastqFields('primary_data_form_<%= study_file._id %>', humanDataSelect.val());
               })
           } else {

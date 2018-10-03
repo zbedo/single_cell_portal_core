@@ -57,8 +57,6 @@
 
   <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
-      var restrictedTaxons = <%= raw Taxon::RESTRICTED_NCBI_TAXON_IDS %>;
-
       $("#delete-directory-<%= directory.id %>").click(function() {
           launchModalSpinner('#delete-modal-spinner', '#delete-modal', function() {
               $.ajax({
@@ -94,7 +92,7 @@
           var selectedTaxon = $(this).val();
           if (selectedTaxon !== '') {
               $.getJSON('<%= get_taxon_path %>?taxon=' + selectedTaxon, function(taxon) {
-                  if ( restrictedTaxons.includes(taxon.ncbi_taxid) ) {
+                  if ( taxon.restricted ) {
                       var humanData = confirm('Does this directory contain ' + taxon.common_name + ' data?\n\nThe Single ' +
                           'Cell Portal does not currently permit storing ' + taxon.common_name + ' sequence data.  ' +
                           'Selecting "OK" will remove this list from your study (source data files will be unaffected).');

@@ -13,6 +13,7 @@ class Taxon
   field :scientific_name, type: String
   field :ncbi_taxid, type: Integer
   field :aliases, type: String
+  field :restricted, type: Boolean, default: false
   field :notes, type: String
 
   validates_presence_of :common_name, :scientific_name, :ncbi_taxid, :notes
@@ -40,6 +41,10 @@ class Taxon
     property :ncbi_taxid do
       key :type, :integer
       key :description, 'NCBI Taxon ID'
+    end
+    property :restricted do
+      key :type, :boolean
+      key :description, 'Restriction on adding primary sequence data from this species to portal'
     end
     property :aliases do
       key :type, :string
@@ -131,6 +136,7 @@ class Taxon
     common_name_idx = headers.index('common_name')
     scientific_name_idx = headers.index('scientific_name')
     taxid_idx = headers.index('taxid')
+    restricted_idx = headers.index('restricted')
     assembly_name_idx = headers.index('assembly_name')
     release_date_idx = headers.index('release_date')
     while !file.eof?
@@ -141,6 +147,7 @@ class Taxon
         taxon.common_name = vals[common_name_idx]
         taxon.scientific_name = vals[scientific_name_idx]
         taxon.ncbi_taxid = vals[taxid_idx]
+        taxon.restricted = vals[restricted_idx].downcase == 'true'
         taxon.user = user
         taxon.notes = "Uploaded from #{tempfile_upload.original_filename} on #{Date.today}"
         taxon.save!
