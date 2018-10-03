@@ -1,5 +1,12 @@
 <h1><%= @taxon.common_name %> <%= @taxon.aliases.present? ? "(#{@taxon.aliases})" : nil %></h1>
-<p class="lead help-block">Added by: <span class="label label-default"><%= @taxon.user.email %></span></p>
+<p class="lead help-block">
+  Added by: <span class="label label-default"><%= @taxon.user.email %></span>
+  <% if @taxon.restricted? %>
+    <span class="label label-danger">Restricted</span>
+  <% else %>
+    <span class="label label-success">Unrestricted</span>
+  <% end %>
+</p>
 <div class="row">
   <div class="col-sm-3">
       <dl>

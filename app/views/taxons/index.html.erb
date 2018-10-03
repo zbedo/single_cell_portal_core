@@ -20,7 +20,7 @@
               <tr>
                 <td><%= taxon.common_name %></td>
                 <td><%= taxon.scientific_name %></td>
-                <td><%= taxon.restricted? ? "<i class='fas fa-check text-success'></i>".html_safe : "<i class='fas fa-times text-danger'></i>".html_safe %></td>
+                <td><%= taxon.restricted? ? "<span class='label label-danger'>Restricted</span>".html_safe : "<span class='label label-success'>Unrestricted</span>".html_safe %></td>
                 <td><%= link_to taxon.ncbi_taxid, "https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=#{taxon.ncbi_taxid}", target: :_blank %></td>
                 <td>
                   <% taxon.genome_assemblies.each do |assembly| %>
