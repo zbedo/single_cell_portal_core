@@ -634,6 +634,15 @@ class StudyFile
     end
   end
 
+  # helper to return public link to genome annotation index, if present
+  def genome_annotation_index_link
+    if self.genome_assembly.present? && self.genome_assembly.current_annotation.present?
+      self.genome_assembly.current_annotation.public_annotation_index_link
+    else
+      nil
+    end
+  end
+
   ###
   #
   # CACHING METHODS
