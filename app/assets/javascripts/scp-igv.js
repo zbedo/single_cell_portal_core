@@ -35,15 +35,19 @@ $(document).on('click', '.bam-browse-genome', function(e) {
     selectedBams[thisBam] = 1;
   }
 
-  $('#genome-tab-nav').css('display', ''); // Show 'Genome' tab
   $('#study-visualize-nav > a').click();
   $('#genome-tab-nav > a').click();
-
-  hasDisplayedIgv = true;
 });
 
 $(document).on('click', '#genome-tab-nav', function (e) {
-  initializeIgv();
+  window.location.hash = '#genome-tab';
+
+  // Go to Google sign-in page, redirect to this view after authenticating.
+  if (accessToken === null) {
+    ga('send', 'event', 'genome', 'sign_in_start');
+    localStorage.setItem('signed-in-via-genome-tab', true);
+    window.location = '/single_cell/users/auth/google_oauth2';
+  }
 });
 
 /**
@@ -116,6 +120,10 @@ igv.GenomeUtils.getKnownGenomes = function () {
   })
 };
 
+function igvIsDisplayed() {
+  return $('#igvRootDiv').length === 1;
+}
+
 /**
  * Instantiates and renders igv.js widget on the page
  */
@@ -123,8 +131,13 @@ function initializeIgv() {
   var igvContainer, igvOptions, tracks, genome, genesTrack, bamTracks,
     genesTrackName, genes, locus;
 
-  if (hasDisplayedIgv) {
-    return;
+  // Bail if already displayed or not signed in
+  if (igvIsDisplayed() || accessToken === null) return;
+
+  delete igv.browser;
+
+  if (bamsToViewInIgv.includes(bamAndBaiFiles[0]) === false) {
+    bamsToViewInIgv.push(bamAndBaiFiles[0]);
   }
 
   igvContainer = document.getElementById('igv-container');
@@ -138,11 +151,45 @@ function initializeIgv() {
   bamTracks = getBamTracks();
   tracks = [genesTrack].concat(bamTracks);
 
-  igvOptions = {
-    genome: genome,
-    locus: locus,
-    tracks: tracks
-  };
+  igvOptions = {genome: genome, locus: locus, tracks: tracks};
 
   igv.createBrowser(igvContainer, igvOptions);
+
+  // Log igv.js initialization in Google Analytics
+  ga('send', 'event', 'igv', 'initialize');
 }
+
+$(document).on('click', '#genome-tab-nav > a', function(event) {
+  initializeIgv();
+});
+
+$(document).ready(function() {
+
+  // Bail if on a page without genome visualization support
+  if (typeof accessToken === 'undefined') return;
+
+  if (window.location.hash === '#genome-tab') {
+    $('#study-visualize-nav > a').click();
+
+    // Reload igv if refreshing, but not upon clicking back button in sign-in
+    if (accessToken !== null) $('#genome-tab-nav > a').click();
+  }
+
+  var signedInViaGenomeTab = localStorage.getItem('signed-in-via-genome-tab');
+  if (signedInViaGenomeTab === 'true') {
+    ga('send', 'event', 'genome', 'sign_in_end_success');
+
+    // Remove usage analysis token
+    localStorage.removeItem('signed-in-via-genome-tab');
+
+    // Load igv
+    $('#study-visualize-nav > a').click();
+    $('#genome-tab-nav > a').click();
+  }
+
+  if (accessToken === null) {
+    $('#genome-tab-nav')
+      .attr('title', 'Click to sign in; only authenticated users can visualize genomes')
+      .attr('data-toogle', 'tooltip');
+  }
+});
