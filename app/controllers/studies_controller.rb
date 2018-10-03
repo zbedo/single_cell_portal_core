@@ -658,7 +658,7 @@ class StudiesController < ApplicationController
     when 'Coordinate Labels'
       @study_file.update(parse_status: 'parsing')
       # we need to create the bundle here as it doesn't exist yet
-      parent_cluster_file = ClusterGroup.find_by(@study_file.options[:cluster_group_id]).study_file
+      parent_cluster_file = ClusterGroup.find_by(id: @study_file.options[:cluster_group_id]).study_file
       file_list = StudyFileBundle.generate_file_list(parent_cluster_file, @study_file)
       StudyFileBundle.create(study_id: @study.id, bundle_type: parent_cluster_file.file_type, original_file_list: file_list)
       @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user)
