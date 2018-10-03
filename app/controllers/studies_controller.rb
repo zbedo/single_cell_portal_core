@@ -874,7 +874,7 @@ class StudiesController < ApplicationController
     # do a test assignment and check for validity; if valid and either Cluster or Gene List, invalidate caches
     @study_file.assign_attributes(study_file_params)
     if ['Cluster', 'Coordinate Labels', 'Gene List'].include?(@study_file.file_type) && @study_file.valid?
-      @study_file.invalidate_cache_by_file_type
+      @study_file.delay.invalidate_cache_by_file_type # run this in the background reduce UI blocking
     end
 
     if @study_file.save
