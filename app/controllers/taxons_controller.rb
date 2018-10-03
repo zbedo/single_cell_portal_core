@@ -98,7 +98,7 @@ class TaxonsController < ApplicationController
     def taxon_params
       params.require(:taxon).permit(:common_name, :scientific_name, :ncbi_taxid, :user_id, :notes, :aliases,
                                     genome_assemblies_attributes: [:id, :name, :alias, :release_date, :_destroy,
-                                    genome_annotations_attributes: [:id, :name, :link, :release_date,
+                                    genome_annotations_attributes: [:id, :name, :link, :index_link, :release_date,
                                     :_destroy]])
     end
 end

@@ -25,11 +25,12 @@
     </div>
     <div class="col-sm-4">
       <%= f.label :taxon_id, 'Species' %><br />
-      <%= f.select :taxon_id, options_from_collection_for_select(Taxon.sorted, :id, :display_name, study_file.taxon_id), {prompt: 'None selected...'}, {class: 'form-control taxon-select'} %>
+      <%= f.select :taxon_id, options_from_collection_for_select(Taxon.sorted, :id, :display_name, study_file.taxon_id), {include_blank: 'None selected...'}, {class: 'form-control taxon-select'} %>
     </div>
-    <div class="col-sm-4 hidden genome-assembly-association">
-      <%= f.label :genome_assembly_id, 'Genome Assembly' %><br />
-      <%= f.select :genome_assembly_id, options_for_select([]), {prompt: 'Please select species...'}, {class: 'form-control genome-assembly-select'} %>
+    <div class="col-sm-4 <%= study_file.file_type == 'BAM' ? nil : 'hidden' %> genome-assembly-association">
+      <%= f.label :genome_assembly_id, 'Genome Assembly' %><br/>
+      <% assemblies = study_file.genome_assembly.present? ? study_file.genome_assembly.taxon.genome_assemblies.map {|a| [a.name, a.id]} : [] %>
+      <%= f.select :genome_assembly_id, options_for_select(assemblies, study_file.genome_assembly.present? ? study_file.genome_assembly.id : nil), {prompt: 'Please select species...'}, {class: 'form-control genome-assembly-select'} %>
     </div>
   </div>
   <div class="form-group row">
@@ -87,7 +88,7 @@
                   }
               })
           }
-          toggleFastqFields('primary_data_form_<%= study_file._id %>', $(this).val());
+          toggleFastqFields('primary_data_form_<%= study_file._id %>', $(this).val() === 'true');
       });
 
       $('#primary_data_form_<%= study_file._id %>').find('.file-type').change(function() {
@@ -125,7 +126,7 @@
                           });
                       }
                   )
-                  toggleFastqFields('primary_data_form_<%= study_file._id %>', humanDataSelect.val());
+                  toggleFastqFields('primary_data_form_<%= study_file._id %>', humanDataSelect.val() === 'true');
               })
           } else {
               assemblyDropdown.empty();
