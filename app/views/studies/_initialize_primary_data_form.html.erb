@@ -108,7 +108,7 @@
           if (selectedTaxon !== '') {
               $.getJSON('<%= get_taxon_path %>?taxon=' + selectedTaxon, function(taxon) {
                   var humanDataSelect = $('#primary_data_form_<%= study_file.id %>').find('.human-data');
-                  if ( taxon.restricted ) {
+                  if (taxon.restricted) {
                       if (humanDataSelect.val() !== 'true') {
                           $('#primary_data_form_<%= study_file.id %>').find('.human-data').val('true');
                       }
