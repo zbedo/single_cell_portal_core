@@ -228,6 +228,7 @@ class Test::Unit::TestCase
     login_link.click
     $verbose ? puts('logging in as ' + email) : nil
     use_new = @driver.find_element(:xpath, "//div[contains(text(), 'Use another account')]")
+    sleep(2)
     use_new.click
     wait_for_render(:id, 'identifierId')
     sleep(1)

@@ -9,18 +9,102 @@ class DirectoryListing
 
 	include Mongoid::Document
 	include Mongoid::Timestamps
+  include Swagger::Blocks
 	include Rails.application.routes.url_helpers # for accessing download_file_path and download_private_file_path
 
 	PRIMARY_DATA_TYPES = %w(fq fastq).freeze
 	READ_PAIR_IDENTIFIERS = %w(_R1 _R2 _I1 _I2).freeze
+  FILE_ARRAY_ATTRIBUTES = {
+      name: 'String',
+      size: 'Integer',
+      generation: 'String'
+  }
+  REQUIRED_ATTRIBUTES = %w(study_id name file_type files)
+	TAXON_REQUIRED_REGEX = /(fastq|fq)/
+	IGNORED_EXTENTIONS = %w(txt) # other file extentions to ignore
+  MIN_SIZE = 10 # threshold of like file types required for creating DirectoryListing
 
 	belongs_to :study
+  belongs_to :taxon, optional: true
 
 	field :name, type: String
 	field :description, type: String
 	field :file_type, type: String
 	field :files, type: Array
 	field :sync_status, type: Boolean, default: false
+
+	swagger_schema :DirectoryListing do
+		key :required, [:name, :file_type, :files]
+		key :name, 'DirectoryListing'
+		property :id do
+			key :type, :string
+		end
+		property :study_id do
+			key :type, :string
+			key :description, 'ID of Study this StudyShare belongs to'
+		end
+		property :taxon_id do
+			key :type, :string
+			key :description, 'ID of Taxon (species) this DirectoryListing belongs to'
+    end
+    property :name do
+      key :type, :string
+      key :description, 'Name of remote GCS directory containing files'
+    end
+		property :description do
+			key :type, :string
+			key :format, :email
+			key :description, 'Block description for all files contained in DirectoryListing'
+		end
+		property :file_type do
+			key :type, :string
+			key :description, 'File type (i.e. extension) of all files contained in DirectoryListing'
+		end
+		property :files do
+			key :type, :array
+			key :description, 'Array of file objects'
+			items type: :object do
+        key :title, 'GCS File object'
+        key :required, [:name, :size, :generation]
+        property :name do
+			    key :type, :string
+					key :description, 'name of File'
+				end
+				property :size do
+					key :type, :integer
+					key :description, 'size of File'
+				end
+				property :generation do
+					key :type, :string
+					key :description, 'GCS generation tag of File'
+				end
+			end
+		end
+		property :sync_status do
+			key :type, :boolean
+			key :description, 'Boolean indication whether this DirectoryListing has been synced (and made available for download)'
+    end
+    property :created_at do
+      key :type, :string
+      key :format, :date_time
+      key :description, 'Creation timestamp'
+    end
+    property :updated_at do
+      key :type, :string
+      key :format, :date_time
+      key :description, 'Last update timestamp'
+    end
+  end
+
+  swagger_schema :DirectoryListingInput do
+    allOf do
+      schema do
+        property :directory_listing do
+          key :'$ref', :DirectoryListing
+        end
+      end
+    end
+  end
 
 	validates_uniqueness_of :name, scope: [:study_id, :file_type]
   validates_presence_of :name, :file_type, :files
@@ -30,6 +114,9 @@ class DirectoryListing
             message: ValidationTools::OBJECT_LABELS_ERROR, allow_blank: true
   validates_format_of :file_type, with: ValidationTools::FILENAME_CHARS,
 											message: ValidationTools::FILENAME_CHARS_ERROR
+
+	validate :check_taxon, on: :update
+	validate :check_files_array_format
 
 	index({ name: 1, study_id: 1, file_type: 1 }, { unique: true, background: true })
 
@@ -66,6 +153,30 @@ class DirectoryListing
 		if self.has_file?(filename)
 			"gs://#{self.study.bucket_id}/#{filename}"
 		end
+	end
+
+  # helper method for retrieving species common name
+  def species_name
+    self.taxon.present? ? self.taxon.common_name : nil
+  end
+
+  # helper to return assembly name
+  def genome_assembly_name
+    self.genome_assembly.present? ? self.genome_assembly.name : nil
+  end
+
+  # helper to return genome annotation, if present
+  def genome_annotation
+    self.genome_assembly.present? ? self.genome_assembly.current_annotation : nil
+  end
+
+  # helper to return public link to genome annotation, if present
+  def genome_annotation_link
+    if self.genome_assembly.present? && self.genome_assembly.current_annotation.present?
+      self.genome_assembly.current_annotation.public_annotation_link
+    else
+      nil
+    end
 	end
 
 	# return sample name based on filename (everything to the left of _(R|I)(1|2) string in file basename)
@@ -115,7 +226,9 @@ class DirectoryListing
 				path = self.get_folder_name(name)
 				ext = self.file_extension(name)
 				# don't store primary data filetypes in map as these are handled separately
-				if !DirectoryListing::PRIMARY_DATA_TYPES.any? {|e| ext.include?(e)}
+        # also ignore any file types in IGNORED_EXTENTIONS
+				unless DirectoryListing::PRIMARY_DATA_TYPES.any? {|e| ext.include?(e)} ||
+            DirectoryListing::IGNORED_EXTENTIONS.include?(ext)
 					if map[path].nil?
 						map[path] = {"#{ext}" => 1}
 					elsif map[path][ext].nil?
@@ -156,4 +269,29 @@ class DirectoryListing
 		filepath.include?('/') ? filepath.split('/').first : '/'
 	end
 
+  private
+
+  # if this directory is sequence data, validate that the user has supplied a species and assembly (only if syncing)
+  def check_taxon
+    if Taxon.present? && self.file_type.match(TAXON_REQUIRED_REGEX).present? && self.sync_status
+      if self.taxon_id.nil?
+        errors.add(:taxon_id, 'You must supply a species for this file type: ' + self.file_type)
+      end
+    end
+	end
+
+	# make sure that the files array is in the correct format
+	def check_files_array_format
+		error_msg = 'has invalid entries.  Each entry must be a hash with the keys of name (String), size (Integer), and '\
+ 								'generation (String).  The following entries are invalid: '
+		has_error = false
+		self.files.each do |file|
+			unless file.keys.map(&:to_s).sort == %w(generation name size)
+				error_msg += "#{file}"
+			end
+		end
+		if has_error
+			errors.add(:files, error_msg)
+		end
+	end
 end

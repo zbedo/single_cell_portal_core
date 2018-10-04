@@ -12,7 +12,7 @@ require "test_helper"
 class FireCloudClientTest < ActiveSupport::TestCase
 
   def setup
-    @fire_cloud_client = FireCloudClient.new
+    @fire_cloud_client = Study.firecloud_client
     @test_email = 'singlecelltest@gmail.com'
   end
 

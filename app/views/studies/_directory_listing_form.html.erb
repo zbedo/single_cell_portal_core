@@ -33,9 +33,16 @@
       <%= select_tag :human_data, options_for_select(['Yes', 'No'], 'No'), {class: 'form-control human-data', data: {id: "directory-listing-#{directory.id}"}} %>
     </div>
     <div class="col-sm-2">
+      <% if directory.file_type.match(DirectoryListing::TAXON_REQUIRED_REGEX).present? %>
+        <%= f.label :taxon_id, 'Species' %><br />
+        <%= f.select :taxon_id, options_from_collection_for_select(Taxon.sorted, :id, :display_name, f.object.taxon_id),
+                     {prompt: 'None selected...'}, {class: 'form-control taxon-select'} %>
+      <% end %>
+    </div>
+    <div class="col-sm-2">
       <%= f.label :files, 'Files found' %> <span class="badge directory-files-found"> <%= directory.files.size %></span>
     </div>
-    <div class="col-sm-6">
+    <div class="col-sm-4">
       <%= f.label :actions %>
       <div class="row">
         <div class="col-xs-6">
@@ -49,6 +56,7 @@
   </div>
 
   <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+
       $("#delete-directory-<%= directory.id %>").click(function() {
           launchModalSpinner('#delete-modal-spinner', '#delete-modal', function() {
               $.ajax({
@@ -62,7 +70,9 @@
       $('#directory-listing-<%= directory.id %> .human-data').change(function() {
           var hDSelect = $(this);
           if ( hDSelect.val() === 'Yes' ) {
-              var humanData = confirm("Does this directory contain human data?\n\nThe Single Cell Portal does not currently permit storing human data.  Selecting 'OK' will remove this list from your study (source data files will be unaffected).")
+              var humanData = confirm('Does this directory contain human data?\n\nThe Single Cell Portal does not ' +
+                  'currently permit storing human data.  Selecting "OK" will remove this list from your study (source ' +
+                  'data files will be unaffected).');
               if (humanData) {
                   launchModalSpinner('#delete-modal-spinner', '#delete-modal', function() {
                       $.ajax({
@@ -74,6 +84,31 @@
               } else {
                   hDSelect.val('No');
               }
+          }
+      });
+
+      $('#directory-listing-<%= directory.id %>').find('.taxon-select').change(function() {
+          var taxonSelect = $(this);
+          var selectedTaxon = $(this).val();
+          if (selectedTaxon !== '') {
+              $.getJSON('<%= get_taxon_path %>?taxon=' + selectedTaxon, function(taxon) {
+                  if ( taxon.restricted ) {
+                      var humanData = confirm('Does this directory contain ' + taxon.common_name + ' data?\n\nThe Single ' +
+                          'Cell Portal does not currently permit storing ' + taxon.common_name + ' sequence data.  ' +
+                          'Selecting "OK" will remove this list from your study (source data files will be unaffected).');
+                      if (humanData) {
+                          launchModalSpinner('#delete-modal-spinner', '#delete-modal', function() {
+                              $.ajax({
+                                  url: "<%= delete_directory_listing_study_path(@study.id, directory.id) %>",
+                                  method: 'DELETE',
+                                  dataType: 'script'
+                              });
+                          });
+                      } else {
+                          taxonSelect.val('');
+                      }
+                  }
+              })
           }
       });
   </script>

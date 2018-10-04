@@ -53,6 +53,14 @@ class Gene
     self.gene_id.blank? ? self.name : "#{self.name} (#{self.gene_id})"
   end
 
+  def taxon
+    self.study_file.taxon
+  end
+
+  def species
+    self.study_file.taxon
+  end
+
   ##
   # CLASS INSTANCE METHODS
   ##

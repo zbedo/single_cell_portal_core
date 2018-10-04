@@ -11,6 +11,8 @@ window.hasDisplayedIgv = false;
 window.bamsToViewInIgv = [];
 window.selectedBams = {};
 
+window.genomeAssemblyInView = '';
+
 /**
  * Upon clicking 'Browse in genome', show selected BAM in igv.js in Genome tab.
  */
@@ -33,15 +35,19 @@ $(document).on('click', '.bam-browse-genome', function(e) {
     selectedBams[thisBam] = 1;
   }
 
-  $('#genome-tab-nav').css('display', ''); // Show 'Genome' tab
   $('#study-visualize-nav > a').click();
   $('#genome-tab-nav > a').click();
-
-  hasDisplayedIgv = true;
 });
 
 $(document).on('click', '#genome-tab-nav', function (e) {
-  initializeIgv();
+  window.location.hash = '#genome-tab';
+
+  // Go to Google sign-in page, redirect to this view after authenticating.
+  if (accessToken === null) {
+    ga('send', 'event', 'genome', 'sign_in_start');
+    localStorage.setItem('signed-in-via-genome-tab', true);
+    window.location = '/single_cell/users/auth/google_oauth2';
+  }
 });
 
 /**
@@ -77,7 +83,7 @@ function getGenesTrack(genome, genesTrackName) {
   var gtfFile, genesTrack;
 
   // gtfFiles assigned in _genome.html.erb
-  gtfFile = gtfFiles[genome];
+  gtfFile = gtfFiles[genome].genome_annotations;
 
   genesTrack = {
     name: genesTrackName,
@@ -105,6 +111,7 @@ igv.GenomeUtils.getKnownGenomes = function () {
   return originalGetKnownGenomes.apply(this).then(function(reference) {
     var key,
         newRef = {};
+    newRef['GRCm38'] = reference['mm10']; // Fix name
     for (key in reference) {
       delete reference[key].tracks;
       newRef[key] = reference[key];
@@ -113,6 +120,10 @@ igv.GenomeUtils.getKnownGenomes = function () {
   })
 };
 
+function igvIsDisplayed() {
+  return $('#igvRootDiv').length === 1;
+}
+
 /**
  * Instantiates and renders igv.js widget on the page
  */
@@ -120,8 +131,13 @@ function initializeIgv() {
   var igvContainer, igvOptions, tracks, genome, genesTrack, bamTracks,
     genesTrackName, genes, locus;
 
-  if (hasDisplayedIgv) {
-    return;
+  // Bail if already displayed or not signed in
+  if (igvIsDisplayed() || accessToken === null) return;
+
+  delete igv.browser;
+
+  if (bamsToViewInIgv.includes(bamAndBaiFiles[0]) === false) {
+    bamsToViewInIgv.push(bamAndBaiFiles[0]);
   }
 
   igvContainer = document.getElementById('igv-container');
@@ -129,18 +145,51 @@ function initializeIgv() {
   genes = $('.queried-gene');
   locus = (genes.length === 0) ? ['myc'] : [genes.first().text()];
 
-  // TODO: Remove hard-coding of genome after SCP species integration
-  genome = 'mm10';
-  genesTrackName = 'Genes | GENCODE M17';
+  genome = bamsToViewInIgv[0].genomeAssembly;
+  genesTrackName = 'Genes | ' + bamsToViewInIgv[0].genomeAnnotation.name;
   genesTrack = getGenesTrack(genome, genesTrackName);
   bamTracks = getBamTracks();
   tracks = [genesTrack].concat(bamTracks);
 
-  igvOptions = {
-    genome: genome,
-    locus: locus,
-    tracks: tracks
-  };
+  igvOptions = {genome: genome, locus: locus, tracks: tracks};
 
   igv.createBrowser(igvContainer, igvOptions);
+
+  // Log igv.js initialization in Google Analytics
+  ga('send', 'event', 'igv', 'initialize');
 }
+
+$(document).on('click', '#genome-tab-nav > a', function(event) {
+  initializeIgv();
+});
+
+$(document).ready(function() {
+
+  // Bail if on a page without genome visualization support
+  if (typeof accessToken === 'undefined') return;
+
+  if (window.location.hash === '#genome-tab') {
+    $('#study-visualize-nav > a').click();
+
+    // Reload igv if refreshing, but not upon clicking back button in sign-in
+    if (accessToken !== null) $('#genome-tab-nav > a').click();
+  }
+
+  var signedInViaGenomeTab = localStorage.getItem('signed-in-via-genome-tab');
+  if (signedInViaGenomeTab === 'true') {
+    ga('send', 'event', 'genome', 'sign_in_end_success');
+
+    // Remove usage analysis token
+    localStorage.removeItem('signed-in-via-genome-tab');
+
+    // Load igv
+    $('#study-visualize-nav > a').click();
+    $('#genome-tab-nav > a').click();
+  }
+
+  if (accessToken === null) {
+    $('#genome-tab-nav')
+      .attr('title', 'Click to sign in; only authenticated users can visualize genomes')
+      .attr('data-toogle', 'tooltip');
+  }
+});

@@ -1,0 +1,1 @@
+json.partial! 'api/v1/study_files/study_file', locals: {study_file: @study_file}

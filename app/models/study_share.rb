@@ -14,6 +14,7 @@ class StudyShare
 
 	include Mongoid::Document
 	include Mongoid::Timestamps
+  include Swagger::Blocks
 
 	belongs_to :study
 
@@ -22,6 +23,7 @@ class StudyShare
 	field	:firecloud_project, type: String
 	field :permission, type: String, default: 'View'
   field :deliver_emails, type: Boolean, default: true
+
 
 	PERMISSION_TYPES = %w(Edit View Reviewer)
 	FIRECLOUD_ACLS = ['WRITER', 'READER', 'NO ACCESS']
@@ -35,6 +37,94 @@ class StudyShare
 	FIRECLOUD_ACL_MAP = Hash[PERMISSION_TYPES.zip(FIRECLOUD_ACLS)]
 	PORTAL_ACL_MAP = Hash[FIRECLOUD_ACLS.zip(PERMISSION_TYPES)]
 	PERMISSION_DESCRIPTION_MAP = Hash[PERMISSION_TYPES.zip(PERMISSION_DESCRIPTIONS)]
+	REQUIRED_ATTRIBUTES = %w(email permission study_id)
+
+  swagger_schema :StudyShare do
+    key :required, [:email, :permission]
+    key :name, 'StudyShare'
+    property :id do
+      key :type, :string
+    end
+    property :study_id do
+      key :type, :string
+      key :description, 'ID of Study this StudyShare belongs to'
+    end
+    property :email do
+      key :type, :string
+      key :format, :email
+      key :description, 'Email of share user'
+    end
+    property :permission do
+      key :type, :string
+      key :enum, PERMISSION_TYPES
+      key :description, 'Permission granted by StudyShare'
+    end
+    property :firecloud_project do
+      key :type, :string
+      key :description, 'FireCloud billing project this Study belongs to'
+    end
+    property :firecloud_workspace do
+      key :type, :string
+      key :description, 'FireCloud workspace this Study belongs to'
+    end
+    property :deliver_emails do
+      key :type, :boolean
+      key :description, 'Boolean indication whether to email user with updates to Study'
+    end
+    property :created_at do
+      key :type, :string
+      key :format, :date_time
+      key :description, 'Creation timestamp'
+    end
+    property :updated_at do
+      key :type, :string
+      key :format, :date_time
+      key :description, 'Last update timestamp'
+    end
+  end
+
+  swagger_schema :StudyShareInput do
+    allOf do
+      schema do
+        property :study_share do
+          key :type, :object
+          property :email do
+            key :type, :string
+            key :format, :email
+            key :description, 'Email of share user'
+          end
+          property :permission do
+            key :type, :string
+            key :enum, PERMISSION_TYPES
+            key :description, 'Permission granted by StudyShare'
+          end
+          property :deliver_emails do
+            key :type, :boolean
+            key :description, 'Boolean indication whether to email user with updates to Study'
+          end
+        end
+      end
+    end
+  end
+
+	swagger_schema :StudyShareUpdateInput do
+		allOf do
+			schema do
+				property :study_share do
+					key :type, :object
+					property :permission do
+						key :type, :string
+						key :enum, PERMISSION_TYPES
+						key :description, 'Permission granted by StudyShare'
+					end
+					property :deliver_emails do
+						key :type, :boolean
+						key :description, 'Boolean indication whether to email user with updates to Study'
+					end
+				end
+			end
+		end
+	end
 
   validates_format_of :email, with: Devise.email_regexp, message: 'is not a valid email address.'
   validates_format_of :firecloud_project, :firecloud_workspace, with: ValidationTools::ALPHANUMERIC_DASH,

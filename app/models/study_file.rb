@@ -16,6 +16,7 @@ class StudyFile
   include Mongoid::Timestamps
   include Mongoid::Paperclip
   include Rails.application.routes.url_helpers # for accessing download_file_path and download_private_file_path
+  include Swagger::Blocks
 
   # constants, used for statuses and file types
   STUDY_FILE_TYPES = ['Cluster', 'Coordinate Labels' ,'Expression Matrix', 'MM Coordinate Matrix', '10X Genes File',
@@ -23,11 +24,16 @@ class StudyFile
                       'Other', 'Analysis Output']
   PARSEABLE_TYPES = ['Cluster', 'Coordinate Labels', 'Expression Matrix', 'MM Coordinate Matrix', '10X Genes File',
                      '10X Barcodes File', 'Gene List', 'Metadata']
+  DISALLOWED_SYNC_TYPES = ['Fastq']
   UPLOAD_STATUSES = %w(new uploading uploaded)
   PARSE_STATUSES = %w(unparsed parsing parsed)
   PRIMARY_DATA_EXTENTIONS = %w(fastq fastq.zip fastq.gz fastq.tar.gz fq fq.zip fq.gz fq.tar.gz bam bam.gz bam.bai bam.gz.bai)
   PRIMARY_DATA_TYPES = ['Fastq', 'BAM', 'BAM Index']
+  TAXON_REQUIRED_TYPES = ['Fastq', 'BAM', 'Expression Matrix', 'MM Coordinate Matrix']
+  ASSEMBLY_REQUIRED_TYPES = ['BAM']
   GZIP_MAGIC_NUMBER = "\x1f\x8b".force_encoding(Encoding::ASCII_8BIT)
+  REQUIRED_ATTRIBUTES = %w(file_type name)
+
 
   # associations
   belongs_to :study, index: true
@@ -35,10 +41,12 @@ class StudyFile
   has_many :genes, dependent: :destroy
   has_many :precomputed_scores, dependent: :destroy
   has_many :cell_metadata, dependent: :destroy
+  belongs_to :taxon, optional: true
+  belongs_to :genome_assembly, optional: true
+  belongs_to :study_file_bundle, optional: true
 
   # field definitions
   field :name, type: String
-  field :path, type: String
   field :description, type: String
   field :file_type, type: String
   field :status, type: String
@@ -64,6 +72,291 @@ class StudyFile
     attachment.instance.data_dir
   end
 
+  ##
+  #
+  # SWAGGER DEFINITIONS
+  #
+  ##
+
+  swagger_schema :StudyFile do
+    key :required, [:file_type, :name]
+    key :name, 'StudyFile'
+    property :id do
+      key :type, :string
+    end
+    property :study_id do
+      key :type, :string
+      key :description, 'ID of Study to which StudyFile belongs'
+    end
+    property :taxon_id do
+      key :type, :string
+      key :description, 'Database ID of Taxon entry (species) to which StudyFile belongs, if required/present.  THIS IS NOT THE NCBI TAXON ID.'
+    end
+    property :species do
+      key :type, :string
+      key :description, '(optional) Common name of a species registered in the portal to set taxon_id association manually'
+    end
+    property :genome_assembly_id do
+      key :type, :string
+      key :description, 'ID of GenomeAssembly to which StudyFile belongs, if required/present'
+    end
+    property :assembly do
+      key :type, :string
+      key :description, '(optional) Common name of a genome assembly registered in the portal to set genome_assembly_id association manually'
+    end
+    property :study_file_bundle_id do
+      key :type, :string
+      key :description, 'ID of StudyFileBundle to which StudyFile belongs, if present'
+    end
+    property :name do
+      key :type, :string
+      key :description, 'Name of StudyFile (either filename or name of Cluster/Gene List)'
+    end
+    property :description do
+      key :type, :string
+      key :description, 'StudyFile description, used in download views'
+    end
+    property :upload do
+      key :type, :string
+      key :format, :binary
+      key :description, 'File object that StudyFile represents (will auto-set all upload_* attributes from File headers)'
+    end
+    property :upload_file_name do
+      key :type, :string
+      key :description, 'Filename of upload File object'
+    end
+    property :upload_content_type do
+      key :type, :string
+      key :description, 'Content-Type of upload File object'
+    end
+    property :upload_file_size do
+      key :type, :integer
+      key :description, 'Size (in bytes) of upload File object'
+    end
+    property :upload_fingerprint do
+      key :type, :string
+      key :description, 'Checksum of upload File object'
+    end
+    property :upload_updated_at do
+      key :type, :string
+      key :format, :date_time
+      key :description, 'Last update timestamp of upload File object'
+    end
+    property :file_type do
+      key :type, :string
+      key :enum, STUDY_FILE_TYPES
+      key :description, 'Type of file, governs parsing/caching behavior'
+    end
+    property :status do
+      key :type, :string
+      key :enum, UPLOAD_STATUSES
+      key :description, 'Status of File object upload (new, uploading, or uploaded)'
+    end
+    property :parse_status do
+      key :type, :string
+      key :enum, PARSE_STATUSES
+      key :description, 'Parse status of StudyFile (unparsed, parsing, or parsed)'
+    end
+    property :data_dir do
+      key :type, :string
+      key :description, 'Local directory where File object is localized to (for parsing)'
+    end
+    property :remote_location do
+      key :type, :string
+      key :description, 'Location in GCS bucket of File object'
+    end
+    property :human_fastq_url do
+      key :type, :string
+      key :format, :url
+      key :description, 'External URL for human sequence data (if required)'
+    end
+    property :human_data do
+      key :type, :boolean
+      key :default, false
+      key :description, 'Boolean indication whether StudyFile represents human data'
+    end
+    property :generation do
+      key :type, :string
+      key :description, 'GCS generation tag of File in bucket'
+    end
+    property :x_axis_label do
+      key :type, :string
+      key :description, 'Label to use on X axis of plots (for Clusters)'
+    end
+    property :y_axis_label do
+      key :type, :string
+      key :description, 'Label to use on Y axis of plots (for Clusters, Expression Matrix, MM Coordinate Matrix)'
+    end
+    property :z_axis_label do
+      key :type, :string
+      key :description, 'Label to use on Z axis of plots (for Clusters)'
+    end
+    property :x_axis_min do
+      key :type, :integer
+      key :description, 'X axis domain minimum (for Clusters)'
+    end
+    property :x_axis_max do
+      key :type, :integer
+      key :description, 'X axis domain maximum (for Clusters)'
+    end
+    property :y_axis_min do
+      key :type, :integer
+      key :description, 'Y axis domain minimum (for Clusters)'
+    end
+    property :y_axis_max do
+      key :type, :integer
+      key :description, 'Y axis domain maximum (for Clusters)'
+    end
+    property :z_axis_min do
+      key :type, :integer
+      key :description, 'Z axis domain minimum (for Clusters)'
+    end
+    property :z_axis_max do
+      key :type, :integer
+      key :description, 'Z axis domain maximum (for Clusters)'
+    end
+    property :queued_for_deletion do
+      key :type, :boolean
+      key :default, false
+      key :description, 'Boolean indication whether file is queued for garbage collection'
+    end
+    property :options do
+      key :type, :object
+      key :default, {}
+      key :description, 'Key/Value storage of extra file options'
+    end
+    property :created_at do
+      key :type, :string
+      key :format, :date_time
+      key :description, 'Creation timestamp'
+    end
+    property :updated_at do
+      key :type, :string
+      key :format, :date_time
+      key :description, 'Last update timestamp'
+    end
+  end
+
+  swagger_schema :StudyFileInput do
+    allOf do
+      schema do
+        property :taxon_id do
+          key :type, :string
+          key :description, 'Database ID of Taxon entry (species) to which StudyFile belongs, if required/present.  THIS IS NOT THE NCBI TAXON ID.'
+        end
+        property :species do
+          key :type, :string
+          key :description, '(optional) Common name of a species registered in the portal to set taxon_id association manually'
+        end
+        property :genome_assembly_id do
+          key :type, :string
+          key :description, 'ID of GenomeAssembly to which StudyFile belongs, if required/present'
+        end
+        property :assembly do
+          key :type, :string
+          key :description, '(optional) Common name of a genome assembly registered in the portal to set genome_assembly_id association manually'
+        end
+        property :study_file_bundle_id do
+          key :type, :string
+          key :description, 'ID of StudyFileBundle to which StudyFile belongs, if present'
+        end
+        property :name do
+          key :type, :string
+          key :description, 'Name of StudyFile (either filename or name of Cluster/Gene List)'
+        end
+        property :description do
+          key :type, :string
+          key :description, 'StudyFile description, used in download views'
+        end
+        property :file_type do
+          key :type, :string
+          key :enum, STUDY_FILE_TYPES
+          key :description, 'Type of file, governs parsing/caching behavior'
+        end
+        property :status do
+          key :type, :string
+          key :enum, UPLOAD_STATUSES
+          key :description, 'Status of File object upload (new, uploading, or uploaded)'
+        end
+        property :remote_location do
+          key :type, :string
+          key :description, 'Location in GCS bucket of File object'
+        end
+        property :human_fastq_url do
+          key :type, :string
+          key :format, :url
+          key :description, 'External URL for human sequence data (if required)'
+        end
+        property :human_data do
+          key :type, :boolean
+          key :default, false
+          key :description, 'Boolean indication whether StudyFile represents human data'
+        end
+        property :generation do
+          key :type, :string
+          key :description, 'GCS generation tag of File in bucket'
+        end
+        property :x_axis_label do
+          key :type, :string
+          key :description, 'Label to use on X axis of plots (for Clusters)'
+        end
+        property :y_axis_label do
+          key :type, :string
+          key :description, 'Label to use on Y axis of plots (for Clusters, Expression Matrix, MM Coordinate Matrix)'
+        end
+        property :z_axis_label do
+          key :type, :string
+          key :description, 'Label to use on Z axis of plots (for Clusters)'
+        end
+        property :x_axis_min do
+          key :type, :integer
+          key :description, 'X axis domain minimum (for Clusters)'
+        end
+        property :x_axis_max do
+          key :type, :integer
+          key :description, 'X axis domain maximum (for Clusters)'
+        end
+        property :y_axis_min do
+          key :type, :integer
+          key :description, 'Y axis domain minimum (for Clusters)'
+        end
+        property :y_axis_max do
+          key :type, :integer
+          key :description, 'Y axis domain maximum (for Clusters)'
+        end
+        property :z_axis_min do
+          key :type, :integer
+          key :description, 'Z axis domain minimum (for Clusters)'
+        end
+        property :z_axis_max do
+          key :type, :integer
+          key :description, 'Z axis domain maximum (for Clusters)'
+        end
+        property :options do
+          key :type, :object
+          key :default, {}
+          key :description, 'Key/Value storage of extra file options'
+        end
+      end
+    end
+  end
+
+  swagger_schema :FileBundleInput do
+    allOf do
+      schema do
+        property :name do
+          key :type, :string
+          key :description, 'Filename of File object'
+        end
+        property :file_type do
+          key :type, :string
+          key :enum, STUDY_FILE_TYPES
+          key :description, 'File type of File object'
+        end
+      end
+    end
+  end
+
   ###
   #
   # VALIDATIONS & CALLBACKS
@@ -74,6 +367,7 @@ class StudyFile
   before_validation   :set_file_name_and_data_dir, on: :create
   before_save         :sanitize_name
   after_save          :set_cluster_group_ranges
+  before_destroy      :remove_bundle_associations
 
   has_mongoid_attached_file :upload,
                             :path => ":rails_root/data/:data_dir/:id/:filename",
@@ -105,6 +399,9 @@ class StudyFile
   validates_format_of :generation, with: /\A\d+\z/, if: proc {|f| f.generation.present?}
 
   validates_inclusion_of :file_type, in: STUDY_FILE_TYPES, unless: proc {|f| f.file_type == 'DELETE'}
+
+  validate :check_taxon, on: :create
+  validate :check_assembly, on: :create
 
   ###
   #
@@ -156,13 +453,11 @@ class StudyFile
     else
       case self.file_type
       when 'MM Coordinate Matrix'
-        StudyFile.where(file_type: '10X Genes File', 'options.matrix_id' => self.id.to_s).exists? && StudyFile.where(file_type: '10X Barcodes File', 'options.matrix_id' => self.id.to_s).exists?
+        self.study_file_bundle.present? && self.study_file_bundle.completed?
       when '10X Genes File'
-        parent_matrix = self.bundle_parent
-        parent_matrix.present? && StudyFile.where(file_type: '10X Barcodes File', 'options.matrix_id' => parent_matrix.id.to_s).exists?
+        self.study_file_bundle.present? && self.study_file_bundle.completed?
       when '10X Barcodes File'
-        parent_matrix = self.bundle_parent
-        parent_matrix.present? && StudyFile.where(file_type: '10X Genes File', 'options.matrix_id' => parent_matrix.id.to_s).exists?
+        self.study_file_bundle.present? && self.study_file_bundle.completed?
       else
         true # the file is parseable and a singleton
       end
@@ -227,36 +522,51 @@ class StudyFile
     self.remote_location.blank? ? self.upload_file_name : self.remote_location
   end
 
+  def is_local?
+    File.exists?(Rails.root.join(self.study.data_store_path, self.download_location)) ||
+        File.exists?(Rails.root.join(self.study.data_store_path, self.bucket_location))
+  end
+
   # get any 'bundled' files that correspond to this file
   def bundled_files
-    # base 'selector' for query, used to search study_file.options hash
-    selector = 'options'
-    case self.file_type
-    when 'MM Coordinate Matrix'
-      selector += '.matrix_id'
-    when 'BAM'
-      selector += '.bam_id'
-    when 'Cluster'
-      selector += '.cluster_group_id'
+    if self.study_file_bundle.present?
+      self.study_file_bundle.bundled_files
+    else
+      # base 'selector' for query, used to search study_file.options hash
+      selector = 'options'
+      query_id = self.id.to_s
+      case self.file_type
+      when 'MM Coordinate Matrix'
+        selector += '.matrix_id'
+      when 'BAM'
+        selector += '.bam_id'
+      when 'Cluster'
+        selector += '.cluster_group_id'
+        query_id = self.cluster_groups.first.id.to_s
+      end
+      StudyFile.where(selector => query_id) # return Mongoid::Criteria to lazy-load, better performance
     end
-    StudyFile.where(selector => self.id.to_s) # return Mongoid::Criteria to lazy-load, better performance
   end
 
   # get the bundle 'parent' file for a bundled file (e.g. MM Coordinate Matrix that is bundled with a 10X Genes File)
   # inverse of study_file.bundled_files.  In the case of Coordinate Labels, this returns the cluster, not the file
   def bundle_parent
-    model = StudyFile
-    case self.file_type
-    when /10X/
-      selector = :matrix_id
-    when 'BAM Index'
-      selector = :bam_id
-    when 'Coordinate Labels'
-      selector = :cluster_group_id
-      model = ClusterGroup
+    if self.study_file_bundle.present?
+      self.study_file_bundle.bundle_target
+    else
+      model = StudyFile
+      case self.file_type
+      when /10X/
+        selector = :matrix_id
+      when 'BAM Index'
+        selector = :bam_id
+      when 'Coordinate Labels'
+        selector = :cluster_group_id
+        model = ClusterGroup
+      end
+      # call find_by(id: ) to avoid Mongoid::Errors::InvalidFind
+      model.find_by(id: self.options[selector])
     end
-    # call find_by(id: ) to avoid Mongoid::Errors::InvalidFind
-    model.find_by(id: self.options[selector])
   end
 
   # retrieve the cluster group id from the options hash for a cluster labels file
@@ -289,11 +599,47 @@ class StudyFile
   # determine a file's content type by reading the first 2 bytes and comparing to known magic numbers
   def determine_content_type
     location = File.join(self.study.data_store_path, self.download_location)
+    if !File.exists?(location)
+      location = File.join(self.study.data_store_path, self.bucket_location)
+    end
     signature = File.open(location).read(2)
     if signature == StudyFile::GZIP_MAGIC_NUMBER
       'application/gzip'
     else
       'text/plain'
+    end
+  end
+
+  # helper method for retrieving species common name
+  def species_name
+    self.taxon.present? ? self.taxon.common_name : nil
+  end
+
+  # helper to return assembly name
+  def genome_assembly_name
+    self.genome_assembly.present? ? self.genome_assembly.name : nil
+  end
+
+  # helper to return annotation, if present
+  def genome_annotation
+    self.genome_assembly.present? ? self.genome_assembly.current_annotation : nil
+  end
+
+  # helper to return public link to genome annotation, if present
+  def genome_annotation_link
+    if self.genome_assembly.present? && self.genome_assembly.current_annotation.present?
+      self.genome_assembly.current_annotation.public_annotation_link
+    else
+      nil
+    end
+  end
+
+  # helper to return public link to genome annotation index, if present
+  def genome_annotation_index_link
+    if self.genome_assembly.present? && self.genome_assembly.current_annotation.present?
+      self.genome_assembly.current_annotation.public_annotation_index_link
+    else
+      nil
     end
   end
 
@@ -317,7 +663,7 @@ class StudyFile
     study_name = self.study.url_safe_name
     case self.file_type
       when 'Cluster'
-        name_key = self.cluster_groups.first.name.split.join('-')
+        name_key = self.name.split.join('-')
         @cache_key = "#{study_name}.*render_cluster.*#{name_key}"
       when 'Coordinate Labels'
         name_key = self.bundle_parent.name.split.join('-')
@@ -366,6 +712,8 @@ class StudyFile
       if Dir.exist?(subdir) && Dir.entries(subdir).delete_if {|e| e.start_with?('.')}.empty?
         Dir.rmdir(subdir)
       end
+    elsif File.exists?(self.bucket_location)
+      File.delete(self.bucket_location)
     end
   end
 
@@ -511,6 +859,26 @@ class StudyFile
     end
     if self.name !~ regex
       errors.add(:name, error)
+    end
+  end
+
+  # if this file is expression or sequence data, validate that the user has supplied a species/taxon
+  def check_taxon
+    if Taxon.present? && TAXON_REQUIRED_TYPES.include?(self.file_type) && self.taxon_id.blank?
+      errors.add(:taxon_id, 'You must supply a species for this file type: ' + self.file_type)
+    end
+  end
+
+  def check_assembly
+    if GenomeAssembly.present? && ASSEMBLY_REQUIRED_TYPES.include?(self.file_type) && self.genome_assembly_id.nil?
+      errors.add(:genome_assembly_id, 'You must supply a genome assembly for this file type: ' + self.file_type)
+    end
+  end
+
+  # if this file is part of a bundle, delete that bundle before removing this file
+  def remove_bundle_associations
+    if self.study_file_bundle.present?
+      self.study_file_bundle.destroy # destroying bundle removes all references to the bundle in all included files
     end
   end
 end

@@ -4,6 +4,7 @@
   <%= f.hidden_field :_id, value: study_file._id %>
   <%= hidden_field_tag :selector, "#primary_data_form_#{study_file._id}" %>
   <%= hidden_field_tag :partial, 'initialize_primary_data_form' %>
+  <%= f.hidden_field :study_file_bundle_id %>
   <% study_file.options.each do |key, value| %>
     <%= hidden_field_tag "study_file_options_#{key}", value, name: "study_file[options][#{key}]" %>
   <% end %>
@@ -17,15 +18,26 @@
 			<%= f.text_field :description, class: 'form-control' %>
 		</div>
 	</div>
-	<div class="form-group row">
-		<div class="col-sm-1">
-			<%= f.label :file_type %><br />
-			<%= f.select :file_type, options_for_select(['Fastq', 'BAM'], f.object.file_type), {}, class: 'form-control file-type' %>
-		</div>
-		<div class="col-sm-2">
-			<%= f.label :human_data, "Primary Human Data?" %><br />
-			<%= f.select :human_data, options_for_select([['Yes', true],['No', false]], study_file.human_data), {}, class: 'form-control human-data' %>
-		</div>
+  <div class="form-group row">
+    <div class="col-sm-4">
+      <%= f.label :file_type %><br />
+      <%= f.select :file_type, options_for_select(['Fastq', 'BAM'], f.object.file_type), {}, class: 'form-control file-type' %>
+    </div>
+    <div class="col-sm-4">
+      <%= f.label :taxon_id, 'Species' %><br />
+      <%= f.select :taxon_id, options_from_collection_for_select(Taxon.sorted, :id, :display_name, study_file.taxon_id), {include_blank: 'None selected...'}, {class: 'form-control taxon-select'} %>
+    </div>
+    <div class="col-sm-4 <%= study_file.file_type == 'BAM' ? nil : 'hidden' %> genome-assembly-association">
+      <%= f.label :genome_assembly_id, 'Genome Assembly' %><br/>
+      <% assemblies = study_file.genome_assembly.present? ? study_file.genome_assembly.taxon.genome_assemblies.map {|a| [a.name, a.id]} : [] %>
+      <%= f.select :genome_assembly_id, options_for_select(assemblies, study_file.genome_assembly.present? ? study_file.genome_assembly.id : nil), {prompt: 'Please select species...'}, {class: 'form-control genome-assembly-select'} %>
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-sm-4">
+      <%= f.label :human_data, "Primary Human Data?" %><br />
+      <%= f.select :human_data, options_for_select([['Yes', true],['No', false]], study_file.human_data), {}, class: 'form-control human-data' %>
+    </div>
 		<div class="col-sm-5 upload-field <%= study_file.human_data? ? 'hidden' : nil %>">
       <% if !study_file.upload_file_name.nil? %>
         <p><label>Link to file </label><br /><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></p>
@@ -62,9 +74,65 @@
 	</div>
 	<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
-		$('#primary_data_form_<%= study_file._id %>').find('.human-data').change(function() {
-			toggleFastqFields('primary_data_form_<%= study_file._id %>');
-		});
+      $('#primary_data_form_<%= study_file._id %>').find('.human-data').change(function() {
+          var that = $(this);
+          var taxonSelect = $('#primary_data_form_<%= study_file._id %>').find('.taxon-select');
+          var selectedTaxon = taxonSelect.val();
+          if (selectedTaxon !== '') {
+              $.getJSON('<%= get_taxon_path %>?taxon=' + selectedTaxon, function (taxon) {
+                  if (taxon.restricted) {
+                      if (that.val() !== 'true') {
+                          taxonSelect.val('');
+                          $('#primary_data_form_<%= study_file._id %>').find('.genome-assembly-select').empty();
+                      }
+                  }
+              })
+          }
+          toggleFastqFields('primary_data_form_<%= study_file._id %>', $(this).val() === 'true');
+      });
+
+      $('#primary_data_form_<%= study_file._id %>').find('.file-type').change(function() {
+          var fileType = $(this).val();
+          var genomeAssemblyDiv = $('#primary_data_form_<%= study_file._id %>').find('.genome-assembly-association');
+
+          if (fileType == 'BAM') {
+              genomeAssemblyDiv.removeClass('hidden');
+          } else {
+              genomeAssemblyDiv.addClass('hidden');
+              $('#primary_data_form_<%= study_file._id %>').find('.genome-assembly-select').empty();
+          }
+      });
+
+      $('#primary_data_form_<%= study_file._id %>').find('.taxon-select').change(function() {
+          var selectedTaxon = $(this).val();
+          var assemblyDropdown = $('#primary_data_form_<%= study_file._id %>').find('.genome-assembly-select');
+          if (selectedTaxon !== '') {
+              $.getJSON('<%= get_taxon_path %>?taxon=' + selectedTaxon, function(taxon) {
+                  var humanDataSelect = $('#primary_data_form_<%= study_file.id %>').find('.human-data');
+                  if (taxon.restricted) {
+                      if (humanDataSelect.val() !== 'true') {
+                          $('#primary_data_form_<%= study_file.id %>').find('.human-data').val('true');
+                      }
+                  } else {
+                      $('#primary_data_form_<%= study_file.id %>').find('.human-data').val('false');
+                  }
+                  $.getJSON('<%= get_taxon_assemblies_path %>?taxon=' + selectedTaxon, function (data) {
+                          assemblyDropdown.empty();
+                          $(data).each(function (index, assembly) {
+                              assemblyDropdown.append($('<option />', {
+                                  value: assembly[1],
+                                  text: assembly[0]
+                              }));
+                          });
+                      }
+                  )
+                  toggleFastqFields('primary_data_form_<%= study_file._id %>', humanDataSelect.val() === 'true');
+              })
+          } else {
+              assemblyDropdown.empty();
+              assemblyDropdown.append('<option value="">Please select species...</option>');
+          }
+      });
 
 		$(function() {
 			$('#primary_data_form_<%= study_file._id %>').fileupload({
