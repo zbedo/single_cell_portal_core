@@ -126,7 +126,16 @@ class Taxon
 
   # parser to auto-add taxons, and assemblies from an uploaded file, returning number of new entities
   def self.parse_from_file(tempfile_upload, user)
-    file = File.open(tempfile_upload.tempfile.path)
+    if tempfile_upload.is_a?(ActionDispatch::Http::UploadedFile)
+      file = File.open(tempfile_upload.tempfile.path)
+      original_filename = tempfile_upload.original_filename
+    elsif tempfile_upload.is_a?(Pathname)
+      file = File.open(tempfile_upload)
+      original_filename = tempfile_upload.basename.to_s
+    elsif tempfile_upload.is_a?(File)
+      file = tempfile_upload
+      original_filename = file.path.split('/').last
+    end
     num_species = 0
     num_assemblies = 0
     headers = file.readline.split("\t").map(&:strip)
@@ -149,7 +158,7 @@ class Taxon
         taxon.ncbi_taxid = vals[taxid_idx]
         taxon.restricted = vals[restricted_idx].downcase == 'true'
         taxon.user = user
-        taxon.notes = "Uploaded from #{tempfile_upload.original_filename} on #{Date.today}"
+        taxon.notes = "Uploaded from #{original_filename} on #{Date.today}"
         taxon.save!
         num_species += 1
       end
