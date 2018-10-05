@@ -93,8 +93,8 @@ about service accounts.  To export the credentials:
 * **Registering your Service Account as a FireCloud user**: Once you have configured and booted your instance of the portal, 
 you will need to register your service account as a FireCloud user in order to create a billing project and create studies.  
 To do so:
-	* Launch an instance of your portal (see RUNNING THE CONTAINER below)
-	* Create an admin user account (see ADMIN USER ACCOUNTS below)
+	* Launch an instance of your portal (see [RUNNING THE CONTAINER](#running-the-container) below)
+	* Create an admin user account (see [ADMIN USER ACCOUNTS](#admin-user-accounts) below)
 	* Log in with the admin account, and select 'Admin Configurations' from the profile menu (top righthand corner)
 	* At the bottom of the page, in the 'Other Tasks' dropdown, select 'Manage Main Service Account FireCloud Registration' 
 	and click 'Execute Task'
