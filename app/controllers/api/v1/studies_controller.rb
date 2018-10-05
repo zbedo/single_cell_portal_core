@@ -247,6 +247,9 @@ module Api
       def destroy
         # check if user is allowed to delete study
         if @study.can_delete?(current_api_user)
+          # set queued_for_deletion manually - gotcha due to race condition on page reloading and how quickly delayed_job can process jobs
+          @study.update(queued_for_deletion: true)
+
           if params[:workspace] == 'persist'
             @study.update(firecloud_workspace: nil)
           else
@@ -257,9 +260,6 @@ module Api
               render json: {error: "Error deleting FireCloud workspace #{@study.firecloud_project}/#{@study.firecloud_workspace}: #{e.message}"}, status: 500
             end
           end
-
-          # set queued_for_deletion manually - gotcha due to race condition on page reloading and how quickly delayed_job can process jobs
-          @study.update(queued_for_deletion: true)
 
           # queue jobs to delete study caches & study itself
           CacheRemovalJob.new(@study.url_safe_name).delay.perform

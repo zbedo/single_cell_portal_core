@@ -450,6 +450,7 @@ class Study
   validates_uniqueness_of :name, on: :update, message: ": %{value} has already been taken.  Please choose another name."
   validates_presence_of   :name, on: :update
   validates_uniqueness_of :url_safe_name, on: :update, message: ": The name you provided tried to create a public URL (%{value}) that is already assigned.  Please rename your study to a different value."
+  validate :prevent_firecloud_attribute_changes, on: :update
 
   # callbacks
   before_validation :set_url_safe_name
@@ -2844,5 +2845,17 @@ class Study
 
   def strip_unsafe_characters_from_description
     self.description = self.description.to_s.gsub(ValidationTools::SCRIPT_TAG_REGEX, '')
+  end
+
+  # prevent editing firecloud project or workspace on edit
+  def prevent_firecloud_attribute_changes
+    if self.persisted? && !self.queued_for_deletion # skip this validation if we're queueing for deletion
+      if self.firecloud_project_changed?
+        errors.add(:firecloud_project, ' cannot be changed once initialized.')
+      end
+      if self.firecloud_workspace_changed?
+        errors.add(:firecloud_workspace, ' cannot be changed once initialized.')
+      end
+    end
   end
 end
