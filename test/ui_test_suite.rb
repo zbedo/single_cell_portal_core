@@ -11,7 +11,7 @@ require File.expand_path('ui_test_helper.rb', 'test')
 # Therefore, the following languages/packages must be installed on your host:
 #
 # 1. RVM (or equivalent Ruby language management system)
-# 2. Ruby >= 2.3 (currently, 2.3.1 is the version running inside the container)
+# 2. Ruby >= 2.5.1 (currently, 2.5.1 is the version running inside the container)
 # 3. Gems: rubygems, test-unit, selenium-webdriver (see Gemfile.lock for version requirements)
 # 4. Google Chrome
 # 5. Chromedriver (https://sites.google.com/a/chromium.org/chromedriver/); make sure the verison you install works with your version of chrome
