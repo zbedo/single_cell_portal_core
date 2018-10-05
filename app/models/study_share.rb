@@ -205,7 +205,6 @@ class StudyShare
 						Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.study.firecloud_workspace, acl)
 					rescue RuntimeError => e
 						errors.add(:base, "Could not create a share for #{self.email} to workspace #{self.firecloud_workspace} due to: #{e.message}")
-						false
 					end
 				end
 			end

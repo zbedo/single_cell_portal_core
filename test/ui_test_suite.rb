@@ -16,7 +16,7 @@ require File.expand_path('ui_test_helper.rb', 'test')
 # 4. Google Chrome
 # 5. Chromedriver (https://sites.google.com/a/chromium.org/chromedriver/); make sure the verison you install works with your version of chrome
 # 6. Register for FireCloud (https://portal.firecloud.org) for both Google accounts (needed for auth & sharing acls)
-# 7. The 'test email account' (see below) must be configured as a portal admin.  See 'ADMIN USER ACCOUNTS' in README.rdoc for more information.
+# 7. The 'test email account' (see below) must be configured as a portal admin.  See 'ADMIN USER ACCOUNTS' in README.md for more information.
 
 # USAGE
 #
