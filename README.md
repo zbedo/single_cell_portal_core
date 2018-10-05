@@ -237,9 +237,10 @@ requirements are as follows:
 * Ruby 2.5.1, preferably mangaged through [RVM](https://rvm.io/) or [rbenv](https://github.com/rbenv/rbenv)
 * Gems: [rubygems](https://github.com/rubygems/rubygems), [test-unit](http://test-unit.github.io), 
 [selenium-webdriver](https://github.com/SeleniumHQ/selenium/tree/master/rb) (see Gemfile.lock for version requirements)
-* Google Chrome along with 2 Google accounts, one of which needs to be a portal admin account (see above)
+* Google Chrome along with 2 Google accounts, one of which needs to be a portal admin account (see 
+[ADMIN USER ACCOUNTS](#admin-user-accounts) above)
 * [Chromedriver](http://chromedriver.chromium.org/)
-* FireCloud accounts for both Google accounts (see FIRECLOUD INTEGRATION below)
+* FireCloud accounts for both Google accounts (see [FIRECLOUD INTEGRATION](#firecloud-integration) below)
 
 
 #### RUNNING UI TESTS
@@ -457,7 +458,7 @@ will not be enabled unless this account is enabled.
 To enable the read-only service account:
 
 1. Create a new service account in your GCP project and grant it 'Storage Object Viewer' permission (see 'GCP Service 
-Account keys' under 'DEPLOYING A PRIVATE INSTANCE' above for more information)
+Account keys' under [DEPLOYING A PRIVATE INSTANCE](#local-development-or-deploying-a-private-instance) for more information)
 
 1. Export the JSON credentials to a file and save inside the portal home directory.
 1. When booting your instance (via `bin/boot_docker`), make sure to pass `-K (/path/to/readonly/credentials.json)`
