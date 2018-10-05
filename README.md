@@ -369,7 +369,7 @@ For more information on formatting and mounting additional persistent disks to a
 * To connect to the running portal container: `docker exec -it single_cell bash`
 
 If you have pulled changes from source that require re-building the container, you will need to follow the checklist above 
-in the [PRODUCTION](#google-deployment-production) section.
+in the [PRODUCTION](#production) section.
 
 **You will need to rebuild the docker image if you do any of the following:**
 * Edit the Dockerfile
