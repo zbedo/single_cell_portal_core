@@ -54,7 +54,7 @@ class UserAnnotationsController < ApplicationController
     old_labels = @user_annotation.values
 
     # Remeber the old annotations
-    annotation_arrays = @user_annotation.user_data_arrays.by_name_and_type(@user_annotation.name,'annotations')
+    annotation_arrays = @user_annotation.user_data_arrays.all_by_name_and_type(@user_annotation.name,'annotations')
 
     respond_to do |format|
       #if a successful update, update data arrays
