@@ -27,6 +27,15 @@ $(window).on('resizeEnd', function() {
     }
 });
 
+// Ensure cluster plot is sized properly upon clicking Explore tab (SCP-1106)
+$('body').on('click', '#study-visualize-nav > a', function() {
+  window.exploreResizeTO = setTimeout(function () {
+    $(window).trigger('resizeEnd');
+    delete window.exploreResizeTO;
+    $('#study-visualize-nav > a').off('click');
+  }, 50);
+})
+
 // attach click event for toggle switch
 $('#toggle-traces').click(function() {
     togglePlotlyTraces('cluster-plot');
