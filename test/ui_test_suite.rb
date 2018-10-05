@@ -754,7 +754,7 @@ class UiTestSuite < Test::Unit::TestCase
     @driver.get data_url
     wait_for_modal_open('message_modal')
     alert_text = @driver.find_element(:id, 'alert-content').text
-    expected_alert = "You may not download any data from this study until #{(Date.today + 1).strftime("%B %-d, %Y")}."
+    expected_alert = "You may not download any data from this study until #{(Date.today + 1).strftime("%B %d, %Y")}."
     assert alert_text == expected_alert, "did not find correct alert, expected '#{expected_alert}' but found '#{alert_text}'"
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
@@ -3876,7 +3876,7 @@ class UiTestSuite < Test::Unit::TestCase
 
     # assert labels are correct
     plot_labels = @driver.find_elements(:class, "legendtext").map(&:text)
-    assert plot_labels.grep(/user-#{$random_seed}:.group0/).any?, "labels are incorrect: '#{plot_labels}' should include 'user-#{$random_seed}: group0'"
+    assert plot_labels.grep(/user-#{$random_seed}:.group0new/).any?, "labels are incorrect: '#{plot_labels}' should include 'user-#{$random_seed}: group0'"
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
