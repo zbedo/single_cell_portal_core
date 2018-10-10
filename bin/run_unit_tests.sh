@@ -40,7 +40,7 @@ else
   echo "Running all unit & integration tests..."
 	ruby -I test test/integration/fire_cloud_client_test.rb
 	ruby -I test test/integration/cache_management_test.rb
-	ruby -I test test/integration/study_admin_test.rb
+	ruby -I test test/integration/study_creation_test.rb
 	ruby -I test test/api/studies_controller_test.rb
 	ruby -I test test/api/study_files_controller_test.rb
 	ruby -I test test/api/study_file_bundles_controller_test.rb
