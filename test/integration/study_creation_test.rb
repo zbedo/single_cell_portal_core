@@ -37,7 +37,7 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
     # upload files and parse manually
     # expression matrix #1
     file_params = {study_file: {file_type: 'Expression Matrix', study_id: @study.id.to_s}}
-    perform_study_file_upload('expression_matrix_example.txt.gz', file_params, @study.id)
+    perform_study_file_upload('expression_matrix_example.txt', file_params, @study.id)
     assert_response 200, "Expression matrix upload failed: #{@response.code}"
     assert @study.expression_matrix_files.size == 1, "Expression matrix failed to associate, found #{@study.expression_matrix_files.size} files"
     expression_matrix_1 = @study.expression_matrix_files.first
@@ -46,7 +46,7 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
     num_genes = @study.gene_count
     # expression matrix #2
     file_params = {study_file: {file_type: 'Expression Matrix', study_id: @study.id.to_s}}
-    perform_study_file_upload('expression_matrix_example_2.txt.gz', file_params, @study.id)
+    perform_study_file_upload('expression_matrix_example_2.txt', file_params, @study.id)
     assert_response 200, "Expression matrix upload failed: #{@response.code}"
     assert @study.expression_matrix_files.size == 2, "Expression matrix failed to associate, found #{@study.expression_matrix_files.size} files"
     expression_matrix_2 = @study.expression_matrix_files.last
@@ -54,7 +54,7 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
     assert @study.genes.size > num_genes, 'Did not parse any genes from 2nd expression matrix'
     # metadata file
     file_params = {study_file: {file_type: 'Metadata', study_id: @study.id.to_s}}
-    perform_study_file_upload('metadata_example2.txt.gz', file_params, @study.id)
+    perform_study_file_upload('metadata_example2.txt', file_params, @study.id)
     assert_response 200, "Metadata upload failed: #{@response.code}"
     metadata_study_file = @study.metadata_file
     assert metadata_study_file.present?, "Metadata failed to associate, found no file: #{metadata_study_file.present?}"
@@ -69,7 +69,7 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
                            study_file_x_axis_label: 'X Axis', study_file_y_axis_label: 'Y Axis', study_file_z_axis_label: 'Z Axis'
                        }
     }
-    perform_study_file_upload('cluster_example_2.txt.gz', file_params, @study.id)
+    perform_study_file_upload('cluster_example_2.txt', file_params, @study.id)
     assert_response 200, "Cluster 1 upload failed: #{@response.code}"
     assert @study.cluster_ordinations_files.size == 1, "Cluster 1 failed to associate, found #{@study.cluster_ordinations_files.size} files"
     cluster_file_1 = @study.cluster_ordinations_files.first
@@ -79,7 +79,7 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
     assert DataArray.where(linear_data_id: cluster_1.id, study_id: @study.id).any?, 'Did not parse any data arrays from cluster file'
     # second cluster
     file_params = {study_file: {name: 'Test Cluster 2', file_type: 'Cluster', study_id: @study.id.to_s}}
-    perform_study_file_upload('cluster_2_example_2.txt.gz', file_params, @study.id)
+    perform_study_file_upload('cluster_2_example_2.txt', file_params, @study.id)
     assert_response 200, "Cluster 2 upload failed: #{@response.code}"
     assert @study.cluster_ordinations_files.size == 2, "Cluster 1 failed to associate, found #{@study.cluster_ordinations_files.size} files"
     cluster_file_2 = @study.cluster_ordinations_files.last
@@ -93,7 +93,7 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
                            file_type: 'Coordinate Labels', study_id: @study.id.to_s, options: {cluster_group_id: cluster_1.id.to_s}
                        }
     }
-    perform_study_file_upload('coordinate_labels_1.txt.gz', file_params, @study.id)
+    perform_study_file_upload('coordinate_labels_1.txt', file_params, @study.id)
     assert_response 200, "Coordinate label upload failed: #{@response.code}"
     label_files = @study.study_files.where(file_type: 'Coordinate Labels')
     assert label_files.size == 1, "Coordinate label failed to associate, found #{label_files.size} files"
@@ -274,7 +274,7 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
 
     # assert all 4 parses completed
     study_file_count = @study.study_files.non_primary_data.size
-    assert study_file_count == 4, "did not find correct number of study files, expected 4 but found #{study_file_count}"
+    assert study_file_count == 5, "did not find correct number of study files, expected 5 but found #{study_file_count}"
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 
@@ -301,11 +301,115 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
     expression_matrix_1 = @study.expression_matrix_files.first
     @study.initialize_gene_expression_data(expression_matrix_1, @test_user)
     assert @study.genes.size > 0, 'Did not parse any genes from expression matrix'
-
-    # assert all 4 parses completed
     study_file_count = @study.expression_matrix_files.size
     assert study_file_count == 1, "did not find correct number of study files, expected 4 but found #{study_file_count}"
-    assert @study.genes.count == 20, "Did not parse correct number of genes, expected 20 but found #{@study.genes.count}"
+    assert @study.genes.count == 19, "Did not parse correct number of genes, expected 20 but found #{@study.genes.count}"
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
+
+  test 'create R-format expression testing study' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+    study_params = {
+        study: {
+            name: "R-Format Expression Parse #{@random_seed}",
+            user_id: @test_user.id
+        }
+    }
+    post studies_path, params: study_params
+    follow_redirect!
+    assert_response 200, "Did not redirect to upload successfully"
+    @study = Study.find_by(name: "R-Format Expression Parse #{@random_seed}")
+    assert @study.present?, "Study did not successfully save"
+    # upload files and parse manually
+    # R-format expression matrix
+    file_params = {study_file: {file_type: 'Expression Matrix', study_id: @study.id.to_s}}
+    perform_study_file_upload('R_format_text.txt', file_params, @study.id)
+    assert_response 200, "Expression matrix upload failed: #{@response.code}"
+    assert @study.expression_matrix_files.size == 1, "Expression matrix failed to associate, found #{@study.expression_matrix_files.size} files"
+    expression_matrix_1 = @study.expression_matrix_files.first
+    @study.initialize_gene_expression_data(expression_matrix_1, @test_user)
+    assert @study.genes.size > 0, 'Did not parse any genes from expression matrix'
+    study_file_count = @study.expression_matrix_files.size
+    assert study_file_count == 1, "did not find correct number of study files, expected 1 but found #{study_file_count}"
+    assert @study.genes.count == 10, "Did not parse correct number of genes, expected 10 but found #{@study.genes.count}"
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
+
+  test 'create study file bundle' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+    study_params = {
+        study: {
+            name: "File Bundle #{@random_seed}",
+            user_id: @test_user.id
+        }
+    }
+    post studies_path, params: study_params
+    follow_redirect!
+    assert_response 200, "Did not redirect to upload successfully"
+    @study = Study.find_by(name: "File Bundle #{@random_seed}")
+    assert @study.present?, "Study did not successfully save"
+    # upload files and parse manually
+    # mm coordinate expression matrix
+    file_params = {study_file: {file_type: 'MM Coordinate Matrix', study_id: @study.id.to_s}}
+    perform_study_file_upload('GRCh38/test_matrix.mtx', file_params, @study.id)
+    assert_response 200, "Expression matrix upload failed: #{@response.code}"
+    assert @study.expression_matrix_files.size == 1, "Expression matrix failed to associate, found #{@study.expression_matrix_files.size} files"
+
+    # call retrieve_wizard_upload endpoint as this initializes the study_file_bundle (normal flow of upload for MM coordinate matrices)
+    coordinate_matrix = @study.expression_matrix_files.first
+    get retrieve_wizard_upload_study_path(@study.id, file: 'test_matrix.mtx', selector: "expression_form_#{coordinate_matrix.id}",
+                                          partial: 'initialize_expression_form'), xhr: true
+    study_file_bundle = @study.study_file_bundles.first
+    assert study_file_bundle.present?, 'StudyFileBundle did not initialize properly'
+    assert study_file_bundle.parent.id == coordinate_matrix.id,
+           "Did not properly associate coordinate matrix with bundle, expected parent ID of #{coordinate_matrix.id} but found #{study_file_bundle.parent.id}"
+
+    # upload genes & barcodes files
+    file_params = {study_file: {file_type: '10X Genes File', study_id: @study.id.to_s, study_file_bundle_id: study_file_bundle.id.to_s}}
+    perform_study_file_upload('GRCh38/test_genes.tsv', file_params, @study.id)
+    file_params = {study_file: {file_type: '10X Barcodes File', study_id: @study.id.to_s, study_file_bundle_id: study_file_bundle.id.to_s}}
+    perform_study_file_upload('GRCh38/barcodes.tsv', file_params, @study.id)
+    genes_file = @study.study_files.where(file_type: '10X Genes File').first
+    assert genes_file.present?, 'Did not find genes file after upload'
+    barcodes_file = @study.study_files.where(file_type: '10X Barcodes File').first
+    assert barcodes_file.present?, 'Did not find genes file after upload'
+
+    # validate that the study_file_bundle has initialized successfully
+    updated_bundle = @study.study_file_bundles.first
+    assert updated_bundle.original_file_list.size == 3,
+           "Did not find correct number of files in original_file_list, expected 3 but found #{updated_bundle.original_file_list.size}"
+    assert updated_bundle.study_files.size == 3,
+           "Associations did not set correctly on study_file_bundle, expected 3 but found #{updated_bundle.study_files.size}"
+    assert updated_bundle.completed?, "Bundle did not successfully initialize, expected completed? to be true but found #{updated_bundle.completed?}"
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
+
+  test 'create embargoed study' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+    study_params = {
+        study: {
+            name: "Embargo Study #{@random_seed}",
+            user_id: @test_user.id,
+            embargo: (Date.today + 1).to_s
+        }
+    }
+    post studies_path, params: study_params
+    follow_redirect!
+    assert_response 200, "Did not redirect to upload successfully"
+    @study = Study.find_by(name: "Embargo Study #{@random_seed}")
+    assert @study.present?, "Study did not successfully save"
+    # upload files and parse manually
+    # expression matrix #1
+    file_params = {study_file: {file_type: 'Expression Matrix', study_id: @study.id.to_s}}
+    perform_study_file_upload('expression_matrix_example.txt', file_params, @study.id)
+    assert_response 200, "Expression matrix upload failed: #{@response.code}"
+    assert @study.expression_matrix_files.size == 1, "Expression matrix failed to associate, found #{@study.expression_matrix_files.size} files"
+
+    # check that embargo functionality is working
+    assert @study.embargoed?(@sharing_user),
+           "Study should be embargoed for non-shared user, expected @study.embargoed?(@sharing_user) = true but found #{@study.embargoed?(@sharing_user)}"
+    assert !@study.embargoed?(@test_user),
+           "Study should not be embargoed for owner, expected !@study.embargoed?(@test_user) = true but found #{!@study.embargoed?(@test_user)}"
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 end
