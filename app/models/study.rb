@@ -1419,7 +1419,11 @@ class Study
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       # rather than relying on opts[:local], actually check if the file is already in the GCS bucket
       destination = expression_file.bucket_location
-      remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      begin
+        remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      rescue => e
+        Rails.logger.error "Error retrieving remote: #{e.message}"
+      end
       if remote.nil?
         begin
           Rails.logger.info "#{Time.now}: preparing to upload expression file: #{expression_file.upload_file_name}:#{expression_file.id} to FireCloud"
@@ -1763,7 +1767,11 @@ class Study
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       destination = ordinations_file.bucket_location
-      remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      begin
+        remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      rescue => e
+        Rails.logger.error "Error retrieving remote: #{e.message}"
+      end
       if remote.nil?
         begin
           Rails.logger.info "#{Time.now}: preparing to upload ordinations file: #{ordinations_file.upload_file_name}:#{ordinations_file.id} to FireCloud"
@@ -1982,7 +1990,11 @@ class Study
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       destination = coordinate_file.bucket_location
-      remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      begin
+        remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      rescue => e
+        Rails.logger.error "Error retrieving remote: #{e.message}"
+      end
       if remote.nil?
         begin
           Rails.logger.info "#{Time.now}: preparing to upload ordinations file: #{coordinate_file.upload_file_name}:#{coordinate_file.id} to FireCloud"
@@ -2254,7 +2266,11 @@ class Study
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       destination = metadata_file.bucket_location
-      remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      begin
+        remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      rescue => e
+        Rails.logger.error "Error retrieving remote: #{e.message}"
+      end
       if remote.nil?
         begin
           Rails.logger.info "#{Time.now}: preparing to upload metadata file: #{metadata_file.upload_file_name}:#{metadata_file.id} to FireCloud"
@@ -2426,7 +2442,11 @@ class Study
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       destination = marker_file.bucket_location
-      remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      begin
+        remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      rescue => e
+        Rails.logger.error "Error retrieving remote: #{e.message}"
+      end
       if remote.nil?
         begin
           Rails.logger.info "#{Time.now}: preparing to upload gene list file: #{marker_file.upload_file_name}:#{marker_file.id} to FireCloud"
