@@ -1809,7 +1809,7 @@ class Study
 
   # parse a coordinate labels file and create necessary data_array objects
   # coordinate labels are specific to a cluster_group
-  def initialize_coordinate_label_data_arrays(coordinate_file, use, opts={local: true})
+  def initialize_coordinate_label_data_arrays(coordinate_file, user, opts={local: true})
     begin
       @file_location = coordinate_file.upload.path
       # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
