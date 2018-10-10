@@ -28,9 +28,9 @@ echo "Database initialized, generating random test seed..."
 RANDOM_SEED=`openssl rand -hex 16`
 echo $RANDOM_SEED > /home/app/webapp/.random_seed
 echo "Launching tests using seed: $RANDOM_SEED"
-if [[ -v TEST_FILEPATH ]]
+if [ "$TEST_FILEPATH" != "" ]
 then
-  if [[ -v MATCHING_TESTS ]]
+  if [ "$MATCHING_TESTS" != "" ]
   then
     EXTRA_ARGS="-n $MATCHING_TESTS"
   fi
@@ -51,6 +51,7 @@ else
 	ruby -I test test/models/parse_utils_test.rb
 fi
 echo "Cleaning up..."
+bin/rails runner -e test "Study.destroy_all" # destroy all studies to clean up any files
 rake RAILS_ENV=test db:purge
 echo "Cleanup complete!"
 end=$(date +%s)
