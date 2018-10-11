@@ -6,11 +6,7 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
   setup do
     @test_user = User.find_by(email: 'testing.user@gmail.com')
     @sharing_user = User.find_by(email: 'sharing.user@gmail.com')
-    OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new({
-                                                                           :provider => 'google_oauth2',
-                                                                           :uid => '123545',
-                                                                           :email => 'testing.user@gmail.com'
-                                                                       })
+    auth_as_user(@test_user)
     sign_in @test_user
     @random_seed = File.open(Rails.root.join('.random_seed')).read.strip
   end
