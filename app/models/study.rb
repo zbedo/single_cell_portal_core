@@ -2871,10 +2871,10 @@ class Study
   def prevent_firecloud_attribute_changes
     if self.persisted? && !self.queued_for_deletion # skip this validation if we're queueing for deletion
       if self.firecloud_project_changed?
-        errors.add(:firecloud_project, ' cannot be changed once initialized.')
+        errors.add(:firecloud_project, 'cannot be changed once initialized.')
       end
       if self.firecloud_workspace_changed?
-        errors.add(:firecloud_workspace, ' cannot be changed once initialized.')
+        errors.add(:firecloud_workspace, 'cannot be changed once initialized.')
       end
     end
   end
