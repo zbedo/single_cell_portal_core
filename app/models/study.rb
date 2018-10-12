@@ -560,8 +560,13 @@ class Study
     if user.nil?
       false
     else
-      workspace_acl = Study.firecloud_client.get_workspace_acl(self.firecloud_project, self.firecloud_workspace)
-      workspace_acl['acl'][user.email].nil? ? false : workspace_acl['acl'][user.email]['canCompute']
+      begin
+        workspace_acl = Study.firecloud_client.get_workspace_acl(self.firecloud_project, self.firecloud_workspace)
+        workspace_acl['acl'][user.email].nil? ? false : workspace_acl['acl'][user.email]['canCompute']
+      rescue => e
+        Rails.logger.error "Unable to retrieve compute permissions for #{user.email}: #{e.message}"
+        false
+      end
     end
   end
 
