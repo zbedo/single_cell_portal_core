@@ -279,8 +279,7 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
     study_params = {
         study: {
             name: "Gzip Parse #{@random_seed}",
-            user_id: @test_user.id,
-            public: false
+            user_id: @test_user.id
         }
     }
     post studies_path, params: study_params
