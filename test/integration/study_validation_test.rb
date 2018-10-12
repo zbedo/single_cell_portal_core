@@ -135,7 +135,7 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
     auth_as_user(@sharing_user)
     sign_in(@sharing_user)
     get view_private_path
-    assert_redirected_to site_path, "Did not redirect to site path"
+    assert_redirected_to site_path, "Did not redirect to site path, current path is #{path}"
     get view_gzip_path
     assert_response 200,
                     "Did not correctly load #{view_gzip_path}, expected response 200 but found #{@response.code}"
@@ -143,7 +143,8 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
                  "Did not correctly load #{view_gzip_path}, current path is #{path}"
 
     get edit_private_study_path
-    assert_redirected_to studies_path, "Did not redirect to studies path"
+    assert_redirected_to studies_path, "Did not redirect to studies path, current path is #{path}"
+    follow_redirect!
     assert_equal studies_path, path,
                  "Did not correctly load #{studies_path}, current path is #{path}"
 
@@ -156,14 +157,50 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
     file_params = {study_file: {file_type: 'Documentation', study_id: @test_study.id.to_s}}
     perform_study_file_upload('README.txt', file_params, @test_study.id)
     assert_response 200, "Doc file upload failed: #{@response.code}"
-    assert @study.study_files.where(file_type: 'Documentation').size == 1,
-           "Doc failed to associate, found #{@study.study_files.where(file_type: 'Documentation').size} files"
+    assert @test_study.study_files.where(file_type: 'Documentation').size == 2,
+           "Doc failed to associate, found #{@test_study.study_files.where(file_type: 'Documentation').size} files"
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 
   test 'should disable downloads for reviewers' do
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
+    study_params = {
+        study: {
+            name: "Reviewer Share #{@random_seed}",
+            user_id: @test_user.id,
+            public: false,
+            study_shares_attributes: {
+                "0" => {
+                    email: @sharing_user.email,
+                    permission: 'Reviewer'
+                }
+            }
+        }
+    }
+    post studies_path, params: study_params
+    follow_redirect!
+    assert_response 200, "Did not complete request successfully, expected redirect and response 200 but found #{@response.code}"
+    @study = Study.find_by(name: "Reviewer Share #{@random_seed}")
+    assert @study.study_shares.size == 1, "Did not successfully create study_share, found #{@study.study_shares.size} shares"
+    reviewer_email = @study.study_shares.reviewers.first
+    assert reviewer_email == @sharing_user.email, "Did not grant reviewer permission to #{@sharing_user.email}, reviewers: #{reviewer_email}"
 
+    # load private study and validate reviewer can see study but not download data
+    sign_out @test_user
+    auth_as_user(@sharing_user)
+    sign_in @sharing_user
+    get view_study_path(@study.url_safe_name)
+    assert controller.current_user == @sharing_user,
+           "Did not successfully authenticate as sharing user, current_user is #{controller.current_user.email}"
+    assert_select "h1.study-lead", true, "Did not successfully load study page for #{@study.name}"
+    assert_select 'li#study-download-nav' do |element|
+      assert element.attr('class').to_str.include?('disabled'), "Did not disable downloads tab for reviewer: '#{element.attr('class')}'"
+    end
+    # ensure direct call to download is still disabled
+    get download_private_file_path(@study.url_safe_name, filename: 'README.txt')
+    follow_redirect!
+    assert_equal view_study_path(@study.url_safe_name), path,
+                 "Did not block download and redirect to study page, current path is #{path}"
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 end
