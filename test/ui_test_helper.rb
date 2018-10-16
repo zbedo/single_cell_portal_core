@@ -25,9 +25,10 @@ def parse_test_arguments(arguments)
   $env = 'development'
   $random_seed = SecureRandom.uuid
   $verbose = false
+  $headless = true
 
   # usage string for help message
-  $usage = "ruby test/ui_test_suite.rb -- -c=/path/to/chromedriver -e=testing.email@gmail.com -p='testing_email_password' -s=sharing.email@gmail.com -P='sharing_email_password' -o=order -d=/path/to/downloads -u=portal_url -E=environment -r=random_seed"
+  $usage = "ruby test/ui_test_suite.rb -- -c=/path/to/chromedriver -e=testing.email@gmail.com -p='testing_email_password' -s=sharing.email@gmail.com -P='sharing_email_password' -o=order -d=/path/to/downloads -u=portal_url -E=environment -r=random_seed -i (to disable headless)"
 
   # parse arguments and set values
   arguments.each do |arg|
@@ -53,6 +54,8 @@ def parse_test_arguments(arguments)
       $random_seed = arg.gsub(/\-r\=/, '')
     elsif arg =~ /\-v/
       $verbose = true
+    elsif arg =~ /\-i/
+      $headless = false
     end
   end
 end
