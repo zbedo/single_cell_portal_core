@@ -1,6 +1,6 @@
 require "integration_test_helper"
 
-class StudyAdminTest < ActionDispatch::IntegrationTest
+class StudyCreationTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
 
   setup do
