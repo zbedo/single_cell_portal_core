@@ -9,7 +9,7 @@ class GenomeAnnotation
   field :index_link, type: String
   field :release_date, type: Date
 
-  validates_presence_of :name, :link, :release_date
+  validates_presence_of :name, :link, :index_link, :release_date
   validates_uniqueness_of :name, scope: :genome_assembly_id
 
   validate :check_genome_annotation_link
