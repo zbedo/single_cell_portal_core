@@ -175,6 +175,7 @@ Rails.application.routes.draw do
     post 'search_all_genes', to: 'site#search_all_genes', as: :search_all_genes
     get 'log_action', to: 'site#log_action', as: :log_action
     get 'privacy_policy', to: 'site#privacy_policy', as: :privacy_policy
+    get 'terms_of_service', to: 'site#terms_of_service', as: :terms_of_service
     get '/', to: 'site#index', as: :site
     root to: 'site#index'
   end
