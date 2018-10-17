@@ -506,6 +506,9 @@ class StudiesController < ApplicationController
       # destroyed nightly after the database has been re-indexed.  This uses less memory and also makes the process
       # faster for end users
 
+      # set queued_for_deletion manually - gotcha due to race condition on page reloading and how quickly delayed_job can process jobs
+      @study.update(queued_for_deletion: true)
+
       # delete firecloud workspace so it can be reused (unless specified by user), and raise error if unsuccessful
       # if successful, we're clear to queue the study for deletion
       if params[:workspace] == 'persist'
@@ -518,9 +521,6 @@ class StudiesController < ApplicationController
           redirect_to merge_default_redirect_params(studies_path, scpbr: params[:scpbr]), alert: "We were unable to delete your study due to: #{view_context.simple_format(e.message)}.<br /><br />No files or database records have been deleted.  Please try again later" and return
         end
       end
-
-      # set queued_for_deletion manually - gotcha due to race condition on page reloading and how quickly delayed_job can process jobs
-      @study.update(queued_for_deletion: true)
 
       # Remove the analysis.json before enqueuing the delete job
       AnalysisMetadatum.where(study_id: @study.id).delete_all

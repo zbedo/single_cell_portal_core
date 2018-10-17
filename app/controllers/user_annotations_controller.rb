@@ -50,11 +50,11 @@ class UserAnnotationsController < ApplicationController
       new_labels.push('Undefined')
     end
 
-    # Remeber the old values
+    # Remember the old values
     old_labels = @user_annotation.values
 
-    # Remeber the old annotations
-    annotation_arrays = @user_annotation.user_data_arrays.by_name_and_type(@user_annotation.name,'annotations')
+    # Remember the old annotations
+    annotation_arrays = @user_annotation.user_data_arrays.all_by_name_and_type(@user_annotation.name,'annotations')
 
     respond_to do |format|
       #if a successful update, update data arrays
@@ -73,7 +73,7 @@ class UserAnnotationsController < ApplicationController
           #remember the index of old labels, this is per annotation
           old_values = annot.values
 
-          #remeber all the old indices and their labels
+          #remember all the old indices and their labels
           index_of_values = []
           old_labels.each_with_index do |old, i|
             index_array = []
