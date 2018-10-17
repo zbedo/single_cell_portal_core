@@ -25,6 +25,8 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
     assert_response 200, "Did not redirect to upload successfully"
     @study = Study.find_by(name: "Parse Failure Study #{@random_seed}")
     assert @study.present?, "Study did not successfully save"
+
+
     # upload files and parse manually
     # bad expression matrix
     file_params = {study_file: {file_type: 'Expression Matrix', study_id: @study.id.to_s}}
@@ -38,6 +40,8 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
     assert @study.genes.size == 0, "Found #{@study.genes.size} genes when should have found 0"
     assert @study.expression_matrix_files.size == 0,
            "Found #{@study.expression_matrix_files.size} expression matrices when should have found 0"
+
+
     # bad metadata file
     file_params = {study_file: {file_type: 'Metadata', study_id: @study.id.to_s}}
     perform_study_file_upload('metadata_bad.txt', file_params, @study.id)
@@ -53,6 +57,8 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
     assert @study.cell_metadata.size == 0, "Found #{@study.cell_metadata.size} genes when should have found 0"
     assert @study.metadata_file.nil?,
            "Found metadata file when should have found none"
+
+
     # bad cluster
     file_params = {study_file: {name: 'Test Cluster 1', file_type: 'Cluster', study_id: @study.id.to_s}}
     perform_study_file_upload('cluster_bad.txt', file_params, @study.id)
@@ -68,6 +74,8 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
     assert @study.cluster_groups.size == 0, "Found #{@study.cluster_groups.size} genes when should have found 0"
     assert @study.cluster_ordinations_files.size == 0,
            "Found #{@study.cluster_ordinations_files.size} cluster files when should have found 0"
+
+
     # bad marker gene list
     file_params = {study_file: {name: 'Test Gene List', file_type: 'Gene List', study_id: @study.id.to_s}}
     perform_study_file_upload('marker_1_gene_list_bad.txt', file_params, @study.id)
@@ -82,6 +90,7 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
     assert @study.study_files.where(file_type: 'Gene List').size == 0,
            "Found #{@study.study_files.where(file_type: 'Gene List').size} gene list files when should have found 0"
     assert @study.precomputed_scores.size == 0, "Found #{@study.precomputed_scores.size} precomputed scores when should have found 0"
+
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 
@@ -134,26 +143,34 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
     sign_out(@test_user)
     auth_as_user(@sharing_user)
     sign_in(@sharing_user)
+
+    # view private study, should fail and redirect
     get view_private_path
     assert_redirected_to site_path, "Did not redirect to site path, current path is #{path}"
+
+    # view public study
     get view_gzip_path
     assert_response 200,
                     "Did not correctly load #{view_gzip_path}, expected response 200 but found #{@response.code}"
     assert_equal view_gzip_path, path,
                  "Did not correctly load #{view_gzip_path}, current path is #{path}"
 
+    # edit private study, should fail and redirect
     get edit_private_study_path
     assert_redirected_to studies_path, "Did not redirect to studies path, current path is #{path}"
     follow_redirect!
     assert_equal studies_path, path,
                  "Did not correctly load #{studies_path}, current path is #{path}"
 
+    # edit shared study
     get edit_test_study_path
     assert_response 200,
                     "Did not correctly load #{edit_test_study_path}, expected response 200 but found #{@response.code}"
     assert_equal edit_test_study_path, path,
                  "Did not correctly load #{edit_test_study_path}, current path is #{path}"
-    # upload a file
+
+
+    # upload a file to shared study
     file_params = {study_file: {file_type: 'Documentation', study_id: @test_study.id.to_s}}
     perform_study_file_upload('README.txt', file_params, @test_study.id)
     assert_response 200, "Doc file upload failed: #{@response.code}"
@@ -185,6 +202,7 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
     reviewer_email = @study.study_shares.reviewers.first
     assert reviewer_email == @sharing_user.email, "Did not grant reviewer permission to #{@sharing_user.email}, reviewers: #{reviewer_email}"
 
+
     # load private study and validate reviewer can see study but not download data
     sign_out @test_user
     auth_as_user(@sharing_user)
@@ -196,6 +214,8 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
     assert_select 'li#study-download-nav' do |element|
       assert element.attr('class').to_str.include?('disabled'), "Did not disable downloads tab for reviewer: '#{element.attr('class')}'"
     end
+
+
     # ensure direct call to download is still disabled
     get download_private_file_path(@study.url_safe_name, filename: 'README.txt')
     follow_redirect!
