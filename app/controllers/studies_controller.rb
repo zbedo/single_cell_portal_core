@@ -1465,14 +1465,18 @@ class StudiesController < ApplicationController
 
   def set_user_projects
     @projects = [['Default Project', FireCloudClient::PORTAL_NAMESPACE]]
-    client = FireCloudClient.new(current_user, 'single-cell-portal')
-    unless !client.registered?
-      available_projects = client.get_billing_projects.keep_if {|project| project['role'] == 'Owner'}
-      available_projects.each do |project|
-        if project['creationStatus'] == 'Ready'
-          @projects << [project['projectName'], project['projectName']]
+    begin
+      client = FireCloudClient.new(current_user, 'single-cell-portal')
+      unless !client.registered?
+        available_projects = client.get_billing_projects.keep_if {|project| project['role'] == 'Owner'}
+        available_projects.each do |project|
+          if project['creationStatus'] == 'Ready'
+            @projects << [project['projectName'], project['projectName']]
+          end
         end
       end
+    rescue => e
+      Rails.logger.error "Error setting user projects for #{current_user.email}: #{e.message}"
     end
   end
 

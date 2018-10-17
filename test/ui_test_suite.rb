@@ -16,7 +16,7 @@ require File.expand_path('ui_test_helper.rb', 'test')
 # 4. Google Chrome
 # 5. Chromedriver (https://sites.google.com/a/chromium.org/chromedriver/); make sure the verison you install works with your version of chrome
 # 6. Register for FireCloud (https://portal.firecloud.org) for both Google accounts (needed for auth & sharing acls)
-# 7. The 'test email account' (see below) must be configured as a portal admin.  See 'ADMIN USER ACCOUNTS' in README.rdoc for more information.
+# 7. The 'test email account' (see below) must be configured as a portal admin.  See 'ADMIN USER ACCOUNTS' in README.md for more information.
 
 # USAGE
 #
@@ -24,7 +24,7 @@ require File.expand_path('ui_test_helper.rb', 'test')
 #
 # ruby test/ui_test_suite.rb [-n /pattern/] [--ignore-name /pattern/] -- -c=/path/to/chromedriver -e=testing.email@gmail.com -p='testing_email_password' -s=sharing.email@gmail.com -P='sharing_email_password' -o=order -d=/path/to/downloads -u=portal_url -E=environment -r=random_seed -v
 #
-# ui_test_suite.rb takes up to 12 arguments (4 are required):
+# ui_test_suite.rb takes up to 13 arguments (4 are required):
 # 1. path to your Chromedriver binary (passed with -c=)
 # 2. path to your Chrome profile (passed with -C=): tests may fail to log in properly if you do not load the default chrome profile due to Google captchas
 # 3. test email account (passed with -e=); REQUIRED. this must be a valid Google & FireCloud user and also configured as an 'admin' account in the portal
@@ -37,6 +37,7 @@ require File.expand_path('ui_test_helper.rb', 'test')
 # 10. environment (passed with -E=); Rails environment that the target instance is running in.  Needed for constructing certain URLs
 # 11. random seed (passed with -r=); random seed to use when running tests (will be needed if you're running front end tests against previously created studies from test suite)
 # 12. verbose (passed with -v); run tests in verbose mode, will print extra logging messages where appropriate
+# 13. interactive mode (passed with -i); run tests in interactive mode, which will open a chrome instance on your machine.  Default is to run headlessly via chromedriver
 #
 # IMPORTANT: if you do not use -- before the argument list and give the appropriate flag (with =), it is processed as a Test::Unit flag and ignored, and likely may
 # cause the suite to fail to launch.
@@ -72,6 +73,7 @@ puts "Download directory: #{$download_dir}"
 puts "Portal URL: #{$portal_url}"
 puts "Environment: #{$env}"
 puts "Random Seed: #{$random_seed}"
+puts "Headless: #{$headless}"
 puts "Verbose: #{$verbose}"
 
 # make sure download & chromedriver paths exist and portal url is valid, otherwise kill tests before running and print usage
@@ -99,6 +101,13 @@ class UiTestSuite < Test::Unit::TestCase
     options = Selenium::WebDriver::Chrome::Options.new
     options.add_argument('--enable-webgl-draft-extensions')
     options.add_argument('--incognito')
+    options.add_argument('--allow-insecure-localhost')
+    if $headless
+      options.add_argument('--disable-gpu')
+      options.add_argument('--no-sandbox')
+      options.add_argument('--headless')
+      options.add_argument('--disable-dev-shm-usage')
+    end
     @driver = Selenium::WebDriver::Driver.for :chrome, driver_path: $chromedriver_dir,
                                               options: options, desired_capabilities: caps,
                                               driver_opts: {log_path: '/tmp/webdriver.log'}

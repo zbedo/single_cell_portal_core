@@ -16,6 +16,7 @@
 /db/*.json
 /data/*
 /public/single_cell/assets
+/public/single_cell/test_assets
 /public/single_cell/branding_groups
 /public/single_cell/ckeditor_assets
 /config/broad-singlecellportal.json
@@ -37,3 +38,4 @@ node_modules/*
 /node_modules
 yarn-debug.log*
 .yarn-integrity
+/.random_seed
