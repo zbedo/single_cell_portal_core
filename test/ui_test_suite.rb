@@ -11,12 +11,12 @@ require File.expand_path('ui_test_helper.rb', 'test')
 # Therefore, the following languages/packages must be installed on your host:
 #
 # 1. RVM (or equivalent Ruby language management system)
-# 2. Ruby >= 2.3 (currently, 2.3.1 is the version running inside the container)
+# 2. Ruby >= 2.5.1 (currently, 2.5.1 is the version running inside the container)
 # 3. Gems: rubygems, test-unit, selenium-webdriver (see Gemfile.lock for version requirements)
 # 4. Google Chrome
 # 5. Chromedriver (https://sites.google.com/a/chromium.org/chromedriver/); make sure the verison you install works with your version of chrome
 # 6. Register for FireCloud (https://portal.firecloud.org) for both Google accounts (needed for auth & sharing acls)
-# 7. The 'test email account' (see below) must be configured as a portal admin.  See 'ADMIN USER ACCOUNTS' in README.rdoc for more information.
+# 7. The 'test email account' (see below) must be configured as a portal admin.  See 'ADMIN USER ACCOUNTS' in README.md for more information.
 
 # USAGE
 #
@@ -24,7 +24,7 @@ require File.expand_path('ui_test_helper.rb', 'test')
 #
 # ruby test/ui_test_suite.rb [-n /pattern/] [--ignore-name /pattern/] -- -c=/path/to/chromedriver -e=testing.email@gmail.com -p='testing_email_password' -s=sharing.email@gmail.com -P='sharing_email_password' -o=order -d=/path/to/downloads -u=portal_url -E=environment -r=random_seed -v
 #
-# ui_test_suite.rb takes up to 12 arguments (4 are required):
+# ui_test_suite.rb takes up to 13 arguments (4 are required):
 # 1. path to your Chromedriver binary (passed with -c=)
 # 2. path to your Chrome profile (passed with -C=): tests may fail to log in properly if you do not load the default chrome profile due to Google captchas
 # 3. test email account (passed with -e=); REQUIRED. this must be a valid Google & FireCloud user and also configured as an 'admin' account in the portal
@@ -37,6 +37,7 @@ require File.expand_path('ui_test_helper.rb', 'test')
 # 10. environment (passed with -E=); Rails environment that the target instance is running in.  Needed for constructing certain URLs
 # 11. random seed (passed with -r=); random seed to use when running tests (will be needed if you're running front end tests against previously created studies from test suite)
 # 12. verbose (passed with -v); run tests in verbose mode, will print extra logging messages where appropriate
+# 13. interactive mode (passed with -i); run tests in interactive mode, which will open a chrome instance on your machine.  Default is to run headlessly via chromedriver
 #
 # IMPORTANT: if you do not use -- before the argument list and give the appropriate flag (with =), it is processed as a Test::Unit flag and ignored, and likely may
 # cause the suite to fail to launch.
@@ -72,6 +73,7 @@ puts "Download directory: #{$download_dir}"
 puts "Portal URL: #{$portal_url}"
 puts "Environment: #{$env}"
 puts "Random Seed: #{$random_seed}"
+puts "Headless: #{$headless}"
 puts "Verbose: #{$verbose}"
 
 # make sure download & chromedriver paths exist and portal url is valid, otherwise kill tests before running and print usage
@@ -99,6 +101,13 @@ class UiTestSuite < Test::Unit::TestCase
     options = Selenium::WebDriver::Chrome::Options.new
     options.add_argument('--enable-webgl-draft-extensions')
     options.add_argument('--incognito')
+    options.add_argument('--allow-insecure-localhost')
+    if $headless
+      options.add_argument('--disable-gpu')
+      options.add_argument('--no-sandbox')
+      options.add_argument('--headless')
+      options.add_argument('--disable-dev-shm-usage')
+    end
     @driver = Selenium::WebDriver::Driver.for :chrome, driver_path: $chromedriver_dir,
                                               options: options, desired_capabilities: caps,
                                               driver_opts: {log_path: '/tmp/webdriver.log'}
@@ -754,7 +763,7 @@ class UiTestSuite < Test::Unit::TestCase
     @driver.get data_url
     wait_for_modal_open('message_modal')
     alert_text = @driver.find_element(:id, 'alert-content').text
-    expected_alert = "You may not download any data from this study until #{(Date.today + 1).strftime("%B %-d, %Y")}."
+    expected_alert = "You may not download any data from this study until #{(Date.today + 1).strftime("%B %d, %Y")}."
     assert alert_text == expected_alert, "did not find correct alert, expected '#{expected_alert}' but found '#{alert_text}'"
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
@@ -1707,229 +1716,6 @@ class UiTestSuite < Test::Unit::TestCase
 
     job_title = @driver.find_element(:id, 'fire_cloud_profile_title')['value']
     assert job_title == new_title, "Did not update job title correctly, expected '#{new_title}' but found '#{job_title}'"
-
-    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
-  end
-
-  ##
-  ## BILLING TESTS
-  ## Validate the portal can create and manage new FireCloud projects given existing billing projects/accounts
-  ## The user being used for the test must have an available Google billing project that they own for these tests to work
-  ##
-
-  # create a new firecloud billing project
-  test 'admin: billing-projects: create' do
-    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
-
-    @driver.get @base_url
-    login($test_email, $test_email_password)
-    @driver.get @base_url + '/billing_projects'
-
-    # create new billing project
-    add_btn = @driver.find_element(:id, 'add-billing-project')
-    add_btn.click
-    wait_for_modal_open('new-firecloud-project-modal')
-
-    # select available billing account and name project
-    accounts = @driver.find_element(:id, 'billing_project_billing_account').find_elements(:tag_name, 'option').keep_if {|opt| !opt['value'].empty?}
-    account = accounts.sample
-    account.click
-    name_field = @driver.find_element(:id, 'billing_project_project_name')
-    # project names have a length limit, so shorten random seed element
-    random_seed_slug = $random_seed.split('-').first
-    project_name = "test-scp-project-#{random_seed_slug}"
-    name_field.send_key(project_name)
-
-    # save new billing project
-    save_btn = @driver.find_element(:id, 'create-billing-project')
-    save_btn.click
-
-    # confirm project creation
-    close_modal('message_modal')
-    created_project = @driver.find_element(:id, project_name)
-    assert !created_project.nil?, "Did not find a new project with the name #{project_name}"
-    created_project_name = created_project.find_element(:class, 'project-name').text
-    assert project_name == created_project_name, "Did not set name of project correctly, expected '#{project_name}' but found '#{created_project_name}'"
-
-    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
-  end
-
-  # add users to a billing project
-  test 'admin: billing-projects: manage users' do
-    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
-
-    @driver.get @base_url
-    login($test_email, $test_email_password)
-    path = @base_url + '/billing_projects'
-    @driver.get path
-
-    # add a user to newly created project
-    random_seed_slug = $random_seed.split('-').first
-    project_name = "test-scp-project-#{random_seed_slug}"
-    project_path = path + "/#{project_name}/new_user"
-    add_user_button = @driver.find_element(:id, project_name).find_element(:class, 'add-billing-project-user')
-    add_user_button.click
-    wait_until_page_loads(project_path)
-    email_field = @driver.find_element(:id, 'billing_project_user_email')
-    email_field.send_key($share_email)
-    role_select = @driver.find_element(:id, 'billing_project_user_role')
-    role_select.send_key('user')
-    save_btn = @driver.find_element(:id, 'add-billing-project-user')
-    save_btn.click
-    wait_until_page_loads(path)
-    close_modal('message_modal')
-
-    # assert user was added
-    email_id = "#{project_name}-#{$share_email.gsub(/[@\.]/, '-')}"
-    assert element_present?(:id, email_id), "Did not successfully add user to billing project, could not find element with id: #{email_id}"
-
-    # remove user
-    remove_link = @driver.find_element(:id, project_name).find_element(:class, 'delete-billing-project-user')
-    remove_link.click
-    accept_alert
-    close_modal('message_modal')
-
-    # assert deletion
-    assert !element_present?(:id, email_id), "Did not successfully remove user to billing project, found element with id: #{email_id}"
-
-    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
-  end
-
-  # add a study to a newly created billing project
-  test 'admin: billing-projects: add a study' do
-    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
-
-    @driver.get @base_url
-    login($test_email, $test_email_password)
-    @driver.get @base_url + '/studies/new'
-
-    # fill out study form
-    study_form = @driver.find_element(:id, 'new_study')
-    study_form.find_element(:id, 'study_name').send_keys("New Project Study #{$random_seed}")
-    project = study_form.find_element(:id, 'study_firecloud_project')
-    random_seed_slug = $random_seed.split('-').first
-    project_name = "test-scp-project-#{random_seed_slug}"
-    project.send_keys(project_name)
-    # make sure dropdown changed to new project name
-    assert project['value'] == project_name, "Did not set FireCloud project to correct value, expected #{project_name} but found #{project['value']}"
-    # add a share
-    share = @driver.find_element(:id, 'add-study-share')
-    @wait.until {share.displayed?}
-    share.click
-    share_email = study_form.find_element(:class, 'share-email')
-    share_email.send_keys($share_email)
-    share_permission = study_form.find_element(:class, 'share-permission')
-    share_permission.send_keys('Edit')
-    # save study
-    save_study = @driver.find_element(:id, 'save-study')
-    save_study.click
-
-    # upload expression matrix
-    close_modal('message_modal')
-    upload_expression = @driver.find_element(:id, 'upload-expression')
-    upload_expression.send_keys(@test_data_path + 'expression_matrix_example.txt')
-    wait_for_render(:id, 'start-file-upload')
-    upload_btn = @driver.find_element(:id, 'start-file-upload')
-    sleep(0.5)
-    upload_btn.click
-    # close success modal
-    close_modal('upload-success-modal')
-    next_btn = @driver.find_element(:id, 'next-btn')
-    next_btn.click
-
-    # upload metadata
-    wait_for_render(:id, 'metadata_form')
-    upload_metadata = @driver.find_element(:id, 'upload-metadata')
-    upload_metadata.send_keys(@test_data_path + 'metadata_example2.txt')
-    wait_for_render(:id, 'start-file-upload')
-    upload_btn = @driver.find_element(:id, 'start-file-upload')
-    sleep(0.5)
-    upload_btn.click
-    close_modal('upload-success-modal')
-
-    # upload cluster
-    cluster_form_1 = @driver.find_element(:class, 'initialize_ordinations_form')
-    cluster_name = cluster_form_1.find_element(:class, 'filename')
-    cluster_name.send_keys('Test Cluster 1')
-    upload_cluster = cluster_form_1.find_element(:class, 'upload-clusters')
-    upload_cluster.send_keys(@test_data_path + 'cluster_example_2.txt')
-    wait_for_render(:id, 'start-file-upload')
-    # perform upload
-    upload_btn = cluster_form_1.find_element(:id, 'start-file-upload')
-    sleep(0.5)
-    upload_btn.click
-    close_modal('upload-success-modal')
-
-    # validate everything uploaded and parsed
-    sleep(3)
-    study_path = @base_url + '/study/' + "new-project-study-#{$random_seed}"
-    @driver.get study_path
-    wait_until_page_loads(study_path)
-    open_ui_tab('study-download')
-    files = @driver.find_elements(:class, 'dl-link').size
-    assert files == 3, "Did not find correct nubmer of files to download, expected 3 but found #{files}"
-    open_ui_tab('study-visualize')
-    assert element_visible?(:id, 'cluster-plot'), 'Study visualizations are not enabled'
-
-    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
-  end
-
-  # manage compute permissions for workspaces in a project
-  test 'admin: billing-projects: compute permissions' do
-    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
-
-    @driver.get @base_url
-    login($test_email, $test_email_password)
-    path =  @base_url + '/billing_projects'
-    @driver.get path
-
-    # make sure there is a project and a workspace
-    assert element_present?(:class, 'billing-project'), 'Did not find any billing projects'
-    random_seed_slug = $random_seed.split('-').first
-    project_name = "test-scp-project-#{random_seed_slug}"
-    workspaces_btn = @driver.find_element(:id, project_name).find_element(:class, 'view-workspaces')
-    workspaces_btn.click
-    wait_until_page_loads(path + "/#{project_name}/workspaces")
-    assert @driver.find_elements(:class, 'project-workspace').any?, 'Did not find any project workspaces'
-
-    # navigate to compute permissions page
-    edit_compute = @driver.find_element(:class, 'edit-computes')
-    edit_compute.click
-    wait_for_render(:id, 'user-computes')
-
-    # revoke compute permissions
-    share_email_id = $share_email.gsub(/[@.]/, '-')
-    form = @driver.find_element(:id, share_email_id)
-    compute_permissions = form.find_element(:id, 'compute_can_compute')
-    compute_permissions.send_key('No')
-    update_btn = form.find_element(:class, 'update-compute-permissions')
-    update_btn.click
-    wait_for_modal_open('message_modal')
-    notice = @driver.find_element(:id, 'notice-content').text
-    assert notice.include?('successfully updated'), "Did not find correct notification, expected 'successfully updated' but found #{notice}"
-
-    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
-  end
-
-  # view storage cost estimate for a project
-  test 'admin: billing-projects: storage costs' do
-    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
-
-    @driver.get @base_url
-    login($test_email, $test_email_password)
-    path = @base_url + '/billing_projects'
-    @driver.get path
-
-    # navigate to storage page
-    random_seed_slug = $random_seed.split('-').first
-    project_name = "test-scp-project-#{random_seed_slug}"
-    storage_btn = @driver.find_element(:id, project_name).find_element(:class, 'storage-estimate')
-    storage_btn.click
-    wait_until_page_loads(path + "/#{project_name}/storage_estimate")
-
-    project_label = @driver.find_element(:id, 'project-name').text
-    assert project_label == project_name, "Did not load correct project, expected '#{project_name}' but found '#{project_label}'"
-    assert element_present?(:id, 'workspace-costs'), 'Did not find workspace costs table'
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end

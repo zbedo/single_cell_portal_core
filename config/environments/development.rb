@@ -68,4 +68,11 @@ Rails.application.configure do
 
   # set MongoDB logging level
   Mongoid.logger.level = Logger::INFO
+
+  # patching Devise sign_out method & SwaggerDocs to bypass CSP headers & layout fixes
+  config.to_prepare do
+    Devise::RegistrationsController.send(:include, DeviseSignOutPatch)
+    SwaggerUiEngine::SwaggerDocsController.send(:include, Api::V1::Concerns::CspHeaderBypass)
+    SwaggerUiEngine::SwaggerDocsController.send(:layout, 'swagger_ui_engine/layouts/swagger')
+  end
 end

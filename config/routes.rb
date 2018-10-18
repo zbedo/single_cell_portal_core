@@ -83,8 +83,6 @@ Rails.application.routes.draw do
         patch 'upload', to: 'studies#do_upload'
         get 'resume_upload', to: 'studies#resume_upload'
         patch 'update_status', to: 'studies#update_status'
-        get 'reset_upload', to: 'studies#reset_upload'
-        get 'retrieve_upload', to: 'studies#retrieve_upload', as: :retrieve_upload
         get 'retrieve_wizard_upload', to: 'studies#retrieve_wizard_upload', as: :retrieve_wizard_upload
         get 'study_files/new', to: 'studies#new_study_file', as: :new_study_file
         match 'study_files', to: 'studies#update_study_file', via: [:post, :patch], as: :update_study_file
@@ -175,6 +173,7 @@ Rails.application.routes.draw do
     post 'search_all_genes', to: 'site#search_all_genes', as: :search_all_genes
     get 'log_action', to: 'site#log_action', as: :log_action
     get 'privacy_policy', to: 'site#privacy_policy', as: :privacy_policy
+    get 'terms_of_service', to: 'site#terms_of_service', as: :terms_of_service
     get '/', to: 'site#index', as: :site
     root to: 'site#index'
   end

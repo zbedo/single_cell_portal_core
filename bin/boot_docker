@@ -26,6 +26,8 @@ $0 [OPTION]
 -o VALUE	set the OAUTH_CLIENT_ID variable (for Google OAuth2)
 -S VALUE	set the OAUTH_CLIENT_SECRET variable (for Google OAuth2)
 -v VALUE	set the version of the single_cell_portal Docker image to use (defaults to latest)
+-t VALUE	set the path to a specific test suite file to run (if booting in test mode only)
+-R VALUE	set the regular expression or exact name to run only matching tests specified in -t (if booting in test mode only)
 -H COMMAND	print this text
 EOF
 )
@@ -46,7 +48,7 @@ GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
 GOOGLE_CLOUD_PROJECT=$GOOGLE_CLOUD_PROJECT
 DOCKER_IMAGE_VERSION='latest'
 
-while getopts "n:e:d:D:m:r:s:k:K:p:h:u:P:H:o:S:" OPTION; do
+while getopts "n:e:d:D:m:r:s:k:K:p:h:u:P:H:o:S:t:R:" OPTION; do
 case $OPTION in
 	n)
 		CONTAINER_NAME="$OPTARG"
@@ -97,6 +99,12 @@ case $OPTION in
 		echo "$usage"
 		exit 0
 		;;
+	t)
+	  TEST_FILEPATH="$OPTARG"
+	  ;;
+	R)
+	  TEST_REGEX="$OPTARG"
+	  ;;
 	*)
     echo "unrecognized option"
     echo "$usage"
@@ -117,7 +125,15 @@ then
 elif [[ $PASSENGER_APP_ENV = "test" ]]
 then
 	# used only to run all unit tests
-	docker run --rm -it --name single_cell_test --link mongodb:mongodb -h localhost -v $PROJECT_DIR:/home/app/webapp:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY -e SECRET_KEY_BASE=$SECRET_KEY_BASE -e GOOGLE_CLOUD_KEYFILE_JSON="$GOOGLE_CLOUD_KEYFILE_JSON" -e GOOGLE_PRIVATE_KEY="$GOOGLE_PRIVATE_KEY" -e GOOGLE_CLIENT_EMAIL="$GOOGLE_CLIENT_EMAIL" -e GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" -e GOOGLE_CLOUD_PROJECT="$GOOGLE_CLOUD_PROJECT" single_cell_docker:$DOCKER_IMAGE_VERSION bin/run_unit_tests.sh
+	if [ "$TEST_FILEPATH" != "" ]
+  then
+    EXTRA_ARGS="-t $TEST_FILEPATH"
+    if [ "$TEST_REGEX" != "" ]
+    then
+      EXTRA_ARGS=$EXTRA_ARGS" -R $TEST_REGEX"
+    fi
+	fi
+	docker run --rm -it --name single_cell_test --link mongodb:mongodb -h localhost -v $PROJECT_DIR:/home/app/webapp:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY -e SECRET_KEY_BASE=$SECRET_KEY_BASE -e GOOGLE_CLOUD_KEYFILE_JSON="$GOOGLE_CLOUD_KEYFILE_JSON" -e GOOGLE_PRIVATE_KEY="$GOOGLE_PRIVATE_KEY" -e GOOGLE_CLIENT_EMAIL="$GOOGLE_CLIENT_EMAIL" -e GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" -e GOOGLE_CLOUD_PROJECT="$GOOGLE_CLOUD_PROJECT" single_cell_docker:$DOCKER_IMAGE_VERSION bin/run_unit_tests.sh $EXTRA_ARGS
 else
 	docker run --rm -it --name $CONTAINER_NAME -p 80:80 -p 443:443 -p 587:587 --link mongodb:mongodb -h localhost -v $PROJECT_DIR:/home/app/webapp:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY -e READ_ONLY_SERVICE_ACCOUNT_KEY=$READ_ONLY_SERVICE_ACCOUNT_KEY -e READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON="$READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON" -e SENDGRID_USERNAME=$SENDGRID_USERNAME -e SENDGRID_PASSWORD=$SENDGRID_PASSWORD -e SECRET_KEY_BASE=$SECRET_KEY_BASE -e OAUTH_CLIENT_ID=$OAUTH_CLIENT_ID -e OAUTH_CLIENT_SECRET=$OAUTH_CLIENT_SECRET -e GOOGLE_CLOUD_KEYFILE_JSON="$GOOGLE_CLOUD_KEYFILE_JSON" -e GOOGLE_PRIVATE_KEY="$GOOGLE_PRIVATE_KEY" -e GOOGLE_CLIENT_EMAIL="$GOOGLE_CLIENT_EMAIL" -e GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" -e GOOGLE_CLOUD_PROJECT="$GOOGLE_CLOUD_PROJECT" single_cell_docker:$DOCKER_IMAGE_VERSION
 fi

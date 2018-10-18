@@ -450,6 +450,7 @@ class Study
   validates_uniqueness_of :name, on: :update, message: ": %{value} has already been taken.  Please choose another name."
   validates_presence_of   :name, on: :update
   validates_uniqueness_of :url_safe_name, on: :update, message: ": The name you provided tried to create a public URL (%{value}) that is already assigned.  Please rename your study to a different value."
+  validate :prevent_firecloud_attribute_changes, on: :update
 
   # callbacks
   before_validation :set_url_safe_name
@@ -559,8 +560,13 @@ class Study
     if user.nil?
       false
     else
-      workspace_acl = Study.firecloud_client.get_workspace_acl(self.firecloud_project, self.firecloud_workspace)
-      workspace_acl['acl'][user.email].nil? ? false : workspace_acl['acl'][user.email]['canCompute']
+      begin
+        workspace_acl = Study.firecloud_client.get_workspace_acl(self.firecloud_project, self.firecloud_workspace)
+        workspace_acl['acl'][user.email].nil? ? false : workspace_acl['acl'][user.email]['canCompute']
+      rescue => e
+        Rails.logger.error "Unable to retrieve compute permissions for #{user.email}: #{e.message}"
+        false
+      end
     end
   end
 
@@ -1418,7 +1424,11 @@ class Study
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       # rather than relying on opts[:local], actually check if the file is already in the GCS bucket
       destination = expression_file.bucket_location
-      remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      begin
+        remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      rescue => e
+        Rails.logger.error "Error retrieving remote: #{e.message}"
+      end
       if remote.nil?
         begin
           Rails.logger.info "#{Time.now}: preparing to upload expression file: #{expression_file.upload_file_name}:#{expression_file.id} to FireCloud"
@@ -1762,7 +1772,11 @@ class Study
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       destination = ordinations_file.bucket_location
-      remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      begin
+        remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      rescue => e
+        Rails.logger.error "Error retrieving remote: #{e.message}"
+      end
       if remote.nil?
         begin
           Rails.logger.info "#{Time.now}: preparing to upload ordinations file: #{ordinations_file.upload_file_name}:#{ordinations_file.id} to FireCloud"
@@ -1800,7 +1814,7 @@ class Study
 
   # parse a coordinate labels file and create necessary data_array objects
   # coordinate labels are specific to a cluster_group
-  def initialize_coordinate_label_data_arrays(coordinate_file, use, opts={local: true})
+  def initialize_coordinate_label_data_arrays(coordinate_file, user, opts={local: true})
     begin
       @file_location = coordinate_file.upload.path
       # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
@@ -1981,7 +1995,11 @@ class Study
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       destination = coordinate_file.bucket_location
-      remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      begin
+        remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      rescue => e
+        Rails.logger.error "Error retrieving remote: #{e.message}"
+      end
       if remote.nil?
         begin
           Rails.logger.info "#{Time.now}: preparing to upload ordinations file: #{coordinate_file.upload_file_name}:#{coordinate_file.id} to FireCloud"
@@ -2253,7 +2271,11 @@ class Study
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       destination = metadata_file.bucket_location
-      remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      begin
+        remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      rescue => e
+        Rails.logger.error "Error retrieving remote: #{e.message}"
+      end
       if remote.nil?
         begin
           Rails.logger.info "#{Time.now}: preparing to upload metadata file: #{metadata_file.upload_file_name}:#{metadata_file.id} to FireCloud"
@@ -2425,7 +2447,11 @@ class Study
 
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       destination = marker_file.bucket_location
-      remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      begin
+        remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+      rescue => e
+        Rails.logger.error "Error retrieving remote: #{e.message}"
+      end
       if remote.nil?
         begin
           Rails.logger.info "#{Time.now}: preparing to upload gene list file: #{marker_file.upload_file_name}:#{marker_file.id} to FireCloud"
@@ -2844,5 +2870,17 @@ class Study
 
   def strip_unsafe_characters_from_description
     self.description = self.description.to_s.gsub(ValidationTools::SCRIPT_TAG_REGEX, '')
+  end
+
+  # prevent editing firecloud project or workspace on edit
+  def prevent_firecloud_attribute_changes
+    if self.persisted? && !self.queued_for_deletion # skip this validation if we're queueing for deletion
+      if self.firecloud_project_changed?
+        errors.add(:firecloud_project, 'cannot be changed once initialized.')
+      end
+      if self.firecloud_workspace_changed?
+        errors.add(:firecloud_workspace, 'cannot be changed once initialized.')
+      end
+    end
   end
 end

@@ -28,6 +28,11 @@ class UserAnnotation
     def by_name_and_type(name, type, subsample_threshold=nil, subsample_annotation=nil)
       where(name: name, array_type: type, subsample_threshold: subsample_threshold, subsample_annotation: subsample_annotation).order_by(&:array_index).to_a
     end
+
+    # used primarily when updating annotations to get new labels in
+    def all_by_name_and_type(name, type)
+      where(name: name, array_type: type).order_by(&:array_index).to_a
+    end
   end
 
   has_many :user_annotation_shares, dependent: :delete do
