@@ -317,7 +317,7 @@ class ParseUtils
       # we have the file in FireCloud already, so just delete it
       begin
         Rails.logger.info "#{Time.now}: found remote version of #{study_file.bucket_location}: #{remote.name} (#{remote.generation})"
-        run_at = 15.seconds.from_now
+        run_at = 2.minutes.from_now
         Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file), run_at: run_at)
         Rails.logger.info "#{Time.now}: cleanup job for #{study_file.bucket_location}:#{study_file.id} scheduled for #{run_at}"
       rescue => e
