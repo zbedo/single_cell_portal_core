@@ -27,9 +27,14 @@ class ParseUtils
       # process the genes file to concatenate gene names and IDs together (for differentiating entries with duplicate names)
       raw_genes = genes_file.readlines.map(&:strip)
       @genes = []
-      raw_genes.each_with_index do |row, index|
-        gene_id, gene_name = row.split.map(&:strip)
-        @genes << [gene_name, gene_id]
+      raw_genes.each do |row|
+        vals = row.split
+        if vals.size == 1
+          @genes << vals.first.strip
+        else
+          gene_id, gene_name = vals.map(&:strip)
+          @genes << [gene_name, gene_id]
+        end
       end
 
       # read barcodes file
@@ -107,8 +112,13 @@ class ParseUtils
       other_genes = []
       other_genes_count = 0
       @genes.each do |gene|
-        gene_name, gene_id = gene
-        other_genes << Gene.new(study_id: study.id, name: gene_name, searchable_name: gene_name.downcase, gene_id: gene_id.last, study_file_id: matrix_study_file.id).attributes
+        if gene.is_a?(Array)
+          gene_name, gene_id = gene
+        else
+          gene_name = gene
+          gene_id = nil
+        end
+        other_genes << Gene.new(study_id: study.id, name: gene_name, searchable_name: gene_name.downcase, gene_id: gene_id, study_file_id: matrix_study_file.id).attributes
         other_genes_count += 1
         if other_genes.size % 1000 == 0
           Rails.logger.info "#{Time.now}: creating #{other_genes_count} non-expressed gene records in #{study.name}"
@@ -203,7 +213,12 @@ class ParseUtils
   # returns current gene index and new gene object
   def self.initialize_new_gene(study, gene_idx, matrix_file)
     reference_gene = @genes[gene_idx]
-    gene_name, gene_id = reference_gene
+    if reference_gene.is_a?(Array)
+      gene_name, gene_id = reference_gene
+    else
+      gene_name = reference_gene
+      gene_id = nil
+    end
     new_gene = Gene.new(study_id: study.id, name: gene_name, searchable_name: gene_name.downcase, gene_id: gene_id, study_file_id: matrix_file.id)
     @gene_documents << new_gene.attributes
     [gene_idx, new_gene]
