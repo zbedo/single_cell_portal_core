@@ -9,7 +9,9 @@ class UploadCleanupJob < Struct.new(:study, :study_file)
 
   def perform
     # make sure file or study isn't queued for deletion first
-    if study_file.queued_for_deletion || study.queued_for_deletion
+    if study_file.nil?
+      Rails.logger.info "#{Time.now}: aborting UploadCleanupJob due to StudyFile already being deleted."
+    elsif study_file.queued_for_deletion || study.queued_for_deletion
       Rails.logger.info "#{Time.now}: aborting UploadCleanupJob for #{study_file.bucket_location}:#{study_file.id} in '#{study.name}', file queued for deletion"
     else
       file_location = File.join(study.data_store_path, study_file.download_location)
