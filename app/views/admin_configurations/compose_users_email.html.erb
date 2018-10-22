@@ -68,9 +68,6 @@
                 toolbar: ["heading", '|',  "bold", "italic", "link", "bulletedList", "numberedList", "blockQuote", '|', "undo", "redo"]
             }
         )
-        .then( function(editor) {
-            console.log(Array.from( editor.ui.componentFactory.names() ));
-    } )
     .catch( function(error) {
         console.error( error );
     } );
