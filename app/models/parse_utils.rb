@@ -186,9 +186,11 @@ class ParseUtils
       matrix_study_file.remove_local_copy
       genes_study_file.remove_local_copy
       barcodes_study_file.remove_local_copy
-      delete_remote_file_on_fail(matrix_study_file, study)
-      delete_remote_file_on_fail(genes_study_file, study)
-      delete_remote_file_on_fail(barcodes_study_file, study)
+      unless opts[:sync] # if parse was initiated via sync, don't remove files
+        delete_remote_file_on_fail(matrix_study_file, study)
+        delete_remote_file_on_fail(genes_study_file, study)
+        delete_remote_file_on_fail(barcodes_study_file, study)
+      end
       matrix_study_file.destroy
       genes_study_file.destroy
       barcodes_study_file.destroy
