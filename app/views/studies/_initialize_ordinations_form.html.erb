@@ -141,6 +141,7 @@
 					$(data.context).find('h1').html(perc + "% uploaded");
 				},
 				done: function(e, data) {
+          $('#add-coordinate-label-btn').removeClass('hidden');
           completeWizardStep('initialize_ordinations_form_nav');
 					var fileName = data.files[0].name.replace(/ /g, '_');
 					// update upload status
