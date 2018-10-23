@@ -705,16 +705,16 @@ class StudyFile
 
   # remove a local copy on the file system if a parse fails
   def remove_local_copy
+    Rails.logger.info "Removing local copy of #{self.upload_file_name}"
     Dir.chdir(self.study.data_store_path)
-    if File.exists?(self.download_location)
-      File.delete(self.download_location)
-      subdir = self.remote_location.blank? ? self.id : self.remote_location.split('/').first
-      if Dir.exist?(subdir) && Dir.entries(subdir).delete_if {|e| e.start_with?('.')}.empty?
-        Dir.rmdir(subdir)
-      end
+    if Dir.exists?(self.id.to_s)
+      Rails.logger.info "Removing upload directory for #{self.upload_file_name} at #{Dir.pwd}/#{self.id.to_s}"
+      FileUtils.rm_rf(self.id.to_s)
     elsif File.exists?(self.bucket_location)
+      Rails.logger.info "Removing local copy at #{Dir.pwd}/#{self.bucket_location}"
       File.delete(self.bucket_location)
     end
+    Rails.logger.info "Removal of local copy of #{self.upload_file_name} complete"
   end
 
   ##

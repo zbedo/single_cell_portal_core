@@ -10,30 +10,39 @@ class ParseUtilsTest < ActiveSupport::TestCase
   def test_cell_ranger_expression_parse
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
-    # control values
-    @expected_genes = %w(KLHL17 HES4 AGRN UBE2J2 CPTP DVL1 VWA1 ATAD3C MIB2 MMP23B CDK11A NADK GABRD HES5 ACTRT2 ARHGEF16
-                         MEGF6 WRAP73 SMIM1 DFFB CHD5 PLEKHG5 UTS2 PARK7)
-    @expected_cells = %w(AACGTTGGTTAAAGTG-1 AGTAGTCAGAGCTATA-1 ATCTGCCCATACTCTT-1 ATGCGATCAAGTTGTC-1 ATTTCTGTCCTTTCGG-1
-                         CAGTAACGTAAACACA-1 CCAATCCCATGAAGTA-1 CGTAGGCCAGCGAACA-1 CTAACTTGTTCCATGA-1 CTCCTAGGTCTCATCC-1
-                         CTCGGAGTCGTAGGAG-1 CTGAAACAGGGAAACA-1 GACTACAGTAACGCGA-1 GCATACAGTACCGTTA-1 GCGAGAACAAGAGGCT-1
-                         GCTTCCACAGCTGTAT-1 GCTTGAAAGAGCTGCA-1 GGACGTCGTTAAAGAC-1 GTACTCCCACTGTTAG-1 GTCACAAAGTAAGTAC-1
-                         TAGCCGGAGAGACGAA-1 TCAACGACACAGCCCA-1 TCGGGACGTCTCAACA-1 TCTCTAACATGCTGGC-1 TGAGCCGGTGATAAGT-1)
-
-    # initiate parse
+    # load study files
     matrix = @study.study_files.by_type('MM Coordinate Matrix').first
     genes = @study.study_files.by_type('10X Genes File').first
     barcodes = @study.study_files.by_type('10X Barcodes File').first
+
+    # control values
+    @expected_genes = File.open(genes.upload.path).readlines.map {|line| line.split.map(&:strip)}
+    @expected_cells = File.open(barcodes.upload.path).readlines.map(&:strip)
+    matrix_file = File.open(matrix.upload.path).readlines
+    matrix_file.shift(3) # discard header lines
+    expressed_gene_idx = matrix_file.map {|line| line.split.first.strip.to_i}
+    @expressed_genes = expressed_gene_idx.map {|idx| @expected_genes[idx - 1].last}
+
+    # initiate parse
+
     user = User.first
     puts 'Parsing 10X GRCh38 output...'
     ParseUtils.cell_ranger_expression_parse(@study, user, matrix, genes, barcodes, {skip_upload: true})
     puts 'Parse of 10X GRCh38 complete'
     # validate that the expected significant values have been created
-    @expected_genes.each_with_index do |gene, index|
-      gene = @study.genes.where(name: /#{gene}/).first
-      cell_name = gene.scores.keys.first
-      value = gene.scores.values.first
-      assert value == index + 1, "Did not find correct score value for #{gene.name}:#{cell_name}, expected #{index + 1} but found #{value}"
-      assert @expected_cells.include?(cell_name), "Cell name '#{cell_name}' was not from control list: #{@expected_cells}"
+    @expected_genes.each do |entry|
+      gene_id, gene_name = entry
+      gene = @study.genes.find_by(name: gene_name)
+      assert gene_name == gene.name, "Gene names do not match: #{gene_name}, #{gene.name}"
+      assert gene_id == gene.gene_id, "Gene IDs do not match: #{gene_id}, #{gene.gene_id}"
+      # if this gene is expected to have expression, then validate the score is correct
+      if @expressed_genes.include?(gene_name)
+        expected_value = @expressed_genes.index(gene_name) + 1
+        cell_name = gene.scores.keys.first
+        assert @expected_cells.include?(cell_name), "Cell name '#{cell_name}' was not from control list: #{@expected_cells}"
+        value = gene.scores.values.first
+        assert value == expected_value, "Did not find correct score value for #{gene.name}:#{cell_name}, expected #{expected_value} but found #{value}"
+      end
     end
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
