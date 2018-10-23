@@ -24,7 +24,7 @@
       <%= f.select :file_type, options_for_select(['Fastq', 'BAM'], f.object.file_type), {}, class: 'form-control file-type' %>
     </div>
     <div class="col-sm-4">
-      <%= f.label :taxon_id, 'Species' %><br />
+      <%= f.label :taxon_id, 'Species' %> <%= render partial: 'taxon_help_popover' %><br />
       <%= f.select :taxon_id, options_from_collection_for_select(Taxon.sorted, :id, :display_name, study_file.taxon_id), {include_blank: 'None selected...'}, {class: 'form-control taxon-select'} %>
     </div>
     <div class="col-sm-4 <%= study_file.file_type == 'BAM' ? nil : 'hidden' %> genome-assembly-association">

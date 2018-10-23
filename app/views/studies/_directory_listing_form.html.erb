@@ -34,7 +34,7 @@
     </div>
     <div class="col-sm-2">
       <% if directory.file_type.match(DirectoryListing::TAXON_REQUIRED_REGEX).present? %>
-        <%= f.label :taxon_id, 'Species' %><br />
+        <%= f.label :taxon_id, 'Species' %> <%= render partial: 'taxon_help_popover' %><br />
         <%= f.select :taxon_id, options_from_collection_for_select(Taxon.sorted, :id, :display_name, f.object.taxon_id),
                      {prompt: 'None selected...'}, {class: 'form-control taxon-select'} %>
       <% end %>
