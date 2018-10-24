@@ -886,7 +886,7 @@ class StudyFile
 
   # if this file is part of a bundle, delete that bundle before removing this file (only if a parent)
   def remove_bundle_associations
-    if self.is_bundle_parent? && self.study_file_bundle.present?
+    if self.is_bundle_parent?
       self.study_file_bundle.destroy # destroying bundle removes all references to the bundle in all included files
     end
   end

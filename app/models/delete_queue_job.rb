@@ -65,6 +65,14 @@ class DeleteQueueJob < Struct.new(:object)
           nil
         end
 
+        # if this is a parent bundled file, delete all other associated files
+        if object.is_bundle_parent?
+          object.bundled_files.each do |file|
+            Rail.logger.info "Deleting bundled file #{file.upload_file_name} from #{study.name}"
+            DeleteQueueJob.new(file).delay.perform
+          end
+        end
+
         # queue study file object for deletion, set file_type to DELETE to prevent it from being picked up in any queries
         new_name = "DELETE-#{SecureRandom.uuid}"
         object.update!(queued_for_deletion: true, upload_file_name: new_name, name: new_name, file_type: 'DELETE')
@@ -72,13 +80,6 @@ class DeleteQueueJob < Struct.new(:object)
         # reset initialized if needed
         if study.cluster_groups.empty? || study.genes.empty? || study.cell_metadata.empty?
           study.update!(initialized: false)
-        end
-
-        # if this is a parent bundled file, delete all other associated files
-        if object.is_bundle_parent?
-          object.bundled_files.each do |file|
-            DeleteQueueJob.new(file).delay.perform
-          end
         end
       when 'UserAnnotation'
         # set queued for deletion to true and set user annotation name
