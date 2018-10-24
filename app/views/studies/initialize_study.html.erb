@@ -232,5 +232,16 @@
 		$('#show-gsutil-command').click(function() {
 		   $('#gsutil-command-wrapper').slideToggle('slow');
     });
+
+		$('.tab-content').on('click', '.initialize-bundled-file', function() {
+		    var url = "<%= initialize_bundled_file_study_path(@study) %>";
+		    var dataAttr = $(this).data();
+		    url += "?file_type=" + dataAttr.fileType + "&study_file_id=" + dataAttr.studyFileId;
+		    $.ajax({
+            url: url,
+            method: 'POST',
+            dataType: 'script'
+        });
+    })
 	});
 </script>

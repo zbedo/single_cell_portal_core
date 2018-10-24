@@ -50,7 +50,7 @@
 				</div>
 				<div class="col-xs-6">
           <% if study_file.parsing? || study_file.upload_file_name.nil? %>
-            <%= link_to 'Delete', 'javascript:;', class: 'btn btn-block btn-danger disabled-delete', disabled: 'disabled', title: 'You must wait until the file has finished uploading & parsing before deleting', data: {toggle: 'tooltip'} %>
+            <%= link_to 'Delete', '#/', class: 'btn btn-block btn-danger disabled-delete', disabled: 'disabled', title: 'You must wait until the file has finished uploading & parsing before deleting', data: {toggle: 'tooltip'} %>
           <% else %>
             <%= link_to 'Delete', delete_study_file_study_path(@study._id, study_file._id, target: "#expression_form_#{study_file._id}"), method: :delete, class: 'btn btn-block btn-danger delete-file', data: {remote: true} %>
           <% end %>
@@ -58,11 +58,18 @@
 			</div>
 		</div>
 	</div>
+
 	<div class="form-group upload-progress">
 		<table class="table table-condensed">
 			<tbody class="files"></tbody>
 		</table>
 	</div>
+
+  <div class="initialize-bundle-target">
+    <% if study_file.study_file_bundle.present? && !study_file.study_file_bundle.completed? %>
+      <%= render partial: 'study_file_bundle_btns', locals: {study_file_id: study_file.id.to_s, file_type: 'MM Coordinate Matrix'} %>
+    <% end %>
+  </div>
 
 	<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
       var form = $('#expression_form_<%= study_file._id %>');
@@ -71,6 +78,7 @@
               form.append("<%= j render partial: 'sort_warning' %>")
           } else {
               form.find($('.sort-warning')).remove();
+              form.find('.initialize-bundle-target').empty();
           }
       });
 
@@ -110,6 +118,9 @@
 				chunkdone: function(e, data) {
 					var perc = parseInt(data.loaded / data.total * 100, 10);
 					$(data.context).find('h1').html(perc + "% uploaded");
+            if ( $('#<%= study_file.id %>-bundle-btns').length === 0 && form.find('.file-type').val() === 'MM Coordinate Matrix') {
+                form.find('.initialize-bundle-target').html("<%= j(render partial: 'study_file_bundle_btns', locals: {study_file_id: study_file.id.to_s, file_type: 'MM Coordinate Matrix'}) %>")
+            }
 				},
 				done: function(e, data) {
           completeWizardStep('initialize_expression_form_nav');

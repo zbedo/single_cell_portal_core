@@ -568,6 +568,16 @@ class StudiesController < ApplicationController
       # don't use helper as we're about to mass-assign params
       study_file = @study.study_files.build
       if study_file.update(study_file_params)
+        # determine if we need to create a study_file_bundle for the new study_file
+        if StudyFileBundle::BUNDLE_TYPES.include?(study_file.file_type) && study_file.file_type != 'Cluster'
+          matching_bundle = @study.study_file_bundles.detect {|bundle| bundle.bundle_type == study_file.file_type && bundle.parent == study_file}
+          if matching_bundle.nil?
+            study_file_bundle = @study.study_file_bundles.build(bundle_type: study_file.file_type)
+            bundle_payload = StudyFileBundle.generate_file_list(study_file)
+            study_file_bundle.original_file_list = bundle_payload
+            study_file_bundle.save! # saving the study_file_bundle will create new placeholder entries for the bundled study_files
+          end
+        end
         # we need to add this file to a study_file_bundle if it was assigned
         if study_file_params[:study_file_bundle_id].present?
           # we're processing a bundled upload, which means there might be a placeholder file entry we need to find
@@ -635,33 +645,50 @@ class StudiesController < ApplicationController
       head 404 and return
     end
     @bundled_files = {}
-    # determine if we need to make a StudyFileBundle.  Cluster files are ignored as they're handled separately
+    # determine if we need to add forms to the page for bundled files
     if StudyFileBundle::BUNDLE_TYPES.include?(@study_file.file_type) && @study_file.file_type != 'Cluster'
       @study_file_bundle = @study_file.study_file_bundle.present? ? @study_file.study_file_bundle : @study.study_file_bundles.build(bundle_type: @study_file.file_type)
-      if @study_file_bundle.new_record?
-        bundle_payload = StudyFileBundle.generate_file_list(@study_file)
-        @study_file_bundle.original_file_list = bundle_payload
-        @study_file_bundle.save! # saving the study_file_bundle will create new placeholder entries for the bundled study_files
-      end
-      # check if there are 'bundled' files that need to be added
+      # initialize container that will be used to render new forms in the upload wizard if needed
+      target = 'expressions-target'
       case @study_file.file_type
       when 'MM Coordinate Matrix'
-        if @study_file_bundle.bundled_files.empty?
-          @bundled_files['expressions-target'] = [
-              @study.study_files.build(file_type: '10X Genes File', study_file_bundle_id: @study_file_bundle.id),
-              @study.study_files.build(file_type: '10X Barcodes File', study_file_bundle_id: @study_file_bundle.id)
-          ]
-        else
-          @bundled_files['expressions-target'] = @study_file_bundle.bundled_files.to_a
-        end
+        target = 'expressions-target'
       when 'BAM'
-        if @study_file_bundle.bundled_files.empty?
-          @bundled_files['primary-data-target'] = [
-              @study.study_files.build(file_type: 'BAM Index', study_file_bundle_id: @study_file_bundle.id)
-          ]
-        else
-          @bundled_files['primary-data-target'] = @study_file_bundle.bundled_files.to_a
+        target = 'primary-data-target'
+      end
+      @bundled_files[target] = []
+      StudyFileBundle::BUNDLE_REQUIREMENTS[@study_file.file_type].each do |bundled_file_type|
+        if @study_file_bundle.bundled_files.detect {|f| f.file_type == bundled_file_type}.nil?
+          @bundled_files[target] << @study.study_files.build(file_type: bundled_file_type, study_file_bundle_id: @study_file_bundle.id)
         end
+      end
+    end
+  end
+
+  # begin uploading a bundled study_file while parent is still uploading
+  def initialize_bundled_file
+    parent_file = StudyFile.find_by(study_id: params[:id], id: params[:study_file_id])
+    if parent_file.present? && parent_file.study_file_bundle.present?
+      @bundle = parent_file.study_file_bundle
+      # either load existing bundled file, or create new one of the requested file_type
+      @study_file = @bundle.bundled_files.detect {|f| f.file_type == params[:file_type] }
+      if @study_file.nil?
+        @study_file = @study.study_files.build(study_file_bundle_id: @bundle.id, file_type: params[:file_type])
+      end
+      case parent_file.file_type
+      when 'MM Coordinate Matrix'
+        @target = '#expressions-target'
+      when 'Cluster'
+        @target = '#ordinations-target'
+      when 'BAM'
+        @target = '#primary-data-target'
+      end
+    else
+      alert = 'Invalid operation: you cannot bundle files with the requested study file.'
+      respond_to do |format|
+        format.html {head 422}
+        format.json {render json: {error: alert}, status: 422}
+        format.js {render js: "alert('#{alert}');"}
       end
     end
   end
