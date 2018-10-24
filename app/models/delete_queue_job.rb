@@ -65,12 +65,13 @@ class DeleteQueueJob < Struct.new(:object)
           nil
         end
 
-        # if this is a parent bundled file, delete all other associated files
+        # if this is a parent bundled file, delete all other associated files and bundle
         if object.is_bundle_parent?
           object.bundled_files.each do |file|
-            Rail.logger.info "Deleting bundled file #{file.upload_file_name} from #{study.name}"
+            Rails.logger.info "Deleting bundled file #{file.upload_file_name} from #{study.name} due to parent deletion: #{object.upload_file_name}"
             DeleteQueueJob.new(file).delay.perform
           end
+          object.study_file_bundle.destroy # manually remove bundle
         end
 
         # queue study file object for deletion, set file_type to DELETE to prevent it from being picked up in any queries

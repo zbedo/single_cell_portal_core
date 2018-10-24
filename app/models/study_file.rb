@@ -367,7 +367,6 @@ class StudyFile
   before_validation   :set_file_name_and_data_dir, on: :create
   before_save         :sanitize_name
   after_save          :set_cluster_group_ranges
-  before_destroy      :remove_bundle_associations
 
   has_mongoid_attached_file :upload,
                             :path => ":rails_root/data/:data_dir/:id/:filename",
@@ -881,13 +880,6 @@ class StudyFile
   def check_assembly
     if GenomeAssembly.present? && ASSEMBLY_REQUIRED_TYPES.include?(self.file_type) && self.genome_assembly_id.nil?
       errors.add(:genome_assembly_id, 'You must supply a genome assembly for this file type: ' + self.file_type)
-    end
-  end
-
-  # if this file is part of a bundle, delete that bundle before removing this file (only if a parent)
-  def remove_bundle_associations
-    if self.is_bundle_parent?
-      self.study_file_bundle.destroy # destroying bundle removes all references to the bundle in all included files
     end
   end
 end
