@@ -17,7 +17,7 @@
           </div>
           <div class="col-sm-3">
             <label>View Workflow</label><br />
-            <%= link_to 'View Selected WDL', 'javascript:;', class: 'btn btn-default', id: 'view-selected-wdl', 'data-loading-text' => 'Loading... Please wait.' %>
+            <%= link_to 'View Selected WDL', '#/', class: 'btn btn-default', id: 'view-selected-wdl', 'data-loading-text' => 'Loading... Please wait.' %>
           </div>
         </div>
         <div id="wdl-content-target">
@@ -66,8 +66,8 @@
     </div>
 
     <ul class="pager wizard">
-      <li class="previous"><a href="javascript:;" id="prev-btn">Previous</a></li>
-      <li class="next"><a href="javascript:;" id="next-btn">Next</a></li>
+      <li class="previous"><a href="#/" id="prev-btn">Previous</a></li>
+      <li class="next"><a href="#/" id="next-btn">Next</a></li>
     </ul>
   </div>
 <% end %>

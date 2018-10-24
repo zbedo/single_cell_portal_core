@@ -34,7 +34,7 @@
       <%= f.text_field :file_type, readonly: true, class: 'form-control file-type' %>
     </div>
 		<div class="col-sm-5 upload-field">
-      <% if !study_file.upload_file_name.nil? && study_file.upload_file_name !~ /BUNDLE_PLACEHOLDER/ %>
+      <% if !study_file.upload_file_name.nil? %>
         <p><label>Link to file </label><br /><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></p>
       <% else %>
         <%= f.label :upload, 'Upload Data File' %><br />
@@ -50,7 +50,7 @@
 				</div>
 				<div class="col-xs-6">
           <% if study_file.parsing? || study_file.upload_file_name.nil? %>
-            <%= link_to 'Delete', 'javascript:;', class: 'btn btn-block btn-danger disabled-delete', disabled: 'disabled', title: 'You must wait until the file has finished uploading & parsing before deleting', data: {toggle: 'tooltip'} %>
+            <%= link_to 'Delete', '#/', class: 'btn btn-block btn-danger disabled-delete', disabled: 'disabled', title: 'You must wait until the file has finished uploading & parsing before deleting', data: {toggle: 'tooltip'} %>
           <% else %>
             <%= link_to 'Delete', delete_study_file_study_path(@study._id, study_file._id, target: "#bundled_file_form_#{study_file._id}"), method: :delete, class: 'btn btn-block btn-danger delete-file', data: {remote: true} %>
           <% end %>
