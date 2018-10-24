@@ -72,19 +72,18 @@
   </div>
 
 	<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
-      var form = $('#expression_form_<%= study_file._id %>');
-      form.find($('.file-type')).on('change', function() {
+      $('#expression_form_<%= study_file._id %>').find('.file-type').on('change', function() {
           if ($(this).val() === 'MM Coordinate Matrix') {
-              form.append("<%= j render partial: 'sort_warning' %>")
+              $('#expression_form_<%= study_file._id %>').append("<%= j render partial: 'sort_warning' %>")
           } else {
-              form.find($('.sort-warning')).remove();
-              form.find('.initialize-bundle-target').empty();
+              $('#expression_form_<%= study_file._id %>').find($('.sort-warning')).remove();
+              $('#expression_form_<%= study_file._id %>').find('.initialize-bundle-target').empty();
           }
       });
 
 		$(function() {
 
-			form.fileupload({
+        $('#expression_form_<%= study_file._id %>').fileupload({
 				url: "<%= upload_study_path(@study._id) %>",
 				maxChunkSize: 10000000,
 				type: 'PATCH',
@@ -119,7 +118,7 @@
 					var perc = parseInt(data.loaded / data.total * 100, 10);
 					$(data.context).find('h1').html(perc + "% uploaded");
             if ( $('#<%= study_file.id %>-bundle-btns').length === 0 && form.find('.file-type').val() === 'MM Coordinate Matrix') {
-                form.find('.initialize-bundle-target').html("<%= j(render partial: 'study_file_bundle_btns', locals: {study_file_id: study_file.id.to_s, file_type: 'MM Coordinate Matrix'}) %>")
+                $('#expression_form_<%= study_file._id %>').find('.initialize-bundle-target').html("<%= j(render partial: 'study_file_bundle_btns', locals: {study_file_id: study_file.id.to_s, file_type: 'MM Coordinate Matrix'}) %>")
             }
 				},
 				done: function(e, data) {

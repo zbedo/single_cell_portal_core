@@ -80,17 +80,16 @@
     <% end %>
   </div>
 	<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
-      var form = $('#primary_data_form_<%= study_file._id %>');
-      form.find('.human-data').change(function() {
+      $('#primary_data_form_<%= study_file._id %>').find('.human-data').change(function() {
           var that = $(this);
-          var taxonSelect = form.find('.taxon-select');
+          var taxonSelect = $('#primary_data_form_<%= study_file._id %>').find('.taxon-select');
           var selectedTaxon = taxonSelect.val();
           if (selectedTaxon !== '') {
               $.getJSON('<%= get_taxon_path %>?taxon=' + selectedTaxon, function (taxon) {
                   if (taxon.restricted) {
                       if (that.val() !== 'true') {
                           taxonSelect.val('');
-                          form.find('.genome-assembly-select').empty();
+                          $('#primary_data_form_<%= study_file._id %>').find('.genome-assembly-select').empty();
                       }
                   }
               })
@@ -98,21 +97,21 @@
           toggleFastqFields('primary_data_form_<%= study_file._id %>', $(this).val() === 'true');
       });
 
-      form.find('.file-type').change(function() {
+      $('#primary_data_form_<%= study_file._id %>').find('.file-type').change(function() {
           var fileType = $(this).val();
-          var genomeAssemblyDiv = form.find('.genome-assembly-association');
+          var genomeAssemblyDiv = $('#primary_data_form_<%= study_file._id %>').find('.genome-assembly-association');
 
           if (fileType == 'BAM') {
               genomeAssemblyDiv.removeClass('hidden');
           } else {
               genomeAssemblyDiv.addClass('hidden');
-              form.find('.genome-assembly-select').empty();
+              $('#primary_data_form_<%= study_file._id %>').find('.genome-assembly-select').empty();
           }
       });
 
-      form.find('.taxon-select').change(function() {
+      $('#primary_data_form_<%= study_file._id %>').find('.taxon-select').change(function() {
           var selectedTaxon = $(this).val();
-          var assemblyDropdown = form.find('.genome-assembly-select');
+          var assemblyDropdown = $('#primary_data_form_<%= study_file._id %>').find('.genome-assembly-select');
           if (selectedTaxon !== '') {
               $.getJSON('<%= get_taxon_path %>?taxon=' + selectedTaxon, function(taxon) {
                   var humanDataSelect = $('#primary_data_form_<%= study_file.id %>').find('.human-data');
@@ -142,7 +141,7 @@
       });
 
 		$(function() {
-			form.fileupload({
+			$('#primary_data_form_<%= study_file._id %>').fileupload({
 				url: "<%= upload_study_path(@study._id) %>",
 				maxChunkSize: 10000000,
 				type: 'PATCH',
@@ -171,8 +170,9 @@
 				chunkdone: function(e, data) {
 					var perc = parseInt(data.loaded / data.total * 100, 10);
 					$(data.context).find('h1').html(perc + "%");
-          if ( $('#<%= study_file.id %>-bundle-btns').length === 0 && form.find('.file-type').val() === 'BAM') {
-              form.find('.initialize-bundle-target').html("<%= j(render partial: 'study_file_bundle_btns', locals: {study_file_id: study_file.id.to_s, file_type: 'BAM'}) %>")
+          if ( $('#<%= study_file.id %>-bundle-btns').length === 0 &&
+              $('#primary_data_form_<%= study_file._id %>').find('.file-type').val() === 'BAM') {
+              $('#primary_data_form_<%= study_file._id %>').find('.initialize-bundle-target').html("<%= j(render partial: 'study_file_bundle_btns', locals: {study_file_id: study_file.id.to_s, file_type: 'BAM'}) %>")
           }
 				},
 				done: function(e, data) {
