@@ -569,6 +569,15 @@ class StudyFile
     end
   end
 
+  # determine if this file is a bundle parent
+  def is_bundle_parent?
+    if self.study_file_bundle.present?
+      self.study_file_bundle.parent == self
+    else
+      false
+    end
+  end
+
   # retrieve the cluster group id from the options hash for a cluster labels file
   def coordinate_labels_font_family
     if self.options[:font_family].blank?
@@ -875,9 +884,9 @@ class StudyFile
     end
   end
 
-  # if this file is part of a bundle, delete that bundle before removing this file
+  # if this file is part of a bundle, delete that bundle before removing this file (only if a parent)
   def remove_bundle_associations
-    if self.study_file_bundle.present?
+    if self.is_bundle_parent? && self.study_file_bundle.present?
       self.study_file_bundle.destroy # destroying bundle removes all references to the bundle in all included files
     end
   end
