@@ -29,10 +29,9 @@ class DeleteQueueJob < Struct.new(:object)
             study.save
           end
 
-          clusters = ClusterGroup.where(study_file_id: object.id, study_id: study.id)
-          cluster_group_id = clusters.first.id
-          clusters.delete_all
-          DataArray.where(study_file_id: object.id, study_id: study.id).delete_all
+          cluster_group_id = ClusterGroup.find_by(study_file_id: object.id, study_id: study.id).id
+          delete_parsed_data(object.id, study.id, ClusterGroup)
+          delete_parsed_data(object.id, study.id, DataArray)
           user_annotations = UserAnnotation.where(study_id: study.id, cluster_group_id: cluster_group_id )
           user_annotations.each do |annot|
             annot.user_data_arrays.delete_all
@@ -41,29 +40,28 @@ class DeleteQueueJob < Struct.new(:object)
           user_annotations.delete_all
         end
       when 'Coordinate Labels'
-        DataArray.where(study_file_id: object.id, study_id: study.id).delete_all
+        delete_parsed_data(object.id, study.id, DataArray)
+        remove_file_from_bundle
       when 'Expression Matrix'
-        Gene.where(study_file_id: object.id, study_id: study.id).delete_all
-        DataArray.where(study_file_id: object.id, study_id: study.id).delete_all
+        delete_parsed_data(object.id, study.id, Gene, DataArray)
         study.set_gene_count
       when 'MM Coordinate Matrix'
-        Gene.where(study_file_id: object.id, study_id: study.id).delete_all
-        DataArray.where(study_file_id: object.id, study_id: study.id).delete_all
+        delete_parsed_data(object.id, study.id, Gene, DataArray)
         study.set_gene_count
+      when /10X/
+        object.study_file_bundle.study_files.each do |file|
+          file.update(parse_status: 'unparsed')
+        end
+        parent = object.study_file_bundle.parent
+        delete_parsed_data(parent.id, study.id, Gene, DataArray)
+        remove_file_from_bundle
       when 'Metadata'
-        CellMetadatum.where(study_file_id: object.id, study_id: study.id).delete_all
-        DataArray.where(study_file_id: object.id, study_id: study.id).delete_all
+        delete_parsed_data(object.id, study.id, CellMetadatum, DataArray)
         study.update(cell_count: 0)
       when 'Gene List'
-        PrecomputedScore.where(study_file_id: object.id, study_id: study.id).delete_all
-      when /(10X|Index|Coordinate)/ # this is a bundled 10X file, a BAM Index, or a Coordinate Label
-        bundle = object.study_file_bundle
-        bundle.original_file_list.delete_if {|file| file['file_type'] == object.file_type} # this edits the list in place, but is not saved
-        object.update(study_file_bundle_id: nil)
-        bundle.save
-        if bundle.original_file_list.empty?
-          bundle.destroy
-        end
+        delete_parsed_data(object.id, study.id, PrecomputedScore)
+      when 'BAM Index'
+        remove_file_from_bundle
       else
         nil
       end
@@ -74,13 +72,7 @@ class DeleteQueueJob < Struct.new(:object)
           Rails.logger.info "Deleting bundled file #{file.upload_file_name} from #{study.name} due to parent deletion: #{object.upload_file_name}"
           DeleteQueueJob.new(file).delay.perform
         end
-        bundle = object.study_file_bundle
-        bundle.original_file_list.delete_if {|file| file['file_type'] == object.file_type} # this edits the list in place, but is not saved
-        object.update(study_file_bundle_id: nil)
-        bundle.save
-        if bundle.original_file_list.empty?
-          bundle.destroy
-        end
+        remove_file_from_bundle
       end
 
       # queue study file object for deletion, set file_type to DELETE to prevent it from being picked up in any queries
@@ -108,6 +100,26 @@ class DeleteQueueJob < Struct.new(:object)
         files = object.next
         files.each {|f| f.delete}
       end
+    end
+  end
+
+  private
+
+  # remove a study_file from a study_file_bundle, and clean up as necessary
+  def remove_file_from_bundle
+    bundle = object.study_file_bundle
+    bundle.original_file_list.delete_if {|file| file['file_type'] == object.file_type} # this edits the list in place, but is not saved
+    object.update(study_file_bundle_id: nil)
+    bundle.save
+    if bundle.original_file_list.empty?
+      bundle.destroy
+    end
+  end
+
+  # removed all parsed data from provided list of models
+  def delete_parsed_data(object_id, study_id, *models)
+    models.each do |model|
+      model.where(study_file_id: object_id, study_id: study_id).delete_all
     end
   end
 end
