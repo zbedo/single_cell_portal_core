@@ -1005,33 +1005,7 @@ class StudiesController < ApplicationController
         DeleteQueueJob.new(@study_file).delay.perform
         @file_type = @study_file.file_type
         @message = "'#{@study_file.name}' has been successfully deleted."
-        # clean up records before removing file (for memory optimization)
-        case @file_type
-        when 'Cluster'
-          @partial = 'initialize_ordinations_form'
-        when 'Coordinate Labels'
-          @partial = 'initialize_labels_form'
-        when 'Expression Matrix'
-          @partial = 'initialize_expression_form'
-        when 'MM Coordinate Matrix'
-          @partial = 'initialize_expression_form'
-        when '10X Genes File'
-          @partial = 'initialize_expression_form'
-        when 'Expression Matrix'
-          @partial = 'initialize_expression_form'
-        when 'Metadata'
-          @partial = 'initialize_metadata_form'
-        when 'Fastq'
-          @partial = 'initialize_primary_data_form'
-        when 'BAM'
-          @partial = 'initialize_primary_data_form'
-        when 'BAM Index'
-          @partial = 'initialize_primary_data_form'
-        when 'Gene List'
-          @partial = 'initialize_marker_genes_form'
-        else
-          @partial = 'initialize_misc_form'
-        end
+        @partial = @study_file.wizard_partial_name
         # delete source file in FireCloud and then remove record
         begin
           # make sure file is in FireCloud first as user may be aborting the upload

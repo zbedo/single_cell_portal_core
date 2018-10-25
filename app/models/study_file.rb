@@ -731,6 +731,70 @@ class StudyFile
   #
   ##
 
+  # get the name of form partial for the wizard uploader by file type
+  def wizard_partial_name
+    case self.file_type
+    when 'Cluster'
+      'initialize_ordinations_form'
+    when 'Coordinate Labels'
+      'initialize_labels_form'
+    when 'Expression Matrix'
+      'initialize_expression_form'
+    when 'MM Coordinate Matrix'
+      'initialize_expression_form'
+    when '10X Genes File'
+      'initialize_expression_form'
+    when '10X Barcodes File'
+      'initialize_expression_form'
+    when 'Expression Matrix'
+      'initialize_expression_form'
+    when 'Metadata'
+      'initialize_metadata_form'
+    when 'Fastq'
+      'initialize_primary_data_form'
+    when 'BAM'
+      'initialize_primary_data_form'
+    when 'BAM Index'
+      'initialize_primary_data_form'
+    when 'Gene List'
+      'initialize_marker_genes_form'
+    else
+      'initialize_misc_form'
+    end
+  end
+
+  # get the ID of form for the wizard uploader by file type
+  def wizard_form_id
+    case self.file_type
+    when 'Cluster'
+      "ordinations_form_#{self.id}"
+    when 'Coordinate Labels'
+      "labels_form_#{self.id}"
+    when 'Expression Matrix'
+      "expression_form_#{self.id}"
+    when 'MM Coordinate Matrix'
+      "expression_form_#{self.id}"
+    when '10X Genes File'
+      "bundled_file_form_#{self.id}"
+    when '10X Barcodes File'
+      "bundled_file_form_#{self.id}"
+    when 'Expression Matrix'
+      "misc_form_#{self.id}"
+    when 'Metadata'
+      "metadata_form"
+    when 'Fastq'
+      "primary_data_form_#{self.id}"
+    when 'BAM'
+      "primary_data_form_#{self.id}"
+    when 'BAM Index'
+      "bundled_file_form_#{self.id}"
+    when 'Gene List'
+      "marker_genes_form_#{self.id}"
+    else
+      "misc_form_#{self.id}"
+    end
+  end
+
   def generate_expression_matrix_cells
     begin
       study = self.study
