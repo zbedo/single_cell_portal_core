@@ -357,8 +357,8 @@ function enableDefaultActions() {
     $('.datepicker').datepicker({dateFormat: 'yy-mm-dd'});
 
     $('body').tooltip({selector: '[data-toggle="tooltip"]', container: 'body', trigger: 'hover'});
-    $('body').popover({container: 'body', html: true, trigger: 'hover focus', selector: '[data-toggle="popover"]'});
-    $('body').on('mouseenter', '[data-toggle="popover"]', function() { $(this).focus(); });
+
+    enableHoverPopovers();
 
     // warns user of in progress uploads, fileUploading is set to true from fileupload().add()
     $('.check-upload').click(function () {
@@ -419,6 +419,25 @@ function enableDefaultActions() {
 
   restoreExploreMenusState();
 
+}
+
+function enableHoverPopovers(selector=null) {
+    var selector = selector || '[data-toggle="popover"]';
+    $(selector).popover({container: 'body', html: true, trigger: 'manual'})
+        .on("mouseenter", function () {
+            var _this = this;
+            $(this).popover("show");
+            $(".popover").on("mouseleave", function () {
+                $(_this).popover('hide');
+            });
+        }).on("mouseleave", function () {
+        var _this = this;
+        setTimeout(function () {
+            if (!$(".popover:hover").length) {
+                $(_this).popover("hide");
+            }
+        }, 100);
+    });
 }
 
 

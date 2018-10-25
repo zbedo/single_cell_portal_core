@@ -1,6 +1,6 @@
 <div class="form-group row">
   <div class="col-sm-4">
-    <%= f.label :taxon_id, 'Species' %> <%= render partial: 'taxon_help_popover' %><br />
+    <%= f.label :taxon_id, 'Species' %> <%= render partial: 'taxon_help_popover', locals: {id: f.object.id.to_s} %><br />
     <%= f.select :taxon_id, options_from_collection_for_select(Taxon.sorted, :id, :display_name, f.object.taxon_id), {prompt: 'None selected...'}, {class: 'form-control'} %>
   </div>
   <div class="col-sm-8">
