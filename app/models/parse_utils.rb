@@ -242,8 +242,8 @@ class ParseUtils
           # then we must abort and throw an error as the parse will not complete properly.  we will have all the genes,
           # but not all of the expression data
           if gene_idx < @last_gene_index
-            Rails.logger.error "Error in parsing #{matrix_file.bucket_location} in #{study.name}: incorrect sort order; #{gene_idx + 1} is less than #{@last_gene_idx + 1} at line #{matrix_file.lineno}"
-            error_message = "Your input matrix is not sorted in the correct order.  The data must be sorted by gene index first, then barcode index: #{gene_idx + 1} is less than #{@last_gene_idx + 1} at #{matrix_file.lineno}"
+            Rails.logger.error "Error in parsing #{matrix_file.bucket_location} in #{study.name}: incorrect sort order; #{gene_idx + 1} is less than #{@last_gene_index + 1} at line #{matrix_data.lineno}"
+            error_message = "Your input matrix is not sorted in the correct order.  The data must be sorted by gene index first, then barcode index: #{gene_idx + 1} is less than #{@last_gene_index + 1} at #{matrix_data.lineno}"
             raise StandardError, error_message
           end
           # create data_arrays and move to the next gene
