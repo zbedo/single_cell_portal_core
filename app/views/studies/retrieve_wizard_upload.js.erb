@@ -28,7 +28,7 @@ $('.initialize-label').tooltip({container: 'body'});
 // render any 'bundled' file forms, unless already present
 <% @bundled_files.each do |target, study_files| %>
   <% study_files.each do |study_file| %>
-    $("#<%= target %>").append("<%= escape_javascript(render partial: 'initialize_bundled_file_form', locals: {study_file: study_file }) %>");
+    $("<%= target %>").append("<%= escape_javascript(render partial: 'initialize_bundled_file_form', locals: {study_file: study_file }) %>");
   <% end %>
 <% end %>
 
