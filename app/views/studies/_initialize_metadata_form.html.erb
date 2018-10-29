@@ -91,20 +91,23 @@
 						  url: "<%= update_status_study_path %>",
 						  type: "PATCH",
               dataType: 'script',
-						  data: { status: 'uploaded', file: fileName}
+						  data: { status: 'uploaded', file: fileName},
+              success: function() {
+                  fileUploading = false;
+                  $.ajax({
+                      url: "<%= parse_study_file_study_path(@study._id) %>",
+                      type: 'POST',
+                      data: {
+                          file: fileName,
+                          modal_target: '#metadata-parse-modal',
+                          partial: 'initialize_metadata_form',
+                          selector: "#metadata_form"
+                      },
+                      dataType: 'script'
+                  });
+              }
 					});
-					fileUploading = false;
-          $.ajax({
-              url: "<%= parse_study_file_study_path(@study._id) %>",
-              type: 'POST',
-              data: {
-                  file: fileName,
-                  modal_target: '#metadata-parse-modal',
-                  partial: 'initialize_metadata_form',
-                  selector: "#metadata_form"
-              },
-              dataType: 'script'
-          });
+
 				},
         fail: function(e, data) {
             if (data.jqXHR != undefined) {

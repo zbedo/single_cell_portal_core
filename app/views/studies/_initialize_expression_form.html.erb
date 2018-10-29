@@ -117,7 +117,7 @@
 				chunkdone: function(e, data) {
 					var perc = parseInt(data.loaded / data.total * 100, 10);
 					$(data.context).find('h1').html(perc + "% uploaded");
-            if ( $('#<%= study_file.id %>-bundle-btns').length === 0 && form.find('.file-type').val() === 'MM Coordinate Matrix') {
+            if ( $('#<%= study_file.id %>-bundle-btns').length === 0 && $('#expression_form_<%= study_file._id %>').find('.file-type').val() === 'MM Coordinate Matrix') {
                 $('#expression_form_<%= study_file._id %>').find('.initialize-bundle-target').html("<%= j(render partial: 'study_file_bundle_btns', locals: {study_file_id: study_file.id.to_s, file_type: 'MM Coordinate Matrix'}) %>")
             }
 				},
@@ -128,20 +128,22 @@
 						  url: "<%= update_status_study_path %>",
 						  type: "PATCH",
               dataType: 'script',
-						  data: { status: 'uploaded', file: fileName}
+						  data: { status: 'uploaded', file: fileName},
+              success: function () {
+                  fileUploading = false;
+                  $.ajax({
+                      url: "<%= parse_study_file_study_path(@study._id) %>",
+                      type: 'POST',
+                      data: {
+                          file: fileName,
+                          modal_target: '#expression-parse-modal',
+                          partial: 'initialize_expression_form',
+                          selector: "#expression_form_<%= study_file._id %>"
+                      },
+                      dataType: 'script'
+                  });
+              }
 					});
-					fileUploading = false;
-					$.ajax({
-              url: "<%= parse_study_file_study_path(@study._id) %>",
-              type: 'POST',
-              data: {
-                  file: fileName,
-                  modal_target: '#expression-parse-modal',
-                  partial: 'initialize_expression_form',
-                  selector: "#expression_form_<%= study_file._id %>"
-              },
-              dataType: 'script'
-          });
 				},
         fail: function(e, data) {
 				    if (data.jqXHR != undefined) {
