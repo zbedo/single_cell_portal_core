@@ -1396,6 +1396,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
         buffer.rewind
         local.write buffer.read
       end
+      local.close
+      local = nil # garbage collect
       Rails.logger.info "Chunked download for #{filename} from #{workspace_namespace}/#{workspace_name} complete"
       # return newly-opened file (will need to check content type before attempting to parse)
       File.open end_path
