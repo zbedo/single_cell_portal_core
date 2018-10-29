@@ -46,4 +46,25 @@ class ParseUtilsTest < ActiveSupport::TestCase
     end
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
+
+  # test that sparse matrix parsing validates coordinate matrix sort order correctly
+  def test_sparse_matrix_sort_check
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+    @study = Study.find_by(name: 'Negative Testing Study')
+    user = User.first
+    matrix = @study.study_files.by_type('MM Coordinate Matrix').first
+    genes = @study.study_files.by_type('10X Genes File').first
+    barcodes = @study.study_files.by_type('10X Barcodes File').first
+
+    begin
+      puts 'Parsing 10X incorrectly sorted matrix...'
+      ParseUtils.cell_ranger_expression_parse(@study, user, matrix, genes, barcodes, {skip_upload: true, sync: true})
+    rescue => e
+      assert e.is_a?(StandardError), "Did not raise the correct error, expected StandardError but found #{e.class}"
+      assert e.message.starts_with?('Your input matrix is not sorted in the correct order.'), "Error message did not specify incorrect sort order: #{e.message}"
+      assert @study.genes.count == 0, "Should not have saved any genes, found #{@study.genes.count}"
+    end
+
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
 end
