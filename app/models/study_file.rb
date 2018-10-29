@@ -480,6 +480,15 @@ class StudyFile
     api_url + '?alt=media'
   end
 
+  # determine if a file has been uploaded
+  def uploaded?
+    if self.human_data?
+      true # human sequence data is remote, so this is always true
+    else
+      self.generation.present? || self.status == 'uploaded'
+    end
+  end
+
   # convert all domain ranges from floats to integers
   def convert_all_ranges
     if self.file_type == 'Cluster'
