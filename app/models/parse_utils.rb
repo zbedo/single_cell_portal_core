@@ -5,7 +5,7 @@ class ParseUtils
     begin
       start_time = Time.now
       # localize files
-      Rails.logger.info "#{Time.now}: Parsing 10X CellRanger source data files for #{study.name}"
+      Rails.logger.info "#{Time.now}: Parsing 10X CellRanger source data files for #{study.name} with the following options: #{opts}"
       study.make_data_dir
       Rails.logger.info "#{Time.now}: Localizing output files & creating study file entries from 10X CellRanger source data for #{study.name}"
 
@@ -186,7 +186,7 @@ class ParseUtils
       matrix_study_file.remove_local_copy
       genes_study_file.remove_local_copy
       barcodes_study_file.remove_local_copy
-      unless opts[:sync] # if parse was initiated via sync, don't remove files
+      unless opts[:sync] == true # if parse was initiated via sync, don't remove files
         delete_remote_file_on_fail(matrix_study_file, study)
         delete_remote_file_on_fail(genes_study_file, study)
         delete_remote_file_on_fail(barcodes_study_file, study)
