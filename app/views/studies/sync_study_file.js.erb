@@ -3,7 +3,7 @@ $('#sync-notice-modal').modal('show');
 $("<%= @form %>").remove();
 
 // now append synced study file to synced data panel
-$('#synced-study-files').append("<%= escape_javascript(render partial: 'synced_study_file_form', locals: {study_file: @study_file}) %>");
+$('<%= @target %>').append("<%= escape_javascript(render partial: 'synced_study_file_form', locals: {study_file: @study_file}) %>");
 
 // close any empty panels
 $('.unsynced').each(function() {

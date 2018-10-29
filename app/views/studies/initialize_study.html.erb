@@ -27,9 +27,6 @@
         </div>
         <% @expression_files.each do |study_file| %>
           <%= render partial: 'initialize_expression_form', locals: {study_file: study_file} %>
-          <% study_file.bundled_files.each do |bundled_file| %>
-            <%= render partial: 'initialize_bundled_file_form', locals: {study_file: bundled_file} %>
-          <% end %>
         <% end %>
         <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
             if (<%= !@expression_files.first.new_record? %>) {

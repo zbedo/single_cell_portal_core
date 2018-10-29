@@ -1,91 +1,79 @@
-<%= form_for(study_file, url: update_study_file_from_sync_study_path(@study._id), html: {id: "study-file-#{study_file._id}" , class: "bs-callout bs-callout-primary synced-study-file" }, data: {remote: true}) do |f| %>
-  <%= render partial: 'study_file_errors', locals: {study_file: study_file} %>
-  <%= f.hidden_field :study_id, value: params[:id] %>
-  <%= f.hidden_field :_id, value: study_file._id %>
-  <%= f.hidden_field :upload_file_name %>
-  <%= f.hidden_field :upload_file_size %>
-  <%= f.hidden_field :status, value: 'uploaded' %>
-  <%= f.hidden_field :upload_content_type %>
-  <%= f.hidden_field :generation %>
-  <%= f.hidden_field :remote_location %>
-  <% study_file.options.each do |key, value| %>
-    <%= hidden_field_tag "study_file_options_#{key}", value, name: "study_file[options][#{key}]" %>
-  <% end %>
-  <div class="form-group row">
-    <div class="col-sm-4">
-      <%= f.label :name %><br />
-      <%= f.text_field :name, class: 'form-control filename', readonly: !['Cluster', 'Gene List'].include?(study_file.file_type) , placeholder: 'Please provide a name for this entity...', autocomplete: 'off' %>
-    </div>
-    <% if study_file.bundle_parent.present? %>
-      <div class="col-sm-4" style="cursor: not-allowed;">
-        <%= f.fields_for :options do |opts| %>
-          <% if ['10X Genes File', '10X Barcodes File'].include?(study_file.file_type) %>
-            <%= opts.label :matrix_id, 'Associated expression matrix' %><br />
-            <%= opts.select :matrix_id, options_for_select([[study_file.bundle_parent.name, study_file.bundle_parent.id]], f.object.bundle_parent.id), {}, class: 'form-control', style: 'pointer-events: none;', disabled: true %>
-          <% elsif study_file.file_type == 'BAM Index' %>
-            <%= opts.label :bam_id, 'Associated BAM file' %><br />
-            <%= opts.select :bam_id, options_for_select([[study_file.bundle_parent.name, study_file.bundle_parent.id]], f.object.bundle_parent.id), {}, class: 'form-control', style: 'pointer-events: none;', disabled: true %>
-          <% elsif study_file.file_type == 'Coordinate Labels' %>
-            <%= opts.label :cluster_group_id, 'Associated Cluster' %><br />
-            <%= opts.select :cluster_group_id, options_for_select(@study.cluster_groups.map {|cluster_group| [cluster_group.name, cluster_group.id]}, f.object.bundle_parent.id), {}, class: 'form-control', style: 'pointer-events: none;', disabled: true %>
-          <% end %>
-        <% end %>
-      </div>
-      <div class="col-sm-4">
-        <%= f.label :description, 'Description' %><br />
-        <%= f.text_field :description, class: 'form-control' %>
-      </div>
 
-    <% else %>
+  <%= form_for(study_file, url: update_study_file_from_sync_study_path(@study._id), html: {id: "study-file-#{study_file.id}" , class: "synced-study-file" }, data: {remote: true}) do |f| %>
+    <%= render partial: 'study_file_errors', locals: {study_file: study_file} %>
+    <%= f.hidden_field :study_id, value: params[:id] %>
+    <%= f.hidden_field :_id, value: study_file._id %>
+    <%= f.hidden_field :upload_file_name %>
+    <%= f.hidden_field :upload_file_size %>
+    <%= f.hidden_field :status, value: 'uploaded' %>
+    <%= f.hidden_field :upload_content_type %>
+    <%= f.hidden_field :generation %>
+    <%= f.hidden_field :remote_location %>
+    <%= f.hidden_field :study_file_bundle_id %>
+    <% study_file.options.each do |key, value| %>
+      <%= hidden_field_tag "study_file_options_#{key}", value, name: "study_file[options][#{key}]" %>
+    <% end %>
+    <div class="form-group row">
+      <div class="col-sm-4">
+        <%= f.label :name %><br />
+        <%= f.text_field :name, class: 'form-control filename', readonly: !['Cluster', 'Gene List'].include?(study_file.file_type) , placeholder: 'Please provide a name for this entity...', autocomplete: 'off' %>
+      </div>
       <div class="col-sm-8">
         <%= f.label :description, 'Description' %><br />
         <%= f.text_field :description, class: 'form-control' %>
       </div>
-    <% end %>
-  </div>
-  <div id="study-file-<%= study_file._id %>-extra-info">
-    <% if study_file.file_type == 'Cluster'  %>
-      <%= render partial: 'cluster_axis_fields', locals: {f: f} %>
-    <% elsif study_file.file_type == 'Expression Matrix' || study_file.file_type == 'MM Coordinate Matrix' %>
-      <%= render partial: 'expression_file_fields', locals: {f: f} %>
-    <% end %>
-  </div>
-  <div class="form-group row">
-    <div class="col-sm-2">
-      <%= f.label :file_type %><br />
-      <%= f.select :file_type, options_for_select(@file_types, study_file.file_type), {}, class: 'form-control file-type' %>
     </div>
-    <div class="col-sm-2">
-      <%= f.label :upload, 'Download' %><br />
-      <%= render partial: 'layouts/download_link', locals: {study_file: study_file} %>
-    </div>
-    <div class="col-sm-4 taxon-select-target">
-      <% if study_file.file_type == 'BAM' || study_file.file_type == 'Fastq' || study_file.file_type == 'Analysis Output' %>
-        <%= render partial: 'taxon_fields', locals: {f: f} %>
+    <div id="study-file-<%= study_file._id %>-extra-info">
+      <% if study_file.file_type == 'Cluster'  %>
+        <%= render partial: 'cluster_axis_fields', locals: {f: f} %>
+      <% elsif study_file.file_type == 'Expression Matrix' || study_file.file_type == 'MM Coordinate Matrix' %>
+        <%= render partial: 'expression_file_fields', locals: {f: f} %>
       <% end %>
     </div>
-    <div class="col-sm-2">
-      <%= label_tag :reparse, 'Reparse File?' %><br/>
-      <%= select_tag :reparse, options_for_select(%w(Yes No), 'No'), {class: 'form-control'} %>
-    </div>
-    <div class="col-sm-2">
-      <%= f.label :actions %>
-      <div class="row">
-        <div class="col-xs-6">
-          <%= f.submit 'Update', class: 'btn btn-block btn-success save-study-file', id: "sync-study-file-#{study_file.id}" %>
-        </div>
-        <div class="col-xs-6">
-          <% if study_file.parsing? %>
-            <%= link_to 'Delete', '#/', class: 'btn btn-block btn-danger disabled-delete', disabled: 'disabled', title: 'You must wait until the file has finished parsing before deleting', data: {toggle: 'tooltip'} %>
-          <% else %>
-            <%= link_to "Delete", unsync_study_file_study_path(@study._id, study_file._id), method: :delete, title: "This will delete all database records associated with #{study_file.name} but leave the remote file in the workspace.", class: 'btn btn-block btn-danger delete-file-sync delete-study-file', data: {remote: true, toggle: 'tooltip'} %>
-          <% end %>
+    <div class="form-group row">
+      <div class="col-sm-2">
+        <%= f.label :file_type %><br />
+        <%= f.select :file_type, options_for_select(@file_types, study_file.file_type), {}, class: 'form-control file-type' %>
+      </div>
+      <div class="col-sm-2">
+        <%= f.label :upload, 'Download' %><br />
+        <%= render partial: 'layouts/download_link', locals: {study_file: study_file} %>
+      </div>
+      <div class="col-sm-4 taxon-select-target">
+        <% if study_file.file_type == 'BAM' || study_file.file_type == 'Fastq' || study_file.file_type == 'Analysis Output' %>
+          <%= render partial: 'taxon_fields', locals: {f: f} %>
+        <% end %>
+      </div>
+      <div class="col-sm-2">
+        <%= label_tag :reparse, 'Reparse File?' %><br/>
+        <%= select_tag :reparse, options_for_select(%w(Yes No), 'No'), {class: 'form-control'} %>
+      </div>
+      <div class="col-sm-2">
+        <%= f.label :actions %>
+        <div class="row">
+          <div class="col-xs-6">
+            <%= f.submit 'Update', class: 'btn btn-block btn-success save-study-file', id: "sync-study-file-#{study_file.id}" %>
+          </div>
+          <div class="col-xs-6">
+            <% if study_file.parsing? %>
+              <%= link_to 'Delete', '#/', class: 'btn btn-block btn-danger disabled-delete', disabled: 'disabled', title: 'You must wait until the file has finished parsing before deleting', data: {toggle: 'tooltip'} %>
+            <% else %>
+              <%= link_to "Delete", unsync_study_file_study_path(@study._id, study_file._id), method: :delete, title: "This will delete all database records associated with #{study_file.name} but leave the remote file in the workspace.", class: 'btn btn-block btn-danger delete-file-sync delete-study-file', data: {remote: true, toggle: 'tooltip'} %>
+            <% end %>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
-      <%= render partial: 'shared_sync_functions.js.erb', locals: {study_file: study_file, f: f} %>
-  </script>
-<% end %>
+    <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+        <%= render partial: 'shared_sync_functions.js.erb', locals: {study_file: study_file, f: f} %>
+    </script>
+  <% end %>
+  <% if study_file.is_bundle_parent? %>
+    <h4>Bundled Files</h4>
+    <% study_file.bundled_files.each do |bundled_file| %>
+      <div class="bs-callout bs-callout-default">
+        <%= render partial: 'synced_study_file_form', locals: {study_file: bundled_file} %>
+      </div>
+    <% end %>
+  <% end %>

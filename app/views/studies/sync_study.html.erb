@@ -103,7 +103,9 @@
         <h4>Study Files</h4>
         <div id="synced-study-files">
           <% @synced_study_files.each do |sf| %>
-            <%= render partial: 'synced_study_file_form', locals: {study_file: sf} %>
+            <div class="bs-callout bs-callout-primary">
+              <%= render partial: 'synced_study_file_form', locals: {study_file: sf} %>
+            </div>
           <% end %>
         </div>
         <h4>Sequence Data & Other Directories</h4>
