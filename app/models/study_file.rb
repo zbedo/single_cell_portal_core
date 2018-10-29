@@ -776,31 +776,31 @@ class StudyFile
   def wizard_form_id
     case self.file_type
     when 'Cluster'
-      "ordinations_form_#{self.id}"
+      "#ordinations_form_#{self.id}"
     when 'Coordinate Labels'
-      "labels_form_#{self.id}"
+      "#labels_form_#{self.id}"
     when 'Expression Matrix'
-      "expression_form_#{self.id}"
+      "#expression_form_#{self.id}"
     when 'MM Coordinate Matrix'
-      "expression_form_#{self.id}"
+      "#expression_form_#{self.id}"
     when '10X Genes File'
-      "bundled_file_form_#{self.id}"
+      "#bundled_file_form_#{self.id}"
     when '10X Barcodes File'
-      "bundled_file_form_#{self.id}"
+      "#bundled_file_form_#{self.id}"
     when 'Expression Matrix'
-      "misc_form_#{self.id}"
+      "#misc_form_#{self.id}"
     when 'Metadata'
-      "metadata_form"
+      "#metadata_form"
     when 'Fastq'
-      "primary_data_form_#{self.id}"
+      "#primary_data_form_#{self.id}"
     when 'BAM'
-      "primary_data_form_#{self.id}"
+      "#primary_data_form_#{self.id}"
     when 'BAM Index'
-      "bundled_file_form_#{self.id}"
+      "#bundled_file_form_#{self.id}"
     when 'Gene List'
-      "marker_genes_form_#{self.id}"
+      "#marker_genes_form_#{self.id}"
     else
-      "misc_form_#{self.id}"
+      "#misc_form_#{self.id}"
     end
   end
 
