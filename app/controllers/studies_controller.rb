@@ -649,13 +649,7 @@ class StudiesController < ApplicationController
     if StudyFileBundle::BUNDLE_TYPES.include?(@study_file.file_type) && @study_file.file_type != 'Cluster'
       @study_file_bundle = @study_file.study_file_bundle.present? ? @study_file.study_file_bundle : @study.study_file_bundles.build(bundle_type: @study_file.file_type)
       # initialize container that will be used to render new forms in the upload wizard if needed
-      target = 'expressions-target'
-      case @study_file.file_type
-      when 'MM Coordinate Matrix'
-        target = 'expressions-target'
-      when 'BAM'
-        target = 'primary-data-target'
-      end
+      target = @study_file.wizard_form_id
       @bundled_files[target] = []
       StudyFileBundle::BUNDLE_REQUIREMENTS[@study_file.file_type].each do |bundled_file_type|
         if @study_file_bundle.bundled_files.detect {|f| f.file_type == bundled_file_type}.nil?
@@ -675,14 +669,7 @@ class StudiesController < ApplicationController
       if @study_file.nil?
         @study_file = @study.study_files.build(study_file_bundle_id: @bundle.id, file_type: params[:file_type])
       end
-      case parent_file.file_type
-      when 'MM Coordinate Matrix'
-        @target = '#expressions-target'
-      when 'Cluster'
-        @target = '#ordinations-target'
-      when 'BAM'
-        @target = '#primary-data-target'
-      end
+      @target = parent_file.wizard_form_id
     else
       alert = 'Invalid operation: you cannot bundle files with the requested study file.'
       respond_to do |format|
