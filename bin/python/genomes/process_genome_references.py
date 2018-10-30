@@ -17,7 +17,7 @@ https://portals.broadinstitute.org/single_cell/species.
 
 INSTALL
 
-python3 -m venv /path/to/my/.../env
+python3 -m venv env
 source env/bin/activate
 pip3 install -r requirements.txt
 
