@@ -120,13 +120,12 @@ def update_meta_row(row, org_metadata, annot_metadata):
     return new_row
 
 
-def record_annotation_metadata(ensembl_metadata, context):
+def record_annotation_metadata(ensembl_metadata):
     """Write annotation URLs, etc. to species metadata reference TSV file
     """
     new_metadata_ref = []
 
-    output_dir = context['output_dir']
-    ref_file = output_dir + 'species_metadata_reference.tsv'
+    ref_file = 'species_metadata_reference.tsv'
 
     with open(ref_file) as f:
         metadata_ref = [line.strip().split('\t') for line in f.readlines()]

@@ -139,7 +139,7 @@ def parse_assembly_report(assembly_report):
     """
     assemblies = {}
     for line in assembly_report:
-        if line[0] == '#':
+        if len(line) == 0 or line[0] == '#':
             # Skip header lines
             continue
         columns = line.split('\t')
@@ -162,7 +162,7 @@ def write_assemblies_to_file(assemblies):
         assemblies_str.append('\t'.join(assembly))
     assemblies_str = '\n'.join(assemblies_str)
 
-    output_path = output_dir + 'species_metadata_reference.tsv'
+    output_path = 'species_metadata_reference.tsv'
     with open(output_path, 'w') as f:
         f.write(assemblies_str)
     print('Wrote assemblies to ' + output_path)

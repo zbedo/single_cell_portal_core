@@ -69,7 +69,7 @@ def fetch_content(url_and_output_paths):
                     content = f.readlines()
             else:
                 # If local report absent, fetch remote content and cache it
-                print('  Fetching ' + output_path)
+                print('  Fetching ' + url)
                 with request.urlopen(url) as response:
                     remote_content = response.read().decode('utf-8')
                     with open(output_path, 'w') as f:

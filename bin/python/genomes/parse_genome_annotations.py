@@ -201,4 +201,4 @@ if os.path.exists(output_dir) is False:
 ensembl_metadata = get_ensembl_metadata()
 ensembl_metadata = transform_ensembl_gtfs(ensembl_metadata)
 ensembl_metadata = upload_ensembl_gtf_products(ensembl_metadata, context)
-record_annotation_metadata(ensembl_metadata, context)
+record_annotation_metadata(ensembl_metadata)
