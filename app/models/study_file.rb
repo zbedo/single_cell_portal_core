@@ -804,6 +804,11 @@ class StudyFile
     end
   end
 
+  # DOM ID of the parent div holding the form for this file, used in upload wizard and sync page
+  def form_container_id
+    "#container-#{self.id}"
+  end
+
   def generate_expression_matrix_cells
     begin
       study = self.study

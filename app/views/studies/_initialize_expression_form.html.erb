@@ -1,4 +1,3 @@
-<div class="bs-callout bs-callout-info">
 <%= form_for(study_file, url: update_study_file_study_path(@study._id), html: {id: "expression_form_#{study_file._id}", class: "initialize_expression_form #{study_file.new_record? ? 'new-expression-form' : nil}", data: {remote: true}}) do |f| %>
 	<%= render partial: 'study_file_errors', locals: {study_file: study_file} %>
   <%= f.hidden_field :study_id, value: params[:id] %>
@@ -169,11 +168,3 @@
 	</script>
 
 <% end %>
-<% if study_file.bundled_files.any? %>
-  <h4>Bundled Files</h4>
-  <% study_file.bundled_files.each do |bundled_file| %>
-    <%= render partial: 'initialize_bundled_file_form', locals: {study_file: bundled_file} %>
-  <% end %>
-<% end %>
-
-</div>

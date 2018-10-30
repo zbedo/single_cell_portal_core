@@ -26,7 +26,15 @@
           <p><%= link_to "Example Expression Matrix <span class='fas fa-download'></span>".html_safe, 'https://raw.githubusercontent.com/broadinstitute/single_cell_portal/master/demo_data/expression_example.txt', class: 'btn btn-default', download: 'expression_matrix_example.txt' %></p>
         </div>
         <% @expression_files.each do |study_file| %>
-          <%= render partial: 'initialize_expression_form', locals: {study_file: study_file} %>
+          <div class="bs-callout bs-callout-info" id="<%= study_file.form_container_id %>">
+            <%= render partial: 'initialize_expression_form', locals: {study_file: study_file} %>
+            <% if study_file.bundled_files.any? %>
+              <h4>Bundled Files</h4>
+              <% study_file.bundled_files.each do |bundled_file| %>
+                <%= render partial: 'initialize_bundled_file_form', locals: {study_file: bundled_file} %>
+              <% end %>
+            <% end %>
+          </div>
         <% end %>
         <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
             if (<%= !@expression_files.first.new_record? %>) {
@@ -47,7 +55,9 @@
         <p class="lead">The second row in this file (beginning with the header 'TYPE') must contain a value for each metadata column declaring its datatype.  The two accepted values are <strong>group</strong> (set membership) or <strong>numeric</strong> (continuous scores).  Group values are treated as literal strings, and numerics as floating-point numbers.</p>
         <p><%= link_to "Example Metadata File <span class='fas fa-download'></span>".html_safe, 'https://raw.githubusercontent.com/broadinstitute/single_cell_portal/master/demo_data/metadata_example.txt', class: 'btn btn-default', download: 'metadata_example.txt' %></p>
       </div>
-      <%= render partial: 'initialize_metadata_form', locals: {study_file: @metadata_file} %>
+      <div id="container-<%= @metadata_file.id %>">
+        <%= render partial: 'initialize_metadata_form', locals: {study_file: @metadata_file} %>
+      </div>
     </div>
 		<div class="tab-pane" id="ordinations">
 			<div id="ordinations-target">
@@ -59,7 +69,9 @@
 					<p><%= link_to "Example Cluster File <span class='fas fa-download'></span>".html_safe, 'https://raw.githubusercontent.com/broadinstitute/single_cell_portal/master/demo_data/coordinates_example.txt', class: 'btn btn-default', download: 'coordinates_example.txt' %></p>
 				</div>
 				<% @cluster_ordinations.each do |study_file| %>
-					<%= render partial: 'initialize_ordinations_form', locals: {study_file: study_file} %>
+          <div class="bs-callout bs-callout-info" id="<%= study_file.form_container_id %>">
+					  <%= render partial: 'initialize_ordinations_form', locals: {study_file: study_file} %>
+          </div>
 				<% end %>
 				<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 					if (<%= !@cluster_ordinations.first.new_record? %>) {
@@ -83,7 +95,9 @@
           <p><%= link_to "Example Coordinate Label File <span class='fas fa-download'></span>".html_safe, 'https://raw.githubusercontent.com/broadinstitute/single_cell_portal/master/demo_data/coordinate_labels_example.txt', class: 'btn btn-default', download: 'coordinates_example.txt' %></p>
         </div>
         <% @coordinate_labels.each do |study_file| %>
-          <%= render partial: 'initialize_labels_form', locals: {study_file: study_file} %>
+          <div class="bs-callout bs-callout-info" id="<%= study_file.form_container_id %>">
+            <%= render partial: 'initialize_labels_form', locals: {study_file: study_file} %>
+          </div>
         <% end %>
         <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
             if (<%= @coordinate_labels.any? && !@coordinate_labels.first.new_record? %>) {
@@ -108,10 +122,15 @@
           <p><%= link_to "FASTQ File Format <span class='fas fa-info-circle'></span>".html_safe, 'https://en.wikipedia.org/wiki/FASTQ_format#Format', class: 'btn btn-default', target: :_blank %>&nbsp;<%= link_to "BAM File Format <span class='fas fa-info-circle'></span>".html_safe, 'https://www.ncbi.nlm.nih.gov/sra/docs/submitformats/#bam-files', class: 'btn btn-default', target: :_blank %>&nbsp;<%= link_to "gzip Documentation <span class='fas fa-info-circle'></span>".html_safe, 'http://www.gnu.org/software/gzip/manual/gzip.html', class: 'btn btn-default', target: :_blank %></p>
         </div>
         <% @fastq_files.each do |study_file| %>
-          <%= render partial: 'initialize_primary_data_form', locals: {study_file: study_file} %>
-          <% study_file.bundled_files.each do |bundled_file| %>
-            <%= render partial: 'initialize_bundled_file_form', locals: {study_file: bundled_file} %>
-          <% end %>
+          <div class="bs-callout bs-callout-info" id="<%= study_file.form_container_id %>">
+            <%= render partial: 'initialize_primary_data_form', locals: {study_file: study_file} %>
+            <% if study_file.bundled_files.any? %>
+              <h4>Bundled Files</h4>
+              <% study_file.bundled_files.each do |bundled_file| %>
+                <%= render partial: 'initialize_bundled_file_form', locals: {study_file: bundled_file} %>
+              <% end %>
+            <% end %>
+          </div>
         <% end %>
         <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
           if (<%= !@fastq_files.first.new_record? %>) {
@@ -133,7 +152,9 @@
 					<p><%= link_to "Example Gene List <span class='fas fa-download'></span>".html_safe, 'https://raw.githubusercontent.com/broadinstitute/single_cell_portal/master/demo_data/marker_gene_list_example.txt', class: 'btn btn-default', download: 'marker_gene_list_example.txt' %></p>
 				</div>
 				<% @marker_lists.each do |study_file| %>
-					<%= render partial: 'initialize_marker_genes_form', locals: {study_file: study_file} %>
+          <div class="bs-callout bs-callout-info" id="<%= study_file.form_container_id %>">
+					  <%= render partial: 'initialize_marker_genes_form', locals: {study_file: study_file} %>
+          </div>
 				<% end %>
 				<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 					if (<%= !@marker_lists.first.new_record? %>) {
@@ -154,7 +175,9 @@
 					<p class="lead">Upload any documentation or other support files you have.</p>
 				</div>
 				<% @other_files.each do |study_file| %>
-					<%= render partial: 'initialize_misc_form', locals: {study_file: study_file} %>
+          <div class="bs-callout bs-callout-info" id="<%= study_file.form_container_id %>">
+					  <%= render partial: 'initialize_misc_form', locals: {study_file: study_file} %>
+          </div>
 				<% end %>
 				<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 					if (<%= !@other_files.first.new_record? %>) {
