@@ -2,7 +2,7 @@
   <%= @study.description.html_safe %>
 </div>
 <% if user_signed_in? && @study.can_edit?(current_user) %>
-  <p><%= link_to "<i class='fas fa-fw fa-edit'></i> Edit Description".html_safe, 'javascript:;', class: 'btn btn-primary', id: 'edit-study-description' %></p>
+  <p><%= link_to "<i class='fas fa-fw fa-edit'></i> Edit Description".html_safe, '#/', class: 'btn btn-primary', id: 'edit-study-description' %></p>
 
   <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 

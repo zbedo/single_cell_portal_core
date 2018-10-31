@@ -13,7 +13,7 @@
       </div>
     <% end %>
   </div>
-  <div class="col-md-1 col-sm-12 col-xs-12"><%= link_to 'Help', 'javascript:;', class: 'btn btn-default btn-block', title: 'Search Help', data: {toggle: 'popover', container: 'body', content: render(partial: 'search_help'), html: true, trigger: 'hover focus'} %></h2></div>
+  <div class="col-md-1 col-sm-12 col-xs-12"><%= link_to 'Help', '#/', class: 'btn btn-default btn-block', title: 'Search Help', data: {toggle: 'popover', container: 'body', content: render(partial: 'search_help'), html: true, trigger: 'hover focus'} %></h2></div>
   <div class="col-md-2 col-sm-4 col-xs-12">
     <%= scp_link_to "<span class='fas fa-clock-o'></span> Most Recent".html_safe, get_site_path_with_params(params[:search_terms].to_s, 'recent'), class: 'btn btn-default btn-block' %>
   </div>

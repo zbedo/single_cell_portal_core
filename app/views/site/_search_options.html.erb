@@ -175,7 +175,7 @@
           <div class="col-sm-12">
             <div id="scattergl_div" class="text-center">
               <% if user_signed_in? %>
-                <%= link_to "Select Cells <i class='fas fa-toggle-off'></i>".html_safe, 'javascript:;', class: 'btn btn-default btn-sm', id: 'toggle-scatter', data: {toggle: 'tooltip', placement: 'right', trigger: 'hover'}, title: 'Enable cell selection for creating custom annotations (may hurt performance on large clusters).  Only available on 2d data.' %>
+                <%= link_to "Select Cells <i class='fas fa-toggle-off'></i>".html_safe, '#/', class: 'btn btn-default btn-sm', id: 'toggle-scatter', data: {toggle: 'tooltip', placement: 'right', trigger: 'hover'}, title: 'Enable cell selection for creating custom annotations (may hurt performance on large clusters).  Only available on 2d data.' %>
                 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
                     $('#toggle-scatter').click(function() {
                         if (CLUSTER_TYPE === '2d') {
@@ -196,7 +196,7 @@
                 </script>
 
               <% else %>
-                <%= link_to "Select Cells <i class='fas fa-toggle-off '></i>".html_safe, 'javascript:;', class: 'btn btn-default btn-disabled btn-sm', id: 'disabled', data: {toggle: 'tooltip', placement: 'right', trigger: 'hover'}, title: 'Log in to enable cell selection.' %>
+                <%= link_to "Select Cells <i class='fas fa-toggle-off '></i>".html_safe, '#/', class: 'btn btn-default btn-disabled btn-sm', id: 'disabled', data: {toggle: 'tooltip', placement: 'right', trigger: 'hover'}, title: 'Log in to enable cell selection.' %>
               <% end %>
             </div>
           </div>

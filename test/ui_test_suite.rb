@@ -111,7 +111,7 @@ class UiTestSuite < Test::Unit::TestCase
     @driver = Selenium::WebDriver::Driver.for :chrome, driver_path: $chromedriver_dir,
                                               options: options, desired_capabilities: caps,
                                               driver_opts: {log_path: '/tmp/webdriver.log'}
-    @driver.manage.window.maximize
+    # @driver.manage.window.maximize
     @base_url = $portal_url
     @accept_next_alert = true
     @driver.manage.timeouts.implicit_wait = 15

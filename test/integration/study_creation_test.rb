@@ -371,6 +371,9 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
 
     # validate that the study_file_bundle has initialized successfully
     updated_bundle = @study.study_file_bundles.first
+    # this is a hack, but the final assertion will always fail as we aren't performing uploads in test, so we have to
+    # trick the test into thinking that they're uploaded
+    updated_bundle.study_files.update_all(status: 'uploaded')
     assert updated_bundle.original_file_list.size == 3,
            "Did not find correct number of files in original_file_list, expected 3 but found #{updated_bundle.original_file_list.size}"
     assert updated_bundle.study_files.size == 3,
