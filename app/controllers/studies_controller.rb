@@ -1090,10 +1090,7 @@ class StudiesController < ApplicationController
             genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => @study_file.id.to_s)
             # create a study_file_bundle if it doesn't already exist
             @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, @study_file)
-            if barcodes.present? && genes.present?
-              if !@study_file_bundle.completed?
-                @study_file_bundle.add_files(genes, barcodes)
-              end
+            if barcodes.present? && genes.present? && @study_file_bundle.completed?
               @study_file.update(parse_status: 'parsing')
               genes.update(parse_status: 'parsing')
               barcodes.update(parse_status: 'parsing')
@@ -1104,11 +1101,9 @@ class StudiesController < ApplicationController
             matrix = StudyFile.find(matrix_id)
             barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => matrix_id)
             @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, matrix)
-            @target = "#study-file-#{matrix_id}"
-            if barcodes.present? && matrix.present?
-              if !@study_file_bundle.completed?
-                @study_file_bundle.add_files(barcodes, @study_file)
-              end
+            @target = "##{matrix.form_container_id}"
+            @study_file_bundle.add_files(@study_file)
+            if barcodes.present? && matrix.present? && @study_file_bundle.completed?
               @study_file.update(parse_status: 'parsing')
               matrix.update(parse_status: 'parsing')
               barcodes.update(parse_status: 'parsing')
@@ -1119,11 +1114,9 @@ class StudiesController < ApplicationController
             matrix = StudyFile.find(matrix_id)
             genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => matrix_id)
             @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, matrix)
-            @target = "#study-file-#{matrix_id}"
-            if genes.present? && matrix.present?
-              if !@study_file_bundle.completed?
-                @study_file_bundle.add_files(genes, @study_file)
-              end
+            @study_file_bundle.add_files(@study_file)
+            @target = "##{matrix.form_container_id}"
+            if genes.present? && matrix.present? && @study_file_bundle.completed?
               @study_file.update(parse_status: 'parsing')
               genes.update(parse_status: 'parsing')
               matrix.update(parse_status: 'parsing')
@@ -1196,10 +1189,7 @@ class StudiesController < ApplicationController
           genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => @study_file.id.to_s)
           # create a study_file_bundle if it doesn't already exist
           @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, @study_file)
-          if barcodes.present? && genes.present?
-            if !@study_file_bundle.completed?
-              @study_file_bundle.add_files(genes, barcodes)
-            end
+          if barcodes.present? && genes.present? && @study_file_bundle.completed?
             @study_file.update(parse_status: 'parsing')
             genes.update(parse_status: 'parsing')
             barcodes.update(parse_status: 'parsing')
@@ -1209,11 +1199,9 @@ class StudiesController < ApplicationController
           matrix_id = @study_file.options[:matrix_id]
           matrix = StudyFile.find(matrix_id)
           barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => matrix_id)
-          @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, matrix)
-          if barcodes.present? && matrix.present?
-            if !@study_file_bundle.completed?
-              @study_file_bundle.add_files(barcodes, @study_file)
-            end
+          @target = "##{matrix.form_container_id}"
+          @study_file_bundle.add_files(@study_file)
+          if barcodes.present? && matrix.present? && @study_file_bundle.completed?
             @study_file.update(parse_status: 'parsing')
             matrix.update(parse_status: 'parsing')
             barcodes.update(parse_status: 'parsing')
@@ -1224,10 +1212,9 @@ class StudiesController < ApplicationController
           matrix = StudyFile.find(matrix_id)
           genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => matrix_id)
           @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, matrix)
-          if genes.present? && matrix.present?
-            if !@study_file_bundle.completed?
-              @study_file_bundle.add_files(genes, @study_file)
-            end
+          @study_file_bundle.add_files(@study_file)
+          @target = "##{matrix.form_container_id}"
+          if genes.present? && matrix.present? && @study_file_bundle.completed?
             @study_file.update(parse_status: 'parsing')
             genes.update(parse_status: 'parsing')
             matrix.update(parse_status: 'parsing')

@@ -3,8 +3,12 @@ $('#sync-notice-modal').modal('show');
 $("<%= @form %>").remove();
 
 // now append synced study file to synced data panel
-$('<%= @target %>').append("<%= escape_javascript(render partial: 'synced_study_file_form', locals: {study_file: @study_file}) %>");
 
+<% if @study_file.study_file_bundle.nil? || @study_file.is_bundle_parent? %>
+  $('<%= @target %>').append("<div class='bs-callout bs-callout-primary' id='<%= @study_file.form_container_id %>'><%= escape_javascript(render partial: 'synced_study_file_form', locals: {study_file: @study_file}) %></div>");
+<% else %>
+  $('<%= @target %>').append("<%= escape_javascript(render partial: 'synced_bundled_study_file_form', locals: {study_file: @study_file}) %>");
+<% end %>
 // close any empty panels
 $('.unsynced').each(function() {
     if ($(this).find('.unsynced-content').html().trim() == "") {
