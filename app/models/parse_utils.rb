@@ -191,6 +191,8 @@ class ParseUtils
         delete_remote_file_on_fail(genes_study_file, study)
         delete_remote_file_on_fail(barcodes_study_file, study)
       end
+      bundle = matrix_study_file.study_file_bundle
+      bundle.destroy
       matrix_study_file.destroy
       genes_study_file.destroy
       barcodes_study_file.destroy
@@ -283,20 +285,25 @@ class ParseUtils
   # localize a file for parsing and return opened file handler
   def self.localize_study_file(study_file, study)
     Rails.logger.info "#{Time.now}: Attempting to localize #{study_file.upload_file_name}"
-    if File.exists?(study_file.upload.path) || File.exists?(Rails.root.join(study.data_dir, study_file.download_location))
-      content_type = study_file.determine_content_type
-      if content_type == 'application/gzip'
-        Rails.logger.info "#{Time.now}: Parsing #{study_file.name}:#{study_file.id} as application/gzip"
-        local_file = Zlib::GzipReader.open(study_file.upload.path)
-      else
-        Rails.logger.info "#{Time.now}: Parsing #{study_file.name}:#{study_file.id} as text/plain"
-        local_file = File.open(study_file.upload.path, 'rb')
-      end
+    if File.exists?(study_file.upload.path)
+      local_path = study_file.upload.path
+    elsif File.exists?(Rails.root.join(study.data_dir, study_file.download_location))
+      local_path = File.join(study.data_store_path, study_file.download_location)
     else
-
-      local_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
-                                                                 study.firecloud_workspace, study_file.bucket_location,
-                                                                 study.data_store_path, verify: :none)
+      Rails.logger.info "Downloading #{study_file.upload_file_name} from remote"
+      Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
+                                                   study.firecloud_workspace, study_file.bucket_location,
+                                                   study.data_store_path, verify: :none)
+      Rails.logger.info "Successful localization of #{study_file.upload_file_name}"
+      local_path = File.join(study.data_store_path, study_file.download_location)
+    end
+    content_type = study_file.determine_content_type
+    if content_type == 'application/gzip'
+      Rails.logger.info "#{Time.now}: Parsing #{study_file.name}:#{study_file.id} as application/gzip"
+      local_file = Zlib::GzipReader.open(local_path)
+    else
+      Rails.logger.info "#{Time.now}: Parsing #{study_file.name}:#{study_file.id} as text/plain"
+      local_file = File.open(local_path, 'rb')
     end
     local_file
   end
