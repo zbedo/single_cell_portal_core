@@ -197,7 +197,6 @@ class Taxon
         # handle annotation links according to content
         annotation.link = process_annotation_link_value(vals[annot_link_idx], bucket_id)
         annotation.index_link = process_annotation_link_value(vals[annot_index_link_idx], bucket_id)
-        Rails.logger.info "annotation: #{annotation.attributes}"
         annotation.save!
         num_annotations += 1
       end
