@@ -421,8 +421,7 @@ function enableDefaultActions() {
 
 }
 
-function enableHoverPopovers(selector=null) {
-    var selector = selector || '[data-toggle="popover"]';
+function enableHoverPopovers(selector='[data-toggle="popover"]') {
     $(selector).popover({container: 'body', html: true, trigger: 'manual'})
         .on("mouseenter", function () {
             var _this = this;
@@ -431,13 +430,13 @@ function enableHoverPopovers(selector=null) {
                 $(_this).popover('hide');
             });
         }).on("mouseleave", function () {
-        var _this = this;
-        setTimeout(function () {
-            if (!$(".popover:hover").length) {
-                $(_this).popover("hide");
-            }
-        }, 100);
-    });
+            var _this = this;
+            setTimeout(function () {
+                if (!$(".popover:hover").length) {
+                    $(_this).popover("hide");
+                }
+            }, 100);
+        });
 }
 
 
