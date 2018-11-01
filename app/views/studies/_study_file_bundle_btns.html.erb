@@ -1,0 +1,9 @@
+<% if StudyFileBundle::BUNDLE_TYPES.include?(file_type) %>
+  <div class="row" id="<%= study_file_id %>-bundle-btns">
+    <div class="col-xs-12">
+      <% StudyFileBundle::BUNDLE_REQUIREMENTS[file_type].each do |bundled_file_type| %>
+        <%= link_to "<i class='fas fa-plus'></i> Bundle a #{bundled_file_type} with this #{file_type}".html_safe, '#/', class: 'btn btn-sm btn-info initialize-bundled-file', data: {file_type: bundled_file_type, study_file_id: study_file_id} %>
+      <% end %>
+    </div>
+  </div>
+<% end %>

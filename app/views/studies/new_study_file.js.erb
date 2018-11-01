@@ -1,4 +1,4 @@
-$('<%= params[:target] %>').append("<%= escape_javascript(render partial: params[:form], locals: {study_file: @study_file }) %>");
+$('<%= params[:target] %>').append("<div class='bs-callout bs-callout-info' id='<%= @study_file.form_container_id %>'><%= escape_javascript(render partial: params[:form], locals: {study_file: @study_file }) %></div>");
 
 // get instance of new form as ID has changed
 var wizForm = $('.<%= params[:form] %>').slice(-1)[0];

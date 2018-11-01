@@ -66,8 +66,9 @@ Rails.application.configure do
   # disable admin notification (like startup email)
   config.disable_admin_notifications = false
 
-  # set MongoDB logging level
+  # set MongoDB & Google API logging level
   Mongoid.logger.level = Logger::INFO
+  Google::Apis.logger.level = Logger::INFO
 
   # patching Devise sign_out method & SwaggerDocs to bypass CSP headers & layout fixes
   config.to_prepare do

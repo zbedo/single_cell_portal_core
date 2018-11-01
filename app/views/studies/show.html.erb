@@ -1,6 +1,6 @@
 <h1>
   <%= @study.name %> <%= get_initialized_icon(@study.initialized) %> <%= @study.visibility %> <span class="badge" id="cell-count"><%= @study.cell_count %> cells</span> <span class="badge" id="gene-count"><%= @study.gene_count %> genes</span>
-  <%= link_to "Toggle All Panels <i class='fas fa-toggle-on'></i>".html_safe, 'javascript:;', class: 'btn btn-default btn-sm pull-right', id: 'toggle-panels' %>
+  <%= link_to "Toggle All Panels <i class='fas fa-toggle-on'></i>".html_safe, '#/', class: 'btn btn-default btn-sm pull-right', id: 'toggle-panels' %>
 </h1>
 <% if @study.check_embargo? %>
   <p class="lead text-danger">Embargoed until: <%= @study.embargo.to_s(:long) %></p>
@@ -185,7 +185,7 @@
               <td><%= link_to analysis.submission_id, @study.submission_url(analysis.submission_id), target: :_blank %></td>
               <td><%= analysis.created_at.strftime("%F %R") %></td>
               <td class="actions">
-                <%= link_to("<i class='fas fa-fw fa-code'></i> View Run Info".html_safe, 'javascript:;', class: 'btn btn-xs btn-info view-submission-metadata', title: 'View HCA-formatted analysis metadata', data: {toggle: 'tooltip', id: analysis.submission_id, url: get_submission_metadata_path(study_name: @study.url_safe_name, submission_id: analysis.submission_id)}) %>
+                <%= link_to("<i class='fas fa-fw fa-code'></i> View Run Info".html_safe, '#/', class: 'btn btn-xs btn-info view-submission-metadata', title: 'View HCA-formatted analysis metadata', data: {toggle: 'tooltip', id: analysis.submission_id, url: get_submission_metadata_path(study_name: @study.url_safe_name, submission_id: analysis.submission_id)}) %>
               </td>
             </tr>
           <% end %>
@@ -270,7 +270,7 @@
                 <% if @allow_downloads %>
                   <%= render partial: '/layouts/download_link', locals: {study: @study, study_file: file} %>
                 <% else %>
-                  <%= button_to 'Currently Unavailable', 'javascript:;', class: 'btn btn-danger disabled-download', disabled: true %>
+                  <%= button_to 'Currently Unavailable', '#/', class: 'btn btn-danger disabled-download', disabled: true %>
                 <% end %>
               </td>
             </tr>

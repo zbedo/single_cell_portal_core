@@ -5,7 +5,7 @@ class ParseUtils
     begin
       start_time = Time.now
       # localize files
-      Rails.logger.info "#{Time.now}: Parsing 10X CellRanger source data files for #{study.name} with the following options: #{opts}"
+      Rails.logger.info "#{Time.now}: Parsing gene-barcode matrix source data files for #{study.name} with the following options: #{opts}"
       study.make_data_dir
       Rails.logger.info "#{Time.now}: Localizing output files & creating study file entries from 10X CellRanger source data for #{study.name}"
 
@@ -162,7 +162,7 @@ class ParseUtils
       @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
       Rails.logger.info @message.join("\n")
       begin
-        SingleCellMailer.notify_user_parse_complete(user.email, "10X CellRanger expression data has completed parsing", @message).deliver_now
+        SingleCellMailer.notify_user_parse_complete(user.email, "Gene-barcode matrix expression data has completed parsing", @message).deliver_now
       rescue => e
         Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
       end
@@ -186,11 +186,13 @@ class ParseUtils
       matrix_study_file.remove_local_copy
       genes_study_file.remove_local_copy
       barcodes_study_file.remove_local_copy
-      unless opts[:sync] # if parse was initiated via sync, don't remove files
+      unless opts[:sync] == true # if parse was initiated via sync, don't remove files
         delete_remote_file_on_fail(matrix_study_file, study)
         delete_remote_file_on_fail(genes_study_file, study)
         delete_remote_file_on_fail(barcodes_study_file, study)
       end
+      bundle = matrix_study_file.study_file_bundle
+      bundle.destroy
       matrix_study_file.destroy
       genes_study_file.destroy
       barcodes_study_file.destroy
@@ -283,20 +285,25 @@ class ParseUtils
   # localize a file for parsing and return opened file handler
   def self.localize_study_file(study_file, study)
     Rails.logger.info "#{Time.now}: Attempting to localize #{study_file.upload_file_name}"
-    if File.exists?(study_file.upload.path) || File.exists?(Rails.root.join(study.data_dir, study_file.download_location))
-      content_type = study_file.determine_content_type
-      if content_type == 'application/gzip'
-        Rails.logger.info "#{Time.now}: Parsing #{study_file.name}:#{study_file.id} as application/gzip"
-        local_file = Zlib::GzipReader.open(study_file.upload.path)
-      else
-        Rails.logger.info "#{Time.now}: Parsing #{study_file.name}:#{study_file.id} as text/plain"
-        local_file = File.open(study_file.upload.path, 'rb')
-      end
+    if File.exists?(study_file.upload.path)
+      local_path = study_file.upload.path
+    elsif File.exists?(Rails.root.join(study.data_dir, study_file.download_location))
+      local_path = File.join(study.data_store_path, study_file.download_location)
     else
-
-      local_file = Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
-                                                                 study.firecloud_workspace, study_file.bucket_location,
-                                                                 study.data_store_path, verify: :none)
+      Rails.logger.info "Downloading #{study_file.upload_file_name} from remote"
+      Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
+                                                   study.firecloud_workspace, study_file.bucket_location,
+                                                   study.data_store_path, verify: :none)
+      Rails.logger.info "Successful localization of #{study_file.upload_file_name}"
+      local_path = File.join(study.data_store_path, study_file.download_location)
+    end
+    content_type = study_file.determine_content_type
+    if content_type == 'application/gzip'
+      Rails.logger.info "#{Time.now}: Parsing #{study_file.name}:#{study_file.id} as application/gzip"
+      local_file = Zlib::GzipReader.open(local_path)
+    else
+      Rails.logger.info "#{Time.now}: Parsing #{study_file.name}:#{study_file.id} as text/plain"
+      local_file = File.open(local_path, 'rb')
     end
     local_file
   end

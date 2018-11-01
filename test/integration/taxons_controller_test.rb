@@ -26,6 +26,7 @@ class TaxonsControllerTest < ActionDispatch::IntegrationTest
             genome_assemblies_attributes: {
                 '0' => {
                     name: 'GRCm38',
+                    accession: 'GCA_000001635.2',
                     release_date: '2012-01-09'
                 }
             }
@@ -64,8 +65,8 @@ class TaxonsControllerTest < ActionDispatch::IntegrationTest
     post upload_species_list_path, params: {upload: taxon_file}
     follow_redirect!
     assert path == taxons_path, "Did not redirect to taxons path after upload, current path is #{path}"
-    assert Taxon.count == 10, "Did not create all taxons from file, expected 10 but found #{Taxon.count}"
-    assert GenomeAssembly.count == 29, "Did not create all assemblies from file, expected 29 but found #{GenomeAssembly.count}"
+    assert Taxon.count == 11, "Did not create all taxons from file, expected 11 but found #{Taxon.count}"
+    assert GenomeAssembly.count == 35, "Did not create all assemblies from file, expected 35 but found #{GenomeAssembly.count}"
     # clean up to prevent failure of other tests
     Taxon.destroy_all
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"

@@ -153,6 +153,12 @@ class StudyFileBundle
     if child_file_types.size > BUNDLE_REQUIREMENTS[self.bundle_type].size
       return false
     end
+    # make sure all files have at least uploaded to the server
+    self.study_files.each do |study_file|
+      if !study_file.uploaded?
+        return false
+      end
+    end
     true
   end
 

@@ -1,4 +1,4 @@
-<%= form_for(study_file, url: update_study_file_study_path(@study._id), html: {id: "primary_data_form_#{study_file._id}", class: "bs-callout bs-callout-info initialize_primary_data_form #{study_file.new_record? ? 'new-fastq-form' : nil}", data: {remote: true}}) do |f| %>
+<%= form_for(study_file, url: update_study_file_study_path(@study._id), html: {id: "primary_data_form_#{study_file._id}", class: "initialize_primary_data_form #{study_file.new_record? ? 'new-fastq-form' : nil}", data: {remote: true}}) do |f| %>
   <%= render partial: 'study_file_errors', locals: {study_file: study_file} %>
   <%= f.hidden_field :study_id, value: params[:id] %>
   <%= f.hidden_field :_id, value: study_file._id %>
@@ -24,7 +24,7 @@
       <%= f.select :file_type, options_for_select(['Fastq', 'BAM'], f.object.file_type), {}, class: 'form-control file-type' %>
     </div>
     <div class="col-sm-4">
-      <%= f.label :taxon_id, 'Species' %> <%= render partial: 'taxon_help_popover' %><br />
+      <%= f.label :taxon_id, 'Species' %> <%= render partial: 'taxon_help_popover', locals: {id: study_file.id.to_s} %><br />
       <%= f.select :taxon_id, options_from_collection_for_select(Taxon.sorted, :id, :display_name, study_file.taxon_id), {include_blank: 'None selected...'}, {class: 'form-control taxon-select'} %>
     </div>
     <div class="col-sm-4 <%= study_file.file_type == 'BAM' ? nil : 'hidden' %> genome-assembly-association">
@@ -59,7 +59,7 @@
 				</div>
 				<div class="col-xs-6">
           <% if study_file.generation.blank? && !study_file.human_data? %>
-            <%= link_to 'Delete', 'javascript:;', class: 'btn btn-block btn-danger disabled-delete', disabled: 'disabled', title: 'You must wait until the file has finished pushing to FireCloud before deleting', data: {toggle: 'tooltip'} %>
+            <%= link_to 'Delete', '#/', class: 'btn btn-block btn-danger disabled-delete', disabled: 'disabled', title: 'You must wait until the file has finished pushing to FireCloud before deleting', data: {toggle: 'tooltip'} %>
           <% else %>
 					  <%= link_to 'Delete', delete_study_file_study_path(@study._id, study_file._id, target: "#primary_data_form_#{study_file._id}"), method: :delete, class: 'btn btn-block btn-danger delete-file', data: {remote: true} %>
           <% end %>
@@ -67,13 +67,19 @@
 			</div>
 		</div>
 	</div>
-	<div class="form-group upload-progress">
+
+  <div class="form-group upload-progress">
 		<table class="table table-condensed">
 			<tbody class="files"></tbody>
 		</table>
 	</div>
-	<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
+  <div class="initialize-bundle-target">
+    <% if study_file.study_file_bundle.present? && !study_file.study_file_bundle.completed? %>
+      <%= render partial: 'study_file_bundle_btns', locals: {study_file_id: study_file.id.to_s, file_type: 'BAM'} %>
+    <% end %>
+  </div>
+	<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
       $('#primary_data_form_<%= study_file._id %>').find('.human-data').change(function() {
           var that = $(this);
           var taxonSelect = $('#primary_data_form_<%= study_file._id %>').find('.taxon-select');
@@ -164,6 +170,10 @@
 				chunkdone: function(e, data) {
 					var perc = parseInt(data.loaded / data.total * 100, 10);
 					$(data.context).find('h1').html(perc + "%");
+          if ( $('#<%= study_file.id %>-bundle-btns').length === 0 &&
+              $('#primary_data_form_<%= study_file._id %>').find('.file-type').val() === 'BAM') {
+              $('#primary_data_form_<%= study_file._id %>').find('.initialize-bundle-target').html("<%= j(render partial: 'study_file_bundle_btns', locals: {study_file_id: study_file.id.to_s, file_type: 'BAM'}) %>")
+          }
 				},
 				done: function(e, data) {
 					var fileName = data.files[0].name.replace(/ /g, '_');

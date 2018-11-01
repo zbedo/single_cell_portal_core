@@ -238,6 +238,10 @@ class StudiesController < ApplicationController
     # now determine if we have study_files that have been 'orphaned' (cannot find a corresponding bucket file)
     @orphaned_study_files = @study_files - @synced_study_files
     @available_files = @unsynced_files.map {|f| {name: f.name, generation: f.generation, size: f.upload_file_size}}
+
+    # now remove any 'bundled' files from @synced_study_files so we can render them inside their parent file's form
+    bundled_file_ids = @study.study_file_bundles.map {|bundle| bundle.bundled_files.to_a.map(&:id)}.flatten
+    @synced_study_files.delete_if {|file| bundled_file_ids.include?(file.id)}
   end
 
   # sync outputs from a specific submission
@@ -568,6 +572,16 @@ class StudiesController < ApplicationController
       # don't use helper as we're about to mass-assign params
       study_file = @study.study_files.build
       if study_file.update(study_file_params)
+        # determine if we need to create a study_file_bundle for the new study_file
+        if StudyFileBundle::BUNDLE_TYPES.include?(study_file.file_type) && study_file.file_type != 'Cluster'
+          matching_bundle = @study.study_file_bundles.detect {|bundle| bundle.bundle_type == study_file.file_type && bundle.parent == study_file}
+          if matching_bundle.nil?
+            study_file_bundle = @study.study_file_bundles.build(bundle_type: study_file.file_type)
+            bundle_payload = StudyFileBundle.generate_file_list(study_file)
+            study_file_bundle.original_file_list = bundle_payload
+            study_file_bundle.save! # saving the study_file_bundle will create new placeholder entries for the bundled study_files
+          end
+        end
         # we need to add this file to a study_file_bundle if it was assigned
         if study_file_params[:study_file_bundle_id].present?
           # we're processing a bundled upload, which means there might be a placeholder file entry we need to find
@@ -635,33 +649,37 @@ class StudiesController < ApplicationController
       head 404 and return
     end
     @bundled_files = {}
-    # determine if we need to make a StudyFileBundle.  Cluster files are ignored as they're handled separately
+    # determine if we need to add forms to the page for bundled files
     if StudyFileBundle::BUNDLE_TYPES.include?(@study_file.file_type) && @study_file.file_type != 'Cluster'
       @study_file_bundle = @study_file.study_file_bundle.present? ? @study_file.study_file_bundle : @study.study_file_bundles.build(bundle_type: @study_file.file_type)
-      if @study_file_bundle.new_record?
-        bundle_payload = StudyFileBundle.generate_file_list(@study_file)
-        @study_file_bundle.original_file_list = bundle_payload
-        @study_file_bundle.save! # saving the study_file_bundle will create new placeholder entries for the bundled study_files
+      # initialize container that will be used to render new forms in the upload wizard if needed
+      target = @study_file.form_container_id
+      @bundled_files[target] = []
+      StudyFileBundle::BUNDLE_REQUIREMENTS[@study_file.file_type].each do |bundled_file_type|
+        if @study_file_bundle.bundled_files.detect {|f| f.file_type == bundled_file_type}.nil?
+          @bundled_files[target] << @study.study_files.build(file_type: bundled_file_type, study_file_bundle_id: @study_file_bundle.id)
+        end
       end
-      # check if there are 'bundled' files that need to be added
-      case @study_file.file_type
-      when 'MM Coordinate Matrix'
-        if @study_file_bundle.bundled_files.empty?
-          @bundled_files['expressions-target'] = [
-              @study.study_files.build(file_type: '10X Genes File', study_file_bundle_id: @study_file_bundle.id),
-              @study.study_files.build(file_type: '10X Barcodes File', study_file_bundle_id: @study_file_bundle.id)
-          ]
-        else
-          @bundled_files['expressions-target'] = @study_file_bundle.bundled_files.to_a
-        end
-      when 'BAM'
-        if @study_file_bundle.bundled_files.empty?
-          @bundled_files['primary-data-target'] = [
-              @study.study_files.build(file_type: 'BAM Index', study_file_bundle_id: @study_file_bundle.id)
-          ]
-        else
-          @bundled_files['primary-data-target'] = @study_file_bundle.bundled_files.to_a
-        end
+    end
+  end
+
+  # begin uploading a bundled study_file while parent is still uploading
+  def initialize_bundled_file
+    parent_file = StudyFile.find_by(study_id: params[:id], id: params[:study_file_id])
+    if parent_file.present? && parent_file.study_file_bundle.present?
+      @bundle = parent_file.study_file_bundle
+      # either load existing bundled file, or create new one of the requested file_type
+      @study_file = @bundle.bundled_files.detect {|f| f.file_type == params[:file_type] }
+      if @study_file.nil?
+        @study_file = @study.study_files.build(study_file_bundle_id: @bundle.id, file_type: params[:file_type])
+      end
+      @target = parent_file.form_container_id
+    else
+      alert = 'Invalid operation: you cannot bundle files with the requested study file.'
+      respond_to do |format|
+        format.html {head 422}
+        format.json {render json: {error: alert}, status: 422}
+        format.js {render js: "alert('#{alert}');"}
       end
     end
   end
@@ -978,33 +996,7 @@ class StudiesController < ApplicationController
         DeleteQueueJob.new(@study_file).delay.perform
         @file_type = @study_file.file_type
         @message = "'#{@study_file.name}' has been successfully deleted."
-        # clean up records before removing file (for memory optimization)
-        case @file_type
-        when 'Cluster'
-          @partial = 'initialize_ordinations_form'
-        when 'Coordinate Labels'
-          @partial = 'initialize_labels_form'
-        when 'Expression Matrix'
-          @partial = 'initialize_expression_form'
-        when 'MM Coordinate Matrix'
-          @partial = 'initialize_expression_form'
-        when '10X Genes File'
-          @partial = 'initialize_expression_form'
-        when 'Expression Matrix'
-          @partial = 'initialize_expression_form'
-        when 'Metadata'
-          @partial = 'initialize_metadata_form'
-        when 'Fastq'
-          @partial = 'initialize_primary_data_form'
-        when 'BAM'
-          @partial = 'initialize_primary_data_form'
-        when 'BAM Index'
-          @partial = 'initialize_primary_data_form'
-        when 'Gene List'
-          @partial = 'initialize_marker_genes_form'
-        else
-          @partial = 'initialize_misc_form'
-        end
+        @partial = @study_file.wizard_partial_name
         # delete source file in FireCloud and then remove record
         begin
           # make sure file is in FireCloud first as user may be aborting the upload
@@ -1080,7 +1072,7 @@ class StudiesController < ApplicationController
       @message = "New Study File '#{@study_file.name}' successfully synced."
       # only grab id after update as it will change on new entries
       @form = "#study-file-#{@study_file.id}"
-
+      @target = "#synced-study-files"
       if @study_file.parseable?
         logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
         @message += " You will receive an email at #{current_user.email} when the parse has completed."
@@ -1098,10 +1090,7 @@ class StudiesController < ApplicationController
             genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => @study_file.id.to_s)
             # create a study_file_bundle if it doesn't already exist
             @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, @study_file)
-            if barcodes.present? && genes.present?
-              if !@study_file_bundle.completed?
-                @study_file_bundle.add_files(genes, barcodes)
-              end
+            if barcodes.present? && genes.present? && @study_file_bundle.completed?
               @study_file.update(parse_status: 'parsing')
               genes.update(parse_status: 'parsing')
               barcodes.update(parse_status: 'parsing')
@@ -1112,10 +1101,9 @@ class StudiesController < ApplicationController
             matrix = StudyFile.find(matrix_id)
             barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => matrix_id)
             @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, matrix)
-            if barcodes.present? && matrix.present?
-              if !@study_file_bundle.completed?
-                @study_file_bundle.add_files(barcodes, @study_file)
-              end
+            @target = "##{matrix.form_container_id}"
+            @study_file_bundle.add_files(@study_file)
+            if barcodes.present? && matrix.present? && @study_file_bundle.completed?
               @study_file.update(parse_status: 'parsing')
               matrix.update(parse_status: 'parsing')
               barcodes.update(parse_status: 'parsing')
@@ -1126,10 +1114,9 @@ class StudiesController < ApplicationController
             matrix = StudyFile.find(matrix_id)
             genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => matrix_id)
             @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, matrix)
-            if genes.present? && matrix.present?
-              if !@study_file_bundle.completed?
-                @study_file_bundle.add_files(genes, @study_file)
-              end
+            @study_file_bundle.add_files(@study_file)
+            @target = "##{matrix.form_container_id}"
+            if genes.present? && matrix.present? && @study_file_bundle.completed?
               @study_file.update(parse_status: 'parsing')
               genes.update(parse_status: 'parsing')
               matrix.update(parse_status: 'parsing')
@@ -1154,6 +1141,7 @@ class StudiesController < ApplicationController
         if @study_file_bundle.bundled_files.detect {|f| f.upload_file_name == @study_file.upload_file_name}.nil?
           @study_file_bundle.add_files(@study_file)
         end
+        @target = "#study-file-#{@study_file.options[:bam_id]}"
       end
       respond_to do |format|
         format.js
@@ -1201,10 +1189,7 @@ class StudiesController < ApplicationController
           genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => @study_file.id.to_s)
           # create a study_file_bundle if it doesn't already exist
           @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, @study_file)
-          if barcodes.present? && genes.present?
-            if !@study_file_bundle.completed?
-              @study_file_bundle.add_files(genes, barcodes)
-            end
+          if barcodes.present? && genes.present? && @study_file_bundle.completed?
             @study_file.update(parse_status: 'parsing')
             genes.update(parse_status: 'parsing')
             barcodes.update(parse_status: 'parsing')
@@ -1214,11 +1199,9 @@ class StudiesController < ApplicationController
           matrix_id = @study_file.options[:matrix_id]
           matrix = StudyFile.find(matrix_id)
           barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => matrix_id)
-          @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, matrix)
-          if barcodes.present? && matrix.present?
-            if !@study_file_bundle.completed?
-              @study_file_bundle.add_files(barcodes, @study_file)
-            end
+          @target = "##{matrix.form_container_id}"
+          @study_file_bundle.add_files(@study_file)
+          if barcodes.present? && matrix.present? && @study_file_bundle.completed?
             @study_file.update(parse_status: 'parsing')
             matrix.update(parse_status: 'parsing')
             barcodes.update(parse_status: 'parsing')
@@ -1229,10 +1212,9 @@ class StudiesController < ApplicationController
           matrix = StudyFile.find(matrix_id)
           genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => matrix_id)
           @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, matrix)
-          if genes.present? && matrix.present?
-            if !@study_file_bundle.completed?
-              @study_file_bundle.add_files(genes, @study_file)
-            end
+          @study_file_bundle.add_files(@study_file)
+          @target = "##{matrix.form_container_id}"
+          if genes.present? && matrix.present? && @study_file_bundle.completed?
             @study_file.update(parse_status: 'parsing')
             genes.update(parse_status: 'parsing')
             matrix.update(parse_status: 'parsing')

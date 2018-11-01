@@ -1387,20 +1387,31 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
     # determine if a chunked download is needed
     if file.size > 50.megabytes
       Rails.logger.info "Performing chunked download for #{filename} from #{workspace_namespace}/#{workspace_name}"
-      size_range = 0..file.size
+      # we need to determine whether or not this file has been gzipped - if so, we have to make a copy and unset the
+      # gzip content-encoding as we cannot do range requests on gzipped data
+      if file.content_encoding == 'gzip'
+        new_file = file.copy file.name + '.tmp'
+        new_file.content_encoding = nil
+        remote = new_file
+      else
+        remote = file
+      end
+      size_range = 0..remote.size
       local = File.new(end_path, 'wb')
       size_range.each_slice(50.megabytes) do |range|
         range_req = range.first..range.last
         merged_opts = opts.merge(range: range_req)
-        buffer = file.download merged_opts
+        buffer = remote.download merged_opts
         buffer.rewind
         local.write buffer.read
       end
-      local.close
-      local = nil # garbage collect
+      if file.content_encoding == 'gzip'
+        # clean up the temp copy
+        remote.delete
+      end
       Rails.logger.info "Chunked download for #{filename} from #{workspace_namespace}/#{workspace_name} complete"
       # return newly-opened file (will need to check content type before attempting to parse)
-      File.open end_path
+      local
     else
       file.download end_path, opts
     end
