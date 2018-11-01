@@ -33,6 +33,7 @@
         <thead>
           <tr>
             <th>Name (alias)</th>
+            <th>Accession</th>
             <th>Release Date</th>
             <th>Annotations</th>
           </tr>
@@ -41,6 +42,7 @@
           <% @taxon.genome_assemblies.each do |assembly| %>
             <tr>
               <td><%= assembly.name %> (<%= assembly.alias %>)</td>
+              <td><%= assembly.accession %></td>
               <td><%= assembly.release_date.strftime("%D") %></td>
               <td>
                 <% assembly.genome_annotations.each do |annotation| %>

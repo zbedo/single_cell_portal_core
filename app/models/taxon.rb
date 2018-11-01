@@ -150,7 +150,8 @@ class Taxon
     restricted_idx = headers.index('restricted')
     # genome assembly fields
     assembly_name_idx = headers.index('assembly_name')
-    release_date_idx = headers.index('release_date')
+    assembly_accession_idx = headers.index('assembly_accession')
+    assembly_release_date_idx = headers.index('assembly_release_date')
     # genome annotation fields
     annot_name_idx = headers.index('annotation_name')
     annot_release_date_idx = headers.index('annotation_release_date')
@@ -180,11 +181,13 @@ class Taxon
         assembly = taxon.genome_assemblies.build
       end
       assembly.name = vals[assembly_name_idx]
-      assembly.release_date = vals[release_date_idx]
+      assembly.accession = vals[assembly_accession_idx]
+      assembly.release_date = vals[assembly_release_date_idx]
       assembly.save!
       num_assemblies += 1
-      # only add annotations if all fields are present
-      if annot_name_idx.present? && annot_release_date_idx.present? && annot_link_idx.present? && annot_index_link_idx.present?
+      # only add annotations if all fields are present, need to check that headers are there and that there are values
+      if annot_name_idx.present? && annot_release_date_idx.present? && annot_link_idx.present? && annot_index_link_idx.present? &&
+      !vals[annot_name_idx].blank? && !vals[annot_release_date_idx].blank? && !vals[annot_link_idx].blank? && !vals[annot_index_link_idx].blank?
         annotation = assembly.genome_annotations.find_by(name: vals[annot_name_idx])
         if annotation.nil?
           annotation = assembly.genome_annotations.build
