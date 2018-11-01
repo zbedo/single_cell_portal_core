@@ -112,7 +112,13 @@ def update_meta_row(row, org_metadata, annot_metadata):
         if date is None:
             # If annotation is undated (as with Drosophila), use assembly date
             assembly_date = row[4]
-            annot_metadata[1] = assembly_date
+            date = assembly_date
+        date_parts = date.split('-')
+        if len(date_parts) == 2 and len(date_parts[0]) == 4:
+            # YYYY-MM encountered, YYYY-MM-DD needed; use first of month
+            date += '-01'
+        annot_metadata[1] = date
+
         new_row = '\t'.join(row + annot_metadata)
     else:
         new_row = '\t'.join(row)
