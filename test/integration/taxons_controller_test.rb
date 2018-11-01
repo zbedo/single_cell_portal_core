@@ -26,6 +26,7 @@ class TaxonsControllerTest < ActionDispatch::IntegrationTest
             genome_assemblies_attributes: {
                 '0' => {
                     name: 'GRCm38',
+                    accession: 'GCA_000001635.2',
                     release_date: '2012-01-09'
                 }
             }
