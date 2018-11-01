@@ -58,6 +58,11 @@ class DeleteQueueJob < Struct.new(:object)
       when 'Metadata'
         delete_parsed_data(object.id, study.id, CellMetadatum, DataArray)
         study.update(cell_count: 0)
+        # unset default annotation if it was study-based
+        if study.default_annotation.include?('--study')
+          study.default_options[:annotation] = nil
+          study.save
+        end
       when 'Gene List'
         delete_parsed_data(object.id, study.id, PrecomputedScore)
       when 'BAM Index'
@@ -84,6 +89,11 @@ class DeleteQueueJob < Struct.new(:object)
         study.update!(initialized: false)
       end
     when 'UserAnnotation'
+      # unset default annotation if it was this user_annotation
+      if study.default_annotation == object.formatted_annotation_identifier
+        study.default_options[:annotation] = nil
+        study.save
+      end
       # set queued for deletion to true and set user annotation name
       new_name = "DELETE-#{SecureRandom.uuid}"
       object.update!(name: new_name)
