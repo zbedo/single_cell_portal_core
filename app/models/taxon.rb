@@ -176,13 +176,14 @@ class Taxon
       taxon.notes = "Uploaded from #{original_filename} on #{Date.today}"
       taxon.save!
       num_species += 1
-      assembly = taxon.genome_assemblies.find_by(name: vals[assembly_name_idx])
+      assembly = taxon.genome_assemblies.find_by(accession: vals[assembly_accession_idx])
       if assembly.nil?
         assembly = taxon.genome_assemblies.build
       end
       assembly.name = vals[assembly_name_idx]
       assembly.accession = vals[assembly_accession_idx]
       assembly.release_date = vals[assembly_release_date_idx]
+      Rails.logger.info "Assembly: #{assembly.attributes}"
       assembly.save!
       num_assemblies += 1
       # only add annotations if all fields are present, need to check that headers are there and that there are values

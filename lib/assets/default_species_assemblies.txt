@@ -18,7 +18,7 @@ Bos taurus	cow	9913	false	ARS-UCD1.2	2018-04-11	GCA_002263795.2
 Bos taurus	cow	9913	false	Btau_5.0.1	2015-11-19	GCA_000003205.6
 Bos taurus	cow	9913	false	Btau_4.6.1	2011-11-02	GCA_000003205.4
 Bos taurus	cow	9913	false	Btau_4.2	2011-05-12	GCA_000003205.2
-Bos taurus	cow	9913	false Btau_4.2	2009-06-10	GCA_000003205.1
+Bos taurus	cow	9913	false	Btau_4.2	2009-06-10	GCA_000003205.1
 Bos taurus	cow	9913	false	Bos_taurus_UMD_3.1	2009-12-01	GCA_000003055.3
 Sus scrofa	pig	9823	false	Sscrofa11.1	2017-02-07	GCA_000003025.6
 Sus scrofa	pig	9823	false	Sscrofa10.2	2011-09-07	GCA_000003025.4
