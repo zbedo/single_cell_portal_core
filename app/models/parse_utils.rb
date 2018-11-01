@@ -5,7 +5,7 @@ class ParseUtils
     begin
       start_time = Time.now
       # localize files
-      Rails.logger.info "#{Time.now}: Parsing 10X CellRanger source data files for #{study.name} with the following options: #{opts}"
+      Rails.logger.info "#{Time.now}: Parsing gene-barcode matrix source data files for #{study.name} with the following options: #{opts}"
       study.make_data_dir
       Rails.logger.info "#{Time.now}: Localizing output files & creating study file entries from 10X CellRanger source data for #{study.name}"
 
@@ -162,7 +162,7 @@ class ParseUtils
       @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
       Rails.logger.info @message.join("\n")
       begin
-        SingleCellMailer.notify_user_parse_complete(user.email, "10X CellRanger expression data has completed parsing", @message).deliver_now
+        SingleCellMailer.notify_user_parse_complete(user.email, "Gene-barcode matrix expression data has completed parsing", @message).deliver_now
       rescue => e
         Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
       end
