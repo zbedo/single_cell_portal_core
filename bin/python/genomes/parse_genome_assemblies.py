@@ -21,16 +21,20 @@ from utils import *
 parser = argparse.ArgumentParser(
     description=__doc__, # Use docstring at top of file for --help summary
     formatter_class=argparse.RawDescriptionHelpFormatter)
+parser.add_argument('--input_dir',
+                    help='Input directory; where to find organisms.tsv.  Default: ./',
+                    default='./')
 parser.add_argument('--output_dir',
                     help='Directory to send output data to.  Default: output/',
                     default='output/')
 args = parser.parse_args()
+input_dir = args.input_dir
 output_dir = args.output_dir
 
 if os.path.exists(output_dir) is False:
     os.mkdir(output_dir)
 
-species_list = get_species_list('organisms.tsv')
+species_list = get_species_list(input_dir + 'organisms.tsv')
 
 # One-dimensional list of species names
 species_names = [species[0] for species in species_list]

@@ -3,8 +3,6 @@
 
 from utils import *
 
-scp_species = get_species_list('organisms.tsv')
-
 def upload_gtf_product(transformed_gtf, bucket, existing_names):
     """Execute upload of a GTF product to GCS
     """
@@ -24,7 +22,7 @@ def upload_gtf_product(transformed_gtf, bucket, existing_names):
     return target_blob_name
 
 
-def upload_ensembl_gtf_products(ensembl_metadata, config):
+def upload_ensembl_gtf_products(ensembl_metadata, scp_species, config):
     """Upload position-sorted GTF file and GTF index file to GCS bucket
     """
     print('Uploading Ensembl GTF products')
@@ -126,7 +124,7 @@ def update_meta_row(row, org_metadata, annot_metadata):
     return new_row
 
 
-def record_annotation_metadata(ensembl_metadata):
+def record_annotation_metadata(ensembl_metadata, scp_species):
     """Write annotation URLs, etc. to species metadata reference TSV file
     """
     new_metadata_ref = []

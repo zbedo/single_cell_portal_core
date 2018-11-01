@@ -24,10 +24,10 @@ pip3 install -r requirements.txt
 EXAMPLES
 
 # Basic usage.  Upload GTF products to reference_dev in default SCP GCS bucket.
-$ python3 process_genome_references.py --vault_path=secrets/service_account.json
+$ python3 process_genome_references.py --vault_path=secrets/service_account.json --input_dir ../../../lib/assets/python/genomes/
 
 # Upload GTF products to reference_data_staging folder, using cached data from previous run
-$ python3 process_genome_references.py --vault_path=secrets/service_account.json --remote_output_dir reference_data_staging/ --use_cache
+$ python3 process_genome_references.py --vault_path=secrets/service_account.json --input_dir ../../../lib/assets/python/genomes/ --remote_output_dir reference_data_staging/ --use_cache
 """
 
 # This script is basically a wrapper for:
@@ -42,6 +42,9 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawDescriptionHelpFormatter)
 parser.add_argument('--vault_path',
                     help='Path in Vault for GCS service account credentials')
+parser.add_argument('--input_dir',
+                    help='Input directory; where to find organisms.tsv.  Default: ./',
+                    default='./')
 parser.add_argument('--remote_output_dir',
                     help='Remote directory for output in GCS bucket.  ' +
                     'Default: reference_data_dev/',
@@ -65,6 +68,7 @@ parser.add_argument('--use_cache',
 args = parser.parse_args()
 
 vault_path = args.vault_path
+input_dir = args.input_dir
 remote_output_dir = args.remote_output_dir
 local_output_dir = args.local_output_dir
 gcs_bucket = args.gcs_bucket
@@ -79,6 +83,7 @@ subprocess.call(assemblies_command)
 annotations_command = [
     'python3', 'parse_genome_annotations.py',
     '--vault_path', vault_path,
+    '--input_dir', input_dir,
     '--remote_output_dir', remote_output_dir,
     '--local_output_dir', local_output_dir,
     '--gcs_bucket', gcs_bucket,

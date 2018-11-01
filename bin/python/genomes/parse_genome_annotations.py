@@ -19,6 +19,9 @@ parser.add_argument('--use_cache',
                     action='store_true')
 parser.add_argument('--vault_path',
                     help='Path in Vault for GCS service account credentials')
+parser.add_argument('--input_dir',
+                    help='Input directory; where to find organisms.tsv.  Default: ./',
+                    default='./')
 parser.add_argument('--local_output_dir',
                     help='Local directory for output.  Default: output/',
                     default='output/')
@@ -39,12 +42,13 @@ parser.add_argument('--copy_data_from_prod_dir',
 args = parser.parse_args()
 use_cache = args.use_cache
 vault_path = args.vault_path
-gcs_bucket = args.gcs_bucket
+input_dir = args.input_dir
 output_dir = args.local_output_dir
+gcs_bucket = args.gcs_bucket
 remote_prod_dir = args.copy_data_from_prod_dir
 remote_output_dir = args.remote_output_dir
 
-scp_species = get_species_list('organisms.tsv')
+scp_species = get_species_list(input_dir + 'organisms.tsv')
 
 context = {
     'vault_path': vault_path,
@@ -200,5 +204,5 @@ if os.path.exists(output_dir) is False:
 
 ensembl_metadata = get_ensembl_metadata()
 ensembl_metadata = transform_ensembl_gtfs(ensembl_metadata)
-ensembl_metadata = upload_ensembl_gtf_products(ensembl_metadata, context)
-record_annotation_metadata(ensembl_metadata)
+ensembl_metadata = upload_ensembl_gtf_products(ensembl_metadata, scp_species, context)
+record_annotation_metadata(ensembl_metadata, scp_species)
