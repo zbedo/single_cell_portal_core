@@ -279,6 +279,11 @@ module Api
             @precomputed_entry.update(name: @study_file.name)
           elsif study_file_params[:file_type] == 'Cluster'
             @cluster = ClusterGroup.find_by(study_file_id: study_file_params[:_id])
+            # before updating, check if the defaults also need to change
+            if @study.default_cluster == @cluster
+              @study.default_options[:cluster] = @study_file.name
+              @study.save
+            end
             @cluster.update(name: @study_file.name)
             # also update data_arrays
             @cluster.data_arrays.update_all(cluster_name: @study_file.name)
