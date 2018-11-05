@@ -59,7 +59,7 @@ class DeleteQueueJob < Struct.new(:object)
         delete_parsed_data(object.id, study.id, CellMetadatum, DataArray)
         study.update(cell_count: 0)
         # unset default annotation if it was study-based
-        if study.default_annotation.include?('--study')
+        if study.default_options[:annotation].end_with?('--study')
           study.default_options[:annotation] = nil
           study.save
         end
