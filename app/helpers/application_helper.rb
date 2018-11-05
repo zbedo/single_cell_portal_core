@@ -200,9 +200,11 @@ module ApplicationHelper
 
 	# set colorscale value
 	def set_colorscale_value(selected_study, parameters)
-		if !parameters[:colorscale].nil?
+		if !parameters[:colorscale].blank?
 			parameters[:colorscale]
-		elsif selected_study.default_cluster.name == parameters[:cluster] && !selected_study.default_color_profile.nil?
+		elsif selected_study.default_cluster.name == parameters[:cluster] && !selected_study.default_color_profile.blank?
+			selected_study.default_color_profile
+		elsif params[:cluster].blank? && !selected_study.default_color_profile.blank? # no cluster requested, so go to defaults
 			selected_study.default_color_profile
 		else
 			'Reds'
