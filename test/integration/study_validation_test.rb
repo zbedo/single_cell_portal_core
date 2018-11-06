@@ -223,5 +223,88 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
                  "Did not block download and redirect to study page, current path is #{path}"
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
+
+  test 'should update default annotation after deleting metadata' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+    study_params = {
+        study: {
+            name: "Default Annotation #{@random_seed}",
+            user_id: @test_user.id,
+            public: true
+        }
+    }
+    post studies_path, params: study_params
+    follow_redirect!
+    assert_response 200, "Did not complete request successfully, expected redirect and response 200 but found #{@response.code}"
+    @study = Study.find_by(name: "Default Annotation #{@random_seed}")
+    assert @study.present?, "Did not persist study"
+    file_params = {study_file: {file_type: 'Expression Matrix', study_id: @study.id.to_s}}
+    perform_study_file_upload('expression_matrix_example.txt', file_params, @study.id)
+    assert_response 200, "Expression matrix upload failed: #{@response.code}"
+    assert @study.expression_matrix_files.size == 1, "Expression matrix failed to associate, found #{@study.expression_matrix_files.size} files"
+    expression_matrix_1 = @study.expression_matrix_files.first
+    @study.initialize_gene_expression_data(expression_matrix_1, @test_user)
+    assert @study.genes.size > 0, 'Did not parse any genes from expression matrix'
+    file_params = {study_file: {file_type: 'Metadata', study_id: @study.id.to_s}}
+    perform_study_file_upload('metadata_example.txt', file_params, @study.id)
+    assert_response 200, "Metadata upload failed: #{@response.code}"
+    metadata_study_file = @study.metadata_file
+    assert metadata_study_file.present?, "Metadata failed to associate, found no file: #{metadata_study_file.present?}"
+    @study.initialize_cell_metadata(metadata_study_file, @test_user)
+    assert @study.cell_metadata.size > 0, 'Did not parse any cell metadata from metadata file'
+    # first cluster
+    file_params = {study_file:
+                       {
+                           name: 'Test Cluster 1', file_type: 'Cluster', study_id: @study.id.to_s,
+                           study_file_x_axis_min: -100, study_file_x_axis_max: 100, study_file_y_axis_min: -75,
+                           study_file_y_axis_max: 75, study_file_z_axis_min: -125, study_file_z_axis_max: 125,
+                           study_file_x_axis_label: 'X Axis', study_file_y_axis_label: 'Y Axis', study_file_z_axis_label: 'Z Axis'
+                       }
+    }
+    perform_study_file_upload('cluster_example.txt', file_params, @study.id)
+    assert_response 200, "Cluster 1 upload failed: #{@response.code}"
+    assert @study.cluster_ordinations_files.size == 1, "Cluster 1 failed to associate, found #{@study.cluster_ordinations_files.size} files"
+    cluster_file_1 = @study.cluster_ordinations_files.first
+    @study.initialize_cluster_group_and_data_arrays(cluster_file_1, @test_user)
+    assert @study.cluster_groups.size == 1, 'Did not parse any clusters from cluster file'
+    cluster_1 = @study.cluster_groups.first
+    assert DataArray.where(linear_data_id: cluster_1.id, study_id: @study.id).any?, 'Did not parse any data arrays from cluster file'
+
+    # reload study to get defaults
+    @study = Study.find_by(name: "Default Annotation #{@random_seed}")
+    default_annotation = @study.default_options[:annotation]
+    assert default_annotation == 'Cluster--group--study', "Did not properly set default annotation, expected 'Cluster--group--study' but found #{default_annotation}"
+
+    # queue for deletion and remove
+    file_to_delete = StudyFile.find_by(study_id: @study.id, file_type: 'Metadata')
+    file_to_delete.update(queued_for_deletion: true)
+    DeleteQueueJob.new(file_to_delete).perform
+
+    # assert delete is done by reloading study object and checking values
+    @study = nil # REALLY make sure we're reloading the study
+    @study = Study.find_by(name: "Default Annotation #{@random_seed}")
+    assert @study.metadata_file.nil?, "Did not delete metadata file, found #{@study.metadata_file}"
+    assert @study.cell_metadata.size == 0, "Did not remove metadata, found #{@study.cell_metadata.size} cell_metadata entries"
+    assert @study.cell_count == 0, "Did not reset cell count: #{@study.cell_count}"
+    # we need to check the default annotation directly, not use the helper as the helper has a fallback option that will
+    # cause the assertion to fail
+    assert @study.default_options[:annotation].nil?, "Did not clear default annotation: #{@study.default_options[:annotation]}"
+
+    # upload new metadata file
+    file_params = {study_file: {file_type: 'Metadata', study_id: @study.id.to_s}}
+    perform_study_file_upload('metadata_update.txt', file_params, @study.id)
+    assert_response 200, "Metadata upload failed: #{@response.code}"
+    updated_metadata_study_file = @study.metadata_file
+    @study.initialize_cell_metadata(updated_metadata_study_file, @test_user)
+    assert @study.cell_metadata.size > 0, 'Did not parse any cell metadata from updated metadata file'
+
+    # assert change in default annotation
+    @study = Study.find_by(name: "Default Annotation #{@random_seed}")
+    new_default_annotation = @study.default_options[:annotation]
+    assert new_default_annotation != default_annotation, "Annotation did not update: #{new_default_annotation} should not equal #{default_annotation}"
+    assert new_default_annotation == 'Label--group--study', "Did not find correct new default annotation, 'Label--group--study' but found #{new_default_annotation}"
+
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
 end
 

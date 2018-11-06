@@ -3365,6 +3365,46 @@ class UiTestSuite < Test::Unit::TestCase
       assert new_color == exp_loaded_color, "default color incorrect, expected #{new_color} but found #{exp_loaded_color}"
     end
 
+    # now update the name of the default cluster to make sure it saves
+    path = @base_url + '/studies'
+    @driver.get path
+
+    edit_study_data = @driver.find_element(:class, "test-study-#{$random_seed}-upload")
+    edit_study_data.click
+    cluster_tab = @driver.find_element(:id, 'initialize_ordinations_form_nav')
+    cluster_tab.click
+    cluster_forms = @driver.find_elements(:class, 'initialize_ordinations_form')
+    cluster_forms.each do |form|
+      cluster_name = form.find_element(:id, 'study_file_name')
+      if cluster_name['value'] == new_cluster
+        cluster_name.send_keys(" (#{$random_seed})")
+        save_btn = form.find_element(:class, 'save-study-file')
+        save_btn.click
+        close_modal('study-file-notices')
+      end
+    end
+    
+    # validate update was persisted
+    @driver.get path
+    show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
+    show_study.click
+    options_form = @driver.find_element(:id, 'default-study-options-form')
+    cluster_dropdown = options_form.find_element(:id, 'study_default_options_cluster')
+    new_default_cluster = cluster_dropdown.find_elements(:tag_name, 'option').detect {|opt| opt.selected?}
+    expected_name = new_cluster + " (#{$random_seed})"
+    assert new_default_cluster.text == expected_name, "Did not update default cluster: #{expected_name} does not equal #{new_default_cluster.text}"
+
+    # make sure front end reflects change
+    study_page = @base_url + "/study/test-study-#{$random_seed}"
+    @driver.get study_page
+    wait_until_page_loads(study_page)
+    open_ui_tab('study-visualize')
+    view_options_panel = @driver.find_element(:id, 'view-option-link')
+    view_options_panel.click
+    wait_for_render(:id, 'view-options')
+    selected_cluster = @driver.find_element(:id, 'cluster')
+    assert selected_cluster['value'] == expected_name, "Front end did not update default cluster: #{selected_cluster['value']} does not equal #{expected_name}"
+
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
 
