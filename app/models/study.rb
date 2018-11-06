@@ -859,6 +859,22 @@ class Study
     end
   end
 
+  # return a nested array of all available annotations, both cluster-specific and study-wide for use in auto-generated
+  # dropdowns for selecting annotations.  can be scoped to one specific cluster, or return all with 'Cluster: ' prepended on the name
+  def formatted_annotation_select(cluster: nil, annotation_type: nil)
+    options = {}
+    metadata = annotation_type.nil? ? self.cell_metadata : self.cell_metadata.where(annotation_type: annotation_type)
+    options['Study Wide'] = metadata.map(&:annotation_select_option)
+    if cluster.present?
+      options['Cluster-Based'] = cluster.cell_annotation_select_option(annotation_type)
+    else
+      self.cluster_groups.each do |cluster_group|
+        options[cluster_group.name] = cluster_group.cell_annotation_select_option(annotation_type, true) # prepend name onto option value
+      end
+    end
+    options
+  end
+
   ###
   #
   # STUDYFILE GETTERS

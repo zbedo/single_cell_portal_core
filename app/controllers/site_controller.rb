@@ -1086,7 +1086,7 @@ class SiteController < ApplicationController
 
   # retrieve any optional parameters for a selected workflow
   def get_workflow_options
-    @options = WorkflowConfiguration.get_additional_parameters(params[:workflow_identifier])
+    @options = WorkflowConfiguration.get_additional_parameters(params[:workflow_identifier], @study)
     workflow_name = params[:workflow_identifier].split('--').join('/')
     @configuration = AdminConfiguration.find_by(config_type: 'Workflow Name', value: workflow_name)
     if @configuration.nil?
@@ -2078,10 +2078,7 @@ class SiteController < ApplicationController
 
   # helper method to load all available cluster_group-specific annotations
   def load_cluster_group_annotations
-    grouped_options = {
-        'Cluster-based' => @cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]},
-        'Study Wide' => @study.cell_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
-    }
+    grouped_options = @study.formatted_annotation_select(cluster: @cluster)
     # load available user annotations (if any)
     if user_signed_in?
       user_annotations = UserAnnotation.viewable_by_cluster(current_user, @cluster)

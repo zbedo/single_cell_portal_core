@@ -100,6 +100,18 @@ class ClusterGroup
     }
   end
 
+  # return a formatted array for use in a select dropdown that corresponds to a specific cell_annotation
+  def formatted_cell_annotation(annotation, prepend_name=false)
+    ["#{annotation[:name]}", "#{prepend_name ? "#{self.name}--" : nil}#{annotation[:name]}--#{annotation[:type]}--cluster"]
+  end
+
+  # generate a formatted select box options array that corresponds to all this cluster_group's cell_annotations
+  # can be scoped to cell_annotations of a specific type (group, numeric)
+  def cell_annotation_select_option(annotation_type=nil, prepend_name=false)
+    annotations = annotation_type.nil? ? self.cell_annotations : self.cell_annotations.select {|annot| annot[:type] == annotation_type}
+    annotations.map {|annot| self.formatted_cell_annotation(annot, prepend_name)}
+  end
+
   # method used during parsing to generate representative sub-sampled data_arrays for rendering
   #
   # annotation_name: name of annotation to subsample off of
