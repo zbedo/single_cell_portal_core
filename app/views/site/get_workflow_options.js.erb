@@ -23,8 +23,6 @@ if (Object.keys(workflowOptions).length > 0) {
             var paramDefault = workflowOptions[task][parameter]['default'];
             var paramHelp = workflowOptions[task][parameter]['help'];
             var required = workflowOptions[task][parameter]['required'];
-            console.log('param: ' + parameter + ' required?' + required);
-
             var optionalParam = "<label for='" + inputId + "'>" + task + "." + parameter + "</label>" +
                 (required ? ' <span class="label label-danger">required</span>' : '') + "<br />";
             switch(paramType) {
@@ -55,6 +53,26 @@ if (Object.keys(workflowOptions).length > 0) {
                             input += "<option value='" + opt + "'>" + display + "</option>";
                         }
                     });
+                    input += "</select>";
+                    break;
+                case 'select-group':
+                    input = "<select id='" + inputId + "' name='" + inputName + "' class='form-control'>";
+                    var paramOpts = workflowOptions[task][parameter]['values'];
+                    var defaultVal = workflowOptions[task][parameter]['default'];
+                    for (var optgroup in paramOpts) {
+                        var options = paramOpts[optgroup]
+                        input += "<optgroup label='" + optgroup + "'>"
+                        options.forEach(function(option) {
+                            var display = option[0];
+                            var opt = option[1];
+                            if (opt == defaultVal) {
+                                input += "<option value='" + opt + "' selected='selected'>" + display + "</option>";
+                            } else {
+                                input += "<option value='" + opt + "'>" + display + "</option>";
+                            }
+                        });
+                        input += "</optgroup>"
+                    }
                     input += "</select>";
                     break;
                 default:

@@ -112,15 +112,20 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
               configuration['inputs']['infercnv.gene_pos_file'] = "\"#{reference_attributes['infercnv_mouse_gen_pos_file']}\""
           end
 
-          # assemble cluster information, need to concatenate names into escaped strings, whitespace delimited (for Python)
-          cluster_names = []
-          cluster_files_input = []
-          study.cluster_groups.each do |cluster|
-            cluster_names << cluster.name
-            cluster_files_input << StudyFile.find(cluster.study_file_id).gs_url
+          # pass in path to cell annotations either from cluster or metadata file, as well as name of annotation column
+          if inputs['infercnv']['annotation'].end_with?('--study')
+            # ending in --study means this is a cell_metadatum object
+            configuration['inputs']['infercnv.cell_annotation_path'] = "\"#{study.metadata_file.gs_url}\""
+            configuration['inputs']['infercnv.cell_annotation_name'] = "\"#{inputs['infercnv']['annotation'].split('--').first}\""
+          else
+            # this ended in --cluster, which means it is cluster-specific, so we need to find the cluster & study_file
+            # that map to this value
+            annotation_vals = inputs['infercnv']['annotation'].split('--')
+            annotation_name = annotation_vals[1]
+            annotation_path = study.cluster_groups.find_by(name: annotation_name).study_file.gs_url
+            configuration['inputs']['infercnv.cell_annotation_path'] = "\"#{annotation_path}\""
+            configuration['inputs']['infercnv.cell_annotation_name'] = "\"#{annotation_name}\""
           end
-          configuration['inputs']['infercnv.cluster_names'] = cluster_names.to_s # cast array as string for JSON encoding
-          configuration['inputs']['infercnv.cluster_paths'] = cluster_files_input.to_s # cast array as string for JSON encoding
 
           # assign expression file to configuration
           configuration['inputs']['infercnv.expression_file'] = "\"#{inputs[:input_file]}\""
@@ -190,7 +195,7 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
   end
 
   # return additional parameters for a requested workflow (curated list) to update UI
-  def self.get_additional_parameters(workflow_identifier)
+  def self.get_additional_parameters(workflow_identifier, study=nil)
     opts = {}
     case workflow_identifier
       when /cell-ranger-2-0-2/
@@ -248,6 +253,13 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
                     ],
                     required: true,
                     help: 'Gene position annotation source (human or mouse)'
+                },
+                'annotation' => {
+                    type: 'select-group',
+                    default: nil,
+                    values: study.formatted_annotation_select(annotation_type: 'group'),
+                    required: true,
+                    help: 'Select an annotation from which to source both cell names and annotation labels.  Study-wide annotations will use all cells, whereas cluster-specific annotations only use cells from that cluster.  This will set the \'cell_annotation_path\' and \'cell_annotation_name\' parameters'
                 },
                 'delimiter' => {
                     type: 'select',
