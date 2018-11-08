@@ -440,6 +440,7 @@ DEPENDENCIES
   ruby-debug-ide
   ruby-prof
   ruby_native_statistics
+  rubyzip
   sass-rails (~> 5.0, >= 5.0.6)
   sdoc (~> 0.4.0)
   secure_headers

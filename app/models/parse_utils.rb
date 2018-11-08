@@ -196,8 +196,73 @@ class ParseUtils
       matrix_study_file.destroy
       genes_study_file.destroy
       barcodes_study_file.destroy
-      SingleCellMailer.notify_user_parse_fail(user.email, "10X CellRanger expression data in #{study.name} parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Gene-barcode matrix expression data in #{study.name} parse has failed", error_message).deliver_now
       false
+    end
+  end
+
+  # extract analysis output files based on a type of analysis output
+  def self.extract_analysis_output_files(study, user, zipfile_path, analysis_method, submission_id, taxon, genome_assembly)
+    begin
+      study.make_data_dir
+      extracted_files = []
+      Zip::File.open(zipfile_path) do |zip_file|
+        Dir.chdir(study.data_store_path)
+        zip_file.each do |entry|
+          unless entry.name.end_with?('/') || entry.name.start_with?('.')
+            Rails.logger.info "Extracting: #{entry.name} in #{study.data_store_path}"
+            entry.extract(entry.name)
+            extracted_files << entry.name
+          end
+        end
+      end
+      files_created = []
+      case analysis_method
+      when 'infercnv'
+        # here we are extracting Ideogram.js JSON annotation files from a zipfile bundle and setting various
+        # attributes to allow Ideogram to render this file with the correct cluster/annotation
+        extracted_files.each do |file|
+          converted_filename = URI.unescape(file)
+          file_basename = converted_filename.split('/').last
+          Rails.logger.info "Renaming #{file} to #{file_basename}"
+          File.rename(file, file_basename)
+          Rails.logger.info "Rename of #{file} to #{file_basename} complete"
+          file_payload = File.open(File.join(study.data_store_path, file_basename))
+          study_file = study.study_files.build(file_type: 'Analysis Output', name: file_basename.dup, upload: file_payload,
+                                               status: 'uploaded', taxon_id: taxon.id, genome_assembly_id: genome_assembly.id)
+          # chomp off filename header and .json at end
+          file_basename.gsub!(/infercnv_ideogram--/, '')
+          file_basename.gsub!(/\.json/, '')
+          cluster_name, annotation_name = file_basename.split('--')
+          study_file.options = {
+              analysis_name: analysis_method, visualization_name: 'ideogram.js',
+              cluster_name: cluster_name, annotation_name: annotation_name,
+              submission_id: submission_id
+          }
+          study_file.description = "Ideogram.js annotation outputs for #{cluster_name == 'study-wide' ? 'All Clusters' : cluster_name}:#{annotation_name}"
+          if study_file.save
+            Rails.logger.info "Added #{study_file.name} as Ideogram Analysis Output to #{study.name}"
+            files_created << study_file.name
+            begin
+              Rails.logger.info "#{Time.now}: preparing to upload Ideogram outputs: #{study_file.upload_file_name}:#{study_file.id} to FireCloud"
+              study.send_to_firecloud(study_file)
+              # clean up the extracted copy as we have a new copy in a subdir of the new study_file's ID
+              File.delete(study_file.name)
+            rescue => e
+              Rails.logger.info "#{Time.now}: Ideogram output file: #{study_file.upload_file_name}:#{study_file.id} failed to upload to FireCloud due to #{e.message}"
+              SingleCellMailer.notify_admin_upload_fail(study_file, e.message).deliver_now
+            end
+          else
+            SingleCellMailer.notify_user_parse_fail(user.email, "Zipfile extraction from inferCNV submission #{submission_id} in #{study.name} has failed", study_file.errors.full_messages.join(', ')).deliver_now
+          end
+        end
+        # email user that file extraction is complete
+        message = ['The following files were extracted from the Ideogram zip archive and added to your study:']
+        files_created.each {|file| message << file}
+        SingleCellMailer.notify_user_parse_complete(user.email, "Zipfile extraction of inferCNV submission #{submission_id} outputs has completed", message).deliver_now
+      end
+    rescue => e
+      SingleCellMailer.notify_user_parse_fail(user.email, "Zipfile extraction from inferCNV submission #{submission_id} in #{study.name} has failed", e.message).deliver_now
     end
   end
 
