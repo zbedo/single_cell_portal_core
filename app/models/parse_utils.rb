@@ -202,9 +202,14 @@ class ParseUtils
   end
 
   # extract analysis output files based on a type of analysis output
-  def self.extract_analysis_output_files(study, user, zipfile_path, analysis_method, submission_id, taxon, genome_assembly)
+  def self.extract_analysis_output_files(study, user, zipfile, analysis_method)
     begin
       study.make_data_dir
+      Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
+                                                   study.firecloud_workspace, zipfile.bucket_location,
+                                                   study.data_store_path, verify: :none)
+      Rails.logger.info "Successful localization of #{zipfile.upload_file_name}"
+      zipfile_path = File.join(study.data_store_path, zipfile.download_location)
       extracted_files = []
       Zip::File.open(zipfile_path) do |zip_file|
         Dir.chdir(study.data_store_path)
@@ -229,7 +234,7 @@ class ParseUtils
           Rails.logger.info "Rename of #{file} to #{file_basename} complete"
           file_payload = File.open(File.join(study.data_store_path, file_basename))
           study_file = study.study_files.build(file_type: 'Analysis Output', name: file_basename.dup, upload: file_payload,
-                                               status: 'uploaded', taxon_id: taxon.id, genome_assembly_id: genome_assembly.id)
+                                               status: 'uploaded', taxon_id: zipfile.taxon_id, genome_assembly_id: zipfile.genome_assembly_id)
           # chomp off filename header and .json at end
           file_basename.gsub!(/infercnv_ideogram--/, '')
           file_basename.gsub!(/\.json/, '')
@@ -237,7 +242,7 @@ class ParseUtils
           study_file.options = {
               analysis_name: analysis_method, visualization_name: 'ideogram.js',
               cluster_name: cluster_name, annotation_name: annotation_name,
-              submission_id: submission_id
+              submission_id: zipfile.options[:submission_id]
           }
           study_file.description = "Ideogram.js annotation outputs for #{cluster_name == 'study-wide' ? 'All Clusters' : cluster_name}:#{annotation_name}"
           if study_file.save
@@ -253,16 +258,16 @@ class ParseUtils
               SingleCellMailer.notify_admin_upload_fail(study_file, e.message).deliver_now
             end
           else
-            SingleCellMailer.notify_user_parse_fail(user.email, "Zipfile extraction from inferCNV submission #{submission_id} in #{study.name} has failed", study_file.errors.full_messages.join(', ')).deliver_now
+            SingleCellMailer.notify_user_parse_fail(user.email, "Zipfile extraction from inferCNV submission #{zipfile.options[:submission_id]} in #{study.name} has failed", study_file.errors.full_messages.join(', ')).deliver_now
           end
         end
         # email user that file extraction is complete
         message = ['The following files were extracted from the Ideogram zip archive and added to your study:']
         files_created.each {|file| message << file}
-        SingleCellMailer.notify_user_parse_complete(user.email, "Zipfile extraction of inferCNV submission #{submission_id} outputs has completed", message).deliver_now
+        SingleCellMailer.notify_user_parse_complete(user.email, "Zipfile extraction of inferCNV submission #{zipfile.options[:submission_id]} outputs has completed", message).deliver_now
       end
     rescue => e
-      SingleCellMailer.notify_user_parse_fail(user.email, "Zipfile extraction from inferCNV submission #{submission_id} in #{study.name} has failed", e.message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Zipfile extraction from inferCNV submission #{zipfile.options[:submission_id]} in #{study.name} has failed", e.message).deliver_now
     end
   end
 

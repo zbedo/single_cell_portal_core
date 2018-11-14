@@ -35,6 +35,8 @@
       <%= render partial: 'mm_coordinate_association_fields', locals: {f: f} %>
     <% elsif study_file.file_type == 'BAM' %>
       <%= render partial: 'bam_association_fields', locals: {f: f} %>
+    <% elsif study_file.file_type == 'Analysis Output' %>
+      <%= render partial: 'taxon_fields', locals: {f: f} %>
     <% end %>
   </div>
   <div class="form-group row">
