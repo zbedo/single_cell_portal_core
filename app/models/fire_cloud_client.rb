@@ -20,8 +20,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   GOOGLE_SCOPES = %w(https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/cloud-billing.readonly https://www.googleapis.com/auth/devstorage.read_only)
   # constant used for retry loops in process_firecloud_request and execute_gcloud_method
   MAX_RETRY_COUNT = 5
-  # constant used for incremental backoffs on retries (in seconds)
-  RETRY_INTERVAL = 15
+  # constant used for incremental backoffs on retries (in seconds); ignored when running unit/integration test suite
+  RETRY_INTERVAL = Rails.env == 'test' ? 0 : 15
   # default namespace used for all FireCloud workspaces owned by the 'portal'
   PORTAL_NAMESPACE = 'single-cell-portal'
   # location of Google service account JSON (must be absolute path to file)
