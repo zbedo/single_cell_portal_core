@@ -19,7 +19,9 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # default auth scopes
   GOOGLE_SCOPES = %w(https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/cloud-billing.readonly https://www.googleapis.com/auth/devstorage.read_only)
   # constant used for retry loops in process_firecloud_request and execute_gcloud_method
-  MAX_RETRY_COUNT = 3
+  MAX_RETRY_COUNT = 5
+  # constant used for incremental backoffs on retries (in seconds)
+  RETRY_INTERVAL = 15
   # default namespace used for all FireCloud workspaces owned by the 'portal'
   PORTAL_NAMESPACE = 'single-cell-portal'
   # location of Google service account JSON (must be absolute path to file)
@@ -275,6 +277,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
         log_message = "#{Time.now}: " + e.message + context
         Rails.logger.error log_message
         @error = e
+        retry_time = (@retry_count - 1) * RETRY_INTERVAL
+        sleep(retry_time)
         process_firecloud_request(http_method, path, payload, opts)
       end
     else
@@ -1256,9 +1260,12 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
         @error = e.message
         Rails.logger.info "#{Time.now}: error calling #{method_name} with #{params.join(', ')}; #{e.message} -- retry ##{@retries}"
         @retries += 1
+        retry_time = (@retries - 1) * RETRY_INTERVAL
+        sleep(retry_time)
         execute_gcloud_method(method_name, *params)
       end
     else
+      @retries = 0
       Rails.logger.info "#{Time.now}: Retry count exceeded: #{@error}"
       raise RuntimeError.new "#{@error}"
     end
