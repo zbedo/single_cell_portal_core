@@ -22,6 +22,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   MAX_RETRY_COUNT = 5
   # constant used for incremental backoffs on retries (in seconds); ignored when running unit/integration test suite
   RETRY_INTERVAL = Rails.env == 'test' ? 0 : 15
+  # List of URLs/Method names to ignore incremental backoffs on (in cases of UI blocking)
   RETRY_IGNORE_LIST = ["#{BASE_URL}/register", :generate_signed_url, :generate_api_url]
   # default namespace used for all FireCloud workspaces owned by the 'portal'
   PORTAL_NAMESPACE = 'single-cell-portal'
