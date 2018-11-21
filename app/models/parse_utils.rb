@@ -236,9 +236,9 @@ class ParseUtils
           study_file = study.study_files.build(file_type: 'Analysis Output', name: file_basename.dup, upload: file_payload,
                                                status: 'uploaded', taxon_id: zipfile.taxon_id, genome_assembly_id: zipfile.genome_assembly_id)
           # chomp off filename header and .json at end
-          file_basename.gsub!(/infercnv_ideogram--/, '')
+          file_basename.gsub!(/infercnv_exp_means__/, '')
           file_basename.gsub!(/\.json/, '')
-          cluster_name, annotation_name = file_basename.split('--')
+          cluster_name, annotation_name = file_basename.split('__')
           study_file.options = {
               analysis_name: analysis_method, visualization_name: 'ideogram.js',
               cluster_name: cluster_name, annotation_name: annotation_name,
