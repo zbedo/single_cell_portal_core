@@ -22,6 +22,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   MAX_RETRY_COUNT = 5
   # constant used for incremental backoffs on retries (in seconds); ignored when running unit/integration test suite
   RETRY_INTERVAL = Rails.env == 'test' ? 0 : 15
+  RETRY_IGNORE_LIST = ["#{BASE_URL}/register", :generate_signed_url, :generate_api_url]
   # default namespace used for all FireCloud workspaces owned by the 'portal'
   PORTAL_NAMESPACE = 'single-cell-portal'
   # location of Google service account JSON (must be absolute path to file)
@@ -277,8 +278,10 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
         log_message = "#{Time.now}: " + e.message + context
         Rails.logger.error log_message
         @error = e
-        retry_time = (@retry_count - 1) * RETRY_INTERVAL
-        sleep(retry_time)
+        unless RETRY_IGNORE_LIST.include?(path)
+          retry_time = (@retry_count - 1) * RETRY_INTERVAL
+          sleep(retry_time)
+        end
         process_firecloud_request(http_method, path, payload, opts)
       end
     else
@@ -1260,8 +1263,10 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
         @error = e.message
         Rails.logger.info "#{Time.now}: error calling #{method_name} with #{params.join(', ')}; #{e.message} -- retry ##{@retries}"
         @retries += 1
-        retry_time = (@retries - 1) * RETRY_INTERVAL
-        sleep(retry_time)
+        unless RETRY_IGNORE_LIST.include?(method_name)
+          retry_time = (@retries - 1) * RETRY_INTERVAL
+          sleep(retry_time)
+        end
         execute_gcloud_method(method_name, *params)
       end
     else
