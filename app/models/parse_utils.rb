@@ -168,10 +168,15 @@ class ParseUtils
       end
 
       # determine what to do with local files
-      unless opts[:skip_upload] == true
-        upload_or_remove_study_file(matrix_study_file, study)
-        upload_or_remove_study_file(genes_study_file, study)
-        upload_or_remove_study_file(barcodes_study_file, study)
+      begin
+        unless opts[:skip_upload] == true
+          upload_or_remove_study_file(matrix_study_file, study)
+          upload_or_remove_study_file(genes_study_file, study)
+          upload_or_remove_study_file(barcodes_study_file, study)
+        end
+      rescue => e
+        Rails.logger.error "Error in uploading files from sparse matrix parse to #{study.firecloud_project}/#{study.firecloud_workspace}#{study.bucket_id}: #{e.message}"
+        # use UploadCleanupJob
       end
 
       # finished, so return true
@@ -313,27 +318,22 @@ class ParseUtils
     Rails.logger.info "#{Time.now}: determining upload status of #{study_file.file_type}: #{study_file.bucket_location}:#{study_file.id}"
     # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
     # rather than relying on opts[:local], actually check if the file is already in the GCS bucket
-    remote = Study.firecloud_client.get_workspace_file(study.firecloud_project, study.firecloud_workspace, study_file.bucket_location)
-    if remote.nil?
-      begin
+    begin
+      remote = Study.firecloud_client.get_workspace_file(study.firecloud_project, study.firecloud_workspace, study_file.bucket_location)
+      if remote.nil?
         Rails.logger.info "#{Time.now}: preparing to upload expression file: #{study_file.bucket_location}:#{study_file.id} to FireCloud"
         study.send_to_firecloud(study_file)
-      rescue => e
-        Rails.logger.info "#{Time.now}: Expression file: #{study_file.bucket_location}:#{study_file.id} failed to upload to FireCloud due to #{e.message}"
-        SingleCellMailer.notify_admin_upload_fail(study_file, e.message).deliver_now
-      end
-    else
-      # we have the file in FireCloud already, so just delete it
-      begin
+      else
         Rails.logger.info "#{Time.now}: found remote version of #{study_file.bucket_location}: #{remote.name} (#{remote.generation})"
         run_at = 2.minutes.from_now
-        Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file), run_at: run_at)
+        Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file, 0), run_at: run_at)
         Rails.logger.info "#{Time.now}: cleanup job for #{study_file.bucket_location}:#{study_file.id} scheduled for #{run_at}"
-      rescue => e
-        # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
-        Rails.logger.error "#{Time.now}: Could not delete #{study_file.bucket_location}:#{study_file.id} in study #{self.name}; aborting"
-        SingleCellMailer.admin_notification('Local file deletion failed', nil, "The file at #{Rails.root.join(study.data_store_path, study_file.download_location)} failed to clean up after parsing, please remove.").deliver_now
       end
+    rescue => e
+      Rails.logger.error "Error in pushing #{study_file.bucket_location}:#{study_file.id} to #{study.firecloud_project}/#{study.firecloud_workspace}:#{study.bucket_id}: #{e.message}"
+      run_at = 2.minutes.from_now
+      Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file, 0), run_at: run_at)
+      Rails.logger.info "UploadCleanupJob scheduled for #{run_at} for #{study_file.bucket_location}:#{study_file.id}"
     end
   end
 

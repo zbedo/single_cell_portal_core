@@ -5,9 +5,10 @@
 #
 ##
 
-class UploadCleanupJob < Struct.new(:study, :study_file)
+class UploadCleanupJob < Struct.new(:study, :study_file, :retry_count)
 
   def perform
+    retries = retry_count + 1
     # make sure file or study isn't queued for deletion first
     if study_file.nil?
       Rails.logger.info "#{Time.now}: aborting UploadCleanupJob due to StudyFile already being deleted."
@@ -46,13 +47,21 @@ class UploadCleanupJob < Struct.new(:study, :study_file)
             Rails.logger.info "#{Time.now}: remote file MISSING for #{study_file.bucket_location}:#{study_file.id}, attempting upload"
             study.send_to_firecloud(study_file)
             # schedule a new cleanup job
-            run_at = 2.minutes.from_now
+            interval = retries * 2
+            run_at = interval.minutes.from_now
             Rails.logger.info "#{Time.now}: scheduling new UploadCleanupJob for #{study_file.bucket_location}:#{study_file.id}, will run at #{run_at}"
-            Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file), run_at: run_at)
+            Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file, retries), run_at: run_at)
           end
         rescue => e
-          Rails.logger.error "#{Time.now}: error in UploadCleanupJob for #{study.name}:#{study_file.bucket_location}:#{study_file.id}; #{e.message}"
-          SingleCellMailer.admin_notification('UploadCleanupJob failure', nil, "<p>The following failure occurred when attempting to clean up #{study_file.upload.path}: #{e.message}</p>").deliver_now
+          if retries <= 3
+            interval = retries * 2
+            run_at = interval.minutes.from_now
+            Rails.logger.error "#{Time.now}: error in UploadCleanupJob for #{study.name}:#{study_file.bucket_location}:#{study_file.id}, will retry at #{run_at}; #{e.message}"
+            Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file, retries), run_at: run_at)
+          else
+            Rails.logger.error "#{Time.now}: error in UploadCleanupJob for #{study.name}:#{study_file.bucket_location}:#{study_file.id}; #{e.message}"
+            SingleCellMailer.admin_notification('UploadCleanupJob failure', nil, "<p>The following failure occurred when attempting to clean up #{study_file.upload.path}: #{e.message}</p>").deliver_now
+          end
         end
       end
     end
