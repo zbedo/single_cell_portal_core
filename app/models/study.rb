@@ -2499,7 +2499,7 @@ class Study
   def send_to_firecloud(file)
     begin
       Rails.logger.info "#{Time.now}: Uploading #{file.bucket_location}:#{file.id} to FireCloud workspace: #{self.firecloud_workspace}"
-      file_location = file.bucket_location
+      file_location = file.remote_location.blank? ? file.upload.path : File.join(self.data_store_path, file.remote_location)
       # determine if file needs to be compressed
       first_two_bytes = File.open(file_location).read(2)
       gzip_signature = StudyFile::GZIP_MAGIC_NUMBER # per IETF
@@ -2532,7 +2532,7 @@ class Study
       run_at = 2.minutes.from_now
       Delayed::Job.enqueue(UploadCleanupJob.new(file.study, file, 0), run_at: run_at)
       Rails.logger.info "#{Time.now}: cleanup job for #{file.bucket_location}:#{file.id} scheduled for #{run_at}"
-    rescue RuntimeError => e
+    rescue => e
       # if upload fails, try again using UploadCleanupJob in 2 minutes
       run_at = 2.minutes.from_now
       Rails.logger.error "#{Time.now}: unable to upload '#{file.bucket_location}:#{file.id} to FireCloud, will retry at #{run_at}; #{e.message}"
