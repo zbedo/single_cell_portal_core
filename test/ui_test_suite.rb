@@ -791,6 +791,7 @@ class UiTestSuite < Test::Unit::TestCase
     firecloud_link.click
     @driver.switch_to.window(@driver.window_handles.last)
     sleep(1) # we need a sleep to let the driver catch up, otherwise we can get stuck in an inbetween state
+    accept_firecloud_tos
     completed = @driver.find_elements(:class, 'fa-check-circle')
     assert completed.size >= 1, 'did not provision workspace properly'
     assert @driver.current_url == firecloud_url, 'did not open firecloud workspace'
@@ -1005,6 +1006,7 @@ class UiTestSuite < Test::Unit::TestCase
     # verify that workspace is still there
     firecloud_url = 'https://portal.firecloud.org/#workspaces/single-cell-portal/development-sync-test-study'
     open_new_page(firecloud_url)
+    accept_firecloud_tos
     completed = @driver.find_elements(:class, 'fa-check-circle')
     assert completed.size >= 1, "did not find workspace - may have been deleted; please check #{firecloud_url}"
 
@@ -1445,6 +1447,7 @@ class UiTestSuite < Test::Unit::TestCase
     login_as_other($share_email, $share_email_password)
     firecloud_workspace = "https://portal.firecloud.org/#workspaces/single-cell-portal/sync-test-#{$random_seed}"
     @driver.get firecloud_workspace
+    accept_firecloud_tos
     assert !element_present?(:class, 'fa-check-circle'), 'did not revoke access - study workspace still loads'
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
@@ -1746,6 +1749,7 @@ class UiTestSuite < Test::Unit::TestCase
     # assert access is revoked
     firecloud_url = "https://portal.firecloud.org/#workspaces/single-cell-portal/#{$env}-test-study-#{$random_seed}"
     @driver.get firecloud_url
+    accept_firecloud_tos
     assert !element_present?(:class, 'fa-check-circle'), 'did not revoke access - study workspace still loads'
 
     # test that study admin access is disabled
