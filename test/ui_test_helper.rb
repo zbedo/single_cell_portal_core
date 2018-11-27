@@ -368,7 +368,7 @@ class Test::Unit::TestCase
       accept = @driver.find_element(:xpath, "//a[@data-test-id='accept-button']")
       $verbose ? puts('accepting FireCloud Terms of Service') : nil
       accept.click
-    rescue Selenium::WebDriver::Error::NoSuchElementError => e
+    rescue Selenium::WebDriver::Error::NoSuchElementError
       $verbose ? puts('no FireCloud Terms of Service to accept') : nil
     end
   end
