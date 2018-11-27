@@ -15,15 +15,10 @@ class UploadCleanupJob < Struct.new(:study, :study_file, :retry_count)
     elsif study_file.queued_for_deletion || study.queued_for_deletion
       Rails.logger.info "#{Time.now}: aborting UploadCleanupJob for #{study_file.bucket_location}:#{study_file.id} in '#{study.name}', file queued for deletion"
     else
-      file_location = File.join(study.data_store_path, study_file.download_location)
-      # make sure the local file still exists
-      if !File.exists?(file_location)
-        # try again at path without file ID
-        file_location = File.join(study.data_store_path, study_file.bucket_location)
-      end
-      if !File.exists?(file_location)
+      file_location = study_file.local_location
+      if !file_location.present?
         Rails.logger.error "#{Time.now}: error in UploadCleanupJob for #{study.name}:#{study_file.bucket_location}:#{study_file.id}; file no longer present"
-        SingleCellMailer.admin_notification('File missing on cleanup', nil, "<p>The study file #{study_file.upload.path} was missing from the local file system at the time of cleanup job execution.  Please check #{study.firecloud_workspace} to ensure the upload occurred.</p>")
+        SingleCellMailer.admin_notification('File missing on cleanup', nil, "<p>The study file #{study_file.upload_file_name} was missing from the local file system at the time of cleanup job execution.  Please check #{study.firecloud_workspace} to ensure the upload occurred.</p>")
       else
         begin
           # check workspace bucket for existence of remote file
