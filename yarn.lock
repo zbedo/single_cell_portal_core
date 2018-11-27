@@ -3103,9 +3103,9 @@ icss-utils@^2.1.0:
   dependencies:
     postcss "^6.0.1"
 
-"ideogram@git://github.com/eweitz/ideogram.git#d01a16a70fe9f48fcf28a2db19273bf812c96f3b":
+"ideogram@git://github.com/eweitz/ideogram.git#e4183667f701502280aadf0aac2b17f817886697":
   version "1.3.0"
-  resolved "git://github.com/eweitz/ideogram.git#d01a16a70fe9f48fcf28a2db19273bf812c96f3b"
+  resolved "git://github.com/eweitz/ideogram.git#e4183667f701502280aadf0aac2b17f817886697"
   dependencies:
     commander "*"
     crossfilter "1.3.12"
