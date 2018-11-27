@@ -2499,7 +2499,7 @@ class Study
   def send_to_firecloud(file)
     begin
       Rails.logger.info "#{Time.now}: Uploading #{file.bucket_location}:#{file.id} to FireCloud workspace: #{self.firecloud_workspace}"
-      file_location = file.remote_location.blank? ? file.upload.path : File.join(self.data_store_path, file.remote_location)
+      file_location = file.local_location.to_s
       # determine if file needs to be compressed
       first_two_bytes = File.open(file_location).read(2)
       gzip_signature = StudyFile::GZIP_MAGIC_NUMBER # per IETF
