@@ -1,6 +1,32 @@
+
 <div id="ideogram-container" style="margin: 12px">
+  <div id="filters-container">
+  <ul id="tracks-to-display">
+  </ul>
+</div>
+
   <!-- Ideogram goes here -->
 </div>
+<style>
+#tracks-to-display {
+  list-style-type: none;
+  float: left;
+}
+
+#tracks-to-display label {
+  font-weight: normal;
+}
+
+#ideogram-container {
+  margin: 12px;
+  position: relative;
+  left: -15px;
+}
+#_ideogramLegend {
+  position: relative;
+  left: 30px;
+}
+</style>
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
 //    Not used currently, but perhaps later.
@@ -122,17 +148,60 @@
     ]
   }];
 
+  function getSelectedTracks() {
+    var selectedTracks = [];
+
+    checkboxes.forEach(function(checkbox) {
+      var trackIndex = parseInt(checkbox.getAttribute('id').split('_')[1]);
+      if (checkbox.checked) {
+        selectedTracks.push(trackIndex);
+      }
+    });
+
+    return selectedTracks;
+  }
+
+  function updateTracks() {
+    var selectedTracks = getSelectedTracks();
+    ideogram.updateDisplayedTracks(selectedTracks);
+  }
+
+  function createTrackFilters() {
+    var i, listItems, trackLabels, content, checked;
+    // Only apply this function once
+    if (document.querySelector('#filter_1')) return;
+    listItems = '';
+    trackLabels = ideogram.rawAnnots.keys.slice(7,);
+    for (i = 0; i < trackLabels.length; i++) {
+      checked = ([0, 1, 2].includes(i)) ? 'checked' : '';
+      listItems +=
+        '<li>' +
+          '<label for="filter_' + (i + 1) + '">' +
+            '<input type="checkbox" id="filter_'  + (i + 1) + '" ' + checked + '/>' +
+            trackLabels[i] +
+          '</label>' +
+        '</li>';
+    }
+    content = 'Tracks to display ' + listItems;
+    document.querySelector('#tracks-to-display').innerHTML = content;
+    checkboxes = document.querySelectorAll('input[type=checkbox]');
+    checkboxes.forEach(function(checkbox) {
+      checkbox.addEventListener('click', function() {
+        updateTracks();
+      });
+    });
+  }
+
   function defineHeatmaps(url) {
     fetch(url).then(response => response.json().then(function(data) {
-      console.log(data);
       var i, labels, heatmap, heatmaps, annotationTracks;
 
       heatmaps = [];
-      labels = data.keys.slice(4,);
+      labels = data.keys.slice(7,);
 
       annotationTracks = []
 
-      for (i = 0; i < 3; i++) {
+      for (i = 0; i < labels.length; i++) {
         heatmaps.push({key: labels[i], thresholds: heatmapThresholds});
         annotationTracks.push({id: labels[i], shape: ideoAnnotShape});
       }
@@ -142,6 +211,7 @@
         organism: ideogramInferCnvSettings.organism.toLowerCase(),
         assembly: ideogramInferCnvSettings.assembly,
         chrHeight: 400,
+        chrMargin: 1,
         dataDir: 'https://unpkg.com/ideogram@1.3.0/dist/data/bands/native/',
         annotationsPath: url,
         annotationTracks: annotationTracks,
@@ -150,6 +220,7 @@
         annotationsDisplayedTracks: [1, 2, 3],
         heatmaps: heatmaps,
         legend: legend,
+        onDrawAnnots: createTrackFilters,
         debug: true,
         rotatable: false
       });
