@@ -95,12 +95,6 @@
     'l ' + annotHeight/2 + ' 0' +
     'l 0 -' + (2 * annotHeight) + 'z';
 
-  var annotationTracks = [
-    {id: 'all', shape: ideoAnnotShape},
-    {id: 'cluster1', shape: ideoAnnotShape},
-    {id: 'cluster2', shape: ideoAnnotShape}
-  ];
-
   // Intercept requests to add bearer token, enabling direct load of files from GCS
   var originalFetch = window.fetch;
   window.fetch = function () {
@@ -128,25 +122,41 @@
     ]
   }];
 
-  var ideogram = new Ideogram({
-    container: '#ideogram-container',
-    organism: ideogramInferCnvSettings.organism.toLowerCase(),
-    assembly: ideogramInferCnvSettings.assembly,
-    chrHeight: 400,
-    dataDir: 'https://unpkg.com/ideogram@1.3.0/dist/data/bands/native/',
-    // annotationsPath: ideogramInferCnvSettings.annotationsPath,
-    annotationsPath: '/single_cell/example_data/tailored__infercnv_exp_means2.json',
-    annotationTracks: annotationTracks,
-    annotationsLayout: 'heatmap',
-    heatmaps: [
-      {key: 'SS1', thresholds: heatmapThresholds},
-      {key: 'SS2', thresholds: heatmapThresholds},
-      {key: 'SS7', thresholds: heatmapThresholds}
-    ],
-    legend: legend,
-    debug: true,
-    rotatable: false
-  });
+  function defineHeatmaps(url) {
+    fetch(url).then(response => response.json().then(function(data) {
+      console.log(data);
+      var i, labels, heatmap, heatmaps, annotationTracks;
 
+      heatmaps = [];
+      labels = data.keys.slice(4,);
+
+      annotationTracks = []
+
+      for (i = 0; i < 3; i++) {
+        heatmaps.push({key: labels[i], thresholds: heatmapThresholds});
+        annotationTracks.push({id: labels[i], shape: ideoAnnotShape});
+      }
+
+      window.ideogram = new Ideogram({
+        container: '#ideogram-container',
+        organism: ideogramInferCnvSettings.organism.toLowerCase(),
+        assembly: ideogramInferCnvSettings.assembly,
+        chrHeight: 400,
+        dataDir: 'https://unpkg.com/ideogram@1.3.0/dist/data/bands/native/',
+        annotationsPath: url,
+        annotationTracks: annotationTracks,
+        annotationsLayout: 'heatmap',
+        annotationsNumTracks: 3,
+        annotationsDisplayedTracks: [1, 2, 3],
+        heatmaps: heatmaps,
+        legend: legend,
+        debug: true,
+        rotatable: false
+      });
+
+    }));
+  }
+
+  defineHeatmaps('/single_cell/example_data/tailored__infercnv_exp_means2.json');
 
 </script>
