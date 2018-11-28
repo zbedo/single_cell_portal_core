@@ -1209,7 +1209,9 @@ class Study
       if !opts[:local] || !expression_file.is_local?
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, expression_file.bucket_location, self.data_store_path, verify: :none)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, self.firecloud_project,
+                                                     self.firecloud_workspace, expression_file.bucket_location,
+                                                     self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, expression_file.bucket_location)
       end
 
@@ -1477,7 +1479,9 @@ class Study
         # make sure data dir exists first
         Rails.logger.info "Localizing file: #{ordinations_file.upload_file_name} in #{self.data_store_path}"
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, ordinations_file.bucket_location, self.data_store_path, verify: :none)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, self.firecloud_project,
+                                                     self.firecloud_workspace, ordinations_file.bucket_location,
+                                                     self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, ordinations_file.bucket_location)
       end
 
@@ -1823,7 +1827,9 @@ class Study
       if !opts[:local] || !coordinate_file.is_local?
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, coordinate_file.bucket_location, self.data_store_path, verify: :none)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, self.firecloud_project,
+                                                     self.firecloud_workspace, coordinate_file.bucket_location,
+                                                     self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, coordinate_file.bucket_location)
       end
 
@@ -2044,7 +2050,9 @@ class Study
       if !opts[:local] || !metadata_file.is_local?
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, metadata_file.bucket_location, self.data_store_path, verify: :none)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, self.firecloud_project,
+                                                     self.firecloud_workspace, metadata_file.bucket_location,
+                                                     self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, metadata_file.bucket_location)
       end
 
@@ -2321,7 +2329,9 @@ class Study
       if !opts[:local] || !marker_file.is_local?
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, marker_file.bucket_location, self.data_store_path, verify: :none)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, self.firecloud_project,
+                                                     self.firecloud_workspace, marker_file.bucket_location,
+                                                     self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, marker_file.bucket_location)
       end
 
@@ -2522,7 +2532,9 @@ class Study
         File.rename gzip_filepath, file_location
         opts.merge!(content_encoding: 'gzip')
       end
-      remote_file = Study.firecloud_client.execute_gcloud_method(:create_workspace_file, self.firecloud_project, self.firecloud_workspace, file.upload.path, file.bucket_location, opts)
+      remote_file = Study.firecloud_client.execute_gcloud_method(:create_workspace_file, 0, self.firecloud_project,
+                                                                 self.firecloud_workspace, file.upload.path,
+                                                                 file.bucket_location, opts)
       # store generation tag to know whether a file has been updated in GCP
       Rails.logger.info "#{Time.now}: Updating #{file.bucket_location}:#{file.id} with generation tag: #{remote_file.generation} after successful upload"
       file.update(generation: remote_file.generation)

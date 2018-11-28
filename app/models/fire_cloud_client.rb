@@ -228,14 +228,15 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   #   - +path+ (String) => FireCloud REST API path
   #   - +payload+ (Hash) => HTTP POST/PATCH/PUT body for creates/updates, defaults to nil
   #		- +opts+ (Hash) => Hash of extra options (defaults are file_upload=false, max_attemps=MAX_RETRY_COUNT)
+  #   - +retry_count+ (Integer) => current count of number of retries.  defaults to 0 and self-increments
   #
   # * *return*
   #   - +Hash+, +Boolean+ depending on response body
   # * *raises*
   #   - +RuntimeError+
-  def process_firecloud_request(http_method, path, payload=nil, opts={})
+  def process_firecloud_request(http_method, path, payload=nil, opts={}, retry_count=0)
     # set up default options
-    request_opts = {file_upload: false, max_attempts: MAX_RETRY_COUNT}.merge(opts)
+    request_opts = {file_upload: false}.merge(opts)
 
     # check for token expiry first before executing
     if self.access_token_expired?
@@ -251,24 +252,18 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
       headers.merge!({'Content-Type' => 'application/json'})
     end
 
-    # initialize counter to prevent endless feedback loop
-    @retry_count ||= 0
-
     # process request
-    if @retry_count < request_opts[:max_attempts]
+    if retry_count < MAX_RETRY_COUNT
       begin
-        @retry_count += 1
         @obj = RestClient::Request.execute(method: http_method, url: path, payload: payload, headers: headers)
         # handle response codes as necessary
         if ok?(@obj.code) && !@obj.body.blank?
-          @retry_count = 0
           begin
             return JSON.parse(@obj.body)
           rescue JSON::ParserError => e
             return @obj.body
           end
         elsif ok?(@obj.code) && @obj.body.blank?
-          @retry_count = 0
           return true
         else
           Rails.logger.info "#{Time.now}: Unexpected response #{@obj.code}, not sure what to do here..."
@@ -283,10 +278,9 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
           retry_time = (@retry_count - 1) * RETRY_INTERVAL
           sleep(retry_time)
         end
-        process_firecloud_request(http_method, path, payload, opts)
+        process_firecloud_request(http_method, path, payload, opts, retry_count + 1)
       end
     else
-      @retry_count = 0
       error_message = parse_error_message(@error)
       Rails.logger.error "#{Time.now}: Retry count exceeded - #{error_message}"
       raise RuntimeError.new(error_message)
@@ -1249,29 +1243,27 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   #
   # * *params*
   #   - +method_name+ (String, Symbol) => name of FireCloudClient GCS method to execute
+  #   - +retry_count+ (Integer) => current count of number of retries.  defaults to 0 and self-increments
   #   - +params+ (Array) => array of method parameters (passed with splat operator, so does not need to be an actual array)
   #
   # * *return*
   #   - Object depends on method, can be one of the following: +Google::Cloud::Storage::Bucket+, +Google::Cloud::Storage::File+,
   #     +Google::Cloud::Storage::FileList+, +Boolean+, +File+, or +String+
 
-  def execute_gcloud_method(method_name, *params)
-    @retries ||= 0
-    if @retries < MAX_RETRY_COUNT
+  def execute_gcloud_method(method_name, retry_count=0, *params)
+    if retry_count < MAX_RETRY_COUNT
       begin
         self.send(method_name, *params)
       rescue => e
         @error = e.message
         Rails.logger.info "#{Time.now}: error calling #{method_name} with #{params.join(', ')}; #{e.message} -- retry ##{@retries}"
-        @retries += 1
         unless RETRY_IGNORE_LIST.include?(method_name)
           retry_time = (@retries - 1) * RETRY_INTERVAL
           sleep(retry_time)
         end
-        execute_gcloud_method(method_name, *params)
+        execute_gcloud_method(method_name, retry_count + 1, *params)
       end
     else
-      @retries = 0
       Rails.logger.info "#{Time.now}: Retry count exceeded: #{@error}"
       raise RuntimeError.new "#{@error}"
     end

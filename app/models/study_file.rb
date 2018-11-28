@@ -836,7 +836,9 @@ class StudyFile
           puts msg
           Rails.logger.info msg
           file_location = File.join(study.data_store_path, self.download_location)
-          Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project, study.firecloud_workspace, self.bucket_location, download_location, verify: :none)
+          Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, study.firecloud_project,
+                                                       study.firecloud_workspace, self.bucket_location, download_location,
+                                                       verify: :none)
           content_type = self.determine_content_type
           shift_headers = true
           if content_type == 'application/gzip'

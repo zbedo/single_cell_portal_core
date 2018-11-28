@@ -296,7 +296,7 @@ class ParseUtils
       local_path = File.join(study.data_store_path, study_file.download_location)
     else
       Rails.logger.info "Downloading #{study_file.upload_file_name} from remote"
-      Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
+      Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, study.firecloud_project,
                                                    study.firecloud_workspace, study_file.bucket_location,
                                                    study.data_store_path, verify: :none)
       Rails.logger.info "Successful localization of #{study_file.upload_file_name}"

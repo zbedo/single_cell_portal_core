@@ -349,10 +349,10 @@ module Api
         begin
           # make sure file is in FireCloud first
           unless human_data || @study_file.generation.blank?
-            present = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project,
+            present = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.firecloud_project,
                                                                    @study.firecloud_workspace, @study_file.upload_file_name)
             if present
-              Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, @study.firecloud_project,
+              Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, 0, @study.firecloud_project,
                                                            @study.firecloud_workspace, @study_file.upload_file_name)
             end
           end
