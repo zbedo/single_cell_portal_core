@@ -228,6 +228,31 @@
     }));
   }
 
-  defineHeatmaps('/single_cell/example_data/tailored__infercnv_exp_means2.json');
+  function getIdeogramAnnotationPaths() {
+    var paths, stem, clusters = [], cellAnnots = [];
+
+    paths = [];
+
+    $('#cluster option').each((i, el) => clusters.push($(el).val()));
+    $('#annotation option').each((i, el) => {
+      var cellAnnot = $(el).attr('value');
+      if (cellAnnot.split('--').slice(-2)[0] === 'group') {
+        cellAnnots.push(cellAnnot);
+      }
+    });
+
+    clusters.forEach(cluster => {
+      cellAnnots.forEach(cellAnnot => {
+        stem = '/single_cell/example_data/ideogram_exp_means/ideogram_exp_means__';
+        paths.push(stem + cluster + '--' + cellAnnot + '.json');
+      });
+    });
+
+    return paths;
+  }
+
+  var ideoAnnotPaths = getIdeogramAnnotationPaths();
+
+  defineHeatmaps(ideoAnnotPaths[0]);
 
 </script>
