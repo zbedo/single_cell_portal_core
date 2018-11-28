@@ -348,6 +348,7 @@ class Test::Unit::TestCase
   # load file either in browser or download and check for existence
   def download_file(link, basename)
     link.click
+    sleep(3)
     if @driver.current_url.include?('https://storage.googleapis.com/')
       assert @driver.current_url =~ /#{basename}/, "Downloaded file url incorrect, did not find #{basename}"
       @driver.navigate.back
