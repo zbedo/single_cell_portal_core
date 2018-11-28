@@ -240,7 +240,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
     # check for token expiry first before executing
     if self.access_token_expired?
-      Rails.logger.info "#{Time.now}: FireCloudClient token expired, refreshing access token"
+      Rails.logger.info "FireCloudClient token expired, refreshing access token"
       self.refresh_access_token
     end
     # set default headers
@@ -266,23 +266,23 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
         elsif ok?(@obj.code) && @obj.body.blank?
           return true
         else
-          Rails.logger.info "#{Time.now}: Unexpected response #{@obj.code}, not sure what to do here..."
+          Rails.logger.info "Unexpected response #{@obj.code}, not sure what to do here..."
           @obj.message
         end
       rescue RestClient::Exception => e
-        context = " encountered when requesting '#{path}'"
-        log_message = "#{Time.now}: " + e.message + context
+        context = " encountered when requesting '#{path}', attempt ##{retry_count + 1}"
+        log_message = e.message + context
         Rails.logger.error log_message
         @error = e
         unless RETRY_IGNORE_LIST.include?(path)
-          retry_time = (@retry_count - 1) * RETRY_INTERVAL
+          retry_time = retry_count * RETRY_INTERVAL
           sleep(retry_time)
         end
         process_firecloud_request(http_method, path, payload, opts, retry_count + 1)
       end
     else
       error_message = parse_error_message(@error)
-      Rails.logger.error "#{Time.now}: Retry count exceeded - #{error_message}"
+      Rails.logger.error "Retry count exceeded when requesting '#{path}' - #{error_message}"
       raise RuntimeError.new(error_message)
     end
   end
@@ -325,7 +325,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
       response = RestClient::Request.execute(method: :get, url: path, headers: headers)
       JSON.parse(response.body)
     rescue RestClient::ExceptionWithResponse => e
-      Rails.logger.error "#{Time.now}: FireCloud status error: #{e.message}"
+      Rails.logger.error "FireCloud status error: #{e.message}"
       e.response
     end
   end
@@ -1256,15 +1256,15 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
         self.send(method_name, *params)
       rescue => e
         @error = e.message
-        Rails.logger.info "#{Time.now}: error calling #{method_name} with #{params.join(', ')}; #{e.message} -- retry ##{@retries}"
+        Rails.logger.info "error calling #{method_name} with #{params.join(', ')}; #{e.message} -- attempt ##{retry_count + 1}"
         unless RETRY_IGNORE_LIST.include?(method_name)
-          retry_time = (@retries - 1) * RETRY_INTERVAL
+          retry_time = retry_count * RETRY_INTERVAL
           sleep(retry_time)
         end
         execute_gcloud_method(method_name, retry_count + 1, *params)
       end
     else
-      Rails.logger.info "#{Time.now}: Retry count exceeded: #{@error}"
+      Rails.logger.info "Retry count exceeded calling #{method_name} with #{params.join(', ')}: #{@error}"
       raise RuntimeError.new "#{@error}"
     end
   end
@@ -1360,7 +1360,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		begin
 			file.delete
 		rescue => e
-			Rails.logger.info("#{Time.now}: failed to delete workspace file #{filename} with error #{e.message}")
+			Rails.logger.info("failed to delete workspace file #{filename} with error #{e.message}")
 			false
 		end
 	end
