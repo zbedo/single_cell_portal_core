@@ -52,9 +52,9 @@ def parse_test_arguments(arguments)
       $env = arg.gsub(/\-E\=/, '')
     elsif arg =~ /\-r\=/
       $random_seed = arg.gsub(/\-r\=/, '')
-    elsif arg =~ /\-v/
+    elsif arg == '-v'
       $verbose = true
-    elsif arg =~ /\-i/
+    elsif arg == '-i'
       $headless = false
     end
   end
