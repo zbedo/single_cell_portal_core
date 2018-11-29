@@ -1,3 +1,4 @@
+require 'rubygems/package' # for tar reader
 class ParseUtils
 
   # parse a 10X gene-barcode matrix file triplet (input matrix must be sorted by gene indices)
@@ -202,25 +203,38 @@ class ParseUtils
   end
 
   # extract analysis output files based on a type of analysis output
-  def self.extract_analysis_output_files(study, user, zipfile, analysis_method)
+  def self.extract_analysis_output_files(study, user, archive_file, analysis_method)
     begin
       study.make_data_dir
       Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
-                                                   study.firecloud_workspace, zipfile.bucket_location,
+                                                   study.firecloud_workspace, archive_file.bucket_location,
                                                    study.data_store_path, verify: :none)
-      Rails.logger.info "Successful localization of #{zipfile.upload_file_name}"
-      zipfile_path = File.join(study.data_store_path, zipfile.download_location)
+      Rails.logger.info "Successful localization of #{archive_file.upload_file_name}"
+      archive_path = File.join(study.data_store_path, archive_file.download_location)
       extracted_files = []
-      Zip::File.open(zipfile_path) do |zip_file|
-        Dir.chdir(study.data_store_path)
-        zip_file.each do |entry|
-          unless entry.name.end_with?('/') || entry.name.start_with?('.')
-            Rails.logger.info "Extracting: #{entry.name} in #{study.data_store_path}"
-            entry.extract(entry.name)
-            extracted_files << entry.name
+      if archive_path.ends_with?('.zip')
+        Zip::File.open(archive_path) do |zip_file|
+          Dir.chdir(study.data_store_path)
+          zip_file.each do |entry|
+            unless entry.name.end_with?('/') || entry.name.start_with?('.')
+              Rails.logger.info "Extracting: #{entry.name} in #{study.data_store_path}"
+              entry.extract(entry.name)
+              extracted_files << entry.name
+            end
           end
         end
+      elsif archive_path.ends_with('tar.gz')
+        # since there is a bug with tar extraction in RubyGems right now, we need to use the tar command from the OS
+        all_outputs = `system "tar -zxvf #{archive_path}"`
+        all_outputs.each do |output|
+          unless output.ends_with('/')
+            extracted_files << output
+          end
+        end
+      else
+        raise ArgumentError, "Unknown archive type: #{archive_path}; only .zip and .tar.gz archives are supported."
       end
+
       files_created = []
       case analysis_method
       when 'infercnv'
@@ -234,17 +248,18 @@ class ParseUtils
           Rails.logger.info "Rename of #{file} to #{file_basename} complete"
           file_payload = File.open(File.join(study.data_store_path, file_basename))
           study_file = study.study_files.build(file_type: 'Analysis Output', name: file_basename.dup, upload: file_payload,
-                                               status: 'uploaded', taxon_id: zipfile.taxon_id, genome_assembly_id: zipfile.genome_assembly_id)
+                                               status: 'uploaded', taxon_id: archive_file.taxon_id, genome_assembly_id: archive_file.genome_assembly_id)
           # chomp off filename header and .json at end
-          file_basename.gsub!(/infercnv_exp_means__/, '')
+          file_basename.gsub!(/ideogram_exp_means__/, '')
           file_basename.gsub!(/\.json/, '')
-          cluster_name, annotation_name = file_basename.split('__')
+          cluster_name, annotation_name, annotation_type, annotation_scope = file_basename.split('--')
+          annotation_identifier = [annotation_name, annotation_type, annotation_scope].join('--')
           study_file.options = {
               analysis_name: analysis_method, visualization_name: 'ideogram.js',
-              cluster_name: cluster_name, annotation_name: annotation_name,
-              submission_id: zipfile.options[:submission_id]
+              cluster_name: cluster_name, annotation_name: annotation_identifier,
+              submission_id: archive_file.options[:submission_id]
           }
-          study_file.description = "Ideogram.js annotation outputs for #{cluster_name == 'study-wide' ? 'All Clusters' : cluster_name}:#{annotation_name}"
+          study_file.description = "Ideogram.js annotation outputs for #{cluster_name}:#{annotation_name}"
           if study_file.save
             Rails.logger.info "Added #{study_file.name} as Ideogram Analysis Output to #{study.name}"
             files_created << study_file.name
@@ -258,16 +273,16 @@ class ParseUtils
               SingleCellMailer.notify_admin_upload_fail(study_file, e.message).deliver_now
             end
           else
-            SingleCellMailer.notify_user_parse_fail(user.email, "Zipfile extraction from inferCNV submission #{zipfile.options[:submission_id]} in #{study.name} has failed", study_file.errors.full_messages.join(', ')).deliver_now
+            SingleCellMailer.notify_user_parse_fail(user.email, "Zipfile extraction from inferCNV submission #{archive_file.options[:submission_id]} in #{study.name} has failed", study_file.errors.full_messages.join(', ')).deliver_now
           end
         end
         # email user that file extraction is complete
         message = ['The following files were extracted from the Ideogram zip archive and added to your study:']
         files_created.each {|file| message << file}
-        SingleCellMailer.notify_user_parse_complete(user.email, "Zipfile extraction of inferCNV submission #{zipfile.options[:submission_id]} outputs has completed", message).deliver_now
+        SingleCellMailer.notify_user_parse_complete(user.email, "Zipfile extraction of inferCNV submission #{archive_file.options[:submission_id]} outputs has completed", message).deliver_now
       end
     rescue => e
-      SingleCellMailer.notify_user_parse_fail(user.email, "Zipfile extraction from inferCNV submission #{zipfile.options[:submission_id]} in #{study.name} has failed", e.message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Zipfile extraction from inferCNV submission #{archive_file.options[:submission_id]} in #{study.name} has failed", e.message).deliver_now
     end
   end
 

@@ -435,7 +435,7 @@ class StudiesController < ApplicationController
             observations_output.options.merge!({analysis_name: 'infercnv', matrix_id: study_file_id})
           end
 
-          ideogram_output = @unsynced_files.detect {|file| file.name.split('/').last == 'infercnv_exp_means.zip'}
+          ideogram_output = @unsynced_files.detect {|file| file.name.split('/').last == 'ideogram_exp_means.tar.gz'}
           if ideogram_output.present?
             ideogram_output.file_type = 'Analysis Output'
             ideogram_output.description = "Ideogram annotation outputs archive from inferCNV run #{params[:submission_id]}"
@@ -445,7 +445,7 @@ class StudiesController < ApplicationController
             ideogram_output.taxon_id = input_matrix_file.taxon_id
             assemblies = Taxon.find(taxon_id).genome_assemblies
             if assemblies.any?
-              # provisionally pick the first possible assembly
+              # provisionally pick the first possible assembly, and hopefully the user will update this
               ideogram_output.genome_assembly_id = assemblies.first.id
             end
           end
