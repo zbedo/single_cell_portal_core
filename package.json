@@ -2,7 +2,7 @@
   "dependencies": {
     "@ckeditor/ckeditor5-build-classic": "^11.0.1",
     "@rails/webpacker": "3.5",
-    "ideogram": "git://github.com/eweitz/ideogram.git#c33e66335caf218feb23f7f197c5a9687a80297f",
+    "ideogram": "git://github.com/eweitz/ideogram.git#babe278f677c9dff6dcd8d0af5e77a2a8182a075",
     "jquery": "3.3.1",
     "jquery-ui": "1.12.1",
     "spin.js": "^4.0.0",

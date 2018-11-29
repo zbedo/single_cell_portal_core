@@ -84,6 +84,8 @@
 //     $('#ideogram-container').append(table);
 //   }
 
+var ideoAnnotPathStem = '/single_cell/example_data/ideogram_exp_means/ideogram_exp_means__';
+
 var annotHeight = 3.5;
 var ideoAnnotShape =
   'm0,0 l 0 ' + (2 * annotHeight) +
@@ -140,7 +142,7 @@ function createTrackFilters() {
   // Only apply this function once
   if (document.querySelector('#filter_1')) return;
   listItems = '';
-  trackLabels = ideogram.rawAnnots.keys.slice(7,);
+  trackLabels = ideogram.rawAnnots.keys.slice(6,);
   for (i = 0; i < trackLabels.length; i++) {
     checked = ([0, 1, 2].includes(i)) ? 'checked' : '';
     listItems +=
@@ -162,10 +164,10 @@ function createTrackFilters() {
 }
 
 function defineHeatmaps() {
-  var i, labels, heatmap, heatmaps, annotationTracks;
+  var i, labels, heatmaps, annotationTracks;
 
   heatmaps = [];
-  labels = ideogram.rawAnnots.keys.slice(7,);
+  labels = ideogram.rawAnnots.keys.slice(3,);
 
   annotationTracks = [];
 
@@ -176,11 +178,10 @@ function defineHeatmaps() {
 
   ideogram.config.heatmaps = heatmaps;
   ideogram.config.annotationTracks = annotationTracks;
-
 }
 
 function getIdeogramAnnotationPaths() {
-  var paths, stem, clusters = [], cellAnnots = [];
+  var paths, clusters = [], cellAnnots = [];
 
   paths = [];
 
@@ -194,16 +195,31 @@ function getIdeogramAnnotationPaths() {
 
   clusters.forEach(cluster => {
     cellAnnots.forEach(cellAnnot => {
-      stem = '/single_cell/example_data/ideogram_exp_means/ideogram_exp_means__';
-      paths.push(stem + cluster + '--' + cellAnnot + '.json');
+      paths.push(ideoAnnotPathStem + cluster + '--' + cellAnnot + '.json');
     });
   });
 
   return paths;
 }
 
-function initializeIdeogram() {
-  url = getIdeogramAnnotationPaths()[0];
+$(document).on('change', '#cluster, #annotation', function(el) {
+  var cluster, cellAnnot, path;
+
+  delete window.ideogram;
+  document.querySelector('#tracks-to-display').innerHTML = '';
+
+  cluster = $('#cluster option:selected').attr('value');
+  cellAnnot = $('#annotation option:selected').attr('value');
+  path = ideoAnnotPathStem + cluster + '--' + cellAnnot + '.json'
+
+  initializeIdeogram(path);
+});
+
+function initializeIdeogram(url) {
+
+  if (typeof url === 'undefined') {
+    url = getIdeogramAnnotationPaths()[0];
+  }
 
   window.ideogram = new Ideogram({
     container: '#ideogram-container',
