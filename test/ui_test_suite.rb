@@ -791,6 +791,7 @@ class UiTestSuite < Test::Unit::TestCase
     firecloud_link.click
     @driver.switch_to.window(@driver.window_handles.last)
     sleep(1) # we need a sleep to let the driver catch up, otherwise we can get stuck in an inbetween state
+    accept_firecloud_tos
     completed = @driver.find_elements(:class, 'fa-check-circle')
     assert completed.size >= 1, 'did not provision workspace properly'
     assert @driver.current_url == firecloud_url, 'did not open firecloud workspace'
@@ -1005,6 +1006,7 @@ class UiTestSuite < Test::Unit::TestCase
     # verify that workspace is still there
     firecloud_url = 'https://portal.firecloud.org/#workspaces/single-cell-portal/development-sync-test-study'
     open_new_page(firecloud_url)
+    accept_firecloud_tos
     completed = @driver.find_elements(:class, 'fa-check-circle')
     assert completed.size >= 1, "did not find workspace - may have been deleted; please check #{firecloud_url}"
 
@@ -1445,6 +1447,7 @@ class UiTestSuite < Test::Unit::TestCase
     login_as_other($share_email, $share_email_password)
     firecloud_workspace = "https://portal.firecloud.org/#workspaces/single-cell-portal/sync-test-#{$random_seed}"
     @driver.get firecloud_workspace
+    accept_firecloud_tos
     assert !element_present?(:class, 'fa-check-circle'), 'did not revoke access - study workspace still loads'
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
@@ -1746,6 +1749,7 @@ class UiTestSuite < Test::Unit::TestCase
     # assert access is revoked
     firecloud_url = "https://portal.firecloud.org/#workspaces/single-cell-portal/#{$env}-test-study-#{$random_seed}"
     @driver.get firecloud_url
+    accept_firecloud_tos
     assert !element_present?(:class, 'fa-check-circle'), 'did not revoke access - study workspace still loads'
 
     # test that study admin access is disabled
@@ -2417,7 +2421,7 @@ class UiTestSuite < Test::Unit::TestCase
 
   # search for a single gene and view plots
   test 'front-end: search-genes: single' do
-    puts "Test method: '#{self.method_name}'"
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     path = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get(path)
@@ -2554,12 +2558,12 @@ class UiTestSuite < Test::Unit::TestCase
     reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
     assert reference_rendered, "private reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
-    puts "Test method: '#{self.method_name}' successful!"
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
 
   # search for multiple genes, but collapse using a consensus metric and view plots
   test 'front-end: search-genes: multiple consensus' do
-    puts "Test method: '#{self.method_name}'"
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     path = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get(path)
@@ -2722,12 +2726,12 @@ class UiTestSuite < Test::Unit::TestCase
     reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
     assert reference_rendered, "private reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
-    puts "Test method: '#{self.method_name}' successful!"
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
 
   # search for multiple genes and view as a heatmap
   test 'front-end: search-genes: multiple heatmap' do
-    puts "Test method: '#{self.method_name}'"
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     path = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get(path)
@@ -2804,12 +2808,12 @@ class UiTestSuite < Test::Unit::TestCase
     new_queried_genes = @driver.find_elements(:class, 'queried-gene').map(&:text)
     assert new_genes.sort == new_queried_genes.sort, "found incorrect genes, expected #{new_genes.sort} but found #{new_queried_genes.sort}"
 
-    puts "Test method: '#{self.method_name}' successful!"
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
 
   # search for multiple genes by uploading a text file of gene names
   test 'front-end: search-genes: multiple upload file' do
-    puts "Test method: '#{self.method_name}'"
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     path = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get(path)
@@ -2848,12 +2852,12 @@ class UiTestSuite < Test::Unit::TestCase
     private_heatmap_drawn = @driver.execute_script("return $('#heatmap-plot').data('morpheus').heatmap !== undefined;")
     assert private_heatmap_drawn, "heatmap plot encountered error, expected true but found #{private_heatmap_drawn}"
 
-    puts "Test method: '#{self.method_name}' successful!"
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
 
   # perform a global gene search for public & private studies
   test 'front-end: search-genes: global' do
-    puts "Test method: '#{self.method_name}'"
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     @driver.get @base_url
     wait_until_page_loads(@base_url)
@@ -2922,12 +2926,12 @@ class UiTestSuite < Test::Unit::TestCase
     private_new_plot_type = private_updated_data.first['type']
     assert private_new_plot_type == 'scattergl', "Did not correctly update private plot to 2d scatter, expected 'scattergl' but found '#{private_new_plot_type}'"
 
-    puts "Test method: '#{self.method_name}' successful!"
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
 
   # view a list of marker genes as a heatmap
   test 'front-end: marker-gene: heatmap' do
-    puts "Test method: '#{self.method_name}'"
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     path = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get(path)
@@ -2985,12 +2989,12 @@ class UiTestSuite < Test::Unit::TestCase
     private_heatmap_drawn = @driver.execute_script("return $('#heatmap-plot').data('morpheus').heatmap !== undefined;")
     assert private_heatmap_drawn, "heatmap plot encountered error, expected true but found #{private_heatmap_drawn}"
 
-    puts "Test method: '#{self.method_name}' successful!"
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
 
   # view a list of marker genes as distribution plots
   test 'front-end: marker-gene: box/scatter' do
-    puts "Test method: '#{self.method_name}'"
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     path = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get(path)
@@ -3132,7 +3136,7 @@ class UiTestSuite < Test::Unit::TestCase
     reference_rendered = @driver.execute_script("return $('#expression-plots').data('reference-rendered')")
     assert reference_rendered, "private reference plot did not finish rendering, expected true but found #{reference_rendered}"
 
-    puts "Test method: '#{self.method_name}' successful!"
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
 
   ##

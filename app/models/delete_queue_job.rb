@@ -49,11 +49,18 @@ class DeleteQueueJob < Struct.new(:object)
         delete_parsed_data(object.id, study.id, Gene, DataArray)
         study.set_gene_count
       when /10X/
-        object.study_file_bundle.study_files.each do |file|
-          file.update(parse_status: 'unparsed')
+        bundle = object.study_file_bundle
+        if bundle.present?
+          if bundle.study_files.any?
+            object.study_file_bundle.study_files.each do |file|
+              file.update(parse_status: 'unparsed')
+            end
+          end
+          parent = object.study_file_bundle.parent
+          if parent.present?
+            delete_parsed_data(parent.id, study.id, Gene, DataArray)
+          end
         end
-        parent = object.study_file_bundle.parent
-        delete_parsed_data(parent.id, study.id, Gene, DataArray)
         remove_file_from_bundle
       when 'Metadata'
         delete_parsed_data(object.id, study.id, CellMetadatum, DataArray)
@@ -75,9 +82,9 @@ class DeleteQueueJob < Struct.new(:object)
       if object.is_bundle_parent?
         object.bundled_files.each do |file|
           Rails.logger.info "Deleting bundled file #{file.upload_file_name} from #{study.name} due to parent deletion: #{object.upload_file_name}"
-          DeleteQueueJob.new(file).delay.perform
+          DeleteQueueJob.new(file).perform
         end
-        remove_file_from_bundle
+        object.study_file_bundle.destroy
       end
 
       # queue study file object for deletion, set file_type to DELETE to prevent it from being picked up in any queries
@@ -115,15 +122,12 @@ class DeleteQueueJob < Struct.new(:object)
 
   private
 
-  # remove a study_file from a study_file_bundle, and clean up as necessary
+  # remove a study_file from a study_file_bundle, and clean original_file_list up as necessary
   def remove_file_from_bundle
     bundle = object.study_file_bundle
     bundle.original_file_list.delete_if {|file| file['file_type'] == object.file_type} # this edits the list in place, but is not saved
     object.update(study_file_bundle_id: nil)
     bundle.save
-    if bundle.original_file_list.empty?
-      bundle.destroy
-    end
   end
 
   # removed all parsed data from provided list of models

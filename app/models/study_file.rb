@@ -530,9 +530,18 @@ class StudyFile
     self.remote_location.blank? ? self.upload_file_name : self.remote_location
   end
 
+  def local_location
+    path = Rails.root.join(self.study.data_store_path, self.download_location)
+    if File.exists?(path)
+      path
+    else
+      path = Rails.root.join(self.study.data_store_path, self.bucket_location)
+      File.exists?(path) ? path : nil
+    end
+  end
+
   def is_local?
-    File.exists?(Rails.root.join(self.study.data_store_path, self.download_location)) ||
-        File.exists?(Rails.root.join(self.study.data_store_path, self.bucket_location))
+    self.local_location.present?
   end
 
   # get any 'bundled' files that correspond to this file
@@ -827,7 +836,9 @@ class StudyFile
           puts msg
           Rails.logger.info msg
           file_location = File.join(study.data_store_path, self.download_location)
-          Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project, study.firecloud_workspace, self.bucket_location, download_location, verify: :none)
+          Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, study.firecloud_project,
+                                                       study.firecloud_workspace, self.bucket_location, download_location,
+                                                       verify: :none)
           content_type = self.determine_content_type
           shift_headers = true
           if content_type == 'application/gzip'
