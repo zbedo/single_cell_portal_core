@@ -21,7 +21,12 @@
         // suppress logging in production
         var console = { log: function() {} };
     </script>
-	<% end %>
+    <script src="https://jsagent.tcell.io/tcellagent.min.js" nonce="<%= content_security_policy_script_nonce %>"
+            tcellappid="FCProd-EBOgM" tcellapikey="AQEBBAEGP2gTM2pIdJAQOIeNrm8dcTM7E4FMSmaibbMUQxNU6qy6nLPOBK8QfSvPFSsX8PQ"></script>
+	<% else %>
+    <script src="https://jsagent.tcell.io/tcellagent.min.js" nonce="<%= content_security_policy_script_nonce %>"
+            tcellappid="FCNonprod-NaVu9" tcellapikey="AQEBBAEkx4iE2KxNyI7Wx08EwU1ycTM7E4FMSmaibbMUQxNU6uQvuAJt7fyABAtFYSYfgEE"></script>
+  <% end %>
 
   <% if @selected_branding_group.present? %>
     <style type="text/css">
