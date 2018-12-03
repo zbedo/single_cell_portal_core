@@ -202,17 +202,37 @@ function getIdeogramAnnotationPaths() {
   return paths;
 }
 
+function warnOfNumericCluster() {
+  var cluster, cellAnnot, warning;
+
+  cluster = $('#cluster option:selected').val();
+  cellAnnot = $('#annotation option:selected').val();
+
+  warning =
+    '<div style="height: 400px; margin-left: 20px;">' +
+      'Ideogram not available, as selected cluster ("' + cluster + '") and ' +
+      'cell annotation ("' + cellAnnot + '") are numeric.' +
+    '</div>';
+
+  document.querySelector('#_ideogramOuterWrap').innerHTML = warning;
+}
+
 $(document).on('change', '#cluster, #annotation', function(el) {
   var cluster, cellAnnot, path;
 
   delete window.ideogram;
   document.querySelector('#tracks-to-display').innerHTML = '';
+  document.querySelector('#_ideogramOuterWrap').innerHTML = '';
 
   cluster = $('#cluster option:selected').attr('value');
   cellAnnot = $('#annotation option:selected').attr('value');
   path = ideoAnnotPathStem + cluster + '--' + cellAnnot + '.json'
 
-  initializeIdeogram(path);
+  if (path.indexOf('--numeric--') !== -1) {
+    warnOfNumericCluster();
+  } else {
+    initializeIdeogram(path);
+  }
 });
 
 function initializeIdeogram(url) {
