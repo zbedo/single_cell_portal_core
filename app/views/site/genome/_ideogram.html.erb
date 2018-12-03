@@ -1,5 +1,5 @@
 
-<div id="ideogram-container" style="margin: 12px">
+<div id="ideogram-container" style="margin-top: 12px">
   <div id="filters-container">
   <ul id="tracks-to-display">
   </ul>
@@ -11,20 +11,23 @@
 #tracks-to-display {
   list-style-type: none;
   float: left;
+  padding-left: 20px;
 }
 
 #tracks-to-display label {
   font-weight: normal;
+  position: relative;
+  top: 1px;
 }
 
-#ideogram-container {
-  margin: 12px;
-  position: relative;
-  left: -15px;
+#tracks-to-display input {
+  margin-right: 5px;
 }
+
+
 #_ideogramLegend {
   position: relative;
-  left: 30px;
+  left: 20px;
 }
 </style>
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
