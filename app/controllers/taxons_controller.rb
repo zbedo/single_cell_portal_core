@@ -83,6 +83,7 @@ class TaxonsController < ApplicationController
       new_records = Taxon.parse_from_file(species_upload, current_user)
       redirect_to taxons_path, notice: "Upload successful - new/updated species added: #{new_records[:new_species]}, new/updated assemblies added: #{new_records[:new_assemblies]}, new/updated annotations added: #{new_records[:new_annotations]}"
     rescue => e
+      Raven.capture_exception(e)
       Rails.logger.error "Error parsing uploaded species file: #{e.message}"
       redirect_to taxons_path, alert: "An error occurred while parsing the uploaded file: #{e.message}"
     end

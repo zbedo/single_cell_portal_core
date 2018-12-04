@@ -87,9 +87,11 @@ class AnalysisMetadatum
         JSON.parse(metadata_schema.body)
       end
     rescue RestClient::ExceptionWithResponse => e
+      Raven.capture_exception(e)
       Rails.logger.error "#{Time.now}: Error retrieving remote HCA Analysis metadata schema: #{e.message}"
       {error: "Error retrieving definition schema: #{e.message}"}
     rescue JSON::ParserError => e
+      Raven.capture_exception(e)
       Rails.logger.error "#{Time.now}: Error parsing HCA Analysis metadata schema: #{e.message}"
       {error: "Error parsing definition schema: #{e.message}"}
     end
@@ -106,6 +108,7 @@ class AnalysisMetadatum
         defs
       end
     rescue NoMethodError => e
+      Raven.capture_exception(e)
       field_key = field.present? ? "#{key}/#{field}" : key
       Rails.logger.error "#{Time.now}: Error accessing remote HCA Analysis metadata field definitions for #{field_key}: #{e.message}"
       nil
@@ -185,6 +188,7 @@ class AnalysisMetadatum
       end
       call_metadata
     rescue => e
+      Raven.capture_exception(e)
       Rails.logger.error "#{Time.now}: Error retrieving workflow call metadata for: #{e.message}"
       []
     end

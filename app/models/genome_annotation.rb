@@ -35,6 +35,7 @@ class GenomeAnnotation
           Study.firecloud_client.execute_gcloud_method(:generate_api_url, 0, reference_project,
                                                                  reference_workspace, self.link)
         rescue => e
+          Raven.capture_exception(e)
           Rails.logger.error "Cannot generate public genome annotation link for #{self.link}: #{e.message}"
           ''
         end
@@ -58,6 +59,7 @@ class GenomeAnnotation
           Study.firecloud_client.execute_gcloud_method(:generate_api_url, 0, reference_project,
                                                        reference_workspace, self.index_link)
         rescue => e
+          Raven.capture_exception(e)
           Rails.logger.error "Cannot generate public genome annotation index link for #{self.index_link}: #{e.message}"
           ''
         end
@@ -81,6 +83,7 @@ class GenomeAnnotation
           Study.firecloud_client.execute_gcloud_method(:generate_signed_url, 0, reference_project,
                                                        reference_workspace, self.link, expires: 15)
         rescue => e
+          Raven.capture_exception(e)
           Rails.logger.error "Cannot generate genome annotation download link for #{self.link}: #{e.message}"
           ''
         end
@@ -105,6 +108,7 @@ class GenomeAnnotation
           errors.add(:link, "was not found at the specified link: #{link}.  The response code was #{response.code} rather than 200.")
         end
       rescue => e
+        Raven.capture_exception(e)
         errors.add(:link, "was not found due to an error: #{e.message}.  Please check the link and try again.")
       end
     else
@@ -119,6 +123,7 @@ class GenomeAnnotation
             errors.add(:link, "was not found in the reference workspace of #{config.value}.  Please check the link and try again.")
           end
         rescue => e
+          Raven.capture_exception(e)
           errors.add(:link, "was not found due to an error: #{e.message}.  Please check the link and try again.")
         end
       else
@@ -137,6 +142,7 @@ def check_genome_annotation_index_link
         errors.add(:index_link, "was not found at the specified index link: #{index_link}.  The response code was #{response.code} rather than 200.")
       end
     rescue => e
+      Raven.capture_exception(e)
       errors.add(:index_link, "was not found due to an error: #{e.message}.  Please check the index link and try again.")
     end
   else
@@ -151,6 +157,7 @@ def check_genome_annotation_index_link
           errors.add(:index_link, "was not found in the reference workspace of #{config.value}.  Please check the index link and try again.")
         end
       rescue => e
+        Raven.capture_exception(e)
         errors.add(:index_link, "was not found due to an error: #{e.message}.  Please check the index link and try again.")
       end
     else

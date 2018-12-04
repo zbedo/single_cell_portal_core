@@ -36,6 +36,7 @@ module Api
                   Rails.logger.error "Unable to retrieve user info from access token: #{api_access_token}"
                 end
               rescue => e
+                Raven.capture_exception(e)
                 Rails.logger.error "Error retrieving user api credentials: #{e.class.name}: #{e.message}"
               end
             end

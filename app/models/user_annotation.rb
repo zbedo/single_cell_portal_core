@@ -472,6 +472,7 @@ class UserAnnotation
         SingleCellMailer.annotation_publish_fail(self, self.user, cluster.errors.full_messages.join(', '))
       end
     rescue => e
+      Raven.capture_exception(e)
       # error occured, so roll back
       self.update(queued_for_deletion: false, publishing: false)
 

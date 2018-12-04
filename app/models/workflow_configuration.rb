@@ -150,6 +150,7 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
       response[:complete] = true
       return response
     rescue => e
+      Raven.capture_exception(e)
       # generic error catch all, will halt workflow submission and return error message to UI
       Rails.logger.error "#{Time.now}: Error in configuring #{configuration_namespace}/#{configuration_name} using #{inputs}: #{e.message}"
       response[:error_message] = e.message

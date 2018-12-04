@@ -211,6 +211,7 @@ module Api
           @study_file_bundle.destroy
           head 204
         rescue => e
+          Raven.capture_exception(e)
           render json: {error: e.message}, status: 500
         end
       end

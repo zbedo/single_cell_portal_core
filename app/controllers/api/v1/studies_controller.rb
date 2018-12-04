@@ -255,7 +255,8 @@ module Api
           else
             begin
               Study.firecloud_client.delete_workspace(@study.firecloud_project, @study.firecloud_workspace)
-            rescue RuntimeError => e
+            rescue => e
+              Raven.capture_exception(e)
               logger.error "#{Time.now} unable to delete workspace: #{@study.firecloud_workspace}; #{e.message}"
               render json: {error: "Error deleting FireCloud workspace #{@study.firecloud_project}/#{@study.firecloud_workspace}: #{e.message}"}, status: 500
             end
@@ -439,7 +440,8 @@ module Api
             workspace_files = workspace_files.next
             process_workspace_bucket_files(workspace_files)
           end
-        rescue RuntimeError => e
+        rescue => e
+          Raven.capture_exception(e)
           logger.error "#{Time.now}: error syncing files in workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
           render json: {error: "Unable to sync with workspace bucket: #{view_context.simple_format(e.message)}"}, status: 500
         end

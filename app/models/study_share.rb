@@ -204,6 +204,7 @@ class StudyShare
 						acl = Study.firecloud_client.create_workspace_acl(self.email, FIRECLOUD_ACL_MAP[self.permission])
 						Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.study.firecloud_workspace, acl)
 					rescue RuntimeError => e
+						Raven.capture_exception(e)
 						errors.add(:base, "Could not create a share for #{self.email} to workspace #{self.firecloud_workspace} due to: #{e.message}")
 					end
 				end
@@ -219,6 +220,7 @@ class StudyShare
 				Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, acl)
 			end
 		rescue RuntimeError => e
+			Raven.capture_exception(e)
 			Rails.logger.error "#{Time.now}: Could not remove share for #{self.email} to workspace #{self.firecloud_workspace} due to: #{e.message}"
 			SingleCellMailer.share_delete_fail(self.study, self.email).deliver_now
 		end

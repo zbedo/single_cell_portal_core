@@ -262,6 +262,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
           begin
             return JSON.parse(@obj.body)
           rescue JSON::ParserError => e
+            Raven.capture_exception(e)
             return @obj.body
           end
         elsif ok?(@obj.code) && @obj.body.blank?
@@ -271,6 +272,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
           @obj.message
         end
       rescue RestClient::Exception => e
+        Raven.capture_exception(e)
         context = " encountered when requesting '#{path}', attempt ##{retry_count + 1}"
         log_message = e.message + context
         Rails.logger.error log_message
@@ -1256,6 +1258,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
       begin
         self.send(method_name, *params)
       rescue => e
+        Raven.capture_exception(e)
         @error = e.message
         Rails.logger.info "error calling #{method_name} with #{params.join(', ')}; #{e.message} -- attempt ##{retry_count + 1}"
         unless RETRY_IGNORE_LIST.include?(method_name)
@@ -1360,7 +1363,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		file = self.get_workspace_file(workspace_namespace, workspace_name, filename)
 		begin
 			file.delete
-		rescue => e
+    rescue => e
+      Raven.capture_exception(e)
 			Rails.logger.info("failed to delete workspace file #{filename} with error #{e.message}")
 			false
 		end
@@ -1553,6 +1557,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
           return error.message
         end
       rescue => e
+        Raven.capture_exception(e)
         Rails.logger.error e.message
         error.message + ': ' + error.http_body
       end

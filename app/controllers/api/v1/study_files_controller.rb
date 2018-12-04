@@ -357,7 +357,8 @@ module Api
             end
           end
           head 204
-        rescue RuntimeError => e
+        rescue => e
+          Raven.capture_exception(e)
           logger.error "#{Time.now}: error in deleting #{@study_file.upload_file_name} from workspace: #{@study.firecloud_workspace}; #{e.message}"
           render json: {error: "Error deleting remote file in bucket: #{e.message}"}, status: 500
         end
