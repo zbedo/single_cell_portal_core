@@ -412,6 +412,7 @@ class StudiesController < ApplicationController
             pre_expression_output.file_type = 'Analysis Output'
             pre_expression_output.description = "Output expression matrix (without visualization data transform) from inferCNV run #{params[:submission_id]}"
             pre_expression_output.options.merge!({analysis_name: 'infercnv', matrix_id: study_file_id})
+            pre_expression_output.taxon_id = input_matrix_file.taxon_id
           end
 
           figure = @unsynced_files.detect {|file| file.name.split('/').last =~ /infercnv\.pdf/}
@@ -426,6 +427,7 @@ class StudiesController < ApplicationController
             post_expression_output.file_type = 'Analysis Output'
             post_expression_output.description = "Output expression matrix (including visualization data transform) from inferCNV run #{params[:submission_id]}"
             post_expression_output.options.merge!({analysis_name: 'infercnv', matrix_id: study_file_id})
+            post_expression_output.taxon_id = input_matrix_file.taxon_id
           end
 
           observations_output = @unsynced_files.detect {|file| file.name.split('/').last == 'observations.txt'}
@@ -443,7 +445,7 @@ class StudiesController < ApplicationController
                                             visualization_name: 'ideogram.js',
                                             matrix_id: study_file_id})
             ideogram_output.taxon_id = input_matrix_file.taxon_id
-            assemblies = Taxon.find(taxon_id).genome_assemblies
+            assemblies = Taxon.find(input_matrix_file.taxon_id).genome_assemblies
             if assemblies.any?
               # provisionally pick the first possible assembly, and hopefully the user will update this
               ideogram_output.genome_assembly_id = assemblies.first.id
@@ -1149,6 +1151,8 @@ class StudiesController < ApplicationController
             if @study_file.options[:visualization_name] == 'ideogram.js'
               ParseUtils.delay.extract_analysis_output_files(@study, current_user, @study_file, @study_file.options[:analysis_name])
             end
+          else
+            Rails.logger.info "Aborting parse of #{@study_file.name} as #{@study_file.file_type} in study #{@study.name}; not applicable"
           end
         end
       elsif @study_file.file_type == 'BAM'
