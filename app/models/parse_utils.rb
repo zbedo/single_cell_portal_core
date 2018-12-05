@@ -177,7 +177,6 @@ class ParseUtils
         end
       rescue => e
         Rails.logger.error "Error in uploading files from sparse matrix parse to #{study.firecloud_project}/#{study.firecloud_workspace}#{study.bucket_id}: #{e.message}"
-        # use UploadCleanupJob
       end
 
       # finished, so return true
@@ -211,7 +210,7 @@ class ParseUtils
   def self.extract_analysis_output_files(study, user, archive_file, analysis_method)
     begin
       study.make_data_dir
-      Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project,
+      Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, study.firecloud_project,
                                                    study.firecloud_workspace, archive_file.bucket_location,
                                                    study.data_store_path, verify: :none)
       Rails.logger.info "Successful localization of #{archive_file.upload_file_name}"
@@ -238,7 +237,7 @@ class ParseUtils
         entries.each do |entry|
           extracted_files << File.join(archive_dir, entry)
         end
-        Delayed::Job.enqueue(UploadCleanupJob.new(study, archive_file), run_at: 2.minutes.from_now)
+        Delayed::Job.enqueue(UploadCleanupJob.new(study, archive_file, 0), run_at: 2.minutes.from_now)
       else
         raise ArgumentError, "Unknown archive type: #{archive_path}; only .zip and .tar.gz archives are supported."
       end
@@ -275,11 +274,11 @@ class ParseUtils
               Rails.logger.info "#{Time.now}: preparing to upload Ideogram outputs: #{study_file.upload_file_name}:#{study_file.id} to FireCloud"
               study.send_to_firecloud(study_file)
               # clean up the extracted copy as we have a new copy in a subdir of the new study_file's ID
-              Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file), run_at: run_at)
+              Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file, 0), run_at: run_at)
               Rails.logger.info "#{Time.now}: cleanup job for #{study_file.upload_file_name}:#{study_file.id} scheduled for #{run_at}"
             rescue => e
               Rails.logger.info "#{Time.now}: Ideogram output file: #{study_file.upload_file_name}:#{study_file.id} failed to upload to FireCloud due to #{e.message}"
-              Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file), run_at: run_at)
+              Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file, 0), run_at: run_at)
             end
           else
             SingleCellMailer.notify_user_parse_fail(user.email, "Error: Zipfile extraction from inferCNV submission #{archive_file.options[:submission_id]} in #{study.name}", study_file.errors.full_messages.join(', ')).deliver_now
