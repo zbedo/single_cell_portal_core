@@ -155,7 +155,7 @@ class StudiesController < ApplicationController
     begin
       # create a map of file extension to use for creating directory_listings of groups of 10+ files of the same type
       @file_extension_map = {}
-      workspace_files = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, @study.firecloud_project, @study.firecloud_workspace)
+      workspace_files = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, 0, @study.firecloud_project, @study.firecloud_workspace)
       # see process_workspace_bucket_files in private methods for more details on syncing
       process_workspace_bucket_files(workspace_files)
       while workspace_files.next?
@@ -281,7 +281,7 @@ class StudiesController < ApplicationController
         workflow['outputs'].each do |output, file_url|
           file_location = file_url.gsub(/gs\:\/\/#{@study.bucket_id}\//, '')
           # get google instance of file
-          file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project,
+          file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.firecloud_project,
                                                               @study.firecloud_workspace, file_location)
           if file.present?
             # depending on the requested 'depth' of the new file (i.e. how many directories to include in the new name),
@@ -298,7 +298,7 @@ class StudiesController < ApplicationController
             end
             # check if file has already been synced first
             # we can only do this by md5 hash as the filename and generation will be different
-            existing_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project,
+            existing_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.firecloud_project,
                                                                          @study.firecloud_workspace, new_location)
             if existing_file.present? && existing_file.md5 == file.md5 && StudyFile.where(study_id: @study.id, upload_file_name: new_location).exists?
               next
@@ -791,14 +791,14 @@ class StudiesController < ApplicationController
     end
     begin
       # get filesize and make sure the user is under their quota
-      requested_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project,
+      requested_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.firecloud_project,
                                                                     @study.firecloud_workspace, params[:filename])
       if requested_file.present?
         filesize = requested_file.size
         user_quota = current_user.daily_download_quota + filesize
         # check against download quota that is loaded in ApplicationController.get_download_quota
         if user_quota <= @download_quota
-          @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_project,
+          @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, 0, @study.firecloud_project,
                                                                      @study.firecloud_workspace, params[:filename], expires: 15)
           current_user.update(daily_download_quota: user_quota)
         else
@@ -1020,10 +1020,10 @@ class StudiesController < ApplicationController
         begin
           # make sure file is in FireCloud first as user may be aborting the upload
           unless human_data
-            present = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project,
+            present = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.firecloud_project,
                                                                    @study.firecloud_workspace, @study_file.upload_file_name)
             if present
-              Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, @study.firecloud_project,
+              Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, 0, @study.firecloud_project,
                                                            @study.firecloud_workspace, @study_file.upload_file_name)
             end
           end

@@ -27,7 +27,7 @@
         var selectedTaxon = speciesDropdown.val();
         if (selectedTaxon !== '') {
           // perform check to see if human was selected
-          var fileType = speciesDropdown.find('#study_file_file_type').val();
+          var fileType = speciesDropdown.parentsUntil('form').parent().find('.file-type').val();
           $.getJSON('<%= get_taxon_path %>?taxon=' + selectedTaxon, function (taxon) {
             if ((fileType === 'BAM' || fileType === 'Fastq') && taxon.restricted ) {
               var restrictedData = confirm('Is this ' + fileType + ' file ' + taxon.common_name + ' data?\n\n' +

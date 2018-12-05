@@ -1141,6 +1141,8 @@ class Study
           if file.generation.blank?
             puts "#{file_location} was never uploaded to #{study.bucket_id} (no generation tag)"
             @missing_files << {filename: file_location, study: study.name, owner: study.user.email, reason: "File was never uploaded to #{study.bucket_id} (no generation tag)"}
+            # push the file to firecloud using UploadCleanupJob, which will retry on failure
+            Delayed::Job.enqueue(UploadCleanupJob.new(study, file, 0), run_at: Time.now)
           else
             match = study_remotes.detect {|remote| remote.name == file_location}
             if match.nil?
@@ -1223,7 +1225,9 @@ class Study
       if !opts[:local] || !expression_file.is_local?
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, expression_file.bucket_location, self.data_store_path, verify: :none)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, self.firecloud_project,
+                                                     self.firecloud_workspace, expression_file.bucket_location,
+                                                     self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, expression_file.bucket_location)
       end
 
@@ -1458,7 +1462,7 @@ class Study
         begin
           Rails.logger.info "#{Time.now}: found remote version of #{expression_file.upload_file_name}: #{remote.name} (#{remote.generation})"
           run_at = 15.seconds.from_now
-          Delayed::Job.enqueue(UploadCleanupJob.new(self, expression_file), run_at: run_at)
+          Delayed::Job.enqueue(UploadCleanupJob.new(self, expression_file, 0), run_at: run_at)
           Rails.logger.info "#{Time.now}: cleanup job for #{expression_file.upload_file_name}:#{expression_file.id} scheduled for #{run_at}"
         rescue => e
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
@@ -1491,7 +1495,9 @@ class Study
         # make sure data dir exists first
         Rails.logger.info "Localizing file: #{ordinations_file.upload_file_name} in #{self.data_store_path}"
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, ordinations_file.bucket_location, self.data_store_path, verify: :none)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, self.firecloud_project,
+                                                     self.firecloud_workspace, ordinations_file.bucket_location,
+                                                     self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, ordinations_file.bucket_location)
       end
 
@@ -1806,7 +1812,7 @@ class Study
         begin
           Rails.logger.info "#{Time.now}: found remote version of #{ordinations_file.upload_file_name}: #{remote.name} (#{remote.generation})"
           run_at = 15.seconds.from_now
-          Delayed::Job.enqueue(UploadCleanupJob.new(self, ordinations_file), run_at: run_at)
+          Delayed::Job.enqueue(UploadCleanupJob.new(self, ordinations_file, 0), run_at: run_at)
           Rails.logger.info "#{Time.now}: cleanup job for #{ordinations_file.upload_file_name}:#{ordinations_file.id} scheduled for #{run_at}"
         rescue => e
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
@@ -1837,7 +1843,9 @@ class Study
       if !opts[:local] || !coordinate_file.is_local?
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, coordinate_file.bucket_location, self.data_store_path, verify: :none)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, self.firecloud_project,
+                                                     self.firecloud_workspace, coordinate_file.bucket_location,
+                                                     self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, coordinate_file.bucket_location)
       end
 
@@ -2029,7 +2037,7 @@ class Study
         begin
           Rails.logger.info "#{Time.now}: found remote version of #{coordinate_file.upload_file_name}: #{remote.name} (#{remote.generation})"
           run_at = 15.seconds.from_now
-          Delayed::Job.enqueue(UploadCleanupJob.new(self, coordinate_file), run_at: run_at)
+          Delayed::Job.enqueue(UploadCleanupJob.new(self, coordinate_file, 0), run_at: run_at)
           Rails.logger.info "#{Time.now}: cleanup job for #{coordinate_file.upload_file_name}:#{coordinate_file.id} scheduled for #{run_at}"
         rescue => e
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
@@ -2058,7 +2066,9 @@ class Study
       if !opts[:local] || !metadata_file.is_local?
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, metadata_file.bucket_location, self.data_store_path, verify: :none)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, self.firecloud_project,
+                                                     self.firecloud_workspace, metadata_file.bucket_location,
+                                                     self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, metadata_file.bucket_location)
       end
 
@@ -2305,7 +2315,7 @@ class Study
         begin
           Rails.logger.info "#{Time.now}: found remote version of #{metadata_file.upload_file_name}: #{remote.name} (#{remote.generation})"
           run_at = 15.seconds.from_now
-          Delayed::Job.enqueue(UploadCleanupJob.new(self, metadata_file), run_at: run_at)
+          Delayed::Job.enqueue(UploadCleanupJob.new(self, metadata_file, 0), run_at: run_at)
           Rails.logger.info "#{Time.now}: cleanup job for #{metadata_file.upload_file_name}:#{metadata_file.id} scheduled for #{run_at}"
         rescue => e
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
@@ -2335,7 +2345,9 @@ class Study
       if !opts[:local] || !marker_file.is_local?
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, self.firecloud_project, self.firecloud_workspace, marker_file.bucket_location, self.data_store_path, verify: :none)
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, self.firecloud_project,
+                                                     self.firecloud_workspace, marker_file.bucket_location,
+                                                     self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, marker_file.bucket_location)
       end
 
@@ -2481,7 +2493,7 @@ class Study
         begin
           Rails.logger.info "#{Time.now}: found remote version of #{marker_file.upload_file_name}: #{remote.name} (#{remote.generation})"
           run_at = 15.seconds.from_now
-          Delayed::Job.enqueue(UploadCleanupJob.new(self, metadata_file), run_at: run_at)
+          Delayed::Job.enqueue(UploadCleanupJob.new(self, metadata_file, 0), run_at: run_at)
           Rails.logger.info "#{Time.now}: cleanup job for #{marker_file.upload_file_name}:#{marker_file.id} scheduled for #{run_at}"
         rescue => e
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
@@ -2512,8 +2524,8 @@ class Study
   # will compress plain text files before uploading to reduce storage/egress charges
   def send_to_firecloud(file)
     begin
-      Rails.logger.info "#{Time.now}: Uploading #{file.upload_file_name}:#{file.id} to FireCloud workspace: #{self.firecloud_workspace}"
-      file_location = file.remote_location.blank? ? file.upload.path : File.join(self.data_store_path, file.remote_location)
+      Rails.logger.info "#{Time.now}: Uploading #{file.bucket_location}:#{file.id} to FireCloud workspace: #{self.firecloud_workspace}"
+      file_location = file.local_location.to_s
       # determine if file needs to be compressed
       first_two_bytes = File.open(file_location).read(2)
       gzip_signature = StudyFile::GZIP_MAGIC_NUMBER # per IETF
@@ -2536,23 +2548,23 @@ class Study
         File.rename gzip_filepath, file_location
         opts.merge!(content_encoding: 'gzip')
       end
-      remote_file = Study.firecloud_client.execute_gcloud_method(:create_workspace_file, self.firecloud_project, self.firecloud_workspace, file.upload.path, file.upload_file_name, opts)
+      remote_file = Study.firecloud_client.execute_gcloud_method(:create_workspace_file, 0, self.firecloud_project,
+                                                                 self.firecloud_workspace, file.upload.path,
+                                                                 file.bucket_location, opts)
       # store generation tag to know whether a file has been updated in GCP
-      Rails.logger.info "#{Time.now}: Updating #{file.upload_file_name}:#{file.id} with generation tag: #{remote_file.generation} after successful upload"
+      Rails.logger.info "#{Time.now}: Updating #{file.bucket_location}:#{file.id} with generation tag: #{remote_file.generation} after successful upload"
       file.update(generation: remote_file.generation)
       file.update(upload_file_size: remote_file.size)
-      Rails.logger.info "#{Time.now}: Upload of #{file.upload_file_name}:#{file.id} complete, scheduling cleanup job"
+      Rails.logger.info "#{Time.now}: Upload of #{file.bucket_location}:#{file.id} complete, scheduling cleanup job"
       # schedule the upload cleanup job to run in two minutes
       run_at = 2.minutes.from_now
-      Delayed::Job.enqueue(UploadCleanupJob.new(file.study, file), run_at: run_at)
-      Rails.logger.info "#{Time.now}: cleanup job for #{file.upload_file_name}:#{file.id} scheduled for #{run_at}"
-    rescue RuntimeError => e
-      Rails.logger.error "#{Time.now}: unable to upload '#{file.upload_file_name}:#{file.id} to FireCloud; #{e.message}"
-      # check if file still exists
-      file_location = file.remote_location.blank? ? file.upload.path : File.join(self.data_store_path, file.remote_location)
-      exists = File.exists?(file_location)
-      Rails.logger.info "#{Time.now} local copy of #{file.upload_file_name}:#{file.id} still in #{self.data_store_path}? #{exists}"
-      SingleCellMailer.notify_admin_upload_fail(file, e.message).deliver_now
+      Delayed::Job.enqueue(UploadCleanupJob.new(file.study, file, 0), run_at: run_at)
+      Rails.logger.info "#{Time.now}: cleanup job for #{file.bucket_location}:#{file.id} scheduled for #{run_at}"
+    rescue => e
+      # if upload fails, try again using UploadCleanupJob in 2 minutes
+      run_at = 2.minutes.from_now
+      Rails.logger.error "#{Time.now}: unable to upload '#{file.bucket_location}:#{file.id} to FireCloud, will retry at #{run_at}; #{e.message}"
+      Delayed::Job.enqueue(UploadCleanupJob.new(file.study, file, 0), run_at: run_at)
     end
   end
 
