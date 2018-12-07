@@ -105,9 +105,9 @@ window.fetch = function () {
 // Use colors like inferCNV; see
 // https://github.com/broadinstitute/inferCNV/wiki#demo-example-figure
 var heatmapThresholds = [
-  [-0.099, '#00B'], // If expression value < 0 (-0.001), use blue
-  [0.099, '#CCC'], // If value == 0, use grey
-  ['+', '#F00'] // If value > 0, use red  
+  [-100, '#00B'], // If -100 < expression value, use blue (loss)
+  [300, '#CCC'], // If -100 >= value 0 > 300 , use grey
+  ['+', '#F00'] // If value >= 300, use red (gain)
 ];
 
 var legend = [{
@@ -164,10 +164,11 @@ function createTrackFilters() {
 }
 
 function defineHeatmaps() {
-  var i, labels, heatmaps, annotationTracks;
+  var i, labels, heatmaps, annotationTracks, rawAnnots, chrs;
 
   heatmaps = [];
-  labels = ideogram.rawAnnots.keys.slice(3,);
+  rawAnnots = ideogram.rawAnnots;
+  labels = rawAnnots.keys.slice(3,);
 
   annotationTracks = [];
 
@@ -175,6 +176,21 @@ function defineHeatmaps() {
     heatmaps.push({key: labels[i], thresholds: heatmapThresholds});
     annotationTracks.push({id: labels[i], shape: ideoAnnotShape});
   }
+
+  rawAnnots.annots.forEach((rawAnnotContainer, i) => {
+    rawAnnotContainer.annots.forEach((annot, j) => {
+      var newValues = [];
+      annot.forEach((value, k) => {
+        // console.log(value)
+        if (k > 2) {
+          value *= 1000; // workaround for parseInt in heatmap thresholding
+          // console.log(value)
+        }
+        newValues.push(value);
+      })
+      ideogram.rawAnnots.annots[i].annots[j] = newValues;
+    })
+  });
 
   ideogram.config.heatmaps = heatmaps;
   ideogram.config.annotationTracks = annotationTracks;
@@ -241,9 +257,9 @@ function initializeIdeogram(url) {
     url = getIdeogramAnnotationPaths()[0];
   }
 
-  // Temporary measure for Jean's scientific validation of inferCNV-Ideogram
-  ideoAnnotPathStem = '/single_cell/example_data/ideogram_exp_means/jean_tmp/ideogram_exp_means__';
-  url = ideoAnnotPathStem + 'default--Cluster--group--study_2.json'
+  // // Temporary measure for Jean's scientific validation of inferCNV-Ideogram
+  // ideoAnnotPathStem = '/single_cell/example_data/ideogram_exp_means/jean_tmp/ideogram_exp_means__';
+  // url = ideoAnnotPathStem + 'default--Cluster--group--study_2.json'
 
   window.ideogram = new Ideogram({
     container: '#ideogram-container',
