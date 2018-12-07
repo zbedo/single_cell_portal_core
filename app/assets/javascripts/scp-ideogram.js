@@ -105,17 +105,17 @@ window.fetch = function () {
 // Use colors like inferCNV; see
 // https://github.com/broadinstitute/inferCNV/wiki#demo-example-figure
 var heatmapThresholds = [
-  ['-0.001', '#F33'], // If expression value < 0 (-0.001), use blue (alt. purple: #551ABB)
-  ['0', '#CCC'], // If value == 0, use grey
-  ['+', '#33F'] // If value > 0, use red (alt. orange: #FFA500)
+  [-0.099, '#00B'], // If expression value < 0 (-0.001), use blue
+  [0.099, '#CCC'], // If value == 0, use grey
+  ['+', '#F00'] // If value > 0, use red  
 ];
 
 var legend = [{
   name: 'Expression level',
   rows: [
-    {name: 'Low', color: '#33F'},
+    {name: 'Low', color: '#00B'},
     {name: 'Normal', color: '#CCC'},
-    {name: 'High', color: '#F33'}
+    {name: 'High', color: '#F00'}
   ]
 }];
 
@@ -144,7 +144,7 @@ function createTrackFilters() {
   listItems = '';
   trackLabels = ideogram.rawAnnots.keys.slice(6,);
   for (i = 0; i < trackLabels.length; i++) {
-    checked = ([0, 1, 2].includes(i)) ? 'checked' : '';
+    checked = ([0, 1].includes(i)) ? 'checked' : '';
     listItems +=
       '<li>' +
         '<label for="filter_' + (i + 1) + '">' +
@@ -241,6 +241,10 @@ function initializeIdeogram(url) {
     url = getIdeogramAnnotationPaths()[0];
   }
 
+  // Temporary measure for Jean's scientific validation of inferCNV-Ideogram
+  ideoAnnotPathStem = '/single_cell/example_data/ideogram_exp_means/jean_tmp/ideogram_exp_means__';
+  url = ideoAnnotPathStem + 'default--Cluster--group--study_2.json'
+
   window.ideogram = new Ideogram({
     container: '#ideogram-container',
     organism: ideogramInferCnvSettings.organism.toLowerCase(),
@@ -250,7 +254,7 @@ function initializeIdeogram(url) {
     annotationsPath: url,
     annotationsLayout: 'heatmap',
     annotationsNumTracks: 3,
-    annotationsDisplayedTracks: [1, 2, 3],
+    annotationsDisplayedTracks: [1, 2],
     legend: legend,
     onLoadAnnots: defineHeatmaps,
     onDrawAnnots: createTrackFilters,
