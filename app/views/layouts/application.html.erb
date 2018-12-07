@@ -38,13 +38,18 @@
 <div id="notices-target">
   <%= render '/layouts/notices' %>
 </div>
-<div class="container-fluid" id="wrap">
-	<div class="row section-pad" id="main-body">
-		<div class="col-md-12">
-			<%= yield %>
-		</div>
-	</div>
-</div>
+<% if controller_name == 'site' && action_name == 'index' %>
+  <%= yield %>
+<% else %>
+  <div class="container-fluid" id="wrap">
+    <div class="row section-pad" id="main-body">
+      <div class="col-md-12">
+        <%= yield %>
+      </div>
+    </div>
+  </div>
+<% end %>
+
 <div class="modal fade" id="loading-modal" role="dialog" aria-labelledby="loading-modal" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -91,17 +96,19 @@
   </div>
 </div>
 <div id="generic-update-target"></div>
-<div class="footer container-fluid">
-	<div class="row">
-		<div class="col-md-offset-4 col-md-4 text-center">
-			<%= link_to image_tag("broad-logo.png", class: "center-block img-responsive"), "http://www.broadinstitute.org" %>
-			<p class="text-muted">&copy; <%= Date.today.year %> The Broad Institute of MIT & Harvard</p>
-      <p class="text-muted"><%= scp_link_to 'Privacy Policy', privacy_policy_path %></p>
-      <% if @selected_branding_group.present? %>
-        <small class="text-muted"><%= link_to "<i class='fas fa-chevron-circle-left fa-fw'></i> Return to Single Cell Portal".html_safe, site_path %></small>
-      <% end %>
-		</div>
-	</div>
+<div id="scp-footer">
+  <%= link_to image_tag('broad-logo-white.png'), "http://www.broadinstitute.org", class: 'pull-left' %>
+    <div class="footer-text-block pull-left">
+      &copy; <%= Date.today.year %> The Broad Institute of MIT & Harvard
+    </div>
+    <div class="footer-text-block pull-left left-border-0-5">
+      <%= scp_link_to 'Privacy Policy', privacy_policy_path %>
+    </div>
+  <% if @selected_branding_group.present? %>
+    <div class="footer-text-block">
+      <%= link_to "<i class='fas fa-chevron-circle-left fa-fw'></i> Return to Single Cell Portal".html_safe, site_path %>
+    </div>
+  <% end %>
 </div>
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
     // variable used mostly for testing

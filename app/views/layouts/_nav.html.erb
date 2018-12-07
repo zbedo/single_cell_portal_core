@@ -1,4 +1,4 @@
-<nav class="navbar fluid navbar-inverse navbar-fixed-top sc-navbar" role="navigation" id="single-cell-navbar">
+<nav class="navbar fluid navbar-inverse navbar-fixed-top sc-navbar rectangle" role="navigation" id="single-cell-navbar">
 	<div class="navbar-header">
 		<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
 			<span class="sr-only">Toggle navigation</span>
@@ -9,7 +9,7 @@
     <% if @selected_branding_group.present? %>
       <%= scp_link_to "<span class='fas fa-home'></span> #{@selected_branding_group.name}</sup>".html_safe, site_path, class: "navbar-brand hidden-xs check-upload" %>
     <% else %>
-      <%= link_to "<span class='fas fa-home'></span> Single Cell Portal<sup class='text-danger'><small> BETA</small></sup>".html_safe, site_path, class: "navbar-brand hidden-xs check-upload" %>
+      <%= link_to image_tag('SCP-white.png'), site_path, class: "navbar-brand hidden-xs check-upload" %>
     <% end %>
 	</div>
 	<div class="collapse navbar-collapse">
@@ -25,7 +25,7 @@
 				</ul>
 			</li>
 			<% if user_signed_in? %>
-				<li class="dropdown"><%= scp_link_to "<span class='fas fa-user'></span> #{current_user.email.split('@').first} <span class='caret'></span>".html_safe, "#", class: "dropdown-toggle", "data-toggle" => "dropdown", id: 'profile-nav' %>
+				<li class="dropdown"><%= scp_link_to "<span class='fas fa-user'></span> #{current_user.email.split('@').first} <span class='caret'></span>".html_safe, "#", class: "dropdown-toggle left-border-0-5", "data-toggle" => "dropdown", id: 'profile-nav' %>
 					<ul class="dropdown-menu dropdown-menu-right">
             <% if current_user.admin? %>
               <li><%= link_to "<span class='fas fa-lock fa-fw'></span> Admin Config".html_safe, admin_configurations_path, class: 'check-upload', id: 'admin-nav' %></li>
@@ -58,7 +58,7 @@
 				</li>
 			<% else %>
 
-				<li><%= scp_link_to "<span class='fas fa-sign-in-alt fa-fw'></span> Sign In".html_safe, user_google_oauth2_omniauth_authorize_path, id: 'login-nav' %></li>
+				<li><%= scp_link_to "<span class='fas fa-sign-in-alt fa-fw'></span> Sign In".html_safe, user_google_oauth2_omniauth_authorize_path, class: 'left-border-0-5', id: 'login-nav' %></li>
 			<% end %>
 		</ul>
 	</div>

@@ -1,18 +1,24 @@
-<div class="well well-lg jumbotron" id="main-banner">
+<div class="mask" id="main-banner">
 
   <% if @selected_branding_group.present? %>
-    <h1 class="lead text-center"><%= @selected_branding_group.name %></h1>
-    <p class="lead text-center"><%= @selected_branding_group.tag_line %></p>
-    <p class="lead text-center">Now featuring <span class="label label-primary"><%= @study_count %></span> studies with
-      <span class="label label-success"><%= number_with_delimiter @cell_count %></span> cells.</p>
-    <% if @selected_branding_group.splash_image.present? %>
-      <%= image_tag @selected_branding_group.splash_image.url, class: 'img-responsive', style: 'margin: 0 auto;' %>
-    <% end %>
+    <div id="main-banner-logo">
+      <% if @selected_branding_group.splash_image.present? %>
+        <%= image_tag @selected_branding_group.splash_image.url, style: 'padding: 5px 0;' %>
+      <% end %>
+      <p id='main-banner-name'><%= @selected_branding_group.name %></p>
+      <p id='main-banner-tag-line'><%= @selected_branding_group.tag_line %></p>
+    </div>
   <% else %>
-    <h1 class="lead text-center">Single Cell Portal<sup><small> BETA</small></sup></h1>
-    <p class="lead text-center">Visualization portal for single cell RNA-seq data.</p>
-    <p class="lead text-center">Now featuring <span class="label label-primary"><%= @study_count %></span> studies with
-      <span class="label label-success"><%= number_with_delimiter @cell_count %></span> cells.</p>
+    <div id="main-banner-logo">
+      <%= image_tag "SCP-logo.png", id: 'scp-logo' %>
+      <p id='main-banner-tag-line' class="scp-banner-position">Reducing barriers and accelerating single-cell research</p>
+    </div>
   <% end %>
+  <div id="main-banner-counts">
+    <span class="counts-text">Featuring<br />
+      <span class="green-count"><%= @study_count %></span> <%= pluralize_without_count(@study_count, 'study') %><br />
+      <span class="blue-count"><%= number_with_delimiter @cell_count %></span> <%= pluralize_without_count(@cell_count, 'cell') %>
+    </span>
+  </div>
 
 </div>
