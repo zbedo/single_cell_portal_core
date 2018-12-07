@@ -7,7 +7,7 @@
 			<span class="icon-bar"></span>
 		</button>
     <% if @selected_branding_group.present? %>
-      <%= scp_link_to "<span class='fas fa-home'></span> #{@selected_branding_group.name}</sup>".html_safe, site_path, class: "navbar-brand hidden-xs check-upload" %>
+      <%= scp_link_to "<span class='fas fa-home'></span> #{@selected_branding_group.name}</sup>".html_safe, site_path, class: "navbar-brand hidden-xs check-upload", style: 'margin-top: 6px;' %>
     <% else %>
       <%= link_to image_tag('SCP-white.png'), site_path, class: "navbar-brand hidden-xs check-upload" %>
     <% end %>
