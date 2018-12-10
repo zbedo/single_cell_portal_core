@@ -319,6 +319,11 @@ function toggleGlyph(el) {
     el.toggleClass('fa-chevron-right fa-chevron-down');
 }
 
+// toggle chevron glyphs on clicks
+function toggleDescription(el) {
+    el.toggleClass('fa-plus-square fa-minus-square');
+}
+
 // function to delegate delete call for a file after showing confirmation dialog
 function deletePromise(event, message) {
     new Promise(function (resolve) {
@@ -352,6 +357,7 @@ function enableDefaultActions() {
 
     $('.panel-collapse').on('show.bs.collapse hide.bs.collapse', function () {
         toggleGlyph($(this).prev().find('span.toggle-glyph'));
+        toggleDescription($(this).prev().find('span.toggle-description'));
     });
 
     $('.datepicker').datepicker({dateFormat: 'yy-mm-dd'});
