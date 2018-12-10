@@ -1,5 +1,11 @@
-<a href="javascript:;" title="Need a species/assembly not listed?" class="label label-default pull-right"
+<a href="#/" title="Need a species/assembly not listed?" class="label label-default pull-right" id="taxon-popover-<%= id %>"
    data-content="If your data is derived from a species or assembly not in this list, please send an email to <a href='mailto:single_cell_portal@broadinstitute.org'>single_cell_portal@broadinstitute.org</a> and we'll add it for you!"
    data-toggle="popover">
   Need Help?
 </a>
+
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+
+    enableHoverPopovers('#taxon-popover-<%= id %>');
+
+</script>

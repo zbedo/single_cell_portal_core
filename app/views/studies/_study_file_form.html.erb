@@ -28,13 +28,13 @@
   </div>
   <div id="study-file-<%= study_file._id %>-extra-info">
     <% if study_file.file_type == 'Cluster'  %>
-      <%= render partial: 'cluster_axis_fields', locals: {f: f} %>
+      <%= render partial: 'cluster_axis_fields', locals: {f: f.dup} %>
     <% elsif study_file.file_type == 'Expression Matrix' || study_file.file_type == 'MM Coordinate Matrix' %>
-      <%= render partial: 'expression_file_fields', locals: {f: f} %>
+      <%= render partial: 'expression_file_fields', locals: {f: f.dup} %>
     <% elsif study_file.file_type == '10X Genes File' || study_file.file_type == '10X Barcodes File' %>
-      <%= render partial: 'mm_coordinate_association_fields', locals: {f: f} %>
+      <%= render partial: 'mm_coordinate_association_fields', locals: {f: f.dup} %>
     <% elsif study_file.file_type == 'BAM' %>
-      <%= render partial: 'bam_association_fields', locals: {f: f} %>
+      <%= render partial: 'bam_association_fields', locals: {f: f.dup} %>
     <% end %>
   </div>
   <div class="form-group row">
@@ -43,7 +43,9 @@
       <%= f.select :file_type, options_for_select(@file_types, study_file.file_type), {include_blank: 'Please select a file type'}, class: 'form-control file-type' %>
     </div>
     <div class="col-sm-4 taxon-select-target">
-
+      <% if StudyFile::TAXON_REQUIRED_TYPES.include?(study_file.file_type) || study_file.file_type == 'Analysis Output' %>
+        <%= render partial: 'taxon_fields', locals: {f: f.dup} %>
+      <% end %>
     </div>
     <div class="col-sm-4">
       <%= f.label :actions %>
@@ -59,7 +61,7 @@
   </div>
 
   <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
-      <%= render partial: 'shared_sync_functions.js.erb', locals: {study_file: study_file, f: f} %>
+      <%= render partial: 'shared_sync_functions.js.erb', locals: {study_file: study_file, f: f.dup} %>
 
       $("#remove-<%= study_file._id %>").click(function() {
           $('#study-file-<%= study_file._id %>').remove();

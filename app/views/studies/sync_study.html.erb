@@ -103,7 +103,15 @@
         <h4>Study Files</h4>
         <div id="synced-study-files">
           <% @synced_study_files.each do |sf| %>
-            <%= render partial: 'synced_study_file_form', locals: {study_file: sf} %>
+            <div class="bs-callout bs-callout-primary" id="<%= sf.form_container_id %>">
+              <%= render partial: 'synced_study_file_form', locals: {study_file: sf} %>
+              <% if sf.is_bundle_parent? %>
+                <h4>Bundled Files</h4>
+                <% sf.bundled_files.each do |bundled_file| %>
+                  <%= render partial: 'synced_bundled_study_file_form', locals: {study_file: bundled_file} %>
+                <% end %>
+              <% end %>
+            </div>
           <% end %>
         </div>
         <h4>Sequence Data & Other Directories</h4>

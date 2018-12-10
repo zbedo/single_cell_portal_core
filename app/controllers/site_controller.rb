@@ -703,13 +703,13 @@ class SiteController < ApplicationController
 
     begin
       # get filesize and make sure the user is under their quota
-      requested_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project, @study.firecloud_workspace, params[:filename])
+      requested_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.firecloud_project, @study.firecloud_workspace, params[:filename])
       if requested_file.present?
         filesize = requested_file.size
         user_quota = current_user.daily_download_quota + filesize
         # check against download quota that is loaded in ApplicationController.get_download_quota
         if user_quota <= @download_quota
-          @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, @study.firecloud_project, @study.firecloud_workspace, params[:filename], expires: 15)
+          @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, 0, @study.firecloud_project, @study.firecloud_workspace, params[:filename], expires: 15)
           current_user.update(daily_download_quota: user_quota)
         else
           redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]), alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
@@ -1086,7 +1086,7 @@ class SiteController < ApplicationController
 
   # retrieve any optional parameters for a selected workflow
   def get_workflow_options
-    @options = WorkflowConfiguration.get_additional_parameters(params[:workflow_identifier])
+    @options = WorkflowConfiguration.get_additional_parameters(params[:workflow_identifier], @study)
     workflow_name = params[:workflow_identifier].split('--').join('/')
     @configuration = AdminConfiguration.find_by(config_type: 'Workflow Name', value: workflow_name)
     if @configuration.nil?
@@ -1268,7 +1268,7 @@ class SiteController < ApplicationController
       logger.info "#{Time.now}: deleting analysis metadata for #{params[:submission_id]} in #{@study.url_safe_name}"
       AnalysisMetadatum.where(submission_id: params[:submission_id]).delete
       logger.info "#{Time.now}: queueing submission #{params[:submission]} deletion in #{@study.firecloud_workspace}"
-      submission_files = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, @study.firecloud_project, @study.firecloud_workspace, prefix: params[:submission_id])
+      submission_files = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, 0, @study.firecloud_project, @study.firecloud_workspace, prefix: params[:submission_id])
       DeleteQueueJob.new(submission_files).perform
     rescue => e
       logger.error "#{Time.now}: unable to remove submission #{params[:submission_id]} files from #{@study.firecloud_workspace} due to: #{e.message}"
@@ -2078,10 +2078,7 @@ class SiteController < ApplicationController
 
   # helper method to load all available cluster_group-specific annotations
   def load_cluster_group_annotations
-    grouped_options = {
-        'Cluster-based' => @cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]},
-        'Study Wide' => @study.cell_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
-    }
+    grouped_options = @study.formatted_annotation_select(cluster: @cluster)
     # load available user annotations (if any)
     if user_signed_in?
       user_annotations = UserAnnotation.viewable_by_cluster(current_user, @cluster)
@@ -2224,11 +2221,11 @@ class SiteController < ApplicationController
     filename = (is_study_file ? file.upload_file_name : file[:name])
 
     begin
-      signed_url = fc_client.execute_gcloud_method(:generate_signed_url,
-                                                              @study.firecloud_project,
-                                                              @study.firecloud_workspace,
-                                                              filename,
-                                                              expires: 1.day.to_i) # 1 day in seconds, 86400
+      signed_url = fc_client.execute_gcloud_method(:generate_signed_url, 0,
+                                                   @study.firecloud_project,
+                                                   @study.firecloud_workspace,
+                                                   filename,
+                                                   expires: 1.day.to_i) # 1 day in seconds, 86400
       curl_config = [
           'url="' + signed_url + '"',
           'output="' + filename + '"'

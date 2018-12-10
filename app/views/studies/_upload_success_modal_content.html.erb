@@ -10,7 +10,7 @@
           <p class="lead text-center">Your file is currently being parsed.  You will receive an email at <%= current_user.email %> when the parse has completed.</p>
         <% elsif study_file.parseable? && !study_file.able_to_parse? %>
           <p class="lead text-center text-danger">This file type requires other associated files to complete parsing.  Please use the new forms below to add the necessary files.</p>
-        <% elsif !study_file.parseable? && @bundled_files.present? %>
+        <% elsif !study_file.parseable? && study_file.study_file_bundle.present? && !study_file.study_file_bundle.completed? %>
           <p class="lead text-center text-danger">This file type requires other associated files in order to be utilized in the portal.  Please use the new forms below to add the necessary files.</p>
         <% end %>
       </div>

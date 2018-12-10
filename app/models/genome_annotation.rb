@@ -32,7 +32,7 @@ class GenomeAnnotation
       if config.present?
         begin
           reference_project, reference_workspace = config.value.split('/')
-          Study.firecloud_client.execute_gcloud_method(:generate_api_url, reference_project,
+          Study.firecloud_client.execute_gcloud_method(:generate_api_url, 0, reference_project,
                                                                  reference_workspace, self.link)
         rescue => e
           Rails.logger.error "Cannot generate public genome annotation link for #{self.link}: #{e.message}"
@@ -55,7 +55,7 @@ class GenomeAnnotation
       if config.present?
         begin
           reference_project, reference_workspace = config.value.split('/')
-          Study.firecloud_client.execute_gcloud_method(:generate_api_url, reference_project,
+          Study.firecloud_client.execute_gcloud_method(:generate_api_url, 0, reference_project,
                                                        reference_workspace, self.index_link)
         rescue => e
           Rails.logger.error "Cannot generate public genome annotation index link for #{self.index_link}: #{e.message}"
@@ -78,7 +78,7 @@ class GenomeAnnotation
       if config.present?
         begin
           reference_project, reference_workspace = config.value.split('/')
-          Study.firecloud_client.execute_gcloud_method(:generate_signed_url, reference_project,
+          Study.firecloud_client.execute_gcloud_method(:generate_signed_url, 0, reference_project,
                                                        reference_workspace, self.link, expires: 15)
         rescue => e
           Rails.logger.error "Cannot generate genome annotation download link for #{self.link}: #{e.message}"
@@ -113,8 +113,8 @@ class GenomeAnnotation
       if config.present?
         begin
           reference_project, reference_workspace = config.value.split('/')
-          genome_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, reference_project, reference_workspace,
-                                                                     self.link)
+          genome_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, reference_project,
+                                                                     reference_workspace, self.link)
           if !genome_file.present?
             errors.add(:link, "was not found in the reference workspace of #{config.value}.  Please check the link and try again.")
           end
@@ -145,8 +145,8 @@ def check_genome_annotation_index_link
     if config.present?
       begin
         reference_project, reference_workspace = config.value.split('/')
-        genome_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, reference_project, reference_workspace,
-                                                                   self.index_link)
+        genome_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, reference_project,
+                                                                   reference_workspace, self.index_link)
         if !genome_file.present?
           errors.add(:index_link, "was not found in the reference workspace of #{config.value}.  Please check the index link and try again.")
         end

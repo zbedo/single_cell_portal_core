@@ -34,7 +34,7 @@
     </div>
     <div class="col-sm-2">
       <% if directory.file_type.match(DirectoryListing::TAXON_REQUIRED_REGEX).present? %>
-        <%= f.label :taxon_id, 'Species' %> <%= render partial: 'taxon_help_popover' %><br />
+        <%= f.label :taxon_id, 'Species' %> <%= render partial: 'taxon_help_popover', locals: {id: f.object.id.to_s} %><br />
         <%= f.select :taxon_id, options_from_collection_for_select(Taxon.sorted, :id, :display_name, f.object.taxon_id),
                      {prompt: 'None selected...'}, {class: 'form-control taxon-select'} %>
       <% end %>
@@ -59,11 +59,7 @@
 
       $("#delete-directory-<%= directory.id %>").click(function() {
           launchModalSpinner('#delete-modal-spinner', '#delete-modal', function() {
-              $.ajax({
-                  url: "<%= delete_directory_listing_study_path(@study.id, directory.id) %>",
-                  method: 'DELETE',
-                  dataType: 'script'
-              });
+              return true;
           });
       });
 

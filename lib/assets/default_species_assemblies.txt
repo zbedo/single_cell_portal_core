@@ -1,30 +1,36 @@
-# scientific_name	common_name	taxid	restricted	assembly_name	release_date
-Homo sapiens	human	9606	true	GRCh38	2013-12-17
-Homo sapiens	human	9606	true	GRCh37	2009-02-27
-Mus musculus	mouse	10090	false	GRCm38	2012-01-09
-Mus musculus	mouse	10090	false	MGSCv37	2010-10-21
-Danio rerio	zebrafish	7955	false	GRCz11	2017-05-09
-Danio rerio	zebrafish	7955	false	GRCz10	2014-09-02
-Danio rerio	zebrafish	7955	false	Zv9	2010-07-15
-Danio rerio	zebrafish	7955	false	Zv8	2009-06-23
-Gallus gallus	chicken	9031	false	GRCg6a	2018-03-27
-Gallus gallus	chicken	9031	false	Gallus_gallus-5.0	2015-12-16
-Gallus gallus	chicken	9031	false	Gallus_gallus-4.0	2011-11-22
-Gallus gallus	chicken	9031	false	Gallus_gallus-2.1	2006-11-01
-Rattus norvegicus	rat	10116	false	Rnor_6.0	2014-07-01
-Rattus norvegicus	rat	10116	false	Rnor_5.0	2012-03-16
-Macaca fascicularis	macaque	9541	false	Macaca_fascicularis_5.0	2013-06-12
-Bos taurus	cow	9913	false	ARS-UCD1.2	2018-04-11
-Bos taurus	cow	9913	false	Btau_5.0.1	2015-11-19
-Bos taurus	cow	9913	false	Btau_4.6.1	2011-11-02
-Bos taurus	cow	9913	false	Btau_4.2	2011-05-12
-Bos taurus	cow	9913	false	Bos_taurus_UMD_3.1	2009-12-01
-Sus scrofa	pig	9823	false	Sscrofa11.1	2017-02-07
-Sus scrofa	pig	9823	false	Sscrofa10.2	2011-09-07
-Sus scrofa	pig	9823	false	Sscrofa10	2011-05-19
-Sus scrofa	pig	9823	false	Sscrofa9.2	2010-02-23
-Canis lupus familiaris	dog	9615	false	CanFam3.1	2011-11-02
-Canis lupus familiaris	dog	9615	false	CanFam2.0	2005-07-12
-Felis catus	cat	9685	false	Felis_catus_9.0	2017-11-20
-Felis catus	cat	9685	false	Felis_catus_8.0	2014-11-07
-Felis catus	cat	9685	false	Felis_catus-6.2	2011-12-14
+# scientific_name	common_name	taxid	restricted	assembly_name	assembly_release_date	assembly_accession
+Homo sapiens	human	9606	true	GRCh38	2013-12-17	GCA_000001405.15
+Homo sapiens	human	9606	true	GRCh37	2009-02-27	GCA_000001405.1
+Mus musculus	mouse	10090	false	GRCm38	2012-01-09	GCA_000001635.2
+Mus musculus	mouse	10090	false	MGSCv37	2010-10-21	GCA_000001635.1
+Danio rerio	zebrafish	7955	false	GRCz11	2017-05-09	GCA_000002035.4
+Danio rerio	zebrafish	7955	false	GRCz10	2014-09-02	GCA_000002035.3
+Danio rerio	zebrafish	7955	false	Zv9	2010-07-15	GCA_000002035.2
+Danio rerio	zebrafish	7955	false	Zv8	2009-06-23	GCA_000002035.1
+Gallus gallus	chicken	9031	false	GRCg6a	2018-03-27	GCA_000002315.5
+Gallus gallus	chicken	9031	false	Gallus_gallus-5.0	2015-12-16	GCA_000002315.3
+Gallus gallus	chicken	9031	false	Gallus_gallus-4.0	2011-11-22	GCA_000002315.2
+Gallus gallus	chicken	9031	false	Gallus_gallus-2.1	2006-11-01	GCA_000002315.1
+Rattus norvegicus	rat	10116	false	Rnor_6.0	2014-07-01	GCA_000001895.4
+Rattus norvegicus	rat	10116	false	Rnor_5.0	2012-03-16	GCA_000001895.3
+Macaca fascicularis	macaque	9541	false	Macaca_fascicularis_5.0	2013-06-12	GCA_000364345.1
+Bos taurus	cow	9913	false	ARS-UCD1.2	2018-04-11	GCA_002263795.2
+Bos taurus	cow	9913	false	Btau_5.0.1	2015-11-19	GCA_000003205.6
+Bos taurus	cow	9913	false	Btau_4.6.1	2011-11-02	GCA_000003205.4
+Bos taurus	cow	9913	false	Btau_4.2	2011-05-12	GCA_000003205.2
+Bos taurus	cow	9913	false	Btau_4.2	2009-06-10	GCA_000003205.1
+Bos taurus	cow	9913	false	Bos_taurus_UMD_3.1	2009-12-01	GCA_000003055.3
+Sus scrofa	pig	9823	false	Sscrofa11.1	2017-02-07	GCA_000003025.6
+Sus scrofa	pig	9823	false	Sscrofa10.2	2011-09-07	GCA_000003025.4
+Sus scrofa	pig	9823	false	Sscrofa10	2011-05-19	GCA_000003025.3
+Sus scrofa	pig	9823	false	Sscrofa9.2	2010-02-23	GCA_000003025.2
+Canis lupus familiaris	dog	9615	false	CanFam3.1	2011-11-02	GCA_000002285.2
+Canis lupus familiaris	dog	9615	false	CanFam2.0	2005-07-12	GCA_000002285.1
+Felis catus	cat	9685	false	Felis_catus_9.0	2017-11-20	GCA_000181335.4
+Felis catus	cat	9685	false	Felis_catus_8.0	2014-11-07	GCA_000181335.3
+Felis catus	cat	9685	false	Felis_catus-6.2	2011-12-14	GCA_000181335.2
+Drosophila melanogaster	fruit fly	7227	false	Release 4	2004-11-04	GCA_000004615.4
+Drosophila melanogaster	fruit fly	7227	false	Release 6 plus ISO1 MT	2014-08-01	GCA_000001215.4
+Drosophila melanogaster	fruit fly	7227	false	Release 6	2014-07-25	GCA_000001215.3
+Drosophila melanogaster	fruit fly	7227	false	Release 5	2007-10-22	GCA_000001215.2
+Drosophila melanogaster	fruit fly	7227	false	Release 5	2007-10-22	GCA_000001215.1

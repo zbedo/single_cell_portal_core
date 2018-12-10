@@ -16,7 +16,7 @@
         <div class="form-group">
           <%= f.hidden_field :admin_email_delivery %>
           <% button_text = @user.admin_email_delivery ? "On <i class='fas fa-fw fa-toggle-on'></i>".html_safe : "Off <i class='fas fa-fw fa-toggle-off'></i>".html_safe %>
-          <h3>Admin Email Delivery <%= link_to button_text, 'javascript:;', class: 'btn btn-default', id: 'toggle-admin-emails' %></h3>
+          <h3>Admin Email Delivery <%= link_to button_text, '#/', class: 'btn btn-default', id: 'toggle-admin-emails' %></h3>
           <p class="help-block">Use this toggle to determine whether or not you would like to receive information emails from Single Cell Portal adminsitrators (new feature announcements, unplanned site maintenance, general notices, etc.).</p>
         </div>
       <% end %>

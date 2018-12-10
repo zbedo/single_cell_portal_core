@@ -26,10 +26,15 @@
           <p><%= link_to "Example Expression Matrix <span class='fas fa-download'></span>".html_safe, 'https://raw.githubusercontent.com/broadinstitute/single_cell_portal/master/demo_data/expression_example.txt', class: 'btn btn-default', download: 'expression_matrix_example.txt' %></p>
         </div>
         <% @expression_files.each do |study_file| %>
-          <%= render partial: 'initialize_expression_form', locals: {study_file: study_file} %>
-          <% study_file.bundled_files.each do |bundled_file| %>
-            <%= render partial: 'initialize_bundled_file_form', locals: {study_file: bundled_file} %>
-          <% end %>
+          <div class="bs-callout bs-callout-info" id="<%= study_file.form_container_id %>">
+            <%= render partial: 'initialize_expression_form', locals: {study_file: study_file} %>
+            <% if study_file.bundled_files.any? %>
+              <h4>Bundled Files</h4>
+              <% study_file.bundled_files.each do |bundled_file| %>
+                <%= render partial: 'initialize_bundled_file_form', locals: {study_file: bundled_file} %>
+              <% end %>
+            <% end %>
+          </div>
         <% end %>
         <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
             if (<%= !@expression_files.first.new_record? %>) {
@@ -50,7 +55,9 @@
         <p class="lead">The second row in this file (beginning with the header 'TYPE') must contain a value for each metadata column declaring its datatype.  The two accepted values are <strong>group</strong> (set membership) or <strong>numeric</strong> (continuous scores).  Group values are treated as literal strings, and numerics as floating-point numbers.</p>
         <p><%= link_to "Example Metadata File <span class='fas fa-download'></span>".html_safe, 'https://raw.githubusercontent.com/broadinstitute/single_cell_portal/master/demo_data/metadata_example.txt', class: 'btn btn-default', download: 'metadata_example.txt' %></p>
       </div>
-      <%= render partial: 'initialize_metadata_form', locals: {study_file: @metadata_file} %>
+      <div id="container-<%= @metadata_file.id %>">
+        <%= render partial: 'initialize_metadata_form', locals: {study_file: @metadata_file} %>
+      </div>
     </div>
 		<div class="tab-pane" id="ordinations">
 			<div id="ordinations-target">
@@ -62,7 +69,9 @@
 					<p><%= link_to "Example Cluster File <span class='fas fa-download'></span>".html_safe, 'https://raw.githubusercontent.com/broadinstitute/single_cell_portal/master/demo_data/coordinates_example.txt', class: 'btn btn-default', download: 'coordinates_example.txt' %></p>
 				</div>
 				<% @cluster_ordinations.each do |study_file| %>
-					<%= render partial: 'initialize_ordinations_form', locals: {study_file: study_file} %>
+          <div class="bs-callout bs-callout-info" id="<%= study_file.form_container_id %>">
+					  <%= render partial: 'initialize_ordinations_form', locals: {study_file: study_file} %>
+          </div>
 				<% end %>
 				<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 					if (<%= !@cluster_ordinations.first.new_record? %>) {
@@ -79,12 +88,16 @@
       <div id="labels-target">
         <div class="well well-sm">
           <h2>Step 4. Upload Coordinate Labels <small class="initialize-label" id="initialize_labels_form_completed"><span class="label label-info">Optional</span></small></h2>
-          <p class="lead">Upload a tab- or comma-delimited text file containing any 2d or 3d spatial coordinates and labels to display.  The file must be a plain text (.txt) file with at least 3 columns and a header row containing the values '<strong>X</strong>', '<strong>Y</strong>', and '<strong>LABELS</strong>'.  The file may have an optional column of '<strong>Z</strong>' (for 3d clusters).  The last column must contain text labels to display at the specified coordinates.</p>
+          <p class="lead">Upload a tab- or comma-delimited text file containing any 2d or 3d spatial coordinates and labels to display.  <strong class="text-danger">These are not cluster files - they are annotations to overlay on top of a cluster.</strong>
+            The file must be a plain text (.txt) file with at least 3 columns and a header row containing the values '<strong>X</strong>', '<strong>Y</strong>', and '<strong>LABELS</strong>'.  The file may have an optional column of '<strong>Z</strong>' (for 3d clusters).
+            The last column must contain text labels to display at the specified coordinates.</p>
           <p class="lead"><i class="fas fa-fw fa-exclamation-triangle text-warning"></i> The coordinates of the labels must fall inside the ranges of the cluster they are associated with for them to render.</p>
           <p><%= link_to "Example Coordinate Label File <span class='fas fa-download'></span>".html_safe, 'https://raw.githubusercontent.com/broadinstitute/single_cell_portal/master/demo_data/coordinate_labels_example.txt', class: 'btn btn-default', download: 'coordinates_example.txt' %></p>
         </div>
         <% @coordinate_labels.each do |study_file| %>
-          <%= render partial: 'initialize_labels_form', locals: {study_file: study_file} %>
+          <div class="bs-callout bs-callout-info" id="<%= study_file.form_container_id %>">
+            <%= render partial: 'initialize_labels_form', locals: {study_file: study_file} %>
+          </div>
         <% end %>
         <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
             if (<%= @coordinate_labels.any? && !@coordinate_labels.first.new_record? %>) {
@@ -95,7 +108,7 @@
             }
         </script>
       </div>
-      <p><%= link_to "<span class='fas fa-plus'></span> Add a Coordinate Labels File".html_safe, new_study_file_study_path(@study._id, file_type: 'Coordinate Labels', target: '#labels-target', form: 'initialize_labels_form'), class: 'btn btn-sm btn-primary add-coordinate-labels', 'data-remote' => true %></p>
+      <p><%= link_to "<span class='fas fa-plus'></span> Add a Coordinate Labels File".html_safe, new_study_file_study_path(@study._id, file_type: 'Coordinate Labels', target: '#labels-target', form: 'initialize_labels_form'), class: 'btn btn-sm btn-primary add-coordinate-labels hidden', id: 'add-coordinate-label-btn', 'data-remote' => true %></p>
     </div>
     <div class="tab-pane" id="primary-data">
       <div id="primary-data-target">
@@ -109,10 +122,15 @@
           <p><%= link_to "FASTQ File Format <span class='fas fa-info-circle'></span>".html_safe, 'https://en.wikipedia.org/wiki/FASTQ_format#Format', class: 'btn btn-default', target: :_blank %>&nbsp;<%= link_to "BAM File Format <span class='fas fa-info-circle'></span>".html_safe, 'https://www.ncbi.nlm.nih.gov/sra/docs/submitformats/#bam-files', class: 'btn btn-default', target: :_blank %>&nbsp;<%= link_to "gzip Documentation <span class='fas fa-info-circle'></span>".html_safe, 'http://www.gnu.org/software/gzip/manual/gzip.html', class: 'btn btn-default', target: :_blank %></p>
         </div>
         <% @fastq_files.each do |study_file| %>
-          <%= render partial: 'initialize_primary_data_form', locals: {study_file: study_file} %>
-          <% study_file.bundled_files.each do |bundled_file| %>
-            <%= render partial: 'initialize_bundled_file_form', locals: {study_file: bundled_file} %>
-          <% end %>
+          <div class="bs-callout bs-callout-info" id="<%= study_file.form_container_id %>">
+            <%= render partial: 'initialize_primary_data_form', locals: {study_file: study_file} %>
+            <% if study_file.bundled_files.any? %>
+              <h4>Bundled Files</h4>
+              <% study_file.bundled_files.each do |bundled_file| %>
+                <%= render partial: 'initialize_bundled_file_form', locals: {study_file: bundled_file} %>
+              <% end %>
+            <% end %>
+          </div>
         <% end %>
         <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
           if (<%= !@fastq_files.first.new_record? %>) {
@@ -134,7 +152,9 @@
 					<p><%= link_to "Example Gene List <span class='fas fa-download'></span>".html_safe, 'https://raw.githubusercontent.com/broadinstitute/single_cell_portal/master/demo_data/marker_gene_list_example.txt', class: 'btn btn-default', download: 'marker_gene_list_example.txt' %></p>
 				</div>
 				<% @marker_lists.each do |study_file| %>
-					<%= render partial: 'initialize_marker_genes_form', locals: {study_file: study_file} %>
+          <div class="bs-callout bs-callout-info" id="<%= study_file.form_container_id %>">
+					  <%= render partial: 'initialize_marker_genes_form', locals: {study_file: study_file} %>
+          </div>
 				<% end %>
 				<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 					if (<%= !@marker_lists.first.new_record? %>) {
@@ -155,7 +175,9 @@
 					<p class="lead">Upload any documentation or other support files you have.</p>
 				</div>
 				<% @other_files.each do |study_file| %>
-					<%= render partial: 'initialize_misc_form', locals: {study_file: study_file} %>
+          <div class="bs-callout bs-callout-info" id="<%= study_file.form_container_id %>">
+					  <%= render partial: 'initialize_misc_form', locals: {study_file: study_file} %>
+          </div>
 				<% end %>
 				<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 					if (<%= !@other_files.first.new_record? %>) {
@@ -229,6 +251,17 @@
 
 		$('#show-gsutil-command').click(function() {
 		   $('#gsutil-command-wrapper').slideToggle('slow');
+    });
+
+		$('.tab-content').on('click', '.initialize-bundled-file', function() {
+		    var url = "<%= initialize_bundled_file_study_path(@study) %>";
+		    var dataAttr = $(this).data();
+		    url += "?file_type=" + dataAttr.fileType + "&study_file_id=" + dataAttr.studyFileId;
+		    $.ajax({
+            url: url,
+            method: 'POST',
+            dataType: 'script'
+        });
     });
 	});
 </script>

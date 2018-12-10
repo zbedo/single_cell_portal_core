@@ -371,11 +371,30 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
 
     # validate that the study_file_bundle has initialized successfully
     updated_bundle = @study.study_file_bundles.first
+    # this is a hack, but the final assertion will always fail as we aren't performing uploads in test, so we have to
+    # trick the test into thinking that they're uploaded
+    updated_bundle.study_files.update_all(status: 'uploaded')
     assert updated_bundle.original_file_list.size == 3,
            "Did not find correct number of files in original_file_list, expected 3 but found #{updated_bundle.original_file_list.size}"
     assert updated_bundle.study_files.size == 3,
            "Associations did not set correctly on study_file_bundle, expected 3 but found #{updated_bundle.study_files.size}"
     assert updated_bundle.completed?, "Bundle did not successfully initialize, expected completed? to be true but found #{updated_bundle.completed?}"
+
+    # parse data
+    ParseUtils.cell_ranger_expression_parse(@study, @test_user, coordinate_matrix, genes_file, barcodes_file, {skip_upload: true})
+    assert @study.genes.size == 100, "Did not parse correct number of genes, expected 100 but found #{@study.genes.size}"
+
+    # delete a bundled file (must call DeleteQueueJob manually as delayed_job isn't running)
+    DeleteQueueJob.new(genes_file).perform
+    assert @study.genes.size == 0, "Did not delete parsed data when removing bundled file, expected 0 but found #{@study.genes.size}"
+    # reload the bundle and assert it is no longer completed
+    incomplete_bundle = @study.study_file_bundles.first
+    assert !incomplete_bundle.completed?, "Incomplete undle still shows as completed: #{incomplete_bundle.completed?}"
+
+    # delete parent file to confirm complete deletion
+    DeleteQueueJob.new(coordinate_matrix).perform
+    assert @study.study_file_bundles.count == 0, "Study file bundle is still present; expected 0 but found #{@study.study_file_bundles.count}"
+    assert @study.study_files.where(queued_for_deletion: false).size == 0, "Did not remove all files, expected 0 but found #{@study.study_files.where(queued_for_deletion: false).size}"
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 

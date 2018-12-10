@@ -52,9 +52,9 @@ def parse_test_arguments(arguments)
       $env = arg.gsub(/\-E\=/, '')
     elsif arg =~ /\-r\=/
       $random_seed = arg.gsub(/\-r\=/, '')
-    elsif arg =~ /\-v/
+    elsif arg == '-v'
       $verbose = true
-    elsif arg =~ /\-i/
+    elsif arg == '-i'
       $headless = false
     end
   end
@@ -348,6 +348,7 @@ class Test::Unit::TestCase
   # load file either in browser or download and check for existence
   def download_file(link, basename)
     link.click
+    sleep(3)
     if @driver.current_url.include?('https://storage.googleapis.com/')
       assert @driver.current_url =~ /#{basename}/, "Downloaded file url incorrect, did not find #{basename}"
       @driver.navigate.back
@@ -360,6 +361,16 @@ class Test::Unit::TestCase
 
       # delete matching files
       Dir.glob("#{$download_dir}/*").select {|f| /#{basename}/.match(f)}.map {|f| File.delete(f)}
+    end
+  end
+
+  def accept_firecloud_tos
+    begin
+      accept = @driver.find_element(:xpath, "//a[@data-test-id='accept-button']")
+      $verbose ? puts('accepting FireCloud Terms of Service') : nil
+      accept.click
+    rescue Selenium::WebDriver::Error::NoSuchElementError
+      $verbose ? puts('no FireCloud Terms of Service to accept') : nil
     end
   end
 

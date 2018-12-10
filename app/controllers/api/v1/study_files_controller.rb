@@ -279,6 +279,11 @@ module Api
             @precomputed_entry.update(name: @study_file.name)
           elsif study_file_params[:file_type] == 'Cluster'
             @cluster = ClusterGroup.find_by(study_file_id: study_file_params[:_id])
+            # before updating, check if the defaults also need to change
+            if @study.default_cluster == @cluster
+              @study.default_options[:cluster] = @study_file.name
+              @study.save
+            end
             @cluster.update(name: @study_file.name)
             # also update data_arrays
             @cluster.data_arrays.update_all(cluster_name: @study_file.name)
@@ -344,10 +349,10 @@ module Api
         begin
           # make sure file is in FireCloud first
           unless human_data || @study_file.generation.blank?
-            present = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, @study.firecloud_project,
+            present = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.firecloud_project,
                                                                    @study.firecloud_workspace, @study_file.upload_file_name)
             if present
-              Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, @study.firecloud_project,
+              Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, 0, @study.firecloud_project,
                                                            @study.firecloud_workspace, @study_file.upload_file_name)
             end
           end

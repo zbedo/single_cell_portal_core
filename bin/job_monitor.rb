@@ -52,8 +52,14 @@ if @running == false
 	# restart delayed job workers
 	system(". /home/app/.cron_env ; cd /home/app/webapp ; bin/delayed_job restart #{@env} -n #{@num_workers}")
 
+	# unlock orphaned jobs
+	system(". /home/app/.cron_env ; /home/app/webapp/bin/rails runner -e #{@env} \"AdminConfiguration.restart_locked_jobs\"")
+
 	# send email via mailer to handle auth correctly
 	system(". /home/app/.cron_env ; /home/app/webapp/bin/rails runner -e #{@env} \"SingleCellMailer.delayed_job_email('#{@log_message}').deliver_now\"")
+
+  # unlock orphaned jobs
+	system(". /home/app/.cron_env ; /home/app/webapp/bin/rails runner -e #{@env} \"AdminConfiguration.restart_locked_jobs\"")
 
 	# write to log
 	log = File.open('log/delayed_job.log', 'w+')

@@ -54,7 +54,7 @@
                 </div>
               </div>
               <div class="col-md-2">
-                <%= link_to 'Execute Task', 'javascript:;', id: 'perform-admin-task', class: 'btn btn-default' %>
+                <%= link_to 'Execute Task', '#/', id: 'perform-admin-task', class: 'btn btn-default' %>
               </div>
               <div class="col-md-5 text-right">
                 <%= link_to 'Email All Users', compose_users_email_path, id: 'email-all-users', class: 'btn btn-primary' %>
@@ -82,18 +82,18 @@
                   <%= f.hidden_field :status, value: @current_firecloud_status %>
                   <div class="form-group row">
                     <div class="col-md-offset-2 col-md-4">
-                      <%= link_to "Disable All Access".html_safe, 'javascript:;', class: "btn btn-lg btn-block btn-danger #{@current_firecloud_status == 'off' ? 'disabled' : 'firecloud-status'}", id: 'disable-firecloud-access', method: :post, data: {dismiss: @current_firecloud_status == 'off' ? nil : 'modal', status: 'off'} %>
+                      <%= link_to "Disable All Access".html_safe, '#/', class: "btn btn-lg btn-block btn-danger #{@current_firecloud_status == 'off' ? 'disabled' : 'firecloud-status'}", id: 'disable-firecloud-access', data: {dismiss: @current_firecloud_status == 'off' ? nil : 'modal', status: 'off'} %>
                     </div>
                     <div class="col-md-4">
-                      <%= link_to "Disable Local Access".html_safe, 'javascript:;', class: "btn btn-lg btn-block btn-danger #{@current_firecloud_status == 'off' ? 'disabled' : 'firecloud-status'}", id: 'disable-local-access', method: :post, data: {dismiss: @current_firecloud_status == 'off' ? nil : 'modal', status: 'local-off'} %>
+                      <%= link_to "Disable Local Access".html_safe, '#/', class: "btn btn-lg btn-block btn-danger #{@current_firecloud_status == 'off' ? 'disabled' : 'firecloud-status'}", id: 'disable-local-access', data: {dismiss: @current_firecloud_status == 'off' ? nil : 'modal', status: 'local-off'} %>
                     </div>
                   </div>
                   <div class="form-group row">
                     <div class="col-md-offset-2 col-md-4">
-                      <%= link_to "Disable Compute Access".html_safe, 'javascript:;', class: "btn btn-lg btn-block btn-warning #{@current_firecloud_status == 'readonly' ? 'disabled' : 'firecloud-status'}", id: 'disable-compute-access', method: :post, data: {dismiss: @current_firecloud_status == 'readonly' ? nil : 'modal', status: 'readonly'} %>
+                      <%= link_to "Disable Compute Access".html_safe, '#/', class: "btn btn-lg btn-block btn-warning #{@current_firecloud_status == 'readonly' ? 'disabled' : 'firecloud-status'}", id: 'disable-compute-access', data: {dismiss: @current_firecloud_status == 'readonly' ? nil : 'modal', status: 'readonly'} %>
                     </div>
                     <div class="col-md-4">
-                      <%= link_to "Enable All Access".html_safe, 'javascript:;', class: "btn btn-lg btn-block btn-success #{@current_firecloud_status == 'on' ? 'disabled' : 'firecloud-status'}", id: 'enable-firecloud-access', method: :post, data: {dismiss: @current_firecloud_status == 'on' ? nil : 'modal', status: 'on'} %>
+                      <%= link_to "Enable All Access".html_safe, '#/', class: "btn btn-lg btn-block btn-success #{@current_firecloud_status == 'on' ? 'disabled' : 'firecloud-status'}", id: 'enable-firecloud-access', data: {dismiss: @current_firecloud_status == 'on' ? nil : 'modal', status: 'on'} %>
                     </div>
                   </div>
                 <% end %>

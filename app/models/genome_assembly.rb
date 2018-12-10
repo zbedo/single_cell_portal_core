@@ -10,9 +10,10 @@ class GenomeAssembly
   field :name, type: String
   field :alias, type: String
   field :release_date, type: Date
+  field :accession, type: String
 
-  validates_presence_of :name, :release_date
-  validates_uniqueness_of :name, scope: :taxon_id
+  validates_presence_of :name, :release_date, :accession
+  validates_uniqueness_of :accession, scope: :taxon_id
 
   def current_annotation
     if self.genome_annotations.any?

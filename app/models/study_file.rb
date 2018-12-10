@@ -23,7 +23,7 @@ class StudyFile
                       '10X Barcodes File', 'Gene List', 'Metadata', 'Fastq', 'BAM', 'BAM Index', 'Documentation',
                       'Other', 'Analysis Output']
   PARSEABLE_TYPES = ['Cluster', 'Coordinate Labels', 'Expression Matrix', 'MM Coordinate Matrix', '10X Genes File',
-                     '10X Barcodes File', 'Gene List', 'Metadata']
+                     '10X Barcodes File', 'Gene List', 'Metadata', 'Analysis Output']
   DISALLOWED_SYNC_TYPES = ['Fastq']
   UPLOAD_STATUSES = %w(new uploading uploaded)
   PARSE_STATUSES = %w(unparsed parsing parsed)
@@ -367,7 +367,6 @@ class StudyFile
   before_validation   :set_file_name_and_data_dir, on: :create
   before_save         :sanitize_name
   after_save          :set_cluster_group_ranges
-  before_destroy      :remove_bundle_associations
 
   has_mongoid_attached_file :upload,
                             :path => ":rails_root/data/:data_dir/:id/:filename",
@@ -481,6 +480,15 @@ class StudyFile
     api_url + '?alt=media'
   end
 
+  # determine if a file has been uploaded
+  def uploaded?
+    if self.human_data?
+      true # human sequence data is remote, so this is always true
+    else
+      self.generation.present? || self.status == 'uploaded'
+    end
+  end
+
   # convert all domain ranges from floats to integers
   def convert_all_ranges
     if self.file_type == 'Cluster'
@@ -522,9 +530,18 @@ class StudyFile
     self.remote_location.blank? ? self.upload_file_name : self.remote_location
   end
 
+  def local_location
+    path = Rails.root.join(self.study.data_store_path, self.download_location)
+    if File.exists?(path)
+      path
+    else
+      path = Rails.root.join(self.study.data_store_path, self.bucket_location)
+      File.exists?(path) ? path : nil
+    end
+  end
+
   def is_local?
-    File.exists?(Rails.root.join(self.study.data_store_path, self.download_location)) ||
-        File.exists?(Rails.root.join(self.study.data_store_path, self.bucket_location))
+    self.local_location.present?
   end
 
   # get any 'bundled' files that correspond to this file
@@ -566,6 +583,15 @@ class StudyFile
       end
       # call find_by(id: ) to avoid Mongoid::Errors::InvalidFind
       model.find_by(id: self.options[selector])
+    end
+  end
+
+  # determine if this file is a bundle parent
+  def is_bundle_parent?
+    if self.study_file_bundle.present?
+      self.study_file_bundle.parent == self
+    else
+      false
     end
   end
 
@@ -663,11 +689,9 @@ class StudyFile
     study_name = self.study.url_safe_name
     case self.file_type
       when 'Cluster'
-        name_key = self.name.split.join('-')
-        @cache_key = "#{study_name}.*render_cluster.*#{name_key}"
+        @cache_key = "#{study_name}.*render_cluster"
       when 'Coordinate Labels'
-        name_key = self.bundle_parent.name.split.join('-')
-        @cache_key = "#{study_name}.*render_cluster.*#{name_key}"
+        @cache_key = "#{study_name}.*render_cluster"
       when 'Expression Matrix'
         @cache_key = "#{study_name}.*expression"
       when 'MM Coordinate Matrix'
@@ -675,8 +699,7 @@ class StudyFile
       when /10X.*File/
         @cache_key = "#{study_name}.*expression"
       when 'Gene List'
-        name_key = self.precomputed_scores.first.name.split.join('-')
-        @cache_key = "#{study_name}.*#{name_key}"
+        @cache_key = "#{study_name}.*precomputed_gene_expression"
       when 'Metadata'
         # when reparsing metadata, almost all caches now become invalid so we just clear all matching the study
         @cache_key =  "#{study_name}"
@@ -723,6 +746,75 @@ class StudyFile
   #
   ##
 
+  # get the name of form partial for the wizard uploader by file type
+  def wizard_partial_name
+    case self.file_type
+    when 'Cluster'
+      'initialize_ordinations_form'
+    when 'Coordinate Labels'
+      'initialize_labels_form'
+    when 'Expression Matrix'
+      'initialize_expression_form'
+    when 'MM Coordinate Matrix'
+      'initialize_expression_form'
+    when '10X Genes File'
+      'initialize_expression_form'
+    when '10X Barcodes File'
+      'initialize_expression_form'
+    when 'Expression Matrix'
+      'initialize_expression_form'
+    when 'Metadata'
+      'initialize_metadata_form'
+    when 'Fastq'
+      'initialize_primary_data_form'
+    when 'BAM'
+      'initialize_primary_data_form'
+    when 'BAM Index'
+      'initialize_primary_data_form'
+    when 'Gene List'
+      'initialize_marker_genes_form'
+    else
+      'initialize_misc_form'
+    end
+  end
+
+  # get the ID of form for the wizard uploader by file type
+  def wizard_form_id
+    case self.file_type
+    when 'Cluster'
+      "ordinations_form_#{self.id}"
+    when 'Coordinate Labels'
+      "labels_form_#{self.id}"
+    when 'Expression Matrix'
+      "expression_form_#{self.id}"
+    when 'MM Coordinate Matrix'
+      "expression_form_#{self.id}"
+    when '10X Genes File'
+      "bundled_file_form_#{self.id}"
+    when '10X Barcodes File'
+      "bundled_file_form_#{self.id}"
+    when 'Expression Matrix'
+      "misc_form_#{self.id}"
+    when 'Metadata'
+      "metadata_form"
+    when 'Fastq'
+      "primary_data_form_#{self.id}"
+    when 'BAM'
+      "primary_data_form_#{self.id}"
+    when 'BAM Index'
+      "bundled_file_form_#{self.id}"
+    when 'Gene List'
+      "marker_genes_form_#{self.id}"
+    else
+      "misc_form_#{self.id}"
+    end
+  end
+
+  # DOM ID of the parent div holding the form for this file, used in upload wizard and sync page
+  def form_container_id
+    "container-#{self.id}"
+  end
+
   def generate_expression_matrix_cells
     begin
       study = self.study
@@ -744,7 +836,9 @@ class StudyFile
           puts msg
           Rails.logger.info msg
           file_location = File.join(study.data_store_path, self.download_location)
-          Study.firecloud_client.execute_gcloud_method(:download_workspace_file, study.firecloud_project, study.firecloud_workspace, self.bucket_location, download_location, verify: :none)
+          Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, study.firecloud_project,
+                                                       study.firecloud_workspace, self.bucket_location, download_location,
+                                                       verify: :none)
           content_type = self.determine_content_type
           shift_headers = true
           if content_type == 'application/gzip'
@@ -872,13 +966,6 @@ class StudyFile
   def check_assembly
     if GenomeAssembly.present? && ASSEMBLY_REQUIRED_TYPES.include?(self.file_type) && self.genome_assembly_id.nil?
       errors.add(:genome_assembly_id, 'You must supply a genome assembly for this file type: ' + self.file_type)
-    end
-  end
-
-  # if this file is part of a bundle, delete that bundle before removing this file
-  def remove_bundle_associations
-    if self.study_file_bundle.present?
-      self.study_file_bundle.destroy # destroying bundle removes all references to the bundle in all included files
     end
   end
 end
