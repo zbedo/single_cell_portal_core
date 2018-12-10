@@ -105,9 +105,9 @@ window.fetch = function () {
 // Use colors like inferCNV; see
 // https://github.com/broadinstitute/inferCNV/wiki#demo-example-figure
 var heatmapThresholds = [
-  [-100, '#00B'], // If -100 < expression value, use blue (loss)
-  [300, '#CCC'], // If -100 >= value 0 > 300 , use grey
-  ['+', '#F00'] // If value >= 300, use red (gain)
+  [-0.1, '#00B'], // If -0.001 < expression value, use blue (loss)
+  [0.3, '#CCC'], // If -0.001 >= value 0 > 0.003, use grey
+  ['+', '#F00'] // If value >= 0.003, use red (gain)
 ];
 
 var legend = [{
@@ -177,20 +177,13 @@ function defineHeatmaps() {
     annotationTracks.push({id: labels[i], shape: ideoAnnotShape});
   }
 
-  rawAnnots.annots.forEach((rawAnnotContainer, i) => {
-    rawAnnotContainer.annots.forEach((annot, j) => {
-      var newValues = [];
-      annot.forEach((value, k) => {
-        // console.log(value)
-        if (k > 2) {
-          value *= 1000; // workaround for parseInt in heatmap thresholding
-          // console.log(value)
-        }
-        newValues.push(value);
-      })
-      ideogram.rawAnnots.annots[i].annots[j] = newValues;
-    })
-  });
+  console.log(ideogram.rawAnnots.annots[0].annots[0]);
+  // var numExpressionTracks = ideogram.rawAnnots.annots[0].annots[0].length - 3;
+  // var numTracks = (numExpressionTracks > 3) 
+
+  // ideogram.config.annotationsNumTracks = 
+  // annotationsNumTracks: 3,
+  // annotationsDisplayedTracks: [1, 2],
 
   ideogram.config.heatmaps = heatmaps;
   ideogram.config.annotationTracks = annotationTracks;
@@ -266,14 +259,14 @@ function initializeIdeogram(url) {
     organism: ideogramInferCnvSettings.organism.toLowerCase(),
     assembly: ideogramInferCnvSettings.assembly,
     chrHeight: 400,
-    dataDir: 'https://unpkg.com/ideogram@1.4.0/dist/data/bands/native/',
+    dataDir: 'https://unpkg.com/ideogram@1.4.1/dist/data/bands/native/',
     annotationsPath: url,
     annotationsLayout: 'heatmap',
-    annotationsNumTracks: 3,
-    annotationsDisplayedTracks: [1, 2],
     legend: legend,
     onLoadAnnots: defineHeatmaps,
     onDrawAnnots: createTrackFilters,
+    annotationsNumTracks: 3,
+    annotationsDisplayedTracks: [1, 2],
     debug: true,
     rotatable: false
   });
