@@ -143,8 +143,9 @@ function createTrackFilters() {
   if (document.querySelector('#filter_1')) return;
   listItems = '';
   trackLabels = ideogram.rawAnnots.keys.slice(6,);
+  displayedTracks = ideogram.config.annotationsDisplayedTracks;
   for (i = 0; i < trackLabels.length; i++) {
-    checked = ([0, 1].includes(i)) ? 'checked' : '';
+    checked = (displayedTracks.includes(i + 1)) ? 'checked' : '';
     listItems +=
       '<li>' +
         '<label for="filter_' + (i + 1) + '">' +
@@ -164,27 +165,25 @@ function createTrackFilters() {
 }
 
 function defineHeatmaps() {
-  var i, labels, heatmaps, annotationTracks, rawAnnots, chrs;
+  var i, labels, heatmaps, annotationTracks, rawAnnots, numTracks, displayedTracks;
 
   heatmaps = [];
   rawAnnots = ideogram.rawAnnots;
   labels = rawAnnots.keys.slice(3,);
 
   annotationTracks = [];
+  displayedTracks = []
+
+  numTracks = (labels.length > 2) ? 3 : labels.length;
 
   for (i = 0; i < labels.length; i++) {
     heatmaps.push({key: labels[i], thresholds: heatmapThresholds});
     annotationTracks.push({id: labels[i], shape: ideoAnnotShape});
+    if (i < numTracks) displayedTracks.push(i + 1)
   }
 
-  console.log(ideogram.rawAnnots.annots[0].annots[0]);
-  // var numExpressionTracks = ideogram.rawAnnots.annots[0].annots[0].length - 3;
-  // var numTracks = (numExpressionTracks > 3) 
-
-  // ideogram.config.annotationsNumTracks = 
-  // annotationsNumTracks: 3,
-  // annotationsDisplayedTracks: [1, 2],
-
+  ideogram.config.annotationsNumTracks = numTracks;
+  ideogram.config.annotationsDisplayedTracks = displayedTracks;
   ideogram.config.heatmaps = heatmaps;
   ideogram.config.annotationTracks = annotationTracks;
 }
@@ -263,10 +262,9 @@ function initializeIdeogram(url) {
     annotationsPath: url,
     annotationsLayout: 'heatmap',
     legend: legend,
+    annotationsNumTracks: 3,
     onLoadAnnots: defineHeatmaps,
     onDrawAnnots: createTrackFilters,
-    annotationsNumTracks: 3,
-    annotationsDisplayedTracks: [1, 2],
     debug: true,
     rotatable: false
   });
