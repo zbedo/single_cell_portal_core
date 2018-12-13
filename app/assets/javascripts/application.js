@@ -252,8 +252,7 @@ function paginateStudies(totalPages, order, searchString, project) {
                 type: "GET",
                 success: function(data){
                     spinner.stop();
-                    $(".glyphicon").tooltip();
-                    if ( dataParams["page"] != totalPages ) {
+                    if ( dataParams["page"] < totalPages ) {
                         $("#pagination").fadeIn("fast");
                         $(window).bind('scroll', bindScroll);
                     }
