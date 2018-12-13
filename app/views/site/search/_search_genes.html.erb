@@ -41,7 +41,7 @@
             $("#gene-search-results").empty();
             $('#gene-search-results-count').html($('div.gene-panel').length);
             $('#gene-search-studies-count').html($('div.has-gene-results').length);
-            var target = document.getElementById('gene-search-results');
+            var target = document.getElementById('wrap');
             var spinner = new Spinner(opts).spin(target);
             $(target).data('spinner', spinner);
             var requestUrl = '<%= javascript_safe_url("/single_cell/search_all_genes") %>';
