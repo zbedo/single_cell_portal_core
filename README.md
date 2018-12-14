@@ -116,11 +116,11 @@ will need to create a FireCloud project that will own all the workspaces created
 Once the image has successfully built, all registration/configuration steps have been completed, use the following command 
 to start the container:
 
-    bin/boot_docker -u (sendgrid username) -P (sendgrid password) -k (service account key path) -K (read-only service account key path) -o (oauth client id) -S (oauth client secret)
+    bin/boot_docker -u (sendgrid username) -P (sendgrid password) -k (service account key path) -K (read-only service account key path) -o (oauth client id) -S (oauth client secret) -y (Sentry DSN)
 
 This sets up several environment variables in your shell and then runs the following command:
 
-    docker run --rm -it --name $CONTAINER_NAME -p 80:80 -p 443:443 -p 587:587 --link mongodb:mongodb -h localhost -v $PROJECT_DIR:/home/app/webapp:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e SENDGRID_USERNAME=$SENDGRID_USERNAME -e SENDGRID_PASSWORD=$SENDGRID_PASSWORD -e SECRET_KEY_BASE=$SECRET_KEY_BASE -e SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY -e OAUTH_CLIENT_ID=$OAUTH_CLIENT_ID -e OAUTH_CLIENT_SECRET=$OAUTH_CLIENT_SECRET single_cell_docker
+    docker run --rm -it --name $CONTAINER_NAME -p 80:80 -p 443:443 -p 587:587 --link mongodb:mongodb -h localhost -v $PROJECT_DIR:/home/app/webapp:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e SENDGRID_USERNAME=$SENDGRID_USERNAME -e SENDGRID_PASSWORD=$SENDGRID_PASSWORD -e SECRET_KEY_BASE=$SECRET_KEY_BASE -e SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY -e OAUTH_CLIENT_ID=$OAUTH_CLIENT_ID -e OAUTH_CLIENT_SECRET=$OAUTH_CLIENT_SECRET -e SENTRY_DSN=$SENTRY_DSN single_cell_docker
 
 The container will then start running, and will execute its local startup scripts that will configure the application automatically.
 
@@ -141,7 +141,6 @@ This script takes four parameters:
 1.  **SERVICE_ACCOUNT_PATH** (passed with -c): Path to GCP main service account configuration JSON inside Vault.
 1.  **READ_ONLY_SERVICE_ACCOUNT_PATH** (passed with -c): Path to GCP read-only service account configuration JSON inside Vault.
 1.  **PASSENGER_APP_ENV** (passed with -e; optional): Environment to boot portal in.  Defaults to 'development'.
-
 
 The script requires two command line utilities: [vault](https://www.vaultproject.io) and [jq](https://stedolan.github.io/jq/). 
 Please refer to their respective sites for installation instructions.
@@ -166,7 +165,11 @@ API calls to FireCloud & GCP.
 for making authenticated API calls to GCP for streaming assets to the browser.
 1. **OAUTH_CLIENT_ID** (passed with -e): Sets the OAUTH_CLIENT_ID environment variable, used for Google OAuth2 integration.
 1. **OAUTH_CLIENT_SECRET** (passed with -e): Sets the OAUTH_CLIENT_SECRET environment variable, used for Google OAuth2 
+1. **SENTRY_DSN** (passed with -e): Sets the SENTRY_DSN environment variable, for error reporting to [Sentry](https://sentry.io/)
 integration.
+1. **PROD_DATABASE_PASSWORD** (passed with -e, for production deployments only): Sets the prod database password for accessing
+the production database instance.  Only needed when deploying the portal in production mode.  See <code>config/mongoid.yml</code>
+for more configuration information regarding the production database.
 
 
 ### RUN COMMAND IN DETAIL
@@ -203,6 +206,7 @@ to the JSON read-only service account key file you exported from GCP.
 * **-e OAUTH_CLIENT_ID=[OAUTH_CLIENT_ID] -e OAUTH_CLIENT_SECRET=[OAUTH_CLIENT_SECRET]:** Setting the OAUTH_CLIENT_ID and
 OAUTH_CLIENT_SECRET variables are necessary for allowing Google user authentication.  For instructions on creating OAuth 
 2.0 Client IDs, refer to the [Google OAuth 2.0 documentation](https://support.google.com/cloud/answer/6158849).
+* **-e SENTRY_DSN=[SENTRY_DSN]:** Sets the SENTRY_DSN environment variable for error reporting to [Sentry](https://sentry.io/)
 * **single_cell_docker**: This is the name of the image we created earlier. If you chose a different name, please use 
 that here.
 
@@ -348,7 +352,7 @@ To access the production instance for maintenance purposes:
 * Launch a new instance of the portal with the updated container:
 
 
-    bin/boot_docker -u (sendgrid username) -P (sendgrid password) -e production -p (prod database password) -h (production hostname) -k (service account key path) -K (read-only service account key path) -o (oauth client id) -S (oauth client secret)`
+    bin/boot_docker -u (sendgrid username) -P (sendgrid password) -e production -p (prod database password) -h (production hostname) -k (service account key path) -K (read-only service account key path) -o (oauth client id) -S (oauth client secret) -y (Sentry DSN)`
 
 * View Docker logs: `docker logs -f single_cell`
 * Once Nginx is running again (i.e. you see "Passenger core online" in Docker logs), take off maintanence mode via `bin/enable_maintenance.sh off`
