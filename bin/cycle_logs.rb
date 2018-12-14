@@ -32,4 +32,13 @@ all_logs.select {|l| l.split('.')[1] == 'log'}.each do |log|
   end
 end
 
+# blow away any nginx access & error logs
+if Dir.exists?('log/nginx')
+  Dir.chdir('log/nginx')
+  nginx_logs = Dir.entries(".").keep_if {|l| !l.start_with?('.')}
+  nginx_logs.each do |log|
+    File.delete log
+  end
+end
+
 

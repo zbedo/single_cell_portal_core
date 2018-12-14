@@ -1,0 +1,11 @@
+filebeat.prospectors:
+- type: log
+  enabled: true
+  paths:
+  - /var/log/rails/nginx/*.log
+  fields:
+    type: nginx-access
+    app_id: single-cell-portal
+  fields_under_root: true
+  encoding: utf-8
+  exclude_files: [".gz"]
