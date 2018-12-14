@@ -11,11 +11,6 @@
         <div id="study-<%= study.url_safe_name %>-gene-<%= gene.name.gsub(/\W/, '-') %>-options" class="top-pad"></div>
       </div>
     </div>
-    <div class="row">
-      <div class="col-xs-12">
-        <p class="text-center"><%= scp_link_to "Explore Study <i class='fas fa-fw fa-eye'></i>".html_safe, view_study_path(study_name: study.url_safe_name) + "#study-visualize", class: 'btn btn-lg btn-success' %></p>
-      </div>
-    </div>
   </div>
 </div>
 

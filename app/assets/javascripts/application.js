@@ -252,8 +252,7 @@ function paginateStudies(totalPages, order, searchString, project) {
                 type: "GET",
                 success: function(data){
                     spinner.stop();
-                    $(".glyphicon").tooltip();
-                    if ( dataParams["page"] != totalPages ) {
+                    if ( dataParams["page"] < totalPages ) {
                         $("#pagination").fadeIn("fast");
                         $(window).bind('scroll', bindScroll);
                     }
@@ -960,6 +959,6 @@ function calculatePlotViewport(target) {
 // garbage collector to clear the search animation on global gene search (in case no results are found)
 window.clearGeneSearchLoading = function() {
     console.log('Clearing global gene search message');
-    $('#gene-search-results').data('spinner').stop();
+    $('#wrap').data('spinner').stop();
     $('#gene-search-results-count').html($('.gene-panel').length);
 };
