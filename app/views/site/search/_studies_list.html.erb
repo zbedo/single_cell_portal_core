@@ -1,18 +1,16 @@
 <% @studies.each do |study| %>
-  <div class="panel panel-primary study-panel" data-page="<%= params[:page].nil? ? 1 : params[:page] %>">
+  <% study_description = strip_tags(study.description).truncate_words(100, omission: '... (continued)') %>
+  <div class="panel panel-default study-panel" data-page="<%= params[:page].nil? ? 1 : params[:page] %>">
     <div class="panel-heading">
       <div class="panel-title">
-        <h4><%= link_to "#{study.name} <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, "#study-#{study.url_safe_name}", "data-toggle" => "collapse", 'data-parent' => '#search-studies', style: 'color: white;'  %></h4>
+        <h4><%= link_to study.name, view_study_path(study_name: study.url_safe_name), title: 'View Study', data: {toggle: 'tooltip'} %>&nbsp;<%= link_to "<span class='fas fa-chevron-#{study_description.present? ? 'down' : 'right'} toggle-glyph'></span>".html_safe, "#study-#{study.url_safe_name}", data: {toggle: 'collapse', parent: '#search-studies'} %></h4>
       </div>
     </div>
-    <div id="study-<%= study.url_safe_name %>" class="panel-collapse collapse in">
+    <div id="study-<%= study.url_safe_name %>" class="panel-collapse collapse <%= study_description.present? ? 'in' : nil %>">
       <div class="panel-body">
         <div class="row">
-          <div class="col-sm-2">
-            <%= scp_link_to "View Study".html_safe, view_study_path(study_name: study.url_safe_name), class: 'btn btn-success btn-lg btn-block view-study-page' %>
-          </div>
-          <div class="col-sm-9">
-            <%= strip_tags(study.description).truncate_words(100, omission: '... (continued)') %>
+          <div class="col-sm-12">
+            <%= study_description %>
           </div>
         </div>
       </div>
