@@ -912,13 +912,18 @@ class Study
   end
 
   # check if a study has analysis output files for a given analysis
-  def has_analysis_outputs?(analysis_name, visualization_name=nil)
-    self.get_analysis_outputs(analysis_name, visualization_name).any?
+  def has_analysis_outputs?(analysis_name, visualization_name=nil, cluster_name=nil, annotation_name=nil)
+    self.get_analysis_outputs(analysis_name, visualization_name, cluster_name, annotation_name).any?
   end
 
   # return all study files for a given analysis & visualization component
-  def get_analysis_outputs(analysis_name, visualization_name=nil)
-    self.study_files.where('options.analysis_name' => analysis_name, 'options.visualization_name' => visualization_name)
+  def get_analysis_outputs(analysis_name, visualization_name=nil, cluster_name=nil, annotation_name=nil)
+    self.study_files.where(
+      'options.analysis_name' => analysis_name,
+      'options.visualization_name' => visualization_name,
+      'options.cluster_name' => cluster_name,
+      'options.annotation_name' => annotation_name
+      );
   end
 
   # Return settings for this study's inferCNV ideogram visualization

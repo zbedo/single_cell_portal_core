@@ -41,7 +41,6 @@ class SiteController < ApplicationController
   caches_action :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :render_global_gene_expression_plots,
                 :expression_query, :annotation_query, :precomputed_results,
                 cache_path: :set_cache_path
-
   COLORSCALE_THEMES = %w(Greys YlGnBu Greens YlOrRd Bluered RdBu Reds Blues Picnic Rainbow Portland Jet Hot Blackbody Earth Electric Viridis Cividis)
 
   ###
@@ -305,13 +304,6 @@ class SiteController < ApplicationController
       @cluster_annotations = load_cluster_group_annotations
       # call set_selected_annotation manually
       set_selected_annotation
-
-      # load data for visualization, if present
-      @analysis_outputs = {}
-      if @study.has_analysis_outputs?('infercnv', 'ideogram.js')
-        ideogram_annotations = @study.get_analysis_outputs('infercnv', 'ideogram.js').first
-        @analysis_outputs['ideogram.js'] = ideogram_annotations.bucket_location
-      end
     end
 
     # if user has permission to run workflows, load available workflows and current submissions
@@ -356,6 +348,16 @@ class SiteController < ApplicationController
       end
     end
     @axes = load_axis_labels
+
+    cluster_name = @cluster[:name]
+    annot_name = params[:annotation]
+
+    # load data for visualization, if present
+    @analysis_outputs = {}
+    if @selected_annotation[:type] == 'group' && @study.has_analysis_outputs?('infercnv', 'ideogram.js', cluster_name, annot_name)
+      ideogram_annotations = @study.get_analysis_outputs('infercnv', 'ideogram.js', cluster_name, annot_name).first
+      @analysis_outputs['ideogram.js'] = ideogram_annotations.api_url
+    end
 
     # load default color profile if necessary
     if params[:annotation] == @study.default_annotation && @study.default_annotation_type == 'numeric' && !@study.default_color_profile.nil?
