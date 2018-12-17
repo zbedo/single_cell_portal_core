@@ -191,35 +191,7 @@ class Test::Unit::TestCase
     # fill out login form
     complete_login_process(email, password)
     # wait for redirect to finish by checking for footer element
-    @not_loaded = true
-    while @not_loaded == true
-      begin
-        # we need to return the result of the script to store its value
-        loaded = @driver.execute_script("return elementVisible('.footer')")
-        if loaded == true
-          @not_loaded = false
-        end
-        sleep(1)
-      rescue Selenium::WebDriver::Error::UnknownError
-        # check to make sure if we need to accept terms first to complete login
-        if @driver.current_url.include?('https://accounts.google.com/signin/oauth/consent')
-          $verbose ? puts('approving access') : nil
-          approve = @driver.find_element(:id, 'submit_approve_access')
-          @clickable = approve['disabled'].nil?
-          while @clickable != true
-            sleep(1)
-            @clickable = @driver.find_element(:id, 'submit_approve_access')['disabled'].nil?
-          end
-          approve.click
-          $verbose ? puts('access approved') : nil
-        end
-        sleep(1)
-      end
-    end
-    @wait.until {@driver.execute_script("return PAGE_RENDERED;")}
-    if element_present?(:id, 'message_modal') && element_visible?(:id, 'message_modal')
-      close_modal('message_modal')
-    end
+    handle_oauth_redirect(email)
     $verbose ? puts('login successful') : nil
   end
 
@@ -238,34 +210,7 @@ class Test::Unit::TestCase
     # fill out login form
     complete_login_process(email, password)
     # wait for redirect to finish by checking for footer element
-    @not_loaded = true
-    while @not_loaded == true
-      begin
-        # we need to return the result of the script to store its value
-        loaded = @driver.execute_script("return elementVisible('.footer')")
-        if loaded == true
-          @not_loaded = false
-        end
-        sleep(1)
-      rescue Selenium::WebDriver::Error::UnknownError
-        # check to make sure if we need to accept terms first to complete login
-        if @driver.current_url.include?('https://accounts.google.com/signin/oauth/consent')
-          $verbose ? puts('approving access') : nil
-          approve = @driver.find_element(:id, 'submit_approve_access')
-          @clickable = approve['disabled'].nil?
-          while @clickable != true
-            sleep(1)
-            @clickable = @driver.find_element(:id, 'submit_approve_access')['disabled'].nil?
-          end
-          approve.click
-          $verbose ? puts('access approved') : nil
-        end
-        sleep(1)
-      end
-    end
-    if element_present?(:id, 'message_modal') && element_visible?(:id, 'message_modal')
-      close_modal('message_modal')
-    end
+    handle_oauth_redirect(email)
     $verbose ? puts('login successful') : nil
   end
 
@@ -375,6 +320,43 @@ class Test::Unit::TestCase
   end
 
   private
+
+  def handle_oauth_redirect(email)
+    @not_loaded = true
+    @timeout_counter = 0
+    while @not_loaded == true && @timeout_counter < 30
+      begin
+        if @timeout_counter >= 30 # break out of while loop; if we haven't authenticated in 30s, it won't happen...
+          raise Selenium::WebDriver::Error::TimeOutError, "Timing out logging in, check #{email} for authentication challenges"
+        end
+        # we need to return the result of the script to store its value
+        loaded = @driver.execute_script("return elementVisible('#scp-footer')")
+        if loaded == true
+          @not_loaded = false
+        end
+        @timeout_counter += 1
+        sleep(1)
+      rescue Selenium::WebDriver::Error::UnknownError
+        # check to make sure if we need to accept terms first to complete login
+        if @driver.current_url.include?('https://accounts.google.com/signin/oauth/consent')
+          $verbose ? puts('approving access') : nil
+          approve = @driver.find_element(:id, 'submit_approve_access')
+          @clickable = approve['disabled'].nil?
+          while @clickable != true
+            sleep(1)
+            @clickable = @driver.find_element(:id, 'submit_approve_access')['disabled'].nil?
+          end
+          approve.click
+          $verbose ? puts('access approved') : nil
+        end
+        sleep(1)
+      end
+    end
+    @wait.until {@driver.execute_script("return PAGE_RENDERED;")}
+    if element_present?(:id, 'message_modal') && element_visible?(:id, 'message_modal')
+      close_modal('message_modal')
+    end
+  end
 
   def complete_login_process(email, password)
     if !element_visible?(:id, 'identifierId')
