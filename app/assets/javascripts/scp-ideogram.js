@@ -210,48 +210,32 @@ function getIdeogramAnnotationPaths() {
   return paths;
 }
 
-function warnOfNumericCluster() {
+function warnIdeogramOfNumericCluster() {
   var cluster, cellAnnot, warning;
 
   cluster = $('#cluster option:selected').val();
   cellAnnot = $('#annotation option:selected').val();
 
   warning =
-    '<div style="height: 400px; margin-left: 20px;">' +
+    '<div id="ideogramWarning" style="height: 400px; margin-left: 20px;">' +
       'Ideogram not available, as selected cluster ("' + cluster + '") and ' +
       'cell annotation ("' + cellAnnot + '") are numeric.' +
     '</div>';
 
-  document.querySelector('#_ideogramOuterWrap').innerHTML = warning;
+    $('#tracks-to-display').html('');
+    $('#_ideogramOuterWrap').html('');
+    $('#ideogram-container').append(warning);
 }
-
-$(document).on('change', '#cluster, #annotation', function(el) {
-  var cluster, cellAnnot, path;
-
-  delete window.ideogram;
-  document.querySelector('#tracks-to-display').innerHTML = '';
-  document.querySelector('#_ideogramOuterWrap').innerHTML = '';
-
-  cluster = $('#cluster option:selected').attr('value');
-  cellAnnot = $('#annotation option:selected').attr('value');
-  path = ideoAnnotPathStem + cluster + '--' + cellAnnot + '.json'
-
-  if (path.indexOf('--numeric--') !== -1) {
-    warnOfNumericCluster();
-  } else {
-    initializeIdeogram(path);
-  }
-});
 
 function initializeIdeogram(url) {
 
-  if (typeof url === 'undefined') {
-    url = getIdeogramAnnotationPaths()[0];
+  if (typeof window.ideogram !== 'undefined') {
+    delete window.ideogram;
+    $('#tracks-to-display').html('');
+    $('#_ideogramOuterWrap').html('');
   }
 
-  // // Temporary measure for Jean's scientific validation of inferCNV-Ideogram
-  // ideoAnnotPathStem = '/single_cell/example_data/ideogram_exp_means/jean_tmp/ideogram_exp_means__';
-  // url = ideoAnnotPathStem + 'default--Cluster--group--study_2.json'
+  $('#ideogramWarning').remove();
 
   window.ideogram = new Ideogram({
     container: '#ideogram-container',

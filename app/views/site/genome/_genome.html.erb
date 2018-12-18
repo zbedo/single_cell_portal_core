@@ -13,7 +13,6 @@ See partials referenced below and scp-igv.js for larger bodies of code.
   <%= render partial: '/site/genome/ideogram' %>
   <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
     window.ideogramInferCnvSettings = <%= raw @study.get_ideogram_infercnv_settings.to_json %>;
-    initializeIdeogram();
   </script>
 <% end %>
 
