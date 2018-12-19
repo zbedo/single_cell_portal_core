@@ -1,4 +1,5 @@
 language: ruby
+cache: bundler
 branches:
   only:
   - jb-travis-ci
@@ -9,9 +10,8 @@ before_install:
 - sudo curl -O https://releases.hashicorp.com/vault/1.0.1/vault_1.0.1_linux_amd64.zip
 - sudo unzip vault_1.0.1_linux_amd64.zip
 - sudo mv vault /usr/local/bin
-- vault login $VAULT_TOKEN
 - docker pull mongo:3.4
 - docker tag mongo:3.4 mongo:latest
 - docker build -t single_cell_docker .
 script:
-- vault list $VAULT_SECRET_PATH
+- bin/load_env_secrets.sh -p secret/kdux/scp/development/scp_config.json -s secret/kdux/scp/development/scp_service_account.json -e test
