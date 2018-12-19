@@ -24,7 +24,7 @@ require File.expand_path('ui_test_helper.rb', 'test')
 #
 # ruby test/ui_test_suite.rb [-n /pattern/] [--ignore-name /pattern/] -- -c=/path/to/chromedriver -e=testing.email@gmail.com -p='testing_email_password' -s=sharing.email@gmail.com -P='sharing_email_password' -o=order -d=/path/to/downloads -u=portal_url -E=environment -r=random_seed -v
 #
-# ui_test_suite.rb takes up to 13 arguments (4 are required):
+# ui_test_suite.rb takes up to 14 arguments (4 are required):
 # 1. path to your Chromedriver binary (passed with -c=)
 # 2. path to your Chrome profile (passed with -C=): tests may fail to log in properly if you do not load the default chrome profile due to Google captchas
 # 3. test email account (passed with -e=); REQUIRED. this must be a valid Google & FireCloud user and also configured as an 'admin' account in the portal
@@ -35,9 +35,10 @@ require File.expand_path('ui_test_helper.rb', 'test')
 # 8. download directory (passed with -d=); place where files are downloaded on your OS, defaults to standard OSX location (/Users/`whoami`/Downloads)
 # 9. portal url (passed with -u=); url to point tests at, defaults to https://localhost/single_cell
 # 10. environment (passed with -E=); Rails environment that the target instance is running in.  Needed for constructing certain URLs
-# 11. random seed (passed with -r=); random seed to use when running tests (will be needed if you're running front end tests against previously created studies from test suite)
-# 12. verbose (passed with -v); run tests in verbose mode, will print extra logging messages where appropriate
-# 13. interactive mode (passed with -i); run tests in interactive mode, which will open a chrome instance on your machine.  Default is to run headlessly via chromedriver
+# 11. proxy (passed with -x=); option setting to set up a proxy for all Chromedriver traffic, no default
+# 12. random seed (passed with -r=); random seed to use when running tests (will be needed if you're running front end tests against previously created studies from test suite)
+# 13. verbose (passed with -v); run tests in verbose mode, will print extra logging messages where appropriate
+# 14. interactive mode (passed with -i); run tests in interactive mode, which will open a chrome instance on your machine.  Default is to run headlessly via chromedriver
 #
 # IMPORTANT: if you do not use -- before the argument list and give the appropriate flag (with =), it is processed as a Test::Unit flag and ignored, and likely may
 # cause the suite to fail to launch.
@@ -72,6 +73,7 @@ puts "Sharing email: #{$share_email}"
 puts "Download directory: #{$download_dir}"
 puts "Portal URL: #{$portal_url}"
 puts "Environment: #{$env}"
+puts "Webdriver Proxy: #{$webdriver_proxy}"
 puts "Random Seed: #{$random_seed}"
 puts "Headless: #{$headless}"
 puts "Verbose: #{$verbose}"
@@ -98,6 +100,9 @@ class UiTestSuite < Test::Unit::TestCase
   def setup
     # disable the 'save your password' prompt
     caps = Selenium::WebDriver::Remote::Capabilities.chrome("chromeOptions" => {'prefs' => {'credentials_enable_service' => false}})
+    if !$webdriver_proxy.nil?
+      caps.proxy = Selenium::WebDriver::Proxy.new(http: $webdriver_proxy, ssl: $webdriver_proxy)
+    end
     options = Selenium::WebDriver::Chrome::Options.new
     options.add_argument('--enable-webgl-draft-extensions')
     options.add_argument('--incognito')

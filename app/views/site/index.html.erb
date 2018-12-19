@@ -1,18 +1,24 @@
 <%= render partial: 'main_banner_content' %>
-<ul class="nav nav-tabs" role="tablist" id="home-page-tabs">
-  <li role="presentation" class="home-nav active" id="search-studies-nav">
-    <a href="#search-studies" class="home-nav-tab" data-toggle="tab"><span class="fas fa-book"></span> Search Studies</a>
-  </li>
-  <li role="presentation" class="home-nav" id="search-genes-nav">
-    <a href="#search-genes" class="home-nav-tab" data-toggle="tab"><span class="fas fa-dna"></span> Search Genes</a>
-  </li>
-</ul>
-<div class="tab-content top-pad">
-  <div class="tab-pane active in" id="search-studies" role="tabpanel">
-    <%= render partial: '/site/search/search_studies' %>
-</div>
-  <div class="tab-pane" id="search-genes" role="tabpanel">
-    <%= render partial: '/site/search/search_genes' %>
+<div class="container-fluid home-page-fix" id="wrap">
+  <div class="row section-pad" id="main-body">
+    <div class="col-md-12">
+      <ul class="nav nav-tabs sc-tabs" role="tablist" id="home-page-tabs">
+        <li role="presentation" class="home-nav active" id="search-studies-nav">
+          <a href="#search-studies" class="home-nav-tab" data-toggle="tab">Search Studies <span class="fas fa-book"></span></a>
+        </li>
+        <li role="presentation" class="home-nav" id="search-genes-nav">
+          <a href="#search-genes" class="home-nav-tab" data-toggle="tab">Search Genes <span class="fas fa-dna"></span></a>
+        </li>
+      </ul>
+      <div class="tab-content top-pad">
+        <div class="tab-pane active in" id="search-studies" role="tabpanel">
+          <%= render partial: '/site/search/search_studies' %>
+      </div>
+        <div class="tab-pane" id="search-genes" role="tabpanel">
+          <%= render partial: '/site/search/search_genes' %>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -60,26 +66,11 @@
         $('#search_terms').val($('<div/>').html(search).text());
     }
 
-    $('#submit-gene-search').on('click', function() {
-        if ( $('#search_genes').val() === '' ) {
-            alert('Please enter a term before searching.');
-            return false;
-        } else {
-            $(window).unbind('scroll');
-            $("#gene-search-results").empty();
-            $('#gene-search-results-count').html($('div.gene-panel').length);
-            $('#gene-search-studies-count').html($('div.has-gene-results').length);
-            var target = document.getElementById('gene-search-results');
-            var spinner = new Spinner(opts).spin(target);
-            $(target).data('spinner', spinner);
-            var requestUrl = '<%= javascript_safe_url("/single_cell/search_all_genes") %>';
-            var genes = $('#search_genes').val().split(' ');
-            var numGenes = genes.length;
-            requestUrl += '?genes=' + genes.join('+') + '&num_genes=' + numGenes;
-            gaTrack(requestUrl, 'Single Cell Portal | Global Gene Search');
-            $(window).scroll(bindScroll);
-            return true;
-        }
+    $(document).ready(function() {
+        var main = $('.home-page-fix');
+        var height = main.actual('height');
+        main.css('min-height', height - 245);
+
     });
 
 </script>
