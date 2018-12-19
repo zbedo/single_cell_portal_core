@@ -26,6 +26,7 @@ def parse_test_arguments(arguments)
   $random_seed = SecureRandom.uuid
   $verbose = false
   $headless = true
+  $webdriver_proxy = nil
 
   # usage string for help message
   $usage = "ruby test/ui_test_suite.rb -- -c=/path/to/chromedriver -e=testing.email@gmail.com -p='testing_email_password' -s=sharing.email@gmail.com -P='sharing_email_password' -o=order -d=/path/to/downloads -u=portal_url -E=environment -r=random_seed -i (to disable headless)"
@@ -56,6 +57,8 @@ def parse_test_arguments(arguments)
       $verbose = true
     elsif arg == '-i'
       $headless = false
+    elsif arg =~ /\-x=/
+      $webdriver_proxy = arg.gsub(/\-x\=/, '')
     end
   end
 end
