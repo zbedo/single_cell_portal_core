@@ -107,7 +107,7 @@ fi
 
 # now load public read-only service account credentials
 if [[ -n $READ_ONLY_SERVICE_ACCOUNT_PATH ]] ; then
-	echo "setting value for READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON"
+	echo "setting value for: READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON"
 	READ_ONLY_CREDS_VALS=`vault read -format=json $READ_ONLY_SERVICE_ACCOUNT_PATH`
 	READ_ONLY_JSON_CONTENTS=`echo $READ_ONLY_CREDS_VALS | jq --raw-output .data`
 	export READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON=$(echo -n $READ_ONLY_JSON_CONTENTS)
