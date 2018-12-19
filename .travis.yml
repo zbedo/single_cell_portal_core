@@ -5,10 +5,10 @@ branches:
 services:
 - docker
 before_install:
-- apt-get update && apt-get -y install curl unzip jq
-- curl -O https://releases.hashicorp.com/vault/1.0.1/vault_1.0.1_linux_amd64.zip
-- unzip vault_1.0.1_linux_amd64.zip
-- mv vault /usr/local/bin
+- sudo apt-get update && apt-get -y install curl unzip jq
+- sudo curl -O https://releases.hashicorp.com/vault/1.0.1/vault_1.0.1_linux_amd64.zip
+- sudo unzip vault_1.0.1_linux_amd64.zip
+- sudo mv vault /usr/local/bin
 - vault login $VAULT_TOKEN
 - docker pull mongo:3.4
 - docker tag mongo:3.4 mongo:latest
