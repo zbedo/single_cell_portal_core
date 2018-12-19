@@ -224,6 +224,7 @@ function warnIdeogramOfNumericCluster() {
 
     $('#tracks-to-display').html('');
     $('#_ideogramOuterWrap').html('');
+    $('#ideogramWarning').remove();
     $('#ideogram-container').append(warning);
 }
 
