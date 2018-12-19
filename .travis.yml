@@ -5,7 +5,7 @@ branches:
 services:
 - docker
 before_install:
-- sudo apt-get update && apt-get -y install curl unzip jq
+- sudo apt-get update && sudo apt-get -y install curl unzip jq
 - sudo curl -O https://releases.hashicorp.com/vault/1.0.1/vault_1.0.1_linux_amd64.zip
 - sudo unzip vault_1.0.1_linux_amd64.zip
 - sudo mv vault /usr/local/bin
