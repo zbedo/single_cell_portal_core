@@ -13,6 +13,6 @@ before_install:
 - docker pull mongo:3.4
 - docker tag mongo:3.4 mongo:latest
 - docker build -t single_cell_docker .
-- docker run --name -p 27017:27017 mongodb mongo
+- docker run --name mongodb -p 27017:27017 mongo
 script:
 - bin/load_env_secrets.sh -p secret/kdux/scp/development/scp_config.json -s secret/kdux/scp/development/scp_service_account.json -e test
