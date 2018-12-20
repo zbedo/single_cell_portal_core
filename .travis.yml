@@ -2,7 +2,8 @@ language: ruby
 install: bundle install --jobs=3 --retry=3 --no-deployment
 branches:
   only:
-  - jb-travis-ci
+  - master
+  - development
 services:
 - docker
 before_install:
