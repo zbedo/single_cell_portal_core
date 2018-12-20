@@ -2155,7 +2155,7 @@ class UiTestSuite < Test::Unit::TestCase
 
     @driver.get(@base_url)
     assert element_present?(:id, 'main-banner'), 'could not find index page title text'
-    assert @driver.find_elements(:class, 'panel-primary').size >= 1, 'did not find any studies'
+    assert @driver.find_elements(:class, 'study-panel').size >= 1, 'did not find any studies'
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
 
