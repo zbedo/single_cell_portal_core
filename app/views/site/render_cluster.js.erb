@@ -61,3 +61,10 @@ var requestUrl = '<%= javascript_safe_url(request.fullpath) %>';
 gaTrack(requestUrl, 'Single Cell Portal');
 
 $(document).trigger('scpPlotsDidRender');
+
+<% if @analysis_outputs.key?('ideogram.js') %>
+var ideogramAnnotsUrl = '<%= javascript_safe_url(@analysis_outputs['ideogram.js']) %>';
+initializeIdeogram(ideogramAnnotsUrl);
+<% else %>
+warnIdeogramOfNumericCluster();
+<% end %>

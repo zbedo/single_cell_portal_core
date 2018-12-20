@@ -24,7 +24,7 @@ require File.expand_path('ui_test_helper.rb', 'test')
 #
 # ruby test/ui_test_suite.rb [-n /pattern/] [--ignore-name /pattern/] -- -c=/path/to/chromedriver -e=testing.email@gmail.com -p='testing_email_password' -s=sharing.email@gmail.com -P='sharing_email_password' -o=order -d=/path/to/downloads -u=portal_url -E=environment -r=random_seed -v
 #
-# ui_test_suite.rb takes up to 13 arguments (4 are required):
+# ui_test_suite.rb takes up to 14 arguments (4 are required):
 # 1. path to your Chromedriver binary (passed with -c=)
 # 2. path to your Chrome profile (passed with -C=): tests may fail to log in properly if you do not load the default chrome profile due to Google captchas
 # 3. test email account (passed with -e=); REQUIRED. this must be a valid Google & FireCloud user and also configured as an 'admin' account in the portal
@@ -35,9 +35,10 @@ require File.expand_path('ui_test_helper.rb', 'test')
 # 8. download directory (passed with -d=); place where files are downloaded on your OS, defaults to standard OSX location (/Users/`whoami`/Downloads)
 # 9. portal url (passed with -u=); url to point tests at, defaults to https://localhost/single_cell
 # 10. environment (passed with -E=); Rails environment that the target instance is running in.  Needed for constructing certain URLs
-# 11. random seed (passed with -r=); random seed to use when running tests (will be needed if you're running front end tests against previously created studies from test suite)
-# 12. verbose (passed with -v); run tests in verbose mode, will print extra logging messages where appropriate
-# 13. interactive mode (passed with -i); run tests in interactive mode, which will open a chrome instance on your machine.  Default is to run headlessly via chromedriver
+# 11. proxy (passed with -x=); option setting to set up a proxy for all Chromedriver traffic, no default
+# 12. random seed (passed with -r=); random seed to use when running tests (will be needed if you're running front end tests against previously created studies from test suite)
+# 13. verbose (passed with -v); run tests in verbose mode, will print extra logging messages where appropriate
+# 14. interactive mode (passed with -i); run tests in interactive mode, which will open a chrome instance on your machine.  Default is to run headlessly via chromedriver
 #
 # IMPORTANT: if you do not use -- before the argument list and give the appropriate flag (with =), it is processed as a Test::Unit flag and ignored, and likely may
 # cause the suite to fail to launch.
@@ -72,6 +73,7 @@ puts "Sharing email: #{$share_email}"
 puts "Download directory: #{$download_dir}"
 puts "Portal URL: #{$portal_url}"
 puts "Environment: #{$env}"
+puts "Webdriver Proxy: #{$webdriver_proxy}"
 puts "Random Seed: #{$random_seed}"
 puts "Headless: #{$headless}"
 puts "Verbose: #{$verbose}"
@@ -98,6 +100,9 @@ class UiTestSuite < Test::Unit::TestCase
   def setup
     # disable the 'save your password' prompt
     caps = Selenium::WebDriver::Remote::Capabilities.chrome("chromeOptions" => {'prefs' => {'credentials_enable_service' => false}})
+    if !$webdriver_proxy.nil?
+      caps.proxy = Selenium::WebDriver::Proxy.new(http: $webdriver_proxy, ssl: $webdriver_proxy)
+    end
     options = Selenium::WebDriver::Chrome::Options.new
     options.add_argument('--enable-webgl-draft-extensions')
     options.add_argument('--incognito')
@@ -4660,7 +4665,7 @@ class UiTestSuite < Test::Unit::TestCase
   end
 
   # Test loading data directly into web browser from Google Cloud Storage (GCS).
-  # This test depends on a workspace already existing in FireCloud called development-infercnv-sync-test
+  # This test depends on a workspace already existing in FireCloud called development-infercnv-q418-ui-test
   # if this study has been deleted, this test will fail until the workspace is re-created with at least
   # 3 default files for expression, metadata, one cluster, and a file for Ideogram.js annotations
   # Also requires an administrator to register a taxon of 'human' with at least one genome assembly
@@ -4678,7 +4683,7 @@ class UiTestSuite < Test::Unit::TestCase
     study_form = @driver.find_element(:id, 'new_study')
     study_form.find_element(:id, 'study_name').send_keys(random_name)
     study_form.find_element(:id, 'study_use_existing_workspace').send_keys('Yes')
-    study_form.find_element(:id, 'study_firecloud_workspace').send_keys("development-infercnv-sync-test")
+    study_form.find_element(:id, 'study_firecloud_workspace').send_keys("development-infercnv-q418-ui-test")
     share = @driver.find_element(:id, 'add-study-share')
     @wait.until {share.displayed?}
     share.click
@@ -4695,21 +4700,24 @@ class UiTestSuite < Test::Unit::TestCase
     study_file_forms = @driver.find_elements(:class, 'unsynced-study-file')
     study_file_forms.each do |form|
       filename = form.find_element(:id, 'study_file_name')['value']
-      if filename == 'cluster_1.txt' or filename == 'expression_matrix_example.txt' or filename == 'metadata.txt'
+      if filename == 'cluster_example.txt' or filename == 'expression_matrix_example_human.txt' or filename == 'metadata_example.txt'
         file_type = form.find_element(:id, 'study_file_file_type')
         case filename
-          when 'cluster_1.txt'
+          when 'cluster_example.txt'
             file_type.send_keys('Cluster')
-          when 'expression_matrix_example.txt'
+            cluster_file_name = form.find_element(:id, 'study_file_name')
+            cluster_file_name.clear
+            cluster_file_name.send_keys('cluster')
+          when 'expression_matrix_example_human.txt'
             file_type.send_keys('Expression Matrix')
             species_dropdown = form.find_element(:id, 'study_file_taxon_id')
             @wait.until {file_type.displayed?}
             opts = species_dropdown.find_elements(:tag_name, 'option')
-            available_species = opts.delete_if {|opt| opt['value'] == ''}
+            available_species = opts.keep_if {|opt| opt.text.downcase == 'human'} # need human data
             if available_species.any?
               species_dropdown.send_key(available_species.sample.text)
             end
-          when 'metadata.txt'
+          when 'metadata_example.txt'
             file_type.send_keys('Metadata')
         end
         sync_button = form.find_element(:class, 'save-study-file')
@@ -4721,6 +4729,8 @@ class UiTestSuite < Test::Unit::TestCase
     # now assert that forms were re-rendered in synced data panel
     sync_panel = @driver.find_element(:id, 'synced-data-panel-toggle')
     sync_panel.click
+
+    sleep(10) # Give time for expression matrix to parse
 
     # lastly, check info page to make sure everything did in fact parse and complete
     studies_path = @base_url + '/studies'
@@ -4755,7 +4765,7 @@ class UiTestSuite < Test::Unit::TestCase
     ideogram_annots_form = nil
     study_file_forms.each do |form|
       filename = form.find_element(:id, 'study_file_name')
-      if filename['value'].end_with?('infercnv_exp_means.json')
+      if filename['value'].end_with?('ideogram_exp_means.tar.gz')
         # for the purpose of the test, we only need one such file
         ideogram_annots_form = form
       end
@@ -4784,17 +4794,37 @@ class UiTestSuite < Test::Unit::TestCase
     close_modal('sync-notice-modal')
     puts "Synced annotation data for Ideogram.js"
 
+    sleep(10) # Give time for ideogram_exp_means.tar.gz to parse
+
     # Ensure we can load Ideogram and render its annotations
     @driver.get(sync_study_path)
     wait_until_page_loads(sync_study_path)
+
+    # If "Explore" tab is disabled, wait 20 seconds and try again
+    vis_tab = @driver.find_element(:css, '#study-visualize-nav a')
+    if vis_tab.attribute('data-original-title') == 'This study has no data to view'
+      sleep(20)
+      @driver.get(sync_study_path)
+      wait_until_page_loads(sync_study_path)
+    end
+
     open_ui_tab('study-visualize')
     wait_for_render(:id, 'plots-tab')
-    @wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')} # this also gives
+    @wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+
+    # Select a cluster that is indeed group-based
+    view_options_panel = @driver.find_element(:id, 'view-option-link')
+    view_options_panel.click
+    wait_for_render(:id, 'view-options')
+    annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
+    annotations.select {|opt| opt.text == 'Sub-Cluster'}.first.click
+
     # open the 'genome' tab
     open_ui_tab('genome-tab')
+    wait_for_render(:css, '#tracks-to-display #filter_1')
     wait_for_render(:id, 'ideogram-container')
-    user_ideogram = @driver.execute_script("return $('#_ideogram .annot').length > 0")
-    assert user_ideogram, "Ideogram did not render using user token: '$('#_ideogram .annot').length > 0' returned #{user_ideogram}"
+    user_ideogram = @driver.execute_script("return $('#_ideogramOuterWrap canvas').length > 0")
+    assert user_ideogram, "Ideogram did not render using user token: '$('#_ideogramOuterWrap canvas').length > 0' returned #{user_ideogram}"
     puts "Ensured we can load Ideogram and render its annotations"
 
     # Log out and validate that we can *not* use the read-only service account to load results (SCP-1158)
