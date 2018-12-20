@@ -92,16 +92,6 @@ var ideoAnnotShape =
   'l ' + annotHeight/2 + ' 0' +
   'l 0 -' + (2 * annotHeight) + 'z';
 
-// Intercept requests to add bearer token, enabling direct load of files from GCS
-var originalFetch = window.fetch;
-window.fetch = function () {
-  var myHeaders = new Headers({
-    'Authorization': 'Bearer ' + accessToken
-  });
-  arguments[1] = {headers: myHeaders};
-  return originalFetch.apply(this, arguments)
-};
-
 // Use colors like inferCNV; see
 // https://github.com/broadinstitute/inferCNV/wiki#demo-example-figure
 var heatmapThresholds = [
