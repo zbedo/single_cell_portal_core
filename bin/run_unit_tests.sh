@@ -23,7 +23,7 @@ echo "Precompiling assets, yarn and webpacker..."
 RAILS_ENV=test NODE_ENV=test bin/bundle exec rake assets:clean
 RAILS_ENV=test NODE_ENV=test bin/bundle exec rake assets:precompile
 echo "Seeding test database..."
-rake RAILS_ENV=test db:seed
+bundle exec rake RAILS_ENV=test db:seed
 echo "Database initialized, generating random test seed..."
 RANDOM_SEED=`openssl rand -hex 16`
 echo $RANDOM_SEED > /home/app/webapp/.random_seed
@@ -38,23 +38,23 @@ then
   ruby -I test $TEST_FILEPATH $EXTRA_ARGS
 else
   echo "Running all unit & integration tests..."
-	ruby -I test test/integration/fire_cloud_client_test.rb
-	ruby -I test test/integration/cache_management_test.rb
-	ruby -I test test/integration/study_creation_test.rb
-	ruby -I test test/integration/study_validation_test.rb
-	ruby -I test test/integration/taxons_controller_test.rb
-	ruby -I test test/api/studies_controller_test.rb
-	ruby -I test test/api/study_files_controller_test.rb
-	ruby -I test test/api/study_file_bundles_controller_test.rb
-	ruby -I test test/api/study_shares_controller_test.rb
-	ruby -I test test/api/directory_listings_controller_test.rb
-	ruby -I test test/models/cluster_group_test.rb
-	ruby -I test test/models/user_annotation_test.rb
-	ruby -I test test/models/parse_utils_test.rb
+	bundle exec ruby -I test test/integration/fire_cloud_client_test.rb
+	bundle exec ruby -I test test/integration/cache_management_test.rb
+	bundle exec ruby -I test test/integration/study_creation_test.rb
+	bundle exec ruby -I test test/integration/study_validation_test.rb
+	bundle exec ruby -I test test/integration/taxons_controller_test.rb
+	bundle exec ruby -I test test/api/studies_controller_test.rb
+	bundle exec ruby -I test test/api/study_files_controller_test.rb
+	bundle exec ruby -I test test/api/study_file_bundles_controller_test.rb
+	bundle exec ruby -I test test/api/study_shares_controller_test.rb
+	bundle exec ruby -I test test/api/directory_listings_controller_test.rb
+	bundle exec ruby -I test test/models/cluster_group_test.rb
+	bundle exec ruby -I test test/models/user_annotation_test.rb
+	bundle exec ruby -I test test/models/parse_utils_test.rb
 fi
 echo "Cleaning up..."
-bin/rails runner -e test "Study.destroy_all" # destroy all studies to clean up any files
-rake RAILS_ENV=test db:purge
+bundle exec bin/rails runner -e test "Study.destroy_all" # destroy all studies to clean up any files
+bundle exec rake RAILS_ENV=test db:purge
 echo "Cleanup complete!"
 end=$(date +%s)
 difference=$(($end - $start))

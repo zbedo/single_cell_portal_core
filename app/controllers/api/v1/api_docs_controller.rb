@@ -37,6 +37,10 @@ module Api
           key :name, 'DirectoryListings'
           key :description, 'DirectoryListing operations'
         end
+        tag do
+          key :name, 'Status'
+          key :description, 'Status operations'
+        end
         key :host, "#{ENV['HOSTNAME']}"
         key :basePath, '/single_cell/api/v1'
         key :consumes, ['application/json']
@@ -69,7 +73,8 @@ module Api
           Api::V1::StudySharesController,
           Api::V1::DirectoryListingsController,
           Api::V1::SchemasController,
-          Api::V1::TaxonsController
+          Api::V1::TaxonsController,
+          Api::V1::StatusController
       ].freeze
 
       def index
