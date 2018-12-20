@@ -1088,7 +1088,7 @@ class SiteController < ApplicationController
 
   # retrieve any optional parameters for a selected workflow
   def get_workflow_options
-    @options = WorkflowConfiguration.get_additional_parameters(params[:workflow_identifier], @study)
+    @options = WorkflowConfiguration.get_additional_parameters(params[:workflow_identifier])
     workflow_name = params[:workflow_identifier].split('--').join('/')
     @configuration = AdminConfiguration.find_by(config_type: 'Workflow Name', value: workflow_name)
     if @configuration.nil?
