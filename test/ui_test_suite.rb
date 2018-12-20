@@ -4665,7 +4665,7 @@ class UiTestSuite < Test::Unit::TestCase
   end
 
   # Test loading data directly into web browser from Google Cloud Storage (GCS).
-  # This test depends on a workspace already existing in FireCloud called development-infercnv-sync-test
+  # This test depends on a workspace already existing in FireCloud called development-infercnv-q418-ui-test
   # if this study has been deleted, this test will fail until the workspace is re-created with at least
   # 3 default files for expression, metadata, one cluster, and a file for Ideogram.js annotations
   # Also requires an administrator to register a taxon of 'human' with at least one genome assembly
@@ -4683,7 +4683,7 @@ class UiTestSuite < Test::Unit::TestCase
     study_form = @driver.find_element(:id, 'new_study')
     study_form.find_element(:id, 'study_name').send_keys(random_name)
     study_form.find_element(:id, 'study_use_existing_workspace').send_keys('Yes')
-    study_form.find_element(:id, 'study_firecloud_workspace').send_keys("development-infercnv-sync-test")
+    study_form.find_element(:id, 'study_firecloud_workspace').send_keys("development-infercnv-q418-ui-test")
     share = @driver.find_element(:id, 'add-study-share')
     @wait.until {share.displayed?}
     share.click
@@ -4700,21 +4700,24 @@ class UiTestSuite < Test::Unit::TestCase
     study_file_forms = @driver.find_elements(:class, 'unsynced-study-file')
     study_file_forms.each do |form|
       filename = form.find_element(:id, 'study_file_name')['value']
-      if filename == 'cluster_1.txt' or filename == 'expression_matrix_example.txt' or filename == 'metadata.txt'
+      if filename == 'cluster_example.txt' or filename == 'expression_matrix_example_human.txt' or filename == 'metadata_example.txt'
         file_type = form.find_element(:id, 'study_file_file_type')
         case filename
-          when 'cluster_1.txt'
+          when 'cluster_example.txt'
             file_type.send_keys('Cluster')
-          when 'expression_matrix_example.txt'
+            cluster_file_name = form.find_element(:id, 'study_file_name')
+            cluster_file_name.clear
+            cluster_file_name.send_keys('cluster')
+          when 'expression_matrix_example_human.txt'
             file_type.send_keys('Expression Matrix')
             species_dropdown = form.find_element(:id, 'study_file_taxon_id')
             @wait.until {file_type.displayed?}
             opts = species_dropdown.find_elements(:tag_name, 'option')
-            available_species = opts.delete_if {|opt| opt['value'] == ''}
+            available_species = opts.keep_if {|opt| opt.text.downcase == 'human'} # need human data
             if available_species.any?
               species_dropdown.send_key(available_species.sample.text)
             end
-          when 'metadata.txt'
+          when 'metadata_example.txt'
             file_type.send_keys('Metadata')
         end
         sync_button = form.find_element(:class, 'save-study-file')
@@ -4726,6 +4729,8 @@ class UiTestSuite < Test::Unit::TestCase
     # now assert that forms were re-rendered in synced data panel
     sync_panel = @driver.find_element(:id, 'synced-data-panel-toggle')
     sync_panel.click
+
+    sleep(10) # Give time for expression matrix to parse
 
     # lastly, check info page to make sure everything did in fact parse and complete
     studies_path = @base_url + '/studies'
@@ -4760,7 +4765,7 @@ class UiTestSuite < Test::Unit::TestCase
     ideogram_annots_form = nil
     study_file_forms.each do |form|
       filename = form.find_element(:id, 'study_file_name')
-      if filename['value'].end_with?('infercnv_exp_means.json')
+      if filename['value'].end_with?('ideogram_exp_means.tar.gz')
         # for the purpose of the test, we only need one such file
         ideogram_annots_form = form
       end
@@ -4789,17 +4794,37 @@ class UiTestSuite < Test::Unit::TestCase
     close_modal('sync-notice-modal')
     puts "Synced annotation data for Ideogram.js"
 
+    sleep(10) # Give time for ideogram_exp_means.tar.gz to parse
+
     # Ensure we can load Ideogram and render its annotations
     @driver.get(sync_study_path)
     wait_until_page_loads(sync_study_path)
+
+    # If "Explore" tab is disabled, wait 20 seconds and try again
+    vis_tab = @driver.find_element(:css, '#study-visualize-nav a')
+    if vis_tab.attribute('data-original-title') == 'This study has no data to view'
+      sleep(20)
+      @driver.get(sync_study_path)
+      wait_until_page_loads(sync_study_path)
+    end
+
     open_ui_tab('study-visualize')
     wait_for_render(:id, 'plots-tab')
-    @wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')} # this also gives
+    @wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+
+    # Select a cluster that is indeed group-based
+    view_options_panel = @driver.find_element(:id, 'view-option-link')
+    view_options_panel.click
+    wait_for_render(:id, 'view-options')
+    annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
+    annotations.select {|opt| opt.text == 'Sub-Cluster'}.first.click
+
     # open the 'genome' tab
     open_ui_tab('genome-tab')
+    wait_for_render(:css, '#tracks-to-display #filter_1')
     wait_for_render(:id, 'ideogram-container')
-    user_ideogram = @driver.execute_script("return $('#_ideogram .annot').length > 0")
-    assert user_ideogram, "Ideogram did not render using user token: '$('#_ideogram .annot').length > 0' returned #{user_ideogram}"
+    user_ideogram = @driver.execute_script("return $('#_ideogramOuterWrap canvas').length > 0")
+    assert user_ideogram, "Ideogram did not render using user token: '$('#_ideogramOuterWrap canvas').length > 0' returned #{user_ideogram}"
     puts "Ensured we can load Ideogram and render its annotations"
 
     # Log out and validate that we can *not* use the read-only service account to load results (SCP-1158)

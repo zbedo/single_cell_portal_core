@@ -30,6 +30,7 @@
 //= require jquery.stickyPanel
 //= require clipboard.min
 //= require scp-igv
+//= require scp-ideogram
 
 var fileUploading = false;
 var PAGE_RENDERED = false;
