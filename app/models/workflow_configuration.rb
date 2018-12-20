@@ -192,7 +192,7 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
   end
 
   # return additional parameters for a requested workflow (curated list) to update UI
-  def self.get_additional_parameters(workflow_identifier, study=nil)
+  def self.get_additional_parameters(workflow_identifier)
     opts = {}
     case workflow_identifier
       when /cell-ranger-2-0-2/
