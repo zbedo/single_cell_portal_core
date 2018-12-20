@@ -349,7 +349,7 @@ class SiteController < ApplicationController
     end
     @axes = load_axis_labels
 
-    cluster_name = @cluster[:name]
+    cluster_name = @cluster.name
     annot_name = params[:annotation]
 
     # load data for visualization, if present
