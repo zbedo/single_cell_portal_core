@@ -36,10 +36,10 @@ then
     EXTRA_ARGS="-n $MATCHING_TESTS"
   fi
   echo "Running specified tests: $TEST_FILEPATH $EXTRA_ARGS"
-  code=$(bundle exec ruby -I test $TEST_FILEPATH $EXTRA_ARGS)
+  bundle exec ruby -I test $TEST_FILEPATH $EXTRA_ARGS
+  code=$?
   if [[ $code -ne 0 ]]
   then
-    echo "SETTING CODE TO $code"
     RETURN_CODE=$code
   fi
 else
@@ -59,10 +59,13 @@ else
                     test/models/parse_utils_test.rb
   )
   for test_name in ${tests[*]}; do
-      code=$(bundle exec ruby -I test $test_name)
+      bundle exec ruby -I test $test_name
+      code=$?
       if [[ $code -ne 0 ]]
       then
+        echo "Setting return code to $code for $test_name"
         RETURN_CODE=$code
+        echo "RETURN CODE IS NOW $RETURN_CODE"
       fi
   done
 fi
@@ -75,5 +78,5 @@ difference=$(($end - $start))
 min=$(($difference / 60))
 sec=$(($difference % 60))
 echo "Total elapsed time: $min minutes, $sec seconds"
-echo "RETURN CODE: $RETURN_CODE"
+echo "Exiting with code: $RETURN_CODE"
 exit $RETURN_CODE
