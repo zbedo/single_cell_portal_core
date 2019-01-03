@@ -241,10 +241,10 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
       Rails.logger.info "FireCloudClient token expired, refreshing access token"
       self.refresh_access_token
     end
-    # set default headers
+    # set default headers, appending application identifier including hostname for disambiguation
     headers = {
         'Authorization' => "Bearer #{self.access_token['access_token']}",
-        'x-app-id' => 'single-cell-portal'
+        'x-app-id' => "single-cell-portal-#{ENV['HOSTNAME']}"
     }
     # if not uploading a file, set the content_type to application/json
     if !request_opts[:file_upload]
