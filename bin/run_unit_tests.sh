@@ -20,6 +20,7 @@ case $OPTION in
 done
 start=$(date +%s)
 RETURN_CODE=0
+FAILED_COUNT=0
 echo "Precompiling assets, yarn and webpacker..."
 RAILS_ENV=test NODE_ENV=test bin/bundle exec rake assets:clean
 RAILS_ENV=test NODE_ENV=test bin/bundle exec rake assets:precompile
@@ -37,10 +38,10 @@ then
   fi
   echo "Running specified tests: $TEST_FILEPATH $EXTRA_ARGS"
   bundle exec ruby -I test $TEST_FILEPATH $EXTRA_ARGS
-  code=$?
-  if [[ $code -ne 0 ]]
-  then
+  code=$? # immediately capture exit code to prevent this from getting clobbered
+  if [[ $code -ne 0 ]]; then
     RETURN_CODE=$code
+    ((FAILED_COUNT++))
   fi
 else
   echo "Running all unit & integration tests..."
@@ -60,12 +61,10 @@ else
   )
   for test_name in ${tests[*]}; do
       bundle exec ruby -I test $test_name
-      code=$?
-      if [[ $code -ne 0 ]]
-      then
-        echo "Setting return code to $code for $test_name"
+      code=$? # immediately capture exit code to prevent this from getting clobbered
+      if [[ $code -ne 0 ]]; then
         RETURN_CODE=$code
-        echo "RETURN CODE IS NOW $RETURN_CODE"
+        ((FAILED_COUNT++))
       fi
   done
 fi
@@ -78,5 +77,8 @@ difference=$(($end - $start))
 min=$(($difference / 60))
 sec=$(($difference % 60))
 echo "Total elapsed time: $min minutes, $sec seconds"
+if [[ $RETURN_CODE -ne 0 ]]; then
+	printf "\n### There were $FAILED_COUNT errors/failed tests in this run ###\n\n"
+fi
 echo "Exiting with code: $RETURN_CODE"
 exit $RETURN_CODE
