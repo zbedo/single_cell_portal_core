@@ -526,7 +526,7 @@ class FireCloudClientTest < ActiveSupport::TestCase
     # upload files
     participant_upload = File.open(Rails.root.join('test', 'test_data', 'default_participant.tsv'))
     participant_filename = File.basename(participant_upload)
-    uploaded_participant = @fire_cloud_client.execute_gcloud_method(:get_workspace_files, 0, @fire_cloud_client.project, workspace_name, participant_upload.to_path, participant_filename)
+    uploaded_participant = @fire_cloud_client.execute_gcloud_method(:create_workspace_file, 0, @fire_cloud_client.project, workspace_name, participant_upload.to_path, participant_filename)
     assert uploaded_participant.present?, 'Did not upload participant file'
     assert uploaded_participant.name == participant_filename, "Name not set correctly on uploaded participant file, expected '#{participant_filename}' but found '#{uploaded_participant.name}'"
 
