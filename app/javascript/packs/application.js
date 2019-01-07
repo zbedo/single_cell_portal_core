@@ -15,7 +15,7 @@ import 'jquery-ui/ui/widgets/autocomplete';
 import 'jquery-ui/ui/widgets/sortable';
 import 'jquery-ui/ui/widgets/dialog';
 import 'jquery-ui/ui/effects/effect-highlight';
-import igv from 'tmp_es6_igv';
+import igv from 'igv';
 import morpheus from 'morpheus-app';
 import Ideogram from 'ideogram';
 
@@ -26,7 +26,7 @@ import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 // import {} from 'jquery-ujs';
 // Above seems causes errors like "jQuery is not defined" to be thrown, so use Sprockets for this for now.
 
-// SCP expects variables to be available globally, so do that.
+// SCP expects these variables to be global.
 window.$ = $;
 window.jQuery = jQuery;
 window.ClassicEditor = ClassicEditor;

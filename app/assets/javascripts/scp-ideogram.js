@@ -84,19 +84,11 @@
 //     $('#ideogram-container').append(table);
 //   }
 
-var ideoAnnotPathStem = '/single_cell/example_data/ideogram_exp_means/ideogram_exp_means__';
-
-var annotHeight = 3.5;
-var ideoAnnotShape =
-  'm0,0 l 0 ' + (2 * annotHeight) +
-  'l ' + annotHeight/2 + ' 0' +
-  'l 0 -' + (2 * annotHeight) + 'z';
-
 // Use colors like inferCNV; see
 // https://github.com/broadinstitute/inferCNV/wiki#demo-example-figure
 var heatmapThresholds = [
   [-0.1, '#00B'], // If -0.001 < expression value, use blue (loss)
-  [0.3, '#CCC'], // If -0.001 >= value 0 > 0.003, use grey
+  [0.3, '#DDD'], // If -0.001 >= value 0 > 0.003, use grey
   ['+', '#F00'] // If value >= 0.003, use red (gain)
 ];
 
@@ -104,7 +96,7 @@ var legend = [{
   name: 'Expression level',
   rows: [
     {name: 'Low', color: '#00B'},
-    {name: 'Normal', color: '#CCC'},
+    {name: 'Normal', color: '#DDD'},
     {name: 'High', color: '#F00'}
   ]
 }];
@@ -153,53 +145,7 @@ function createTrackFilters() {
     });
   });
 }
-
-function defineHeatmaps() {
-  var i, labels, heatmaps, annotationTracks, rawAnnots, numTracks, displayedTracks;
-
-  heatmaps = [];
-  rawAnnots = ideogram.rawAnnots;
-  labels = rawAnnots.keys.slice(3,);
-
-  annotationTracks = [];
-  displayedTracks = []
-
-  numTracks = (labels.length > 2) ? 3 : labels.length;
-
-  for (i = 0; i < labels.length; i++) {
-    heatmaps.push({key: labels[i], thresholds: heatmapThresholds});
-    annotationTracks.push({id: labels[i], shape: ideoAnnotShape});
-    if (i < numTracks) displayedTracks.push(i + 1)
-  }
-
-  ideogram.config.annotationsNumTracks = numTracks;
-  ideogram.config.annotationsDisplayedTracks = displayedTracks;
-  ideogram.config.heatmaps = heatmaps;
-  ideogram.config.annotationTracks = annotationTracks;
-}
-
-function getIdeogramAnnotationPaths() {
-  var paths, clusters = [], cellAnnots = [];
-
-  paths = [];
-
-  $('#cluster option').each((i, el) => clusters.push($(el).val()));
-  $('#annotation option').each((i, el) => {
-    var cellAnnot = $(el).attr('value');
-    if (cellAnnot.split('--').slice(-2)[0] === 'group') {
-      cellAnnots.push(cellAnnot);
-    }
-  });
-
-  clusters.forEach(cluster => {
-    cellAnnots.forEach(cellAnnot => {
-      paths.push(ideoAnnotPathStem + cluster + '--' + cellAnnot + '.json');
-    });
-  });
-
-  return paths;
-}
-
+ 
 function warnIdeogramOfNumericCluster() {
   var cluster, cellAnnot, warning;
 
@@ -237,10 +183,14 @@ function initializeIdeogram(url) {
     annotationsPath: url,
     annotationsLayout: 'heatmap',
     legend: legend,
-    annotationsNumTracks: 3,
-    onLoadAnnots: defineHeatmaps,
     onDrawAnnots: createTrackFilters,
     debug: true,
-    rotatable: false
+    rotatable: false,
+
+    chrHeight: 90,
+    annotationHeight: 20,
+    geometry: 'collinear',
+    orientation: 'horizontal',
+    heatmapThresholds: heatmapThresholds
   });
 }
