@@ -278,7 +278,7 @@ module Api
           @directory_listing.destroy
           head 204
         rescue => e
-          Raven.capture_exception(e)
+          ErrorTracker.report_exception(e, current_api_user, params)
           render json: {error: e.message}, status: 500
         end
       end

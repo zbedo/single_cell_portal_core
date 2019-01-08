@@ -36,7 +36,12 @@ module Api
                   Rails.logger.error "Unable to retrieve user info from access token: #{api_access_token}"
                 end
               rescue => e
-                Raven.capture_exception(e)
+                error_context = {
+                    auth_response_body: response.present? ? response.body : nil,
+                    auth_response_code: response.present? ? response.code : nil,
+                    auth_response_headers: response.present? ? response.headers : nil
+                }
+                ErrorTracker.report_exception(e, user, error_context)
                 Rails.logger.error "Error retrieving user api credentials: #{e.class.name}: #{e.message}"
               end
             end

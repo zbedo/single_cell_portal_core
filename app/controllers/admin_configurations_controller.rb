@@ -146,7 +146,7 @@ class AdminConfigurationsController < ApplicationController
           redirect_to admin_configuration_path, alert: 'Invalid configuration option; ignored.'
       end
     rescue => e
-      Raven.capture_exception(e)
+      ErrorTracker.report_exception(e, current_user, params)
       logger.error "#{Time.now}: error in setting download status to #{status}; #{e.message}"
       redirect_to admin_configurations_path, alert: "An error occured while turing #{status} downloads: #{e.message}" and return
     end
@@ -197,7 +197,7 @@ class AdminConfigurationsController < ApplicationController
         end
       end
     rescue => e
-      Raven.capture_exception(e)
+      ErrorTracker.report_exception(e, current_user, params)
       logger.error "#{Time.now}: unable to retrieve service account FireCloud registration: #{e.message}"
     end
   end
@@ -210,7 +210,7 @@ class AdminConfigurationsController < ApplicationController
       @client.set_profile(profile_params)
       @notice = "The portal service account FireCloud profile has been successfully updated."
     rescue => e
-      Raven.capture_exception(e)
+      ErrorTracker.report_exception(e, current_user, params)
       logger.error "#{Time.now}: unable to update service account FireCloud registration: #{e.message}"
       @alert = "Unable to update portal service account FireCloud profile: #{e.message}"
     end
@@ -221,7 +221,7 @@ class AdminConfigurationsController < ApplicationController
     begin
       @status = Study.firecloud_client.api_status
     rescue => e
-      Raven.capture_exception(e)
+      ErrorTracker.report_exception(e, current_user, params)
       logger.error "#{Time.now}: unable to retrieve FireCloud API status due to: #{e.message}"
       @status = {error: "An error occurred while fetching the FireCloud API status: #{e.message}"}
     end
@@ -260,7 +260,7 @@ class AdminConfigurationsController < ApplicationController
         end
         logger.info "#{Time.now}: User group #{@group_name} successfully synchronized"
       rescue => e
-        Raven.capture_exception(e)
+        ErrorTracker.report_exception(e, current_user, params)
         logger.error "#{Time.now}: Error in synchronizing portal user group #{@group_name}: #{e.message}"
         @alert = "Unable to synchronize user group #{@group_name} due to an error: #{e.message}"
       end
@@ -280,7 +280,7 @@ class AdminConfigurationsController < ApplicationController
       begin
         @success, @alert = AdminConfiguration.set_readonly_service_account_permissions(revoke_access)
       rescue => e
-        Raven.capture_exception(e)
+        ErrorTracker.report_exception(e, current_user, params)
         @alert = "An error occurred while trying to set the access for the readonly service account: #{e.message}"
       end
     else
@@ -329,7 +329,7 @@ class AdminConfigurationsController < ApplicationController
       SingleCellMailer.users_email(users_email_params, current_user).deliver_now
       @notice = 'Your email has successfully been delivered.'
     rescue => e
-      Raven.capture_exception(e)
+      ErrorTracker.report_exception(e, current_user, params)
       logger.error "#{Time.now}: Error delivering users email: #{e.message}"
       @alert = "Unabled to deliver users email due to the following error: #{e.message}"
     end

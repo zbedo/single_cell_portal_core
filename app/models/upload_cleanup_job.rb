@@ -52,7 +52,7 @@ class UploadCleanupJob < Struct.new(:study, :study_file, :retry_count)
             Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file, retries), run_at: run_at)
           end
         rescue => e
-          Raven.capture_exception(e)
+          ErrorTracker.report_exception(e, nil, {study_file: study_file.attributes.to_h, study: study.attributes.to_h})
           if retries <= 3
             interval = retries * 2
             run_at = interval.minutes.from_now

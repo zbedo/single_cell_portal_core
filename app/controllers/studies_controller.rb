@@ -147,7 +147,7 @@ class StudiesController < ApplicationController
         end
       end
     rescue => e
-      Raven.capture_exception(e)
+      ErrorTracker.report_exception(e, current_user, format_error_params(params, @study))
       logger.error "#{Time.now}: error syncing ACLs in workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
       redirect_to merge_default_redirect_params(studies_path, scpbr: params[:scpbr]), alert: "We were unable to sync with your workspace bucket due to an error: #{view_context.simple_format(e.message)}" and return
     end
@@ -164,7 +164,7 @@ class StudiesController < ApplicationController
         process_workspace_bucket_files(workspace_files)
       end
     rescue => e
-      Raven.capture_exception(e)
+      ErrorTracker.report_exception(e, current_user, format_error_params(params, @study))
       logger.error "#{Time.now}: error syncing files in workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
       redirect_to merge_default_redirect_params(studies_path, scpbr: params[:scpbr]), alert: "We were unable to sync with your workspace bucket due to an error: #{view_context.simple_format(e.message)}" and return
     end
@@ -457,7 +457,7 @@ class StudiesController < ApplicationController
       end
       render action: :sync_study
     rescue => e
-      Raven.capture_exception(e)
+      ErrorTracker.report_exception(e, current_user, format_error_params(params, @study))
       redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]), alert: "We were unable to sync the outputs from submission #{params[:submission_id]} due to the following error: #{e.message}"
     end
   end
@@ -524,7 +524,7 @@ class StudiesController < ApplicationController
         begin
           Study.firecloud_client.delete_workspace(@study.firecloud_project, @study.firecloud_workspace)
         rescue => e
-          Raven.capture_exception(e)
+          ErrorTracker.report_exception(e, current_user, format_error_params(params, @study))
           logger.error "#{Time.now} unable to delete workspace: #{@study.firecloud_workspace}; #{e.message}"
           redirect_to merge_default_redirect_params(studies_path, scpbr: params[:scpbr]), alert: "We were unable to delete your study due to: #{view_context.simple_format(e.message)}.<br /><br />No files or database records have been deleted.  Please try again later" and return
         end
@@ -815,7 +815,7 @@ class StudiesController < ApplicationController
                     alert: 'The file you requested is currently not available.  Please contact the study owner if you require access to this file.' and return
       end
     rescue => e
-      Raven.capture_exception(e)
+      ErrorTracker.report_exception(e, current_user, format_error_params(params, @study))
       logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
       redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
                   alert: "We were unable to download the file #{params[:filename]} do to an error: #{view_context.simple_format(e.message)}" and return
@@ -1024,7 +1024,7 @@ class StudiesController < ApplicationController
             end
           end
         rescue => e
-          Raven.capture_exception(e)
+          ErrorTracker.report_exception(e, current_user, format_error_params(params, @study))
           logger.error "#{Time.now}: error in deleting #{@study_file.upload_file_name} from workspace: #{@study.firecloud_workspace}; #{e.message}"
           redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
                       alert: "We were unable to delete #{@study_file.upload_file_name} due to an error: #{view_context.simple_format(e.message)}.  Please try again later."
@@ -1297,7 +1297,7 @@ class StudiesController < ApplicationController
             format.js {render action: 'sync_action_success'}
           end
         rescue => e
-          Raven.capture_exception(e)
+          ErrorTracker.report_exception(e, current_user, format_error_params(params, @study))
           respond_to do |format|
             format.js {render action: 'sync_action_fail'}
           end
@@ -1475,7 +1475,7 @@ class StudiesController < ApplicationController
         end
       end
     rescue => e
-      Raven.capture_exception(e)
+      ErrorTracker.report_exception(e, current_user, format_error_params(params, @study))
       Rails.logger.error "Error setting user projects for #{current_user.email}: #{e.message}"
     end
   end

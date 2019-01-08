@@ -8,6 +8,7 @@
 class AnalysisMetadatum
   include Mongoid::Document
   include Mongoid::Timestamps
+  extend ErrorTracker
 
   # field definitions
   belongs_to :study
@@ -87,11 +88,11 @@ class AnalysisMetadatum
         JSON.parse(metadata_schema.body)
       end
     rescue RestClient::ExceptionWithResponse => e
-      Raven.capture_exception(e)
+      ErrorTracker.report_exception(e, self.study.user, {request_url: self.definition_url, request_response: e.http_body})
       Rails.logger.error "#{Time.now}: Error retrieving remote HCA Analysis metadata schema: #{e.message}"
       {error: "Error retrieving definition schema: #{e.message}"}
     rescue JSON::ParserError => e
-      Raven.capture_exception(e)
+      ErrorTracker.report_exception(e, self.study.user, {metadata_body: metadata_schema.body})
       Rails.logger.error "#{Time.now}: Error parsing HCA Analysis metadata schema: #{e.message}"
       {error: "Error parsing definition schema: #{e.message}"}
     end
@@ -108,8 +109,8 @@ class AnalysisMetadatum
         defs
       end
     rescue NoMethodError => e
-      Raven.capture_exception(e)
       field_key = field.present? ? "#{key}/#{field}" : key
+      ErrorTracker.report_exception(e, self.study.user, {missing_key: field_key, analysis_metadatum: self.attributes.to_h})
       Rails.logger.error "#{Time.now}: Error accessing remote HCA Analysis metadata field definitions for #{field_key}: #{e.message}"
       nil
     end
@@ -188,7 +189,7 @@ class AnalysisMetadatum
       end
       call_metadata
     rescue => e
-      Raven.capture_exception(e)
+      ErrorTracker.report_exception(e, self.study.user, {workflows: workflows, analysis_metadatum: self.attributes.to_h})
       Rails.logger.error "#{Time.now}: Error retrieving workflow call metadata for: #{e.message}"
       []
     end

@@ -1,5 +1,7 @@
 class ApplicationController < ActionController::Base
 
+  extend ErrorTracker
+
   ###
   #
   # These are methods that are not specific to any one controller and are inherited into all
@@ -15,6 +17,7 @@ class ApplicationController < ActionController::Base
   before_action :set_selected_branding_group
 
   rescue_from ActionController::InvalidAuthenticityToken, with: :invalid_csrf
+
 
   # auth action for portal admins
   def authenticate_admin
@@ -62,7 +65,8 @@ class ApplicationController < ActionController::Base
   end
 
   # rescue from an invalid csrf token (if user logged out in another window, or some kind of spoofing attack)
-  def invalid_csrf
+  def invalid_csrf(exception)
+    ErrorTracker.report_exception(exception, current_user, {request_url: request.url, params: params})
     @alert = "We're sorry, but the change you wanted was rejected by the server."
     respond_to do |format|
       format.html {render template: '/layouts/422', status: 422}
@@ -99,5 +103,12 @@ class ApplicationController < ActionController::Base
     parsed_query = Rack::Utils.parse_query(uri.query)
     # return true if the scheme is https, the hostname matches a known GCS host, and the query string parameters have the correct keys
     uri.scheme == 'https' && ValidationTools::GCS_HOSTNAMES.include?(uri.hostname) && parsed_query.keys == ValidationTools::SIGNED_URL_KEYS
+  end
+
+  # create an extra context hash for error reporting purposes
+  def format_error_params(parameters, study=nil)
+    context_hash = study.present? ? {firecloud_project: study.firecloud_project, firecloud_workspace: study.firecloud_workspace} : {}
+    context_hash.merge!(parameters.dup)
+    context_hash
   end
 end

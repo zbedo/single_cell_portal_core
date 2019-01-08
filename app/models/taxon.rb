@@ -183,7 +183,6 @@ class Taxon
       assembly.name = vals[assembly_name_idx]
       assembly.accession = vals[assembly_accession_idx]
       assembly.release_date = vals[assembly_release_date_idx]
-      Rails.logger.info "Assembly: #{assembly.attributes}"
       assembly.save!
       num_assemblies += 1
       # only add annotations if all fields are present, need to check that headers are there and that there are values

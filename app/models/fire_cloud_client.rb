@@ -271,8 +271,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
           begin
             return JSON.parse(@obj.body)
           rescue JSON::ParserError => e
-            ErrorTracker.capture_raven_exception(e, self.issuer_object, {method: http_method, url: path,
-                                                                     payload: payload, opts: opts, retry_count: retry_count})
+            ErrorTracker.report_exception(e, self.issuer_object, {method: http_method, url: path,
+                                                                  payload: payload, opts: opts, retry_count: retry_count})
             return @obj.body
           end
         elsif ok?(@obj.code) && @obj.body.blank?
@@ -282,8 +282,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
           @obj.message
         end
       rescue RestClient::Exception => e
-        ErrorTracker.capture_raven_exception(e, self.issuer_object, {method: http_method, url: path, payload: payload,
-                                                                 opts: opts, retry_count: retry_count})
+        ErrorTracker.report_exception(e, self.issuer_object, {method: http_method, url: path, payload: payload,
+                                                              opts: opts, retry_count: retry_count})
         context = " encountered when requesting '#{path}', attempt ##{retry_count + 1}"
         log_message = e.message + context
         Rails.logger.error log_message
@@ -1269,8 +1269,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
       begin
         self.send(method_name, *params)
       rescue => e
-        ErrorTracker.capture_raven_exception(e, self.issuer_object, {method_name: method_name, retry_count: retry_count,
-                                                                 params: params})
+        ErrorTracker.report_exception(e, self.issuer_object, {method_name: method_name, retry_count: retry_count,
+                                                              params: params})
         @error = e.message
         Rails.logger.info "error calling #{method_name} with #{params.join(', ')}; #{e.message} -- attempt ##{retry_count + 1}"
         unless RETRY_IGNORE_LIST.include?(method_name)
@@ -1376,8 +1376,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		begin
 			file.delete
     rescue => e
-      ErrorTracker.capture_raven_exception(e, self.issuer_object, {method_name: :delete_workspace_file,
-                                                               params: [workspace_namespace, workspace_name, filename]})
+      ErrorTracker.report_exception(e, self.issuer_object, {method_name: :delete_workspace_file,
+                                                            params: [workspace_namespace, workspace_name, filename]})
 			Rails.logger.info("failed to delete workspace file #{filename} with error #{e.message}")
 			false
 		end
@@ -1570,7 +1570,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
           return error.message
         end
       rescue => e
-        ErrorTracker.capture_raven_exception(e, self.issuer_object, {original_error: error})
+        ErrorTracker.report_exception(e, self.issuer_object, {original_error: error})
         Rails.logger.error e.message
         error.message + ': ' + error.http_body
       end

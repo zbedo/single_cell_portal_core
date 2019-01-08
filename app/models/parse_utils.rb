@@ -164,7 +164,7 @@ class ParseUtils
       begin
         SingleCellMailer.notify_user_parse_complete(user.email, "Gene-barcode matrix expression data has completed parsing", @message).deliver_now
       rescue => e
-        Raven.capture_exception(e)
+        ErrorTracker.report_exception(e, user, {message: @message})
         Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
       end
 
@@ -176,7 +176,10 @@ class ParseUtils
           upload_or_remove_study_file(barcodes_study_file, study)
         end
       rescue => e
-        Raven.capture_exception(e)
+        ErrorTracker.report_exception(e, user, {matrix_study_file: matrix_study_file.attributes.to_h,
+                                                genes_study_file: genes_study_file.attributes.to_h,
+                                                barcodes_study_file: barcodes_study_file.attributes.to_h,
+                                                study: study.attributes.to_h})
         Rails.logger.error "Error in uploading files from sparse matrix parse to #{study.firecloud_project}/#{study.firecloud_workspace}#{study.bucket_id}: #{e.message}"
         # use UploadCleanupJob
       end
@@ -184,7 +187,10 @@ class ParseUtils
       # finished, so return true
       true
     rescue => e
-      Raven.capture_exception(e)
+      ErrorTracker.report_exception(e, user, {matrix_study_file: matrix_study_file.attributes.to_h,
+                                              genes_study_file: genes_study_file.attributes.to_h,
+                                              barcodes_study_file: barcodes_study_file.attributes.to_h,
+                                              study: study.attributes.to_h})
       error_message = e.message
       Rails.logger.error "#{Time.now}: #{e.class.name}:#{error_message}, #{@last_line}"
       # error has occurred, so clean up records and remove file
@@ -333,7 +339,7 @@ class ParseUtils
         Rails.logger.info "#{Time.now}: cleanup job for #{study_file.bucket_location}:#{study_file.id} scheduled for #{run_at}"
       end
     rescue => e
-      Raven.capture_exception(e)
+      ErrorTracker.report_exception(e, user, {study_file: study_file.attributes.to_h, study: study.attributes.to_h})
       Rails.logger.error "Error in pushing #{study_file.bucket_location}:#{study_file.id} to #{study.firecloud_project}/#{study.firecloud_workspace}:#{study.bucket_id}: #{e.message}"
       run_at = 2.minutes.from_now
       Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file, 0), run_at: run_at)

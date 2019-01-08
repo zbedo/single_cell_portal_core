@@ -56,7 +56,7 @@ class BillingProjectsController < ApplicationController
       @fire_cloud_client.add_user_to_billing_project(project_name, 'owner', @portal_service_account)
       redirect_to merge_default_redirect_params(billing_projects_path, scpbr: params[:scpbr]), notice: "Your new project '#{project_name}' was successfully created using '#{billing_account}'" and return
     rescue => e
-      Raven.capture_exception(e)
+      ErrorTracker.report_exception(e, current_user, params)
       logger.error "#{Time.now}: Unable to create new billing project #{project_name} due to error: #{e.message}"
       redirect_to merge_default_redirect_params(billing_projects_path, scpbr: params[:scpbr]), alert: "We were unable to create your new project due to the following error: #{e.message}" and return
     end
@@ -74,7 +74,7 @@ class BillingProjectsController < ApplicationController
       @fire_cloud_client.add_user_to_billing_project(params[:project_name], role, email)
       redirect_to merge_default_redirect_params(billing_projects_path, scpbr: params[:scpbr]), notice: "#{email} has successfully been added to #{params[:project_name]} as #{role}" and return
     rescue => e
-      Raven.capture_exception(e)
+      ErrorTracker.report_exception(e, current_user, params)
       logger.error "#{Time.now}: Unable to add #{email} to #{params[:project_name]} due to error: #{e.message}"
       redirect_to merge_default_redirect_params(new_billing_project_user_path, scpbr: params[:scpbr]), alert: "We were unable to add #{email} to #{params[:project_name]} due to the following error: #{e.message}" and return
     end
@@ -88,7 +88,7 @@ class BillingProjectsController < ApplicationController
       @fire_cloud_client.delete_user_from_billing_project(params[:project_name], role, email)
       redirect_to merge_default_redirect_params(billing_projects_path, scpbr: params[:scpbr]), notice: "#{email} has successfully been removed from #{params[:project_name]} as #{role}" and return
     rescue => e
-      Raven.capture_exception(e)
+      ErrorTracker.report_exception(e, current_user, params)
       logger.error "#{Time.now}: Unable to remove #{email} from #{params[:project_name]} due to error: #{e.message}"
       redirect_to merge_default_redirect_params(billing_projects_path, scpbr: params[:scpbr]), alert: "We were unable to remove #{email} from #{params[:project_name]} due to the following error: #{e.message}'" and return
     end
@@ -142,7 +142,7 @@ class BillingProjectsController < ApplicationController
                                                             compute_params[:can_compute] == 'true')
       @fire_cloud_client.update_workspace_acl(params[:project_name], params[:study_name], new_acl)
     rescue => e
-      Raven.capture_exception(e)
+      ErrorTracker.report_exception(e, current_user, params)
       logger.error "#{Time.now}: error in updating acl for #{params[:project_name]}:#{params[:study_name]}: #{e.message}"
       @error = e.message
     end

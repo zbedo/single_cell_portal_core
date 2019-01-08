@@ -277,7 +277,7 @@ module Api
           @study_share.destroy
           head 204
         rescue => e
-          Raven.capture_exception(e)
+          ErrorTracker.report_exception(e, current_api_user, {params: params, study_share: @study_share.attributes.to_h})
           render json: {error: e.message}, status: 500
         end
       end
