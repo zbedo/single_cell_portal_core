@@ -1,5 +1,7 @@
 class UserAnnotation
 
+  extend ErrorTracker
+
   ###
   #
   # UserAnnotation: class holding metadata about user-defined (as opposed to study-defined) annotation objects.  Annotation
@@ -14,6 +16,7 @@ class UserAnnotation
   ###
 
   include Mongoid::Document
+  extend ErrorTracker
   field :name, type: String
   field :values, type: Array
   field :queued_for_deletion, type: Boolean, default: false
@@ -472,7 +475,8 @@ class UserAnnotation
         SingleCellMailer.annotation_publish_fail(self, self.user, cluster.errors.full_messages.join(', '))
       end
     rescue => e
-      Raven.capture_exception(e)
+      error_context = ErrorTracker.format_extra_context(self)
+      ErrorTracker.report_exception(e, self.user, error_context)
       # error occured, so roll back
       self.update(queued_for_deletion: false, publishing: false)
 

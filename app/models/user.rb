@@ -10,6 +10,7 @@ class User
 
   include Mongoid::Document
   include Mongoid::Timestamps
+  extend ErrorTracker
 
   ###
   #
@@ -139,7 +140,7 @@ class User
         self.update!(access_token: user_access_token)
         user_access_token
       rescue => e
-        Raven.capture_exception(e)
+        ErrorTracker.report_exception(e, self)
         Rails.logger.error "#{Time.now}: Unable to generate access token for user #{self.email} due to error; #{e.message}"
         nil
       end

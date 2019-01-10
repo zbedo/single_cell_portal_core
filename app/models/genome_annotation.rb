@@ -1,5 +1,6 @@
 class GenomeAnnotation
   include Mongoid::Document
+  extend ErrorTracker
 
   belongs_to :genome_assembly
   has_many :study_files
@@ -35,7 +36,8 @@ class GenomeAnnotation
           Study.firecloud_client.execute_gcloud_method(:generate_api_url, 0, reference_project,
                                                                  reference_workspace, self.link)
         rescue => e
-          ErrorTracker.report_exception(e, nil, {genome_annotation: self.attributes.to_h, method_call: :generate_api_url})
+          error_context = ErrorTracker.format_extra_context(self, {method_call: :generate_api_url})
+          ErrorTracker.report_exception(e, nil, error_context)
           Rails.logger.error "Cannot generate public genome annotation link for #{self.link}: #{e.message}"
           ''
         end
@@ -59,7 +61,8 @@ class GenomeAnnotation
           Study.firecloud_client.execute_gcloud_method(:generate_api_url, 0, reference_project,
                                                        reference_workspace, self.index_link)
         rescue => e
-          ErrorTracker.report_exception(e, nil, {genome_annotation: self.attributes.to_h, method_call: :generate_api_url})
+          error_context = ErrorTracker.format_extra_context(self, {method_call: :generate_api_url})
+          ErrorTracker.report_exception(e, nil, error_context)
           Rails.logger.error "Cannot generate public genome annotation index link for #{self.index_link}: #{e.message}"
           ''
         end
@@ -83,7 +86,8 @@ class GenomeAnnotation
           Study.firecloud_client.execute_gcloud_method(:generate_signed_url, 0, reference_project,
                                                        reference_workspace, self.link, expires: 15)
         rescue => e
-          ErrorTracker.report_exception(e, nil, {genome_annotation: self.attributes.to_h, method_call: :generate_signed_url})
+          error_context = ErrorTracker.format_extra_context(self, {method_call: :generate_signed_url})
+          ErrorTracker.report_exception(e, nil, error_context)
           Rails.logger.error "Cannot generate genome annotation download link for #{self.link}: #{e.message}"
           ''
         end
@@ -108,12 +112,12 @@ class GenomeAnnotation
           errors.add(:link, "was not found at the specified link: #{link}.  The response code was #{response.code} rather than 200.")
         end
       rescue => e
-        error_context = {
+        request_context = {
             auth_response_body: response.present? ? response.body : nil,
             auth_response_code: response.present? ? response.code : nil,
-            auth_response_headers: response.present? ? response.headers : nil,
-            genome_annotation: self.attributes.to_h
+            auth_response_headers: response.present? ? response.headers : nil
         }
+        error_context = ErrorTracker.format_extra_context(request_context, self)
         ErrorTracker.report_exception(e, nil, error_context)
         errors.add(:link, "was not found due to an error: #{e.message}.  Please check the link and try again.")
       end
@@ -129,11 +133,7 @@ class GenomeAnnotation
             errors.add(:link, "was not found in the reference workspace of #{config.value}.  Please check the link and try again.")
           end
         rescue => e
-          error_context = {
-              reference_project: reference_project,
-              reference_workspace: reference_workspace,
-              genome_annotation: self.attributes.to_h
-          }
+          error_context = ErrorTracker.format_extra_context({reference_project: reference_project, reference_workspace: reference_workspace}, self)
           ErrorTracker.report_exception(e, nil, error_context)
           errors.add(:link, "was not found due to an error: #{e.message}.  Please check the link and try again.")
         end
@@ -153,12 +153,12 @@ def check_genome_annotation_index_link
         errors.add(:index_link, "was not found at the specified index link: #{index_link}.  The response code was #{response.code} rather than 200.")
       end
     rescue => e
-      error_context = {
+      request_context = {
           auth_response_body: response.present? ? response.body : nil,
           auth_response_code: response.present? ? response.code : nil,
-          auth_response_headers: response.present? ? response.headers : nil,
-          genome_annotation: self.attributes.to_h
+          auth_response_headers: response.present? ? response.headers : nil
       }
+      error_context = ErrorTracker.format_extra_context(request_context, self)
       ErrorTracker.report_exception(e, nil, error_context)
       errors.add(:index_link, "was not found due to an error: #{e.message}.  Please check the index link and try again.")
     end
@@ -174,11 +174,7 @@ def check_genome_annotation_index_link
           errors.add(:index_link, "was not found in the reference workspace of #{config.value}.  Please check the index link and try again.")
         end
       rescue => e
-        error_context = {
-            reference_project: reference_project,
-            reference_workspace: reference_workspace,
-            genome_annotation: self.attributes.to_h
-        }
+        error_context = ErrorTracker.format_extra_context({reference_project: reference_project, reference_workspace: reference_workspace}, self)
         ErrorTracker.report_exception(e, nil, error_context)
         errors.add(:index_link, "was not found due to an error: #{e.message}.  Please check the index link and try again.")
       end

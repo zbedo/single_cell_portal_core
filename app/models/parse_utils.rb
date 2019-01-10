@@ -1,4 +1,5 @@
 class ParseUtils
+  extend ErrorTracker
 
   # parse a 10X gene-barcode matrix file triplet (input matrix must be sorted by gene indices)
   def self.cell_ranger_expression_parse(study, user, matrix_study_file, genes_study_file, barcodes_study_file, opts={})
@@ -339,7 +340,8 @@ class ParseUtils
         Rails.logger.info "#{Time.now}: cleanup job for #{study_file.bucket_location}:#{study_file.id} scheduled for #{run_at}"
       end
     rescue => e
-      ErrorTracker.report_exception(e, user, {study_file: study_file.attributes.to_h, study: study.attributes.to_h})
+      error_context = ErrorTracker.format_extra_context(study, study_file)
+      ErrorTracker.report_exception(e, nil, error_context)
       Rails.logger.error "Error in pushing #{study_file.bucket_location}:#{study_file.id} to #{study.firecloud_project}/#{study.firecloud_workspace}:#{study.bucket_id}: #{e.message}"
       run_at = 2.minutes.from_now
       Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file, 0), run_at: run_at)

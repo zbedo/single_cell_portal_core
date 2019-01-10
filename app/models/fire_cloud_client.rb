@@ -98,6 +98,17 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
     self.api_root = BASE_URL
   end
 
+  # return a hash of instance attributes for this client
+  #
+  # * *return*
+  #   - +Hash+ of values for all instance variables for this client
+  def attributes
+    sanitized_values = self.to_h.dup
+    sanitized_values[:access_token] = 'REDACTED'
+    sanitized_values[:issuer] = self.issuer
+    sanitized_values
+  end
+
   #
   # TOKEN METHODS
   #

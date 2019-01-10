@@ -6,6 +6,7 @@
 ##
 
 class UploadCleanupJob < Struct.new(:study, :study_file, :retry_count)
+  extend ErrorTracker
 
   def perform
     retries = retry_count + 1
@@ -52,7 +53,8 @@ class UploadCleanupJob < Struct.new(:study, :study_file, :retry_count)
             Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file, retries), run_at: run_at)
           end
         rescue => e
-          ErrorTracker.report_exception(e, nil, {study_file: study_file.attributes.to_h, study: study.attributes.to_h})
+          error_context = ErrorTracker.format_extra_context(study, study_file, {retry_count: retry_count})
+          ErrorTracker.report_exception(e, nil, error_context)
           if retries <= 3
             interval = retries * 2
             run_at = interval.minutes.from_now
