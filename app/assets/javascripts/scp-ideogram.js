@@ -136,8 +136,12 @@ function createTrackFilters() {
         '</label>' +
       '</li>';
   }
-  content = 'Tracks to display ' + listItems;
+  content = 'Tracks ' + listItems;
   document.querySelector('#tracks-to-display').innerHTML = content;
+
+
+  $('#filters-container').after('<div id="ideogramTitle">Copy number variation inference</div>');
+
   checkboxes = document.querySelectorAll('input[type=checkbox]');
   checkboxes.forEach(function(checkbox) {
     checkbox.addEventListener('click', function() {
@@ -158,9 +162,8 @@ function warnIdeogramOfNumericCluster() {
       'cell annotation ("' + cellAnnot + '") are numeric.' +
     '</div>';
 
-    $('#tracks-to-display').html('');
-    $('#_ideogramOuterWrap').html('');
-    $('#ideogramWarning').remove();
+    $('#tracks-to-display, #_ideogramOuterWrap').html('');
+    $('#ideogramWarning, #ideogramTitle').remove();
     $('#ideogram-container').append(warning);
 }
 
@@ -172,7 +175,7 @@ function initializeIdeogram(url) {
     $('#_ideogramOuterWrap').html('');
   }
 
-  $('#ideogramWarning').remove();
+  $('#ideogramWarning, #ideogramTitle').remove();
 
   window.ideogram = new Ideogram({
     container: '#ideogram-container',
