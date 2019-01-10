@@ -104,11 +104,4 @@ class ApplicationController < ActionController::Base
     # return true if the scheme is https, the hostname matches a known GCS host, and the query string parameters have the correct keys
     uri.scheme == 'https' && ValidationTools::GCS_HOSTNAMES.include?(uri.hostname) && parsed_query.keys == ValidationTools::SIGNED_URL_KEYS
   end
-
-  # create an extra context hash for error reporting purposes
-  def format_error_params(parameters, study=nil)
-    context_hash = study.present? ? {firecloud_project: study.firecloud_project, firecloud_workspace: study.firecloud_workspace} : {}
-    context_hash.merge!(parameters.dup)
-    context_hash
-  end
 end
