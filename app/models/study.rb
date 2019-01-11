@@ -2083,7 +2083,7 @@ class Study
   # parse a study metadata file and create necessary cell_metadatum objects
   def initialize_cell_metadata(metadata_file, user, opts={local: true})
     begin
-      error_context = ErrorTracker.format_extra_context(self, ordinations_file, {opts: opts})
+      error_context = ErrorTracker.format_extra_context(self, metadata_file, {opts: opts})
       # remove study description as it's not useful
       error_context['study'].delete('description')
       @file_location = metadata_file.upload.path

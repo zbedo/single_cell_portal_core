@@ -25,7 +25,7 @@ module ErrorTracker
 
   private
 
-  def extract_user_identifier(user)
+  def self.extract_user_identifier(user)
     if user.is_a?(User)
       user.id.to_s
     else
