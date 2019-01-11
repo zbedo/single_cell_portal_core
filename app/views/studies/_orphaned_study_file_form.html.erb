@@ -32,9 +32,9 @@
   </div>
   <div id="study-file-<%= study_file._id %>-extra-info">
     <% if study_file.file_type == 'Cluster'  %>
-      <%= render partial: 'cluster_axis_fields', locals: {f: f} %>
+      <%= render partial: 'cluster_axis_fields', locals: {f: f.dup} %>
     <% elsif study_file.file_type == 'Expression Matrix' || study_file.file_type == 'MM Coordinate Matrix' %>
-      <%= render partial: 'expression_file_fields', locals: {f: f} %>
+      <%= render partial: 'expression_file_fields', locals: {f: f.dup} %>
     <% end %>
   </div>
   <div class="form-group row">
@@ -44,7 +44,7 @@
     </div>
     <div class="col-sm-4 taxon-select-target">
       <% if study_file.file_type == 'BAM' || study_file.file_type == 'Fastq' %>
-        <%= render partial: 'taxon_fields', locals: {f: f} %>
+        <%= render partial: 'taxon_fields', locals: {f: f.dup} %>
       <% end %>
     </div>
     <div class="col-sm-2">
@@ -65,7 +65,7 @@
   </div>
 
   <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
-      <%= render partial: 'shared_sync_functions.js.erb', locals: {study_file: study_file, f: f} %>
+      <%= render partial: 'shared_sync_functions.js.erb', locals: {study_file: study_file, f: f.dup} %>
 
       $('#sync-study-file-<%= study_file.id %>').click(function() {
           if ($("#existing-file-<%= study_file.id %> ").val() !== '') {

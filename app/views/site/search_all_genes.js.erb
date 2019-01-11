@@ -6,7 +6,7 @@ $("#<%= gene.study.id %>-count").html($('#<%= gene.study.id %>-body .gene-panel'
 <% end %>
 
 if ($('.gene-panel').length > 0) {
-    $('#gene-search-results').data('spinner').stop();
+    $('#wrap').data('spinner').stop();
     $('#gene-search-results-count').html($('div.gene-panel').length);
     $('#gene-search-studies-count').html($('div.has-gene-results').length);
     window.clearTimeout(window.clearGeneSearchTimeoutID);

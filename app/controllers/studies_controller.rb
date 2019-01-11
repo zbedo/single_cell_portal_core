@@ -410,11 +410,13 @@ class StudiesController < ApplicationController
               break
             end
           end
+          input_matrix_file = StudyFile.find(study_file_id)
           pre_expression_output = @unsynced_files.detect {|file| file.name.split('/').last == 'expression_pre_vis_transform.txt'}
           if pre_expression_output.present?
             pre_expression_output.file_type = 'Analysis Output'
             pre_expression_output.description = "Output expression matrix (without visualization data transform) from inferCNV run #{params[:submission_id]}"
             pre_expression_output.options.merge!({analysis_name: 'infercnv', matrix_id: study_file_id})
+            pre_expression_output.taxon_id = input_matrix_file.taxon_id
           end
 
           figure = @unsynced_files.detect {|file| file.name.split('/').last =~ /infercnv\.pdf/}
@@ -429,6 +431,7 @@ class StudiesController < ApplicationController
             post_expression_output.file_type = 'Analysis Output'
             post_expression_output.description = "Output expression matrix (including visualization data transform) from inferCNV run #{params[:submission_id]}"
             post_expression_output.options.merge!({analysis_name: 'infercnv', matrix_id: study_file_id})
+            post_expression_output.taxon_id = input_matrix_file.taxon_id
           end
 
           observations_output = @unsynced_files.detect {|file| file.name.split('/').last == 'observations.txt'}
@@ -438,13 +441,19 @@ class StudiesController < ApplicationController
             observations_output.options.merge!({analysis_name: 'infercnv', matrix_id: study_file_id})
           end
 
-          ideogram_output = @unsynced_files.detect {|file| file.name.split('/').last == 'infercnv_exp_means.json'}
+          ideogram_output = @unsynced_files.detect {|file| file.name.split('/').last == 'ideogram_exp_means.tar.gz'}
           if ideogram_output.present?
             ideogram_output.file_type = 'Analysis Output'
-            ideogram_output.description = "Ideogram.js formatted annotation output from inferCNV run #{params[:submission_id]}"
+            ideogram_output.description = "Ideogram annotation outputs archive from inferCNV run #{params[:submission_id]}"
             ideogram_output.options.merge!({analysis_name: 'infercnv',
                                             visualization_name: 'ideogram.js',
                                             matrix_id: study_file_id})
+            ideogram_output.taxon_id = input_matrix_file.taxon_id
+            assemblies = Taxon.find(input_matrix_file.taxon_id).genome_assemblies
+            if assemblies.any?
+              # provisionally pick the first possible assembly, and hopefully the user will update this
+              ideogram_output.genome_assembly_id = assemblies.first.id
+            end
           end
 
           logfile = @unsynced_files.detect {|file| file.name.split('/').last == 'infercnv.log'}
@@ -1100,54 +1109,63 @@ class StudiesController < ApplicationController
         @message += " You will receive an email at #{current_user.email} when the parse has completed."
         # parse file as appropriate type
         case @study_file.file_type
-          when 'Cluster'
-            @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false})
-          when 'Coordinate Labels'
-            @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user, {local: false})
-          when 'Expression Matrix'
-            @study.delay.initialize_gene_expression_data(@study_file, current_user, {local: false})
-          when 'MM Coordinate Matrix'
-            # we have to cast the study_file ID to a string, otherwise it is a BSON::ObjectID and will not match
-            barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => @study_file.id.to_s)
-            genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => @study_file.id.to_s)
-            # create a study_file_bundle if it doesn't already exist
-            @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, @study_file)
-            if barcodes.present? && genes.present? && @study_file_bundle.completed?
-              @study_file.update(parse_status: 'parsing')
-              genes.update(parse_status: 'parsing')
-              barcodes.update(parse_status: 'parsing')
-              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, @study_file, genes, barcodes, {sync: true})
+        when 'Cluster'
+          @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false})
+        when 'Coordinate Labels'
+          @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user, {local: false})
+        when 'Expression Matrix'
+          @study.delay.initialize_gene_expression_data(@study_file, current_user, {local: false})
+        when 'MM Coordinate Matrix'
+          # we have to cast the study_file ID to a string, otherwise it is a BSON::ObjectID and will not match
+          barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => @study_file.id.to_s)
+          genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => @study_file.id.to_s)
+          # create a study_file_bundle if it doesn't already exist
+          @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, @study_file)
+          if barcodes.present? && genes.present? && @study_file_bundle.completed?
+            @study_file.update(parse_status: 'parsing')
+            genes.update(parse_status: 'parsing')
+            barcodes.update(parse_status: 'parsing')
+            ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, @study_file, genes, barcodes, {sync: true})
+          end
+        when '10X Genes File'
+          matrix_id = @study_file.options[:matrix_id]
+          matrix = StudyFile.find(matrix_id)
+          barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => matrix_id)
+          @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, matrix)
+          @target = "##{matrix.form_container_id}"
+          @study_file_bundle.add_files(@study_file)
+          if barcodes.present? && matrix.present? && @study_file_bundle.completed?
+            @study_file.update(parse_status: 'parsing')
+            matrix.update(parse_status: 'parsing')
+            barcodes.update(parse_status: 'parsing')
+            ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, @study_file, barcodes, {sync: true})
+          end
+        when '10X Barcodes File'
+          matrix_id = @study_file.options[:matrix_id]
+          matrix = StudyFile.find(matrix_id)
+          genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => matrix_id)
+          @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, matrix)
+          @study_file_bundle.add_files(@study_file)
+          @target = "##{matrix.form_container_id}"
+          if genes.present? && matrix.present? && @study_file_bundle.completed?
+            @study_file.update(parse_status: 'parsing')
+            genes.update(parse_status: 'parsing')
+            matrix.update(parse_status: 'parsing')
+            ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, genes, @study_file, {sync: true})
+          end
+        when 'Gene List'
+          @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false})
+        when 'Metadata'
+          @study.delay.initialize_cell_metadata(@study_file, current_user, {local: false})
+        when 'Analysis Output'
+          case @study_file.options[:analysis_name]
+          when 'infercnv'
+            if @study_file.options[:visualization_name] == 'ideogram.js'
+              ParseUtils.delay.extract_analysis_output_files(@study, current_user, @study_file, @study_file.options[:analysis_name])
             end
-          when '10X Genes File'
-            matrix_id = @study_file.options[:matrix_id]
-            matrix = StudyFile.find(matrix_id)
-            barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => matrix_id)
-            @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, matrix)
-            @target = "##{matrix.form_container_id}"
-            @study_file_bundle.add_files(@study_file)
-            if barcodes.present? && matrix.present? && @study_file_bundle.completed?
-              @study_file.update(parse_status: 'parsing')
-              matrix.update(parse_status: 'parsing')
-              barcodes.update(parse_status: 'parsing')
-              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, @study_file, barcodes, {sync: true})
-            end
-          when '10X Barcodes File'
-            matrix_id = @study_file.options[:matrix_id]
-            matrix = StudyFile.find(matrix_id)
-            genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => matrix_id)
-            @study_file_bundle = StudyFileBundle.initialize_from_parent(@study, matrix)
-            @study_file_bundle.add_files(@study_file)
-            @target = "##{matrix.form_container_id}"
-            if genes.present? && matrix.present? && @study_file_bundle.completed?
-              @study_file.update(parse_status: 'parsing')
-              genes.update(parse_status: 'parsing')
-              matrix.update(parse_status: 'parsing')
-              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, genes, @study_file, {sync: true})
-            end
-          when 'Gene List'
-            @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false})
-          when 'Metadata'
-            @study.delay.initialize_cell_metadata(@study_file, current_user, {local: false})
+          else
+            Rails.logger.info "Aborting parse of #{@study_file.name} as #{@study_file.file_type} in study #{@study.name}; not applicable"
+          end
         end
       elsif @study_file.file_type == 'BAM'
         # we need to check if we have a study_file_bundle here

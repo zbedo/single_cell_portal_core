@@ -23,7 +23,7 @@ class StudyFile
                       '10X Barcodes File', 'Gene List', 'Metadata', 'Fastq', 'BAM', 'BAM Index', 'Documentation',
                       'Other', 'Analysis Output']
   PARSEABLE_TYPES = ['Cluster', 'Coordinate Labels', 'Expression Matrix', 'MM Coordinate Matrix', '10X Genes File',
-                     '10X Barcodes File', 'Gene List', 'Metadata']
+                     '10X Barcodes File', 'Gene List', 'Metadata', 'Analysis Output']
   DISALLOWED_SYNC_TYPES = ['Fastq']
   UPLOAD_STATUSES = %w(new uploading uploaded)
   PARSE_STATUSES = %w(unparsed parsing parsed)

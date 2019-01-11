@@ -5,7 +5,7 @@ module Api
         extend ActiveSupport::Concern
 
         included do
-          before_action :authenticate_api_user!, unless: proc { %w(schemas taxons).include?(controller_name)}
+          before_action :authenticate_api_user!, unless: proc { %w(schemas taxons status).include?(controller_name)}
         end
 
         def authenticate_api_user!

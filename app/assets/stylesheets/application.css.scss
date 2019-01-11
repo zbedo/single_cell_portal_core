@@ -25,6 +25,7 @@
  *= require animate
  *= require bootstrap-select.min
  *= require spin
+ *= require brand
  *= require_self
  */
 
@@ -39,12 +40,16 @@ html, body {
   height: 100%;
 }
 
+body {
+  background-color: #eff2f5;
+}
+
 label {
   margin-bottom: 2px;
 }
 
 #main-body {
-  padding-bottom: 155px;
+  padding-bottom: 98px;
   overflow-x: hidden;
 }
 
@@ -74,13 +79,17 @@ label {
 }
 
 .sc-navbar {
+  a {
+    color: white !important;
+    font-weight: lighter !important;
+  }
+  a:hover {
+    color: #99979c !important;
+  }
   min-height: 50px !important;
   .navbar-header {
     position: relative;
-    top: 8px;
-    .navbar-brand {
-      font-size: 22px;
-    }
+    top: 10px;
   }
   .nav {
     margin-top: 0px;
@@ -89,11 +98,7 @@ label {
 }
 
 .navbar-brand {
-  padding: 6px 15px;
-}
-
-.navbar-collapse.collapse {
-
+  padding: 0 15px;
 }
 
 .bs-callout{
@@ -206,7 +211,11 @@ label {
 }
 
 #main-banner {
-  margin-top: 20px;
+  margin-top: 50px;
+  background-image: image-url('SCP-Header-resize.png');
+  background-repeat: no-repeat;
+  background-position: right bottom;
+  min-width: 1200px;
 }
 
 #main-banner h1 sup small {
@@ -248,25 +257,6 @@ label {
 
 .table-responsive .dataTables_wrapper .row {
   margin: 0;
-}
-
-.footer {
-  background-color: #efefef;
-  padding-top: 25px;
-  position: relative;
-  margin-top: -155px; /* negative value of footer height */
-  height: 155px;
-  clear:both;
-  width: 100%;
-}
-
-.footer img {
-  margin-bottom: 10px;
-}
-
-.footer a {
-  color: inherit;
-  text-decoration: underline;
 }
 
 .svg-container {
