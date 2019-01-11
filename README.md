@@ -116,11 +116,11 @@ will need to create a FireCloud project that will own all the workspaces created
 Once the image has successfully built, all registration/configuration steps have been completed, use the following command 
 to start the container:
 
-    bin/boot_docker -u (sendgrid username) -P (sendgrid password) -k (service account key path) -K (read-only service account key path) -o (oauth client id) -S (oauth client secret) -y (Sentry DSN)
+    bin/boot_docker -u (sendgrid username) -P (sendgrid password) -k (service account key path) -K (read-only service account key path) -o (oauth client id) -S (oauth client secret)
 
 This sets up several environment variables in your shell and then runs the following command:
 
-    docker run --rm -it --name $CONTAINER_NAME -p 80:80 -p 443:443 -p 587:587 --link mongodb:mongodb -h localhost -v $PROJECT_DIR:/home/app/webapp:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e SENDGRID_USERNAME=$SENDGRID_USERNAME -e SENDGRID_PASSWORD=$SENDGRID_PASSWORD -e SECRET_KEY_BASE=$SECRET_KEY_BASE -e SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY -e OAUTH_CLIENT_ID=$OAUTH_CLIENT_ID -e OAUTH_CLIENT_SECRET=$OAUTH_CLIENT_SECRET -e SENTRY_DSN=$SENTRY_DSN -e GA_TRACKING_ID=$GA_TRACKING_ID single_cell_docker
+    docker run --rm -it --name $CONTAINER_NAME -p 80:80 -p 443:443 -p 587:587 --link mongodb:mongodb -h localhost -v $PROJECT_DIR:/home/app/webapp:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e SENDGRID_USERNAME=$SENDGRID_USERNAME -e SENDGRID_PASSWORD=$SENDGRID_PASSWORD -e SECRET_KEY_BASE=$SECRET_KEY_BASE -e SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY -e OAUTH_CLIENT_ID=$OAUTH_CLIENT_ID -e OAUTH_CLIENT_SECRET=$OAUTH_CLIENT_SECRET -e SENTRY_DSN=$SENTRY_DSN -e GA_TRACKING_ID=$GA_TRACKING_ID -e TCELL_APP_ID=$TCELL_APP_ID -e TCELL_API_KEY=$TCELL_API_KEY single_cell_docker
 
 The container will then start running, and will execute its local startup scripts that will configure the application automatically.
 
@@ -169,6 +169,8 @@ for making authenticated API calls to GCP for streaming assets to the browser.
 integration.
 1. **GA_TRACKING_ID** (passed with -e): Sets the GA_TRACKING_ID environment variable for tracking usage via 
 [Google Analytics](https://analytics.google.com) if you have created an app ID.
+1. **TCELL_APP_ID** (passed with -e): Sets the TCELL_APP_ID environment variable to enable the TCell web application firewall (if enabled)
+1. **TCELL_API_KEY** (passed with -e): Sets the TCELL_API_KEY environment variable to enable the TCell web application firewall (if enabled)
 1. **PROD_DATABASE_PASSWORD** (passed with -e, for production deployments only): Sets the prod database password for accessing
 the production database instance.  Only needed when deploying the portal in production mode.  See <code>config/mongoid.yml</code>
 for more configuration information regarding the production database.
@@ -209,6 +211,8 @@ to the JSON read-only service account key file you exported from GCP.
 OAUTH_CLIENT_SECRET variables are necessary for allowing Google user authentication.  For instructions on creating OAuth 
 2.0 Client IDs, refer to the [Google OAuth 2.0 documentation](https://support.google.com/cloud/answer/6158849).
 * **-e SENTRY_DSN=[SENTRY_DSN]:** Sets the SENTRY_DSN environment variable for error reporting to [Sentry](https://sentry.io/)
+* **-e TCELL_APP_ID=[TCELL_APP_ID]:** Sets the TCELL_APP_ID environment variable to enable the [TCell](https://tcell.io) web application firewall (if enabled)
+* **-e TCELL_API_KEY=[TCELL_API_KEY]:** Sets the TCELL_API_KEY environment variable to enable the [TCell](https://tcell.io) web application firewall (if enabled)
 * **-e GA_TRACKING_ID=[GA_TRACKING_ID]:** Sets the GA_TRACKING_ID environment variable for tracking usage via 
 [Google Analytics](https://analytics.google.com)
 * **single_cell_docker**: This is the name of the image we created earlier. If you chose a different name, please use 
@@ -356,7 +360,7 @@ To access the production instance for maintenance purposes:
 * Launch a new instance of the portal with the updated container:
 
 
-    bin/boot_docker -u (sendgrid username) -P (sendgrid password) -e production -p (prod database password) -h (production hostname) -k (service account key path) -K (read-only service account key path) -o (oauth client id) -S (oauth client secret) -y (Sentry DSN)`
+    bin/boot_docker -u (sendgrid username) -P (sendgrid password) -e production -p (prod database password) -h (production hostname) -k (service account key path) -K (read-only service account key path) -o (oauth client id) -S (oauth client secret)`
 
 * View Docker logs: `docker logs -f single_cell`
 * Once Nginx is running again (i.e. you see "Passenger core online" in Docker logs), take off maintanence mode via `bin/enable_maintenance.sh off`
