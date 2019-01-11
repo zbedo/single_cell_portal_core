@@ -391,7 +391,7 @@ module Api
           firecloud_permissions = Study.firecloud_client.get_workspace_acl(@study.firecloud_project, @study.firecloud_workspace)
           firecloud_permissions['acl'].each do |user, permissions|
             # skip project owner permissions, they aren't relevant in this context
-            if permissions['accessLevel'] == 'PROJECT_OWNER'
+            if permissions['accessLevel'] =~ /OWNER/i
               next
             else
               # determine whether permissions are incorrect or missing completely
