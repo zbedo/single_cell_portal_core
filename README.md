@@ -67,7 +67,7 @@ deploying their own instance will need to register for an account with Sentry, a
 environment variable when deploying your instance (see [Running the Container](#running-the-container) and
 [DOCKER RUN COMMAND ENVIRONMENT VARIABLES](#docker-run-command-environment-variables) for more detail).
 
-#### [TCell Web Application FireWall](https://tcell.io)
+#### [TCell Web Application Firewall](https://tcell.io)
 
 The Single Cell Portal employs the TCell web application firewall as part of its security configuration.  This is not 
 required the portal to function (this feature is opt-in and only functions when certain parameters are set at runtime). 
