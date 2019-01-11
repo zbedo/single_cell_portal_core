@@ -27,12 +27,13 @@ SecureHeaders::Configuration.default do |config|
       font_src: %w('self' data:),
       form_action: %w('self'),
       connect_src: %w('self' https://www.google-analytics.com https://unpkg.com https://www.googleapis.com https://s3.amazonaws.com
-                      https://portals.broadinstitute.org https://data.broadinstitute.org),
+                      https://portals.broadinstitute.org https://data.broadinstitute.org https://api.tcell.io https://input.tcell.io),
       img_src: %w('self' data: https://www.google-analytics.com https://online.swagger.io),
       manifest_src: %w('self'),
       object_src: %w('none'),
       script_src: %w('self' blob: 'unsafe-eval' 'unsafe-inline' 'strict-dynamic' https://cdn.plot.ly https://cdn.datatables.net
-                      https://www.google-analytics.com https://cdnjs.cloudflare.com https://maxcdn.bootstrapcdn.com https://use.fontawesome.com),
+                     https://www.google-analytics.com https://cdnjs.cloudflare.com https://maxcdn.bootstrapcdn.com
+                     https://use.fontawesome.com https://jsagent.tcell.io),
       style_src: %w('self' https://maxcdn.bootstrapcdn.com 'unsafe-inline'),
       upgrade_insecure_requests: true, # see https://www.w3.org/TR/upgrade-insecure-requests/
   }

@@ -105,11 +105,11 @@ class StudiesControllerControllerTest < ActionDispatch::IntegrationTest
     metadata_filename = 'metadata_example.txt'
     fastq_path = Rails.root.join('test', 'test_data', fastq_filename).to_s
     metadata_path = Rails.root.join('test', 'test_data', metadata_filename).to_s
-    Study.firecloud_client.create_workspace_file(FireCloudClient::PORTAL_NAMESPACE, workspace_name, fastq_path, fastq_filename)
-    Study.firecloud_client.create_workspace_file(FireCloudClient::PORTAL_NAMESPACE, workspace_name, metadata_path, metadata_filename)
-    assert Study.firecloud_client.get_workspace_file(FireCloudClient::PORTAL_NAMESPACE, workspace_name, fastq_filename).present?,
+    Study.firecloud_client.execute_gcloud_method(:create_workspace_file, 0, FireCloudClient::PORTAL_NAMESPACE, workspace_name, fastq_path, fastq_filename)
+    Study.firecloud_client.execute_gcloud_method(:create_workspace_file, 0, FireCloudClient::PORTAL_NAMESPACE, workspace_name, metadata_path, metadata_filename)
+    assert Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, FireCloudClient::PORTAL_NAMESPACE, workspace_name, fastq_filename).present?,
            "Did not add fastq file to bucket"
-    assert Study.firecloud_client.get_workspace_file(FireCloudClient::PORTAL_NAMESPACE, workspace_name, metadata_filename).present?,
+    assert Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, FireCloudClient::PORTAL_NAMESPACE, workspace_name, metadata_filename).present?,
            "Did not add metadata file to bucket"
     # now create study entry
     puts 'adding study...'

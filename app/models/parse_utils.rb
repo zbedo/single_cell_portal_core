@@ -1,5 +1,6 @@
 require 'rubygems/package' # for tar reader
 class ParseUtils
+  extend ErrorTracker
 
   # parse a 10X gene-barcode matrix file triplet (input matrix must be sorted by gene indices)
   def self.cell_ranger_expression_parse(study, user, matrix_study_file, genes_study_file, barcodes_study_file, opts={})
@@ -165,6 +166,7 @@ class ParseUtils
       begin
         SingleCellMailer.notify_user_parse_complete(user.email, "Gene-barcode matrix expression data has completed parsing", @message).deliver_now
       rescue => e
+        ErrorTracker.report_exception(e, user, {message: @message})
         Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
       end
 
@@ -176,12 +178,20 @@ class ParseUtils
           upload_or_remove_study_file(barcodes_study_file, study)
         end
       rescue => e
+        ErrorTracker.report_exception(e, user, {matrix_study_file: matrix_study_file.attributes.to_h,
+                                                genes_study_file: genes_study_file.attributes.to_h,
+                                                barcodes_study_file: barcodes_study_file.attributes.to_h,
+                                                study: study.attributes.to_h})
         Rails.logger.error "Error in uploading files from sparse matrix parse to #{study.firecloud_project}/#{study.firecloud_workspace}#{study.bucket_id}: #{e.message}"
       end
 
       # finished, so return true
       true
     rescue => e
+      ErrorTracker.report_exception(e, user, {matrix_study_file: matrix_study_file.attributes.to_h,
+                                              genes_study_file: genes_study_file.attributes.to_h,
+                                              barcodes_study_file: barcodes_study_file.attributes.to_h,
+                                              study: study.attributes.to_h})
       error_message = e.message
       Rails.logger.error "#{Time.now}: #{e.class.name}:#{error_message}, #{@last_line}"
       # error has occurred, so clean up records and remove file
@@ -408,7 +418,7 @@ class ParseUtils
     # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
     # rather than relying on opts[:local], actually check if the file is already in the GCS bucket
     begin
-      remote = Study.firecloud_client.get_workspace_file(study.firecloud_project, study.firecloud_workspace, study_file.bucket_location)
+      remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, study.firecloud_project, study.firecloud_workspace, study_file.bucket_location)
       if remote.nil?
         Rails.logger.info "#{Time.now}: preparing to upload expression file: #{study_file.bucket_location}:#{study_file.id} to FireCloud"
         study.send_to_firecloud(study_file)
@@ -419,6 +429,8 @@ class ParseUtils
         Rails.logger.info "#{Time.now}: cleanup job for #{study_file.bucket_location}:#{study_file.id} scheduled for #{run_at}"
       end
     rescue => e
+      error_context = ErrorTracker.format_extra_context(study, study_file)
+      ErrorTracker.report_exception(e, nil, error_context)
       Rails.logger.error "Error in pushing #{study_file.bucket_location}:#{study_file.id} to #{study.firecloud_project}/#{study.firecloud_workspace}:#{study.bucket_id}: #{e.message}"
       run_at = 2.minutes.from_now
       Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file, 0), run_at: run_at)
@@ -428,9 +440,9 @@ class ParseUtils
 
   # delete a file from the bucket on fail
   def self.delete_remote_file_on_fail(study_file, study)
-    remote = Study.firecloud_client.get_workspace_file(study.firecloud_project, study.firecloud_workspace, study_file.bucket_location)
+    remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, study.firecloud_project, study.firecloud_workspace, study_file.bucket_location)
     if remote.present?
-      Study.firecloud_client.delete_workspace_file(study.firecloud_project, study.firecloud_workspace, study_file.bucket_location)
+      Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, 0, study.firecloud_project, study.firecloud_workspace, study_file.bucket_location)
     end
   end
 

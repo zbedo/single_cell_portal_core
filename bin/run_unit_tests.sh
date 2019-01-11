@@ -5,20 +5,22 @@
 #
 # can take the following arguments:
 #
-# -t filepath		Run all tests in the specified file
-# -R regex			Run all matching tests in the file specified with -t
+# -t filepath    Run all tests in the specified file
+# -R regex      Run all matching tests in the file specified with -t
 
 while getopts "t:R:" OPTION; do
 case $OPTION in
-	t)
-		TEST_FILEPATH="$OPTARG"
-		;;
-	R)
-	  MATCHING_TESTS="$OPTARG"
-	  ;;
+  t)
+    TEST_FILEPATH="$OPTARG"
+    ;;
+  R)
+    MATCHING_TESTS="$OPTARG"
+    ;;
   esac
 done
 start=$(date +%s)
+RETURN_CODE=0
+FAILED_COUNT=0
 echo "Precompiling assets, yarn and webpacker..."
 RAILS_ENV=test NODE_ENV=test bin/bundle exec rake assets:clean
 RAILS_ENV=test NODE_ENV=test bin/bundle exec rake assets:precompile
@@ -35,22 +37,36 @@ then
     EXTRA_ARGS="-n $MATCHING_TESTS"
   fi
   echo "Running specified tests: $TEST_FILEPATH $EXTRA_ARGS"
-  ruby -I test $TEST_FILEPATH $EXTRA_ARGS
+  bundle exec ruby -I test $TEST_FILEPATH $EXTRA_ARGS
+  code=$? # immediately capture exit code to prevent this from getting clobbered
+  if [[ $code -ne 0 ]]; then
+    RETURN_CODE=$code
+    ((FAILED_COUNT++))
+  fi
 else
   echo "Running all unit & integration tests..."
-	bundle exec ruby -I test test/integration/fire_cloud_client_test.rb
-	bundle exec ruby -I test test/integration/cache_management_test.rb
-	bundle exec ruby -I test test/integration/study_creation_test.rb
-	bundle exec ruby -I test test/integration/study_validation_test.rb
-	bundle exec ruby -I test test/integration/taxons_controller_test.rb
-	bundle exec ruby -I test test/api/studies_controller_test.rb
-	bundle exec ruby -I test test/api/study_files_controller_test.rb
-	bundle exec ruby -I test test/api/study_file_bundles_controller_test.rb
-	bundle exec ruby -I test test/api/study_shares_controller_test.rb
-	bundle exec ruby -I test test/api/directory_listings_controller_test.rb
-	bundle exec ruby -I test test/models/cluster_group_test.rb
-	bundle exec ruby -I test test/models/user_annotation_test.rb
-	bundle exec ruby -I test test/models/parse_utils_test.rb
+  declare -a tests=(test/integration/fire_cloud_client_test.rb
+                    test/integration/cache_management_test.rb
+                    test/integration/study_creation_test.rb
+                    test/integration/study_validation_test.rb
+                    test/integration/taxons_controller_test.rb
+                    test/api/studies_controller_test.rb
+                    test/api/study_files_controller_test.rb
+                    test/api/study_file_bundles_controller_test.rb
+                    test/api/study_shares_controller_test.rb
+                    test/api/directory_listings_controller_test.rb
+                    test/models/cluster_group_test.rb
+                    test/models/user_annotation_test.rb
+                    test/models/parse_utils_test.rb
+  )
+  for test_name in ${tests[*]}; do
+      bundle exec ruby -I test $test_name
+      code=$? # immediately capture exit code to prevent this from getting clobbered
+      if [[ $code -ne 0 ]]; then
+        RETURN_CODE=$code
+        ((FAILED_COUNT++))
+      fi
+  done
 fi
 echo "Cleaning up..."
 bundle exec bin/rails runner -e test "Study.destroy_all" # destroy all studies to clean up any files
@@ -61,4 +77,8 @@ difference=$(($end - $start))
 min=$(($difference / 60))
 sec=$(($difference % 60))
 echo "Total elapsed time: $min minutes, $sec seconds"
-exit
+if [[ $RETURN_CODE -ne 0 ]]; then
+	printf "\n### There were $FAILED_COUNT errors/failed test suites in this run ###\n\n"
+fi
+echo "Exiting with code: $RETURN_CODE"
+exit $RETURN_CODE

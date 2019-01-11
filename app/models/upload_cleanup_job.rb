@@ -6,6 +6,7 @@
 ##
 
 class UploadCleanupJob < Struct.new(:study, :study_file, :retry_count)
+  extend ErrorTracker
 
   def perform
     retries = retry_count + 1
@@ -14,6 +15,10 @@ class UploadCleanupJob < Struct.new(:study, :study_file, :retry_count)
       Rails.logger.info "#{Time.now}: aborting UploadCleanupJob due to StudyFile already being deleted."
     elsif study_file.queued_for_deletion || study.queued_for_deletion
       Rails.logger.info "#{Time.now}: aborting UploadCleanupJob for #{study_file.bucket_location}:#{study_file.id} in '#{study.name}', file queued for deletion"
+      # check if there's still a local copy we need to clean up
+      if study_file.is_local?
+        study_file.remove_local_copy
+      end
     else
       if !study_file.is_local?
         Rails.logger.error "#{Time.now}: error in UploadCleanupJob for #{study.name}:#{study_file.bucket_location}:#{study_file.id}; file no longer present"
@@ -48,6 +53,8 @@ class UploadCleanupJob < Struct.new(:study, :study_file, :retry_count)
             Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file, retries), run_at: run_at)
           end
         rescue => e
+          error_context = ErrorTracker.format_extra_context(study, study_file, {retry_count: retry_count})
+          ErrorTracker.report_exception(e, nil, error_context)
           if retries <= 3
             interval = retries * 2
             run_at = interval.minutes.from_now

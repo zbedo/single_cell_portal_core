@@ -1,0 +1,16 @@
+filebeat.prospectors:
+- type: log
+  enabled: true
+  paths:
+  - /var/log/rails/${PASSENGER_APP_ENV}.log
+  fields:
+    type: rails
+    app_id: single-cell-portal
+  fields_under_root: true
+  include_lines:
+  encoding: utf-8
+  multiline:
+    pattern: '.*Started (GET|POST|PUT|PATCH|OPTIONS|HEAD|DELETE)'
+    negate: true
+    match: after
+    tail_files: false

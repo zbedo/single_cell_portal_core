@@ -211,6 +211,8 @@ module Api
           @study_file_bundle.destroy
           head 204
         rescue => e
+          error_context = ErrorTracker.format_extra_context(@study_file_bundle, {params: params})
+          ErrorTracker.report_exception(e, current_api_user, error_context)
           render json: {error: e.message}, status: 500
         end
       end
