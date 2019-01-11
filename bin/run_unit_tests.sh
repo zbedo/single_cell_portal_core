@@ -78,7 +78,7 @@ min=$(($difference / 60))
 sec=$(($difference % 60))
 echo "Total elapsed time: $min minutes, $sec seconds"
 if [[ $RETURN_CODE -ne 0 ]]; then
-	printf "\n### There were $FAILED_COUNT errors/failed tests in this run ###\n\n"
+	printf "\n### There were $FAILED_COUNT errors/failed test suites in this run ###\n\n"
 fi
 echo "Exiting with code: $RETURN_CODE"
 exit $RETURN_CODE
