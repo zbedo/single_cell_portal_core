@@ -23,8 +23,6 @@ module ErrorTracker
     context
   end
 
-  private
-
   def self.extract_user_identifier(user)
     if user.is_a?(User)
       user.id.to_s
