@@ -1461,10 +1461,15 @@ combined-stream@1.0.6, combined-stream@~1.0.5, combined-stream@~1.0.6:
   dependencies:
     delayed-stream "~1.0.0"
 
-commander@*, commander@2:
+commander@2:
   version "2.17.1"
   resolved "https://registry.yarnpkg.com/commander/-/commander-2.17.1.tgz#bd77ab7de6de94205ceacc72f1716d29f20a77bf"
   integrity sha512-wPMUt6FnH2yzG95SA6mzjQOEKUU3aLaDEmzs1ti+1E9h+CsrZghRlqEM/EJ4KscsQVG8uNN4uVreUeT8+drlgg==
+
+commander@^2.19.0:
+  version "2.19.0"
+  resolved "https://registry.yarnpkg.com/commander/-/commander-2.19.0.tgz#f6198aa84e5b83c46054b94ddedbfed5ee9ff12a"
+  integrity sha512-6tvAOO+D6OENvRAh524Dh9jcfKTYDQAqvqezbCW82xj5X0pSrcpxtvRKHLG0yBY6SD7PSDrJaj+0AiOcKVd1Xg==
 
 commander@~2.13.0:
   version "2.13.0"
@@ -1809,10 +1814,15 @@ d3-array@^1.2.0:
   resolved "https://registry.yarnpkg.com/d3-array/-/d3-array-1.2.1.tgz#d1ca33de2f6ac31efadb8e050a021d7e2396d5dc"
   integrity sha512-CyINJQ0SOUHojDdFDH4JEM0552vCR1utGyLHegJHyYH0JyCpSeTPxi4OBqHMA2jJZq4NH782LtaJWBImqI/HBw==
 
-d3-brush@^1.0.4:
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/d3-brush/-/d3-brush-1.0.4.tgz#00c2f238019f24f6c0a194a26d41a1530ffe7bc4"
-  integrity sha1-AMLyOAGfJPbAoZSibUGhUw/+e8Q=
+d3-array@^1.2.4:
+  version "1.2.4"
+  resolved "https://registry.yarnpkg.com/d3-array/-/d3-array-1.2.4.tgz#635ce4d5eea759f6f605863dbcfc30edc737f71f"
+  integrity sha512-KHW6M86R+FUPYGb3R5XiYjXPq7VzwxZ22buHhAEVG5ztoEcZZMLov530mmccaqA1GghZArjQV46fuc8kUqhhHw==
+
+d3-brush@^1.0.6:
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/d3-brush/-/d3-brush-1.0.6.tgz#33691f2032d9db6c5d8cb684ff255a9883629e21"
+  integrity sha512-lGSiF5SoSqO5/mYGD5FAeGKKS62JdA1EV7HPrU2b5rTX4qEJJtpjaGLJngjnkewQy7UnGstnFd3168wpf5z76w==
   dependencies:
     d3-dispatch "1"
     d3-drag "1"
@@ -1830,10 +1840,15 @@ d3-color@1:
   resolved "https://registry.yarnpkg.com/d3-color/-/d3-color-1.2.0.tgz#d1ea19db5859c86854586276ec892cf93148459a"
   integrity sha512-dmL9Zr/v39aSSMnLOTd58in2RbregCg4UtGyUArvEKTTN6S3HKEy+ziBWVYo9PTzRyVW+pUBHUtRKz0HYX+SQg==
 
-d3-dispatch@1, d3-dispatch@^1.0.3:
+d3-dispatch@1:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/d3-dispatch/-/d3-dispatch-1.0.3.tgz#46e1491eaa9b58c358fce5be4e8bed626e7871f8"
   integrity sha1-RuFJHqqbWMNY/OW+TovtYm54cfg=
+
+d3-dispatch@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/d3-dispatch/-/d3-dispatch-1.0.5.tgz#e25c10a186517cd6c82dd19ea018f07e01e39015"
+  integrity sha512-vwKx+lAqB1UuCeklr6Jh1bvC4SZgbSqbkGBLClItFBIYH4vqDJCA7qfoy14lXmJdnBOdxndAMxjCbImJYW7e6g==
 
 d3-drag@1:
   version "1.2.1"
@@ -1857,10 +1872,10 @@ d3-ease@1:
   resolved "https://registry.yarnpkg.com/d3-ease/-/d3-ease-1.0.3.tgz#68bfbc349338a380c44d8acc4fbc3304aa2d8c0e"
   integrity sha1-aL+8NJM4o4DETYrMT7wzBKotjA4=
 
-d3-fetch@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/d3-fetch/-/d3-fetch-1.1.0.tgz#31cbcd506b21d6519ac6a120a079de8d0a57c00f"
-  integrity sha512-j+V4vtT6dceQbcKYLtpTueB8Zvc+wb9I93WaFtEQIYNADXl0c1ZJMN3qQo0CssiTsAqK8pePwc7f4qiW+b0WOg==
+d3-fetch@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/d3-fetch/-/d3-fetch-1.1.2.tgz#957c8fbc6d4480599ba191b1b2518bf86b3e1be2"
+  integrity sha512-S2loaQCV/ZeyTyIF2oP8D1K9Z4QizUzW7cWeAOAS4U88qOt3Ucf6GsmgthuYSdyB2HyEm4CeGvkQxWsmInsIVA==
   dependencies:
     d3-dsv "1"
 
@@ -1889,10 +1904,23 @@ d3-scale@^1.0.6:
     d3-time "1"
     d3-time-format "2"
 
+d3-selection-multi@1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/d3-selection-multi/-/d3-selection-multi-1.0.1.tgz#cd6c25413d04a2cb97470e786f2cd877f3e34f58"
+  integrity sha1-zWwlQT0EosuXRw54byzYd/PjT1g=
+  dependencies:
+    d3-selection "1"
+    d3-transition "1"
+
 d3-selection@1, d3-selection@^1.1.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/d3-selection/-/d3-selection-1.3.0.tgz#d53772382d3dc4f7507bfb28bcd2d6aed2a0ad6d"
   integrity sha512-qgpUOg9tl5CirdqESUAu0t9MU/t3O9klYfGfyKsXEmhyxyzLpzpeh08gaxBUTQw1uXIOkr/30Ut2YRjSSxlmHA==
+
+d3-selection@^1.3.2:
+  version "1.3.2"
+  resolved "https://registry.yarnpkg.com/d3-selection/-/d3-selection-1.3.2.tgz#6e70a9df60801c8af28ac24d10072d82cbfdf652"
+  integrity sha512-OoXdv1nZ7h2aKMVg3kaUFbLLK5jXUFAMLD/Tu5JA96mjf8f2a9ZUESGY+C36t8R1WFeWk/e55hy54Ml2I62CRQ==
 
 d3-time-format@2:
   version "2.1.1"
@@ -3081,19 +3109,19 @@ icss-utils@^2.1.0:
   dependencies:
     postcss "^6.0.1"
 
-ideogram@1.4.1:
+"ideogram@git://github.com/eweitz/ideogram.git#4cf42850ff95f8d090665842376afd7af2d1c49d":
   version "1.4.1"
-  resolved "https://registry.yarnpkg.com/ideogram/-/ideogram-1.4.1.tgz#bd6756df645719c2a61718d5e785571833ad5d3d"
-  integrity sha512-uhlEquAm4ggQ4DFV0l0Q/9Lb1FOVs6wCM+5BkFIJnfx12P6y1SChitKXDRJhFISy7iOD50VdZxFhZhUEJ5YCrg==
+  resolved "git://github.com/eweitz/ideogram.git#4cf42850ff95f8d090665842376afd7af2d1c49d"
   dependencies:
-    commander "*"
+    commander "^2.19.0"
     crossfilter "1.3.12"
-    d3-array "^1.2.0"
-    d3-brush "^1.0.4"
-    d3-dispatch "^1.0.3"
-    d3-fetch "^1.1.0"
+    d3-array "^1.2.4"
+    d3-brush "^1.0.6"
+    d3-dispatch "^1.0.5"
+    d3-fetch "^1.1.2"
     d3-scale "^1.0.6"
-    d3-selection "^1.1.0"
+    d3-selection "^1.3.2"
+    d3-selection-multi "1.0.1"
     es6-natural-sort "1.0.0"
 
 ieee754@^1.1.4:
@@ -3112,6 +3140,11 @@ ignore-walk@^3.0.1:
   integrity sha512-DTVlMx3IYPe0/JJcYP7Gxg7ttZZu3IInhuEhbchuqneY9wWe5Ojy2mXLBaQFUQmo0AW2r3qG7m1mg86js+gnlQ==
   dependencies:
     minimatch "^3.0.4"
+
+igv@2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/igv/-/igv-2.1.0.tgz#1b3b18a2fa1ae1a6c9beb7772f4181ac7eb48a64"
+  integrity sha512-VI2ywuI2FYt2ZkyUO2dMk3xrLpZ5hxSGzDyMgKad95lwzmZNe0nK2ZpY/N8VobEjey/8gozIfk7PCTtYp/SFSA==
 
 import-cwd@^2.0.0:
   version "2.1.0"
@@ -6442,11 +6475,6 @@ timers-browserify@^2.0.4:
   integrity sha512-YvC1SV1XdOUaL6gx5CoGroT3Gu49pK9+TZ38ErPldOWW4j49GI1HKs9DV+KGq/w6y+LZ72W1c8cKz2vzY+qpzg==
   dependencies:
     setimmediate "^1.0.4"
-
-tmp_es6_igv@0.0.4:
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/tmp_es6_igv/-/tmp_es6_igv-0.0.4.tgz#ae337081f0e92f02de5bbe0f2bae1ef4f230e3ed"
-  integrity sha512-FlQGx1P56Rjv4xfuwSIPAkKEtuhLlvstFlOs1iAW3rM1Ztd0Itn8drgecie816otz2XtTPlqF4xN7dlKoJC4Iw==
 
 to-arraybuffer@^1.0.0:
   version "1.0.1"
