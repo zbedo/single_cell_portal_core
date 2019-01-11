@@ -39,6 +39,49 @@ To deploy the database container:
 
 Note: Once the container has been run once, you can stop & restart it using: `docker stop mongodb` or `docker restart mongodb`
 
+## EXTERNAL DEPENDENCIES AND INTEGRATIONS
+
+The Single Cell Portal has several external dependencies & integrations that are either required for operation, or enable 
+extra security/reporting features when certain variables are set.  If you are deploying your own instance of the Single Cell Portal, 
+you will need to create resources and accounts in order for the portal to function.  They are as follows:
+
+#### [Google Cloud Platform](https://console.cloud.google.com) (REQUIRED)
+
+The Single Cell Portal is currently deployed in Google Cloud Platform (specifically, on a Google Compute Engine virtual machine).
+This is a requirement for all functionality.  The portal utilizes GCP service accounts for making authenticated calls to 
+various APIs as a part of normal usage.  For more information on how to configure your GCP project, please see 
+[Local Development or Deploying a Private Instance](##local-development-or-deploying-a-private-instance) below.
+
+#### [FireCloud](https://firecloud.org) (REQUIRED)
+
+The Single Cell Portal uses FireCloud, which is the Broad Institute's cloud-based analysis platform.  The portal uses 
+FireCloud both as a data and permission store, as well as an analysis platform.  For more information on the integration 
+itself, see [FireCloud Integration](#firecloud-integration) below, or for setting up your own FireCloud project, see 
+[Local Development or Deploying a Private Instance](##local-development-or-deploying-a-private-instance) below.
+
+#### [Sentry](https://sentry.io)
+
+The Single Cell Portal is set up to integrate with Sentry, an external error reporting service.  This is not required for 
+the portal to function (this feature is opt-in and only functions when certain parameters are set at runtime).  Developers 
+deploying their own instance will need to register for an account with Sentry, and then set the <code>SENTRY_DSN</code> 
+environment variable when deploying your instance (see [Running the Container](#running-the-container) and
+[DOCKER RUN COMMAND ENVIRONMENT VARIABLES](#docker-run-command-environment-variables) for more detail).
+
+#### [TCell Web Application FireWall](https://tcell.io)
+
+The Single Cell Portal employs the TCell web application firewall as part of its security configuration.  This is not 
+required the portal to function (this feature is opt-in and only functions when certain parameters are set at runtime). 
+Developers deploying their own instance will need to register for an account with TCell, and then set the <code>TCELL_APP_ID</code> 
+and <code>TCELL_API_KEY</code> environment variables when deploying your instance (see [Running the Container](#running-the-container) and
+[DOCKER RUN COMMAND ENVIRONMENT VARIABLES](#docker-run-command-environment-variables) for more detail).
+
+#### [Google Analytics](https://analytics.google.com)
+
+The Single Cell Portal is configured to report web traffic to Google Analytics.  You will first need to set up an account 
+on Google Analytics, and then to enable simply set the <code>GA_TRACKING_ID</code> environment variable when deploying 
+(see [Running the Container](#running-the-container) and [DOCKER RUN COMMAND ENVIRONMENT VARIABLES](#docker-run-command-environment-variables) 
+for more detail).
+
 ## LOCAL DEVELOPMENT OR DEPLOYING A PRIVATE INSTANCE
 
 If you are not part of the Single Cell Portal development team and are trying to use the portal locally or deploying a 
@@ -109,6 +152,10 @@ will need to create a FireCloud project that will own all the workspaces created
 		* Select your newly-created billing account
 		* Provide a name for your project (no spaces allowed)
 		* Click 'Create Billing Project'
+	
+* **IMPORTANT: Reboot your instance**
+  * Once you have created your FireCloud billing project, you will need to restart your instance and pass the name of your 
+  FireCloud project into <code>bin/boot_docker</code> with <code>-N</code>
 
 
 ## RUNNING THE CONTAINER
@@ -116,11 +163,11 @@ will need to create a FireCloud project that will own all the workspaces created
 Once the image has successfully built, all registration/configuration steps have been completed, use the following command 
 to start the container:
 
-    bin/boot_docker -u (sendgrid username) -P (sendgrid password) -k (service account key path) -K (read-only service account key path) -o (oauth client id) -S (oauth client secret)
+    bin/boot_docker -u (sendgrid username) -P (sendgrid password) -k (service account key path) -K (read-only service account key path) -o (oauth client id) -S (oauth client secret) -N (portal namespace)
 
 This sets up several environment variables in your shell and then runs the following command:
 
-    docker run --rm -it --name $CONTAINER_NAME -p 80:80 -p 443:443 -p 587:587 --link mongodb:mongodb -h localhost -v $PROJECT_DIR:/home/app/webapp:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e SENDGRID_USERNAME=$SENDGRID_USERNAME -e SENDGRID_PASSWORD=$SENDGRID_PASSWORD -e SECRET_KEY_BASE=$SECRET_KEY_BASE -e SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY -e OAUTH_CLIENT_ID=$OAUTH_CLIENT_ID -e OAUTH_CLIENT_SECRET=$OAUTH_CLIENT_SECRET -e SENTRY_DSN=$SENTRY_DSN -e GA_TRACKING_ID=$GA_TRACKING_ID -e TCELL_APP_ID=$TCELL_APP_ID -e TCELL_API_KEY=$TCELL_API_KEY single_cell_docker
+    docker run --rm -it --name $CONTAINER_NAME -p 80:80 -p 443:443 -p 587:587 --link mongodb:mongodb -h localhost -v $PROJECT_DIR:/home/app/webapp:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e SENDGRID_USERNAME=$SENDGRID_USERNAME -e SENDGRID_PASSWORD=$SENDGRID_PASSWORD -e SECRET_KEY_BASE=$SECRET_KEY_BASE -e PORTAL_NAMESPACE=$PORTAL_NAMESPACE -e SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY -e OAUTH_CLIENT_ID=$OAUTH_CLIENT_ID -e OAUTH_CLIENT_SECRET=$OAUTH_CLIENT_SECRET -e SENTRY_DSN=$SENTRY_DSN -e GA_TRACKING_ID=$GA_TRACKING_ID -e TCELL_APP_ID=$TCELL_APP_ID -e TCELL_API_KEY=$TCELL_API_KEY single_cell_docker
 
 The container will then start running, and will execute its local startup scripts that will configure the application automatically.
 
@@ -417,7 +464,7 @@ and any differing values for hostnames/client secrets/passwords as needed.
 The Single Cell Portal stores uploaded study data files in [FireCloud](https://software.broadinstitute.org/firecloud/) 
 workspaces, which in turn store data in GCP buckets.  This is all managed through a GCP service account which in turn 
 owns all portal workspaces and manages them on behalf of portal users.  All portal-related workspaces are within the 
-`single-cell-portal` namespace, which should be noted is a separate project from the one the portal operates out of.
+`single-cell-portal` namespace (or ), which should be noted is a separate project from the one the portal operates out of.
 
 When a study is created through the portal, a call is made to the FireCloud API to provision a workspace and set the ACL 
 to allow owner access to the user who created the study, and read/write access to any designated shares.  Every FireCloud 

@@ -27,7 +27,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # List of URLs/Method names to ignore incremental backoffs on (in cases of UI blocking)
   RETRY_IGNORE_LIST = ["#{BASE_URL}/register", :generate_signed_url, :generate_api_url]
   # default namespace used for all FireCloud workspaces owned by the 'portal'
-  PORTAL_NAMESPACE = 'single-cell-portal'
+  PORTAL_NAMESPACE = ENV['PORTAL_NAMESPACE'].present? ? ENV['PORTAL_NAMESPACE'] : 'single-cell-portal'
   # location of Google service account JSON (must be absolute path to file)
   SERVICE_ACCOUNT_KEY = !ENV['SERVICE_ACCOUNT_KEY'].blank? ? File.absolute_path(ENV['SERVICE_ACCOUNT_KEY']) : ''
   # location of Google service account JSON (must be absolute path to file)
