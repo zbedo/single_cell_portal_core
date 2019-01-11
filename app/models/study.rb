@@ -868,6 +868,22 @@ class Study
     end
   end
 
+  # return a nested array of all available annotations, both cluster-specific and study-wide for use in auto-generated
+  # dropdowns for selecting annotations.  can be scoped to one specific cluster, or return all with 'Cluster: ' prepended on the name
+  def formatted_annotation_select(cluster: nil, annotation_type: nil)
+    options = {}
+    metadata = annotation_type.nil? ? self.cell_metadata : self.cell_metadata.where(annotation_type: annotation_type)
+    options['Study Wide'] = metadata.map(&:annotation_select_option)
+    if cluster.present?
+      options['Cluster-Based'] = cluster.cell_annotation_select_option(annotation_type)
+    else
+      self.cluster_groups.each do |cluster_group|
+        options[cluster_group.name] = cluster_group.cell_annotation_select_option(annotation_type, true) # prepend name onto option value
+      end
+    end
+    options
+  end
+
   ###
   #
   # STUDYFILE GETTERS
@@ -905,13 +921,18 @@ class Study
   end
 
   # check if a study has analysis output files for a given analysis
-  def has_analysis_outputs?(analysis_name, visualization_name=nil)
-    self.get_analysis_outputs(analysis_name, visualization_name).any?
+  def has_analysis_outputs?(analysis_name, visualization_name=nil, cluster_name=nil, annotation_name=nil)
+    self.get_analysis_outputs(analysis_name, visualization_name, cluster_name, annotation_name).any?
   end
 
   # return all study files for a given analysis & visualization component
-  def get_analysis_outputs(analysis_name, visualization_name=nil)
-    self.study_files.where('options.analysis_name' => analysis_name, 'options.visualization_name' => visualization_name)
+  def get_analysis_outputs(analysis_name, visualization_name=nil, cluster_name=nil, annotation_name=nil)
+    self.study_files.where(
+      'options.analysis_name' => analysis_name,
+      'options.visualization_name' => visualization_name,
+      'options.cluster_name' => cluster_name,
+      'options.annotation_name' => annotation_name
+      );
   end
 
   # Return settings for this study's inferCNV ideogram visualization
@@ -1270,7 +1291,7 @@ class Study
       expression_file.remove_local_copy
       expression_file.destroy
       Rails.logger.info Time.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Expression file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Expression file: '#{filename}' parse has failed", error_message).deliver_now
       raise StandardError, error_message
     end
 
@@ -1280,7 +1301,7 @@ class Study
       expression_file.remove_local_copy
       expression_file.destroy
       Rails.logger.info Time.now.to_s + ': ' + @validation_error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Expression file: '#{filename}' parse has failed", @validation_error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Expression file: '#{filename}' parse has failed", @validation_error_message).deliver_now
       raise StandardError, error_message
     end
 
@@ -1483,7 +1504,7 @@ class Study
       expression_file.destroy
       error_message = "#{@last_line}: #{e.message}"
       Rails.logger.info Time.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Gene Expression matrix: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Gene Expression matrix: '#{filename}' parse has failed", error_message).deliver_now
     end
     true
   end
@@ -1546,7 +1567,7 @@ class Study
       filename = ordinations_file.upload_file_name
       ordinations_file.remove_local_copy
       ordinations_file.destroy
-      SingleCellMailer.notify_user_parse_fail(user.email, "Cluster file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Cluster file: '#{filename}' parse has failed", error_message).deliver_now
       raise StandardError, error_message
     end
 
@@ -1557,7 +1578,7 @@ class Study
       filename = ordinations_file.upload_file_name
       ordinations_file.remove_local_copy
       ordinations_file.destroy
-      SingleCellMailer.notify_user_parse_fail(user.email, "Cluster file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Cluster file: '#{filename}' parse has failed", error_message).deliver_now
       raise StandardError, error_message
     end
 
@@ -1842,7 +1863,7 @@ class Study
       ordinations_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Cluster file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Cluster file: '#{filename}' parse has failed", error_message).deliver_now
     end
     true
   end
@@ -1901,7 +1922,7 @@ class Study
       filename = coordinate_file.upload_file_name
       coordinate_file.remove_local_copy
       coordinate_file.destroy
-      SingleCellMailer.notify_user_parse_fail(user.email, "Coordinate Labels file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Coordinate Labels file: '#{filename}' parse has failed", error_message).deliver_now
       raise StandardError, error_message
     end
 
@@ -1918,7 +1939,7 @@ class Study
         end
       end
       coordinate_file.destroy
-      SingleCellMailer.notify_user_parse_fail(user.email, "Coordinate Labels file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Coordinate Labels file: '#{filename}' parse has failed", error_message).deliver_now
       raise StandardError, error_message
     end
 
@@ -2075,7 +2096,7 @@ class Study
       coordinate_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Coordinate Labels file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Coordinate Labels file: '#{filename}' parse has failed", error_message).deliver_now
 
     end
   end
@@ -2136,7 +2157,7 @@ class Study
       metadata_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Metadata file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Metadata file: '#{filename}' parse has failed", error_message).deliver_now
       raise StandardError, error_message
     end
 
@@ -2146,7 +2167,7 @@ class Study
       filename = metadata_file.upload_file_name
       metadata_file.destroy
       Rails.logger.info Time.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Metadata file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Metadata file: '#{filename}' parse has failed", error_message).deliver_now
       raise StandardError, error_message
     end
 
@@ -2363,7 +2384,7 @@ class Study
       metadata_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Metadata file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Metadata file: '#{filename}' parse has failed", error_message).deliver_now
     end
     true
   end
@@ -2423,7 +2444,7 @@ class Study
       marker_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Gene List file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Gene List file: '#{filename}' parse has failed", error_message).deliver_now
       # raise standard error to halt execution
       raise StandardError, error_message
     end
@@ -2434,7 +2455,7 @@ class Study
       filename = marker_file.upload_file_name
       marker_file.destroy
       Rails.logger.info Time.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Gene List file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Gene List file: '#{filename}' parse has failed", error_message).deliver_now
       raise StandardError, error_message
     end
 
@@ -2549,7 +2570,7 @@ class Study
       marker_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Gene List file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Gene List file: '#{filename}' parse has failed", error_message).deliver_now
     end
     true
   end

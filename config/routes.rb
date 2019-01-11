@@ -28,6 +28,7 @@ Rails.application.routes.draw do
             post 'sync', to: 'studies#sync_study'
           end
         end
+        get 'status', to: 'status#index'
       end
     end
 

@@ -38,6 +38,11 @@ class CellMetadatum
     all_values
   end
 
+  # generate a select box option for use in dropdowns that corresponds to this cell_metadatum
+  def annotation_select_option
+    [self.name, "#{self.name}--#{self.annotation_type}--study"]
+  end
+
   ##
   #
   # CLASS INSTANCE METHODS

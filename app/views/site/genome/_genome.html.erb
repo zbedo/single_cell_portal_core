@@ -10,10 +10,19 @@ See partials referenced below and scp-igv.js for larger bodies of code.
   }
 </script>
 <% if @study.has_analysis_outputs?('infercnv', 'ideogram.js') and action_name == 'study' %>
-  <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
-  window.ideogramInferCnvSettings = <%= raw @study.get_ideogram_infercnv_settings.to_json %>;
-</script>
   <%= render partial: '/site/genome/ideogram' %>
+  <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+    window.ideogramInferCnvSettings = <%= raw @study.get_ideogram_infercnv_settings.to_json %>;
+    // Intercept requests to add bearer token, enabling direct load of files from GCS
+    var originalFetch = window.fetch;
+    window.fetch = function () {
+      var myHeaders = new Headers({
+        'Authorization': 'Bearer ' + accessToken
+      });
+      arguments[1] = {headers: myHeaders};
+      return originalFetch.apply(this, arguments)
+    };
+  </script>
 <% end %>
 
 <% if @study.has_bam_files? %>

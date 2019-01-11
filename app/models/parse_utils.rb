@@ -1,3 +1,4 @@
+require 'rubygems/package' # for tar reader
 class ParseUtils
   extend ErrorTracker
 
@@ -182,7 +183,6 @@ class ParseUtils
                                                 barcodes_study_file: barcodes_study_file.attributes.to_h,
                                                 study: study.attributes.to_h})
         Rails.logger.error "Error in uploading files from sparse matrix parse to #{study.firecloud_project}/#{study.firecloud_workspace}#{study.bucket_id}: #{e.message}"
-        # use UploadCleanupJob
       end
 
       # finished, so return true
@@ -211,8 +211,97 @@ class ParseUtils
       matrix_study_file.destroy
       genes_study_file.destroy
       barcodes_study_file.destroy
-      SingleCellMailer.notify_user_parse_fail(user.email, "10X CellRanger expression data in #{study.name} parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Gene-barcode matrix expression data in #{study.name} parse has failed", error_message).deliver_now
       false
+    end
+  end
+
+  # extract analysis output files based on a type of analysis output
+  def self.extract_analysis_output_files(study, user, archive_file, analysis_method)
+    begin
+      study.make_data_dir
+      Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, study.firecloud_project,
+                                                   study.firecloud_workspace, archive_file.bucket_location,
+                                                   study.data_store_path, verify: :none)
+      Rails.logger.info "Successful localization of #{archive_file.upload_file_name}"
+      archive_path = File.join(study.data_store_path, archive_file.download_location)
+      extracted_files = []
+      if archive_path.ends_with?('.zip')
+        Zip::File.open(archive_path) do |zip_file|
+          Dir.chdir(study.data_store_path)
+          zip_file.each do |entry|
+            unless entry.name.end_with?('/') || entry.name.start_with?('.')
+              Rails.logger.info "Extracting: #{entry.name} in #{study.data_store_path}"
+              entry.extract(entry.name)
+              extracted_files << entry.name
+            end
+          end
+        end
+      elsif archive_path.ends_with?('tar.gz')
+        archive_dir = File.join(study.data_store_path, archive_file.remote_location.split('/').first)
+        Dir.chdir(archive_dir)
+        # since there is a bug with tar extraction in RubyGems right now, we need to use the tar command from the OS
+        system "tar -zxvf #{archive_path}"
+        Rails.logger.info "Extraction of #{archive_path} complete"
+        entries = Dir.entries(archive_dir).keep_if {|entry| entry.starts_with?('ideogram_exp_means') && entry.ends_with?('.json')}
+        entries.each do |entry|
+          extracted_files << File.join(archive_dir, entry)
+        end
+        Delayed::Job.enqueue(UploadCleanupJob.new(study, archive_file, 0), run_at: 2.minutes.from_now)
+      else
+        raise ArgumentError, "Unknown archive type: #{archive_path}; only .zip and .tar.gz archives are supported."
+      end
+
+      files_created = []
+      case analysis_method
+      when 'infercnv'
+        # here we are extracting Ideogram.js JSON annotation files from a zipfile bundle and setting various
+        # attributes to allow Ideogram to render this file with the correct cluster/annotation
+        extracted_files.each do |file|
+          converted_path = URI.unescape(file)
+          file_basename = file.split('/').last
+          Rails.logger.info "Opening #{converted_path} for new study_file creation"
+          file_payload = File.open(converted_path)
+          study_file = study.study_files.build(file_type: 'Analysis Output', name: file_basename.dup, upload: file_payload,
+                                               status: 'uploaded', taxon_id: archive_file.taxon_id, genome_assembly_id: archive_file.genome_assembly_id)
+          # chomp off filename header and .json at end
+          file_basename.gsub!(/ideogram_exp_means__/, '')
+          file_basename.gsub!(/\.json/, '')
+          cluster_name, annotation_name, annotation_type, annotation_scope = file_basename.split('--')
+          annotation_identifier = [annotation_name, annotation_type, annotation_scope].join('--')
+          study_file.options = {
+              analysis_name: analysis_method, visualization_name: 'ideogram.js',
+              cluster_name: cluster_name, annotation_name: annotation_identifier,
+              submission_id: archive_file.options[:submission_id]
+          }
+          study_file.description = "Ideogram.js annotation outputs for #{cluster_name}:#{annotation_name}"
+          if study_file.save
+            Rails.logger.info "Added #{study_file.name} as Ideogram Analysis Output to #{study.name}"
+            files_created << study_file.name
+            File.delete(file_payload.path) # remove temp copy
+            run_at = 2.minutes.from_now
+            begin
+              Rails.logger.info "#{Time.now}: preparing to upload Ideogram outputs: #{study_file.upload_file_name}:#{study_file.id} to FireCloud"
+              study.send_to_firecloud(study_file)
+              # clean up the extracted copy as we have a new copy in a subdir of the new study_file's ID
+              Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file, 0), run_at: run_at)
+              Rails.logger.info "#{Time.now}: cleanup job for #{study_file.upload_file_name}:#{study_file.id} scheduled for #{run_at}"
+            rescue => e
+              Rails.logger.info "#{Time.now}: Ideogram output file: #{study_file.upload_file_name}:#{study_file.id} failed to upload to FireCloud due to #{e.message}"
+              Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file, 0), run_at: run_at)
+            end
+          else
+            SingleCellMailer.notify_user_parse_fail(user.email, "Error: Zipfile extraction from inferCNV submission #{archive_file.options[:submission_id]} in #{study.name}", study_file.errors.full_messages.join(', ')).deliver_now
+          end
+        end
+        # email user that file extraction is complete
+        message = ['The following files were extracted from the Ideogram zip archive and added to your study:']
+        files_created.each {|file| message << file}
+        SingleCellMailer.notify_user_parse_complete(user.email, "Zipfile extraction of inferCNV submission #{archive_file.options[:submission_id]} outputs has completed", message).deliver_now
+      end
+    rescue => e
+      remove_extracted_archive_files(study, archive_file, extracted_files)
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Zipfile extraction from inferCNV submission #{archive_file.options[:submission_id]} in #{study.name} has failed", e.message).deliver_now
     end
   end
 
@@ -355,5 +444,25 @@ class ParseUtils
     if remote.present?
       Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, 0, study.firecloud_project, study.firecloud_workspace, study_file.bucket_location)
     end
+  end
+
+  # clean up any extracted files from a failed archive extraction job
+  def self.remove_extracted_archive_files(study, archive, extracted_files)
+    Rails.logger.error "Removing archive #{archive.upload_file_name} and #{extracted_files.size} extracted files from #{study.name}"
+    extracted_files.each do |file|
+      converted_filename = URI.unescape(file)
+      file_basename = converted_filename.split('/').last
+      match = StudyFile.find_by(study_id: study.id, upload_file_name: file_basename)
+      if match.present?
+        begin
+          delete_remote_file_on_fail(match, study)
+        rescue => e
+          Rails.logger.error "Unable to remove remote copy of #{match.upload_file_name} from #{study.name}: #{e.message}"
+        end
+        match.destroy
+      end
+    end
+    archive.remove_local_copy
+    archive.destroy
   end
 end

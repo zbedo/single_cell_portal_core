@@ -123,6 +123,8 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
           end
           configuration['inputs']['infercnv.cluster_names'] = cluster_names.to_s # cast array as string for JSON encoding
           configuration['inputs']['infercnv.cluster_paths'] = cluster_files_input.to_s # cast array as string for JSON encoding
+          # add metadata file path
+          configuration['inputs']['infercnv.metadata_path'] = "\"#{study.metadata_file.gs_url}\""
 
           # assign expression file to configuration
           configuration['inputs']['infercnv.expression_file'] = "\"#{inputs[:input_file]}\""

@@ -93,21 +93,21 @@ fi
 if [[ -n $SERVICE_ACCOUNT_PATH ]] ; then
 	CREDS_VALS=`vault read -format=json $SERVICE_ACCOUNT_PATH`
 	JSON_CONTENTS=`echo $CREDS_VALS | jq --raw-output .data`
-	echo "setting value for GOOGLE_CLOUD_KEYFILE_JSON"
+	echo "setting value for: GOOGLE_CLOUD_KEYFILE_JSON"
 	export GOOGLE_CLOUD_KEYFILE_JSON=$(echo -n $JSON_CONTENTS)
-	echo "setting value for GOOGLE_PRIVATE_KEY"
+	echo "setting value for: GOOGLE_PRIVATE_KEY"
 	export GOOGLE_PRIVATE_KEY=$(echo $CREDS_VALS | jq --raw-output .data.private_key)
-	echo "setting value for GOOGLE_CLIENT_EMAIL"
+	echo "setting value for: GOOGLE_CLIENT_EMAIL"
 	export GOOGLE_CLIENT_EMAIL=$(echo $CREDS_VALS | jq --raw-output .data.client_email)
-	echo "setting value for GOOGLE_CLIENT_ID"
+	echo "setting value for: GOOGLE_CLIENT_ID"
 	export GOOGLE_CLIENT_ID=$(echo $CREDS_VALS | jq --raw-output .data.client_id)
-	echo "setting value for GOOGLE_CLOUD_PROJECT"
+	echo "setting value for: GOOGLE_CLOUD_PROJECT"
 	export GOOGLE_CLOUD_PROJECT=$(echo $CREDS_VALS | jq --raw-output .data.project_id)
 fi
 
 # now load public read-only service account credentials
 if [[ -n $READ_ONLY_SERVICE_ACCOUNT_PATH ]] ; then
-	echo "setting value for READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON"
+	echo "setting value for: READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON"
 	READ_ONLY_CREDS_VALS=`vault read -format=json $READ_ONLY_SERVICE_ACCOUNT_PATH`
 	READ_ONLY_JSON_CONTENTS=`echo $READ_ONLY_CREDS_VALS | jq --raw-output .data`
 	export READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON=$(echo -n $READ_ONLY_JSON_CONTENTS)
