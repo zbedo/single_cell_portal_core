@@ -10,6 +10,7 @@ class Study
   include Mongoid::Document
   include Mongoid::Timestamps
   extend ValidationTools
+  extend ErrorTracker
   include Swagger::Blocks
 
   ###
@@ -41,6 +42,7 @@ class Study
       @@firecloud_client = FireCloudClient.new
       true
     rescue => e
+      ErrorTracker.report_exception(e, nil, self.firecloud_client.attributes)
       Rails.logger.error "#{Time.now}: unable to refresh FireCloud client: #{e.message}"
       e.message
     end
@@ -562,8 +564,15 @@ class Study
     else
       begin
         workspace_acl = Study.firecloud_client.get_workspace_acl(self.firecloud_project, self.firecloud_workspace)
-        workspace_acl['acl'][user.email].nil? ? false : workspace_acl['acl'][user.email]['canCompute']
+        if workspace_acl['acl'][user.email].nil?
+          # check project-level permissions, otherwise user cannot compute
+          project_members = Study.firecloud_client.get_billing_project_members(self.firecloud_project).map {|member| member['email']}
+          project_members.include?(user.email)
+        else
+          workspace_acl['acl'][user.email]['canCompute']
+        end
       rescue => e
+        ErrorTracker.report_exception(e, user, {study: self.attributes.to_h})
         Rails.logger.error "Unable to retrieve compute permissions for #{user.email}: #{e.message}"
         false
       end
@@ -1133,7 +1142,7 @@ class Study
       study_remotes = []
       # get all remotes at once, rather than individually to save time & memory
       begin
-        remotes = Study.firecloud_client.get_workspace_files(study.firecloud_project, study.firecloud_workspace)
+        remotes = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, 0, study.firecloud_project, study.firecloud_workspace)
         study_remotes += remotes
         while remotes.next?
           remotes = remotes.next
@@ -1177,6 +1186,7 @@ class Study
           end
         end
       rescue => e
+        ErrorTracker.report_exception(e, nil, {})
         puts "#{Time.now}: error in retrieving remotes for #{study.name}: #{e.message}"
         @missing_files << {filename: 'N/A', study: study.name, owner: study.user.email, reason: "Error retrieving remotes: #{e.message}"}
       end
@@ -1225,6 +1235,10 @@ class Study
       @validation_error = false
       @file_location = expression_file.upload.path
       @shift_headers = true
+      # error context object for reporting (if enabled)
+      error_context = ErrorTracker.format_extra_context(self, expression_file, {opts: opts})
+      # remove study description as it's not useful
+      error_context['study'].delete('description')
 
       # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
       if !opts[:local] || !expression_file.is_local?
@@ -1271,6 +1285,7 @@ class Study
 
       file.close
     rescue => e
+      ErrorTracker.report_exception(e, user, error_context)
       error_message = "Unexpected error: #{e.message}"
       filename = expression_file.name
       expression_file.remove_local_copy
@@ -1442,6 +1457,7 @@ class Study
       begin
         SingleCellMailer.notify_user_parse_complete(user.email, "Expression file: '#{expression_file.name}' has completed parsing", @message).deliver_now
       rescue => e
+        ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
       end
 
@@ -1450,8 +1466,9 @@ class Study
       # rather than relying on opts[:local], actually check if the file is already in the GCS bucket
       destination = expression_file.bucket_location
       begin
-        remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+        remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, self.firecloud_project, self.firecloud_workspace, destination)
       rescue => e
+        ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "Error retrieving remote: #{e.message}"
       end
       if remote.nil?
@@ -1459,6 +1476,7 @@ class Study
           Rails.logger.info "#{Time.now}: preparing to upload expression file: #{expression_file.upload_file_name}:#{expression_file.id} to FireCloud"
           self.send_to_firecloud(expression_file)
         rescue => e
+          ErrorTracker.report_exception(e, user, error_context)
           Rails.logger.info "#{Time.now}: Expression file: #{expression_file.upload_file_name}:#{expression_file.id} failed to upload to FireCloud due to #{e.message}"
           SingleCellMailer.notify_admin_upload_fail(expression_file, e.message).deliver_now
         end
@@ -1470,12 +1488,14 @@ class Study
           Delayed::Job.enqueue(UploadCleanupJob.new(self, expression_file, 0), run_at: run_at)
           Rails.logger.info "#{Time.now}: cleanup job for #{expression_file.upload_file_name}:#{expression_file.id} scheduled for #{run_at}"
         rescue => e
+          ErrorTracker.report_exception(e, user, error_context)
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
           Rails.logger.error "#{Time.now}: Could not delete #{expression_file.name}:#{expression_file.id} in study #{self.name}; aborting"
           SingleCellMailer.admin_notification('Local file deletion failed', nil, "The file at #{@file_location} failed to clean up after parsing, please remove.").deliver_now
         end
       end
     rescue => e
+      ErrorTracker.report_exception(e, user, error_context)
       # error has occurred, so clean up records and remove file
       Gene.where(study_id: self.id, study_file_id: expression_file.id).delete_all
       DataArray.where(study_id: self.id, study_file_id: expression_file.id).delete_all
@@ -1494,6 +1514,9 @@ class Study
   # stores point data in cluster_group_data_arrays instead of single_cells and cluster_points
   def initialize_cluster_group_and_data_arrays(ordinations_file, user, opts={local: true})
     begin
+      error_context = ErrorTracker.format_extra_context(self, ordinations_file, {opts: opts})
+      # remove study description as it's not useful
+      error_context['study'].delete('description')
       @file_location = ordinations_file.upload.path
       # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
       if !opts[:local] || !ordinations_file.is_local?
@@ -1537,6 +1560,7 @@ class Study
       end
       d_file.close
     rescue => e
+      ErrorTracker.report_exception(e, user, error_context)
       ordinations_file.update(parse_status: 'failed')
       error_message = "#{e.message}"
       Rails.logger.info Time.now.to_s + ': ' + error_message
@@ -1792,6 +1816,7 @@ class Study
       begin
         SingleCellMailer.notify_user_parse_complete(user.email, "Cluster file: '#{ordinations_file.upload_file_name}' has completed parsing", @message).deliver_now
       rescue => e
+        ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
       end
 
@@ -1800,8 +1825,9 @@ class Study
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       destination = ordinations_file.bucket_location
       begin
-        remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+        remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, self.firecloud_project, self.firecloud_workspace, destination)
       rescue => e
+        ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "Error retrieving remote: #{e.message}"
       end
       if remote.nil?
@@ -1809,6 +1835,7 @@ class Study
           Rails.logger.info "#{Time.now}: preparing to upload ordinations file: #{ordinations_file.upload_file_name}:#{ordinations_file.id} to FireCloud"
           self.send_to_firecloud(ordinations_file)
         rescue => e
+          ErrorTracker.report_exception(e, user, error_context)
           Rails.logger.info "#{Time.now}: Cluster file: #{ordinations_file.upload_file_name}:#{ordinations_file.id} failed to upload to FireCloud due to #{e.message}"
           SingleCellMailer.notify_admin_upload_fail(ordinations_file, e.message).deliver_now
         end
@@ -1820,12 +1847,14 @@ class Study
           Delayed::Job.enqueue(UploadCleanupJob.new(self, ordinations_file, 0), run_at: run_at)
           Rails.logger.info "#{Time.now}: cleanup job for #{ordinations_file.upload_file_name}:#{ordinations_file.id} scheduled for #{run_at}"
         rescue => e
+          ErrorTracker.report_exception(e, user, error_context)
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
           Rails.logger.error "#{Time.now}: Could not delete #{ordinations_file.name}:#{ordinations_file.id} in study #{self.name}; aborting"
           SingleCellMailer.admin_notification('Local file deletion failed', nil, "The file at #{@file_location} failed to clean up after parsing, please remove.").deliver_now
         end
       end
     rescue => e
+      ErrorTracker.report_exception(e, user, error_context)
       # error has occurred, so clean up records and remove file
       ClusterGroup.where(study_file_id: ordinations_file.id).delete_all
       DataArray.where(study_file_id: ordinations_file.id).delete_all
@@ -1843,6 +1872,9 @@ class Study
   # coordinate labels are specific to a cluster_group
   def initialize_coordinate_label_data_arrays(coordinate_file, user, opts={local: true})
     begin
+      error_context = ErrorTracker.format_extra_context(self, coordinate_file, {opts: opts})
+      # remove study description as it's not useful
+      error_context['study'].delete('description')
       @file_location = coordinate_file.upload.path
       # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
       if !opts[:local] || !coordinate_file.is_local?
@@ -1883,6 +1915,7 @@ class Study
       end
       c_file.close
     rescue => e
+      ErrorTracker.report_exception(e, user, error_context)
       coordinate_file.update(parse_status: 'failed')
       error_message = "#{e.message}"
       Rails.logger.info Time.now.to_s + ': ' + error_message
@@ -2017,6 +2050,7 @@ class Study
       begin
         SingleCellMailer.notify_user_parse_complete(user.email, "Coordinate Label file: '#{coordinate_file.upload_file_name}' has completed parsing", @message).deliver_now
       rescue => e
+        ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
       end
 
@@ -2025,8 +2059,9 @@ class Study
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       destination = coordinate_file.bucket_location
       begin
-        remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+        remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, self.firecloud_project, self.firecloud_workspace, destination)
       rescue => e
+        ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "Error retrieving remote: #{e.message}"
       end
       if remote.nil?
@@ -2034,6 +2069,7 @@ class Study
           Rails.logger.info "#{Time.now}: preparing to upload ordinations file: #{coordinate_file.upload_file_name}:#{coordinate_file.id} to FireCloud"
           self.send_to_firecloud(coordinate_file)
         rescue => e
+          ErrorTracker.report_exception(e, user, error_context)
           Rails.logger.info "#{Time.now}: Cluster file: #{coordinate_file.upload_file_name}:#{coordinate_file.id} failed to upload to FireCloud due to #{e.message}"
           SingleCellMailer.notify_admin_upload_fail(coordinate_file, e.message).deliver_now
         end
@@ -2045,12 +2081,14 @@ class Study
           Delayed::Job.enqueue(UploadCleanupJob.new(self, coordinate_file, 0), run_at: run_at)
           Rails.logger.info "#{Time.now}: cleanup job for #{coordinate_file.upload_file_name}:#{coordinate_file.id} scheduled for #{run_at}"
         rescue => e
+          ErrorTracker.report_exception(e, user, error_context)
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
           Rails.logger.error "#{Time.now}: Could not delete #{coordinate_file.name}:#{coordinate_file.id} in study #{self.name}; aborting"
           SingleCellMailer.admin_notification('Local file deletion failed', nil, "The file at #{@file_location} failed to clean up after parsing, please remove.").deliver_now
         end
       end
     rescue => e
+      ErrorTracker.report_exception(e, user, error_context)
       # error has occurred, so clean up records and remove file
       DataArray.where(study_file_id: coordinate_file.id).delete_all
       filename = coordinate_file.upload_file_name
@@ -2066,6 +2104,9 @@ class Study
   # parse a study metadata file and create necessary cell_metadatum objects
   def initialize_cell_metadata(metadata_file, user, opts={local: true})
     begin
+      error_context = ErrorTracker.format_extra_context(self, metadata_file, {opts: opts})
+      # remove study description as it's not useful
+      error_context['study'].delete('description')
       @file_location = metadata_file.upload.path
       # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
       if !opts[:local] || !metadata_file.is_local?
@@ -2110,6 +2151,7 @@ class Study
       end
       m_file.close
     rescue => e
+      ErrorTracker.report_exception(e, user, error_context)
       filename = metadata_file.upload_file_name
       metadata_file.remove_local_copy
       metadata_file.destroy
@@ -2292,6 +2334,7 @@ class Study
       begin
         SingleCellMailer.notify_user_parse_complete(user.email, "Metadata file: '#{metadata_file.upload_file_name}' has completed parsing", @message).deliver_now
       rescue => e
+        ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
       end
 
@@ -2303,8 +2346,9 @@ class Study
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       destination = metadata_file.bucket_location
       begin
-        remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+        remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, self.firecloud_project, self.firecloud_workspace, destination)
       rescue => e
+        ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "Error retrieving remote: #{e.message}"
       end
       if remote.nil?
@@ -2312,6 +2356,7 @@ class Study
           Rails.logger.info "#{Time.now}: preparing to upload metadata file: #{metadata_file.upload_file_name}:#{metadata_file.id} to FireCloud"
           self.send_to_firecloud(metadata_file)
         rescue => e
+          ErrorTracker.report_exception(e, user, error_context)
           Rails.logger.info "#{Time.now}: Metadata file: #{metadata_file.upload_file_name}:#{metadata_file.id} failed to upload to FireCloud due to #{e.message}"
           SingleCellMailer.notify_admin_upload_fail(metadata_file, e.message).deliver_now
         end
@@ -2323,12 +2368,14 @@ class Study
           Delayed::Job.enqueue(UploadCleanupJob.new(self, metadata_file, 0), run_at: run_at)
           Rails.logger.info "#{Time.now}: cleanup job for #{metadata_file.upload_file_name}:#{metadata_file.id} scheduled for #{run_at}"
         rescue => e
+          ErrorTracker.report_exception(e, user, error_context)
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
           Rails.logger.error "#{Time.now}: Could not delete #{metadata_file.name} in study #{self.name}; aborting"
           SingleCellMailer.admin_notification('Local file deletion failed', nil, "The file at #{@file_location} failed to clean up after parsing, please remove.").deliver_now
         end
       end
     rescue => e
+      ErrorTracker.report_exception(e, user, error_context)
       # parse has failed, so clean up records and remove file
       CellMetadatum.where(study_id: self.id).delete_all
       DataArray.where(study_file_id: metadata_file.id).delete_all
@@ -2345,6 +2392,9 @@ class Study
   # parse precomputed marker gene files and create documents to render in Morpheus
   def initialize_precomputed_scores(marker_file, user, opts={local: true})
     begin
+      error_context = ErrorTracker.format_extra_context(self, marker_file, {opts: opts})
+      # remove study description as it's not useful
+      error_context['study'].delete('description')
       @file_location = marker_file.upload.path
       # before anything starts, check if file has been uploaded locally or needs to be pulled down from FireCloud first
       if !opts[:local] || !marker_file.is_local?
@@ -2388,6 +2438,7 @@ class Study
       end
       file.close
     rescue => e
+      ErrorTracker.report_exception(e, user, error_context)
       filename = marker_file.upload_file_name
       marker_file.remove_local_copy
       marker_file.destroy
@@ -2473,6 +2524,7 @@ class Study
       begin
         SingleCellMailer.notify_user_parse_complete(user.email, "Gene list file: '#{marker_file.name}' has completed parsing", @message).deliver_now
       rescue => e
+        ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
       end
 
@@ -2481,8 +2533,9 @@ class Study
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       destination = marker_file.bucket_location
       begin
-        remote = Study.firecloud_client.get_workspace_file(self.firecloud_project, self.firecloud_workspace, destination)
+        remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, self.firecloud_project, self.firecloud_workspace, destination)
       rescue => e
+        ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "Error retrieving remote: #{e.message}"
       end
       if remote.nil?
@@ -2490,6 +2543,7 @@ class Study
           Rails.logger.info "#{Time.now}: preparing to upload gene list file: #{marker_file.upload_file_name}:#{marker_file.id} to FireCloud"
           self.send_to_firecloud(marker_file)
         rescue => e
+          ErrorTracker.report_exception(e, user, error_context)
           Rails.logger.info "#{Time.now}: Gene List file: #{marker_file.upload_file_name}:#{marker_file.id} failed to upload to FireCloud due to #{e.message}"
           SingleCellMailer.notify_admin_upload_fail(marker_file, e.message).deliver_now
         end
@@ -2501,12 +2555,14 @@ class Study
           Delayed::Job.enqueue(UploadCleanupJob.new(self, metadata_file, 0), run_at: run_at)
           Rails.logger.info "#{Time.now}: cleanup job for #{marker_file.upload_file_name}:#{marker_file.id} scheduled for #{run_at}"
         rescue => e
+          ErrorTracker.report_exception(e, user, error_context)
           # we don't really care if the delete fails, we can always manually remove it later as the file is in FireCloud already
           Rails.logger.error "#{Time.now}: Could not delete #{marker_file.name} in study #{self.name}; aborting"
           SingleCellMailer.admin_notification('Local file deletion failed', nil, "The file at #{@file_location} failed to clean up after parsing, please remove.").deliver_now
         end
       end
     rescue => e
+      ErrorTracker.report_exception(e, user, error_context)
       # parse has failed, so clean up records and remove file
       PrecomputedScore.where(study_file_id: marker_file.id).delete_all
       filename = marker_file.upload_file_name
@@ -2566,6 +2622,8 @@ class Study
       Delayed::Job.enqueue(UploadCleanupJob.new(file.study, file, 0), run_at: run_at)
       Rails.logger.info "#{Time.now}: cleanup job for #{file.bucket_location}:#{file.id} scheduled for #{run_at}"
     rescue => e
+      error_context = ErrorTracker.format_extra_context(self, study_file)
+      ErrorTracker.report_exception(e, user, error_context)
       # if upload fails, try again using UploadCleanupJob in 2 minutes
       run_at = 2.minutes.from_now
       Rails.logger.error "#{Time.now}: unable to upload '#{file.bucket_location}:#{file.id} to FireCloud, will retry at #{run_at}; #{e.message}"
@@ -2600,6 +2658,9 @@ class Study
       Rails.logger.info "#{Time.now}: created default_participant for #{self.firecloud_workspace}"
       File.delete(path)
     rescue => e
+      error_context = ErrorTracker.format_extra_context(self)
+      error_context['study'].delete('description')
+      ErrorTracker.report_exception(e, user, error_context)
       Rails.logger.error "#{Time.now}: Unable to set default participant: #{e.message}"
     end
   end
@@ -2731,6 +2792,10 @@ class Study
                 Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, acl)
                 Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares #{share.email} successful"
               rescue RuntimeError => e
+                error_context = ErrorTracker.format_extra_context(self, acl)
+                # remove study description as it's not useful
+                error_context['study'].delete('description')
+                ErrorTracker.report_exception(e, user, error_context)
                 errors.add(:study_shares, "Could not create a share for #{share.email} to workspace #{self.firecloud_workspace} due to: #{e.message}")
                 return false
               end
@@ -2738,6 +2803,10 @@ class Study
           end
 
         rescue => e
+          error_context = ErrorTracker.format_extra_context(self)
+          # remove study description as it's not useful
+          error_context['study'].delete('description')
+          ErrorTracker.report_exception(e, user, error_context)
           # delete workspace on any fail as this amounts to a validation fail
           Rails.logger.info "#{Time.now}: Error creating workspace: #{e.message}"
           # delete firecloud workspace unless error is 409 Conflict (workspace already taken)
@@ -2829,12 +2898,20 @@ class Study
                 Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, acl)
                 Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace acl assignment for shares #{share.email} successful"
               rescue RuntimeError => e
+                error_context = ErrorTracker.format_extra_context(self, acl)
+                # remove study description as it's not useful
+                error_context['study'].delete('description')
+                ErrorTracker.report_exception(e, user, error_context)
                 errors.add(:study_shares, "Could not create a share for #{share.email} to workspace #{self.firecloud_workspace} due to: #{e.message}")
                 return false
               end
             end
           end
         rescue => e
+          error_context = ErrorTracker.format_extra_context(self)
+          # remove study description as it's not useful
+          error_context['study'].delete('description')
+          ErrorTracker.report_exception(e, user, error_context)
           # delete workspace on any fail as this amounts to a validation fail
           Rails.logger.info "#{Time.now}: Error assigning workspace: #{e.message}"
           errors.add(:firecloud_workspace, " assignment failed: #{e.message}; Please check the workspace in question and try again.")
@@ -2876,6 +2953,7 @@ class Study
     begin
       Study.firecloud_client.delete_workspace(self.firecloud_project, self.firecloud_workspace)
     rescue RuntimeError => e
+      ErrorTracker.report_exception(e, nil, {firecloud_project: self.firecloud_project, firecloud_workspace: self.firecloud_workspace})
       # workspace was not found, most likely deleted already
       Rails.logger.error "#{Time.now}: #{e.message}"
     end
@@ -2893,6 +2971,7 @@ class Study
           return added == 'OK'
         end
       rescue RuntimeError => e
+        ErrorTracker.report_exception(e, self.user, {firecloud_project: self.firecloud_project})
         Rails.logger.error "#{Time.now}: unable to add portal service account to #{self.firecloud_project}: #{e.message}"
         false
       end

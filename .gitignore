@@ -24,8 +24,9 @@
 /single-cell-staging.broadinstitute.org.*
 /config/client_secret*.json
 /config/.read_only_service_account.json
+/config/tcell_agent.congig
 ssmtp.conf
-
+/tcell
 # Ignore hidden macOS files
 .DS_Store
 /config/.read_only_service_account.json

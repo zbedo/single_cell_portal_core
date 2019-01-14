@@ -474,9 +474,8 @@ class StudyFile
   end
 
   def api_url
-    api_url = Study.firecloud_client.generate_api_url(self.study.firecloud_project,
-                                              self.study.firecloud_workspace,
-                                              self.bucket_location)
+    api_url = Study.firecloud_client.execute_gcloud_method(:generate_api_url, 0, self.study.firecloud_project,
+                                              self.study.firecloud_workspace, self.bucket_location)
     api_url + '?alt=media'
   end
 
@@ -821,7 +820,7 @@ class StudyFile
       existing_array = DataArray.where(name: "#{self.name} Cells", array_type: 'cells', linear_data_type: 'Study',
                                        linear_data_id: self.study_id).any?
       unless existing_array
-        remote = Study.firecloud_client.get_workspace_file(study.firecloud_project, study.firecloud_workspace, self.bucket_location)
+        remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, study.firecloud_project, study.firecloud_workspace, self.bucket_location)
         if remote.present?
           study.make_data_dir
           download_location = study.data_store_path

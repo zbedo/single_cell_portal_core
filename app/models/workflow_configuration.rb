@@ -14,6 +14,8 @@
 ##
 
 class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :configuration_name, :workflow_namespace, :workflow_name, :inputs)
+  extend ErrorTracker
+
   # update a FireCloud configuration with run-specific information
   def perform
     begin
@@ -152,6 +154,17 @@ class WorkflowConfiguration < Struct.new(:study, :configuration_namespace, :conf
       response[:complete] = true
       return response
     rescue => e
+      error_context = {
+          configuration_namespace: configuration_namespace,
+          configuration_name: configuration_name,
+          workflow_namespace: workflow_namespace,
+          workflow_name: workflow_name,
+          inputs: inputs,
+          study: study.attributes.to_h
+      }
+      # delete description as it's not helpful
+      error_context[:study].delete(:description)
+      ErrorTracker.report_exception(e, nil, error_context)
       # generic error catch all, will halt workflow submission and return error message to UI
       Rails.logger.error "#{Time.now}: Error in configuring #{configuration_namespace}/#{configuration_name} using #{inputs}: #{e.message}"
       response[:error_message] = e.message

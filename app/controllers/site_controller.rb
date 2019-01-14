@@ -1,5 +1,4 @@
 class SiteController < ApplicationController
-
   ###
   #
   # This is the main public controller for the portal.  All data viewing/rendering is handled here, including creating
@@ -295,7 +294,7 @@ class SiteController < ApplicationController
     # then check individual statuses to see what to enable/disable
     @allow_firecloud_access = AdminConfiguration.firecloud_access_enabled?
     @allow_downloads = Study.firecloud_client.services_available?('GoogleBuckets')
-    @allow_computes = Study.firecloud_client.services_available?('Agora', 'Rawls')
+    @allow_computes = Study.firecloud_client.services_available?('Sam', 'Agora', 'Rawls')
     @allow_edits = Study.firecloud_client.services_available?('Sam', 'Rawls')
     set_study_default_options
     # load options and annotations
@@ -730,6 +729,8 @@ class SiteController < ApplicationController
         redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]), alert: 'The file you requested is currently not available.  Please contact the study owner if you require access to this file.' and return
       end
     rescue RuntimeError => e
+      error_context = ErrorTracker.format_extra_context(@study, {params: params})
+      ErrorTracker.report_exception(e, current_user, error_context)
       logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
       redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
                   alert: "We were unable to download the file #{params[:filename]} do to an error: #{view_context.simple_format(e.message)}" and return
@@ -889,6 +890,10 @@ class SiteController < ApplicationController
       end
         # More error handling, this is if can't save user annotation
     rescue Mongoid::Errors::InvalidValue => e
+      sanitized_params = user_annotation_params.dup
+      sanitized_params.delete(:user_data_arrays_attributes) # remove data_arrays attributes due to size
+      error_context = ErrorTracker.format_extra_context(@study, {params: sanitized_params})
+      ErrorTracker.report_exception(e, current_user, error_context)
       # If an invalid value was somehow passed through the form, and couldn't save the annotation
       @cluster_annotations = load_cluster_group_annotations
       @options = load_cluster_group_options
@@ -898,6 +903,10 @@ class SiteController < ApplicationController
       render 'update_user_annotations'
 
     rescue NoMethodError => e
+      sanitized_params = user_annotation_params.dup
+      sanitized_params.delete(:user_data_arrays_attributes) # remove data_arrays attributes due to size
+      error_context = ErrorTracker.format_extra_context(@study, {params: sanitized_params})
+      ErrorTracker.report_exception(e, current_user, error_context)
       # If something is nil and can't have a method called on it, respond with an alert
       @cluster_annotations = load_cluster_group_annotations
       @options = load_cluster_group_options
@@ -907,6 +916,10 @@ class SiteController < ApplicationController
       render 'update_user_annotations'
 
     rescue => e
+      sanitized_params = user_annotation_params.dup
+      sanitized_params.delete(:user_data_arrays_attributes) # remove data_arrays attributes due to size
+      error_context = ErrorTracker.format_extra_context(@study, {params: sanitized_params})
+      ErrorTracker.report_exception(e, current_user, error_context)
       # If a generic unexpected error occurred and couldn't save the annotation
       @cluster_annotations = load_cluster_group_annotations
       @options = load_cluster_group_options
@@ -970,6 +983,8 @@ class SiteController < ApplicationController
         @workflow_wdl = @workflow_wdl['payload']
       end
     rescue => e
+      error_context = ErrorTracker.format_extra_context(@study, {params: params})
+      ErrorTracker.report_exception(e, current_user, error_context)
       @workflow_wdl = "We're sorry, but we could not load the requested workflow object.  Please try again later.\n\nError: #{e.message}"
       logger.error "#{Time.now}: unable to load WDL for #{@workflow_namespace}:#{@workflow_name}:#{@workflow_snapshot}; #{e.message}"
     end
@@ -994,6 +1009,8 @@ class SiteController < ApplicationController
       end
       render json: @samples.to_json
     rescue => e
+      error_context = ErrorTracker.format_extra_context(@study, {params: params})
+      ErrorTracker.report_exception(e, current_user, error_context)
       logger.error "#{Time.now}: Error retrieving workspace samples for #{study.name}; #{e.message}"
       render json: []
     end
@@ -1044,6 +1061,8 @@ class SiteController < ApplicationController
       @notice = 'Your sample information has successfully been saved.'
       render action: :update_workspace_samples
     rescue => e
+      error_context = ErrorTracker.format_extra_context(@study, {params: params})
+      ErrorTracker.report_exception(e, current_user, error_context)
       logger.info "#{Time.now}: Error saving workspace entities: #{e.message}"
       @alert = "An error occurred while trying to save your sample information: #{view_context.simple_format(e.message)}"
       render action: :notice
@@ -1069,6 +1088,8 @@ class SiteController < ApplicationController
       @empty_samples_table = true
       render action: :update_workspace_samples
     rescue => e
+      error_context = ErrorTracker.format_extra_context(@study, {params: params})
+      ErrorTracker.report_exception(e, current_user, error_context)
       logger.error "#{Time.now}: Error deleting workspace entities: #{e.message}"
       @alert = "An error occurred while trying to delete your sample information: #{view_context.simple_format(e.message)}"
       render action: :notice
@@ -1135,6 +1156,8 @@ class SiteController < ApplicationController
         end
       end
     rescue => e
+      error_context = ErrorTracker.format_extra_context(@study, {params: params})
+      ErrorTracker.report_exception(e, current_user, error_context)
       logger.error "#{Time.now}: unable to submit workflow #{workflow_name} in #{@study.firecloud_workspace} due to: #{e.message}"
       @alert = "We were unable to submit your workflow due to an error: #{e.message}"
       render action: :notice
@@ -1147,6 +1170,8 @@ class SiteController < ApplicationController
       submission = Study.firecloud_client.get_workspace_submission(@study.firecloud_project, @study.firecloud_workspace, params[:submission_id])
       render json: submission.to_json
     rescue => e
+      error_context = ErrorTracker.format_extra_context(@study, {params: params})
+      ErrorTracker.report_exception(e, current_user, error_context)
       logger.error "#{Time.now}: unable to load workspace submission #{params[:submission_id]} in #{@study.firecloud_workspace} due to: #{e.message}"
       render js: "alert('We were unable to load the requested submission due to an error: #{e.message}')"
     end
@@ -1158,8 +1183,9 @@ class SiteController < ApplicationController
     begin
       Study.firecloud_client.abort_workspace_submission(@study.firecloud_project, @study.firecloud_workspace, @submission_id)
       @notice = "Submission #{@submission_id} was successfully aborted."
-
     rescue => e
+      error_context = ErrorTracker.format_extra_context(@study, {params: params})
+      ErrorTracker.report_exception(e, current_user, error_context)
       @alert = "Unable to abort submission #{@submission_id} due to an error: #{e.message}"
       render action: :notice
     end
@@ -1193,6 +1219,8 @@ class SiteController < ApplicationController
       end
       @error_message = errors.join("<br />")
     rescue => e
+      error_context = ErrorTracker.format_extra_context(@study, {params: params})
+      ErrorTracker.report_exception(e, current_user, error_context)
       @alert = "Unable to retrieve submission #{@submission_id} error messages due to: #{e.message}"
       render action: :notice
     end
@@ -1213,6 +1241,8 @@ class SiteController < ApplicationController
         end
       end
     rescue => e
+      error_context = ErrorTracker.format_extra_context(@study, {params: params})
+      ErrorTracker.report_exception(e, current_user, error_context)
       @alert = "Unable to retrieve submission #{@submission_id} outputs due to: #{e.message}"
       render action: :notice
     end
@@ -1239,6 +1269,8 @@ class SiteController < ApplicationController
         render action: :notice
       end
     rescue => e
+      error_context = ErrorTracker.format_extra_context(@study, {params: params})
+      ErrorTracker.report_exception(e, current_user, error_context)
       @alert = "An error occurred trying to load submission '#{params[:submission_id]}': #{e.message}"
       render action: :notice
     end
@@ -1273,6 +1305,8 @@ class SiteController < ApplicationController
       submission_files = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, 0, @study.firecloud_project, @study.firecloud_workspace, prefix: params[:submission_id])
       DeleteQueueJob.new(submission_files).perform
     rescue => e
+      error_context = ErrorTracker.format_extra_context(@study, {params: params})
+      ErrorTracker.report_exception(e, current_user, error_context)
       logger.error "#{Time.now}: unable to remove submission #{params[:submission_id]} files from #{@study.firecloud_workspace} due to: #{e.message}"
       @alert = "Unable to delete the outputs for #{params[:submission_id]} due to the following error: #{e.message}"
       render action: :notice
@@ -1438,7 +1472,7 @@ class SiteController < ApplicationController
 
   # check compute permissions for study
   def check_compute_permissions
-    if Study.firecloud_client.services_available?('Rawls')
+    if Study.firecloud_client.services_available?('Sam', 'Rawls')
       if !user_signed_in? || !@study.can_compute?(current_user)
         @alert ='You do not have permission to perform that action.'
         respond_to do |format|
@@ -2233,6 +2267,8 @@ class SiteController < ApplicationController
           'output="' + filename + '"'
       ]
     rescue => e
+      error_context = ErrorTracker.format_extra_context(@study, )
+      ErrorTracker.report_exception(e, current_user, error_context)
       logger.error "#{Time.now}: error generating signed url for #{filename}; #{e.message}"
       curl_config = [
           '# Error downloading ' + filename + '.  ' +

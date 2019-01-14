@@ -10,6 +10,8 @@
 
 class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :storage, :expires_at, :service_account_credentials)
 
+  extend ErrorTracker
+
   #
   # CONSTANTS
   #
@@ -25,7 +27,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # List of URLs/Method names to ignore incremental backoffs on (in cases of UI blocking)
   RETRY_IGNORE_LIST = ["#{BASE_URL}/register", :generate_signed_url, :generate_api_url]
   # default namespace used for all FireCloud workspaces owned by the 'portal'
-  PORTAL_NAMESPACE = 'single-cell-portal'
+  PORTAL_NAMESPACE = ENV['PORTAL_NAMESPACE'].present? ? ENV['PORTAL_NAMESPACE'] : 'single-cell-portal'
   # location of Google service account JSON (must be absolute path to file)
   SERVICE_ACCOUNT_KEY = !ENV['SERVICE_ACCOUNT_KEY'].blank? ? File.absolute_path(ENV['SERVICE_ACCOUNT_KEY']) : ''
   # location of Google service account JSON (must be absolute path to file)
@@ -36,8 +38,6 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   USER_GROUP_ROLES = %w(admin member)
   # List of FireCloud billing project roles
   BILLING_PROJECT_ROLES = %w(user owner)
-  # List of available FireCloud 'operations' for updating FireCloud workspace entities or attributes
-  AVAILABLE_OPS = %w(AddUpdateAttribute RemoveAttribute AddListMember RemoveListMember)
   # List of projects where computes are not permitted (sets canCompute to false for all users by default, can only be overridden
   # by PROJECT_OWNER)
   COMPUTE_BLACKLIST = %w(single-cell-portal)
@@ -96,6 +96,17 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 
     # set FireCloud API base url
     self.api_root = BASE_URL
+  end
+
+  # return a hash of instance attributes for this client
+  #
+  # * *return*
+  #   - +Hash+ of values for all instance variables for this client
+  def attributes
+    sanitized_values = self.to_h.dup
+    sanitized_values[:access_token] = 'REDACTED'
+    sanitized_values[:issuer] = self.issuer
+    sanitized_values
   end
 
   #
@@ -215,6 +226,14 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
     self.user.nil? ? self.storage_issuer : self.user.email
   end
 
+  # get issuer object of access_token (either instance of User, or email of service account)
+  #
+  # * *return*
+  #   - +User+ of access_token issuer or +String+ of service account email
+  def issuer_object
+    self.user.nil? ? self.storage_issuer : self.user
+  end
+
   ######
   ##
   ## FIRECLOUD METHODS
@@ -243,9 +262,11 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
       Rails.logger.info "FireCloudClient token expired, refreshing access token"
       self.refresh_access_token
     end
-    # set default headers
+    # set default headers, appending application identifier including hostname for disambiguation
     headers = {
-        'Authorization' => "Bearer #{self.access_token['access_token']}"
+        'Authorization' => "Bearer #{self.access_token['access_token']}",
+        'x-app-id' => "single-cell-portal",
+        'x-domain-id' => "#{ENV['HOSTNAME']}"
     }
     # if not uploading a file, set the content_type to application/json
     if !request_opts[:file_upload]
@@ -261,6 +282,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
           begin
             return JSON.parse(@obj.body)
           rescue JSON::ParserError => e
+            ErrorTracker.report_exception(e, self.issuer_object, {method: http_method, url: path,
+                                                                  payload: payload, opts: opts, retry_count: retry_count})
             return @obj.body
           end
         elsif ok?(@obj.code) && @obj.body.blank?
@@ -270,6 +293,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
           @obj.message
         end
       rescue RestClient::Exception => e
+        ErrorTracker.report_exception(e, self.issuer_object, {method: http_method, url: path, payload: payload,
+                                                              opts: opts, retry_count: retry_count})
         context = " encountered when requesting '#{path}', attempt ##{retry_count + 1}"
         log_message = e.message + context
         Rails.logger.error log_message
@@ -1255,6 +1280,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
       begin
         self.send(method_name, *params)
       rescue => e
+        ErrorTracker.report_exception(e, self.issuer_object, {method_name: method_name, retry_count: retry_count,
+                                                              params: params})
         @error = e.message
         Rails.logger.info "error calling #{method_name} with #{params.join(', ')}; #{e.message} -- attempt ##{retry_count + 1}"
         unless RETRY_IGNORE_LIST.include?(method_name)
@@ -1359,7 +1386,9 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
 		file = self.get_workspace_file(workspace_namespace, workspace_name, filename)
 		begin
 			file.delete
-		rescue => e
+    rescue => e
+      ErrorTracker.report_exception(e, self.issuer_object, {method_name: :delete_workspace_file,
+                                                            params: [workspace_namespace, workspace_name, filename]})
 			Rails.logger.info("failed to delete workspace file #{filename} with error #{e.message}")
 			false
 		end
@@ -1552,6 +1581,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
           return error.message
         end
       rescue => e
+        ErrorTracker.report_exception(e, self.issuer_object, {original_error: error})
         Rails.logger.error e.message
         error.message + ': ' + error.http_body
       end
