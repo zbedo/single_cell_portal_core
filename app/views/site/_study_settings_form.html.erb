@@ -115,26 +115,28 @@
   <div class="form-group">
     <h3>Sharing</h3>
     <%= f.fields_for :study_shares do |share| %>
-      <div class="well well-sm">
-        <div class="form-group row">
-          <div class="col-sm-6">
-            <%= share.label :email %>
-            <% if !share.object.new_record? %>
-              <span class="fas fa-exclamation-triangle text-danger" data-toggle="tooltip" data-placement="right" title="Editing share emails is not permitted.  If the email is incorrect, please delete the share and create a new one."></span>
-            <% end %>
-            <br />
-            <%= share.text_field :email, class: 'form-control share-email', readonly: !share.object.new_record?, autocomplete: 'no' %>
-          </div>
-          <div class="col-sm-5">
-            <%= share.label :permission %><br />
-            <%= share.select :permission, options_for_select(StudyShare::PERMISSION_TYPES, share.object.permission), {}, class: 'form-control share-permission' %>
-          </div>
-          <div class="col-sm-1">
-            <%= share.label :delete, "&nbsp;".html_safe %><br />
-            <%= share.link_to_remove "<span class='btn btn-sm btn-danger'><span class='fas fa-times'></span></span>".html_safe, data: {confirm: 'Are you sure?  This cannot be undone unless you reload the page before saving.'} %>
+      <% if share.object.show_share? %>
+        <div class="well well-sm">
+          <div class="form-group row">
+            <div class="col-sm-6">
+              <%= share.label :email %>
+              <% if !share.object.new_record? %>
+                <span class="fas fa-exclamation-triangle text-danger" data-toggle="tooltip" data-placement="right" title="Editing share emails is not permitted.  If the email is incorrect, please delete the share and create a new one."></span>
+              <% end %>
+              <br />
+              <%= share.text_field :email, class: 'form-control share-email', readonly: !share.object.new_record?, autocomplete: 'no' %>
+            </div>
+            <div class="col-sm-5">
+              <%= share.label :permission %><br />
+              <%= share.select :permission, options_for_select(StudyShare::PERMISSION_TYPES, share.object.permission), {}, class: 'form-control share-permission' %>
+            </div>
+            <div class="col-sm-1">
+              <%= share.label :delete, "&nbsp;".html_safe %><br />
+              <%= share.link_to_remove "<span class='btn btn-sm btn-danger'><span class='fas fa-times'></span></span>".html_safe, data: {confirm: 'Are you sure?  This cannot be undone unless you reload the page before saving.'} %>
+            </div>
           </div>
         </div>
-      </div>
+      <% end %>
     <% end %>
     <%= f.link_to_add "<span class='fas fa-plus'></span> Share Study".html_safe, :study_shares, class: 'btn btn-primary', id: 'add-study-share' %>
   </div>
