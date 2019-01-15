@@ -2675,7 +2675,7 @@ class Study
           case access_level
           when 'NO ACCESS'
             read_only_share = self.study_shares.find_by(email: read_only_email)
-            read_only_share.destroy
+            read_only_share.destroy if read_only_share.present?
           when 'READER'
             unless self.study_shares.non_reviewers.include?(read_only_email)
               new_share = self.study_shares.build(email: read_only_email, permission: 'View')
