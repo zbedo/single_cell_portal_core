@@ -2666,26 +2666,13 @@ class Study
     unless Rails.env == 'test' || self.queued_for_deletion
       if manual_set || self.public_changed? || self.new_record?
         if self.firecloud_workspace.present? && self.firecloud_project.present? && Study.read_only_firecloud_client.present?
-          read_only_email = Study.read_only_firecloud_client.issuer
           access_level = self.public? ? 'READER' : 'NO ACCESS'
           if !grant_access # revoke all access
             access_level = 'NO ACCESS'
           end
           Rails.logger.info "#{Time.now}: setting readonly access on #{self.name} to #{access_level}"
-          case access_level
-          when 'NO ACCESS'
-            read_only_share = self.study_shares.find_by(email: read_only_email)
-            read_only_share.destroy if read_only_share.present?
-          when 'READER'
-            unless self.study_shares.non_reviewers.include?(read_only_email)
-              new_share = self.study_shares.build(email: read_only_email, permission: 'View')
-              new_share.save
-            else
-              Rails.logger.info "#{Time.now}: aborting setting readonly access on #{self.name}; share already exists"
-            end
-          else
-            Rails.logger.info "#{Time.now}: invalid readonly access permission level of #{access_level} on #{self.name}"
-          end
+          readonly_acl = Study.firecloud_client.create_workspace_acl(Study.read_only_firecloud_client.issuer, access_level, false, false)
+          Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, readonly_acl)
         end
       end
     end
