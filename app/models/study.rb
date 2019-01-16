@@ -2618,7 +2618,7 @@ class Study
       Delayed::Job.enqueue(UploadCleanupJob.new(file.study, file, 0), run_at: run_at)
       Rails.logger.info "#{Time.now}: cleanup job for #{file.bucket_location}:#{file.id} scheduled for #{run_at}"
     rescue => e
-      error_context = ErrorTracker.format_extra_context(self, study_file)
+      error_context = ErrorTracker.format_extra_context(self, file)
       ErrorTracker.report_exception(e, user, error_context)
       # if upload fails, try again using UploadCleanupJob in 2 minutes
       run_at = 2.minutes.from_now
