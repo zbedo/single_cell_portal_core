@@ -1611,7 +1611,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +String+ representation of complete error message, with http body if present
   def parse_error_message(error)
-    if error.http_body.blank?
+    if error.http_body.blank? || !is_json?(error.http_body)
       error.message
     else
       begin
