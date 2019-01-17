@@ -112,7 +112,8 @@ class StudiesController < ApplicationController
       firecloud_permissions = Study.firecloud_client.get_workspace_acl(@study.firecloud_project, @study.firecloud_workspace)
       firecloud_permissions['acl'].each do |user, permissions|
         # skip project owner permissions, they aren't relevant in this context
-        if permissions['accessLevel'] =~ /OWNER/i
+        # also skip the readonly service account
+        if permissions['accessLevel'] =~ /OWNER/i || (Study.read_only_firecloud_client.present? && user == Study.read_only_firecloud_client.isser)
           next
         else
           # determine whether permissions are incorrect or missing completely
