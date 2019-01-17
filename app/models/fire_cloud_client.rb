@@ -1277,7 +1277,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
       sleep(retry_time) unless RETRY_BACKOFF_BLACKLIST.include?(method_name)
       # only retry if status code indicates a possible temporary error, and we are under the retry limit and
       # not calling a method that is blocked from retries
-      if should_retry?(e.code) && retry_count < MAX_RETRY_COUNT && !ERROR_IGNORE_LIST.include?(method_name)
+      status_code = e.respond_to?(:code) ? e.code : nil
+      if should_retry?(status_code) && retry_count < MAX_RETRY_COUNT && !ERROR_IGNORE_LIST.include?(method_name)
         execute_gcloud_method(method_name, current_retry, *params)
       else
         # we have reached our retry limit or the response code indicates we should not retry
