@@ -392,7 +392,7 @@ module Api
           firecloud_permissions['acl'].each do |user, permissions|
             # skip project owner permissions, they aren't relevant in this context
             # also skip the readonly service account
-            if permissions['accessLevel'] =~ /OWNER/i || (Study.read_only_firecloud_client.present? && user == Study.read_only_firecloud_client.isser)
+            if permissions['accessLevel'] =~ /OWNER/i || (Study.read_only_firecloud_client.present? && user == Study.read_only_firecloud_client.issuer)
               next
             else
               # determine whether permissions are incorrect or missing completely
@@ -551,7 +551,7 @@ module Api
         files_to_remove = []
         files.each do |file|
           # first, check if file is in a submission directory, and if so mark it for removal from list of files to sync
-          if @submission_ids.include?(file.name.split('/').first)
+          if @submission_ids.include?(file.name.split('/').first) || file.name.end_with?('/')
             files_to_remove << file.generation
           else
             directory_name = DirectoryListing.get_folder_name(file.name)
