@@ -1,0 +1,17 @@
+<%= form_with(model: analysis_configuration, local: true) do |form| %>
+  <% if analysis_configuration.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(analysis_configuration.errors.count, "error") %> prohibited this analysis_configuration from being saved:</h2>
+
+      <ul>
+      <% analysis_configuration.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="actions">
+    <%= form.submit %>
+  </div>
+<% end %>

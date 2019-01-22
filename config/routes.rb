@@ -56,6 +56,9 @@ Rails.application.routes.draw do
     # branding groups
     resources :branding_groups
 
+    # analysis configurations
+    resources :analysis_configurations
+
     # study reporter actions
     get 'reports', to: 'reports#index', as: :reports
     get 'reports/report_request', to: 'reports#report_request', as: :report_request
