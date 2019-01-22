@@ -58,6 +58,7 @@ else
                     test/models/cluster_group_test.rb
                     test/models/user_annotation_test.rb
                     test/models/parse_utils_test.rb
+                    test/models/analysis_configuration_test.rb
   )
   for test_name in ${tests[*]}; do
       bundle exec ruby -I test $test_name

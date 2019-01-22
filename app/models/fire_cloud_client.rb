@@ -552,6 +552,39 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
     process_firecloud_request(:get, path)
   end
 
+  # get all configurations for a FireCloud method object
+  #
+  # * *params*
+  #   - +namespace+ (String) => namespace of method
+  #   - +name+ (String) => name of method
+  #   - +snapshot_id+ (Integer) => snapshot ID of method
+  #
+  # * *return*
+  #   - +Hash+ method object
+  def get_method_configurations(namespace, method_name, snapshot_id)
+    path = self.api_root + "/api/methods/#{namespace}/#{method_name}/#{snapshot_id}/configurations"
+    process_firecloud_request(:get, path)
+  end
+
+  # get a FireCloud method input/output parameters
+  #
+  # * *params*
+  #   - +namespace+ (String) => namespace of method
+  #   - +name+ (String) => name of method
+  #   - +snapshot_id+ (Integer) => snapshot ID of method
+  #
+  # * *return*
+  #   - +Hash+ method object
+  def get_method_parameters(namespace, method_name, snapshot_id)
+    path = self.api_root + '/api/inputsOutputs'
+    method_payload = {
+        methodNamespace: namespace,
+        methodName: method_name,
+        methodVersion: snapshot_id
+    }.to_json
+    process_firecloud_request(:post, path, method_payload)
+  end
+
   # get list of available configurations from the repository
   #
   # * *params*
