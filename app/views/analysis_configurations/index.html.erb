@@ -16,7 +16,7 @@
 
           <tbody>
             <% @analysis_configurations.each do |analysis_configuration| %>
-              <tr id="<%= analysis_configuration.dom_identifier %>">
+              <tr id="<%= analysis_configuration.dom_identifier %>" class="analysis-configuration-entry">
                 <td class="analysis-config-identifer">
                   <%= link_to analysis_configuration.identifier, analysis_configuration.method_repo_url, target: :_blank %>
                 </td>
@@ -58,7 +58,7 @@
     // of whether they are visible yet or not
     $('#analysis-configurations').on('click', '.delete-btn', function(){
         // get name of study for confirmation
-        var analysisConfig = $(this).parent().parent().find('.analysis-config-identifer').text();
+        var analysisConfig = $(this).parent().parent().find('.analysis-config-identifer').text().trim();
         if ( confirm('Are you sure you want to delete \"' + analysisConfig + '\"?')) {
             launchModalSpinner('#delete-modal-spinner','#delete-modal', function() {
                 return true;

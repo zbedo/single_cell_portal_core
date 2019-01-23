@@ -16,7 +16,7 @@
   </thead>
   <tbody>
   <% @analysis_configuration.analysis_parameters.each do |parameter| %>
-    <tr>
+    <tr class="analysis-parameter-entry">
       <td><%= parameter.data_type %></td>
       <td><%= parameter.parameter_type %></td>
       <td><%= parameter.call_name %></td>
