@@ -1,25 +1,71 @@
-<p id="notice"><%= notice %></p>
+<h1>Analysis Config Panel</h1>
+<div class="row">
+  <div class="col-md-12">
+    <div class="table-responsive">
+      <div class="well">
+        <table class="table table-striped" id="analysis-configurations">
+          <thead>
+          <tr>
+            <th>WDL</th>
+            <th>Synopsis</th>
+            <th>Added By</th>
+            <th class="actions">Actions</th>
+          </tr>
+          </thead>
 
-<h1>Analysis Configurations</h1>
 
-<table>
-  <thead>
-    <tr>
-      <th colspan="3"></th>
-    </tr>
-  </thead>
+          <tbody>
+            <% @analysis_configurations.each do |analysis_configuration| %>
+              <tr id="<%= analysis_configuration.dom_identifier %>">
+                <td class="analysis-config-identifer">
+                  <%= link_to analysis_configuration.identifier, analysis_configuration.method_repo_url, target: :_blank %>
+                </td>
+                <td class="analysis-config-synopsis"><%= analysis_configuration.synopsis %></td>
+                <td class="analysis-config-user"><%= analysis_configuration.user.email %></td>
+                <td>
+                  <%= scp_link_to "<i class='fas fa-search'></i> Info".html_safe,
+                                  analysis_configuration_path(analysis_configuration),
+                                  class: "btn btn-xs btn-info #{analysis_configuration.dom_identifier}-show" %>
+                  <%= scp_link_to "<i class='fas fa-edit'></i> Edit".html_safe,
+                                  edit_analysis_configuration_path(analysis_configuration),
+                                  class: "btn btn-xs btn-primary #{analysis_configuration.dom_identifier}-edit" %>
+                  <%= scp_link_to "<i class='fas fa-trash'></i> Destroy".html_safe,
+                                  analysis_configuration_path(analysis_configuration), method: :delete,
+                                  class: "btn btn-xs btn-danger delete-btn #{analysis_configuration.dom_identifier}-delete" %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p><%= scp_link_to "<i class='fas fa-plus'></i> New Analysis".html_safe, new_analysis_configuration_path,
+                       class: 'btn btn-lg btn-success', id: 'new-analysis-configuration' %></p>
+  </div>
+</div>
 
-  <tbody>
-    <% @analysis_configurations.each do |analysis_configuration| %>
-      <tr>
-        <td><%= link_to 'Show', analysis_configuration %></td>
-        <td><%= link_to 'Edit', edit_analysis_configuration_path(analysis_configuration) %></td>
-        <td><%= link_to 'Destroy', analysis_configuration, method: :delete, data: { confirm: 'Are you sure?' } %></td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
-<br>
+    $('#analysis-configurations').dataTable({
+        pagingType: "full_numbers",
+        order: [[0, 'asc']],
+        language: {
+            search: "Filter Results By: "
+        }
+    });
 
-<%= link_to 'New Analysis Configuration', new_analysis_configuration_path %>
+    // ask user to confirm delete, then show modal
+    // use event delegation to attach to all delete-btn regardless
+    // of whether they are visible yet or not
+    $('#analysis-configurations').on('click', '.delete-btn', function(){
+        // get name of study for confirmation
+        var analysisConfig = $(this).parent().parent().find('.analysis-config-identifer').text();
+        if ( confirm('Are you sure you want to delete \"' + analysisConfig + '\"?')) {
+            launchModalSpinner('#delete-modal-spinner','#delete-modal', function() {
+                return true;
+            });
+        } else {
+            return false;
+        }
+    });
+
+</script>

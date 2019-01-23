@@ -13,16 +13,23 @@ class AnalysisConfiguration
   validate :ensure_wdl_keys
   validates_format_of :namespace, :name, :snapshot, with: ValidationTools::ALPHANUMERIC_DASH,
                       message: ValidationTools::ALPHANUMERIC_DASH_ERROR
+  validates_uniqueness_of :name, scope: [:namespace, :snapshot]
   validate :validate_wdl_accessibility
 
   has_many :analysis_parameters, dependent: :delete
   accepts_nested_attributes_for :analysis_parameters, allow_destroy: true
 
   after_create :load_parameters_from_wdl!
+  after_create :set_synopsis!
 
   # formatted identifer as used in Methods Repository
   def identifier
     "#{self.namespace}/#{self.name}/#{self.snapshot}"
+  end
+
+  # analysis identifer as a DOM id (/ replaced with -)
+  def dom_identifier
+    self.identifier.gsub(/\//, '-')
   end
 
   # viewable URL for WDL payload in Methods Repository
@@ -98,6 +105,19 @@ class AnalysisConfiguration
       error_context = ErrorTracker.format_extra_context(self, last_config)
       ErrorTracker.report_exception(e, self.user, error_context)
       Rails.logger.error "Error retrieving analysis WDL inputs/outputs: #{e.message}"
+      e
+    end
+  end
+
+  # set the synopsis from the method repository summary
+  def set_synopsis!
+    begin
+      method = Study.firecloud_client.get_method(self.namespace, self.name, self.snapshot)
+      self.update(synopsis: method['synopsis'])
+    rescue => e
+      error_context = ErrorTracker.format_extra_context(self, last_config)
+      ErrorTracker.report_exception(e, self.user, error_context)
+      Rails.logger.error "Error retrieving analysis WDL synopsis: #{e.message}"
       e
     end
   end

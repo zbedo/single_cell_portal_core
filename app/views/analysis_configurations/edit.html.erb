@@ -1,6 +1,8 @@
-<h1>Editing Analysis Configuration</h1>
+<h1>Editing <%= @analysis_configuration.identifier %></h1>
 
-<%= render 'form', analysis_configuration: @analysis_configuration %>
+<%= render 'form' %>
 
-<%= link_to 'Show', @analysis_configuration %> |
-<%= link_to 'Back', analysis_configurations_path %>
+<p>
+  <%= link_to "<span class='fas fa-search'></span> Info".html_safe, analysis_configuration_path(@analysis_configuration), class: 'btn btn-info' %>
+  <%= link_to "<span class='fas fa-chevron-left'></span> Back".html_safe, analysis_configurations_path, class: 'btn btn-warning' %>
+</p>

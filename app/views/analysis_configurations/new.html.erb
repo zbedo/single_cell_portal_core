@@ -1,5 +1,13 @@
-<h1>New Analysis Configuration</h1>
+<h1>New Analysis</h1>
+<div class="bs-callout bs-callout-info">
+  <p>Use this form to register a new analysis into the portal.  Users who have compute privileges on studies will see the
+    'Analysis' tab enabled, and this analysis will be available in the dropdown menu for users to select.  Once the analysis
+    has been added, you will be able to further configure the parameters to control any special behavior when users sync
+    successful submissions of this analysis (like how to parse output files, and what associations to set, if any).
+  </p>
+</div>
+<%= render 'form' %>
 
-<%= render 'form', analysis_configuration: @analysis_configuration %>
-
-<%= link_to 'Back', analysis_configurations_path %>
+<p>
+  <%= link_to "<span class='fas fa-chevron-left'></span> Back".html_safe, analysis_configurations_path, class: 'btn btn-warning' %>
+</p>

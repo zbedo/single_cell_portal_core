@@ -19,7 +19,7 @@ class AnalysisConfigurationsController < ApplicationController
 
   # GET /analysis_configurations/new
   def new
-    @analysis_configuration = AnalysisConfiguration.new
+    @analysis_configuration = AnalysisConfiguration.new(user: current_user)
   end
 
   # GET /analysis_configurations/1/edit
@@ -64,6 +64,12 @@ class AnalysisConfigurationsController < ApplicationController
       format.html { redirect_to analysis_configurations_url, notice: 'Analysis configuration was successfully destroyed.' }
       format.json { head :no_content }
     end
+  end
+
+  # clear out any saved input/output parameters and set directly from WDL
+  def reset_analysis_parameters
+    @analysis_configuration.load_parameters_from_wdl!
+    redirect_to analysis_configurations_path(@analysis_configuration), notice: "'#{@analysis_configuration.identifier}' required parameters successfully reset."
   end
 
   private

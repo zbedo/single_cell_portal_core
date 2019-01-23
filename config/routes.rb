@@ -57,7 +57,11 @@ Rails.application.routes.draw do
     resources :branding_groups
 
     # analysis configurations
-    resources :analysis_configurations
+    resources :analysis_configurations do
+      member do
+        put 'reset_analysis_parameters', to: 'analysis_configurations#reset_wdl_params', as: :reset_analysis_parameters
+      end
+    end
 
     # study reporter actions
     get 'reports', to: 'reports#index', as: :reports
