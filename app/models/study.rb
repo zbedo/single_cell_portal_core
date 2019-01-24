@@ -453,7 +453,7 @@ class Study
   validates_presence_of   :name, on: :update
   validates_uniqueness_of :url_safe_name, on: :update, message: ": The name you provided tried to create a public URL (%{value}) that is already assigned.  Please rename your study to a different value."
   validate :prevent_firecloud_attribute_changes, on: :update
-
+  validates_presence_of :firecloud_project, :firecloud_workspace
   # callbacks
   before_validation :set_url_safe_name
   before_validation :set_data_dir, :set_firecloud_workspace_name, on: :create
@@ -534,22 +534,18 @@ class Study
     end
   end
 
-  # check if a user can download data directly from the bucket
-  def can_direct_download?(user)
+  # check if a user has access to a study's GCS bucket.  will require View or Edit permission at the user or group level
+  def has_bucket_access?(user)
     if user.nil?
       false
     else
-      self.user.email == user.email || self.study_shares.can_view.include?(user.email)
+      self.can_edit?(user) || self.study_shares.non_reviewers.include?(user.email) || self.user_in_group_share?(user, 'View', 'Edit')
     end
   end
 
-  # check if a user can download data through the portal
+  # check if a user has permission do download data from this study (either is public and user is signed in or user has a direct share)
   def can_download?(user)
-    if user.nil?
-      false
-    else
-      self.public? || self.can_edit?(user) || self.study_shares.non_reviewers.include?(user.email) || self.user_in_group_share?(user, 'View')
-    end
+    (self.public? && user.present?) || self.has_bucket_access?(user)
   end
 
   # check if user can delete a study - only owners can
@@ -2622,7 +2618,7 @@ class Study
       Delayed::Job.enqueue(UploadCleanupJob.new(file.study, file, 0), run_at: run_at)
       Rails.logger.info "#{Time.now}: cleanup job for #{file.bucket_location}:#{file.id} scheduled for #{run_at}"
     rescue => e
-      error_context = ErrorTracker.format_extra_context(self, study_file)
+      error_context = ErrorTracker.format_extra_context(self, file)
       ErrorTracker.report_exception(e, user, error_context)
       # if upload fails, try again using UploadCleanupJob in 2 minutes
       run_at = 2.minutes.from_now
