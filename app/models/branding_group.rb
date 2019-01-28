@@ -21,6 +21,24 @@ class BrandingGroup
                        content_type: { content_type: ['image/jpeg', 'image/jpg', 'image/png'] },
                        size: { in: 0..10.megabytes }
 
+  has_mongoid_attached_file :footer_image,
+                            :path => ":rails_root/public/single_cell/branding_groups/:id/:filename",
+                            :url => "/single_cell/branding_groups/:id/:filename"
+
+  validates_attachment :footer_image,
+                       content_type: { content_type: ['image/jpeg', 'image/jpg', 'image/png'] },
+                       size: { in: 0..10.megabytes }
+
+
+  has_mongoid_attached_file :banner_image,
+                            :path => ":rails_root/public/single_cell/branding_groups/:id/:filename",
+                            :url => "/single_cell/branding_groups/:id/:filename"
+
+  validates_attachment :banner_image,
+                       content_type: { content_type: ['image/jpeg', 'image/jpg', 'image/png'] },
+                       size: { in: 0..10.megabytes }
+
+
   validates_presence_of :name, :name_as_id, :user_id, :background_color, :font_family
   validates_uniqueness_of :name
   validates_format_of :name, :name_as_id,
