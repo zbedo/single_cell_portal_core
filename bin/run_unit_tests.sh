@@ -50,6 +50,7 @@ else
                     test/integration/study_creation_test.rb
                     test/integration/study_validation_test.rb
                     test/integration/taxons_controller_test.rb
+                    test/controllers/analysis_configurations_controller_test.rb
                     test/api/studies_controller_test.rb
                     test/api/study_files_controller_test.rb
                     test/api/study_file_bundles_controller_test.rb
@@ -58,6 +59,7 @@ else
                     test/models/cluster_group_test.rb
                     test/models/user_annotation_test.rb
                     test/models/parse_utils_test.rb
+                    test/models/analysis_configuration_test.rb
   )
   for test_name in ${tests[*]}; do
       bundle exec ruby -I test $test_name
