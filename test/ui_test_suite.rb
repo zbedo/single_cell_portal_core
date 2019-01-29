@@ -1506,7 +1506,9 @@ class UiTestSuite < Test::Unit::TestCase
     bg_color = '#00ffff'
     font_family = 'Tahoma, sans-serif'
     font_color = '#666666'
-    splash_image = @base_path + '/app/assets/images/broad-logo.png'
+    splash_image = @test_data_path + '/branding_groups/SCP-logo-invert.png'
+    banner_image = @test_data_path + '/branding_groups/SCP-Header-resize-invert.png'
+    footer_image = @test_data_path + '/branding_groups/broad-logo-white-invert.png'
 
     # we have to set the color value via JS as webdriver can't interact with the native OS colorpicker dialog
     @driver.execute_script("$('#branding_group_background_color').val('#{bg_color}');")
@@ -1521,11 +1523,15 @@ class UiTestSuite < Test::Unit::TestCase
     font_family_field.send_keys(font_family)
     splash_image_field = form.find_element(:id, 'branding_group_splash_image')
     splash_image_field.send_keys(splash_image)
+    banner_image_field = form.find_element(:id, 'branding_group_banner_image')
+    banner_image_field.send_keys(banner_image)
+    footer_image_field = form.find_element(:id, 'branding_group_footer_image')
+    footer_image_field.send_keys(footer_image)
     user_field = form.find_element(:id, 'branding_group_user_id')
     user_field.send_keys($test_email)
     save_btn = form.find_element(:id, 'save-branding-group')
     save_btn.click
-    wait_for_render(:id, 'branding-group-demo')
+    wait_for_render(:id, 'scp-footer')
 
     saved_name = @driver.find_element(:id, 'branding_group_name').text
     saved_tag_line = @driver.find_element(:id, 'branding_group_tag_line').text
@@ -1533,13 +1539,17 @@ class UiTestSuite < Test::Unit::TestCase
     saved_font_family = @driver.find_element(:id, 'branding_group_font_family').text
     saved_font_color = @driver.find_element(:id, 'branding_group_font_color').text
     saved_splash_image = @driver.find_element(:id, 'branding_group_splash_image').text
+    saved_banner_image = @driver.find_element(:id, 'branding_group_banner_image').text
+    saved_footer_image = @driver.find_element(:id, 'branding_group_footer_image').text
 
     assert saved_name == name, "Name did not save correctly, expected '#{name}' but found '#{saved_name}'"
     assert saved_tag_line == tag_line, "tag_line did not save correctly, expected '#{tag_line}' but found '#{saved_tag_line}'"
     assert saved_bg_color == bg_color, "bg_color did not save correctly, expected '#{bg_color}' but found '#{saved_bg_color}'"
     assert saved_font_family == font_family, "font_family did not save correctly, expected '#{font_family}' but found '#{saved_font_family}'"
     assert saved_font_color == font_color, "font_color did not save correctly, expected '#{font_color}' but found '#{saved_font_color}'"
-    assert saved_splash_image == 'broad-logo.png', "Name did not save correctly, expected 'broad-logo.png' but found '#{saved_splash_image}'"
+    assert saved_splash_image == 'SCP-logo-invert.png', "Splash image did not save correctly, expected 'SCP-logo-invert.png' but found '#{saved_splash_image}'"
+    assert saved_banner_image == 'SCP-Header-resize-invert.png', "Banner image did not save correctly, expected 'SCP-Header-resize-invert.png' but found '#{saved_banner_image}'"
+    assert saved_footer_image == 'broad-logo-white-invert.png', "Footer image did not save correctly, expected 'broad-logo-white-invert.png' but found '#{saved_footer_image}'"
 
     @driver.get @base_url + '/studies'
     wait_for_render(:id, 'studies')
