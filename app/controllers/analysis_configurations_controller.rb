@@ -80,7 +80,9 @@ class AnalysisConfigurationsController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def analysis_configuration_params
-      params.require(:analysis_configuration).permit(:namespace, :name, :snapshot, :user_id, analysis_parameters_attributes: [
+      params.require(:analysis_configuration).permit(:namespace, :name, :snapshot, :configuration_namespace,
+                                                     :configuration_name, :configuration_snapshot, :user_id,
+                                                     analysis_parameters_attributes: [
           :id, :data_type, :call_name, :parameter_type, :parameter_name, :parameter_value, :optional, :_destroy
       ])
     end

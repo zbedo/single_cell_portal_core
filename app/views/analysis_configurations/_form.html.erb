@@ -26,6 +26,20 @@
     </div>
   </div>
   <div class="form-group row">
+    <div class="col-sm-4">
+      <%= f.label :configuration_namespace, 'Configuration Namespace' %><br />
+      <%= f.text_field :configuration_namespace, class: 'form-control' %>
+    </div>
+    <div class="col-sm-4">
+      <%= f.label :configuration_name, 'Configuration Name' %><br />
+      <%= f.text_field :configuration_name, class: 'form-control' %>
+    </div>
+    <div class="col-sm-4">
+      <%= f.label :configuration_snapshot, 'Configuration Snapshot' %><br />
+      <%= f.number_field :configuration_snapshot, class: 'form-control', min: 1, step: 1 %>
+    </div>
+  </div>
+  <div class="form-group row">
     <div class="col-sm-12">
       <h4>Analysis Parameters</h4>
       <p class="text-muted">These are input/output parameters that will be used to generate user interfaces for submitting
