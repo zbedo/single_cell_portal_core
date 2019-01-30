@@ -11,11 +11,18 @@ class AnalysisParameter
   field :parameter_name, type: String # name of the parameter from the WDL
   field :parameter_value, type: String # value of the parameter (optional)
   field :optional, type: Boolean, default: false # parameter optional?
-  field :portal_file_type, type: String
+  field :associated_model, type: String # SCP model this parameter is associated with, if any (e.g. StudyFile, etc)
+  field :associated_model_method, type: String # model instance method that should be called to set value by
+  field :association_filter_attribute, type: String # attribute to filter instances of :associated_model by (e.g. file_type)
+  field :association_filter_value, type: String # attribute value to use in above filter (e.g. Expresion Matrix)
+  field :output_association_param_name, type: String # parameter name to find output to use when setting associations
+  field :output_association_attribute, type: String # association id attribute to set on output files
 
   DATA_TYPES = %w(inputs outputs)
   PRIMITIVE_PARAMETER_TYPES = %w(String Int Float File Boolean String? Int? Float? File? Boolean?)
   COMPOUND_PARAMETER_TYPES = %w(Array Map Object)
+  ASSOCIATED_MODELS = %w(StudyFile Taxon GenomeAssembly GenomeAnnotation ClusterGroup CellMetadatum)
+  ASSOCIATED_MODEL_CONST_NAMES = [:ANALYSIS_METHOD_NAMES, :ANALYSIS_ASSOCIATION_IDS, :ANALYSIS_FILTER_METHODS, :ANALYSIS_FILTER_VALUES]
 
   validates_presence_of :data_type, :call_name, :parameter_type, :parameter_name
   validates_format_of :parameter_name, with: ValidationTools::ALPHANUMERIC_PERIOD,
@@ -30,6 +37,7 @@ class AnalysisParameter
   def config_param_name
     "#{self.call_name}.#{self.parameter_name}"
   end
+
   private
 
   # ensure parameter type conforms to WDL input types

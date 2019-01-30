@@ -1,6 +1,10 @@
 class CellMetadatum
   include Mongoid::Document
 
+  ANALYSIS_METHOD_NAMES = %w(name annotation_type)
+  ANALYSIS_ASSOCIATION_IDS = %w(study_file_id)
+  ANALYSIS_FILTER_METHODS = %w(annotation_type)
+
   belongs_to :study
   belongs_to :study_file
   has_many :data_arrays, as: :linear_data

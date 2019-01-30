@@ -33,7 +33,10 @@ class StudyFile
   ASSEMBLY_REQUIRED_TYPES = ['BAM']
   GZIP_MAGIC_NUMBER = "\x1f\x8b".force_encoding(Encoding::ASCII_8BIT)
   REQUIRED_ATTRIBUTES = %w(file_type name)
-
+  ANALYSIS_METHOD_NAMES = %w(gs_url bundle_parent bundled_files upload_file_name bucket_location)
+  ANALYSIS_ASSOCIATION_IDS = %w(taxon_id genome_assembly_id study_file_bundle_id)
+  ANALYSIS_FILTER_METHODS = %w(file_type)
+  ANALYSIS_FILTER_VALUES = STUDY_FILE_TYPES.dup
 
   # associations
   belongs_to :study, index: true

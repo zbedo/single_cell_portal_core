@@ -22,8 +22,9 @@ class Taxon
                       message: ALPHANUMERIC_SPACE_DASH_ERROR
 
   before_destroy :remove_study_file_associations
-
-  RESTRICTED_NCBI_TAXON_IDS = [9606]
+  ANALYSIS_METHOD_NAMES = %w(common_name scientific_name ncbi_taxid)
+  ANALYSIS_ASSOCIATION_IDS = %w(study_file_id)
+  ANALYSIS_FILTER_METHODS = %w(common_name scientific_name)
 
   swagger_schema :Taxon do
     key :required, [:common_name, :scientific_name, :ncbi_taxid]

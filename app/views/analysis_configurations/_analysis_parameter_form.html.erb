@@ -1,0 +1,84 @@
+<div class="well well-sm">
+  <%= form_for(analysis_parameter, url: update_analysis_parameter_analysis_configuration_path(analysis_parameter_id: analysis_parameter.id), html: {multipart: true, id: "analysis-parameter-#{analysis_parameter.id}", class: 'analysis-parameter-form'}) do |f| %>
+    <% if analysis_parameter.errors.any? %>
+      <div class="form-group row">
+        <div class="col-sm">
+          <div class="bs-callout bs-callout-danger">
+            <h4><%= pluralize(analysis_parameter.errors.count, "error") %> prohibited this required input/output from being saved:</h4>
+
+            <ul>
+              <% analysis_parameter.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      </div>
+    <% end %>
+    <div class="form-group row">
+      <div class="col-sm-2">
+        <%= f.label :data_type, 'Type' %>
+        <%= f.select :data_type, options_for_select(AnalysisParameter::DATA_TYPES, selected: analysis_parameter.data_type), {}, class: 'form-control' %>
+      </div>
+      <div class="col-sm-3">
+        <%= f.label :call_name, 'WDL Call/Task Name' %>
+        <%= f.text_field :call_name, class: 'form-control' %>
+      </div>
+      <div class="col-sm-3">
+        <%= f.label :call_name, 'Parameter Type/Format' %>
+        <%= f.text_field :parameter_type, class: 'form-control' %>
+      </div>
+      <div class="col-sm-2">
+        <label>&nbsp;</label>
+        <%= link_to "Parameter Types <i class='fas fa-external-link-alt'></i>".html_safe,
+                    'https://gatkforums.broadinstitute.org/wdl/discussion/7030/data-types-and-serialization',
+                    class: 'text-secondary bg-light form-control', target: :_blank %>
+      </div>
+      <div class="col-sm-2">
+        <%= f.label :optional, 'Required/Optional' %>
+        <%= f.select :optional, options_for_select([['Required', 0],['Optional', 1]], selected: analysis_parameter.optional), {}, class: 'form-control' %>
+      </div>
+    </div>
+    <div class="form-group row">
+      <div class="col-sm-3">
+        <%= f.label :parameter_name, 'Parameter Name' %>
+        <%= f.text_field :parameter_name, class: 'form-control' %>
+      </div>
+      <div class="col-sm-3">
+        <%= f.label :parameter_value, 'Parameter Value' %>
+        <%= f.text_field :parameter_value, class: 'form-control' %>
+      </div>
+      <div class="col-sm-3">
+        <%= f.label :associated_model, 'Associated Model (if any)' %>
+        <%= f.select :associated_model, options_for_select(AnalysisParameter::ASSOCIATED_MODELS), {prompt: 'Select an associated model'}, class: 'form-control' %>
+      </div>
+      <div class="col-sm-3">
+        <%= f.label :associated_model_method, 'Associated Model method (if any)' %>
+        <%= f.select :associated_model_method, [], {}, class: 'form-control' %>
+      </div>
+    </div>
+    <div class="form-group row">
+      <div class="col-sm-3">
+        <%= f.label :association_filter_attribute, 'Filter associated model by' %>
+        <%= f.select :association_filter_attribute, [], {}, class: 'form-control' %>
+      </div>
+      <div class="col-sm-3">
+        <%= f.label :association_filter_value, 'Association Filter value' %>
+        <%= f.text_field :association_filter_value, class: 'form-control' %>
+      </div>
+      <div class="col-sm-3">
+        <%= f.label :output_association_param_name, 'Output parameter name for association' %>
+        <%= f.text_field :output_association_param_name, class: 'form-control' %>
+      </div>
+      <div class="col-sm-3">
+        <%= f.label :output_association_attribute, 'Output association attribute (if any)' %>
+        <%= f.text_field :output_association_attribute, class: 'form-control' %>
+      </div>
+    </div>
+    <div class="form-group row">
+      <div class="col-sm-3">
+        <%= f.submit 'Update Parameter', class: 'btn btn-lg btn-success' %>
+      </div>
+    </div>
+  <% end %>
+</div>

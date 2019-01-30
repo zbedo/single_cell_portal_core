@@ -3,36 +3,11 @@
 <h3>Analysis Parameters</h3>
 <p class="text-muted">These are input/output parameters that will be used to generate user interfaces for submitting
   this analysis, and also govern behavior when syncing successful submissions of this analysis.</p>
-<table id="analysis-parameters" class="table table-striped table-active">
-  <thead>
-  <tr>
-    <th>Type</th>
-    <th>Parameter Format</th>
-    <th>Call Name</th>
-    <th>Parameter Name</th>
-    <th>Optional</th>
-    <th>Value</th>
-  </tr>
-  </thead>
-  <tbody>
-  <% @analysis_configuration.analysis_parameters.each do |parameter| %>
-    <tr class="analysis-parameter-entry">
-      <td><%= parameter.data_type %></td>
-      <td><%= parameter.parameter_type %></td>
-      <td><%= parameter.call_name %></td>
-      <td><%= parameter.parameter_name %></td>
-      <td>
-        <% if parameter.data_type == 'inputs' %>
-          <%= parameter.optional ? "<i class='fas fa-check-circle text-success'></i>".html_safe : "<i class='fas fa-times-circle text-danger'></i>".html_safe %>
-        <% else %>
-          N/A
-        <% end %>
-      </td>
-      <td><%= parameter.parameter_value %></td>
-    </tr>
-  <% end %>
-  </tbody>
-</table>
+
+<% @analysis_configuration.analysis_parameters.each do |parameter| %>
+  <%= render partial: 'analysis_parameter_form', locals: {analysis_parameter: parameter} %>
+<% end %>
+
 <p>
   <%= link_to "<span class='fas fa-edit'></span> Edit".html_safe, edit_analysis_configuration_path(@analysis_configuration), class: 'btn btn-info' %>
   <%= link_to "<span class='fas fa-chevron-left'></span> Back".html_safe, analysis_configurations_path, class: 'btn btn-warning' %>
