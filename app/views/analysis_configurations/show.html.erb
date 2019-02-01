@@ -4,10 +4,11 @@
 <p class="text-muted">These are input/output parameters that will be used to generate user interfaces for submitting
   this analysis, and also govern behavior when syncing successful submissions of this analysis.</p>
 
-<% @analysis_configuration.analysis_parameters.each do |parameter| %>
-  <%= render partial: 'analysis_parameter_form', locals: {analysis_parameter: parameter} %>
-<% end %>
-
+<div id="analysis-parameters">
+  <% @analysis_configuration.analysis_parameters.each do |parameter| %>
+    <%= render partial: 'analysis_parameter_form', locals: {analysis_parameter: parameter} %>
+  <% end %>
+</div>
 <p>
   <%= link_to "<span class='fas fa-edit'></span> Edit".html_safe, edit_analysis_configuration_path(@analysis_configuration), class: 'btn btn-info' %>
   <%= link_to "<span class='fas fa-chevron-left'></span> Back".html_safe, analysis_configurations_path, class: 'btn btn-warning' %>
@@ -15,8 +16,26 @@
 
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
-    $('#analysis-parameters').DataTable({
-        pagingType: 'full_numbers'
+    $('#analysis-parameters').on('change', '.associated-model-field', function() {
+        var modelDropdown = $(this);
+        var model = modelDropdown.val();
+        var form = modelDropdown.closest('.analysis-parameter-form');
+        if (model !== '') {
+            $.getJSON("<%= load_associated_model_path %>?model=" + model, function(data) {
+                // set each dropdown with returned data, or revert to text field if nothing
+                $.each(data, function(attribute, values) {
+                   var dropdown = form.find('.' + attribute);
+                   dropdown.empty();
+                   dropdown.append('<option value=""></option>');
+                   if (data[attribute].length !== 0) {
+                       $.each(values, function(index, value) {
+                           dropdown.append('<option value="' + value + '">' + value + '</option>');
+                       })
+                   }
+                   dropdown.parent().effect('highlight', 1200);
+                });
+            });
+        }
     });
 
 </script>

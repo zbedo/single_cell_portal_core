@@ -54,17 +54,17 @@
       </div>
       <div class="col-sm-3">
         <%= f.label :associated_model_method, 'Associated Model method (if any)' %>
-        <%= f.select :associated_model_method, [], {}, class: 'form-control associated-model-method-field' %>
+        <%= f.select :associated_model_method, [], {}, class: 'form-control analysis_method_names parameter-select' %>
       </div>
     </div>
     <div class="form-group row">
       <div class="col-sm-3">
         <%= f.label :association_filter_attribute, 'Filter associated model by' %>
-        <%= f.select :association_filter_attribute, [], {}, class: 'form-control association-filter-attribute-field' %>
+        <%= f.select :association_filter_attribute, [], {}, class: 'form-control analysis_filter_methods parameter-select' %>
       </div>
       <div class="col-sm-3">
         <%= f.label :association_filter_value, 'Association Filter value' %>
-        <%= f.text_field :association_filter_value, class: 'form-control' %>
+        <%= f.select :association_filter_value, [], {}, class: 'form-control analysis_filter_values parameter-select' %>
       </div>
       <div class="col-sm-3">
         <%= f.label :output_association_param_name, 'Output parameter name for association' %>
@@ -72,7 +72,7 @@
       </div>
       <div class="col-sm-3">
         <%= f.label :output_association_attribute, 'Output association attribute (if any)' %>
-        <%= f.text_field :output_association_attribute, class: 'form-control output-association-field' %>
+        <%= f.select :output_association_attribute, [], {}, class: 'form-control analysis_association_ids parameter-select' %>
       </div>
     </div>
     <div class="form-group row">

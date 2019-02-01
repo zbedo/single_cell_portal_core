@@ -88,9 +88,7 @@ class AnalysisConfigurationsController < ApplicationController
     begin
       model = associated_model.constantize
       AnalysisParameter::ASSOCIATED_MODEL_CONST_NAMES.each do |constant_name|
-        if model.const_defined?(constant_name)
-          model_attributes[constant_name.downcase.to_s] = model.const_get(constant_name)
-        end
+        model_attributes[constant_name.downcase.to_s] = model.const_defined?(constant_name) ? model.const_get(constant_name) : []
       end
     rescue => e
       error_context = ErrorTracker.format_extra_context({params: params})
