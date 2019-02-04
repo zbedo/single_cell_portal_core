@@ -12,6 +12,7 @@ class AnalysisConfiguration
   field :configuration_name, type: String
   field :configuration_snapshot, type: Integer
   field :synopsis, type: String
+  field :entity_type, type: String
 
   validate :ensure_wdl_keys
   validates_presence_of :namespace, :name, :snapshot, :configuration_namespace, :configuration_name, :configuration_snapshot
@@ -21,6 +22,8 @@ class AnalysisConfiguration
   validates_uniqueness_of :configuration_snapshot, scope: [:configuration_namespace, :configuration_name]
   validate :validate_wdl_accessibility
   validate :validate_wdl_configuration
+
+  ENTITY_TYPES = %w(participant sample)
 
   has_many :analysis_parameters, dependent: :delete do
     def inputs
@@ -54,6 +57,11 @@ class AnalysisConfiguration
   # viewable URL for WDL payload in Methods Repository
   def method_repo_url
     "https://portal.firecloud.org/#methods/#{self.identifier}/wdl"
+  end
+
+  # viewable URL for WDL configuration in Methods Repository
+  def method_repo_config_url
+    "https://portal.firecloud.org/#methods/#{self.identifier}/configs/#{self.configuration_identifier}"
   end
 
   # load input/output parameters directly from Methods Repository
@@ -125,6 +133,7 @@ class AnalysisConfiguration
         "inputs" => self.repository_parameter_list(:inputs),
         "outputs" => self.repository_parameter_list(:outputs),
         "prerequisites" => {},
+        "rootEntityType" => self.entity_type,
         "deleted" => false
     }
   end
@@ -138,6 +147,10 @@ class AnalysisConfiguration
       self.analysis_parameters.delete_all
       config = self.methods_repo_settings
       repo_config = self.methods_repo_configuration
+      # set root entity type, if available
+      if repo_config['payloadObject'].present? && repo_config['payloadObject']['rootEntityType'].present?
+        self.update(entity_type: repo_config['payloadObject']['rootEntityType'])
+      end
       config.each do |data_type, settings|
         settings.each do |setting|
           Rails.logger.info "Setting analysis parameter #{data_type}:#{setting['name']} for #{self.identifier}"

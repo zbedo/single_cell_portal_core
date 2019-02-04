@@ -1,5 +1,6 @@
 class AnalysisConfigurationsController < ApplicationController
   before_action :set_analysis_configuration, only: [:show, :edit, :update, :destroy]
+  before_action :set_analysis_parameter, only: [:update_analysis_parameter, :destroy_analysis_parameter]
   before_action do
     authenticate_user!
     authenticate_admin
@@ -68,7 +69,15 @@ class AnalysisConfigurationsController < ApplicationController
 
   # PATCH /analysis_configurations/:id/analysis_parameters/:analysis_parameter_id
   def update_analysis_parameter
-
+    respond_to do |format|
+      if @analysis_parameter.update(analysis_parameter_params)
+        format.js { render :update_analysis_parameter, notice: "'#{@analysis_parameter.config_param_name}' was successfully updated." }
+        format.json { render :show, status: :ok, location: @analysis_parameter }
+      else
+        format.js { render :update_analysis_parameter }
+        format.json { render json: @analysis_parameter.errors, status: :unprocessable_entity }
+      end
+    end
   end
 
   # DELETE /analysis_configurations/:id/analysis_parameters/:analysis_parameter_id
@@ -87,7 +96,7 @@ class AnalysisConfigurationsController < ApplicationController
     model_attributes = {}
     begin
       model = associated_model.constantize
-      AnalysisParameter::ASSOCIATED_MODEL_CONST_NAMES.each do |constant_name|
+      AnalysisParameter::ASSOCIATED_MODEL_ATTR_NAMES.each do |constant_name|
         model_attributes[constant_name.downcase.to_s] = model.const_defined?(constant_name) ? model.const_get(constant_name) : []
       end
     rescue => e
@@ -104,16 +113,27 @@ class AnalysisConfigurationsController < ApplicationController
       @analysis_configuration = AnalysisConfiguration.find(params[:id])
     end
 
+    def set_analysis_parameter
+      @analysis_parameter = AnalysisParameter.find_by(id: params[:analysis_parameter_id], analysis_configuration_id: params[:id])
+    end
+
     # Never trust parameters from the scary internet, only allow the white list through.
     def analysis_configuration_params
       params.require(:analysis_configuration).permit(:namespace, :name, :snapshot, :configuration_namespace,
                                                      :configuration_name, :configuration_snapshot, :user_id,
                                                      analysis_parameters_attributes: [
-          :id, :data_type, :call_name, :parameter_type, :parameter_name, :parameter_value, :optional, :_destroy
+          :id, :data_type, :call_name, :parameter_type, :parameter_name, :parameter_value, :optional, :associated_model,
+          :associated_model_method, :associated_model_display_method, :association_filter_attribute,
+          :association_filter_value, :output_association_param_name, :output_association_attribute, :visible,
+          :apply_to_all, :_destroy
       ])
     end
 
     def analysis_parameter_params
-      params.require(:analysis_parameter).permit(:id, :data_type, :call_name, :parameter_type, :parameter_name, :parameter_value, :optional,)
+      params.require(:analysis_parameter).permit(:id, :data_type, :call_name, :parameter_type, :parameter_name,
+                                                 :parameter_value, :optional, :associated_model, :associated_model_method,
+                                                 :associated_model_display_method, :association_filter_attribute,
+                                                 :association_filter_value, :output_association_param_name,
+                                                 :output_association_attribute, :visible, :apply_to_all)
     end
 end

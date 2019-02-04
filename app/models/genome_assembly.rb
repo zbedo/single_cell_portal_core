@@ -12,9 +12,10 @@ class GenomeAssembly
   field :release_date, type: Date
   field :accession, type: String
 
-  ANALYSIS_METHOD_NAMES = %w(name accession)
-  ANALYSIS_ASSOCIATION_IDS = %w(study_file_id taxon_id)
-  ANALYSIS_FILTER_METHODS = %w(name accession)
+  ASSOCIATED_MODEL_METHOD = %w(name accession)
+  ASSOCIATED_MODEL_DISPLAY_METHOD = %w(name accession)
+  OUTPUT_ASSOCIATION_ATTRIBUTE = %w(study_file_id taxon_id)
+  ASSOCIATION_FILTER_ATTRIBUTE = %w(name accession)
 
   validates_presence_of :name, :release_date, :accession
   validates_uniqueness_of :accession, scope: :taxon_id

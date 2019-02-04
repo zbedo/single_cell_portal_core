@@ -1,5 +1,6 @@
-<div class="well well-sm">
-  <%= form_for(analysis_parameter, url: update_analysis_parameter_analysis_configuration_path(analysis_parameter_id: analysis_parameter.id), html: {multipart: true, id: "analysis-parameter-#{analysis_parameter.id}", class: 'analysis-parameter-form'}) do |f| %>
+<div class="well well-sm white-bg">
+  <%= form_for(analysis_parameter, url: update_analysis_parameter_analysis_configuration_path(analysis_parameter_id: analysis_parameter.id),
+               html: {multipart: true, id: "analysis-parameter-#{analysis_parameter.id}", class: 'analysis-parameter-form', data: {remote: true}}) do |f| %>
     <% if analysis_parameter.errors.any? %>
       <div class="form-group row">
         <div class="col-sm">
@@ -16,63 +17,78 @@
       </div>
     <% end %>
     <div class="form-group row">
-      <div class="col-sm-2">
+      <div class="col-sm-3">
         <%= f.label :data_type, 'Type' %>
-        <%= f.select :data_type, options_for_select(AnalysisParameter::DATA_TYPES, selected: analysis_parameter.data_type), {}, class: 'form-control' %>
+        <%= f.text_field :data_type, class: 'form-control', readonly: true %>
       </div>
       <div class="col-sm-3">
         <%= f.label :call_name, 'WDL Call/Task Name' %>
-        <%= f.text_field :call_name, class: 'form-control' %>
+        <%= f.text_field :call_name, class: 'form-control', readonly: true %>
       </div>
       <div class="col-sm-3">
         <%= f.label :call_name, 'Parameter Type/Format' %>
-        <%= f.text_field :parameter_type, class: 'form-control' %>
+        <%= f.text_field :parameter_type, class: 'form-control', readonly: true %>
       </div>
-      <div class="col-sm-2">
-        <label>&nbsp;</label>
-        <%= link_to "Parameter Types <i class='fas fa-external-link-alt'></i>".html_safe,
-                    'https://gatkforums.broadinstitute.org/wdl/discussion/7030/data-types-and-serialization',
-                    class: 'text-secondary bg-light form-control', target: :_blank %>
-      </div>
-      <div class="col-sm-2">
+      <div class="col-sm-3">
         <%= f.label :optional, 'Required/Optional' %>
-        <%= f.select :optional, options_for_select([['Required', 0],['Optional', 1]], selected: analysis_parameter.optional), {}, class: 'form-control' %>
+        <%= f.hidden_field :optional, value: analysis_parameter.optional %>
+        <input type="text" class="form-control" value="<%= analysis_parameter.optional? ? 'Optional' : 'Required' %>" readonly="readonly">
       </div>
     </div>
     <div class="form-group row">
-      <div class="col-sm-3">
+      <div class="col-sm-4">
         <%= f.label :parameter_name, 'Parameter Name' %>
-        <%= f.text_field :parameter_name, class: 'form-control' %>
+        <%= f.text_field :parameter_name, class: 'form-control', readonly: true %>
       </div>
-      <div class="col-sm-3">
+      <div class="col-sm-8">
         <%= f.label :parameter_value, 'Parameter Value' %>
         <%= f.text_field :parameter_value, class: 'form-control' %>
       </div>
-      <div class="col-sm-3">
-        <%= f.label :associated_model, 'Associated Model (if any)' %>
+    </div>
+    <h3>Input Controls</h3>
+    <p class="help-block">Use these dropdowns to configure how inputs are rendered for users, and how outputs are processed after successful submissions.</p>
+    <div class="form-group row">
+      <div class="col-sm-4">
+        <%= f.label :associated_model, 'Restrict parameter values to this model (if any)' %>
         <%= f.select :associated_model, options_for_select(AnalysisParameter::ASSOCIATED_MODELS), {prompt: 'Select an associated model'}, class: 'form-control associated-model-field' %>
       </div>
-      <div class="col-sm-3">
-        <%= f.label :associated_model_method, 'Associated Model method (if any)' %>
-        <%= f.select :associated_model_method, [], {}, class: 'form-control analysis_method_names parameter-select' %>
+      <div class="col-sm-4">
+        <%= f.label :visible, 'Render this input for users?' %>
+        <%= f.select :visible, options_for_select([['Yes', 1],['No', 0]], analysis_parameter.visible? ? 1 : 0), {}, class: 'form-control' %>
+      </div>
+      <div class="col-sm-4">
+        <%= f.label :apply_to_all, 'Apply method to all (only valid for arrays)?' %>
+        <%= f.select :apply_to_all, options_for_select([['Yes', 1],['No', 0]], analysis_parameter.apply_to_all? ? 1 : 0),
+                     {}, class: 'form-control', disabled: !analysis_parameter.is_array? %>
+      </div>
+    </div>
+    <hr />
+    <div class="form-group row">
+      <div class="col-sm-4">
+        <%= f.label :associated_model_method, 'Associated model value method (if any)' %>
+        <%= f.select :associated_model_method, [], {}, class: 'form-control associated_model_method parameter-select' %>
+      </div>
+      <div class="col-sm-4">
+        <%= f.label :associated_model_display_method, 'Associated model display method (if any)' %>
+        <%= f.select :associated_model_display_method, [], {}, class: 'form-control associated_model_display_method parameter-select' %>
+      </div>
+      <div class="col-sm-4">
+        <%= f.label :association_filter_attribute, 'Filter associated model using' %>
+        <%= f.select :association_filter_attribute, [], {}, class: 'form-control association_filter_attribute parameter-select' %>
       </div>
     </div>
     <div class="form-group row">
-      <div class="col-sm-3">
-        <%= f.label :association_filter_attribute, 'Filter associated model by' %>
-        <%= f.select :association_filter_attribute, [], {}, class: 'form-control analysis_filter_methods parameter-select' %>
+      <div class="col-sm-4">
+        <%= f.label :association_filter_value, 'Association filter value' %>
+        <%= f.select :association_filter_value, [], {}, class: 'form-control association_filter_value parameter-select' %>
       </div>
-      <div class="col-sm-3">
-        <%= f.label :association_filter_value, 'Association Filter value' %>
-        <%= f.select :association_filter_value, [], {}, class: 'form-control analysis_filter_values parameter-select' %>
-      </div>
-      <div class="col-sm-3">
+      <div class="col-sm-4">
         <%= f.label :output_association_param_name, 'Output parameter name for association' %>
         <%= f.text_field :output_association_param_name, class: 'form-control' %>
       </div>
-      <div class="col-sm-3">
+      <div class="col-sm-4">
         <%= f.label :output_association_attribute, 'Output association attribute (if any)' %>
-        <%= f.select :output_association_attribute, [], {}, class: 'form-control analysis_association_ids parameter-select' %>
+        <%= f.select :output_association_attribute, [], {}, class: 'form-control output_association_attribute parameter-select' %>
       </div>
     </div>
     <div class="form-group row">

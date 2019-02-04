@@ -1,9 +1,11 @@
 class CellMetadatum
   include Mongoid::Document
 
-  ANALYSIS_METHOD_NAMES = %w(name annotation_type)
-  ANALYSIS_ASSOCIATION_IDS = %w(study_file_id)
-  ANALYSIS_FILTER_METHODS = %w(annotation_type)
+  # Constants for scoping values for AnalysisParameter inputs/outputs
+  ASSOCIATED_MODEL_METHOD = %w(name annotation_type)
+  ASSOCIATED_MODEL_DISPLAY_METHOD = %w(name annotation_type)
+  OUTPUT_ASSOCIATION_ATTRIBUTE = %w(study_file_id)
+  ASSOCIATION_FILTER_ATTRIBUTE = %w(annotation_type)
 
   belongs_to :study
   belongs_to :study_file

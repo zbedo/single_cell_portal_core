@@ -1,0 +1,7 @@
+$('#analysis-parameter-<%= params[:analysis_parameter_id] %>').html("<%= j(render partial: 'analysis_parameter_form', locals: {analysis_parameter: @analysis_parameter}) %>");
+<% unless @analysis_parameter.errors.any? %>
+  $('#generic-update-target').html("<%= escape_javascript(render partial: '/layouts/generic_update_modal') %>");
+  $('#generic-update-modal-title').html("<%= notice %>");
+  $('#generic-update-modal-body').empty();
+  $("#generic-update-modal").modal("show");
+<% end %>

@@ -13,16 +13,20 @@ class AnalysisParameter
   field :optional, type: Boolean, default: false # parameter optional?
   field :associated_model, type: String # SCP model this parameter is associated with, if any (e.g. StudyFile, etc)
   field :associated_model_method, type: String # model instance method that should be called to set value by
+  field :associated_model_display_method, type: String # model instance method that should be called to set DISPLAY value by (for dropdowns)
   field :association_filter_attribute, type: String # attribute to filter instances of :associated_model by (e.g. file_type)
   field :association_filter_value, type: String # attribute value to use in above filter (e.g. Expresion Matrix)
   field :output_association_param_name, type: String # parameter name to find output to use when setting associations
   field :output_association_attribute, type: String # association id attribute to set on output files
+  field :visible, type: Boolean, default: true # whether or not to render parameter input in submission form
+  field :apply_to_all, type: Boolean, default: false # whether or not to apply :associated_model_method to all instances (if an array type input)
 
   DATA_TYPES = %w(inputs outputs)
   PRIMITIVE_PARAMETER_TYPES = %w(String Int Float File Boolean String? Int? Float? File? Boolean?)
   COMPOUND_PARAMETER_TYPES = %w(Array Map Object)
   ASSOCIATED_MODELS = %w(StudyFile Taxon GenomeAssembly GenomeAnnotation ClusterGroup CellMetadatum)
-  ASSOCIATED_MODEL_CONST_NAMES = [:ANALYSIS_METHOD_NAMES, :ANALYSIS_ASSOCIATION_IDS, :ANALYSIS_FILTER_METHODS, :ANALYSIS_FILTER_VALUES]
+  ASSOCIATED_MODEL_ATTR_NAMES = [:ASSOCIATED_MODEL_METHOD, :ASSOCIATED_MODEL_DISPLAY_METHOD, :OUTPUT_ASSOCIATION_ATTRIBUTE,
+                                 :ASSOCIATION_FILTER_ATTRIBUTE, :ASSOCIATION_FILTER_VALUE]
 
   validates_presence_of :data_type, :call_name, :parameter_type, :parameter_name
   validates_format_of :parameter_name, with: ValidationTools::ALPHANUMERIC_PERIOD,
@@ -36,6 +40,18 @@ class AnalysisParameter
   # get the call & parameter name together for use in Methods Repository configuration objects
   def config_param_name
     "#{self.call_name}.#{self.parameter_name}"
+  end
+
+  # determine if parameter is an array type
+  def is_array?
+    self.parameter_type.split('[').first == 'Array'
+  end
+
+  # type of input parameter for array-based inputs
+  def array_type
+    if self.is_array?
+      self.parameter_type.split('[').last.split(']').first
+    end
   end
 
   private

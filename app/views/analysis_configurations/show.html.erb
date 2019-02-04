@@ -1,6 +1,15 @@
-<h2><%= @analysis_configuration.identifier %> <%= link_to "<i class='fas fa-external-link-square-alt'></i>".html_safe, @analysis_configuration.method_repo_url, target: :_blank %></h2>
+<h2><%= @analysis_configuration.identifier %></h2>
 <p class="lead"><%= @analysis_configuration.synopsis %></p>
-<h3>Analysis Parameters</h3>
+<dl class="dl-horizontal">
+  <dt>Analysis</dt>
+  <dd><%= link_to "#{@analysis_configuration.identifier} <i class='fas fa-external-link-square-alt'></i>".html_safe, @analysis_configuration.method_repo_url, target: :_blank %></dd>
+  <dt>Configuration</dt>
+  <dd><%= link_to "#{@analysis_configuration.configuration_identifier} <i class='fas fa-external-link-square-alt'></i>".html_safe, @analysis_configuration.method_repo_config_url, target: :_blank %></dd>
+  <dt>Entity Type</dt>
+  <dd><%= @analysis_configuration.entity_type %></dd>
+</dl>
+
+<h3>Analysis Parameters <span class="badge"><%= @analysis_configuration.analysis_parameters.count %></span></h3>
 <p class="text-muted">These are input/output parameters that will be used to generate user interfaces for submitting
   this analysis, and also govern behavior when syncing successful submissions of this analysis.</p>
 
@@ -16,6 +25,15 @@
 
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
+    // populate dropdown with JSON response values
+    function populateDropdown(formInput, options) {
+        formInput.empty();
+        formInput.append('<option value=""></option>');
+        $.each(options, function(index, value) {
+            formInput.append('<option value="' + value + '">' + value + '</option>');
+        });
+    }
+
     $('#analysis-parameters').on('change', '.associated-model-field', function() {
         var modelDropdown = $(this);
         var model = modelDropdown.val();
@@ -24,15 +42,22 @@
             $.getJSON("<%= load_associated_model_path %>?model=" + model, function(data) {
                 // set each dropdown with returned data, or revert to text field if nothing
                 $.each(data, function(attribute, values) {
-                   var dropdown = form.find('.' + attribute);
-                   dropdown.empty();
-                   dropdown.append('<option value=""></option>');
+                   var input = form.find('.' + attribute);
+
                    if (data[attribute].length !== 0) {
-                       $.each(values, function(index, value) {
-                           dropdown.append('<option value="' + value + '">' + value + '</option>');
-                       })
+                       if (input.is('select')) {
+                           populateDropdown(input, values);
+                       } else {
+                           input.replaceWith('<select class="form-control ' + attribute + ' parameter-select" ' +
+                               'name="analysis_parameter[' + attribute + ']" id="analysis_parameter_' + attribute + '"></select>');
+                           var newInput = form.find('.' + attribute);
+                           populateDropdown(newInput, values);
+                       }
+                   } else {
+                       input.replaceWith('<input class="form-control ' + attribute + ' parameter-select" type="text" ' +
+                           'value="" name="analysis_parameter[' + attribute + ']" id="analysis_parameter_' + attribute + '">');
                    }
-                   dropdown.parent().effect('highlight', 1200);
+                   input.parent().effect('highlight', 1200);
                 });
             });
         }

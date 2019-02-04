@@ -18,9 +18,10 @@ class GenomeAnnotation
 
   before_destroy :remove_study_file_associations
 
-  ANALYSIS_METHOD_NAMES = %w(name link index_link)
-  ANALYSIS_ASSOCIATION_IDS = %w(study_file_id genome_assembly_id)
-  ANALYSIS_FILTER_METHODS = %w(name link index_link)
+  ASSOCIATED_MODEL_METHOD = %w(name link index_link)
+  ASSOCIATED_MODEL_DISPLAY_METHOD = %w(name link index_link)
+  OUTPUT_ASSOCIATION_ATTRIBUTE = %w(study_file_id genome_assembly_id)
+  ASSOCIATION_FILTER_ATTRIBUTE = %w(name link index_link)
 
   def display_name
     "#{self.name} (#{self.release_date.strftime("%D")})"
