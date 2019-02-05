@@ -55,11 +55,16 @@ class AnalysisParameter
     end
   end
 
+  # helper to constantize the associated_model
+  def associated_model_class
+    self.associated_model.present? ? self.associated_model.constantize : nil
+  end
+
   # used to populate dropdowns in analysis_parameter_form, not for use with user inputs
   # see options_by_association_method for user forms
   def admin_options(attribute)
     if self.associated_model.present?
-      model = self.associated_model.constantize
+      model = self.associated_model_class
       const_name = attribute.upcase
       model.const_defined?(const_name) ? model.const_get(const_name) : []
     else
@@ -69,15 +74,18 @@ class AnalysisParameter
 
   # return array of options for select when rendering a user input form
   def options_by_association_method(study=nil)
-    if self.associated_model.present?
-      model = self.associated_model.constantize
+    if self.associated_model_class.present?
+      model = self.associated_model_class
       if study.present?
         instances = model.where(study_id: study.id)
         if self.association_filter_attribute.present? && self.association_filter_value.present?
           instances = instances.where(self.association_filter_attribute.to_sym => "#{self.association_filter_value}")
         end
-      else
+      elsif !model === StudyFile
         instances = model.send(:all)
+      else
+        # we're calling for study_files without a study, so return empty as this is a security violation
+        instances = []
       end
       instances.map {|instance| [instance.send(self.associated_model_display_method), instance.send(self.associated_model_method)]}
     else
