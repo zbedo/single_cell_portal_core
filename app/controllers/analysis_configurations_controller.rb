@@ -22,10 +22,6 @@ class AnalysisConfigurationsController < ApplicationController
     @analysis_configuration = AnalysisConfiguration.new(user: current_user)
   end
 
-  # GET /analysis_configurations/1/edit
-  def edit
-  end
-
   # POST /analysis_configurations
   # POST /analysis_configurations.json
   def create
@@ -71,18 +67,13 @@ class AnalysisConfigurationsController < ApplicationController
   def update_analysis_parameter
     respond_to do |format|
       if @analysis_parameter.update(analysis_parameter_params)
-        format.js { render :update_analysis_parameter, notice: "'#{@analysis_parameter.config_param_name}' was successfully updated." }
+        format.js { render :update_analysis_parameter }
         format.json { render :show, status: :ok, location: @analysis_parameter }
       else
         format.js { render :update_analysis_parameter }
         format.json { render json: @analysis_parameter.errors, status: :unprocessable_entity }
       end
     end
-  end
-
-  # DELETE /analysis_configurations/:id/analysis_parameters/:analysis_parameter_id
-  def destroy_analysis_parameter
-
   end
 
   # clear out any saved input/output parameters and set directly from WDL
