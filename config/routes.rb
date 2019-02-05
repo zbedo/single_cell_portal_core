@@ -60,7 +60,7 @@ Rails.application.routes.draw do
     # analysis configurations
     get 'analysis_configurations/load_associated_model', to: 'analysis_configurations#load_associated_model',
         as: :load_associated_model
-    resources :analysis_configurations do
+    resources :analysis_configurations, except: [:edit] do
       member do
         put 'reset_analysis_parameters', to: 'analysis_configurations#reset_wdl_params', as: :reset_analysis_parameters
         match 'analysis_parameters/:analysis_parameter_id', via: [:post, :put, :patch],
