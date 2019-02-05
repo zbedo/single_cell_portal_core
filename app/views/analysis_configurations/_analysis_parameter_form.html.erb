@@ -50,7 +50,8 @@
     <div class="form-group row">
       <div class="col-sm-4">
         <%= f.label :associated_model, 'Restrict parameter values to this model (if any)' %>
-        <%= f.select :associated_model, options_for_select(AnalysisParameter::ASSOCIATED_MODELS), {prompt: 'Select an associated model'}, class: 'form-control associated-model-field' %>
+        <%= f.select :associated_model, options_for_select(AnalysisParameter::ASSOCIATED_MODELS, analysis_parameter.associated_model),
+                     {prompt: 'Select an associated model'}, class: 'form-control associated-model-field' %>
       </div>
       <div class="col-sm-4">
         <%= f.label :visible, 'Render this input for users?' %>
