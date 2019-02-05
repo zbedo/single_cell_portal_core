@@ -1,5 +1,6 @@
 class AnalysisParameter
   include Mongoid::Document
+  include ActionView::Helpers::FormTagHelper # for rendering inputs
   extend ValidationTools
   extend ErrorTracker
 
@@ -51,6 +52,36 @@ class AnalysisParameter
   def array_type
     if self.is_array?
       self.parameter_type.split('[').last.split(']').first
+    end
+  end
+
+  # used to populate dropdowns in analysis_parameter_form, not for use with user inputs
+  # see options_by_association_method for user forms
+  def admin_options(attribute)
+    if self.associated_model.present?
+      model = self.associated_model.constantize
+      const_name = attribute.upcase
+      model.const_defined?(const_name) ? model.const_get(const_name) : []
+    else
+      []
+    end
+  end
+
+  # return array of options for select when rendering a user input form
+  def options_by_association_method(study=nil)
+    if self.associated_model.present?
+      model = self.associated_model.constantize
+      if study.present?
+        instances = model.where(study_id: study.id)
+        if self.association_filter_attribute.present? && self.association_filter_value.present?
+          instances = instances.where(self.association_filter_attribute.to_sym => "#{self.association_filter_value}")
+        end
+      else
+        instances = model.send(:all)
+      end
+      instances.map {|instance| [instance.send(self.associated_model_display_method), instance.send(self.associated_model_method)]}
+    else
+      []
     end
   end
 

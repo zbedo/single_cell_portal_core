@@ -66,21 +66,29 @@
     <div class="form-group row">
       <div class="col-sm-4">
         <%= f.label :associated_model_method, 'Associated model value method (if any)' %>
-        <%= f.select :associated_model_method, [], {}, class: 'form-control associated_model_method parameter-select' %>
+        <%= f.select :associated_model_method,
+                     options_for_select(analysis_parameter.admin_options(:associated_model_method), analysis_parameter.associated_model_method),
+                     {include_blank: true}, class: 'form-control associated_model_method parameter-select' %>
       </div>
       <div class="col-sm-4">
         <%= f.label :associated_model_display_method, 'Associated model display method (if any)' %>
-        <%= f.select :associated_model_display_method, [], {}, class: 'form-control associated_model_display_method parameter-select' %>
+        <%= f.select :associated_model_display_method,
+                     options_for_select(analysis_parameter.admin_options(:associated_model_display_method), analysis_parameter.associated_model_display_method),
+                     {include_blank: true}, class: 'form-control associated_model_display_method parameter-select' %>
       </div>
       <div class="col-sm-4">
         <%= f.label :association_filter_attribute, 'Filter associated model using' %>
-        <%= f.select :association_filter_attribute, [], {}, class: 'form-control association_filter_attribute parameter-select' %>
+        <%= f.select :association_filter_attribute,
+                     options_for_select(analysis_parameter.admin_options(:association_filter_attribute), analysis_parameter.association_filter_attribute),
+                     {include_blank: true}, class: 'form-control association_filter_attribute parameter-select' %>
       </div>
     </div>
     <div class="form-group row">
       <div class="col-sm-4">
         <%= f.label :association_filter_value, 'Association filter value' %>
-        <%= f.select :association_filter_value, [], {}, class: 'form-control association_filter_value parameter-select' %>
+        <%= f.select :association_filter_value,
+                     options_for_select(analysis_parameter.admin_options(:association_filter_value), analysis_parameter.association_filter_value),
+                     {include_blank: true}, class: 'form-control association_filter_value parameter-select' %>
       </div>
       <div class="col-sm-4">
         <%= f.label :output_association_param_name, 'Output parameter name for association' %>
@@ -88,7 +96,9 @@
       </div>
       <div class="col-sm-4">
         <%= f.label :output_association_attribute, 'Output association attribute (if any)' %>
-        <%= f.select :output_association_attribute, [], {}, class: 'form-control output_association_attribute parameter-select' %>
+        <%= f.select :output_association_attribute,
+                     options_for_select(analysis_parameter.admin_options(:output_association_attribute), analysis_parameter.output_association_attribute),
+                     {include_blank: true}, class: 'form-control output_association_attribute parameter-select' %>
       </div>
     </div>
     <div class="form-group row">
