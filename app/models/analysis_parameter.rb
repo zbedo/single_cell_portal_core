@@ -1,6 +1,5 @@
 class AnalysisParameter
   include Mongoid::Document
-  include ActionView::Helpers::FormTagHelper # for rendering inputs
   extend ValidationTools
   extend ErrorTracker
 
@@ -48,10 +47,39 @@ class AnalysisParameter
     self.parameter_type.split('[').first == 'Array'
   end
 
+  # determine if values need to be scoped by a study or not
+  def study_scoped?
+    if self.associated_model.present?
+      self.associated_model_class.method_defined?(:study_id)
+    else
+      false
+    end
+  end
+
   # type of input parameter for array-based inputs
   def array_type
     if self.is_array?
       self.parameter_type.split('[').last.split(']').first
+    else
+      nil
+    end
+  end
+
+  # helper to return input type method name
+  def input_type
+    if self.associated_model.present? || self.parameter_type == 'File' || self.is_array?
+      :select
+    else
+      case self.parameter_type
+      when 'String'
+        :text_field
+      when 'Int'
+        :number_field
+      when 'Float'
+        :number_field
+      when 'Boolean'
+        :check_box
+      end
     end
   end
 
@@ -81,7 +109,7 @@ class AnalysisParameter
         if self.association_filter_attribute.present? && self.association_filter_value.present?
           instances = instances.where(self.association_filter_attribute.to_sym => "#{self.association_filter_value}")
         end
-      elsif !model === StudyFile
+      elsif model != StudyFile
         instances = model.send(:all)
       else
         # we're calling for study_files without a study, so return empty as this is a security violation
