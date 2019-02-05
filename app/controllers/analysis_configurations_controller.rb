@@ -1,5 +1,5 @@
 class AnalysisConfigurationsController < ApplicationController
-  before_action :set_analysis_configuration, only: [:show, :edit, :update, :destroy]
+  before_action :set_analysis_configuration, only: [:show, :edit, :update, :destroy, :submission_preview]
   before_action :set_analysis_parameter, only: [:update_analysis_parameter, :destroy_analysis_parameter]
   before_action do
     authenticate_user!
@@ -82,6 +82,7 @@ class AnalysisConfigurationsController < ApplicationController
     redirect_to analysis_configurations_path(@analysis_configuration), notice: "'#{@analysis_configuration.identifier}' required parameters successfully reset."
   end
 
+  # load options for associated model
   def load_associated_model
     associated_model = params[:model]
     model_attributes = {}
@@ -96,6 +97,12 @@ class AnalysisConfigurationsController < ApplicationController
       logger.error "Error loading associated model due to error: #{e.message}"
     end
     render json: model_attributes.to_json
+  end
+
+  # preview submission form for a given analysis and study
+  def submission_preview
+    # load a random study, or use selected study
+    @study = params[:study_name].present? ? Study.find_by(url_safe_name: params[:study_name]) : Study.all.sample
   end
 
   private

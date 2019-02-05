@@ -26,6 +26,9 @@
                   <%= scp_link_to "<i class='fas fa-cog'></i> Configure".html_safe,
                                   analysis_configuration_path(analysis_configuration),
                                   class: "btn btn-xs btn-primary #{analysis_configuration.dom_identifier}-show" %>
+                  <%= scp_link_to "<i class='fas fa-search'></i> Preview".html_safe,
+                                  submission_preview_analysis_configuration_path(analysis_configuration),
+                                  class: "btn btn-xs btn-warning #{analysis_configuration.dom_identifier}-show" %>
                   <%= scp_link_to "<i class='fas fa-trash'></i> Destroy".html_safe,
                                   analysis_configuration_path(analysis_configuration), method: :delete,
                                   class: "btn btn-xs btn-danger delete-btn #{analysis_configuration.dom_identifier}-delete" %></td>

@@ -67,6 +67,7 @@ Rails.application.routes.draw do
               to: 'analysis_configurations#update_analysis_parameter', as: :update_analysis_parameter
         delete 'analysis_parameters/:analysis_parameter_id', to: 'analysis_configurations#destroy_analysis_parameter',
                as: :destroy_analysis_parameter
+        get 'submission_preview', to: 'analysis_configurations#submission_preview', as: :submission_preview
       end
     end
 

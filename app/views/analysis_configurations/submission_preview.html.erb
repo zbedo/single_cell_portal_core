@@ -1,0 +1,27 @@
+<h1>Preview of <%= @analysis_configuration.identifier %> submission form</h1>
+<h4>Using: <%= @study.name %></h4>
+<div class="well well-lg">
+  <%= form_for(:submission, url: '#', html: {class: 'form'}) do |f| %>
+    <% @analysis_configuration.analysis_parameters.each do |parameter| %>
+      <div class="form-group row">
+        <div class="col-sm-offset-3 col-sm-6">
+          <%= f.label parameter.config_param_name %><br />
+          <% case parameter.input_type
+             when :select %>
+            <%= f.select parameter.config_param_name,
+                         options_for_select(parameter.options_by_association_method(parameter.study_scoped? ? @study : nil)),
+                         {}, class: 'form-control' %>
+          <% when :text_field %>
+            <%= f.text_field parameter.config_param_name, value: parameter.parameter_value, class: 'form-control' %>
+          <% when :number_field %>
+            <%= f.number_field parameter.config_param_name, value: parameter.parameter_value, class: 'form-control' %>
+          <% when :check_box %>
+            <div class="checkbox">
+              <%= f.check_box parameter.config_param_name %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+</div>
