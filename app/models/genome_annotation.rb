@@ -21,12 +21,17 @@ class GenomeAnnotation
   before_destroy :remove_study_file_associations
 
   ASSOCIATED_MODEL_METHOD = %w(name link index_link gs_url)
-  ASSOCIATED_MODEL_DISPLAY_METHOD = %w(name genome_assembly_name species_common_name species_name)
+  ASSOCIATED_MODEL_DISPLAY_METHOD = %w(name genome_assembly_name species_common_name species_name species_and_assembly_name)
   OUTPUT_ASSOCIATION_ATTRIBUTE = %w(study_file_id genome_assembly_id)
   ASSOCIATION_FILTER_ATTRIBUTE = %w(name link index_link)
 
   def display_name
     "#{self.name} (#{self.release_date.strftime("%D")})"
+  end
+
+  # combines complete inheritance tree of taxon -> genome_assembly -> genome_annotation into one display value
+  def species_and_assembly_name
+    "#{self.species_common_name} (#{self.genome_assembly_name}, #{self.name})"
   end
 
   def genome_assembly_name

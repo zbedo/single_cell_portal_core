@@ -62,12 +62,13 @@ Rails.application.routes.draw do
         as: :load_associated_model
     resources :analysis_configurations, except: [:edit] do
       member do
-        put 'reset_analysis_parameters', to: 'analysis_configurations#reset_wdl_params', as: :reset_analysis_parameters
+        put 'reset_analysis_parameters', to: 'analysis_configurations#reset_analysis_parameters', as: :reset_analysis_parameters
         match 'analysis_parameters/:analysis_parameter_id', via: [:post, :put, :patch],
               to: 'analysis_configurations#update_analysis_parameter', as: :update_analysis_parameter
         delete 'analysis_parameters/:analysis_parameter_id', to: 'analysis_configurations#destroy_analysis_parameter',
                as: :destroy_analysis_parameter
         get 'submission_preview', to: 'analysis_configurations#submission_preview', as: :submission_preview
+        post 'submission_preview', to: 'analysis_configurations#load_study_for_submission_preview', as: :load_study_for_submission_preview
       end
     end
 

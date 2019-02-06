@@ -10,6 +10,7 @@ class AnalysisParameter
   field :parameter_type, type: String # type of the parameter (from primitive/compound types)
   field :parameter_name, type: String # name of the parameter from the WDL
   field :parameter_value, type: String # value of the parameter (optional)
+  field :description, type: String # help text for input (optional, user-supplied)
   field :optional, type: Boolean, default: false # parameter optional?
   field :associated_model, type: String # SCP model this parameter is associated with, if any (e.g. StudyFile, etc)
   field :associated_model_method, type: String # model instance method that should be called to set value by
@@ -67,11 +68,13 @@ class AnalysisParameter
 
   # helper to return input type method name
   def input_type
-    if self.associated_model.present? || self.parameter_type == 'File' || self.is_array?
+    if self.associated_model.present? || self.is_array?
       :select
     else
       case self.parameter_type
       when 'String'
+        :text_field
+      when 'File'
         :text_field
       when 'Int'
         :number_field
@@ -80,6 +83,15 @@ class AnalysisParameter
       when 'Boolean'
         :check_box
       end
+    end
+  end
+
+  # helper to return the correct method for setting
+  def value_method_type
+    if self.associated_model.present? || self.parameter_type == 'File' || self.is_array?
+      :options_for_select
+    else
+      :value
     end
   end
 
@@ -103,17 +115,9 @@ class AnalysisParameter
   # return array of options for select when rendering a user input form
   def options_by_association_method(study=nil)
     if self.associated_model_class.present?
-      model = self.associated_model_class
-      if study.present?
-        instances = model.where(study_id: study.id)
-        if self.association_filter_attribute.present? && self.association_filter_value.present?
-          instances = instances.where(self.association_filter_attribute.to_sym => "#{self.association_filter_value}")
-        end
-      elsif model != StudyFile
-        instances = model.send(:all)
-      else
-        # we're calling for study_files without a study, so return empty as this is a security violation
-        instances = []
+      instances = get_instances_by_associations(study)
+      if self.association_filter_attribute.present? && self.association_filter_value.present?
+        instances = instances.where(self.association_filter_attribute.to_sym => "#{self.association_filter_value}")
       end
       instances.map {|instance| [instance.send(self.associated_model_display_method), instance.send(self.associated_model_method)]}
     else
@@ -122,6 +126,17 @@ class AnalysisParameter
   end
 
   private
+
+  def get_instances_by_associations(study)
+    model = self.associated_model_class
+    instances = []
+    if study.present?
+      instances = model.where(study_id: study.id)
+    elsif model != StudyFile
+      instances = model.all
+    end
+    instances
+  end
 
   # ensure parameter type conforms to WDL input types
   def validate_parameter_type

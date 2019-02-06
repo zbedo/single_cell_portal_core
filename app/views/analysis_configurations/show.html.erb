@@ -1,4 +1,16 @@
-<h2><%= @analysis_configuration.identifier %></h2>
+<h1><%= @analysis_configuration.identifier %>
+  <%= link_to "Preview <i class='fas fa-search'></i>".html_safe,
+              submission_preview_analysis_configuration_path(@analysis_configuration), class: 'btn btn-sm btn-info',
+              title: 'Preview the submission form that a user would see when submitting this analysis', target: :_blank,
+              data: {toggle: 'tooltip', placement: 'right'} %>
+  <%= link_to "Reset <i class='fas fa-undo-alt'></i>".html_safe,
+              reset_analysis_parameters_analysis_configuration_path(@analysis_configuration), class: 'btn btn-sm btn-danger',
+              title: 'Reset all input/output parameters to defaults from Methods Repository', method: :put,
+              data: {toggle: 'tooltip', placement: 'right', confirm: 'Are you sure you want to reset?  This cannot be undone.'} %>
+  <%= link_to "<span class='fas fa-chevron-left'></span> Back".html_safe, analysis_configurations_path,
+              class: 'btn btn-sm btn-warning pull-right top-margin-5' %>
+
+</h1>
 <p class="lead"><%= @analysis_configuration.synopsis %></p>
 <dl class="dl-horizontal">
   <dt>Analysis</dt>
@@ -8,15 +20,29 @@
   <dt>Entity Type</dt>
   <dd><%= @analysis_configuration.entity_type %></dd>
 </dl>
-
-<h3>Analysis Parameters <span class="badge"><%= @analysis_configuration.analysis_parameters.count %></span></h3>
+<h2>Analysis Parameters <span class="badge"><%= @analysis_configuration.analysis_parameters.count %></span></h2>
 <p class="text-muted">These are input/output parameters that will be used to generate user interfaces for submitting
   this analysis, and also govern behavior when syncing successful submissions of this analysis.</p>
 
 <div id="analysis-parameters">
-  <% @analysis_configuration.analysis_parameters.each do |parameter| %>
-    <%= render partial: 'analysis_parameter_form', locals: {analysis_parameter: parameter} %>
-  <% end %>
+  <div id="tab-root">
+    <ul class="nav nav-tabs" role="tablist" id="analysis-parameter-tabs">
+      <li role="presentation" class="analysis-parameter-nav active" id="inputs-nav"><a href="#inputs" data-toggle="tab">Inputs <span class="badge"><%= @inputs.size %></a></li>
+      <li role="presentation" class="analysis-parameter-nav" id="outputs-nav"><a href="#outputs" data-toggle="tab">Outputs <span class="badge"><%= @outputs.size %></a></li>
+    </ul>
+    <div class="tab-content">
+      <div class="tab-pane active in" id="inputs" role="tabpanel">
+        <% @inputs.each do |parameter| %>
+          <%= render partial: 'analysis_parameter_form', locals: {analysis_parameter: parameter} %>
+        <% end %>
+      </div>
+      <div class="tab-pane" id="outputs" role="tabpanel">
+        <% @outputs.each do |parameter| %>
+          <%= render partial: 'analysis_parameter_form', locals: {analysis_parameter: parameter} %>
+        <% end %>
+      </div>
+    </div>
+  </div>
 </div>
 <p>
   <%= link_to "<span class='fas fa-chevron-left'></span> Back".html_safe, analysis_configurations_path, class: 'btn btn-warning' %>
@@ -42,21 +68,22 @@
                 // set each dropdown with returned data, or revert to text field if nothing
                 $.each(data, function(attribute, values) {
                    var input = form.find('.' + attribute);
-
-                   if (data[attribute].length !== 0) {
-                       if (input.is('select')) {
-                           populateDropdown(input, values);
+                   if (typeof input[0] !== 'undefined') {
+                       if (data[attribute].length !== 0) {
+                           if (input.is('select')) {
+                               populateDropdown(input, values);
+                           } else {
+                               input.replaceWith('<select class="form-control ' + attribute + ' parameter-select" ' +
+                                   'name="analysis_parameter[' + attribute + ']" id="analysis_parameter_' + attribute + '"></select>');
+                               var newInput = form.find('.' + attribute);
+                               populateDropdown(newInput, values);
+                           }
                        } else {
-                           input.replaceWith('<select class="form-control ' + attribute + ' parameter-select" ' +
-                               'name="analysis_parameter[' + attribute + ']" id="analysis_parameter_' + attribute + '"></select>');
-                           var newInput = form.find('.' + attribute);
-                           populateDropdown(newInput, values);
+                           input.replaceWith('<input class="form-control ' + attribute + ' parameter-select" type="text" ' +
+                               'value="" name="analysis_parameter[' + attribute + ']" id="analysis_parameter_' + attribute + '">');
                        }
-                   } else {
-                       input.replaceWith('<input class="form-control ' + attribute + ' parameter-select" type="text" ' +
-                           'value="" name="analysis_parameter[' + attribute + ']" id="analysis_parameter_' + attribute + '">');
+                       input.parent().effect('highlight', 1200);
                    }
-                   input.parent().effect('highlight', 1200);
                 });
             });
         }

@@ -1,27 +1,24 @@
 <h1>Preview of <%= @analysis_configuration.identifier %> submission form</h1>
-<h4>Using: <%= @study.name %></h4>
-<div class="well well-lg">
-  <%= form_for(:submission, url: '#', html: {class: 'form'}) do |f| %>
-    <% @analysis_configuration.analysis_parameters.each do |parameter| %>
-      <div class="form-group row">
-        <div class="col-sm-offset-3 col-sm-6">
-          <%= f.label parameter.config_param_name %><br />
-          <% case parameter.input_type
-             when :select %>
-            <%= f.select parameter.config_param_name,
-                         options_for_select(parameter.options_by_association_method(parameter.study_scoped? ? @study : nil)),
-                         {}, class: 'form-control' %>
-          <% when :text_field %>
-            <%= f.text_field parameter.config_param_name, value: parameter.parameter_value, class: 'form-control' %>
-          <% when :number_field %>
-            <%= f.number_field parameter.config_param_name, value: parameter.parameter_value, class: 'form-control' %>
-          <% when :check_box %>
-            <div class="checkbox">
-              <%= f.check_box parameter.config_param_name %>
-            </div>
-          <% end %>
-        </div>
-      </div>
-    <% end %>
-  <% end %>
-</div>
+<%= form_for(:study, url: load_study_for_submission_preview_analysis_configuration_path(@analysis_configuration.id),
+             html: {class: 'form', id: 'select-study', data: {remote: true}}) do |f| %>
+  <div class="form-group row">
+    <div class="col-sm-offset-3 col-sm-6">
+      <%= f.label :id, 'Select a study to use (to populate values into dropdowns)' %><br />
+      <%= f.select :id, options_for_select(@studies), {include_blank: true}, class: 'form-control' %>
+    </div>
+  </div>
+<% end %>
+<div class="well well-lg" id="preview-form"></div>
+
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+
+    $('#study_id').on('change', function() {
+        if ($(this).val() !== '') {
+            var form = $('#select-study');
+            form.submit();
+        } else {
+            $('#preview-form').empty();
+        }
+    });
+
+</script>

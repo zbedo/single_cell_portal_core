@@ -34,7 +34,6 @@ class AnalysisConfiguration
       where(data_type: 'outputs')
     end
   end
-  accepts_nested_attributes_for :analysis_parameters, allow_destroy: true
 
   after_create :load_parameters_from_wdl!
   after_create :set_synopsis!
