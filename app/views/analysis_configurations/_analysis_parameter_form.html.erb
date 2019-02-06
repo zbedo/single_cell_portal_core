@@ -1,6 +1,6 @@
 <div class="well well-sm white-bg" id="analysis-parameter-<%= analysis_parameter.id %>-wrapper">
   <%= form_for(analysis_parameter, url: update_analysis_parameter_analysis_configuration_path(analysis_parameter_id: analysis_parameter.id),
-               html: {multipart: true, id: "analysis-parameter-#{analysis_parameter.id}", class: 'analysis-parameter-form', data: {remote: true}}) do |f| %>
+               html: {multipart: true, id: "analysis-parameter-#{analysis_parameter.id}", class: "analysis-parameter-form #{analysis_parameter.data_type.singularize}-analysis-parameter", data: {remote: true}}) do |f| %>
     <% if analysis_parameter.errors.any? %>
       <div class="form-group row">
         <div class="col-sm">

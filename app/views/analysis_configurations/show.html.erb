@@ -1,6 +1,6 @@
 <h1><%= @analysis_configuration.identifier %>
   <%= link_to "Preview <i class='fas fa-search'></i>".html_safe,
-              submission_preview_analysis_configuration_path(@analysis_configuration), class: 'btn btn-sm btn-info',
+              submission_preview_analysis_configuration_path(@analysis_configuration), class: 'btn btn-sm btn-info  ',
               title: 'Preview the submission form that a user would see when submitting this analysis', target: :_blank,
               data: {toggle: 'tooltip', placement: 'right'} %>
   <%= link_to "Reset <i class='fas fa-undo-alt'></i>".html_safe,
