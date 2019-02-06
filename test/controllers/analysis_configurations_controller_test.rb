@@ -35,7 +35,10 @@ class AnalysisConfigurationsControllerTest < ActionDispatch::IntegrationTest
             namespace: 'unity-benchmark-test',
             name: 'test-analysis',
             snapshot: 1,
-            user_id: @test_user.id
+            user_id: @test_user.id,
+            configuration_namespace: 'unity-benchmark-test',
+            configuration_name: 'test-analysis',
+            configuration_snapshot: 2
         }
     }
     post analysis_configurations_path, params: analysis_configuration_params
