@@ -38,6 +38,11 @@ class AnalysisConfiguration
   after_create :load_parameters_from_wdl!
   after_create :set_synopsis!
 
+  # returns an array of all available analysis_configurations for use in dropdown menus
+  def self.available_analyses
+    self.all.map {|analysis| [analysis.select_option_display, analysis.select_option_value]}
+  end
+
   # formatted identifer as used in Methods Repository
   def identifier
     "#{self.namespace}/#{self.name}/#{self.snapshot}"
@@ -51,6 +56,18 @@ class AnalysisConfiguration
   # analysis identifer as a DOM id (/ replaced with -)
   def dom_identifier
     self.identifier.gsub(/\//, '-')
+  end
+
+  # analysis identifer as a select option value (/ replaced with --)
+  def select_option_value
+    self.identifier.gsub(/\//, '--')
+  end
+
+  # display value for dropdown menus in user-facing forms
+  def select_option_display
+    display_value = self.name
+    display_value += self.synopsis.present? ? " (#{self.synopsis})" : nil
+    display_value
   end
 
   # viewable URL for WDL payload in Methods Repository
@@ -71,6 +88,17 @@ class AnalysisConfiguration
   # get corresponding configuration object from Methods Repository
   def methods_repo_configuration
     Study.firecloud_client.get_configuration(self.configuration_namespace, self.configuration_name, self.configuration_snapshot, true)
+  end
+
+  def wdl_payload
+    begin
+      Study.firecloud_client.get_method(self.namespace, self.name, self.snapshot, true)
+    rescue => e
+      error_context = ErrorTracker.format_extra_context(self)
+      ErrorTracker.report_exception(e, nil, error_context)
+      Rails.logger.error "Error retrieving analysis WDL payload for #{self.identifier}: #{e.message}"
+      nil
+    end
   end
 
   # get all input/output parameters for this analysis as a hash, can include values if needed

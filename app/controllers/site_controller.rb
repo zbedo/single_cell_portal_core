@@ -973,21 +973,9 @@ class SiteController < ApplicationController
 
   # view the wdl of a specified workflow
   def view_workflow_wdl
-    @workflow_name = params[:workflow]
-    @workflow_namespace = params[:namespace]
-    @workflow_snapshot = params[:snapshot]
-    begin
-      # load workflow payload object
-      @workflow_wdl = Study.firecloud_client.get_method(@workflow_namespace, @workflow_name, @workflow_snapshot, true)
-      if @workflow_wdl.is_a?(Hash)
-        @workflow_wdl = @workflow_wdl['payload']
-      end
-    rescue => e
-      error_context = ErrorTracker.format_extra_context(@study, {params: params})
-      ErrorTracker.report_exception(e, current_user, error_context)
-      @workflow_wdl = "We're sorry, but we could not load the requested workflow object.  Please try again later.\n\nError: #{e.message}"
-      logger.error "#{Time.now}: unable to load WDL for #{@workflow_namespace}:#{@workflow_name}:#{@workflow_snapshot}; #{e.message}"
-    end
+    analysis_configuration = AnalysisConfiguration.find_by(namespace: params[:namespace], name: params[:workflow],
+                                                                              snapshot: params[:snapshot].to_i)
+    @workflow_wdl = analysis_configuration.wdl_payload
   end
 
   # get the available entities for a workspace
@@ -2197,23 +2185,24 @@ class SiteController < ApplicationController
 
   # load list of available workflows
   def load_available_workflows
-    config_options = AdminConfiguration.where(config_type: 'Workflow Name').to_a
-    allowed_workflows = config_options.map(&:value)
-    all_workflows = []
-    
-    # parellelize gets to speed up performance if there are a lot of workflows
-    # restrict parallelization to 3 threads to avoid spurious 401 errors
-    Parallel.map(allowed_workflows, in_threads: 3) do |workflow_opts|
-      namespace, name, snapshot = workflow_opts.split('/')
-      all_workflows << Study.firecloud_client.get_methods(namespace: namespace, name: name, snapshotId: snapshot)
-    end
-
-    # flatten list as it will be nested arrays
-    all_workflows.flatten!
-
-    # assemble readable list for the dropdown menu
-    list = all_workflows.sort_by {|w| [w['name'], w['snapshotId'].to_i]}.map {|w| ["#{w['name']} (#{w['snapshotId']})#{w['synopsis'].blank? ? nil : " -- #{w['synopsis']}"}", "#{w['namespace']}--#{w['name']}--#{w['snapshotId']}"]}
-    list
+    # config_options = AdminConfiguration.where(config_type: 'Workflow Name').to_a
+    # allowed_workflows = config_options.map(&:value)
+    # all_workflows = []
+    #
+    # # parellelize gets to speed up performance if there are a lot of workflows
+    # # restrict parallelization to 3 threads to avoid spurious 401 errors
+    # Parallel.map(allowed_workflows, in_threads: 3) do |workflow_opts|
+    #   namespace, name, snapshot = workflow_opts.split('/')
+    #   all_workflows << Study.firecloud_client.get_methods(namespace: namespace, name: name, snapshotId: snapshot)
+    # end
+    #
+    # # flatten list as it will be nested arrays
+    # all_workflows.flatten!
+    #
+    # # assemble readable list for the dropdown menu
+    # list = all_workflows.sort_by {|w| [w['name'], w['snapshotId'].to_i]}.map {|w| ["#{w['name']} (#{w['snapshotId']})#{w['synopsis'].blank? ? nil : " -- #{w['synopsis']}"}", "#{w['namespace']}--#{w['name']}--#{w['snapshotId']}"]}
+    # list
+    AnalysisConfiguration.available_analyses
   end
 
   # configure and submit a submission in a workspace
