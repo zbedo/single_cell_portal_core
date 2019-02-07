@@ -13,4 +13,16 @@ require "minitest/pride"
 
 class ActiveSupport::TestCase
   include Rails.application.routes.url_helpers
+
+  # Add more helper methods to be used by all tests here...
+  def compare_hashes(reference, compare)
+    ref = reference.to_a.flatten
+    comp = compare.to_a.flatten
+    if (ref.size > comp.size)
+      difference = ref - comp
+    else
+      difference = comp - ref
+    end
+    Hash[*difference.flatten]
+  end
 end

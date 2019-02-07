@@ -127,7 +127,7 @@ class StudyShare
 		end
 	end
 
-  validates_format_of :email, with: Devise.email_regexp, message: 'is not a valid email address.'
+  validate            :check_email_format
   validates_format_of :firecloud_project, :firecloud_workspace, with: ValidationTools::ALPHANUMERIC_DASH,
                       message: ValidationTools::ALPHANUMERIC_DASH_ERROR
   validates_inclusion_of :permission, in: PERMISSION_TYPES, message: 'is not a valid permission setting.'
@@ -187,6 +187,14 @@ class StudyShare
 	def check_updated_permissions
 		if self.permission_changed?
 			SingleCellMailer.share_notification(self.study.user, self).deliver_now
+		end
+	end
+
+	# custom email format validation that will abort subsequent validation callbacks on error
+	def check_email_format
+		unless self.email =~ Devise.email_regexp
+			errors.add(:email, "#{self.email} is not a valid email address.  Please enter only email addresses (no names or spaces).")
+			throw(:abort)
 		end
 	end
 

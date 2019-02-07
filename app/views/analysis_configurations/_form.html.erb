@@ -1,0 +1,54 @@
+<%= nested_form_for(@analysis_configuration, html: {multipart: true, id: 'analysis-configuration-form', class: 'form'}) do |f| %>
+  <% if @analysis_configuration.errors.any? %>
+    <div class="bs-callout bs-callout-danger">
+      <h4><%= pluralize(@analysis_configuration.errors.count, "error") %> prohibited this analysis from being saved:</h4>
+
+      <ul>
+      <% @analysis_configuration.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+  <%= f.hidden_field :user_id %>
+  <div class="form-group row">
+    <div class="col-sm-4">
+      <%= f.label :namespace %><br />
+      <%= f.text_field :namespace, class: 'form-control' %>
+    </div>
+    <div class="col-sm-4">
+      <%= f.label :name %><br />
+      <%= f.text_field :name, class: 'form-control' %>
+    </div>
+    <div class="col-sm-4">
+      <%= f.label :snapshot %><br />
+      <%= f.number_field :snapshot, class: 'form-control', min: 1, step: 1 %>
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-sm-12">
+      <h4>Analysis Parameters</h4>
+      <p class="text-muted">These are input/output parameters that will be used to generate user interfaces for submitting
+        this analysis, and also govern behavior when syncing successful submissions of this analysis.  <strong>You are not
+        required to add these parameters manually - they will auto-populate from the analysis WDL inputs/ouputs when the
+        record is first created.</strong></p>
+      <%= f.fields_for :analysis_parameters, class: 'form-control' %>
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-sm-12">
+      <%= f.link_to_add "<span class='fa fa-plus'></span> Add input/output parameters".html_safe,
+                           :analysis_parameters, class: 'btn btn-sm btn-primary', id: 'add-analysis-parameter' %>
+      <% if !@analysis_configuration.new_record? %>
+        <%= link_to "<span class='fas fa-sync-alt'></span> Reset Parameters to Defaults".html_safe,
+                    reset_analysis_parameters_analysis_configuration_path, method: :put, class: 'btn btn-sm btn-danger',
+                    data: {toggle: 'tooltip'}, title: 'Reset all input/output parameters to defaults from WDL' %>
+      <% end %>
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-sm-12">
+      <%= f.submit 'Save', class: 'btn btn-lg btn-success', id: 'save-analysis-configuration' %>
+    </div>
+  </div>
+<% end %>

@@ -17,7 +17,7 @@
           <tbody>
             <% @branding_groups.each do |branding_group| %>
               <tr id="<%= branding_group.name_as_id %>">
-                <td class="branding-group-name"><%= scp_link_to branding_group.name, site_path(scpbr: branding_group.name_as_id) %></td>
+                <td class="branding-group-name"><%= link_to branding_group.name, site_path(scpbr: branding_group.name_as_id) %></td>
                 <td class="branding-group-user"><%= branding_group.user.email %></td>
                 <td class="branding-group-study-count"><%= branding_group.studies.count %></td>
                 <td><%= branding_group.created_at.strftime('%Y-%m-%d %H:%M:%S') %></td>

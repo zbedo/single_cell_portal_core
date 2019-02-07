@@ -3,7 +3,7 @@
   <div class="panel panel-default study-panel" data-page="<%= params[:page].nil? ? 1 : params[:page] %>">
     <div class="panel-heading">
       <div class="panel-title">
-        <h4><%= link_to study.name, view_study_path(study_name: study.url_safe_name), title: 'View Study', data: {toggle: 'tooltip'} %>&nbsp;<%= link_to "<span class='fas fa-chevron-#{study_description.present? ? 'down' : 'right'} toggle-glyph'></span>".html_safe, "#study-#{study.url_safe_name}", data: {toggle: 'collapse', parent: '#search-studies'} %></h4>
+        <h4><%= scp_link_to study.name, view_study_path(study_name: study.url_safe_name), title: 'View Study', data: {toggle: 'tooltip'}, class: 'view-study-page' %>&nbsp;<%= link_to "<span class='fas fa-chevron-#{study_description.present? ? 'down' : 'right'} toggle-glyph'></span>".html_safe, "#study-#{study.url_safe_name}", data: {toggle: 'collapse', parent: '#search-studies'} %></h4>
       </div>
     </div>
     <div id="study-<%= study.url_safe_name %>" class="panel-collapse collapse <%= study_description.present? ? 'in' : nil %>">
