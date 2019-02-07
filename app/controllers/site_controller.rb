@@ -975,6 +975,7 @@ class SiteController < ApplicationController
   def view_workflow_wdl
     analysis_configuration = AnalysisConfiguration.find_by(namespace: params[:namespace], name: params[:workflow],
                                                                               snapshot: params[:snapshot].to_i)
+    @workflow_name = analysis_configuration.name
     @workflow_wdl = analysis_configuration.wdl_payload
   end
 
@@ -1113,6 +1114,13 @@ class SiteController < ApplicationController
         @input_files = files.map {|file| ["#{file.name}#{file.description.present? ? " (#{file.description})" : nil}", file.gs_url]}
       end
     end
+  end
+
+  # retrieve analysis configuration and associated parameters
+  def get_analysis_configuration
+    namespace, name, snapshot = params[:workflow_identifier].split('--')
+    @analysis_configuration = AnalysisConfiguration.find_by(namespace: namespace, name: name,
+                                                           snapshot: snapshot.to_i)
   end
 
   # create a workspace analysis submission for a given sample

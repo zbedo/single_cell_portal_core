@@ -7,7 +7,7 @@
             <%= !parameter.visible? ? "<p class='help-block'>This input will not be shown to users, but would pass the following values:</p>".html_safe : nil %>
             <%= f.label parameter.config_param_name, "#{parameter.config_param_name}" %><br />
             <%= parameter.description.present? ? "<span class='help-block'>#{parameter.description}</span>".html_safe : nil %>
-            <%= render_analysis_parameter_input(f, parameter, study).html_safe %>
+            <%= render_analysis_parameter_preview(f, parameter, study).html_safe %>
           </div>
         </div>
       <% end %>

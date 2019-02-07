@@ -82,7 +82,7 @@
       $('#selected-workflow').html(displayWdlText);
       // get any optional parameters
       $.ajax({
-        url: "<%= get_workflow_options_path(study_name: @study.url_safe_name) %>&workflow_identifier=" + selectedWdl,
+        url: "<%= get_analysis_configuration_path(study_name: @study.url_safe_name) %>&workflow_identifier=" + selectedWdl,
         dataType: 'script'
       });
     } else {

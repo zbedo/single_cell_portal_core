@@ -202,6 +202,7 @@ Rails.application.routes.draw do
     post 'study/:study_name/delete_workspace_samples', to: 'site#delete_workspace_samples', as: :delete_workspace_samples
     get 'view_workflow_wdl', to: 'site#view_workflow_wdl', as: :view_workflow_wdl
     get 'workflow_options', to: 'site#get_workflow_options', as: :get_workflow_options
+    get 'analysis_configuration', to: 'site#get_analysis_configuration', as: :get_analysis_configuration
     get 'genome_assemblies', to: 'site#get_taxon_assemblies', as: :get_taxon_assemblies
     get 'taxon', to: 'site#get_taxon', as: :get_taxon
 
