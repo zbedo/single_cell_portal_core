@@ -4,6 +4,8 @@ class AnalysisParameter
   extend ErrorTracker
 
   belongs_to :analysis_configuration
+  has_many :analysis_parameter_filters, dependent: :delete
+  accepts_nested_attributes_for :analysis_parameter_filters, allow_destroy: :true
 
   field :data_type, type: String # input, output
   field :call_name, type: String # name of WDL task this input
