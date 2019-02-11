@@ -69,29 +69,24 @@
         </div>
       </div>
       <div class="form-group row">
-        <div class="col-sm-3">
+        <div class="col-sm-6">
           <%= f.label :associated_model_method, 'Associated model value method' %>
           <%= f.select :associated_model_method,
                        options_for_select(analysis_parameter.admin_options(:associated_model_method), analysis_parameter.associated_model_method),
                        {include_blank: true}, class: 'form-control associated_model_method parameter-select' %>
         </div>
-        <div class="col-sm-3">
+        <div class="col-sm-6">
           <%= f.label :associated_model_display_method, 'Associated model display method' %>
           <%= f.select :associated_model_display_method,
                        options_for_select(analysis_parameter.admin_options(:associated_model_display_method), analysis_parameter.associated_model_display_method),
                        {include_blank: true}, class: 'form-control associated_model_display_method parameter-select' %>
         </div>
-        <div class="col-sm-3">
-          <%= f.label :association_filter_attribute, 'Filter associated model using' %>
-          <%= f.select :association_filter_attribute,
-                       options_for_select(analysis_parameter.admin_options(:association_filter_attribute), analysis_parameter.association_filter_attribute),
-                       {include_blank: true}, class: 'form-control association_filter_attribute parameter-select' %>
-        </div>
-        <div class="col-sm-3">
-          <%= f.label :association_filter_value, 'Association filter value' %>
-          <%= f.select :association_filter_value,
-                       options_for_select(analysis_parameter.admin_options(:association_filter_value), analysis_parameter.association_filter_value),
-                       {include_blank: true}, class: 'form-control association_filter_value parameter-select' %>
+      </div>
+      <div class="form-group row">
+        <div class="col-sm-12">
+          <%= f.fields_for :analysis_parameter_filters %>
+          <%= f.link_to_add "<span class='fas fa-plus'></span> Add Filter to Associated Model".html_safe, :analysis_parameter_filters, class: 'btn btn-primary',
+                            id: 'add-analysis-parameter-filter' %>
         </div>
       </div>
     <% else %>

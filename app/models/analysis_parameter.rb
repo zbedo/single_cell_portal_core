@@ -28,8 +28,7 @@ class AnalysisParameter
   PRIMITIVE_PARAMETER_TYPES = %w(String Int Float File Boolean String? Int? Float? File? Boolean?)
   COMPOUND_PARAMETER_TYPES = %w(Array Map Object)
   ASSOCIATED_MODELS = %w(StudyFile Taxon GenomeAssembly GenomeAnnotation ClusterGroup CellMetadatum)
-  ASSOCIATED_MODEL_ATTR_NAMES = [:ASSOCIATED_MODEL_METHOD, :ASSOCIATED_MODEL_DISPLAY_METHOD, :OUTPUT_ASSOCIATION_ATTRIBUTE,
-                                 :ASSOCIATION_FILTER_ATTRIBUTE, :ASSOCIATION_FILTER_VALUE]
+  ASSOCIATED_MODEL_ATTR_NAMES = [:ASSOCIATED_MODEL_METHOD, :ASSOCIATED_MODEL_DISPLAY_METHOD, :OUTPUT_ASSOCIATION_ATTRIBUTE]
 
   validates_presence_of :data_type, :call_name, :parameter_type, :parameter_name
   validates_format_of :parameter_name, with: ValidationTools::ALPHANUMERIC_PERIOD,
@@ -118,6 +117,9 @@ class AnalysisParameter
   def options_by_association_method(study=nil)
     if self.associated_model_class.present?
       instances = get_instances_by_associations(study)
+      self.analysis_parameter_filters.each do |filter|
+        instances = instances.where(filter.attribute_name.to_sym => "#{filter.value}")
+      end
       if self.association_filter_attribute.present? && self.association_filter_value.present?
         instances = instances.where(self.association_filter_attribute.to_sym => "#{self.association_filter_value}")
       end

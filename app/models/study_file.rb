@@ -39,7 +39,10 @@ class StudyFile
   ASSOCIATED_MODEL_DISPLAY_METHOD = %w(upload_file_name bucket_location)
   OUTPUT_ASSOCIATION_ATTRIBUTE = %w(taxon_id genome_assembly_id study_file_bundle_id)
   ASSOCIATION_FILTER_ATTRIBUTE = %w(file_type)
-  ASSOCIATION_FILTER_VALUE = STUDY_FILE_TYPES.dup
+  ASSOCIATION_FILTER_VALUE = {
+      file_type: STUDY_FILE_TYPES.dup,
+      taxon_id: Taxon.all.map {|t| [t.common_name, t.id]}
+  }
 
   # associations
   belongs_to :study, index: true
