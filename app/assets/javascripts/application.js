@@ -521,6 +521,7 @@ function updateSearchGeneParams() {
   $('#search_boxpoints').val(boxpoints);
   $('#search_heatmap_row_centering').val(heatmap_row_centering);
   $('#search_heatmap_size').val(heatmap_size);
+  $('#search_subsample').val(subsample);
 }
 
 
@@ -548,7 +549,6 @@ function getRenderUrlParams() {
     '&heatmap_row_centering=' + heatmap_row_centering +
     '&heatmap_size=' + heatmap_size +
     '&colorscale=' + color_profile;
-
   return urlParams;
 }
 
