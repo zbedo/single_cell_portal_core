@@ -152,7 +152,7 @@ class AnalysisConfiguration
         "name" => self.configuration_name,
         "namespace" => self.configuration_namespace,
         "methodConfigVersion" => self.configuration_snapshot,
-        "methodsRepoMethod" => {
+        "methodRepoMethod" => {
             "methodName" => self.name,
             "methodNamespace" => self.namespace,
             "methodVersion" => self.snapshot
@@ -163,6 +163,18 @@ class AnalysisConfiguration
         "rootEntityType" => self.entity_type,
         "deleted" => false
     }
+  end
+
+  # populate parameters based on user input for submission to a workspace
+  def apply_user_inputs(user_inputs, entity_name=nil)
+    default_config = self.configuration_for_repository.dup
+    user_inputs.each do |parameter_name, parameter_value|
+       default_config['inputs'][parameter_name] = parameter_value.to_s
+    end
+    default_name = default_config['name']
+    default_name += entity_name.present? ? "_#{entity_name}" : "_#{SecureRandom.hex(5)}" # make config name unique
+    default_config['name'] = default_name
+    default_config
   end
 
   # populate inputs & outputs from analysis WDL definition.  will automatically fire after record creation

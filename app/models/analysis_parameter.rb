@@ -123,7 +123,7 @@ class AnalysisParameter
       if self.association_filter_attribute.present? && self.association_filter_value.present?
         instances = instances.where(self.association_filter_attribute.to_sym => "#{self.association_filter_value}")
       end
-      instances.map {|instance| [instance.send(self.associated_model_display_method), instance.send(self.associated_model_method)]}
+      instances.map {|instance| [instance.send(self.associated_model_display_method), "\"#{instance.send(self.associated_model_method)}\""]}
     else
       []
     end

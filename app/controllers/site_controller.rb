@@ -1124,37 +1124,66 @@ class SiteController < ApplicationController
   end
 
   # create a workspace analysis submission for a given sample
+  # def create_workspace_submission
+  #   begin
+  #     # before creating submission, we need to make sure that the user is on the 'all-portal' user group list if it exists
+  #     current_user.add_to_portal_user_group
+  #
+  #     # set up parameters
+  #     workflow_namespace, workflow_name, workflow_snapshot = params[:workflow][:identifier].split('--')
+  #     primary_inputs = params[:workflow][:inputs].keep_if {|s| !s.blank?}
+  #     optional_inputs = params[:workflow][:optional_parameters]
+  #
+  #     # either load existing workspace configuration or copy new one into the workspace from the methods repository
+  #     config_namespace, config_name = set_workflow_configuration(workflow_name, workflow_namespace, workflow_snapshot)
+  #
+  #     # submission must be done as user, so create a client with current_user and submit
+  #     client = FireCloudClient.new(current_user, @study.firecloud_project)
+  #     @submissions = []
+  #     @failed_submissions = []
+  #     logger.info "#{Time.now}: Updating configuration for #{config_namespace}/#{config_name} to run #{workflow_namespace}/#{workflow_name} in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
+  #     primary_inputs.each do |input_name, input_value|
+  #       if input_value.is_a?(Array)
+  #         input_value.each do |val|
+  #           perform_workspace_submission(client, config_name, config_namespace, input_name, val, optional_inputs, workflow_name, workflow_namespace)
+  #         end
+  #       else
+  #         perform_workspace_submission(client, config_name, config_namespace, input_name, input_value, optional_inputs, workflow_name, workflow_namespace)
+  #       end
+  #     end
+  #   rescue => e
+  #     error_context = ErrorTracker.format_extra_context(@study, {params: params})
+  #     ErrorTracker.report_exception(e, current_user, error_context)
+  #     logger.error "#{Time.now}: unable to submit workflow #{workflow_name} in #{@study.firecloud_workspace} due to: #{e.message}"
+  #     @alert = "We were unable to submit your workflow due to an error: #{e.message}"
+  #     render action: :notice
+  #   end
+  # end
+
   def create_workspace_submission
     begin
       # before creating submission, we need to make sure that the user is on the 'all-portal' user group list if it exists
       current_user.add_to_portal_user_group
 
-      # set up parameters
-      workflow_namespace, workflow_name, workflow_snapshot = params[:workflow][:identifier].split('--')
-      primary_inputs = params[:workflow][:inputs].keep_if {|s| !s.blank?}
-      optional_inputs = params[:workflow][:optional_parameters]
+      # load analysis configuration
+      @analysis_configuration = AnalysisConfiguration.find(params[:analysis_configuration_id])
 
-      # either load existing workspace configuration or copy new one into the workspace from the methods repository
-      config_namespace, config_name = set_workflow_configuration(workflow_name, workflow_namespace, workflow_snapshot)
+
+      @submissions = []
+      @failed_submissions = []
+      logger.info "Updating configuration for #{@analysis_configuration.configuration_identifier} to run #{@analysis_configuration.identifier} in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
+      submission_config = @analysis_configuration.apply_user_inputs(params[:workflow][:inputs])
+      logger.info "submission config: #{submission_config}"
+      # save configuration in workspace
+      Study.firecloud_client.create_workspace_configuration(@study.firecloud_project, @study.firecloud_workspace, submission_config)
 
       # submission must be done as user, so create a client with current_user and submit
       client = FireCloudClient.new(current_user, @study.firecloud_project)
-      @submissions = []
-      @failed_submissions = []
-      logger.info "#{Time.now}: Updating configuration for #{config_namespace}/#{config_name} to run #{workflow_namespace}/#{workflow_name} in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
-      primary_inputs.each do |input_name, input_value|
-        if input_value.is_a?(Array)
-          input_value.each do |val|
-            perform_workspace_submission(client, config_name, config_namespace, input_name, val, optional_inputs, workflow_name, workflow_namespace)
-          end
-        else
-          perform_workspace_submission(client, config_name, config_namespace, input_name, input_value, optional_inputs, workflow_name, workflow_namespace)
-        end
-      end
+      head :ok
     rescue => e
       error_context = ErrorTracker.format_extra_context(@study, {params: params})
       ErrorTracker.report_exception(e, current_user, error_context)
-      logger.error "#{Time.now}: unable to submit workflow #{workflow_name} in #{@study.firecloud_workspace} due to: #{e.message}"
+      logger.error "#{Time.now}: unable to submit workflow #{@analysis_configuration.identifier} in #{@study.firecloud_workspace} due to: #{e.message}"
       @alert = "We were unable to submit your workflow due to an error: #{e.message}"
       render action: :notice
     end

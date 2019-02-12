@@ -5,8 +5,12 @@ module AnalysisConfigurationsHelper
     case parameter.input_type
     when :select
       options = parameter.options_by_association_method(parameter.study_scoped? ? study : nil)
-      form.select parameter.config_param_name, options_for_select(options, parameter.apply_to_all? ? options.map(&:last) : nil),
-                  {}, multiple: parameter.is_array?, class: 'form-control'
+      if parameter.apply_to_all?
+        form.select "#{parameter.config_param_name}[]", options_for_select(options, options.map(&:last)),
+                    {}, multiple: true, class: 'form-control'
+      else
+        form.select parameter.config_param_name, options_for_select(options), {}, class: 'form-control'
+      end
     when :text_field
       form.text_field parameter.config_param_name, value: parameter.parameter_value, class: 'form-control'
     when :number_field
@@ -21,14 +25,20 @@ module AnalysisConfigurationsHelper
     case parameter.input_type
     when :select
       options = parameter.options_by_association_method(parameter.study_scoped? ? study : nil)
-      select_tag "workflow_#{parameter.config_param_name}", options_for_select(options, parameter.apply_to_all? ? options.map(&:last) : nil),
-                  multiple: parameter.is_array?, class: 'form-control', name: "workflow[#{parameter.config_param_name}]"
+      if parameter.apply_to_all?
+        select_tag "workflow_inputs_#{parameter.config_param_name}#{parameter.config_param_name}[]",
+                    options_for_select(options, options.map(&:last)), multiple: true, class: 'form-control',
+                    name: "workflow[inputs][#{parameter.config_param_name}][]"
+      else
+        select_tag parameter.config_param_name, options_for_select(options), class: 'form-control',
+                   name: "workflow[inputs][#{parameter.config_param_name}]"
+      end
     when :text_field
-      text_field_tag "workflow_#{parameter.config_param_name}", parameter.parameter_value, class: 'form-control', name: "workflow[#{parameter.config_param_name}]"
+      text_field_tag "workflow_inputs_#{parameter.config_param_name}", parameter.parameter_value, class: 'form-control', name: "workflow[inputs][#{parameter.config_param_name}]"
     when :number_field
-      number_field_tag "workflow_#{parameter.config_param_name}", value: parameter.parameter_value, class: 'form-control', name: "workflow[#{parameter.config_param_name}]"
+      number_field_tag "workflow_inputs_#{parameter.config_param_name}", value: parameter.parameter_value, class: 'form-control', name: "workflow[inputs][#{parameter.config_param_name}]"
     when :check_box
-      "<div class='checkbox'>#{check_box_tag "workflow_#{parameter.config_param_name}", name: "workflow[#{parameter.config_param_name}]"}</div>"
+      "<div class='checkbox'>#{check_box_tag "workflow_inputs_#{parameter.config_param_name}", name: "workflow[inputs][#{parameter.config_param_name}]"}</div>"
     end
   end
 end
