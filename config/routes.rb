@@ -60,6 +60,10 @@ Rails.application.routes.draw do
     # analysis configurations
     get 'analysis_configurations/load_associated_model', to: 'analysis_configurations#load_associated_model',
         as: :load_associated_model
+    get 'analysis_configurations/load_associated_model_filter_types', to: 'analysis_configurations#load_associated_model_filter_types',
+        as: :load_associated_model_filter_types
+    get 'analysis_configurations/load_associated_model_filter_values', to: 'analysis_configurations#load_associated_model_filter_values',
+        as: :load_associated_model_filter_values
     resources :analysis_configurations, except: [:edit] do
       member do
         put 'reset_analysis_parameters', to: 'analysis_configurations#reset_analysis_parameters', as: :reset_analysis_parameters

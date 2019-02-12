@@ -102,6 +102,41 @@ class AnalysisConfigurationsController < ApplicationController
     render json: model_attributes.to_json
   end
 
+  def load_associated_model_filter_types
+    associated_model = params[:model]
+    model_filters = {}
+    begin
+      model = associated_model.constantize
+      model_filters= []
+      if model.const_defined?(:ANALYSIS_PARAMETER_FILTERS)
+        model_filters = model.const_get(:ANALYSIS_PARAMETER_FILTERS).keys
+      end
+    rescue => e
+      error_context = ErrorTracker.format_extra_context({params: params})
+      ErrorTracker.report_exception(e, current_user, error_context)
+      logger.error "Error loading associated model due to error: #{e.message}"
+    end
+    render json: model_filters.to_json
+  end
+
+  def load_associated_model_filter_values
+    associated_model = params[:model]
+    filter_attr = params[:filter]
+    model_filters = {}
+    begin
+      model = associated_model.constantize
+      model_filters = []
+      if model.const_defined?(:ANALYSIS_PARAMETER_FILTERS)
+        model_filters = model.const_get(:ANALYSIS_PARAMETER_FILTERS)[filter_attr]
+      end
+    rescue => e
+      error_context = ErrorTracker.format_extra_context({params: params})
+      ErrorTracker.report_exception(e, current_user, error_context)
+      logger.error "Error loading associated model due to error: #{e.message}"
+    end
+    render json: model_filters.to_json
+  end
+
   # preview submission form for a given analysis and study
   def submission_preview
     # load a random study, or use selected study

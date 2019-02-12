@@ -55,7 +55,11 @@
         formInput.empty();
         formInput.append('<option value=""></option>');
         $.each(options, function(index, value) {
-            formInput.append('<option value="' + value + '">' + value + '</option>');
+            if ( Array.isArray(value) ) {
+                formInput.append('<option value="' + value[1] + '">' + value[0] + '</option>');
+            } else {
+                formInput.append('<option value="' + value + '">' + value + '</option>');
+            }
         });
     }
 
@@ -92,8 +96,25 @@
     $('#analysis-parameters').on('nested:fieldAdded', function(event) {
         var form = event.field.closest('.analysis-parameter-form');
         var model = form.find('.associated-model-field').val();
-        var modelMethod = form.find('.associated_model_method').val();
-        alert('Model: ' + model + ', method: ' + modelMethod);
-    })
+        if (model !== '') {
+            $.getJSON("<%= load_associated_model_filter_types_path %>?model=" + model, function (data) {
+                var filterAttrSelect = form.find('.analysis_parameter_filter_attribute_name').slice(-1)[0];
+                populateDropdown($(filterAttrSelect), data);
+            });
+        }
+    });
+
+    $('#analysis-parameters').on('change', '.analysis_parameter_filter_attribute_name', function() {
+        var filterDropdown = $(this);
+        var filter = filterDropdown.val();
+        var form = filterDropdown.closest('.analysis-parameter-form');
+        var model = form.find('.associated-model-field').val();
+        if (model !== '' && filter !== '') {
+            $.getJSON("<%= load_associated_model_filter_values_path %>?model=" + model + '&filter=' + filter, function (data) {
+                var filterAttrSelect = form.find('.analysis_parameter_filter_value').slice(-1)[0];
+                populateDropdown($(filterAttrSelect), data);
+            });
+        }
+    });
 
 </script>

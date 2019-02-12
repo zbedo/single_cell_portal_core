@@ -48,7 +48,9 @@ class ClusterGroup
   ASSOCIATED_MODEL_METHOD = %w(name)
   ASSOCIATED_MODEL_DISPLAY_METHOD = %w(name)
   OUTPUT_ASSOCIATION_ATTRIBUTE = %w(study_file_id)
-  ASSOCIATION_FILTER_ATTRIBUTE = %w(name)
+  ANALYSIS_PARAMETER_FILTERS = {
+      'cell_annotations.type' => %w(group numeric)
+  }
 
   # method to return a single data array of values for a given data array name, annotation name, and annotation value
   # gathers all matching data arrays and orders by index, then concatenates into single array
@@ -116,6 +118,11 @@ class ClusterGroup
   def cell_annotation_select_option(annotation_type=nil, prepend_name=false)
     annotations = annotation_type.nil? ? self.cell_annotations : self.cell_annotations.select {|annot| annot[:type] == annotation_type}
     annotations.map {|annot| self.formatted_cell_annotation(annot, prepend_name)}
+  end
+
+  # list of cell annotation header values by type (group or numeric)
+  def cell_annotation_names_by_type(type)
+    self.cell_annotations.select {|annotation| annotation['type'] == type}.map {|annotation| annotation['name']}
   end
 
   # method used during parsing to generate representative sub-sampled data_arrays for rendering
