@@ -6,6 +6,8 @@ class AnalysisParameter
   belongs_to :analysis_configuration
   has_many :analysis_parameter_filters, dependent: :delete
   accepts_nested_attributes_for :analysis_parameter_filters, allow_destroy: :true
+  has_many :analysis_output_associations, dependent: :delete
+  accepts_nested_attributes_for :analysis_output_associations, allow_destroy: :true
 
   field :data_type, type: String # input, output
   field :call_name, type: String # name of WDL task this input
@@ -19,8 +21,6 @@ class AnalysisParameter
   field :associated_model_display_method, type: String # model instance method that should be called to set DISPLAY value by (for dropdowns)
   field :association_filter_attribute, type: String # attribute to filter instances of :associated_model by (e.g. file_type)
   field :association_filter_value, type: String # attribute value to use in above filter (e.g. Expresion Matrix)
-  field :output_association_param_name, type: String # parameter name to find output to use when setting associations
-  field :output_association_attribute, type: String # association id attribute to set on output files
   field :visible, type: Boolean, default: true # whether or not to render parameter input in submission form
   field :apply_to_all, type: Boolean, default: false # whether or not to apply :associated_model_method to all instances (if an array type input)
 

@@ -169,6 +169,8 @@ class AnalysisConfigurationsController < ApplicationController
                                                  :associated_model_display_method, :association_filter_attribute,
                                                  :association_filter_value, :output_association_param_name, :description,
                                                  :output_association_attribute, :visible, :apply_to_all,
-                                                 analysis_parameter_filters_attributes: [:id, :attribute_name, :value, :_destroy])
+                                                 analysis_parameter_filters_attributes: [:id, :attribute_name, :value, :_destroy],
+                                                 analysis_output_associations_attributes: [:id, :attribute_name, :attribute_value,
+                                                 :association_source, :association_method, :_destroy])
     end
 end

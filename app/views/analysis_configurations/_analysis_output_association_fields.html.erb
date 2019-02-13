@@ -1,0 +1,29 @@
+<div class="well well-sm">
+  <div class="row">
+    <div class="col-sm-6">
+      <%= f.label :attribute_name, 'Attribute to set directly' %>
+      <%= f.select :attribute_name, options_for_select(AnalysisOutputAssociation::STUDY_FILE_ATTRIBUTES.keys, f.object.attribute_name), {include_blank: true},
+                   class: 'form-control analysis_output_association_attribute_name parameter-select' %>
+    </div>
+    <div class="col-sm-6">
+      <%= f.label :attribute_value, 'Value to set on attribute' %>
+      <%= f.select :attribute_value, options_for_select(AnalysisOutputAssociation::STUDY_FILE_ATTRIBUTES.values.first, f.object.attribute_value), {include_blank: true},
+                   class: 'form-control analysis_output_association_attribute_value parameter-select' %>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm-6">
+      <%= f.label :association_source, 'Name of other output parameter to source value from' %>
+      <%= f.text_field :association_source, class: 'form-control analysis_output_association_association_source' %>
+    </div>
+    <div class="col-sm-5">
+      <%= f.label :association_method, 'Association attribute to set' %>
+      <%= f.select :association_method, options_for_select(AnalysisOutputAssociation::ASSOCIATION_METHODS, f.object.association_method), {include_blank: true},
+                   class: 'form-control analysis_output_association_association_method parameter-select' %>
+    </div>
+    <div class="col-sm-1">
+      <%= f.label :delete, "&nbsp;".html_safe %><br />
+      <%= f.link_to_remove "<span class='btn btn-sm btn-danger'><span class='fas fa-times'></span></span>".html_safe, data: {confirm: 'Are you sure?  This cannot be undone unless you reload the page before saving.'} %>
+    </div>
+  </div>
+</div>

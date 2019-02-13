@@ -90,23 +90,13 @@
         </div>
       </div>
     <% else %>
-      <h4>Output Association Controls</h4>
-      <p class="help-block">Use these dropdowns to configure how outputs are associated together when a user syncs a successful submission.</p>
+      <h4>Output Controls</h4>
+      <p class="help-block">Add output controls to configure how outputs are processed or associated together when a user syncs a successful submission.</p>
       <div class="form-group row">
-        <div class="col-sm-4">
-          <%= f.label :associated_model, 'Restrict parameter values to this model (if any)' %>
-          <%= f.select :associated_model, options_for_select(AnalysisParameter::ASSOCIATED_MODELS, analysis_parameter.associated_model),
-                       {prompt: 'Select an associated model'}, class: 'form-control associated-model-field' %>
-        </div>
-        <div class="col-sm-4">
-          <%= f.label :output_association_param_name, 'Name of output parameter to use for association' %>
-          <%= f.text_field :output_association_param_name, class: 'form-control' %>
-        </div>
-        <div class="col-sm-4">
-          <%= f.label :output_association_attribute, 'Association attribute to assign' %>
-          <%= f.select :output_association_attribute,
-                       options_for_select(analysis_parameter.admin_options(:output_association_attribute), analysis_parameter.output_association_attribute),
-                       {include_blank: true}, class: 'form-control output_association_attribute parameter-select' %>
+        <div class="col-sm-12">
+          <%= f.fields_for :analysis_output_associations %>
+          <%= f.link_to_add "<span class='fas fa-plus'></span> Add an Output Control".html_safe, :analysis_output_associations, class: 'btn btn-primary',
+                            id: 'add-analysis-parameter-filter' %>
         </div>
       </div>
     <% end %>

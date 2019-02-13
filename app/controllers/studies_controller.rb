@@ -258,28 +258,24 @@ class StudiesController < ApplicationController
     @unsynced_primary_data_dirs = []
     @unsynced_other_dirs = []
     configuration_name = params[:configuration_name]
+    configuration_namespace = params[:configuration_namespace]
     begin
-      submission = Study.firecloud_client.get_workspace_submission(@study.firecloud_project, @study.firecloud_workspace,
-                                                                   params[:submission_id])
-
-      # retrieve the matching AdminConfiguration object that enabled this workflow (to get special options, if present)
-      configuration_namespace = submission['methodConfigurationNamespace']
       configuration = Study.firecloud_client.get_workspace_configuration(@study.firecloud_project, @study.firecloud_workspace,
                                                                          configuration_namespace, configuration_name)
-      workflow_info = configuration['methodRepoMethod']
-      workflow_identifier = [workflow_info['methodNamespace'],workflow_info['methodName'],workflow_info['methodVersion'],].join('/')
-      @workflow_config = AdminConfiguration.find_by(config_type: 'Workflow Name', value: workflow_identifier)
-      if @workflow_config.nil?
-        # check if there's a config option for the same workflow without a snapshot id on it
-        workflow_identifier.chomp!("/#{workflow_info['methodVersion']}")
-        @workflow_config = AdminConfiguration.find_by(config_type: 'Workflow Name', value: workflow_identifier)
+      submission = Study.firecloud_client.get_workspace_submission(@study.firecloud_project, @study.firecloud_workspace,
+                                                                   params[:submission_id])
+      # get method identifiers to load analysis_configuration object
+      method_name = configuration['methodRepoMethod']['MethodName']
+      method_namespace = configuration['methodRepoMethod']['methodNamespace']
+      method_snapshot = configuration['methodRepoMethod']['MethodVersion']
+      @analysis_configuration = AnalysisConfiguration.find_by(namespace: method_namespace, name: method_name, snapshot: method_snapshot)
+      unless @analysis_configuration.present?
+        # don't allow syncing of submissions that are not 'registered' with the portal
+        redirect_to view_study_path(study_name: @study.url_safe_name),
+                    alert: "This feature is not available for the requested analysis: #{method_namespace}/#{method_name}/#{method_snapshot}" and return
       end
       filename_depth =  1
       task_names = []
-      if @workflow_config.options[:filename_depth].present?
-        filename_depth = @workflow_config.options[:filename_depth].to_i
-        task_names = @workflow_config.options[:task_names].to_s.split(',')
-      end
       submission['workflows'].each do |workflow|
         workflow = Study.firecloud_client.get_workspace_submission_workflow(@study.firecloud_project, @study.firecloud_workspace,
                                                                             params[:submission_id], workflow['workflowId'])
