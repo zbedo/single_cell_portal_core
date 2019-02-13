@@ -13,8 +13,6 @@ class AnalysisOutputAssociation
   field :association_source, type: String # name of other output parameter to source value from
   field :association_method, type: String # name of method to source value from for association from :output_parameter
 
-  STUDY_FILE_ATTRIBUTES = {
-      'file_type' => StudyFile::STUDY_FILE_TYPES,
-  }
+  STUDY_FILE_ATTRIBUTES = %w(description options.visualization_name options.analysis_name human_data)
   ASSOCIATION_METHODS = %w(taxon_id genome_assembly_id study_file_bundle_id)
 end

@@ -1,6 +1,7 @@
 class AnalysisConfigurationsController < ApplicationController
   before_action :set_analysis_configuration, only: [:show, :edit, :update, :destroy, :reset_analysis_parameters,
-                                                    :submission_preview, :load_study_for_submission_preview]
+                                                    :submission_preview, :load_study_for_submission_preview,
+                                                    :update_analysis_parameter]
   before_action :set_analysis_parameter, only: [:update_analysis_parameter]
   before_action do
     authenticate_user!
@@ -167,8 +168,7 @@ class AnalysisConfigurationsController < ApplicationController
       params.require(:analysis_parameter).permit(:id, :data_type, :call_name, :parameter_type, :parameter_name,
                                                  :parameter_value, :optional, :associated_model, :associated_model_method,
                                                  :associated_model_display_method, :association_filter_attribute,
-                                                 :association_filter_value, :output_association_param_name, :description,
-                                                 :output_association_attribute, :visible, :apply_to_all,
+                                                 :association_filter_value, :output_file_type, :description, :visible, :apply_to_all,
                                                  analysis_parameter_filters_attributes: [:id, :attribute_name, :value, :_destroy],
                                                  analysis_output_associations_attributes: [:id, :attribute_name, :attribute_value,
                                                  :association_source, :association_method, :_destroy])

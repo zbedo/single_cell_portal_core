@@ -21,6 +21,7 @@ class AnalysisParameter
   field :associated_model_display_method, type: String # model instance method that should be called to set DISPLAY value by (for dropdowns)
   field :association_filter_attribute, type: String # attribute to filter instances of :associated_model by (e.g. file_type)
   field :association_filter_value, type: String # attribute value to use in above filter (e.g. Expresion Matrix)
+  field :output_file_type, type: String
   field :visible, type: Boolean, default: true # whether or not to render parameter input in submission form
   field :apply_to_all, type: Boolean, default: false # whether or not to apply :associated_model_method to all instances (if an array type input)
 
@@ -38,6 +39,8 @@ class AnalysisParameter
   validates_inclusion_of :data_type, in: DATA_TYPES
   validate :validate_parameter_type
   validate :validate_parameter_value_by_type, unless: proc {|attributes| attributes.parameter_value.blank?}
+  validates :output_file_type, inclusion: {in: StudyFile::STUDY_FILE_TYPES},
+            presence: true, on: :update, if: proc {|attributes| attributes.data_type == 'outputs'}
 
   # get the call & parameter name together for use in Methods Repository configuration objects
   def config_param_name

@@ -146,6 +146,19 @@ class AnalysisConfiguration
     params
   end
 
+  # get all the parameter names for a given parameter type
+  def analysis_parameter_names(parameter_type)
+    self.analysis_parameters.send(parameter_type).map(&:config_param_name)
+  end
+
+  # construct a grouped select for analysis parameter names by type
+  def param_name_group_opts
+    {
+        'inputs' => self.analysis_parameter_names(:inputs),
+        'outputs' => self.analysis_parameter_names(:outputs)
+    }
+  end
+
   # get a hash of the configuration object payload as it would appear in the Methods Repository
   def configuration_for_repository
     {
