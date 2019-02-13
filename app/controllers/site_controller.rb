@@ -731,7 +731,7 @@ class SiteController < ApplicationController
     rescue RuntimeError => e
       error_context = ErrorTracker.format_extra_context(@study, {params: params})
       ErrorTracker.report_exception(e, current_user, error_context)
-      logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
+      logger.error "Error generating signed url for #{params[:filename]}; #{e.message}"
       redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
                   alert: "We were unable to download the file #{params[:filename]} do to an error: #{view_context.simple_format(e.message)}" and return
     end
@@ -821,7 +821,7 @@ class SiteController < ApplicationController
 
     end_time = Time.now
     time = (end_time - start_time).divmod 60.0
-    @log_message = ["#{Time.now}: #{@study.url_safe_name} curl configs generated!"]
+    @log_message = ["#{@study.url_safe_name} curl configs generated!"]
     @log_message << "Signed URLs generated: #{curl_configs.size}"
     @log_message << "Total time in get_curl_config: #{time.first} minutes, #{time.last} seconds"
     logger.info @log_message.join("\n")
@@ -885,7 +885,7 @@ class SiteController < ApplicationController
         @options = load_cluster_group_options
         @notice = nil
         @alert = 'The following errors prevented the annotation from being saved: ' + @user_annotation.errors.full_messages.join(',')
-        logger.error "#{Time.now}: Creating user annotation of params: #{user_annotation_params}, unable to save user annotation with errors #{@user_annotation.errors.full_messages.join(', ')}"
+        logger.error "Creating user annotation of params: #{user_annotation_params}, unable to save user annotation with errors #{@user_annotation.errors.full_messages.join(', ')}"
         render 'update_user_annotations'
       end
         # More error handling, this is if can't save user annotation
@@ -899,7 +899,7 @@ class SiteController < ApplicationController
       @options = load_cluster_group_options
       @notice = nil
       @alert = 'The following errors prevented the annotation from being saved: ' + 'Invalid data type submitted. (' + e.problem + '. ' + e.resolution + ')'
-      logger.error "#{Time.now}: Creating user annotation of params: #{user_annotation_params}, invalid value of #{e.message}"
+      logger.error "Creating user annotation of params: #{user_annotation_params}, invalid value of #{e.message}"
       render 'update_user_annotations'
 
     rescue NoMethodError => e
@@ -912,7 +912,7 @@ class SiteController < ApplicationController
       @options = load_cluster_group_options
       @notice = nil
       @alert = 'The following errors prevented the annotation from being saved: ' + e.message
-      logger.error "#{Time.now}: Creating user annotation of params: #{user_annotation_params}, no method error #{e.message}"
+      logger.error "Creating user annotation of params: #{user_annotation_params}, no method error #{e.message}"
       render 'update_user_annotations'
 
     rescue => e
@@ -925,7 +925,7 @@ class SiteController < ApplicationController
       @options = load_cluster_group_options
       @notice = nil
       @alert = 'An unexpected error prevented the annotation from being saved: ' + e.message
-      logger.error "#{Time.now}: Creating user annotation of params: #{user_annotation_params}, unexpected error #{e.message}"
+      logger.error "Creating user annotation of params: #{user_annotation_params}, unexpected error #{e.message}"
       render 'update_user_annotations'
     end
   end
@@ -1000,7 +1000,7 @@ class SiteController < ApplicationController
     rescue => e
       error_context = ErrorTracker.format_extra_context(@study, {params: params})
       ErrorTracker.report_exception(e, current_user, error_context)
-      logger.error "#{Time.now}: Error retrieving workspace samples for #{study.name}; #{e.message}"
+      logger.error "Error retrieving workspace samples for #{study.name}; #{e.message}"
       render json: []
     end
   end
@@ -1052,7 +1052,7 @@ class SiteController < ApplicationController
     rescue => e
       error_context = ErrorTracker.format_extra_context(@study, {params: params})
       ErrorTracker.report_exception(e, current_user, error_context)
-      logger.info "#{Time.now}: Error saving workspace entities: #{e.message}"
+      logger.info "Error saving workspace entities: #{e.message}"
       @alert = "An error occurred while trying to save your sample information: #{view_context.simple_format(e.message)}"
       render action: :notice
     end
@@ -1079,7 +1079,7 @@ class SiteController < ApplicationController
     rescue => e
       error_context = ErrorTracker.format_extra_context(@study, {params: params})
       ErrorTracker.report_exception(e, current_user, error_context)
-      logger.error "#{Time.now}: Error deleting workspace entities: #{e.message}"
+      logger.error "Error deleting workspace entities: #{e.message}"
       @alert = "An error occurred while trying to delete your sample information: #{view_context.simple_format(e.message)}"
       render action: :notice
     end
@@ -1096,69 +1096,12 @@ class SiteController < ApplicationController
     end
   end
 
-  # retrieve any optional parameters for a selected workflow
-  def get_workflow_options
-    @options = WorkflowConfiguration.get_additional_parameters(params[:workflow_identifier])
-    workflow_name = params[:workflow_identifier].split('--').join('/')
-    @configuration = AdminConfiguration.find_by(config_type: 'Workflow Name', value: workflow_name)
-    if @configuration.nil?
-      # gotcha in case we enabled all snapshots of a pipeline, in which case trim off snapshot Id and search again
-      new_name = workflow_name.split('/').take(2).join('/')
-      @configuration = AdminConfiguration.find_by(config_type: 'Workflow Name', value: new_name)
-    end
-    set_workspace_samples
-    if @configuration.options.any?
-      @input_configuration = @configuration.options
-      if @input_configuration[:input_select] == 'study_file' && @input_configuration[:file_type].present?
-        files = @study.study_files.valid.select {|study_file| study_file.file_type == @input_configuration[:file_type]}
-        @input_files = files.map {|file| ["#{file.name}#{file.description.present? ? " (#{file.description})" : nil}", file.gs_url]}
-      end
-    end
-  end
-
   # retrieve analysis configuration and associated parameters
   def get_analysis_configuration
     namespace, name, snapshot = params[:workflow_identifier].split('--')
     @analysis_configuration = AnalysisConfiguration.find_by(namespace: namespace, name: name,
                                                            snapshot: snapshot.to_i)
   end
-
-  # create a workspace analysis submission for a given sample
-  # def create_workspace_submission
-  #   begin
-  #     # before creating submission, we need to make sure that the user is on the 'all-portal' user group list if it exists
-  #     current_user.add_to_portal_user_group
-  #
-  #     # set up parameters
-  #     workflow_namespace, workflow_name, workflow_snapshot = params[:workflow][:identifier].split('--')
-  #     primary_inputs = params[:workflow][:inputs].keep_if {|s| !s.blank?}
-  #     optional_inputs = params[:workflow][:optional_parameters]
-  #
-  #     # either load existing workspace configuration or copy new one into the workspace from the methods repository
-  #     config_namespace, config_name = set_workflow_configuration(workflow_name, workflow_namespace, workflow_snapshot)
-  #
-  #     # submission must be done as user, so create a client with current_user and submit
-  #     client = FireCloudClient.new(current_user, @study.firecloud_project)
-  #     @submissions = []
-  #     @failed_submissions = []
-  #     logger.info "#{Time.now}: Updating configuration for #{config_namespace}/#{config_name} to run #{workflow_namespace}/#{workflow_name} in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
-  #     primary_inputs.each do |input_name, input_value|
-  #       if input_value.is_a?(Array)
-  #         input_value.each do |val|
-  #           perform_workspace_submission(client, config_name, config_namespace, input_name, val, optional_inputs, workflow_name, workflow_namespace)
-  #         end
-  #       else
-  #         perform_workspace_submission(client, config_name, config_namespace, input_name, input_value, optional_inputs, workflow_name, workflow_namespace)
-  #       end
-  #     end
-  #   rescue => e
-  #     error_context = ErrorTracker.format_extra_context(@study, {params: params})
-  #     ErrorTracker.report_exception(e, current_user, error_context)
-  #     logger.error "#{Time.now}: unable to submit workflow #{workflow_name} in #{@study.firecloud_workspace} due to: #{e.message}"
-  #     @alert = "We were unable to submit your workflow due to an error: #{e.message}"
-  #     render action: :notice
-  #   end
-  # end
 
   def create_workspace_submission
     begin
@@ -1169,21 +1112,22 @@ class SiteController < ApplicationController
       @analysis_configuration = AnalysisConfiguration.find(params[:analysis_configuration_id])
 
 
-      @submissions = []
-      @failed_submissions = []
       logger.info "Updating configuration for #{@analysis_configuration.configuration_identifier} to run #{@analysis_configuration.identifier} in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
       submission_config = @analysis_configuration.apply_user_inputs(params[:workflow][:inputs])
-      logger.info "submission config: #{submission_config}"
       # save configuration in workspace
       Study.firecloud_client.create_workspace_configuration(@study.firecloud_project, @study.firecloud_workspace, submission_config)
 
       # submission must be done as user, so create a client with current_user and submit
       client = FireCloudClient.new(current_user, @study.firecloud_project)
-      head :ok
+      logger.info "Creating submission for #{@analysis_configuration.configuration_identifier} using configuration: #{submission_config['name']} in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
+      @submission = client.create_workspace_submission(@study.firecloud_project, @study.firecloud_workspace,
+                                                         submission_config['namespace'], submission_config['name'],
+                                                         submission_config['entityType'], submission_config['entityName'])
+
     rescue => e
       error_context = ErrorTracker.format_extra_context(@study, {params: params})
       ErrorTracker.report_exception(e, current_user, error_context)
-      logger.error "#{Time.now}: unable to submit workflow #{@analysis_configuration.identifier} in #{@study.firecloud_workspace} due to: #{e.message}"
+      logger.error "Unable to submit workflow #{@analysis_configuration.identifier} in #{@study.firecloud_workspace} due to: #{e.message}"
       @alert = "We were unable to submit your workflow due to an error: #{e.message}"
       render action: :notice
     end
@@ -1197,7 +1141,7 @@ class SiteController < ApplicationController
     rescue => e
       error_context = ErrorTracker.format_extra_context(@study, {params: params})
       ErrorTracker.report_exception(e, current_user, error_context)
-      logger.error "#{Time.now}: unable to load workspace submission #{params[:submission_id]} in #{@study.firecloud_workspace} due to: #{e.message}"
+      logger.error "Unable to load workspace submission #{params[:submission_id]} in #{@study.firecloud_workspace} due to: #{e.message}"
       render js: "alert('We were unable to load the requested submission due to an error: #{e.message}')"
     end
   end
@@ -1322,17 +1266,17 @@ class SiteController < ApplicationController
       else
         ws_attributes['deleted_submissions']['items'] << params[:submission_id]
       end
-      logger.info "#{Time.now}: adding #{params[:submission_id]} to workspace delete_submissions attribute in #{@study.firecloud_workspace}"
+      logger.info "Adding #{params[:submission_id]} to workspace delete_submissions attribute in #{@study.firecloud_workspace}"
       Study.firecloud_client.set_workspace_attributes(@study.firecloud_project, @study.firecloud_workspace, ws_attributes)
-      logger.info "#{Time.now}: deleting analysis metadata for #{params[:submission_id]} in #{@study.url_safe_name}"
+      logger.info "Deleting analysis metadata for #{params[:submission_id]} in #{@study.url_safe_name}"
       AnalysisMetadatum.where(submission_id: params[:submission_id]).delete
-      logger.info "#{Time.now}: queueing submission #{params[:submission]} deletion in #{@study.firecloud_workspace}"
+      logger.info "Queueing submission #{params[:submission]} deletion in #{@study.firecloud_workspace}"
       submission_files = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, 0, @study.firecloud_project, @study.firecloud_workspace, prefix: params[:submission_id])
       DeleteQueueJob.new(submission_files).perform
     rescue => e
       error_context = ErrorTracker.format_extra_context(@study, {params: params})
       ErrorTracker.report_exception(e, current_user, error_context)
-      logger.error "#{Time.now}: unable to remove submission #{params[:submission_id]} files from #{@study.firecloud_workspace} due to: #{e.message}"
+      logger.error "Unable to remove submission #{params[:submission_id]} files from #{@study.firecloud_workspace} due to: #{e.message}"
       @alert = "Unable to delete the outputs for #{params[:submission_id]} due to the following error: #{e.message}"
       render action: :notice
     end
@@ -1413,52 +1357,6 @@ class SiteController < ApplicationController
       end
     end
     @selected_annotation
-  end
-
-  # create/retrieve a workflow configuration object in a workspace prior to submitting a workflow
-  def set_workflow_configuration(workflow_name, workflow_namespace, workflow_snapshot)
-    # create a unique identifier for the configuration (combination of name & snapshot ID)
-    ws_config_name = [workflow_name, workflow_snapshot].join('_')
-    config_namespace = ""
-    config_name = ""
-    logger.info "#{Time.now}: checking for existing workspace configurations in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
-    workspace_configs = Study.firecloud_client.get_workspace_configurations(@study.firecloud_project, @study.firecloud_workspace)
-    matching_ws_config = workspace_configs.find {|config| config['methodRepoMethod']['methodName'] == workflow_name && config['methodRepoMethod']['methodNamespace'] == workflow_namespace && config['methodRepoMethod']['methodVersion'] == workflow_snapshot.to_i}
-    if matching_ws_config.present?
-      submission_config = Study.firecloud_client.get_workspace_configuration(@study.firecloud_project, @study.firecloud_workspace, matching_ws_config['namespace'], matching_ws_config['name'])
-      logger.info "#{Time.now}: found existing configuration #{ws_config_name} in #{@study.firecloud_workspace}"
-      config_namespace = submission_config['namespace']
-      config_name = submission_config['name']
-    else
-      logger.info "#{Time.now}: No existing configuration found for #{ws_config_name} in #{@study.firecloud_workspace}; copying from repository"
-      # we did not find a configuration, so we must copy the public one from the repository
-      # first check for a public configuration in 'scp-pipeline-configurations'
-      existing_configs = Study.firecloud_client.get_configurations(namespace: workflow_namespace, name: workflow_name)
-      if existing_configs.empty?
-        # check for configurations in the workflow namespace next
-        existing_configs = Study.firecloud_client.get_configurations(namespace: 'scp-pipeline-configurations', name: workflow_name)
-      end
-      matching_config = existing_configs.find {|config| config['method']['name'] == workflow_name && config['method']['namespace'] == workflow_namespace && config['method']['snapshotId'] == workflow_snapshot.to_i}
-      if matching_config.present?
-        logger.info "#{Time.now}: Found matching configuration: #{matching_config['namespace']}/#{matching_config['name']}"
-        new_config = Study.firecloud_client.copy_configuration_to_workspace(@study.firecloud_project, @study.firecloud_workspace, matching_config['namespace'], matching_config['name'], matching_config['snapshotId'], @study.firecloud_project, ws_config_name)
-        config_namespace = new_config['methodConfiguration']['namespace']
-        config_name = new_config['methodConfiguration']['name']
-      else
-        # no matching configurations were present, so create a blank template and configure later
-        logger.info "#{Time.now}: No configurations found, creating blank template for #{workflow_namespace}/#{workflow_name}"
-        config_template = Study.firecloud_client.create_configuration_template(workflow_namespace, workflow_name, workflow_snapshot.to_i)
-        # configure name, namespace and rootEntityType
-        config_template['name'] = ws_config_name
-        config_template['namespace'] = workflow_namespace
-        config_template['rootEntityType'] = 'sample'
-        new_config = Study.firecloud_client.create_workspace_configuration(@study.firecloud_project, @study.firecloud_workspace, config_template)
-        config_namespace = new_config['methodConfiguration']['namespace']
-        config_name = new_config['methodConfiguration']['name']
-      end
-    end
-    # return new configuration namespace & name
-    [config_namespace, config_name]
   end
 
   def set_workspace_samples
@@ -2242,34 +2140,6 @@ class SiteController < ApplicationController
     AnalysisConfiguration.available_analyses
   end
 
-  # configure and submit a submission in a workspace
-  def perform_workspace_submission(client, config_name, config_namespace, input_name, input_value, optional_inputs, workflow_name, workflow_namespace)
-    submission_inputs = {}
-    case input_name
-      when 'samples'
-        submission_inputs = {sample_name: input_value}
-      when 'input_file'
-        submission_inputs = {input_file: input_value}
-      else
-        submission_inputs = {input_name.to_sym => input_value}
-    end
-    if optional_inputs.present?
-      submission_inputs.merge!(optional_inputs.to_unsafe_hash)
-    end
-    # Run any workflow-specific extra configuration steps
-    configuration_response = WorkflowConfiguration.new(@study, config_namespace, config_name, workflow_namespace, workflow_name, submission_inputs).perform
-    # make sure the configuration step completed without error, otherwise abort submission
-    if configuration_response[:complete]
-      logger.info "#{Time.now}: Creating submission for #{submission_inputs} using #{configuration_response[:configuration_namespace]}/#{configuration_response[:configuration_name]} in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
-      @submissions << client.create_workspace_submission(@study.firecloud_project, @study.firecloud_workspace,
-                                                         configuration_response[:configuration_namespace], configuration_response[:configuration_name],
-                                                         configuration_response[:entity_type], configuration_response[:entity_value])
-    else
-      logger.error "#{Time.now}: Unable to submit #{submission_inputs} using #{config_namespace}/#{config_name} in #{@study.firecloud_project}/#{@study.firecloud_workspace}; logging error"
-      @failed_submissions << configuration_response
-    end
-  end
-
   # Helper method for download_bulk_files.  Returns file's curl config, size.
   def get_curl_config(file, fc_client=nil)
 
@@ -2295,7 +2165,7 @@ class SiteController < ApplicationController
     rescue => e
       error_context = ErrorTracker.format_extra_context(@study, )
       ErrorTracker.report_exception(e, current_user, error_context)
-      logger.error "#{Time.now}: error generating signed url for #{filename}; #{e.message}"
+      logger.error "Error generating signed url for #{filename}; #{e.message}"
       curl_config = [
           '# Error downloading ' + filename + '.  ' +
           'Did you delete the file in the bucket and not sync it in Single Cell Portal?'
