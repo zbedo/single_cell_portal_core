@@ -169,7 +169,8 @@ class AnalysisConfiguration
   def apply_user_inputs(user_inputs, entity_name=nil)
     default_config = self.configuration_for_repository.dup
     user_inputs.each do |parameter_name, parameter_value|
-       default_config['inputs'][parameter_name] = parameter_value.to_s
+      # cast values to a string, but remove escaped quotes for JSON encoding
+      default_config['inputs'][parameter_name] = parameter_value.to_s.gsub(/\\"/, '')
     end
     default_name = default_config['name']
     default_name += entity_name.present? ? "_#{entity_name}" : "_#{SecureRandom.hex(5)}" # make config name unique
@@ -267,12 +268,12 @@ class AnalysisConfiguration
     begin
       configuration = Study.firecloud_client.get_configuration(self.configuration_namespace, self.configuration_name, self.configuration_snapshot)
       if configuration.nil? || configuration['public'] == false
-        errors.add(:base, "#{self.identifier} does not have an available configuration saved in the Methods Repository")
+        errors.add(:base, "#{self.identifier} does not have a publicly available configuration saved in the Methods Repository")
       end
     rescue => e
       error_context = ErrorTracker.format_extra_context(self)
       ErrorTracker.report_exception(e, self.user, error_context)
-      errors.add(:base, "#{self.identifier} does not have an available configuration saved in the Methods Repository")
+      errors.add(:base, "#{self.identifier} does not have a publicly available configuration saved in the Methods Repository")
     end
   end
 end

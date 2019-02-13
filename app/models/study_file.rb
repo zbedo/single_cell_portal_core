@@ -35,7 +35,7 @@ class StudyFile
   REQUIRED_ATTRIBUTES = %w(file_type name)
 
   # Constants for scoping values for AnalysisParameter inputs/outputs
-  ASSOCIATED_MODEL_METHOD = %w(gs_url upload_file_name bucket_location)
+  ASSOCIATED_MODEL_METHOD = %w(gs_url name upload_file_name bucket_location)
   ASSOCIATED_MODEL_DISPLAY_METHOD = %w(name upload_file_name bucket_location)
   OUTPUT_ASSOCIATION_ATTRIBUTE = %w(taxon_id genome_assembly_id study_file_bundle_id)
   ANALYSIS_PARAMETER_FILTERS = {

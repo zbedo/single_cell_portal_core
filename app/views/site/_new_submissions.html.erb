@@ -1,25 +1,9 @@
-<% @submissions.each do |submission| %>
-  <dl class="dl-horizontal">
-    <dt>ID</dt>
-    <dd><%= submission['submissionId'] %></dd>
-    <dt>Date</dt>
-    <dd><%= local_timestamp(submission['submissionDate']) %></dd>
-    <dt><%= submission['request']['entityType'] %></dt>
-    <dd><%= submission['request']['entityName'] %></dd>
-  </dl>
-<% end %>
-
-<% if @failed_submissions.any? %>
-  <h4 class="text-danger text-center">The following sample(s) failed to submit:</h4>
-  <% @failed_submissions.each do |failure| %>
-    <div class="bs-callout bs-callout-danger">
-      <dl class="dl-horizontal">
-        <dt><%= failure[:entity_type]%></dt>
-        <dd><%= failure[:entity_value] %></dd>
-        <dt>Error</dt>
-        <dd><%= failure[:error_message] %></dd>
-      </dl>
-    </div>
-  <% end %>
-<% end %>
+<dl class="dl-horizontal">
+  <dt>ID</dt>
+  <dd><%= @submission['submissionId'] %></dd>
+  <dt>Date</dt>
+  <dd><%= local_timestamp(@submission['submissionDate']) %></dd>
+  <dt><%= @submission['request']['entityType'] %></dt>
+  <dd><%= @submission['request']['entityName'] %></dd>
+</dl>
 
