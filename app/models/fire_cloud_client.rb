@@ -283,7 +283,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
     rescue RestClient::Exception => e
       current_retry = retry_count + 1
       context = " encountered when requesting '#{path}', attempt ##{current_retry}"
-      log_message = e.message + context
+      log_message = e.message + ': ' + e.http_body + '; ' + context
       Rails.logger.error log_message
       retry_time = retry_count * RETRY_INTERVAL
       sleep(retry_time) unless RETRY_BACKOFF_BLACKLIST.include?(path) # only sleep if non-blocking
