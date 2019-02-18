@@ -265,17 +265,15 @@ class StudiesController < ApplicationController
       submission = Study.firecloud_client.get_workspace_submission(@study.firecloud_project, @study.firecloud_workspace,
                                                                    params[:submission_id])
       # get method identifiers to load analysis_configuration object
-      method_name = configuration['methodRepoMethod']['MethodName']
+      method_name = configuration['methodRepoMethod']['methodName']
       method_namespace = configuration['methodRepoMethod']['methodNamespace']
-      method_snapshot = configuration['methodRepoMethod']['MethodVersion']
+      method_snapshot = configuration['methodRepoMethod']['methodVersion']
       @analysis_configuration = AnalysisConfiguration.find_by(namespace: method_namespace, name: method_name, snapshot: method_snapshot)
       unless @analysis_configuration.present?
         # don't allow syncing of submissions that are not 'registered' with the portal
         redirect_to view_study_path(study_name: @study.url_safe_name),
                     alert: "This feature is not available for the requested analysis: #{method_namespace}/#{method_name}/#{method_snapshot}" and return
       end
-      filename_depth =  1
-      task_names = []
       submission['workflows'].each do |workflow|
         workflow = Study.firecloud_client.get_workspace_submission_workflow(@study.firecloud_project, @study.firecloud_workspace,
                                                                             params[:submission_id], workflow['workflowId'])
@@ -292,11 +290,6 @@ class StudiesController < ApplicationController
             path_parts = file.name.split('/')
             basename = path_parts.last
             new_location = "outputs_#{@study.id}_#{params[:submission_id]}/#{basename}"
-            if (path_parts & task_names).any?
-              starting_index = path_parts.index(path_parts.slice(filename_depth * -1))
-              new_filename = path_parts[starting_index..path_parts.size - 1].join('_')
-              new_location = "outputs_#{@study.id}_#{params[:submission_id]}/#{new_filename}"
-            end
             # check if file has already been synced first
             # we can only do this by md5 hash as the filename and generation will be different
             existing_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.firecloud_project,
@@ -309,7 +302,20 @@ class StudiesController < ApplicationController
               unsynced_output = StudyFile.new(study_id: @study.id, name: new_file.name, upload_file_name: new_file.name,
                                               upload_content_type: new_file.content_type, upload_file_size: new_file.size,
                                               generation: new_file.generation, remote_location: new_file.name,
-                                              file_type: 'Analysis Output', options: {submission_id: params[:submission_id]})
+                                              options: {submission_id: params[:submission_id]})
+              # process output according to analysis_configuration output parameters and associations (if present)
+              workflow_parts = output.split('.')
+              call_name = workflow_parts.shift
+              param_name = workflow_parts.join('.')
+              Rails.logger.info "Processing output #{output} in #{params[:submission_id]}/#{workflow['workflowId']}"
+              # find matching output analysis_parameter
+              output_param = @analysis_configuration.analysis_parameters.outputs.detect {|param| param.parameter_name == param_name && param.call_name == call_name}
+              # set declared file type
+              unsynced_output.file_type = output_param.output_file_type
+              # process any direct attribute assignments or associations
+              output_param.analysis_output_associations.each do |association|
+                unsynced_output = association.process_output_file(unsynced_output, configuration, @study)
+              end
               @unsynced_files << unsynced_output
             end
           else
@@ -318,7 +324,6 @@ class StudiesController < ApplicationController
             redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
                         alert: alert_content and return
           end
-
         end
         metadata = AnalysisMetadatum.find_by(study_id: @study.id, submission_id: params[:submission_id])
         if metadata.nil?
@@ -333,136 +338,9 @@ class StudiesController < ApplicationController
       end
       @available_files = @unsynced_files.map {|f| {name: f.name, generation: f.generation, size: f.upload_file_size}}
       # indication of whether or not we have custom sync code to run, defaults to false
-      @special_sync = false
+      @special_sync = true
       # now execute any special code that is needed for further handling this submission
-      case configuration_name
-        when /cell-ranger/
-          @special_sync = true
-          sorted_matrix_study_file = @unsynced_files.detect {|file| file.name =~ /sorted_matrix\.mtx/}
-          if sorted_matrix_study_file.present?
-            sorted_matrix_study_file.file_type = 'MM Coordinate Matrix'
-            sorted_matrix_study_file.description = "Matrix Market coordinate expression matrix from Cell Ranger run #{params[:submission_id]}"
-            sorted_matrix_study_file.options.merge!({analysis_name: 'cell-ranger'})
-          end
 
-          genes_file = @unsynced_files.detect {|file| file.name=~ /filtered_gene_bc_matrices.*genes\.tsv/}
-          if genes_file.present?
-            genes_file.file_type = '10X Genes File'
-            genes_file.description = "Gene ID/Names output from Cell Ranger run #{params[:submission_id]}"
-            if sorted_matrix_study_file.present?
-              genes_file.options.merge!({matrix_id: sorted_matrix_study_file.id, analysis_name: 'cell-ranger'})
-            end
-          end
-
-          barcodes_file = @unsynced_files.detect {|file| file.name=~ /filtered_gene_bc_matrices.*barcodes\.tsv/}
-          if barcodes_file.present?
-            barcodes_file.file_type = '10X Barcodes File'
-            barcodes_file.description = "Barcode sequence output from Cell Ranger run #{params[:submission_id]}"
-            if sorted_matrix_study_file.present?
-              barcodes_file.options.merge!({matrix_id: sorted_matrix_study_file.id, analysis_name: 'cell-ranger'})
-            end
-          end
-
-          metadata_file = @unsynced_files.detect {|file| file.name.split('/').last =~ /_metadata\.txt/}
-          if metadata_file.present?
-            metadata_file.file_type = 'Metadata'
-            metadata_file.description = "Merged barcode-level metadata output from Cell Ranger run #{params[:submission_id]}"
-            metadata_file.options.merge!({analysis_name: 'cell-ranger'})
-          end
-
-          tsne_cluster_file = @unsynced_files.detect {|file| file.name.split('/').last =~ /_tsne.txt/}
-          if tsne_cluster_file.present?
-            new_name = tsne_cluster_file.name.split('/').last.chomp('.txt')
-            tsne_cluster_file.name = new_name
-            tsne_cluster_file.file_type = 'Cluster'
-            tsne_cluster_file.description = "tSNE 2d projection from Cell Ranger run #{params[:submission_id]}"
-            tsne_cluster_file.options.merge!({analysis_name: 'cell-ranger'})
-          end
-
-          pca_cluster_file = @unsynced_files.detect {|file| file.name.split('/').last =~ /_pca.txt/}
-          if pca_cluster_file.present?
-            new_name = pca_cluster_file.name.split('/').last.chomp('.txt')
-            pca_cluster_file.name = new_name
-            pca_cluster_file.file_type = 'Cluster'
-            pca_cluster_file.description = "PCA 3d projection from Cell Ranger run #{params[:submission_id]}"
-            pca_cluster_file.options.merge!({analysis_name: 'cell-ranger'})
-          end
-
-          other_matrices = @unsynced_files.select {|file| file.name.split('/').last =~ /\.mtx/ && file.name != sorted_matrix_study_file.name}
-          other_matrices.each do |matrix|
-            matrix.file_type = 'Analysis Output'
-            matrix.description = "Secondary expression matrix output from Cell Ranger run #{params[:submission_id]}"
-            matrix.options.merge!({analysis_name: 'cell-ranger'})
-          end
-
-        when /infercnv/
-          @special_sync = true
-          metadata = AnalysisMetadatum.find_by(submission_id: params[:submission_id])
-          input_matrix_gs_url = metadata.payload['inputs'].detect {|input| input['name'] == 'infercnv.expression_file'}['value']
-          study_file_id = nil
-          # grab the study_file_id of the input matrix so we know without having to go back to the analysis_metadata object
-          @study.expression_matrix_files.each do |file|
-            if file.gs_url == input_matrix_gs_url
-              study_file_id = file.id
-              break
-            end
-          end
-          input_matrix_file = StudyFile.find(study_file_id)
-          pre_expression_output = @unsynced_files.detect {|file| file.name.split('/').last == 'expression_pre_vis_transform.txt'}
-          if pre_expression_output.present?
-            pre_expression_output.file_type = 'Analysis Output'
-            pre_expression_output.description = "Output expression matrix (without visualization data transform) from inferCNV run #{params[:submission_id]}"
-            pre_expression_output.options.merge!({analysis_name: 'infercnv', matrix_id: study_file_id})
-            pre_expression_output.taxon_id = input_matrix_file.taxon_id
-          end
-
-          figure = @unsynced_files.detect {|file| file.name.split('/').last =~ /infercnv\.pdf/}
-          if figure.present?
-            figure.file_type = 'Analysis Output'
-            figure.description = "Copy number variation inference figure from inferCNV run #{params[:submission_id]}"
-            figure.options.merge!({analysis_name: 'infercnv', matrix_id: study_file_id})
-          end
-
-          post_expression_output = @unsynced_files.detect {|file| file.name.split('/').last =~ /expression_post_viz_transform\.txt/}
-          if post_expression_output.present?
-            post_expression_output.file_type = 'Analysis Output'
-            post_expression_output.description = "Output expression matrix (including visualization data transform) from inferCNV run #{params[:submission_id]}"
-            post_expression_output.options.merge!({analysis_name: 'infercnv', matrix_id: study_file_id})
-            post_expression_output.taxon_id = input_matrix_file.taxon_id
-          end
-
-          observations_output = @unsynced_files.detect {|file| file.name.split('/').last == 'observations.txt'}
-          if observations_output.present?
-            observations_output.file_type = 'Analysis Output'
-            observations_output.description = "All observations and associated measurements from inferCNV run #{params[:submission_id]}"
-            observations_output.options.merge!({analysis_name: 'infercnv', matrix_id: study_file_id})
-          end
-
-          ideogram_output = @unsynced_files.detect {|file| file.name.split('/').last == 'ideogram_exp_means.tar.gz'}
-          if ideogram_output.present?
-            ideogram_output.file_type = 'Analysis Output'
-            ideogram_output.description = "Ideogram annotation outputs archive from inferCNV run #{params[:submission_id]}"
-            ideogram_output.options.merge!({analysis_name: 'infercnv',
-                                            visualization_name: 'ideogram.js',
-                                            matrix_id: study_file_id})
-            ideogram_output.taxon_id = input_matrix_file.taxon_id
-            assemblies = Taxon.find(input_matrix_file.taxon_id).genome_assemblies
-            if assemblies.any?
-              # provisionally pick the first possible assembly, and hopefully the user will update this
-              ideogram_output.genome_assembly_id = assemblies.first.id
-            end
-          end
-
-          logfile = @unsynced_files.detect {|file| file.name.split('/').last == 'infercnv.log'}
-          if logfile.present?
-            logfile.file_type = 'Analysis Output'
-            logfile.description = "Log output from R for inferCNV run #{params[:submission_id]}"
-            logfile.options.merge!({analysis_name: 'infercnv', matrix_id: study_file_id})
-          end
-
-        else
-          nil # no special code to execute
-      end
       render action: :sync_study
     rescue => e
       error_context = ErrorTracker.format_extra_context(@study, {params: params})

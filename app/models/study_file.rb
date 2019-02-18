@@ -21,7 +21,7 @@ class StudyFile
   # constants, used for statuses and file types
   STUDY_FILE_TYPES = ['Cluster', 'Coordinate Labels' ,'Expression Matrix', 'MM Coordinate Matrix', '10X Genes File',
                       '10X Barcodes File', 'Gene List', 'Metadata', 'Fastq', 'BAM', 'BAM Index', 'Documentation',
-                      'Other', 'Analysis Output']
+                      'Other', 'Analysis Output', 'Ideogram Annotations']
   PARSEABLE_TYPES = ['Cluster', 'Coordinate Labels', 'Expression Matrix', 'MM Coordinate Matrix', '10X Genes File',
                      '10X Barcodes File', 'Gene List', 'Metadata', 'Analysis Output']
   DISALLOWED_SYNC_TYPES = ['Fastq']
@@ -29,8 +29,8 @@ class StudyFile
   PARSE_STATUSES = %w(unparsed parsing parsed)
   PRIMARY_DATA_EXTENTIONS = %w(fastq fastq.zip fastq.gz fastq.tar.gz fq fq.zip fq.gz fq.tar.gz bam bam.gz bam.bai bam.gz.bai)
   PRIMARY_DATA_TYPES = ['Fastq', 'BAM', 'BAM Index']
-  TAXON_REQUIRED_TYPES = ['Fastq', 'BAM', 'Expression Matrix', 'MM Coordinate Matrix']
-  ASSEMBLY_REQUIRED_TYPES = ['BAM']
+  TAXON_REQUIRED_TYPES = ['Fastq', 'BAM', 'Expression Matrix', 'MM Coordinate Matrix', 'Ideogram Annotations']
+  ASSEMBLY_REQUIRED_TYPES = ['BAM', 'Ideogram Annotations']
   GZIP_MAGIC_NUMBER = "\x1f\x8b".force_encoding(Encoding::ASCII_8BIT)
   REQUIRED_ATTRIBUTES = %w(file_type name)
 

@@ -93,7 +93,7 @@
         }
     });
 
-    $('#analysis-parameters').on('nested:fieldAdded', function(event) {
+    $('#inputs').on('nested:fieldAdded', function(event) {
         var form = event.field.closest('.analysis-parameter-form');
         var model = form.find('.associated-model-field').val();
         if (model !== '') {
@@ -114,6 +114,19 @@
                 var filterAttrSelect = form.find('.analysis_parameter_filter_value').slice(-1)[0];
                 populateDropdown($(filterAttrSelect), data);
             });
+        }
+    });
+
+    $('#analysis-parameters').on('change', '.analysis_output_association_association_source', function() {
+        var select = $(this);
+        var form = select.closest('.analysis_output_association_fields');
+        var assocDataType = form.find('.analysis_output_association_association_data_type');
+        if ( select.val() !== '' ) {
+            var option = select.find(':selected');
+            var dataType = option.parent().attr('label');
+            assocDataType.val(dataType);
+        } else {
+            assocDataType.val('');
         }
     });
 
