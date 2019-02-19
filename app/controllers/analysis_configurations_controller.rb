@@ -3,6 +3,7 @@ class AnalysisConfigurationsController < ApplicationController
                                                     :submission_preview, :load_study_for_submission_preview,
                                                     :update_analysis_parameter]
   before_action :set_analysis_parameter, only: [:update_analysis_parameter]
+  before_action :check_firecloud_status, only: [:new, :create]
   before_action do
     authenticate_user!
     authenticate_admin
@@ -172,5 +173,17 @@ class AnalysisConfigurationsController < ApplicationController
                                                  analysis_parameter_filters_attributes: [:id, :attribute_name, :value, :_destroy],
                                                  analysis_output_associations_attributes: [:id, :attribute_name, :attribute_value,
                                                  :association_source, :association_method, :association_data_type, :_destroy])
+    end
+
+    def check_firecloud_status
+      unless Study.firecloud_client.services_available?('Rawls')
+        alert = 'The Methods Repository is temporarily unavailable, so we cannot complete your request.  Please try again later.'
+        respond_to do |format|
+          format.js {render js: "$('.modal').modal('hide'); alert('#{alert}')" and return}
+          format.html {redirect_to merge_default_redirect_params(studies_path, scpbr: params[:scpbr]),
+                                   alert: alert and return}
+          format.json {head 503}
+        end
+      end
     end
 end

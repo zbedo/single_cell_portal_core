@@ -277,52 +277,35 @@ class StudiesController < ApplicationController
       submission['workflows'].each do |workflow|
         workflow = Study.firecloud_client.get_workspace_submission_workflow(@study.firecloud_project, @study.firecloud_workspace,
                                                                             params[:submission_id], workflow['workflowId'])
-        workflow['outputs'].each do |output, file_url|
-          file_location = file_url.gsub(/gs\:\/\/#{@study.bucket_id}\//, '')
-          # get google instance of file
-          file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.firecloud_project,
-                                                              @study.firecloud_workspace, file_location)
-          if file.present?
-            # depending on the requested 'depth' of the new file (i.e. how many directories to include in the new name),
-            # construct a new filename for the file about to by synced
-            # this is only applied to files whose task name is in the workflow_config[:task_names] list
-            # all other files are renamed to their basename (last path part)
-            path_parts = file.name.split('/')
-            basename = path_parts.last
-            new_location = "outputs_#{@study.id}_#{params[:submission_id]}/#{basename}"
-            # check if file has already been synced first
-            # we can only do this by md5 hash as the filename and generation will be different
-            existing_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.firecloud_project,
-                                                                         @study.firecloud_workspace, new_location)
-            if existing_file.present? && existing_file.md5 == file.md5 && StudyFile.where(study_id: @study.id, upload_file_name: new_location).exists?
-              next
-            else
-              # now copy the file to a new location for syncing, marking as default type of 'Analysis Output'
-              new_file = file.copy new_location
-              unsynced_output = StudyFile.new(study_id: @study.id, name: new_file.name, upload_file_name: new_file.name,
-                                              upload_content_type: new_file.content_type, upload_file_size: new_file.size,
-                                              generation: new_file.generation, remote_location: new_file.name,
-                                              options: {submission_id: params[:submission_id]})
-              # process output according to analysis_configuration output parameters and associations (if present)
-              workflow_parts = output.split('.')
-              call_name = workflow_parts.shift
-              param_name = workflow_parts.join('.')
-              Rails.logger.info "Processing output #{output} in #{params[:submission_id]}/#{workflow['workflowId']}"
-              # find matching output analysis_parameter
-              output_param = @analysis_configuration.analysis_parameters.outputs.detect {|param| param.parameter_name == param_name && param.call_name == call_name}
-              # set declared file type
-              unsynced_output.file_type = output_param.output_file_type
-              # process any direct attribute assignments or associations
-              output_param.analysis_output_associations.each do |association|
-                unsynced_output = association.process_output_file(unsynced_output, configuration, @study)
+        workflow['outputs'].each do |output_name, outputs|
+          if outputs.is_a?(Array)
+            outputs.each do |output_file|
+              file_location = output_file.gsub(/gs\:\/\/#{@study.bucket_id}\//, '')
+              # get google instance of file
+              remote_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.firecloud_project,
+                                                                  @study.firecloud_workspace, file_location)
+              if remote_file.present?
+                process_workflow_output(output_name, output_file, remote_file, workflow, params[:submission_id], configuration)
+              else
+                alert_content = "We were unable to sync the outputs from submission #{params[:submission_id]}; one or more of
+                             the declared output files have been deleted.  Please check the output directory before continuing."
+                redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
+                            alert: alert_content and return
               end
-              @unsynced_files << unsynced_output
             end
           else
-            alert_content = "We were unable to sync the outputs from submission #{params[:submission_id]}; one or more of
+            file_location = outputs.gsub(/gs\:\/\/#{@study.bucket_id}\//, '')
+            # get google instance of file
+            remote_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.firecloud_project,
+                                                                @study.firecloud_workspace, file_location)
+            if remote_file.present?
+              process_workflow_output(output_name, outputs, remote_file, workflow, params[:submission_id], configuration)
+            else
+              alert_content = "We were unable to sync the outputs from submission #{params[:submission_id]}; one or more of
                              the declared output files have been deleted.  Please check the output directory before continuing."
-            redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
-                        alert: alert_content and return
+              redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
+                          alert: alert_content and return
+            end
           end
         end
         metadata = AnalysisMetadatum.find_by(study_id: @study.id, submission_id: params[:submission_id])
@@ -1488,6 +1471,38 @@ class StudiesController < ApplicationController
         @unsynced_directories.delete(existing_dir)
       end
       @unsynced_directories << existing_dir
+    end
+  end
+
+  def process_workflow_output(output_name, file_url, remote_gs_file, workflow, submission_id, submission_config)
+    path_parts = file_url.split('/')
+    basename = path_parts.last
+    new_location = "outputs_#{@study.id}_#{submission_id}/#{basename}"
+    # check if file has already been synced first
+    # we can only do this by md5 hash as the filename and generation will be different
+    existing_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.firecloud_project,
+                                                                 @study.firecloud_workspace, new_location)
+    unless existing_file.present? && existing_file.md5 == remote_gs_file.md5 && StudyFile.where(study_id: @study.id, upload_file_name: new_location).exists?
+      # now copy the file to a new location for syncing, marking as default type of 'Analysis Output'
+      new_file = remote_gs_file.copy new_location
+      unsynced_output = StudyFile.new(study_id: @study.id, name: new_file.name, upload_file_name: new_file.name,
+                                      upload_content_type: new_file.content_type, upload_file_size: new_file.size,
+                                      generation: new_file.generation, remote_location: new_file.name,
+                                      options: {submission_id: params[:submission_id]})
+      # process output according to analysis_configuration output parameters and associations (if present)
+      workflow_parts = output_name.split('.')
+      call_name = workflow_parts.shift
+      param_name = workflow_parts.join('.')
+      Rails.logger.info "Processing output #{output_name}:#{file_url} in #{params[:submission_id]}/#{workflow['workflowId']}"
+      # find matching output analysis_parameter
+      output_param = @analysis_configuration.analysis_parameters.outputs.detect {|param| param.parameter_name == param_name && param.call_name == call_name}
+      # set declared file type
+      unsynced_output.file_type = output_param.output_file_type
+      # process any direct attribute assignments or associations
+      output_param.analysis_output_associations.each do |association|
+        unsynced_output = association.process_output_file(unsynced_output, submission_config, @study)
+      end
+      @unsynced_files << unsynced_output
     end
   end
 end

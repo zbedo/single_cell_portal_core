@@ -35,8 +35,8 @@ class AnalysisConfiguration
     end
   end
 
+  before_create :set_synopsis
   after_create :load_parameters_from_wdl!
-  after_create :set_synopsis!
 
   # returns an array of all available analysis_configurations for use in dropdown menus
   def self.available_analyses
@@ -236,11 +236,14 @@ class AnalysisConfiguration
     end
   end
 
+  private
+
   # set the synopsis from the method repository summary
-  def set_synopsis!
+  def set_synopsis
     begin
+      Rails.logger.info "Setting synopsis for #{self.identifier}"
       method = Study.firecloud_client.get_method(self.namespace, self.name, self.snapshot)
-      self.update(synopsis: method['synopsis'])
+      self.synopsis = method['synopsis']
     rescue => e
       error_context = ErrorTracker.format_extra_context(self, last_config)
       ErrorTracker.report_exception(e, self.user, error_context)
@@ -248,8 +251,6 @@ class AnalysisConfiguration
       e
     end
   end
-
-  private
 
   # custom presence validator for WDL keys (namespace, name, snapshot) that will halt execution on fail to prevent
   # downstream errors for non-existent attributes
