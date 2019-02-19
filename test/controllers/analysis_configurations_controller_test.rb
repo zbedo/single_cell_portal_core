@@ -23,9 +23,9 @@ class AnalysisConfigurationsControllerTest < ActionDispatch::IntegrationTest
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
     get analysis_configuration_path(@analysis_configuration)
     assert_response 200, "Did not successfully load detail page for #{@analysis_configuration.identifier}"
-    assert_select 'div#analysis-parameters', 1, 'Did not find analysis parameters table'
-    assert_select 'form.analysis-parameter-form', 3, 'Did not find correct number of analysis parameter entries'
-    assert_select 'form.input-analysis-parameter', 2, 'Did not find correct number of inputs'
+    assert_select 'div#analysis-parameters', 1, 'Did not find analysis parameters div'
+    assert_select 'form.analysis-parameter-form', 2, 'Did not find correct number of analysis parameter entries'
+    assert_select 'form.input-analysis-parameter', 1, 'Did not find correct number of inputs'
     assert_select 'form.output-analysis-parameter', 1, 'Did not find correct number of outputs'
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end

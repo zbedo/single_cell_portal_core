@@ -112,6 +112,6 @@ StudyFileBundle.create!(bundle_type: 'BAM', original_file_list: [{'name' => 'sam
 User.create!(email:'testing.user.2@gmail.com', password:'someotherpassword', api_access_token: 'test-api-token-2')
 
 # Analysis Configuration seeds
-AnalysisConfiguration.create(namespace: 'unity-benchmark-test', name: 'test-orchestration', snapshot: 1, user_id: user.id,
-                             configuration_namespace: 'unity-benchmark-test', configuration_name: 'test-orchestration',
+AnalysisConfiguration.create(namespace: 'single-cell-portal', name: 'split-cluster', snapshot: 1, user_id: user.id,
+                             configuration_namespace: 'single-cell-portal', configuration_name: 'split-cluster',
                              configuration_snapshot: 2)

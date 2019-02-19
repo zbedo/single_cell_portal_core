@@ -1661,6 +1661,82 @@ class UiTestSuite < Test::Unit::TestCase
   end
 
   ##
+  ## ANALYSIS CONFIGURATION TESTS
+  ##
+
+  test 'admin: analysis-configurations: workflows: add and configure analysis' do
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
+
+    @driver.get @base_url
+    login($test_email, $test_email_password)
+    @driver.get @base_url + '/analysis_configurations/new'
+
+    namespace_field = @driver.find_element(:id, 'analysis_configuration_namespace')
+    namespace_field.send_keys('single-cell-portal')
+    name_field = @driver.find_element(:id, 'analysis_configuration_name')
+    name_field.send_keys('split-cluster')
+    snapshot_field = @driver.find_element(:id, 'analysis_configuration_snapshot')
+    snapshot_field.send_keys(1)
+    config_namespace_field = @driver.find_element(:id, 'analysis_configuration_configuration_namespace')
+    config_namespace_field.send_keys('single-cell-portal')
+    config_name_field = @driver.find_element(:id, 'analysis_configuration_configuration_name')
+    config_name_field.send_keys('split-cluster')
+    config_snapshot_field = @driver.find_element(:id, 'analysis_configuration_configuration_snapshot')
+    config_snapshot_field.send_keys(2)
+    save_btn = @driver.find_element(:id, 'save-analysis-configuration')
+    save_btn.click
+
+    # wait for config page to load
+    close_modal('message_modal')
+    wait_for_render(:id, 'inputs')
+
+    # configure analysis input
+    input_form = @driver.find_element(:class, 'input-analysis-parameter')
+    assoc_model = input_form.find_element(:class, 'associated-model-field')
+    assoc_model.send_keys('StudyFile')
+    sleep(1) # need to wait for REST call to populate other dropdowns
+    model_method = input_form.find_element(class: 'associated_model_method')
+    model_method.send_keys('gs_url')
+    model_display = input_form.find_element(class: 'associated_model_display_method')
+    model_display.send_keys('name')
+    add_filter_btn = input_form.find_element(:id, 'add-analysis-parameter-filter')
+    add_filter_btn.click
+    filter_form = input_form.find_element(:class, 'analysis_parameter_filter_fields')
+    filter_attr = filter_form.find_element(:class, 'analysis_parameter_filter_attribute_name')
+    filter_attr.send_keys('file_type')
+    filter_val = filter_form.find_element(:class, 'analysis_parameter_filter_value')
+    filter_val.send_keys('Cluster')
+    save_btn = input_form.find_element(:class, 'save-analysis-parameter')
+    save_btn.click
+    close_modal('generic-update-modal')
+
+    # configure analysis output
+    output_nav = @driver.find_element(:id, 'outputs-nav')
+    output_nav.click
+    @wait.until {element_visible?(:id, 'outputs')}
+    output_form = @driver.find_element(:class, 'output-analysis-parameter')
+    out_file_type = output_form.find_element(:id, 'analysis_parameter_output_file_type')
+    out_file_type.send_keys('Cluster')
+    save_btn = output_form.find_element(:class, 'save-analysis-parameter')
+    save_btn.click
+    close_modal('generic-update-modal')
+
+    @driver.get @base_url + '/analysis_configurations'
+    wait_for_render(:id, 'analysis-configurations')
+    configs = @driver.find_element(:id, 'analysis-configurations')
+    split_cluster_tr = configs.find_element(:id, 'single-cell-portal-split-cluster-1')
+    config_identifier = split_cluster_tr.find_element(:class, 'analysis-config-identifer')
+    assert config_identifier.text == 'single-cell-portal/split-cluster/1',
+           "Did not find correct identifier name, expected 'single-cell-portal/split-cluster/1' but found #{config_identifier.text}"
+    expected_synopsis = 'Single Cell Portal testing WDL to split a cluster on annotations'
+    config_synopsis = split_cluster_tr.find_element(:class, 'analysis-config-synopsis')
+    assert config_synopsis.text == expected_synopsis,
+           "Did not find correct identifier name, expected '#{expected_synopsis}' but found #{config_synopsis.text}"
+
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
+  end
+
+  ##
   ## USER PROFILE TESTS
   ## Setting email preferences, etc
   ##
