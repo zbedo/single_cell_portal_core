@@ -1717,6 +1717,13 @@ class UiTestSuite < Test::Unit::TestCase
     output_form = @driver.find_element(:class, 'output-analysis-parameter')
     out_file_type = output_form.find_element(:id, 'analysis_parameter_output_file_type')
     out_file_type.send_keys('Cluster')
+    add_assoc = output_form.find_element(:id, 'add-analysis-output-association')
+    add_assoc.click
+    assoc_form = output_form.find_element(:class, 'analysis_output_association_fields')
+    attr_dropdown = assoc_form.find_element(:class, 'analysis_output_association_attribute_name')
+    attr_dropdown.send_keys('description')
+    attr_value = assoc_form.find_element(:class, 'analysis_output_association_attribute_value')
+    attr_value.send_keys("Description set from run #{$random_seed}")
     save_btn = output_form.find_element(:class, 'save-analysis-parameter')
     save_btn.click
     close_modal('generic-update-modal')
@@ -4429,70 +4436,8 @@ class UiTestSuite < Test::Unit::TestCase
 
   ##
   ## WORKFLOW TESTS
-  ## Test FireCloud workflow integration
-  ##
+  ## Test FireCloud workflow integration with analysis configurations & submission/syncing outputs
 
-  # test creating sample entities for workflows
-  test 'front-end: workflows: import sample entities' do
-    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
-
-    @driver.get @base_url
-    login($test_email, $test_email_password)
-
-    study_page = @base_url + "/study/test-study-#{$random_seed}"
-    @driver.get study_page
-    wait_until_page_loads(study_page)
-
-    open_ui_tab('study-analysis')
-    wait_for_render(:id, 'workflow_identifier')
-    samples_tab = @driver.find_element(:id, 'select-inputs-nav')
-    samples_tab.click
-    wait_for_render(:id, 'submissions-table')
-    # select all available fastq files to create a sample entity
-    study_data_select = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_study_data'))
-    study_data_select.select_all
-    scroll_to(:bottom)
-    save_samples = @driver.find_element(:id, 'save-workspace-samples')
-    save_samples.click
-    close_modal('message_modal')
-
-    # test export button
-    export_samples = @driver.find_element(:id, 'export-sample-info')
-    export_samples.click
-    # wait for export to complete
-    sleep(3)
-    filename = 'sample_info.txt'
-    sample_info_file = File.open(File.join($download_dir, filename))
-    assert File.exist?(sample_info_file.path), 'Did not find exported sample info file'
-    file_contents = sample_info_file.readlines
-    assert file_contents.size == 2, "Sample info file is wrong size; exprected 2 lines but found #{file_contents.size}"
-    header_line = "entity:sample_id\tfastq_file_1\tfastq_file_2\tfastq_file_3\tfastq_file_4\n"
-    assert file_contents.first == header_line, "sample info header line incorrect, expected #{header_line} but found '#{file_contents.first}'"
-    assert file_contents.last.start_with?('cell_1'), "sample name in content line incorrect, expected 'cell_1' but found '#{file_contents.last}'"
-
-    # clean up
-    sample_info_file.close
-    File.delete(File.join($download_dir, filename))
-
-    # clear samples table
-    clear_btn = @driver.find_element(:id, 'clear-sample-info')
-    clear_btn.click
-
-    # now select sample
-    study_samples = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_inputs_samples'))
-    study_samples.select_all
-    # wait for table to populate (will have a row with sorting_1 class)
-    @wait.until {@driver.find_element(:id, 'samples-table').find_element(:class, 'sorting_1').displayed?}
-
-    # assert samples loaded correctly
-    sample_table_body = @driver.find_element(:id, 'samples-table').find_element(:tag_name, 'tbody')
-    sample_rows = sample_table_body.find_elements(:tag_name, 'tr')
-    assert sample_rows.size == 1, "Did not find correct number of samples in table, expected 1 but found '#{sample_rows.size}'"
-    sample_name = sample_rows.first.find_element(:tag_name, 'td')
-    assert sample_name.text == 'cell_1', "Did not find correct sample name, expected 'cell_1' but found '#{sample_name.text}'"
-
-    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
-  end
 
   # test creating & cancelling submissions of workflows
   test 'front-end: workflows: launch and cancel submissions' do
@@ -4511,7 +4456,8 @@ class UiTestSuite < Test::Unit::TestCase
     scroll_to(:bottom)
     wdl_workdropdown = @driver.find_element(:id, 'workflow_identifier')
     wdl_workflows = wdl_workdropdown.find_elements(:tag_name, 'option')
-    wdl_workflows.last.click
+    workflow = wdl_workflows.detect {|w| w['value'] == 'single-cell-portal--split-cluster--1'}
+    wdl_workdropdown.send_keys(workflow['value'])
     # view WDL to allow time for sample input browser to render fully
     view_wdl = @driver.find_element(:id, 'view-selected-wdl')
     view_wdl.click
@@ -4519,19 +4465,9 @@ class UiTestSuite < Test::Unit::TestCase
     wdl_contents = @driver.find_element(:id, 'wdl-contents').text
     assert !wdl_contents.empty?, 'Did not find any contents for test WDL'
 
-    samples_tab = @driver.find_element(:id, 'select-inputs-nav')
-    samples_tab.click
-    wait_for_render(:id, 'samples-table')
-
-    study_samples = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_inputs_samples'))
-    study_samples.select_all
-    # wait for table to populate (will have a row with sorting_1 class)
-    sample_info = @driver.find_element(:id, 'samples-table')
-    @wait.until {sample_info.find_element(:class, 'sorting_1').displayed?}
-
     # submit workflow
-    review_tab = @driver.find_element(:id, 'review-submission-nav')
-    review_tab.click
+    configure_nav = @driver.find_element(:id, 'select-inputs-nav')
+    configure_nav.click
     wait_for_render(:id, 'submit-workflow')
     submit_btn = @driver.find_element(id: 'submit-workflow')
     submit_btn.click
@@ -4598,7 +4534,7 @@ class UiTestSuite < Test::Unit::TestCase
     }
     i = 1
     while completed_submission.nil?
-      omit_if i >= 60, 'Skipping test; waited 5 minutes but no submissions complete yet.'
+      omit_if i >= 120, 'Skipping test; waited 10 minutes but no submissions complete yet.'
 
       $verbose ? puts("no completed submissions, refresh try ##{i}") : nil
       refresh_btn = @driver.find_element(:id, 'refresh-submissions-table-top')
@@ -4618,9 +4554,17 @@ class UiTestSuite < Test::Unit::TestCase
     sync_btn.click
     wait_for_render(:class, 'unsynced-study-file')
     study_file_forms = @driver.find_elements(:class, 'unsynced-study-file')
-    study_file_forms.each do |form|
+    study_file_forms.each_with_index do |form, index|
       file_type = form.find_element(:id, 'study_file_file_type')
-      file_type.send_keys('Other')
+      selected_type = file_type.find_elements(:tag_name, 'option').detect {|opt| opt.selected?}.text
+      assert selected_type == 'Cluster', "Did not set file type correctly, expected 'Cluster' but found '#{selected_type}'"
+      description = form.find_element(:id, 'study_file_description')
+      expected_description = "Description set from run #{$random_seed}"
+      assert description['value'] == expected_description,
+             "Did not set description correctly, expected '#{expected_description}' but found '#{description['value']}'"
+      cluster_name_field = form.find_element(:id, 'study_file_name')
+      cluster_name_field.clear
+      cluster_name_field.send_keys("Split Cluster #{index + 1}")
       sync_button = form.find_element(:class, 'save-study-file')
       sync_button.click
       close_modal('sync-notice-modal')
@@ -4632,6 +4576,23 @@ class UiTestSuite < Test::Unit::TestCase
     synced_files = @driver.find_elements(:class, 'synced-study-file')
     filenames = synced_files.map {|form| form.find_element(:class, 'filename')[:value]}
     assert filenames.any?, "Did not find any files in list of synced files: #{filenames.join(', ')}"
+    # assert new clusters have been added
+    # sleep 7 seconds to give portal a chance to parse files
+    sleep(7)
+    @driver.get @base_url + "/study/test-study-#{$random_seed}"
+    wait_until_page_loads(study_page)
+    open_ui_tab('study-visualize')
+    wait_for_render(:id, 'plots-tab')
+    @wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+
+    # assert all new clusters are present
+    view_options_panel = @driver.find_element(:id, 'view-option-link')
+    view_options_panel.click
+    wait_for_render(:id, 'view-options')
+    clusters = @driver.find_element(:id, 'cluster').find_elements(:tag_name, 'option')
+    names = clusters.map {|cluster| cluster.text}
+    expected_names = ['Split Cluster 1', 'Split Cluster 2']
+    assert expected_names & names == expected_names, "Did not find expected names of '#{expected_names}' in '#{names}'"
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
@@ -4683,8 +4644,8 @@ class UiTestSuite < Test::Unit::TestCase
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
 
-  # delete submissions from study
-  test 'front-end: workflows: delete submissions' do
+  # delete submissions from study, and remove the analysis configuration
+  test 'front-end: workflows: delete submissions and analysis configuration' do
     puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     @driver.get @base_url
@@ -4710,42 +4671,13 @@ class UiTestSuite < Test::Unit::TestCase
     empty_row = empty_table.find_element(:tag_name, 'tbody').find_element(:tag_name, 'tr').find_element(:tag_name, 'td')
     assert empty_row.text == 'No data available in table', "Did not completely remove all submissions, expected 'No data available in table' but found #{empty_row.text}"
 
-    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
-  end
-
-  # test deleting sample entities for workflows
-  test 'front-end: workflows: delete sample entities' do
-    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
-
-    @driver.get @base_url
-    login($test_email, $test_email_password)
-
-    study_page = @base_url + "/study/test-study-#{$random_seed}"
-    @driver.get study_page
-    wait_until_page_loads(study_page)
-
-    open_ui_tab('study-analysis')
-    wait_for_render(:id, 'workflow_identifier')
-    samples_tab = @driver.find_element(:id, 'select-inputs-nav')
-    samples_tab.click
-    wait_for_render(:id, 'submissions-table')
-
-    # now select sample
-    study_samples = Selenium::WebDriver::Support::Select.new(@driver.find_element(:id, 'workflow_inputs_samples'))
-    study_samples.select_all
-    # wait for table to populate (will have a row with sorting_1 class)
-    @wait.until {@driver.find_element(:id, 'samples-table').find_element(:class, 'sorting_1').displayed?}
-
-    # delete samples
-    delete_btn = @driver.find_element(:id, 'delete-workspace-samples')
+    # remove analysis configuration
+    analysis_config_path = @base_url + '/analysis_configurations'
+    @driver.get analysis_config_path
+    wait_until_page_loads(analysis_config_path)
+    delete_btn = @driver.find_element(:class, 'single-cell-portal-split-cluster-1-delete')
     delete_btn.click
-    close_modal('message_modal')
-
-    empty_table = @driver.find_element(:id, 'samples-table')
-    empty_row = empty_table.find_element(:tag_name, 'tbody').find_element(:tag_name, 'tr').find_element(:tag_name, 'td')
-    assert empty_row.text == 'No data available in table', "Did not completely remove all samples, expected 'No data available in table' but found #{empty_row.text}"
-    samples_list = @driver.find_element(:id, 'workflow_inputs_samples')
-    assert samples_list['value'].empty?, "Did not delete workspace samples; samples list is not empty: ''#{samples_list['value']}''"
+    accept_alert
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
