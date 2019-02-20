@@ -260,6 +260,8 @@ class StudiesController < ApplicationController
     configuration_name = params[:configuration_name]
     configuration_namespace = params[:configuration_namespace]
     begin
+      # indication of whether or not we have custom sync code to run, defaults to false
+      @special_sync = false
       configuration = Study.firecloud_client.get_workspace_configuration(@study.firecloud_project, @study.firecloud_workspace,
                                                                          configuration_namespace, configuration_name)
       submission = Study.firecloud_client.get_workspace_submission(@study.firecloud_project, @study.firecloud_workspace,
@@ -269,10 +271,8 @@ class StudiesController < ApplicationController
       method_namespace = configuration['methodRepoMethod']['methodNamespace']
       method_snapshot = configuration['methodRepoMethod']['methodVersion']
       @analysis_configuration = AnalysisConfiguration.find_by(namespace: method_namespace, name: method_name, snapshot: method_snapshot)
-      unless @analysis_configuration.present?
-        # don't allow syncing of submissions that are not 'registered' with the portal
-        redirect_to view_study_path(study_name: @study.url_safe_name),
-                    alert: "This feature is not available for the requested analysis: #{method_namespace}/#{method_name}/#{method_snapshot}" and return
+      if @analysis_configuration.present?
+        @special_sync = true
       end
       submission['workflows'].each do |workflow|
         workflow = Study.firecloud_client.get_workspace_submission_workflow(@study.firecloud_project, @study.firecloud_workspace,
@@ -320,10 +320,6 @@ class StudiesController < ApplicationController
         end
       end
       @available_files = @unsynced_files.map {|f| {name: f.name, generation: f.generation, size: f.upload_file_size}}
-      # indication of whether or not we have custom sync code to run, defaults to false
-      @special_sync = true
-      # now execute any special code that is needed for further handling this submission
-
       render action: :sync_study
     rescue => e
       error_context = ErrorTracker.format_extra_context(@study, {params: params})
@@ -1493,14 +1489,16 @@ class StudiesController < ApplicationController
       workflow_parts = output_name.split('.')
       call_name = workflow_parts.shift
       param_name = workflow_parts.join('.')
-      Rails.logger.info "Processing output #{output_name}:#{file_url} in #{params[:submission_id]}/#{workflow['workflowId']}"
-      # find matching output analysis_parameter
-      output_param = @analysis_configuration.analysis_parameters.outputs.detect {|param| param.parameter_name == param_name && param.call_name == call_name}
-      # set declared file type
-      unsynced_output.file_type = output_param.output_file_type
-      # process any direct attribute assignments or associations
-      output_param.analysis_output_associations.each do |association|
-        unsynced_output = association.process_output_file(unsynced_output, submission_config, @study)
+      if @special_sync # only process outputs from 'registered' analyses
+        Rails.logger.info "Processing output #{output_name}:#{file_url} in #{params[:submission_id]}/#{workflow['workflowId']}"
+        # find matching output analysis_parameter
+        output_param = @analysis_configuration.analysis_parameters.outputs.detect {|param| param.parameter_name == param_name && param.call_name == call_name}
+        # set declared file type
+        unsynced_output.file_type = output_param.output_file_type
+        # process any direct attribute assignments or associations
+        output_param.analysis_output_associations.each do |association|
+          unsynced_output = association.process_output_file(unsynced_output, submission_config, @study)
+        end
       end
       @unsynced_files << unsynced_output
     end
