@@ -1,0 +1,4 @@
+var inputSelectionForm = $('#analysis-configuration-inputs');
+inputSelectionForm.empty();
+inputSelectionForm.html("<%= j(render partial: '/site/analysis/analysis_submission_form') %>");
+$('#submit-workflow').parent().removeClass('hidden');

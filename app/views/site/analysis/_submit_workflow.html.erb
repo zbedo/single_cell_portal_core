@@ -4,8 +4,7 @@
   <div id="workflow-wizard">
     <ul class="nav wizard">
       <li role="presentation" class="wizard-nav" id="select-workflow-nav"><a href="#select-workflow" data-toggle="tab">1. Select Workflow</a></li>
-      <li role="presentation" class="wizard-nav" id="select-inputs-nav"><a href="#select-inputs" data-toggle="tab">2. Select Inputs</a></li>
-      <li role="presentation" class="wizard-nav" id="review-submission-nav"><a href="#review-submission" data-toggle="tab">3. Review & Submit</a></li>
+      <li role="presentation" class="wizard-nav" id="select-inputs-nav"><a href="#configure-submission" data-toggle="tab">2. Configure Inputs & Submit</a></li>
     </ul>
 
     <div class="tab-content">
@@ -31,35 +30,13 @@
         </div>
       </div>
 
-      <div class="tab-pane workflow-tab" id="select-inputs">
-        <%= render partial: '/site/analysis/input_sample_browser' %>
-      </div>
-
-      <div class="tab-pane workflow-tab" id="review-submission">
-        <div class="form-group">
-          <div class="bs-callout bs-callout-default">
-            <div class="row">
-              <div class="col-sm-offset-3 col-sm-6">
-                <h4>Submission Parameters</h4>
-                <dl class="dl-horizontal">
-                  <dt>Workflow</dt>
-                  <dd id="selected-workflow"></dd>
-                  <dt id="selected-input-name">Input(s)</dt>
-                  <dd id="selected-inputs"></dd>
-                </dl>
-              </div>
-              <div class="col-sm-offset-3 col-sm-6">
-                <h4>Additional Parameters</h4>
-                <div id="additional-parameters-target">
-                  <p class="help-block">There are no additional parameters for this workflow.  Click 'Submit Workflow' to launch your submission.</p>
-                </div>
-              </div>
-            </div>
-          </div>
+      <div class="tab-pane workflow-tab" id="configure-submission">
+        <div id="analysis-configuration-inputs">
+          <p class="lead">Please select a workflow before continuing.</p>
         </div>
-        <div class="form-group row">
-          <div class="col-sm-12 text-center">
-            <%= f.submit 'Submit Workflow', class: 'btn btn-lg btn-success', id: 'submit-workflow', disabled: true %>
+        <div class="row">
+          <div class="col-sm-offset-3 col-sm-6 hidden text-center">
+            <%= f.submit 'Submit Workflow', class: 'btn btn-lg btn-success', id: 'submit-workflow' %>
           </div>
         </div>
       </div>
@@ -82,12 +59,13 @@
       $('#selected-workflow').html(displayWdlText);
       // get any optional parameters
       $.ajax({
-        url: "<%= get_workflow_options_path(study_name: @study.url_safe_name) %>&workflow_identifier=" + selectedWdl,
+        url: "<%= get_analysis_configuration_path(study_name: @study.url_safe_name) %>&workflow_identifier=" + selectedWdl,
         dataType: 'script'
       });
     } else {
       $('#selected-workflow').html('');
-      $('#optional-parameters-target').empty();
+      $('#analysis-configuration-inputs').html('<p class="lead">Please select a workflow before continuing.</p>');
+      $('#submit-workflow').parent().addClass('hidden');
     }
   });
 
@@ -118,28 +96,10 @@
 
   // main workflow submit function
   $('#submit-workflow').click(function () {
-      var inputs;
-      if ($('#workflow_inputs_samples').length == 0) {
-          inputs = $('#workflow_inputs_input_file').val()
-      } else {
-          inputs = $('#workflow_inputs_samples').val()
-      }
-      var selectedSamples = $('#workflow_input_samples').val();
-      var selectedWdl = $('#workflow_identifier').val();
-      if (selectedWdl === '') {
-          alert('You must select a workflow before continuing.');
-          $('#workflow_identifier').parent().addClass('has-error');
-          return false;
-      } else if (inputs === null || typeof inputs === 'undefined' || inputs === '') {
-          alert('You must create and select an input before submitting a workflow.');
-          $('#workflow_samples').parent().addClass('has-error');
-          return false;
-      } else {
-          $('#generic-modal-title').html('Submitting... Please wait.');
-          launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
-              return true;
-          });
-      }
+      $('#generic-modal-title').html('Submitting... Please wait.');
+      launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
+          return true;
+      });
   });
 
   // workflow submit wizard
@@ -149,24 +109,13 @@
       tabClass: 'nav-tabs',
       onTabShow: function(tab, navigation, index, clickedIndex, clickedTab) {
         var step = $(tab[0]).attr('id');
-        if (index > 0) {
-          wizard.find('.pager .previous').removeClass('disabled');
-        }
-        if (step == 'review-submission-nav') {
+        if (step === 'configure-submission') {
           wizard.find('.pager .next').hide();
-          var workflow = $('#workflow_identifier').val();
-          var samples = $('#workflow_samples').val();
-          if (workflow !== '' && samples !== null) {
-            $('#submit-workflow').attr('disabled', false);
-          } else {
-            $('#submit-workflow').attr('disabled', 'disabled');
-          }
         } else {
           wizard.find('.pager .next').show();
         }
       },
       onNext: function(tab, navigation, index) {
-        var step = $(tab[0]).attr('id');
         wizard.find('.pager .previous').removeClass('disabled');
         return true;
       }

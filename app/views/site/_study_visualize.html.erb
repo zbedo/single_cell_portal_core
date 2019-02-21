@@ -117,9 +117,10 @@
         $('#gene_set_cluster').val(newCluster);
         // grab currently selected annotation
         var currAnnot = $('#annotation').val();
+        var currSubsample = $('#subsample').val();
         // get new annotation options and re-render
         $.ajax({
-            url: "<%= get_new_annotations_path(study_name: @study.url_safe_name)%>?cluster=" + newCluster,
+            url: "<%= get_new_annotations_path(study_name: @study.url_safe_name)%>?cluster=" + newCluster + '&subsample=' + currSubsample,
             method: 'GET',
             dataType: 'script',
             success: function (data) {
