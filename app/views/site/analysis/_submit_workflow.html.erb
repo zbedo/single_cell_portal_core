@@ -109,7 +109,7 @@
       tabClass: 'nav-tabs',
       onTabShow: function(tab, navigation, index, clickedIndex, clickedTab) {
         var step = $(tab[0]).attr('id');
-        if (step == 'configure-submission') {
+        if (step === 'configure-submission') {
           wizard.find('.pager .next').hide();
         } else {
           wizard.find('.pager .next').show();
