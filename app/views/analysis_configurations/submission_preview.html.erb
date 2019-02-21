@@ -1,0 +1,24 @@
+<h1>Preview of <%= @analysis_configuration.identifier %> submission form</h1>
+<%= form_for(:study, url: load_study_for_submission_preview_analysis_configuration_path(@analysis_configuration.id),
+             html: {class: 'form', id: 'select-study', data: {remote: true}}) do |f| %>
+  <div class="form-group row">
+    <div class="col-sm-offset-3 col-sm-6">
+      <%= f.label :id, 'Select a study to use (to populate values into dropdowns)' %><br />
+      <%= f.select :id, options_for_select(@studies), {include_blank: true}, class: 'form-control' %>
+    </div>
+  </div>
+<% end %>
+<div class="well well-lg" id="preview-form"></div>
+
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+
+    $('#study_id').on('change', function() {
+        if ($(this).val() !== '') {
+            var form = $('#select-study');
+            form.submit();
+        } else {
+            $('#preview-form').empty();
+        }
+    });
+
+</script>

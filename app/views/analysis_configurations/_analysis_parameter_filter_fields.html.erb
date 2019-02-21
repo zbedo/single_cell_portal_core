@@ -1,0 +1,18 @@
+<div class="well well-sm analysis_parameter_filter_fields">
+  <div class="row">
+    <div class="col-xs-6">
+      <%= f.label :attribute_name, 'Filter associated model using' %>
+      <%= f.select :attribute_name, options_for_select(f.object.filter_attributes, f.object.attribute_name), {include_blank: true},
+                   class: 'form-control analysis_parameter_filter_attribute_name parameter-select' %>
+    </div>
+    <div class="col-xs-5">
+      <%= f.label :value, 'Association filter value' %>
+      <%= f.select :value, options_for_select(f.object.filter_values, f.object.value), {include_blank: true},
+                   class: 'form-control analysis_parameter_filter_value parameter-select' %>
+    </div>
+    <div class="col-xs-1">
+      <%= f.label :delete, "&nbsp;".html_safe %><br />
+      <%= f.link_to_remove "<span class='btn btn-sm btn-danger'><span class='fas fa-times'></span></span>".html_safe, data: {confirm: 'Are you sure?  This cannot be undone unless you reload the page before saving.'} %>
+    </div>
+  </div>
+</div>

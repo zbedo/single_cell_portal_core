@@ -1,12 +1,15 @@
 <div class="row">
   <div class="col-xs-6">
     <%= f.label :taxon_id, 'Species' %> <%= render partial: 'taxon_help_popover', locals: {id: f.object.id.to_s} %><br />
-    <%= f.select :taxon_id, options_from_collection_for_select(Taxon.sorted, :id, :display_name, f.object.taxon_id.present? ? f.object.taxon_id.to_s : nil), {include_blank: 'None selected...'}, {class: 'form-control taxon-select'} %>
+    <%= f.select :taxon_id, options_from_collection_for_select(Taxon.sorted, :id, :display_name, f.object.taxon_id.present? ? f.object.taxon_id.to_s : nil),
+                 {include_blank: 'None selected...'}, {class: 'form-control taxon-select'} %>
   </div>
   <div class="col-xs-6 <%= f.object.file_type == 'BAM' || f.object.file_type == 'Analysis Output' ? nil : 'hidden' %> genome-assembly-association">
     <%= f.label :genome_assembly_id, 'Genome Assembly' %> <%= render partial: 'taxon_help_popover', locals: {id: f.object.id.to_s} %><br/>
-    <% if f.object.genome_assembly_id.present? %>
-      <%= f.select :genome_assembly_id, options_for_select(f.object.genome_assembly.taxon.genome_assemblies.map {|a| [a.name, a.id.to_s]}, f.object.genome_assembly_id.to_s), {prompt: 'Please select species...'}, {class: 'form-control genome-assembly-select'} %>
+    <% if f.object.taxon_id.present? %>
+      <%= f.select :genome_assembly_id, options_for_select(f.object.taxon.genome_assemblies.map {|a| [a.name, a.id.to_s]},
+                                                           f.object.genome_assembly_id.present? ? f.object.genome_assembly_id.to_s : nil),
+                   {}, {class: 'form-control genome-assembly-select'} %>
     <% else %>
       <%= f.select :genome_assembly_id, options_for_select([]), {prompt: 'Please select species...'}, {class: 'form-control genome-assembly-select'} %>
     <% end %>

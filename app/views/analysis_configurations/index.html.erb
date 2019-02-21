@@ -23,12 +23,12 @@
                 <td class="analysis-config-synopsis"><%= analysis_configuration.synopsis %></td>
                 <td class="analysis-config-user"><%= analysis_configuration.user.email %></td>
                 <td>
-                  <%= scp_link_to "<i class='fas fa-search'></i> Info".html_safe,
+                  <%= scp_link_to "<i class='fas fa-cog'></i> Configure".html_safe,
                                   analysis_configuration_path(analysis_configuration),
+                                  class: "btn btn-xs btn-primary #{analysis_configuration.dom_identifier}-show" %>
+                  <%= scp_link_to "<i class='fas fa-search'></i> Preview".html_safe,
+                                  submission_preview_analysis_configuration_path(analysis_configuration),
                                   class: "btn btn-xs btn-info #{analysis_configuration.dom_identifier}-show" %>
-                  <%= scp_link_to "<i class='fas fa-edit'></i> Edit".html_safe,
-                                  edit_analysis_configuration_path(analysis_configuration),
-                                  class: "btn btn-xs btn-primary #{analysis_configuration.dom_identifier}-edit" %>
                   <%= scp_link_to "<i class='fas fa-trash'></i> Destroy".html_safe,
                                   analysis_configuration_path(analysis_configuration), method: :delete,
                                   class: "btn btn-xs btn-danger delete-btn #{analysis_configuration.dom_identifier}-delete" %></td>

@@ -255,6 +255,10 @@ label {
   margin-top: 10px;
 }
 
+.top-margin-5 {
+  margin-top: 5px;
+}
+
 .table-responsive .dataTables_wrapper .row {
   margin: 0;
 }
@@ -607,4 +611,14 @@ h4, .h4, h5, .h5, h6, .h6 {
 
 .bottom-pad {
   margin-bottom: 10px;
+}
+
+.white-bg {
+  background-color: white !important;
+}
+
+.preview-hidden-input {
+  padding-bottom: 10px;
+  border: 1px dashed #666666;
+  border-radius: 4px;
 }
