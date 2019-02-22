@@ -133,7 +133,7 @@ class AnalysisMetadatum
     value_type = definitions['type']
     case value_type
       when 'string'
-        value
+        value.gsub(/\"/, '')
       when 'integer'
         value.to_i
       when 'array'
@@ -210,6 +210,9 @@ class AnalysisMetadatum
                                                                        study.firecloud_workspace,
                                                                        submission['methodConfigurationNamespace'],
                                                                        submission['methodConfigurationName'])
+    analysis_configuration = AnalysisConfiguration.find_by(name: configuration['methodRepoMethod']['methodName'],
+                                                           namespace: configuration['methodRepoMethod']['methodNamespace'],
+                                                           snapshot: configuration['methodRepoMethod']['methodVersion'])
     workflows = []
     submission['workflows'].each do |submission_workflow|
       Rails.logger.info "getting workflow: #{submission_workflow['workflowId']}"
@@ -234,7 +237,11 @@ class AnalysisMetadatum
           end
           value = set_value_by_type(definitions, inputs)
         when 'reference_bundle'
-          value = set_value_by_type(definitions, WorkflowConfiguration.get_reference_bundle(configuration))
+          if analysis_configuration.present? && analysis_configuration.reference_bundle_name.present?
+            value = set_value_by_type(definitions, configuration['inputs'][analysis_configuration.reference_bundle_name])
+          else
+            value = set_value_by_type(definitions, study.workspace_url)
+          end
         when 'tasks'
           value = set_value_by_type(definitions, self.get_workflow_call_attributes(workflows))
         when 'description'

@@ -169,10 +169,14 @@ class AnalysisConfigurationsController < ApplicationController
       params.require(:analysis_parameter).permit(:id, :data_type, :call_name, :parameter_type, :parameter_name,
                                                  :parameter_value, :optional, :associated_model, :associated_model_method,
                                                  :associated_model_display_method, :association_filter_attribute,
-                                                 :association_filter_value, :output_file_type, :description, :visible, :apply_to_all,
-                                                 analysis_parameter_filters_attributes: [:id, :attribute_name, :value, :_destroy],
-                                                 analysis_output_associations_attributes: [:id, :attribute_name, :attribute_value,
-                                                 :association_source, :association_method, :association_data_type, :_destroy])
+                                                 :association_filter_value, :output_file_type, :description, :visible,
+                                                 :apply_to_all, :is_reference_bundle,
+                                                 analysis_parameter_filters_attributes: [:id, :attribute_name, :value,
+                                                                                         :multiple, :_destroy, :multiple_values => []],
+                                                 analysis_output_associations_attributes: [:id, :attribute_name,
+                                                                                           :attribute_value, :association_source,
+                                                                                           :association_method, :association_data_type,
+                                                                                           :_destroy])
     end
 
     def check_firecloud_status

@@ -1,14 +1,24 @@
 <div class="well well-sm analysis_parameter_filter_fields">
   <div class="row">
-    <div class="col-xs-6">
+    <div class="col-xs-4">
       <%= f.label :attribute_name, 'Filter associated model using' %>
       <%= f.select :attribute_name, options_for_select(f.object.filter_attributes, f.object.attribute_name), {include_blank: true},
                    class: 'form-control analysis_parameter_filter_attribute_name parameter-select' %>
     </div>
-    <div class="col-xs-5">
+    <div class="col-xs-4 analysis_parameter_filter_value_field <%= f.object.multiple? ? 'hidden' : nil %>">
       <%= f.label :value, 'Association filter value' %>
       <%= f.select :value, options_for_select(f.object.filter_values, f.object.value), {include_blank: true},
                    class: 'form-control analysis_parameter_filter_value parameter-select' %>
+    </div>
+    <div class="col-xs-4 analysis_parameter_filter_multiple_values_field <%= f.object.multiple? ? nil : 'hidden' %>">
+      <%= f.label :multiple_values, 'Association filter values' %>
+      <%= f.select :multiple_values, options_for_select(f.object.filter_values, f.object.multiple_values), {},
+                   class: 'form-control analysis_parameter_filter_multiple_values parameter-select', multiple: true, include_hidden: false %>
+    </div>
+    <div class="col-xs-3">
+      <%= f.label :multiple, 'Allow multiple values for filter?' %>
+      <%= f.select :multiple, options_for_select([['Yes', 1],['No', 0]], f.object.multiple ? 1 : 0), {},
+                   class: 'form-control analysis_parameter_filter_multiple parameter-select' %>
     </div>
     <div class="col-xs-1">
       <%= f.label :delete, "&nbsp;".html_safe %><br />

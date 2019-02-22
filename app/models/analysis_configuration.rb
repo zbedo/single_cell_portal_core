@@ -178,6 +178,13 @@ class AnalysisConfiguration
     }
   end
 
+  def reference_bundle_name
+    bundle_parameter = self.analysis_parameters.inputs.find_by(is_reference_bundle: true)
+    if bundle_parameter.present?
+      bundle_parameter.config_param_name
+    end
+  end
+
   # populate parameters based on user input for submission to a workspace
   def apply_user_inputs(user_inputs, entity_name=nil)
     default_config = self.configuration_for_repository.dup
