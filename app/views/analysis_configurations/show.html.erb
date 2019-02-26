@@ -53,7 +53,9 @@
     // populate dropdown with JSON response values
     function populateDropdown(formInput, options) {
         formInput.empty();
-        formInput.append('<option value=""></option>');
+        if (typeof formInput.attr('multiple') === 'undefined') {
+            formInput.append('<option value=""></option>');
+        }
         $.each(options, function(index, value) {
             if ( Array.isArray(value) ) {
                 formInput.append('<option value="' + value[1] + '">' + value[0] + '</option>');
@@ -111,8 +113,10 @@
         var model = form.find('.associated-model-field').val();
         if (model !== '' && filter !== '') {
             $.getJSON("<%= load_associated_model_filter_values_path %>?model=" + model + '&filter=' + filter, function (data) {
-                var filterAttrSelect = form.find('.analysis_parameter_filter_value').slice(-1)[0];
-                populateDropdown($(filterAttrSelect), data);
+                $.each(['.analysis_parameter_filter_value', '.analysis_parameter_filter_multiple_values'], function(i, select) {
+                    var filterAttrSelect = form.find(select).slice(-1)[0];
+                    populateDropdown($(filterAttrSelect), data);
+                });
             });
         }
     });
@@ -127,6 +131,20 @@
             assocDataType.val(dataType);
         } else {
             assocDataType.val('');
+        }
+    });
+
+    $('#analysis-parameters').on('change', '.analysis_parameter_filter_multiple', function() {
+        var select = $(this);
+        var form = select.closest('.analysis_parameter_filter_fields');
+        var multiSelect = form.find('.analysis_parameter_filter_multiple_values');
+        var singleSelect = form.find('.analysis_parameter_filter_value');
+        if ( select.val() === '1' ) {
+            multiSelect.parent().removeClass('hidden');
+            singleSelect.parent().addClass('hidden');
+        } else {
+            multiSelect.parent().addClass('hidden');
+            singleSelect.parent().removeClass('hidden');
         }
     });
 

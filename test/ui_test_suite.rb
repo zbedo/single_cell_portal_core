@@ -4577,8 +4577,8 @@ class UiTestSuite < Test::Unit::TestCase
     filenames = synced_files.map {|form| form.find_element(:class, 'filename')[:value]}
     assert filenames.any?, "Did not find any files in list of synced files: #{filenames.join(', ')}"
     # assert new clusters have been added
-    # sleep 7 seconds to give portal a chance to parse files
-    sleep(7)
+    # sleep 15 seconds to give portal a chance to parse files
+    sleep(15)
     @driver.get @base_url + "/study/test-study-#{$random_seed}"
     wait_until_page_loads(study_page)
     open_ui_tab('study-visualize')

@@ -16,28 +16,33 @@
       </div>
     <% end %>
     <div class="form-group row">
-      <div class="col-sm-3">
+      <div class="col-sm-2">
         <%= f.label :data_type, 'Type' %>
         <%= f.text_field :data_type, class: 'form-control', readonly: true %>
+      </div>
+      <div class="col-sm-2">
+        <%= f.label :optional, 'Required/Optional' %>
+        <%= f.hidden_field :optional, value: analysis_parameter.optional %>
+        <input type="text" class="form-control" value="<%= analysis_parameter.optional? ? 'Optional' : 'Required' %>" readonly="readonly">
+      </div>
+      <div class="col-sm-2">
+        <%= f.label :call_name, 'Parameter Type/Format' %>
+        <%= f.text_field :parameter_type, class: 'form-control', readonly: true %>
       </div>
       <div class="col-sm-3">
         <%= f.label :call_name, 'WDL Call/Task Name' %>
         <%= f.text_field :call_name, class: 'form-control', readonly: true %>
       </div>
       <div class="col-sm-3">
-        <%= f.label :call_name, 'Parameter Type/Format' %>
-        <%= f.text_field :parameter_type, class: 'form-control', readonly: true %>
-      </div>
-      <div class="col-sm-3">
-        <%= f.label :optional, 'Required/Optional' %>
-        <%= f.hidden_field :optional, value: analysis_parameter.optional %>
-        <input type="text" class="form-control" value="<%= analysis_parameter.optional? ? 'Optional' : 'Required' %>" readonly="readonly">
+        <%= f.label :parameter_name, 'Parameter Name' %>
+        <%= f.text_field :parameter_name, class: 'form-control', readonly: true %>
       </div>
     </div>
     <div class="form-group row">
       <div class="col-sm-3">
-        <%= f.label :parameter_name, 'Parameter Name' %>
-        <%= f.text_field :parameter_name, class: 'form-control', readonly: true %>
+        <%= f.label :is_reference_bundle, 'Reference Bundle?' %>
+        <%= f.select :is_reference_bundle, options_for_select([['Yes', 1],['No', 0]], analysis_parameter.is_reference_bundle ? 1 : 0),
+                     {}, class: 'form-control' %>
       </div>
       <div class="col-sm-3">
         <%= f.label :parameter_value, 'Parameter Value' %>
