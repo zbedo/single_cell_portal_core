@@ -199,10 +199,14 @@ class Study
   # HCA metadata object
   has_many :analysis_metadata, dependent: :delete
 
+  # Study Accession
+  has_one :study_accession
+
   # field definitions
   field :name, type: String
   field :embargo, type: Date
   field :url_safe_name, type: String
+  field :accession, type: String
   field :description, type: String
   field :firecloud_workspace, type: String
   field :firecloud_project, type: String, default: FireCloudClient::PORTAL_NAMESPACE
@@ -249,6 +253,10 @@ class Study
     property :url_safe_name do
       key :type, :string
       key :description, 'URL-encoded version of Study name'
+    end
+    property :accession do
+      key :type, :string
+      key :description, 'Accession (used in permalinks, not editable)'
     end
     property :firecloud_project do
       key :type, :string
@@ -458,7 +466,7 @@ class Study
   before_validation :set_url_safe_name
   before_validation :set_data_dir, :set_firecloud_workspace_name, on: :create
   # before_save       :verify_default_options
-  after_create      :make_data_dir, :set_default_participant
+  after_create      :make_data_dir, :set_default_participant, :assign_accession
   after_destroy     :remove_data_dir
   before_save       :set_readonly_access
 
@@ -2659,6 +2667,16 @@ class Study
       ErrorTracker.report_exception(e, user, error_context)
       Rails.logger.error "#{Time.now}: Unable to set default participant: #{e.message}"
     end
+  end
+
+  # set the study_accession for this study
+  def assign_accession
+    next_accession = StudyAccession.next_available
+    while Study.where(accession: next_accession).exists?
+      next_accession = StudyAccession.next_available
+    end
+    StudyAccession.create(accession: next_accession, study_id: self.id)
+    self.update(accession: next_accession)
   end
 
   # set access for the readonly service account if a study is public
