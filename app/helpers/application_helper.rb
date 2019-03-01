@@ -43,7 +43,7 @@ module ApplicationHelper
 		breadcrumbs = []
 		if controller_name == 'site'
 			if @study
-				breadcrumbs << {title: "Study Overview", link: view_study_path(study_name: @study.url_safe_name)}
+				breadcrumbs << {title: "Study Overview", link: view_study_path(accession: @study.accession, study_name: @study.url_safe_name)}
 			end
 			case action_name
 				when 'view_gene_expression'
@@ -99,7 +99,7 @@ module ApplicationHelper
 	def load_gene_nav(genes)
 		nav = [['All queried genes', '']]
 		genes.each do |gene|
-			nav << [gene['gene'], view_gene_expression_path(study_name: params[:study_name], gene: gene['gene'])]
+			nav << [gene['gene'], view_gene_expression_path(accession: params[:accession], study_name: params[:study_name], gene: gene['gene'])]
 		end
 		nav
 	end
@@ -271,21 +271,21 @@ module ApplicationHelper
 		actions = []
 		# submission is still queued or running
 		if %w(Queued Submitted Running).include?(submission['status'])
-			actions << link_to("<i class='fas fa-fw fa-times'></i> Abort".html_safe, '#', class: 'btn btn-xs btn-block btn-danger abort-submission', title: 'Stop execution of this workflow', data: {toggle: 'tooltip', url: abort_submission_workflow_path(study_name: study.url_safe_name, submission_id: submission['submissionId']), id: submission['submissionId']})
+			actions << link_to("<i class='fas fa-fw fa-times'></i> Abort".html_safe, '#', class: 'btn btn-xs btn-block btn-danger abort-submission', title: 'Stop execution of this workflow', data: {toggle: 'tooltip', url: abort_submission_workflow_path(accession: study.accession, study_name: study.url_safe_name, submission_id: submission['submissionId']), id: submission['submissionId']})
 		end
 		# submission has completed successfully
 		if submission['status'] == 'Done' && submission['workflowStatuses'].keys.include?('Succeeded')
 			# actions << link_to("<i class='fas fa-files-o'></i> Download".html_safe, '#', class: 'btn btn-xs btn-block btn-primary get-submission-outputs', title: 'Download outputs from this run', data: {toggle: 'tooltip', url: get_submission_outputs_path(study_name: study.url_safe_name, submission_id: submission['submissionId']), id: submission['submissionId']})
-			actions << link_to("<i class='fas fa-fw fa-code'></i> View Run Info".html_safe, 'javascript:;', class: 'btn btn-xs btn-block btn-info view-submission-metadata', title: 'View HCA-formatted analysis metadata', data: {toggle: 'tooltip', id: submission['submissionId'], url: get_submission_metadata_path(study_name: @study.url_safe_name, submission_id: submission['submissionId'])})
+			actions << link_to("<i class='fas fa-fw fa-code'></i> View Run Info".html_safe, 'javascript:;', class: 'btn btn-xs btn-block btn-info view-submission-metadata', title: 'View HCA-formatted analysis metadata', data: {toggle: 'tooltip', id: submission['submissionId'], url: get_submission_metadata_path(accession: study.accession, study_name: @study.url_safe_name, submission_id: submission['submissionId'])})
 			actions << link_to("<i class='fas fa-fw fa-sync-alt'></i> Sync".html_safe, sync_submission_outputs_study_path(id: @study.id, submission_id: submission['submissionId'], configuration_namespace: submission['methodConfigurationNamespace'], configuration_name: submission['methodConfigurationName']), class: 'btn btn-xs btn-block btn-warning sync-submission-outputs', title: 'Sync outputs from this run back to study', data: {toggle: 'tooltip', id: submission['submissionId']})
 		end
 		# submission has failed
 		if %w(Done Aborted).include?(submission['status']) && submission['workflowStatuses'].keys.include?('Failed')
-			actions << link_to("<i class='fas fa-fw fa-exclamation-triangle'></i> Show Errors".html_safe, 'javascript:;', class: 'btn btn-xs btn-block btn-danger get-submission-errors', title: 'View errors for this run', data: {toggle: 'tooltip', url: get_submission_workflow_path(study_name: study.url_safe_name, submission_id: submission['submissionId']), id: submission['submissionId']})
+			actions << link_to("<i class='fas fa-fw fa-exclamation-triangle'></i> Show Errors".html_safe, 'javascript:;', class: 'btn btn-xs btn-block btn-danger get-submission-errors', title: 'View errors for this run', data: {toggle: 'tooltip', url: get_submission_workflow_path(accession: study.accession, study_name: study.url_safe_name, submission_id: submission['submissionId']), id: submission['submissionId']})
 		end
 		# delete action to always load when completed
 		if %w(Done Aborted).include?(submission['status'])
-			actions << link_to("<i class='fas fa-fw fa-trash'></i> Delete Submission".html_safe, 'javascript:;', class: 'btn btn-xs btn-block btn-danger delete-submission-files', title: 'Remove submission from list and delete all files from submission directory', data: {toggle: 'tooltip', url: delete_submission_files_path(study_name: study.url_safe_name, submission_id: submission['submissionId']), id: submission['submissionId']})
+			actions << link_to("<i class='fas fa-fw fa-trash'></i> Delete Submission".html_safe, 'javascript:;', class: 'btn btn-xs btn-block btn-danger delete-submission-files', title: 'Remove submission from list and delete all files from submission directory', data: {toggle: 'tooltip', url: delete_submission_files_path(accession: study.accession, study_name: study.url_safe_name, submission_id: submission['submissionId']), id: submission['submissionId']})
 		end
 		actions.join(" ").html_safe
 	end

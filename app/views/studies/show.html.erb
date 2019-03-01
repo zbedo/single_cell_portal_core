@@ -29,7 +29,7 @@
               <tbody>
                 <tr>
                   <td>Study URL</td>
-                  <td><%= view_study_url(@study.url_safe_name) %></td>
+                  <td><%= view_study_url(accession: @study.accession, study_name: @study.url_safe_name) %></td>
                   <td><%= scp_link_to "<span class='fas fa-eye'></span> View Study".html_safe, view_study_path(@study.url_safe_name), class: 'btn btn-primary', id: 'study-link' %></td>
                 </tr>
                 <tr>

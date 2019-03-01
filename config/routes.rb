@@ -136,8 +136,8 @@ Rails.application.routes.draw do
     get 'publish_to_study/:id', to: 'user_annotations#publish_to_study', as: :publish_to_study
 
     # public/private file download links (redirect to signed_urls from Google)
-    get 'data/public/:study_name', to: 'site#download_file', as: :download_file
-    get 'data/private/:study_name', to: 'studies#download_private_file', as: :download_private_file
+    get 'data/public/:accession/:study_name', to: 'site#download_file', as: :download_file
+    get 'data/private/:accession/:study_name', to: 'studies#download_private_file', as: :download_private_file
 
     post 'totat', to: 'site#create_totat', as: :create_totat
     get 'bulk_data/:study_name/:download_object/:totat', to: 'site#download_bulk_files', as: :download_bulk_files,
@@ -158,52 +158,53 @@ Rails.application.routes.draw do
     post 'profile/:id/firecloud_profile', to: 'profiles#update_firecloud_profile', as: :update_user_firecloud_profile
 
     # data viewing actions
-    get 'study/:study_name', to: 'site#study', as: :view_study
-    get 'study/:study_name/edit_study_description', to: 'site#edit_study_description', as: :edit_study_description
-    match 'study/:study_name/update_settings', to: 'site#update_study_settings', via: [:post, :patch], as: :update_study_settings
-    get 'study/:study_name/render_cluster', to: 'site#render_cluster', as: :render_cluster
-    get 'study/:study_name/get_new_annotations', to: 'site#get_new_annotations', as: :get_new_annotations
-    post 'study/:study_name/search', to: 'site#search_genes', as: :search_genes
-    get 'study/:study_name/gene_expression/:gene/', to: 'site#view_gene_expression', as: :view_gene_expression,
+    get 'study/:identifier', to: 'site#legacy_study', as: :legacy_study
+    get 'study/:accession/:study_name', to: 'site#study', as: :view_study
+    get 'study/:accession/:study_name/edit_study_description', to: 'site#edit_study_description', as: :edit_study_description
+    match 'study/:accession/:study_name/update_settings', to: 'site#update_study_settings', via: [:post, :patch], as: :update_study_settings
+    get 'study/:accession/:study_name/render_cluster', to: 'site#render_cluster', as: :render_cluster
+    get 'study/:accession/:study_name/get_new_annotations', to: 'site#get_new_annotations', as: :get_new_annotations
+    post 'study/:accession/:study_name/search', to: 'site#search_genes', as: :search_genes
+    get 'study/:accession/:study_name/gene_expression/:gene/', to: 'site#view_gene_expression', as: :view_gene_expression,
         constraints: {gene: /.*/}
-    get 'study/:study_name/render_gene_expression_plots/:gene/', to: 'site#render_gene_expression_plots',
+    get 'study/:accession/:study_name/render_gene_expression_plots/:gene/', to: 'site#render_gene_expression_plots',
         as: :render_gene_expression_plots, constraints: {gene: /.*/}
-    get 'study/:study_name/render_global_gene_expression_plots/:gene/', to: 'site#render_global_gene_expression_plots',
+    get 'study/:accession/:study_name/render_global_gene_expression_plots/:gene/', to: 'site#render_global_gene_expression_plots',
         as: :render_global_gene_expression_plots, constraints: {gene: /.*/}
-    get 'study/:study_name/gene_expression', to: 'site#view_gene_expression_heatmap', as: :view_gene_expression_heatmap
-    get 'study/:study_name/gene_set_expression', to: 'site#view_gene_set_expression', as: :view_gene_set_expression
-    get 'study/:study_name/render_gene_set_expression_plots', to: 'site#render_gene_set_expression_plots',
+    get 'study/:accession/:study_name/gene_expression', to: 'site#view_gene_expression_heatmap', as: :view_gene_expression_heatmap
+    get 'study/:accession/:study_name/gene_set_expression', to: 'site#view_gene_set_expression', as: :view_gene_set_expression
+    get 'study/:accession/:study_name/render_gene_set_expression_plots', to: 'site#render_gene_set_expression_plots',
         as: :render_gene_set_expression_plots
-    get 'study/:study_name/expression_query', to: 'site#expression_query', as: :expression_query
-    get 'study/:study_name/annotation_query', to: 'site#annotation_query', as: :annotation_query
-    get 'study/:study_name/annotation_values', to: 'site#annotation_values', as: :annotation_values
-    post 'study/:study_name/precomputed_gene_expression', to: 'site#search_precomputed_results', as: :search_precomputed_results
-    get 'study/:study_name/precomputed_gene_expression', to: 'site#view_precomputed_gene_expression_heatmap',
+    get 'study/:accession/:study_name/expression_query', to: 'site#expression_query', as: :expression_query
+    get 'study/:accession/:study_name/annotation_query', to: 'site#annotation_query', as: :annotation_query
+    get 'study/:accession/:study_name/annotation_values', to: 'site#annotation_values', as: :annotation_values
+    post 'study/:accession/:study_name/precomputed_gene_expression', to: 'site#search_precomputed_results', as: :search_precomputed_results
+    get 'study/:accession/:study_name/precomputed_gene_expression', to: 'site#view_precomputed_gene_expression_heatmap',
         as: :view_precomputed_gene_expression_heatmap
-    get 'study/:study_name/precomputed_results', to: 'site#precomputed_results', as: :precomputed_results
+    get 'study/:accession/:study_name/precomputed_results', to: 'site#precomputed_results', as: :precomputed_results
 
     # user annotation actions
-    post 'study/:study_name/create_user_annotations', to: 'site#create_user_annotations', as: :create_user_annotations
-    get 'study/:study_name/show_user_annotations_form', to: 'site#show_user_annotations_form', as: :show_user_annotations_form
+    post 'study/:accession/:study_name/create_user_annotations', to: 'site#create_user_annotations', as: :create_user_annotations
+    get 'study/:accession/:study_name/show_user_annotations_form', to: 'site#show_user_annotations_form', as: :show_user_annotations_form
 
     # workflow actions
-    get 'study/:study_name/get_fastq_files', to: 'site#get_fastq_files', as: :get_fastq_files
-    get 'study/:study_name/workspace_samples', to: 'site#get_workspace_samples', as: :get_workspace_samples
-    get 'study/:study_name/submissions', to: 'site#get_workspace_submissions', as: :get_workspace_submissions
-    post 'study/:study_name/submissions', to: 'site#create_workspace_submission', as: :create_workspace_submission
-    get 'study/:study_name/submissions/:submission_id', to: 'site#get_submission_workflow', as: :get_submission_workflow
-    get 'study/:study_name/submissions/:submission_id/metadata', to: 'site#get_submission_metadata',
+    get 'study/:accession/:study_name/get_fastq_files', to: 'site#get_fastq_files', as: :get_fastq_files
+    get 'study/:accession/:study_name/workspace_samples', to: 'site#get_workspace_samples', as: :get_workspace_samples
+    get 'study/:accession/:study_name/submissions', to: 'site#get_workspace_submissions', as: :get_workspace_submissions
+    post 'study/:accession/:study_name/submissions', to: 'site#create_workspace_submission', as: :create_workspace_submission
+    get 'study/:accession/:study_name/submissions/:submission_id', to: 'site#get_submission_workflow', as: :get_submission_workflow
+    get 'study/:accession/:study_name/submissions/:submission_id/metadata', to: 'site#get_submission_metadata',
         as: :get_submission_metadata
-    get 'study/:study_name/submissions/:submission_id/metadata_export', to: 'site#export_submission_metadata',
+    get 'study/:accession/:study_name/submissions/:submission_id/metadata_export', to: 'site#export_submission_metadata',
         as: :export_submission_metadata
-    delete 'study/:study_name/submissions/:submission_id', to: 'site#abort_submission_workflow',
+    delete 'study/:accession/:study_name/submissions/:submission_id', to: 'site#abort_submission_workflow',
            as: :abort_submission_workflow
-    delete 'study/:study_name/submissions/:submission_id/outputs', to: 'site#delete_submission_files',
+    delete 'study/:accession/:study_name/submissions/:submission_id/outputs', to: 'site#delete_submission_files',
            as: :delete_submission_files
-    get 'study/:study_name/submissions/:submission_id/outputs', to: 'site#get_submission_outputs', as: :get_submission_outputs
-    get 'study/:study_name/submissions/:submission_id/errors', to: 'site#get_submission_errors', as: :get_submission_errors
-    post 'study/:study_name/workspace_samples', to: 'site#update_workspace_samples', as: :update_workspace_samples
-    post 'study/:study_name/delete_workspace_samples', to: 'site#delete_workspace_samples', as: :delete_workspace_samples
+    get 'study/:accession/:study_name/submissions/:submission_id/outputs', to: 'site#get_submission_outputs', as: :get_submission_outputs
+    get 'study/:accession/:study_name/submissions/:submission_id/errors', to: 'site#get_submission_errors', as: :get_submission_errors
+    post 'study/:accession/:study_name/workspace_samples', to: 'site#update_workspace_samples', as: :update_workspace_samples
+    post 'study/:accession/:study_name/delete_workspace_samples', to: 'site#delete_workspace_samples', as: :delete_workspace_samples
     get 'view_workflow_wdl', to: 'site#view_workflow_wdl', as: :view_workflow_wdl
     get 'workflow_options', to: 'site#get_workflow_options', as: :get_workflow_options
     get 'analysis_configuration', to: 'site#get_analysis_configuration', as: :get_analysis_configuration

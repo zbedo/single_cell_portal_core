@@ -14,7 +14,7 @@ class SiteController < ApplicationController
 
   respond_to :html, :js, :json
 
-  before_action :set_study, except: [:index, :search, :get_viewable_studies, :search_all_genes, :privacy_policy, :terms_of_service,
+  before_action :set_study, except: [:index, :search, :legacy_study, :get_viewable_studies, :search_all_genes, :privacy_policy, :terms_of_service,
                                      :view_workflow_wdl, :create_totat, :log_action, :get_taxon, :get_taxon_assemblies]
   before_action :set_cluster_group, only: [:study, :render_cluster, :render_gene_expression_plots, :render_global_gene_expression_plots,
                                            :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression,
@@ -27,7 +27,7 @@ class SiteController < ApplicationController
   before_action :load_precomputed_options, only: [:study, :update_study_settings, :render_cluster, :render_gene_expression_plots,
                                                   :render_gene_set_expression_plots, :view_gene_expression, :view_gene_set_expression,
                                                   :view_gene_expression_heatmap, :view_precomputed_gene_expression_heatmap]
-  before_action :check_view_permissions, except: [:index, :get_viewable_studies, :search_all_genes, :render_global_gene_expression_plots, :privacy_policy,
+  before_action :check_view_permissions, except: [:index, :legacy_study, :get_viewable_studies, :search_all_genes, :render_global_gene_expression_plots, :privacy_policy,
                                                   :terms_of_service, :search, :precomputed_results, :expression_query, :annotation_query, :view_workflow_wdl,
                                                   :log_action, :get_workspace_samples, :update_workspace_samples, :create_totat,
                                                   :get_workflow_options, :get_taxon, :get_taxon_assemblies]
@@ -101,6 +101,19 @@ class SiteController < ApplicationController
     end
 
     render 'index'
+  end
+
+  # legacy method to load a study by url_safe_name, or simply by accession
+  def legacy_study
+    study = Study.any_of({url_safe_name: params[:identifier]},{accession: params[:identifier]}).first
+    if study.present?
+      redirect_to merge_default_redirect_params(view_study_path(accession: study.accession,
+                                                                study_name: study.url_safe_name,
+                                                                scpbr: params[:scpbr])) and return
+    else
+      redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]),
+                  alert: 'Study not found.  Please check the name and try again.' and return
+    end
   end
 
   def privacy_policy
@@ -241,9 +254,7 @@ class SiteController < ApplicationController
             other_clusters.map {|cluster_group| cluster_group.study_file.invalidate_cache_by_file_type}
             @study.expression_matrix_files.map {|matrix_file| matrix_file.invalidate_cache_by_file_type}
           elsif @study.previous_changes.keys.include?('name')
-            # if user renames a study, invalidate all caches
-            old_name = @study.previous_changes['url_safe_name'].first
-            CacheRemovalJob.new(old_name).delay.perform
+            CacheRemovalJob.new(@study.accession).delay.perform
           end
           set_study_default_options
           if @study.initialized?
@@ -685,13 +696,13 @@ class SiteController < ApplicationController
   def download_file
     # make sure user is signed in
     if !user_signed_in?
-      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
+      redirect_to merge_default_redirect_params(view_study_path(accession: @study.accession, study_name: @study.url_safe_name), scpbr: params[:scpbr]),
                   alert: 'You must be signed in to download data.' and return
     elsif @study.embargoed?(current_user)
-      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
+      redirect_to merge_default_redirect_params(view_study_path(accession: @study.accession, study_name: @study.url_safe_name), scpbr: params[:scpbr]),
                   alert: "You may not download any data from this study until #{@study.embargo.to_s(:long)}." and return
     elsif !@study.can_download?(current_user)
-      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
+      redirect_to merge_default_redirect_params(view_study_path(accession: @study.accession, study_name: @study.url_safe_name), scpbr: params[:scpbr]),
                   alert: 'You do not have permission to perform that action.' and return
     end
 
@@ -713,14 +724,14 @@ class SiteController < ApplicationController
           @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, 0, @study.firecloud_project, @study.firecloud_workspace, params[:filename], expires: 15)
           current_user.update(daily_download_quota: user_quota)
         else
-          redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]), alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
+          redirect_to merge_default_redirect_params(view_study_path(accession: @study.accession, study_name: @study.url_safe_name), scpbr: params[:scpbr]), alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
         end
         # redirect directly to file to trigger download
         # validate that the signed_url is in fact the correct URL - it must be a GCS link
         if is_valid_signed_url?(@signed_url)
           redirect_to @signed_url
         else
-          redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
+          redirect_to merge_default_redirect_params(view_study_path(accession: @study.accession, study_name: @study.url_safe_name), scpbr: params[:scpbr]),
                       alert: 'We are unable to process your download.  Please try again later.' and return
         end
       else
@@ -732,7 +743,7 @@ class SiteController < ApplicationController
       error_context = ErrorTracker.format_extra_context(@study, {params: params})
       ErrorTracker.report_exception(e, current_user, error_context)
       logger.error "Error generating signed url for #{params[:filename]}; #{e.message}"
-      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
+      redirect_to merge_default_redirect_params(accession: @study.accession, study_name: view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
                   alert: "We were unable to download the file #{params[:filename]} do to an error: #{view_context.simple_format(e.message)}" and return
     end
   end
@@ -1318,7 +1329,7 @@ class SiteController < ApplicationController
   ###
 
   def set_study
-    @study = Study.find_by(url_safe_name: params[:study_name])
+    @study = Study.find_by(accession: params[:accession], url_safe_name: params[:study_name])
     # redirect if study is not found
     if @study.nil?
       redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]), alert: 'Study not found.  Please check the name and try again.' and return
@@ -2188,7 +2199,7 @@ class SiteController < ApplicationController
       unless params[:subsample].blank?
         params_key += "_#{params[:subsample]}"
       end
-      render_cluster_url(study_name: params[:study_name]) + params_key
+      render_cluster_url(accession: params[:accession], study_name: params[:study_name]) + params_key
     when 'render_gene_expression_plots'
       unless params[:subsample].blank?
         params_key += "_#{params[:subsample]}"
@@ -2197,7 +2208,8 @@ class SiteController < ApplicationController
         params_key += "_#{params[:boxpoints]}"
       end
       params_key += "_#{params[:plot_type]}"
-      render_gene_expression_plots_url(study_name: params[:study_name], gene: params[:gene]) + params_key
+      render_gene_expression_plots_url(accession: params[:accession], study_name: params[:study_name],
+                                       gene: params[:gene]) + params_key
     when 'render_global_gene_expression_plots'
       unless params[:subsample].blank?
         params_key += "_#{params[:subsample]}"
@@ -2206,7 +2218,8 @@ class SiteController < ApplicationController
         params_key += "_#{params[:identifier]}"
       end
       params_key += "_#{params[:plot_type]}"
-      render_global_gene_expression_plots_url(study_name: params[:study_name], gene: params[:gene]) + params_key
+      render_global_gene_expression_plots_url(accession: params[:accession], study_name: params[:study_name],
+                                              gene: params[:gene]) + params_key
     when 'render_gene_set_expression_plots'
       unless params[:subsample].blank?
         params_key += "_#{params[:subsample]}"
@@ -2225,7 +2238,7 @@ class SiteController < ApplicationController
       unless params[:boxpoints].blank?
         params_key += "_#{params[:boxpoints]}"
       end
-      render_gene_set_expression_plots_url(study_name: params[:study_name]) + params_key
+      render_gene_set_expression_plots_url(accession: params[:accession], study_name: params[:study_name]) + params_key
     when 'expression_query'
       params_key += "_#{params[:row_centered]}"
       gene_list = params[:search][:genes]
@@ -2235,7 +2248,8 @@ class SiteController < ApplicationController
     when 'annotation_query'
       annotation_query_url(study_name: params[:study_name]) + params_key
     when 'precomputed_results'
-      precomputed_results_url(study_name: params[:study_name], precomputed: params[:precomputed].split.join('-'))
+      precomputed_results_url(accession: params[:accession], study_name: params[:study_name],
+                              precomputed: params[:precomputed].split.join('-'))
     end
   end
 end
