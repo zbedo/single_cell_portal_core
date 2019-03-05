@@ -275,8 +275,7 @@ module ApplicationHelper
 		end
 		# submission has completed successfully
 		if submission['status'] == 'Done' && submission['workflowStatuses'].keys.include?('Succeeded')
-			# actions << link_to("<i class='fas fa-files-o'></i> Download".html_safe, '#', class: 'btn btn-xs btn-block btn-primary get-submission-outputs', title: 'Download outputs from this run', data: {toggle: 'tooltip', url: get_submission_outputs_path(study_name: study.url_safe_name, submission_id: submission['submissionId']), id: submission['submissionId']})
-			actions << link_to("<i class='fas fa-fw fa-code'></i> View Run Info".html_safe, 'javascript:;', class: 'btn btn-xs btn-block btn-info view-submission-metadata', title: 'View HCA-formatted analysis metadata', data: {toggle: 'tooltip', id: submission['submissionId'], url: get_submission_metadata_path(accession: study.accession, study_name: @study.url_safe_name, submission_id: submission['submissionId'])})
+			actions << link_to("<i class='fas fa-fw fa-code'></i> View Run Info".html_safe, 'javascript:;', class: 'btn btn-xs btn-block btn-info view-submission-metadata', title: 'View HCA-formatted analysis metadata', data: {toggle: 'tooltip', id: submission['submissionId'], url: get_submission_metadata_path(accession: study.accession, study_name: study.url_safe_name, submission_id: submission['submissionId'])})
 			actions << link_to("<i class='fas fa-fw fa-sync-alt'></i> Sync".html_safe, sync_submission_outputs_study_path(id: @study.id, submission_id: submission['submissionId'], configuration_namespace: submission['methodConfigurationNamespace'], configuration_name: submission['methodConfigurationName']), class: 'btn btn-xs btn-block btn-warning sync-submission-outputs', title: 'Sync outputs from this run back to study', data: {toggle: 'tooltip', id: submission['submissionId']})
 		end
 		# submission has failed

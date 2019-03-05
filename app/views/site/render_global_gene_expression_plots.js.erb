@@ -52,7 +52,7 @@ function renderDistribution<%= @identifier %>() {
     // no need to store spinners in data attribute as entire plot div will be re-rendered
     new Spinner(opts).spin(target);
 
-    var url = '<%= render_global_gene_expression_plots_path(study_name: @study.url_safe_name, gene: params[:gene]) %>?';
+    var url = '<%= render_global_gene_expression_plots_path(accession: @study.accession, study_name: @study.url_safe_name, gene: params[:gene]) %>?';
     var cluster = $('#<%= @target %>-cluster').val();
     var annotation = $('#<%= @target %>-annotation').val();
     var subsample = $('#<%= @target %>-subsample').val();

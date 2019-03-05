@@ -185,7 +185,7 @@
                             var loadedAnnotation = $('#annotation').val();
                             var loadedSubsample = $('#subsample').val();
                             $.ajax({
-                                url: '<%= show_user_annotations_form_path(@study.url_safe_name) %>?cluster=' + loadedCluster + '&annotation=' + loadedAnnotation + '&subsample=' + loadedSubsample,
+                                url: '<%= show_user_annotations_form_path(accession: @study.accession, study_name: @study.url_safe_name) %>?cluster=' + loadedCluster + '&annotation=' + loadedAnnotation + '&subsample=' + loadedSubsample,
                                 dataType: 'script'
                             });
                         } else {

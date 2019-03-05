@@ -86,7 +86,7 @@
         var renderUrlParams = getRenderUrlParams();
         // get annotation values to set color values in Morpheus and draw heatmap in callback
         $.ajax({
-            url: '<%= annotation_values_path(study_name: @study.url_safe_name) %>?' + renderUrlParams,
+            url: '<%= annotation_values_path(accession: @study.accession, study_name: @study.url_safe_name) %>?' + renderUrlParams,
             dataType: 'JSON',
             success: function(annotations) {
                 renderMorpheus(dataPath, newAnnotPath, annotName, annotType, '#heatmap-plot', annotations, fit, height, colorScalingMode);

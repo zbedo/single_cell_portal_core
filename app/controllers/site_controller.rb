@@ -146,7 +146,7 @@ class SiteController < ApplicationController
         redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
                     alert: "No matches found for: #{@terms.first}." and return
       else
-        redirect_to merge_default_redirect_params(view_gene_expression_path(study_name: params[:study_name], gene: @gene['name'],
+        redirect_to merge_default_redirect_params(view_gene_expression_path(accession: @study.accession, study_name: @study.url_safe_name, gene: @gene['name'],
                                                                             cluster: cluster, annotation: annotation, consensus: consensus,
                                                                             subsample: subsample, plot_type: plot_type,
                                                                             boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering,
@@ -157,7 +157,8 @@ class SiteController < ApplicationController
 
     # else, determine which view to load (heatmaps vs. violin/scatter)
     if !consensus.blank?
-      redirect_to merge_default_redirect_params(view_gene_set_expression_path(study_name: params[:study_name], search: {genes: @terms.join(' ')},
+      redirect_to merge_default_redirect_params(view_gene_set_expression_path(accession: @study.accession, study_name: @study.url_safe_name,
+                                                                              search: {genes: @terms.join(' ')},
                                                                               cluster: cluster, annotation: annotation,
                                                                               consensus: consensus, subsample: subsample,
                                                                               plot_type: plot_type,  boxpoints: boxpoints,
@@ -165,7 +166,8 @@ class SiteController < ApplicationController
                                                                               heatmap_size: heatmap_size, colorscale: colorscale),
                                                 scpbr: params[:scpbr])
     else
-      redirect_to merge_default_redirect_params(view_gene_expression_heatmap_path(search: {genes: @terms.join(' ')}, cluster: cluster,
+      redirect_to merge_default_redirect_params(view_gene_expression_heatmap_path(accession: @study.accession, study_name: @study.url_safe_name,
+                                                                                  search: {genes: @terms.join(' ')}, cluster: cluster,
                                                                                   annotation: annotation, plot_type: plot_type,
                                                                                   boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering,
                                                                                   heatmap_size: heatmap_size, colorscale: colorscale),
@@ -479,7 +481,7 @@ class SiteController < ApplicationController
     end
     # make sure we found genes, otherwise redirect back to base view
     if @genes.empty?
-      redirect_to merge_default_redirect_params(view_study_path, scpbr: params[:scpbr]), alert: "None of the requested genes were found: #{terms.join(', ')}"
+      redirect_to merge_default_redirect_params(view_study_path(accession: @study.accession, study_name: @study.url_safe_name), scpbr: params[:scpbr]), alert: "None of the requested genes were found: #{terms.join(', ')}"
     else
       render 'view_gene_expression'
     end
@@ -561,7 +563,7 @@ class SiteController < ApplicationController
     end
     # make sure we found genes, otherwise redirect back to base view
     if @genes.empty?
-      redirect_to merge_default_redirect_params(view_study_path, scpbr: params[:scpbr]), alert: "None of the requested genes were found: #{terms.join(', ')}"
+      redirect_to merge_default_redirect_params(view_study_path(accession: @study.accession, study_name: @study.url_safe_name), scpbr: params[:scpbr]), alert: "None of the requested genes were found: #{terms.join(', ')}"
     end
   end
 
@@ -674,7 +676,8 @@ class SiteController < ApplicationController
 
   # redirect to show precomputed marker gene results
   def search_precomputed_results
-    redirect_to merge_default_redirect_params(view_precomputed_gene_expression_heatmap_path(study_name: params[:study_name],
+    redirect_to merge_default_redirect_params(view_precomputed_gene_expression_heatmap_path(accession: params[:accession],
+                                                                                            study_name: params[:study_name],
                                                                                             precomputed: params[:expression]),
                                               scpbr: params[:scpbr])
   end
@@ -737,7 +740,7 @@ class SiteController < ApplicationController
       else
         # send notification to the study owner that file is missing (if notifications turned on)
         SingleCellMailer.user_download_fail_notification(@study, params[:filename]).deliver_now
-        redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]), alert: 'The file you requested is currently not available.  Please contact the study owner if you require access to this file.' and return
+        redirect_to merge_default_redirect_params(view_study_path(accession: @study.accession, study_name: @study.url_safe_name), scpbr: params[:scpbr]), alert: 'The file you requested is currently not available.  Please contact the study owner if you require access to this file.' and return
       end
     rescue RuntimeError => e
       error_context = ErrorTracker.format_extra_context(@study, {params: params})
@@ -2131,23 +2134,6 @@ class SiteController < ApplicationController
 
   # load list of available workflows
   def load_available_workflows
-    # config_options = AdminConfiguration.where(config_type: 'Workflow Name').to_a
-    # allowed_workflows = config_options.map(&:value)
-    # all_workflows = []
-    #
-    # # parellelize gets to speed up performance if there are a lot of workflows
-    # # restrict parallelization to 3 threads to avoid spurious 401 errors
-    # Parallel.map(allowed_workflows, in_threads: 3) do |workflow_opts|
-    #   namespace, name, snapshot = workflow_opts.split('/')
-    #   all_workflows << Study.firecloud_client.get_methods(namespace: namespace, name: name, snapshotId: snapshot)
-    # end
-    #
-    # # flatten list as it will be nested arrays
-    # all_workflows.flatten!
-    #
-    # # assemble readable list for the dropdown menu
-    # list = all_workflows.sort_by {|w| [w['name'], w['snapshotId'].to_i]}.map {|w| ["#{w['name']} (#{w['snapshotId']})#{w['synopsis'].blank? ? nil : " -- #{w['synopsis']}"}", "#{w['namespace']}--#{w['name']}--#{w['snapshotId']}"]}
-    # list
     AnalysisConfiguration.available_analyses
   end
 
@@ -2244,9 +2230,9 @@ class SiteController < ApplicationController
       gene_list = params[:search][:genes]
       gene_key = construct_gene_list_hash(gene_list)
       params_key += "_#{gene_key}"
-      expression_query_url(study_name: params[:study_name]) + params_key
+      expression_query_url(accession: params[:accession], study_name: params[:study_name]) + params_key
     when 'annotation_query'
-      annotation_query_url(study_name: params[:study_name]) + params_key
+      annotation_query_url(accession: params[:accession], study_name: params[:study_name]) + params_key
     when 'precomputed_results'
       precomputed_results_url(accession: params[:accession], study_name: params[:study_name],
                               precomputed: params[:precomputed].split.join('-'))
