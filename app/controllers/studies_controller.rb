@@ -1011,6 +1011,16 @@ class StudiesController < ApplicationController
           @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false})
         when 'Metadata'
           @study.delay.initialize_cell_metadata(@study_file, current_user, {local: false})
+        when 'Ideogram Annotations'
+          file_basename = @study_file.upload_file_name.split('/').last
+          # chomp off filename header and .json at end
+          file_basename.gsub!(/ideogram_exp_means__/, '')
+          file_basename.gsub!(/\.json/, '')
+          cluster_name, annotation_name, annotation_type, annotation_scope = file_basename.split('--')
+          annotation_identifier = [annotation_name, annotation_type, annotation_scope].join('--')
+          @study_file.options[:cluster_name] = cluster_name
+          @study_file.options[:annotation_name] = annotation_identifier
+          @study_file.save
         when 'Analysis Output'
           case @study_file.options[:analysis_name]
           when 'infercnv'

@@ -29,7 +29,7 @@ class AnalysisParameter
   DATA_TYPES = %w(inputs outputs)
   PRIMITIVE_PARAMETER_TYPES = %w(String Int Float File Boolean String? Int? Float? File? Boolean?)
   COMPOUND_PARAMETER_TYPES = %w(Array Map Object)
-  ASSOCIATED_MODELS = %w(StudyFile Taxon GenomeAssembly GenomeAnnotation ClusterGroup CellMetadatum)
+  ASSOCIATED_MODELS = %w(Study StudyFile Taxon GenomeAssembly GenomeAnnotation ClusterGroup CellMetadatum)
   ASSOCIATED_MODEL_ATTR_NAMES = [:ASSOCIATED_MODEL_METHOD, :ASSOCIATED_MODEL_DISPLAY_METHOD, :OUTPUT_ASSOCIATION_ATTRIBUTE]
 
   validates_presence_of :data_type, :call_name, :parameter_type, :parameter_name

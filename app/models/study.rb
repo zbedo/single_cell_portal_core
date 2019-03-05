@@ -23,6 +23,11 @@ class Study
   WORKSPACE_NAME_PREFIX = Rails.env != 'production' ? Rails.env + '-' : ''
   REQUIRED_ATTRIBUTES = %w(name)
 
+  # Constants for scoping values for AnalysisParameter inputs/outputs
+  ASSOCIATED_MODEL_METHOD = %w(bucket_id firecloud_project firecloud_workspace url_safe_name workspace_url google_bucket_url gs_url)
+  ASSOCIATED_MODEL_DISPLAY_METHOD = %w(name url_safe_name bucket_id firecloud_project firecloud_workspace workspace_url google_bucket_url gs_url)
+  OUTPUT_ASSOCIATION_ATTRIBUTE = %w(id)
+
   # instantiate one FireCloudClient to avoid creating too many tokens
   @@firecloud_client = FireCloudClient.new
   @@read_only_client = ENV['READ_ONLY_SERVICE_ACCOUNT_KEY'].present? ? FireCloudClient.new(nil, FireCloudClient::PORTAL_NAMESPACE, File.absolute_path(ENV['READ_ONLY_SERVICE_ACCOUNT_KEY'])) : nil
@@ -647,9 +652,14 @@ class Study
     "https://portal.firecloud.org/#workspaces/#{self.firecloud_project}/#{self.firecloud_workspace}"
   end
 
-  # helper to generate a URL to a study's GCP bucket
+  # helper to generate an HTTPS URL to a study's GCP bucket
   def google_bucket_url
     "https://accounts.google.com/AccountChooser?continue=https://console.cloud.google.com/storage/browser/#{self.bucket_id}"
+  end
+
+  # helper to generate a GS URL to a study's GCP bucket
+  def gs_url
+    "gs://#{self.bucket_id}"
   end
 
   # helper to generate a URL to a specific FireCloud submission inside a study's GCP bucket
