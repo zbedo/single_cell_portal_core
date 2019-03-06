@@ -764,7 +764,8 @@ class UiTestSuite < Test::Unit::TestCase
     assert embargo_links.size == 1, "did not find correct number of embargo links, expected 1 but found #{embargo_links.size}"
 
     # make sure embargo redirect is in place
-    data_url = @base_url + "/data/public/embargo-study-#{$random_seed}?filename=expression_matrix_example.txt"
+    study_accession = extract_accession_from_url(@driver.current_url)
+    data_url = @base_url + "/data/public/#{study_accession}/embargo-study-#{$random_seed}?filename=expression_matrix_example.txt"
     @driver.get data_url
     wait_for_modal_open('message_modal')
     alert_text = @driver.find_element(:id, 'alert-content').text
@@ -1090,7 +1091,9 @@ class UiTestSuite < Test::Unit::TestCase
     # check public visibility when logged in
     path = @base_url + "/study/gzip-parse-#{$random_seed}"
     @driver.get path
-    assert @driver.current_url == path, 'did not load public study without share'
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/gzip-parse-#{$random_seed}"
+    assert @driver.current_url == loaded_path, 'did not load public study without share'
 
     # edit study
     edit_path = @base_url + '/studies/' + private_study_id + '/edit'
@@ -1102,7 +1105,9 @@ class UiTestSuite < Test::Unit::TestCase
     # test share
     share_view_path = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get share_view_path
-    assert @driver.current_url == share_view_path, 'did not load share study view'
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_view_share_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    assert @driver.current_url == loaded_view_share_path, 'did not load share study view'
     share_edit_path = @base_url + '/studies/' + share_study_id + '/edit'
     @driver.get share_edit_path
     assert @driver.current_url == share_edit_path, 'did not load share study edit'
@@ -1179,7 +1184,8 @@ class UiTestSuite < Test::Unit::TestCase
     download_tab = @driver.find_element(:id, 'study-download-nav')
     assert download_tab['class'].include?('disabled'), "Download tab was not properly disabled: #{download_tab['class']}"
     # try bypassing download with a direct call to file we uploaded earlier
-    direct_link = @base_url + "/data/public/private-study-#{$random_seed}?filename=expression_matrix_example.txt"
+    study_accession = extract_accession_from_url(@driver.current_url)
+    direct_link = @base_url + "/data/public/#{study_accession}/private-study-#{$random_seed}?filename=expression_matrix_example.txt"
     @driver.get direct_link
     alert_content = @driver.find_element(:id, 'alert-content')
     assert alert_content.text == 'You do not have permission to perform that action.', 'download was not successfully blocked'
@@ -1365,7 +1371,9 @@ class UiTestSuite < Test::Unit::TestCase
     # make sure parsing succeeded
     sync_study_path = @base_url + "/study/sync-test-#{$random_seed}"
     @driver.get(sync_study_path)
-    wait_until_page_loads(sync_study_path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_sync_study_path = @base_url + "/study/#{study_accession}/sync-test-#{$random_seed}"
+    wait_until_page_loads(loaded_sync_study_path)
     open_ui_tab('study-visualize')
 
     assert element_present?(:class, 'study-lead'), 'could not find study title'
@@ -1968,7 +1976,9 @@ class UiTestSuite < Test::Unit::TestCase
     # now test downloads
     study_path = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get(study_path)
-    wait_until_page_loads(study_path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_study_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    wait_until_page_loads(loaded_study_path)
 
     open_ui_tab('study-download')
 
@@ -1976,7 +1986,8 @@ class UiTestSuite < Test::Unit::TestCase
     assert files.size >= 1, 'downloads not properly disabled (did not find any disabled-download links)'
 
     # try bypassing download with a direct call to file we uploaded earlier
-    direct_link = @base_url + "/data/public/test-study-#{$random_seed}?filename=expression_matrix_example.txt"
+
+    direct_link = @base_url + "/data/public/#{study_accession}/test-study-#{$random_seed}?filename=expression_matrix_example.txt"
     @driver.get direct_link
     alert_content = @driver.find_element(:id, 'alert-content')
     assert alert_content.text == 'You have exceeded your current daily download quota. You must wait until tomorrow to download this file.', 'download was not successfully blocked'
@@ -2272,7 +2283,9 @@ class UiTestSuite < Test::Unit::TestCase
 
     path = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get(path)
-    wait_until_page_loads(path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    wait_until_page_loads(loaded_path)
     open_ui_tab('study-visualize')
 
     assert element_present?(:class, 'study-lead'), 'could not find study title'
@@ -2318,7 +2331,9 @@ class UiTestSuite < Test::Unit::TestCase
     login($test_email, $test_email_password)
     private_study_path = @base_url + "/study/private-study-#{$random_seed}"
     @driver.get private_study_path
-    wait_until_page_loads(private_study_path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_private_study_path = @base_url + "/study/#{study_accession}/private-study-#{$random_seed}"
+    wait_until_page_loads(loaded_private_study_path)
     open_ui_tab('study-visualize')
 
     @wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
@@ -2335,8 +2350,11 @@ class UiTestSuite < Test::Unit::TestCase
     login($test_email, $test_email_password)
 
     path = @base_url + "/study/test-study-#{$random_seed}"
+    
     @driver.get(path)
-    wait_until_page_loads(path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    wait_until_page_loads(loaded_path)
     open_ui_tab('study-download')
 
     files = @driver.find_elements(:class, 'dl-link')
@@ -2350,7 +2368,9 @@ class UiTestSuite < Test::Unit::TestCase
     # now download a file from a private study
     private_path = @base_url + "/study/private-study-#{$random_seed}"
     @driver.get(private_path)
-    wait_until_page_loads(private_path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_private_path = @base_url + "/study/#{study_accession}/private-study-#{$random_seed}"
+    wait_until_page_loads(loaded_private_path)
     open_ui_tab('study-download')
 
     private_files = @driver.find_elements(:class, 'dl-link')
@@ -2366,8 +2386,8 @@ class UiTestSuite < Test::Unit::TestCase
     # now login as share user and test downloads
     login_as_other($share_email, $share_email_password)
 
-    @driver.get(path)
-    wait_until_page_loads(path)
+    @driver.get(loaded_path)
+    wait_until_page_loads(loaded_path)
     open_ui_tab('study-download')
 
     files = @driver.find_elements(:class, 'dl-link')
@@ -2385,11 +2405,21 @@ class UiTestSuite < Test::Unit::TestCase
     puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     @driver.get @base_url
-    login($share_email, $share_email_password)
+    login($test_email, $test_email_password)
 
+    # get the accession for the private study
+    private_path = @base_url + "/study/private-study-#{$random_seed}"
+    @driver.get(private_path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_private_path = @base_url + "/study/#{study_accession}/private-study-#{$random_seed}"
+    wait_until_page_loads(loaded_private_path)
+
+    logout_from_portal
+    @driver.get @base_url
+    login_as_other($share_email, $share_email_password)
     # negative test, should not be able to download private files from study without access
-    non_share_public_link = @base_url + "/data/public/private-study-#{$random_seed}?filename=README.txt"
-    non_share_private_link = @base_url + "/data/private/private-study-#{$random_seed}?filename=README.txt"
+    non_share_public_link = @base_url + "/data/public/#{study_accession}/private-study-#{$random_seed}?filename=README.txt"
+    non_share_private_link = @base_url + "/data/private/#{study_accession}/private-study-#{$random_seed}?filename=README.txt"
 
     # try public rout
     @driver.get non_share_public_link
@@ -2415,7 +2445,9 @@ class UiTestSuite < Test::Unit::TestCase
 
     path = @base_url + "/study/sync-test-#{$random_seed}"
     @driver.get(path)
-    wait_until_page_loads(path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/sync-test-#{$random_seed}"
+    wait_until_page_loads(loaded_path)
     open_ui_tab('study-download')
 
     # open download help modal
@@ -2447,7 +2479,9 @@ class UiTestSuite < Test::Unit::TestCase
 
     path = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get(path)
-    wait_until_page_loads(path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    wait_until_page_loads(loaded_path)
     open_ui_tab('study-visualize')
 
     assert element_present?(:class, 'study-lead'), 'could not find study title'
@@ -2475,7 +2509,9 @@ class UiTestSuite < Test::Unit::TestCase
 
     path = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get(path)
-    wait_until_page_loads(path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    wait_until_page_loads(loaded_path)
     open_ui_tab('study-visualize')
 
     assert element_present?(:class, 'study-lead'), 'could not find study title'
@@ -2523,7 +2559,9 @@ class UiTestSuite < Test::Unit::TestCase
 
     path = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get(path)
-    wait_until_page_loads(path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    wait_until_page_loads(loaded_path)
     open_ui_tab('study-visualize')
 
     # perform negative search first to test redirect
@@ -2612,7 +2650,9 @@ class UiTestSuite < Test::Unit::TestCase
     login($test_email, $test_email_password)
     private_study_path = @base_url + "/study/private-study-#{$random_seed}"
     @driver.get private_study_path
-    wait_until_page_loads(private_study_path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_private_study_path = @base_url + "/study/#{study_accession}/private-study-#{$random_seed}"
+    wait_until_page_loads(loaded_private_study_path)
     open_ui_tab('study-visualize')
 
     new_gene = @genes.sample
@@ -2665,7 +2705,9 @@ class UiTestSuite < Test::Unit::TestCase
 
     path = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get(path)
-    wait_until_page_loads(path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    wait_until_page_loads(loaded_path)
     open_ui_tab('study-visualize')
 
     # load random genes to search, take between 2-5, adding in bad gene to test error handling
@@ -2763,7 +2805,9 @@ class UiTestSuite < Test::Unit::TestCase
     login($test_email, $test_email_password)
     private_study_path = @base_url + "/study/private-study-#{$random_seed}"
     @driver.get private_study_path
-    wait_until_page_loads(private_study_path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_private_study_path = @base_url + "/study/#{study_accession}/private-study-#{$random_seed}"
+    wait_until_page_loads(loaded_private_study_path)
     open_ui_tab('study-visualize')
 
     new_genes = @genes.shuffle.take(rand(2..5))
@@ -2833,7 +2877,9 @@ class UiTestSuite < Test::Unit::TestCase
 
     path = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get(path)
-    wait_until_page_loads(path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    wait_until_page_loads(loaded_path)
     open_ui_tab('study-visualize')
 
     # load random genes to search, take between 2-5
@@ -2887,7 +2933,9 @@ class UiTestSuite < Test::Unit::TestCase
     login($test_email, $test_email_password)
     private_study_path = @base_url + "/study/private-study-#{$random_seed}"
     @driver.get private_study_path
-    wait_until_page_loads(private_study_path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_private_study_path = @base_url + "/study/#{study_accession}/private-study-#{$random_seed}"
+    wait_until_page_loads(loaded_private_study_path)
     open_ui_tab('study-visualize')
 
     new_genes = @genes.shuffle.take(rand(2..5))
@@ -2915,7 +2963,9 @@ class UiTestSuite < Test::Unit::TestCase
 
     path = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get(path)
-    wait_until_page_loads(path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    wait_until_page_loads(loaded_path)
     open_ui_tab('study-visualize')
 
     search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
@@ -2935,7 +2985,9 @@ class UiTestSuite < Test::Unit::TestCase
     login($test_email, $test_email_password)
     private_study_path = @base_url + "/study/private-study-#{$random_seed}"
     @driver.get private_study_path
-    wait_until_page_loads(private_study_path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_private_study_path = @base_url + "/study/#{study_accession}/private-study-#{$random_seed}"
+    wait_until_page_loads(loaded_private_study_path)
     open_ui_tab('study-visualize')
 
     search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
@@ -3033,7 +3085,9 @@ class UiTestSuite < Test::Unit::TestCase
 
     path = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get(path)
-    wait_until_page_loads(path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    wait_until_page_loads(loaded_path)
     open_ui_tab('study-visualize')
 
     search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
@@ -3062,7 +3116,9 @@ class UiTestSuite < Test::Unit::TestCase
     login($test_email, $test_email_password)
     private_study_path = @base_url + "/study/private-study-#{$random_seed}"
     @driver.get private_study_path
-    wait_until_page_loads(private_study_path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_private_study_path = @base_url + "/study/#{study_accession}/private-study-#{$random_seed}"
+    wait_until_page_loads(loaded_private_study_path)
     open_ui_tab('study-visualize')
 
     search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
@@ -3096,7 +3152,9 @@ class UiTestSuite < Test::Unit::TestCase
 
     path = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get(path)
-    wait_until_page_loads(path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    wait_until_page_loads(loaded_path)
     open_ui_tab('study-visualize')
 
     search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
@@ -3185,7 +3243,9 @@ class UiTestSuite < Test::Unit::TestCase
     login($test_email, $test_email_password)
     private_study_path = @base_url + "/study/private-study-#{$random_seed}"
     @driver.get private_study_path
-    wait_until_page_loads(private_study_path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_private_study_path = @base_url + "/study/#{study_accession}/private-study-#{$random_seed}"
+    wait_until_page_loads(loaded_private_study_path)
     open_ui_tab('study-visualize')
 
     search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
@@ -3249,7 +3309,9 @@ class UiTestSuite < Test::Unit::TestCase
 
     path = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get(path)
-    wait_until_page_loads(path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    wait_until_page_loads(loaded_path)
     open_ui_tab('study-visualize')
 
     @wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
@@ -3499,7 +3561,9 @@ class UiTestSuite < Test::Unit::TestCase
     # make sure front end reflects change
     study_page = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get study_page
-    wait_until_page_loads(study_page)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    wait_until_page_loads(loaded_path)
     open_ui_tab('study-visualize')
     view_options_panel = @driver.find_element(:id, 'view-option-link')
     view_options_panel.click
@@ -3519,7 +3583,9 @@ class UiTestSuite < Test::Unit::TestCase
 
     study_page = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get study_page
-    wait_until_page_loads(study_page)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    wait_until_page_loads(loaded_path)
 
     # update description first
     edit_btn = @driver.find_element(:id, 'edit-study-description')
@@ -3644,7 +3710,9 @@ class UiTestSuite < Test::Unit::TestCase
     # first confirm that you cannot create an annotation on a 3d study
     test_study_path = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get test_study_path
-    wait_until_page_loads(test_study_path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    wait_until_page_loads(loaded_path)
     open_ui_tab('study-visualize')
     @wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
     search_menu = @driver.find_element(:id, 'search-omnibar-menu-icon')
@@ -3665,7 +3733,9 @@ class UiTestSuite < Test::Unit::TestCase
     # go to the 2d scatter plot study
     two_d_study_path = @base_url + "/study/twod-study-#{$random_seed}"
     @driver.get two_d_study_path
-    wait_until_page_loads(two_d_study_path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_2d_path = @base_url + "/study/#{study_accession}/twod-study-#{$random_seed}"
+    wait_until_page_loads(loaded_2d_path)
     open_ui_tab('study-visualize')
 
     # Click selection tab
@@ -3840,8 +3910,8 @@ class UiTestSuite < Test::Unit::TestCase
 
     close_modal('message_modal')
 
-    @driver.get two_d_study_path
-    wait_until_page_loads(two_d_study_path)
+    @driver.get loaded_2d_path
+    wait_until_page_loads(loaded_2d_path)
     open_ui_tab('study-visualize')
 
     # choose the user annotation
@@ -4309,7 +4379,9 @@ class UiTestSuite < Test::Unit::TestCase
     # go to study and make sure this annotation is saved
     two_d_study_path = @base_url + "/study/twod-study-#{$random_seed}"
     @driver.get two_d_study_path
-    wait_until_page_loads(two_d_study_path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_2d_path = @base_url + "/study/#{study_accession}/twod-study-#{$random_seed}"
+    wait_until_page_loads(loaded_2d_path)
     open_ui_tab('study-visualize')
 
     # choose the newly persisted annotation
@@ -4448,7 +4520,9 @@ class UiTestSuite < Test::Unit::TestCase
 
     study_page = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get study_page
-    wait_until_page_loads(study_page)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    wait_until_page_loads(loaded_path)
 
     # select worfklow & sample
     open_ui_tab('study-analysis')
@@ -4521,7 +4595,9 @@ class UiTestSuite < Test::Unit::TestCase
 
     study_page = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get study_page
-    wait_until_page_loads(study_page)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    wait_until_page_loads(loaded_path)
     open_ui_tab('study-analysis')
     wait_for_render(:id, 'submissions-table')
 
@@ -4579,8 +4655,8 @@ class UiTestSuite < Test::Unit::TestCase
     # assert new clusters have been added
     # sleep 15 seconds to give portal a chance to parse files
     sleep(15)
-    @driver.get @base_url + "/study/test-study-#{$random_seed}"
-    wait_until_page_loads(study_page)
+    @driver.get loaded_path
+    wait_until_page_loads(loaded_path)
     open_ui_tab('study-visualize')
     wait_for_render(:id, 'plots-tab')
     @wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
@@ -4606,7 +4682,9 @@ class UiTestSuite < Test::Unit::TestCase
 
     study_page = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get study_page
-    wait_until_page_loads(study_page)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    wait_until_page_loads(loaded_path)
     open_ui_tab('study-analysis')
     wait_for_render(:id, 'submissions-table')
 
@@ -4653,7 +4731,9 @@ class UiTestSuite < Test::Unit::TestCase
 
     study_page = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get study_page
-    wait_until_page_loads(study_page)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    wait_until_page_loads(loaded_path)
     open_ui_tab('study-analysis')
     wait_for_render(:id, 'submissions-table')
     submissions_table = @driver.find_element(:id, 'submissions-table')
@@ -4762,7 +4842,9 @@ class UiTestSuite < Test::Unit::TestCase
     # make sure parsing succeeded
     sync_study_path = @base_url + "/study/load-from-gcs-#{$random_seed}"
     @driver.get(sync_study_path)
-    wait_until_page_loads(sync_study_path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_sync_study_path = @base_url + "/study/#{study_accession}/load-from-gcs-#{$random_seed}"
+    wait_until_page_loads(loaded_sync_study_path)
     open_ui_tab('study-analysis')
     wait_for_render(:id, 'submissions-table')
 
@@ -4815,15 +4897,15 @@ class UiTestSuite < Test::Unit::TestCase
     sleep(10) # Give time for ideogram_exp_means.tar.gz to parse
 
     # Ensure we can load Ideogram and render its annotations
-    @driver.get(sync_study_path)
-    wait_until_page_loads(sync_study_path)
+    @driver.get(loaded_sync_study_path)
+    wait_until_page_loads(loaded_sync_study_path)
 
     # If "Explore" tab is disabled, wait 20 seconds and try again
     vis_tab = @driver.find_element(:css, '#study-visualize-nav a')
     if vis_tab.attribute('data-original-title') == 'This study has no data to view'
       sleep(20)
-      @driver.get(sync_study_path)
-      wait_until_page_loads(sync_study_path)
+      @driver.get(loaded_sync_study_path)
+      wait_until_page_loads(loaded_sync_study_path)
     end
 
     open_ui_tab('study-visualize')
@@ -4848,8 +4930,8 @@ class UiTestSuite < Test::Unit::TestCase
     # Log out and validate that we can *not* use the read-only service account to load results (SCP-1158)
     logout_from_portal
     puts "Logged out"
-    @driver.get(sync_study_path)
-    wait_until_page_loads(sync_study_path)
+    @driver.get(loaded_sync_study_path)
+    wait_until_page_loads(loaded_sync_study_path)
     open_ui_tab('study-visualize')
     wait_for_render(:id, 'plots-tab')
 
@@ -4954,7 +5036,9 @@ class UiTestSuite < Test::Unit::TestCase
     # Go to study, click 'Browse genome' in Downloads tab
     study_path = @base_url + "/study/igv-js-ui-test-#{$random_seed}"
     @driver.get(study_path)
-    wait_until_page_loads(study_path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    wait_until_page_loads(loaded_path)
     open_ui_tab('study-download')
     browse_genome_button = @driver.find_element(:class, "bam-browse-genome")
     browse_genome_button.click

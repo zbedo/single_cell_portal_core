@@ -18,7 +18,7 @@
 
     $('#study-<%= study.url_safe_name %>-gene-<%= gene.name.gsub(/\W/, '-') %>-plot').data('rendered', false);
 
-    var url = '<%= render_global_gene_expression_plots_path(study_name: study.url_safe_name, gene: gene.name) %>?';
+    var url = '<%= render_global_gene_expression_plots_path(accession: study.accession, study_name: study.url_safe_name, gene: gene.name) %>?';
     var cluster = '<%= study.default_cluster.name %>';
     var annotation = '<%= study.default_annotation %>';
     var identifier = '<%= identifier %>';

@@ -4,7 +4,7 @@ closeModalSpinner('#generic-modal-spinner', '#generic-modal', function () {
     $('#generic-update-modal-body').html("<p>Submission <strong><%= params[:submission_id] %></strong> has been successfully stopped.  You may still need to clean up files in the submission directory if the submission started running.")
     $("#generic-update-modal").modal("show");
     $.ajax({
-        url: '<%= get_workspace_submissions_path(study_name: @study.url_safe_name) %>',
+        url: '<%= get_workspace_submissions_path(accession: @study.accession, study_name: @study.url_safe_name) %>',
         dataType: 'script'
     });
     var requestUrl = '<%= javascript_safe_url(request.fullpath) %>';

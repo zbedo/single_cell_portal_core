@@ -579,7 +579,7 @@ class UserAnnotation
 
   # cache lookup key used when clearing entries on updates/deletes
   def cache_removal_key
-    "#{self.study.url_safe_name}.*#{self.cluster_group.name.split.join('-')}_#{self.formatted_annotation_identifier}"
+    "#{self.study.accession}/#{self.study.url_safe_name}.*#{self.cluster_group.name.split.join('-')}_#{self.formatted_annotation_identifier}"
   end
 
   # delete all queued annotation objects

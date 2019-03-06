@@ -1,5 +1,5 @@
 <div class="row no-bottom-margin form-group" id="selection-well">
-  <%= form_for(:user_annotation, url: create_user_annotations_path(study_name: params[:study_name]), html: {id: 'create_annotations', method: :post, data: {remote: true}}) do |f|  %>
+  <%= form_for(:user_annotation, url: create_user_annotations_path(accession: @study.accession, study_name: @study.url_safe_name), html: {id: 'create_annotations', method: :post, data: {remote: true}}) do |f|  %>
     <div class="col-sm-12 form-group">
       <%= f.text_field :name, class: 'form-control need-text annotation-name', placeholder: 'Name this group of labels' %>
       <%= f.hidden_field :user_id, value: current_user.id %>

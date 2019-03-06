@@ -60,7 +60,7 @@
     function renderScatter() {
         // detach listener as it will be re-attached in response; this helps reduce spurious errors
         $(window).off('resizeEnd');
-        var url = '<%= render_cluster_path(study_name: @study.url_safe_name) %>';
+        var url = '<%= render_cluster_path(accession: @study.accession, study_name: @study.url_safe_name) %>';
         var target = $('#cluster-plot')[0];
         var spinner = new Spinner(opts).spin(target);
         $('#cluster-plot').data('spinner', spinner);
@@ -120,7 +120,7 @@
         var currSubsample = $('#subsample').val();
         // get new annotation options and re-render
         $.ajax({
-            url: "<%= get_new_annotations_path(study_name: @study.url_safe_name)%>?cluster=" + newCluster + '&subsample=' + currSubsample,
+            url: "<%= get_new_annotations_path(accession: @study.accession, study_name: @study.url_safe_name)%>?cluster=" + newCluster + '&subsample=' + currSubsample,
             method: 'GET',
             dataType: 'script',
             success: function (data) {

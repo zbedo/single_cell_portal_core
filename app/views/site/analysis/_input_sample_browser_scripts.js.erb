@@ -23,7 +23,7 @@ $('#workflow_study_data').change(function () {
     $('#workflow_samples').val('');
     var selected = $(this).val();
     $.ajax({
-        url: '<%= get_fastq_files_path(study_name: @study.url_safe_name) %>?selected_entries=' + selected,
+        url: '<%= get_fastq_files_path(accession: @study.accession, study_name: @study.url_safe_name) %>?selected_entries=' + selected,
         dataType: 'json',
         success: function(data) {
             updateSampleTable(data);
@@ -41,7 +41,7 @@ $('#workflow_inputs_samples').change(function () {
 
     // update samples datatable
     $.ajax({
-        url: '<%= get_workspace_samples_path(study_name: @study.url_safe_name) %>?samples=' + requestedSamples,
+        url: '<%= get_workspace_samples_path(accession: @study.accession, study_name: @study.url_safe_name) %>?samples=' + requestedSamples,
         dataType: 'json',
         success: function(data) {
             updateSampleTable(data)
@@ -57,7 +57,7 @@ $('#delete-workspace-samples').click(function () {
         $('#generic-modal-title').html('Saving... Please wait.');
         launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
             $.ajax({
-                url: '<%= delete_workspace_samples_path(study_name: @study.url_safe_name) %>',
+                url: '<%= delete_workspace_samples_path(accession: @study.accession, study_name: @study.url_safe_name) %>',
                 method: 'POST',
                 dataType: 'script',
                 data: {samples: samples}
@@ -89,7 +89,7 @@ $('#save-workspace-samples').click(function() {
         $('#generic-modal-title').html('Saving... Please wait.');
         launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
             $.ajax({
-                url: '<%= update_workspace_samples_path(study_name: @study.url_safe_name) %>',
+                url: '<%= update_workspace_samples_path(accession: @study.accession, study_name: @study.url_safe_name) %>',
                 method: 'POST',
                 dataType: 'script',
                 data: {samples: samplePayload}

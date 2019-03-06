@@ -45,11 +45,11 @@
 
           $(window).off('resizeEnd');
           <% if !params[:gene].nil? %>
-          var url = '<%= render_gene_expression_plots_path(study_name: params[:study_name], gene: params[:gene]) %>';
+          var url = '<%= render_gene_expression_plots_path(accession: params[:accession], study_name: params[:study_name], gene: params[:gene]) %>';
           <% elsif !params[:gene_set].nil? %>
-          var url = '<%= render_gene_set_expression_plots_path(study_name: params[:study_name], gene_set: params[:gene_set]) %>';
+          var url = '<%= render_gene_set_expression_plots_path(accession: params[:accession], study_name: params[:study_name], gene_set: params[:gene_set]) %>';
           <% else %>
-          var url = '<%= render_gene_set_expression_plots_path(study_name: params[:study_name], search: {genes: @gene_list}) %>';
+          var url = '<%= render_gene_set_expression_plots_path(accession: params[:accession], study_name: params[:study_name], search: {genes: @gene_list}) %>';
           <% end %>
           var target1 = document.getElementById('box-plot');
           var target2 = document.getElementById('scatter-plot');
@@ -121,7 +121,7 @@
           var currAnnot = $('#annotation').val();
           // get new annotation options and re-render
           $.ajax({
-              url: "<%= get_new_annotations_path(study_name: params[:study_name])%>?cluster=" + newCluster,
+              url: "<%= get_new_annotations_path(accession: params[:accession], study_name: params[:study_name])%>?cluster=" + newCluster,
               method: 'GET',
               dataType: 'script',
               success: function (data) {

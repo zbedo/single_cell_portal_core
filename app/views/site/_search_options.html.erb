@@ -1,4 +1,4 @@
-<%= form_for(:search, url: search_genes_path(@study.url_safe_name), html: {class: 'form', id: 'search-genes-form', data: {remote: true}}) do |f| %>
+<%= form_for(:search, url: search_genes_path(accession: @study.accession, study_name: @study.url_safe_name), html: {class: 'form', id: 'search-genes-form', data: {remote: true}}) do |f| %>
   <%= f.hidden_field :cluster, value: set_cluster_value(@study, params) %>
   <%= f.hidden_field :boxpoints, value: params[:boxpoints].nil? ? 'all' : params[:boxpoints] %>
   <%= f.hidden_field :annotation, value: set_annotation_value(@study, params) %>
@@ -47,7 +47,7 @@
                       clearForm('search_genes');
                       $(this).tooltip('hide');
                       var urlParams = getRenderUrlParams();
-                      var url = "<%= view_study_path(study_name: @study.url_safe_name )%>?" + urlParams;
+                      var url = "<%= view_study_path(accession: @study.accession, study_name: @study.url_safe_name )%>?" + urlParams;
                       launchModalSpinner('#spinner_target', '#loading-modal', function() {
                           $.ajax({
                               url: url,
@@ -116,7 +116,7 @@
     <div class="panel-body collapse" id="panel-gene-lists">
       <div class="row">
         <div class="col-sm-12">
-          <%= form_tag(view_gene_set_expression_path(study_name: params[:study_name]), id: 'gene-sets', method: :get, data: {remote: true}) do %>
+          <%= form_tag(view_gene_set_expression_path(accession: params[:accession], study_name: params[:study_name]), id: 'gene-sets', method: :get, data: {remote: true}) do %>
               <%= label_tag :gene_set, 'Mean expression' %>
               <%= select_tag :gene_set, options_for_select(@precomputed, params[:gene_set]), {include_blank: 'Select gene list', class: 'form-control'} %>
               <%= hidden_field_tag :gene_set_cluster %>
@@ -143,7 +143,7 @@
       </div>
       <div class="row">
         <div class="col-sm-12">
-          <%= form_tag(search_precomputed_results_path(study_name: params[:study_name]), id: 'precomputed-expression', data: {remote: true}) do %>
+          <%= form_tag(search_precomputed_results_path(accession: params[:accession], study_name: params[:study_name]), id: 'precomputed-expression', data: {remote: true}) do %>
               <%= label_tag :expression, 'Heatmaps' %><br />
               <%= select_tag :expression, options_for_select(@precomputed, params[:precomputed]), {include_blank: 'Select gene list', class: "form-control"} %>
               <%= hidden_field_tag :scpbr, params[:scpbr] %>
@@ -185,7 +185,7 @@
                             var loadedAnnotation = $('#annotation').val();
                             var loadedSubsample = $('#subsample').val();
                             $.ajax({
-                                url: '<%= show_user_annotations_form_path(@study.url_safe_name) %>?cluster=' + loadedCluster + '&annotation=' + loadedAnnotation + '&subsample=' + loadedSubsample,
+                                url: '<%= show_user_annotations_form_path(accession: @study.accession, study_name: @study.url_safe_name) %>?cluster=' + loadedCluster + '&annotation=' + loadedAnnotation + '&subsample=' + loadedSubsample,
                                 dataType: 'script'
                             });
                         } else {

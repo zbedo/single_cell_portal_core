@@ -2,7 +2,7 @@
   <div class="panel-heading">
     <div class="panel-title">
       <h4><%= scp_link_to "#{study.name}: (<span id='#{study.id}-count'></span> matches)".html_safe,
-                          view_study_path(study_name: study.url_safe_name) + "#study-visualize", title: 'Explore Study',
+                          view_study_path(accession: study.accession, study_name: study.url_safe_name) + "#study-visualize", title: 'Explore Study',
                           data: {toggle: 'tooltip'} %>
         <%= link_to "<span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, "##{study.id}-body",
                           data: {toggle: 'collapse'} %>

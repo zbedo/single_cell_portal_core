@@ -128,9 +128,9 @@ class DirectoryListing
 	# helper to generate correct urls for downloading fastq files
 	def download_path(file)
 		if self.study.public?
-			download_file_path(self.study.url_safe_name, filename: file)
+			download_file_path(accession: self.study.accession, study_name: self.study.url_safe_name, filename: file)
 		else
-			download_private_file_path(self.study.url_safe_name, filename: file)
+			download_private_file_path(accession: self.study.accession, study_name: self.study.url_safe_name, filename: file)
 		end
 	end
 

@@ -422,9 +422,9 @@ class StudyFile
       self.human_fastq_url
     else
       if self.study.public?
-        download_file_path(self.study.url_safe_name, filename: self.bucket_location)
+        download_file_path(accession: self.study.accession, study_name: self.study.url_safe_name, filename: self.bucket_location)
       else
-        download_private_file_path(self.study.url_safe_name, filename: self.bucket_location)
+        download_private_file_path(accession: self.study.accession, study_name: self.study.url_safe_name, filename: self.bucket_location)
       end
     end
   end
@@ -694,22 +694,23 @@ class StudyFile
   # helper method to return cache removal key based on file type (this is refactored out for use in tests)
   def cache_removal_key
     study_name = self.study.url_safe_name
+    accession = self.study.accession
     case self.file_type
       when 'Cluster'
-        @cache_key = "#{study_name}.*render_cluster"
+        @cache_key = "#{accession}/#{study_name}.*render_cluster"
       when 'Coordinate Labels'
-        @cache_key = "#{study_name}.*render_cluster"
+        @cache_key = "#{accession}/#{study_name}.*render_cluster"
       when 'Expression Matrix'
-        @cache_key = "#{study_name}.*expression"
+        @cache_key = "#{accession}/#{study_name}.*expression"
       when 'MM Coordinate Matrix'
-        @cache_key = "#{study_name}.*expression"
+        @cache_key = "#{accession}/#{study_name}.*expression"
       when /10X.*File/
-        @cache_key = "#{study_name}.*expression"
+        @cache_key = "#{accession}/#{study_name}.*expression"
       when 'Gene List'
-        @cache_key = "#{study_name}.*precomputed_gene_expression"
+        @cache_key = "#{accession}/#{study_name}.*precomputed_gene_expression"
       when 'Metadata'
         # when reparsing metadata, almost all caches now become invalid so we just clear all matching the study
-        @cache_key =  "#{study_name}"
+        @cache_key =  "#{accession}/#{study_name}"
       else
         @cache_key = nil
     end

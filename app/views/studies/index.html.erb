@@ -18,7 +18,7 @@
 					<tbody>
 					<% @studies.each do |study| %>
 						<tr class="study-entry">
-              <td class="study-name"><%= scp_link_to study.name, view_study_path(study_name: study.url_safe_name), title: 'View Live', data: {toggle: 'tooltip', placement: 'right'}, id: "#{study.url_safe_name}-view-live-link" %></td>
+              <td class="study-name"><%= scp_link_to study.name, view_study_path(accession: study.accession, study_name: study.url_safe_name), title: 'View Live', data: {toggle: 'tooltip', placement: 'right'}, id: "#{study.url_safe_name}-view-live-link" %></td>
               <td><%= study.user.email %></td>
 							<td><%= strip_tags(truncate_html(study.description, length: 50)) %></td>
 							<td><%= study.visibility %></td>

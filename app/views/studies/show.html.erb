@@ -2,6 +2,8 @@
   <%= @study.name %> <%= get_initialized_icon(@study.initialized) %> <%= @study.visibility %> <span class="badge" id="cell-count"><%= @study.cell_count %> cells</span> <span class="badge" id="gene-count"><%= @study.gene_count %> genes</span>
   <%= link_to "Toggle All Panels <i class='fas fa-toggle-on'></i>".html_safe, '#/', class: 'btn btn-default btn-sm pull-right', id: 'toggle-panels' %>
 </h1>
+<p class="lead">Accession: <span id="study-accession"><%= @study.accession %></span></p>
+</p>
 <% if @study.check_embargo? %>
   <p class="lead text-danger">Embargoed until: <%= @study.embargo.to_s(:long) %></p>
 <% end %>
@@ -29,8 +31,13 @@
               <tbody>
                 <tr>
                   <td>Study URL</td>
-                  <td><%= view_study_url(@study.url_safe_name) %></td>
-                  <td><%= scp_link_to "<span class='fas fa-eye'></span> View Study".html_safe, view_study_path(@study.url_safe_name), class: 'btn btn-primary', id: 'study-link' %></td>
+                  <td><%= view_study_url(accession: @study.accession, study_name: @study.url_safe_name) %></td>
+                  <td><%= scp_link_to "<span class='fas fa-eye'></span> View Study".html_safe, view_study_path(accession: @study.accession, study_name: @study.url_safe_name), class: 'btn btn-primary', id: 'study-link' %></td>
+                </tr>
+                <tr>
+                  <td>Accession URL (permanent, for external use)</td>
+                  <td><%= site_url %>/study/<%= @study.accession %></td>
+                  <td><%= scp_link_to "<span class='fas fa-eye'></span> View Study".html_safe, view_study_path(accession: @study.accession, study_name: @study.url_safe_name), class: 'btn btn-primary', id: 'study-accession-link' %></td>
                 </tr>
                 <tr>
                   <td>FireCloud Project & Workspace</td>
@@ -185,7 +192,7 @@
               <td><%= link_to analysis.submission_id, @study.submission_url(analysis.submission_id), target: :_blank %></td>
               <td><%= analysis.created_at.strftime("%F %R") %></td>
               <td class="actions">
-                <%= link_to("<i class='fas fa-fw fa-code'></i> View Run Info".html_safe, '#/', class: 'btn btn-xs btn-info view-submission-metadata', title: 'View HCA-formatted analysis metadata', data: {toggle: 'tooltip', id: analysis.submission_id, url: get_submission_metadata_path(study_name: @study.url_safe_name, submission_id: analysis.submission_id)}) %>
+                <%= link_to("<i class='fas fa-fw fa-code'></i> View Run Info".html_safe, '#/', class: 'btn btn-xs btn-info view-submission-metadata', title: 'View HCA-formatted analysis metadata', data: {toggle: 'tooltip', id: analysis.submission_id, url: get_submission_metadata_path(accession: @study.accession, study_name: @study.url_safe_name, submission_id: analysis.submission_id)}) %>
               </td>
             </tr>
           <% end %>
