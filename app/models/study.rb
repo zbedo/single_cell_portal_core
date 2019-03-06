@@ -949,8 +949,9 @@ class Study
   end
 
   # Return settings for this study's inferCNV ideogram visualization
-  def get_ideogram_infercnv_settings
-    exp_file = self.get_analysis_outputs('infercnv', 'ideogram.js').first
+  def get_ideogram_infercnv_settings(cluster_name, annotation_name)
+    exp_file = self.get_analysis_outputs('infercnv', 'ideogram.js',
+                                         cluster_name, annotation_name).first
     {
       'organism': exp_file.species_name,
       'assembly': exp_file.genome_assembly['name'],
