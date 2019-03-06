@@ -933,12 +933,19 @@ class Study
 
   # return all study files for a given analysis & visualization component
   def get_analysis_outputs(analysis_name, visualization_name=nil, cluster_name=nil, annotation_name=nil)
-    self.study_files.where(
-      'options.analysis_name' => analysis_name,
-      'options.visualization_name' => visualization_name,
-      'options.cluster_name' => cluster_name,
-      'options.annotation_name' => annotation_name
-      );
+    criteria = {
+        'options.analysis_name' => analysis_name
+    }
+    if visualization_name.present?
+      criteria.merge!('options.visualization_name' => visualization_name)
+    end
+    if cluster_name.present?
+      criteria.merge!('options.cluster_name' => cluster_name)
+    end
+    if annotation_name.present?
+      criteria.merge!('options.annotation_name' => annotation_name)
+    end
+    self.study_files.where(criteria)
   end
 
   # Return settings for this study's inferCNV ideogram visualization
