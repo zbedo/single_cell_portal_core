@@ -374,7 +374,7 @@ class StudyFile
   # callbacks
   before_validation   :set_file_name_and_data_dir, on: :create
   before_save         :sanitize_name
-  after_save          :set_cluster_group_ranges
+  after_save          :set_cluster_group_ranges, :set_options_by_file_type
 
   has_mongoid_attached_file :upload,
                             :path => ":rails_root/data/:data_dir/:id/:filename",
@@ -942,6 +942,29 @@ class StudyFile
         # either user has not supplied ranges or is deleting them, so clear entry for cluster_group
         cluster.update(domain_ranges: nil)
       end
+    end
+  end
+
+  # handler to set certain options based on a study_file's file_type
+  def set_options_by_file_type
+    case self.file_type
+    when 'Ideogram Annotations'
+      Rails.logger.info "Setting ideogram annotations options on #{self.upload_file_name}"
+      unless self.options[:annotation_name].present? && self.options[:cluster_name].present?
+        file_basename = self.upload_file_name.split('/').last
+        # chomp off filename header and .json at end
+        file_basename.gsub!(/ideogram_exp_means__/, '')
+        file_basename.gsub!(/\.json/, '')
+        cluster_name, annotation_name, annotation_type, annotation_scope = file_basename.split('--')
+        annotation_identifier = [annotation_name, annotation_type, annotation_scope].join('--')
+        self.update(options: {
+            cluster_name: cluster_name,
+            annotation_name: annotation_identifier,
+            analysis_name: 'infercnv',
+            visualization_name: 'ideogram.js'
+        })
+      end
+      Rails.logger.info "Ideogram annotation successfully set on: #{self.upload_file_name}"
     end
   end
 

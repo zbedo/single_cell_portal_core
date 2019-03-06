@@ -23,6 +23,11 @@ class Study
   WORKSPACE_NAME_PREFIX = Rails.env != 'production' ? Rails.env + '-' : ''
   REQUIRED_ATTRIBUTES = %w(name)
 
+  # Constants for scoping values for AnalysisParameter inputs/outputs
+  ASSOCIATED_MODEL_METHOD = %w(bucket_id firecloud_project firecloud_workspace url_safe_name workspace_url google_bucket_url gs_url)
+  ASSOCIATED_MODEL_DISPLAY_METHOD = %w(name url_safe_name bucket_id firecloud_project firecloud_workspace workspace_url google_bucket_url gs_url)
+  OUTPUT_ASSOCIATION_ATTRIBUTE = %w(id)
+
   # instantiate one FireCloudClient to avoid creating too many tokens
   @@firecloud_client = FireCloudClient.new
   @@read_only_client = ENV['READ_ONLY_SERVICE_ACCOUNT_KEY'].present? ? FireCloudClient.new(nil, FireCloudClient::PORTAL_NAMESPACE, File.absolute_path(ENV['READ_ONLY_SERVICE_ACCOUNT_KEY'])) : nil
@@ -655,9 +660,14 @@ class Study
     "https://portal.firecloud.org/#workspaces/#{self.firecloud_project}/#{self.firecloud_workspace}"
   end
 
-  # helper to generate a URL to a study's GCP bucket
+  # helper to generate an HTTPS URL to a study's GCP bucket
   def google_bucket_url
     "https://accounts.google.com/AccountChooser?continue=https://console.cloud.google.com/storage/browser/#{self.bucket_id}"
+  end
+
+  # helper to generate a GS URL to a study's GCP bucket
+  def gs_url
+    "gs://#{self.bucket_id}"
   end
 
   # helper to generate a URL to a specific FireCloud submission inside a study's GCP bucket
@@ -931,17 +941,25 @@ class Study
 
   # return all study files for a given analysis & visualization component
   def get_analysis_outputs(analysis_name, visualization_name=nil, cluster_name=nil, annotation_name=nil)
-    self.study_files.where(
-      'options.analysis_name' => analysis_name,
-      'options.visualization_name' => visualization_name,
-      'options.cluster_name' => cluster_name,
-      'options.annotation_name' => annotation_name
-      );
+    criteria = {
+        'options.analysis_name' => analysis_name
+    }
+    if visualization_name.present?
+      criteria.merge!('options.visualization_name' => visualization_name)
+    end
+    if cluster_name.present?
+      criteria.merge!('options.cluster_name' => cluster_name)
+    end
+    if annotation_name.present?
+      criteria.merge!('options.annotation_name' => annotation_name)
+    end
+    self.study_files.where(criteria)
   end
 
   # Return settings for this study's inferCNV ideogram visualization
-  def get_ideogram_infercnv_settings
-    exp_file = self.get_analysis_outputs('infercnv', 'ideogram.js').first
+  def get_ideogram_infercnv_settings(cluster_name, annotation_name)
+    exp_file = self.get_analysis_outputs('infercnv', 'ideogram.js',
+                                         cluster_name, annotation_name).first
     {
       'organism': exp_file.species_name,
       'assembly': exp_file.genome_assembly['name'],

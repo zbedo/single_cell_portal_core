@@ -158,8 +158,8 @@ function warnIdeogramOfNumericCluster() {
 
   warning =
     '<div id="ideogramWarning" style="height: 400px; margin-left: 20px;">' +
-      'Ideogram not available, as selected cluster ("' + cluster + '") and ' +
-      'cell annotation ("' + cellAnnot + '") are numeric.' +
+      'Ideogram not available for selected cluster ("' + cluster + '") and ' +
+      'cell annotation ("' + cellAnnot + '").' +
     '</div>';
 
     $('#tracks-to-display, #_ideogramOuterWrap').html('');
