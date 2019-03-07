@@ -9,7 +9,7 @@
       $('#edit-study-description').on('click', function() {
           $.ajax({
               method: 'GET',
-              url: '<%= edit_study_description_path(study_name: @study.url_safe_name) %>',
+              url: '<%= edit_study_description_path(accession: @study.accession, study_name: @study.url_safe_name) %>',
               dataType: 'script'
           });
       });

@@ -4,6 +4,8 @@ class AnalysisParameterFilter
   belongs_to :analysis_parameter
   field :attribute_name, type: String
   field :value, type: String
+  field :multiple, type: Boolean, default: false
+  field :multiple_values, type: Array, default: []
 
   ASSOCIATED_MODEL_FILTER_ATTRS = [:ANALYSIS_PARAMETER_FILTER_ATTRIBUTE_NAME, :ANALYSIS_PARAMETER_FILTER_VALUE]
 

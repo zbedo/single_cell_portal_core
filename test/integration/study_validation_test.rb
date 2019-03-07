@@ -134,8 +134,8 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
     @test_study = Study.find_by(name: "Test Study #{@random_seed}")
     @private_study = Study.find_by(name: "Private Study #{@random_seed}")
     @gzip_study = Study.find_by(name: "Gzip Parse #{@random_seed}")
-    view_private_path = view_study_path(@private_study.url_safe_name)
-    view_gzip_path = view_study_path(@gzip_study.url_safe_name)
+    view_private_path = view_study_path(accession: @private_study.accession, study_name: @private_study.url_safe_name)
+    view_gzip_path = view_study_path(accession: @gzip_study.accession, study_name: @gzip_study.url_safe_name)
     edit_test_study_path = study_path(@test_study.id)
     edit_private_study_path = study_path(@private_study.id)
 
@@ -207,7 +207,7 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
     sign_out @test_user
     auth_as_user(@sharing_user)
     sign_in @sharing_user
-    get view_study_path(@study.url_safe_name)
+    get view_study_path(accession: @study.accession, study_name: @study.url_safe_name)
     assert controller.current_user == @sharing_user,
            "Did not successfully authenticate as sharing user, current_user is #{controller.current_user.email}"
     assert_select "h1.study-lead", true, "Did not successfully load study page for #{@study.name}"
@@ -217,9 +217,9 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
 
 
     # ensure direct call to download is still disabled
-    get download_private_file_path(@study.url_safe_name, filename: 'README.txt')
+    get download_private_file_path(accession: @study.accession, study_name: @study.url_safe_name, filename: 'README.txt')
     follow_redirect!
-    assert_equal view_study_path(@study.url_safe_name), path,
+    assert_equal view_study_path(accession: @study.accession, study_name: @study.url_safe_name), path,
                  "Did not block download and redirect to study page, current path is #{path}"
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end

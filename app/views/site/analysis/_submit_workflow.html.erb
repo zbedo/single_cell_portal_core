@@ -59,7 +59,7 @@
       $('#selected-workflow').html(displayWdlText);
       // get any optional parameters
       $.ajax({
-        url: "<%= get_analysis_configuration_path(study_name: @study.url_safe_name) %>&workflow_identifier=" + selectedWdl,
+        url: "<%= get_analysis_configuration_path(accession: @study.accession, study_name: @study.url_safe_name) %>&workflow_identifier=" + selectedWdl,
         dataType: 'script'
       });
     } else {
@@ -89,7 +89,7 @@
   $('.refresh-submissions-table').click(function() {
     $(this).addClass('disabled');
     $.ajax({
-      url: "<%= get_workspace_submissions_path(study_name: @study.url_safe_name) %>",
+      url: "<%= get_workspace_submissions_path(accession: @study.accession, study_name: @study.url_safe_name) %>",
       dataType: 'script'
     });
   });

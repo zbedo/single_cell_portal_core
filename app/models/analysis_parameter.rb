@@ -24,11 +24,12 @@ class AnalysisParameter
   field :output_file_type, type: String
   field :visible, type: Boolean, default: true # whether or not to render parameter input in submission form
   field :apply_to_all, type: Boolean, default: false # whether or not to apply :associated_model_method to all instances (if an array type input)
+  field :is_reference_bundle, type: Boolean, default: false # whether or not this input is for a reference genome
 
   DATA_TYPES = %w(inputs outputs)
   PRIMITIVE_PARAMETER_TYPES = %w(String Int Float File Boolean String? Int? Float? File? Boolean?)
   COMPOUND_PARAMETER_TYPES = %w(Array Map Object)
-  ASSOCIATED_MODELS = %w(StudyFile Taxon GenomeAssembly GenomeAnnotation ClusterGroup CellMetadatum)
+  ASSOCIATED_MODELS = %w(Study StudyFile Taxon GenomeAssembly GenomeAnnotation ClusterGroup CellMetadatum)
   ASSOCIATED_MODEL_ATTR_NAMES = [:ASSOCIATED_MODEL_METHOD, :ASSOCIATED_MODEL_DISPLAY_METHOD, :OUTPUT_ASSOCIATION_ATTRIBUTE]
 
   validates_presence_of :data_type, :call_name, :parameter_type, :parameter_name
@@ -41,6 +42,7 @@ class AnalysisParameter
   validate :validate_parameter_value_by_type, unless: proc {|attributes| attributes.parameter_value.blank?}
   validates :output_file_type, inclusion: {in: StudyFile::STUDY_FILE_TYPES},
             presence: true, on: :update, if: proc {|attributes| attributes.data_type == 'outputs'}
+  validates_uniqueness_of :is_reference_bundle, scope: :analysis_configuration_id, if: proc {|attributes| attributes.is_reference_bundle}
 
   # get the call & parameter name together for use in Methods Repository configuration objects
   def config_param_name
@@ -121,7 +123,11 @@ class AnalysisParameter
     if self.associated_model_class.present?
       instances = get_instances_by_associations(study)
       self.analysis_parameter_filters.each do |filter|
-        instances = instances.where(filter.attribute_name.to_sym => "#{filter.value}")
+        if filter.multiple?
+          instances = instances.where(filter.attribute_name.to_sym.in => filter.multiple_values)
+        else
+          instances = instances.where(filter.attribute_name.to_sym => "#{filter.value}")
+        end
       end
       if self.association_filter_attribute.present? && self.association_filter_value.present?
         instances = instances.where(self.association_filter_attribute.to_sym => "#{self.association_filter_value}")

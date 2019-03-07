@@ -352,8 +352,7 @@ class StudiesController < ApplicationController
         end
         if @study.previous_changes.keys.include?('name')
           # if user renames a study, invalidate all caches
-          old_name = @study.previous_changes['url_safe_name'].first
-          CacheRemovalJob.new(old_name).delay.perform
+          CacheRemovalJob.new(@study.accession).delay.perform
         end
         if @study.study_shares.any?
           SingleCellMailer.share_update_notification(@study, changes, current_user).deliver_now
@@ -401,7 +400,7 @@ class StudiesController < ApplicationController
       AnalysisMetadatum.where(study_id: @study.id).delete_all
 
       # queue jobs to delete study caches & study itself
-      CacheRemovalJob.new(@study.url_safe_name).delay.perform
+      CacheRemovalJob.new(@study.accession).delay.perform
       DeleteQueueJob.new(@study).delay.perform
 
       # notify users of deletion before removing shares & owner
@@ -632,16 +631,16 @@ class StudiesController < ApplicationController
 
   # method to download files if study is private, will create temporary signed_url after checking user quota
   def download_private_file
-    @study = Study.find_by(url_safe_name: params[:study_name])
+    @study = Study.find_by(accession: params[:accession], url_safe_name: params[:study_name])
     # make sure user is signed in
     if !user_signed_in? || !@study.can_view?(current_user)
       redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]),
                   alert: 'You do not have permission to perform that action.' and return
     elsif @study.embargoed?(current_user)
-      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
+      redirect_to merge_default_redirect_params(view_study_path(accession: @study.accession, study_name: @study.url_safe_name), scpbr: params[:scpbr]),
                   alert: "You may not download any data from this study until #{@study.embargo.to_s(:long)}." and return
     elsif !@study.can_download?(current_user)
-      redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
+      redirect_to merge_default_redirect_params(view_study_path(accession: @study.accession, study_name: @study.url_safe_name), scpbr: params[:scpbr]),
                   alert: 'You do not have permission to perform that action.' and return
     end
 
@@ -664,7 +663,7 @@ class StudiesController < ApplicationController
                                                                      @study.firecloud_workspace, params[:filename], expires: 15)
           current_user.update(daily_download_quota: user_quota)
         else
-          redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
+          redirect_to merge_default_redirect_params(view_study_path(accession: @study.accession, study_name: @study.url_safe_name), scpbr: params[:scpbr]),
                       alert: 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.' and return
         end
         # redirect directly to file to trigger download
@@ -672,13 +671,13 @@ class StudiesController < ApplicationController
         if is_valid_signed_url?(@signed_url)
           redirect_to @signed_url
         else
-          redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
+          redirect_to merge_default_redirect_params(view_study_path(accession: @study.accession, study_name: @study.url_safe_name), scpbr: params[:scpbr]),
                       alert: 'We are unable to process your download.  Please try again later.' and return
         end
       else
         # send notification to the study owner that file is missing (if notifications turned on)
         SingleCellMailer.user_download_fail_notification(@study, params[:filename]).deliver_now
-        redirect_to merge_default_redirect_params(view_study_path(@study.url_safe_name), scpbr: params[:scpbr]),
+        redirect_to merge_default_redirect_params(view_study_path(accession: @study.accession, study_name: @study.url_safe_name), scpbr: params[:scpbr]),
                     alert: 'The file you requested is currently not available.  Please contact the study owner if you require access to this file.' and return
       end
     rescue => e

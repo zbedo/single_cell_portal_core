@@ -322,6 +322,12 @@ class Test::Unit::TestCase
     end
   end
 
+  # extract the study accession from a url dynamically
+  def extract_accession_from_url(url)
+    parts = url.split(@base_url + '/study/')
+    parts.last.split('/').first
+  end
+
   private
 
   def handle_oauth_redirect(email)

@@ -4,7 +4,7 @@ closeModalSpinner('#generic-modal-spinner', '#generic-modal', function () {
     $('#generic-update-modal-body').html("All files belonging to submission <%= params[:submission_id] %> have been removed.  Any files that were synchronized back to this study have not been affected.");
     $("#generic-update-modal").modal("show");
     $.ajax({
-        url: '<%= get_workspace_submissions_path(study_name: @study.url_safe_name) %>',
+        url: '<%= get_workspace_submissions_path(accession: @study.accession, study_name: @study.url_safe_name) %>',
         dataType: 'script'
     });
 });
