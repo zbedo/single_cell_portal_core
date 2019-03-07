@@ -196,4 +196,7 @@ function initializeIdeogram(url) {
     orientation: 'horizontal',
     heatmapThresholds: heatmapThresholds
   });
+
+    // Log Ideogram.js initialization in Google Analytics
+    ga('send', 'event', 'ideogram', 'initialize');
 }
