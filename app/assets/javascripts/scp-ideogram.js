@@ -169,6 +169,11 @@ function warnIdeogramOfNumericCluster() {
 
 function initializeIdeogram(url) {
 
+  // Percent-encode all slashes to "%2F" after "/o/" in GCS ?alt=media URL
+  var splitUrl = url.split('/o/');
+  var objPathPctEncoded = splitUrl[1].replace('/', '%2F');
+  var url = splitUrl[0] + '/o/' + objPathPctEncoded;
+
   if (typeof window.ideogram !== 'undefined') {
     delete window.ideogram;
     $('#tracks-to-display').html('');
