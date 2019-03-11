@@ -1,4 +1,11 @@
-<h1>Upload/Edit Study Data for '<%= @study.name %>' <%= render partial: 'initialize_study_label' %></h1>
+<div class="row">
+  <div class="col-sm-11">
+    <h1>Upload/Edit Study Data for '<%= @study.name %>' <%= render partial: 'initialize_study_label' %></h1>
+  </div>
+  <div class="col-sm-1">
+    <p class="top-pad"><%= scp_link_to "<span class='fas fa-eye'></span> View Study".html_safe, view_study_path(accession: @study.accession, study_name: @study.url_safe_name), class: 'btn btn-primary' %></p>
+  </div>
+</div>
 
 <div id="rootwizard">
 	<ul class="nav wizard">
