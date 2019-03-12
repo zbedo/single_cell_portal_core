@@ -78,15 +78,15 @@ class AnalysisParameter
       :select
     else
       case self.parameter_type
-      when 'String'
+      when /String/
         :text_field
-      when 'File'
+      when /File/
         :text_field
-      when 'Int'
+      when /Int/
         :number_field
-      when 'Float'
+      when /Float/
         :number_field
-      when 'Boolean'
+      when /Boolean/
         :check_box
       end
     end
