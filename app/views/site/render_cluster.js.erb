@@ -64,7 +64,7 @@ $(document).trigger('scpPlotsDidRender');
 
 <% if @analysis_outputs.key?('ideogram.js') %>
 window.ideogramInferCnvSettings = <%= raw @study.get_ideogram_infercnv_settings(params[:cluster], params[:annotation]).to_json %>;
-var ideogramAnnotsUrl = '<%= javascript_safe_url(@analysis_outputs['ideogram.js']) %>';
+var ideogramAnnotsUrl = '<%= raw @analysis_outputs['ideogram.js'] %>';
 initializeIdeogram(ideogramAnnotsUrl);
 <% else %>
 warnIdeogramOfNumericCluster();

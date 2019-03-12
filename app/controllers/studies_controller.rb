@@ -1288,7 +1288,7 @@ class StudiesController < ApplicationController
                                        :generation, :x_axis_label, :y_axis_label, :z_axis_label, :x_axis_min, :x_axis_max, :y_axis_min,
                                        :y_axis_max, :z_axis_min, :z_axis_max, :taxon_id, :genome_assembly_id, :study_file_bundle_id,
                                        options: [:cluster_group_id, :font_family, :font_size, :font_color, :matrix_id, :submission_id,
-                                                 :bam_id, :analysis_name, :visualization_name])
+                                                 :bam_id, :analysis_name, :visualization_name, :cluster_name, :annotation_name])
   end
 
   def directory_listing_params
