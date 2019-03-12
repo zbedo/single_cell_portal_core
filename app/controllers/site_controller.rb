@@ -37,9 +37,9 @@ class SiteController < ApplicationController
                                                    :get_submission_outputs, :delete_submission_files, :get_submission_metadata]
 
   # caching
-  # caches_action :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :render_global_gene_expression_plots,
-  #               :expression_query, :annotation_query, :precomputed_results,
-  #               cache_path: :set_cache_path
+  caches_action :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :render_global_gene_expression_plots,
+                :expression_query, :annotation_query, :precomputed_results,
+                cache_path: :set_cache_path
   COLORSCALE_THEMES = %w(Greys YlGnBu Greens YlOrRd Bluered RdBu Reds Blues Picnic Rainbow Portland Jet Hot Blackbody Earth Electric Viridis Cividis)
 
   ###
