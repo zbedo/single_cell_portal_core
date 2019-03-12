@@ -1,6 +1,6 @@
 module AnalysisConfigurationsHelper
 
-  # render a form input based on analysis_parameter attributes
+  # render a form input based on analysis_parameter attributes (for preview only)
   def render_analysis_parameter_preview(form, parameter, study)
     case parameter.input_type
     when :select
@@ -16,7 +16,7 @@ module AnalysisConfigurationsHelper
     when :number_field
       form.number_field parameter.config_param_name, value: parameter.parameter_value, class: 'form-control'
     when :check_box
-      "<div class='checkbox'>#{form.check_box parameter.config_param_name}</div>"
+      form.check_box parameter.config_param_name
     end
   end
 
@@ -36,9 +36,9 @@ module AnalysisConfigurationsHelper
     when :text_field
       text_field_tag "workflow_inputs_#{parameter.config_param_name}", parameter.parameter_value, class: 'form-control', name: "workflow[inputs][#{parameter.config_param_name}]"
     when :number_field
-      number_field_tag "workflow_inputs_#{parameter.config_param_name}", value: parameter.parameter_value, class: 'form-control', name: "workflow[inputs][#{parameter.config_param_name}]"
+      number_field_tag "workflow_inputs_#{parameter.config_param_name}", parameter.parameter_value, class: 'form-control', name: "workflow[inputs][#{parameter.config_param_name}]"
     when :check_box
-      "<div class='checkbox'>#{check_box_tag "workflow_inputs_#{parameter.config_param_name}", name: "workflow[inputs][#{parameter.config_param_name}]"}</div>"
+      check_box_tag "workflow_inputs_#{parameter.config_param_name}"
     end
   end
 end
