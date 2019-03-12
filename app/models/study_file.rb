@@ -711,6 +711,8 @@ class StudyFile
       when 'Metadata'
         # when reparsing metadata, almost all caches now become invalid so we just clear all matching the study
         @cache_key =  "#{accession}/#{study_name}"
+      when 'Ideogram Annotations'
+        @cache_key = "#{accession}/#{study_name}.*render_cluster"
       else
         @cache_key = nil
     end

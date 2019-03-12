@@ -791,6 +791,9 @@ class StudiesController < ApplicationController
         # if user is supplying an expression axis label, update default options hash
         @study.update(default_options: @study.default_options.merge(expression_label: study_file_params[:y_axis_label]))
         @study.expression_matrix_files.first.invalidate_cache_by_file_type
+      else
+        # invalidate caches
+        @study_file.delay.invalidate_cache_by_file_type
       end
       @message = "'#{@study_file.name}' has been successfully updated."
 
@@ -951,6 +954,9 @@ class StudiesController < ApplicationController
         # if user is supplying an expression axis label, update default options hash
         @study.update(default_options: @study.default_options.merge(expression_label: study_file_params[:y_axis_label]))
         @study.expression_matrix_files.first.invalidate_cache_by_file_type
+      else
+        # invalidate caches
+        @study_file.delay.invalidate_cache_by_file_type
       end
 
       @message = "New Study File '#{@study_file.name}' successfully synced."
