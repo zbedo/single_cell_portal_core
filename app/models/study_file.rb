@@ -951,11 +951,10 @@ class StudyFile
     when 'Ideogram Annotations'
       Rails.logger.info "Setting ideogram annotations options on #{self.upload_file_name}"
       unless self.options[:annotation_name].present? && self.options[:cluster_name].present?
-        file_basename = self.upload_file_name.split('/').last
+        options_parts = self.upload_file_name.split('ideogram_exp_means__').last
         # chomp off filename header and .json at end
-        file_basename.gsub!(/ideogram_exp_means__/, '')
-        file_basename.gsub!(/\.json/, '')
-        cluster_name, annotation_name, annotation_type, annotation_scope = file_basename.split('--')
+        options_parts.gsub!(/\.json/, '')
+        cluster_name, annotation_name, annotation_type, annotation_scope = options_parts.split('--')
         annotation_identifier = [annotation_name, annotation_type, annotation_scope].join('--')
         self.update(options: {
             cluster_name: cluster_name,

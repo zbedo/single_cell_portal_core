@@ -39,7 +39,7 @@
       <%= render partial: 'layouts/download_link', locals: {study_file: study_file} %>
     </div>
     <div class="col-sm-4 taxon-select-target">
-      <% if study_file.file_type == 'BAM' || study_file.file_type == 'Fastq' || study_file.file_type == 'Analysis Output' %>
+      <% if StudyFile::TAXON_REQUIRED_TYPES.include?(study_file.file_type) || study_file.file_type == 'Analysis Output' %>
         <%= render partial: 'taxon_fields', locals: {f: f.dup} %>
       <% end %>
     </div>
