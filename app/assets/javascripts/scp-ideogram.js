@@ -84,14 +84,6 @@
 //     $('#ideogram-container').append(table);
 //   }
 
-// Use colors like inferCNV; see
-// https://github.com/broadinstitute/inferCNV/wiki#demo-example-figure
-var heatmapThresholds = [
-  [-0.1, '#00B'], // If -0.001 < expression value, use blue (loss)
-  [0.3, '#DDD'], // If -0.001 >= value 0 > 0.003, use grey
-  ['+', '#F00'] // If value >= 0.003, use red (gain)
-];
-
 var legend = [{
   name: 'Expression level',
   rows: [
@@ -119,8 +111,44 @@ function updateTracks() {
   ideogram.updateDisplayedTracks(selectedTracks);
 }
 
+function addMarginControls() {
+  console.log('addMarginControls');
+
+  if (document.querySelector('#chrMarginContainer')) return;
+
+  chrMargin = (typeof chrMargin === 'undefined' ? 10 : chrMargin)
+  marginSlider =
+    `<label id="chrMarginContainer">
+      Chromosome margin:
+    <input type="range" id="chrMargin" list="chrMarginList" value="` + chrMargin + `">
+    </label>
+    <datalist id="chrMarginList">
+      <option value="0" label="0%">
+      <option value="10">
+      <option value="20">
+      <option value="30">
+      <option value="40">
+      <option value="50" label="50%">
+      <option value="60">
+      <option value="70">
+      <option value="80">
+      <option value="90">
+      <option value="100" label="100%">
+    </datalist>`;
+  d3.select('#_ideogramLegend').node().innerHTML += marginSlider;
+  d3.selectAll('input[type="range"]').on('change', function() {
+    window.chrMargin = parseInt(d3.select(this).node().value);
+    window.ideoConfig.chrMargin = chrMargin;
+    ideogram = new Ideogram(window.ideoConfig);
+  });
+}
+
+
 function createTrackFilters() {
   var i, listItems, trackLabels, content, checked;
+
+  addMarginControls();
+
   // Only apply this function once
   if (document.querySelector('#filter_1')) return;
   listItems = '';
@@ -177,7 +205,7 @@ function initializeIdeogram(url) {
 
   $('#ideogramWarning, #ideogramTitle').remove();
 
-  window.ideogram = new Ideogram({
+  window.ideoConfig = {
     container: '#ideogram-container',
     organism: ideogramInferCnvSettings.organism.toLowerCase(),
     assembly: ideogramInferCnvSettings.assembly,
@@ -189,11 +217,15 @@ function initializeIdeogram(url) {
     onDrawAnnots: createTrackFilters,
     debug: true,
     rotatable: false,
-
-    chrHeight: 90,
+    chrMargin: 10,
+    chrHeight: 80,
     annotationHeight: 20,
     geometry: 'collinear',
-    orientation: 'horizontal',
-    heatmapThresholds: heatmapThresholds
-  });
+    orientation: 'horizontal'
+  }
+
+  window.ideogram = new Ideogram(window.ideoConfig);
+
+    // Log Ideogram.js initialization in Google Analytics
+    ga('send', 'event', 'ideogram', 'initialize');
 }

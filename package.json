@@ -2,7 +2,7 @@
   "dependencies": {
     "@ckeditor/ckeditor5-build-classic": "^11.0.1",
     "@rails/webpacker": "3.5",
-    "ideogram": "1.5.0",
+    "ideogram": "1.6.0",
     "igv": "2.1.0",
     "jquery": "3.3.1",
     "jquery-ui": "1.12.1",
