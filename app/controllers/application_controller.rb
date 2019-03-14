@@ -49,7 +49,7 @@ class ApplicationController < ActionController::Base
     redirect = request.referrer.nil? ? site_path : request.referrer
     access = AdminConfiguration.firecloud_access_enabled?
     if !access
-      redirect_to merge_default_redirect_params(redirect, scpbr: params[:scpbr]), alert: "Study access has been temporarily disabled by the site adminsitrator.  Please contact #{view_context.mail_to('single_cell_portal@broadinstitute.org')} if you require assistance." and return
+      redirect_to merge_default_redirect_params(redirect, scpbr: params[:scpbr]), alert: "Study access has been temporarily disabled by the site adminsitrator.  Please contact #{view_context.mail_to('scp-support@broadinstitute.zendesk.com')} if you require assistance." and return
     end
   end
 

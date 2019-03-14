@@ -388,7 +388,7 @@ run only the test called `'test_workspaces'` in `test/integration/fire_cloud_cli
 
 The official production Single Cell Portal is deployed in Google Cloud Platform.  The project name is **broad-singlecellportal**. 
 Only Broad Institute Single Cell Portal team members have access to this instance.  If you are a collaborator and require 
-access, please email [single_cell_portal@broadinstitute.org](mailto:single_cell_portal@broadinstitute.org).
+access, please email [scp-support@broadinstitute.zendesk.com](mailto:scp-support@broadinstitute.zendesk.com).
 
 To access the production instance for maintenance purposes:
 * Go to the [broad-singlecellportal](https://console.cloud.google.com/home/dashboard?project=broad-singlecellportal) GCP page
