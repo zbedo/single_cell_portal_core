@@ -1,9 +1,13 @@
 <div class="row">
-  <div class="col-sm-11">
+  <div class="col-sm-10">
     <h1>Upload/Edit Study Data for '<%= @study.name %>' <%= render partial: 'initialize_study_label' %></h1>
   </div>
-  <div class="col-sm-1">
-    <p class="top-pad"><%= scp_link_to "<span class='fas fa-eye'></span> View Study".html_safe, view_study_path(accession: @study.accession, study_name: @study.url_safe_name), class: 'btn btn-primary' %></p>
+  <div class="col-sm-2">
+    <p class="top-pad pull-right">
+      <%= scp_link_to "<span class='fas fa-eye'></span> View Study".html_safe,
+                      view_study_path(accession: @study.accession, study_name: @study.url_safe_name),
+                      class: 'btn btn-primary', title: 'View Live', data: {toggle: 'tooltip', placement: 'left'} %>
+    </p>
   </div>
 </div>
 
