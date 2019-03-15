@@ -20,6 +20,13 @@
   <dt>Entity Type</dt>
   <dd><%= @analysis_configuration.entity_type %></dd>
 </dl>
+<h3>Documentation Links</h3>
+<%= nested_form_for(@analysis_configuration, method: :patch, html: {class: 'form'} ) do |f| %>
+  <%= f.fields_for :external_resources %>
+  <p><%= f.link_to_add "<span class='fas fa-plus'></span> Add a Link".html_safe, :external_resources, class: 'btn btn-sm btn-info',
+                    id: 'add-external-resource' %></p>
+  <p><%= f.submit 'Update Links', class: 'btn btn-lg btn-success' %></p>
+<% end %>
 <h2>Analysis Parameters <span class="badge"><%= @analysis_configuration.analysis_parameters.count %></span></h2>
 <p class="text-muted">These are input/output parameters that will be used to generate user interfaces for submitting
   this analysis, and also govern behavior when syncing successful submissions of this analysis.</p>

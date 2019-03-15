@@ -1,5 +1,6 @@
 <div class="row">
   <div class="col-sm-offset-3 col-sm-6">
+    <%= render partial: '/layouts/external_resources_view', locals: {instance: @analysis_configuration} %>
     <%= hidden_field_tag :analysis_configuration_id, @analysis_configuration.id.to_s %>
     <% @analysis_configuration.analysis_parameters.inputs.each do |parameter| %>
       <div class="form-group row <%= !parameter.visible? ? 'hidden' : nil %>">
