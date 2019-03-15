@@ -1284,7 +1284,8 @@ class StudiesController < ApplicationController
   # study params whitelist
   def study_params
     params.require(:study).permit(:name, :description, :public, :user_id, :embargo, :use_existing_workspace, :firecloud_workspace,
-                                  :firecloud_project, :branding_group_id, study_shares_attributes: [:id, :_destroy, :email, :permission])
+                                  :firecloud_project, :branding_group_id, study_shares_attributes: [:id, :_destroy, :email, :permission],
+                                  external_resources_attributes: [:id, :_destroy, :title, :description, :url, :publication_url])
   end
 
   # study file params whitelist

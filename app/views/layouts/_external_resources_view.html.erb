@@ -1,0 +1,7 @@
+<p>
+  <% instance.external_resources.each do |resource| %>
+    <%= link_to "#{resource.title}#{resource.publication_url ? " <i class='far fa-file-alt'></i>" : nil}".html_safe,
+                resource.url, class: 'btn btn-default navigation-form', target: :_blank,
+                title: "#{resource.publication_url ? 'Publication: ': nil }#{resource.description}", data: {toggle: 'tooltip'} %>
+  <% end %>
+</p>

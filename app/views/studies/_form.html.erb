@@ -78,6 +78,14 @@
                       id: 'add-study-share' %>
 	</div>
   <div class="form-group">
+    <h3>External Resources</h3>
+    <%= f.fields_for :external_resources do |er| %>
+      <%= render partial: '/layouts/external_resource_fields', locals: {f: er} %>
+    <% end %>
+    <%= f.link_to_add "<span class='fas fa-plus'></span> Add an External Resource".html_safe, :external_resources, class: 'btn btn-info',
+                      id: 'add-external-resource' %>
+  </div>
+  <div class="form-group">
     <%= f.submit nil, class: 'btn btn-lg btn-success', id: 'save-study' %>
   </div>
 <% end %>

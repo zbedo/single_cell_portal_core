@@ -4,6 +4,9 @@ class AnalysisConfiguration
   extend ErrorTracker
 
   belongs_to :user
+  has_many :external_resources, as: :resource_links
+  accepts_nested_attributes_for :external_resources, allow_destroy: true
+
 
   field :namespace, type: String
   field :name, type: String

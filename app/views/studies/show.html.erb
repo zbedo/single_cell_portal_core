@@ -9,6 +9,7 @@
 <% end %>
 
 <%= @study.description.html_safe %>
+
 <div class="panel panel-default top-pad" id="info-panel">
   <div class="panel-heading">
     <div class="panel-title">
@@ -370,6 +371,39 @@
 			</table>
 		</div>
 	</div>
+</div>
+<div class="panel panel-success" id="external-resources-panel">
+  <div class="panel-heading">
+    <div class="panel-title">
+      <h4><%= link_to "External Resources <span class='badge' id='resources-count'>#{@study.external_resources.size}</span> <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#external-resources', class: 'text-success', 'data-toggle' => 'collapse' %></h4>
+    </div>
+  </div>
+
+  <div class="panel-collapse collapse in" id="external-resources">
+    <div class="panel-body table-responsive">
+      <table class="table table-striped">
+        <thead>
+        <tr>
+          <th>Link</th>
+          <th>Description</th>
+          <th>Publication URL?</th>
+          <th>Added On</th>
+        </tr>
+        </thead>
+        <tbody>
+        <% @study.external_resources.each do |resource| %>
+          <tr id="external-resource-<%= resource.id %>">
+            <td><%= link_to resource.title, resource.url, class: "btn btn-#{ resource.publication_url ? 'primary' : 'default'}",
+                            target: :_blank %></td>
+            <td><%= resource.description %></td>
+            <td><%= get_boolean_label(resource.publication_url) %></td>
+            <td><%= resource.updated_at.to_s(:long) %></td>
+          </tr>
+        <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
 <div id="notice-target"></div>
 <p><%= scp_link_to "<span class='fas fa-edit'></span> Edit Study".html_safe, edit_study_path(@study), class: 'btn btn-primary' %>

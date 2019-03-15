@@ -207,6 +207,9 @@ class Study
   # Study Accession
   has_one :study_accession
 
+  # External Resource links
+  has_many :external_resources, as: :resource_links
+
   # field definitions
   field :name, type: String
   field :embargo, type: Date
@@ -229,6 +232,7 @@ class Study
 
   accepts_nested_attributes_for :study_files, allow_destroy: true
   accepts_nested_attributes_for :study_shares, allow_destroy: true, reject_if: proc { |attributes| attributes['email'].blank? }
+  accepts_nested_attributes_for :external_resources, allow_destroy: true
 
   ##
   #
