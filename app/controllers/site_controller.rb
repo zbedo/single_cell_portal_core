@@ -318,11 +318,14 @@ class SiteController < ApplicationController
       set_selected_annotation
     end
 
-    # if user has permission to run workflows, load available workflows and current submissions
-
+    # set various permission variables to govern what tabs to show and decrease load times
+    @user_can_edit = @study.can_edit?(current_user)
+    @user_can_compute = false
+    @user_can_download = @study.can_download?(current_user)
 
     if @allow_firecloud_access && @allow_computes
       if user_signed_in? && @study.can_compute?(current_user)
+        @user_can_compute = true
         # load list of previous submissions
         workspace = Study.firecloud_client.get_workspace(@study.firecloud_project, @study.firecloud_workspace)
         @submissions = Study.firecloud_client.get_workspace_submissions(@study.firecloud_project, @study.firecloud_workspace)
