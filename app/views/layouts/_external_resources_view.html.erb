@@ -1,7 +1,16 @@
 <p>
   <% instance.external_resources.each do |resource| %>
     <%= link_to "#{resource.title}#{resource.publication_url ? " <i class='far fa-file-alt'></i>" : nil}".html_safe,
-                resource.url, class: 'btn btn-default navigation-form', target: :_blank,
+                resource.url, class: 'btn btn-default navigation-form external-resource-link', target: :_blank,
                 title: "#{resource.publication_url ? 'Publication: ': nil }#{resource.description}", data: {toggle: 'tooltip'} %>
   <% end %>
 </p>
+
+<script nonce="<%= content_security_policy_script_nonce %>">
+
+    $('.external-resource-link').on('click', function() {
+        linkHref = $(this).attr('href');
+        gaTrack(linkHref, 'Single Cell Portal | External Resource Click');
+    });
+
+</script>
