@@ -169,6 +169,15 @@ class UiTestSuite < Test::Unit::TestCase
     share_email.send_keys($share_email)
     share_permission = study_form.find_element(:class, 'share-permission')
     share_permission.send_keys('Edit')
+    # add external resource
+    add_resource = @driver.find_element(:id, 'add-external-resource')
+    add_resource.click
+    resource_title = @driver.find_element(:class, 'external-resource-title')
+    resource_title.send_keys('PubMed')
+    resource_description = @driver.find_element(:class, 'external-resource-description')
+    resource_description.send_keys('PubMed link to paper')
+    resource_url = @driver.find_element(:class, 'external-resource-url')
+    resource_url.send_keys('https://www.ncbi.nlm.nih.gov/pubmed/')
     # save study
     save_study = @driver.find_element(:id, 'save-study')
     save_study.click
@@ -371,6 +380,7 @@ class UiTestSuite < Test::Unit::TestCase
     study_file_count = @driver.find_element(:id, 'study-file-count').text.to_i
     primary_data_count = @driver.find_element(:id, 'primary-data-count').text.to_i
     share_count = @driver.find_element(:id, 'share-count').text.to_i
+    resources_count = @driver.find_element(:id, 'resources-count').text.to_i
 
     assert cell_count == 30, "did not find correct number of cells, expected 30 but found #{cell_count}"
     assert gene_count == 19, "did not find correct number of genes, expected 19 but found #{gene_count}"
@@ -381,6 +391,7 @@ class UiTestSuite < Test::Unit::TestCase
     assert study_file_count == 8, "did not find correct number of study files, expected 8 but found #{study_file_count}"
     assert primary_data_count == 2, "did not find correct number of primary data files, expected 2 but found #{primary_data_count}"
     assert share_count == 1, "did not find correct number of study shares, expected 1 but found #{share_count}"
+    assert resources_count == 1, "did not find correct number of external resources, expected 1 but found #{resources_count}"
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
@@ -1697,6 +1708,19 @@ class UiTestSuite < Test::Unit::TestCase
     # wait for config page to load
     close_modal('message_modal')
     wait_for_render(:id, 'inputs')
+
+    # add external resource
+    add_resource = @driver.find_element(:id, 'add-external-resource')
+    add_resource.click
+    resource_title = @driver.find_element(:class, 'external-resource-title')
+    resource_title.send_keys('split-cluster Documentation')
+    resource_description = @driver.find_element(:class, 'external-resource-description')
+    resource_description.send_keys('Documentation for split-cluster')
+    resource_url = @driver.find_element(:class, 'external-resource-url')
+    resource_url.send_keys('https://portal.firecloud.org/#methods/single-cell-portal/split-cluster/1')
+    save_links = @driver.find_element(:id, 'update-doc-links')
+    save_links.click
+    close_modal('message_modal')
 
     # configure analysis input
     input_form = @driver.find_element(:class, 'input-analysis-parameter')
@@ -4539,10 +4563,18 @@ class UiTestSuite < Test::Unit::TestCase
     wdl_contents = @driver.find_element(:id, 'wdl-contents').text
     assert !wdl_contents.empty?, 'Did not find any contents for test WDL'
 
+
     # submit workflow
     configure_nav = @driver.find_element(:id, 'select-inputs-nav')
     configure_nav.click
     wait_for_render(:id, 'submit-workflow')
+    workflow_form = @driver.find_element(:id, 'workflow-submission')
+    # check doc links
+    doc_link = workflow_form.find_element(:class, 'external-resource-link')
+    assert !doc_link.nil?, 'Did not find documentation link'
+    expected_doc_link = 'https://portal.firecloud.org/#methods/single-cell-portal/split-cluster/1'
+    assert doc_link['href'] == expected_doc_link,
+           "Documentation link is incorrect, expected '#{expected_doc_link}' but found '#{doc_link['href']}'"
     submit_btn = @driver.find_element(id: 'submit-workflow')
     submit_btn.click
     close_modal('generic-update-modal')
