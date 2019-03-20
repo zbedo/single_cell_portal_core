@@ -191,20 +191,17 @@ class AnalysisConfiguration
   # populate parameters based on user input for submission to a workspace
   def apply_user_inputs(user_inputs, entity_name=nil)
     default_config = self.configuration_for_repository.dup
-    analysis_inputs = self.required_inputs
+    analysis_inputs = self.analysis_parameters.inputs
     user_inputs.each do |parameter_name, parameter_value|
       # format input values correctly for JSON configuration
-      input = analysis_inputs.detect {|i| i['name'] == parameter_name}
+      input = analysis_inputs.detect {|i| i.config_param_name == parameter_name}
       value_for_config = parameter_value.to_s.gsub(/\\"/, '')
-      if input['inputType'] =~ /String/ && !value_for_config.start_with?('"')
-        default_config['inputs'][parameter_name] = "\"#{value_for_config}\""
-      else
-        default_config['inputs'][parameter_name] = value_for_config
-      end
+      default_config['inputs'][parameter_name] = input.formatted_user_value(value_for_config)
     end
     default_name = default_config['name']
     default_name += entity_name.present? ? "_#{entity_name}" : "_#{SecureRandom.hex(5)}" # make config name unique
     default_config['name'] = default_name
+    Rails.logger.info "formatted configuration: #{default_config}"
     default_config
   end
 

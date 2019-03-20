@@ -15,8 +15,9 @@ module AnalysisConfigurationsHelper
       form.text_field parameter.config_param_name, value: parameter.parameter_value, class: 'form-control'
     when :number_field
       form.number_field parameter.config_param_name, value: parameter.parameter_value, class: 'form-control'
-    when :check_box
-      form.check_box parameter.config_param_name
+    when :boolean_select
+      form.select parameter.config_param_name,
+                  options_for_select([['Yes', true],['No', false]], parameter.parameter_value), {include_blank: true}, class: 'form-control'
     end
   end
 
@@ -34,11 +35,15 @@ module AnalysisConfigurationsHelper
                    name: "workflow[inputs][#{parameter.config_param_name}]"
       end
     when :text_field
-      text_field_tag "workflow_inputs_#{parameter.config_param_name}", parameter.parameter_value, class: 'form-control', name: "workflow[inputs][#{parameter.config_param_name}]"
+      text_field_tag "workflow_inputs_#{parameter.config_param_name}", parameter.parameter_value, class: 'form-control',
+                     name: "workflow[inputs][#{parameter.config_param_name}]"
     when :number_field
-      number_field_tag "workflow_inputs_#{parameter.config_param_name}", parameter.parameter_value, class: 'form-control', name: "workflow[inputs][#{parameter.config_param_name}]"
-    when :check_box
-      check_box_tag "workflow_inputs_#{parameter.config_param_name}"
+      number_field_tag "workflow_inputs_#{parameter.config_param_name}", parameter.parameter_value, class: 'form-control',
+                       name: "workflow[inputs][#{parameter.config_param_name}]"
+    when :boolean_select
+      select_tag parameter.config_param_name,
+                 options_for_select([['Yes', true],['No', false]], parameter.parameter_value), include_blank: true,
+                 class: 'form-control', name: "workflow[inputs][#{parameter.config_param_name}]"
     end
   end
 end
