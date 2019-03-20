@@ -1352,7 +1352,7 @@ class StudiesController < ApplicationController
     begin
       client = FireCloudClient.new(current_user, 'single-cell-portal')
       unless !client.registered?
-        available_projects = client.get_billing_projects.keep_if {|project| project['role'] == 'Owner'}
+        available_projects = client.get_billing_projects
         available_projects.each do |project|
           if project['creationStatus'] == 'Ready'
             @projects << [project['projectName'], project['projectName']]

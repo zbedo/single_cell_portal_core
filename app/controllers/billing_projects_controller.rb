@@ -33,14 +33,15 @@ class BillingProjectsController < ApplicationController
     billing_accounts = @fire_cloud_client.get_billing_accounts
     @accounts = billing_accounts.map {|account| [account['displayName'], account['accountName']]}
     @projects = {}
-    billing_projects = @fire_cloud_client.get_billing_projects.keep_if {|project| project['role'] == 'Owner'}
+    billing_projects = @fire_cloud_client.get_billing_projects
 
     # load user list for each project
     billing_projects.each do |project|
       project_name = project['projectName']
       @projects[project_name] = {
           status: project['creationStatus'],
-          members: @fire_cloud_client.get_billing_project_members(project_name)
+          role: project['role'],
+          members: project['role'] == 'Owner' ?  @fire_cloud_client.get_billing_project_members(project_name) : nil
       }
     end
   end
@@ -98,14 +99,24 @@ class BillingProjectsController < ApplicationController
   def workspaces
     @workspaces = @fire_cloud_client.workspaces(params[:project_name])
     @computes = {}
+    @submissions = {}
     Parallel.map(@workspaces, in_threads: 100) do |workspace|
-      client = FireCloudClient.new(current_user, params[:project_name])
-      workspace_name = workspace['workspace']['name']
-      acl = client.get_workspace_acl(params[:project_name], workspace_name)
-      @computes[workspace_name] = []
-      acl['acl'].each do |user, permission|
-        @computes[workspace_name] << {"#{user}" => {can_compute: permission['canCompute'], access_level: permission['accessLevel']} }
+      begin
+        workspace_name = workspace['workspace']['name']
+        @computes[workspace_name] = []
+        @submissions[workspace_name] = nil
+        submission_count = @fire_cloud_client.get_workspace_submissions(params[:project_name], workspace_name).size
+        @submissions[workspace_name] = submission_count
+        acl = @fire_cloud_client.get_workspace_acl(params[:project_name], workspace_name)
+        acl['acl'].each do |user, permission|
+          @computes[workspace_name] << {"#{user}" => {can_compute: permission['canCompute'], access_level: permission['accessLevel']} }
+        end
+      rescue => e
+        error_context = ErrorTracker.format_extra_context({workspace: workspace, params: params})
+        ErrorTracker.report_exception(e, current_user, error_context)
+        logger.error "#{Time.now}: Error loading workspaces from #{params[:project_name]} due to error: #{e.message}"
       end
+
     end
   end
 
@@ -155,12 +166,17 @@ class BillingProjectsController < ApplicationController
     @total_cost = 0.0
     # parallelize retrieving workspace storage estimates
     Parallel.map(workspaces, in_threads: 100) do |workspace|
-      client = FireCloudClient.new(current_user, params[:project_name])
-      workspace_name = workspace['workspace']['name']
-      cost_estimate = client.get_workspace_storage_cost(params[:project_name], workspace_name)
-      actual_cost = cost_estimate['estimate'].gsub(/\$/, '').to_f
-      @workspaces[workspace_name] = actual_cost
-      @total_cost += actual_cost
+      begin
+        client = FireCloudClient.new(current_user, params[:project_name])
+        workspace_name = URI.escape(workspace['workspace']['name'])
+        cost_estimate = client.get_workspace_storage_cost(params[:project_name], workspace_name)
+        actual_cost = cost_estimate['estimate'].gsub(/\$/, '').to_f
+        @workspaces[workspace_name] = actual_cost
+        @total_cost += actual_cost
+      rescue => e
+        ErrorTracker.report_exception(e, current_user, params)
+        logger.error "Error in computing storage costs for #{params[:project_name]}: #{e.message}"
+      end
     end
   end
 
@@ -203,7 +219,7 @@ class BillingProjectsController < ApplicationController
 
   # check to make sure that the current user has access to the current project
   def check_project_permissions
-    projects = @fire_cloud_client.get_billing_projects.keep_if {|project| project['role'] == 'Owner'}
+    projects = @fire_cloud_client.get_billing_projects
     unless projects.map {|project| project['projectName']}.include?(params[:project_name])
       redirect_to merge_default_redirect_params(billing_projects_path, scpbr: params[:scpbr]), alert: 'You do not have permission to perform that action.' and return
     end
