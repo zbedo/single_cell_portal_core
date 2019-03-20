@@ -1,7 +1,7 @@
 <div class="row">
   <div class="col-sm-offset-3 col-sm-6">
     <%= form_for(:submission, url: '#', html: {class: 'form'}) do |f| %>
-      <% analysis_configuration.analysis_parameters.inputs.each do |parameter| %>
+      <% analysis_configuration.analysis_parameters.inputs.sort_by(&:config_param_name).each do |parameter| %>
         <div class="form-group row <%= !parameter.visible? ? 'preview-hidden-input bg-info' : nil %>">
           <div class="col-xs-12">
             <%= !parameter.visible? ? "<p class='help-block'>This input will not be shown to users, but would pass the following values:</p>".html_safe : nil %>

@@ -15,8 +15,9 @@ module AnalysisConfigurationsHelper
       form.text_field parameter.config_param_name, value: parameter.parameter_value, class: 'form-control'
     when :number_field
       form.number_field parameter.config_param_name, value: parameter.parameter_value, class: 'form-control'
-    when :check_box
-      form.check_box parameter.config_param_name
+    when :boolean_select
+      form.select parameter.config_param_name,
+                  options_for_select([['Yes', true],['No', false]], parameter.parameter_value), {include_blank: true}, class: 'form-control'
     end
   end
 
@@ -24,7 +25,7 @@ module AnalysisConfigurationsHelper
   def render_analysis_parameter_input(parameter, study)
     case parameter.input_type
     when :select
-      options = parameter.options_by_association_method(parameter.study_scoped? ? study : nil)
+      options = parameter.options_by_association_method((parameter.study_scoped? || parameter.associated_model == 'Study') ? study : nil)
       if parameter.apply_to_all?
         select_tag "workflow_inputs_#{parameter.config_param_name}#{parameter.config_param_name}[]",
                     options_for_select(options, options.map(&:last)), multiple: true, class: 'form-control',
@@ -34,11 +35,15 @@ module AnalysisConfigurationsHelper
                    name: "workflow[inputs][#{parameter.config_param_name}]"
       end
     when :text_field
-      text_field_tag "workflow_inputs_#{parameter.config_param_name}", parameter.parameter_value, class: 'form-control', name: "workflow[inputs][#{parameter.config_param_name}]"
+      text_field_tag "workflow_inputs_#{parameter.config_param_name}", parameter.parameter_value, class: 'form-control',
+                     name: "workflow[inputs][#{parameter.config_param_name}]"
     when :number_field
-      number_field_tag "workflow_inputs_#{parameter.config_param_name}", parameter.parameter_value, class: 'form-control', name: "workflow[inputs][#{parameter.config_param_name}]"
-    when :check_box
-      check_box_tag "workflow_inputs_#{parameter.config_param_name}"
+      number_field_tag "workflow_inputs_#{parameter.config_param_name}", parameter.parameter_value, class: 'form-control',
+                       name: "workflow[inputs][#{parameter.config_param_name}]"
+    when :boolean_select
+      select_tag parameter.config_param_name,
+                 options_for_select([['Yes', true],['No', false]], parameter.parameter_value), include_blank: true,
+                 class: 'form-control', name: "workflow[inputs][#{parameter.config_param_name}]"
     end
   end
 end

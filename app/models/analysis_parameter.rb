@@ -87,7 +87,7 @@ class AnalysisParameter
       when /Float/
         :number_field
       when /Boolean/
-        :check_box
+        :boolean_select
       end
     end
   end
@@ -98,6 +98,22 @@ class AnalysisParameter
       :options_for_select
     else
       :value
+    end
+  end
+
+  # helper to format a user-supplied value based in parameter type
+  def formatted_user_value(value)
+    if value.blank?
+      ''
+    else
+      case self.parameter_type
+      when /String/
+        !value.start_with?('"') ? "\"#{value}\"" : value
+      when /Boolean/
+        "#{value.downcase.to_s == 'true'}"
+      else
+        value
+      end
     end
   end
 
@@ -143,7 +159,10 @@ class AnalysisParameter
   def get_instances_by_associations(study)
     model = self.associated_model_class
     instances = []
-    if study.present?
+    if model == Study
+      # we already have the instance if the associated model is a Study
+      instances = model.where(id: study.id)
+    elsif model != Study && study.present?
       instances = model.where(study_id: study.id)
     elsif model != StudyFile
       instances = model.all
