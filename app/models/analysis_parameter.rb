@@ -159,7 +159,10 @@ class AnalysisParameter
   def get_instances_by_associations(study)
     model = self.associated_model_class
     instances = []
-    if study.present?
+    if model == Study
+      # we already have the instance if the associated model is a Study
+      instances = model.where(id: study.id)
+    elsif model != Study && study.present?
       instances = model.where(study_id: study.id)
     elsif model != StudyFile
       instances = model.all

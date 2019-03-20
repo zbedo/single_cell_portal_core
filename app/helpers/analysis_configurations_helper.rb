@@ -25,7 +25,7 @@ module AnalysisConfigurationsHelper
   def render_analysis_parameter_input(parameter, study)
     case parameter.input_type
     when :select
-      options = parameter.options_by_association_method(parameter.study_scoped? ? study : nil)
+      options = parameter.options_by_association_method((parameter.study_scoped? || parameter.associated_model == 'Study') ? study : nil)
       if parameter.apply_to_all?
         select_tag "workflow_inputs_#{parameter.config_param_name}#{parameter.config_param_name}[]",
                     options_for_select(options, options.map(&:last)), multiple: true, class: 'form-control',
