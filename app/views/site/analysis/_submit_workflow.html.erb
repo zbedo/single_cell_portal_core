@@ -104,22 +104,28 @@
 
   // workflow submit wizard
   $(document).ready(function() {
-    var wizard = $('#workflow-wizard');
-    wizard.bootstrapWizard({
-      tabClass: 'nav-tabs',
-      onTabShow: function(tab, navigation, index, clickedIndex, clickedTab) {
-        var step = $(tab[0]).attr('id');
-        if (step === 'configure-submission') {
-          wizard.find('.pager .next').hide();
-        } else {
-          wizard.find('.pager .next').show();
-        }
-      },
-      onNext: function(tab, navigation, index) {
-        wizard.find('.pager .previous').removeClass('disabled');
-        return true;
-      }
-    });
+      var wizard = $('#workflow-wizard');
+      wizard.bootstrapWizard({
+          tabClass: 'nav-tabs',
+          onTabShow: function(tab, navigation, index, clickedIndex, clickedTab) {
+              var step = $(tab[0]).attr('id');
+              console.log('id: ' + step);
+              if (step === 'select-inputs-nav') {
+                  wizard.find('.pager .next').hide();
+              } else {
+                  wizard.find('.pager .next').show();
+                  wizard.find('.pager .next').removeClass('disabled');
+              }
+          },
+          onNext: function(tab, navigation, index) {
+              wizard.find('.pager .previous').removeClass('disabled');
+              wizard.find('.pager .next').addClass('disabled');
+              return true;
+          },
+          onPrevious: function(tab, navigation, index) {
+              wizard.find('.pager .next').removeClass('disabled');
+          }
+      });
   });
 
 </script>

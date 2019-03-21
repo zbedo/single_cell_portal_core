@@ -1,8 +1,9 @@
 # use KDUX base Rails image, configure only project-specific items here
-FROM broadinstitute/kdux-rails-baseimage:1.6
+FROM broadinstitute/kdux-rails-baseimage:1.8
 
 # Set ruby version
 RUN bash -lc 'rvm --default use ruby-2.5.1'
+RUN bash -lc 'rvm rvmrc warning ignore /home/app/webapp/Gemfile'
 
 # Set up project dir, install gems, set up script to migrate database and precompile static assets on run
 RUN mkdir /home/app/webapp

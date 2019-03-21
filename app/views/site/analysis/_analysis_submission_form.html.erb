@@ -1,10 +1,12 @@
 <div class="row">
   <div class="col-sm-offset-3 col-sm-6">
+    <%= render partial: '/layouts/external_resources_view', locals: {instance: @analysis_configuration} %>
     <%= hidden_field_tag :analysis_configuration_id, @analysis_configuration.id.to_s %>
-    <% @analysis_configuration.analysis_parameters.inputs.each do |parameter| %>
+    <% @analysis_configuration.analysis_parameters.inputs.sort_by(&:config_param_name).each do |parameter| %>
       <div class="form-group row <%= !parameter.visible? ? 'hidden' : nil %>">
         <div class="col-xs-12">
-          <%= label_tag "workflow_inputs_#{parameter.config_param_name}", "#{parameter.config_param_name}" %><br />
+          <%= label_tag "workflow_inputs_#{parameter.config_param_name}",
+                        "#{!parameter.optional ? "<i class='fas fa-exclamation-triangle text-danger' data-toggle='tooltip' title='Required'></i>&nbsp;" : nil}#{parameter.config_param_name}".html_safe %><br />
           <%= parameter.description.present? ? "<span class='help-block'>#{parameter.description}</span>".html_safe : nil %>
           <%= render_analysis_parameter_input(parameter, @study).html_safe %>
         </div>

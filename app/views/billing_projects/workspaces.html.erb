@@ -7,6 +7,7 @@
       <tr>
         <th>Workspace Name</th>
         <th>Compute Permissions <i class="fas fa-question-circle" data-toggle="tooltip" title="Only non-owner users are shown here.  You cannot revoke compute permission from workspace- or project-level owners."></i> </th>
+        <th>Total Submissions</th>
         <th>Active Submissions</th>
         <th>Created At</th>
         <th>Actions</th>
@@ -27,6 +28,9 @@
                   <% end %>
                 <% end %>
               <% end %>
+            </td>
+            <td>
+              <%= @submissions[workspace_name] %>
             </td>
             <td>
               <%= workspace['workspaceSubmissionStats']['runningSubmissionsCount'] %>

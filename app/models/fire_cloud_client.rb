@@ -1574,7 +1574,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   #   - +Boolean+ of whether or not response code indicates a retry should be executed
   def should_retry?(code)
     # if code is nil, we're not sure so retry anyway
-    code.nil? || [403, 502, 503].include?(code)
+    code.nil? || [502, 503].include?(code)
   end
 
   # merge hash of options into single URL query string

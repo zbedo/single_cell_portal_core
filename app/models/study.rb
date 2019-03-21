@@ -207,6 +207,9 @@ class Study
   # Study Accession
   has_one :study_accession
 
+  # External Resource links
+  has_many :external_resources, as: :resource_links
+
   # field definitions
   field :name, type: String
   field :embargo, type: Date
@@ -229,6 +232,7 @@ class Study
 
   accepts_nested_attributes_for :study_files, allow_destroy: true
   accepts_nested_attributes_for :study_shares, allow_destroy: true, reject_if: proc { |attributes| attributes['email'].blank? }
+  accepts_nested_attributes_for :external_resources, allow_destroy: true
 
   ##
   #
@@ -2760,17 +2764,34 @@ class Study
       Rails.logger.info "#{Time.now}: Study: #{self.name} creating FireCloud workspace"
       validate_name_and_url
 
-      Rails.logger.info "#{Time.now}: Study: #{self.name} checking FireCloud project permissions"
-      has_access = set_firecloud_project_permissions
-      if !has_access
-        errors.add(:firecloud_project, " is not accessible to the portal service account.  Please choose another project.")
+      # check if project is valid to use
+      if self.firecloud_project != FireCloudClient::PORTAL_NAMESPACE
+        client = FireCloudClient.new(self.user, self.firecloud_project)
+        projects = client.get_billing_projects.map {|project| project['projectName']}
+        unless projects.include?(self.firecloud_project)
+          errors.add(:firecloud_project, ' is not a project you are a member of.  Please choose another project.')
+        end
       end
-      Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud project permissions ok"
+
       unless self.errors.any?
         begin
           # create workspace
-          workspace = Study.firecloud_client.create_workspace(self.firecloud_project, self.firecloud_workspace)
+          if self.firecloud_project == FireCloudClient::PORTAL_NAMESPACE
+            workspace = Study.firecloud_client.create_workspace(self.firecloud_project, self.firecloud_workspace)
+          else
+            workspace = client.create_workspace(self.firecloud_project, self.firecloud_workspace)
+          end
           Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud workspace creation successful"
+
+          # wait until after workspace creation to set service account permissions
+          Rails.logger.info "#{Time.now}: Study: #{self.name} checking service account permissions"
+          has_access = set_service_account_permissions
+          if !has_access
+            errors.add(:firecloud_workspace, ": We encountered an error when attempting to set service account permissions.  Please try again, or chose a different project.")
+          else
+            Rails.logger.info "#{Time.now}: Study: #{self.name} service account permissions ok"
+          end
+
           ws_name = workspace['name']
           # validate creation
           unless ws_name == self.firecloud_workspace
@@ -2790,19 +2811,17 @@ class Study
             return false
           end
           Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud bucket assignment successful"
-          # set workspace acl
-          study_owner = self.user.email
-          workspace_permission = 'WRITER'
-          can_compute = true
-          # if study project is in the compute blacklist, revoke compute permission
-          if Rails.env == 'production' && FireCloudClient::COMPUTE_BLACKLIST.include?(self.firecloud_project)
-            can_compute = false
-          end
-          # check project acls to see if user is project member
-          project_acl = Study.firecloud_client.get_billing_project_members(self.firecloud_project)
-          user_project_acl = project_acl.find {|acl| acl['email'] == study_owner}
+
           # if user has no project acls, then we set specific workspace-level acls
-          if user_project_acl.nil?
+          if self.firecloud_project == FireCloudClient::PORTAL_NAMESPACE
+            # set workspace acl
+            study_owner = self.user.email
+            workspace_permission = 'WRITER'
+            can_compute = true
+            # if study project is in the compute blacklist, revoke compute permission
+            if Rails.env == 'production' && FireCloudClient::COMPUTE_BLACKLIST.include?(self.firecloud_project)
+              can_compute = false
+            end
             acl = Study.firecloud_client.create_workspace_acl(study_owner, workspace_permission, true, can_compute)
             Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, acl)
             # validate acl
@@ -2867,22 +2886,28 @@ class Study
         return false
       end
 
-      Rails.logger.info "#{Time.now}: Study: #{self.name} checking FireCloud project permissions"
-      has_access = set_firecloud_project_permissions
-      if !has_access
-        errors.add(:firecloud_project, " is not accessible to the portal service account.  Please choose another project.")
+      # check if project is valid to use
+      if self.firecloud_project != FireCloudClient::PORTAL_NAMESPACE
+        client = FireCloudClient.new(self.user, self.firecloud_project)
+        projects = client.get_billing_projects.map {|project| project['projectName']}
+        unless projects.include?(self.firecloud_project)
+          errors.add(:firecloud_project, ' is not a project you are a member of.  Please choose another project.')
+        end
       end
-      Rails.logger.info "#{Time.now}: Study: #{self.name} FireCloud project permissions ok"
 
+      Rails.logger.info "#{Time.now}: Study: #{self.name} checking service account permissions"
+      has_access = set_service_account_permissions
+      if !has_access
+        errors.add(:firecloud_workspace, ": We encountered an error when attempting to set service account permissions.  Please try again, or chose a different project.")
+      else
+        Rails.logger.info "#{Time.now}: Study: #{self.name} service account permissions ok"
+      end
       unless self.errors.any?
         begin
           workspace = Study.firecloud_client.get_workspace(self.firecloud_project, self.firecloud_workspace)
           study_owner = self.user.email
-          # check project acls to see if user is project member
-          project_acl = Study.firecloud_client.get_billing_project_members(self.firecloud_project)
-          user_project_acl = project_acl.find {|acl| acl['email'] == study_owner}
-          # if user has no project acls, then we set specific workspace-level acls
-          if user_project_acl.nil?
+          # set acls if using default project
+          if self.firecloud_project == FireCloudClient::PORTAL_NAMESPACE
             workspace_permission = 'WRITER'
             can_compute = true
             # if study project is in the compute blacklist, revoke compute permission
@@ -2990,20 +3015,20 @@ class Study
     end
   end
 
-  # set permissions in projects that were created outside of SCP to allow the service account access
-  def set_firecloud_project_permissions
+  # set permissions on workspaces outside the portal namespace to allow users to use projects they own or are a member of
+  def set_service_account_permissions
     # only perform check if this is not the default portal project
     if self.firecloud_project != FireCloudClient::PORTAL_NAMESPACE
       begin
-        client = FireCloudClient.new(self.user, FireCloudClient::PORTAL_NAMESPACE)
-        project_members = client.get_billing_project_members(self.firecloud_project)
-        if project_members.detect {|member| member['email'] == client.storage_issuer && member['role'] == 'owner'}.nil?
-          added = client.add_user_to_billing_project(self.firecloud_project, 'owner', client.storage_issuer)
-          return added == 'OK'
-        end
+        client = FireCloudClient.new(self.user, self.firecloud_project)
+        service_account = Study.firecloud_client.issuer
+        acl = client.create_workspace_acl(service_account, 'OWNER', true, true)
+        client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, acl)
+        updated = client.get_workspace_acl(self.firecloud_project, self.firecloud_workspace)
+        return updated['acl'][service_account]['accessLevel'] == 'OWNER'
       rescue RuntimeError => e
-        ErrorTracker.report_exception(e, self.user, {firecloud_project: self.firecloud_project})
-        Rails.logger.error "#{Time.now}: unable to add portal service account to #{self.firecloud_project}: #{e.message}"
+        ErrorTracker.report_exception(e, self.user, {firecloud_project: self.firecloud_workspace})
+        Rails.logger.error "#{Time.now}: unable to add portal service account to #{self.firecloud_workspace}: #{e.message}"
         false
       end
     else

@@ -1284,7 +1284,8 @@ class StudiesController < ApplicationController
   # study params whitelist
   def study_params
     params.require(:study).permit(:name, :description, :public, :user_id, :embargo, :use_existing_workspace, :firecloud_workspace,
-                                  :firecloud_project, :branding_group_id, study_shares_attributes: [:id, :_destroy, :email, :permission])
+                                  :firecloud_project, :branding_group_id, study_shares_attributes: [:id, :_destroy, :email, :permission],
+                                  external_resources_attributes: [:id, :_destroy, :title, :description, :url, :publication_url])
   end
 
   # study file params whitelist
@@ -1351,7 +1352,7 @@ class StudiesController < ApplicationController
     begin
       client = FireCloudClient.new(current_user, 'single-cell-portal')
       unless !client.registered?
-        available_projects = client.get_billing_projects.keep_if {|project| project['role'] == 'Owner'}
+        available_projects = client.get_billing_projects
         available_projects.each do |project|
           if project['creationStatus'] == 'Ready'
             @projects << [project['projectName'], project['projectName']]
