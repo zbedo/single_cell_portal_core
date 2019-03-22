@@ -201,7 +201,6 @@ class AnalysisConfiguration
     default_name = default_config['name']
     default_name += entity_name.present? ? "_#{entity_name}" : "_#{SecureRandom.hex(5)}" # make config name unique
     default_config['name'] = default_name
-    Rails.logger.info "formatted configuration: #{default_config}"
     default_config
   end
 
