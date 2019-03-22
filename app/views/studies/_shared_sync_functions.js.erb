@@ -15,6 +15,7 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
         nameField.attr('readonly', false);
     } else if (fileType === 'Expression Matrix') {
         extraInfo.html("<%= j(render partial: 'expression_file_fields', locals: {f: f.dup}) %>");
+        taxonTarget.html("<%= j(render partial: 'taxon_fields', locals: {f: f.dup}) %>");
         nameField.val(fileName);
         nameField.attr('readonly', 'readonly');
     } else if (fileType === 'Gene List') {
@@ -23,6 +24,7 @@ $('#study-file-<%= study_file.id %>').on('change', '.file-type', function() {
     } else if (fileType === 'MM Coordinate Matrix') {
         form.append("<%= j render partial: 'sort_warning' %>")
         extraInfo.html("<%= j(render partial: 'expression_file_fields', locals: {f: f.dup}) %>");
+        taxonTarget.html("<%= j(render partial: 'taxon_fields', locals: {f: f.dup}) %>");
         nameField.val(fileName);
         nameField.attr('readonly', 'readonly');
     } else if (fileType === '10X Genes File' || fileType === '10X Barcodes File') {
