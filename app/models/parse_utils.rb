@@ -30,7 +30,7 @@ class ParseUtils
       raw_genes = genes_file.readlines.map(&:strip)
       @genes = []
       raw_genes.each do |row|
-        vals = row.split
+        vals = row.split(/[\t,\s]/) # split on tabs, commas, or whitespace
         if vals.size == 1
           @genes << vals.first.strip
         else
@@ -60,7 +60,7 @@ class ParseUtils
       m_header_1 = matrix_file.readline.split.map(&:strip)
       valid_headers = %w(%%MatrixMarket matrix coordinate)
       unless m_header_1.first == valid_headers.first && m_header_1[1] == valid_headers[1] && m_header_1[2] == valid_headers[2]
-        raise StandardError, "Your input matrix is not a Matrix Market Coordinate Matrix (header validation failed).  The first line should read: #{valid_headers.join}, but found #{m_header_1}"
+        raise StandardError, "Your input matrix is not a Matrix Market Coordinate Matrix (header validation failed).  The first line should read: #{valid_headers.join(' ')}, but found #{m_header_1}"
       end
 
       scores_header = matrix_file.readline.strip
@@ -76,12 +76,13 @@ class ParseUtils
       @child_count = 0
 
       # read first line manually and initialize containers for storing temporary data yet to be added to documents
-      Rails.logger.info "#{Time.now}: Creating new gene & data_array records from 10X CellRanger source data for #{study.name}"
+      Rails.logger.info "#{Time.now}: Initializing data structures from 10X CellRanger source data for #{study.name}"
       line = matrix_file.readline.strip
       gene_index, barcode_index, expression_score = parse_line(line)
       @last_gene_index, @current_gene = initialize_new_gene(study, gene_index, matrix_study_file)
       @current_barcodes = [@barcodes[barcode_index]]
       @current_expression = [expression_score]
+      Rails.logger.info "#{Time.now}: Creating new gene & data_array records from 10X CellRanger source data for #{study.name}"
 
       # now process all lines
       process_matrix_data(study, matrix_file, matrix_study_file)
@@ -399,7 +400,7 @@ class ParseUtils
                                                    study.firecloud_workspace, study_file.bucket_location,
                                                    study.data_store_path, verify: :none)
       Rails.logger.info "Successful localization of #{study_file.upload_file_name}"
-      local_path = File.join(study.data_store_path, study_file.download_location)
+      local_path = File.join(study.data_store_path, study_file.bucket_location)
     end
     content_type = study_file.determine_content_type
     if content_type == 'application/gzip'
