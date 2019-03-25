@@ -1634,8 +1634,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   #   - +Boolean+ indication if content is JSON
   def is_json?(content)
     if content.present?
-      content.gsub!(/\n/, '') # remove newlines that may break this check
-      chars = [content[0], content[content.size - 1]]
+      sanitized_content = content.gsub(/\n/, '') # remove newlines that may break this check
+      chars = [sanitized_content[0], sanitized_content[sanitized_content.size - 1]]
       chars == %w({ }) || chars == %w([ ])
     else
       false
