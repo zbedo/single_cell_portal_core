@@ -1,16 +1,16 @@
 module Api
   module V1
     module Concerns
-      module Authenticator
+      module SiteAuthenticator
         extend ActiveSupport::Concern
         include CurrentApiUser
 
         included do
-          before_action :authenticate_api_user!, unless: proc { %w(schemas taxons status site).include?(controller_name)}
+          before_action :set_current_api_user!
         end
 
-        def authenticate_api_user!
-          head 401 unless api_user_signed_in?
+        def set_current_api_user!
+          api_user_signed_in? ? current_api_user : nil
         end
 
         def api_user_signed_in?
