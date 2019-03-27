@@ -436,6 +436,34 @@ class Study
     end
   end
 
+  swagger_schema :SiteStudy do
+    key :name, 'Study'
+    property :name do
+      key :type, :string
+      key :description, 'Name of Study'
+    end
+    property :description do
+      key :type, :string
+      key :description, 'HTML description blob for Study'
+    end
+    property :accession do
+      key :type, :string
+      key :description, 'Accession (used in permalinks, not editable)'
+    end
+    property :cell_count do
+      key :type, :number
+      key :format, :integer
+      key :default, 0
+      key :description, 'Number of unique cell names in Study (set from Metadata StudyFile)'
+    end
+    property :gene_count do
+      key :type, :number
+      key :format, :integer
+      key :default, 0
+      key :description, 'Number of unique gene names in Study (set from Expression Matrix or 10X Genes File)'
+    end
+  end
+
 
   ###
   #

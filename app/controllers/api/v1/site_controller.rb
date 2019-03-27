@@ -1,10 +1,40 @@
 module Api
   module V1
     class SiteController < ApiBaseController
-      include Concerns::SiteAuthenticator
+      include Concerns::Authenticator
+      include Swagger::Blocks
 
+      before_action :set_current_api_user!
       before_action :set_study, except: [:studies]
       before_action :check_study_permission, except: [:studies]
+      before_action :set_study_file, only: [:download_data, :stream_data]
+      before_action :get_download_quota, only: [:download_data, :stream_data]
+
+
+      swagger_path '/site/studies' do
+        operation :get do
+          key :tags, [
+              'Site'
+          ]
+          key :summary, 'Find all Studies viewable to user'
+          key :description, 'Returns all Studies viewable by the current user, including public studies'
+          key :operationId, 'site_studies_path'
+          response 200 do
+            key :description, 'Array of Study objects'
+            schema do
+              key :type, :array
+              key :title, 'Array'
+              items do
+                key :title, 'Study'
+                key :'$ref', :SiteStudy
+              end
+            end
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+        end
+      end
 
       def studies
         if api_user_signed_in?
@@ -14,20 +44,53 @@ module Api
         end
       end
 
+      swagger_path '/site/view_study/{accession}' do
+        operation :get do
+          key :tags, [
+              'Site'
+          ]
+          key :summary, 'View a Study & available StudyFiles'
+          key :description, 'View a single Study, and any StudyFiles available for download/streaming'
+          key :operationId, 'site_view_study_path'
+          response 200 do
+            key :description, 'Study, Array of StudyFiles'
+            schema do
+              key :title, 'Study'
+              key :'$ref', :SiteStudy
+              property type: :array do
+                items type: :object do
+                  key :title, 'StudyFile'
+                  property :name, type: :string, description: 'Name of StudyFile/Object'
+                end
+              end
+            end
+          end
+          response 403 do
+            key :description, 'User is not allowed to view study'
+          end
+          response 404 do
+            key :description, 'Study not found'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+        end
+      end
+
       def view_study
 
       end
 
       def download_data
         begin
-          # get filesize and make sure the user is under their quota
-          requested_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.firecloud_project, @study.firecloud_workspace, params[:filename])
-          if requested_file.present?
-            filesize = requested_file.size
+          if @study_file.present?
+            filesize = @study_file.upload_file_size
             user_quota = current_api_user.daily_download_quota + filesize
             # check against download quota that is loaded in ApplicationController.get_download_quota
             if user_quota <= @download_quota
-              @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, 0, @study.firecloud_project, @study.firecloud_workspace, params[:filename], expires: 15)
+              @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, 0, @study.firecloud_project,
+                                                                         @study.firecloud_workspace, @study_file.bucket_location,
+                                                                         expires: 15)
               current_api_user.update(daily_download_quota: user_quota)
               redirect_to @signed_url
             else
@@ -47,14 +110,12 @@ module Api
 
       def stream_data
         begin
-          # get filesize and make sure the user is under their quota
-          requested_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.firecloud_project, @study.firecloud_workspace, params[:filename])
-          if requested_file.present?
-            filesize = requested_file.size
+          if @study_file.present?
+            filesize = @study_file.upload_file_size
             user_quota = current_api_user.daily_download_quota + filesize
             # check against download quota that is loaded in ApplicationController.get_download_quota
             if user_quota <= @download_quota
-              @media_url = Study.firecloud_client.execute_gcloud_method(:generate_api_url, 0, @study.firecloud_project, @study.firecloud_workspace, params[:filename])
+              @media_url = @study_file.api_url
               current_api_user.update(daily_download_quota: user_quota)
               render json: {filename: params[:filename], url: @media_url}
             else
@@ -81,8 +142,23 @@ module Api
         end
       end
 
+      def set_study_file
+        @study_file = @study.study_files.detect {|file| file.upload_file_name == params[:filename] || file.bucket_location == params[:filename]}
+      end
+
       def check_study_permission
         head 403 unless @study.can_view?(current_api_user)
+      end
+
+      # retrieve the current download quota
+      def get_download_quota
+        config_entry = AdminConfiguration.find_by(config_type: 'Daily User Download Quota')
+        if config_entry.nil? || config_entry.value_type != 'Numeric'
+          # fallback in case entry cannot be found or is set to wrong type
+          @download_quota = 2.terabytes
+        else
+          @download_quota = config_entry.convert_value_by_type
+        end
       end
     end
   end

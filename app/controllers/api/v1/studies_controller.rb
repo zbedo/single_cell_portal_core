@@ -2,9 +2,11 @@ module Api
   module V1
     class StudiesController < ApiBaseController
 
+      include Concerns::Authenticator
       include Concerns::FireCloudStatus
       include Swagger::Blocks
 
+      before_action :authenticate_api_user!
       before_action :set_study, except: [:index, :create]
       before_action :check_study_permission, except: [:index, :create]
 
