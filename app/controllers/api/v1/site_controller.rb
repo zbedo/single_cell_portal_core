@@ -52,17 +52,18 @@ module Api
           key :summary, 'View a Study & available StudyFiles'
           key :description, 'View a single Study, and any StudyFiles available for download/streaming'
           key :operationId, 'site_view_study_path'
+          parameter do
+            key :name, :accession
+            key :in, :path
+            key :description, 'Accession of Study to fetch'
+            key :required, true
+            key :type, :string
+          end
           response 200 do
             key :description, 'Study, Array of StudyFiles'
             schema do
-              key :title, 'Study'
-              key :'$ref', :SiteStudy
-              property type: :array do
-                items type: :object do
-                  key :title, 'StudyFile'
-                  property :name, type: :string, description: 'Name of StudyFile/Object'
-                end
-              end
+              key :title, 'Study, StudyFiles'
+              key :'$ref', :SiteStudyWithFiles
             end
           end
           response 403 do
@@ -79,6 +80,44 @@ module Api
 
       def view_study
 
+      end
+
+      swagger_path '/site/download_data/{accession}' do
+        operation :get do
+          key :tags, [
+              'Site'
+          ]
+          key :summary, 'Download a StudyFile'
+          key :description, 'Download a single StudyFile (via signed URL)'
+          key :operationId, 'site_download_data_path'
+          parameter do
+            key :name, :accession
+            key :in, :path
+            key :description, 'Accession of Study to fetch'
+            key :required, true
+            key :type, :string
+          end
+          parameter do
+            key :name, :filename
+            key :in, :query
+            key :description, 'Name/location of file to download'
+            key :required, true
+            key :type, :string
+          end
+          response 200 do
+            key :description, 'File object'
+            key :type, :file
+          end
+          response 403 do
+            key :description, 'User is not allowed to view study'
+          end
+          response 404 do
+            key :description, 'Study or StudyFile not found'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+        end
       end
 
       def download_data
@@ -105,6 +144,55 @@ module Api
           ErrorTracker.report_exception(e, current_api_user, error_context)
           logger.error "Error generating signed url for #{params[:filename]}; #{e.message}"
           render json: {error: "Error generating signed url for #{params[:filename]}; #{e.message}", status: 500}
+        end
+      end
+
+      swagger_path '/site/stream_data/{accession}' do
+        operation :get do
+          key :tags, [
+              'Site'
+          ]
+          key :summary, 'Stream a StudyFile'
+          key :description, 'Retrieve media URL for a StudyFile to stream to a client'
+          key :operationId, 'site_stream_data_path'
+          parameter do
+            key :name, :accession
+            key :in, :path
+            key :description, 'Accession of Study to fetch'
+            key :required, true
+            key :type, :string
+          end
+          parameter do
+            key :name, :filename
+            key :in, :query
+            key :description, 'Name/location of file to download'
+            key :required, true
+            key :type, :string
+          end
+          response 200 do
+            key :description, 'JSON object with media url'
+            schema do
+              key :type, :object
+              key :title, 'File Details'
+              property :filename do
+                key :type, :string
+                key :description, 'Name of file'
+              end
+              property :url do
+                key :type, :string
+                key :description, 'Media URL to stream requested file (requires Authorization Bearer token to access)'
+              end
+            end
+          end
+          response 403 do
+            key :description, 'User is not allowed to view study'
+          end
+          response 404 do
+            key :description, 'Study or StudyFile not found'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
         end
       end
 
@@ -147,7 +235,7 @@ module Api
       end
 
       def check_study_permission
-        head 403 unless @study.can_view?(current_api_user)
+        head 403 unless @study.public? || @study.can_view?(current_api_user)
       end
 
       # retrieve the current download quota

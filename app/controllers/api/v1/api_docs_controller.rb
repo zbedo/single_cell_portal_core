@@ -18,6 +18,14 @@ module Api
           end
         end
         tag do
+          key :name, 'Site'
+          key :description, 'Browse public/shared Studies & available StudyFiles'
+        end
+        tag do
+          key :name, 'Status'
+          key :description, 'Status operations'
+        end
+        tag do
           key :name, 'Studies'
           key :description, 'Study operations'
         end
@@ -38,12 +46,12 @@ module Api
           key :description, 'DirectoryListing operations'
         end
         tag do
-          key :name, 'Status'
-          key :description, 'Status operations'
+          key :name, 'Schemas'
+          key :description, 'Descriptions of SCP model schemas'
         end
         tag do
-          key :name, 'Site'
-          key :description, 'Browse public/shared Studies & available StudyFiles'
+          key :name, 'Taxons'
+          key :description, 'List of available species, genome assemblies & annotations'
         end
         key :host, "#{ENV['HOSTNAME']}"
         key :basePath, '/single_cell/api/v1'
