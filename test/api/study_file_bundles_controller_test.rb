@@ -1,6 +1,6 @@
 require 'api_test_helper'
 
-class StudyFileBundlesControllerControllerTest < ActionDispatch::IntegrationTest
+class StudyFileBundlesControllerTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
   include Requests::JsonHelpers
   include Requests::HttpHelpers
