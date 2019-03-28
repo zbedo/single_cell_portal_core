@@ -9,6 +9,9 @@ class ApplicationController < ActionController::Base
   #
   ###
 
+  before_action :set_csrf_headers
+  before_action :check_session_timeout
+
   # Prevent CSRF attacks by raising an exception.
   # For APIs, you may want to use :null_session instead.
   protect_from_forgery with: :exception
@@ -17,7 +20,6 @@ class ApplicationController < ActionController::Base
   before_action :set_selected_branding_group
 
   rescue_from ActionController::InvalidAuthenticityToken, with: :invalid_csrf
-
 
   # auth action for portal admins
   def authenticate_admin
@@ -103,5 +105,21 @@ class ApplicationController < ActionController::Base
     parsed_query = Rack::Utils.parse_query(uri.query)
     # return true if the scheme is https, the hostname matches a known GCS host, and the query string parameters have the correct keys
     uri.scheme == 'https' && ValidationTools::GCS_HOSTNAMES.include?(uri.hostname) && parsed_query.keys == ValidationTools::SIGNED_URL_KEYS
+  end
+
+  def handle_401
+    respond_to do |format|
+      format.html {redirect_to new_user_session_path, alert: 'Your session has expired.'}
+      format.js {render js: "alert('Your session has expired; Please log in again')"}
+    end
+  end
+
+  protected
+
+  # patch to supply CSRF token on all ajax requests if it is not present
+  def set_csrf_headers
+    if request.xhr?
+      cookies['XSRF-TOKEN'] = form_authenticity_token if cookies['XSRF-TOKEN'].blank?
+    end
   end
 end

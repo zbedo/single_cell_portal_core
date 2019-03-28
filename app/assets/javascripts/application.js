@@ -963,3 +963,10 @@ window.clearGeneSearchLoading = function() {
     $('#wrap').data('spinner').stop();
     $('#gene-search-results-count').html($('.gene-panel').length);
 };
+
+// force login on ajax 401
+$(document).ajaxError(function (e, xhr, settings) {
+    if (xhr.status == 401) {
+        location.reload();
+    }
+});
