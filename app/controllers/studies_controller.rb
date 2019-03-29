@@ -196,23 +196,34 @@ class StudiesController < ApplicationController
 
     # now check against latest list of files by directory vs. what was just found to see if we are missing anything and
     # add directory to unsynced list. also check if an existing directory is now 'orphaned' because it was moved and
-    # store that reference for removal after the check is complete
+    # store that reference for removal after the check is complete.  we make a list of files to remove and then take
+    # them out at the end as removing them from the list mid-iteration will skip the next file accidentally
     orphaned_directories = []
     @directories.each do |directory|
       synced = true
       if @files_by_dir[directory.name].present?
+        remove_from_dir = []
         directory.files.each do |file|
-          if @files_by_dir[directory.name].detect {|f| f['generation'].to_s == file['generation'].to_s}.nil?
+          if @files_by_dir[directory.name].detect {|f| f['generation'].to_i == file['generation'].to_i}.nil?
             synced = false
-            directory.files.delete(file)
+            remove_from_dir << file
           else
             next
           end
         end
         # if no longer synced, check if already in the list and remove as files list has changed
         if !synced
+          directory.sync_status = false
+          # remove files that are no longer present
+          remove_from_dir.each do |remove|
+            directory.files.delete(remove)
+          end
           @unsynced_directories.delete_if {|dir| dir.name == directory.name}
-          @unsynced_directories << directory
+          if directory.files.any?
+            @unsynced_directories << directory
+          else
+            orphaned_directories << directory # queue for deletion as this directory is empty now
+          end
         elsif directory.sync_status
           @synced_directories << directory
         end
@@ -1466,7 +1477,7 @@ class StudiesController < ApplicationController
     if existing_dir.nil?
       dir = @study.directory_listings.build(name: directory, file_type: file_type, files: [found_file], sync_status: false)
       @unsynced_directories << dir
-    elsif existing_dir.files.detect {|f| f['generation'].to_i == file.generation }.nil?
+    elsif existing_dir.files.detect {|f| f['generation'].to_i == file.generation.to_i }.nil?
       existing_dir.files << found_file
       existing_dir.sync_status = false
       if @unsynced_directories.map(&:name).include?(existing_dir.name)
