@@ -967,6 +967,8 @@ window.clearGeneSearchLoading = function() {
 // force login on ajax 401
 $(document).ajaxError(function (e, xhr, settings) {
     if (xhr.status == 401) {
-        location.reload();
+        alert('You are not signed in or your session has expired - please login to continue.');
+        var url = 'https://' + window.location.hostname + '/single_cell/users/auth/google_oauth2';
+        location.href = url;
     }
 });

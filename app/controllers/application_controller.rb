@@ -10,7 +10,6 @@ class ApplicationController < ActionController::Base
   ###
 
   before_action :set_csrf_headers
-  before_action :check_session_timeout
 
   # Prevent CSRF attacks by raising an exception.
   # For APIs, you may want to use :null_session instead.
