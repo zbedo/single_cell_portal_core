@@ -717,6 +717,41 @@ class Study
 
   ###
   #
+  # DATA VISUALIZATION GETTERS
+  #
+  # used to govern rendering behavior on /app/views/site/_study_visualize.html
+  ##
+
+  def has_expression_data?
+    self.genes.any?
+  end
+
+  def has_cluster_data?
+    self.cluster_groups.any?
+  end
+
+  def has_cell_metadata?
+    self.cell_metadata.any?
+  end
+
+  def has_gene_lists?
+    self.precomputed_scores.any?
+  end
+
+  def can_visualize_clusters?
+    self.has_cluster_data? && self.has_cell_metadata?
+  end
+
+  def can_visualize_genome_data?
+    self.has_bam_files? || self.has_analysis_outputs?('infercnv', 'ideogram.js')
+  end
+
+  def can_visualize?
+    self.can_visualize_clusters? || self.can_visualize_genome_data?
+  end
+
+  ###
+  #
   # DATA PATHS & URLS
   #
   ###

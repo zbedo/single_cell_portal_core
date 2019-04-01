@@ -1,5 +1,6 @@
 <div id="view-options-panel" class="panel sidebar-offcanvas">
 	<div id="view-options" class="panel-default no-top-border">
+    <% if @study.can_visualize_clusters? %>
       <div id="precomputed-panel" class="no-top-border">
         <div class="panel-body">
           <div id="precomputed" class="panel-collapse collapse <% if action_name != /precomputed/ %>in<% end %>">
@@ -25,7 +26,20 @@
           </div>
         </div>
       </div>
+    <% elsif !@study.can_visualize_clusters? && @study.has_analysis_outputs?('infercnv', 'ideogram.js') %>
+      <div id="ideogram-panel" class="no-top-border">
+        <div class="panel-body">
+          <div id="ideogram-options" class="panel-collapse collapse in">
+            <div class="form-group col-sm-4">
+              <%= label_tag :ideogram_annotation, 'Select Ideogram Annotation' %><br />
+              <%= select_tag :ideogram_annotation, options_for_select(@ideogram_files), class: 'form-control' %>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
       <div id="view-options-accordion" class="panel-group">
+        <% if @study.has_expression_data? %>
         <div id="expression-options-panel" class="panel <%= /view_gene_(set_)?expression$/.match(action_name) ? "panel-info" : "panel-default" %>">
             <div class="panel-heading">
               <div class="panel-title">
@@ -121,6 +135,7 @@
           </div>
         </div>
       </div>
+    <% end %>
     </div>
   </div>
 </div>

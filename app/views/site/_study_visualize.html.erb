@@ -6,9 +6,11 @@
     <div class="row-offcanvas row-offcanvas-right">
       <div id="view-options-nav"><a href="#view-options" id="view-option-link" data-toggle="offcanvas"><i class="fas fa-cog" aria-hidden="true"></i> View Options </a></div>
       <ul class="nav nav-tabs" role="tablist" id="view-tabs">
-        <li role="presentation" class="study-nav active" id="plots-tab-nav"><a href="#plots-tab" data-toggle="tab">Clusters </a></li>
-        <% if @study.has_analysis_outputs?('infercnv', 'ideogram.js') or @study.has_bam_files? %>
-          <li role="presentation" class="study-nav" id="genome-tab-nav">
+        <% if @study.can_visualize_clusters? %>
+          <li role="presentation" class="study-nav active" id="plots-tab-nav"><a href="#plots-tab" data-toggle="tab">Clusters </a></li>
+        <% end %>
+        <% if @study.can_visualize_genome_data? %>
+          <li role="presentation" class="study-nav<%= !@study.can_visualize_clusters? ? ' active' : nil %>" id="genome-tab-nav">
             <a href="#genome-tab" data-toggle="tab">Genome </a>
           </li>
         <% end %>
@@ -35,7 +37,7 @@
           </div>
         </div>
       </div>
-      <% if @study.has_analysis_outputs?('infercnv', 'ideogram.js') or @study.has_bam_files? %>
+      <% if @study.can_visualize_genome_data? %>
         <div class="tab-pane" id="genome-tab" role="tabpanel" >
           <div class="panel panel-default no-top-border">
             <div id="genome-container" class="panel-collapse collapse in"></div>
@@ -48,7 +50,7 @@
 </div>
 </div>
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
-
+  <% if @study.can_visualize_clusters? %>
     $('#cluster-plot').data('rendered', false);
 
     var baseCamera = {
@@ -138,5 +140,5 @@
             }
         });
     });
-
+  <% end %>
 </script>

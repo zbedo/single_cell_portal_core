@@ -311,11 +311,21 @@ class SiteController < ApplicationController
     @allow_edits = Study.firecloud_client.services_available?('Sam', 'Rawls')
     set_study_default_options
     # load options and annotations
-    if @study.initialized?
+    if @study.can_visualize_clusters?
       @options = load_cluster_group_options
       @cluster_annotations = load_cluster_group_annotations
       # call set_selected_annotation manually
       set_selected_annotation
+    end
+
+    if @study.has_analysis_outputs?('infercnv', 'ideogram.js')
+      @ideogram_files = []
+      Parallel.map(@study.get_analysis_outputs('infercnv', 'ideogram.js'), in_threads: 100) do |file|
+        opts = file.options.with_indifferent_access # allow lookup by string or symbol
+        cluster_name = opts[:cluster_name]
+        annotation_name = opts[:annotation_name].split('--').first
+        @ideogram_files << ["#{cluster_name}: #{annotation_name}", file.api_url]
+      end
     end
 
     # set various permission variables to govern what tabs to show and decrease load times
