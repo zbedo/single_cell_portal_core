@@ -3,8 +3,10 @@ module Api
     class StudyFilesController < ApiBaseController
 
       include Concerns::FireCloudStatus
+      include Concerns::Authenticator
       include Swagger::Blocks
 
+      before_action :authenticate_api_user!
       before_action :set_study
       before_action :check_study_permission
       before_action :set_study_file, except: [:index, :create, :bundle]

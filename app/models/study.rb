@@ -436,6 +436,78 @@ class Study
     end
   end
 
+  swagger_schema :SiteStudy do
+    property :name do
+      key :type, :string
+      key :description, 'Name of Study'
+    end
+    property :description do
+      key :type, :string
+      key :description, 'HTML description blob for Study'
+    end
+    property :accession do
+      key :type, :string
+      key :description, 'Accession (used in permalinks, not editable)'
+    end
+    property :public do
+      key :type, :boolean
+      key :default, true
+      key :description, 'Boolean indication of whether Study is publicly readable'
+    end
+    property :cell_count do
+      key :type, :number
+      key :format, :integer
+      key :default, 0
+      key :description, 'Number of unique cell names in Study (set from Metadata StudyFile)'
+    end
+    property :gene_count do
+      key :type, :number
+      key :format, :integer
+      key :default, 0
+      key :description, 'Number of unique gene names in Study (set from Expression Matrix or 10X Genes File)'
+    end
+  end
+
+  swagger_schema :SiteStudyWithFiles do
+    property :name do
+      key :type, :string
+      key :description, 'Name of Study'
+    end
+    property :description do
+      key :type, :string
+      key :description, 'HTML description blob for Study'
+    end
+    property :accession do
+      key :type, :string
+      key :description, 'Accession (used in permalinks, not editable)'
+    end
+    property :public do
+      key :type, :boolean
+      key :default, true
+      key :description, 'Boolean indication of whether Study is publicly readable'
+    end
+    property :cell_count do
+      key :type, :number
+      key :format, :integer
+      key :default, 0
+      key :description, 'Number of unique cell names in Study (set from Metadata StudyFile)'
+    end
+    property :gene_count do
+      key :type, :number
+      key :format, :integer
+      key :default, 0
+      key :description, 'Number of unique gene names in Study (set from Expression Matrix or 10X Genes File)'
+    end
+    property :study_files do
+      key :type, :array
+      key :description, 'Available StudyFiles for download/streaming'
+      items do
+        key :title, 'StudyFile'
+        key '$ref', 'SiteStudyFile'
+      end
+    end
+  end
+
 
   ###
   #

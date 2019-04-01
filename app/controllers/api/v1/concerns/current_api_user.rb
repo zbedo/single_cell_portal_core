@@ -1,20 +1,7 @@
 module Api
   module V1
     module Concerns
-      module Authenticator
-        extend ActiveSupport::Concern
-
-        def authenticate_api_user!
-          head 401 unless api_user_signed_in?
-        end
-
-        def set_current_api_user!
-          current_api_user
-        end
-
-        def api_user_signed_in?
-          current_api_user.present?
-        end
+      module CurrentApiUser
 
         # method to authenticate a user via Authorization Bearer tokens
         def current_api_user
@@ -42,7 +29,7 @@ module Api
                     auth_response_headers: response.present? ? response.headers : nil
                 }
                 ErrorTracker.report_exception(e, user, error_context)
-                Rails.logger.error "Error retrieving user api credentials: #{e.class.name}: #{e.message}"
+                Rails.logger.error "Error retrieving user API credentials: #{e.class.name}: #{e.message}"
               end
             end
             user
@@ -59,7 +46,6 @@ module Api
             token
           end
         end
-
       end
     end
   end

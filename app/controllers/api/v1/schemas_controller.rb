@@ -81,7 +81,7 @@ module Api
               'Schemas'
           ]
           key :summary, 'Describe the DirectoryListing schema'
-          key :description, 'Returns a description of all Study attributes, with names/types/defaults'
+          key :description, 'Returns a description of all DirectoryListing attributes, with names/types/defaults'
           key :operationId, 'schemas_directory_listings_path'
 
           response 200 do

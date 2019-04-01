@@ -349,6 +349,43 @@ class StudyFile
     end
   end
 
+  swagger_schema :SiteStudyFile do
+    key :name, 'StudyFile'
+    property :name do
+      key :type, :string
+      key :description, 'Name of StudyFile (either filename or name of Cluster/Gene List)'
+    end
+    property :description do
+      key :type, :string
+      key :description, 'StudyFile description, used in download views'
+    end
+    property :upload_content_type do
+      key :type, :string
+      key :description, 'Content-Type of upload File object'
+    end
+    property :upload_file_size do
+      key :type, :integer
+      key :description, 'Size (in bytes) of upload File object'
+    end
+    property :file_type do
+      key :type, :string
+      key :enum, StudyFile::STUDY_FILE_TYPES
+      key :description, 'Type of file, governs parsing/caching behavior'
+    end
+    property :bucket_location do
+      key :type, :string
+      key :description, 'Location in GCS bucket of File object'
+    end
+    property :download_url do
+      key :type, :string
+      key :description, 'URL to download file'
+    end
+    property :media_url do
+      key :type, :string
+      key :description, 'URL to stream file to client'
+    end
+  end
+
   swagger_schema :FileBundleInput do
     allOf do
       schema do
