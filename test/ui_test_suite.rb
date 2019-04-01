@@ -2215,7 +2215,7 @@ class UiTestSuite < Test::Unit::TestCase
 
     # check for reports
     report_plots = @driver.find_elements(:class, 'plotly-report')
-    assert report_plots.size == 11, "did not find correct number of plots, expected 9 but found #{report_plots.size}"
+    assert report_plots.size == 10, "did not find correct number of plots, expected 10 but found #{report_plots.size}"
     report_plots.each do |plot|
       rendered = @driver.execute_script("return $('##{plot['id']}').data('rendered')")
       assert rendered, "#{plot['id']} rendered status was not true"
@@ -2235,6 +2235,31 @@ class UiTestSuite < Test::Unit::TestCase
     @wait.until {wait_for_plotly_render('#plotly-study-email-domain-dist', 'rendered')}
     layout = @driver.execute_script("return document.getElementById('plotly-study-email-domain-dist').layout")
     assert !layout['annotations'].nil?, "did not turn on annotations, expected annotations array but found #{layout['annotations']}"
+
+    # if present, export pipeline stats
+    if element_present?(:id, 'export-submission-report')
+      export_btn = @driver.find_element(:id, 'export-submission-report')
+      export_btn.click
+
+      filename = "analysis_submissions_#{Date.today.strftime('%F')}.txt"
+      download_path = File.join($download_dir, filename)
+
+      i = 0
+      while !File.exists?(download_path)
+        omit_if i >= 30, 'Skipping test; waited 30 seconds but no submission report complete yet.'
+        sleep 1
+        i += 1
+      end
+      submission_report = File.open(download_path)
+      headers = submission_report.readline.split("\t").map(&:strip)
+      expected_headers = %w(email analysis completion_date)
+      assert headers == expected_headers,
+             "Did not find correctly formatted report, expected headers of '#{expected_headers.join(', ')}' but found '#{headers.join(', ')}'"
+
+      # clean up
+      submission_report.close
+      File.delete(download_path)
+    end
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
