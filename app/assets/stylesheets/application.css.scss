@@ -622,3 +622,17 @@ h4, .h4, h5, .h5, h6, .h6 {
   border: 1px dashed #666666;
   border-radius: 4px;
 }
+.code-div{
+  float: none;
+  margin: 0 auto;
+}
+.code-example {
+  padding: 2px 4px;
+  font-size: 90%;
+  color: #c7254e;
+  background-color: #f9f2f4;
+  border-radius: 4px;
+}
+.upload-wizard {
+  font-size: 18px;
+}
