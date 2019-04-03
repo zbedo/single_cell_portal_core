@@ -135,6 +135,12 @@ module Api
             end
           end
           parameter do
+            key :name, 'study_file[name]'
+            key :in, :formData
+            key :required, true
+            key :type, :string
+          end
+          parameter do
             key :name, 'study_file[species]'
             key :description, '(optional) Common name of a species registered in the portal to set taxon_id association manually'
             key :type, :string
