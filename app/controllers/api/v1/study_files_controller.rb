@@ -557,10 +557,10 @@ module Api
         assembly_name = param_list[:assembly]
         matching_taxon = Taxon.find_by(common_name: /#{species_name}/i)
         matching_assembly = GenomeAssembly.find_by(name: /#{assembly_name}/i)
-        if matching_taxon.present?
+        if matching_taxon.present? && !species_name.blank?
           @study_file.taxon_id = matching_taxon.id
         end
-        if matching_assembly.present?
+        if matching_assembly.present? && !assembly_name.blank?
           @study_file.genome_assembly_id = matching_assembly.id
         end
       end
