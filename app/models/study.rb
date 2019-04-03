@@ -1053,7 +1053,8 @@ class Study
   # return all study files for a given analysis & visualization component
   def get_analysis_outputs(analysis_name, visualization_name=nil, cluster_name=nil, annotation_name=nil)
     criteria = {
-        'options.analysis_name' => analysis_name
+        'options.analysis_name' => analysis_name,
+        :queued_for_deletion => false
     }
     if visualization_name.present?
       criteria.merge!('options.visualization_name' => visualization_name)

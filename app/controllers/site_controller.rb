@@ -72,20 +72,20 @@ class SiteController < ApplicationController
       @viewable = @viewable.where(branding_group_id: @selected_branding_group.id)
     end
 
-    # if search params are present, filter accordingly
-    if !params[:search_terms].blank?
-      params[:search_terms] = sanitize_search_values(params[:search_terms])
-      @studies = @viewable.where({:$text => {:$search => params[:search_terms]}}).paginate(page: params[:page], per_page: Study.per_page)
-    else
-      @studies = @viewable.paginate(page: params[:page], per_page: Study.per_page)
-    end
-
     # determine study/cell count based on viewable to user
     @study_count = @viewable.count
     @cell_count = @viewable.map(&:cell_count).inject(&:+)
 
     if @cell_count.nil?
       @cell_count = 0
+    end
+
+    # if search params are present, filter accordingly
+    if !params[:search_terms].blank?
+      params[:search_terms] = sanitize_search_values(params[:search_terms])
+      @studies = @viewable.where({:$text => {:$search => params[:search_terms]}}).paginate(page: params[:page], per_page: Study.per_page)
+    else
+      @studies = @viewable.paginate(page: params[:page], per_page: Study.per_page)
     end
   end
 
@@ -319,12 +319,17 @@ class SiteController < ApplicationController
     end
 
     if @study.has_analysis_outputs?('infercnv', 'ideogram.js')
-      @ideogram_files = []
-      Parallel.map(@study.get_analysis_outputs('infercnv', 'ideogram.js'), in_threads: 100) do |file|
+      @ideogram_files = {}
+      @study.get_analysis_outputs('infercnv', 'ideogram.js').each do |file|
         opts = file.options.with_indifferent_access # allow lookup by string or symbol
         cluster_name = opts[:cluster_name]
         annotation_name = opts[:annotation_name].split('--').first
-        @ideogram_files << ["#{cluster_name}: #{annotation_name}", file.api_url]
+        @ideogram_files[file.id.to_s] = {
+            cluster: cluster_name,
+            annotation: opts[:annotation_name],
+            display: "#{cluster_name}: #{annotation_name}",
+            ideogram_settings: @study.get_ideogram_infercnv_settings(cluster_name, opts[:annotation_name])
+        }
       end
     end
 

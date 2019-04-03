@@ -17,37 +17,42 @@
       </ul>
       <%= render partial: 'view_options' %>
       <div class="tab-content">
-        <div class="tab-pane active" id="plots-tab" role="tabpanel">
-          <div class="panel panel-default no-top-border">
-            <div id="plots" class="panel-collapse collapse in">
-              <div class="panel-body">
-                <div class="col-md-12">
-                  <div class="row">
-                    <div class="col-xs-12">
-                      <div id="colorscale-target"></div>
-                      <div id="toggle-plots"></div>
+        <% if @study.can_visualize_clusters? %>
+          <div class="tab-pane active" id="plots-tab" role="tabpanel">
+            <div class="panel panel-default no-top-border">
+              <div id="plots" class="panel-collapse collapse in">
+                <div class="panel-body">
+                  <div class="col-md-12">
+                    <div class="row">
+                      <div class="col-xs-12">
+                        <div id="colorscale-target"></div>
+                        <div id="toggle-plots"></div>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div id="cluster-plot"></div>
+                      <div id="cluster-figure-legend"></div>
                     </div>
                   </div>
-                  <div class="row">
-                    <div id="cluster-plot"></div>
-                    <div id="cluster-figure-legend"></div>
-                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-      <% if @study.can_visualize_genome_data? %>
-        <div class="tab-pane" id="genome-tab" role="tabpanel" >
-          <div class="panel panel-default no-top-border">
-            <div id="genome-container" class="panel-collapse collapse in"></div>
-            <%= render partial: '/site/genome/genome' %>
+        <% end %>
+        <% if @study.can_visualize_genome_data? %>
+          <div class="tab-pane<%= !@study.can_visualize_clusters? ? ' active' : nil%>" id="genome-tab" role="tabpanel" >
+            <div class="panel panel-default no-top-border">
+              <div id="genome-container" class="panel-collapse collapse in">
+                <div style="padding: 15px 30px;">
+                  <%= render partial: '/site/genome/genome' %>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      <% end %>
+        <% end %>
+      </div>
     </div>
   </div>
-</div>
 </div>
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
   <% if @study.can_visualize_clusters? %>
@@ -140,5 +145,33 @@
             }
         });
     });
+  <% end %>
+    $('#ideogram_annotation').on('change', function() {
+        var ideogramFiles = <%= raw @ideogram_files.to_json %>;
+        var fileId = $(this).val();
+        if (fileId !== '') {
+            var ideogramAnnot = ideogramFiles[fileId];
+            window.ideogramInferCnvSettings = ideogramAnnot.ideogram_settings;
+            initializeIdeogram(ideogramAnnot.ideogram_settings.annotationsPath);
+        } else {
+            $('#tracks-to-display, #_ideogramOuterWrap').html('');
+            $('#ideogramTitle').remove();
+        }
+
+    });
+  <% if !@study.can_visualize_clusters? && @ideogram_files.present? %>
+    // user has no clusters, but does have ideogram annotations
+    $(document).ready(function () {
+        if (<%= !user_signed_in? %>) {
+          $('#study-tabs a[href="#study-visualize"]').on('shown.bs.tab', function() {
+              $('#genome-tab-nav').click(); // force user to sign in
+          });
+        } else {
+            var ideogramSelect = $('#ideogram_annotation');
+            var firstIdeogram = $('#ideogram_annotation option')[1].value;
+            ideogramSelect.val(firstIdeogram).trigger('change'); // manually trigger change to cause ideogram to render
+        }
+    });
+
   <% end %>
 </script>
