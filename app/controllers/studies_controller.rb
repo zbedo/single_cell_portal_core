@@ -395,7 +395,7 @@ class StudiesController < ApplicationController
       # delete firecloud workspace so it can be reused (unless specified by user), and raise error if unsuccessful
       # if successful, we're clear to queue the study for deletion
       if params[:workspace] == 'persist'
-        @study.update(firecloud_workspace: nil)
+        @study.update(firecloud_workspace: SecureRandom.uuid)
       else
         begin
           Study.firecloud_client.delete_workspace(@study.firecloud_project, @study.firecloud_workspace)

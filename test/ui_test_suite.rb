@@ -188,7 +188,7 @@ class UiTestSuite < Test::Unit::TestCase
     opts = species_dropdown.find_elements(:tag_name, 'option')
     available_species = opts.delete_if {|opt| opt['value'] == ''}
     if available_species.any?
-      species_dropdown.send_key(available_species.sample.text)
+      species_dropdown.send_keys(available_species.sample.text)
     end
     # upload expression matrix
     upload_expression = @driver.find_element(:id, 'upload-expression')
@@ -209,7 +209,7 @@ class UiTestSuite < Test::Unit::TestCase
     opts = species_dropdown.find_elements(:tag_name, 'option')
     available_species = opts.delete_if {|opt| opt['value'] == ''}
     if available_species.any?
-      species_dropdown.send_key(available_species.sample.text)
+      species_dropdown.send_keys(available_species.sample.text)
     end
     upload_expression_2 = exp_2_form.find_element(:id, 'upload-expression')
     upload_expression_2.send_keys(@test_data_path + 'expression_matrix_example_2.txt')
@@ -240,15 +240,15 @@ class UiTestSuite < Test::Unit::TestCase
     upload_cluster.send_keys(@test_data_path + 'cluster_example_2.txt')
     wait_for_render(:id, 'start-file-upload')
     # add labels and axis ranges
-    cluster_form_1.find_element(:id, :study_file_x_axis_min).send_key(-100)
-    cluster_form_1.find_element(:id, :study_file_x_axis_max).send_key(100)
-    cluster_form_1.find_element(:id, :study_file_y_axis_min).send_key(-75)
-    cluster_form_1.find_element(:id, :study_file_y_axis_max).send_key(75)
-    cluster_form_1.find_element(:id, :study_file_z_axis_min).send_key(-125)
-    cluster_form_1.find_element(:id, :study_file_z_axis_max).send_key(125)
-    cluster_form_1.find_element(:id, :study_file_x_axis_label).send_key('X Axis')
-    cluster_form_1.find_element(:id, :study_file_y_axis_label).send_key('Y Axis')
-    cluster_form_1.find_element(:id, :study_file_z_axis_label).send_key('Z Axis')
+    cluster_form_1.find_element(:id, :study_file_x_axis_min).send_keys(-100)
+    cluster_form_1.find_element(:id, :study_file_x_axis_max).send_keys(100)
+    cluster_form_1.find_element(:id, :study_file_y_axis_min).send_keys(-75)
+    cluster_form_1.find_element(:id, :study_file_y_axis_max).send_keys(75)
+    cluster_form_1.find_element(:id, :study_file_z_axis_min).send_keys(-125)
+    cluster_form_1.find_element(:id, :study_file_z_axis_max).send_keys(125)
+    cluster_form_1.find_element(:id, :study_file_x_axis_label).send_keys('X Axis')
+    cluster_form_1.find_element(:id, :study_file_y_axis_label).send_keys('Y Axis')
+    cluster_form_1.find_element(:id, :study_file_z_axis_label).send_keys('Z Axis')
     # perform upload
     upload_btn = cluster_form_1.find_element(:id, 'start-file-upload')
     upload_btn.click
@@ -297,7 +297,7 @@ class UiTestSuite < Test::Unit::TestCase
     opts = species_dropdown.find_elements(:tag_name, 'option')
     available_species = opts.delete_if {|opt| opt['value'] == '' || opt.text.downcase == 'human' }
     if available_species.any?
-      species_dropdown.send_key(available_species.sample.text)
+      species_dropdown.send_keys(available_species.sample.text)
     end
     upload_fastq = fastq_form.find_element(:class, 'upload-fastq')
     upload_fastq.send_keys(@test_data_path + 'cell_1_R1_001.fastq.gz')
@@ -316,7 +316,7 @@ class UiTestSuite < Test::Unit::TestCase
     opts = species_dropdown.find_elements(:tag_name, 'option')
     available_species = opts.delete_if {|opt| opt['value'] == '' || opt.text.downcase == 'human' }
     if available_species.any?
-      species_dropdown.send_key(available_species.sample.text)
+      species_dropdown.send_keys(available_species.sample.text)
     end
     new_upload_fastq = new_fastq_form.find_element(:class, 'upload-fastq')
     new_upload_fastq.send_keys(@test_data_path + 'cell_1_I1_001.fastq.gz')
@@ -428,7 +428,7 @@ class UiTestSuite < Test::Unit::TestCase
     opts = species_dropdown.find_elements(:tag_name, 'option')
     available_species = opts.delete_if {|opt| opt['value'] == ''}
     if available_species.any?
-      species_dropdown.send_key(available_species.sample.text)
+      species_dropdown.send_keys(available_species.sample.text)
     end
     upload_expression = exp_form.find_element(:id, 'upload-expression')
     upload_expression.send_keys(@test_data_path + 'expression_matrix_example.txt')
@@ -515,7 +515,7 @@ class UiTestSuite < Test::Unit::TestCase
     opts = species_dropdown.find_elements(:tag_name, 'option')
     available_species = opts.delete_if {|opt| opt['value'] == ''}
     if available_species.any?
-      species_dropdown.send_key(available_species.sample.text)
+      species_dropdown.send_keys(available_species.sample.text)
     end
     upload_expression = exp_form.find_element(:id, 'upload-expression')
     upload_expression.send_keys(@test_data_path + 'expression_matrix_example.txt')
@@ -606,7 +606,7 @@ class UiTestSuite < Test::Unit::TestCase
     opts = species_dropdown.find_elements(:tag_name, 'option')
     available_species = opts.delete_if {|opt| opt['value'] == ''}
     if available_species.any?
-      species_dropdown.send_key(available_species.sample.text)
+      species_dropdown.send_keys(available_species.sample.text)
     end
     upload_expression = exp_form.find_element(:id, 'upload-expression')
     upload_expression.send_keys(@test_data_path + 'expression_matrix_example_gzipped.txt.gz')
@@ -651,7 +651,7 @@ class UiTestSuite < Test::Unit::TestCase
     opts = species_dropdown.find_elements(:tag_name, 'option')
     available_species = opts.delete_if {|opt| opt['value'] == ''}
     if available_species.any?
-      species_dropdown.send_key(available_species.sample.text)
+      species_dropdown.send_keys(available_species.sample.text)
     end
     upload_expression = matrix_form.find_element(:id, 'upload-expression')
     upload_expression.send_keys(@test_data_path + 'GRCh38/test_matrix.mtx')
@@ -732,7 +732,7 @@ class UiTestSuite < Test::Unit::TestCase
     opts = species_dropdown.find_elements(:tag_name, 'option')
     available_species = opts.delete_if {|opt| opt['value'] == ''}
     if available_species.any?
-      species_dropdown.send_key(available_species.sample.text)
+      species_dropdown.send_keys(available_species.sample.text)
     end
     upload_expression = exp_form.find_element(:id, 'upload-expression')
     upload_expression.send_keys(@test_data_path + 'expression_matrix_example.txt')
@@ -854,7 +854,7 @@ class UiTestSuite < Test::Unit::TestCase
     opts = species_dropdown.find_elements(:tag_name, 'option')
     available_species = opts.delete_if {|opt| opt['value'] == ''}
     if available_species.any?
-      species_dropdown.send_key(available_species.sample.text)
+      species_dropdown.send_keys(available_species.sample.text)
     end
     upload_expression = exp_form.find_element(:id, 'upload-expression')
     upload_expression.send_keys(@test_data_path + 'expression_matrix_example_bad.txt')
@@ -874,7 +874,7 @@ class UiTestSuite < Test::Unit::TestCase
     opts = species_dropdown.find_elements(:tag_name, 'option')
     available_species = opts.delete_if {|opt| opt['value'] == ''}
     if available_species.any?
-      species_dropdown.send_key(available_species.sample.text)
+      species_dropdown.send_keys(available_species.sample.text)
     end
     upload_expression = exp_2_form.find_element(:id, 'upload-expression')
     upload_expression.send_keys(@test_data_path + 'R_format_text.txt')
@@ -1253,7 +1253,7 @@ class UiTestSuite < Test::Unit::TestCase
           opts = species_dropdown.find_elements(:tag_name, 'option')
           available_species = opts.delete_if {|opt| opt['value'] == ''}
           if available_species.any?
-            species_dropdown.send_key(available_species.sample.text)
+            species_dropdown.send_keys(available_species.sample.text)
           end
         when 'metadata_example.txt'
           file_type.send_keys('Metadata')
@@ -1276,7 +1276,7 @@ class UiTestSuite < Test::Unit::TestCase
         available_species = opts.delete_if {|opt| opt['value'] == ''}
         if available_species.any?
           taxon = available_species.sample.text
-          species_dropdown.send_key(taxon)
+          species_dropdown.send_keys(taxon)
         end
       end
 
@@ -1398,7 +1398,7 @@ class UiTestSuite < Test::Unit::TestCase
     # search for a gene
     gene = @genes.sample
     search_box = @driver.find_element(:id, 'search_genes')
-    search_box.send_key(gene)
+    search_box.send_keys(gene)
     search_genes = @driver.find_element(:id, 'perform-gene-search')
     search_genes.click
 
@@ -1648,7 +1648,7 @@ class UiTestSuite < Test::Unit::TestCase
     # search for a gene to make sure styles persist
     gene = @genes.sample
     search_box = @driver.find_element(:id, 'search_genes')
-    search_box.send_key(gene)
+    search_box.send_keys(gene)
     search_genes = @driver.find_element(:id, 'perform-gene-search')
     search_genes.click
     @wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
@@ -1979,7 +1979,7 @@ class UiTestSuite < Test::Unit::TestCase
       quota_edit = @driver.find_element(:class, 'daily-user-download-quota-edit')
       quota_edit.click
       multiplier = @driver.find_element(:id, 'admin_configuration_multiplier')
-      multiplier.send_key('byte')
+      multiplier.send_keys('byte')
       save = @driver.find_element(:id, 'save-configuration')
       save.click
       wait_until_page_loads(path)
@@ -1988,9 +1988,9 @@ class UiTestSuite < Test::Unit::TestCase
       create = @driver.find_element(id: 'create-new-configuration')
       create.click
       value = @driver.find_element(:id, 'admin_configuration_value')
-      value.send_key(2)
+      value.send_keys(2)
       multiplier = @driver.find_element(:id, 'admin_configuration_multiplier')
-      multiplier.send_key('byte')
+      multiplier.send_keys('byte')
       save = @driver.find_element(:id, 'save-configuration')
       save.click
       wait_until_page_loads(path)
@@ -2021,7 +2021,7 @@ class UiTestSuite < Test::Unit::TestCase
     quota_edit = @driver.find_element(:class, 'daily-user-download-quota-edit')
     quota_edit.click
     multiplier = @driver.find_element(:id, 'admin_configuration_multiplier')
-    multiplier.send_key('terabyte')
+    multiplier.send_keys('terabyte')
     save = @driver.find_element(:id, 'save-configuration')
     save.click
     wait_until_page_loads(path)
@@ -2616,7 +2616,7 @@ class UiTestSuite < Test::Unit::TestCase
     # perform negative search first to test redirect
     bad_gene = 'foo'
     search_box = @driver.find_element(:id, 'search_genes')
-    search_box.send_key(bad_gene)
+    search_box.send_keys(bad_gene)
     search_genes = @driver.find_element(:id, 'perform-gene-search')
     search_genes.click
     wait_for_modal_open('message_modal')
@@ -2627,7 +2627,7 @@ class UiTestSuite < Test::Unit::TestCase
     # load random gene to search
     gene = @genes.sample
     search_box = @driver.find_element(:id, 'search_genes')
-    search_box.send_key(gene)
+    search_box.send_keys(gene)
     search_genes = @driver.find_element(:id, 'perform-gene-search')
     search_genes.click
     assert element_present?(:id, 'box-controls'), 'could not find expression violin plot'
@@ -2657,7 +2657,7 @@ class UiTestSuite < Test::Unit::TestCase
         is_box_plot = plot_ops.select {|opt| opt.selected?}.sample.text == 'Box Plot'
         if is_box_plot
           new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
-          plot_dropdown.send_key(new_plot)
+          plot_dropdown.send_keys(new_plot)
         end
         # wait until violin plot renders, at this point all 3 should be done
 
@@ -2673,7 +2673,7 @@ class UiTestSuite < Test::Unit::TestCase
         plot_dropdown = @driver.find_element(:id, 'plot_type')
         plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
         new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
-        plot_dropdown.send_key(new_plot)
+        plot_dropdown.send_keys(new_plot)
 
         # wait until box plot renders, at this point all 3 should be done
         @wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
@@ -2706,7 +2706,7 @@ class UiTestSuite < Test::Unit::TestCase
 
     new_gene = @genes.sample
     search_box = @driver.find_element(:id, 'search_genes')
-    search_box.send_key(new_gene)
+    search_box.send_keys(new_gene)
     search_genes = @driver.find_element(:id, 'perform-gene-search')
     search_genes.click
     assert element_present?(:id, 'box-controls'), 'could not find expression boxplot'
@@ -2734,7 +2734,7 @@ class UiTestSuite < Test::Unit::TestCase
     private_plot_dropdown = @driver.find_element(:id, 'plot_type')
     private_plot_ops = private_plot_dropdown.find_elements(:tag_name, 'option')
     private_new_plot = private_plot_ops.select {|opt| !opt.selected?}.sample.text
-    private_plot_dropdown.send_key(private_new_plot)
+    private_plot_dropdown.send_keys(private_new_plot)
 
     # wait until box plot renders, at this point all 3 should be done
     @wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
@@ -2812,7 +2812,7 @@ class UiTestSuite < Test::Unit::TestCase
         is_box_plot = plot_ops.select {|opt| opt.selected?}.sample.text == 'Box Plot'
         if is_box_plot
           new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
-          plot_dropdown.send_key(new_plot)
+          plot_dropdown.send_keys(new_plot)
         end
         # wait until violin plot renders, at this point all 3 should be done
 
@@ -2828,7 +2828,7 @@ class UiTestSuite < Test::Unit::TestCase
         plot_dropdown = @driver.find_element(:id, 'plot_type')
         plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
         new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
-        plot_dropdown.send_key(new_plot)
+        plot_dropdown.send_keys(new_plot)
 
         # wait until box plot renders, at this point all 3 should be done
         @wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
@@ -2906,7 +2906,7 @@ class UiTestSuite < Test::Unit::TestCase
     private_plot_dropdown = @driver.find_element(:id, 'plot_type')
     private_plot_ops = private_plot_dropdown.find_elements(:tag_name, 'option')
     private_new_plot = private_plot_ops.select {|opt| !opt.selected?}.sample.text
-    private_plot_dropdown.send_key(private_new_plot)
+    private_plot_dropdown.send_keys(private_new_plot)
 
     # wait until box plot renders, at this point all 3 should be done
     @wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
@@ -2963,7 +2963,7 @@ class UiTestSuite < Test::Unit::TestCase
     # resize heatmap
     scroll_to(:bottom)
     heatmap_size = @driver.find_element(:id, 'heatmap_size')
-    heatmap_size.send_key(1000)
+    heatmap_size.send_keys(1000)
     @wait.until {wait_for_morpheus_render('#heatmap-plot', 'morpheus')}
 
     resize_heatmap_drawn = @driver.execute_script("return $('#heatmap-plot').data('morpheus').heatmap !== undefined;")
@@ -3086,7 +3086,7 @@ class UiTestSuite < Test::Unit::TestCase
     end
     # load numeric annotation to test 2d scatter feature
     annotation_select = panel_div.find_element(:class, 'annotation-select')
-    annotation_select.send_key('Average Intensity')
+    annotation_select.send_keys('Average Intensity')
     # wait half second for event to fire
     @wait.until {wait_for_plotly_render('#' + plot_id, 'rendered')}
     updated_data = @driver.execute_script("return document.getElementById('#{plot_id}').data")
@@ -3117,7 +3117,7 @@ class UiTestSuite < Test::Unit::TestCase
     end
     # load numeric annotation to test 2d scatter feature
     private_annotation_select = private_panel_div.find_element(:class, 'annotation-select')
-    private_annotation_select.send_key('Average Intensity')
+    private_annotation_select.send_keys('Average Intensity')
     # wait half second for event to fire
     sleep(0.5)
     @wait.until {wait_for_plotly_render('#' + private_plot_id, 'rendered')}
@@ -3249,7 +3249,7 @@ class UiTestSuite < Test::Unit::TestCase
         is_box_plot = plot_ops.select {|opt| opt.selected?}.sample.text == 'Box Plot'
         if is_box_plot
           new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
-          plot_dropdown.send_key(new_plot)
+          plot_dropdown.send_keys(new_plot)
         end
         # wait until violin plot renders, at this point all 3 should be done
 
@@ -3265,7 +3265,7 @@ class UiTestSuite < Test::Unit::TestCase
         plot_dropdown = @driver.find_element(:id, 'plot_type')
         plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
         new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
-        plot_dropdown.send_key(new_plot)
+        plot_dropdown.send_keys(new_plot)
 
         # wait until box plot renders, at this point all 3 should be done
         @wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
@@ -3332,7 +3332,7 @@ class UiTestSuite < Test::Unit::TestCase
     private_plot_dropdown = @driver.find_element(:id, 'plot_type')
     private_plot_ops = private_plot_dropdown.find_elements(:tag_name, 'option')
     private_new_plot = private_plot_ops.select {|opt| !opt.selected?}.sample.text
-    private_plot_dropdown.send_key(private_new_plot)
+    private_plot_dropdown.send_keys(private_new_plot)
 
     # wait until box plot renders, at this point all 3 should be done
     @wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
@@ -3390,7 +3390,7 @@ class UiTestSuite < Test::Unit::TestCase
     # now search for a gene and make sure values are preserved
     gene = @genes.sample
     search_box = @driver.find_element(:id, 'search_genes')
-    search_box.send_key(gene)
+    search_box.send_keys(gene)
     search_genes = @driver.find_element(:id, 'perform-gene-search')
     search_genes.click
 
@@ -3492,7 +3492,7 @@ class UiTestSuite < Test::Unit::TestCase
     cluster_dropdown = options_form.find_element(:id, 'study_default_options_cluster')
     cluster_opts = cluster_dropdown.find_elements(:tag_name, 'option')
     new_cluster = cluster_opts.select {|opt| !opt.selected?}.sample.text
-    cluster_dropdown.send_key(new_cluster)
+    cluster_dropdown.send_keys(new_cluster)
 
     # wait one second while annotation options update
     sleep(1)
@@ -3502,7 +3502,7 @@ class UiTestSuite < Test::Unit::TestCase
     annotation_opts = annotation_dropdown.find_elements(:tag_name, 'option')
     # get value, not text, of dropdown
     new_annot = annotation_opts.select {|opt| !opt.selected?}.sample['value']
-    annotation_dropdown.send_key(new_annot)
+    annotation_dropdown.send_keys(new_annot)
 
     # if annotation option is now numeric, pick a color val
     new_color = ''
@@ -3510,7 +3510,7 @@ class UiTestSuite < Test::Unit::TestCase
     if color_dropdown['disabled'] != 'true'
       color_opts = color_dropdown.find_elements(:tag_name, 'option')
       new_color = color_opts.select {|opt| !opt.selected?}.sample.text
-      color_dropdown.send_key(new_color)
+      color_dropdown.send_keys(new_color)
     end
 
     # change expression axis label
@@ -3557,7 +3557,7 @@ class UiTestSuite < Test::Unit::TestCase
     # now check gene expression pages
     gene = @genes.sample
     search_box = @driver.find_element(:id, 'search_genes')
-    search_box.send_key(gene)
+    search_box.send_keys(gene)
     search_genes = @driver.find_element(:id, 'perform-gene-search')
     search_genes.click
     @wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
@@ -3659,7 +3659,7 @@ class UiTestSuite < Test::Unit::TestCase
     cluster_dropdown = options_form.find_element(:id, 'study_default_options_cluster')
     cluster_opts = cluster_dropdown.find_elements(:tag_name, 'option')
     new_cluster = cluster_opts.select {|opt| !opt.selected?}.sample.text
-    cluster_dropdown.send_key(new_cluster)
+    cluster_dropdown.send_keys(new_cluster)
     # change cluster point size, turn on borders, and reset alpha
     cluster_point_size = options_form.find_element(:id, 'study_default_options_cluster_point_size')
     cluster_point_size.clear
@@ -3678,7 +3678,7 @@ class UiTestSuite < Test::Unit::TestCase
     annotation_opts = annotation_dropdown.find_elements(:tag_name, 'option')
     # get value, not text, of dropdown
     new_annot = annotation_opts.select {|opt| !opt.selected?}.sample['value']
-    annotation_dropdown.send_key(new_annot)
+    annotation_dropdown.send_keys(new_annot)
 
     # if annotation option is now numeric, pick a color val
     new_color = ''
@@ -3686,14 +3686,14 @@ class UiTestSuite < Test::Unit::TestCase
     if color_dropdown['disabled'] != 'true'
       color_opts = color_dropdown.find_elements(:tag_name, 'option')
       new_color = color_opts.select {|opt| !opt.selected?}.sample.text
-      color_dropdown.send_key(new_color)
+      color_dropdown.send_keys(new_color)
     end
 
     # set cell count
     new_cells = rand(100) + 1
     cell_count = @driver.find_element(:id, 'study_cell_count')
     cell_count.clear
-    cell_count.send_key(new_cells)
+    cell_count.send_keys(new_cells)
 
     # manually set rendered to false to avoid a race condition when checking for updates
     @driver.execute_script("$('#cluster-plot').data('rendered', false);")
@@ -3853,7 +3853,7 @@ class UiTestSuite < Test::Unit::TestCase
     scroll_to(:top)
     gene = @genes.sample
     search_box = @driver.find_element(:id, 'search_genes')
-    search_box.send_key(gene)
+    search_box.send_keys(gene)
     search_genes = @driver.find_element(:id, 'perform-gene-search')
     search_genes.click
 
@@ -3878,7 +3878,7 @@ class UiTestSuite < Test::Unit::TestCase
     plot_dropdown = @driver.find_element(:id, 'plot_type')
     plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
     new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
-    plot_dropdown.send_key(new_plot)
+    plot_dropdown.send_keys(new_plot)
 
     # wait until box plot renders, at this point all 3 should be done
     @wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
@@ -3981,7 +3981,7 @@ class UiTestSuite < Test::Unit::TestCase
     # load random gene to search
     gene = @genes.sample
     search_box = @driver.find_element(:id, 'search_genes')
-    search_box.send_key(gene)
+    search_box.send_keys(gene)
     wait_for_render(:id, 'perform-gene-search')
     search_genes = @driver.find_element(:id, 'perform-gene-search')
     search_genes.click
@@ -4007,7 +4007,7 @@ class UiTestSuite < Test::Unit::TestCase
     plot_dropdown = @driver.find_element(:id, 'plot_type')
     plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
     new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
-    plot_dropdown.send_key(new_plot)
+    plot_dropdown.send_keys(new_plot)
 
     # wait until box plot renders, at this point all 3 should be done
     @wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
@@ -4060,7 +4060,7 @@ class UiTestSuite < Test::Unit::TestCase
 
     # add 'new' to the name of annotation
     name = @driver.find_element(:id, 'user_annotation_name')
-    name.send_key("new")
+    name.send_keys("new")
 
     # add 'new' to the labels
     annotation_labels = @driver.find_elements(:id, 'user-annotation_values')
@@ -4107,7 +4107,7 @@ class UiTestSuite < Test::Unit::TestCase
     # revert name
     name = @driver.find_element(:id, 'user_annotation_name')
     name.clear
-    name.send_key("user-#{$random_seed}")
+    name.send_keys("user-#{$random_seed}")
 
     # revert labels
     annotation_labels = @driver.find_elements(:id, 'user-annotation_values')
@@ -4201,7 +4201,7 @@ class UiTestSuite < Test::Unit::TestCase
     # load random gene to search
     gene = @genes.sample
     search_box = @driver.find_element(:id, 'search_genes')
-    search_box.send_key(gene)
+    search_box.send_keys(gene)
     wait_for_render(:id, 'perform-gene-search')
     search_genes = @driver.find_element(:id, 'perform-gene-search')
     search_genes.click
@@ -4231,7 +4231,7 @@ class UiTestSuite < Test::Unit::TestCase
     plot_dropdown = @driver.find_element(:id, 'plot_type')
     plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
     new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
-    plot_dropdown.send_key(new_plot)
+    plot_dropdown.send_keys(new_plot)
 
     # wait until box plot renders, at this point all 3 should be done
     @wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
@@ -4274,7 +4274,7 @@ class UiTestSuite < Test::Unit::TestCase
     # change name
     name = @driver.find_element(:id, 'user_annotation_name')
     name.clear
-    name.send_key("user-#{$random_seed}-exp-Share")
+    name.send_keys("user-#{$random_seed}-exp-Share")
 
     # update annotation
     submit = @driver.find_element(:id, 'submit-button')
@@ -4327,7 +4327,7 @@ class UiTestSuite < Test::Unit::TestCase
     # change name
     name = @driver.find_element(:id, 'user_annotation_name')
     name.clear
-    name.send_key("user-#{$random_seed}-exp")
+    name.send_keys("user-#{$random_seed}-exp")
 
     # update the annotation
     submit = @driver.find_element(:id, 'submit-button')
@@ -4449,7 +4449,7 @@ class UiTestSuite < Test::Unit::TestCase
     # load random gene to search
     gene = @genes.sample
     search_box = @driver.find_element(:id, 'search_genes')
-    search_box.send_key(gene)
+    search_box.send_keys(gene)
     search_genes = @driver.find_element(:id, 'perform-gene-search')
     search_genes.click
 
@@ -4474,7 +4474,7 @@ class UiTestSuite < Test::Unit::TestCase
     plot_dropdown = @driver.find_element(:id, 'plot_type')
     plot_ops = plot_dropdown.find_elements(:tag_name, 'option')
     new_plot = plot_ops.select {|opt| !opt.selected?}.sample.text
-    plot_dropdown.send_key(new_plot)
+    plot_dropdown.send_keys(new_plot)
 
     # wait until box plot renders, at this point all 3 should be done
     @wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
@@ -4819,12 +4819,9 @@ class UiTestSuite < Test::Unit::TestCase
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
 
-  # Test loading data directly into web browser from Google Cloud Storage (GCS).
-  # This test depends on a workspace already existing in FireCloud called development-infercnv-q418-ui-test
-  # if this study has been deleted, this test will fail until the workspace is re-created with at least
-  # 3 default files for expression, metadata, one cluster, and a file for Ideogram.js annotations
-  # Also requires an administrator to register a taxon of 'human' with at least one genome assembly
-  test 'front-end: workflows: load from gcs' do
+  # Test loading data from GCS into Ideogram; also tests the ability to view a study w/o clusters, metadata, or
+  # gene expression.  Relies on a FireCloud workspace called development-ideogram-only
+  test 'front-end: ideogram only' do
     puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     # log in first
@@ -4832,13 +4829,11 @@ class UiTestSuite < Test::Unit::TestCase
     login($test_email, $test_email_password)
     @driver.get @base_url + '/studies/new'
 
-    # create a new study using an existing workspace, also generate a random name to validate that workspace name
-    # and study name can be different
-    random_name = "Load from GCS #{$random_seed}"
+    random_name = "Ideogram Only #{$random_seed}"
     study_form = @driver.find_element(:id, 'new_study')
     study_form.find_element(:id, 'study_name').send_keys(random_name)
     study_form.find_element(:id, 'study_use_existing_workspace').send_keys('Yes')
-    study_form.find_element(:id, 'study_firecloud_workspace').send_keys("development-infercnv-q418-ui-test")
+    study_form.find_element(:id, 'study_firecloud_workspace').send_keys("development-ideogram-only")
     share = @driver.find_element(:id, 'add-study-share')
     @wait.until {share.displayed?}
     share.click
@@ -4849,135 +4844,31 @@ class UiTestSuite < Test::Unit::TestCase
     save_study.click
     @wait.until {element_present?(:id, 'unsynced-study-files')}
     close_modal('message_modal')
-    puts 'Created Load from GCS... study'
 
-    # sync each file
     study_file_forms = @driver.find_elements(:class, 'unsynced-study-file')
     study_file_forms.each do |form|
-      filename = form.find_element(:id, 'study_file_name')['value']
-      if filename == 'cluster_example.txt' or filename == 'expression_matrix_example_human.txt' or filename == 'metadata_example.txt'
-        file_type = form.find_element(:id, 'study_file_file_type')
-        case filename
-          when 'cluster_example.txt'
-            file_type.send_keys('Cluster')
-            cluster_file_name = form.find_element(:id, 'study_file_name')
-            cluster_file_name.clear
-            cluster_file_name.send_keys('cluster')
-          when 'expression_matrix_example_human.txt'
-            file_type.send_keys('Expression Matrix')
-            species_dropdown = form.find_element(:id, 'study_file_taxon_id')
-            @wait.until {file_type.displayed?}
-            opts = species_dropdown.find_elements(:tag_name, 'option')
-            available_species = opts.keep_if {|opt| opt.text.downcase == 'human'} # need human data
-            if available_species.any?
-              species_dropdown.send_key(available_species.sample.text)
-            end
-          when 'metadata_example.txt'
-            file_type.send_keys('Metadata')
-        end
-        sync_button = form.find_element(:class, 'save-study-file')
-        sync_button.click
-        close_modal('sync-notice-modal')
-      end
+      file_type = form.find_element(:id, 'study_file_file_type')
+      file_type.send_keys('Ideogram Annotations')
+      species_dropdown = form.find_element(:id, 'study_file_taxon_id')
+      @wait.until {file_type.displayed?}
+      species_dropdown.send_keys('human') # from lib/assets/default_species_assemblies.txt
+      sleep(2) # this is required as the assemblies dropdown is about to get re-rendered, so we don't want a stale reference
+      assemblies_dropdown = form.find_element(:id, 'study_file_genome_assembly_id')
+      assemblies_dropdown.send_keys('GRCh37') # from lib/assets/default_species_assemblies.txt
+      sync_button = form.find_element(:class, 'save-study-file')
+      sync_button.click
+      close_modal('sync-notice-modal')
     end
-
-    # now assert that forms were re-rendered in synced data panel
-    sync_panel = @driver.find_element(:id, 'synced-data-panel-toggle')
-    sync_panel.click
-
-    sleep(10) # Give time for expression matrix to parse
-
-    # lastly, check info page to make sure everything did in fact parse and complete
-    studies_path = @base_url + '/studies'
-    @driver.get studies_path
-    wait_until_page_loads(studies_path)
-
-    show_button = @driver.find_element(:class, "load-from-gcs-#{$random_seed}-show")
-    show_button.click
-    @wait.until {element_present?(:id, 'info-panel')}
 
     # make sure parsing succeeded
-    sync_study_path = @base_url + "/study/load-from-gcs-#{$random_seed}"
+    sync_study_path = @base_url + "/study/ideogram-only-#{$random_seed}"
     @driver.get(sync_study_path)
     study_accession = extract_accession_from_url(@driver.current_url)
-    loaded_sync_study_path = @base_url + "/study/#{study_accession}/load-from-gcs-#{$random_seed}"
+    loaded_sync_study_path = @base_url + "/study/#{study_accession}/ideogram-only-#{$random_seed}"
     wait_until_page_loads(loaded_sync_study_path)
-    open_ui_tab('study-analysis')
-    wait_for_render(:id, 'submissions-table')
-
-    # Go to Sync Submission Outputs page
-    submissions_table = @driver.find_element(:id, 'submissions-table')
-    submissions = submissions_table.find_element(:tag_name, 'tbody').find_elements(:tag_name, 'tr')
-    completed_submission = submissions.find {|sub|
-      sub.find_element(:class, "submission-state").text == 'Done' &&
-          sub.find_element(:class, "submission-status").text == 'Succeeded'
-    }
-    sync_btn = completed_submission.find_element(:class, 'sync-submission-outputs')
-    sync_btn.click
-    puts "Went to Sync Submission Outputs page"
-
-    # Sync annotation data for Ideogram.js
-    wait_for_render(:class, 'unsynced-study-file')
-    study_file_forms = @driver.find_elements(:class, 'unsynced-study-file')
-    ideogram_annots_form = nil
-    study_file_forms.each do |form|
-      filename = form.find_element(:id, 'study_file_name')
-      if filename['value'].end_with?('ideogram_exp_means.tar.gz')
-        # for the purpose of the test, we only need one such file
-        ideogram_annots_form = form
-      end
-    end
-    dropdown = ideogram_annots_form.find_element(:id, 'study_file_file_type')
-    opts = dropdown.find_elements(:tag_name, 'option')
-    opt = opts.detect {|opt| opt.text == 'Analysis Output'}
-    opt.click
-    @wait.until {element_present?(:id, 'study_file_taxon_id')}
-    species_dropdown = ideogram_annots_form.find_element(:id, 'study_file_taxon_id')
-    @wait.until {species_dropdown.displayed?}
-    opts = species_dropdown.find_elements(:tag_name, 'option')
-    available_species = opts.keep_if {|opt| opt.text.downcase == 'human'} # need human data
-    if available_species.any?
-      species_dropdown.send_key(available_species.sample.text)
-    end
-    sleep(2) # this is required as the assemblies dropdown is about to get re-rendered, so we don't want a stale reference
-    assemblies_dropdown = ideogram_annots_form.find_element(:id, 'study_file_genome_assembly_id')
-    assembly_opts = assemblies_dropdown.find_elements(:tag_name, 'option')
-    available_assemblies = assembly_opts.delete_if {|opt| opt['value'] == ''}
-    if available_assemblies.any?
-      assemblies_dropdown.send_key(available_assemblies.sample.text)
-    end
-    sync_button = ideogram_annots_form.find_element(:class, 'save-study-file')
-    sync_button.click
-    close_modal('sync-notice-modal')
-    puts "Synced annotation data for Ideogram.js"
-
-    sleep(10) # Give time for ideogram_exp_means.tar.gz to parse
-
-    # Ensure we can load Ideogram and render its annotations
-    @driver.get(loaded_sync_study_path)
-    wait_until_page_loads(loaded_sync_study_path)
-
-    # If "Explore" tab is disabled, wait 20 seconds and try again
-    vis_tab = @driver.find_element(:css, '#study-visualize-nav a')
-    if vis_tab.attribute('data-original-title') == 'This study has no data to view'
-      sleep(20)
-      @driver.get(loaded_sync_study_path)
-      wait_until_page_loads(loaded_sync_study_path)
-    end
-
-    open_ui_tab('study-visualize')
-    wait_for_render(:id, 'plots-tab')
-    @wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
-
-    # Select a cluster that is indeed group-based
-    view_options_panel = @driver.find_element(:id, 'view-option-link')
-    view_options_panel.click
-    wait_for_render(:id, 'view-options')
-    annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
-    annotations.select {|opt| opt.text == 'Sub-Cluster'}.first.click
 
     # open the 'genome' tab
-    open_ui_tab('genome-tab')
+    open_ui_tab('study-visualize')
     wait_for_render(:css, '#tracks-to-display #filter_1')
     wait_for_render(:id, 'ideogram-container')
     user_ideogram = @driver.execute_script("return $('#_ideogramOuterWrap canvas').length > 0")
@@ -4988,21 +4879,17 @@ class UiTestSuite < Test::Unit::TestCase
     logout_from_portal
     puts "Logged out"
     @driver.get(loaded_sync_study_path)
-    wait_until_page_loads(loaded_sync_study_path)
-    open_ui_tab('study-visualize')
-    wait_for_render(:id, 'plots-tab')
-
-    # Click 'Genome' tab and verify that anonymous user is brought to sign-in page
-    tab = @driver.find_element(:id, "genome-tab-nav")
-    tab.click
+    # we can't use open_ui_tab as this has an explicit wait that will not return in this case as we prompt to sign in
+    explore_tab = @driver.find_element(:id, 'study-visualize-nav')
+    explore_tab.click
     @wait.until { @driver.current_url.include?('https://accounts.google.com/signin') }
     puts "Verified no public access to genome visualization"
 
     # clean up
     login_as_other($test_email, $test_email_password)
-    @driver.get studies_path
-    wait_until_page_loads(studies_path)
-    delete = @driver.find_element(:class, "load-from-gcs-#{$random_seed}-delete-local")
+    @driver.get @base_url + '/studies'
+    wait_until_page_loads(@base_url + '/studies')
+    delete = @driver.find_element(:class, "ideogram-only-#{$random_seed}-delete-local")
     delete.click
     accept_alert
     close_modal('message_modal')
@@ -5054,19 +4941,18 @@ class UiTestSuite < Test::Unit::TestCase
           opts = species_dropdown.find_elements(:tag_name, 'option')
           available_species = opts.delete_if {|opt| opt['value'] == ''}
           if available_species.any?
-            species_dropdown.send_key(available_species.sample.text)
+            species_dropdown.send_keys(available_species.sample.text)
           end
         when 'metadata_example.txt'
           file_type.send_keys('Metadata')
         when bam_file
           file_type.send_keys('BAM')
           species_dropdown = form.find_element(:id, 'study_file_taxon_id')
-          opts = species_dropdown.find_elements(:tag_name, 'option')
-          available_species = opts.delete_if {|opt| opt['value'] == '' || opt.text.downcase == 'human'}
-          if available_species.any?
-            species_dropdown.send_key(available_species.sample.text)
-          end
-        when bam_file + '.bai'
+          species_dropdown.send_keys('mouse') # from lib/assets/default_species_assemblies.txt
+          sleep(2) # wait for first assembly to load
+          assemblies_dropdown = form.find_element(:id, 'study_file_genome_assembly_id')
+          assemblies_dropdown.send_keys('GRCm38') # from lib/assets/default_species_assemblies.txt
+        when "#{bam_file + '.bai'}"
           file_type.send_keys('BAM Index')
           bam_target_menu = form.find_element(:id, 'study_file_options_bam_id')
           bam_target_menu.send_keys(bam_file)
@@ -5084,17 +4970,22 @@ class UiTestSuite < Test::Unit::TestCase
     # lastly, check info page to make sure everything did in fact parse and complete
     studies_path = @base_url + '/studies'
     @driver.get studies_path
-    wait_until_page_loads(studies_path)
 
     show_button = @driver.find_element(:class, "igv-js-ui-test-#{$random_seed}-show")
     show_button.click
     @wait.until {element_present?(:id, 'info-panel')}
+    study_url = @driver.current_url
+    gene_count = @driver.find_element(:id, 'gene-count').text.to_i
+    while gene_count == 0
+      @driver.get study_url
+      gene_count = @driver.find_element(:id, 'gene-count').text.to_i
+    end
 
     # Go to study, click 'Browse genome' in Downloads tab
     study_path = @base_url + "/study/igv-js-ui-test-#{$random_seed}"
     @driver.get(study_path)
     study_accession = extract_accession_from_url(@driver.current_url)
-    loaded_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    loaded_path = @base_url + "/study/#{study_accession}/igv-js-ui-test-#{$random_seed}"
     wait_until_page_loads(loaded_path)
     open_ui_tab('study-download')
     browse_genome_button = @driver.find_element(:class, "bam-browse-genome")
@@ -5108,17 +4999,19 @@ class UiTestSuite < Test::Unit::TestCase
     # Search for a gene
     gene = @genes.sample
     search_box = @driver.find_element(:id, 'search_genes')
-    search_box.send_key(gene)
+    search_box.send_keys(gene)
     search_box.click
+    search_genes = @driver.find_element(:id, 'perform-gene-search')
+    search_genes.click
 
     # Verify igv.js displays tracks in Explore tab's single-gene view
+    @wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+    open_ui_tab('genome-tab')
     wait_for_render(:class, 'igv-track-div')
     igv_displayed = @driver.execute_script("return $('.igv-track-div').length === 4")
     assert igv_displayed, "igv.js did not display 4 tracks in Explore tab's single-gene view"
 
     # clean up
-    logout_from_portal
-    login_as_other($test_email, $test_email_password)
     @driver.get studies_path
     wait_until_page_loads(studies_path)
     delete = @driver.find_element(:class, "igv-js-ui-test-#{$random_seed}-delete-local")

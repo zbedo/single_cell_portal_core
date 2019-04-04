@@ -33,7 +33,7 @@
       <%= render partial: 'expression_file_fields', locals: {f: f.dup} %>
     <% elsif study_file.file_type == '10X Genes File' || study_file.file_type == '10X Barcodes File' %>
       <%= render partial: 'mm_coordinate_association_fields', locals: {f: f.dup} %>
-    <% elsif study_file.file_type == 'BAM' %>
+    <% elsif study_file.file_type == 'BAM Index' %>
       <%= render partial: 'bam_association_fields', locals: {f: f.dup} %>
     <% end %>
   </div>
