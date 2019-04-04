@@ -29,6 +29,12 @@ Rails.application.routes.draw do
           end
         end
         get 'status', to: 'status#index'
+        scope :site do
+          get 'studies', to: 'site#studies', as: :site_studies
+          get 'view_study/:accession', to: 'site#view_study', as: :site_view_study
+          get 'download_data/:accession', to: 'site#download_data', as: :site_download_data
+          get 'stream_data/:accession', to: 'site#stream_data', as: :site_stream_data
+        end
       end
     end
 
@@ -80,6 +86,7 @@ Rails.application.routes.draw do
     get 'reports', to: 'reports#index', as: :reports
     get 'reports/report_request', to: 'reports#report_request', as: :report_request
     post 'reports/report_request', to: 'reports#submit_report_request', as: :submit_report_request
+    get 'reports/export_submission_report', to: 'reports#export_submission_report', as: :export_submission_report
 
     # firecloud billing project actions
     get 'billing_projects', to: 'billing_projects#index', as: :billing_projects

@@ -436,6 +436,78 @@ class Study
     end
   end
 
+  swagger_schema :SiteStudy do
+    property :name do
+      key :type, :string
+      key :description, 'Name of Study'
+    end
+    property :description do
+      key :type, :string
+      key :description, 'HTML description blob for Study'
+    end
+    property :accession do
+      key :type, :string
+      key :description, 'Accession (used in permalinks, not editable)'
+    end
+    property :public do
+      key :type, :boolean
+      key :default, true
+      key :description, 'Boolean indication of whether Study is publicly readable'
+    end
+    property :cell_count do
+      key :type, :number
+      key :format, :integer
+      key :default, 0
+      key :description, 'Number of unique cell names in Study (set from Metadata StudyFile)'
+    end
+    property :gene_count do
+      key :type, :number
+      key :format, :integer
+      key :default, 0
+      key :description, 'Number of unique gene names in Study (set from Expression Matrix or 10X Genes File)'
+    end
+  end
+
+  swagger_schema :SiteStudyWithFiles do
+    property :name do
+      key :type, :string
+      key :description, 'Name of Study'
+    end
+    property :description do
+      key :type, :string
+      key :description, 'HTML description blob for Study'
+    end
+    property :accession do
+      key :type, :string
+      key :description, 'Accession (used in permalinks, not editable)'
+    end
+    property :public do
+      key :type, :boolean
+      key :default, true
+      key :description, 'Boolean indication of whether Study is publicly readable'
+    end
+    property :cell_count do
+      key :type, :number
+      key :format, :integer
+      key :default, 0
+      key :description, 'Number of unique cell names in Study (set from Metadata StudyFile)'
+    end
+    property :gene_count do
+      key :type, :number
+      key :format, :integer
+      key :default, 0
+      key :description, 'Number of unique gene names in Study (set from Expression Matrix or 10X Genes File)'
+    end
+    property :study_files do
+      key :type, :array
+      key :description, 'Available StudyFiles for download/streaming'
+      items do
+        key :title, 'StudyFile'
+        key '$ref', 'SiteStudyFile'
+      end
+    end
+  end
+
 
   ###
   #
@@ -641,6 +713,41 @@ class Study
       acl["#{share.email}"] = share.permission
     end
     acl
+  end
+
+  ###
+  #
+  # DATA VISUALIZATION GETTERS
+  #
+  # used to govern rendering behavior on /app/views/site/_study_visualize.html
+  ##
+
+  def has_expression_data?
+    self.genes.any?
+  end
+
+  def has_cluster_data?
+    self.cluster_groups.any?
+  end
+
+  def has_cell_metadata?
+    self.cell_metadata.any?
+  end
+
+  def has_gene_lists?
+    self.precomputed_scores.any?
+  end
+
+  def can_visualize_clusters?
+    self.has_cluster_data? && self.has_cell_metadata?
+  end
+
+  def can_visualize_genome_data?
+    self.has_bam_files? || self.has_analysis_outputs?('infercnv', 'ideogram.js')
+  end
+
+  def can_visualize?
+    self.can_visualize_clusters? || self.can_visualize_genome_data?
   end
 
   ###
@@ -946,7 +1053,8 @@ class Study
   # return all study files for a given analysis & visualization component
   def get_analysis_outputs(analysis_name, visualization_name=nil, cluster_name=nil, annotation_name=nil)
     criteria = {
-        'options.analysis_name' => analysis_name
+        'options.analysis_name' => analysis_name,
+        :queued_for_deletion => false
     }
     if visualization_name.present?
       criteria.merge!('options.visualization_name' => visualization_name)

@@ -306,14 +306,6 @@ function setWizardProgress(stepsDone) {
     $('#progress-count').html(totalCompletion+'% Completed');
 }
 
-function showSkipWarning(step) {
-    if (['initialize_ordinations_form_nav', 'initialize_metadata_form_nav', 'initialize_expression_form_nav'].indexOf(step) >= 0) {
-        return (!completed.initialize_ordinations_form_nav || !completed.initialize_metadata_form_nav || !completed.initialize_expression_form_nav)
-    } else {
-        return false;
-    }
-}
-
 // toggle chevron glyphs on clicks
 function toggleGlyph(el) {
     el.toggleClass('fa-chevron-right fa-chevron-down');
@@ -397,21 +389,11 @@ function enableDefaultActions() {
     // when clicking the main study view page tabs, update the current URL so that when you refresh the tab stays open
     $('#study-tabs').on('shown.bs.tab', function(event) {
         var anchor = $(event.target).attr('href');
-        var currentUrl = window.location.href;
-        var urlParts = currentUrl.split('#');
-        var newUrl = '';
-        if (urlParts.length === 1) {
-            newUrl = currentUrl + anchor;
-        } else if (urlParts[1] === '') {
-            newUrl = currentUrl.replace(/#/, '') + anchor;
-        } else {
-            var currentTab = urlParts[1];
-            // we need to replace the current tab with the new one in the anchor/parameter string
-            replaceRegex = new RegExp('#' + currentTab);
-            newUrl = currentUrl.replace(replaceRegex, anchor);
-        }
+        var currentScroll = $(window).scrollTop();
+        window.location.hash = anchor;
         // use HTML5 history API to update the url without reloading the DOM
-        history.pushState('', document.title, newUrl);
+        history.pushState('', document.title, window.location.href);
+        window.scrollTo(0, currentScroll);
     });
 
   // Remove styling set in scpPlotsDidRender
@@ -963,3 +945,12 @@ window.clearGeneSearchLoading = function() {
     $('#wrap').data('spinner').stop();
     $('#gene-search-results-count').html($('.gene-panel').length);
 };
+
+// force login on ajax 401
+$(document).ajaxError(function (e, xhr, settings) {
+    if (xhr.status === 401) {
+        alert('You are not signed in or your session has expired - please login to continue.');
+        var url = 'https://' + window.location.hostname + '/single_cell/users/auth/google_oauth2';
+        location.href = url;
+    }
+});

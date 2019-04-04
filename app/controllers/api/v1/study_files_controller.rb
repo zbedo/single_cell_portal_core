@@ -3,8 +3,10 @@ module Api
     class StudyFilesController < ApiBaseController
 
       include Concerns::FireCloudStatus
+      include Concerns::Authenticator
       include Swagger::Blocks
 
+      before_action :authenticate_api_user!
       before_action :set_study
       before_action :check_study_permission
       before_action :set_study_file, except: [:index, :create, :bundle]
@@ -131,6 +133,12 @@ module Api
               key :type, :string
               key :enum, StudyFile::STUDY_FILE_TYPES
             end
+          end
+          parameter do
+            key :name, 'study_file[name]'
+            key :in, :formData
+            key :required, true
+            key :type, :string
           end
           parameter do
             key :name, 'study_file[species]'
@@ -555,10 +563,10 @@ module Api
         assembly_name = param_list[:assembly]
         matching_taxon = Taxon.find_by(common_name: /#{species_name}/i)
         matching_assembly = GenomeAssembly.find_by(name: /#{assembly_name}/i)
-        if matching_taxon.present?
+        if matching_taxon.present? && !species_name.blank?
           @study_file.taxon_id = matching_taxon.id
         end
-        if matching_assembly.present?
+        if matching_assembly.present? && !assembly_name.blank?
           @study_file.genome_assembly_id = matching_assembly.id
         end
       end

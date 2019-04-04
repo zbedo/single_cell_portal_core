@@ -40,14 +40,21 @@ $(document).on('click', '.bam-browse-genome', function(e) {
 });
 
 $(document).on('click', '#genome-tab-nav', function (e) {
+  var currentScroll = $(window).scrollTop();
   window.location.hash = '#genome-tab';
-
+  window.scrollTo(0, currentScroll);
   // Go to Google sign-in page, redirect to this view after authenticating.
   if (accessToken === null) {
     ga('send', 'event', 'genome', 'sign_in_start');
     localStorage.setItem('signed-in-via-genome-tab', true);
     window.location = '/single_cell/users/auth/google_oauth2';
   }
+});
+
+$(document).on('click', '#plots-tab-nav', function (e) {
+    var currentScroll = $(window).scrollTop();
+    window.location.hash = '#study-visualize';
+    window.scrollTo(0, currentScroll);
 });
 
 /**

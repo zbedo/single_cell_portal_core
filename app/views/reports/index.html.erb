@@ -42,11 +42,11 @@
   </div>
 </div>
 <div class="row">
-  <div class="col-md-6">
+  <div class="col-md-12">
     <div id="plotly-pipeline-submissions" class="plotly-report"></div>
-  </div>
-  <div class="col-md-6">
-    <div id="plotly-pipeline-runtimes" class="plotly-report"></div>
+    <% if current_user.admin %>
+      <p class="text-center top-pad"><%= link_to "Export Submission Report", export_submission_report_path, class: 'btn btn-default', id: 'export-submission-report' %></p>
+    <% end %>
   </div>
 </div>
 <%= render partial: 'contact_modal' %>
@@ -351,32 +351,6 @@
           }
       ).then(setRenderStatus('#plotly-pipeline-submissions', true));
 
-      var pipelineRuntimes = [];
-      <% @pipeline_runtimes.each do |pipeline, entries| %>
-        pipelineRuntimes.push({
-            x: <%= raw entries[:inputs] %>,
-            y: <%= raw entries[:runtime] %>,
-            name: '<%= pipeline %>',
-            mode: 'markers'
-        });
-      <% end %>
-
-      Plotly.newPlot('plotly-pipeline-runtimes', pipelineRuntimes,
-          {
-              title: 'What is the distribution of input file size vs. runtimes for WDL submissions?',
-              titlefont: plotlyTitleFont,
-              font: plotlyLabelFont,
-              hovermode: 'closest',
-              xaxis: {
-                  title: 'Size of input inputs (in bytes)'
-              },
-              yaxis: {
-                  title: 'Runtime in minutes'
-              },
-              showlegend: true
-          }
-      ).then(setRenderStatus('#plotly-pipeline-runtimes', true));
-
     <% end %>
 
     $('#toggle-column-annots').click(function() {
@@ -415,6 +389,18 @@
             Plotly.relayout(divId, annotUpdate).then(setRenderStatus(div, true));
             console.log('render status for ' + divId + ' is ' + $(div).data('rendered'));
         });
+    });
+
+    $('#export-submission-report').on('click', function() {
+        var that = $(this);
+        var text = that.text();
+        var btn = that.button();
+        btn.button('disable');
+        btn.button({'label': 'Exporting... file will download momentarily'});
+        setTimeout(function() {
+            btn.button('enable');
+            btn.button({'label': text});
+        }, 5000);
     });
 
 </script>

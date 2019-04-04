@@ -109,7 +109,6 @@
           tabClass: 'nav-tabs',
           onTabShow: function(tab, navigation, index, clickedIndex, clickedTab) {
               var step = $(tab[0]).attr('id');
-              console.log('id: ' + step);
               if (step === 'select-inputs-nav') {
                   wizard.find('.pager .next').hide();
               } else {

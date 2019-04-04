@@ -30,9 +30,9 @@ class User
 
 
   # Include default devise modules. Others available are:
-  # :confirmable, :lockable, :timeoutable and :omniauthable, :timeoutable
+  # :confirmable, :lockable, :timeoutable and :omniauthable,
   devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :trackable, :validatable,
+         :recoverable, :rememberable, :trackable, :validatable, :timeoutable,
          :omniauthable, :omniauth_providers => [:google_oauth2]
 
   validates_format_of :email, :with => Devise.email_regexp, message: 'is not a valid email address.'
