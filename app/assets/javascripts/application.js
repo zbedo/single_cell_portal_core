@@ -401,7 +401,7 @@ function enableDefaultActions() {
         window.location.hash = anchor;
         // use HTML5 history API to update the url without reloading the DOM
         history.pushState('', document.title, window.location.href);
-        window.scrollTo(0,currentScroll);
+        window.scrollTo(0, currentScroll);
     });
 
   // Remove styling set in scpPlotsDidRender
