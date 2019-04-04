@@ -306,14 +306,6 @@ function setWizardProgress(stepsDone) {
     $('#progress-count').html(totalCompletion+'% Completed');
 }
 
-function showSkipWarning(step) {
-    if (['initialize_ordinations_form_nav', 'initialize_metadata_form_nav', 'initialize_expression_form_nav'].indexOf(step) >= 0) {
-        return (!completed.initialize_ordinations_form_nav || !completed.initialize_metadata_form_nav || !completed.initialize_expression_form_nav)
-    } else {
-        return false;
-    }
-}
-
 // toggle chevron glyphs on clicks
 function toggleGlyph(el) {
     el.toggleClass('fa-chevron-right fa-chevron-down');
