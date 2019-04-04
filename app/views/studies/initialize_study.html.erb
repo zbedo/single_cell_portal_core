@@ -1,20 +1,31 @@
-<h1>Upload/Edit Study Data for '<%= @study.name %>' <%= render partial: 'initialize_study_label' %></h1>
+<div class="row">
+  <div class="col-sm-10">
+    <h1>Upload/Edit Study Data for '<%= @study.name %>' <%= render partial: 'initialize_study_label' %></h1>
+  </div>
+  <div class="col-sm-2">
+    <p class="top-pad pull-right">
+      <%= scp_link_to "<span class='fas fa-eye'></span> View Study".html_safe,
+                      view_study_path(accession: @study.accession, study_name: @study.url_safe_name),
+                      class: 'btn btn-primary', title: 'View Live', data: {toggle: 'tooltip', placement: 'left'} %>
+    </p>
+  </div>
+</div>
 
 <div id="rootwizard">
-	<ul class="nav wizard">
+  <ul class="nav wizard">
     <li role="presentation" class="wizard-nav" id="initialize_expression_form_nav"><a href="#expression" data-toggle="tab">1. Expression Matrix <span id="initialize_expression_form_nav_completed"></span></a></li>
     <li role="presentation" class="wizard-nav" id="initialize_metadata_form_nav"><a href="#metadata" data-toggle="tab">2. Metadata <span id="initialize_metadata_form_nav_completed"></span></a></li>
     <li role="presentation" class="wizard-nav" id="initialize_ordinations_form_nav"><a href="#ordinations" data-toggle="tab">3. Clusters <span id="initialize_ordinations_form_nav_completed"></span></a></li>
     <li role="presentation" class="wizard-nav" id="initialize_labels_form_nav"><a href="#labels" data-toggle="tab">4. Coordinate Labels <span id="initialize_labels_form_nav_completed"></span></a></li>
-		<li role="presentation" class="wizard-nav" id="initialize_primary_data_form_nav"><a href="#primary-data" data-toggle="tab">5. Sequence Data <span id="initialize_primary_data_form_nav_completed"></span></a></li>
+    <li role="presentation" class="wizard-nav" id="initialize_primary_data_form_nav"><a href="#primary-data" data-toggle="tab">5. Sequence Data <span id="initialize_primary_data_form_nav_completed"></span></a></li>
     <li role="presentation" class="wizard-nav" id="initialize_marker_genes_form_nav"><a href="#marker-genes" data-toggle="tab">6. Gene Lists <span id="initialize_marker_genes_form_nav_completed"></span></a></li>
-		<li role="presentation" class="wizard-nav" id="initialize_misc_form_nav"><a href="#misc" data-toggle="tab">7. Miscellaneous <span id="initialize_misc_form_nav_completed"></span></a></li>
-	</ul>
+    <li role="presentation" class="wizard-nav" id="initialize_misc_form_nav"><a href="#misc" data-toggle="tab">7. Miscellaneous <span id="initialize_misc_form_nav_completed"></span></a></li>
+  </ul>
 
-	<div id="bar" class="progress">
-		<div class="progress-bar"><span id="progress-count"></span></div>
-	</div>
-	<div class="tab-content">
+  <div id="bar" class="progress">
+    <div class="progress-bar"><span id="progress-count"></span></div>
+  </div>
+  <div class="tab-content">
     <div class="tab-pane" id="expression">
       <div id="expressions-target">
         <div class="well well-sm container-fluid upload-wizard">
@@ -84,16 +95,18 @@
           <p class="col-sm-12 text-center">A <%= link_to 'metadata file', 'https://raw.githubusercontent.com/broadinstitute/single_cell_portal/master/demo_data/metadata_example.txt', target: :_blank %> (.txt or .txt.gz) is a tab or comma-delimited text file containing cell-level annotations. <strong>At minimum</strong> a metadata file has:</p>
         </div>
           <div class="col-md-9 col-lg-offset-2 col-md-offset-1">
-          <ul>
-          <li>2 columns</li>
-          <li>A header row containing the value <strong>“NAME”</strong> and column names for cluster-level annotations</li>
-          <li>A second row with:</li>
-          <ul >
-            <li>The header of <strong>“TYPE”</strong>to declare metadata types (see below).</li>
-          <li>A value for each metadata column declaring its datatype
-          </li>
-            <ul><li>The two accepted values are <strong>“group”</strong> (set membership) or <strong>“numeric”</strong>(continuous scores). *</li></ul></ul>
-        </ul>
+            <ul>
+              <li>2 columns</li>
+              <li>A header row containing the value <strong>“NAME”</strong> and column names for cluster-level annotations</li>
+              <li>A second row with:</li>
+              <ul>
+                <li>The header of <strong>“TYPE”</strong>to declare metadata types (see below).</li>
+                <li>A value for each metadata column declaring its datatype</li>
+                <ul>
+                  <li>The two accepted values are <strong>“group”</strong> (set membership) or <strong>“numeric”</strong>(continuous scores). *</li>
+                </ul>
+              </ul>
+            </ul>
           </div>
         <div class="row">
         <p class="col-sm-12">* Group values are treated as literal strings, and numerics as floating-point numbers.</p>
@@ -104,9 +117,9 @@
         <%= render partial: 'initialize_metadata_form', locals: {study_file: @metadata_file} %>
       </div>
     </div>
-		<div class="tab-pane" id="ordinations">
-			<div id="ordinations-target">
-				<div class="well well-sm upload-wizard">
+    <div class="tab-pane" id="ordinations">
+      <div id="ordinations-target">
+        <div class="well well-sm upload-wizard">
           <div class="row">
           <h2 class="col-sm-12">Step 3. Upload Cluster File <small class="initialize-label" id="initialize_ordinations_form_completed"></small></h2>
           <p class="text-center"><%= link_to 'Cluster File', 'https://github.com/broadinstitute/single_cell_portal/blob/master/demo_data/coordinates_example.txt', target: :_blank %></p>
@@ -127,30 +140,33 @@
                 <li>The header of <strong>“TYPE”</strong>to declare metadata types (see below).</li>
                 <li>A value for each metadata column declaring its datatype
                 </li>
-                <ul><li>The two accepted values are <strong>“group”</strong> (set membership) or <strong>“numeric”</strong>(continuous scores). *</li>
-                  <li>The values for the “X”, “Y”, and “Z” columns must be set to “numeric”.</li></ul></ul>
+                <ul>
+                  <li>The two accepted values are <strong>“group”</strong> (set membership) or <strong>“numeric”</strong>(continuous scores). *</li>
+                  <li>The values for the “X”, “Y”, and “Z” columns must be set to “numeric”.</li>
+                </ul>
+              </ul>
             </ul>
           </div>
           <div class="row">
             <p class="col-sm-12">* Group values are treated as literal strings, and numerics as floating-point numbers.</p>
           </div>
-				</div>
-				<% @cluster_ordinations.each do |study_file| %>
+        </div>
+        <% @cluster_ordinations.each do |study_file| %>
           <div class="bs-callout bs-callout-info" id="<%= study_file.form_container_id %>">
-					  <%= render partial: 'initialize_ordinations_form', locals: {study_file: study_file} %>
+            <%= render partial: 'initialize_ordinations_form', locals: {study_file: study_file} %>
           </div>
-				<% end %>
-				<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
-					if (<%= !@cluster_ordinations.first.new_record? %>) {
-						completeWizardStep('initialize_ordinations_form_nav');
-						console.log('incrementing status for cluster ordinations upload');
-						$('#initialize_ordinations_form_completed').replaceWith("<%= escape_javascript(render partial: 'step_completed', locals: {id: 'initialize_ordinations_form_completed'}) %>");
-						$('#initialize_ordinations_form_nav_completed').html("<span class='fas fa-check text-success'></span>");
-					}
-				</script>
-			</div>
-			<p><%= link_to "<span class='fas fa-plus'></span> Add a Cluster File".html_safe, new_study_file_study_path(@study._id, file_type: 'Cluster', target: '#ordinations-target', form: 'initialize_ordinations_form'), class: 'btn btn-sm btn-primary add-cluster', 'data-remote' => true %></p>
-		</div>
+        <% end %>
+        <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+          if (<%= !@cluster_ordinations.first.new_record? %>) {
+            completeWizardStep('initialize_ordinations_form_nav');
+            console.log('incrementing status for cluster ordinations upload');
+            $('#initialize_ordinations_form_completed').replaceWith("<%= escape_javascript(render partial: 'step_completed', locals: {id: 'initialize_ordinations_form_completed'}) %>");
+            $('#initialize_ordinations_form_nav_completed').html("<span class='fas fa-check text-success'></span>");
+          }
+        </script>
+      </div>
+      <p><%= link_to "<span class='fas fa-plus'></span> Add a Cluster File".html_safe, new_study_file_study_path(@study._id, file_type: 'Cluster', target: '#ordinations-target', form: 'initialize_ordinations_form'), class: 'btn btn-sm btn-primary add-cluster', 'data-remote' => true %></p>
+    </div>
     <div class="tab-pane" id="labels">
       <div id="labels-target">
         <div class="well well-sm">
@@ -211,107 +227,107 @@
       <p><%= link_to "<span class='fas fa-plus'></span> Add a Primary Data File".html_safe, new_study_file_study_path(@study._id, file_type: 'Fastq', target: '#primary-data-target', form: 'initialize_primary_data_form'), class: 'btn btn-sm btn-primary add-primary-data', 'data-remote' => true %></p>
 
     </div>
-		<div class="tab-pane" id="marker-genes">
-			<div id="marker-genes-target">
-				<div class="well well-sm">
-					<h2>Step 6. Upload Gene List File <small class="initialize-label" id="initialize_marker_genes_form_completed"><span class="label label-info">Optional</span></small></h2>
-					<p class="lead">Upload a tab- or comma-delimited text file containing a list of genes and their mean expression values across any clusters.  The file must be a plain text (.txt) with the value 'GENE NAMES' in the first column, and cluster names in each successive column.</p>
-					<p><%= link_to "Example Gene List <span class='fas fa-download'></span>".html_safe, 'https://raw.githubusercontent.com/broadinstitute/single_cell_portal/master/demo_data/marker_gene_list_example.txt', class: 'btn btn-default', download: 'marker_gene_list_example.txt' %></p>
-				</div>
-				<% @marker_lists.each do |study_file| %>
+    <div class="tab-pane" id="marker-genes">
+      <div id="marker-genes-target">
+        <div class="well well-sm">
+          <h2>Step 6. Upload Gene List File <small class="initialize-label" id="initialize_marker_genes_form_completed"><span class="label label-info">Optional</span></small></h2>
+          <p class="lead">Upload a tab- or comma-delimited text file containing a list of genes and their mean expression values across any clusters.  The file must be a plain text (.txt) with the value 'GENE NAMES' in the first column, and cluster names in each successive column.</p>
+          <p><%= link_to "Example Gene List <span class='fas fa-download'></span>".html_safe, 'https://raw.githubusercontent.com/broadinstitute/single_cell_portal/master/demo_data/marker_gene_list_example.txt', class: 'btn btn-default', download: 'marker_gene_list_example.txt' %></p>
+        </div>
+        <% @marker_lists.each do |study_file| %>
           <div class="bs-callout bs-callout-info" id="<%= study_file.form_container_id %>">
-					  <%= render partial: 'initialize_marker_genes_form', locals: {study_file: study_file} %>
+            <%= render partial: 'initialize_marker_genes_form', locals: {study_file: study_file} %>
           </div>
-				<% end %>
-				<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
-					if (<%= !@marker_lists.first.new_record? %>) {
-						completeWizardStep('initialize_marker_genes_form_nav');
-						console.log('incrementing status for marker gene upload');
-						$('#initialize_marker_genes_form_completed').replaceWith("<%= escape_javascript(render partial: 'step_completed', locals: {id: 'initialize_marker_genes_form_completed'}) %>");
-						$('#initialize_marker_genes_form_nav_completed').html("<span class='fas fa-check text-success'></span>");
-					}
-				</script>
-			</div>
-			<p><%= link_to "<span class='fas fa-plus'></span> Add a Gene List File".html_safe, new_study_file_study_path(@study._id, file_type: 'Gene List', target: '#marker-genes-target', form: 'initialize_marker_genes_form'), class: 'btn btn-sm btn-primary add-gene-list', 'data-remote' => true %></p>
+        <% end %>
+        <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+          if (<%= !@marker_lists.first.new_record? %>) {
+            completeWizardStep('initialize_marker_genes_form_nav');
+            console.log('incrementing status for marker gene upload');
+            $('#initialize_marker_genes_form_completed').replaceWith("<%= escape_javascript(render partial: 'step_completed', locals: {id: 'initialize_marker_genes_form_completed'}) %>");
+            $('#initialize_marker_genes_form_nav_completed').html("<span class='fas fa-check text-success'></span>");
+          }
+        </script>
+      </div>
+      <p><%= link_to "<span class='fas fa-plus'></span> Add a Gene List File".html_safe, new_study_file_study_path(@study._id, file_type: 'Gene List', target: '#marker-genes-target', form: 'initialize_marker_genes_form'), class: 'btn btn-sm btn-primary add-gene-list', 'data-remote' => true %></p>
 
-		</div>
-		<div class="tab-pane" id="misc">
-			<div id="misc-target">
-				<div class="well well-sm">
-					<h2>Step 7. Upload Documentation/Other Files <small class="initialize-label" id="initialize_misc_form_completed"><span class="label label-info">Optional</span></small></h2>
-					<p class="lead">Upload any documentation or other support files you have.</p>
-				</div>
-				<% @other_files.each do |study_file| %>
+    </div>
+    <div class="tab-pane" id="misc">
+      <div id="misc-target">
+        <div class="well well-sm">
+          <h2>Step 7. Upload Documentation/Other Files <small class="initialize-label" id="initialize_misc_form_completed"><span class="label label-info">Optional</span></small></h2>
+          <p class="lead">Upload any documentation or other support files you have.</p>
+        </div>
+        <% @other_files.each do |study_file| %>
           <div class="bs-callout bs-callout-info" id="<%= study_file.form_container_id %>">
-					  <%= render partial: 'initialize_misc_form', locals: {study_file: study_file} %>
+            <%= render partial: 'initialize_misc_form', locals: {study_file: study_file} %>
           </div>
-				<% end %>
-				<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
-					if (<%= !@other_files.first.new_record? %>) {
-						completeWizardStep('initialize_misc_form_nav');
-						console.log('incrementing status for other upload');
-						$('#initialize_misc_form_completed').replaceWith("<%= escape_javascript(render partial: 'step_completed', locals: {id: 'initialize_misc_form_completed'}) %>");
-						$('#initialize_misc_form_nav_completed').html("<span class='fas fa-check text-success'></span>");
-					}
-				</script>
-			</div>
-			<p><%= link_to "<span class='fas fa-plus'></span> Add a Study File".html_safe, new_study_file_study_path(@study._id, file_type: 'Documentation',  target: '#misc-target', form: 'initialize_misc_form'), class: 'btn btn-sm btn-primary add-misc', 'data-remote' => true %></p>
+        <% end %>
+        <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+          if (<%= !@other_files.first.new_record? %>) {
+            completeWizardStep('initialize_misc_form_nav');
+            console.log('incrementing status for other upload');
+            $('#initialize_misc_form_completed').replaceWith("<%= escape_javascript(render partial: 'step_completed', locals: {id: 'initialize_misc_form_completed'}) %>");
+            $('#initialize_misc_form_nav_completed').html("<span class='fas fa-check text-success'></span>");
+          }
+        </script>
+      </div>
+      <p><%= link_to "<span class='fas fa-plus'></span> Add a Study File".html_safe, new_study_file_study_path(@study._id, file_type: 'Documentation',  target: '#misc-target', form: 'initialize_misc_form'), class: 'btn btn-sm btn-primary add-misc', 'data-remote' => true %></p>
 
-		</div>
-		<ul class="pager wizard">
-			<li class="previous"><a href="#" id="prev-btn">Previous</a></li>
-			<li class="next"><a href="#" id="next-btn">Next</a></li>
-			<li class="next finish" style="display:none;"><%= scp_link_to "Finish", study_path(@study), id: 'finish-btn' %></li>
-		</ul>
-	</div>
+    </div>
+    <ul class="pager wizard">
+      <li class="previous"><a href="#" id="prev-btn">Previous</a></li>
+      <li class="next"><a href="#" id="next-btn">Next</a></li>
+      <li class="next finish" style="display:none;"><%= scp_link_to "Finish", study_path(@study), id: 'finish-btn' %></li>
+    </ul>
+  </div>
 </div>
 <div id="study-files-notice-target"></div>
 <%= render 'fileupload_templates' %>
 
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
-	$(document).ready(function() {
-		var wizard = $('#rootwizard');
-		wizard.bootstrapWizard({'tabClass': 'nav-tabs',
-			onTabShow: function(tab, navigation, index, clickedIndex, clickedTab) {
-				var step = $(tab[0]).attr('id');
-				var total = navigation.find('li').length;
-				var done = getWizardStatus();
-				var pctCompleted = Math.round((done/total) * 100);
-				$('#bar').find('.progress-bar').css({width:pctCompleted+'%'});
-				$('#progress-count').html(pctCompleted+'% Completed');
-				// user has finished wizard, show finish button
-				if (index > 0) {
-					wizard.find('.pager .previous').removeClass('disabled');
-				}
-				if (step == 'initialize_misc_form_nav') {
-					wizard.find('.pager .next').hide();
-					wizard.find('.pager .finish').show();
-					wizard.find('.pager .finish').removeClass('disabled');
-					wizard.find('.pager .finish').addClass('enabled');
-					// next step is ready to be done, enable button
-				} else {
-					wizard.find('.pager .next').show();
-				}
-			},
-			onNext: function(tab, navigation, index) {
-				wizard.find('.pager .previous').removeClass('disabled');
-				return true;
-			}
-		});
-
-		$('#show-gsutil-command').click(function() {
-		   $('#gsutil-command-wrapper').slideToggle('slow');
+  $(document).ready(function() {
+    var wizard = $('#rootwizard');
+    wizard.bootstrapWizard({'tabClass': 'nav-tabs',
+      onTabShow: function(tab, navigation, index, clickedIndex, clickedTab) {
+        var step = $(tab[0]).attr('id');
+        var total = navigation.find('li').length;
+        var done = getWizardStatus();
+        var pctCompleted = Math.round((done/total) * 100);
+        $('#bar').find('.progress-bar').css({width:pctCompleted+'%'});
+        $('#progress-count').html(pctCompleted+'% Completed');
+        // user has finished wizard, show finish button
+        if (index > 0) {
+          wizard.find('.pager .previous').removeClass('disabled');
+        }
+        if (step == 'initialize_misc_form_nav') {
+          wizard.find('.pager .next').hide();
+          wizard.find('.pager .finish').show();
+          wizard.find('.pager .finish').removeClass('disabled');
+          wizard.find('.pager .finish').addClass('enabled');
+          // next step is ready to be done, enable button
+        } else {
+          wizard.find('.pager .next').show();
+        }
+      },
+      onNext: function(tab, navigation, index) {
+        wizard.find('.pager .previous').removeClass('disabled');
+        return true;
+      }
     });
 
-		$('.tab-content').on('click', '.initialize-bundled-file', function() {
-		    var url = "<%= initialize_bundled_file_study_path(@study) %>";
-		    var dataAttr = $(this).data();
-		    url += "?file_type=" + dataAttr.fileType + "&study_file_id=" + dataAttr.studyFileId;
-		    $.ajax({
+    $('#show-gsutil-command').click(function() {
+       $('#gsutil-command-wrapper').slideToggle('slow');
+    });
+
+    $('.tab-content').on('click', '.initialize-bundled-file', function() {
+        var url = "<%= initialize_bundled_file_study_path(@study) %>";
+        var dataAttr = $(this).data();
+        url += "?file_type=" + dataAttr.fileType + "&study_file_id=" + dataAttr.studyFileId;
+        $.ajax({
             url: url,
             method: 'POST',
             dataType: 'script'
         });
     });
-	});
+  });
 </script>
