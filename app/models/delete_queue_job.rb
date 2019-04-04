@@ -96,6 +96,7 @@ class DeleteQueueJob < Struct.new(:object)
         study.update!(initialized: false)
       end
     when 'UserAnnotation'
+      study = object.study
       # unset default annotation if it was this user_annotation
       if study.default_annotation == object.formatted_annotation_identifier
         study.default_options[:annotation] = nil
