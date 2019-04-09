@@ -135,7 +135,7 @@ class User
             expires_in: 3600
         )
         token_vals = client.fetch_access_token
-        expires_at = DateTime.zone.now + token_vals['expires_in'].to_i.seconds
+        expires_at = Time.zone.now + token_vals['expires_in'].to_i.seconds
         user_access_token = {'access_token' => token_vals['access_token'], 'expires_in' => token_vals['expires_in'], 'expires_at' => expires_at}
         self.update!(access_token: user_access_token)
         user_access_token
