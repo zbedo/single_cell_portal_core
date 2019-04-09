@@ -301,8 +301,12 @@ module ApplicationHelper
 
 	# return an access token for viewing GCS objects client side, depending on study privacy
   def get_read_access_token(study, user)
-    if user.present? && study.public? && Study.read_only_firecloud_client.present?
-			Study.read_only_firecloud_client.valid_access_token["access_token"]
+    if user.present?
+      if study.public? && Study.read_only_firecloud_client.present?
+        Study.read_only_firecloud_client.valid_access_token["access_token"]
+      else
+        user.valid_access_token[:access_token]
+      end
 		else
 			nil
 		end
