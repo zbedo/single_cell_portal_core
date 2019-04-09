@@ -126,34 +126,24 @@ class ReportsController < ApplicationController
     end
 
     # get pipeline statistics
-    @pipeline_submissions = {}
     @has_pipeline_stats = false
-    submissions = []
-    # Deferring until Q2 2019; investigating better ways of calculating runtimes and costs
-    #
-    AnalysisMetadatum.all.each do |analysis|
+    @pipeline_success = {}
+    @pipeline_fail = {}
+    # report on analysis submission stats (last 6 months)
+    one_year_ago = now - 6.months
+    submissions = AnalysisSubmission.where(:submitted_on.gte => one_year_ago, :status.in => ['Succeeded', 'Failed'])
+    @pipeline_dates = submissions.map {|s| s.submitted_on.strftime('%Y-%m')}.uniq
+    @starting_counts = @pipeline_dates.size.times.map {|i| 0}
+    submissions.each do |analysis|
       @has_pipeline_stats = true
-
-      comp_method = analysis.payload['computational_method']
-      parts = comp_method.split('/')
-      pipeline_name = parts[parts.size - 2]
-      study = analysis.study
-      submission_id = analysis.submission_id
-      submissions << {
-          workspace_namespace: study.firecloud_project,
-          workspace_name: study.firecloud_workspace,
-          submission_id: submission_id
-      }
-      # add run to count totals for this pipeline
-      date_bracket = analysis.created_at.strftime('%Y-%m')
-      if @pipeline_submissions[pipeline_name].present?
-        if @pipeline_submissions[pipeline_name][date_bracket].present?
-          @pipeline_submissions[pipeline_name][date_bracket] += 1
-        else
-          @pipeline_submissions[pipeline_name][date_bracket] = 1
-        end
+      pipeline_name = analysis.analysis_name
+      date_bracket = analysis.submitted_on.strftime('%Y-%m')
+      @pipeline_success[pipeline_name] ||= Hash[@pipeline_dates.zip(@starting_counts)]
+      @pipeline_fail[pipeline_name] ||= Hash[@pipeline_dates.zip(@starting_counts)]
+      if analysis.status == 'Succeeded'
+        @pipeline_success[pipeline_name][date_bracket] += 1
       else
-        @pipeline_submissions[pipeline_name] = {"#{date_bracket}" => 1}
+        @pipeline_fail[pipeline_name][date_bracket] += 1
       end
     end
   end
@@ -175,12 +165,12 @@ class ReportsController < ApplicationController
   def export_submission_report
     if current_user.admin?
       @submission_stats = []
-      Parallel.map(AnalysisMetadatum.all.to_a, in_threads: 100) do |analysis|
-        @submission_stats << {submitter: analysis.submitter, analysis: analysis.analysis_method_name,
-                              date: analysis.created_at}
+      Parallel.map(AnalysisSubmission.all.to_a, in_threads: 100) do |analysis|
+        @submission_stats << {submitter: analysis.submitter, analysis: analysis.analysis_name, status: analysis.status,
+                              submitted_on: analysis.submitted_on, completed_on: analysis.completed_on}
       end
       filename = "analysis_submissions_#{Date.today.strftime('%F')}.txt"
-      report_headers = %w(email analysis completion_date).join("\t")
+      report_headers = %w(email analysis status submission_date completion_date).join("\t")
       report_data = @submission_stats.map {|sub| sub.values.join("\t")}.join("\n")
       send_data [report_headers, report_data].join("\n"), filename: filename
     else

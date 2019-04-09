@@ -42,12 +42,15 @@
   </div>
 </div>
 <div class="row">
-  <div class="col-md-12">
-    <div id="plotly-pipeline-submissions" class="plotly-report"></div>
-    <% if current_user.admin %>
-      <p class="text-center top-pad"><%= link_to "Export Submission Report", export_submission_report_path, class: 'btn btn-default', id: 'export-submission-report' %></p>
-    <% end %>
+  <div class="col-md-6">
+    <div id="plotly-pipeline-submissions-success" class="plotly-report"></div>
   </div>
+  <div class="col-md-6">
+    <div id="plotly-pipeline-submissions-fail" class="plotly-report"></div>
+  </div>
+  <% if current_user.admin %>
+    <p class="text-center top-pad"><%= link_to "Export Submission Report", export_submission_report_path, class: 'btn btn-default', id: 'export-submission-report' %></p>
+  <% end %>
 </div>
 <%= render partial: 'contact_modal' %>
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
@@ -320,38 +323,60 @@
             }
         }
     ).then(setRenderStatus('#plotly-returning-users-time', true));
-
-    var pipelineSubmissions = [];
-    <% @pipeline_submissions.each do |name, entries| %>
-      pipelineSubmissions.push({
-          x: <%= raw entries.keys %>,
-          y: <%= raw entries.values %>,
-          name: '<%= name %>',
-          type: 'bar'
+  <% if @has_pipeline_stats %>
+    var pipelineSuccess = [];
+    var pipelineFail = [];
+    <% @pipeline_success.each_with_index do |(name, submissions), index| %>
+      pipelineSuccess.push({
+          x: <%= raw submissions.keys %>,
+          y: <%= raw submissions.values %>,
+          type: 'bar',
+          name: '<%= name %>'
       });
     <% end %>
 
-    <% if @has_pipeline_stats %>
-      Plotly.newPlot('plotly-pipeline-submissions', pipelineSubmissions,
-          {
-              title: 'How often is each WDL run from the portal each month?',
-              titlefont: plotlyTitleFont,
-              font: plotlyLabelFont,
-              bargap: 0,
-              bargroupgap: 0.5,
-              hovermode: 'closest',
-              xaxis: {
-                  title: 'Date'
-              },
-              yaxis: {
-                  title: 'Number of submissions'
-              },
-              showlegend: true,
-              annotations: []
-          }
-      ).then(setRenderStatus('#plotly-pipeline-submissions', true));
-
+    <% @pipeline_fail.each_with_index do |(name, submissions), index| %>
+    pipelineFail.push({
+        x: <%= raw submissions.keys %>,
+        y: <%= raw submissions.values %>,
+        type: 'bar',
+        name: '<%= name %>'
+    });
     <% end %>
+
+     Plotly.newPlot('plotly-pipeline-submissions-success', pipelineSuccess, {
+         title: 'How many successful pipeline submissions have there been for last 6 months?',
+         font: plotlyLabelFont,
+         titlefont: plotlyTitleFont,
+         barmode: 'group',
+         hovermode: 'closest',
+         xaxis: {
+             title: 'Date',
+         },
+         yaxis: {
+             title: 'Number of submissions'
+         },
+         showlegend: true
+     }).then(setRenderStatus('#plotly-pipeline-submissions-success', true));
+
+    Plotly.newPlot('plotly-pipeline-submissions-fail', pipelineFail, {
+        title: 'How many failed pipeline submissions have there been for last 6 months?',
+        font: plotlyLabelFont,
+        titlefont: plotlyTitleFont,
+        bargap: 0,
+        bargroupgap: 0.5,
+        barmode: 'group',
+        hovermode: 'closest',
+        xaxis: {
+            title: 'Date',
+        },
+        yaxis: {
+            title: 'Number of submissions'
+        },
+        showlegend: true
+    }).then(setRenderStatus('#plotly-pipeline-submissions-fail', true));
+
+  <% end %>
 
     $('#toggle-column-annots').click(function() {
         // immediate set render status to false

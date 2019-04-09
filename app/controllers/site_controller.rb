@@ -345,6 +345,9 @@ class SiteController < ApplicationController
         workspace = Study.firecloud_client.get_workspace(@study.firecloud_project, @study.firecloud_workspace)
         @submissions = Study.firecloud_client.get_workspace_submissions(@study.firecloud_project, @study.firecloud_workspace)
 
+        @submissions.each do |submission|
+          update_analysis_submission(submission)
+        end
         # remove deleted submissions from list of runs
         if !workspace['workspace']['attributes']['deleted_submissions'].blank?
           deleted_submissions = workspace['workspace']['attributes']['deleted_submissions']['items']
@@ -1122,16 +1125,8 @@ class SiteController < ApplicationController
     workspace = Study.firecloud_client.get_workspace(@study.firecloud_project, @study.firecloud_workspace)
     @submissions = Study.firecloud_client.get_workspace_submissions(@study.firecloud_project, @study.firecloud_workspace)
     # update any AnalysisSubmission records with new statuses
-    @submission.each do |submission|
-      analysis_submission = AnalysisSubmission.find_by(submission_id: submission['submissionId'])
-      if analysis_submission.present?
-        workflow_status = submission['workflowStatuses'].keys.first # this only works for single-workflow analyses
-        analysis_submission.update(status: workflow_status)
-        analysis_submission.delay.set_completed_on # run in background to avoid UI blocking
-      else
-        # create a new record from the submission in the background to avoid UI blocking
-        AnalysisSubmission.delay.initialize_from_submission(@study, submission['submissionId'])
-      end
+    @submissions.each do |submission|
+      update_analysis_submission(submission)
     end
     # remove deleted submissions from list of runs
     if !workspace['workspace']['attributes']['deleted_submissions'].blank?
@@ -2167,6 +2162,19 @@ class SiteController < ApplicationController
   # load list of available workflows
   def load_available_workflows
     AnalysisConfiguration.available_analyses
+  end
+
+  # update or create AnalysisSubmissions when loading study analysis tab
+  def update_analysis_submission(submission)
+    analysis_submission = AnalysisSubmission.find_by(submission_id: submission['submissionId'])
+    if analysis_submission.present?
+      workflow_status = submission['workflowStatuses'].keys.first # this only works for single-workflow analyses
+      analysis_submission.update(status: workflow_status)
+      analysis_submission.delay.set_completed_on # run in background to avoid UI blocking
+    else
+      # create a new record from the submission in the background to avoid UI blocking
+      AnalysisSubmission.delay.initialize_from_submission(@study, submission['submissionId'])
+    end
   end
 
   # Helper method for download_bulk_files.  Returns file's curl config, size.
