@@ -175,15 +175,8 @@ class ReportsController < ApplicationController
   def export_submission_report
     if current_user.admin?
       @submission_stats = []
-      Parallel.map(AnalysisMetadatum.all.to_a, in_threads: 3) do |analysis|
-        client = FireCloudClient.new
-        study = analysis.study
-        workspace_namespace = study.firecloud_project
-        workspace_name = study.firecloud_workspace
-        submission_id = analysis.submission_id
-        analysis_method = analysis.payload['computational_method'].gsub(/https:\/\/api\.firecloud\.org\/api\/methods\//, '')
-        submission = client.get_workspace_submission(workspace_namespace, workspace_name, submission_id)
-        @submission_stats << {submitter: submission['submitter'], analysis: analysis_method,
+      Parallel.map(AnalysisMetadatum.all.to_a, in_threads: 100) do |analysis|
+        @submission_stats << {submitter: analysis.submitter, analysis: analysis.analysis_method_name,
                               date: analysis.created_at}
       end
       filename = "analysis_submissions_#{Date.today.strftime('%F')}.txt"

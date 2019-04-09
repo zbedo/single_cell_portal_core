@@ -54,6 +54,12 @@ class AnalysisMetadatum
   # INSTANCE METHODS
   ##
 
+  # helper method to return just the analysis namespace/name/snapshot for a FireCloud method
+  def analysis_method_name
+    method = self.payload['computational_method']
+    method.present? ? method.gsub(/https:\/\/api\.firecloud\.org\/api\/methods\//, '') : ''
+  end
+
   # root directory for storing metadata schema copies
   def definition_root
     Rails.root.join('data', 'HCA_metadata', self.version)
