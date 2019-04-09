@@ -12,6 +12,7 @@
 !/log/.keep
 /tmp
 .idea
+.vscode
 /public/single_cell/data/*
 /db/*.json
 /data/*
