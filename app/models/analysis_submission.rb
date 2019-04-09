@@ -8,6 +8,7 @@ class AnalysisSubmission
   field :firecloud_workspace, type: String
   field :submitted_on, type: DateTime
   field :completed_on, type: DateTime
+  field :submitted_from_portal, type: Boolean, default: false
 
   belongs_to :study, optional: true
 
