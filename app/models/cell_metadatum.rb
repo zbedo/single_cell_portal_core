@@ -59,7 +59,7 @@ class CellMetadatum
 
   # generate new entries based on existing StudyMetadata objects
   def self.generate_new_entries
-    start_time = Time.now
+    start_time = Time.zone.now
     arrays_created = 0
     # we only want to generate the list of 'All Cells' once per study, so do that first
     Study.all.each do |study|
@@ -92,7 +92,7 @@ class CellMetadatum
     end
     DataArray.create(records)
     arrays_created += records.size
-    end_time = Time.now
+    end_time = Time.zone.now
     seconds_diff = (start_time - end_time).to_i.abs
 
     hours = seconds_diff / 3600

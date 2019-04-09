@@ -73,7 +73,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
       self.storage = Google::Cloud::Storage.new(storage_attr)
 
       # set expiration date of token
-      self.expires_at = Time.now + self.access_token['expires_in']
+      self.expires_at = Time.zone.now + self.access_token['expires_in']
     else
       self.user = user
       self.project = project
@@ -137,7 +137,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   def refresh_access_token
     if self.user.nil?
       new_token = FireCloudClient.generate_access_token(self.service_account_credentials)
-      new_expiry = Time.now + new_token['expires_in']
+      new_expiry = Time.zone.now + new_token['expires_in']
       self.access_token = new_token
       self.expires_at = new_expiry
     else
@@ -153,7 +153,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Boolean+ of token expiration
   def access_token_expired?
-    Time.now >= self.expires_at
+    Time.zone.now >= self.expires_at
   end
 
   # return a valid access token

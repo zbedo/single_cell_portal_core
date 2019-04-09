@@ -208,7 +208,7 @@ class StudyShare
 			unless self.permission == 'Reviewer'
 				# set acls only if a new share or if the permission has changed
 				if (self.new_record? && !self.study.new_record?) || (!self.new_record? && self.permission_changed?)
-					Rails.logger.info "#{Time.now}: Creating FireCloud ACLs for study #{self.study.name} - share #{self.email}, permission: #{self.permission}"
+					Rails.logger.info "#{Time.zone.now}: Creating FireCloud ACLs for study #{self.study.name} - share #{self.email}, permission: #{self.permission}"
 					begin
 						acl = Study.firecloud_client.create_workspace_acl(self.email, FIRECLOUD_ACL_MAP[self.permission])
 						Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.study.firecloud_workspace, acl)
@@ -232,7 +232,7 @@ class StudyShare
 		rescue RuntimeError => e
 			error_context = ErrorTracker.format_extra_context(self.study, self)
 			ErrorTracker.report_exception(e, nil, error_context)
-			Rails.logger.error "#{Time.now}: Could not remove share for #{self.email} to workspace #{self.firecloud_workspace} due to: #{e.message}"
+			Rails.logger.error "#{Time.zone.now}: Could not remove share for #{self.email} to workspace #{self.firecloud_workspace} due to: #{e.message}"
 			SingleCellMailer.share_delete_fail(self.study, self.email).deliver_now
 		end
 	end

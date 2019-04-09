@@ -30,7 +30,7 @@ class ProfilesController < ApplicationController
         end
       rescue => e
         ErrorTracker.report_exception(e, current_user, params)
-        logger.info "#{Time.now}: unable to retrieve FireCloud profile for #{current_user.email}: #{e.message}"
+        logger.info "#{Time.zone.now}: unable to retrieve FireCloud profile for #{current_user.email}: #{e.message}"
       end
     end
   end
@@ -78,14 +78,14 @@ class ProfilesController < ApplicationController
         # now check if user is part of 'all-portal' user group
         current_user.add_to_portal_user_group
       else
-        logger.info "#{Time.now}: error in updating FireCloud profile for #{current_user.email}: #{@fire_cloud_profile.errors.full_messages}"
+        logger.info "#{Time.zone.now}: error in updating FireCloud profile for #{current_user.email}: #{@fire_cloud_profile.errors.full_messages}"
         respond_to do |format|
           format.js {render :get_firecloud_profile}
         end
       end
     rescue => e
       ErrorTracker.report_exception(e, current_user, params)
-      logger.info "#{Time.now}: unable to update FireCloud profile for #{current_user.email}: #{e.message}"
+      logger.info "#{Time.zone.now}: unable to update FireCloud profile for #{current_user.email}: #{e.message}"
       @alert = "An error occurred when trying to update your FireCloud profile: #{e.message}"
     end
   end

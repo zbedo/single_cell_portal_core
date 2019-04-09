@@ -17,7 +17,7 @@ class ReportsController < ApplicationController
     @all_studies = Study.where(queued_for_deletion: false).to_a
     @public_studies = @all_studies.select {|s| s.public}
     @private_studies = @all_studies.select {|s| !s.public}
-    now = Time.now
+    now = Time.zone.now
     one_week_ago = now - 1.weeks
 
     # set up local collections and labels

@@ -7,8 +7,8 @@ class CacheRemovalJob < Struct.new(:cache_key)
   ###
 
   def perform
-    Rails.logger.info "#{Time.now}: Deleting caches for #{cache_key}"
+    Rails.logger.info "#{Time.zone.now}: Deleting caches for #{cache_key}"
     Rails.cache.delete_matched(/#{cache_key}/)
-    Rails.logger.info "#{Time.now}: caches successfully cleared"
+    Rails.logger.info "#{Time.zone.now}: caches successfully cleared"
   end
 end

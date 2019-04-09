@@ -841,7 +841,7 @@ class SiteController < ApplicationController
       end
     end
 
-    start_time = Time.now
+    start_time = Time.zone.now
 
     # Get signed URLs for all files in the requested download objects, and update user quota
     Parallel.map(curl_files, in_threads: 100) do |file|
@@ -851,7 +851,7 @@ class SiteController < ApplicationController
       user_quota += file_size
     end
 
-    end_time = Time.now
+    end_time = Time.zone.now
     time = (end_time - start_time).divmod 60.0
     @log_message = ["#{@study.url_safe_name} curl configs generated!"]
     @log_message << "Signed URLs generated: #{curl_configs.size}"

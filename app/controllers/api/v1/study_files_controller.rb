@@ -368,7 +368,7 @@ module Api
         rescue => e
           error_context = ErrorTracker.format_extra_context(@study_file, {params: params})
           ErrorTracker.report_exception(e, current_api_user, error_context)
-          logger.error "#{Time.now}: error in deleting #{@study_file.upload_file_name} from workspace: #{@study.firecloud_workspace}; #{e.message}"
+          logger.error "#{Time.zone.now}: error in deleting #{@study_file.upload_file_name} from workspace: #{@study.firecloud_workspace}; #{e.message}"
           render json: {error: "Error deleting remote file in bucket: #{e.message}"}, status: 500
         end
       end
@@ -424,7 +424,7 @@ module Api
 
       # POST /single_cell/api/v1/studies/:study_id/study_files/:id/parse
       def parse
-        logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name}"
+        logger.info "#{Time.zone.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name}"
         unless @study_file.parsing?
           case @study_file.file_type
           when 'Cluster'
@@ -437,7 +437,7 @@ module Api
               @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_api_user)
               head 204
             else
-              logger.info "#{Time.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
+              logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
               respond_to do |format|
                 format.json {render 'missing_file_bundle', status: 412}
               end
@@ -456,7 +456,7 @@ module Api
               ParseUtils.delay.cell_ranger_expression_parse(@study, current_api_user, @study_file, genes, barcodes)
               head 204
             else
-              logger.info "#{Time.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
+              logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
               respond_to do |format|
                 format.json {render 'missing_file_bundle', status: 412}
               end

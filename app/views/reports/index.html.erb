@@ -1,5 +1,5 @@
 <h1>Reports <%= link_to "<i class='fas fa-fw fa-chart-bar'></i> Request a new plot".html_safe, report_request_path, class: 'btn btn-primary pull-right', id: 'report-request' %></h1>
-<h3 class="lead">Updated as of <%= DateTime.now.strftime("%A, %B %-d %Y %r") %> <%= link_to "<i class='fas fa-toggle-on'></i> Toggle Totals".html_safe, '#/', class: 'btn btn-default pull-right', id: 'toggle-column-annots' %></h3>
+<h3 class="lead">Updated as of <%= DateTime.zone.now.strftime("%A, %B %-d %Y %r") %> <%= link_to "<i class='fas fa-toggle-on'></i> Toggle Totals".html_safe, '#/', class: 'btn btn-default pull-right', id: 'toggle-column-annots' %></h3>
 <div class="row">
   <div class="col-md-6">
     <div id="plotly-study-count" class="plotly-report"></div>

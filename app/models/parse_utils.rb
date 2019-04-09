@@ -5,11 +5,11 @@ class ParseUtils
   # parse a 10X gene-barcode matrix file triplet (input matrix must be sorted by gene indices)
   def self.cell_ranger_expression_parse(study, user, matrix_study_file, genes_study_file, barcodes_study_file, opts={})
     begin
-      start_time = Time.now
+      start_time = Time.zone.now
       # localize files
-      Rails.logger.info "#{Time.now}: Parsing gene-barcode matrix source data files for #{study.name} with the following options: #{opts}"
+      Rails.logger.info "#{Time.zone.now}: Parsing gene-barcode matrix source data files for #{study.name} with the following options: #{opts}"
       study.make_data_dir
-      Rails.logger.info "#{Time.now}: Localizing output files & creating study file entries from 10X CellRanger source data for #{study.name}"
+      Rails.logger.info "#{Time.zone.now}: Localizing output files & creating study file entries from 10X CellRanger source data for #{study.name}"
 
       # localize files if necessary, otherwise open newly uploaded files. check to make sure a local copy doesn't already exists
       # as we may be uploading files piecemeal from upload wizard
@@ -56,7 +56,7 @@ class ParseUtils
       end
 
       # open matrix file and read contents
-      Rails.logger.info "#{Time.now}: Reading gene/barcode/matrix file contents for #{study.name}"
+      Rails.logger.info "#{Time.zone.now}: Reading gene/barcode/matrix file contents for #{study.name}"
       m_header_1 = matrix_file.readline.split.map(&:strip)
       valid_headers = %w(%%MatrixMarket matrix coordinate)
       unless m_header_1.first == valid_headers.first && m_header_1[1] == valid_headers[1] && m_header_1[2] == valid_headers[2]
@@ -76,13 +76,13 @@ class ParseUtils
       @child_count = 0
 
       # read first line manually and initialize containers for storing temporary data yet to be added to documents
-      Rails.logger.info "#{Time.now}: Initializing data structures from 10X CellRanger source data for #{study.name}"
+      Rails.logger.info "#{Time.zone.now}: Initializing data structures from 10X CellRanger source data for #{study.name}"
       line = matrix_file.readline.strip
       gene_index, barcode_index, expression_score = parse_line(line)
       @last_gene_index, @current_gene = initialize_new_gene(study, gene_index, matrix_study_file)
       @current_barcodes = [@barcodes[barcode_index]]
       @current_expression = [expression_score]
-      Rails.logger.info "#{Time.now}: Creating new gene & data_array records from 10X CellRanger source data for #{study.name}"
+      Rails.logger.info "#{Time.zone.now}: Creating new gene & data_array records from 10X CellRanger source data for #{study.name}"
 
       # now process all lines
       process_matrix_data(study, matrix_file, matrix_study_file)
@@ -97,10 +97,10 @@ class ParseUtils
       # write last records to database
       Gene.create(@gene_documents)
       @count += @gene_documents.size
-      Rails.logger.info "#{Time.now}: Processed #{@count} expressed genes from 10X CellRanger source data for #{study.name}"
+      Rails.logger.info "#{Time.zone.now}: Processed #{@count} expressed genes from 10X CellRanger source data for #{study.name}"
       DataArray.create(@data_arrays)
       @child_count += @data_arrays.size
-      Rails.logger.info "#{Time.now}: Processed #{@child_count} child data arrays from 10X CellRanger source data for #{study.name}"
+      Rails.logger.info "#{Time.zone.now}: Processed #{@child_count} child data arrays from 10X CellRanger source data for #{study.name}"
       # create array of known cells for this expression matrix
       @barcodes.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
         known_cells = study.data_arrays.build(name: "#{matrix_study_file.name} Cells", cluster_name: matrix_study_file.name,
@@ -124,14 +124,14 @@ class ParseUtils
         other_genes << Gene.new(study_id: study.id, name: gene_name, searchable_name: gene_name.downcase, gene_id: gene_id, study_file_id: matrix_study_file.id).attributes
         other_genes_count += 1
         if other_genes.size % 1000 == 0
-          Rails.logger.info "#{Time.now}: creating #{other_genes_count} non-expressed gene records in #{study.name}"
+          Rails.logger.info "#{Time.zone.now}: creating #{other_genes_count} non-expressed gene records in #{study.name}"
           Gene.create(other_genes)
           @count += other_genes.size
           other_genes = []
         end
       end
       # process last batch
-      Rails.logger.info "#{Time.now}: creating #{other_genes_count} non-expressed gene records in #{study.name}"
+      Rails.logger.info "#{Time.zone.now}: creating #{other_genes_count} non-expressed gene records in #{study.name}"
       Gene.create(other_genes)
       @count += other_genes.size
 
@@ -145,22 +145,22 @@ class ParseUtils
 
       # set the default expression label if the user supplied one
       if !study.has_expression_label? && !matrix_study_file.y_axis_label.blank?
-        Rails.logger.info "#{Time.now}: Setting default expression label in #{study.name} to '#{matrix_study_file.y_axis_label}'"
+        Rails.logger.info "#{Time.zone.now}: Setting default expression label in #{study.name} to '#{matrix_study_file.y_axis_label}'"
         study_opts = study.default_options
         study.update!(default_options: study_opts.merge(expression_label: matrix_study_file.y_axis_label))
       end
 
       # set initialized to true if possible
       if study.cluster_groups.any? && study.cell_metadata.any? && !study.initialized?
-        Rails.logger.info "#{Time.now}: initializing #{study.name}"
+        Rails.logger.info "#{Time.zone.now}: initializing #{study.name}"
         study.update!(initialized: true)
-        Rails.logger.info "#{Time.now}: #{study.name} successfully initialized"
+        Rails.logger.info "#{Time.zone.now}: #{study.name} successfully initialized"
       end
 
-      end_time = Time.now
+      end_time = Time.zone.now
       time = (end_time - start_time).divmod 60.0
       @message = []
-      @message << "#{Time.now}: #{study.name} 10X CellRanger expression data parse completed!"
+      @message << "#{Time.zone.now}: #{study.name} 10X CellRanger expression data parse completed!"
       @message << "Gene-level entries created: #{@count}"
       @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
       Rails.logger.info @message.join("\n")
@@ -168,7 +168,7 @@ class ParseUtils
         SingleCellMailer.notify_user_parse_complete(user.email, "Gene-barcode matrix expression data has completed parsing", @message).deliver_now
       rescue => e
         ErrorTracker.report_exception(e, user, {message: @message})
-        Rails.logger.error "#{Time.now}: Unable to deliver email: #{e.message}"
+        Rails.logger.error "#{Time.zone.now}: Unable to deliver email: #{e.message}"
       end
 
       # determine what to do with local files
@@ -194,7 +194,7 @@ class ParseUtils
                                               barcodes_study_file: barcodes_study_file.attributes.to_h,
                                               study: study.attributes.to_h})
       error_message = e.message
-      Rails.logger.error "#{Time.now}: #{e.class.name}:#{error_message}, #{@last_line}"
+      Rails.logger.error "#{Time.zone.now}: #{e.class.name}:#{error_message}, #{@last_line}"
       # error has occurred, so clean up records and remove file
       Gene.where(study_id: study.id, study_file_id: matrix_study_file.id).delete_all
       DataArray.where(study_id: study.id, study_file_id: matrix_study_file.id).delete_all
@@ -282,13 +282,13 @@ class ParseUtils
             File.delete(file_payload.path) # remove temp copy
             run_at = 2.minutes.from_now
             begin
-              Rails.logger.info "#{Time.now}: preparing to upload Ideogram outputs: #{study_file.upload_file_name}:#{study_file.id} to FireCloud"
+              Rails.logger.info "#{Time.zone.now}: preparing to upload Ideogram outputs: #{study_file.upload_file_name}:#{study_file.id} to FireCloud"
               study.send_to_firecloud(study_file)
               # clean up the extracted copy as we have a new copy in a subdir of the new study_file's ID
               Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file, 0), run_at: run_at)
-              Rails.logger.info "#{Time.now}: cleanup job for #{study_file.upload_file_name}:#{study_file.id} scheduled for #{run_at}"
+              Rails.logger.info "#{Time.zone.now}: cleanup job for #{study_file.upload_file_name}:#{study_file.id} scheduled for #{run_at}"
             rescue => e
-              Rails.logger.info "#{Time.now}: Ideogram output file: #{study_file.upload_file_name}:#{study_file.id} failed to upload to FireCloud due to #{e.message}"
+              Rails.logger.info "#{Time.zone.now}: Ideogram output file: #{study_file.upload_file_name}:#{study_file.id} failed to upload to FireCloud due to #{e.message}"
               Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file, 0), run_at: run_at)
             end
           else
@@ -364,11 +364,11 @@ class ParseUtils
           if @data_arrays.size >= 1000
             Gene.create(@gene_documents) # genes must be saved first, otherwise the linear data polymorphic association is invalid and will cause a parse fail
             @count += @gene_documents.size
-            Rails.logger.info "#{Time.now}: Processed #{@count} expressed genes from 10X CellRanger source data for #{study.name}"
+            Rails.logger.info "#{Time.zone.now}: Processed #{@count} expressed genes from 10X CellRanger source data for #{study.name}"
             @gene_documents = []
             DataArray.create(@data_arrays)
             @child_count += @data_arrays.size
-            Rails.logger.info "#{Time.now}: Processed #{@child_count} child data arrays from 10X CellRanger source data for #{study.name}"
+            Rails.logger.info "#{Time.zone.now}: Processed #{@child_count} child data arrays from 10X CellRanger source data for #{study.name}"
             @data_arrays = []
           end
         end
@@ -389,7 +389,7 @@ class ParseUtils
 
   # localize a file for parsing and return opened file handler
   def self.localize_study_file(study_file, study)
-    Rails.logger.info "#{Time.now}: Attempting to localize #{study_file.upload_file_name}"
+    Rails.logger.info "#{Time.zone.now}: Attempting to localize #{study_file.upload_file_name}"
     if File.exists?(study_file.upload.path)
       local_path = study_file.upload.path
     elsif File.exists?(Rails.root.join(study.data_dir, study_file.download_location))
@@ -404,10 +404,10 @@ class ParseUtils
     end
     content_type = study_file.determine_content_type
     if content_type == 'application/gzip'
-      Rails.logger.info "#{Time.now}: Parsing #{study_file.name}:#{study_file.id} as application/gzip"
+      Rails.logger.info "#{Time.zone.now}: Parsing #{study_file.name}:#{study_file.id} as application/gzip"
       local_file = Zlib::GzipReader.open(local_path)
     else
-      Rails.logger.info "#{Time.now}: Parsing #{study_file.name}:#{study_file.id} as text/plain"
+      Rails.logger.info "#{Time.zone.now}: Parsing #{study_file.name}:#{study_file.id} as text/plain"
       local_file = File.open(local_path, 'rb')
     end
     local_file
@@ -415,19 +415,19 @@ class ParseUtils
 
   # determine if local files need to be pushed to GCS bucket, or if they can be removed safely
   def self.upload_or_remove_study_file(study_file, study)
-    Rails.logger.info "#{Time.now}: determining upload status of #{study_file.file_type}: #{study_file.bucket_location}:#{study_file.id}"
+    Rails.logger.info "#{Time.zone.now}: determining upload status of #{study_file.file_type}: #{study_file.bucket_location}:#{study_file.id}"
     # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
     # rather than relying on opts[:local], actually check if the file is already in the GCS bucket
     begin
       remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, study.firecloud_project, study.firecloud_workspace, study_file.bucket_location)
       if remote.nil?
-        Rails.logger.info "#{Time.now}: preparing to upload expression file: #{study_file.bucket_location}:#{study_file.id} to FireCloud"
+        Rails.logger.info "#{Time.zone.now}: preparing to upload expression file: #{study_file.bucket_location}:#{study_file.id} to FireCloud"
         study.send_to_firecloud(study_file)
       else
-        Rails.logger.info "#{Time.now}: found remote version of #{study_file.bucket_location}: #{remote.name} (#{remote.generation})"
+        Rails.logger.info "#{Time.zone.now}: found remote version of #{study_file.bucket_location}: #{remote.name} (#{remote.generation})"
         run_at = 2.minutes.from_now
         Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file, 0), run_at: run_at)
-        Rails.logger.info "#{Time.now}: cleanup job for #{study_file.bucket_location}:#{study_file.id} scheduled for #{run_at}"
+        Rails.logger.info "#{Time.zone.now}: cleanup job for #{study_file.bucket_location}:#{study_file.id} scheduled for #{run_at}"
       end
     rescue => e
       error_context = ErrorTracker.format_extra_context(study, study_file)
