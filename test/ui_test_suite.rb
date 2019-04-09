@@ -4834,11 +4834,8 @@ class UiTestSuite < Test::Unit::TestCase
     study_form.find_element(:id, 'study_name').send_keys(random_name)
     study_form.find_element(:id, 'study_use_existing_workspace').send_keys('Yes')
     study_form.find_element(:id, 'study_firecloud_workspace').send_keys("development-ideogram-only")
-    share = @driver.find_element(:id, 'add-study-share')
-    @wait.until {share.displayed?}
-    share.click
-    share_email = study_form.find_element(:class, 'share-email')
-    share_email.send_keys($share_email)
+    # Note that we're not sharing this with "share_email", to enable a later part of this test
+
     # save study
     save_study = @driver.find_element(:id, 'save-study')
     save_study.click
@@ -4885,7 +4882,21 @@ class UiTestSuite < Test::Unit::TestCase
     @wait.until { @driver.current_url.include?('https://accounts.google.com/signin') }
     puts "Verified no public access to genome visualization"
 
+    # Ensure genome visualizations can be seen by signed-in users without View permission
+    # First, adjust variable names to reflect that the user has not had the study shared with them.
+    user_email = $share_email
+    user_password = $share_email_password
+    login_as_other(user_email, user_password)
+    @driver.get(loaded_sync_study_path)
+    open_ui_tab('study-visualize')
+    wait_for_render(:css, '#tracks-to-display #filter_1')
+    wait_for_render(:id, 'ideogram-container')
+    user_ideogram = @driver.execute_script("return $('#_ideogramOuterWrap canvas').length > 0")
+    assert user_ideogram, "Ideogram did not render using user token: '$('#_ideogramOuterWrap canvas').length > 0' returned #{user_ideogram}"
+    puts "Ensured signed-in users without View permission can see Ideogram annotations"
+
     # clean up
+    logout_from_portal
     login_as_other($test_email, $test_email_password)
     @driver.get @base_url + '/studies'
     wait_until_page_loads(@base_url + '/studies')
