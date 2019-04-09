@@ -1121,6 +1121,18 @@ class SiteController < ApplicationController
   def get_workspace_submissions
     workspace = Study.firecloud_client.get_workspace(@study.firecloud_project, @study.firecloud_workspace)
     @submissions = Study.firecloud_client.get_workspace_submissions(@study.firecloud_project, @study.firecloud_workspace)
+    # update any AnalysisSubmission records with new statuses
+    @submission.each do |submission|
+      analysis_submission = AnalysisSubmission.find_by(submission_id: submission['submissionId'])
+      if analysis_submission.present?
+        workflow_status = submission['workflowStatuses'].keys.first # this only works for single-workflow analyses
+        analysis_submission.update(status: workflow_status)
+        analysis_submission.delay.set_completed_on # run in background to avoid UI blocking
+      else
+        # create a new record from the submission in the background to avoid UI blocking
+        AnalysisSubmission.delay.initialize_from_submission(@study, submission['submissionId'])
+      end
+    end
     # remove deleted submissions from list of runs
     if !workspace['workspace']['attributes']['deleted_submissions'].blank?
       deleted_submissions = workspace['workspace']['attributes']['deleted_submissions']['items']
@@ -1155,7 +1167,9 @@ class SiteController < ApplicationController
       @submission = client.create_workspace_submission(@study.firecloud_project, @study.firecloud_workspace,
                                                          submission_config['namespace'], submission_config['name'],
                                                          submission_config['entityType'], submission_config['entityName'])
-
+      AnalysisSubmission.create(submitter: current_user.email, study_id: @study.id, user_id: current_user.id,
+                                firecloud_project: @study.firecloud_project, firecloud_workspace: @study.firecloud_workspace,
+                                analysis_name: @analysis_configuration.identifier, submitted_on: Time.zone.now)
     rescue => e
       error_context = ErrorTracker.format_extra_context(@study, {params: params})
       ErrorTracker.report_exception(e, current_user, error_context)
