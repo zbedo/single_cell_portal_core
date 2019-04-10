@@ -120,7 +120,7 @@ function updateMargin(event) {
 function addMarginControl() {
   chrMargin = (typeof chrMargin === 'undefined' ? 10 : chrMargin)
     marginSlider =
-      `<label id="chrMarginContainer">
+      `<label id="chrMarginContainer" style="float:left; position: relative; top: 50px; left: -130px;">
         Chromosome margin
       <input type="range" id="chrMargin" list="chrMarginList" value="` + chrMargin + `">
       </label>
@@ -170,7 +170,7 @@ function addThresholdControl() {
   }
 
   expressionThresholdSlider =
-    `<label id="expressionThresholdContainer">
+    `<label id="expressionThresholdContainer" style="float: left">
         Expression threshold
       <input type="range" id="expressionThreshold" list="expressionThresholdList" value="` + expressionThreshold + `">
       <datalist id="expressionThresholdList">
