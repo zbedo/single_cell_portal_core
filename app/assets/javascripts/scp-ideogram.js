@@ -148,7 +148,7 @@ function updateThreshold(event) {
   window.adjustedExpressionThreshold = expressionThreshold/10 - 4;
   thresholds = window.originalHeatmapThresholds;
   numThresholds = thresholds.length;
-  ideoConfig.heatmapThresholds = []
+  ideoConfig.heatmapThresholds = [];
 
   // If expressionThreshold > 1, increase thresholds above middle, decrease below
   // If expressionThreshold < 1, decrease thresholds above middle, increase below
