@@ -1350,7 +1350,7 @@ class SiteController < ApplicationController
   ###
 
   def set_study
-    @study = Study.find_by(accession: params[:accession], url_safe_name: params[:study_name])
+    @study = Study.find_by(accession: params[:accession])
     # redirect if study is not found
     if @study.nil?
       redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]), alert: 'Study not found.  Please check the name and try again.' and return
