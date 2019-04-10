@@ -49,7 +49,9 @@
     <div id="plotly-pipeline-submissions-fail" class="plotly-report"></div>
   </div>
   <% if current_user.admin %>
-    <p class="text-center top-pad"><%= link_to "Export Submission Report", export_submission_report_path, class: 'btn btn-default', id: 'export-submission-report' %></p>
+    <div class="col-xs-12">
+      <p class="text-center top-pad"><%= link_to "Export Submission Report", export_submission_report_path, class: 'btn btn-default', id: 'export-submission-report' %></p>
+    </div>
   <% end %>
 </div>
 <%= render partial: 'contact_modal' %>
@@ -330,18 +332,28 @@
       pipelineSuccess.push({
           x: <%= raw submissions.keys %>,
           y: <%= raw submissions.values %>,
+          text: <%= raw submissions.values %>,
+          textposition: 'outside',
           type: 'bar',
-          name: '<%= name %>'
+          name: '<%= name %>',
+          marker: {
+              color: colorBrewerSet[<%= index %>]
+          }
       });
     <% end %>
 
     <% @pipeline_fail.each_with_index do |(name, submissions), index| %>
-    pipelineFail.push({
-        x: <%= raw submissions.keys %>,
-        y: <%= raw submissions.values %>,
-        type: 'bar',
-        name: '<%= name %>'
-    });
+      pipelineFail.push({
+          x: <%= raw submissions.keys %>,
+          y: <%= raw submissions.values %>,
+          text: <%= raw submissions.values %>,
+          textposition: 'outside',
+          type: 'bar',
+          name: '<%= name %>',
+          marker: {
+              color: colorBrewerSet[<%= index %>]
+          }
+      });
     <% end %>
 
      Plotly.newPlot('plotly-pipeline-submissions-success', pipelineSuccess, {
@@ -354,9 +366,14 @@
              title: 'Date',
          },
          yaxis: {
-             title: 'Number of submissions'
+             title: 'Number of submissions',
+             range: <%= raw @pipeline_success_range %>
          },
-         showlegend: true
+         showlegend: true,
+         margin: {
+             b: 150,
+             pad: 5
+         }
      }).then(setRenderStatus('#plotly-pipeline-submissions-success', true));
 
     Plotly.newPlot('plotly-pipeline-submissions-fail', pipelineFail, {
@@ -368,12 +385,17 @@
         barmode: 'group',
         hovermode: 'closest',
         xaxis: {
-            title: 'Date',
+            title: 'Date'
         },
         yaxis: {
-            title: 'Number of submissions'
+            title: 'Number of submissions',
+            range: <%= raw @pipeline_fail_range %>
         },
-        showlegend: true
+        showlegend: true,
+        margin: {
+            b: 150,
+            pad: 5
+        }
     }).then(setRenderStatus('#plotly-pipeline-submissions-fail', true));
 
   <% end %>
@@ -414,18 +436,6 @@
             Plotly.relayout(divId, annotUpdate).then(setRenderStatus(div, true));
             console.log('render status for ' + divId + ' is ' + $(div).data('rendered'));
         });
-    });
-
-    $('#export-submission-report').on('click', function() {
-        var that = $(this);
-        var text = that.text();
-        var btn = that.button();
-        btn.button('disable');
-        btn.button({'label': 'Exporting... file will download momentarily'});
-        setTimeout(function() {
-            btn.button('enable');
-            btn.button({'label': text});
-        }, 5000);
     });
 
 </script>

@@ -129,23 +129,28 @@ class ReportsController < ApplicationController
     @has_pipeline_stats = false
     @pipeline_success = {}
     @pipeline_fail = {}
-    # report on analysis submission stats (last 6 months)
-    one_year_ago = now - 6.months
-    submissions = AnalysisSubmission.where(:submitted_on.gte => one_year_ago, :status.in => ['Succeeded', 'Failed'])
-    @pipeline_dates = submissions.map {|s| s.submitted_on.strftime('%Y-%m')}.uniq
-    @starting_counts = @pipeline_dates.size.times.map {|i| 0}
+    # report on analysis submission stats (last 6 months, submitted from portal, completed workflows only)
+    report_timeframe = now - 6.months
+    submissions = AnalysisSubmission.where(:submitted_on.gte => report_timeframe, :status.in => ['Succeeded', 'Failed'],
+                                           submitted_from_portal: true)
+    @pipeline_dates = submissions.map {|s| s.submitted_on.strftime('%Y-%m')}.uniq # find all existing date periods
+    @starting_counts = @pipeline_dates.size.times.map {|i| 0} # initialize counts to zero
     submissions.each do |analysis|
       @has_pipeline_stats = true
       pipeline_name = analysis.analysis_name
       date_bracket = analysis.submitted_on.strftime('%Y-%m')
-      @pipeline_success[pipeline_name] ||= Hash[@pipeline_dates.zip(@starting_counts)]
-      @pipeline_fail[pipeline_name] ||= Hash[@pipeline_dates.zip(@starting_counts)]
+      @pipeline_success[pipeline_name] ||= Hash[@pipeline_dates.zip(@starting_counts)] # create hash of 0s for all dates
+      @pipeline_fail[pipeline_name] ||= Hash[@pipeline_dates.zip(@starting_counts)] # create hash of 0s for all dates
       if analysis.status == 'Succeeded'
         @pipeline_success[pipeline_name][date_bracket] += 1
       else
         @pipeline_fail[pipeline_name][date_bracket] += 1
       end
     end
+    max_success_count = @pipeline_success.values.map(&:values).flatten.max
+    max_fail_count = @pipeline_fail.values.map(&:values).flatten.max
+    @pipeline_success_range = [0, (max_success_count * 1.1)] # add 10% to range for annotations
+    @pipeline_fail_range = [0, (max_fail_count * 1.1)] # add 10% to range for annotations
   end
 
   def report_request
