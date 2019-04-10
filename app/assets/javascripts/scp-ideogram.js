@@ -111,43 +111,103 @@ function updateTracks() {
   ideogram.updateDisplayedTracks(selectedTracks);
 }
 
-function addMarginControls() {
-  console.log('addMarginControls');
-
-  if (document.querySelector('#chrMarginContainer')) return;
-
-  chrMargin = (typeof chrMargin === 'undefined' ? 10 : chrMargin)
-  marginSlider =
-    `<label id="chrMarginContainer">
-      Chromosome margin:
-    <input type="range" id="chrMargin" list="chrMarginList" value="` + chrMargin + `">
-    </label>
-    <datalist id="chrMarginList">
-      <option value="0" label="0%">
-      <option value="10">
-      <option value="20">
-      <option value="30">
-      <option value="40">
-      <option value="50" label="50%">
-      <option value="60">
-      <option value="70">
-      <option value="80">
-      <option value="90">
-      <option value="100" label="100%">
-    </datalist>`;
-  d3.select('#_ideogramLegend').node().innerHTML += marginSlider;
-  d3.selectAll('input[type="range"]').on('change', function() {
-    window.chrMargin = parseInt(d3.select(this).node().value);
-    window.ideoConfig.chrMargin = chrMargin;
-    ideogram = new Ideogram(window.ideoConfig);
-  });
+function updateMargin(event) {
+  window.chrMargin = parseInt(event.target.value);
+  ideoConfig.chrMargin = chrMargin;
+  ideogram = new Ideogram(ideoConfig);
 }
 
+function addMarginControl() {
+  chrMargin = (typeof chrMargin === 'undefined' ? 10 : chrMargin)
+    marginSlider =
+      `<label id="chrMarginContainer">
+        Chromosome margin
+      <input type="range" id="chrMargin" list="chrMarginList" value="` + chrMargin + `">
+      </label>
+      <datalist id="chrMarginList">
+        <option value="0" label="0%">
+        <option value="10">
+        <option value="20">
+        <option value="30">
+        <option value="40">
+        <option value="50" label="50%">
+        <option value="60">
+        <option value="70">
+        <option value="80">
+        <option value="90">
+        <option value="100" label="100%">
+      </datalist>`;
+    d3.select('#_ideogramLegend').node().innerHTML += marginSlider;
+}
+
+function updateThreshold(event) {
+  var thresholds, newThreshold, numThresholds, i;
+
+  window.expressionThreshold = parseFloat(event.target.value);
+
+  window.adjustedExpressionThreshold = expressionThreshold/10 - 4;
+  thresholds = window.originalHeatmapThresholds;
+  numThresholds = thresholds.length;
+  ideoConfig.heatmapThresholds = []
+
+  // If expressionThreshold > 1, increase thresholds above middle, decrease below
+  // If expressionThreshold < 1, decrease thresholds above middle, increase below
+  for (i = 0; i < numThresholds; i++) {
+    if (i + 1 > numThresholds/2) {
+      newThreshold = thresholds[i + adjustedExpressionThreshold];
+    } else {
+      newThreshold = thresholds[i - adjustedExpressionThreshold];
+    }
+    ideoConfig.heatmapThresholds.push(newThreshold);
+  }
+  ideogram = new Ideogram(ideoConfig);
+}
+
+function addThresholdControl() {
+  if (typeof(expressionThreshold) === 'undefined') {
+    expressionThreshold = 50;
+    window.originalHeatmapThresholds = ideogram.rawAnnots.metadata.heatmapThresholds;
+  }
+
+  expressionThresholdSlider =
+    `<label id="expressionThresholdContainer">
+        Expression threshold
+      <input type="range" id="expressionThreshold" list="expressionThresholdList" value="` + expressionThreshold + `">
+      <datalist id="expressionThresholdList">
+        <option value="0" label="0.">
+        <option value="10">
+        <option value="20">
+        <option value="30">
+        <option value="40">
+        <option value="50" label="1">
+        <option value="60">
+        <option value="70">
+        <option value="80">
+        <option value="90">
+        <option value="100" label="1.5">
+      </datalist>
+      <br/><br/>`;
+  d3.select('#_ideogramLegend').node().innerHTML += expressionThresholdSlider;
+}
+
+function ideoRangeChangeEventHandler(event) {
+  var id = event.target.id;
+  if (id === 'expressionThreshold') updateThreshold(event);
+  if (id === 'chrMargin') updateMargin(event);
+}
+
+function addIdeoRangeControls() {
+  addThresholdControl();
+  addMarginControl();
+
+  document.removeEventListener('change', ideoRangeChangeEventHandler);
+  document.addEventListener('change', ideoRangeChangeEventHandler);
+}
 
 function createTrackFilters() {
   var i, listItems, trackLabels, content, checked;
 
-  addMarginControls();
+  addIdeoRangeControls();
 
   // Only apply this function once
   if (document.querySelector('#filter_1')) return;
