@@ -4959,7 +4959,9 @@ class UiTestSuite < Test::Unit::TestCase
         when bam_file
           file_type.send_keys('BAM')
           species_dropdown = form.find_element(:id, 'study_file_taxon_id')
-          species_dropdown.send_keys('mouse') # from lib/assets/default_species_assemblies.txt
+          opts = species_dropdown.find_elements(:tag_name, 'option')
+          mouse_option = opts.detect {|opt| opt['text'] == 'mouse'}
+          mouse_option.click
           sleep(2) # wait for first assembly to load
           assemblies_dropdown = form.find_element(:id, 'study_file_genome_assembly_id')
           assemblies_dropdown.send_keys('GRCm38') # from lib/assets/default_species_assemblies.txt
