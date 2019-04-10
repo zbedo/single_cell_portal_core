@@ -1163,8 +1163,8 @@ class SiteController < ApplicationController
                                                          submission_config['namespace'], submission_config['name'],
                                                          submission_config['entityType'], submission_config['entityName'])
       AnalysisSubmission.create(submitter: current_user.email, study_id: @study.id, firecloud_project: @study.firecloud_project,
-                                firecloud_workspace: @study.firecloud_workspace, analysis_name: @analysis_configuration.identifier,
-                                submitted_on: Time.zone.now, submitted_from_portal: true)
+                                submission_id: @submission['submissionId'], firecloud_workspace: @study.firecloud_workspace,
+                                analysis_name: @analysis_configuration.identifier, submitted_on: Time.zone.now, submitted_from_portal: true)
     rescue => e
       error_context = ErrorTracker.format_extra_context(@study, {params: params})
       ErrorTracker.report_exception(e, current_user, error_context)
