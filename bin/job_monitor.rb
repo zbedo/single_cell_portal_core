@@ -41,7 +41,7 @@ else
 end
 
 # checks to see if any workers have been killed
-@date = Time.zone.now.strftime("%Y-%m-%d %H:%M:%S")
+@date = Time.now.strftime("%Y-%m-%d %H:%M:%S")
 if @running == false
 	@log_message = "#{@date}: One or more delayed_job workers have died.  Restarting daemon.\n"
 
