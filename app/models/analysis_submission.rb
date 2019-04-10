@@ -69,8 +69,9 @@ class AnalysisSubmission
   def set_completed_on
     if COMPLETION_STATUSES.include?(self.status) && self.completed_on.blank?
       submission = self.get_submission_json
+      last_workflow = submission['workflows'].last
       if submission.present?
-        completion_time = DateTime.parse(submission['statusLastChangedDate']).in_time_zone
+        completion_time = DateTime.parse(last_workflow['statusLastChangedDate']).in_time_zone
         self.update(completed_on: completion_time)
       end
     end
