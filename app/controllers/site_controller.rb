@@ -1162,10 +1162,9 @@ class SiteController < ApplicationController
       @submission = client.create_workspace_submission(@study.firecloud_project, @study.firecloud_workspace,
                                                          submission_config['namespace'], submission_config['name'],
                                                          submission_config['entityType'], submission_config['entityName'])
-      AnalysisSubmission.create(submitter: current_user.email, study_id: @study.id, user_id: current_user.id,
-                                firecloud_project: @study.firecloud_project, firecloud_workspace: @study.firecloud_workspace,
-                                analysis_name: @analysis_configuration.identifier, submitted_on: Time.zone.now,
-                                submitted_from_portal: true)
+      AnalysisSubmission.create(submitter: current_user.email, study_id: @study.id, firecloud_project: @study.firecloud_project,
+                                firecloud_workspace: @study.firecloud_workspace, analysis_name: @analysis_configuration.identifier,
+                                submitted_on: Time.zone.now, submitted_from_portal: true)
     rescue => e
       error_context = ErrorTracker.format_extra_context(@study, {params: params})
       ErrorTracker.report_exception(e, current_user, error_context)
@@ -2165,16 +2164,14 @@ class SiteController < ApplicationController
     AnalysisConfiguration.available_analyses
   end
 
-  # update or create AnalysisSubmissions when loading study analysis tab
+  # update AnalysisSubmissions when loading study analysis tab
+  # will not backfill existing workflows to keep our submission history clean
   def update_analysis_submission(submission)
     analysis_submission = AnalysisSubmission.find_by(submission_id: submission['submissionId'])
     if analysis_submission.present?
       workflow_status = submission['workflowStatuses'].keys.first # this only works for single-workflow analyses
       analysis_submission.update(status: workflow_status)
       analysis_submission.delay.set_completed_on # run in background to avoid UI blocking
-    else
-      # create a new record from the submission in the background to avoid UI blocking
-      AnalysisSubmission.delay.initialize_from_submission(@study, submission['submissionId'])
     end
   end
 

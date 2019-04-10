@@ -8,7 +8,7 @@ class AnalysisSubmission
   field :firecloud_workspace, type: String
   field :submitted_on, type: DateTime
   field :completed_on, type: DateTime
-  field :submitted_from_portal, type: Boolean, default: false
+  field :submitted_from_portal, type: Boolean, default: true
 
   belongs_to :study, optional: true
 
@@ -19,6 +19,7 @@ class AnalysisSubmission
   validates_uniqueness_of :submission_id
 
   # initialize a new AnalysisSubmission record from the FireCloud API JSON entry
+  # only to be used to backfill existing submissions
   def self.initialize_from_submission(study, submission_id)
     analysis_submission = AnalysisSubmission.new(study_id: study.id, firecloud_project: study.firecloud_project,
                                                  firecloud_workspace: study.firecloud_workspace, submission_id: submission_id)
