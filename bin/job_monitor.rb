@@ -46,7 +46,7 @@ if @running == false
 	@log_message = "#{@date}: One or more delayed_job workers have died.  Restarting daemon.\n"
 
   # move old logfile to crash backup
-  date_string = Time.zone.now.strftime("%Y-%m-%d.%H.%M.%S")
+  date_string = Time.now.strftime("%Y-%m-%d.%H.%M.%S")
   File.rename('log/delayed_job.log', "log/delayed_job.crash.#{date_string}.log")
 
 	# restart delayed job workers
