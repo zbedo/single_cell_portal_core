@@ -134,7 +134,7 @@ class ReportsController < ApplicationController
     submissions = AnalysisSubmission.where(:submitted_on.gte => report_timeframe, :status.in => ['Succeeded', 'Failed'],
                                            submitted_from_portal: true)
     @pipeline_dates = submissions.map {|s| s.submitted_on.strftime('%Y-%m')}.uniq # find all existing date periods
-    @starting_counts = @pipeline_dates.size.times.map {|i| 0} # initialize counts to zero
+    @starting_counts = @pipeline_dates.size.times.map {0} # initialize counts to zero
     submissions.each do |analysis|
       @has_pipeline_stats = true
       pipeline_name = analysis.analysis_name
