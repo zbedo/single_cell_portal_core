@@ -4958,8 +4958,8 @@ class UiTestSuite < Test::Unit::TestCase
           file_type.send_keys('Metadata')
         when bam_file
           file_type.send_keys('BAM')
-          species_dropdown = form.find_element(:id, 'study_file_taxon_id')
-          species_dropdown.send_keys('mouse') # from lib/assets/default_species_assemblies.txt
+          # TODO: Determine where else this is needed, apply there.  See SCP-1572.
+          select_option_from_dropdown(form, 'study_file_taxon_id', 'mouse')
           sleep(2) # wait for first assembly to load
           assemblies_dropdown = form.find_element(:id, 'study_file_genome_assembly_id')
           assemblies_dropdown.send_keys('GRCm38') # from lib/assets/default_species_assemblies.txt
