@@ -321,5 +321,5 @@ module ApplicationHelper
 
 	def pluralize_without_count(count, noun, text=nil)
 		count.to_i == 1 ? "#{noun}#{text}" : "#{noun.pluralize}#{text}"
-	end
+  end
 end
