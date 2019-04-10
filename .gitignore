@@ -12,6 +12,7 @@
 !/log/.keep
 /tmp
 .idea
+.vscode
 /public/single_cell/data/*
 /db/*.json
 /data/*
@@ -24,7 +25,7 @@
 /single-cell-staging.broadinstitute.org.*
 /config/client_secret*.json
 /config/.read_only_service_account.json
-/config/tcell_agent.congig
+/config/tcell_agent.config
 ssmtp.conf
 /tcell
 # Ignore hidden macOS files
