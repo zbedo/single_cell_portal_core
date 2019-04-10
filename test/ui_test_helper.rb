@@ -392,4 +392,14 @@ class Test::Unit::TestCase
     password_next = @driver.find_element(:id, 'passwordNext')
     password_next.click
   end
+
+  # Click an <option> from a <select> dropdown menu.
+  # Addresses race condition in standard send_keys methods.
+  def select_option_from_dropdown(form, dropdown_id, option_text)
+    dropdown = form.find_element(:id, dropdown_id)
+    opts = dropdown.find_elements(:tag_name, 'option')
+    option = opts.detect {|opt| opt['text'] == option_text}
+    option.click
+  end
+
 end
