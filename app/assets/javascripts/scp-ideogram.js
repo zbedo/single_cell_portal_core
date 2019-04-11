@@ -84,6 +84,54 @@
 //     $('#ideogram-container').append(table);
 //   }
 
+function monkeyPatchIdeogram() {
+  console.log('in monkeyPatchIdeogram')
+  // Monkey patch "drawHeatmaps" method in Ideogram to fix SCP-1573
+  // TODO: Fix upstream in more refined manner, pull update, remove this patch.
+  
+  originalAfterRawAnnots = ideogram.afterRawAnnots;
+  ideogram.afterRawAnnots = function() {
+    var penultimateThreshold = ideogram.rawAnnots.metadata.heatmapThresholds.slice(-2)[0];
+    // ideogram.rawAnnots.metadata.heatmapThresholds.push(lastThreshold);
+    // ideogram.rawAnnots.metadata.heatmapThresholds.push(lastThreshold);
+
+    ideogram.rawAnnots.metadata.heatmapThresholds.splice(-1, 1, penultimateThreshold + 1/10000);
+    console.log('ideogram.rawAnnots.metadata.heatmapThresholds after splice')
+    console.log(ideogram.rawAnnots.metadata.heatmapThresholds)
+
+    originalAfterRawAnnots.apply(this);
+
+    console.log('ideogram.rawAnnots.metadata.heatmapThresholds after apply')
+    console.log(ideogram.rawAnnots.metadata.heatmapThresholds)
+
+
+    // var i, j, heatmaps, thresholds, threshold, newThresholds,
+    //   newHeatmaps = [];
+
+    // originalAfterRawAnnots.apply(this);
+    
+    // heatmaps = ideogram.config.heatmaps;
+    // for (i = 0; i < heatmaps.length; i++) {
+    //   newHeatmaps.push(heatmaps[i]);
+    //   thresholds = heatmaps[i].thresholds;
+    //   newThresholds = [];
+    //   for (j = 0; j < thresholds.length; j++) {
+    //     threshold = thresholds[j];
+    //     if (threshold[1] === '#undefined') { 
+    //       // Omit nonsensical "#undefined" threshold
+    //       continue;
+    //     }
+    //     newThresholds.push(threshold);
+    //   }
+    //   newHeatmaps[i].thresholds = newThresholds;
+    // }
+    // ideogram.config.heatmaps = newHeatmaps;
+    // console.log('ideogram.config.heatmaps');
+    // console.log(ideogram.config.heatmaps);
+    
+  }
+}
+
 var legend = [{
   name: 'Expression level',
   rows: [
@@ -143,9 +191,9 @@ function addMarginControl() {
 function updateThreshold(event) {
   var thresholds, newThreshold, numThresholds, i;
 
-  window.expressionThreshold = parseFloat(event.target.value);
+  window.expressionThreshold = parseInt(event.target.value);
 
-  window.adjustedExpressionThreshold = expressionThreshold/10 - 4;
+  window.adjustedExpressionThreshold = Math.round(expressionThreshold/10 - 4);
   thresholds = window.originalHeatmapThresholds;
   numThresholds = thresholds.length;
   ideoConfig.heatmapThresholds = [];
@@ -275,6 +323,7 @@ function initializeIdeogram(url) {
     annotationsLayout: 'heatmap',
     legend: legend,
     onDrawAnnots: createTrackFilters,
+    onLoad: monkeyPatchIdeogram,
     debug: true,
     rotatable: false,
     chrMargin: 10,
