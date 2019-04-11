@@ -85,12 +85,13 @@
 //   }
 
 
-// Monkey patch "drawHeatmaps" method in Ideogram to fix SCP-1573
+// Monkey patch "afterRawAnnots" method in Ideogram to fix SCP-1573
 // TODO: Fix upstream in more refined manner, pull update, remove this patch.
 function monkeyPatchIdeogram() {
   originalAfterRawAnnots = ideogram.afterRawAnnots;
   ideogram.afterRawAnnots = function() {
     var penultimateThreshold = ideogram.rawAnnots.metadata.heatmapThresholds.slice(-2)[0];
+    // Ensures default heatmap does not show black unexpectedly
     ideogram.rawAnnots.metadata.heatmapThresholds.splice(-1, 1, penultimateThreshold + 1/10000);
     originalAfterRawAnnots.apply(this);
   }
