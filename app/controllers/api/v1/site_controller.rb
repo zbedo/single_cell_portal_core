@@ -215,8 +215,8 @@ module Api
               elsif @study.has_bucket_access?(current_api_user)
                 token = current_api_user.api_access_token
               else
-                alert = 'You do not have permission to stream the requested file'
-                render json: {error: alert}, status: 403
+                alert = 'You do not have permission to stream the requested file from the bucket'
+                render json: {error: alert}, status: 403 and return
               end
               render json: {filename: params[:filename], url: @media_url, access_token: token}
             else

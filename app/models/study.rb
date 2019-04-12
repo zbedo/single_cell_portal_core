@@ -636,7 +636,7 @@ class Study
     if user.nil?
       false
     else
-      self.can_edit?(user) || self.study_shares.non_reviewers.include?(user.email) || self.user_in_group_share?(user, 'View', 'Edit')
+      self.user == user || self.study_shares.non_reviewers.include?(user.email) || self.user_in_group_share?(user, 'View', 'Edit')
     end
   end
 
@@ -677,7 +677,14 @@ class Study
     if user.registered_for_firecloud
       group_shares = self.study_shares.keep_if {|share| share.is_group_share?}.select {|share| permissions.include?(share.permission)}.map(&:email)
       # get user's FC groups
-      client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
+      if user.access_token.present?
+        client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
+      elsif user.api_access_token.present?
+        client = FireCloudClient.new
+        client.access_token[:access_token] = user.api_access_token
+      else
+        false
+      end
       user_groups = client.get_user_groups.map {|g| g['groupEmail']}
       # use native array intersection to determine if any of the user's groups have been shared with this study at the correct permission
       (user_groups & group_shares).any?
