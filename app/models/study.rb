@@ -572,7 +572,7 @@ class Study
   end
 
   # return all studies that are viewable by a given user as a Mongoid criterion
-  def self.viewable(user)
+  def self.viewable(user, opts={})
     if user.admin?
       self.where(queued_for_deletion: false)
     else
@@ -581,7 +581,15 @@ class Study
       shares = StudyShare.where(email: user.email).map(&:study).select {|s| !s.queued_for_deletion }.map(&:id)
       group_shares = []
       if user.registered_for_firecloud
-        user_client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
+        if opts[:api_request] # request is coming via API, so we have a valid OAuth token to use
+          # use the regular constructor, but overwrite the access token
+          # TODO: solve this more holistically by creating a way to instantiate a client with just a token, or
+          # by not clearing refresh tokens on reboot
+          user_client = FireCloudClient.new
+          user_client.access_token[:access_token] = user.api_access_token
+        else
+          user_client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
+        end
         user_groups = user_client.get_user_groups.map {|g| g['groupEmail']}
         group_shares = StudyShare.where(:email.in => user_groups).map(&:study).select {|s| !s.queued_for_deletion }.map(&:id)
       end
@@ -628,7 +636,7 @@ class Study
     if user.nil?
       false
     else
-      self.can_edit?(user) || self.study_shares.non_reviewers.include?(user.email) || self.user_in_group_share?(user, 'View', 'Edit')
+      self.user == user || self.study_shares.non_reviewers.include?(user.email) || self.user_in_group_share?(user, 'View', 'Edit')
     end
   end
 
@@ -669,7 +677,14 @@ class Study
     if user.registered_for_firecloud
       group_shares = self.study_shares.keep_if {|share| share.is_group_share?}.select {|share| permissions.include?(share.permission)}.map(&:email)
       # get user's FC groups
-      client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
+      if user.access_token.present?
+        client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
+      elsif user.api_access_token.present?
+        client = FireCloudClient.new
+        client.access_token[:access_token] = user.api_access_token
+      else
+        false
+      end
       user_groups = client.get_user_groups.map {|g| g['groupEmail']}
       # use native array intersection to determine if any of the user's groups have been shared with this study at the correct permission
       (user_groups & group_shares).any?
