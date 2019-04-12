@@ -38,7 +38,7 @@ module Api
 
       def studies
         if api_user_signed_in?
-          @studies = Study.viewable(current_api_user)
+          @studies = Study.viewable(current_api_user, {api_request: true})
         else
           @studies = Study.where(public: true)
         end
@@ -134,16 +134,16 @@ module Api
               redirect_to @signed_url
             else
               alert = 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.'
-              render json: {error: alert, status: 403}
+              render json: {error: alert}, status: 403
             end
           else
-            render json: {error: "File not found: #{params[:filename]}", status: 404}
+            render json: {error: "File not found: #{params[:filename]}"}, status: 404
           end
         rescue RuntimeError => e
           error_context = ErrorTracker.format_extra_context(@study, {params: params})
           ErrorTracker.report_exception(e, current_api_user, error_context)
           logger.error "Error generating signed url for #{params[:filename]}; #{e.message}"
-          render json: {error: "Error generating signed url for #{params[:filename]}; #{e.message}", status: 500}
+          render json: {error: "Error generating signed url for #{params[:filename]}; #{e.message}"}, status: 500
         end
       end
 
@@ -182,10 +182,14 @@ module Api
                 key :type, :string
                 key :description, 'Media URL to stream requested file (requires Authorization Bearer token to access)'
               end
+              property :access_token do
+                key :type, :string
+                key :description, 'Authorization bearer token to pass along with media URL request'
+              end
             end
           end
           response 403 do
-            key :description, 'User is not allowed to view study'
+            key :description, 'User is not allowed to view study, or does not have permission to stream file from bucket'
           end
           response 404 do
             key :description, 'Study or StudyFile not found'
@@ -205,19 +209,28 @@ module Api
             if user_quota <= @download_quota
               @media_url = @study_file.api_url
               current_api_user.update(daily_download_quota: user_quota)
-              render json: {filename: params[:filename], url: @media_url}
+              # determine which token to return to use with the media url
+              if @study.public?
+                token = Study.read_only_firecloud_client.valid_access_token['access_token']
+              elsif @study.has_bucket_access?(current_api_user)
+                token = current_api_user.api_access_token
+              else
+                alert = 'You do not have permission to stream the requested file'
+                render json: {error: alert}, status: 403
+              end
+              render json: {filename: params[:filename], url: @media_url, access_token: token}
             else
               alert = 'You have exceeded your current daily download quota.  You must wait until tomorrow to download this file.'
-              render json: {error: alert, status: 403}
+              render json: {error: alert}, status: 403
             end
           else
-            render json: {error: "File not found: #{params[:filename]}", status: 404}
+            render json: {error: "File not found: #{params[:filename]}"}, status: 404
           end
         rescue RuntimeError => e
           error_context = ErrorTracker.format_extra_context(@study, {params: params})
           ErrorTracker.report_exception(e, current_api_user, error_context)
           logger.error "Error generating signed url for #{params[:filename]}; #{e.message}"
-          render json: {error: "Error generating signed url for #{params[:filename]}; #{e.message}", status: 500}
+          render json: {error: "Error generating signed url for #{params[:filename]}; #{e.message}"}, status: 500
         end
       end
 
