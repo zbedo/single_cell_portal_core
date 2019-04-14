@@ -148,6 +148,22 @@ module Api
       end
 
       swagger_path '/site/stream_data/{accession}' do
+        operation :options do
+          key :tags, [
+              'Site'
+          ]
+          response 200 do
+            key :description, 'Success'
+            key :operationId, 'site_stream_data_options_path'
+            header 'Access-Control-Allow-Methods' do
+              key :type, :array
+              key :collectionFormat, :csv
+              items do
+                key :type, :string
+              end
+            end
+          end
+        end
         operation :get do
           key :tags, [
               'Site'
