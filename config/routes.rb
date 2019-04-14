@@ -34,7 +34,6 @@ Rails.application.routes.draw do
           get 'view_study/:accession', to: 'site#view_study', as: :site_view_study
           get 'download_data/:accession', to: 'site#download_data', as: :site_download_data
           get 'stream_data/:accession', to: 'site#stream_data', as: :site_stream_data
-          options 'stream_data/:accession', to: 'site#stream_data_options', as: :site_stream_data_options
         end
       end
     end
