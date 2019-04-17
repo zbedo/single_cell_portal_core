@@ -131,7 +131,7 @@ class ClusterGroup
   # annotation_type: group/numeric
   # annotation_scope: cluster or study - determines where to pull metadata from to key groups off of
   def generate_subsample_arrays(sample_size, annotation_name, annotation_type, annotation_scope)
-    Rails.logger.info "#{Time.now}: Generating subsample data_array for cluster '#{self.name}' using annotation: #{annotation_name} (#{annotation_type}, #{annotation_scope}) at resolution #{sample_size}"
+    Rails.logger.info "#{Time.zone.now}: Generating subsample data_array for cluster '#{self.name}' using annotation: #{annotation_name} (#{annotation_type}, #{annotation_scope}) at resolution #{sample_size}"
     @cells = self.concatenate_data_arrays('text', 'cells')
     case annotation_scope
       when 'cluster'
@@ -223,7 +223,7 @@ class ClusterGroup
           end
         end
     end
-    Rails.logger.info "#{Time.now}: Data assembled, now subsampling for cluster '#{self.name}' using annotation: #{annotation_name} (#{annotation_type}, #{annotation_scope}) at resolution #{sample_size}"
+    Rails.logger.info "#{Time.zone.now}: Data assembled, now subsampling for cluster '#{self.name}' using annotation: #{annotation_name} (#{annotation_type}, #{annotation_scope}) at resolution #{sample_size}"
 
     # determine number of entries per group required
     @num_per_group = sample_size / groups.size
@@ -299,7 +299,7 @@ class ClusterGroup
     data_arrays.each do |array|
       array.save
     end
-    Rails.logger.info "#{Time.now}: Subsampling complete for cluster '#{self.name}' using annotation: #{annotation_name} (#{annotation_type}, #{annotation_scope}) at resolution #{sample_size}"
+    Rails.logger.info "#{Time.zone.now}: Subsampling complete for cluster '#{self.name}' using annotation: #{annotation_name} (#{annotation_type}, #{annotation_scope}) at resolution #{sample_size}"
     true
   end
 
@@ -310,7 +310,7 @@ class ClusterGroup
   ##
 
   def self.generate_new_data_arrays
-    start_time = Time.now
+    start_time = Time.zone.now
     arrays_created = 0
     self.all.each do |cluster|
       arrays_to_save = []
@@ -325,7 +325,7 @@ class ClusterGroup
       arrays_to_save.map(&:save)
       arrays_created += arrays_to_save.size
     end
-    end_time = Time.now
+    end_time = Time.zone.now
     seconds_diff = (start_time - end_time).to_i.abs
 
     hours = seconds_diff / 3600

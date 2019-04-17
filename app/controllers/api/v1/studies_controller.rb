@@ -259,7 +259,7 @@ module Api
             rescue => e
               error_context = ErrorTracker.format_extra_context(@study, {params: params})
               ErrorTracker.report_exception(e, current_api_user, error_context)
-              logger.error "#{Time.now} unable to delete workspace: #{@study.firecloud_workspace}; #{e.message}"
+              logger.error "#{Time.zone.now} unable to delete workspace: #{@study.firecloud_workspace}; #{e.message}"
               render json: {error: "Error deleting FireCloud workspace #{@study.firecloud_project}/#{@study.firecloud_workspace}: #{e.message}"}, status: 500
             end
           end
@@ -423,12 +423,12 @@ module Api
           new_study_permissions = @study.study_shares.to_a
           new_study_permissions.each do |share|
             if firecloud_permissions['acl'][share.email].nil?
-              logger.info "#{Time.now}: removing #{share.email} access to #{@study.name} via sync - no longer in FireCloud acl"
+              logger.info "#{Time.zone.now}: removing #{share.email} access to #{@study.name} via sync - no longer in FireCloud acl"
               share.delete
             end
           end
         rescue => e
-          logger.error "#{Time.now}: error syncing ACLs in workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
+          logger.error "#{Time.zone.now}: error syncing ACLs in workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
           render json: {error: "Unable to sync with workspace ACL: #{view_context.simple_format(e.message)}"}, status: 500
         end
 
@@ -446,7 +446,7 @@ module Api
         rescue => e
           error_context = ErrorTracker.format_extra_context(@study, {params: params})
           ErrorTracker.report_exception(e, current_api_user, error_context)
-          logger.error "#{Time.now}: error syncing files in workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
+          logger.error "#{Time.zone.now}: error syncing files in workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
           render json: {error: "Unable to sync with workspace bucket: #{view_context.simple_format(e.message)}"}, status: 500
         end
 

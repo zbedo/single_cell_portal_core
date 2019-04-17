@@ -193,7 +193,7 @@ class UserAnnotation
     annotation_array.each_slice(UserDataArray::MAX_ENTRIES).each_with_index do |val, i|
       # if threshold exists then the subsample annotation and threshold need to be set on the created data array
       if !threshold.nil?
-        Rails.logger.info "#{Time.now}: Creating user annotation user data arrays without threshold for name: #{name}"
+        Rails.logger.info "#{Time.zone.now}: Creating user annotation user data arrays without threshold for name: #{name}"
         # Create annotation array
         UserDataArray.create(name: self.name, array_type: 'annotations', values: val, cluster_name: cluster.name, array_index: i+1, subsample_threshold: threshold, subsample_annotation: sub_an, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id)
         # Create X
@@ -205,7 +205,7 @@ class UserAnnotation
 
       # Otherwise, if no threshold or annotation, then no threshold or annotation need to be set
       else
-        Rails.logger.info "#{Time.now}: Creating user annotation user data arrays with threshold: #{threshold} for name: #{name}"
+        Rails.logger.info "#{Time.zone.now}: Creating user annotation user data arrays with threshold: #{threshold} for name: #{name}"
         # Create annotation array
         UserDataArray.create(name: self.name, array_type: 'annotations', values: val, cluster_name: cluster.name, array_index: i+1, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id)
         # Create X
@@ -358,7 +358,7 @@ class UserAnnotation
       user_annotation_data_arrays.concat(x_arrays).concat(y_arrays).concat( text_arrays)
       user_annotation_data_arrays.each do |data_array|
         if !data_array.subsample_annotation.nil?
-          Rails.logger.info "#{Time.now}: Creating new data array for #{annot_name} in study: #{data_array.study.name}, cluster: #{cluster.name} at subsample_threshold #{data_array.subsample_threshold}"
+          Rails.logger.info "#{Time.zone.now}: Creating new data array for #{annot_name} in study: #{data_array.study.name}, cluster: #{cluster.name} at subsample_threshold #{data_array.subsample_threshold}"
           subsample_annotation = annot_name + '--group--cluster'
           new_data_array = cluster.data_arrays.build(
               name: data_array.name, cluster_name: cluster.name, array_type: data_array.array_type,
@@ -367,22 +367,22 @@ class UserAnnotation
               study_id: cluster.study_id, study_file_id: cluster.study_file_id
           )
           if new_data_array.save
-            Rails.logger.info "#{Time.now}: Data Array for #{annot_name} created in study: #{data_array.study.name}, cluster: #{cluster.name}"
+            Rails.logger.info "#{Time.zone.now}: Data Array for #{annot_name} created in study: #{data_array.study.name}, cluster: #{cluster.name}"
           else
-            Rails.logger.info "#{Time.now}: Data Array for #{annot_name} in study: #{data_array.study.name}, cluster: #{cluster.name} failed to save: #{new_data_array.errors.full_messages.join('; ')}"
+            Rails.logger.info "#{Time.zone.now}: Data Array for #{annot_name} in study: #{data_array.study.name}, cluster: #{cluster.name} failed to save: #{new_data_array.errors.full_messages.join('; ')}"
           end
         else
           if data_array.array_type == 'annotations'
-            Rails.logger.info "#{Time.now}: Creating data array for #{annot_name} in study: #{data_array.study.name}, cluster: #{cluster.name}"
+            Rails.logger.info "#{Time.zone.now}: Creating data array for #{annot_name} in study: #{data_array.study.name}, cluster: #{cluster.name}"
             new_data_array = cluster.data_arrays.build(
                 name: data_array.name, cluster_name: cluster.name, array_type: data_array.array_type,
                 array_index: data_array.array_index, values: data_array.values,
                 study_id: cluster.study_id, study_file_id: cluster.study_file_id
             )
             if new_data_array.save
-              Rails.logger.info "#{Time.now}: Data Array for #{annot_name} created in study: #{data_array.study.name}, cluster: #{cluster.name}"
+              Rails.logger.info "#{Time.zone.now}: Data Array for #{annot_name} created in study: #{data_array.study.name}, cluster: #{cluster.name}"
             else
-              Rails.logger.info "#{Time.now}: Data Array for #{annot_name} in study: #{data_array.study.name}, cluster: failed to save: #{new_data_array.errors.full_messages.join('; ')}"
+              Rails.logger.info "#{Time.zone.now}: Data Array for #{annot_name} in study: #{data_array.study.name}, cluster: failed to save: #{new_data_array.errors.full_messages.join('; ')}"
             end
           end
         end
@@ -405,7 +405,7 @@ class UserAnnotation
 
       # update cluster group cell annotation attribute with new user annotation
       annot_hash = {'name'=>annot_name, 'type'=>'group','values'=>self.values, 'header_index'=>(types.length-1)}
-      Rails.logger.info "#{Time.now}: Updating annotations cluster #{cluster.name} for #{annot_name} in study: #{cluster.study.name}"
+      Rails.logger.info "#{Time.zone.now}: Updating annotations cluster #{cluster.name} for #{annot_name} in study: #{cluster.study.name}"
 
       # gotcha as we must set queued for deletion to true now, otherwise the cluster_group validation will fail as it
       # will see duplicate annotation names for between cluster_group.cell_annotations & this annotation name
@@ -415,7 +415,7 @@ class UserAnnotation
       cluster_annotations << annot_hash
 
       if cluster.update(cell_annotations: cluster_annotations)
-        Rails.logger.info "#{Time.now}: #{cluster.name} in study: #{cluster.study.name} successfully updated, creating new source file"
+        Rails.logger.info "#{Time.zone.now}: #{cluster.name} in study: #{cluster.study.name} successfully updated, creating new source file"
         # Create new file
         study = self.study
         study_file = cluster.study_file
@@ -446,7 +446,7 @@ class UserAnnotation
 
         # push to FC
 
-        Rails.logger.info "#{Time.now}: new source file for #{cluster.name} in study: #{cluster.study.name} successfully created, pushing to FireCloud"
+        Rails.logger.info "#{Time.zone.now}: new source file for #{cluster.name} in study: #{cluster.study.name} successfully created, pushing to FireCloud"
         study.send_to_firecloud(study_file)
 
         # queue jobs to delete annotation caches & annotation itself
@@ -469,7 +469,7 @@ class UserAnnotation
 
         # clean up any records that may be orphaned
         DataArray.where(name: self.name, cluster_group_id: self.cluster_group_id, array_type: 'annotations').delete_all
-        Rails.logger.error("#{Time.now}: Failed to update cluster cell_annotations: #{cluster.errors.full_messages.join(', ')}")
+        Rails.logger.error("#{Time.zone.now}: Failed to update cluster cell_annotations: #{cluster.errors.full_messages.join(', ')}")
 
         # send notification email
         SingleCellMailer.annotation_publish_fail(self, self.user, cluster.errors.full_messages.join(', '))
@@ -484,7 +484,7 @@ class UserAnnotation
       DataArray.where(name: self.name, cluster_group_id: self.cluster_group_id, array_type: 'annotations').delete_all
 
       # send notification email
-      Rails.logger.error("#{Time.now}: Failed to persist user annotations: #{self.name} in study: #{self.study.name} with error: #{e.message}")
+      Rails.logger.error("#{Time.zone.now}: Failed to persist user annotations: #{self.name} in study: #{self.study.name} with error: #{e.message}")
       SingleCellMailer.annotation_publish_fail(self, self.user, e.message)
     end
   end
@@ -586,9 +586,9 @@ class UserAnnotation
   def self.delete_queued_annotations
     annotations = self.where(queued_for_deletion: true)
     annotations.each do |annot|
-      Rails.logger.info "#{Time.now} deleting queued annotation #{annot.name} in study #{annot.study.name}."
+      Rails.logger.info "#{Time.zone.now} deleting queued annotation #{annot.name} in study #{annot.study.name}."
       annot.destroy
-      Rails.logger.info "#{Time.now} #{annot.name} successfully deleted."
+      Rails.logger.info "#{Time.zone.now} #{annot.name} successfully deleted."
     end
     true
   end

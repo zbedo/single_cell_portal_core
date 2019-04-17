@@ -106,38 +106,38 @@ class AdminConfiguration
         @config_setting = 'ERROR'
     end
     unless @config_setting == 'ERROR'
-      Rails.logger.info "#{Time.now}: setting access on all '#{FireCloudClient::COMPUTE_BLACKLIST.join(', ')}' studies to #{@config_setting}"
+      Rails.logger.info "#{Time.zone.now}: setting access on all '#{FireCloudClient::COMPUTE_BLACKLIST.join(', ')}' studies to #{@config_setting}"
       # only use studies not queued for deletion; those have already had access revoked
       # also filter out studies not in default portal project - user-funded projects are exempt from access revocation
       Study.not_in(queued_for_deletion: true).where(:firecloud_project.in => FireCloudClient::COMPUTE_BLACKLIST).each do |study|
-        Rails.logger.info "#{Time.now}: begin revoking access to study: #{study.name}"
+        Rails.logger.info "#{Time.zone.now}: begin revoking access to study: #{study.name}"
         # first remove share access (only shares with FireCloud access, i.e. non-reviewers)
         shares = study.study_shares.non_reviewers
         shares.each do |user|
-          Rails.logger.info "#{Time.now}: revoking share access for #{user}"
+          Rails.logger.info "#{Time.zone.now}: revoking share access for #{user}"
           revoke_share_acl = Study.firecloud_client.create_workspace_acl(user, @config_setting)
           Study.firecloud_client.update_workspace_acl(study.firecloud_project, study.firecloud_workspace, revoke_share_acl)
         end
         # last, remove study owner access (unless project owner)
         owner = study.user.email
-        Rails.logger.info "#{Time.now}: revoking owner access for #{owner}"
+        Rails.logger.info "#{Time.zone.now}: revoking owner access for #{owner}"
         revoke_owner_acl = Study.firecloud_client.create_workspace_acl(owner, @config_setting)
         Study.firecloud_client.update_workspace_acl(study.firecloud_project, study.firecloud_workspace, revoke_owner_acl)
-        Rails.logger.info "#{Time.now}: access revocation for #{study.name} complete"
+        Rails.logger.info "#{Time.zone.now}: access revocation for #{study.name} complete"
       end
-      Rails.logger.info "#{Time.now}: all '#{FireCloudClient::COMPUTE_BLACKLIST.join(', ')}' study access set to #{@config_setting}"
+      Rails.logger.info "#{Time.zone.now}: all '#{FireCloudClient::COMPUTE_BLACKLIST.join(', ')}' study access set to #{@config_setting}"
     else
-      Rails.logger.info "#{Time.now}: invalid status setting: #{status}; aborting"
+      Rails.logger.info "#{Time.zone.now}: invalid status setting: #{status}; aborting"
     end
   end
 
   # method that re-enables access by restoring permissions to studies directly in FireCloud
   def self.enable_firecloud_access
-    Rails.logger.info "#{Time.now}: restoring access to all '#{FireCloudClient::COMPUTE_BLACKLIST.join(', ')}' studies"
+    Rails.logger.info "#{Time.zone.now}: restoring access to all '#{FireCloudClient::COMPUTE_BLACKLIST.join(', ')}' studies"
     # only use studies not queued for deletion; those have already had access revoked
     # also filter out studies not in default portal project - user-funded projects are exempt from access revocation
     Study.not_in(queued_for_deletion: true).where(:firecloud_project.in => FireCloudClient::COMPUTE_BLACKLIST).each do |study|
-      Rails.logger.info "#{Time.now}: begin restoring access to study: #{study.name}"
+      Rails.logger.info "#{Time.zone.now}: begin restoring access to study: #{study.name}"
       # first re-enable share access (to all non-reviewers)
       shares = study.study_shares.where(:permission.nin => %w(Reviewer)).to_a
       shares.each do |share|
@@ -145,24 +145,24 @@ class AdminConfiguration
         share_permission = StudyShare::FIRECLOUD_ACL_MAP[share.permission]
         can_share = share_permission === 'WRITER' ? true : false
         can_compute = Rails.env == 'production' ? false : share_permission === 'WRITER' ? true : false
-        Rails.logger.info "#{Time.now}: restoring #{share_permission} permission for #{user}"
+        Rails.logger.info "#{Time.zone.now}: restoring #{share_permission} permission for #{user}"
         restore_share_acl = Study.firecloud_client.create_workspace_acl(user, share_permission, can_share, can_compute)
         Study.firecloud_client.update_workspace_acl(study.firecloud_project, study.firecloud_workspace, restore_share_acl)
       end
       # last, restore study owner access (unless project is owned by user)
       owner = study.user.email
-      Rails.logger.info "#{Time.now}: restoring WRITER access for #{owner}"
+      Rails.logger.info "#{Time.zone.now}: restoring WRITER access for #{owner}"
       # restore permissions, setting compute acls correctly (disabled in production for COMPUTE_BLACKLIST projects)
       restore_owner_acl = Study.firecloud_client.create_workspace_acl(owner, 'WRITER', true, Rails.env == 'production' ? false : true)
       Study.firecloud_client.update_workspace_acl(study.firecloud_project, study.firecloud_workspace, restore_owner_acl)
-      Rails.logger.info "#{Time.now}: access restoration for #{study.name} complete"
+      Rails.logger.info "#{Time.zone.now}: access restoration for #{study.name} complete"
     end
-    Rails.logger.info "#{Time.now}: all '#{FireCloudClient::COMPUTE_BLACKLIST.join(', ')}' study access restored"
+    Rails.logger.info "#{Time.zone.now}: all '#{FireCloudClient::COMPUTE_BLACKLIST.join(', ')}' study access restored"
   end
 
   # sends an email to all site administrators on startup notifying them of portal restart
   def self.restart_notification
-    current_time = Time.now.to_s(:long)
+    current_time = Time.zone.now.to_s(:long)
     locked_jobs = Delayed::Job.where(:locked_by.nin => [nil]).count
     message = "<p>The Single Cell Portal was restarted at #{current_time}.</p><p>There are currently #{locked_jobs} jobs waiting to be restarted.</p>"
     SingleCellMailer.admin_notification('Portal restart', nil, message).deliver_now
@@ -184,7 +184,7 @@ class AdminConfiguration
       pid = pid_str.split(':').last
       # check if current job worker has matching pid; if not, then the job is orphaned and should be unlocked
       unless pids[worker] == pid
-        Rails.logger.info "#{Time.now}: Restarting orphaned process #{job.id} initially queued on #{job.created_at.to_s(:long)}"
+        Rails.logger.info "#{Time.zone.now}: Restarting orphaned process #{job.id} initially queued on #{job.created_at.to_s(:long)}"
         job.update(locked_by: nil, locked_at: nil)
         job_count += 1
       end
@@ -200,7 +200,7 @@ class AdminConfiguration
 
     if !api_ok
       current_status = Study.firecloud_client.api_status
-      Rails.logger.error "#{Time.now}: ALERT: FIRECLOUD API SERVICE INTERRUPTION -- current status: #{current_status}"
+      Rails.logger.error "#{Time.zone.now}: ALERT: FIRECLOUD API SERVICE INTERRUPTION -- current status: #{current_status}"
       SingleCellMailer.firecloud_api_notification(current_status).deliver_now
     end
   end
