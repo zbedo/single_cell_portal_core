@@ -170,7 +170,7 @@ class ReportsController < ApplicationController
   def export_submission_report
     if current_user.admin?
       @submission_stats = []
-      Parallel.map(AnalysisSubmission.all.to_a, in_threads: 100) do |analysis|
+      AnalysisSubmission.order(:submitted_on => :asc).each do |analysis|
         @submission_stats << {submitter: analysis.submitter, analysis: analysis.analysis_name, status: analysis.status,
                               submitted_on: analysis.submitted_on, completed_on: analysis.completed_on}
       end
