@@ -1359,11 +1359,18 @@ class SiteController < ApplicationController
   ###
 
   def set_study
-    @study = Study.find_by(accession: params[:accession], url_safe_name: params[:study_name])
-    # redirect if study is not found
+    @study = Study.find_by(accession: params[:accession])
+        # redirect if study is not found
     if @study.nil?
       redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]), alert: 'Study not found.  Please check the name and try again.' and return
     end
+        #Check if current url_safe_name matches model
+    unless @study.url_safe_name == params[:study_name]
+           redirect_to merge_default_redirect_params(view_study_path(accession: params[:accession],
+                                                                     study_name: @study.url_safe_name,
+                                                                     scpbr:params[:scpbr])) and return
+      end
+
   end
 
   def set_cluster_group

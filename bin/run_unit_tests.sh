@@ -51,6 +51,7 @@ else
                     test/integration/study_validation_test.rb
                     test/integration/taxons_controller_test.rb
                     test/controllers/analysis_configurations_controller_test.rb
+                    test/controllers/site_controller_test.rb
                     test/api/studies_controller_test.rb
                     test/api/study_files_controller_test.rb
                     test/api/study_file_bundles_controller_test.rb
