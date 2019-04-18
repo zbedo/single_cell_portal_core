@@ -345,6 +345,9 @@ class SiteController < ApplicationController
         workspace = Study.firecloud_client.get_workspace(@study.firecloud_project, @study.firecloud_workspace)
         @submissions = Study.firecloud_client.get_workspace_submissions(@study.firecloud_project, @study.firecloud_workspace)
 
+        @submissions.each do |submission|
+          update_analysis_submission(submission)
+        end
         # remove deleted submissions from list of runs
         if !workspace['workspace']['attributes']['deleted_submissions'].blank?
           deleted_submissions = workspace['workspace']['attributes']['deleted_submissions']['items']
@@ -841,7 +844,7 @@ class SiteController < ApplicationController
       end
     end
 
-    start_time = Time.now
+    start_time = Time.zone.now
 
     # Get signed URLs for all files in the requested download objects, and update user quota
     Parallel.map(curl_files, in_threads: 100) do |file|
@@ -851,7 +854,7 @@ class SiteController < ApplicationController
       user_quota += file_size
     end
 
-    end_time = Time.now
+    end_time = Time.zone.now
     time = (end_time - start_time).divmod 60.0
     @log_message = ["#{@study.url_safe_name} curl configs generated!"]
     @log_message << "Signed URLs generated: #{curl_configs.size}"
@@ -1121,6 +1124,10 @@ class SiteController < ApplicationController
   def get_workspace_submissions
     workspace = Study.firecloud_client.get_workspace(@study.firecloud_project, @study.firecloud_workspace)
     @submissions = Study.firecloud_client.get_workspace_submissions(@study.firecloud_project, @study.firecloud_workspace)
+    # update any AnalysisSubmission records with new statuses
+    @submissions.each do |submission|
+      update_analysis_submission(submission)
+    end
     # remove deleted submissions from list of runs
     if !workspace['workspace']['attributes']['deleted_submissions'].blank?
       deleted_submissions = workspace['workspace']['attributes']['deleted_submissions']['items']
@@ -1155,7 +1162,9 @@ class SiteController < ApplicationController
       @submission = client.create_workspace_submission(@study.firecloud_project, @study.firecloud_workspace,
                                                          submission_config['namespace'], submission_config['name'],
                                                          submission_config['entityType'], submission_config['entityName'])
-
+      AnalysisSubmission.create(submitter: current_user.email, study_id: @study.id, firecloud_project: @study.firecloud_project,
+                                submission_id: @submission['submissionId'], firecloud_workspace: @study.firecloud_workspace,
+                                analysis_name: @analysis_configuration.identifier, submitted_on: Time.zone.now, submitted_from_portal: true)
     rescue => e
       error_context = ErrorTracker.format_extra_context(@study, {params: params})
       ErrorTracker.report_exception(e, current_user, error_context)
@@ -1350,11 +1359,18 @@ class SiteController < ApplicationController
   ###
 
   def set_study
-    @study = Study.find_by(accession: params[:accession], url_safe_name: params[:study_name])
-    # redirect if study is not found
+    @study = Study.find_by(accession: params[:accession])
+        # redirect if study is not found
     if @study.nil?
       redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]), alert: 'Study not found.  Please check the name and try again.' and return
     end
+        #Check if current url_safe_name matches model
+    unless @study.url_safe_name == params[:study_name]
+           redirect_to merge_default_redirect_params(view_study_path(accession: params[:accession],
+                                                                     study_name: @study.url_safe_name,
+                                                                     scpbr:params[:scpbr])) and return
+      end
+
   end
 
   def set_cluster_group
@@ -2153,6 +2169,17 @@ class SiteController < ApplicationController
   # load list of available workflows
   def load_available_workflows
     AnalysisConfiguration.available_analyses
+  end
+
+  # update AnalysisSubmissions when loading study analysis tab
+  # will not backfill existing workflows to keep our submission history clean
+  def update_analysis_submission(submission)
+    analysis_submission = AnalysisSubmission.find_by(submission_id: submission['submissionId'])
+    if analysis_submission.present?
+      workflow_status = submission['workflowStatuses'].keys.first # this only works for single-workflow analyses
+      analysis_submission.update(status: workflow_status)
+      analysis_submission.delay.set_completed_on # run in background to avoid UI blocking
+    end
   end
 
   # Helper method for download_bulk_files.  Returns file's curl config, size.

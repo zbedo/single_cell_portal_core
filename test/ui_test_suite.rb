@@ -2215,7 +2215,8 @@ class UiTestSuite < Test::Unit::TestCase
 
     # check for reports
     report_plots = @driver.find_elements(:class, 'plotly-report')
-    assert report_plots.size == 10, "did not find correct number of plots, expected 10 but found #{report_plots.size}"
+    assert report_plots.size == 9 || report_plots.size == 11,
+           "did not find correct number of plots, expected 9 or 11 but found #{report_plots.size}"
     report_plots.each do |plot|
       rendered = @driver.execute_script("return $('##{plot['id']}').data('rendered')")
       assert rendered, "#{plot['id']} rendered status was not true"
@@ -2252,7 +2253,7 @@ class UiTestSuite < Test::Unit::TestCase
       end
       submission_report = File.open(download_path)
       headers = submission_report.readline.split("\t").map(&:strip)
-      expected_headers = %w(email analysis completion_date)
+      expected_headers = %w(email analysis status submission_date completion_date)
       assert headers == expected_headers,
              "Did not find correctly formatted report, expected headers of '#{expected_headers.join(', ')}' but found '#{headers.join(', ')}'"
 

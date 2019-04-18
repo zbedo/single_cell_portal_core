@@ -147,7 +147,7 @@ class AdminConfigurationsController < ApplicationController
       end
     rescue => e
       ErrorTracker.report_exception(e, current_user, params)
-      logger.error "#{Time.now}: error in setting download status to #{status}; #{e.message}"
+      logger.error "#{Time.zone.now}: error in setting download status to #{status}; #{e.message}"
       redirect_to admin_configurations_path, alert: "An error occured while turing #{status} downloads: #{e.message}" and return
     end
   end
@@ -174,7 +174,7 @@ class AdminConfigurationsController < ApplicationController
     # reinitialize the firecloud client object (forces new access tokens)
     refresh_status = Study.refresh_firecloud_client
     if refresh_status == true && (expiration < Study.firecloud_client.expires_at && storage_issue_date <  Study.firecloud_client.storage_issued_at)
-      logger.info "#{Time.now}: Refreshing API client tokens and drivers.  New expiry: #{Study.firecloud_client.expires_at}"
+      logger.info "#{Time.zone.now}: Refreshing API client tokens and drivers.  New expiry: #{Study.firecloud_client.expires_at}"
       @notice = "API Client successfully refreshed.  Tokens are now valid until #{Study.firecloud_client.expires_at.strftime('%D %r')} and will renew automatically."
       @alert = ''
     else
@@ -198,7 +198,7 @@ class AdminConfigurationsController < ApplicationController
       end
     rescue => e
       ErrorTracker.report_exception(e, current_user, params)
-      logger.error "#{Time.now}: unable to retrieve service account FireCloud registration: #{e.message}"
+      logger.error "#{Time.zone.now}: unable to retrieve service account FireCloud registration: #{e.message}"
     end
   end
 
@@ -211,7 +211,7 @@ class AdminConfigurationsController < ApplicationController
       @notice = "The portal service account FireCloud profile has been successfully updated."
     rescue => e
       ErrorTracker.report_exception(e, current_user, params)
-      logger.error "#{Time.now}: unable to update service account FireCloud registration: #{e.message}"
+      logger.error "#{Time.zone.now}: unable to update service account FireCloud registration: #{e.message}"
       @alert = "Unable to update portal service account FireCloud profile: #{e.message}"
     end
   end
@@ -222,7 +222,7 @@ class AdminConfigurationsController < ApplicationController
       @status = Study.firecloud_client.api_status
     rescue => e
       ErrorTracker.report_exception(e, current_user, params)
-      logger.error "#{Time.now}: unable to retrieve FireCloud API status due to: #{e.message}"
+      logger.error "#{Time.zone.now}: unable to retrieve FireCloud API status due to: #{e.message}"
       @status = {error: "An error occurred while fetching the FireCloud API status: #{e.message}"}
     end
   end
@@ -250,18 +250,18 @@ class AdminConfigurationsController < ApplicationController
             # check if user is FireCloud member first
             user_client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
             if user_client.registered?
-              logger.info "#{Time.now}: adding #{user.email} to #{@group_name}"
+              logger.info "#{Time.zone.now}: adding #{user.email} to #{@group_name}"
               Study.firecloud_client.add_user_to_group(@group_name, 'member', user_email)
               @new_users << user.email
             else
-              logger.info "#{Time.now}: skipping #{user.email}; not registered in FireCloud yet."
+              logger.info "#{Time.zone.now}: skipping #{user.email}; not registered in FireCloud yet."
             end
           end
         end
-        logger.info "#{Time.now}: User group #{@group_name} successfully synchronized"
+        logger.info "#{Time.zone.now}: User group #{@group_name} successfully synchronized"
       rescue => e
         ErrorTracker.report_exception(e, current_user, params)
-        logger.error "#{Time.now}: Error in synchronizing portal user group #{@group_name}: #{e.message}"
+        logger.error "#{Time.zone.now}: Error in synchronizing portal user group #{@group_name}: #{e.message}"
         @alert = "Unable to synchronize user group #{@group_name} due to an error: #{e.message}"
       end
     else
@@ -330,7 +330,7 @@ class AdminConfigurationsController < ApplicationController
       @notice = 'Your email has successfully been delivered.'
     rescue => e
       ErrorTracker.report_exception(e, current_user, params)
-      logger.error "#{Time.now}: Error delivering users email: #{e.message}"
+      logger.error "#{Time.zone.now}: Error delivering users email: #{e.message}"
       @alert = "Unabled to deliver users email due to the following error: #{e.message}"
     end
   end

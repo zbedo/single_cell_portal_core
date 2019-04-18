@@ -11,11 +11,12 @@ class AnalysisMetadatum
   extend ErrorTracker
 
   # field definitions
-  belongs_to :study
+  belongs_to :study, optional: true
   field :payload, type: Hash # actual HCA JSON payload
   field :version, type: String # string version number indicating an HCA release
   field :name, type: String
   field :submission_id, type: String # FireCloud submission ID, also used as internal analysis_id
+  field :submitter, type: String # user that submitted the analysis
 
   ##
   # INDEXES
@@ -53,6 +54,12 @@ class AnalysisMetadatum
   # INSTANCE METHODS
   ##
 
+  # helper method to return just the analysis namespace/name/snapshot for a FireCloud method
+  def analysis_method_name
+    method = self.payload['computational_method']
+    method.present? ? method.gsub(/https:\/\/api\.firecloud\.org\/api\/methods\//, '') : ''
+  end
+
   # root directory for storing metadata schema copies
   def definition_root
     Rails.root.join('data', 'HCA_metadata', self.version)
@@ -76,7 +83,7 @@ class AnalysisMetadatum
         existing_schema = File.read(self.definition_filepath)
         JSON.parse(existing_schema)
       else
-        Rails.logger.info "#{Time.now}: saving new local copy of #{self.definition_filepath}"
+        Rails.logger.info "#{Time.zone.now}: saving new local copy of #{self.definition_filepath}"
         metadata_schema = RestClient.get self.definition_url
         # write a local copy
         unless Dir.exist?(self.definition_root)
@@ -89,11 +96,11 @@ class AnalysisMetadatum
       end
     rescue RestClient::ExceptionWithResponse => e
       ErrorTracker.report_exception(e, self.study.user, {request_url: self.definition_url, request_response: e.http_body})
-      Rails.logger.error "#{Time.now}: Error retrieving remote HCA Analysis metadata schema: #{e.message}"
+      Rails.logger.error "#{Time.zone.now}: Error retrieving remote HCA Analysis metadata schema: #{e.message}"
       {error: "Error retrieving definition schema: #{e.message}"}
     rescue JSON::ParserError => e
       ErrorTracker.report_exception(e, self.study.user, {metadata_body: metadata_schema.body})
-      Rails.logger.error "#{Time.now}: Error parsing HCA Analysis metadata schema: #{e.message}"
+      Rails.logger.error "#{Time.zone.now}: Error parsing HCA Analysis metadata schema: #{e.message}"
       {error: "Error parsing definition schema: #{e.message}"}
     end
   end
@@ -111,7 +118,7 @@ class AnalysisMetadatum
     rescue NoMethodError => e
       field_key = field.present? ? "#{key}/#{field}" : key
       ErrorTracker.report_exception(e, self.study.user, {missing_key: field_key, analysis_metadatum: self.attributes.to_h})
-      Rails.logger.error "#{Time.now}: Error accessing remote HCA Analysis metadata field definitions for #{field_key}: #{e.message}"
+      Rails.logger.error "#{Time.zone.now}: Error accessing remote HCA Analysis metadata field definitions for #{field_key}: #{e.message}"
       nil
     end
   end
@@ -153,11 +160,11 @@ class AnalysisMetadatum
     begin
       call_metadata = []
       workflows.each do |workflow|
-        Rails.logger.info "#{Time.now}: processing #{workflow['workflowName']} metadata for submission #{self.submission_id}"
+        Rails.logger.info "#{Time.zone.now}: processing #{workflow['workflowName']} metadata for submission #{self.submission_id}"
         # for each 'call', extract the available information as defined by the 'task' definition for this
         # version of the analysis metadata schema
         workflow['calls'].each do |task, task_attributes|
-          Rails.logger.info "#{Time.now}: processing #{task} call metadata for submission #{self.submission_id}"
+          Rails.logger.info "#{Time.zone.now}: processing #{task} call metadata for submission #{self.submission_id}"
           call = {
               'name' => task
           }
@@ -179,7 +186,7 @@ class AnalysisMetadatum
               # make sure we have a valid value type
             else
               # try to do a straight mapping, will likely miss
-              Rails.logger.info "#{Time.now}: trying unmappable HCA analysis.task property: #{property}"
+              Rails.logger.info "#{Time.zone.now}: trying unmappable HCA analysis.task property: #{property}"
               call[property] ||= set_value_by_type(definitions, attributes[property])
               next
             end
@@ -190,7 +197,7 @@ class AnalysisMetadatum
       call_metadata
     rescue => e
       ErrorTracker.report_exception(e, self.study.user, {workflows: workflows, analysis_metadatum: self.attributes.to_h})
-      Rails.logger.error "#{Time.now}: Error retrieving workflow call metadata for: #{e.message}"
+      Rails.logger.error "#{Time.zone.now}: Error retrieving workflow call metadata for: #{e.message}"
       []
     end
   end
@@ -200,7 +207,7 @@ class AnalysisMetadatum
     payload = {}
     study = self.study
     # retrieve available objects pertaining to submission (submission, configuration, all workflows contained in submission)
-    Rails.logger.info "#{Time.now}: creating AnalysisMetadatum payload for submission "
+    Rails.logger.info "#{Time.zone.now}: creating AnalysisMetadatum payload for submission "
     submission = Study.firecloud_client.get_workspace_submission(study.firecloud_project,
                                                                  study.firecloud_workspace,
                                                                  self.submission_id)

@@ -766,9 +766,9 @@ class StudyFile
   def self.delete_queued_files
     study_files = self.where(queued_for_deletion: true)
     study_files.each do |file|
-      Rails.logger.info "#{Time.now} deleting queued file #{file.name} in study #{file.study.name}."
+      Rails.logger.info "#{Time.zone.now} deleting queued file #{file.name} in study #{file.study.name}."
       file.destroy
-      Rails.logger.info "#{Time.now} #{file.name} successfully deleted."
+      Rails.logger.info "#{Time.zone.now} #{file.name} successfully deleted."
     end
     true
   end
@@ -879,7 +879,7 @@ class StudyFile
             subdir = self.remote_location.split('/').first
             download_location = File.join(study.data_store_path, subdir)
           end
-          msg = "#{Time.now}: localizing #{self.name} in #{study.name} to #{download_location}"
+          msg = "#{Time.zone.now}: localizing #{self.name} in #{study.name} to #{download_location}"
           puts msg
           Rails.logger.info msg
           file_location = File.join(study.data_store_path, self.download_location)
@@ -889,12 +889,12 @@ class StudyFile
           content_type = self.determine_content_type
           shift_headers = true
           if content_type == 'application/gzip'
-            msg = "#{Time.now}: Parsing #{self.name}:#{self.id} as application/gzip"
+            msg = "#{Time.zone.now}: Parsing #{self.name}:#{self.id} as application/gzip"
             puts msg
             Rails.logger.info msg
             file = Zlib::GzipReader.open(file_location)
           else
-            msg = "#{Time.now}: Parsing #{self.name}:#{self.id} as text/plain"
+            msg = "#{Time.zone.now}: Parsing #{self.name}:#{self.id} as text/plain"
             puts msg
             Rails.logger.info msg
             file = File.open(file_location, 'rb')
@@ -908,7 +908,7 @@ class StudyFile
           file.close
           # add processed cells to known cells
           cells.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
-            msg = "#{Time.now}: Create known cells array ##{index + 1} for #{self.name}:#{self.id} in #{study.name}"
+            msg = "#{Time.zone.now}: Create known cells array ##{index + 1} for #{self.name}:#{self.id} in #{study.name}"
             puts msg
             Rails.logger.info msg
             known_cells = study.data_arrays.build(name: "#{self.name} Cells", cluster_name: self.name,
@@ -916,20 +916,20 @@ class StudyFile
                                                   study_file_id: self.id, study_id: self.study_id)
             known_cells.save
           end
-          msg = "#{Time.now}: removing local copy of #{download_location}"
+          msg = "#{Time.zone.now}: removing local copy of #{download_location}"
           self.remove_local_copy
         else
-          msg = "#{Time.now}: skipping #{self.name} in #{study.name}; remote file no longer exists"
+          msg = "#{Time.zone.now}: skipping #{self.name} in #{study.name}; remote file no longer exists"
           puts msg
           Rails.logger.error msg
         end
       else
-        msg = "#{Time.now}: skipping #{self.name} in #{study.name}; already processed"
+        msg = "#{Time.zone.now}: skipping #{self.name} in #{study.name}; already processed"
         puts msg
         Rails.logger.info msg
       end
     rescue => e
-      msg = "#{Time.now}: error processing #{self.name} in #{self.study.name}: #{e.message}"
+      msg = "#{Time.zone.now}: error processing #{self.name} in #{self.study.name}: #{e.message}"
       puts msg
       Rails.logger.error msg
     end
