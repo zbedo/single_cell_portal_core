@@ -954,3 +954,20 @@ $(document).ajaxError(function (e, xhr, settings) {
         location.href = url;
     }
 });
+
+// preserve the state of gene search beyond page reload (in case user needs to sign in)
+function preserveGeneSearch() {
+    console.log('preserving search state');
+    // construct a gene expression URL to load after action is completed
+    var searchUrl = window.location.origin + window.location.pathname + '/gene_expression';
+    var urlParams = getRenderUrlParams();
+    var genes = $('#search_genes').val().split(' ');
+    if (genes.length === 1) {
+        searchUrl += '/' + genes[0] + '?'
+    } else {
+        searchUrl += '?search%5Bgenes%5D=' + genes.join('+') + '&';
+    }
+    searchUrl += urlParams + window.location.hash;
+    localStorage.setItem('previous-search-url', searchUrl);
+    console.log('search form saved');
+}

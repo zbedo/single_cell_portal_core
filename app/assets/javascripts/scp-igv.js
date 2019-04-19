@@ -43,11 +43,18 @@ $(document).on('click', '#genome-tab-nav', function (e) {
   var currentScroll = $(window).scrollTop();
   window.location.hash = '#genome-tab';
   window.scrollTo(0, currentScroll);
-  // Go to Google sign-in page, redirect to this view after authenticating.
+
+
+// Go to Google sign-in page, redirect to this view after authenticating.
   if (accessToken === null) {
-    ga('send', 'event', 'genome', 'sign_in_start');
-    localStorage.setItem('signed-in-via-genome-tab', true);
-    window.location = '/single_cell/users/auth/google_oauth2';
+      // preserve all current search form values, but only if gene(s) are present
+      var geneSearch = $('#search_genes').val();
+      if (geneSearch !== '') {
+          preserveGeneSearch();
+      }
+      ga('send', 'event', 'genome', 'sign_in_start');
+      localStorage.setItem('signed-in-via-genome-tab', true);
+      window.location = '/single_cell/users/auth/google_oauth2';
   }
 });
 
