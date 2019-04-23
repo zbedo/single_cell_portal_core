@@ -332,6 +332,7 @@ class FireCloudClientTest < ActiveSupport::TestCase
       assert copied_config['methodConfiguration']['name'] == configuration['name'], "Copied configuration name is incorrect, expected '#{configuration['name']}' but found '#{copied_config['methodConfiguration']['name']}'"
       assert copied_config['methodConfiguration']['namespace'] == workspace['namespace'], "Copied configuration name is incorrect, expected '#{workspace['namespace']}' but found '#{copied_config['methodConfiguration']['namespace']}'"
     rescue => e
+      @fire_cloud_client.delete_workspace(@fire_cloud_client.project, workspace_name)
       skip "Skipping test due to error from methods repo (this is not a regression but a known issue with some methods missing configurations): #{e.message}"
     end
 
