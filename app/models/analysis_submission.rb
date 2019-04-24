@@ -38,6 +38,11 @@ class AnalysisSubmission
     analysis_submission.save
   end
 
+  # get user instance for submitter
+  def user
+    User.find_by(email: self.submitter)
+  end
+
   # helper to get submission JSON from workspace
   def get_submission_json
     begin
