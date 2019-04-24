@@ -26,7 +26,7 @@ end
 
 # check to make sure all delayed_job daemons are still running
 @running = true
-if pids.size != processes.size || processes.size == 0
+if pids.size != processes.size || processes.size != @num_workers
 	@running = false
 else
 	pids.each do |command, pid|
