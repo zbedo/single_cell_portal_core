@@ -23,13 +23,6 @@
       <%= render '/layouts/ga_script.js' %>
   </script>
 
-
-	<% if Rails.env == 'production' %>
-    <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
-        // suppress logging in production
-        var console = { log: function() {} };
-    </script>
-	<% end %>
   <% if ENV['TCELL_AGENT_APP_ID'].present? && ENV['TCELL_AGENT_API_KEY'].present? %>
     <script src="https://jsagent.tcell.io/tcellagent.min.js" nonce="<%= content_security_policy_script_nonce %>"
             tcellappid="<%= ENV['TCELL_AGENT_APP_ID'] %>" tcellapikey="<%= ENV['TCELL_AGENT_API_KEY'] %>"></script>
