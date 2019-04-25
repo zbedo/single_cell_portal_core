@@ -971,3 +971,11 @@ function preserveGeneSearch() {
     localStorage.setItem('previous-search-url', searchUrl);
     console.log('search form saved');
 }
+
+// reopen current tab on page refresh
+function reopenUiTab(navTarget) {
+    var tab = window.location.hash;
+    if (tab !== '') {
+        $(navTarget + ' a[href="#' + tab + '"]').tab('show');
+    }
+}

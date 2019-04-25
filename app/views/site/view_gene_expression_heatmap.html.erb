@@ -81,10 +81,5 @@
 
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
     // re-open a tab on reload if necessary
-    var urlParts = window.location.href.split('#');
-    if (urlParts.length > 1) {
-        openedTab = urlParts[1];
-        console.log('opening ' + openedTab + ' tab');
-        $('#study-tabs a[href="#' + openedTab + '"]').tab('show');
-    }
+    reopenUiTab('#study-tabs');
 </script>
