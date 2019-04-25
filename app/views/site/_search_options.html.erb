@@ -53,10 +53,11 @@
                     clearForm('search_genes');
                     $(this).tooltip('hide');
                     var urlParams = getRenderUrlParams();
-                    var url = "<%= view_study_path(accession: @study.accession, study_name: @study.url_safe_name )%>?" + urlParams;
+                    var url = "<%= view_study_path(accession: @study.accession, study_name: @study.url_safe_name )%>";
+                    history.pushState('', document.title, url);
                     launchModalSpinner('#spinner_target', '#loading-modal', function() {
                         $.ajax({
-                            url: url,
+                            url: url + '?' + urlParams,
                             type: 'GET',
                             dataType: 'script'
                         });

@@ -5,6 +5,14 @@
   <%= csrf_meta_tags %>
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+      // if we had search forms to preserve, recall and resubmit
+      if ( localStorage.getItem('previous-search-url') ) {
+          var searchUrl = localStorage.getItem('previous-search-url');
+          localStorage.removeItem('previous-search-url');
+          window.location = searchUrl;
+      }
+  </script>
   <%= stylesheet_link_tag    'application', media: 'all' %>
   <%= nonced_javascript_include_tag "https://cdn.plot.ly/plotly-1.39.3.min.js" %>
   <%= nonced_javascript_pack_tag 'application' %>
@@ -15,13 +23,6 @@
       <%= render '/layouts/ga_script.js' %>
   </script>
 
-
-	<% if Rails.env == 'production' %>
-    <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
-        // suppress logging in production
-        var console = { log: function() {} };
-    </script>
-	<% end %>
   <% if ENV['TCELL_AGENT_APP_ID'].present? && ENV['TCELL_AGENT_API_KEY'].present? %>
     <script src="https://jsagent.tcell.io/tcellagent.min.js" nonce="<%= content_security_policy_script_nonce %>"
             tcellappid="<%= ENV['TCELL_AGENT_APP_ID'] %>" tcellapikey="<%= ENV['TCELL_AGENT_API_KEY'] %>"></script>
