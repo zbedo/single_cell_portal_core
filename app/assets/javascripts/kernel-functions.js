@@ -20,6 +20,27 @@ function nrd0(X){
     return 0.9 * min * Math.pow(X.length, -0.2)
 }
 
+// More memory- and time-efficient analogs of Math.min and Math.max.
+// From https://stackoverflow.com/a/13440842/10564415.
+function arrayMin(arr) {
+  var len = arr.length, min = Infinity;
+  while (len--) {
+    if (arr[len] < min) {
+      min = arr[len];
+    }
+  }
+  return min;
+};
+function arrayMax(arr) {
+  var len = arr.length, max = -Infinity;
+  while (len--) {
+    if (arr[len] > max) {
+      max = arr[len];
+    }
+  }
+  return max;
+};
+
 //This is the master function that creates all the plotly traces.
 //Takes an array of arrays and returns the data array of traces and the layout variable
 function createTracesAndLayout(arr, title, jitter='all'){
@@ -39,7 +60,7 @@ function createTracesAndLayout(arr, title, jitter='all'){
             jitter = false;
         }
         // check if there is a distribution before adding trace
-        if ( Math.max(...dist) !== Math.min(...dist) ) {
+        if ( arrayMax(dist) !== arrayMin(dist) ) {
             // make a violin plot if there is a distribution
             data = data.concat([{
                 type: 'violin',
