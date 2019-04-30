@@ -40,7 +40,7 @@ class ClusterGroup
   # fixed values to subsample at
   SUBSAMPLE_THRESHOLDS = [1000, 10000, 20000].freeze
 
-  MAX_THRESHOLD = 250000
+  MAX_THRESHOLD = 100000
 
   COLORBREWER_SET = %w(#e41a1c #377eb8 #4daf4a #984ea3 #ff7f00 #a65628 #f781bf #999999
     #66c2a5 #fc8d62 #8da0cb #e78ac3 #a6d854 #ffd92f #e5c494 #b3b3b3 #8dd3c7
