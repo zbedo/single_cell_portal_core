@@ -5,6 +5,6 @@ closeModalSpinner('#spinner_target', '#loading-modal', function () {
     $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices') %>");
     enableDefaultActions();
     var requestUrl = "<%= javascript_safe_url(request.fullpath) %>";
-    ga('send', 'event', 'Study Gene Search', 'view_single_gene');
+    ga('send', 'event', 'study_gene_search', 'view_single_gene');
     gaTrack(requestUrl, 'Single Cell Portal');
 });

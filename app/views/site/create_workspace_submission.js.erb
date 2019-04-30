@@ -8,6 +8,6 @@ closeModalSpinner('#generic-modal-spinner', '#generic-modal', function () {
         dataType: 'script'
     });
     var requestUrl = '<%= javascript_safe_url(request.fullpath) %>';
-    ga('send', 'event', 'Terra Pipeline', 'workspace_submission_created');
+    ga('send', 'event', 'terra_pipeline', 'workspace_submission_created');
     gaTrack(requestUrl, 'Single Cell Portal');
 });
