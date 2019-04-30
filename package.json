@@ -4,8 +4,9 @@
     "@rails/webpacker": "3.5",
     "ideogram": "1.7.0",
     "igv": "2.1.0",
-    "jquery": "3.3.1",
+    "jquery": "3.4.0",
     "jquery-ui": "1.12.1",
+    "js-yaml": "3.13.1",
     "lodash": "4.17.11",
     "morpheus-app": "1.0.17",
     "spin.js": "^4.0.0"
