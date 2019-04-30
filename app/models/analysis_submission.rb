@@ -12,11 +12,37 @@ class AnalysisSubmission
 
   belongs_to :study, optional: true
 
-  SUBMISSON_STATUSES = %w(Queued Launching Submitted Running Failed Succeeded Aborting Aborted Unknown).freeze
-  COMPLETION_STATUSES = %w(Aborted Succeeded Failed)
+  SUBMISSON_STATUSES = %w(Queued Launching Submitted Running Failed Succeeded Aborting Aborted Unknown Deleted).freeze
+  COMPLETION_STATUSES = %w(Aborted Succeeded Failed Deleted)
   validates_presence_of :submission_id, :submitter, :analysis_name, :firecloud_project, :firecloud_workspace
   validates_inclusion_of :status, in: SUBMISSON_STATUSES, if: proc {|attributes| attributes.status.present?}
   validates_uniqueness_of :submission_id
+
+  # cron job to run weekly that will update the status of any 'in-process' analysis submissions
+  def self.update_running_submissions
+    self.where(:status.nin => COMPLETION_STATUSES).each do |submission|
+      begin
+        if submission.study.present?
+          workspace_submission = submission.get_submission_json
+          last_workflow = workspace_submission['workflows'].last
+          latest_status = last_workflow['status']
+          completion_time = DateTime.parse(last_workflow['statusLastChangedDate']).in_time_zone
+          if COMPLETION_STATUSES.include?(latest_status)
+            Rails.logger.info "Setting #{submission.firecloud_project}/#{submission.firecloud_workspace}:#{submission.submission_id} to '#{latest_status}'"
+            submission.update(status: latest_status, completed_on: completion_time)
+          end
+        else
+          Rails.logger.info "Setting #{submission.firecloud_project}/#{submission.firecloud_workspace}:#{submission.submission_id} to 'Deleted' as study was deleted"
+          submission.update(status: 'Deleted', completed_on: Time.zone.now)
+        end
+      rescue => e
+        error_context = ErrorTracker.format_extra_context(submission)
+        ErrorTracker.report_exception(e, Study.firecloud_client.issuer, error_context)
+        Rails.logger.error "Setting #{submission.firecloud_project}/#{submission.firecloud_workspace}:#{submission.submission_id} to 'Deleted' due to error: #{e.message}"
+        submission.update(status: 'Deleted', completed_on: Time.zone.now)
+      end
+    end
+  end
 
   # initialize a new AnalysisSubmission record from the FireCloud API JSON entry
   # only to be used to backfill existing submissions

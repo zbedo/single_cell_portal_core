@@ -2253,7 +2253,7 @@ class UiTestSuite < Test::Unit::TestCase
       end
       submission_report = File.open(download_path)
       headers = submission_report.readline.split("\t").map(&:strip)
-      expected_headers = %w(email analysis status submission_date completion_date)
+      expected_headers = %w(email analysis status submission_date completion_date firecloud_workspace study_info_url)
       assert headers == expected_headers,
              "Did not find correctly formatted report, expected headers of '#{expected_headers.join(', ')}' but found '#{headers.join(', ')}'"
 
