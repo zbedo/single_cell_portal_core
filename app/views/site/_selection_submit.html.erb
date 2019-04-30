@@ -21,6 +21,7 @@
             setErrorOnBlank(needText);
         } else {
             $('#generic-modal-title').html("Saving... Please Wait");
+            ga('send', 'event', 'Custom Cell Annotations', 'create_annotation');
             launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
                 var form = $('#selection-well > form');
                 form.submit();

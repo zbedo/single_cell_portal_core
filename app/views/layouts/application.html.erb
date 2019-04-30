@@ -120,6 +120,17 @@
   <% end %>
 </div>
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+    // set the unique cookie for tracking user IDs in GA
+    // this is not personally identifiable, lasts for 1 year or until cleared
+
+    if ( typeof Cookies.get('user_id') === 'undefined' ) {
+        Cookies.set('user_id', '<%= SecureRandom.uuid %>', {expires: 365})
+    }
+
+    // set userId in Google Analytics
+    var userId = Cookies.get('user_id');
+    ga('set', 'userId', userId);
+
     // variable used mostly for testing
     PAGE_RENDERED = true;
 
