@@ -135,7 +135,7 @@ igv.GenomeUtils.getKnownGenomes = function () {
 };
 
 function igvIsDisplayed() {
-  return $('#igvRootDiv').length === 1;
+  return $('.igv-root-div').length > 0;
 }
 
 /**
