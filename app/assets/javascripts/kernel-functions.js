@@ -30,7 +30,7 @@ function arrayMin(arr) {
     }
   }
   return min;
-};
+}
 function arrayMax(arr) {
   var len = arr.length, max = -Infinity;
   while (len--) {
@@ -39,7 +39,7 @@ function arrayMax(arr) {
     }
   }
   return max;
-};
+}
 
 //This is the master function that creates all the plotly traces.
 //Takes an array of arrays and returns the data array of traces and the layout variable
