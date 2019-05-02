@@ -1,5 +1,8 @@
+<script nonce="<%= content_security_policy_script_nonce %>">
+    $('#breadcrumbs').replaceWith("<%= escape_javascript(render partial: '/layouts/breadcrumbs') %>");
+</script>
 <div id="title-bar">
-  <%= render partial: 'study_title_bar' %>
+  <%= render partial: 'view_gene_expression_title_bar' %>
 </div>
 <div id="tab-root">
   <ul class="nav nav-tabs" role="tablist" id="study-tabs">
@@ -35,7 +38,7 @@
     </div>
     <div class="tab-pane" id="study-visualize" role="tabpanel">
       <% if @study.can_visualize? %>
-        <%= render partial: 'study_visualize' %>
+        <%= render partial: 'view_gene_expression' %>
       <% end %>
     </div>
     <% if @user_can_download %>

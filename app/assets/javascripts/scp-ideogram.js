@@ -84,19 +84,6 @@
 //     $('#ideogram-container').append(table);
 //   }
 
-
-// Monkey patch "afterRawAnnots" method in Ideogram to fix SCP-1573
-// TODO: Fix upstream in more refined manner, pull update, remove this patch.
-function monkeyPatchIdeogram() {
-  originalAfterRawAnnots = ideogram.afterRawAnnots;
-  ideogram.afterRawAnnots = function() {
-    var penultimateThreshold = ideogram.rawAnnots.metadata.heatmapThresholds.slice(-2)[0];
-    // Ensures default heatmap does not show black unexpectedly
-    ideogram.rawAnnots.metadata.heatmapThresholds.splice(-1, 1, penultimateThreshold + 1/10000);
-    originalAfterRawAnnots.apply(this);
-  }
-}
-
 var legend = [{
   name: 'Expression level',
   rows: [
@@ -133,7 +120,7 @@ function updateMargin(event) {
 function addMarginControl() {
   chrMargin = (typeof chrMargin === 'undefined' ? 10 : chrMargin)
     marginSlider =
-      `<label id="chrMarginContainer">
+      `<label id="chrMarginContainer" style="float:left; position: relative; top: 50px; left: -130px;">
         Chromosome margin
       <input type="range" id="chrMargin" list="chrMarginList" value="` + chrMargin + `">
       </label>
@@ -184,7 +171,9 @@ function addThresholdControl() {
 
   expressionThresholdSlider =
     `<label id="expressionThresholdContainer" style="float: left">
-        Expression threshold
+      <span class="glossary" title="Denoiser.  Adjusts mapping between inferCNV's output heatmap threshold values and normal vs. loss/gain signal.  Analogous to inferCNV denoise parameters, e.g. --noise_filter." style="cursor: help;">
+      Expression threshold
+      </span>
       <input type="range" id="expressionThreshold" list="expressionThresholdList" value="` + expressionThreshold + `">
       <datalist id="expressionThresholdList">
         <option value="0" label="0.">
@@ -210,7 +199,7 @@ function ideoRangeChangeEventHandler(event) {
 }
 
 function addIdeoRangeControls() {
-  // addThresholdControl();
+  addThresholdControl();
   addMarginControl();
 
   document.removeEventListener('change', ideoRangeChangeEventHandler);
@@ -288,7 +277,6 @@ function initializeIdeogram(url) {
     annotationsLayout: 'heatmap',
     legend: legend,
     onDrawAnnots: createTrackFilters,
-    onLoad: monkeyPatchIdeogram,
     debug: true,
     rotatable: false,
     chrMargin: 10,

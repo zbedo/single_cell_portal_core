@@ -2253,7 +2253,7 @@ class UiTestSuite < Test::Unit::TestCase
       end
       submission_report = File.open(download_path)
       headers = submission_report.readline.split("\t").map(&:strip)
-      expected_headers = %w(email analysis status submission_date completion_date)
+      expected_headers = %w(email analysis status submission_date completion_date firecloud_workspace study_info_url)
       assert headers == expected_headers,
              "Did not find correctly formatted report, expected headers of '#{expected_headers.join(', ')}' but found '#{headers.join(', ')}'"
 
@@ -5022,6 +5022,34 @@ class UiTestSuite < Test::Unit::TestCase
     wait_for_render(:class, 'igv-track-div')
     igv_displayed = @driver.execute_script("return $('.igv-track-div').length === 4")
     assert igv_displayed, "igv.js did not display 4 tracks in Explore tab's single-gene view"
+    open_ui_tab('box-or-violin-tab')
+    open_ui_tab('genome-tab')
+    igv_single_instance = @driver.execute_script("return $('.igv-root-div').length === 1;")
+    assert igv_single_instance, "Multiple instances of igv.js are display; only one should be"
+
+
+    # sign out and prove that gene search state is remembered after new login
+    logout_from_portal
+    @driver.get(loaded_path)
+    wait_until_page_loads(loaded_path)
+    open_ui_tab('study-visualize')
+    @wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+    # Search for a gene
+    gene = @genes.sample
+    search_box = @driver.find_element(:id, 'search_genes')
+    search_box.send_keys(gene)
+    search_box.click
+    search_genes = @driver.find_element(:id, 'perform-gene-search')
+    search_genes.click
+    @wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
+
+    # open genome tab and validate gene search is remembered
+    genome_nav = @driver.find_element(:id, 'genome-tab-nav')
+    genome_nav.click
+    log_back_in($test_email)
+    @wait.until {element_visible?(:id, 'genome-tab')}
+    queried_gene = @driver.find_element(:class, 'queried-gene')
+    assert queried_gene.text == gene, "did not load the correct gene, expected #{gene} but found #{queried_gene.text}"
 
     # clean up
     @driver.get studies_path
