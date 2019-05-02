@@ -49,7 +49,7 @@ $(document).on('click', '#genome-tab-nav', function (e) {
   if (accessToken === null) {
       // preserve all current search form values, but only if gene(s) are present
       var geneSearch = $('#search_genes').val();
-      if (geneSearch !== '') {
+      if (typeof geneSearch !== 'undefined' && geneSearch !== '') {
           preserveGeneSearch();
       }
       ga('send', 'event', 'genome', 'sign_in_start');
