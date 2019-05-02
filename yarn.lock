@@ -3077,10 +3077,10 @@ icss-utils@^2.1.0:
   dependencies:
     postcss "^6.0.1"
 
-ideogram@1.7.0:
-  version "1.7.0"
-  resolved "https://registry.yarnpkg.com/ideogram/-/ideogram-1.7.0.tgz#32c9745d92b096449e804b128f009c9c1dd02702"
-  integrity sha512-AeZeqhUdxAUSbzs/HyM8nSkV8R8PE2YVhORvmQDTxGlK1E38SNqpFPNbaHZ0+NyjtVvSieFwLU208oLyAc31Uw==
+ideogram@1.8.0:
+  version "1.8.0"
+  resolved "https://registry.yarnpkg.com/ideogram/-/ideogram-1.8.0.tgz#4fecca909199d0d38efe04cee94f36b81508536a"
+  integrity sha512-nGehmjKrfWWfcD2h6w7+cW0do/Bzm+h60CVAEly7V5iICW+qfLFPbwH7RRoOhRN2fYAsBoDNGLuBz5zAxJ1PgQ==
   dependencies:
     commander "^2.19.0"
     crossfilter "1.3.12"
