@@ -5022,6 +5022,11 @@ class UiTestSuite < Test::Unit::TestCase
     wait_for_render(:class, 'igv-track-div')
     igv_displayed = @driver.execute_script("return $('.igv-track-div').length === 4")
     assert igv_displayed, "igv.js did not display 4 tracks in Explore tab's single-gene view"
+    open_ui_tab('box-or-violin-tab')
+    open_ui_tab('genome-tab')
+    igv_single_instance = @driver.execute_script("return $('.igv-root-div').length === 1;")
+    assert igv_single_instance, "Multiple instances of igv.js are display; only one should be"
+
 
     # sign out and prove that gene search state is remembered after new login
     logout_from_portal
