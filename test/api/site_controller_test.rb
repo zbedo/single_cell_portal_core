@@ -29,7 +29,7 @@ class SiteControllerTest < ActionDispatch::IntegrationTest
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
     @study = Study.find_by(name: 'API Test Study')
-    execute_http_request(:get, api_v1_site_view_study_path(accession: @study.accession))
+    execute_http_request(:get, api_v1_site_study_view_path(accession: @study.accession))
     assert_response :success
     assert json['study_files'].size == 3, "Did not find correct number of files, expected 3 but found #{json['study_files'].size}"
 
