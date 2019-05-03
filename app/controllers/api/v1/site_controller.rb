@@ -382,6 +382,10 @@ module Api
                     key :type, :boolean
                     key :description, 'Indication of whether or not to show input to users'
                   end
+                  property :input_type do
+                    key :type, :string
+                    key :description, 'Type of form input for parameter'
+                  end
                   property :options do
                     key :type, :array
                     key :title, 'Select Option'
@@ -418,7 +422,8 @@ module Api
         @analysis_configuration.analysis_parameters.inputs.sort_by(&:config_param_name).each do |parameter|
           @submission_options[parameter.config_param_name] = {
               default_value: parameter.parameter_value,
-              render_for_user: parameter.visible
+              render_for_user: parameter.visible,
+              input_type: parameter.input_type
           }
           if parameter.input_type == :select
             opts = parameter.options_by_association_method((parameter.study_scoped? || parameter.associated_model == 'Study') ? @study : nil)
