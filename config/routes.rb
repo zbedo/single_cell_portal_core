@@ -40,6 +40,8 @@ Rails.application.routes.draw do
           post 'studies/:accession/analyses/:namespace/:name/:snapshot', to: 'site#submit_study_analysis', as: :site_submit_study_analysis
           get 'studies/:accession/submissions', to: 'site#get_study_submissions', as: :site_get_study_submissions
           get 'studies/:accession/submissions/:submission_id', to: 'site#get_study_submission', as: :site_get_study_submission
+          delete 'studies/:accession/submissions/:submission_id', to: 'site#get_study_submission', as: :site_abort_study_submission
+          delete 'studies/:accession/submissions/:submission_id/remove', to: 'site#get_study_submission_dir', as: :site_delete_study_submission_dir
         end
       end
     end

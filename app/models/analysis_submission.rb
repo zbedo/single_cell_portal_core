@@ -24,7 +24,7 @@ class AnalysisSubmission
       begin
         if submission.study.present?
           workspace_submission = submission.get_submission_json
-          last_workflow = workspace_submission['workflows'].last
+          last_workflow = submission.get_last_workflow(workspace_submission['workflows'])
           latest_status = last_workflow['status']
           completion_time = DateTime.parse(last_workflow['statusLastChangedDate']).in_time_zone
           if COMPLETION_STATUSES.include?(latest_status)
@@ -52,7 +52,7 @@ class AnalysisSubmission
     submission = analysis_submission.get_submission_json
     analysis_submission.submitter = submission['submitter']
     analysis_submission.submission_id = submission['submissionId']
-    last_workflow = submission['workflows'].last
+    last_workflow = self.get_last_workflow(submission['workflows'])
     analysis_submission.status = last_workflow['status']
     analysis_submission.submitted_on = DateTime.parse(submission['submissionDate']).in_time_zone
     analysis_method_name = analysis_submission.get_analysis_name_from_config(submission)
@@ -100,11 +100,16 @@ class AnalysisSubmission
   def set_completed_on
     if COMPLETION_STATUSES.include?(self.status) && self.completed_on.blank?
       submission = self.get_submission_json
-      last_workflow = submission['workflows'].last
+      last_workflow = self.get_last_workflow(submission['workflows'])
       if submission.present?
         completion_time = DateTime.parse(last_workflow['statusLastChangedDate']).in_time_zone
         self.update(completed_on: completion_time)
       end
     end
+  end
+
+  # get the latest workflow based on latest update timestamp
+  def get_last_workflow(workflows)
+    workflows.sort_by {|w| w['statusLastChangedDate']}.last
   end
 end
