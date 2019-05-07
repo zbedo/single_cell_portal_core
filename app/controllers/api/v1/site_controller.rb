@@ -475,6 +475,14 @@ module Api
             key :required, true
             key :type, :integer
           end
+          parameter do
+            key :name, :submission_inputs
+            key :in, :body
+            key :description, 'Analysis submission inputs (from GET /site/studies/{accession}/analyses/{namespace}/{name}/{snapshot})'
+            key :required, true
+            key :type, :object
+            key :default, '{"[call_name].[parameter_name]": "\"[value]\""}'
+          end
           response 200 do
             key :description, 'Analysis submission information'
           end
