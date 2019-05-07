@@ -372,10 +372,14 @@ module Api
                   key :type, :integer
                   key :description, 'Snapshot ID of requested analysis'
                 end
+                property :entity_type do
+                  key :type, :string
+                  key :description, 'FireCloud entity type of analysis (may not be present)'
+                end
               end
-              property :submission_options do
+              property :submission_inputs do
                 key :type, :array
-                key :title, 'Submission Options'
+                key :title, 'Submission Input Options'
                 items do
                   property :default_value do
                     key :description, 'Default value (if present)'
@@ -435,7 +439,93 @@ module Api
         end
       end
 
+      swagger_path '/site/studies/{accession}/analyses/{namespace}/{name}/{snapshot}' do
+        operation :post do
+          key :tags, [
+              'Site'
+          ]
+          key :summary, 'Submit an analysis'
+          key :description, 'Submit an analysis to Cromwell'
+          key :operationId, 'site_submit_study_analysis_path'
+          parameter do
+            key :name, :accession
+            key :in, :path
+            key :description, 'Accession of Study in which to submit analysis'
+            key :required, true
+            key :type, :string
+          end
+          parameter do
+            key :name, :namespace
+            key :in, :path
+            key :description, 'Namespace of AnalysisConfiguration to use'
+            key :required, true
+            key :type, :string
+          end
+          parameter do
+            key :name, :name
+            key :in, :path
+            key :description, 'Name of AnalysisConfiguration to use'
+            key :required, true
+            key :type, :string
+          end
+          parameter do
+            key :name, :snapshot
+            key :in, :path
+            key :description, 'Snapshot ID of AnalysisConfiguration to use'
+            key :required, true
+            key :type, :integer
+          end
+          response 200 do
+            key :description, 'Analysis submission information'
+          end
+          response 400 do
+            key :description, 'Malformed submission parameters'
+          end
+          response 403 do
+            key :description, 'User is not allowed to view/run computes in study'
+          end
+          response 404 do
+            key :description, 'Analysis Configuration or Study not found'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+          response 500 do
+            key :description, 'Internal server error (no submission)'
+          end
+        end
+      end
+
       def submit_study_analysis
+        begin
+          # before creating submission, we need to make sure that the user is on the 'all-portal' user group list if it exists
+          current_api_user.add_to_portal_user_group
+
+          # load analysis configuration
+          @analysis_configuration = AnalysisConfiguration.find_by(namespace: params[:namespace], name: params[:name],
+                                                                  snapshot: params[:snapshot].to_i)
+          submission_inputs = params[:submission_inputs]
+          logger.info "Updating configuration for #{@analysis_configuration.configuration_identifier} to run #{@analysis_configuration.identifier} in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
+          submission_config = @analysis_configuration.apply_user_inputs(submission_inputs)
+          # save configuration in workspace
+          Study.firecloud_client.create_workspace_configuration(@study.firecloud_project, @study.firecloud_workspace, submission_config)
+
+          # submission must be done as user, so create a client with current_user and submit
+          client = FireCloudClient.new(current_user, @study.firecloud_project)
+          logger.info "Creating submission for #{@analysis_configuration.configuration_identifier} using configuration: #{submission_config['name']} in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
+          @submission = client.create_workspace_submission(@study.firecloud_project, @study.firecloud_workspace,
+                                                           submission_config['namespace'], submission_config['name'],
+                                                           submission_config['entityType'], submission_config['entityName'])
+          AnalysisSubmission.create(submitter: current_user.email, study_id: @study.id, firecloud_project: @study.firecloud_project,
+                                    submission_id: @submission['submissionId'], firecloud_workspace: @study.firecloud_workspace,
+                                    analysis_name: @analysis_configuration.identifier, submitted_on: Time.zone.now, submitted_from_portal: true)
+        rescue => e
+          error_context = ErrorTracker.format_extra_context(@study, {params: params})
+          ErrorTracker.report_exception(e, current_api_user, error_context)
+          logger.error "Unable to submit workflow #{@analysis_configuration.identifier} in #{@study.firecloud_workspace} due to: #{e.class.name}: #{e.message}"
+          alert = "We were unable to submit your workflow due to an error: #{e.class.name}: #{e.message}"
+          render json: {error: alert}, status: 500
+        end
 
       end
 
