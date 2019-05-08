@@ -258,7 +258,7 @@ class AnalysisConfiguration
       method = Study.firecloud_client.get_method(self.namespace, self.name, self.snapshot)
       self.synopsis = method['synopsis']
     rescue => e
-      error_context = ErrorTracker.format_extra_context(self, last_config)
+      error_context = ErrorTracker.format_extra_context(self)
       ErrorTracker.report_exception(e, self.user, error_context)
       Rails.logger.error "Error retrieving analysis WDL synopsis for #{self.identifier}: #{e.message}"
       e
