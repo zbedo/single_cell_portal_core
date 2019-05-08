@@ -349,6 +349,60 @@ class StudyFile
     end
   end
 
+  swagger_schema :StudyFileSync do
+    allOf do
+      schema do
+        property :taxon_id do
+          key :type, :string
+          key :description, 'Database ID of Taxon entry (species) to which StudyFile belongs, if required/present.  THIS IS NOT THE NCBI TAXON ID.'
+        end
+        property :species do
+          key :type, :string
+          key :description, '(optional) Common name of a species registered in the portal to set taxon_id association manually'
+        end
+        property :genome_assembly_id do
+          key :type, :string
+          key :description, 'ID of GenomeAssembly to which StudyFile belongs, if required/present'
+        end
+        property :assembly do
+          key :type, :string
+          key :description, '(optional) Common name of a genome assembly registered in the portal to set genome_assembly_id association manually'
+        end
+        property :name do
+          key :type, :string
+          key :description, 'Name of StudyFile (either filename or name of Cluster/Gene List)'
+        end
+        property :description do
+          key :type, :string
+          key :description, 'StudyFile description, used in download views'
+        end
+        property :file_type do
+          key :type, :string
+          key :enum, STUDY_FILE_TYPES
+          key :description, 'Type of file, governs parsing/caching behavior'
+        end
+        property :remote_location do
+          key :type, :string
+          key :description, 'Location in GCS bucket of File object'
+        end
+        property :human_data do
+          key :type, :boolean
+          key :default, false
+          key :description, 'Boolean indication whether StudyFile represents human data'
+        end
+        property :generation do
+          key :type, :string
+          key :description, 'GCS generation tag of File in bucket'
+        end
+        property :options do
+          key :type, :object
+          key :default, {}
+          key :description, 'Key/Value storage of extra file options'
+        end
+      end
+    end
+  end
+
   swagger_schema :SiteStudyFile do
     key :name, 'StudyFile'
     property :name do

@@ -481,7 +481,7 @@ module Api
             key :description, 'Analysis submission inputs (from GET /site/studies/{accession}/analyses/{namespace}/{name}/{snapshot})'
             key :required, true
             key :type, :object
-            key :default, '{"[call_name].[parameter_name]": "\"[value]\""}'
+            key :default, JSON.pretty_generate({submission_inputs: {"call_name.parameter_1" => "\"value\"", "call_name.parameter_2" => "\"value\""}}).to_s
           end
           response 200 do
             key :description, 'Analysis submission information'
@@ -519,14 +519,18 @@ module Api
           Study.firecloud_client.create_workspace_configuration(@study.firecloud_project, @study.firecloud_workspace, submission_config)
 
           # submission must be done as user, so create a client with current_user and submit
-          client = FireCloudClient.new(current_user, @study.firecloud_project)
+          # TODO: figure out better way to assign access token based on API vs. MVC app, and figure out how to set submitter correctly
+          user_client = FireCloudClient.new
+          user_client.access_token[:access_token] = current_api_user.api_access_token
+
           logger.info "Creating submission for #{@analysis_configuration.configuration_identifier} using configuration: #{submission_config['name']} in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
-          @submission = client.create_workspace_submission(@study.firecloud_project, @study.firecloud_workspace,
+          @submission = user_client.create_workspace_submission(@study.firecloud_project, @study.firecloud_workspace,
                                                            submission_config['namespace'], submission_config['name'],
                                                            submission_config['entityType'], submission_config['entityName'])
-          AnalysisSubmission.create(submitter: current_user.email, study_id: @study.id, firecloud_project: @study.firecloud_project,
+          AnalysisSubmission.create(submitter: current_api_user.email, study_id: @study.id, firecloud_project: @study.firecloud_project,
                                     submission_id: @submission['submissionId'], firecloud_workspace: @study.firecloud_workspace,
                                     analysis_name: @analysis_configuration.identifier, submitted_on: Time.zone.now, submitted_from_portal: true)
+          render json: @submission.to_json
         rescue => e
           error_context = ErrorTracker.format_extra_context(@study, {params: params})
           ErrorTracker.report_exception(e, current_api_user, error_context)
@@ -756,8 +760,129 @@ module Api
         end
       end
 
-      def sync_submission_outputs
+      swagger_path '/site/studies/{accession}/submissions/{submission_id}/sync' do
+        operation :get do
+          key :tags, [
+              'Site'
+          ]
+          key :summary, 'Sync outputs for a submission'
+          key :description, 'Sync submission outputs for a given submission in a Study'
+          key :operationId, 'site_sync_submission_outputs_path'
+          parameter do
+            key :name, :accession
+            key :in, :path
+            key :description, 'Accession of Study to fetch'
+            key :required, true
+            key :type, :string
+          end
+          parameter do
+            key :name, :submission_id
+            key :in, :path
+            key :description, 'ID of FireCloud submissions to sync'
+            key :required, true
+            key :type, :string
+          end
+          response 200 do
+            key :description, 'Array of StudyFiles from submission'
+            key :title, 'Submission outputs object'
+            key :type, :object
+            schema do
+              property :submission_outputs do
+                key :type, :array
+                key :title, 'Array of StudyFiles objects to be synced from submission'
+                items do
+                  key :title, 'StudyFile'
+                  key :'$ref', :StudyFile
+                end
+              end
+            end
+          end
+          response 403 do
+            key :description, 'User is not allowed to view/run computes in study'
+          end
+          response 404 do
+            key :description, 'Study not found'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+        end
+      end
 
+      def sync_submission_outputs
+        @synced_study_files = @study.study_files.valid
+        @synced_directories = @study.directory_listings.to_a
+        @unsynced_files = []
+        @orphaned_study_files = []
+        @unsynced_primary_data_dirs = []
+        @unsynced_other_dirs = []
+        begin
+          # indication of whether or not we have custom sync code to run, defaults to false
+          @special_sync = false
+          submission = Study.firecloud_client.get_workspace_submission(@study.firecloud_project, @study.firecloud_workspace,
+                                                                       params[:submission_id])
+          configuration = Study.firecloud_client.get_workspace_configuration(@study.firecloud_project, @study.firecloud_workspace,
+                                                                             submission['methodConfigurationNamespace'],
+                                                                             submission['methodConfigurationName'])
+          # get method identifiers to load analysis_configuration object
+          method_name = configuration['methodRepoMethod']['methodName']
+          method_namespace = configuration['methodRepoMethod']['methodNamespace']
+          method_snapshot = configuration['methodRepoMethod']['methodVersion']
+          @analysis_configuration = AnalysisConfiguration.find_by(namespace: method_namespace, name: method_name, snapshot: method_snapshot)
+          if @analysis_configuration.present?
+            @special_sync = true
+          end
+          submission['workflows'].each do |workflow|
+            workflow = Study.firecloud_client.get_workspace_submission_workflow(@study.firecloud_project, @study.firecloud_workspace,
+                                                                                params[:submission_id], workflow['workflowId'])
+            workflow['outputs'].each do |output_name, outputs|
+              if outputs.is_a?(Array)
+                outputs.each do |output_file|
+                  file_location = output_file.gsub(/gs\:\/\/#{@study.bucket_id}\//, '')
+                  # get google instance of file
+                  remote_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.firecloud_project,
+                                                                             @study.firecloud_workspace, file_location)
+                  if remote_file.present?
+                    process_workflow_output(output_name, output_file, remote_file, workflow, params[:submission_id], configuration)
+                  else
+                    alert_content = "We were unable to sync the outputs from submission #{params[:submission_id]}; one or more of
+                             the declared output files have been deleted.  Please check the output directory before continuing."
+                    render json: {error: alert_content}, status: 500
+                  end
+                end
+              else
+                file_location = outputs.gsub(/gs\:\/\/#{@study.bucket_id}\//, '')
+                # get google instance of file
+                remote_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.firecloud_project,
+                                                                           @study.firecloud_workspace, file_location)
+                if remote_file.present?
+                  process_workflow_output(output_name, outputs, remote_file, workflow, params[:submission_id], configuration)
+                else
+                  alert_content = "We were unable to sync the outputs from submission #{params[:submission_id]}; one or more of
+                             the declared output files have been deleted.  Please check the output directory before continuing."
+                  render json: {error: alert_content}, status: 500
+                end
+              end
+            end
+            metadata = AnalysisMetadatum.find_by(study_id: @study.id, submission_id: params[:submission_id])
+            if metadata.nil?
+              metadata_attr = {
+                  name: submission['methodConfigurationName'],
+                  submitter: submission['submitter'],
+                  submission_id: params[:submission_id],
+                  study_id: @study.id,
+                  version: '4.6.1'
+              }
+              AnalysisMetadatum.create!(metadata_attr)
+            end
+          end
+          @available_files = @unsynced_files.map {|f| {name: f.name, generation: f.generation, size: f.upload_file_size}}
+        rescue => e
+          error_context = ErrorTracker.format_extra_context(@study, {params: params})
+          ErrorTracker.report_exception(e, current_api_user, error_context)
+          alert = "We were unable to sync the outputs from submission #{params[:submission_id]} due to the following error: #{e.class.name}: #{e.message}"
+          render json: {error: alert}, status: 500
+        end
       end
 
       private
@@ -825,6 +950,41 @@ module Api
                                                                      submission_id)
         last_workflow = submission['workflows'].sort_by {|w| w['statusLastChangedDate']}.last
         AnalysisSubmission::COMPLETION_STATUSES.include?(last_workflow['status'])
+      end
+
+      # process a submission output file based on behavior from the corresponding anaylsis_configuration
+      def process_workflow_output(output_name, file_url, remote_gs_file, workflow, submission_id, submission_config)
+        path_parts = file_url.split('/')
+        basename = path_parts.last
+        new_location = "outputs_#{@study.id}_#{submission_id}/#{basename}"
+        # check if file has already been synced first
+        # we can only do this by md5 hash as the filename and generation will be different
+        existing_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.firecloud_project,
+                                                                     @study.firecloud_workspace, new_location)
+        unless existing_file.present? && existing_file.md5 == remote_gs_file.md5 && StudyFile.where(study_id: @study.id, upload_file_name: new_location).exists?
+          # now copy the file to a new location for syncing, marking as default type of 'Analysis Output'
+          new_file = remote_gs_file.copy new_location
+          unsynced_output = StudyFile.new(study_id: @study.id, name: new_file.name, upload_file_name: new_file.name,
+                                          upload_content_type: new_file.content_type, upload_file_size: new_file.size,
+                                          generation: new_file.generation, remote_location: new_file.name,
+                                          options: {submission_id: params[:submission_id]})
+          # process output according to analysis_configuration output parameters and associations (if present)
+          workflow_parts = output_name.split('.')
+          call_name = workflow_parts.shift
+          param_name = workflow_parts.join('.')
+          if @special_sync # only process outputs from 'registered' analyses
+            Rails.logger.info "Processing output #{output_name}:#{file_url} in #{params[:submission_id]}/#{workflow['workflowId']}"
+            # find matching output analysis_parameter
+            output_param = @analysis_configuration.analysis_parameters.outputs.detect {|param| param.parameter_name == param_name && param.call_name == call_name}
+            # set declared file type
+            unsynced_output.file_type = output_param.output_file_type
+            # process any direct attribute assignments or associations
+            output_param.analysis_output_associations.each do |association|
+              unsynced_output = association.process_output_file(unsynced_output, submission_config, @study)
+            end
+          end
+          @unsynced_files << unsynced_output
+        end
       end
     end
   end

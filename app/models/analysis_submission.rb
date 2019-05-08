@@ -1,5 +1,6 @@
 class AnalysisSubmission
   include Mongoid::Document
+
   field :submission_id, type: String
   field :submitter, type: String
   field :analysis_name, type: String
