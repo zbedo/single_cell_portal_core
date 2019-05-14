@@ -42,7 +42,7 @@ module Api
 
       def studies
         if api_user_signed_in?
-          @studies = Study.viewable(current_api_user, {api_request: true})
+          @studies = Study.viewable(current_api_user)
         else
           @studies = Study.where(public: true)
         end
@@ -520,8 +520,7 @@ module Api
 
           # submission must be done as user, so create a client with current_user and submit
           # TODO: figure out better way to assign access token based on API vs. MVC app, and figure out how to set submitter correctly
-          user_client = FireCloudClient.new
-          user_client.access_token[:access_token] = current_api_user.api_access_token
+          user_client = FireCloudClient.new(current_api_user, @study.firecloud_project)
 
           logger.info "Creating submission for #{@analysis_configuration.configuration_identifier} using configuration: #{submission_config['name']} in #{@study.firecloud_project}/#{@study.firecloud_workspace}"
           @submission = user_client.create_workspace_submission(@study.firecloud_project, @study.firecloud_workspace,

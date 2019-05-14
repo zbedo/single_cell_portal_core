@@ -572,7 +572,7 @@ class Study
   end
 
   # return all studies that are viewable by a given user as a Mongoid criterion
-  def self.viewable(user, opts={})
+  def self.viewable(user)
     if user.admin?
       self.where(queued_for_deletion: false)
     else
@@ -581,15 +581,7 @@ class Study
       shares = StudyShare.where(email: user.email).map(&:study).select {|s| !s.queued_for_deletion }.map(&:id)
       group_shares = []
       if user.registered_for_firecloud
-        if opts[:api_request] # request is coming via API, so we have a valid OAuth token to use
-          # use the regular constructor, but overwrite the access token
-          # TODO: solve this more holistically by creating a way to instantiate a client with just a token, or
-          # by not clearing refresh tokens on reboot
-          user_client = FireCloudClient.new
-          user_client.access_token[:access_token] = user.api_access_token
-        else
-          user_client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
-        end
+        user_client = FireCloudClient.new(user, FireCloudClient::PORTAL_NAMESPACE)
         user_groups = user_client.get_user_groups.map {|g| g['groupEmail']}
         group_shares = StudyShare.where(:email.in => user_groups).map(&:study).select {|s| !s.queued_for_deletion }.map(&:id)
       end
