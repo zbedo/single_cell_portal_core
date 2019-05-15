@@ -21,7 +21,6 @@ module Api
           api_access_token = extract_bearer_token(request)
           if api_access_token.present?
             user = User.find_by('api_access_token.access_token' => api_access_token)
-            logger.info "found user: #{user.email}"
             if user.nil?
               # extract user info from access_token
               begin
