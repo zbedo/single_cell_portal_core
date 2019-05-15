@@ -20,18 +20,24 @@ module Api
         def current_api_user
           api_access_token = extract_bearer_token(request)
           if api_access_token.present?
-            user = User.find_by(api_access_token: api_access_token)
+            user = User.find_by('api_access_token.access_token' => api_access_token)
+            logger.info "found user: #{user.email}"
             if user.nil?
               # extract user info from access_token
               begin
                 token_url = "https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=#{api_access_token}"
                 response = RestClient.get token_url
                 credentials = JSON.parse response.body
+                token_values = {
+                    'access_token' => api_access_token,
+                    'expires_in' => credentials['expires_in'],
+                    'expires_at' => Time.zone.now + credentials['expires_in'].to_i
+                }
                 email = credentials['email']
                 user = User.find_by(email: email)
                 if user.present?
                   # store api_access_token to speed up retrieval next time
-                  user.update(api_access_token: api_access_token)
+                  user.update(api_access_token: token_values)
                 else
                   Rails.logger.error "Unable to retrieve user info from access token: #{api_access_token}"
                 end
@@ -45,7 +51,12 @@ module Api
                 Rails.logger.error "Error retrieving user api credentials: #{e.class.name}: #{e.message}"
               end
             end
-            user
+            # check for token expiry and unset user if expired
+            if user.api_access_token_expired?
+              nil
+            else
+              user
+            end
           end
         end
 

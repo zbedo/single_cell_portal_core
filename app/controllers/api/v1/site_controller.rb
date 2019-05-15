@@ -70,6 +70,9 @@ module Api
               key :'$ref', :SiteStudyWithFiles
             end
           end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
           response 403 do
             key :description, 'User is not allowed to view study'
           end
@@ -111,6 +114,9 @@ module Api
           response 200 do
             key :description, 'File object'
             key :type, :file
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
           end
           response 403 do
             key :description, 'User is not allowed to view study'
@@ -191,6 +197,9 @@ module Api
                 key :description, 'Authorization bearer token to pass along with media URL request'
               end
             end
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
           end
           response 403 do
             key :description, 'User is not allowed to view study, or does not have permission to stream file from bucket'
@@ -412,6 +421,9 @@ module Api
               end
             end
           end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
           response 403 do
             key :description, 'User is not allowed to view/run computes in study'
           end
@@ -489,6 +501,9 @@ module Api
           response 400 do
             key :description, 'Malformed submission parameters'
           end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
           response 403 do
             key :description, 'User is not allowed to view/run computes in study'
           end
@@ -558,6 +573,9 @@ module Api
           response 200 do
             key :description, 'Array of analysis submissions'
           end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
           response 403 do
             key :description, 'User is not allowed to view/run computes in study'
           end
@@ -610,6 +628,9 @@ module Api
           response 200 do
             key :description, 'Analysis submission object w/ individual workflow statuses'
           end
+          response 401 do
+            key :description, 'User is not authenticated'
+          end
           response 403 do
             key :description, 'User is not allowed to view/run computes in study'
           end
@@ -652,6 +673,9 @@ module Api
           end
           response 204 do
             key :description, 'Analysis submission successfully aborted'
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
           end
           response 403 do
             key :description, 'User is not allowed to view/run computes in study'
@@ -713,6 +737,9 @@ module Api
           end
           response 204 do
             key :description, 'Analysis submission bucket directory successfully deleted'
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
           end
           response 403 do
             key :description, 'User is not allowed to view/run computes in study'
@@ -795,6 +822,9 @@ module Api
                 end
               end
             end
+          end
+          response 401 do
+            key :description, 'User is not authenticated'
           end
           response 403 do
             key :description, 'User is not allowed to view/run computes in study'
@@ -910,15 +940,27 @@ module Api
       ##
 
       def check_study_view_permission
-        head 403 unless @study.public? || @study.can_view?(current_api_user)
+        if !@study.public? && !api_user_signed_in?
+          head 401
+        else
+          head 403 unless @study.public? || @study.can_view?(current_api_user)
+        end
       end
 
       def check_study_edit_permission
-        head 403 unless @study.can_edit?(current_api_user)
+        if !api_user_signed_in?
+          head 401
+        else
+          head 403 unless @study.can_edit?(current_api_user)
+        end
       end
 
       def check_study_compute_permission
-        head 403 unless @study.can_compute?(current_api_user)
+        if !api_user_signed_in?
+          head 401
+        else
+          head 403 unless @study.can_compute?(current_api_user)
+        end
       end
 
       # retrieve the current download quota
