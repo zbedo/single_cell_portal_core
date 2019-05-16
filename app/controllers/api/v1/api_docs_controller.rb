@@ -19,7 +19,7 @@ module Api
         end
         tag do
           key :name, 'Site'
-          key :description, 'Browse public/shared Studies & available StudyFiles'
+          key :description, 'Browse public/shared Studies, and configure/submit Analyses'
         end
         tag do
           key :name, 'Status'
@@ -79,6 +79,7 @@ module Api
           StudyShare,
           StudyFileBundle,
           Taxon,
+          AnalysisConfiguration,
           Api::V1::StudiesController,
           Api::V1::StudyFilesController,
           Api::V1::StudyFileBundlesController,

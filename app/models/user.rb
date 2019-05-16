@@ -89,7 +89,7 @@ class User
   field :daily_download_quota, type: Integer, default: 0
   field :admin_email_delivery, type: Boolean, default: true
   field :registered_for_firecloud, type: Boolean, default: false
-  field :api_access_token, type: String
+  field :api_access_token, type: Hash
 
   ###
   #
@@ -152,12 +152,21 @@ class User
 
   # check timestamp on user access token expiry
   def access_token_expired?
-    self.access_token.nil? ? true : Time.at(self.access_token[:expires_at]) < Time.zone.now
+    self.access_token.nil? ? true : Time.at(self.access_token[:expires_at]) < Time.now.in_time_zone(self.get_token_timezone(:access_token))
   end
 
-  # return an valid access token (will renew if expired)
+  def api_access_token_expired?
+    self.api_access_token.nil? ? true : Time.at(self.api_access_token[:expires_at]) < Time.now.in_time_zone(self.get_token_timezone(:api_access_token))
+  end
+
+  # return an valid access token (will renew if expired) - does not apply to api access tokens, those cannot be renewed
   def valid_access_token
     self.access_token_expired? ? self.generate_access_token : self.access_token
+  end
+
+  # extract timezone from an access token to allow correct date math
+  def get_token_timezone(token_method)
+    self.send(token_method)[:expires_at].zone
   end
 
   ###

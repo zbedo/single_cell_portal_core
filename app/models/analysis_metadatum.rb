@@ -211,8 +211,6 @@ class AnalysisMetadatum
     submission = Study.firecloud_client.get_workspace_submission(study.firecloud_project,
                                                                  study.firecloud_workspace,
                                                                  self.submission_id)
-    Rails.logger.info "getting config"
-
     configuration = Study.firecloud_client.get_workspace_configuration(study.firecloud_project,
                                                                        study.firecloud_workspace,
                                                                        submission['methodConfigurationNamespace'],

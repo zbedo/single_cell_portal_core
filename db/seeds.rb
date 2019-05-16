@@ -6,7 +6,8 @@
 #   cities = City.create([{ name: 'Chicago' }, { name: 'Copenhagen' }])
 #   Mayor.create(name: 'Emanuel', city: cities.first)
 #
-user = User.create!(email:'testing.user@gmail.com', password:'password', api_access_token: 'test-api-token', admin: true, uid: '12345')
+user = User.create!(email:'testing.user@gmail.com', password:'password', admin: true, uid: '12345',
+                    api_access_token: {access_token: 'test-api-token', expires_in: 3600, expires_at: Time.zone.now + 1.hour})
 user_2 = User.create!(email: 'sharing.user@gmail.com', password: 'password', uid: '67890')
 study = Study.create!(name: 'Testing Study', description: '<p>This is the test study.</p>', data_dir: 'test', user_id: user.id)
 expression_file = StudyFile.create!(name: 'expression_matrix.txt', upload_file_name: 'expression_matrix.txt', study_id: study.id,
@@ -109,7 +110,8 @@ DirectoryListing.create!(name: 'csvs', file_type: 'csv', files: [{name: 'foo.csv
 StudyFileBundle.create!(bundle_type: 'BAM', original_file_list: [{'name' => 'sample_1.bam', 'file_type' => 'BAM'},
                                                                  {'name' => 'sample_1.bam.bai', 'file_type' => 'BAM Index'}],
                         study_id: api_study.id)
-User.create!(email:'testing.user.2@gmail.com', password:'someotherpassword', api_access_token: 'test-api-token-2')
+User.create!(email:'testing.user.2@gmail.com', password:'someotherpassword',
+             api_access_token: {access_token: 'test-api-token-2', expires_in: 3600, expires_at: Time.zone.now + 1.hour})
 
 # Analysis Configuration seeds
 AnalysisConfiguration.create(namespace: 'single-cell-portal', name: 'split-cluster', snapshot: 1, user_id: user.id,
