@@ -103,7 +103,7 @@ echo "*** ADDING DAILY RESET OF USER DOWNLOAD QUOTAS ***"
 echo "*** COMPLETED ***"
 
 echo "*** CLEARING CACHED USER OAUTH TOKENS ***"
-/home/app/webapp/bin/rails runner -e $PASSENGER_APP_ENV "User.update_all(refresh_token: nil, access_token: nil)"
+/home/app/webapp/bin/rails runner -e $PASSENGER_APP_ENV "User.update_all(refresh_token: nil, access_token: nil, api_access_token: nil)"
 echo "*** COMPLETED ***"
 
 echo "*** ADDING REPORTING CRONS ***"

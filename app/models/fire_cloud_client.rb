@@ -78,7 +78,17 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
       self.user = user
       self.project = project
       # when initializing with a user, pull access token from user object and set desired project
-      self.access_token = user.valid_access_token
+      if user.refresh_token.nil? && user.api_access_token.present?
+        # as this client is only getting instantiated for a single request via the API, set expiration timestamp
+        # to 5 minutes, as this is the length of an HTTP request
+        expiration_timestamp = Time.now + 5.minutes
+        self.access_token = {
+            'access_token' => user.api_access_token, 'expires_in' => 5.minutes.to_i, 'expires_at' => expiration_timestamp
+        }
+      else
+        self.access_token = user.valid_access_token
+      end
+
       self.expires_at = self.access_token['expires_at']
 
       # use user-defined project instead of portal default
