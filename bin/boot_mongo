@@ -14,6 +14,7 @@ $0 [OPTION]
 -d VALUE	set the data directory to mount inside the MySQL Docker container (defaults to $HOME/Documents/Data/docker-mongo)
 -m VALUE	set the max memory cache size (in GB) for wiredTiger (defaults to 10GB)
 -r VALUE	set the max memory allocation size (in GB) for container (defaults to 12GB)
+-s VALUE  set the internalQueryExecMaxBlockingSortBytes parameter (defaults to 128GB)
 -u VALUE	set the MONGO_USERNAME variable (no default value)
 -p VALUE	set the MONGO_PASSWORD variable (no default value)
 -H COMMAND	print this text
@@ -25,8 +26,9 @@ CONTAINER_NAME="mongodb"
 DATA_DIR="$HOME/Documents/Data/docker-mongo"
 MAX_RAM=12G
 MAX_RAM_CACHE_GB=4
+SORT_BUFFER=134217728
 
-while getopts "n:d:m:r:p:H" OPTION; do
+while getopts "n:d:m:r:p:s:H" OPTION; do
 case $OPTION in
 	n)
 		CONTAINER_NAME="$OPTARG"
@@ -46,6 +48,9 @@ case $OPTION in
 	p)
 		MONGO_PASSWORD="$OPTARG"
 		;;
+	s)
+	  SORT_BUFFER="$OPTARG"
+	  ;;
 	H)
 		echo "$usage"
 		exit 0
@@ -57,4 +62,4 @@ case $OPTION in
 	esac
 done
 
-docker run --name $CONTAINER_NAME -p 27017:27017 -v $DATA_DIR:/data/db:rw -v $DATA_DIR/log:/var/log/mongodb:rw -d -m $MAX_RAM mongo --logpath /var/log/mongodb/mongodb.log --wiredTigerCacheSizeGB $MAX_RAM_CACHE_GB
+docker run --name $CONTAINER_NAME -p 27017:27017 -v $DATA_DIR:/data/db:rw -v $DATA_DIR/log:/var/log/mongodb:rw -d -m $MAX_RAM mongo --logpath /var/log/mongodb/mongodb.log --wiredTigerCacheSizeGB $MAX_RAM_CACHE_GB --setParameter internalQueryExecMaxBlockingSortBytes=$SORT_BUFFER
