@@ -20,8 +20,6 @@ class ClusterGroupTest < ActiveSupport::TestCase
 
     # generate subsampled arrays at 1K
     @cluster_group.generate_subsample_arrays(1000, 'Category', 'group', 'cluster')
-    @cluster_group.generate_subsample_arrays(10000, 'Category', 'group', 'cluster')
-    @cluster_group.generate_subsample_arrays(20000, 'Category', 'group', 'cluster')
 
     # load subsampled arrays
     subsample_x = @cluster_group.concatenate_data_arrays('x', 'coordinates', 1000, 'Category--group--cluster')
@@ -128,8 +126,6 @@ class ClusterGroupTest < ActiveSupport::TestCase
 
     # generate subsampled arrays at 1K
     @cluster_group.generate_subsample_arrays(1000, 'Label', 'group', 'study')
-    @cluster_group.generate_subsample_arrays(10000, 'Label', 'group', 'study')
-    @cluster_group.generate_subsample_arrays(20000, 'Label', 'group', 'study')
 
     # load subsampled arrays (study based)
     subsample_x = @cluster_group.concatenate_data_arrays('x', 'coordinates', 1000, 'Label--group--study')
