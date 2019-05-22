@@ -897,7 +897,7 @@ class SiteController < ApplicationController
       @user_annotation = UserAnnotation.new(user_id: user_annotation_params[:user_id], study_id: user_annotation_params[:study_id],
                                             cluster_group_id: user_annotation_params[:cluster_group_id],
                                             values: @data_names, name: user_annotation_params[:name],
-                                            source_resolution: params[:subsample_threshold.present? ? params[:subsample_threshold].to_i : nil])
+                                            source_resolution: user_annotation_params[:subsample_threshold].present? ? user_annotation_params[:subsample_threshold].to_i : nil)
 
       # override cluster setter to use the current selected cluster, needed for reloading
       @cluster = @user_annotation.cluster_group
