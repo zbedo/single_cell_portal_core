@@ -22,7 +22,7 @@ class UserAnnotationTest < ActiveSupport::TestCase
     potential_labels = %w[Label--group--study Category--group--cluster]
     loaded_annotation = potential_labels.sample
     puts "loaded_annotation: #{loaded_annotation}"
-    @user_annotation = UserAnnotation.create(user_id: @user.id, study_id: @study.id, cluster_group_id: @cluster.id, values: keys, name: 'fulldata')
+    @user_annotation = UserAnnotation.create(user_id: @user.id, study_id: @study.id, cluster_group_id: @cluster.id, values: keys, name: 'fulldata', source_resolution: nil)
 
     #build user_data_array_attributes
     user_data_arrays_attributes = {}
@@ -61,8 +61,8 @@ class UserAnnotationTest < ActiveSupport::TestCase
     end
 
     #Check that created at method works correctly
-    created_at = @user_annotation.subsampled_at
-    assert created_at == 'Created at Full Data', "Incorrect created at, '#{created_at} should be 'Created at Full Data"
+    created_at = @user_annotation.source_resolution_label
+    assert created_at == 'All Cells', "Incorrect created at, '#{created_at} should be 'Created at Full Data"
 
     #Check that 16 data arrays were created
     num_data_arrays = @user_annotation.user_data_arrays.all.to_a.count
@@ -86,7 +86,8 @@ class UserAnnotationTest < ActiveSupport::TestCase
     potential_labels = %w[Label--group--study Category--group--cluster]
     loaded_annotation = potential_labels.sample
     puts "loaded_annotation: #{loaded_annotation}"
-    @user_annotation = UserAnnotation.create(user_id: @user.id, study_id: @study.id, cluster_group_id: @cluster.id, values: keys, name: 'twenty')
+    @user_annotation = UserAnnotation.create(user_id: @user.id, study_id: @study.id, cluster_group_id: @cluster.id,
+                                             values: keys, name: 'twenty', source_resolution: 20000)
 
     #build user_data_array_attributes
     user_data_arrays_attributes = {}
@@ -129,8 +130,8 @@ class UserAnnotationTest < ActiveSupport::TestCase
     end
 
     #Check that created at method works correctly
-    created_at = @user_annotation.subsampled_at
-    assert created_at == 'Created at a subsample of 20,000 Cells', "Incorrect created at, '#{created_at} should be 'Created at a subsample of 20,000 Cells"
+    created_at = @user_annotation.source_resolution_label
+    assert created_at == '20000 Cells', "Incorrect created at, '#{created_at} should be 'Created at a subsample of 20,000 Cells"
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
@@ -150,7 +151,8 @@ class UserAnnotationTest < ActiveSupport::TestCase
     potential_labels = %w[Label--group--study Category--group--cluster]
     loaded_annotation = potential_labels.sample
 
-    @user_annotation = UserAnnotation.create(user_id: @user.id, study_id: @study.id, cluster_group_id: @cluster.id, values: keys, name: 'ten')
+    @user_annotation = UserAnnotation.create(user_id: @user.id, study_id: @study.id, cluster_group_id: @cluster.id,
+                                             values: keys, name: 'ten', source_resolution: 10000)
 
     #build user_data_array_attributes
     user_data_arrays_attributes = {}
@@ -193,8 +195,8 @@ class UserAnnotationTest < ActiveSupport::TestCase
     end
 
     #Check that created at method works correctly
-    created_at = @user_annotation.subsampled_at
-    assert created_at == 'Created at a subsample of 10,000 Cells', "Incorrect created at, '#{created_at} should be 'Created at a subsample of 10,000 Cells"
+    created_at = @user_annotation.source_resolution_label
+    assert created_at == '10000 Cells', "Incorrect created at, '#{created_at} should be 'Created at a subsample of 10,000 Cells"
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
@@ -214,7 +216,8 @@ class UserAnnotationTest < ActiveSupport::TestCase
     potential_labels = %w[Label--group--study Category--group--cluster]
     loaded_annotation = potential_labels.sample
     puts "loaded_annotation: #{loaded_annotation}"
-    @user_annotation = UserAnnotation.create(user_id: @user.id, study_id: @study.id, cluster_group_id: @cluster.id, values: keys, name: 'one')
+    @user_annotation = UserAnnotation.create(user_id: @user.id, study_id: @study.id, cluster_group_id: @cluster.id,
+                                             values: keys, name: 'one', source_resolution: 1000)
 
     #build user_data_array_attributes
     user_data_arrays_attributes = {}
@@ -257,8 +260,8 @@ class UserAnnotationTest < ActiveSupport::TestCase
     end
 
     #Check that created at method works correctly
-    created_at = @user_annotation.subsampled_at
-    assert created_at == 'Created at a subsample of 1,000 Cells', "Incorrect created at, '#{created_at} should be 'Created at a subsample of 1,000 Cells"
+    created_at = @user_annotation.source_resolution_label
+    assert created_at == '1000 Cells', "Incorrect created at, '#{created_at} should be 'Created at a subsample of 1,000 Cells"
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end

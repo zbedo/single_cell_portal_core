@@ -200,8 +200,8 @@ class UserAnnotation
     # create each data array
     annotation_array.each_slice(UserDataArray::MAX_ENTRIES).each_with_index do |val, i|
       # if threshold exists then the subsample annotation and threshold need to be set on the created data array
-      if !threshold.nil?
-        Rails.logger.info "#{Time.zone.now}: Creating user annotation user data arrays without threshold for name: #{self.name}"
+      if threshold.present?
+        Rails.logger.info "#{Time.zone.now}: Creating user annotation user data arrays with threshold: #{threshold} for name: #{self.name}"
         # Create annotation array
         UserDataArray.create!(name: self.name, array_type: 'annotations', values: val, cluster_name: cluster.name, array_index: i+1, subsample_threshold: threshold, subsample_annotation: sub_an, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id)
         # Create X
@@ -213,7 +213,7 @@ class UserAnnotation
 
       # Otherwise, if no threshold or annotation, then no threshold or annotation need to be set
       else
-        Rails.logger.info "#{Time.zone.now}: Creating user annotation user data arrays with threshold: #{threshold} for name: #{self.name}"
+        Rails.logger.info "#{Time.zone.now}: Creating user annotation user data arrays without threshold for name: #{self.name}"
         # Create annotation array
         UserDataArray.create!(name: self.name, array_type: 'annotations', values: val, cluster_name: cluster.name, array_index: i+1, user_id: self.user_id, cluster_group_id: self.cluster_group_id, study_id: self.study_id, user_annotation_id: id)
         # Create X
@@ -279,13 +279,9 @@ class UserAnnotation
     max_length = arrays.map {|array| array.values.size}.max
     vals = self.values
     subsample_message = 'All Cells'
+    # in 'Undefined' is present, then find the highest level at which it does not exist
     if vals.include? 'Undefined'
-      undefined_subsamples = {
-          1000 => false,
-          10000 => false,
-          20000 => false,
-          100000 => false
-      }
+      undefined_subsamples = {}
 
       arrays.each do |array|
         unless array.subsample_threshold.nil?
@@ -293,6 +289,8 @@ class UserAnnotation
         end
       end
 
+      # start from the lowest subsample and work up to determine what is the highest full resolution annotation &
+      # maximum subsample available is
       highest_full_resolution = 1000
       max_subsample = 1000
       undefined_subsamples.keys.each do |subsample|
@@ -300,8 +298,10 @@ class UserAnnotation
         max_subsample = subsample if max_length >= subsample
       end
 
+      # in reverse order, check if this subsample is full resolution and the max subsample available is the same
+      # as the level we're checking, which means this is the level the annotation was sampled at
       [100000, 20000, 10000, 1000].each do |subsample|
-        if highest_full_resolution == subsample && max_subsample >= subsample
+        if highest_full_resolution == subsample && max_subsample == subsample
           subsample_message = subsample
         end
       end
