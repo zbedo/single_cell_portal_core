@@ -24,6 +24,9 @@
                   <% else %>
                   <%= select_tag :subsample, options_for_select(subsampling_options(@cluster.points), set_subsample_value(params) ), include_blank: 'All Cells', class: 'form-control' %>
                   <% end %>
+                  <%if @cluster.points >= ClusterGroup::MAX_THRESHOLD %>
+                  <small>Subsampling will be used for gene search results.</small>
+                  <% end %>
                 </div>
                 <!-- end -->
             </div>
