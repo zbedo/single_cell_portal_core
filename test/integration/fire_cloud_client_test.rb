@@ -14,6 +14,7 @@ class FireCloudClientTest < ActiveSupport::TestCase
   def setup
     @fire_cloud_client = Study.firecloud_client
     @test_email = 'singlecelltest@gmail.com'
+    @random_test_seed = SecureRandom.uuid # use same random seed to differentiate between entire runs
   end
 
   ##
@@ -100,7 +101,7 @@ class FireCloudClientTest < ActiveSupport::TestCase
     puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     # set workspace name
-    workspace_name = "#{self.method_name}-#{SecureRandom.uuid}"
+    workspace_name = "#{self.method_name}-#{@random_test_seed}"
 
     # create workspace
     puts 'creating workspace...'
@@ -127,7 +128,7 @@ class FireCloudClientTest < ActiveSupport::TestCase
     # set workspace attribute
     puts 'setting workspace attribute...'
     new_attribute = {
-        'random_attribute' => SecureRandom.uuid
+        'random_attribute' => @random_test_seed
     }
     updated_ws_attributes = @fire_cloud_client.set_workspace_attributes(@fire_cloud_client.project, workspace_name, new_attribute)
     assert updated_ws_attributes['attributes'] == new_attribute, "Did not properly set new attribute to workspace, expected '#{new_attribute}' but found '#{updated_ws_attributes['attributes']}'"
@@ -147,7 +148,7 @@ class FireCloudClientTest < ActiveSupport::TestCase
     puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     # set workspace name
-    workspace_name = "#{self.method_name}-#{SecureRandom.uuid}"
+    workspace_name = "#{self.method_name}-#{@random_test_seed}"
 
     # create workspace
     puts 'creating workspace...'
@@ -312,7 +313,7 @@ class FireCloudClientTest < ActiveSupport::TestCase
     puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     # set workspace name
-    workspace_name = "#{self.method_name}-#{SecureRandom.uuid}"
+    workspace_name = "#{self.method_name}-#{@random_test_seed}"
 
     # create workspace
     puts 'creating workspace...'
@@ -332,6 +333,7 @@ class FireCloudClientTest < ActiveSupport::TestCase
       assert copied_config['methodConfiguration']['name'] == configuration['name'], "Copied configuration name is incorrect, expected '#{configuration['name']}' but found '#{copied_config['methodConfiguration']['name']}'"
       assert copied_config['methodConfiguration']['namespace'] == workspace['namespace'], "Copied configuration name is incorrect, expected '#{workspace['namespace']}' but found '#{copied_config['methodConfiguration']['namespace']}'"
     rescue => e
+      @fire_cloud_client.delete_workspace(@fire_cloud_client.project, workspace_name)
       skip "Skipping test due to error from methods repo (this is not a regression but a known issue with some methods missing configurations): #{e.message}"
     end
 
@@ -382,7 +384,7 @@ class FireCloudClientTest < ActiveSupport::TestCase
     puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     # set group name
-    group_name = "test-group-#{SecureRandom.uuid}"
+    group_name = "test-group-#{@random_test_seed}"
     puts 'creating group...'
     group = @fire_cloud_client.create_user_group(group_name)
     assert group.present?, 'Did not create user group'
@@ -495,7 +497,7 @@ class FireCloudClientTest < ActiveSupport::TestCase
     puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     # set workspace name
-    workspace_name = "#{self.method_name}-#{SecureRandom.uuid}"
+    workspace_name = "#{self.method_name}-#{@random_test_seed}"
 
     # create workspace
     puts 'creating workspace...'
@@ -519,7 +521,7 @@ class FireCloudClientTest < ActiveSupport::TestCase
     puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     # set workspace name
-    workspace_name = "#{self.method_name}-#{SecureRandom.uuid}"
+    workspace_name = "#{self.method_name}-#{@random_test_seed}"
 
     # create workspace
     puts 'creating workspace...'

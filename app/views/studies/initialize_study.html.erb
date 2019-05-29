@@ -122,13 +122,13 @@
         <div class="well well-sm upload-wizard">
           <div class="row">
           <h2 class="col-sm-12">Step 3. Upload Cluster File <small class="initialize-label" id="initialize_ordinations_form_completed"></small></h2>
-          <p class="text-center"><%= link_to 'Cluster File', 'https://github.com/broadinstitute/single_cell_portal/blob/master/demo_data/coordinates_example.txt', target: :_blank %></p>
+          <p class="text-center"><%= link_to 'Cluster File', 'https://github.com/broadinstitute/single_cell_portal/blob/master/demo_data/cluster_example.txt', target: :_blank %></p>
           </div>
           <div class="row">
             <pre class="code-example col-sm-5 col-sm-offset-4">NAME&#09;X&#09;Y&#09;Z&#09;Category&#09;Intensity<br/>TYPE&#09;numeric&#09;numeric&#09;numeric&#09;group&#09;numeric<br/>CELL_0001&#09;34.472&#09;32.211&#09;60.035&#09;C&#09;0.719<br/>CELL_0002&#09;15.975&#09;10.043&#09;21.424&#09;B&#09;.904<br/>...</pre>
           </div>
           <div class="row">
-            <p class="col-sm-12 text-center">A <%= link_to 'cluster file', 'https://github.com/broadinstitute/single_cell_portal/blob/master/demo_data/coordinates_example.txt', target: :_blank %> (.txt or .txt.gz) contains any cluster ordinations and optional cluster-specific metadata.  <strong>At minimum </strong> a cluster file has:</p>
+            <p class="col-sm-12 text-center">A <%= link_to 'cluster file', 'https://github.com/broadinstitute/single_cell_portal/blob/master/demo_data/cluster_example.txt', target: :_blank %> (.txt or .txt.gz) contains any cluster ordinations and optional cluster-specific metadata.  <strong>At minimum </strong> a cluster file has:</p>
           </div>
           <div class="col-md-9 col-lg-offset-2 col-md-offset-1">
             <ul>
@@ -175,7 +175,7 @@
             The file must be a plain text (.txt) file with at least 3 columns and a header row containing the values '<strong>X</strong>', '<strong>Y</strong>', and '<strong>LABELS</strong>'.  The file may have an optional column of '<strong>Z</strong>' (for 3d clusters).
             The last column must contain text labels to display at the specified coordinates.</p>
           <p class="lead"><i class="fas fa-fw fa-exclamation-triangle text-warning"></i> The coordinates of the labels must fall inside the ranges of the cluster they are associated with for them to render.</p>
-          <p><%= link_to "Example Coordinate Label File <span class='fas fa-download'></span>".html_safe, 'https://raw.githubusercontent.com/broadinstitute/single_cell_portal/master/demo_data/coordinate_labels_example.txt', class: 'btn btn-default', download: 'coordinates_example.txt' %></p>
+          <p><%= link_to "Example Coordinate Label File <span class='fas fa-download'></span>".html_safe, 'https://raw.githubusercontent.com/broadinstitute/single_cell_portal/master/demo_data/coordinate_labels_example.txt', class: 'btn btn-default', download: 'coordinate_labels_example.txt' %></p>
         </div>
         <% @coordinate_labels.each do |study_file| %>
           <div class="bs-callout bs-callout-info" id="<%= study_file.form_container_id %>">

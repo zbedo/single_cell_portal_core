@@ -1,7 +1,7 @@
 class CreateGenesAndCellMetadata < Mongoid::Migration
   def self.up
     ClusterGroup.delay.generate_new_data_arrays
-    Gene.delay.generate_new_entries
+    # Gene.delay.generate_new_entries
     CellMetadatum.delay.generate_new_entries
   end
 

@@ -1,11 +1,13 @@
 <div class="mask" id="main-banner">
 
   <% if @selected_branding_group.present? %>
-    <style>
-      #main-banner {
-        background-image: url("<%= @selected_branding_group.banner_image.url %>") !important;
-      }
-    </style>
+    <% if @selected_branding_group.banner_image.present? %>
+      <style>
+        #main-banner {
+          background-image: url("<%= @selected_branding_group.banner_image.url %>") !important;
+        }
+      </style>
+    <% end %>
     <div id="main-banner-logo">
       <% if @selected_branding_group.splash_image.present? %>
         <%= image_tag @selected_branding_group.splash_image.url, style: 'padding: 5px 0; display: inline-block;' %>

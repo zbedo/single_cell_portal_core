@@ -5,8 +5,16 @@
   <%= csrf_meta_tags %>
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+      // if we had search forms to preserve, recall and resubmit
+      if ( localStorage.getItem('previous-search-url') ) {
+          var searchUrl = localStorage.getItem('previous-search-url');
+          localStorage.removeItem('previous-search-url');
+          window.location = searchUrl;
+      }
+  </script>
   <%= stylesheet_link_tag    'application', media: 'all' %>
-  <%= nonced_javascript_include_tag "https://cdn.plot.ly/plotly-1.39.3.min.js" %>
+  <%= nonced_javascript_include_tag "https://cdn.plot.ly/plotly-1.47.4.min.js" %>
   <%= nonced_javascript_pack_tag 'application' %>
   <%= nonced_javascript_include_tag 'application' %>
   <%= nonced_javascript_include_tag "https://cdn.datatables.net/plug-ins/1.10.15/sorting/natural.js" %>
@@ -15,16 +23,9 @@
       <%= render '/layouts/ga_script.js' %>
   </script>
 
-
-	<% if Rails.env == 'production' %>
-    <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
-        // suppress logging in production
-        var console = { log: function() {} };
-    </script>
-	<% end %>
   <% if ENV['TCELL_AGENT_APP_ID'].present? && ENV['TCELL_AGENT_API_KEY'].present? %>
     <script src="https://jsagent.tcell.io/tcellagent.min.js" nonce="<%= content_security_policy_script_nonce %>"
-            tcellappid="<%= ENV['TCELL_APP_ID'] %>" tcellapikey="<%= ENV['TCELL_API_KEY'] %>"></script>
+            tcellappid="<%= ENV['TCELL_AGENT_APP_ID'] %>" tcellapikey="<%= ENV['TCELL_AGENT_API_KEY'] %>"></script>
   <% end %>
 
   <% if @selected_branding_group.present? %>
@@ -105,7 +106,7 @@
 </div>
 <div id="generic-update-target"></div>
 <div id="scp-footer">
-  <% if @selected_branding_group.present? %>
+  <% if @selected_branding_group.present? && @selected_branding_group.footer_image.present? %>
     <%= image_tag @selected_branding_group.footer_image.url, class: 'pull-left' %>
   <% else %>
     <%= link_to image_tag('broad-logo-white.png'), "https://www.broadinstitute.org", class: 'pull-left' %>
@@ -123,6 +124,17 @@
   <% end %>
 </div>
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+    // set the unique cookie for tracking user IDs in GA
+    // this is not personally identifiable, lasts for 1 year or until cleared
+
+    if ( typeof Cookies.get('user_id') === 'undefined' ) {
+        Cookies.set('user_id', '<%= SecureRandom.uuid %>', {expires: 365})
+    }
+
+    // set userId in Google Analytics
+    var userId = Cookies.get('user_id');
+    ga('set', 'userId', userId);
+
     // variable used mostly for testing
     PAGE_RENDERED = true;
 

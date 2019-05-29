@@ -73,12 +73,22 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
       self.storage = Google::Cloud::Storage.new(storage_attr)
 
       # set expiration date of token
-      self.expires_at = Time.now + self.access_token['expires_in']
+      self.expires_at = Time.zone.now + self.access_token['expires_in']
     else
       self.user = user
       self.project = project
       # when initializing with a user, pull access token from user object and set desired project
-      self.access_token = user.valid_access_token
+      if user.refresh_token.nil? && user.api_access_token.present?
+        # as this client is only getting instantiated for a single request via the API, set expiration timestamp
+        # to 5 minutes, as this is the length of an HTTP request
+        expiration_timestamp = Time.now + 5.minutes
+        self.access_token = {
+            'access_token' => user.api_access_token, 'expires_in' => 5.minutes.to_i, 'expires_at' => expiration_timestamp
+        }
+      else
+        self.access_token = user.valid_access_token
+      end
+
       self.expires_at = self.access_token['expires_at']
 
       # use user-defined project instead of portal default
@@ -137,7 +147,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   def refresh_access_token
     if self.user.nil?
       new_token = FireCloudClient.generate_access_token(self.service_account_credentials)
-      new_expiry = Time.now + new_token['expires_in']
+      new_expiry = Time.zone.now + new_token['expires_in']
       self.access_token = new_token
       self.expires_at = new_expiry
     else
@@ -153,7 +163,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Boolean+ of token expiration
   def access_token_expired?
-    Time.now >= self.expires_at
+    Time.zone.now >= self.expires_at
   end
 
   # return a valid access token

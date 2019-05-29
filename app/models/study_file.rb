@@ -349,6 +349,60 @@ class StudyFile
     end
   end
 
+  swagger_schema :StudyFileSync do
+    allOf do
+      schema do
+        property :taxon_id do
+          key :type, :string
+          key :description, 'Database ID of Taxon entry (species) to which StudyFile belongs, if required/present.  THIS IS NOT THE NCBI TAXON ID.'
+        end
+        property :species do
+          key :type, :string
+          key :description, '(optional) Common name of a species registered in the portal to set taxon_id association manually'
+        end
+        property :genome_assembly_id do
+          key :type, :string
+          key :description, 'ID of GenomeAssembly to which StudyFile belongs, if required/present'
+        end
+        property :assembly do
+          key :type, :string
+          key :description, '(optional) Common name of a genome assembly registered in the portal to set genome_assembly_id association manually'
+        end
+        property :name do
+          key :type, :string
+          key :description, 'Name of StudyFile (either filename or name of Cluster/Gene List)'
+        end
+        property :description do
+          key :type, :string
+          key :description, 'StudyFile description, used in download views'
+        end
+        property :file_type do
+          key :type, :string
+          key :enum, STUDY_FILE_TYPES
+          key :description, 'Type of file, governs parsing/caching behavior'
+        end
+        property :remote_location do
+          key :type, :string
+          key :description, 'Location in GCS bucket of File object'
+        end
+        property :human_data do
+          key :type, :boolean
+          key :default, false
+          key :description, 'Boolean indication whether StudyFile represents human data'
+        end
+        property :generation do
+          key :type, :string
+          key :description, 'GCS generation tag of File in bucket'
+        end
+        property :options do
+          key :type, :object
+          key :default, {}
+          key :description, 'Key/Value storage of extra file options'
+        end
+      end
+    end
+  end
+
   swagger_schema :SiteStudyFile do
     key :name, 'StudyFile'
     property :name do
@@ -766,9 +820,9 @@ class StudyFile
   def self.delete_queued_files
     study_files = self.where(queued_for_deletion: true)
     study_files.each do |file|
-      Rails.logger.info "#{Time.now} deleting queued file #{file.name} in study #{file.study.name}."
+      Rails.logger.info "#{Time.zone.now} deleting queued file #{file.name} in study #{file.study.name}."
       file.destroy
-      Rails.logger.info "#{Time.now} #{file.name} successfully deleted."
+      Rails.logger.info "#{Time.zone.now} #{file.name} successfully deleted."
     end
     true
   end
@@ -879,7 +933,7 @@ class StudyFile
             subdir = self.remote_location.split('/').first
             download_location = File.join(study.data_store_path, subdir)
           end
-          msg = "#{Time.now}: localizing #{self.name} in #{study.name} to #{download_location}"
+          msg = "#{Time.zone.now}: localizing #{self.name} in #{study.name} to #{download_location}"
           puts msg
           Rails.logger.info msg
           file_location = File.join(study.data_store_path, self.download_location)
@@ -889,12 +943,12 @@ class StudyFile
           content_type = self.determine_content_type
           shift_headers = true
           if content_type == 'application/gzip'
-            msg = "#{Time.now}: Parsing #{self.name}:#{self.id} as application/gzip"
+            msg = "#{Time.zone.now}: Parsing #{self.name}:#{self.id} as application/gzip"
             puts msg
             Rails.logger.info msg
             file = Zlib::GzipReader.open(file_location)
           else
-            msg = "#{Time.now}: Parsing #{self.name}:#{self.id} as text/plain"
+            msg = "#{Time.zone.now}: Parsing #{self.name}:#{self.id} as text/plain"
             puts msg
             Rails.logger.info msg
             file = File.open(file_location, 'rb')
@@ -908,7 +962,7 @@ class StudyFile
           file.close
           # add processed cells to known cells
           cells.each_slice(DataArray::MAX_ENTRIES).with_index do |slice, index|
-            msg = "#{Time.now}: Create known cells array ##{index + 1} for #{self.name}:#{self.id} in #{study.name}"
+            msg = "#{Time.zone.now}: Create known cells array ##{index + 1} for #{self.name}:#{self.id} in #{study.name}"
             puts msg
             Rails.logger.info msg
             known_cells = study.data_arrays.build(name: "#{self.name} Cells", cluster_name: self.name,
@@ -916,20 +970,20 @@ class StudyFile
                                                   study_file_id: self.id, study_id: self.study_id)
             known_cells.save
           end
-          msg = "#{Time.now}: removing local copy of #{download_location}"
+          msg = "#{Time.zone.now}: removing local copy of #{download_location}"
           self.remove_local_copy
         else
-          msg = "#{Time.now}: skipping #{self.name} in #{study.name}; remote file no longer exists"
+          msg = "#{Time.zone.now}: skipping #{self.name} in #{study.name}; remote file no longer exists"
           puts msg
           Rails.logger.error msg
         end
       else
-        msg = "#{Time.now}: skipping #{self.name} in #{study.name}; already processed"
+        msg = "#{Time.zone.now}: skipping #{self.name} in #{study.name}; already processed"
         puts msg
         Rails.logger.info msg
       end
     rescue => e
-      msg = "#{Time.now}: error processing #{self.name} in #{self.study.name}: #{e.message}"
+      msg = "#{Time.zone.now}: error processing #{self.name} in #{self.study.name}: #{e.message}"
       puts msg
       Rails.logger.error msg
     end

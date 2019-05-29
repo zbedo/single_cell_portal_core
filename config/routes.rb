@@ -31,9 +31,18 @@ Rails.application.routes.draw do
         get 'status', to: 'status#index'
         scope :site do
           get 'studies', to: 'site#studies', as: :site_studies
-          get 'view_study/:accession', to: 'site#view_study', as: :site_view_study
-          get 'download_data/:accession', to: 'site#download_data', as: :site_download_data
-          get 'stream_data/:accession', to: 'site#stream_data', as: :site_stream_data
+          get 'studies/:accession', to: 'site#view_study', as: :site_study_view
+          get 'studies/:accession/download', to: 'site#download_data', as: :site_study_download_data
+          get 'studies/:accession/stream', to: 'site#stream_data', as: :site_study_stream_data
+          get 'analyses', to: 'site#analyses', as: :site_analyses
+          get 'analyses/:namespace/:name/:snapshot', to: 'site#get_analysis', as: :site_get_analysis
+          get 'studies/:accession/analyses/:namespace/:name/:snapshot', to: 'site#get_study_analysis_config', as: :site_get_study_analysis_config
+          post 'studies/:accession/analyses/:namespace/:name/:snapshot', to: 'site#submit_study_analysis', as: :site_submit_study_analysis
+          get 'studies/:accession/submissions', to: 'site#get_study_submissions', as: :site_get_study_submissions
+          get 'studies/:accession/submissions/:submission_id', to: 'site#get_study_submission', as: :site_get_study_submission
+          get 'studies/:accession/submissions/:submission_id/sync', to: 'site#sync_submission_outputs', as: :site_sync_submission_outputs
+          delete 'studies/:accession/submissions/:submission_id', to: 'site#get_study_submission', as: :site_abort_study_submission
+          delete 'studies/:accession/submissions/:submission_id/remove', to: 'site#get_study_submission_dir', as: :site_delete_study_submission_dir
         end
       end
     end

@@ -1,0 +1,85 @@
+<script nonce="<%= content_security_policy_script_nonce %>">
+    $('#breadcrumbs').replaceWith("<%= escape_javascript(render partial: '/layouts/breadcrumbs') %>");
+</script>
+<div id="title-bar">
+  <%= render partial: 'view_gene_expression_title_bar' %>
+</div>
+<div id="tab-root">
+  <ul class="nav nav-tabs" role="tablist" id="study-tabs">
+    <li role="presentation" class="study-nav active" id="study-summary-nav"><a href="#study-summary" data-toggle="tab">Summary <i class="far fa-fw fa-file-alt"></i></a></li>
+    <% if @study.can_visualize? %>
+      <li role="presentation" class="study-nav" id="study-visualize-nav"><a href="#study-visualize" data-toggle="tab">Explore <i class="fas fa-fw fa-eye"></i></a></li>
+    <% else %>
+      <li role="presentation" class="study-nav disabled" id="study-visualize-nav"><a href="#study-visualize" data-toggle="tooltip" title="This study has no data to view">Explore <i class="fas fa-fw fa-eye"></i></a></li>
+    <% end %>
+    <% if @user_can_download %>
+      <li role="presentation" class="study-nav" id="study-download-nav"><a href="#study-download" data-toggle="tab">Download <i class="fas fa-fw fa-download"></i></a></li>
+    <% else %>
+      <li role="presentation" class="study-nav disabled" id="study-download-nav"><a href="#study-download" data-toggle="tooltip" title="Only authenticated users with download privileges can download data">Download <i class="fas fa-fw fa-download"></i></a></li>
+    <% end %>
+    <% if @allow_firecloud_access && @user_can_compute %>
+      <% if @allow_computes %>
+        <li role="presentation" class="study-nav" id="study-analysis-nav"><a href="#study-analysis" data-toggle="tab">Analysis <i class="fas fa-fw fa-tasks"></i></a></li>
+      <% else %>
+        <li role="presentation" class="study-nav disabled" id="study-analysis-nav"><a href="#study-analysis" data-toggle="tooltip" title="Study workspaces are currently unavailable - please try again later.">Analysis <i class="fas fa-fw fa-tasks"></i></a></li>
+  <% end %>
+    <% end %>
+    <% if @allow_firecloud_access && @user_can_edit %>
+      <% if @allow_edits %>
+        <li role="presentation" class="study-nav" id="study-settings-nav"><a href="#study-settings" data-toggle="tab">Settings <i class="fas fa-fw fa-cogs"></i></a></li>
+      <% else %>
+        <li role="presentation" class="study-nav disabled" id="study-settings-nav"><a href="#study-settings" data-toggle="tooltip" title="Study workspaces are currently unavailable - please try again later.">Settings <i class="fas fa-fw fa-cogs"></i></a></li>
+      <% end %>
+    <% end %>
+  </ul>
+  <div class="tab-content top-pad">
+    <div class="tab-pane active in" id="study-summary" role="tabpanel">
+      <%= render partial: 'study_description_view' %>
+    </div>
+    <div class="tab-pane" id="study-visualize" role="tabpanel">
+      <% if @study.can_visualize? %>
+        <%= render partial: 'view_gene_expression' %>
+      <% end %>
+    </div>
+    <% if @user_can_download %>
+      <div class="tab-pane" id="study-download" role="tabpanel">
+        <%= render partial: 'study_download_data' %>
+      </div>
+    <% end %>
+    <% if @allow_firecloud_access && @allow_computes && @user_can_compute %>
+      <div class="tab-pane" id="study-analysis" role="tabpanel">
+        <%= render partial: 'study_analysis' %>
+      </div>
+    <% end %>
+    <% if @allow_firecloud_access && @allow_edits && @user_can_edit %>
+      <div class="tab-pane" id="study-settings" role="tabpanel">
+        <div class="row">
+          <div class="col-xs-12" id="study-settings-form-target">
+            <%= render partial: 'study_settings_form' %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<div class="modal fade" id="update-study-settings-modal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="text-center">Updating Study... Please wait<br/></h4>
+      </div>
+      <div class="modal-body">
+        <div class="spinner-target" id="update-study-settings-spinner"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="close" data-dismiss="modal">×</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+    // re-open a tab on reload if necessary
+    reopenUiTab('#study-tabs');
+</script>

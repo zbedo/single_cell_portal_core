@@ -7,5 +7,6 @@ closeModalSpinner('#spinner_target', '#loading-modal', function () {
     $(window).off('resizeEnd');
     enableDefaultActions();
     var requestUrl = "<%= javascript_safe_url(request.fullpath) %>";
+    ga('send', 'event', 'engaged_user_action', 'study_gene_search_multiple')
     gaTrack(requestUrl, 'Single Cell Portal');
 });

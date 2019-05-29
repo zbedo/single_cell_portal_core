@@ -12,14 +12,14 @@
     <% if @user_can_download %>
       <li role="presentation" class="study-nav" id="study-download-nav"><a href="#study-download" data-toggle="tab">Download <i class="fas fa-fw fa-download"></i></a></li>
     <% else %>
-      <li role="presentation" class="study-nav disabled" id="study-download-nav"><a href="#study-download" data-toggle="tooltip" title="Only authenticated users with download privileges can download data">Download <i class="fas fa-fw fa-download"></i></a></li>
+      <li role="presentation" class="study-nav disabled" id="study-download-nav"><a href="#study-download" data-toggle="tooltip" title="Please sign in to download data">Download <i class="fas fa-fw fa-download"></i></a></li>
     <% end %>
     <% if @allow_firecloud_access && @user_can_compute %>
       <% if @allow_computes %>
         <li role="presentation" class="study-nav" id="study-analysis-nav"><a href="#study-analysis" data-toggle="tab">Analysis <i class="fas fa-fw fa-tasks"></i></a></li>
       <% else %>
         <li role="presentation" class="study-nav disabled" id="study-analysis-nav"><a href="#study-analysis" data-toggle="tooltip" title="Study workspaces are currently unavailable - please try again later.">Analysis <i class="fas fa-fw fa-tasks"></i></a></li>
-  <% end %>
+      <% end %>
     <% end %>
     <% if @allow_firecloud_access && @user_can_edit %>
       <% if @allow_edits %>
@@ -78,10 +78,5 @@
 
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
     // re-open a tab on reload if necessary
-    var urlParts = window.location.href.split('#');
-    if (urlParts.length > 1) {
-        openedTab = urlParts[1];
-        console.log('opening ' + openedTab + ' tab');
-        $('#study-tabs a[href="#' + openedTab + '"]').tab('show');
-    }
+    reopenUiTab('#study-tabs');
 </script>

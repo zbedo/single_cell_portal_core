@@ -143,14 +143,14 @@ class StudiesController < ApplicationController
       new_study_permissions = @study.study_shares.to_a
       new_study_permissions.each do |share|
         if firecloud_permissions['acl'][share.email].nil?
-          logger.info "#{Time.now}: removing #{share.email} access to #{@study.name} via sync - no longer in FireCloud acl"
+          logger.info "#{Time.zone.now}: removing #{share.email} access to #{@study.name} via sync - no longer in FireCloud acl"
           share.delete
         end
       end
     rescue => e
       error_context = ErrorTracker.format_extra_context(@study, {params: params})
       ErrorTracker.report_exception(e, current_user, error_context)
-      logger.error "#{Time.now}: error syncing ACLs in workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
+      logger.error "#{Time.zone.now}: error syncing ACLs in workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
       redirect_to merge_default_redirect_params(studies_path, scpbr: params[:scpbr]), alert: "We were unable to sync with your workspace bucket due to an error: #{view_context.simple_format(e.message)}" and return
     end
 
@@ -168,7 +168,7 @@ class StudiesController < ApplicationController
     rescue => e
       error_context = ErrorTracker.format_extra_context(@study, {params: params})
       ErrorTracker.report_exception(e, current_user, error_context)
-      logger.error "#{Time.now}: error syncing files in workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
+      logger.error "#{Time.zone.now}: error syncing files in workspace bucket #{@study.firecloud_workspace} due to error: #{e.message}"
       redirect_to merge_default_redirect_params(studies_path, scpbr: params[:scpbr]), alert: "We were unable to sync with your workspace bucket due to an error: #{view_context.simple_format(e.message)}" and return
     end
 
@@ -323,6 +323,7 @@ class StudiesController < ApplicationController
         if metadata.nil?
           metadata_attr = {
               name: submission['methodConfigurationName'],
+              submitter: submission['submitter'],
               submission_id: params[:submission_id],
               study_id: @study.id,
               version: '4.6.1'
@@ -402,13 +403,10 @@ class StudiesController < ApplicationController
         rescue => e
           error_context = ErrorTracker.format_extra_context(@study, {params: params})
           ErrorTracker.report_exception(e, current_user, error_context)
-          logger.error "#{Time.now} unable to delete workspace: #{@study.firecloud_workspace}; #{e.message}"
+          logger.error "#{Time.zone.now} unable to delete workspace: #{@study.firecloud_workspace}; #{e.message}"
           redirect_to merge_default_redirect_params(studies_path, scpbr: params[:scpbr]), alert: "We were unable to delete your study due to: #{view_context.simple_format(e.message)}.<br /><br />No files or database records have been deleted.  Please try again later" and return
         end
       end
-
-      # Remove the analysis.json before enqueuing the delete job
-      AnalysisMetadatum.where(study_id: @study.id).delete_all
 
       # queue jobs to delete study caches & study itself
       CacheRemovalJob.new(@study.accession).delay.perform
@@ -475,7 +473,7 @@ class StudiesController < ApplicationController
         end
         render json: { file: { name: study_file.upload_file_name,size: upload.size } } and return
       else
-        logger.error "#{Time.now} #{study_file.errors.full_messages.join(", ")}"
+        logger.error "#{Time.zone.now} #{study_file.errors.full_messages.join(", ")}"
         render json: { file: { name: study_file.upload_file_name, errors: study_file.errors.full_messages.join(", ") } }, status: 422 and return
       end
     else
@@ -568,7 +566,7 @@ class StudiesController < ApplicationController
   # parses happen in background to prevent UI blocking
   def parse
     @study_file = StudyFile.where(study_id: params[:id], upload_file_name: params[:file]).first
-    logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name}"
+    logger.info "#{Time.zone.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name}"
     case @study_file.file_type
     when 'Cluster'
       @study_file.update(parse_status: 'parsing')
@@ -593,7 +591,7 @@ class StudiesController < ApplicationController
         barcodes.update(parse_status: 'parsing')
         ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, @study_file, genes, barcodes)
       else
-        logger.info "#{Time.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
+        logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
         # send file directly to firecloud, will pull down to parse later as needed
         @study.delay.send_to_firecloud(@study_file)
       end
@@ -608,7 +606,7 @@ class StudiesController < ApplicationController
         ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, @study_file, barcodes)
       else
         # we can only get here if we have a matrix and no barcodes, which means the barcodes form is already rendered
-        logger.info "#{Time.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
+        logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
         # send file directly to firecloud, will pull down to parse later as needed
         @study.delay.send_to_firecloud(@study_file)
       end
@@ -623,7 +621,7 @@ class StudiesController < ApplicationController
         ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, genes, @study_file)
       else
         # we can only get here if we have a matrix and no genes, which means the genes form is already rendered
-        logger.info "#{Time.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
+        logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
         # send file directly to firecloud, will pull down to parse later as needed
         @study.delay.send_to_firecloud(@study_file)
       end
@@ -694,7 +692,7 @@ class StudiesController < ApplicationController
     rescue => e
       error_context = ErrorTracker.format_extra_context(@study, {params: params})
       ErrorTracker.report_exception(e, current_user, error_context)
-      logger.error "#{Time.now}: error generating signed url for #{params[:filename]}; #{e.message}"
+      logger.error "#{Time.zone.now}: error generating signed url for #{params[:filename]}; #{e.message}"
       redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
                   alert: "We were unable to download the file #{params[:filename]} do to an error: #{view_context.simple_format(e.message)}" and return
     end
@@ -722,7 +720,7 @@ class StudiesController < ApplicationController
         # only build new study file if this is an external human fastq
         @study_file = @study.study_files.build
       else
-        logger.error "#{Time.now}: Aborting study file save for file id #{study_file_params[:_id]} - file not found"
+        logger.error "#{Time.zone.now}: Aborting study file save for file id #{study_file_params[:_id]} - file not found"
         # we get here if a user uploads a file, the parse fails, and they click 'Save' before refreshing the page
         @alert = "The study file in question has already been deleted (likely due to a parse failure).  The page will be refreshed to reflect the current status - please upload the file again before continuing."
         render js: "window.location.reload(); alert('#{@alert}');" and return
@@ -810,7 +808,7 @@ class StudiesController < ApplicationController
 
       # only reparse if user requests
       if @study_file.parseable? && params[:reparse] == 'Yes'
-        logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
+        logger.info "#{Time.zone.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
         @message += " You will receive an email at #{current_user.email} when the parse has completed."
         case @study_file.file_type
           when 'Cluster'
@@ -828,7 +826,7 @@ class StudiesController < ApplicationController
               barcodes.update(parse_status: 'parsing')
               ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, @study_file, genes, barcodes, {sync: true, reparse: true})
             else
-              logger.info "#{Time.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
+              logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
             end
           when '10X Genes File'
             matrix_id = @study_file.options[:matrix_id]
@@ -841,7 +839,7 @@ class StudiesController < ApplicationController
               ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, @study_file, barcodes, {sync: true, reparse: true})
             else
               # we can only get here if we have a matrix and no barcodes, which means the barcodes form is already rendered
-              logger.info "#{Time.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
+              logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
             end
           when '10X Barcodes File'
             matrix_id = @study_file.options[:matrix_id]
@@ -854,7 +852,7 @@ class StudiesController < ApplicationController
               ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, genes, @study_file, {sync: true, reparse: true})
             else
               # we can only get here if we have a matrix and no genes, which means the genes form is already rendered
-              logger.info "#{Time.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
+              logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
             end
           when 'Gene List'
             @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false, reparse: true})
@@ -907,7 +905,7 @@ class StudiesController < ApplicationController
         rescue => e
           error_context = ErrorTracker.format_extra_context(@study, {params: params})
           ErrorTracker.report_exception(e, current_user, error_context)
-          logger.error "#{Time.now}: error in deleting #{@study_file.upload_file_name} from workspace: #{@study.firecloud_workspace}; #{e.message}"
+          logger.error "#{Time.zone.now}: error in deleting #{@study_file.upload_file_name} from workspace: #{@study.firecloud_workspace}; #{e.message}"
           redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
                       alert: "We were unable to delete #{@study_file.upload_file_name} due to an error: #{view_context.simple_format(e.message)}.  Please try again later."
         end
@@ -975,7 +973,7 @@ class StudiesController < ApplicationController
       @form = "#study-file-#{@study_file.id}"
       @target = "#synced-study-files"
       if @study_file.parseable?
-        logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
+        logger.info "#{Time.zone.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
         @message += " You will receive an email at #{current_user.email} when the parse has completed."
         # parse file as appropriate type
         case @study_file.file_type
@@ -1084,7 +1082,7 @@ class StudiesController < ApplicationController
       @message = "New Study File '#{@study_file.name}' successfully synced."
       # only reparse if user requests
       if @study_file.parseable? && params[:reparse] == 'Yes'
-        logger.info "#{Time.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
+        logger.info "#{Time.zone.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
         @message += " You will receive an email at #{current_user.email} when the parse has completed."
         case @study_file.file_type
         when 'Cluster'

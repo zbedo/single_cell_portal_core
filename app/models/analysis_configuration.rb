@@ -1,5 +1,6 @@
 class AnalysisConfiguration
   include Mongoid::Document
+  include Swagger::Blocks
   extend ValidationTools
   extend ErrorTracker
 
@@ -7,6 +8,81 @@ class AnalysisConfiguration
   has_many :external_resources, as: :resource_links
   accepts_nested_attributes_for :external_resources, allow_destroy: true
 
+  swagger_schema :AnalysisConfigurationList do
+    key :name, 'AnalysisConfigurationList'
+    property :namespace do
+      key :type, :string
+      key :description, 'Methods Repository namespace of analysis object'
+    end
+    property :name do
+      key :type, :string
+      key :description, 'Methods Repository name of analysis object'
+    end
+    property :snapshot do
+      key :type, :integer
+      key :description, 'Methods Repository snapshot ID of analysis object'
+    end
+    property :configuration_namespace do
+      key :type, :string
+      key :description, 'Methods Repository namespace of analysis configuration object'
+    end
+    property :configuration_name do
+      key :type, :string
+      key :description, 'Methods Repository name of analysis configuration object'
+    end
+    property :configuration_snapshot do
+      key :type, :integer
+      key :description, 'Methods Repository snapshot ID of analysis configuration object'
+    end
+    property :synopsis do
+      key :type, :string
+      key :description, 'Short description of analysis method'
+    end
+    property :entity_type do
+      key :type, :string
+      key :description, 'FireCloud entity model type supported by analysis method'
+    end
+  end
+
+  swagger_schema :AnalysisConfiguration do
+    key :name, 'AnalysisConfiguration'
+    property :namespace do
+      key :type, :string
+      key :description, 'Methods Repository namespace of analysis object'
+    end
+    property :name do
+      key :type, :string
+      key :description, 'Methods Repository name of analysis object'
+    end
+    property :snapshot do
+      key :type, :integer
+      key :description, 'Methods Repository snapshot ID of analysis object'
+    end
+    property :configuration_namespace do
+      key :type, :string
+      key :description, 'Methods Repository namespace of analysis configuration object'
+    end
+    property :configuration_name do
+      key :type, :string
+      key :description, 'Methods Repository name of analysis configuration object'
+    end
+    property :configuration_snapshot do
+      key :type, :integer
+      key :description, 'Methods Repository snapshot ID of analysis configuration object'
+    end
+    property :synopsis do
+      key :type, :string
+      key :description, 'Short description of analysis method'
+    end
+    property :entity_type do
+      key :type, :string
+      key :description, 'FireCloud entity model type supported by analysis method'
+    end
+    property :required_inputs do
+      key :type, :object
+      key :description, 'FireCloud Methods Repo method input parameters w/ default values'
+    end
+  end
 
   field :namespace, type: String
   field :name, type: String
@@ -258,7 +334,7 @@ class AnalysisConfiguration
       method = Study.firecloud_client.get_method(self.namespace, self.name, self.snapshot)
       self.synopsis = method['synopsis']
     rescue => e
-      error_context = ErrorTracker.format_extra_context(self, last_config)
+      error_context = ErrorTracker.format_extra_context(self)
       ErrorTracker.report_exception(e, self.user, error_context)
       Rails.logger.error "Error retrieving analysis WDL synopsis for #{self.identifier}: #{e.message}"
       e

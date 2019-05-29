@@ -89,7 +89,7 @@ class User
   field :daily_download_quota, type: Integer, default: 0
   field :admin_email_delivery, type: Boolean, default: true
   field :registered_for_firecloud, type: Boolean, default: false
-  field :api_access_token, type: String
+  field :api_access_token, type: Hash
 
   ###
   #
@@ -135,29 +135,38 @@ class User
             expires_in: 3600
         )
         token_vals = client.fetch_access_token
-        expires_at = DateTime.now + token_vals['expires_in'].to_i.seconds
+        expires_at = Time.zone.now + token_vals['expires_in'].to_i.seconds
         user_access_token = {'access_token' => token_vals['access_token'], 'expires_in' => token_vals['expires_in'], 'expires_at' => expires_at}
         self.update!(access_token: user_access_token)
         user_access_token
       rescue => e
         ErrorTracker.report_exception(e, self)
-        Rails.logger.error "#{Time.now}: Unable to generate access token for user #{self.email} due to error; #{e.message}"
+        Rails.logger.error "#{Time.zone.now}: Unable to generate access token for user #{self.email} due to error; #{e.message}"
         nil
       end
     else
-      Rails.logger.error "#{Time.now}: Unable to generate access token for user #{self.email} due to missing refresh token"
+      Rails.logger.error "#{Time.zone.now}: Unable to generate access token for user #{self.email} due to missing refresh token"
       nil
     end
   end
 
   # check timestamp on user access token expiry
   def access_token_expired?
-    self.access_token.nil? ? true : Time.at(self.access_token[:expires_at]) < Time.now
+    self.access_token.nil? ? true : Time.at(self.access_token[:expires_at]) < Time.now.in_time_zone(self.get_token_timezone(:access_token))
   end
 
-  # return an valid access token (will renew if expired)
+  def api_access_token_expired?
+    self.api_access_token.nil? ? true : Time.at(self.api_access_token[:expires_at]) < Time.now.in_time_zone(self.get_token_timezone(:api_access_token))
+  end
+
+  # return an valid access token (will renew if expired) - does not apply to api access tokens, those cannot be renewed
   def valid_access_token
     self.access_token_expired? ? self.generate_access_token : self.access_token
+  end
+
+  # extract timezone from an access token to allow correct date math
+  def get_token_timezone(token_method)
+    self.send(token_method)[:expires_at].zone
   end
 
   ###
@@ -168,7 +177,7 @@ class User
 
   # Time since Unix epoch, in milliseconds
   def self.milliseconds_since_epoch
-    return (Time.now.to_f * 1000).round
+    return (Time.zone.now.to_f * 1000).round
   end
 
   # Creates and returns a time-based one-time access token (TOTAT).
@@ -235,7 +244,7 @@ class User
     else
       client = FireCloudClient.new(self, FireCloudClient::PORTAL_NAMESPACE)
       if client.registered?
-        Rails.logger.info "#{Time.now} - setting user firecloud registrations status for #{self.email} to true"
+        Rails.logger.info "#{Time.zone.now} - setting user firecloud registrations status for #{self.email} to true"
         self.update(registered_for_firecloud: true)
         self.add_to_portal_user_group
       end
@@ -246,9 +255,9 @@ class User
     user_group_config = AdminConfiguration.find_by(config_type: 'Portal FireCloud User Group')
     if user_group_config.present?
       group_name = user_group_config.value
-      Rails.logger.info "#{Time.now}: adding #{self.email} to #{group_name} user group"
+      Rails.logger.info "#{Time.zone.now}: adding #{self.email} to #{group_name} user group"
       Study.firecloud_client.add_user_to_group(group_name, 'member', self.email)
-      Rails.logger.info "#{Time.now}: user group registration complete"
+      Rails.logger.info "#{Time.zone.now}: user group registration complete"
     end
   end
 

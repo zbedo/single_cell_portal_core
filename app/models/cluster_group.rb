@@ -38,7 +38,9 @@ class ClusterGroup
   index({ study_id: 1, study_file_id: 1}, { unique: false, background: true })
 
   # fixed values to subsample at
-  SUBSAMPLE_THRESHOLDS = [1000, 10000, 20000].freeze
+  SUBSAMPLE_THRESHOLDS = [1000, 10000, 20000, 100000].freeze
+
+  MAX_THRESHOLD = 100000
 
   COLORBREWER_SET = %w(#e41a1c #377eb8 #4daf4a #984ea3 #ff7f00 #a65628 #f781bf #999999
     #66c2a5 #fc8d62 #8da0cb #e78ac3 #a6d854 #ffd92f #e5c494 #b3b3b3 #8dd3c7
@@ -131,7 +133,7 @@ class ClusterGroup
   # annotation_type: group/numeric
   # annotation_scope: cluster or study - determines where to pull metadata from to key groups off of
   def generate_subsample_arrays(sample_size, annotation_name, annotation_type, annotation_scope)
-    Rails.logger.info "#{Time.now}: Generating subsample data_array for cluster '#{self.name}' using annotation: #{annotation_name} (#{annotation_type}, #{annotation_scope}) at resolution #{sample_size}"
+    Rails.logger.info "#{Time.zone.now}: Generating subsample data_array for cluster '#{self.name}' using annotation: #{annotation_name} (#{annotation_type}, #{annotation_scope}) at resolution #{sample_size}"
     @cells = self.concatenate_data_arrays('text', 'cells')
     case annotation_scope
       when 'cluster'
@@ -223,7 +225,7 @@ class ClusterGroup
           end
         end
     end
-    Rails.logger.info "#{Time.now}: Data assembled, now subsampling for cluster '#{self.name}' using annotation: #{annotation_name} (#{annotation_type}, #{annotation_scope}) at resolution #{sample_size}"
+    Rails.logger.info "#{Time.zone.now}: Data assembled, now subsampling for cluster '#{self.name}' using annotation: #{annotation_name} (#{annotation_type}, #{annotation_scope}) at resolution #{sample_size}"
 
     # determine number of entries per group required
     @num_per_group = sample_size / groups.size
@@ -299,7 +301,7 @@ class ClusterGroup
     data_arrays.each do |array|
       array.save
     end
-    Rails.logger.info "#{Time.now}: Subsampling complete for cluster '#{self.name}' using annotation: #{annotation_name} (#{annotation_type}, #{annotation_scope}) at resolution #{sample_size}"
+    Rails.logger.info "#{Time.zone.now}: Subsampling complete for cluster '#{self.name}' using annotation: #{annotation_name} (#{annotation_type}, #{annotation_scope}) at resolution #{sample_size}"
     true
   end
 
@@ -310,7 +312,7 @@ class ClusterGroup
   ##
 
   def self.generate_new_data_arrays
-    start_time = Time.now
+    start_time = Time.zone.now
     arrays_created = 0
     self.all.each do |cluster|
       arrays_to_save = []
@@ -325,7 +327,7 @@ class ClusterGroup
       arrays_to_save.map(&:save)
       arrays_created += arrays_to_save.size
     end
-    end_time = Time.now
+    end_time = Time.zone.now
     seconds_diff = (start_time - end_time).to_i.abs
 
     hours = seconds_diff / 3600
