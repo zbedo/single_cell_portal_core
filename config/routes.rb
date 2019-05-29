@@ -53,7 +53,9 @@ Rails.application.routes.draw do
     get 'admin/firecloud_api_status', to: 'admin_configurations#firecloud_api_status', as: :firecloud_api_status
     get 'admin/create_portal_user_group', to: 'admin_configurations#create_portal_user_group', as: :create_portal_user_group
     get 'admin/sync_portal_user_group', to: 'admin_configurations#sync_portal_user_group', as: :sync_portal_user_group
-
+    get 'admin/deployment' , to: 'admin_configurations#view_deployment', as: :view_deployment
+    post 'admin/deployment', to: 'admin_configurations#create_deployment_notification', as: :create_deployment_notification
+    delete 'admin/deployment', to: 'admin_configurations#delete_deployment_notification', as: :delete_deployment_notification
     resources :admin_configurations, path: 'admin'
 
     resources :taxons, path: 'species'

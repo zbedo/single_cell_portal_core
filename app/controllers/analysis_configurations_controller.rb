@@ -1,7 +1,6 @@
 class AnalysisConfigurationsController < ApplicationController
   before_action :set_analysis_configuration, only: [:show, :edit, :update, :destroy, :reset_analysis_parameters,
-                                                    :submission_preview, :load_study_for_submission_preview,
-                                                    :update_analysis_parameter]
+                                                    :submission_preview, :load_study_for_submission_preview]
   before_action :set_analysis_parameter, only: [:update_analysis_parameter]
   before_action :check_firecloud_status, only: [:new, :create]
   before_action do

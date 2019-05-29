@@ -1,0 +1,5 @@
+$('#deployment').html("<%= escape_javascript(render partial: 'deployment') %>");
+<% if @notice.present? %>
+$("<div />").html("<%= @notice %>").dialog();
+<% end %>
+
