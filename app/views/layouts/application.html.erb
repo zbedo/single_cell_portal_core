@@ -102,7 +102,7 @@
 </div>
 <div id="generic-update-target"></div>
 <div id="scp-footer">
-  <% if @selected_branding_group.present? %>
+  <% if @selected_branding_group.present? && @selected_branding_group.footer_image.present? %>
     <%= image_tag @selected_branding_group.footer_image.url, class: 'pull-left' %>
   <% else %>
     <%= link_to image_tag('broad-logo-white.png'), "https://www.broadinstitute.org", class: 'pull-left' %>
