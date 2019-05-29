@@ -132,7 +132,7 @@ class AdminConfigurationsController < ApplicationController
           @config.update(value: status)
           redirect_to admin_configurations_path, alert: message
         when 'off'
-          AdminConfiguration.x('off')
+          AdminConfiguration.configure_firecloud_access('off')
           @config.update(value: status)
           redirect_to admin_configurations_path, alert: "FireCloud access setting recorded successfully as 'off'.  Portal study & workspace access is now disabled."
         when 'local-off'
@@ -454,7 +454,7 @@ class AdminConfigurationsController < ApplicationController
             description: 'Ensure that all registered portal members are a member of the portal-wide user group list (can be used for FireCloud read permissions to certain public workspaces for reference data, if needed).',
             url: sync_portal_user_group_path,
             method: 'GET'
-        },
+        }
     ]
   end
 end
