@@ -37,6 +37,9 @@ class ClusterGroup
   index({ study_id: 1 }, { unique: false, background: true })
   index({ study_id: 1, study_file_id: 1}, { unique: false, background: true })
 
+  # fixed values to subsample at
+  SUBSAMPLE_THRESHOLDS = [100000, 20000, 10000, 1000].freeze
+
   MAX_THRESHOLD = 100000
 
   # fixed values to subsample at

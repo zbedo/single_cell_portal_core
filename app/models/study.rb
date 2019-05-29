@@ -632,9 +632,9 @@ class Study
     end
   end
 
-  # check if a user has permission do download data from this study (either is public and user is signed in or user has a direct share)
+  # check if a user has permission do download data from this study (either is public and user is signed in, user is an admin, or user has a direct share)
   def can_download?(user)
-    (self.public? && user.present?) || self.has_bucket_access?(user)
+    (self.public? && user.present?) || (user.present? && user.admin?) || self.has_bucket_access?(user)
   end
 
   # check if user can delete a study - only owners can

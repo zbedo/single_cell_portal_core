@@ -18,7 +18,7 @@ class ClusterGroupTest < ActiveSupport::TestCase
     category_array = @cluster_group.concatenate_data_arrays('Category', 'annotations')
     original_category_values = @cluster_group.cell_annotations.find {|c| c[:name] == 'Category'}['values'].sort
 
-    # generate subsampled arrays at 1K
+    # generate subsampled arrays at 1K, 10K, 20K (needed for user annotation tests later)
     @cluster_group.generate_subsample_arrays(1000, 'Category', 'group', 'cluster')
     @cluster_group.generate_subsample_arrays(10000, 'Category', 'group', 'cluster')
     @cluster_group.generate_subsample_arrays(20000, 'Category', 'group', 'cluster')
@@ -126,10 +126,11 @@ class ClusterGroupTest < ActiveSupport::TestCase
     z_array = @cluster_group.concatenate_data_arrays('z', 'coordinates')
     cell_array = @cluster_group.concatenate_data_arrays('text', 'cells')
 
-    # generate subsampled arrays at 1K
+    # generate subsampled arrays at 1K, 10K, and 20K (needed for user annotation tests later)
     @cluster_group.generate_subsample_arrays(1000, 'Label', 'group', 'study')
     @cluster_group.generate_subsample_arrays(10000, 'Label', 'group', 'study')
     @cluster_group.generate_subsample_arrays(20000, 'Label', 'group', 'study')
+
 
     # load subsampled arrays (study based)
     subsample_x = @cluster_group.concatenate_data_arrays('x', 'coordinates', 1000, 'Label--group--study')
