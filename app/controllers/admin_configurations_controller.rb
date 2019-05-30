@@ -23,6 +23,7 @@ class AdminConfigurationsController < ApplicationController
   def index
     @admin_configurations = AdminConfiguration.not_in(config_type: AdminConfiguration::FIRECLOUD_ACCESS_NAME)
     @current_firecloud_status = AdminConfiguration.current_firecloud_access
+
     case @current_firecloud_status
       when 'on'
         @download_status = true
@@ -49,6 +50,7 @@ class AdminConfigurationsController < ApplicationController
       @task_http_methods[action[:name]] = action[:method]
     end
   end
+
 
   # GET /admin_configurations/1
   # GET /admin_configurations/1.json
@@ -335,6 +337,37 @@ class AdminConfigurationsController < ApplicationController
     end
   end
 
+  ###
+  #
+  # DEPLOYMENT METHODS
+  #
+  ###
+
+  def view_deployment
+    @deployment_notification = DeploymentNotification.first || DeploymentNotification.new
+  end
+
+  def create_deployment_notification
+    @deployment_notification = DeploymentNotification.new(deployment_notification_params)
+    respond_to do |format|
+      if @deployment_notification.save
+        @notice = "Notification banner has been scheduled."
+        format.js { render :view_deployment}
+
+      else
+        format.js { render :view_deployment}
+        format.json {render :json => @deployment_notification.errors, status: :unprocessable_entity}
+      end
+    end
+  end
+
+  def delete_deployment_notification
+    @deployment_notification.destroy
+    respond_to do |format|
+      format.html { redirect_to admin_configurations_path, notice: "Notification banner was successfully destroyed and is no longer scheduled" }
+    end
+  end
+
   private
 
   ###
@@ -370,6 +403,11 @@ class AdminConfigurationsController < ApplicationController
 
   def readonly_settings_params
     params.require(:readonly_settings).permit(:access_level)
+  end
+
+  # parameters for deployment notifications
+  def deployment_notification_params
+    params.require(:deployment_notification).permit(:deployment_time, :message)
   end
 
   # list of available actions to perform

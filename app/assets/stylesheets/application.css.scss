@@ -639,3 +639,24 @@ h4, .h4, h5, .h5, h6, .h6 {
 .upload-wizard {
   font-size: 18px;
 }
+
+#deployment_notification_message{
+  width: 100%;
+}
+#message-area{
+  max-height: 80px;
+  text-align: center;
+}
+#display-time, #display-time-label{
+  vertical-align: -webkit-baseline-middle;
+  display: inline-block;
+}
+.notification-banner{
+  color: white;
+  height: 50px;
+  padding: 5px;
+  background: #ff5252;
+}
+#deployment-form-group{
+  padding-bottom: 10px;
+}
