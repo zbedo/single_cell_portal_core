@@ -160,7 +160,10 @@ var expressionData = [];
     <% @values.sort_by {|k,v| k}.each do |cluster, data| %>
       formatted_array.push(["<%= cluster %>", <%= raw data[:y] %>]);
     <% end %>
-    var title = "<%= params[:cluster]%>";
+    var title = '<%= params[:cluster]%>';
+    <% if @expression[:all][:x].length >= ClusterGroup::MAX_THRESHOLD %>
+    title += ' (subsampled to <%= ClusterGroup::MAX_THRESHOLD %> cells)';
+    <% end %>
     var data = createTracesAndLayout(formatted_array, title, jitter_var);
     expressionData = [].concat.apply([], data[0] );
     expressionLayout = data[1];
