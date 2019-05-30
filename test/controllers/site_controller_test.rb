@@ -23,5 +23,24 @@ class SiteControllerTest < ActionDispatch::IntegrationTest
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 
+  test "should create and delete deployment notification banner" do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+
+    deployment_notification_params = {
+        deployment_notification: {
+            deployment_time: Time.zone.now,
+            message: "Testing deployment notification banner"
+        }
+    }
+
+    post create_deployment_notification_path, params: deployment_notification_params, xhr:true
+    get site_path
+    assert_select '.notification-banner', 1,"Notification banner did not render to page"
+    delete delete_deployment_notification_path
+    follow_redirect!
+    assert_response 200, 'Did not redirect successfully after banner was deleted'
+    # Ensure page does not contain notification banner
+    assert_select ".notification-banner", false, "Notification banner was not deleted and still is present on page."
+  end
 
 end

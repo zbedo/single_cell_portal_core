@@ -16,6 +16,7 @@ class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
 
   before_action :get_download_quota
+  before_action :get_deployment_notification
   before_action :set_selected_branding_group
 
   rescue_from ActionController::InvalidAuthenticityToken, with: :invalid_csrf
@@ -43,6 +44,11 @@ class ApplicationController < ActionController::Base
     else
       @download_quota = config_entry.convert_value_by_type
     end
+  end
+
+  #see if deployment has been scheduled
+  def get_deployment_notification
+    @deployment_notification = DeploymentNotification.first
   end
 
   # check whether the portal has been put in 'safe-mode'
