@@ -18,14 +18,20 @@
 
                 <!-- if action_name !~ /heatmap/ -->
                 <div class="form-group col-sm-4">
-                  <%= label_tag :subsample, 'Subsampling threshold' %>&nbsp;<i class='fas fa-question-circle' title="Take a representative subsample of the current cluster.  Choosing all cells may dramatically increase rendering time." data-toggle="tooltip"></i><br />
+                  <%= label_tag :subsample, 'Subsampling threshold' %>
+                  &nbsp;
+                  <i
+                    class='fas fa-question-circle'
+                    title="Take a representative subsample of the current cluster.
+                      <% if /view_gene_(set_)?expression$/.match(action_name) === false %>Choosing all cells may dramatically increase rendering time.  <% end %>
+                      <% if @cluster.points < ClusterGroup::MAX_THRESHOLD %>
+                      <% else %>Gene search results will be subsampled to <%= ClusterGroup::MAX_THRESHOLD %> cells.<% end %>"
+                    data-toggle="tooltip"></i>
+                  <br />
                   <% if /view_gene_(set_)?expression$/.match(action_name) %>
                   <%= select_tag :subsample, options_for_select(subsampling_options(@cluster.points), set_subsample_value(params) ), {include_blank: @cluster.points < ClusterGroup::MAX_THRESHOLD ? 'All Cells' : false, class: 'form-control'} %>
                   <% else %>
                   <%= select_tag :subsample, options_for_select(subsampling_options(@cluster.points), set_subsample_value(params) ), include_blank: 'All Cells', class: 'form-control' %>
-                  <% end %>
-                  <%if @cluster.points >= ClusterGroup::MAX_THRESHOLD %>
-                  <small>Subsampling will be used for gene search results.</small>
                   <% end %>
                 </div>
                 <!-- end -->
