@@ -354,9 +354,6 @@ class SiteController < ApplicationController
           @submissions.delete_if {|submission| deleted_submissions.include?(submission['submissionId'])}
         end
 
-        # load samples from workspace
-        set_workspace_samples
-
         # load list of available workflows
         @workflows_list = load_available_workflows
       end

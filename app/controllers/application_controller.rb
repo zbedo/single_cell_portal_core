@@ -21,6 +21,17 @@ class ApplicationController < ActionController::Base
 
   rescue_from ActionController::InvalidAuthenticityToken, with: :invalid_csrf
 
+  # set current_user for use outside of controllers
+  # from https://stackoverflow.com/questions/2513383/access-current-user-in-model
+  around_action :set_current_user
+  def set_current_user
+    Current.user = current_user
+    yield
+  ensure
+    # to address the thread variable leak issues in Puma/Thin webserver
+    Current.user = nil
+  end
+
   # auth action for portal admins
   def authenticate_admin
     unless current_user.admin?
