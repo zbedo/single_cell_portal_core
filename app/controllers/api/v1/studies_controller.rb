@@ -436,7 +436,7 @@ module Api
         begin
           # create a map of file extension to use for creating directory_listings of groups of 10+ files of the same type
           @file_extension_map = {}
-          workspace_files = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, 0, @study.firecloud_project, @study.firecloud_workspace)
+          workspace_files = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, 0, @study.bucket_id)
           # see process_workspace_bucket_files in private methods for more details on syncing
           process_workspace_bucket_files(workspace_files)
           while workspace_files.next?
