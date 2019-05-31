@@ -771,6 +771,9 @@ class StudiesController < ApplicationController
     end
     @form = "#study-file-#{@study_file.id}"
 
+    # check if the name of the file has changed as we won't be able to tell after we saved
+    name_changed = @study_file.name != study_file_params[:name]
+
     # do a test assignment and check for validity; if valid and either Cluster or Gene List, invalidate caches
     @study_file.assign_attributes(study_file_params)
     if ['Cluster', 'Coordinate Labels', 'Gene List'].include?(@study_file.file_type) && @study_file.valid?
@@ -778,12 +781,17 @@ class StudiesController < ApplicationController
     end
 
     if @study_file.save
+      # invalidate caches first
+      @study_file.delay.invalidate_cache_by_file_type
       # if a gene list or cluster got updated, we need to update the associated records
-      if study_file_params[:file_type] == 'Gene List'
+      if study_file_params[:file_type] == 'Gene List' && name_changed
         @precomputed_entry = PrecomputedScore.find_by(study_file_id: study_file_params[:_id])
+        logger.info "Updating gene list #{@precomputed_entry.name} to match #{study_file_params[:name]}"
         @precomputed_entry.update(name: @study_file.name)
-      elsif study_file_params[:file_type] == 'Cluster'
+      elsif study_file_params[:file_type] == 'Cluster' && name_changed
         @cluster = ClusterGroup.find_by(study_file_id: study_file_params[:_id])
+        logger.info "Updating cluster #{@cluster.name} to match #{study_file_params[:name]}"
+
         # before updating, check if the defaults also need to change
         if @study.default_cluster == @cluster
           @study.default_options[:cluster] = @study_file.name
@@ -791,14 +799,11 @@ class StudiesController < ApplicationController
         end
         @cluster.update(name: @study_file.name)
         # also update data_arrays
-        @cluster.data_arrays.update_all(cluster_name: study_file_params[:name])
+        DataArray.where(study_id: @study.id, linear_data_type: 'ClusterGroup', linear_data_id: @cluster.id,
+                        study_file_id: @study_file.id).update_all(cluster_name: study_file_params[:name])
       elsif study_file_params[:file_type] == 'Expression Matrix' && !study_file_params[:y_axis_label].blank?
         # if user is supplying an expression axis label, update default options hash
         @study.update(default_options: @study.default_options.merge(expression_label: study_file_params[:y_axis_label]))
-        @study.expression_matrix_files.first.invalidate_cache_by_file_type
-      else
-        # invalidate caches
-        @study_file.delay.invalidate_cache_by_file_type
       end
       @message = "'#{@study_file.name}' has been successfully updated."
 
