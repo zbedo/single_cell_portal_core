@@ -70,6 +70,7 @@ echo "*/15 * * * * . /home/app/.cron_env ; /home/app/webapp/bin/job_monitor.rb -
 echo "*** COMPLETED ***"
 
 if [[ $PASSENGER_APP_ENV != "development" ]]
+then
 	echo "*** ADDING API HEALTH CRONTAB ***"
 	(crontab -u app -l ; echo "*/5 * * * * . /home/app/.cron_env ; cd /home/app/webapp/; /home/app/webapp/bin/rails runner -e $PASSENGER_APP_ENV \"AdminConfiguration.check_api_health\" >> /home/app/webapp/log/cron_out.log 2>&1") | crontab -u app -
 	echo "*** COMPLETED ***"
@@ -84,9 +85,10 @@ if [[ $PASSENGER_APP_ENV = "development" ]]
 then
   echo "*** DELETING QUEUED STUDIES & FILES ***"
   # run cleanups at boot, don't run crons to reduce memory usage
-	sudo -E -u app -H bin/rails runner -e $PASSENGER_APP_ENV "Study.delete_queued_studies" >> /home/app/webapp/log/cron_out.log 2>&1
-	sudo -E -u app -H bin/rails runner -e $PASSENGER_APP_ENV "StudyFile.delete_queued_files" >> /home/app/webapp/log/cron_out.log 2>&1
-	sudo -E -u app -H bin/rails runner -e $PASSENGER_APP_ENV "UserAnnotation.delete_queued_annotations" >> /home/app/webapp/log/cron_out.log 2>&1
+  sudo -E -u app -H bin/bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV db:mongoid:create_indexes
+	sudo -E -u app -H bin/rails runner -e $PASSENGER_APP_ENV "StudyFile.delay.delete_queued_files"
+	sudo -E -u app -H bin/rails runner -e $PASSENGER_APP_ENV "UserAnnotation.delay.delete_queued_annotations"
+	sudo -E -u app -H bin/rails runner -e $PASSENGER_APP_ENV "Study.delay.delete_queued_studies"
 else
   echo "*** ADDING CRONTAB TO DELETE QUEUED STUDIES & FILES ***"
 	(crontab -u app -l ; echo "0 1 * * * . /home/app/.cron_env ; cd /home/app/webapp/; /home/app/webapp/bin/rails runner -e $PASSENGER_APP_ENV \"Study.delete_queued_studies\" >> /home/app/webapp/log/cron_out.log 2>&1") | crontab -u app -
