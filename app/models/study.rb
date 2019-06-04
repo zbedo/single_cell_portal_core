@@ -1151,7 +1151,9 @@ class Study
     studies.each do |study|
       Rails.logger.info "#{Time.zone.now}: deleting queued study #{study.name}"
       Gene.where(study_id: study.id).delete_all
-      DataArray.where(study_id: study.id).delete_all
+      study.study_files.each do |file|
+        DataArray.where(study_id: study.id, study_file_id: file.id).delete_all
+      end
       CellMetadatum.where(study_id: study.id).delete_all
       PrecomputedScore.where(study_id: study.id).delete_all
       ClusterGroup.where(study_id: study.id).delete_all
