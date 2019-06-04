@@ -221,8 +221,7 @@ class ParseUtils
   def self.extract_analysis_output_files(study, user, archive_file, analysis_method)
     begin
       study.make_data_dir
-      Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, study.firecloud_project,
-                                                   study.firecloud_workspace, archive_file.bucket_location,
+      Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, study.bucket_id, archive_file.bucket_location,
                                                    study.data_store_path, verify: :none)
       Rails.logger.info "Successful localization of #{archive_file.upload_file_name}"
       archive_path = File.join(study.data_store_path, archive_file.download_location)
@@ -396,8 +395,7 @@ class ParseUtils
       local_path = File.join(study.data_store_path, study_file.download_location)
     else
       Rails.logger.info "Downloading #{study_file.upload_file_name} from remote"
-      Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, study.firecloud_project,
-                                                   study.firecloud_workspace, study_file.bucket_location,
+      Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, study.bucket_id, study_file.bucket_location,
                                                    study.data_store_path, verify: :none)
       Rails.logger.info "Successful localization of #{study_file.upload_file_name}"
       local_path = File.join(study.data_store_path, study_file.bucket_location)
@@ -419,7 +417,7 @@ class ParseUtils
     # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
     # rather than relying on opts[:local], actually check if the file is already in the GCS bucket
     begin
-      remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, study.firecloud_project, study.firecloud_workspace, study_file.bucket_location)
+      remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, study.bucket_id, study_file.bucket_location)
       if remote.nil?
         Rails.logger.info "#{Time.zone.now}: preparing to upload expression file: #{study_file.bucket_location}:#{study_file.id} to FireCloud"
         study.send_to_firecloud(study_file)
@@ -441,9 +439,9 @@ class ParseUtils
 
   # delete a file from the bucket on fail
   def self.delete_remote_file_on_fail(study_file, study)
-    remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, study.firecloud_project, study.firecloud_workspace, study_file.bucket_location)
+    remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, study.bucket_id, study_file.bucket_location)
     if remote.present?
-      Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, 0, study.firecloud_project, study.firecloud_workspace, study_file.bucket_location)
+      Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, 0, study.bucket_id, study_file.bucket_location)
     end
   end
 
