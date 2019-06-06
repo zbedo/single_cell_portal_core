@@ -246,6 +246,20 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
     self.user.nil? ? self.storage_issuer : self.user
   end
 
+  # identify user initiating a request; either self.user, Current.user, or service account
+  #
+  # *return*
+  #   - +String+ db identifier of user, or service account email
+  def tracking_identifier
+    if self.user.present?
+      self.user.id
+    elsif Current.user.present?
+      Current.user.id
+    else
+      self.issuer
+    end
+  end
+
   ######
   ##
   ## FIRECLOUD METHODS
@@ -269,6 +283,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
     # set up default options
     request_opts = {file_upload: false}.merge(opts)
 
+    # Log API call for auditing/tracking purposes
+    Rails.logger.info "FireCloud API request (#{http_method.to_s.upcase}) #{path} with tracking identifier: #{self.tracking_identifier}"
     # check for token expiry first before executing
     if self.access_token_expired?
       Rails.logger.info "FireCloudClient token expired, refreshing access token"
@@ -278,7 +294,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
     headers = {
         'Authorization' => "Bearer #{self.access_token['access_token']}",
         'x-app-id' => "single-cell-portal",
-        'x-domain-id' => "#{ENV['HOSTNAME']}"
+        'x-domain-id' => "#{ENV['HOSTNAME']}",
+        'x-user-id' => "#{self.tracking_identifier}"
     }
     # if not uploading a file, set the content_type to application/json
     if !request_opts[:file_upload]
