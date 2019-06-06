@@ -27,6 +27,7 @@ class AnalysisConfigurationsControllerTest < ActionDispatch::IntegrationTest
     assert_select 'form.analysis-parameter-form', 2, 'Did not find correct number of analysis parameter entries'
     assert_select 'form.input-analysis-parameter', 1, 'Did not find correct number of inputs'
     assert_select 'form.output-analysis-parameter', 1, 'Did not find correct number of outputs'
+    assert_select 'textarea#analysis_configuration_description', text: @analysis_configuration.description
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 

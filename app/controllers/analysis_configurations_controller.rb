@@ -162,7 +162,7 @@ class AnalysisConfigurationsController < ApplicationController
     # Never trust parameters from the scary internet, only allow the white list through.
     def analysis_configuration_params
       params.require(:analysis_configuration).permit(:namespace, :name, :snapshot, :configuration_namespace,
-                                                     :configuration_name, :configuration_snapshot, :user_id,
+                                                     :configuration_name, :configuration_snapshot, :user_id, :description,
                                                      external_resources_attributes: [:id, :_destroy, :title, :description,
                                                                                      :url, :publication_url])
     end
