@@ -1,6 +1,6 @@
 <div class="tab-pane container-fluid " id="deployment">
   <h3>Deployment Notification</h3>
-  <div class="well ">
+  <div class="well">
     <% if @deployment_notification.errors.any? %>
       <div class="row bs-callout bs-callout-danger">
         <ul>
@@ -17,19 +17,19 @@
           <%= f.label :deployment_time, "Deployment Start Time:" %>
           <%= f.datetime_field :deployment_time, :disabled => true, :class=> "form-control"%>
           </div>
-          <div class="col-md-6 form-group" >
+          <div class="col-md-6 form-group">
               <label id='display-time-label'>Display Time: </label>
               <span id="display-time"><%= @deployment_notification.display_time.strftime("%a %b %d, %Y %I:%M%p")%> EST </span>
           </div>
         </div>
-        <div class="row " id ="message-area">
+        <div class="row" id ="message-area">
           <div class="col-md-1 col-md-offset-3">
             <label>Message</label>
           </div>
           <div class="col-md-5" >
           <%= f.text_area :message, :disabled =>true, :class=> "form-control"%>
           </div>
-        </div ></br>
+        </div></br>
         <div class="text-center">
         <%= link_to "<i class='fas fa fa-trash'></i> Delete Notification".html_safe, delete_deployment_notification_path, class: 'btn btn-lg btn-danger', method: :delete%></div>
         </div>
@@ -44,17 +44,17 @@
             <span id="display-time"><%= (Time.now - 4.hours).strftime("%a %b %d, %Y %I:%M%p")%></span>
           </div>
         </div>
-        <div class="row " id = "message-area">
-          <div class="col-md-1 col-md-offset-3 ">
+        <div class="row" id = "message-area">
+          <div class="col-md-1 col-md-offset-3">
             <label class ="form-group">Message:</label>
           </div>
-          <div class="col-md-5" >
+          <div class="col-md-5">
             <%= f.text_area :message, :value => "Single Cell Portal will be undergoing scheduled maintenance. During this time users may experience slowness or temporary downtime.",
                             :required => 'required', :class=> "form-control" %>
           </div>
         </div></br>
         <div class="text-center">
-          <%= f.submit 'Schedule', class: 'btn btn-lg btn-success submit_btn',   id: 'save-deployment-notifcation' %>
+          <%= f.submit 'Schedule', class: 'btn btn-lg btn-success submit_btn', id: 'save-deployment-notifcation' %>
         </div>
       <% end %>
     <% end %>

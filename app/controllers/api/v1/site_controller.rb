@@ -137,9 +137,8 @@ module Api
             user_quota = current_api_user.daily_download_quota + filesize
             # check against download quota that is loaded in ApplicationController.get_download_quota
             if user_quota <= @download_quota
-              @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, 0, @study.firecloud_project,
-                                                                         @study.firecloud_workspace, @study_file.bucket_location,
-                                                                         expires: 15)
+              @signed_url = Study.firecloud_client.execute_gcloud_method(:generate_signed_url, 0, @study.bucket_id,
+                                                                         @study_file.bucket_location, expires: 15)
               current_api_user.update(daily_download_quota: user_quota)
               redirect_to @signed_url
             else
@@ -869,8 +868,7 @@ module Api
                 outputs.each do |output_file|
                   file_location = output_file.gsub(/gs\:\/\/#{@study.bucket_id}\//, '')
                   # get google instance of file
-                  remote_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.firecloud_project,
-                                                                             @study.firecloud_workspace, file_location)
+                  remote_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.bucket_id, file_location)
                   if remote_file.present?
                     process_workflow_output(output_name, output_file, remote_file, workflow, params[:submission_id], configuration)
                   else
@@ -882,8 +880,7 @@ module Api
               else
                 file_location = outputs.gsub(/gs\:\/\/#{@study.bucket_id}\//, '')
                 # get google instance of file
-                remote_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.firecloud_project,
-                                                                           @study.firecloud_workspace, file_location)
+                remote_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.bucket_id, file_location)
                 if remote_file.present?
                   process_workflow_output(output_name, outputs, remote_file, workflow, params[:submission_id], configuration)
                 else
@@ -1000,8 +997,7 @@ module Api
         new_location = "outputs_#{@study.id}_#{submission_id}/#{basename}"
         # check if file has already been synced first
         # we can only do this by md5 hash as the filename and generation will be different
-        existing_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.firecloud_project,
-                                                                     @study.firecloud_workspace, new_location)
+        existing_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, @study.bucket_id, new_location)
         unless existing_file.present? && existing_file.md5 == remote_gs_file.md5 && StudyFile.where(study_id: @study.id, upload_file_name: new_location).exists?
           # now copy the file to a new location for syncing, marking as default type of 'Analysis Output'
           new_file = remote_gs_file.copy new_location

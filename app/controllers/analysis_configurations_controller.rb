@@ -1,6 +1,7 @@
 class AnalysisConfigurationsController < ApplicationController
   before_action :set_analysis_configuration, only: [:show, :edit, :update, :destroy, :reset_analysis_parameters,
-                                                    :submission_preview, :load_study_for_submission_preview]
+                                                    :submission_preview, :load_study_for_submission_preview,
+                                                    :update_analysis_parameter]
   before_action :set_analysis_parameter, only: [:update_analysis_parameter]
   before_action :check_firecloud_status, only: [:new, :create]
   before_action do
@@ -161,7 +162,7 @@ class AnalysisConfigurationsController < ApplicationController
     # Never trust parameters from the scary internet, only allow the white list through.
     def analysis_configuration_params
       params.require(:analysis_configuration).permit(:namespace, :name, :snapshot, :configuration_namespace,
-                                                     :configuration_name, :configuration_snapshot, :user_id,
+                                                     :configuration_name, :configuration_snapshot, :user_id, :description,
                                                      external_resources_attributes: [:id, :_destroy, :title, :description,
                                                                                      :url, :publication_url])
     end
