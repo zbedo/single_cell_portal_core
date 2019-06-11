@@ -6,7 +6,8 @@
     <div class="row-offcanvas row-offcanvas-right">
       <div id="view-options-nav"><a href="#view-options" id="view-option-link" data-toggle="offcanvas"><i class="fas fa-cog" aria-hidden="true"></i> View Options </a></div>
       <ul class="nav nav-tabs" role="tablist" id="view-tabs">
-        <li role="presentation" class="study-nav active" id="plots-tab-nav"><a href="#plots-tab" data-toggle="tab">Heatmap </a></li>
+        <li role="presentation" class="study-nav active" id="dot-tab-nav"><a href="#dot-plots-tab" data-toggle="tab">Dot Plot </a></li>
+        <li role="presentation" class="study-nav" id="plots-tab-nav"><a href="#plots-tab" data-toggle="tab">Heatmap </a></li>
         <% if @study.has_bam_files? %>
           <li role="presentation" class="study-nav" id="genome-tab-nav">
             <a href="#genome-tab" data-toggle="tab">Genome </a>
@@ -15,7 +16,19 @@
       </ul>
       <%= render partial: 'view_options' %>
       <div class="tab-content">
-        <div class="tab-pane active" id="plots-tab" role="tabpanel">
+        <div class="tab-pane active" id="dot-plots-tab" role="tabpanel">
+          <div class="panel panel-default no-top-border">
+            <div id="dot-plots" class="panel-collapse collapse in">
+              <div class="panel-body">
+                <div class="col-md-12">
+                  <%= render partial: 'morpheus_help' %>
+                  <div id="dot-plot"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tab-pane" id="plots-tab" role="tabpanel">
           <div class="panel panel-default no-top-border">
             <div id="plots" class="panel-collapse collapse in">
               <div class="panel-body">
@@ -44,11 +57,12 @@
 
     // monitor status of rendering plots for tests
     $('#heatmap-plot').data('rendered', false);
-
+    $('#dot-plot').data('rendered', false);
     function drawHeatmap(height) {
         $(window).off('resizeEnd');
         // clear out previous stored heatmap object
         $('#heatmap-plot').data('heatmap', null);
+        $('#dot-plot').data('heatmap', null);
         // if height isn't specified, pull from stored value, defaults to 500
         if (height === undefined) {
             height = $('#heatmap-plot').data('height');
@@ -90,6 +104,7 @@
             dataType: 'JSON',
             success: function(annotations) {
                 renderMorpheus(dataPath, newAnnotPath, annotName, annotType, '#heatmap-plot', annotations, fit, height, colorScalingMode);
+                renderMorpheusDotPlot(dataPath, newAnnotPath, annotName, annotType, '#dot-plot', annotations, fit, height);
             }
         });
     }
@@ -97,6 +112,9 @@
     $(document).ready(function() {
         $('#heatmap-plot').data('fit', '');
         $('#heatmap-plot').data('height', 500);
+        $('#dot-plot').data('fit', '');
+        $('#dot-plot').data('height', 500);
+
         drawHeatmap();
     });
 
@@ -113,6 +131,8 @@
     // when changing cluster, re-render annotation options and call render function
     $("#cluster").change(function(){
         $('#heatmap-plot').data('rendered', false);
+        $('#dot-plot').data('rendered', false);
+
         var newCluster = $(this).val();
         // keep track for search purposes
         $('#search_cluster').val(newCluster);
@@ -141,45 +161,25 @@
 
     $('#resize-heatmap').click(function() {
         $('#heatmap-plot').data('rendered', false);
+        $('#dot-plot').data('rendered', false);
+
         var newHeight = parseInt($('#heatmap_size').val());
         $("#heatmap-plot").data('height', newHeight);
         console.log('resizing heatmap to ' + newHeight);
         drawHeatmap(newHeight);
     });
 
-    // eweitz 2018-02-07: We removed the view-fullscreen button last month.  Is this needed?
-    $('#view-fullscreen').click(function() {
-        $('#heatmap-plot').data('rendered', false);
-        var btn = $(this);
-        var btnState = btn.data('active');
-        var newState = btnState === 'on' ? 'off' : 'on';
-        btn.data('active', newState);
-        btn.toggleClass('active');
-        toggleSearch();
-        var searchDisplay = $('#search-options-panel').css('display');
-        var currHeight = $('#heatmap_size').val();
-        var redraw = searchDisplay === 'none' || currHeight !== '';
-        // toggle view options if search options has been hidden
-        if (searchDisplay === 'none') {
-            $('#view-options').collapse('hide');
-        }
-        if (redraw) {
-            // if currHeight is blank, calling drawHeatmap with NaN for height will render all rows visible
-            drawHeatmap(parseInt(currHeight));
-        } else {
-            drawHeatmap();
-        }
-    });
-
     $('.fit-btn').click(function() {
         $('#heatmap-plot').data('rendered', false);
+        $('#dot-plot').data('rendered', false);
+
         var btn = $(this);
         var btnState = btn.data('active');
         var newState = btnState === 'on' ? 'off' : 'on';
         btn.data('active', newState);
         var fitType = btn.data('fit');
         console.log('setting fit type: ' + fitType + 'to ' + newState);
-        var plot = $('#heatmap-plot');
+
         btn.toggleClass('active');
         currFit = plot.data('fit');
         // determine state and set appropriately
@@ -195,8 +195,8 @@
             }
         }
 
-        plot.data('fit', fitType);
+        $('#heatmap-plot').data('fit', fitType);
+        $('#dot-plot').data('fit', fitType);
         drawHeatmap();
     });
-
 </script>

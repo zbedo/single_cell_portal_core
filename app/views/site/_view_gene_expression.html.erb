@@ -16,6 +16,9 @@
       <ul class="nav nav-tabs" role="tablist" id="view-tabs">
         <li role="presentation" class="study-nav active" id="box-or-violin-tab-nav"><a href="#box-or-violin-tab" id="distribution-link" data-toggle="tab">Distribution</a></li>
         <li role="presentation" class="study-nav" id="scatter-tab-nav"><a href="#scatter-tab" id="scatter-link" data-toggle="tab">Scatter</a></li>
+        <% if !@genes.nil? or @precomputed_heatmap %>
+          <li role="presentation" class="study-nav" id="dot-plots-tab-nav"><a href="#dot-plots-tab" id="dot-plots-link" data-toggle="tab">Dot Plot</a></li>
+        <% end %>
         <% if @study.has_bam_files? %>
             <li role="presentation" class="study-nav" id="genome-tab-nav">
             <a href="#genome-tab" data-toggle="tab">Genome </a>
@@ -24,7 +27,7 @@
       </ul>
       <%= render partial: 'view_options' %>
       <div class="tab-content">
-          <%= render partial: @top_plot_partial %>
+        <%= render partial: @top_plot_partial %>
       </div>
     </div>
   </div>
@@ -139,6 +142,5 @@
               }
           });
       });
-
   </script>
 </div>
