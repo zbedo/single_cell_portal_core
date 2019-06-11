@@ -51,6 +51,9 @@
     var dotPlotAnnotValuesPath = '<%= annotation_values_path(study_name: @study.url_safe_name) %>';
     var dotPlotNewAnnotsPath = '<%= get_new_annotations_path(study: params[:study])%>';
 
+    // monitor status of rendering plots for tests
+    $('#dot-plot').data('rendered', false);
+
     $(document).ready(function() {
         $('#dot-plot').data('fit', '');
         $('#dot-plot').data('height', 500);
