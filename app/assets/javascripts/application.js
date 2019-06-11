@@ -31,6 +31,7 @@
 //= require clipboard.min
 //= require scp-igv
 //= require scp-ideogram
+//= require scp-dot-plot
 
 var fileUploading = false;
 var PAGE_RENDERED = false;
@@ -667,90 +668,6 @@ function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, t
     $(target).data('morpheus', heatmap);
     $(target).data('rendered', true);
     console.log('render status of ' + target + ' at end: ' + $(target).data('rendered'));
-
-}
-
-function renderMorpheusDotPlot(dataPath, annotPath, selectedAnnot, selectedAnnotType, target, annotations, fitType, dotHeight) {
-    console.log('render status of ' + target + ' at start: ' + $(target).data('rendered'));
-    $(target).empty();
-
-    // collapse by median
-    var tools = [{ name: "Collapse", params: {shape: 'circle', collapse: ["Columns"], collapse_to_fields: [selectedAnnot], compute_percent: true, pass_expression: ">", pass_value:"0", percentile:"100"}}];
-
-    var config = {shape: 'circle', dataset: dataPath, el: $(target), menu: null, colorScheme: {scalingMode: 'relative'}, tools: tools};
-
-    // set height if specified, otherwise use default setting of 500 px
-    if (dotHeight !== undefined) {
-        config.height = dotHeight;
-    } else {
-        config.height = 500;
-    }
-
-    // fit rows, columns, or both to screen
-    if (fitType === 'cols') {
-        config.columnSize = 'fit';
-    } else if (fitType === 'rows') {
-        config.rowSize = 'fit';
-    } else if (fitType === 'both') {
-        config.columnSize = 'fit';
-        config.rowSize = 'fit';
-    } else {
-        config.columnSize = null;
-        config.rowSize = null;
-    }
-
-    // load annotations if specified
-    if (annotPath !== '') {
-        config.columnAnnotations = [{
-            file : annotPath,
-            datasetField : 'id',
-            fileField : 'NAME',
-            include: [selectedAnnot]}
-        ];
-        config.columnSortBy = [
-            {field: selectedAnnot, order:0}
-        ];
-        config.columns = [
-            {field: selectedAnnot, display: 'text'}
-        ];
-        config.rows = [
-            {field: 'id', display: 'text'}
-        ];
-        // create mapping of selected annotations to colorBrewer colors
-        var annotColorModel = {};
-        annotColorModel[selectedAnnot] = {};
-        var sortedAnnots = annotations['values'].sort();
-
-        // calling % 27 will always return to the beginning of colorBrewerSet once we use all 27 values
-        $(sortedAnnots).each(function(index, annot) {
-            annotColorModel[selectedAnnot][annot] = colorBrewerSet[index % 27];
-        });
-        config.columnColorModel = annotColorModel;
-    }
-
-
-
-    config.colorScheme = {
-        values : [0, 0.5,1],
-        colors : ["blue", "purple", "red"]
-    };
-
-
-    // instantiate heatmap and embed in DOM element
-    var dotPlot = new morpheus.HeatMap(config);
-    dotPlot.tabManager.setOptions({autohideTabBar:true});
-    $(target).off();
-    $(target).on('heatMapLoaded', function (e, heatMap) {
-        var tabItems = dotPlot.tabManager.getTabItems();
-        dotPlot.tabManager.setActiveTab(tabItems[1].id);
-        dotPlot.tabManager.remove(tabItems[0].id);
-    });
-
-    // set render variable to true for tests
-    $(target).data('morpheus', dotPlot);
-    $(target).data('rendered', true);
-    console.log('render status of ' + target + ' at end: ' + $(target).data('rendered'));
-
 
 }
 
