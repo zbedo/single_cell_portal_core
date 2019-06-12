@@ -362,7 +362,10 @@
           <% if study_share.show_share? %>
 					<tr id="study-share-<%= study_share.email.gsub(/[@.]/, '-') %>">
 						<td class="share-email"><%= study_share.email %></td>
-						<td class="share-permission"><%= study_share.permission %></td>
+						<td class="share-permission">
+              <%= study_share.permission %><br />
+              <span class="help-block share-description"><%= StudyShare::PERMISSION_DESCRIPTION_MAP[study_share.permission] %></span>
+            </td>
 						<td><%= study_share.updated_at.to_s(:long) %></td>
 					</tr>
           <% end %>

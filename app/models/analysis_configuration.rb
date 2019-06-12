@@ -153,7 +153,7 @@ class AnalysisConfiguration
 
   # display value for dropdown menus in user-facing forms
   def select_option_display
-    display_value = self.name
+    display_value = self.name + " [v.#{self.snapshot}]"
     display_value += self.synopsis.present? ? " (#{self.synopsis})" : ""
     display_value
   end
