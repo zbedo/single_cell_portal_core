@@ -1,3 +1,12 @@
+/**
+ * @fileoverview Functions for rendering dot plots using Morpheus.js
+ *
+ * Dot plots are similar to heatmaps, and better for summarizing expression
+ * across many cells. The color of the dot is the size of the average
+ * expression of a cluster in a gene. The size of the dot is what percent of
+ * cells in the cluster have expression (expr > 0) in the gene.
+ */
+
 function renderMorpheusDotPlot(dataPath, annotPath, selectedAnnot, selectedAnnotType, target, annotations, fitType, dotHeight) {
   console.log('render status of ' + target + ' at start: ' + $(target).data('rendered'));
   $(target).empty();
@@ -9,10 +18,10 @@ function renderMorpheusDotPlot(dataPath, annotPath, selectedAnnot, selectedAnnot
       shape: 'circle',
       collapse: ['Columns'],
       collapse_to_fields: [selectedAnnot],
-      compute_percent: true,
       pass_expression: '>',
       pass_value: '0',
-      percentile: '100'
+      percentile: '100',
+      // compute_percent: true
     }
   }];
 
@@ -56,7 +65,7 @@ function renderMorpheusDotPlot(dataPath, annotPath, selectedAnnot, selectedAnnot
       include: [selectedAnnot]
     }];
     config.columnSortBy = [
-      {field: selectedAnnot, order:0}
+      {field: selectedAnnot, order: 0}
     ];
     config.columns = [
       {field: selectedAnnot, display: 'text'}
@@ -78,13 +87,13 @@ function renderMorpheusDotPlot(dataPath, annotPath, selectedAnnot, selectedAnnot
   }
 
   config.colorScheme = {
-    values : [0, 0.5, 1],
-    colors : ['blue', 'purple', 'red']
+    values: [0, 0.5, 1],
+    colors: ['blue', 'purple', 'red']
   };
 
   // Instantiate heatmap and embed in DOM element
   var dotPlot = new morpheus.HeatMap(config);
-  dotPlot.tabManager.setOptions({autohideTabBar:true});
+  dotPlot.tabManager.setOptions({autohideTabBar: true});
   $(target).off();
   $(target).on('heatMapLoaded', function (e, heatMap) {
     var tabItems = dotPlot.tabManager.getTabItems();
@@ -177,7 +186,7 @@ $('#cluster').change(function(){
     dataType: 'script',
     success: function (data) {
       // Parse response as a string and see if currently selected annotation exists in new annotations
-      if (data.indexOf(currAnnot) >= 0) {
+      if (data.includes(currAnnot)) {
         $('#annotation').val(currAnnot);
       }
       $(document).ready(function () {
