@@ -62,65 +62,65 @@
   </div>
 </div>
 <div class="panel panel-info top-pad" id="stats-panel">
-	<div class="panel-heading">
-		<div class="panel-title">
-			<h4><%= link_to "Statistics <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#stats', 'data-toggle' => 'collapse' %></h4>
-		</div>
-	</div>
-	<div class="panel-collapse collapse in" id="stats">
-		<div class="panel-body">
-			<div class="row">
-				<div class="col-md-6">
-					<h4>Clusters <span class="badge" id="cluster-count"><%= @study.cluster_groups.count %></span></h4>
-					<div class="table-responsive">
-						<table class="table table-condensed" id="clusters">
-							<thead>
-								<tr>
-									<th>Name</th>
-									<th>Type</th>
+  <div class="panel-heading">
+    <div class="panel-title">
+      <h4><%= link_to "Statistics <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#stats', 'data-toggle' => 'collapse' %></h4>
+    </div>
+  </div>
+  <div class="panel-collapse collapse in" id="stats">
+    <div class="panel-body">
+      <div class="row">
+        <div class="col-md-6">
+          <h4>Clusters <span class="badge" id="cluster-count"><%= @study.cluster_groups.count %></span></h4>
+          <div class="table-responsive">
+            <table class="table table-condensed" id="clusters">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Type</th>
                   <th>Points</th>
                   <th>Annotations</th>
-								</tr>
-							</thead>
-							<tbody>
-								<% @study.cluster_groups.each do |cluster| %>
-									<tr>
-										<td><%= cluster.name %></td>
-										<td><%= cluster.cluster_type %></td>
+                </tr>
+              </thead>
+              <tbody>
+                <% @study.cluster_groups.each do |cluster| %>
+                  <tr>
+                    <td><%= cluster.name %></td>
+                    <td><%= cluster.cluster_type %></td>
                     <td><%= cluster.points %></td>
                     <td><%= cluster.cell_annotations.size %></td>
-									</tr>
-								<% end %>
-							</tbody>
-						</table>
-					</div>
-				</div>
-				<div class="col-md-6">
-					<h4>Gene Lists <span class="badge" id="precomputed-count"><%= @study.precomputed_scores.count %></span></h4>
-					<div class="table-responsive">
-						<table class="table table-condensed" id="precomputed">
-							<thead>
-							<tr>
-								<th>Name</th>
-								<th>Clusters</th>
-								<th>Genes</th>
-							</tr>
-							</thead>
-							<tbody>
-							<% @study.precomputed_scores.each do |pc_score| %>
-								<tr>
-									<td><%= pc_score.name %></td>
-									<td><%= pc_score.clusters.count %></td>
-									<td><%= pc_score.gene_list.count %></td>
-								</tr>
-							<% end %>
-							</tbody>
-						</table>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <h4>Gene Lists <span class="badge" id="precomputed-count"><%= @study.precomputed_scores.count %></span></h4>
+          <div class="table-responsive">
+            <table class="table table-condensed" id="precomputed">
+              <thead>
+              <tr>
+                <th>Name</th>
+                <th>Clusters</th>
+                <th>Genes</th>
+              </tr>
+              </thead>
+              <tbody>
+              <% @study.precomputed_scores.each do |pc_score| %>
+                <tr>
+                  <td><%= pc_score.name %></td>
+                  <td><%= pc_score.clusters.count %></td>
+                  <td><%= pc_score.gene_list.count %></td>
+                </tr>
+              <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 <div class="panel panel-info" id="metadata-annotations-panel">
   <div class="panel-heading">
@@ -204,44 +204,44 @@
 </div>
 
 <div class="panel panel-primary" id="study-files-panel">
-	<div class="panel-heading">
-		<div class="panel-title">
-			<h4><%= link_to "Study Files <span class='badge' id='study-file-count'>#{@study.study_files.non_primary_data.size}</span> <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#study-files', 'data-toggle' => 'collapse', class: 'white' %></h4>
-		</div>
-	</div>
+  <div class="panel-heading">
+    <div class="panel-title">
+      <h4><%= link_to "Study Files <span class='badge' id='study-file-count'>#{@study.study_files.non_primary_data.size}</span> <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#study-files', 'data-toggle' => 'collapse', class: 'white' %></h4>
+    </div>
+  </div>
 
-	<div class="panel-collapse collapse in" id="study-files">
-		<div class="panel-body table-responsive">
-			<table class="table table-striped">
-				<thead>
-					<tr>
-						<th>Name</th>
-						<th>Description</th>
+  <div class="panel-collapse collapse in" id="study-files">
+    <div class="panel-body table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
             <th>File Type</th>
             <th>Species/Assembly</th>
-						<th>Parse Status</th>
-						<th>Download</th>
-					</tr>
-				</thead>
-				<tbody>
-					<% @study.study_files.non_primary_data.sort_by(&:name).each do |study_file| %>
-						<tr id="study-file-<%= study_file.id %>">
-							<td class="study-file-name"><%= study_file.name %></td>
-							<td class="study-file-description"><%= study_file.description %></td>
+            <th>Parse Status</th>
+            <th>Download</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @study.study_files.non_primary_data.sort_by(&:name).each do |study_file| %>
+            <tr id="study-file-<%= study_file.id %>">
+              <td class="study-file-name"><%= study_file.name %></td>
+              <td class="study-file-description"><%= study_file.description %></td>
               <td class="study-file-file-type"><%= study_file.file_type %></td>
               <td class="study-file-species-info">
                 <% if study_file.taxon.present? %>
                   <%= study_file.species_name %> <%= study_file.genome_assembly.present? ? " (#{study_file.genome_assembly_name})" : nil %>
                 <% end %>
               </td>
-							<td class="study-file-parsed" data-parsed="<%= study_file.parsed? %>"><%= study_file.parseable? ? get_parse_label(study_file.parse_status) : get_na_label %></td>
-							<td><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></td>
-						</tr>
-					<% end %>
-				</tbody>
-			</table>
-		</div>
-	</div>
+              <td class="study-file-parsed" data-parsed="<%= study_file.parsed? %>"><%= study_file.parseable? ? get_parse_label(study_file.parse_status) : get_na_label %></td>
+              <td><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <div class="panel panel-warning" id="fastq-files-panel">
@@ -340,40 +340,40 @@
 </div>
 
 <div class="panel panel-success" id="study-shares-panel">
-	<div class="panel-heading">
-		<div class="panel-title">
-			<h4><%= link_to "Sharing <span class='badge' id='share-count'>#{@study.study_shares.visible.size}</span> <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#study-shares', class: 'text-success', 'data-toggle' => 'collapse' %></h4>
-		</div>
-	</div>
+  <div class="panel-heading">
+    <div class="panel-title">
+      <h4><%= link_to "Sharing <span class='badge' id='share-count'>#{@study.study_shares.visible.size}</span> <span class='fas fa-chevron-down toggle-glyph'></span>".html_safe, '#study-shares', class: 'text-success', 'data-toggle' => 'collapse' %></h4>
+    </div>
+  </div>
 
-	<div class="panel-collapse collapse in" id="study-shares">
-		<div class="panel-body table-responsive">
-			<table class="table table-striped">
-				<thead>
-				<tr>
-					<th>Email</th>
-					<th>Permission</th>
-					<th>Date</th>
-				</tr>
-				</thead>
-				<tbody>
-				<% @study.study_shares.each do |study_share| %>
+  <div class="panel-collapse collapse in" id="study-shares">
+    <div class="panel-body table-responsive">
+      <table class="table table-striped">
+        <thead>
+        <tr>
+          <th>Email</th>
+          <th>Permission</th>
+          <th>Date</th>
+        </tr>
+        </thead>
+        <tbody>
+        <% @study.study_shares.each do |study_share| %>
           <%#=% Don't show entry for read-only service account %>
           <% if study_share.show_share? %>
-					<tr id="study-share-<%= study_share.email.gsub(/[@.]/, '-') %>">
-						<td class="share-email"><%= study_share.email %></td>
-						<td class="share-permission">
+          <tr id="study-share-<%= study_share.email.gsub(/[@.]/, '-') %>">
+            <td class="share-email"><%= study_share.email %></td>
+            <td class="share-permission">
               <%= study_share.permission %><br />
               <span class="help-block share-description"><%= StudyShare::PERMISSION_DESCRIPTION_MAP[study_share.permission] %></span>
             </td>
-						<td><%= study_share.updated_at.to_s(:long) %></td>
-					</tr>
+            <td><%= study_share.updated_at.to_s(:long) %></td>
+          </tr>
           <% end %>
-				<% end %>
-				</tbody>
-			</table>
-		</div>
-	</div>
+        <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
 <div class="panel panel-success" id="external-resources-panel">
   <div class="panel-heading">
@@ -410,18 +410,18 @@
 </div>
 <div id="notice-target"></div>
 <p><%= scp_link_to "<span class='fas fa-edit'></span> Edit Study".html_safe, edit_study_path(@study), class: 'btn btn-primary' %>
-	<%= scp_link_to "<span class='fas fa-upload'></span> Upload/Edit Data".html_safe, upload_study_path(@study), class: 'btn btn-success' %>
-	<%= scp_link_to "<span class='fas fa-chevron-left'></span> Back".html_safe, studies_path, class: 'btn btn-warning' %></p>
+  <%= scp_link_to "<span class='fas fa-upload'></span> Upload/Edit Data".html_safe, upload_study_path(@study), class: 'btn btn-success' %>
+  <%= scp_link_to "<span class='fas fa-chevron-left'></span> Back".html_safe, studies_path, class: 'btn btn-warning' %></p>
 
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
-		$('#clusters, #precomputed').dataTable({
-			pagingType: "simple",
-			order: [[0, 'asc']],
-			language: {
-				search: "Filter records:"
-			}
-		});
+    $('#clusters, #precomputed').dataTable({
+      pagingType: "simple",
+      order: [[0, 'asc']],
+      language: {
+        search: "Filter records:"
+      }
+    });
 
     $('#fastq-table').dataTable({
         pagingType: 'full',
