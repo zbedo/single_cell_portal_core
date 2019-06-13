@@ -38,6 +38,10 @@ class AnalysisConfiguration
       key :type, :string
       key :description, 'Short description of analysis method'
     end
+    property :description do
+      key :type, :string
+      key :description, 'Long-form description of analysis method, or information regarding running analysis'
+    end
     property :entity_type do
       key :type, :string
       key :description, 'FireCloud entity model type supported by analysis method'
@@ -74,6 +78,10 @@ class AnalysisConfiguration
       key :type, :string
       key :description, 'Short description of analysis method'
     end
+    property :description do
+      key :type, :string
+      key :description, 'Long-form description of analysis method, or information regarding running analysis'
+    end
     property :entity_type do
       key :type, :string
       key :description, 'FireCloud entity model type supported by analysis method'
@@ -92,6 +100,7 @@ class AnalysisConfiguration
   field :configuration_snapshot, type: Integer
   field :synopsis, type: String
   field :entity_type, type: String
+  field :description, type: String, default: ''
 
   validate :ensure_wdl_keys
   validates_presence_of :namespace, :name, :snapshot, :configuration_namespace, :configuration_name, :configuration_snapshot
@@ -144,7 +153,7 @@ class AnalysisConfiguration
 
   # display value for dropdown menus in user-facing forms
   def select_option_display
-    display_value = self.name
+    display_value = self.name + " [v.#{self.snapshot}]"
     display_value += self.synopsis.present? ? " (#{self.synopsis})" : ""
     display_value
   end

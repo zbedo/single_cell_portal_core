@@ -1151,7 +1151,9 @@ class Study
     studies.each do |study|
       Rails.logger.info "#{Time.zone.now}: deleting queued study #{study.name}"
       Gene.where(study_id: study.id).delete_all
-      DataArray.where(study_id: study.id).delete_all
+      study.study_files.each do |file|
+        DataArray.where(study_id: study.id, study_file_id: file.id).delete_all
+      end
       CellMetadatum.where(study_id: study.id).delete_all
       PrecomputedScore.where(study_id: study.id).delete_all
       ClusterGroup.where(study_id: study.id).delete_all
@@ -1283,7 +1285,7 @@ class Study
       study_remotes = []
       # get all remotes at once, rather than individually to save time & memory
       begin
-        remotes = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, 0, study.firecloud_project, study.firecloud_workspace)
+        remotes = Study.firecloud_client.execute_gcloud_method(:get_workspace_files, 0, study.bucket_id)
         study_remotes += remotes
         while remotes.next?
           remotes = remotes.next
@@ -1385,8 +1387,7 @@ class Study
       if !opts[:local] || !expression_file.is_local?
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, self.firecloud_project,
-                                                     self.firecloud_workspace, expression_file.bucket_location,
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, self.bucket_id, expression_file.bucket_location,
                                                      self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, expression_file.bucket_location)
       end
@@ -1607,7 +1608,7 @@ class Study
       # rather than relying on opts[:local], actually check if the file is already in the GCS bucket
       destination = expression_file.bucket_location
       begin
-        remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, self.firecloud_project, self.firecloud_workspace, destination)
+        remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, self.bucket_id, destination)
       rescue => e
         ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "Error retrieving remote: #{e.message}"
@@ -1664,8 +1665,7 @@ class Study
         # make sure data dir exists first
         Rails.logger.info "Localizing file: #{ordinations_file.upload_file_name} in #{self.data_store_path}"
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, self.firecloud_project,
-                                                     self.firecloud_workspace, ordinations_file.bucket_location,
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, self.bucket_id, ordinations_file.bucket_location,
                                                      self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, ordinations_file.bucket_location)
       end
@@ -1966,7 +1966,7 @@ class Study
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       destination = ordinations_file.bucket_location
       begin
-        remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, self.firecloud_project, self.firecloud_workspace, destination)
+        remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, self.bucket_id, destination)
       rescue => e
         ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "Error retrieving remote: #{e.message}"
@@ -2021,8 +2021,7 @@ class Study
       if !opts[:local] || !coordinate_file.is_local?
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, self.firecloud_project,
-                                                     self.firecloud_workspace, coordinate_file.bucket_location,
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, self.bucket_id, coordinate_file.bucket_location,
                                                      self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, coordinate_file.bucket_location)
       end
@@ -2200,7 +2199,7 @@ class Study
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       destination = coordinate_file.bucket_location
       begin
-        remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, self.firecloud_project, self.firecloud_workspace, destination)
+        remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, self.bucket_id, destination)
       rescue => e
         ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "Error retrieving remote: #{e.message}"
@@ -2253,8 +2252,7 @@ class Study
       if !opts[:local] || !metadata_file.is_local?
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, self.firecloud_project,
-                                                     self.firecloud_workspace, metadata_file.bucket_location,
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, self.bucket_id, metadata_file.bucket_location,
                                                      self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, metadata_file.bucket_location)
       end
@@ -2487,7 +2485,7 @@ class Study
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       destination = metadata_file.bucket_location
       begin
-        remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, self.firecloud_project, self.firecloud_workspace, destination)
+        remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, self.bucket_id, destination)
       rescue => e
         ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "Error retrieving remote: #{e.message}"
@@ -2541,8 +2539,7 @@ class Study
       if !opts[:local] || !marker_file.is_local?
         # make sure data dir exists first
         self.make_data_dir
-        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, self.firecloud_project,
-                                                     self.firecloud_workspace, marker_file.bucket_location,
+        Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, self.bucket_id, marker_file.bucket_location,
                                                      self.data_store_path, verify: :none)
         @file_location = File.join(self.data_store_path, marker_file.bucket_location)
       end
@@ -2674,7 +2671,7 @@ class Study
       # now that parsing is complete, we can move file into storage bucket and delete local (unless we downloaded from FireCloud to begin with)
       destination = marker_file.bucket_location
       begin
-        remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, self.firecloud_project, self.firecloud_workspace, destination)
+        remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, self.bucket_id, destination)
       rescue => e
         ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "Error retrieving remote: #{e.message}"
@@ -2750,8 +2747,7 @@ class Study
         File.rename gzip_filepath, file_location
         opts.merge!(content_encoding: 'gzip')
       end
-      remote_file = Study.firecloud_client.execute_gcloud_method(:create_workspace_file, 0, self.firecloud_project,
-                                                                 self.firecloud_workspace, file.upload.path,
+      remote_file = Study.firecloud_client.execute_gcloud_method(:create_workspace_file, 0, self.bucket_id, file.upload.path,
                                                                  file.bucket_location, opts)
       # store generation tag to know whether a file has been updated in GCP
       Rails.logger.info "#{Time.zone.now}: Updating #{file.bucket_location}:#{file.id} with generation tag: #{remote_file.generation} after successful upload"

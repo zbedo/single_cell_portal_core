@@ -573,8 +573,7 @@ class StudyFile
   end
 
   def api_url
-    api_url = Study.firecloud_client.execute_gcloud_method(:generate_api_url, 0, self.study.firecloud_project,
-                                              self.study.firecloud_workspace, self.bucket_location)
+    api_url = Study.firecloud_client.execute_gcloud_method(:generate_api_url, 0, self.study.bucket_id, self.bucket_location)
     api_url + '?alt=media'
   end
 
@@ -922,7 +921,7 @@ class StudyFile
       existing_array = DataArray.where(name: "#{self.name} Cells", array_type: 'cells', linear_data_type: 'Study',
                                        linear_data_id: self.study_id).any?
       unless existing_array
-        remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, study.firecloud_project, study.firecloud_workspace, self.bucket_location)
+        remote = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, study.bucket_id, self.bucket_location)
         if remote.present?
           study.make_data_dir
           download_location = study.data_store_path
@@ -937,9 +936,8 @@ class StudyFile
           puts msg
           Rails.logger.info msg
           file_location = File.join(study.data_store_path, self.download_location)
-          Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, study.firecloud_project,
-                                                       study.firecloud_workspace, self.bucket_location, download_location,
-                                                       verify: :none)
+          Study.firecloud_client.execute_gcloud_method(:download_workspace_file, 0, study.bucket_id, self.bucket_location,
+                                                       download_location, verify: :none)
           content_type = self.determine_content_type
           shift_headers = true
           if content_type == 'application/gzip'

@@ -246,6 +246,20 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
     self.user.nil? ? self.storage_issuer : self.user
   end
 
+  # identify user initiating a request; either self.user, Current.user, or service account
+  #
+  # *return*
+  #   - +String+ db identifier of user, or service account email
+  def tracking_identifier
+    if self.user.present?
+      self.user.id
+    elsif Current.user.present?
+      Current.user.id
+    else
+      self.issuer
+    end
+  end
+
   ######
   ##
   ## FIRECLOUD METHODS
@@ -269,6 +283,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
     # set up default options
     request_opts = {file_upload: false}.merge(opts)
 
+    # Log API call for auditing/tracking purposes
+    Rails.logger.info "FireCloud API request (#{http_method.to_s.upcase}) #{path} with tracking identifier: #{self.tracking_identifier}"
     # check for token expiry first before executing
     if self.access_token_expired?
       Rails.logger.info "FireCloudClient token expired, refreshing access token"
@@ -278,7 +294,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
     headers = {
         'Authorization' => "Bearer #{self.access_token['access_token']}",
         'x-app-id' => "single-cell-portal",
-        'x-domain-id' => "#{ENV['HOSTNAME']}"
+        'x-domain-id' => "#{ENV['HOSTNAME']}",
+        'x-user-id' => "#{self.tracking_identifier}"
     }
     # if not uploading a file, set the content_type to application/json
     if !request_opts[:file_upload]
@@ -1338,51 +1355,45 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # retrieve a workspace's GCP bucket
   #
   # * *params*
-  #   - +workspace_namespace+ (String) => namespace of workspace
-  #   - +workspace_name+ (String) => name of workspace
+  #   - +workspace_bucket_id+ (String) => ID of workspace GCP bucket
   #
   # * *return*
   #   - +Google::Cloud::Storage::Bucket+ object
-  def get_workspace_bucket(workspace_namespace, workspace_name)
-    workspace = self.get_workspace(workspace_namespace, workspace_name)
-    bucket_name = workspace['workspace']['bucketName']
-    self.storage.bucket bucket_name
+  def get_workspace_bucket(workspace_bucket_id)
+    self.storage.bucket workspace_bucket_id
   end
 
   # retrieve all files in a GCP bucket of a workspace
   #
   # * *params*
-  #   - +workspace_namespace+ (String) => namespace of workspace
-  #   - +workspace_name+ (String) => name of workspace
+  #   - +workspace_bucket_id+ (String) => ID of workspace GCP bucket
   #   - +opts+ (Hash) => hash of optional parameters, see
   #     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.13.0/google/cloud/storage/bucket?method=files-instance
   #
   # * *return*
   #   - +Google::Cloud::Storage::File::List+
-  def get_workspace_files(workspace_namespace, workspace_name, opts={})
-    bucket = self.get_workspace_bucket(workspace_namespace, workspace_name)
+  def get_workspace_files(workspace_bucket_id, opts={})
+    bucket = self.get_workspace_bucket(workspace_bucket_id)
     bucket.files(opts)
   end
 
   # retrieve single study_file in a GCP bucket of a workspace
   #
   # * *params*
-  #   - +workspace_namespace+ (String) => namespace of workspace
-  #   - +workspace_name+ (String) => name of workspace
+  #   - +workspace_bucket_id+ (String) => ID of workspace GCP bucket
   #   - +filename+ (String) => name of file
   #
   # * *return*
   #   - +Google::Cloud::Storage::File+
-  def get_workspace_file(workspace_namespace, workspace_name, filename)
-    bucket = self.get_workspace_bucket(workspace_namespace, workspace_name)
+  def get_workspace_file(workspace_bucket_id, filename)
+    bucket = self.get_workspace_bucket(workspace_bucket_id)
     bucket.file filename
   end
 
   # add a file to a workspace bucket
   #
   # * *params*
-  #   - +workspace_namespace+ (String) => namespace of workspace
-  #   - +workspace_name+ (String) => name of workspace
+  #   - +workspace_bucket_id+ (String) => ID of workspace GCP bucket
   #   - +filepath+ (String) => path to file
   #   - +filename+ (String) => name of file
   #   - +opts+ (Hash) => extra options for create_file, see
@@ -1390,16 +1401,15 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   #
   # * *return*
   #   - +Google::Cloud::Storage::File+
-  def create_workspace_file(workspace_namespace, workspace_name, filepath, filename, opts={})
-    bucket = self.get_workspace_bucket(workspace_namespace, workspace_name)
+  def create_workspace_file(workspace_bucket_id, filepath, filename, opts={})
+    bucket = self.get_workspace_bucket(workspace_bucket_id)
     bucket.create_file filepath, filename, opts
   end
 
   # copy a file to a new location in a workspace bucket
   #
   # * *params*
-  #   - +workspace_namespace+ (String) => namespace of workspace
-  #   - +workspace_name+ (String) => name of workspace
+  #   - +workspace_bucket_id+ (String) => ID of workspace GCP bucket
   #   - +filename+ (String) => name of target file
   #   - +destination_name+ (String) => destination of new file
   #   - +opts+ (Hash) => extra options for create_file, see
@@ -1407,27 +1417,26 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   #
   # * *return*
   #   - +Google::Cloud::Storage::File+
-  def copy_workspace_file(workspace_namespace, workspace_name, filename, destination_name, opts={})
-    file = self.get_workspace_file(workspace_namespace, workspace_name, filename)
+  def copy_workspace_file(workspace_bucket_id, filename, destination_name, opts={})
+    file = self.get_workspace_file(workspace_bucket_id, filename)
     file.copy destination_name, opts
   end
 
   # delete a file to a workspace bucket
   #
   # * *params*
-  #   - +workspace_namespace+ (String) => namespace of workspace
-  #   - +workspace_name+ (String) => name of workspace
+  #   - +workspace_bucket_id+ (String) => ID of workspace GCP bucket
   #   - +filename+ (String) => name of file
   #
   # * *return*
   #   - +Boolean+ indication of file deletion
-	def delete_workspace_file(workspace_namespace, workspace_name, filename)
-		file = self.get_workspace_file(workspace_namespace, workspace_name, filename)
+	def delete_workspace_file(workspace_bucket_id, filename)
+		file = self.get_workspace_file(workspace_bucket_id, filename)
 		begin
 			file.delete
     rescue => e
       ErrorTracker.report_exception(e, self.issuer_object, {method_name: :delete_workspace_file,
-                                                            params: [workspace_namespace, workspace_name, filename]})
+                                                            params: [workspace_bucket_id, filename]})
 			Rails.logger.info("failed to delete workspace file #{filename} with error #{e.message}")
 			false
 		end
@@ -1437,8 +1446,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # on files larger that 50 MB
   #
   # * *params*
-  #   - +workspace_namespace+ (String) => namespace of workspace
-  #   - +workspace_name+ (String) => name of workspace
+  #   - +workspace_bucket_id+ (String) => ID of workspace GCP bucket
   #   - +filename+ (String) => name of file
   #   - +destination+ (String) => destination path for downloaded file
   #   - +opts+ (Hash) => extra options for signed_url, see
@@ -1446,8 +1454,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   #
   # * *return*
   #   - +File+ object
-  def download_workspace_file(workspace_namespace, workspace_name, filename, destination, opts={})
-    file = self.get_workspace_file(workspace_namespace, workspace_name, filename)
+  def download_workspace_file(workspace_bucket_id, filename, destination, opts={})
+    file = self.get_workspace_file(workspace_bucket_id, filename)
     # create a valid path by combining destination directory and filename, making sure no double / exist
     end_path = [destination, filename].join('/').gsub(/\/\//, '/')
     # gotcha in case file is in a subdirectory
@@ -1459,7 +1467,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
     end
     # determine if a chunked download is needed
     if file.size > 50.megabytes
-      Rails.logger.info "Performing chunked download for #{filename} from #{workspace_namespace}/#{workspace_name}"
+      Rails.logger.info "Performing chunked download for #{filename} from #{workspace_bucket_id}"
       # we need to determine whether or not this file has been gzipped - if so, we have to make a copy and unset the
       # gzip content-encoding as we cannot do range requests on gzipped data
       if file.content_encoding == 'gzip'
@@ -1482,7 +1490,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
         # clean up the temp copy
         remote.delete
       end
-      Rails.logger.info "Chunked download for #{filename} from #{workspace_namespace}/#{workspace_name} complete"
+      Rails.logger.info "Chunked download for #{filename} from #{workspace_bucket_id} complete"
       # return newly-opened file (will need to check content type before attempting to parse)
       local
     else
@@ -1493,30 +1501,28 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # generate a signed url to download a file that isn't public (set at study level)
   #
   # * *params*
-  #   - +workspace_namespace+ (String) => namespace of workspace
-  #   - +workspace_name+ (String) => name of workspace
+  #   - +workspace_bucket_id+ (String) => ID of workspace GCP bucket
   #   - +filename+ (String) => name of file
   #   - +opts+ (Hash) => extra options for signed_url, see
   #     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.13.0/google/cloud/storage/file?method=signed_url-instance
   #
   # * *return*
   #   - +String+ signed URL
-  def generate_signed_url(workspace_namespace, workspace_name, filename, opts={})
-    file = self.get_workspace_file(workspace_namespace, workspace_name, filename)
+  def generate_signed_url(workspace_bucket_id, filename, opts={})
+    file = self.get_workspace_file(workspace_bucket_id, filename)
     file.signed_url(opts)
   end
 
   # generate an api url to directly load a file from GCS via client-side JavaScript
   #
   # * *params*
-  #   - +workspace_namespace+ (String) => namespace of workspace
-  #   - +workspace_name+ (String) => name of workspace
+  #   - +workspace_bucket_id+ (String) => ID of workspace GCP bucket
   #   - +filename+ (String) => name of file
   #
   # * *return*
   #   - +String+ signed URL
-  def generate_api_url(workspace_namespace, workspace_name, filename)
-    file = self.get_workspace_file(workspace_namespace, workspace_name, filename)
+  def generate_api_url(workspace_bucket_id, filename)
+    file = self.get_workspace_file(workspace_bucket_id, filename)
     if file
       file.api_url
     else
@@ -1527,19 +1533,18 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # retrieve all files in a GCP directory
   #
   # * *params*
-  #   - +workspace_namespace+ (String) => namespace of workspace
-  #   - +workspace_name+ (String) => name of workspace
+  #   - +workspace_bucket_id+ (String) => ID of workspace GCP bucket
   #   - +directory+ (String) => name of directory in bucket
   #   - +opts+ (Hash) => hash of optional parameters, see
   #     https://googlecloudplatform.github.io/google-cloud-ruby/#/docs/google-cloud-storage/v1.13.0/google/cloud/storage/bucket?method=files-instance
   #
   # * *return*
   #   - +Google::Cloud::Storage::File::List+
-  def get_workspace_directory_files(workspace_namespace, workspace_name, directory, opts={})
+  def get_workspace_directory_files(workspace_bucket_id, directory, opts={})
     # makes sure directory ends with '/', otherwise append to prevent spurious matches
     directory += '/' unless directory.last == '/'
     opts.merge!(prefix: directory)
-    self.get_workspace_files(workspace_namespace, workspace_name, opts)
+    self.get_workspace_files(workspace_bucket_id, opts)
   end
 
   #######

@@ -27,8 +27,7 @@ class UploadCleanupJob < Struct.new(:study, :study_file, :retry_count)
         begin
           # check workspace bucket for existence of remote file
           Rails.logger.info "#{Time.zone.now}: performing UploadCleanupJob for #{study_file.bucket_location}:#{study_file.id} in '#{study.name}'"
-          remote_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, study.firecloud_project,
-                                                                     study.firecloud_workspace, study_file.bucket_location)
+          remote_file = Study.firecloud_client.execute_gcloud_method(:get_workspace_file, 0, study.bucket_id, study_file.bucket_location)
           if remote_file.present?
             # check generation tags to make sure we're in sync
             Rails.logger.info "#{Time.zone.now}: remote file located for #{study_file.bucket_location}:#{study_file.id}, checking generation tag"
