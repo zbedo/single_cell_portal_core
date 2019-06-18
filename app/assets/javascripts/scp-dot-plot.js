@@ -21,7 +21,7 @@ function renderMorpheusDotPlot(dataPath, annotPath, selectedAnnot, selectedAnnot
       pass_expression: '>',
       pass_value: '0',
       percentile: '100',
-      // compute_percent: true
+      compute_percent: true
     }
   }];
 
