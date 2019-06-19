@@ -7,6 +7,32 @@
  * cells in the cluster have expression (expr > 0) in the gene.
  */
 
+function renderDotPlotLegend() {
+  // var sizes = [10, 20, 30];
+  // var xOffsets = [0, 30, 60]; // more advanced: use reduce()
+
+  // var circles = sizes.map((size, i) => {
+  //   return '<circle cx="' + (size*2 + xOffsets[i]) + '" cy="0" r="' + size + '"/>';
+  // });
+  // var legend = '<svg>' + circles + '</svg>';
+
+  var legend =
+    `<svg>
+      <circle cx="20" cy="10" r="1"/>
+      <circle cx="37.5" cy="10" r="3"/>
+      <circle cx="60" cy="10" r="6"/>
+      <circle cx="90" cy="10" r="10"/>
+
+      <text x="0" y="16">0</text>
+      <text x="110" y="16">75</text>
+
+      <text x="15" y="40">% expressing</text>
+    <svg>`;
+
+  $('#dot-plot').append('<div id="morpheus-legend" style="position: relative; top: 20px;"></div>');
+  document.querySelector('#morpheus-legend').innerHTML = legend;
+}
+
 function renderMorpheusDotPlot(dataPath, annotPath, selectedAnnot, selectedAnnotType, target, annotations, fitType, dotHeight) {
   console.log('render status of ' + target + ' at start: ' + $(target).data('rendered'));
   $(target).empty();
@@ -99,6 +125,7 @@ function renderMorpheusDotPlot(dataPath, annotPath, selectedAnnot, selectedAnnot
     var tabItems = dotPlot.tabManager.getTabItems();
     dotPlot.tabManager.setActiveTab(tabItems[1].id);
     dotPlot.tabManager.remove(tabItems[0].id);
+    renderDotPlotLegend();
   });
 
   // Set render variable to true for tests
