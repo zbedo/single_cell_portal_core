@@ -15,7 +15,6 @@ $0
 [OPTIONS]
 -p VALUE	set the path to the Vault configuration object
 -s VALUE	set the path to the service account credentials object in Vault
--f VALUE	set the path to the local JSON configuration file (optional, is overridden by -p)
 -c VALUE	command to execute after loading secrets (defaults to bin/boot_docker, please wrap command in 'quotes' to ensure proper execution)
 -e VALUE	set the environment to boot the portal in (defaults to development)
 -v VALUE  set the version of the Docker image to load (defaults to latest)
@@ -36,9 +35,6 @@ case $OPTION in
 		;;
 	r)
 		READ_ONLY_SERVICE_ACCOUNT_PATH="$OPTARG"
-		;;
-	f)
-		CONFIG_FILE_PATH="$OPTARG"
 		;;
 	c)
 		COMMAND="$OPTARG"
@@ -65,19 +61,8 @@ if [[ -z $SERVICE_ACCOUNT_PATH ]] && [[ -z $VAULT_SECRET_PATH ]] ; then
 	echo "$usage"
 	exit 1
 fi
-# if user supplies a path to a configuration file, use that first
-if [[ -z $VAULT_SECRET_PATH ]] && [[ -n $CONFIG_FILE_PATH ]] ; then
-	# load raw secrets from config JSON file
-	VALS=`echo -n $(cat $CONFIG_FILE_PATH)`
-	# for each key in the secrets config, export the value
-	for key in `echo $VALS | jq --raw-output 'keys[]'`
-	do
-		echo "setting value for: $key"
-		curr_val=$(echo $VALS | jq --raw-output .$key)
-		export $key=$curr_val
-	done
 
-elif [[ -n $VAULT_SECRET_PATH ]] ; then
+if [[ -n $VAULT_SECRET_PATH ]] ; then
 	# load raw secrets from vault
 	VALS=`vault read -format=json $VAULT_SECRET_PATH`
 
