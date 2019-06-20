@@ -53,6 +53,8 @@ class SiteControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert json['name'] == @analysis_configuration.name,
            "Did not load correct analysis name, expected '#{@analysis_configuration.name}' but found '#{json['name']}'"
+    assert json['description'] == @analysis_configuration.description,
+           "Description did not match; expected '#{@analysis_configuration.description}' but found '#{json['description']}'"
     assert json['required_inputs'] == @analysis_configuration.required_inputs(true),
            "Required inputs do not match; expected '#{@analysis_configuration.required_inputs(true)}' but found #{json['required_inputs']}"
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
