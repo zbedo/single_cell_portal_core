@@ -9,15 +9,28 @@
 # defaults
 
 PORTAL_DOCKER_CONTAINER="single_cell"
-PORTAIL_DOCKER_CONTAINER_VERSION="latest"
+PORTAL_DOCKER_CONTAINER_VERSION="latest"
 
 # set the docker container name
 function set_container_name {
     CONTAINER="$1"
     if [[ -z $CONTAINER ]]; then
-        CONTAINER=$PORTAL_DOCKER_CONTAINER
+        CONTAINER="$PORTAL_DOCKER_CONTAINER"
     fi
     echo "$CONTAINER"
+}
+
+# set a name & version for an image when building
+function set_image_name {
+    IMAGE="$1"
+    VERSION="$2"
+    if [[ -z $IMAGE ]]; then
+        IMAGE="$PORTAL_DOCKER_CONTAINER"
+    fi
+    if [[ -z $VERSION ]]; then
+        VERSION="$PORTAL_DOCKER_CONTAINER_VERSION"
+    fi
+    echo "$IMAGE:$VERSION"
 }
 
 # get all running containers
@@ -37,15 +50,25 @@ function remove_docker_container {
     docker rm $CONTAINER_NAME || exit_with_error_message "docker could not stop container: $CONTAINER_NAME"
 }
 
+# build a new docker image
+function build_docker_image {
+    SOURCE_PATH="$1"
+    REQUESTED_NAME="$2"
+    REQUESTED_VERSION="$3"
+    IMAGE_NAME="$(set_image_name $REQUESTED_NAME $REQUESTED_VERSION)"
+
+    docker build -t "$IMAGE_NAME" -f $SOURCE_PATH/Dockerfile $SOURCE_PATH || exit_with_error_message "could not navigate to source directory $SOURCE_PATH"
+}
+
 # ensure that container is running
 function ensure_container_running {
     CONTAINER_NAME=$(set_container_name $1)
     RUNNING_CONTAINERS=$(get_running_containers)
-    RUNNING=false
+    RUNNING=1
     for CONTAINER in $RUNNING_CONTAINERS; do
         if [[ "$CONTAINER" = "$CONTAINER_NAME" ]]; then
-            RUNNING=true
+            RUNNING=0
         fi
     done
-
+    return $RUNNING
 }

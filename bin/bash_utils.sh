@@ -25,3 +25,9 @@ function extract_terminal_pathname {
     fi
     echo ${FULL_PATH##*/} || exit_with_error_message "could not extract final path from $FULL_PATH"
 }
+
+function extract_pathname_extension {
+    FULL_PATH="$1"
+    SEP="."
+    echo ${FULL_PATH##*.} || exit_with_error_message "could not extract file extension from $FULL_PATH"
+}

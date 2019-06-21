@@ -39,5 +39,5 @@ function copy_artifacts_from_previous_release {
         exit_with_error_message "did not supply source/target location when copying artifacts; ARTIFACTS: $ARTIFACT_PATH, TARGET: $TARGET_DIR"
     fi
     echo "copying $ARTIFACT_PATH to $TARGET_DIR"
-    cp -R $ARTIFACT_PATH $TARGET_DIR
+    cp -Rp $ARTIFACT_PATH $TARGET_DIR
 }

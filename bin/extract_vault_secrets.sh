@@ -7,15 +7,20 @@
 
 # defaults
 SECRET_BASEPATH='../config/'
-SECRET_ENV='development'
 DOCKER_IMAGE_FOR_VAULT_CLIENT='vault:1.1.3'
 export VAULT_ADDR
 export JENKINS_VAULT_TOKEN_PATH
 
-# extract filename from end of vault path
+# extract filename from end of vault path, replacing with new extension if needed
 function set_export_filename {
     SECRET_PATH="$1"
-    FILENAME=$(extract_terminal_pathname $SECRET_PATH) || exit_with_error_message "could not extract filename from $SECRET_PATH"
+    REQUESTED_EXTENSION="$2"
+    FILENAME=$(extract_terminal_pathname $SECRET_PATH)
+    if [[ -n "$REQUESTED_EXTENSION" ]]; then
+        # replace existing extension with requested extension (like .env for non-JSON secrets)
+        EXPORT_EXTENSION="$(extract_pathname_extension $FILENAME)"
+        FILENAME="$(echo $FILENAME | sed "s/$EXPORT_EXTENSION/$REQUESTED_EXTENSION/")" || exit_with_error_message "could not change export filename extension to $REQUESTED_EXTENSION from $EXPORT_EXTENSION"
+    fi
     echo "$SECRET_BASEPATH$FILENAME"
 }
 
@@ -35,7 +40,7 @@ function extract_service_account_credentials {
 function extract_vault_secrets_as_env_file {
     VAULT_SECRET_PATH="$1"
     echo "setting filename for $VAULT_SECRET_PATH export"
-    SECRET_EXPORT_FILENAME=$(set_export_filename $VAULT_SECRET_PATH)
+    SECRET_EXPORT_FILENAME=$(set_export_filename $VAULT_SECRET_PATH env)
     # load raw secrets from vault
     echo "extracting vault secrets from $VAULT_SECRET_PATH"
     VALS=$(load_secrets_from_vault $VAULT_SECRET_PATH) || exit_with_error_message "could not read secrets from $VAULT_SECRET_PATH"
