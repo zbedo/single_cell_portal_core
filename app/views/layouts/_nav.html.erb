@@ -64,35 +64,11 @@
 			<% end %>
 		</ul>
 	</div>
-  <% if @deployment_notification.present?%>
-    <% if Time.zone.now >= @deployment_notification.display_time%>
-    <div class="notification-banner">
-      <button type="button" class="close" id='close-notification-banner' aria-label="Close" style="padding-right: 10px;">
-        <span aria-hidden="true">&times;</span>
-      </button>
-      <div class="col-sm-3">
-        <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
-        <span>Service Alert: Starting on</span></br>
-        <span><%= @deployment_notification.deployment_time.strftime("%a %b %d, %Y %I:%M %p") %> ET</span>
-      </div>
-      <div >
-        <span class="align-middle"><%= @deployment_notification.message %></span>
-      </div>
-
-    </div>
-    <%end %>
-    <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
-        $('#close-notification-banner').click(function() {
-            $(".notification-banner").hide();
-            if ( typeof Cookies.get('hide_deployment_notification') === 'undefined' ) {
-                Cookies.set('hide_deployment_notification', 'true')
-            }
-        });
-        $(document).ready(function() {
-            if ( typeof Cookies.get('hide_deployment_notification') !== 'undefined' ) {
-                $(".notification-banner").hide();
-            }
-        });
-    </script>
-  <%end %>
+  <% if @deployment_notification.present? %>
+    <% if Time.zone.now >= @deployment_notification.display_time %>
+      <% if cookies[:hide_deployment_notification].nil? || cookies[:hide_deployment_notification] !=  @deployment_notification.id.to_s  %>
+        <%= render partial: '/layouts/deployment_notification_banner', locals: {deployment_notification: @deployment_notification} %>
+      <% end %>
+    <% end %>
+  <% end %>
 </nav>
