@@ -212,25 +212,16 @@ function drawDotplot(height) {
   // Pull fit type as well, defaults to ''
   var fit = $('#dot-plot').data('fit');
 
-  var dotplotRowCentering = $('#dotplot_row_centering').val();
   var selectedAnnot = $('#annotation').val();
   var annotName = selectedAnnot.split('--')[0];
   var annotType = selectedAnnot.split('--')[1];
-  dataPath = dotPlotDataPathBase + '&row_centered=' + dotplotRowCentering;
+
   var cluster = $('#cluster').val();
   $('#search_cluster').val(cluster);
   $('#search_annotation').val(''); // clear value first
   $('#search_annotation').val(selectedAnnot);
 
-  dataPath += '&cluster=' + cluster + '&request_user_token=' + dotPlotRequestToken;
   var newAnnotPath = dotPlotAnnotPathBase + '?cluster=' + cluster + '&annotation=' + selectedAnnot + '&request_user_token=' + requestToken;
-  var colorScalingMode = 'relative';
-  // Determine whether to scale row colors globally or by row
-  if (dotplotRowCentering !== '') {
-    colorScalingMode = 'fixed';
-  }
-  var consensus = dotPlotConsensus;
-  console.log(consensus);
 
   var renderUrlParams = getRenderUrlParams();
   // Get annotation values to set color values in Morpheus and draw dotplot in callback
@@ -243,7 +234,7 @@ function drawDotplot(height) {
   });
 }
 
-$('#dotplot_row_centering, #annotation').change(function() {
+$('#annotation').change(function() {
   $('#dot-plot').data('rendered', false);
   if ($(this).attr('id') === 'annotation') {
     var an = $(this).val();
