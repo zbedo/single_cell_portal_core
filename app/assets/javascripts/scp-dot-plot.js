@@ -13,6 +13,8 @@
  * https://github.com/cmap/morpheus.js
  */
 
+var dotPlot;
+
 var dotPlotColorScheme = {
   // Blue, purple, red.  These red and blue hues are accessible, per WCAG.
   colors: ['#0000BB', '#CC0088', '#FF0000'],
@@ -169,7 +171,7 @@ function renderMorpheusDotPlot(dataPath, annotPath, selectedAnnot, selectedAnnot
   config.colorScheme = dotPlotColorScheme;
 
   // Instantiate dot plot and embed in DOM element
-  var dotPlot = new morpheus.HeatMap(config);
+  dotPlot = new morpheus.HeatMap(config);
   dotPlot.tabManager.setOptions({autohideTabBar: true});
   $(target).off();
   $(target).on('heatMapLoaded', function (e, heatMap) {
@@ -283,42 +285,4 @@ $('#cluster').change(function(){
       });
     }
   });
-});
-
-$('#resize-dotplot').click(function() {
-  $('#dot-plot').data('rendered', false);
-
-  var newHeight = parseInt($('#dotplot_size').val());
-  $('#dot-plot').data('height', newHeight);
-  console.log('resizing dotplot to ' + newHeight);
-  drawDotplot(newHeight);
-});
-
-$('.fit-btn').click(function() {
-  $('#dot-plot').data('rendered', false);
-
-  var btn = $(this);
-  var btnState = btn.data('active');
-  var newState = btnState === 'on' ? 'off' : 'on';
-  btn.data('active', newState);
-  var fitType = btn.data('fit');
-  console.log('setting fit type: ' + fitType + 'to ' + newState);
-
-  btn.toggleClass('active');
-  currFit = plot.data('fit');
-  // Determine state and set appropriately
-  if (newState === 'on') {
-    if (currFit !== '' && fitType !== currFit) {
-      fitType = 'both'
-    }
-  } else {
-    if (currFit === 'both') {
-      fitType = fitType === 'rows' ? 'cols' : 'rows';
-    } else {
-      fitType = '';
-    }
-  }
-
-  $('#dot-plot').data('fit', fitType);
-  drawDotplot();
 });

@@ -181,7 +181,7 @@
         console.log('setting fit type: ' + fitType + 'to ' + newState);
 
         btn.toggleClass('active');
-        currFit = plot.data('fit');
+        currFit = $('#heatmap-plot').data('fit');
         // determine state and set appropriately
         if (newState == 'on') {
             if (currFit !== '' && fitType !== currFit) {
