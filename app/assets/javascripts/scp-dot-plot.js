@@ -9,23 +9,34 @@
 
 var dotPlotColorScheme = {
   // Blue, purple, red.  These red and blue hues are accessible, per WCAG.
-  colors: ['#0000BB', '#FF00BB', '#FF0000'],
+  colors: ['#0000BB', '#CC0088', '#FF0000'],
+
+  // TODO: Incorporate expression units, once such metadata is available.
   values: [0, 0.5, 1]
 };
 
+/**
+ * Returns SVG comprising the dot plot legend.
+ */
 function getLegendSvg(rects) {
+
+  // TODO:
+  // Develop more robust coordinate offsets for colors and related text.
+  // The very particular values for cx, x, etc. are manually polished and work
+  // for these particular contents, but won't work once we enable users to
+  // change the default size max. and min. values.  Defer work until SCP-1738.
   return (
     `<svg>
       <g id="dp-legend-size">
-        <circle cx="20" cy="10" r="1"/>
-        <circle cx="37.5" cy="10" r="3"/>
-        <circle cx="60" cy="10" r="6"/>
-        <circle cx="90" cy="10" r="10"/>
+        <circle cx="20" cy="8" r="1"/>
+        <circle cx="57.5" cy="8" r="3"/>
+        <circle cx="90" cy="8" r="7"/>
 
-        <text x="0" y="16">0</text>
-        <text x="110" y="16">75</text>
+        <text x="17" y="30">0</text>
+        <text x="50" y="30">38</text>
+        <text x="83" y="30">75</text>
 
-        <text x="15" y="40">% expressing</text>
+        <text x="15" y="52">% expressing</text>
       </g>
       <g id="dp-legend-color" transform="translate(200, 0)">
         ${rects}
@@ -65,7 +76,7 @@ function renderDotPlotLegend() {
 
   var legend = getLegendSvg(rects);
 
-  $('#dot-plot').append('<div id="dot-plot-legend" style="position: relative; top: 20px;"></div>');
+  $('#dot-plot').append('<div id="dot-plot-legend" style="position: relative; top: 30px; left: 70px;"></div>');
   document.querySelector('#dot-plot-legend').innerHTML = legend;
 }
 
