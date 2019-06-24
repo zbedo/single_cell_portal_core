@@ -8,7 +8,8 @@
  */
 
 var dotPlotColorScheme = {
-  colors: ['blue', 'purple', 'red'],
+  // Blue, purple, red.  These red and blue hues are accessible, per WCAG.
+  colors: ['#0000BB', '#FF00BB', '#FF0000'],
   values: [0, 0.5, 1]
 };
 
@@ -120,9 +121,9 @@ function renderMorpheusDotPlot(dataPath, annotPath, selectedAnnot, selectedAnnot
   // Load annotations if specified
   if (annotPath !== '') {
     config.columnAnnotations = [{
-      file : annotPath,
-      datasetField : 'id',
-      fileField : 'NAME',
+      file: annotPath,
+      datasetField: 'id',
+      fileField: 'NAME',
       include: [selectedAnnot]
     }];
     config.columnSortBy = [
