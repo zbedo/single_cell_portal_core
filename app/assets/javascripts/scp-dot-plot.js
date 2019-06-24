@@ -47,6 +47,7 @@ function getLegendSvg(rects) {
       <g id="dp-legend-color" transform="translate(200, 0)">
         ${rects}
         <text x="5" y="50">Expression</text>
+        <text x="9" y="66">(non-zero)</text>
       </g>
     <svg>`
   );
