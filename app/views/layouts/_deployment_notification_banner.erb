@@ -1,0 +1,21 @@
+<div class="notification-banner">
+  <button type="button" class="close" id='close-notification-banner' aria-label="Close" style="padding-right: 15px; color: #ffffff">
+    <span aria-hidden="true">&times;</span>
+  </button>
+  <div class="col-sm-3">
+    <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+    <span>Service Alert: Starting on</span></br>
+    <span><%= @deployment_notification.deployment_time.strftime("%a %b %d, %Y %I:%M %p") %> ET</span>
+  </div>
+  <div >
+    <span class="align-middle"><%= @deployment_notification.message %></span>
+  </div>
+</div>
+<script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+
+    // listener to set the unique cookie for deleting banner as well as delete banner
+    $('#close-notification-banner').click(function() {
+        Cookies.set('hide_deployment_notification', '<%= @deployment_notification.id %>')
+        $(".notification-banner").remove();
+    });
+</script>
