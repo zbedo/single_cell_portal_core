@@ -179,17 +179,23 @@ function renderMorpheusDotPlot(dataPath, annotPath, selectedAnnot, selectedAnnot
   window.dotPlot.tabManager.setOptions({autohideTabBar: true});
   $(target).off();
   $(target).on('heatMapLoaded', function (e, heatMap) {
+
+    // Remove verbose tab atop Morpheus dot plot
     var tabItems = dotPlot.tabManager.getTabItems();
     window.dotPlot.tabManager.setActiveTab(tabItems[1].id);
     window.dotPlot.tabManager.remove(tabItems[0].id);
 
+    renderDotPlotLegend();
+
     // Remove "Options" toolbar button until legend can be updated upon
     // changing default options for size and color (SCP-1738).
-    var options = $('[data-action="Options"]');
-    options.next('.morpheus-button-divider').remove();
-    options.remove();
-
-    renderDotPlotLegend();
+    // setTimeout is a kludge, but seemingly the only way to do this.
+    setTimeout(function() {
+      var options = $('[data-action="Options"]');
+      options.next('.morpheus-button-divider').remove();
+      options.remove();
+      console.log('removed options')
+    }, 50);
   });
 
   // Set render variable to true for tests
