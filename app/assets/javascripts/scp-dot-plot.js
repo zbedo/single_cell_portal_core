@@ -5,6 +5,12 @@
  * across many cells. The color of the dot is the size of the average
  * expression of a cluster in a gene. The size of the dot is what percent of
  * cells in the cluster have expression (expr > 0) in the gene.
+ *
+ * Morpheus examples:
+ * https://software.broadinstitute.org/morpheus/
+ *
+ * Morpheus source code:
+ * https://github.com/cmap/morpheus.js
  */
 
 var dotPlotColorScheme = {
@@ -57,12 +63,13 @@ function renderDotPlotLegend() {
     var value = scheme.values[i]; // Expression threshold value
 
     // TODO:
-    // A more robust, yet more complicated way to do this would be to use
-    // getClientRect() or getBBox() after rendering to DOM to determine each
-    // SVG text element's width, then adjusting the x attribute accordingly
-    // to align at the middle of the corresponding rect for the color stop.
+    // A more robust, yet more complicated way to get textOffset this would
+    // be to use getClientRect() or getBBox() after rendering to DOM to
+    // determine each SVG text element's width, then adjusting the x attribute
+    // accordingly to align at the middle of the corresponding rect for the
+    // color stop.
     //
-    // But that refined approach only adds value over this simple approach
+    // But that robust approach only adds value over this simple approach
     // when we need to support dynamic values.  Defer this TODO until SCP-1738.
     var textOffset = 4 - (String(value).length - 1) * 3;
 
@@ -161,7 +168,7 @@ function renderMorpheusDotPlot(dataPath, annotPath, selectedAnnot, selectedAnnot
 
   config.colorScheme = dotPlotColorScheme;
 
-  // Instantiate heatmap and embed in DOM element
+  // Instantiate dot plot and embed in DOM element
   var dotPlot = new morpheus.HeatMap(config);
   dotPlot.tabManager.setOptions({autohideTabBar: true});
   $(target).off();
