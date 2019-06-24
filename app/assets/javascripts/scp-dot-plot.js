@@ -7,6 +7,11 @@
  * cells in the cluster have expression (expr > 0) in the gene.
  */
 
+var dotPlotColorScheme = {
+  colors: ['blue', 'purple', 'red'],
+  values: [0, 0.5, 1]
+};
+
 function renderDotPlotLegend() {
   // var sizes = [10, 20, 30];
   // var xOffsets = [0, 30, 60]; // more advanced: use reduce()
@@ -15,22 +20,49 @@ function renderDotPlotLegend() {
   //   return '<circle cx="' + (size*2 + xOffsets[i]) + '" cy="0" r="' + size + '"/>';
   // });
   // var legend = '<svg>' + circles + '</svg>';
+  $('#dot-plot-legend').remove();
+  var scheme = dotPlotColorScheme;
+  var rects = scheme.colors.map((color, i) => {
+
+    // Expression threshold value
+    var value = scheme.values[i];
+
+    // Text alignment in SVG isn't as easy as in HTML.
+    // Another way to do this would be:
+    // var textOffset = String(value).length * 5;
+
+    // Ensures text alignment in SVG
+    var textAlignStyle = 'x="50%" dominant-baseline="middle" text-anchor="middle"';
+
+    return (
+      `<g transform="translate(${i * 30}, 0)">
+        <rect fill="${color}" width="15" height="15"/>
+        <text ${textAlignStyle} y="30">${value}</text>
+      </g>`
+    );
+  }).join();
 
   var legend =
     `<svg>
-      <circle cx="20" cy="10" r="1"/>
-      <circle cx="37.5" cy="10" r="3"/>
-      <circle cx="60" cy="10" r="6"/>
-      <circle cx="90" cy="10" r="10"/>
+      <g id="dp-legend-size">
+        <circle cx="20" cy="10" r="1"/>
+        <circle cx="37.5" cy="10" r="3"/>
+        <circle cx="60" cy="10" r="6"/>
+        <circle cx="90" cy="10" r="10"/>
 
-      <text x="0" y="16">0</text>
-      <text x="110" y="16">75</text>
+        <text x="0" y="16">0</text>
+        <text x="110" y="16">75</text>
 
-      <text x="15" y="40">% expressing</text>
+        <text x="15" y="40">% expressing</text>
+      </g>
+      <g id="dp-legend-color" transform="translate(200, 0)">
+        ${rects}
+        <text>Expression</text>
+      </g>
     <svg>`;
 
-  $('#dot-plot').append('<div id="morpheus-legend" style="position: relative; top: 20px;"></div>');
-  document.querySelector('#morpheus-legend').innerHTML = legend;
+  $('#dot-plot').append('<div id="dot-plot-legend" style="position: relative; top: 20px;"></div>');
+  document.querySelector('#dot-plot-legend').innerHTML = legend;
 }
 
 function renderMorpheusDotPlot(dataPath, annotPath, selectedAnnot, selectedAnnotType, target, annotations, fitType, dotHeight) {
@@ -112,10 +144,7 @@ function renderMorpheusDotPlot(dataPath, annotPath, selectedAnnot, selectedAnnot
     config.columnColorModel = annotColorModel;
   }
 
-  config.colorScheme = {
-    values: [0, 0.5, 1],
-    colors: ['blue', 'purple', 'red']
-  };
+  config.colorScheme = dotPlotColorScheme;
 
   // Instantiate heatmap and embed in DOM element
   var dotPlot = new morpheus.HeatMap(config);
