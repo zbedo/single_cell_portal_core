@@ -12,37 +12,8 @@ var dotPlotColorScheme = {
   values: [0, 0.5, 1]
 };
 
-function renderDotPlotLegend() {
-  // var sizes = [10, 20, 30];
-  // var xOffsets = [0, 30, 60]; // more advanced: use reduce()
-
-  // var circles = sizes.map((size, i) => {
-  //   return '<circle cx="' + (size*2 + xOffsets[i]) + '" cy="0" r="' + size + '"/>';
-  // });
-  // var legend = '<svg>' + circles + '</svg>';
-  $('#dot-plot-legend').remove();
-  var scheme = dotPlotColorScheme;
-  var rects = scheme.colors.map((color, i) => {
-
-    // Expression threshold value
-    var value = scheme.values[i];
-
-    // Text alignment in SVG isn't as easy as in HTML.
-    // Another way to do this would be:
-    // var textOffset = String(value).length * 5;
-
-    // Ensures text alignment in SVG
-    var textAlignStyle = 'x="50%" dominant-baseline="middle" text-anchor="middle"';
-
-    return (
-      `<g transform="translate(${i * 30}, 0)">
-        <rect fill="${color}" width="15" height="15"/>
-        <text ${textAlignStyle} y="30">${value}</text>
-      </g>`
-    );
-  }).join();
-
-  var legend =
+function getLegendSvg(rects) {
+  return (
     `<svg>
       <g id="dp-legend-size">
         <circle cx="20" cy="10" r="1"/>
@@ -57,9 +28,41 @@ function renderDotPlotLegend() {
       </g>
       <g id="dp-legend-color" transform="translate(200, 0)">
         ${rects}
-        <text>Expression</text>
+        <text x="5" y="50">Expression</text>
       </g>
-    <svg>`;
+    <svg>`
+  );
+}
+
+/**
+ * Shows a legend for size and color below the dot plot.
+ */
+function renderDotPlotLegend() {
+  $('#dot-plot-legend').remove();
+  var scheme = dotPlotColorScheme;
+  var rects = scheme.colors.map((color, i) => {
+
+    var value = scheme.values[i]; // Expression threshold value
+
+    // TODO:
+    // A more robust, yet more complicated way to do this would be to use
+    // getClientRect() or getBBox() after rendering to DOM to determine each
+    // SVG text element's width, then adjusting the x attribute accordingly
+    // to align at the middle of the corresponding rect for the color stop.
+    //
+    // But that refined approach only adds value over this simple approach
+    // when we need to support dynamic values.  Defer this TODO until SCP-1738.
+    var textOffset = 4 - (String(value).length - 1) * 3;
+
+    return (
+      `<g transform="translate(${i * 30}, 0)">
+        <rect fill="${color}" width="15" height="15"/>
+        <text x="${textOffset}" y="30">${value}</text>
+      </g>`
+    );
+  }).join();
+
+  var legend = getLegendSvg(rects);
 
   $('#dot-plot').append('<div id="dot-plot-legend" style="position: relative; top: 20px;"></div>');
   document.querySelector('#dot-plot-legend').innerHTML = legend;
@@ -154,6 +157,13 @@ function renderMorpheusDotPlot(dataPath, annotPath, selectedAnnot, selectedAnnot
     var tabItems = dotPlot.tabManager.getTabItems();
     dotPlot.tabManager.setActiveTab(tabItems[1].id);
     dotPlot.tabManager.remove(tabItems[0].id);
+
+    // Remove "Options" toolbar button until legend can be updated upon
+    // changing default options for size and color (SCP-1738).
+    var options = $('[data-action="Options"]');
+    options.next('.morpheus-button-divider').remove();
+    options.remove();
+
     renderDotPlotLegend();
   });
 
