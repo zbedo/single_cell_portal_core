@@ -13,8 +13,6 @@
  * https://github.com/cmap/morpheus.js
  */
 
-var dotPlot;
-
 var dotPlotColorScheme = {
   // Blue, purple, red.  These red and blue hues are accessible, per WCAG.
   colors: ['#0000BB', '#CC0088', '#FF0000'],
@@ -170,14 +168,20 @@ function renderMorpheusDotPlot(dataPath, annotPath, selectedAnnot, selectedAnnot
 
   config.colorScheme = dotPlotColorScheme;
 
+  // Log dot plot initialization in Google Analytics
+  if (typeof window.dotPlot === 'undefined') {
+    // Consistent with e.g. IGV, Ideogram
+    ga('send', 'event', 'dot-plot', 'initialize');
+  }
+
   // Instantiate dot plot and embed in DOM element
-  dotPlot = new morpheus.HeatMap(config);
-  dotPlot.tabManager.setOptions({autohideTabBar: true});
+  window.dotPlot = new morpheus.HeatMap(config);
+  window.dotPlot.tabManager.setOptions({autohideTabBar: true});
   $(target).off();
   $(target).on('heatMapLoaded', function (e, heatMap) {
     var tabItems = dotPlot.tabManager.getTabItems();
-    dotPlot.tabManager.setActiveTab(tabItems[1].id);
-    dotPlot.tabManager.remove(tabItems[0].id);
+    window.dotPlot.tabManager.setActiveTab(tabItems[1].id);
+    window.dotPlot.tabManager.remove(tabItems[0].id);
 
     // Remove "Options" toolbar button until legend can be updated upon
     // changing default options for size and color (SCP-1738).
@@ -227,13 +231,6 @@ function drawDotplot(height) {
   }
   var consensus = dotPlotConsensus;
   console.log(consensus);
-  // // Log action of rendering Morpheus
-  // var logUrl = '<%= javascript_safe_url(expression_query_path(study_name: params[:study_name], search: {genes: @dotplot_gene_list })) %>';
-  // logUrl += '--cluster=' + cluster + '--annotation=' + annotName;
-  // $.ajax({
-  //     url: '<%= log_action_path %>?url_string=' + logUrl,
-  //     dataType: 'script'
-  // });
 
   var renderUrlParams = getRenderUrlParams();
   // Get annotation values to set color values in Morpheus and draw dotplot in callback
