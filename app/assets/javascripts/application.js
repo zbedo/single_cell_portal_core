@@ -609,7 +609,6 @@ function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, t
     console.log('render status of ' + target + ' at start: ' + $(target).data('rendered'));
     $(target).empty();
     console.log("scaling mode: " + colorScaleMode);
-    // collapse by median
     var config = {name: 'Heatmap', dataset: dataPath, el: $(target), menu: null, colorScheme: {scalingMode: colorScaleMode}};
 
     // set height if specified, otherwise use default setting of 500 px
@@ -661,8 +660,6 @@ function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, t
 
     // instantiate heatmap and embed in DOM element
     var heatmap = new morpheus.HeatMap(config);
-
-    console.log(heatmap);
 
     // set render variable to true for tests
     $(target).data('morpheus', heatmap);

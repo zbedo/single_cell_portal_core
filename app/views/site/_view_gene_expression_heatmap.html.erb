@@ -118,6 +118,11 @@
         drawHeatmap();
     });
 
+    // Ensures heat map row labels are not truncated
+    $('#plots-tab-nav').on('click', function() {
+      $(window).trigger('resize');
+    })
+
     $("#heatmap_row_centering, #annotation").change(function() {
         $('#heatmap-plot').data('rendered', false);
         if ($(this).attr('id') == 'annotation') {

@@ -2,9 +2,9 @@
  * @fileoverview Functions for rendering dot plots using Morpheus.js
  *
  * Dot plots are similar to heatmaps, and better for summarizing expression
- * across many cells. The color of the dot is the size of the average
- * expression of a cluster in a gene. The size of the dot is what percent of
- * cells in the cluster have expression (expr > 0) in the gene.
+ * across many cells. The color of the dot is the median expression of a
+ * cluster in a gene. The size of the dot is what percent of cells in the
+ * cluster have expression (expr > 0) in the gene.
  *
  * Morpheus examples:
  * https://software.broadinstitute.org/morpheus/
