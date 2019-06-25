@@ -650,9 +650,11 @@ class Study
       begin
         workspace_acl = Study.firecloud_client.get_workspace_acl(self.firecloud_project, self.firecloud_workspace)
         if workspace_acl['acl'][user.email].nil?
-          # check project-level permissions, otherwise user cannot compute
-          project_members = Study.firecloud_client.get_billing_project_members(self.firecloud_project).map {|member| member['email']}
-          project_members.include?(user.email)
+          # check if user has project-level permissions
+          user_client = FireCloudClient.new(user, self.firecloud_project)
+          projects = user_client.get_billing_projects
+          # billing project users can only create workspaces, so unless user is an owner, user cannot compute
+          projects.detect {|project| project['projectName'] == self.firecloud_project && project['role'] == 'Owner'}.present?
         else
           workspace_acl['acl'][user.email]['canCompute']
         end
