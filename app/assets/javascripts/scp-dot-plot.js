@@ -26,6 +26,19 @@ var dotPlotColorScheme = {
  */
 function getLegendSvg(rects) {
 
+  // Sarah N. asked for a note about non-zero in the legend, but it's unclear
+  // if Morpheus supports non-zero.  It might, per the Collapse properties
+  //
+  //    pass_expression: '>',
+  //    pass_value: '0',
+  //
+  // used below, but Morpheus still shows dots with "0.00".  This seems like a
+  // contradiction.  So keep the note code, but don't show the note in the
+  // legend until we can clarify.
+  //
+  // var nonzeroNote = '<text x="9" y="66">(non-zero)</text>';
+  var nonzeroNote = '';
+
   // TODO:
   // Develop more robust coordinate offsets for colors and related text.
   // The very particular values for cx, x, etc. are manually polished and work
@@ -47,7 +60,7 @@ function getLegendSvg(rects) {
       <g id="dp-legend-color" transform="translate(200, 0)">
         ${rects}
         <text x="5" y="50">Expression</text>
-        <text x="9" y="66">(non-zero)</text>
+        ${nonzeroNote}
       </g>
     <svg>`
   );
