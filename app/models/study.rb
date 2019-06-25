@@ -1741,7 +1741,7 @@ class Study
       raw_header_data = cluster_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
       raw_type_data = cluster_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
       header_data = self.sanitize_input_array(raw_header_data)
-      type_data = self.sanitize_input_array(raw_type_data)
+      type_data = self.sanitize_input_array(raw_type_data).map(&:downcase)
 
       # determine if 3d coordinates have been provided
       is_3d = header_data.include?('Z')
@@ -2281,10 +2281,10 @@ class Study
       Rails.logger.info "#{Time.zone.now}: Validating metadata file headers for #{metadata_file.name}:#{metadata_file.id} in #{self.name}"
       headers = m_file.readline.split(/[\t,]/).map(&:strip)
       @last_line = "#{metadata_file.name}, line 1"
-      second_header = m_file.readline.split(/[\t,]/).map(&:strip)
+      second_header = m_file.readline.split(/[\t,]/).map {|entry| entry.downcase.strip}
       @last_line = "#{metadata_file.name}, line 2"
       # must have at least NAME and one column, plus TYPE and one value of group or numeric in second line
-      unless headers.include?('NAME') && headers.size > 1 && (second_header.uniq.sort - %w(group numeric TYPE)).size == 0 && second_header.size > 1
+      unless headers.include?('NAME') && headers.size > 1 && (second_header.uniq.sort - %w(group numeric type)).size == 0 && second_header.size > 1
         metadata_file.update(parse_status: 'failed')
         @validation_error = true
       end
@@ -2326,7 +2326,7 @@ class Study
       raw_header_data = metadata_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
       raw_type_data = metadata_data.readline.encode('UTF-8', invalid: :replace, undef: :replace, replace: '').split(/[\t,]/).map(&:strip)
       header_data = self.sanitize_input_array(raw_header_data)
-      type_data = self.sanitize_input_array(raw_type_data)
+      type_data = self.sanitize_input_array(raw_type_data).map(&:downcase)
       name_index = header_data.index('NAME')
 
       # build study_metadata objects for use later
