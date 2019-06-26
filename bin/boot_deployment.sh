@@ -55,21 +55,11 @@ case $OPTION in
   esac
 done
 
-# pre-populate an error message for first check when calling main
-ERROR_MSG=$(
-cat <<EOF
-
-Cannot boot portal, necessary secrets and paths have not been loaded (must have values for all of these):
-config: $PORTAL_SECRETS
-service account: $SERVICE_ACCOUNT_PATH
-r/o service account: $READ_ONLY_SERVICE_ACCOUNT_PATH
-EOF
-)
-
 function main {
     # exit if all config is not present
     if [[ -z "$PORTAL_SECRETS" ]] || [[ -z "$SERVICE_ACCOUNT_PATH" ]] || [[ -z "$READ_ONLY_SERVICE_ACCOUNT_PATH" ]]; then
-        exit_with_error_message $ERROR_MSG
+        exit_with_error_message "Did not supply all necessary parameters: portal config: $PORTAL_SECRETS" \
+		        "service account path: $SERVICE_ACCOUNT_PATH; read-only service account path: $READ_ONLY_SERVICE_ACCOUNT_PATH"
     fi
 
     # set service account keys
