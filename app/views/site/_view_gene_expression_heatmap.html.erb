@@ -120,7 +120,11 @@
 
     // Ensures heat map row labels are not truncated
     $('#plots-tab-nav').on('click', function() {
-      $(window).trigger('resize');
+      setTimeout(function() {
+        // Without this timeout kludge, this fix doesn't work when
+        // View Options is expanded *then* "Heatmap" tab is clicked.
+        $(window).trigger('resize');
+      }, 25);
     })
 
     $("#heatmap_row_centering, #annotation").change(function() {
