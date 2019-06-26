@@ -2,10 +2,11 @@
 
 # boot deployment on remote server once all secrets/source code has been staged and Docker container is stopped
 
+THIS_DIR="$(cd "$(dirname "$0")"; pwd)"
+
 # common libraries
-. ./bash_utils.sh
-. ./docker_utils.sh
-. ./migrate_source_code.sh
+. $THIS_DIR/bash_utils.sh
+. $THIS_DIR/docker_utils.sh
 
 usage=$(
 cat <<EOF
@@ -17,8 +18,6 @@ $0
 -p VALUE	set the filepath to the secrets env file (will be cleaned up on boot)
 -s VALUE	set the filepath to the service account credentials on disk
 -r VALUE	set the filepath to the 'read-only' service account credentials on disk
--c VALUE	set the fully qualified path to the current release
--n VALUE	set the path to the new or 'staged' release that is being deployed
 -e VALUE	set the environment to boot the portal in (defaults to development)
 -H COMMAND	print this text
 EOF
@@ -29,7 +28,6 @@ PASSENGER_APP_ENV="production"
 COMMAND="bin/boot_docker"
 PORTAL_CONTAINER="single_cell"
 PORTAL_CONTAINER_VERSION="latest"
-ARTIFACTS_TO_MIGRATE=(logs/* public/single_cell tcell tmp)
 
 # parse options
 while getopts "p:s:r:c:n:e:H" OPTION; do
@@ -42,12 +40,6 @@ case $OPTION in
     ;;
   r)
     READ_ONLY_SERVICE_ACCOUNT_PATH="$OPTARG"
-    ;;
-  c)
-    CURRENT_RELEASE="$OPTARG"
-    ;;
-  n)
-    NEW_RELEASE="$OPTARG"
     ;;
   e)
     PASSENGER_APP_ENV="$OPTARG"
@@ -71,16 +63,12 @@ Cannot boot portal, necessary secrets and paths have not been loaded (must have 
 config: $PORTAL_SECRETS
 service account: $SERVICE_ACCOUNT_PATH
 r/o service account: $READ_ONLY_SERVICE_ACCOUNT_PATH
-current release: $CURRENT_RELEASE
-new release: $NEW_RELEASE
 EOF
 )
 
 function main {
     # exit if all config is not present
-    if [[ -z "$PORTAL_SECRETS" ]] || [[ -z "$SERVICE_ACCOUNT_PATH" ]] || [[ -z "$READ_ONLY_SERVICE_ACCOUNT_PATH" ]] || \
-       [[ -z "$CURRENT_RELEASE" ]] || [[ -z "$NEW_RELEASE" ]]; then
-
+    if [[ -z "$PORTAL_SECRETS" ]] || [[ -z "$SERVICE_ACCOUNT_PATH" ]] || [[ -z "$READ_ONLY_SERVICE_ACCOUNT_PATH" ]]; then
         exit_with_error_message $ERROR_MSG
     fi
 
@@ -105,22 +93,6 @@ function main {
     echo "### Stopping & removing docker container $PORTAL_CONTAINER ... ###"
     stop_docker_container $PORTAL_CONTAINER
     remove_docker_container $PORTAL_CONTAINER
-    echo "### COMPLETED ###"
-
-    # migrate source & copy artifacts
-    echo "### Creating backup of $CURRENT_RELEASE ... ###"
-    BACKUP_DIR="$(create_backup_dirname $CURRENT_RELEASE)" || exit_with_error_message "could not generate a backup dirname for $CURRENT_RELEASE"
-    move_directory $CURRENT_RELEASE $BACKUP_DIR
-    echo "### COMPLETED ###"
-    echo "### Staging new release to $CURRENT_RELEASE ... ###"
-    move_directory $NEW_RELEASE $CURRENT_RELEASE
-    echo "### COMPLETED ###"
-    echo "### Migrating ${ARTIFACTS_TO_MIGRATE[*]} to $NEW_RELEASE ... ###"
-    for ARTIFACT in ${ARTIFACTS_TO_MIGRATE[*]}; do
-        OLD_PATH="$BACKUP_DIR/$ARTIFACT"
-        NEW_PATH="$CURRENT_RELEASE/$ARTIFACT"
-        copy_artifacts_from_previous_release $OLD_PATH $NEW_PATH
-    done
     echo "### COMPLETED ###"
 
     # run boot command

@@ -2,14 +2,14 @@
 
 # load secrets from Vault for running/deploying SCP docker container
 
-# load common utils
-. ./bash_utils.sh
-
 # defaults
-SECRET_BASEPATH='../config/'
+THIS_DIR="$(cd "$(dirname "$0")"; pwd)"
 DOCKER_IMAGE_FOR_VAULT_CLIENT='vault:1.1.3'
 export VAULT_ADDR
 export JENKINS_VAULT_TOKEN_PATH
+
+# load common utils
+. $THIS_DIR/bash_utils.sh
 
 # extract filename from end of vault path, replacing with new extension if needed
 function set_export_filename {
@@ -21,30 +21,30 @@ function set_export_filename {
         EXPORT_EXTENSION="$(extract_pathname_extension $FILENAME)"
         FILENAME="$(echo $FILENAME | sed "s/$EXPORT_EXTENSION/$REQUESTED_EXTENSION/")" || exit_with_error_message "could not change export filename extension to $REQUESTED_EXTENSION from $EXPORT_EXTENSION"
     fi
-    echo "$SECRET_BASEPATH$FILENAME"
+    echo "$FILENAME"
 }
 
 # extract Google Service Account credentials and write to a JSON file
 # this file is not compatible with GCS libraries, will need to be parsed with jq utility
 function extract_service_account_credentials {
-    SERVICE_ACCOUNT_PATH="$1"
-    echo "setting filename for $SERVICE_ACCOUNT_PATH export"
-    SERVICE_ACCOUNT_FILENAME=$(set_export_filename $SERVICE_ACCOUNT_PATH)
-    echo "extracting service account credentials from $SERVICE_ACCOUNT_PATH"
-    CREDS=$(load_secrets_from_vault $SERVICE_ACCOUNT_PATH) || exit_with_error_message "error reading credentials from vault"
-    JSON_CONTENTS=$(echo $CREDS | jq --raw-output .data) || exit_with_error_message "error parsing $SERVICE_ACCOUNT_PATH contents"
-    echo $JSON_CONTENTS >| $SERVICE_ACCOUNT_FILENAME || exit_with_error_message "could not write $SERVICE_ACCOUNT_PATH to $SERVICE_ACCOUNT_FILENAME"
+    CREDENTIALS_PATH="$1"
+    echo "setting filename for $CREDENTIALS_PATH export"
+    CREDENTIALS_FILENAME=$(set_export_filename $CREDENTIALS_PATH)
+    echo "extracting service account credentials from $CREDENTIALS_PATH"
+    CREDS=$(load_secrets_from_vault $CREDENTIALS_PATH) || exit_with_error_message "error reading credentials from vault"
+    JSON_CONTENTS=$(echo $CREDS | jq --raw-output .data) || exit_with_error_message "error parsing $CREDENTIALS_PATH contents"
+    echo $JSON_CONTENTS >| $CREDENTIALS_FILENAME || exit_with_error_message "could not write $CREDENTIALS_PATH to $CREDENTIALS_FILENAME"
 }
 
 # extract generic JSON vault secrets and
 function extract_vault_secrets_as_env_file {
     VAULT_SECRET_PATH="$1"
     echo "setting filename for $VAULT_SECRET_PATH export"
-    SECRET_EXPORT_FILENAME=$(set_export_filename $VAULT_SECRET_PATH env)
+    SECRET_EXPORT_FILENAME="$(set_export_filename $VAULT_SECRET_PATH env)"
     # load raw secrets from vault
     echo "extracting vault secrets from $VAULT_SECRET_PATH"
     VALS=$(load_secrets_from_vault $VAULT_SECRET_PATH) || exit_with_error_message "could not read secrets from $VAULT_SECRET_PATH"
-    echo "# env secrets from $VAULT_SECRET_PATH" >| $SECRET_EXPORT_FILENAME || exit_with_error_message "could not initialize $SECRET_EXPORT_FILENAME"
+    echo "env secrets from $VAULT_SECRET_PATH" >| $SECRET_EXPORT_FILENAME || exit_with_error_message "could not initialize $SECRET_EXPORT_FILENAME"
     # for each key in the secrets config, export the value
     for key in $(echo $VALS | jq .data | jq --raw-output 'keys[]')
     do

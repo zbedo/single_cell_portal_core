@@ -2,9 +2,11 @@
 
 # shell shortcuts for starting/stopping/removing docker containers
 
+THIS_DIR="$(cd "$(dirname "$0")"; pwd)"
+
 # load common utils
 
-. ./bash_utils.sh
+. $THIS_DIR/bash_utils.sh
 
 # defaults
 
