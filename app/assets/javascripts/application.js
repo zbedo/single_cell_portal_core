@@ -31,6 +31,7 @@
 //= require clipboard.min
 //= require scp-igv
 //= require scp-ideogram
+//= require scp-dot-plot
 
 var fileUploading = false;
 var PAGE_RENDERED = false;
@@ -603,12 +604,12 @@ $(window).resize(function() {
     }, 100);
 });
 
-// generic function to render Morpheus
+// generic function to render Morpheus heatmap
 function renderMorpheus(dataPath, annotPath, selectedAnnot, selectedAnnotType, target, annotations, fitType, heatmapHeight, colorScaleMode) {
     console.log('render status of ' + target + ' at start: ' + $(target).data('rendered'));
     $(target).empty();
     console.log("scaling mode: " + colorScaleMode);
-    var config = {dataset: dataPath, el: $(target), menu: null, colorScheme: {scalingMode: colorScaleMode}};
+    var config = {name: 'Heatmap', dataset: dataPath, el: $(target), menu: null, colorScheme: {scalingMode: colorScaleMode}};
 
     // set height if specified, otherwise use default setting of 500 px
     if (heatmapHeight !== undefined) {

@@ -28,6 +28,38 @@
     </div>
   </div>
 </div>
+<% if !@genes.nil? %>
+  <div class="tab-pane expression-plot" id="dot-plots-tab" role="tabpanel">
+    <div class="panel panel-default no-top-border">
+      <div id="dot-controls" class="panel-collapse collapse in">
+        <div class="panel-body">
+          <div class="row">
+            <div class="col-md-12">
+              <%= render partial: 'morpheus_help' %>
+              <div id="dot-plot"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+    var dotPlotDataPathBase = '<%= javascript_safe_url(expression_query_path(study_name: params[:study_name], search: {genes: @dotplot_gene_list })) %>';
+    var dotPlotRequestToken = '<%= user_signed_in? ? current_user.id.to_s + ":" + current_user.authentication_token : nil %>';
+    var dotPlotAnnotPathBase = '<%= annotation_query_path(study_name: params[:study_name]) %>';
+    var dotPlotAnnotValuesPath = '<%= annotation_values_path(study_name: @study.url_safe_name) %>';
+    var dotPlotNewAnnotsPath = '<%= get_new_annotations_path(study: params[:study])%>';
+
+    // monitor status of rendering plots for tests
+    $('#dot-plot').data('rendered', false);
+
+    $(document).ready(function() {
+        $('#dot-plot').data('fit', '');
+        $('#dot-plot').data('height', 500);
+        drawDotplot();
+    });
+  </script>
+<% end %>
 <% if @study.has_analysis_outputs?('infercnv', 'ideogram.js') or @study.has_bam_files? %>
   <div class="tab-pane" id="genome-tab" role="tabpanel" >
     <div class="panel panel-default no-top-border">

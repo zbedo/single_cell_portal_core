@@ -2921,8 +2921,8 @@ class UiTestSuite < Test::Unit::TestCase
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
 
-  # search for multiple genes and view as a heatmap
-  test 'front-end: search-genes: multiple heatmap' do
+  # search for multiple genes and view as a dot plot, and heatmap
+  test 'front-end: search-genes: multiple dot plot heatmap' do
     puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     path = @base_url + "/study/test-study-#{$random_seed}"
@@ -2938,9 +2938,23 @@ class UiTestSuite < Test::Unit::TestCase
     search_box.send_keys(genes.join(' '))
     search_genes = @driver.find_element(:id, 'perform-gene-search')
     search_genes.click
-    wait_for_render(:id, 'heatmap-plot')
 
-    assert element_present?(:id, 'plots'), 'could not find expression heatmap'
+    # Verify dot plot shows by default
+    wait_for_render(:id, 'dot-plot')
+    assert element_present?(:id, 'plots'), 'could not find expression dot plot'
+    $verbose ? puts("Verified dot plot") : nil
+
+    # Click 'Heatmap' tab
+    heatmap_tab = @driver.find_element(:id, 'plots-tab-nav')
+    heatmap_tab.click
+    $verbose ? puts("Clicked 'Heatmap' tab") : nil
+
+    # Check for heatmap
+    @wait.until {wait_for_morpheus_render('#heatmap-plot', 'morpheus')}
+    heatmap_drawn = @driver.execute_script("return $('#heatmap-plot').data('morpheus').heatmap !== undefined;")
+    assert heatmap_drawn, "heatmap plot encountered error, expected true but found #{heatmap_drawn}"
+    $verbose ? puts("Verified heatmap") : nil
+
     view_options_panel = @driver.find_element(:id, 'view-option-link')
     view_options_panel.click
     wait_for_render(:id, 'view-options')
@@ -2949,6 +2963,21 @@ class UiTestSuite < Test::Unit::TestCase
     annotations_values = annotations.map{|x| x['value']}
     annotations_values.each do |annotation|
       @driver.find_element(:id, 'annotation').send_key annotation
+
+      # Click 'Dot plot' tab
+      dot_plot_tab = @driver.find_element(:id, 'dot-tab-nav')
+      dot_plot_tab.click
+
+      # Check for dot plot
+      @wait.until {wait_for_morpheus_render('#dot-plot', 'morpheus')}
+      dot_plot_drawn = @driver.execute_script("return $('#dot-plot').data('morpheus').heatmap !== undefined;")
+      assert dot_plot_drawn, "dot plot encountered error, expected true but found #{dot_plot_drawn}"
+
+      # Click 'Heatmap' tab
+      heatmap_tab = @driver.find_element(:id, 'plots-tab-nav')
+      heatmap_tab.click
+
+      # Check for heatmap
       @wait.until {wait_for_morpheus_render('#heatmap-plot', 'morpheus')}
       heatmap_drawn = @driver.execute_script("return $('#heatmap-plot').data('morpheus').heatmap !== undefined;")
       assert heatmap_drawn, "heatmap plot encountered error, expected true but found #{heatmap_drawn}"

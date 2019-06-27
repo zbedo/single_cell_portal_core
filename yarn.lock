@@ -4033,10 +4033,10 @@ mkdirp@0.5.x, "mkdirp@>=0.5 0", mkdirp@^0.5.0, mkdirp@^0.5.1, mkdirp@~0.5.0, mkd
   dependencies:
     minimist "0.0.8"
 
-morpheus-app@1.0.17:
-  version "1.0.17"
-  resolved "https://registry.yarnpkg.com/morpheus-app/-/morpheus-app-1.0.17.tgz#2fb91b8dfb9b2028c70272148bab8722f5b3024f"
-  integrity sha512-Z/Sflyn68RQwByeHrvB7YBwZLPCDiFdzAefFJoBz8dSUyXCYcDkcfpy2bIAzerXdfTlaqqVTV7wDVHH1+cF77w==
+morpheus-app@1.0.18:
+  version "1.0.18"
+  resolved "https://registry.yarnpkg.com/morpheus-app/-/morpheus-app-1.0.18.tgz#4eb65fdad9b71f9c009f233a9515130c1b897778"
+  integrity sha512-l5WIGUrmK43dVDi1u76X0i/LBFIfaf7Z9K6R5BRKpeCoZ1OhqqQJGwR9/TvJDjyQODe+4dAK9DU2ONMO7RAx0g==
 
 move-concurrently@^1.0.1:
   version "1.0.1"
