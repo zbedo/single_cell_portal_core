@@ -64,17 +64,11 @@
 			<% end %>
 		</ul>
 	</div>
-  <% if @deployment_notification.present?%>
+  <% if @deployment_notification.present? %>
     <% if Time.zone.now >= @deployment_notification.display_time %>
-    <div class="notification-banner">
-      <div class="col-sm-3"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
-        <span>Service Alert: Starting on</span></br>
-        <span><%= @deployment_notification.deployment_time.strftime("%a %b %d, %Y %I:%M%p") %> ET</span>
-      </div>
-      <div>
-        <div class="align-middle"><%= @deployment_notification.message %></div>
-      </div>
-    </div>
-    <%end %>
-  <%end %>
+      <% if cookies[:hide_deployment_notification].nil? || cookies[:hide_deployment_notification] !=  @deployment_notification.id.to_s  %>
+        <%= render partial: '/layouts/deployment_notification_banner', locals: {deployment_notification: @deployment_notification} %>
+      <% end %>
+    <% end %>
+  <% end %>
 </nav>

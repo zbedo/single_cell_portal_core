@@ -129,6 +129,7 @@
             <div class="col-sm-5">
               <%= share.label :permission %><br />
               <%= share.select :permission, options_for_select(StudyShare::PERMISSION_TYPES, share.object.permission), {}, class: 'form-control share-permission' %>
+              <span class="help-block share-description"><%= StudyShare::PERMISSION_DESCRIPTION_MAP[share.object.permission] %></span>
             </div>
             <div class="col-sm-1">
               <%= share.label :delete, "&nbsp;".html_safe %><br />
@@ -159,5 +160,12 @@
             var updateForm = $('#update-study-settings-form');
             updateForm.submit();
         });
+    });
+
+    $("#update-study-settings-form").on('change', '.share-permission', function() {
+        var newPermission = $(this).val();
+        var permissionText = <%= raw StudyShare::PERMISSION_DESCRIPTION_MAP.to_json %>;
+        var descField = $(this).next('.share-description');
+        descField.html(permissionText[newPermission])
     });
 </script>
