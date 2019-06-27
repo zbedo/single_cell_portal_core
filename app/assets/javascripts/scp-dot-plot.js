@@ -205,10 +205,9 @@ function renderMorpheusDotPlot(dataPath, annotPath, selectedAnnot, selectedAnnot
     // changing default options for size and color (SCP-1738).
     // setTimeout is a kludge, but seemingly the only way to do this.
     setTimeout(function() {
-      var options = $('[data-action="Options"]');
+      var options = $('#dot-plots [data-action="Options"]');
       options.next('.morpheus-button-divider').remove();
       options.remove();
-      console.log('removed options')
     }, 50);
   });
 
