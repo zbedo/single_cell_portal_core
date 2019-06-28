@@ -17,12 +17,14 @@ SSH_COMMAND="ssh $SSH_OPTS $SSH_USER@$DESTINATION_HOST"
 DESTINATION_BASE_DIR='/home/docker-user/deployments/single_cell_portal_core'
 GIT_BRANCH="master"
 PASSENGER_APP_ENV="production"
-BOOT_COMMAND="bin/boot_deployment.sh"
+BOOT_COMMAND="bin/boot_docker"
+PORTAL_CONTAINER="single_cell"
+PORTAL_CONTAINER_VERSION="latest"
 
 usage=$(
 cat <<EOF
 
-### boot deployment on remote server once all secrets/source code has been staged and Docker container is stopped ###
+### extract secrets from vault, copy to remote host, build/stop/remove docker container and launch boot script for deployment ###
 $0
 
 [OPTIONS]
@@ -67,6 +69,11 @@ case $OPTION in
   esac
 done
 
+function run_remote_command {
+    REMOTE_COMMAND="$1"
+    cd $DESTINATION_BASE_DIR ; $REMOTE_COMMAND
+}
+
 function main {
     # exit if all config is not present
     if [[ -z "$PORTAL_SECRETS_VAULT_PATH" ]] || [[ -z "$SERVICE_ACCOUNT_VAULT_PATH" ]] || [[ -z "$READ_ONLY_SERVICE_ACCOUNT_VAULT_PATH" ]]; then
@@ -86,18 +93,55 @@ function main {
     READ_ONLY_SERVICE_ACCOUNT_JSON_PATH="$DESTINATION_BASE_DIR/config/$READ_ONLY_SERVICE_ACCOUNT_FILENAME"
     echo "### COMPLETED ###"
 
+    echo "### Exporting Service Account Keys: $SERVICE_ACCOUNT_JSON_PATH, $READ_ONLY_SERVICE_ACCOUNT_JSON_PATH ###"
+    echo "export SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_JSON_PATH" >> $CONFIG_FILENAME
+    echo "export READ_ONLY_SERVICE_ACCOUNT_KEY=$READ_ONLY_SERVICE_ACCOUNT_JSON_PATH" >> $CONFIG_FILENAME
+    echo "### COMPLETED ###"
+
     echo "### migrating secrets to remote host ###"
     mv ./$CONFIG_FILENAME $PORTAL_SECRETS_PATH || exit_with_error_message "could not move $CONFIG_FILENAME to $PORTAL_SECRETS_PATH"
     mv ./$SERVICE_ACCOUNT_FILENAME $SERVICE_ACCOUNT_JSON_PATH || exit_with_error_message "could not move $SERVICE_ACCOUNT_FILENAME to $SERVICE_ACCOUNT_JSON_PATH"
     mv ./$READ_ONLY_SERVICE_ACCOUNT_FILENAME $READ_ONLY_SERVICE_ACCOUNT_JSON_PATH || exit_with_error_message "could not move $READ_ONLY_SERVICE_ACCOUNT_FILENAME to $READ_ONLY_SERVICE_ACCOUNT_JSON_PATH"
-
-    echo "### pulling updated source from git on branch $GIT_BRANCH ###"
-    cd $DESTINATION_BASE_DIR ; git fetch && git checkout $GIT_BRANCH || exit_with_error_message "could not pull from $GIT_BRANCH"
     echo "### COMPLETED ###"
 
-    echo "### booting deployment ###"
-    BOOT_COMMAND=$BOOT_COMMAND" -e $PASSENGER_APP_ENV -p $PORTAL_SECRETS_PATH -s $SERVICE_ACCOUNT_JSON_PATH -r $READ_ONLY_SERVICE_ACCOUNT_JSON_PATH"
-    cd $DESTINATION_BASE_DIR ; $BOOT_COMMAND || exit_with_error_message "could not boot new instance"
+    echo "### pulling updated source from git on branch $GIT_BRANCH ###"
+    run_remote_command "git checkout $GIT_BRANCH" || exit_with_error_message "could not checkout $GIT_BRANCH"
+    run_remote_command "git pull origin $GIT_BRANCH" || exit_with_error_message "could not pull from $GIT_BRANCH"
+    echo "### COMPLETED ###"
+
+    # load env secrets from file, then clean up
+    echo "### Exporting portal configuration from $PORTAL_SECRETS_PATH and cleaning up... ###"
+    run_remote_command ". $PORTAL_SECRETS_PATH" || exit_with_error_message "could not load secrets from $PORTAL_SECRETS_PATH"
+    run_remote_command "rm $PORTAL_SECRETS_PATH" || exit_with_error_message "could not clean up secrets from $PORTAL_SECRETS_PATH"
+    echo "### COMPLETED ###"
+
+    # build a new docker container now to save time later
+    echo "### Building new docker image: $PORTAL_CONTAINER:$PORTAL_CONTAINER_VERSION ... ###"
+    run_remote_command "build_docker_image $DESTINATION_BASE_DIR $PORTAL_CONTAINER $PORTAL_CONTAINER_VERSION" || exit_with_error_message "Cannot build new docker image"
+    echo "### COMPLETED ###"
+
+    # stop docker container and remove it
+    echo "### Stopping & removing docker container $PORTAL_CONTAINER ... ###"
+    run_remote_command "stop_docker_container $PORTAL_CONTAINER" || exit_with_error_message "Cannot stop docker container $PORTAL_CONTAINER"
+    run_remote_command "remove_docker_container $PORTAL_CONTAINER" || exit_with_error_message "Cannot remove docker container $PORTAL_CONTAINER"
+    echo "### COMPLETED ###"
+
+    # run boot command
+    echo "### Booting $PORTAL_CONTAINER ###"
+    run_remote_command "$BOOT_COMMAND -e $PASSENGER_APP_ENV -d $DESTINATION_BASE_DIR" || exit_with_error_message "Cannot start new docker container $PORTAL_CONTAINER"
+    echo "### COMPLETED ###"
+
+    # ensure portal is running
+    echo "### Ensuring boot ###"
+    COUNTER=0
+    while [[ $COUNTER -lt 12 ]]; do
+        COUNTER=$[$COUNTER + 1]
+        echo "portal not running on attempt $COUNTER, waiting 5 seconds..."
+        sleep 5
+        if [[ $(run_remote_command "ensure_container_running $PORTAL_CONTAINER") -eq 0 ]]; then break 2; fi
+    done
+    run_remote_command "ensure_container_running $PORTAL_CONTAINER" || exit_with_error_message "Portal still not running after 1 minute, deployment failed"
+    echo "### DEPLOYMENT COMPLETED ###"
 }
 
 main "$@"
