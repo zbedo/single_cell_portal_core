@@ -44,7 +44,7 @@ function extract_vault_secrets_as_env_file {
     # load raw secrets from vault
     echo "extracting vault secrets from $VAULT_SECRET_PATH"
     VALS=$(load_secrets_from_vault $VAULT_SECRET_PATH) || exit_with_error_message "could not read secrets from $VAULT_SECRET_PATH"
-    echo "env secrets from $VAULT_SECRET_PATH" >| $SECRET_EXPORT_FILENAME || exit_with_error_message "could not initialize $SECRET_EXPORT_FILENAME"
+    echo "### env secrets from $VAULT_SECRET_PATH ###" >| $SECRET_EXPORT_FILENAME || exit_with_error_message "could not initialize $SECRET_EXPORT_FILENAME"
     # for each key in the secrets config, export the value
     for key in $(echo $VALS | jq .data | jq --raw-output 'keys[]')
     do
