@@ -9,11 +9,8 @@ THIS_DIR="$(cd "$(dirname "$0")"; pwd)"
 . $THIS_DIR/extract_vault_secrets.sh
 . $THIS_DIR/docker_utils.sh
 
-
 # defaults
-SSH_USER="jenkins"
-SSH_OPTS="-o CheckHostIP=no -o StrictHostKeyChecking=no"
-SSH_COMMAND="ssh $SSH_OPTS $SSH_USER@$DESTINATION_HOST"
+SSH_USER="docker-user"
 DESTINATION_BASE_DIR='/home/docker-user/deployments/single_cell_portal_core'
 GIT_BRANCH="master"
 PASSENGER_APP_ENV="production"
@@ -33,12 +30,14 @@ $0
 -r VALUE	set the path to the read-only service account json in vault
 -e VALUE	set the environment to boot the portal in
 -b VALUE	set the branch to pull from git (defaults to master)
--d VAULE	set the target directory to deploy from (defaults to $DESTINATION_BASE_DIR)
+-d VALUE	set the target directory to deploy from (defaults to $DESTINATION_BASE_DIR)
+-S VALUE	set the path to SSH_KEYFILE (private key for SSH auth, no default)
+-h VALUE	set the DESTINATION_HOST (remote GCP VM to SSH into, no default)
 -H COMMAND	print this text
 EOF
 )
 
-while getopts "p:s:r:c:n:e:b:d:H" OPTION; do
+while getopts "p:s:r:c:n:e:b:d:h:S:H" OPTION; do
 case $OPTION in
   p)
     PORTAL_SECRETS_VAULT_PATH="$OPTARG"
@@ -58,6 +57,12 @@ case $OPTION in
   d)
     DESTINATION_BASE_DIR="$OPTARG"
     ;;
+  h)
+    DESTINATION_HOST="$OPTARG"
+    ;;
+  S)
+    SSH_KEYFILE="$OPTARG"
+    ;;
   H)
     echo "$usage"
     exit 0
@@ -69,9 +74,20 @@ case $OPTION in
   esac
 done
 
+
+# construct SSH command
+SSH_OPTS="-o CheckHostIP=no -o StrictHostKeyChecking=no"
+SSH_COMMAND="ssh -i $SSH_KEYFILE $SSH_OPTS $SSH_USER@$DESTINATION_HOST"
+
 function run_remote_command {
     REMOTE_COMMAND="$1"
-    cd $DESTINATION_BASE_DIR ; $REMOTE_COMMAND
+    $SSH_COMMAND "cd $DESTINATION_BASE_DIR ; $REMOTE_COMMAND"
+}
+
+function copy_file_to_remote {
+    LOCAL_FILEPATH="$1"
+    REMOTE_FILEPATH="$2"
+    cat $LOCAL_FILEPATH | $SSH_COMMAND "cat > $REMOTE_FILEPATH"
 }
 
 function main {
@@ -99,14 +115,14 @@ function main {
     echo "### COMPLETED ###"
 
     echo "### migrating secrets to remote host ###"
-    mv ./$CONFIG_FILENAME $PORTAL_SECRETS_PATH || exit_with_error_message "could not move $CONFIG_FILENAME to $PORTAL_SECRETS_PATH"
-    mv ./$SERVICE_ACCOUNT_FILENAME $SERVICE_ACCOUNT_JSON_PATH || exit_with_error_message "could not move $SERVICE_ACCOUNT_FILENAME to $SERVICE_ACCOUNT_JSON_PATH"
-    mv ./$READ_ONLY_SERVICE_ACCOUNT_FILENAME $READ_ONLY_SERVICE_ACCOUNT_JSON_PATH || exit_with_error_message "could not move $READ_ONLY_SERVICE_ACCOUNT_FILENAME to $READ_ONLY_SERVICE_ACCOUNT_JSON_PATH"
+    copy_file_to_remote ./$CONFIG_FILENAME $PORTAL_SECRETS_PATH || exit_with_error_message "could not move $CONFIG_FILENAME to $PORTAL_SECRETS_PATH"
+    copy_file_to_remote ./$SERVICE_ACCOUNT_FILENAME $SERVICE_ACCOUNT_JSON_PATH || exit_with_error_message "could not move $SERVICE_ACCOUNT_FILENAME to $SERVICE_ACCOUNT_JSON_PATH"
+    copy_file_to_remote ./$READ_ONLY_SERVICE_ACCOUNT_FILENAME $READ_ONLY_SERVICE_ACCOUNT_JSON_PATH || exit_with_error_message "could not move $READ_ONLY_SERVICE_ACCOUNT_FILENAME to $READ_ONLY_SERVICE_ACCOUNT_JSON_PATH"
     echo "### COMPLETED ###"
 
     echo "### pulling updated source from git on branch $GIT_BRANCH ###"
+    run_remote_command "git fetch" || exit_with_error_message "could not checkout $GIT_BRANCH"
     run_remote_command "git checkout $GIT_BRANCH" || exit_with_error_message "could not checkout $GIT_BRANCH"
-    run_remote_command "git pull origin $GIT_BRANCH" || exit_with_error_message "could not pull from $GIT_BRANCH"
     echo "### COMPLETED ###"
 
     # load env secrets from file, then clean up
