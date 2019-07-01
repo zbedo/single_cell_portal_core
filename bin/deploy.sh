@@ -94,6 +94,8 @@ function main {
     echo "### COMPLETED ###"
 
     # update source on remote host
+    # TODO: run_remote_command "bin remote_deploy.sh" || exit_with_error_message "remote_deploy.sh FAILED."
+    # TODO: pretty much everything after this is remote commands, aside from ancillary stuff like echo's and loops. It would be simpler to toss it all into remote_deploy.sh and run the whole thing remotely
     echo "### pulling updated source from git on branch $GIT_BRANCH ###"
     run_remote_command "git fetch" || exit_with_error_message "could not checkout $GIT_BRANCH"
     run_remote_command "git checkout $GIT_BRANCH" || exit_with_error_message "could not checkout $GIT_BRANCH"

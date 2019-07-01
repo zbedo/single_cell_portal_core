@@ -13,6 +13,7 @@ THIS_DIR="$(cd "$(dirname "$0")"; pwd)"
 PORTAL_DOCKER_CONTAINER="single_cell"
 PORTAL_DOCKER_CONTAINER_VERSION="latest"
 
+# TODO: rethink naming for functions that start with "set", echoing my comment in extract_vault_secrets.sh
 # set the docker container name
 function set_container_name {
     CONTAINER="$1"
