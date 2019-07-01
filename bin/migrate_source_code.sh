@@ -9,7 +9,7 @@
 # create a tmp dir name with base directory name & date
 function create_backup_dirname {
     PREV_RELEASE="$1"
-    BASE_DIR=$(extract_terminal_pathname $PREV_RELEASE)
+    BASE_DIR=$(basename $PREV_RELEASE)
     CURRENT_DATE="$(date +%Y-%m-%d)"
     NEW_PATH="/tmp/$BASE_DIR-$CURRENT_DATE-backup"
     echo "$NEW_PATH"

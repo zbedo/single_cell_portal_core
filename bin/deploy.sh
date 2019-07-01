@@ -9,76 +9,54 @@ THIS_DIR="$(cd "$(dirname "$0")"; pwd)"
 . $THIS_DIR/extract_vault_secrets.sh
 . $THIS_DIR/docker_utils.sh
 
-
-# defaults
-SSH_USER="jenkins"
-SSH_OPTS="-o CheckHostIP=no -o StrictHostKeyChecking=no"
-SSH_COMMAND="ssh $SSH_OPTS $SSH_USER@$DESTINATION_HOST"
-DESTINATION_BASE_DIR='/home/docker-user/deployments/single_cell_portal_core'
-GIT_BRANCH="master"
-PASSENGER_APP_ENV="production"
-BOOT_COMMAND="bin/boot_docker"
-PORTAL_CONTAINER="single_cell"
-PORTAL_CONTAINER_VERSION="latest"
-
-usage=$(
-cat <<EOF
-
-### extract secrets from vault, copy to remote host, build/stop/remove docker container and launch boot script for deployment ###
-$0
-
-[OPTIONS]
--p VALUE	set the path to configuration secrets in vault
--s VALUE	set the path to the main service account json in vault
--r VALUE	set the path to the read-only service account json in vault
--e VALUE	set the environment to boot the portal in
--b VALUE	set the branch to pull from git (defaults to master)
--d VAULE	set the target directory to deploy from (defaults to $DESTINATION_BASE_DIR)
--H COMMAND	print this text
-EOF
-)
-
-while getopts "p:s:r:c:n:e:b:d:H" OPTION; do
-case $OPTION in
-  p)
-    PORTAL_SECRETS_VAULT_PATH="$OPTARG"
-    ;;
-  s)
-    SERVICE_ACCOUNT_VAULT_PATH="$OPTARG"
-    ;;
-  r)
-    READ_ONLY_SERVICE_ACCOUNT_VAULT_PATH="$OPTARG"
-    ;;
-  e)
-    PASSENGER_APP_ENV="$OPTARG"
-    ;;
-  b)
-    GIT_BRANCH="$OPTARG"
-    ;;
-  d)
-    DESTINATION_BASE_DIR="$OPTARG"
-    ;;
-  H)
-    echo "$usage"
-    exit 0
-    ;;
-  *)
-    echo "unrecognized option"
-    echo "$usage"
-    ;;
-  esac
-done
-
-function run_remote_command {
-    REMOTE_COMMAND="$1"
-    cd $DESTINATION_BASE_DIR ; $REMOTE_COMMAND
-}
-
 function main {
+
+    # defaults
+    SSH_USER="jenkins"
+    SSH_OPTS="-o CheckHostIP=no -o StrictHostKeyChecking=no"
+    SSH_COMMAND="ssh $SSH_OPTS $SSH_USER@$DESTINATION_HOST"
+    DESTINATION_BASE_DIR='/home/docker-user/deployments/single_cell_portal_core'
+    GIT_BRANCH="master"
+    PASSENGER_APP_ENV="production"
+    BOOT_COMMAND="bin/boot_docker"
+    PORTAL_CONTAINER="single_cell"
+    PORTAL_CONTAINER_VERSION="latest"
+
+    while getopts "p:s:r:c:n:e:b:d:H" OPTION; do case $OPTION in
+            p)
+                PORTAL_SECRETS_VAULT_PATH="$OPTARG"
+                ;;
+            s)
+                SERVICE_ACCOUNT_VAULT_PATH="$OPTARG"
+                ;;
+            r)
+                READ_ONLY_SERVICE_ACCOUNT_VAULT_PATH="$OPTARG"
+                ;;
+            e)
+                PASSENGER_APP_ENV="$OPTARG"
+                ;;
+            b)
+                GIT_BRANCH="$OPTARG"
+                ;;
+            d)
+                DESTINATION_BASE_DIR="$OPTARG"
+                ;;
+            H)
+                echo "$usage"
+                exit 0
+                ;;
+            *)
+                echo "unrecognized option"
+                echo "$usage"
+                exit 1
+                ;;
+        esac
+    done
+
     # exit if all config is not present
     if [[ -z "$PORTAL_SECRETS_VAULT_PATH" ]] || [[ -z "$SERVICE_ACCOUNT_VAULT_PATH" ]] || [[ -z "$READ_ONLY_SERVICE_ACCOUNT_VAULT_PATH" ]]; then
-        exit_with_error_message "Did not supply all necessary parameters: portal config: $PORTAL_SECRETS_VAULT_PATH" \
-            "service account path: $SERVICE_ACCOUNT_VAULT_PATH; read-only service account path: $READ_ONLY_SERVICE_ACCOUNT_VAULT_PATH"
+        exit_with_error_message "Did not supply all necessary parameters: portal config: '$PORTAL_SECRETS_VAULT_PATH';" \
+            "service account path: '$SERVICE_ACCOUNT_VAULT_PATH'; read-only service account path: '$READ_ONLY_SERVICE_ACCOUNT_VAULT_PATH'$newline$newline$usage"
     fi
 
     echo "### extracting secrets from vault ###"
@@ -142,6 +120,33 @@ function main {
     done
     run_remote_command "ensure_container_running $PORTAL_CONTAINER" || exit_with_error_message "Portal still not running after 1 minute, deployment failed"
     echo "### DEPLOYMENT COMPLETED ###"
+}
+
+# TODO: Although I made minimum changes to clarify required vs optional parameters, this may now need rewording...
+usage=$(
+cat <<EOF
+USAGE:
+   $(basename $0) <required parameters> [<options>]
+
+### extract secrets from vault, copy to remote host, build/stop/remove docker container and launch boot script for deployment ###
+$0
+
+[REQUIRED PARAMETERS]
+-p VALUE	set the path to configuration secrets in vault
+-s VALUE	set the path to the main service account json in vault
+-r VALUE	set the path to the read-only service account json in vault
+
+[OPTIONS]
+-e VALUE	set the environment to boot the portal in
+-b VALUE	set the branch to pull from git (defaults to master)
+-d VAULE	set the target directory to deploy from (defaults to $DESTINATION_BASE_DIR)
+-H COMMAND	print this text
+EOF
+)
+
+function run_remote_command {
+    REMOTE_COMMAND="$1"
+    cd $DESTINATION_BASE_DIR ; $REMOTE_COMMAND
 }
 
 main "$@"
