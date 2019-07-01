@@ -11,11 +11,12 @@ export JENKINS_VAULT_TOKEN_PATH
 # load common utils
 . $THIS_DIR/bash_utils.sh
 
+# TODO: consider renaming--"set" is misleading since no value is being stored anywhere. "echo", "show", "calculate", "determine" are some other ideas for verbs
 # extract filename from end of vault path, replacing with new extension if needed
 function set_export_filename {
     SECRET_PATH="$1"
     REQUESTED_EXTENSION="$2"
-    FILENAME=$(extract_terminal_pathname $SECRET_PATH)
+    FILENAME=$(basename $SECRET_PATH)
     if [[ -n "$REQUESTED_EXTENSION" ]]; then
         # replace existing extension with requested extension (like .env for non-JSON secrets)
         EXPORT_EXTENSION="$(extract_pathname_extension $FILENAME)"
