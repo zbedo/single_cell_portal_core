@@ -65,6 +65,7 @@ function get_vault_token {
 }
 
 # load secrets out of vault using Docker image defined in $DOCKER_IMAGE_FOR_VAULT_CLIENT
+# TODO: let's chat about vault tokens---it looks like you might have copy-pasted some stuff you don't need here, or maybe you know something I don't. Also I recently figured out some problems in my understanding of these tokens that manifested itself in mmrf-researcher-portal scripts:
 function load_secrets_from_vault {
     SECRET_PATH_IN_VAULT="$1"
 
@@ -72,6 +73,6 @@ function load_secrets_from_vault {
         -e VAULT_AUTH_GITHUB_TOKEN \
         -e VAULT_AUTH_NATIVE_TOKEN \
         -e VAULT_ADDR \
-				$DOCKER_IMAGE_FOR_VAULT_CLIENT \
-				sh -lc "vault login -method=github -no-print=true token=$(get_vault_token) && vault read -format json $SECRET_PATH_IN_VAULT" || exit_with_error_message "could not read $SECRET_PATH_IN_VAULT"
+        $DOCKER_IMAGE_FOR_VAULT_CLIENT \
+        sh -lc "vault login -method=github -no-print=true token=$(get_vault_token) && vault read -format json $SECRET_PATH_IN_VAULT" || exit_with_error_message "could not read $SECRET_PATH_IN_VAULT"
 }
