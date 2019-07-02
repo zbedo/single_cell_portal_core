@@ -11,7 +11,6 @@ export JENKINS_VAULT_TOKEN_PATH
 # load common utils
 . $THIS_DIR/bash_utils.sh
 
-# TODO: consider renaming--"set" is misleading since no value is being stored anywhere. "echo", "show", "calculate", "determine" are some other ideas for verbs
 # extract filename from end of vault path, replacing with new extension if needed
 function set_export_filename {
     SECRET_PATH="$1"
@@ -19,7 +18,7 @@ function set_export_filename {
     FILENAME=$(basename $SECRET_PATH)
     if [[ -n "$REQUESTED_EXTENSION" ]]; then
         # replace existing extension with requested extension (like .env for non-JSON secrets)
-        EXPORT_EXTENSION="$(extract_pathname_extension $FILENAME)"
+        EXPORT_EXTENSION="$(set_pathname_extension $FILENAME)"
         FILENAME="$(echo $FILENAME | sed "s/$EXPORT_EXTENSION/$REQUESTED_EXTENSION/")" || exit_with_error_message "could not change export filename extension to $REQUESTED_EXTENSION from $EXPORT_EXTENSION"
     fi
     echo "$FILENAME"
@@ -55,17 +54,16 @@ function extract_vault_secrets_as_env_file {
     done
 }
 
-# get the token for authenticating into vault; will default to local machine's github-token
-function get_vault_token {
+function get_authentication_method {
     if [[ -f $JENKINS_VAULT_TOKEN_PATH ]]; then
-        echo $(cat $JENKINS_VAULT_TOKEN_PATH)
+        echo "-method=token -no-print=true token=$(cat $JENKINS_VAULT_TOKEN_PATH)"
     else
-        echo $(cat ~/.github-token)
+        echo "-method=github -no-print=true token=$(cat ~/.github-token)"
     fi
 }
 
 # load secrets out of vault using Docker image defined in $DOCKER_IMAGE_FOR_VAULT_CLIENT
-# TODO: let's chat about vault tokens---it looks like you might have copy-pasted some stuff you don't need here, or maybe you know something I don't. Also I recently figured out some problems in my understanding of these tokens that manifested itself in mmrf-researcher-portal scripts:
+# will auto-detect correct vault authentication method based on presence of $JENKINS_VAULT_TOKEN_PATH
 function load_secrets_from_vault {
     SECRET_PATH_IN_VAULT="$1"
 
@@ -74,5 +72,5 @@ function load_secrets_from_vault {
         -e VAULT_AUTH_NATIVE_TOKEN \
         -e VAULT_ADDR \
         $DOCKER_IMAGE_FOR_VAULT_CLIENT \
-        sh -lc "vault login -method=github -no-print=true token=$(get_vault_token) && vault read -format json $SECRET_PATH_IN_VAULT" || exit_with_error_message "could not read $SECRET_PATH_IN_VAULT"
+        sh -lc "vault login $(get_authentication_method) && vault read -format json $SECRET_PATH_IN_VAULT" || exit_with_error_message "could not read $SECRET_PATH_IN_VAULT"
 }

@@ -7,7 +7,6 @@ THIS_DIR="$(cd "$(dirname "$0")"; pwd)"
 # common libraries
 . $THIS_DIR/bash_utils.sh
 . $THIS_DIR/extract_vault_secrets.sh
-. $THIS_DIR/docker_utils.sh
 
 function main {
 
@@ -16,7 +15,7 @@ function main {
     DESTINATION_BASE_DIR='/home/docker-user/deployments/single_cell_portal_core'
     GIT_BRANCH="master"
     PASSENGER_APP_ENV="production"
-    BOOT_COMMAND="bin/boot_docker"
+    BOOT_COMMAND="bin/remote_deploy.sh"
     PORTAL_CONTAINER="single_cell"
     PORTAL_CONTAINER_VERSION="latest"
 
@@ -60,7 +59,10 @@ function main {
 
     # construct SSH command
     SSH_OPTS="-o CheckHostIP=no -o StrictHostKeyChecking=no"
-    SSH_COMMAND="ssh -i $SSH_KEYFILE $SSH_OPTS $SSH_USER@$DESTINATION_HOST"
+    if [[ -z $SSH_KEYFILE ]]; then
+        SSH_OPTS=$SSH_OPTS" -i $SSH_KEYFILE"
+    fi
+    SSH_COMMAND="ssh $SSH_OPTS $SSH_USER@$DESTINATION_HOST"
 
     # exit if all config is not present
     if [[ -z "$PORTAL_SECRETS_VAULT_PATH" ]] || [[ -z "$SERVICE_ACCOUNT_VAULT_PATH" ]] || [[ -z "$READ_ONLY_SERVICE_ACCOUNT_VAULT_PATH" ]]; then
@@ -93,41 +95,9 @@ function main {
     copy_file_to_remote ./$READ_ONLY_SERVICE_ACCOUNT_FILENAME $READ_ONLY_SERVICE_ACCOUNT_JSON_PATH || exit_with_error_message "could not move $READ_ONLY_SERVICE_ACCOUNT_FILENAME to $READ_ONLY_SERVICE_ACCOUNT_JSON_PATH"
     echo "### COMPLETED ###"
 
-    # update source on remote host
-    # TODO: run_remote_command "bin remote_deploy.sh" || exit_with_error_message "remote_deploy.sh FAILED."
-    # TODO: pretty much everything after this is remote commands, aside from ancillary stuff like echo's and loops. It would be simpler to toss it all into remote_deploy.sh and run the whole thing remotely
-    echo "### pulling updated source from git on branch $GIT_BRANCH ###"
-    run_remote_command "git fetch" || exit_with_error_message "could not checkout $GIT_BRANCH"
-    run_remote_command "git checkout $GIT_BRANCH" || exit_with_error_message "could not checkout $GIT_BRANCH"
+    echo "### running remote deploy script ###"
+    run_remote_command "$(set_remote_environment_vars) $BOOT_COMMAND"
     echo "### COMPLETED ###"
-
-    # build a new docker container now to save time later
-    echo "### Building new docker image: $PORTAL_CONTAINER:$PORTAL_CONTAINER_VERSION ... ###"
-    run_remote_command ". bin/docker_utils.sh ; build_docker_image $DESTINATION_BASE_DIR $PORTAL_CONTAINER $PORTAL_CONTAINER_VERSION" || exit_with_error_message "Cannot build new docker image"
-    echo "### COMPLETED ###"
-
-    # stop docker container and remove it
-    echo "### Stopping & removing docker container $PORTAL_CONTAINER ... ###"
-    run_remote_command ". bin/docker_utils.sh ; stop_docker_container $PORTAL_CONTAINER" || exit_with_error_message "Cannot stop docker container $PORTAL_CONTAINER"
-    run_remote_command ". bin/docker_utils.sh ; remove_docker_container $PORTAL_CONTAINER" || exit_with_error_message "Cannot remove docker container $PORTAL_CONTAINER"
-    echo "### COMPLETED ###"
-
-    # load env secrets from file, then clean up & run boot command
-    echo "### Booting $PORTAL_CONTAINER ###"
-    run_remote_command ". $PORTAL_SECRETS_PATH ; rm $PORTAL_SECRETS_PATH; $BOOT_COMMAND -e $PASSENGER_APP_ENV -d $DESTINATION_BASE_DIR" || exit_with_error_message "Cannot start new docker container $PORTAL_CONTAINER"
-    echo "### COMPLETED ###"
-
-    # ensure portal is running
-    echo "### Ensuring boot ###"
-    COUNTER=0
-    while [[ $COUNTER -lt 12 ]]; do
-        COUNTER=$[$COUNTER + 1]
-        echo "portal not running on attempt $COUNTER, waiting 5 seconds..."
-        sleep 5
-        if [[ $(run_remote_command ". bin/docker_utils.sh ; ensure_container_running $PORTAL_CONTAINER") -eq 0 ]]; then break 2; fi
-    done
-    run_remote_command ". bin/docker_utils.sh ; ensure_container_running $PORTAL_CONTAINER" || exit_with_error_message "Portal still not running after 1 minute, deployment failed"
-    echo "### DEPLOYMENT COMPLETED ###"
 }
 
 # TODO: Although I made minimum changes to clarify required vs optional parameters, this may now need rewording...
@@ -147,7 +117,7 @@ USAGE:
 -e VALUE	set the environment to boot the portal in
 -b VALUE	set the branch to pull from git (defaults to master)
 -d VALUE	set the target directory to deploy from (defaults to $DESTINATION_BASE_DIR)
--S VALUE	set the path to SSH_KEYFILE (private key for SSH auth, no default)
+-S VALUE	set the path to SSH_KEYFILE (private key for SSH auth, no default, not needing except for manual testing)
 -h VALUE	set the DESTINATION_HOST (remote GCP VM to SSH into, no default)
 -H COMMAND	print this text
 EOF
@@ -158,11 +128,14 @@ function run_remote_command {
     $SSH_COMMAND "cd $DESTINATION_BASE_DIR ; $REMOTE_COMMAND"
 }
 
-
 function copy_file_to_remote {
     LOCAL_FILEPATH="$1"
     REMOTE_FILEPATH="$2"
     cat $LOCAL_FILEPATH | $SSH_COMMAND "cat > $REMOTE_FILEPATH"
+}
+
+function set_remote_environment_vars {
+    echo "PASSENGER_APP_ENV=$PASSENGER_APP_ENV GIT_BRANCH=$GIT_BRANCH PORTAL_SECRETS_PATH=$PORTAL_SECRETS_PATH DESTINATION_BASE_DIR=$DESTINATION_BASE_DIR"
 }
 
 main "$@"
