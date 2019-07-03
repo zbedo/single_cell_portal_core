@@ -50,7 +50,7 @@ function extract_vault_secrets_as_env_file {
     do
         echo "setting value for: $key"
         curr_val=$(echo $VALS | jq .data | jq --raw-output .$key) || exit_with_error_message "could not extract value for $key from $VAULT_SECRET_PATH"
-        echo "export $key=$curr_val" >> $SECRET_EXPORT_FILENAME
+        echo "export $key='$curr_val'" >> $SECRET_EXPORT_FILENAME
     done
 }
 
