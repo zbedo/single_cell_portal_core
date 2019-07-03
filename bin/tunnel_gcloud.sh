@@ -6,33 +6,38 @@
 usage=$(
 cat <<EOF
 $0 [OPTION]
--e VALUE	set the environment, defaults to 'production' (determines which VM to ssh into).
+-v VALUE	set the VM name, defaults to 'singlecell-production'.
 -u VALUE	set the login user, defaults to 'root'
+-p VALUE	set the GCP project, defaults to 'broad-singlecellportal'
 -H COMMAND	print this text
 EOF
 )
 
 # set variables & defaults
-ENV="production"
+VM_NAME="singlecell-production"
+PROJECT="broad-singlecellportal"
 USER='root'
 
-while getopts "e:u:H" OPTION; do
+while getopts "v:u:p:H" OPTION; do
 case $OPTION in
-	e)
-		ENV="$OPTARG"
-		;;
-	u)
-		USER="$OPTARG"
-		;;
-	H)
-		echo "$usage"
-		exit 0
-		;;
-	*)
-    echo "unrecognized option"
-    echo "$usage"
-    ;;
-	esac
+    v)
+        VM_NAME="$OPTARG"
+        ;;
+    u)
+        USER="$OPTARG"
+        ;;
+    p)
+        PROJECT="$OPTARG"
+        ;;
+    H)
+        echo "$usage"
+        exit 0
+        ;;
+    *)
+        echo "unrecognized option"
+        echo "$usage"
+        ;;
+    esac
 done
 
-gcloud compute ssh $USER@singlecell-$ENV --project broad-singlecellportal --zone us-central1-a
+gcloud compute ssh $USER@$VM_NAME --project $PROJECT --zone us-central1-a
