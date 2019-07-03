@@ -35,9 +35,16 @@ function main {
     remove_docker_container $PORTAL_CONTAINER || exit_with_error_message "Cannot remove docker container $PORTAL_CONTAINER"
     echo "### COMPLETED ###"
 
-    # load env secrets from file, then clean up & run boot command
+    # load env secrets from file, then clean up
+    echo "### loading env secrets ###"
+    . $PORTAL_SECRETS_PATH
+    rm $PORTAL_SECRETS_PATH
+    echo "current ENV: $(env)"
+    echo "### COMPLETED ###"
+
+    # run boot command
     echo "### Booting $PORTAL_CONTAINER ###"
-    run_command_in_deployment ". $PORTAL_SECRETS_PATH ; rm $PORTAL_SECRETS_PATH; bin/boot_docker -e $PASSENGER_APP_ENV -d $DESTINATION_BASE_DIR" || exit_with_error_message "Cannot start new docker container $PORTAL_CONTAINER"
+    run_command_in_deployment "bin/boot_docker -e $PASSENGER_APP_ENV -d $DESTINATION_BASE_DIR" || exit_with_error_message "Cannot start new docker container $PORTAL_CONTAINER"
     echo "### COMPLETED ###"
 
     # ensure portal is running

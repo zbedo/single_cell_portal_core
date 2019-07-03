@@ -59,7 +59,7 @@ function main {
 
     # construct SSH command
     SSH_OPTS="-o CheckHostIP=no -o StrictHostKeyChecking=no"
-    if [[ -z $SSH_KEYFILE ]]; then
+    if [[ -n $SSH_KEYFILE ]]; then
         SSH_OPTS=$SSH_OPTS" -i $SSH_KEYFILE"
     fi
     SSH_COMMAND="ssh $SSH_OPTS $SSH_USER@$DESTINATION_HOST"
@@ -96,7 +96,7 @@ function main {
     echo "### COMPLETED ###"
 
     echo "### running remote deploy script ###"
-    run_remote_command "$(set_remote_environment_vars) $BOOT_COMMAND"
+    run_remote_command "$(set_remote_environment_vars) $BOOT_COMMAND" || exit_with_error_message "could not run $(set_remote_environment_vars) $BOOT_COMMAND on $DESTINATION_HOST:$DESTINATION_BASE_DIR"
     echo "### COMPLETED ###"
 }
 
