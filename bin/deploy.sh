@@ -95,6 +95,12 @@ function main {
     copy_file_to_remote ./$READ_ONLY_SERVICE_ACCOUNT_FILENAME $READ_ONLY_SERVICE_ACCOUNT_JSON_PATH || exit_with_error_message "could not move $READ_ONLY_SERVICE_ACCOUNT_FILENAME to $READ_ONLY_SERVICE_ACCOUNT_JSON_PATH"
     echo "### COMPLETED ###"
 
+    # update source on remote host to pull in changes before deployment
+    echo "### pulling updated source from git on branch $GIT_BRANCH ###"
+    run_remote_command "git fetch" || exit_with_error_message "could not checkout $GIT_BRANCH"
+    run_remote_command "git checkout $GIT_BRANCH" || exit_with_error_message "could not checkout $GIT_BRANCH"
+    echo "### COMPLETED ###"
+
     echo "### running remote deploy script ###"
     run_remote_command "$(set_remote_environment_vars) $BOOT_COMMAND" || exit_with_error_message "could not run $(set_remote_environment_vars) $BOOT_COMMAND on $DESTINATION_HOST:$DESTINATION_BASE_DIR"
     echo "### COMPLETED ###"
@@ -135,7 +141,7 @@ function copy_file_to_remote {
 }
 
 function set_remote_environment_vars {
-    echo "PASSENGER_APP_ENV=$PASSENGER_APP_ENV GIT_BRANCH=$GIT_BRANCH PORTAL_SECRETS_PATH=$PORTAL_SECRETS_PATH DESTINATION_BASE_DIR=$DESTINATION_BASE_DIR"
+    echo "PASSENGER_APP_ENV=$PASSENGER_APP_ENV PORTAL_SECRETS_PATH=$PORTAL_SECRETS_PATH DESTINATION_BASE_DIR=$DESTINATION_BASE_DIR"
 }
 
 main "$@"

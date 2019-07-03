@@ -13,16 +13,10 @@ function main {
     PORTAL_CONTAINER="single_cell"
     PORTAL_CONTAINER_VERSION="latest"
 
-    if [[ -z "$GIT_BRANCH" ]] || [[ -z "$PORTAL_SECRETS_PATH" ]] || [[ -z "$DESTINATION_BASE_DIR" ]]; then
+    if [[ -z "$PORTAL_SECRETS_PATH" ]] || [[ -z "$DESTINATION_BASE_DIR" ]]; then
         exit_with_error_message "Not all necessary variables have been set: Git branch: $GIT_BRANCH; " \
             "secrets: $PORTAL_SECRETS_PATH; base directory: $DESTINATION_BASE_DIR"
     fi
-
-    # update source on remote host
-    echo "### pulling updated source from git on branch $GIT_BRANCH ###"
-    run_command_in_deployment "git fetch" || exit_with_error_message "could not checkout $GIT_BRANCH"
-    run_command_in_deployment "git checkout $GIT_BRANCH" || exit_with_error_message "could not checkout $GIT_BRANCH"
-    echo "### COMPLETED ###"
 
     # build a new docker container now to save time later
     echo "### Building new docker image: $PORTAL_CONTAINER:$PORTAL_CONTAINER_VERSION ... ###"
