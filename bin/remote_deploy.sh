@@ -33,7 +33,6 @@ function main {
     echo "### loading env secrets ###"
     . $PORTAL_SECRETS_PATH
     rm $PORTAL_SECRETS_PATH
-    echo "current ENV: $(env)"
     echo "### COMPLETED ###"
 
     # run boot command
