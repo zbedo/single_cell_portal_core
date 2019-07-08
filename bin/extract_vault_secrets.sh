@@ -19,7 +19,7 @@ function set_export_filename {
     if [[ -n "$REQUESTED_EXTENSION" ]]; then
         # replace existing extension with requested extension (like .env for non-JSON secrets)
         EXPORT_EXTENSION="$(set_pathname_extension $FILENAME)"
-        FILENAME="$(echo $FILENAME | sed "s/$EXPORT_EXTENSION/$REQUESTED_EXTENSION/")" || exit_with_error_message "could not change export filename extension to $REQUESTED_EXTENSION from $EXPORT_EXTENSION"
+        FILENAME="${FILENAME//$EXPORT_EXTENSION/$REQUESTED_EXTENSION}" || exit_with_error_message "could not change export filename extension to $REQUESTED_EXTENSION from $EXPORT_EXTENSION"
     fi
     echo "$FILENAME"
 }
