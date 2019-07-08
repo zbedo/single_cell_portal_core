@@ -16,8 +16,6 @@ function main {
     GIT_BRANCH="master"
     PASSENGER_APP_ENV="production"
     BOOT_COMMAND="bin/remote_deploy.sh"
-    PORTAL_CONTAINER="single_cell"
-    PORTAL_CONTAINER_VERSION="latest"
 
     while getopts "p:s:r:c:n:e:b:d:h:S:H" OPTION; do
         case $OPTION in
