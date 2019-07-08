@@ -19,6 +19,7 @@ $0
 -c VALUE	command to execute after loading secrets (defaults to bin/boot_docker, please wrap command in 'quotes' to ensure proper execution)
 -e VALUE	set the environment to boot the portal in (defaults to development)
 -v VALUE  set the version of the Docker image to load (defaults to latest)
+-n VALUE	set the value for PORTAL_NAMESPACE (defaults to single-cell-portal-development)
 -H COMMAND	print this text
 EOF
 )
@@ -26,7 +27,7 @@ EOF
 # defaults
 PASSENGER_APP_ENV="development"
 COMMAND="bin/boot_docker"
-while getopts "p:s:r:f:c:e:Hv:" OPTION; do
+while getopts "p:s:r:f:c:e:v:n:H" OPTION; do
 case $OPTION in
   p)
     VAULT_SECRET_PATH="$OPTARG"
@@ -45,6 +46,9 @@ case $OPTION in
     ;;
   e)
     PASSENGER_APP_ENV="$OPTARG"
+    ;;
+  n)
+    PORTAL_NAMESPACE="$OPTARG"
     ;;
   H)
     echo "$usage"
@@ -100,4 +104,4 @@ if [[ -n $READ_ONLY_SERVICE_ACCOUNT_PATH ]] ; then
   COMMAND=$COMMAND" -K /home/app/webapp/config/.read_only_service_account.json"
 fi
 # execute requested command
-$COMMAND -e $PASSENGER_APP_ENV
+$COMMAND -e $PASSENGER_APP_ENV -N $PORTAL_NAMESPACE
