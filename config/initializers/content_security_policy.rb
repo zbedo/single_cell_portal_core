@@ -25,7 +25,7 @@ SecureHeaders::Configuration.default do |config|
       block_all_mixed_content: true, # see http://www.w3.org/TR/mixed-content/
       frame_src: %w('self'), # if child-src isn't supported, the value for frame-src will be set.
       font_src: %w('self' data:),
-      form_action: %w('self'),
+      form_action: %w('self' https://accounts.google.com),
       connect_src: %w('self' https://www.google-analytics.com https://unpkg.com https://www.googleapis.com https://s3.amazonaws.com
                       https://portals.broadinstitute.org https://data.broadinstitute.org https://api.tcell.io https://input.tcell.io),
       img_src: %w('self' data: https://www.google-analytics.com https://online.swagger.io),
