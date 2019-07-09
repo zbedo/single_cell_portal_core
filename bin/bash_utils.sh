@@ -3,7 +3,7 @@
 # common functions to share amongst different bash scripts for running/deploying SCP docker container
 
 # https://stackoverflow.com/a/56841815/1735179
-newline='
+export newline='
 '
 
 # exit 1 with an error message
