@@ -20,7 +20,6 @@ class Study
   ###
 
   # prefix for FireCloud workspaces, defaults to blank in production
-  WORKSPACE_NAME_PREFIX = Rails.env != 'production' ? Rails.env + '-' : ''
   REQUIRED_ATTRIBUTES = %w(name)
 
   # Constants for scoping values for AnalysisParameter inputs/outputs
@@ -2845,7 +2844,7 @@ class Study
   # will only set the first time, and will not set if user is initializing from an existing workspace
   def set_firecloud_workspace_name
     unless self.use_existing_workspace
-      self.firecloud_workspace = "#{WORKSPACE_NAME_PREFIX}#{self.url_safe_name}"
+      self.firecloud_workspace = self.url_safe_name
     end
   end
 
