@@ -977,6 +977,6 @@ function preserveGeneSearch() {
 function reopenUiTab(navTarget) {
     var tab = window.location.hash;
     if (tab !== '') {
-        $(navTarget + ' a[href="#' + tab + '"]').tab('show');
+        $(navTarget + ' a[href="' + tab + '"]').tab('show');
     }
 }

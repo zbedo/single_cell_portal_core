@@ -644,7 +644,7 @@ class Study
 
   # check if a user can run workflows on the given study
   def can_compute?(user)
-    if user.nil?
+    if user.nil? || !user.registered_for_firecloud?
       false
     else
       begin
