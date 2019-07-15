@@ -47,6 +47,7 @@ end
 
 gem 'devise'
 gem 'omniauth-google-oauth2'
+gem 'omniauth-rails_csrf_protection'
 gem 'googleauth'
 gem 'google-cloud-storage', require: 'google/cloud/storage'
 gem 'selenium-webdriver'
