@@ -12,7 +12,9 @@ unless ENV['TCELL_AGENT_APP_ID'].nil? || ENV['TCELL_AGENT_API_KEY'].nil?
           {
               "app_id": "#{ENV['TCELL_AGENT_APP_ID']}",
               "api_key": "#{ENV['TCELL_AGENT_API_KEY']}",
-              "tcell_input_url": "https://input.tcell.io/api/v1"
+              "tcell_api_url": "https://us.agent.tcell.insight.rapid7.com/api/v1",
+              "tcell_input_url": "https://us.input.tcell.insight.rapid7.com/api/v1",
+              "js_agent_api_base_url": "https://us.agent.tcell.insight.rapid7.com/api/v1"
           }
       ]
   }
