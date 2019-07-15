@@ -79,7 +79,7 @@ class StudiesControllerTest < ActionDispatch::IntegrationTest
             name: "Sync Study #{SecureRandom.uuid}"
         }
     }
-    workspace_name = 'test-' + study_attributes[:study][:name].downcase.gsub(/[^a-zA-Z0-9]+/, '-').chomp('-')
+    workspace_name = study_attributes[:study][:name].downcase.gsub(/[^a-zA-Z0-9]+/, '-').chomp('-')
     puts 'creating workspace...'
     workspace = Study.firecloud_client.create_workspace(FireCloudClient::PORTAL_NAMESPACE, workspace_name)
     assert workspace_name = workspace['name'], "Did not set workspace name correctly, expected #{workspace_name} but found #{workspace['name']}"

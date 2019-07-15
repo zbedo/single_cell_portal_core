@@ -17,6 +17,7 @@ class BillingProjectsController < ApplicationController
 
   respond_to :html, :js, :json
   before_action :authenticate_user!
+  before_action :check_firecloud_registration
   before_action :check_firecloud_status
   before_action :create_firecloud_client
   before_action :check_project_permissions, except: [:index, :create]
@@ -216,6 +217,14 @@ class BillingProjectsController < ApplicationController
   # AUTH/PERMISSON CHECKS
   #
   ##
+
+  # make sure a user is registered for firecloud before showing billing information
+  def check_firecloud_registration
+    unless current_user.registered_for_firecloud
+      alert = 'You must complete your FireCloud registration before viewing your available billing projects.'
+      redirect_to view_profile_path(current_user.id) + '#profile-firecloud', alert: alert and return
+    end
+  end
 
   # check to make sure that the current user has access to the current project
   def check_project_permissions
