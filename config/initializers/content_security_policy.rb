@@ -26,7 +26,7 @@ SecureHeaders::Configuration.default do |config|
       frame_src: %w('self' https://us.input.tcell.insight.rapid7.com), # if child-src isn't supported, the value for frame-src will be set.
       font_src: %w('self' data:),
       form_action: %w('self' https://accounts.google.com),
-      connect_src: ['self', "https://#{ENV['PROD_HOSTNAME']}", 'https://www.google-analytics.com', 'https://unpkg.com',
+      connect_src: ['\'self\'', "https://#{ENV['PROD_HOSTNAME']}", 'https://www.google-analytics.com', 'https://unpkg.com',
                     'https://www.googleapis.com', 'https://s3.amazonaws.com', 'https://data.broadinstitute.org',
                     'https://us.input.tcell.insight.rapid7.com'],
       img_src: %w('self' data: https://www.google-analytics.com https://online.swagger.io),
