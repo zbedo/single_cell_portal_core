@@ -9,6 +9,8 @@ branches:
 services:
 - docker
 before_install:
+- gem uninstall -v '>= 2' -i $(rvm gemdir)@global -ax bundler || true
+- gem install bundler -v '< 2'
 - sudo apt-get update && sudo apt-get -y install curl unzip jq
 - sudo curl -O https://releases.hashicorp.com/vault/1.0.1/vault_1.0.1_linux_amd64.zip
 - sudo unzip vault_1.0.1_linux_amd64.zip
