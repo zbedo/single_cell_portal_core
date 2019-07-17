@@ -221,6 +221,7 @@ class Study
   field :data_dir, type: String
   field :public, type: Boolean, default: true
   field :queued_for_deletion, type: Boolean, default: false
+  field :detached, type: Boolean, default: false # indicates whether workspace/bucket is missing
   field :initialized, type: Boolean, default: false
   field :view_count, type: Integer, default: 0
   field :cell_count, type: Integer, default: 0
@@ -1278,7 +1279,7 @@ class Study
     puts 'Performing global storage sanity check for all studies'
     start_time = Time.zone.now
     @missing_files = []
-    self.where(queued_for_deletion: false).each do |study|
+    self.where(queued_for_deletion: false, detached: false).each do |study|
       puts "Performing check for '#{study.name}'"
       puts "Beginning with study_files"
       # begin with study_files
@@ -1330,6 +1331,8 @@ class Study
           end
         end
       rescue => e
+        # check if the bucket or the workspace is missing and mark study accordingly
+        study.set_study_detached_state(e)
         ErrorTracker.report_exception(e, nil, {})
         puts "#{Time.zone.now}: error in retrieving remotes for #{study.name}: #{e.message}"
         @missing_files << {filename: 'N/A', study: study.name, owner: study.user.email, reason: "Error retrieving remotes: #{e.message}"}
@@ -2825,6 +2828,22 @@ class Study
           readonly_acl = Study.firecloud_client.create_workspace_acl(Study.read_only_firecloud_client.issuer, access_level, false, false)
           Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, readonly_acl)
         end
+      end
+    end
+  end
+
+  # check whether a study is "detached" (bucket/workspace missing)
+  def set_study_detached_state(error)
+    case error.class.name
+    when 'NoMethodError'
+      if error.message == "undefined method `files' for nil:NilClass"
+        Rails.logger.error "Marking #{self.name} as 'detached' due to missing bucket: #{self.bucket_id}"
+        self.update(detached: true)
+      end
+    when 'RuntimeError'
+      if error.message == "#{self.firecloud_project}/#{self.firecloud_workspace} does not exist"
+        Rails.logger.error "Marking #{self.name} as 'detached' due to missing workspace: #{self.firecloud_project}/#{self.firecloud_workspace}"
+        self.update(detached: true)
       end
     end
   end
