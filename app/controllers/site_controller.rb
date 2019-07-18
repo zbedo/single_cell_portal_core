@@ -35,6 +35,11 @@ class SiteController < ApplicationController
                                                    :delete_workspace_samples, :get_workspace_submissions, :create_workspace_submission,
                                                    :get_submission_workflow, :abort_submission_workflow, :get_submission_errors,
                                                    :get_submission_outputs, :delete_submission_files, :get_submission_metadata]
+  before_action :check_study_detached, only: [:download_file, :update_study_settings, :create_totat, :download_bulk_files,
+                                              :get_fastq_files, :get_workspace_samples, :update_workspace_samples,
+                                              :delete_workspace_samples, :get_workspace_submissions, :create_workspace_submission,
+                                              :get_submission_workflow, :abort_submission_workflow, :get_submission_errors,
+                                              :get_submission_outputs, :delete_submission_files, :get_submission_metadata]
 
   # caching
   caches_action :render_cluster, :render_gene_expression_plots, :render_gene_set_expression_plots, :render_global_gene_expression_plots,
@@ -305,10 +310,8 @@ class SiteController < ApplicationController
 
     # double check on download availability: first, check if administrator has disabled downloads
     # then check individual statuses to see what to enable/disable
-    @allow_firecloud_access = AdminConfiguration.firecloud_access_enabled?
-    @allow_downloads = Study.firecloud_client.services_available?('GoogleBuckets')
-    @allow_computes = Study.firecloud_client.services_available?('Sam', 'Agora', 'Rawls')
-    @allow_edits = Study.firecloud_client.services_available?('Sam', 'Rawls')
+    # if the study is 'detached', then everything is set to false by default
+    set_firecloud_permissions(@study.detached)
     set_study_default_options
     # load options and annotations
     if @study.can_visualize_clusters?
@@ -318,7 +321,8 @@ class SiteController < ApplicationController
       set_selected_annotation
     end
 
-    if @study.has_analysis_outputs?('infercnv', 'ideogram.js')
+    # only populate if study has ideogram results & is not 'detached'
+    if @study.has_analysis_outputs?('infercnv', 'ideogram.js') && !@study.detached
       @ideogram_files = {}
       @study.get_analysis_outputs('infercnv', 'ideogram.js').each do |file|
         opts = file.options.with_indifferent_access # allow lookup by string or symbol
@@ -338,25 +342,23 @@ class SiteController < ApplicationController
     @user_can_compute = false
     @user_can_download = @study.can_download?(current_user)
 
-    if @allow_firecloud_access && @allow_computes
-      if user_signed_in? && @study.can_compute?(current_user)
-        @user_can_compute = true
-        # load list of previous submissions
-        workspace = Study.firecloud_client.get_workspace(@study.firecloud_project, @study.firecloud_workspace)
-        @submissions = Study.firecloud_client.get_workspace_submissions(@study.firecloud_project, @study.firecloud_workspace)
+    if @allow_firecloud_access && @allow_computes && @study.can_compute?(current_user)
+      @user_can_compute = true
+      # load list of previous submissions
+      workspace = Study.firecloud_client.get_workspace(@study.firecloud_project, @study.firecloud_workspace)
+      @submissions = Study.firecloud_client.get_workspace_submissions(@study.firecloud_project, @study.firecloud_workspace)
 
-        @submissions.each do |submission|
-          update_analysis_submission(submission)
-        end
-        # remove deleted submissions from list of runs
-        if !workspace['workspace']['attributes']['deleted_submissions'].blank?
-          deleted_submissions = workspace['workspace']['attributes']['deleted_submissions']['items']
-          @submissions.delete_if {|submission| deleted_submissions.include?(submission['submissionId'])}
-        end
-
-        # load list of available workflows
-        @workflows_list = load_available_workflows
+      @submissions.each do |submission|
+        update_analysis_submission(submission)
       end
+      # remove deleted submissions from list of runs
+      if !workspace['workspace']['attributes']['deleted_submissions'].blank?
+        deleted_submissions = workspace['workspace']['attributes']['deleted_submissions']['items']
+        @submissions.delete_if {|submission| deleted_submissions.include?(submission['submissionId'])}
+      end
+
+      # load list of available workflows
+      @workflows_list = load_available_workflows
     end
   end
 
@@ -407,6 +409,13 @@ class SiteController < ApplicationController
     @cluster_annotations = load_cluster_group_annotations
     @top_plot_partial = @selected_annotation[:type] == 'group' ? 'expression_plots_view' : 'expression_annotation_plots_view'
     @y_axis_title = load_expression_axis_title
+    if request.format == 'text/html'
+      # only set this check on full page loads (happens if user was not signed in but then clicked the 'genome' tab)
+      set_firecloud_permissions(@study.detached)
+      @user_can_edit = @study.can_edit?(current_user)
+      @user_can_compute = @study.can_compute?(current_user)
+      @user_can_download = @study.can_download?(current_user)
+    end
   end
 
   # re-renders plots when changing cluster selection
@@ -1420,6 +1429,14 @@ class SiteController < ApplicationController
     end
   end
 
+  # check various firecloud statuses/permissions, but only if a study is not 'detached'
+  def set_firecloud_permissions(study_detached)
+    @allow_firecloud_access = study_detached ? false : AdminConfiguration.firecloud_access_enabled?
+    @allow_downloads = study_detached ? false : Study.firecloud_client.services_available?('GoogleBuckets')
+    @allow_computes = study_detached ? false : Study.firecloud_client.services_available?('Sam', 'Agora', 'Rawls')
+    @allow_edits = study_detached ? false : Study.firecloud_client.services_available?('Sam', 'Rawls')
+  end
+
   # whitelist parameters for updating studies on study settings tab (smaller list than in studies controller)
   def study_params
     params.require(:study).permit(:name, :description, :public, :embargo, :cell_count, :default_options => [:cluster, :annotation, :color_profile, :expression_label, :deliver_emails, :cluster_point_size, :cluster_point_alpha, :cluster_point_border], study_shares_attributes: [:id, :_destroy, :email, :permission])
@@ -1479,6 +1496,18 @@ class SiteController < ApplicationController
       return true
     else
       return true
+    end
+  end
+
+  # check if a study is 'detached' from a workspace
+  def check_study_detached
+    if @study.detached
+      @alert = 'We were unable to complete your request as the study is question is detached from the workspace (maybe the workspace was deleted?)'
+      respond_to do |format|
+        format.js {render js: "alert('#{@alert}');"}
+        format.html {redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]), alert: @alert and return}
+        format.json {render json: {error: @alert}, status: 410}
+      end
     end
   end
 

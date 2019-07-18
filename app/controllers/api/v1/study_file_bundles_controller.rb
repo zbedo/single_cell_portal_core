@@ -46,6 +46,9 @@ module Api
           response 404 do
             key :description, 'Study is not found'
           end
+          response 410 do
+            key :description, 'Study workspace is not found, cannot complete action'
+          end
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
           end
@@ -94,6 +97,9 @@ module Api
           end
           response 404 do
             key :description, 'Study or StudyFileBundle is not found'
+          end
+          response 410 do
+            key :description, 'Study workspace is not found, cannot complete action'
           end
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
@@ -145,6 +151,9 @@ module Api
           end
           response 404 do
             key :description, 'Study is not found'
+          end
+          response 410 do
+            key :description, 'Study workspace is not found, cannot complete action'
           end
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
@@ -201,6 +210,9 @@ module Api
           response 404 do
             key :description, 'Study or StudyFileBundle is not found'
           end
+          response 410 do
+            key :description, 'Study workspace is not found, cannot complete action'
+          end
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
           end
@@ -225,6 +237,8 @@ module Api
         @study = Study.find_by(id: params[:study_id])
         if @study.nil? || @study.queued_for_deletion?
           head 404 and return
+        elsif @study.detached
+          head 410 and return
         end
       end
 

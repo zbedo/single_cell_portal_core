@@ -59,4 +59,21 @@ class SiteControllerTest < ActionDispatch::IntegrationTest
            "Required inputs do not match; expected '#{@analysis_configuration.required_inputs(true)}' but found #{json['required_inputs']}"
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
+
+  test 'should respond 410 on detached study' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+
+    # manually set detached to validate 410 status
+    @study = Study.find_by(name: 'API Test Study')
+    @study.update(detached: true)
+    file = @study.study_files.first
+
+    execute_http_request(:get, api_v1_site_study_download_data_path(accession: @study.accession, filename: file.upload_file_name))
+    assert_response 410,
+                    "Did not provide correct response code when downloading file from detached study, expected 401 but found #{response.code}"
+
+    # reset status so downstream tests don't break
+    @study.update(detached: false)
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
 end

@@ -308,6 +308,11 @@ class Study
       key :default, false
       key :description, 'Boolean indication of whether Study has at least one of all required StudyFile types parsed to enable visualizations (Expression Matrix, Metadata, Cluster)'
     end
+    property :detached do
+      key :type, :boolean
+      key :default, false
+      key :description, 'Boolean indication of whether Study has been \'detached\' from its FireCloud workspace, usually when the workspace is deleted directly in FireCloud'
+    end
     property :view_count do
       key :type, :number
       key :format, :integer
@@ -454,6 +459,11 @@ class Study
       key :default, true
       key :description, 'Boolean indication of whether Study is publicly readable'
     end
+    property :detached do
+      key :type, :boolean
+      key :default, false
+      key :description, 'Boolean indication of whether Study has been \'detached\' from its FireCloud workspace, usually when the workspace is deleted directly in FireCloud'
+    end
     property :cell_count do
       key :type, :number
       key :format, :integer
@@ -485,6 +495,11 @@ class Study
       key :type, :boolean
       key :default, true
       key :description, 'Boolean indication of whether Study is publicly readable'
+    end
+    property :detached do
+      key :type, :boolean
+      key :default, false
+      key :description, 'Boolean indication of whether Study has been \'detached\' from its FireCloud workspace, usually when the workspace is deleted directly in FireCloud'
     end
     property :cell_count do
       key :type, :number

@@ -7,6 +7,9 @@ module Api
       before_action :set_current_api_user!
       before_action :set_study, except: [:studies, :analyses, :get_analysis]
       before_action :set_analysis_configuration, only: [:get_analysis, :get_study_analysis_config]
+      before_action :check_study_detached, only: [:download_data, :stream_data, :get_study_analysis_config,
+                                                  :submit_study_analysis, :get_study_submissions,
+                                                  :get_study_submission, :sync_submission_outputs]
       before_action :check_study_view_permission, except: [:studies, :analyses, :get_analysis]
       before_action :check_study_compute_permission,
                     only: [:get_study_analysis_config, :submit_study_analysis, :get_study_submissions,
@@ -127,6 +130,9 @@ module Api
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
           end
+          response 410 do
+            key :description, 'Study workspace is not found, cannot complete action'
+          end
         end
       end
 
@@ -208,6 +214,9 @@ module Api
           end
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+          response 410 do
+            key :description, 'Study workspace is not found, cannot complete action'
           end
         end
       end
@@ -957,6 +966,12 @@ module Api
           head 401
         else
           head 403 unless @study.can_compute?(current_api_user)
+        end
+      end
+
+      def check_study_detached
+        if @study.detached
+          head 410 and return
         end
       end
 

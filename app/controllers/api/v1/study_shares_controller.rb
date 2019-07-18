@@ -51,6 +51,9 @@ module Api
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
           end
+          response 410 do
+            key :description, 'Study workspace is not found, cannot complete action'
+          end
         end
       end
 
@@ -99,6 +102,9 @@ module Api
           end
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+          response 410 do
+            key :description, 'Study workspace is not found, cannot complete action'
           end
         end
       end
@@ -150,6 +156,9 @@ module Api
           end
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+          response 410 do
+            key :description, 'Study workspace is not found, cannot complete action'
           end
           response 422 do
             key :description, 'StudyShare validation failed'
@@ -218,6 +227,9 @@ module Api
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
           end
+          response 410 do
+            key :description, 'Study workspace is not found, cannot complete action'
+          end
           response 422 do
             key :description, 'StudyShare validation failed'
           end
@@ -270,6 +282,9 @@ module Api
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
           end
+          response 410 do
+            key :description, 'Study workspace is not found, cannot complete action'
+          end
         end
       end
 
@@ -291,6 +306,8 @@ module Api
         @study = Study.find_by(id: params[:study_id])
         if @study.nil? || @study.queued_for_deletion?
           head 404 and return
+        elsif @study.detached
+          head 410 and return
         end
       end
 
