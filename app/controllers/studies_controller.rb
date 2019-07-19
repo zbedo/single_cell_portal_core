@@ -25,8 +25,7 @@ class StudiesController < ApplicationController
   # special before_action to make sure FireCloud is available and pre-empt any calls when down
   before_action :check_firecloud_status, except: [:index, :do_upload, :resume_upload, :update_status,
                                                   :retrieve_wizard_upload, :parse]
-  before_action :check_study_detached, only: [:edit, :update, :initialize_study, :sync_study, :sync_submission_outputs,
-                                              :download_private_file]
+  before_action :check_study_detached, only: [:edit, :update, :initialize_study, :sync_study, :sync_submission_outputs]
 
   ###
   #
@@ -648,6 +647,9 @@ class StudiesController < ApplicationController
     if !user_signed_in? || !@study.can_view?(current_user)
       redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]),
                   alert: 'You do not have permission to perform that action.' and return
+    elsif @study.detached?
+      redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
+                  alert: "We were unable to complete your request as the study is question is detached from the workspace (maybe the workspace was deleted?)" and return
     elsif @study.embargoed?(current_user)
       redirect_to merge_default_redirect_params(view_study_path(accession: @study.accession, study_name: @study.url_safe_name), scpbr: params[:scpbr]),
                   alert: "You may not download any data from this study until #{@study.embargo.to_s(:long)}." and return
