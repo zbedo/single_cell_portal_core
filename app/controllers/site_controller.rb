@@ -311,7 +311,7 @@ class SiteController < ApplicationController
     # double check on download availability: first, check if administrator has disabled downloads
     # then check individual statuses to see what to enable/disable
     # if the study is 'detached', then everything is set to false by default
-    set_firecloud_permissions(@study.detached)
+    set_firecloud_permissions(@study.detached?)
     set_study_default_options
     # load options and annotations
     if @study.can_visualize_clusters?
@@ -322,7 +322,7 @@ class SiteController < ApplicationController
     end
 
     # only populate if study has ideogram results & is not 'detached'
-    if @study.has_analysis_outputs?('infercnv', 'ideogram.js') && !@study.detached
+    if @study.has_analysis_outputs?('infercnv', 'ideogram.js') && !@study.detached?
       @ideogram_files = {}
       @study.get_analysis_outputs('infercnv', 'ideogram.js').each do |file|
         opts = file.options.with_indifferent_access # allow lookup by string or symbol
@@ -411,7 +411,7 @@ class SiteController < ApplicationController
     @y_axis_title = load_expression_axis_title
     if request.format == 'text/html'
       # only set this check on full page loads (happens if user was not signed in but then clicked the 'genome' tab)
-      set_firecloud_permissions(@study.detached)
+      set_firecloud_permissions(@study.detached?)
       @user_can_edit = @study.can_edit?(current_user)
       @user_can_compute = @study.can_compute?(current_user)
       @user_can_download = @study.can_download?(current_user)
@@ -1501,7 +1501,7 @@ class SiteController < ApplicationController
 
   # check if a study is 'detached' from a workspace
   def check_study_detached
-    if @study.detached
+    if @study.detached?
       @alert = 'We were unable to complete your request as the study is question is detached from the workspace (maybe the workspace was deleted?)'
       respond_to do |format|
         format.js {render js: "alert('#{@alert}');"}

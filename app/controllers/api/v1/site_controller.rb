@@ -970,7 +970,7 @@ module Api
       end
 
       def check_study_detached
-        if @study.detached
+        if @study.detached?
           head 410 and return
         end
       end

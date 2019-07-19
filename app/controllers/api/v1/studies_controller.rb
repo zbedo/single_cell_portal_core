@@ -548,7 +548,7 @@ module Api
         @study = Study.find_by(id: params[:id])
         if @study.nil? || @study.queued_for_deletion?
           head 404 and return
-        elsif @study.detached
+        elsif @study.detached?
           head 410 and return
         end
       end
