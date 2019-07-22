@@ -35,7 +35,7 @@ class SiteController < ApplicationController
                                                    :delete_workspace_samples, :get_workspace_submissions, :create_workspace_submission,
                                                    :get_submission_workflow, :abort_submission_workflow, :get_submission_errors,
                                                    :get_submission_outputs, :delete_submission_files, :get_submission_metadata]
-  before_action :check_study_detached, only: [:download_file, :update_study_settings, :create_totat, :download_bulk_files,
+  before_action :check_study_detached, only: [:download_file, :update_study_settings, :download_bulk_files,
                                               :get_fastq_files, :get_workspace_samples, :update_workspace_samples,
                                               :delete_workspace_samples, :get_workspace_submissions, :create_workspace_submission,
                                               :get_submission_workflow, :abort_submission_workflow, :get_submission_errors,
