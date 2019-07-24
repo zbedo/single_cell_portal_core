@@ -15,14 +15,17 @@ class StudiesController < ApplicationController
   respond_to :html, :js, :json
 
   before_action :set_study, except: [:index, :new, :create, :download_private_file]
-  before_action :set_file_types, only: [:sync_study, :sync_submission_outputs, :sync_study_file, :sync_orphaned_study_file, :update_study_file_from_sync]
+  before_action :set_file_types, only: [:sync_study, :sync_submission_outputs, :sync_study_file, :sync_orphaned_study_file,
+                                        :update_study_file_from_sync]
   before_action :check_edit_permissions, except: [:index, :new, :create, :download_private_file]
   before_action do
     authenticate_user!
     check_access_settings
   end
   # special before_action to make sure FireCloud is available and pre-empt any calls when down
-  before_action :check_firecloud_status, except: [:index, :do_upload, :resume_upload, :update_status, :retrieve_wizard_upload, :parse ]
+  before_action :check_firecloud_status, except: [:index, :do_upload, :resume_upload, :update_status,
+                                                  :retrieve_wizard_upload, :parse]
+  before_action :check_study_detached, only: [:edit, :update, :initialize_study, :sync_study, :sync_submission_outputs]
 
   ###
   #
@@ -43,7 +46,7 @@ class StudiesController < ApplicationController
     @directories = @study.directory_listings.are_synced
     @primary_data = @study.directory_listings.primary_data
     @other_data = @study.directory_listings.non_primary_data
-    @allow_downloads = Study.firecloud_client.services_available?('GoogleBuckets')
+    @allow_downloads = Study.firecloud_client.services_available?('GoogleBuckets') && !@study.detached
     @analysis_metadata = @study.analysis_metadata.to_a
     # load study default options
     set_study_default_options
@@ -393,7 +396,8 @@ class StudiesController < ApplicationController
 
       # delete firecloud workspace so it can be reused (unless specified by user), and raise error if unsuccessful
       # if successful, we're clear to queue the study for deletion
-      if params[:workspace] == 'persist'
+      # if a study is detached, then force the 'persist' option as it will fail otherwise
+      if params[:workspace] == 'persist' || @study.detached
         @study.update(firecloud_workspace: SecureRandom.uuid)
       else
         begin
@@ -643,6 +647,9 @@ class StudiesController < ApplicationController
     if !user_signed_in? || !@study.can_view?(current_user)
       redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]),
                   alert: 'You do not have permission to perform that action.' and return
+    elsif @study.detached?
+      redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
+                  alert: "We were unable to complete your request as the study is question is detached from the workspace (maybe the workspace was deleted?)" and return
     elsif @study.embargoed?(current_user)
       redirect_to merge_default_redirect_params(view_study_path(accession: @study.accession, study_name: @study.url_safe_name), scpbr: params[:scpbr]),
                   alert: "You may not download any data from this study until #{@study.embargo.to_s(:long)}." and return
@@ -1403,6 +1410,15 @@ class StudiesController < ApplicationController
                                  alert: alert and return}
         format.json {head 503}
       end
+    end
+  end
+
+  # check if a study is 'detached' and handle accordingly
+  def check_study_detached
+    if @study.detached
+      redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
+                  alert: "We were unable to complete your request as the study is question is detached from the workspace (maybe the workspace was deleted?)" and return
+
     end
   end
 

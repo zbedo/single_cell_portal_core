@@ -51,6 +51,9 @@ module Api
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
           end
+          response 410 do
+            key :description, ApiBaseController.resource_gone
+          end
         end
       end
 
@@ -99,6 +102,9 @@ module Api
           end
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+          response 410 do
+            key :description, ApiBaseController.resource_gone
           end
         end
       end
@@ -175,6 +181,9 @@ module Api
           end
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+          response 410 do
+            key :description, ApiBaseController.resource_gone
           end
           response 422 do
             key :description, 'StudyFile validation failed'
@@ -254,6 +263,9 @@ module Api
           end
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+          response 410 do
+            key :description, ApiBaseController.resource_gone
           end
           response 422 do
             key :description, 'StudyFile validation failed'
@@ -352,6 +364,9 @@ module Api
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
           end
+          response 410 do
+            key :description, ApiBaseController.resource_gone
+          end
         end
       end
 
@@ -419,6 +434,9 @@ module Api
           end
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+          response 410 do
+            key :description, ApiBaseController.resource_gone
           end
           response 412 do
             key :description, 'StudyFile can only be parsed when bundled in a StudyFileBundle along with other required files, such as MM Coordinate Matrices and 10X Genes/Barcodes files'
@@ -534,6 +552,9 @@ module Api
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
           end
+          response 410 do
+            key :description, ApiBaseController.resource_gone
+          end
           response 412 do
             key :description, 'StudyFile can only be parsed when bundled in a StudyFileBundle along with other required files, such as MM Coordinate Matrices and 10X Genes/Barcodes files'
           end
@@ -582,6 +603,8 @@ module Api
         @study = Study.find_by(id: params[:study_id])
         if @study.nil? || @study.queued_for_deletion?
           head 404 and return
+        elsif @study.detached?
+          head 410 and return
         end
       end
 
