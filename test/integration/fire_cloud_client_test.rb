@@ -267,8 +267,8 @@ class FireCloudClientTest < ActiveSupport::TestCase
     workflow_configurations = @fire_cloud_client.get_configurations
     assert workflow_configurations.any?, 'Did not find any method configurations'
 
-    # get all configurations in a namespace
-    namespace = workflow_configurations.sample['namespace']
+    # get all configurations in 'single-cell-portal' namespace
+    namespace = 'single-cell-portal'
     namespace_configs = @fire_cloud_client.get_configurations(namespace: namespace)
     assert namespace_configs.any?, "Did not find any method configurations in namespace: #{namespace}"
 
