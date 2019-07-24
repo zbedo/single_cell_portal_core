@@ -14,9 +14,9 @@ EOF
 )
 
 # set variables & defaults
-VM_NAME="singlecell-production"
+VM_NAME="singlecell-production-101"
 PROJECT="broad-singlecellportal"
-USER='root'
+USER='ubuntu'
 
 while getopts "v:u:p:H" OPTION; do
 case $OPTION in
