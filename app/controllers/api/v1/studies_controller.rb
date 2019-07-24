@@ -77,7 +77,7 @@ module Api
             key :description, 'Study is not found'
           end
           response 410 do
-            key :description, 'Study workspace is not found, cannot complete action'
+            key :description, ApiBaseController.resource_gone
           end
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
@@ -123,7 +123,7 @@ module Api
             key :description, 'Study is not found'
           end
           response 410 do
-            key :description, 'Study workspace is not found, cannot complete action'
+            key :description, ApiBaseController.resource_gone
           end
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
@@ -185,7 +185,7 @@ module Api
             key :description, 'Study is not found'
           end
           response 410 do
-            key :description, 'Study workspace is not found, cannot complete action'
+            key :description, ApiBaseController.resource_gone
           end
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
@@ -245,7 +245,7 @@ module Api
             key :description, 'Study is not found'
           end
           response 410 do
-            key :description, 'Study workspace is not found, cannot complete action'
+            key :description, ApiBaseController.resource_gone
           end
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
@@ -376,7 +376,7 @@ module Api
             key :description, 'Study is not found'
           end
           response 410 do
-            key :description, 'Study workspace is not found, cannot complete action'
+            key :description, ApiBaseController.resource_gone
           end
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'

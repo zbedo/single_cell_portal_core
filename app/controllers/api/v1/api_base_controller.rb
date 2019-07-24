@@ -13,6 +13,16 @@ module Api
       rescue_from NoMethodError, Faraday::ConnectionFailed do |exception|
         render json: {error: exception.message}, status: 500
       end
+
+      ##
+      # Generic message formatters to use in Swagger responses
+      # TODO: Extend to 401/403/404
+      ##
+
+      # handle a 410 response message (both in UI and API) - this only happens when a Study workspace has been deleted
+      def self.resource_gone
+        'Study workspace is not found, cannot complete action'
+      end
     end
   end
 end

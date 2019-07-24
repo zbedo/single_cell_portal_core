@@ -52,7 +52,7 @@ module Api
             key :description, 'Accept or Content-Type headers missing or misconfigured'
           end
           response 410 do
-            key :description, 'Study workspace is not found, cannot complete action'
+            key :description, ApiBaseController.resource_gone
           end
         end
       end
@@ -104,7 +104,7 @@ module Api
             key :description, 'Accept or Content-Type headers missing or misconfigured'
           end
           response 410 do
-            key :description, 'Study workspace is not found, cannot complete action'
+            key :description, ApiBaseController.resource_gone
           end
         end
       end
@@ -183,7 +183,7 @@ module Api
             key :description, 'Accept or Content-Type headers missing or misconfigured'
           end
           response 410 do
-            key :description, 'Study workspace is not found, cannot complete action'
+            key :description, ApiBaseController.resource_gone
           end
           response 422 do
             key :description, 'StudyFile validation failed'
@@ -265,7 +265,7 @@ module Api
             key :description, 'Accept or Content-Type headers missing or misconfigured'
           end
           response 410 do
-            key :description, 'Study workspace is not found, cannot complete action'
+            key :description, ApiBaseController.resource_gone
           end
           response 422 do
             key :description, 'StudyFile validation failed'
@@ -365,7 +365,7 @@ module Api
             key :description, 'Accept or Content-Type headers missing or misconfigured'
           end
           response 410 do
-            key :description, 'Study workspace is not found, cannot complete action'
+            key :description, ApiBaseController.resource_gone
           end
         end
       end
@@ -436,7 +436,7 @@ module Api
             key :description, 'Accept or Content-Type headers missing or misconfigured'
           end
           response 410 do
-            key :description, 'Study workspace is not found, cannot complete action'
+            key :description, ApiBaseController.resource_gone
           end
           response 412 do
             key :description, 'StudyFile can only be parsed when bundled in a StudyFileBundle along with other required files, such as MM Coordinate Matrices and 10X Genes/Barcodes files'
@@ -553,7 +553,7 @@ module Api
             key :description, 'Accept or Content-Type headers missing or misconfigured'
           end
           response 410 do
-            key :description, 'Study workspace is not found, cannot complete action'
+            key :description, ApiBaseController.resource_gone
           end
           response 412 do
             key :description, 'StudyFile can only be parsed when bundled in a StudyFileBundle along with other required files, such as MM Coordinate Matrices and 10X Genes/Barcodes files'
