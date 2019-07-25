@@ -306,5 +306,21 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
+
+  test 'should redirect for detached studies' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+    @study = Study.find_by(name: 'Testing Study')
+    # manually set 'detached' to true to validate file download requests fail
+    @study.update(detached: true)
+
+    # try to download a file
+    file = @study.study_files.first
+    get download_file_path(accession: @study.accession, study_name: @study.url_safe_name, filename: file.upload_file_name)
+    assert_response 302, "Did not attempt to redirect on a download from a detached study, expected 302 but found #{response.code}"
+
+    # reset 'detached' so downstream tests don't fail
+    @study.update(detached: false)
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
 end
 

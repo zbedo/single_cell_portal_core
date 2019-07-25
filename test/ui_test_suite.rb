@@ -585,7 +585,7 @@ class UiTestSuite < Test::Unit::TestCase
 
   # text gzip parsing of expression matrices
   test 'admin: create-study: gzip expression matrix' do
-    puts "Test method: #{self.method_name}"
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     # log in first
     @driver.get @base_url
@@ -622,13 +622,13 @@ class UiTestSuite < Test::Unit::TestCase
     wait_until_page_loads(studies_path)
     study_file_count = @driver.find_element(:id, "gzip-parse-#{$random_seed}-study-file-count")
     assert study_file_count.text == '1', "found incorrect number of study files; expected 1 and found #{study_file_count.text}"
-    puts "Test method: #{self.method_name} successful!"
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful"
   end
 
   # test bundling process for file uploads
   # also tests ParseUtils.cell_ranger_expression_parse on small 100x25 gene-barcode matrix
   test 'admin: create-study: file bundles' do
-    puts "Test method: #{self.method_name}"
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     # log in first
     @driver.get @base_url
@@ -703,7 +703,7 @@ class UiTestSuite < Test::Unit::TestCase
     delete.click
     accept_alert
     close_modal('message_modal')
-    puts "Test method: #{self.method_name} successful!"
+    puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful"
   end
 
   # test embargo functionality
@@ -1226,7 +1226,7 @@ class UiTestSuite < Test::Unit::TestCase
     study_form = @driver.find_element(:id, 'new_study')
     study_form.find_element(:id, 'study_name').send_keys(random_name)
     study_form.find_element(:id, 'study_use_existing_workspace').send_keys('Yes')
-    study_form.find_element(:id, 'study_firecloud_workspace').send_keys("development-sync-test-study")
+    study_form.find_element(:id, 'study_firecloud_workspace').send_keys("sync-test-study")
     share = @driver.find_element(:id, 'add-study-share')
     @wait.until {share.displayed?}
     share.click
@@ -1376,7 +1376,7 @@ class UiTestSuite < Test::Unit::TestCase
     share_row = @driver.find_element(:id, share_email_id)
     shared_email = share_row.find_element(:class, 'share-email').text
     assert shared_email == $share_email, "did not find correct email for share, expected #{$share_email} but found #{shared_email}"
-    shared_permission = share_row.find_element(:class, 'share-permission').text
+    shared_permission = share_row.find_element(:class, 'share-permission').text.split.first
     assert shared_permission == 'View', "did not find correct share permissions, expected View but found #{shared_permission}"
 
     # make sure parsing succeeded
@@ -1442,7 +1442,7 @@ class UiTestSuite < Test::Unit::TestCase
     @driver.get studies_path
     wait_until_page_loads(studies_path)
     study_file_count = @driver.find_element(:id, "sync-test-#{$random_seed}-study-file-count").text.to_i
-    assert study_file_count == 4, "did not remove files, expected 4 but found #{study_file_count}"
+    assert study_file_count == 2, "did not remove files, expected 2 but found #{study_file_count}"
 
     # remove share and resync
     edit_button = @driver.find_element(:class, "sync-test-#{$random_seed}-edit")
@@ -1469,7 +1469,7 @@ class UiTestSuite < Test::Unit::TestCase
 
     # now login as share user and check workspace
     login_as_other($share_email, $share_email_password)
-    firecloud_workspace = "https://portal.firecloud.org/#workspaces/single-cell-portal/sync-test-#{$random_seed}"
+    firecloud_workspace = "https://portal.firecloud.org/#workspaces/single-cell-portal-development/sync-test-#{$random_seed}"
     @driver.get firecloud_workspace
     accept_firecloud_tos
     assert !element_present?(:class, 'fa-check-circle'), 'did not revoke access - study workspace still loads'
@@ -1493,7 +1493,7 @@ class UiTestSuite < Test::Unit::TestCase
     study_form = @driver.find_element(:id, 'new_study')
     study_form.find_element(:id, 'study_name').send_keys(random_name)
     study_form.find_element(:id, 'study_use_existing_workspace').send_keys('Yes')
-    study_form.find_element(:id, 'study_firecloud_workspace').send_keys("development-authorization-domain-test-study")
+    study_form.find_element(:id, 'study_firecloud_workspace').send_keys("authorization-domain-test-study")
 
     save_study = @driver.find_element(:id, 'save-study')
     save_study.click
