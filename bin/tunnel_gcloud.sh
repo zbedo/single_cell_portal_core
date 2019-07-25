@@ -6,8 +6,8 @@
 usage=$(
 cat <<EOF
 $0 [OPTION]
--v VALUE	set the VM name, defaults to 'singlecell-production'.
--u VALUE	set the login user, defaults to 'root'
+-v VALUE	set the VM name, defaults to 'singlecell-production-101'.
+-u VALUE	set the login user, defaults to 'ubuntu'
 -p VALUE	set the GCP project, defaults to 'broad-singlecellportal'
 -H COMMAND	print this text
 EOF
