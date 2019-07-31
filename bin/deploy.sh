@@ -17,7 +17,7 @@ function main {
     PASSENGER_APP_ENV="production"
     BOOT_COMMAND="bin/remote_deploy.sh"
 
-    while getopts "p:s:r:c:n:e:b:d:h:S:H" OPTION; do
+    while getopts "p:s:r:e:b:d:h:S:H" OPTION; do
         case $OPTION in
             p)
                 PORTAL_SECRETS_VAULT_PATH="$OPTARG"
