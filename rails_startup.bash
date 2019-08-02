@@ -39,12 +39,7 @@ if [[ -z $SERVICE_ACCOUNT_KEY ]]; then
 else
 	echo "export SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY" >> /home/app/.cron_env
 fi
-if [[ -z $READ_ONLY_SERVICE_ACCOUNT_KEY ]] && [[ -n $READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON ]]; then
-	echo "*** WRITING READ ONLY SERVICE ACCOUNT CREDENTIALS ***"
-	echo $READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON >| /home/app/webapp/config/.read_only_service_account.json
-	echo "export READ_ONLY_SERVICE_ACCOUNT_KEY=/home/app/webapp/config/.read_only_service_account.json" >> /home/app/.cron_env
-	chown app:app /home/app/webapp/config/.read_only_service_account.json
-elif [[ -n $READ_ONLY_SERVICE_ACCOUNT_KEY ]]; then
+if [[ -n $READ_ONLY_SERVICE_ACCOUNT_KEY ]]; then
 	echo "export READ_ONLY_SERVICE_ACCOUNT_KEY=$READ_ONLY_SERVICE_ACCOUNT_KEY" >> /home/app/.cron_env
 else
 	echo "*** NO READONLY SERVICE ACCOUNT DETECTED -- SOME FUNCTIONALITY WILL BE DISABLED ***"
