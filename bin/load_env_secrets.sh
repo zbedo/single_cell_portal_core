@@ -27,6 +27,9 @@ EOF
 # defaults
 PASSENGER_APP_ENV="development"
 COMMAND="bin/boot_docker"
+# defaults
+THIS_DIR="$(cd "$(dirname "$0")"; pwd)"
+CONFIG_DIR="$THIS_DIR/../config"
 while getopts "p:s:r:f:c:e:v:n:H" OPTION; do
 case $OPTION in
   p)
@@ -101,6 +104,9 @@ if [[ -n $READ_ONLY_SERVICE_ACCOUNT_PATH ]] ; then
   READ_ONLY_CREDS_VALS=`vault read -format=json $READ_ONLY_SERVICE_ACCOUNT_PATH`
   READ_ONLY_JSON_CONTENTS=`echo $READ_ONLY_CREDS_VALS | jq --raw-output .data`
   export READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON=$(echo -n $READ_ONLY_JSON_CONTENTS)
+	echo "*** WRITING READ ONLY SERVICE ACCOUNT CREDENTIALS ***"
+	READONLY_FILEPATH="$CONFIG_DIR/.read_only_service_account.json"
+	echo $READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON >| $READONLY_FILEPATH
   COMMAND=$COMMAND" -K /home/app/webapp/config/.read_only_service_account.json"
 fi
 # execute requested command
