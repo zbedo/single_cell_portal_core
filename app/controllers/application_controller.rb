@@ -21,6 +21,13 @@ class ApplicationController < ActionController::Base
 
   rescue_from ActionController::InvalidAuthenticityToken, with: :invalid_csrf
 
+  @@firestore_client = Google::Cloud::Firestore.new(credentials: ENV['FIRESTORE_CREDENTIALS'],
+                                                    project_id: ENV['FIRESTORE_PROJECT'])
+
+  def self.firestore_client
+    @@firestore_client
+  end
+
   # set current_user for use outside of controllers
   # from https://stackoverflow.com/questions/2513383/access-current-user-in-model
   around_action :set_current_user

@@ -19,6 +19,7 @@ $0
 -c VALUE	command to execute after loading secrets (defaults to bin/boot_docker, please wrap command in 'quotes' to ensure proper execution)
 -e VALUE	set the environment to boot the portal in (defaults to development)
 -v VALUE  set the version of the Docker image to load (defaults to latest)
+-f VALUE	set the path to the Firestore service account in Vault, used for authenticating into Firestore (no default)
 -n VALUE	set the value for PORTAL_NAMESPACE (defaults to single-cell-portal-development)
 -H COMMAND	print this text
 EOF
@@ -27,6 +28,8 @@ EOF
 # defaults
 PASSENGER_APP_ENV="development"
 COMMAND="bin/boot_docker"
+THIS_DIR="$(cd "$(dirname "$0")"; pwd)"
+CONFIG_DIR="$THIS_DIR/../config"
 while getopts "p:s:r:f:c:e:v:n:H" OPTION; do
 case $OPTION in
   p)
@@ -50,6 +53,9 @@ case $OPTION in
   n)
     PORTAL_NAMESPACE="$OPTARG"
     ;;
+	f)
+		FIRESTORE_CREDENTIALS_PATH="$OPTARG"
+		;;
   H)
     echo "$usage"
     exit 0
@@ -100,8 +106,22 @@ if [[ -n $READ_ONLY_SERVICE_ACCOUNT_PATH ]] ; then
   echo "setting value for: READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON"
   READ_ONLY_CREDS_VALS=`vault read -format=json $READ_ONLY_SERVICE_ACCOUNT_PATH`
   READ_ONLY_JSON_CONTENTS=`echo $READ_ONLY_CREDS_VALS | jq --raw-output .data`
-  export READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON=$(echo -n $READ_ONLY_JSON_CONTENTS)
+	echo "*** WRITING READ ONLY SERVICE ACCOUNT CREDENTIALS ***"
+	READONLY_FILEPATH="$CONFIG_DIR/.read_only_service_account.json"
+	echo $READ_ONLY_JSON_CONTENTS >| $READONLY_FILEPATH
   COMMAND=$COMMAND" -K /home/app/webapp/config/.read_only_service_account.json"
 fi
+
+# now load firestore service account credentials
+if [[ -n $FIRESTORE_CREDENTIALS_PATH ]] ; then
+  echo "setting value for: FIRESTORE_KEYFILE_JSON"
+  FIRESTORE_CREDS_VALS=`vault read -format=json $FIRESTORE_CREDENTIALS_PATH`
+  FIRESTORE_JSON_CONTENTS=`echo $FIRESTORE_CREDS_VALS | jq --raw-output .data`
+  echo "*** WRITING FIRESTORE SERVICE ACCOUNT CREDENTIALS ***"
+	FIRESTORE_FILEPATH="$CONFIG_DIR/.firestore_service_account.json"
+	echo $FIRESTORE_JSON_CONTENTS >| $FIRESTORE_FILEPATH
+  COMMAND=$COMMAND" -f /home/app/webapp/config/.firestore_service_account.json"
+fi
+echo "RUNNING BOOT COMMAND: $COMMAND -e $PASSENGER_APP_ENV -N $PORTAL_NAMESPACE"
 # execute requested command
 $COMMAND -e $PASSENGER_APP_ENV -N $PORTAL_NAMESPACE
