@@ -747,15 +747,15 @@ class Study
   ##
 
   def has_expression_data?
-    self.genes.any?
+    ApplicationController.firestore_client.col('genes').where(:study_accession, :==, self.accession).get.any?
   end
 
   def has_cluster_data?
-    self.cluster_groups.any?
+    ApplicationController.firestore_client.col('clusters').where(:study_accession, :==, self.accession).get.any?
   end
 
   def has_cell_metadata?
-    self.cell_metadata.any?
+    ApplicationController.firestore_client.col('cell_metadata').where(:study_accession, :==, self.accession).get.any?
   end
 
   def has_gene_lists?
@@ -819,9 +819,10 @@ class Study
   # helper to return default cluster to load, will fall back to first cluster if no pf has been set
   # or default cluster cannot be loaded
   def default_cluster
-    default = self.cluster_groups.first
+    clusters = ApplicationController.firestore_client.col('clusters').where(:study_accession, :==, self.accession).get
+    default = clusters.first
     unless self.default_options[:cluster].nil?
-      new_default = self.cluster_groups.by_name(self.default_options[:cluster])
+      new_default = clusters.detect {|cluster| cluster[:name] == self.default_options[:cluster]}
       unless new_default.nil?
         default = new_default
       end
@@ -834,14 +835,15 @@ class Study
   def default_annotation
     default_cluster = self.default_cluster
     default_annot = self.default_options[:annotation]
+    cell_metadata = ApplicationController.firestore_client.col('cell_metadata').where(:study_accession, :==, self.accession).get
     # in case default has not been set
     if default_annot.nil?
-      if !default_cluster.nil? && default_cluster.cell_annotations.any?
-        annot = default_cluster.cell_annotations.first
+      if !default_cluster.nil? && default_cluster[:cell_annotations].any?
+        annot = default_cluster[:cell_annotations].first
         default_annot = "#{annot[:name]}--#{annot[:type]}--cluster"
-      elsif self.cell_metadata.any?
-        metadatum = self.cell_metadata.first
-        default_annot = "#{metadatum.name}--#{metadatum.annotation_type}--study"
+      elsif cell_metadata.any?
+        metadatum = cell_metadata.first.data
+        default_annot = "#{metadatum[:name]}--#{metadatum[:annotation_type]}--study"
       else
         # annotation won't be set yet if a user is parsing metadata without clusters, or vice versa
         default_annot = nil
@@ -1021,13 +1023,22 @@ class Study
   # dropdowns for selecting annotations.  can be scoped to one specific cluster, or return all with 'Cluster: ' prepended on the name
   def formatted_annotation_select(cluster: nil, annotation_type: nil)
     options = {}
-    metadata = annotation_type.nil? ? self.cell_metadata : self.cell_metadata.where(annotation_type: annotation_type)
-    options['Study Wide'] = metadata.map(&:annotation_select_option)
+    metadata = ApplicationController.firestore_client.col('cell_metadata').where(:study_accession, :==, self.accession).get
+    options['Study Wide'] = []
+    metadata.each do |meta|
+      data = meta.data
+      options['Study Wide'] << "#{data[:name]}--#{data[:annotation_type]}--study"
+    end
     if cluster.present?
-      options['Cluster-Based'] = cluster.cell_annotation_select_option(annotation_type)
+      data = cluster.data
+      annotations = annotation_type.nil? ? data[:cell_annotations] : data[:cell_annotations].select {|annot| annot[:type] == annotation_type}
+      options['Cluster-Based'] = annotations.map {|annot| "#{annot[:name]}--#{annot[:type]}--cluster"}
     else
-      self.cluster_groups.each do |cluster_group|
-        options[cluster_group.name] = cluster_group.cell_annotation_select_option(annotation_type, true) # prepend name onto option value
+      clusters = ApplicationController.firestore_client.col('clusters').where(:study_accession, :==, self.accession).get
+      clusters.each do |cluster_group|
+        data = cluster_group.data
+        annotations = annotation_type.nil? ? data[:cell_annotations] : data[:cell_annotations].select {|annot| annot[:type] == annotation_type}
+        options[data[:name]] = annotations.map {|annot| "#{data[:name]}--#{annot[:name]}--#{annot[:type]}--cluster"} # prepend name onto option value
       end
     end
     options

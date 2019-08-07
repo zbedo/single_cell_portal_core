@@ -366,22 +366,22 @@ class SiteController < ApplicationController
   def render_cluster
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
     @coordinates = load_cluster_group_data_array_points(@selected_annotation, subsample)
-    @plot_type = @cluster.cluster_type == '3d' ? 'scatter3d' : 'scattergl'
+    @plot_type = @cluster.data[:cluster_type] == '3d' ? 'scatter3d' : 'scattergl'
     @options = load_cluster_group_options
     @cluster_annotations = load_cluster_group_annotations
-    if @cluster.has_coordinate_labels?
-      @coordinate_labels = load_cluster_group_coordinate_labels
-    end
+    # if @cluster.has_coordinate_labels?
+    #   @coordinate_labels = load_cluster_group_coordinate_labels
+    # end
 
-    if @cluster.is_3d?
+    if @cluster.data[:cluster_type] == '3d'
       @range = set_range(@coordinates.values)
-      if @cluster.has_range?
+      if @cluster.data[:domain_ranges].present?
         @aspect = compute_aspect_ratios(@range)
       end
     end
     @axes = load_axis_labels
 
-    cluster_name = @cluster.name
+    cluster_name = @cluster.data[:name]
     annot_name = params[:annotation]
 
     # load data for visualization, if present
@@ -451,7 +451,7 @@ class SiteController < ApplicationController
       @coordinate_labels = load_cluster_group_coordinate_labels
     end
     @static_range = set_range(@coordinates.values)
-    if @cluster.is_3d? && @cluster.has_range?
+    if @cluster.data[:cluster_type] == '3d' && @cluster.has_range?
       @expression_aspect = compute_aspect_ratios(@range)
       @static_aspect = compute_aspect_ratios(@static_range)
     end
@@ -558,7 +558,7 @@ class SiteController < ApplicationController
     @range = set_range([@expression[:all]])
     @static_range = set_range(@coordinates.values)
 
-    if @cluster.is_3d? && @cluster.has_range?
+    if @cluster.data[:cluster_type] == '3d' && @cluster.has_range?
       @expression_aspect = compute_aspect_ratios(@range)
       @static_aspect = compute_aspect_ratios(@static_range)
     end
@@ -1390,7 +1390,7 @@ class SiteController < ApplicationController
     if selector.nil? || selector.empty?
       @cluster = @study.default_cluster
     else
-      @cluster = @study.cluster_groups.by_name(selector)
+      @cluster = ApplicationController.firestore_client.col('clusters').where(:name, :==, selector).get.first
     end
   end
 
@@ -1400,7 +1400,7 @@ class SiteController < ApplicationController
     annot_name, annot_type, annot_scope = selector.nil? ? @study.default_annotation.split('--') : selector.split('--')
     # construct object based on name, type & scope
     if annot_scope == 'cluster'
-      @selected_annotation = @cluster.cell_annotations.find {|ca| ca[:name] == annot_name && ca[:type] == annot_type}
+      @selected_annotation = @cluster[:cell_annotations].find {|ca| ca[:name] == annot_name && ca[:type] == annot_type}
       @selected_annotation[:scope] = annot_scope
     elsif annot_scope == 'user'
       # in the case of user annotations, the 'name' value that gets passed is actually the ID
@@ -1410,7 +1410,9 @@ class SiteController < ApplicationController
     else
       @selected_annotation = {name: annot_name, type: annot_type, scope: annot_scope}
       if annot_type == 'group'
-        @selected_annotation[:values] = @study.cell_metadata.by_name_and_type(annot_name, annot_type).values
+        metadata_collection = ApplicationController.firestore_client.col('cell_metadata').where(:study_accession, :==, @study.accession)
+        cell_metadata = metadata_collection.where(:name, :==, annot_name).get.first
+        @selected_annotation[:values] = cell_metadata[:unique_values]
       else
         @selected_annotation[:values] = []
       end
@@ -1517,22 +1519,44 @@ class SiteController < ApplicationController
   #
   ###
 
+  # load an individual array of subdocuments for a cluster (e.g. a column of data)
+  def load_cluster_subdocuments(firestore_collection, array_name, array_type, subsample_annotation=nil, subsample_threshold=nil )
+    documents = firestore_collection.where(:name, :==, array_name).where(:array_type, :==, array_type)
+    if subsample_annotation && subsample_threshold
+      documents = documents.where(:subsample_threshold, :==, subsample_threshold).where(:subsample_annotation, :==, subsample_annotation)
+    end
+    documents.get.sort_by {|d| d[:array_index]}.map {|d| d.data[:values]}.flatten
+  end
+
+  # load an individual array of subdocuments for a cluster (e.g. a column of data)
+  def load_metadata_subdocuments(metadata_document)
+    documents = ApplicationController.firestore_client.col('cell_metadata').document(metadata_document.document_id).col('data').get
+    cells = []
+    annotations = []
+    documents.each do |doc|
+      data = doc.data
+      cells += data[:cell_names]
+      annotations += data[:values]
+    end
+    Hash[cells.zip(annotations)]
+  end
+
   # generic method to populate data structure to render a cluster scatter plot
   # uses cluster_group model and loads annotation for both group & numeric plots
   # data values are pulled from associated data_array entries for each axis and annotation/text value
   def load_cluster_group_data_array_points(annotation, subsample_threshold=nil)
     # construct annotation key to load subsample data_arrays if needed, will be identical to params[:annotation]
     subsample_annotation = "#{annotation[:name]}--#{annotation[:type]}--#{annotation[:scope]}"
-    # load data - passing nil for subsample_threshold automatically loads all values
-    x_array = @cluster.concatenate_data_arrays('x', 'coordinates', subsample_threshold, subsample_annotation)
-    y_array = @cluster.concatenate_data_arrays('y', 'coordinates', subsample_threshold, subsample_annotation)
-    z_array = @cluster.concatenate_data_arrays('z', 'coordinates', subsample_threshold, subsample_annotation)
-    cells = @cluster.concatenate_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
+    cluster_data = ApplicationController.firestore_client.col('clusters').document(@cluster.document_id).col('data')
+    x_array = load_cluster_subdocuments(cluster_data, 'x', 'coordinates', subsample_threshold, subsample_annotation)
+    y_array = load_cluster_subdocuments(cluster_data, 'y', 'coordinates', subsample_threshold, subsample_annotation)
+    z_array = load_cluster_subdocuments(cluster_data, 'z', 'coordinates', subsample_threshold, subsample_annotation)
+    cells = load_cluster_subdocuments(cluster_data, 'text', 'cells', subsample_threshold, subsample_annotation)
     annotation_array = []
     annotation_hash = {}
     # Construct the arrays based on scope
     if annotation[:scope] == 'cluster'
-      annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
+      annotation_array = load_cluster_subdocuments(cluster_data, annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
     elsif annotation[:scope] == 'user'
       # for user annotations, we have to load by id as names may not be unique to clusters
       user_annotation = UserAnnotation.find(annotation[:id])
@@ -1544,9 +1568,10 @@ class SiteController < ApplicationController
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     else
       # for study-wide annotations, load from study_metadata values instead of cluster-specific annotations
-      metadata_obj = @study.cell_metadata.by_name_and_type(annotation[:name], annotation[:type])
-      annotation_hash = metadata_obj.cell_annotations
-      annotation[:values] = metadata_obj.values
+      metadata_doc = ApplicationController.firestore_client.col('cell_metadata').where(:study_accession, :==, @study.accession).
+          where(:name, :==, annotation[:name]).where(:annotation_type, :==, annotation[:type]).get.first
+      annotation_hash = load_metadata_subdocuments(metadata_doc)
+      annotation[:values] = annotation_hash.values
     end
     coordinates = {}
     if annotation[:type] == 'numeric'
@@ -1586,7 +1611,7 @@ class SiteController < ApplicationController
               }
           }
       }
-      if @cluster.is_3d?
+      if @cluster.data[:cluster_type] == '3d'
         coordinates[:all][:z] = z_array
       end
     else
@@ -1594,7 +1619,7 @@ class SiteController < ApplicationController
       annotation[:values].each do |value|
         coordinates[value] = {x: [], y: [], text: [], cells: [], annotations: [], name: "#{annotation[:name]}: #{value}",
                               marker: {size: @study.default_cluster_point_size, line: { color: 'rgb(40,40,40)', width: @study.show_cluster_point_borders? ? 0.5 : 0}}}
-        if @cluster.is_3d?
+        if @cluster.data[:cluster_type] == '3d'
           coordinates[value][:z] = []
         end
       end
@@ -1622,7 +1647,7 @@ class SiteController < ApplicationController
             coordinates[annotation_value][:x] << x_array[index]
             coordinates[annotation_value][:y] << y_array[index]
             coordinates[annotation_value][:cells] << cell
-            if @cluster.cluster_type == '3d'
+            if @cluster.data[:cluster_type] == '3d'
               coordinates[annotation_value][:z] << z_array[index]
             end
           end
@@ -1809,7 +1834,7 @@ class SiteController < ApplicationController
         cells: cells,
         marker: {cmax: 0, cmin: 0, color: [], size: @study.default_cluster_point_size, showscale: true, colorbar: {title: @y_axis_title , titleside: 'right'}}
     }
-    if @cluster.is_3d?
+    if @cluster.data[:cluster_type] == '3d'
       expression[:all][:z] = z_array
     end
     cells.each_with_index do |cell, index|
@@ -1931,7 +1956,7 @@ class SiteController < ApplicationController
         cells: cells,
         marker: {cmax: 0, cmin: 0, color: [], size: @study.default_cluster_point_size, showscale: true, colorbar: {title: @y_axis_title , titleside: 'right'}}
     }
-    if @cluster.is_3d?
+    if @cluster.data[:cluster_type] == '3d'
       expression[:all][:z] = z_array
     end
     cells.each_with_index do |cell, index|
@@ -2012,9 +2037,9 @@ class SiteController < ApplicationController
     # select coordinate axes from inputs
     domain_keys = inputs.map(&:keys).flatten.uniq.select {|i| [:x, :y, :z].include?(i)}
     range = Hash[domain_keys.zip]
-    if @cluster.has_range?
+    if @cluster.data[:domain_ranges].present?
       # use study-provided range if available
-      range = @cluster.domain_ranges
+      range = @cluster.data[:domain_ranges]
     else
       # take the minmax of each domain across all groups, then the global minmax
       @vals = inputs.map {|v| domain_keys.map {|k| v[k].minmax}}.flatten.minmax
@@ -2111,7 +2136,7 @@ class SiteController < ApplicationController
 
   # helper method to load all possible cluster groups for a study
   def load_cluster_group_options
-    @study.cluster_groups.map(&:name)
+    ApplicationController.firestore_client.col('clusters').where(:study_accession, :==, @study.accession).get.map {|c| c.data[:name]}
   end
 
   # helper method to load all available cluster_group-specific annotations
@@ -2166,7 +2191,7 @@ class SiteController < ApplicationController
 
   # retrieve axis labels from cluster coordinates file (if provided)
   def load_axis_labels
-    coordinates_file = @cluster.study_file
+    coordinates_file = @study.cluster_ordinations_files.detect {|f| f.name == @cluster.data[:name]}
     {
         x: coordinates_file.x_axis_label.blank? ? 'X' : coordinates_file.x_axis_label,
         y: coordinates_file.y_axis_label.blank? ? 'Y' : coordinates_file.y_axis_label,
