@@ -9,7 +9,7 @@
 
 
 
-<% if @cluster.cluster_type == '3d' %>
+<% if @cluster.data[:cluster_type] == '3d' %>
   var currentCamera = $('#expression-plots').data('scatter-camera');
     scatterLayout.scene = {
       camera: currentCamera,
@@ -25,7 +25,7 @@
           range: <%= raw @range[:z] %>,
           showticklabels: false
       },
-      <% if @cluster.has_range? %>
+      <% if @cluster.data[:domain_ranges].present? %>
         aspectmode: '<%= @expression_aspect[:mode] %>',
         aspectratio: {
           x: <%= @expression_aspect[:x] %>,
@@ -36,11 +36,7 @@
         aspectmode: 'cube'
       <% end %>
   };
-
-    <% if @cluster.has_coordinate_labels? %>
-      scatterLayout.scene.annotations = <%= raw @coordinate_labels.to_json %>
-    <% end %>
-
+    
 <% else %>
     scatterLayout.xaxis = {
       range: <%= raw @range[:x] %>,

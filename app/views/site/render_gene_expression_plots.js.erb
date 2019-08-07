@@ -21,7 +21,7 @@ $('#expression-plots [data-toggle="tooltip"]').tooltip("destroy");
 $('#expression-plots [data-toggle="tooltip"]').tooltip({container: 'body'});
 
 // set CLUSTER_TYPE to control annotations behavior
-CLUSTER_TYPE = '<%= @cluster.cluster_type %>'
+CLUSTER_TYPE = '<%= @cluster.data[:cluster_type] %>'
 
 // resize listener
 

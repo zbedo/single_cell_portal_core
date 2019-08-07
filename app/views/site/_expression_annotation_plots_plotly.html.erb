@@ -30,12 +30,12 @@ Plotly.newPlot('box-plot', expressionData, expressionLayout);
 var exp = {
   x: <%= raw @expression[:all][:x] %>,
   y: <%= raw @expression[:all][:y] %>,
-  <% if @cluster.is_3d? %>
+  <% if @cluster.data[:cluster_type] == '3d' %>
     z: <%= raw @expression[:all][:z] %>,
   <% end %>
   text: <%= raw @expression[:all][:text] %>,
   mode: 'markers',
-  type: '<%= @cluster.is_3d? ? 'scatter3d' : 'scattergl' %>',
+  type: '<%= @cluster.data[:cluster_type] == '3d' ? 'scatter3d' : 'scattergl' %>',
   hoverinfo: 'text',
   opacity: <%= @study.default_cluster_point_alpha %>,
   marker: <%= raw @expression[:all][:marker].to_json %>
@@ -49,7 +49,7 @@ Plotly.newPlot('scatter-plot', clusterData, scatterLayout);
 
 // load static cluster scatter for reference
 var data = [];
-<% if @cluster.is_3d? %>
+<% if @cluster.data[:cluster_type] == '3d' %>
   var static_clst = {
     x: <%= raw @coordinates[:all][:x] %>,
     y: <%= raw @coordinates[:all][:y] %>,
@@ -82,7 +82,7 @@ data.push(static_clst);
 
 Plotly.newPlot('reference-plot', data, staticLayout);
 
-$('#cluster-figure-legend').html("<p class='text-center help-block'><%= escape_javascript(render plain: @cluster.study_file.description) %></p>");
+$('#cluster-figure-legend').html("<p class='text-center help-block'><%= escape_javascript(render plain: @study.cluster_ordinations_files.detect {|f| f.name == @cluster.data[:name]}.description) %></p>");
 
 // listener to redraw expression scatter with new color profile
 // will also redraw reference plot if needed
