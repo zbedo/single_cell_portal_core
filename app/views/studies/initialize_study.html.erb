@@ -191,7 +191,7 @@
             }
         </script>
       </div>
-      <p><%= link_to "<span class='fas fa-plus'></span> Add a Coordinate Labels File".html_safe, new_study_file_study_path(@study._id, file_type: 'Coordinate Labels', target: '#labels-target', form: 'initialize_labels_form'), class: 'btn btn-sm btn-primary add-coordinate-labels hidden', id: 'add-coordinate-label-btn', 'data-remote' => true %></p>
+      <p><%= link_to "<span class='fas fa-plus'></span> Add a Coordinate Labels File".html_safe, new_study_file_study_path(@study._id, file_type: 'Coordinate Labels', target: '#labels-target', form: 'initialize_labels_form'), class: "btn btn-sm btn-primary add-coordinate-labels #{!@study.has_cluster_data? ? 'hidden' : nil}", id: 'add-coordinate-label-btn', 'data-remote' => true %></p>
     </div>
     <div class="tab-pane" id="primary-data">
       <div id="primary-data-target">

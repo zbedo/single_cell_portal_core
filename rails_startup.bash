@@ -39,12 +39,7 @@ if [[ -z $SERVICE_ACCOUNT_KEY ]]; then
 else
 	echo "export SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY" >> /home/app/.cron_env
 fi
-if [[ -z $READ_ONLY_SERVICE_ACCOUNT_KEY ]] && [[ -n $READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON ]]; then
-	echo "*** WRITING READ ONLY SERVICE ACCOUNT CREDENTIALS ***"
-	echo $READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON >| /home/app/webapp/config/.read_only_service_account.json
-	echo "export READ_ONLY_SERVICE_ACCOUNT_KEY=/home/app/webapp/config/.read_only_service_account.json" >> /home/app/.cron_env
-	chown app:app /home/app/webapp/config/.read_only_service_account.json
-elif [[ -n $READ_ONLY_SERVICE_ACCOUNT_KEY ]]; then
+if [[ -n $READ_ONLY_SERVICE_ACCOUNT_KEY ]]; then
 	echo "export READ_ONLY_SERVICE_ACCOUNT_KEY=$READ_ONLY_SERVICE_ACCOUNT_KEY" >> /home/app/.cron_env
 else
 	echo "*** NO READONLY SERVICE ACCOUNT DETECTED -- SOME FUNCTIONALITY WILL BE DISABLED ***"
@@ -68,13 +63,6 @@ sudo -E -u app -H bin/delayed_job start $PASSENGER_APP_ENV -n 4
 echo "*** ADDING CRONTAB TO CHECK DELAYED_JOB ***"
 echo "*/15 * * * * . /home/app/.cron_env ; /home/app/webapp/bin/job_monitor.rb -e=$PASSENGER_APP_ENV >> /home/app/webapp/log/cron_out.log 2>&1" | crontab -u app -
 echo "*** COMPLETED ***"
-
-if [[ $PASSENGER_APP_ENV != "development" ]]
-then
-	echo "*** ADDING API HEALTH CRONTAB ***"
-	(crontab -u app -l ; echo "*/5 * * * * . /home/app/.cron_env ; cd /home/app/webapp/; /home/app/webapp/bin/rails runner -e $PASSENGER_APP_ENV \"AdminConfiguration.check_api_health\" >> /home/app/webapp/log/cron_out.log 2>&1") | crontab -u app -
-	echo "*** COMPLETED ***"
-fi
 
 echo "*** ADDING CRONTAB TO REINDEX DATABASE ***"
 (crontab -u app -l ; echo "@daily . /home/app/.cron_env ; cd /home/app/webapp/; bin/bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV db:mongoid:create_indexes >> /home/app/webapp/log/cron_out.log 2>&1") | crontab -u app -
