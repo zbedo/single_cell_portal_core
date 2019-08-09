@@ -56,7 +56,7 @@ function main {
 		    sleep 5
 		    if [[ $(ensure_container_running $PORTAL_CONTAINER) = "0" ]]; then break 2; fi
     done
-    ensure_container_running $PORTAL_CONTAINER || exit_with_error_message "Portal still not running after 1 minute, deployment failed"
+    if [[ $(ensure_container_running $PORTAL_CONTAINER) = "1" ]] ; then exit_with_error_message "Portal still not running after 1 minute, deployment failed" ; fi
     echo "### COMPLETED ###"
 
     echo "### Cleaning up ###"
