@@ -24,12 +24,16 @@ function main {
     echo "### COMPLETED ###"
 
     # stop docker container and remove it
-    echo "### Removing docker container $PORTAL_CONTAINER ... ###"
     if [[ $(ensure_container_running $PORTAL_CONTAINER) = "0" ]]; then
         echo "### Stopping running container $PORTAL_CONTAINER ###"
         stop_docker_container $PORTAL_CONTAINER || exit_with_error_message "Cannot stop docker container $PORTAL_CONTAINER"
     fi
-    remove_docker_container $PORTAL_CONTAINER || exit_with_error_message "Cannot remove docker container $PORTAL_CONTAINER"
+    for container in $(get_all_containers); do
+       if [[ "$container" = "$PORTAL_CONTAINER" ]]; then
+           echo "### Removing docker container $PORTAL_CONTAINER ... ###"
+           remove_docker_container $PORTAL_CONTAINER || exit_with_error_message "Cannot remove docker container $PORTAL_CONTAINER"
+       fi
+    done
     echo "### COMPLETED ###"
 
     # load env secrets from file, then clean up
