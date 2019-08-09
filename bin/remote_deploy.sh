@@ -25,19 +25,20 @@ function main {
 
     # stop docker container and remove it
     echo "### Stopping & removing docker container $PORTAL_CONTAINER ... ###"
-    stop_docker_container $PORTAL_CONTAINER || exit_with_error_message "Cannot stop docker container $PORTAL_CONTAINER"
+    if [[ $(ensure_container_running $PORTAL_CONTAINER) -eq 0 ]]; then
+        stop_docker_container $PORTAL_CONTAINER || exit_with_error_message "Cannot stop docker container $PORTAL_CONTAINER"
+    fi
     remove_docker_container $PORTAL_CONTAINER || exit_with_error_message "Cannot remove docker container $PORTAL_CONTAINER"
     echo "### COMPLETED ###"
 
     # load env secrets from file, then clean up
     echo "### loading env secrets ###"
     . $PORTAL_SECRETS_PATH
-    rm $PORTAL_SECRETS_PATH
     echo "### COMPLETED ###"
 
     # run boot command
     echo "### Booting $PORTAL_CONTAINER ###"
-    run_command_in_deployment "bin/boot_docker -e '$PASSENGER_APP_ENV' -d '$DESTINATION_BASE_DIR' -h '$PROD_HOSTNAME' -N '$PORTAL_NAMESPACE' -m '$MONGO_LOCALHOST'" || exit_with_error_message "Cannot start new docker container $PORTAL_CONTAINER"
+    run_command_in_deployment "bin/boot_docker -e '$PASSENGER_APP_ENV' -d '$DESTINATION_BASE_DIR' -h '$PROD_HOSTNAME' -N '$PORTAL_NAMESPACE' -m '$MONGO_LOCALHOST'"
     echo "### COMPLETED ###"
 
     # ensure portal is running
@@ -50,6 +51,10 @@ function main {
 		    if [[ $(ensure_container_running $PORTAL_CONTAINER) -eq 0 ]]; then break 2; fi
     done
     ensure_container_running $PORTAL_CONTAINER || exit_with_error_message "Portal still not running after 1 minute, deployment failed"
+    echo "### COMPLETED ###"
+
+    echo "### Cleaning up ###"
+    rm $PORTAL_SECRETS_PATH
     echo "### DEPLOYMENT COMPLETED ###"
 }
 
