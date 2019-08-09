@@ -25,7 +25,7 @@ function main {
 
     # stop docker container and remove it
     echo "### Removing docker container $PORTAL_CONTAINER ... ###"
-    if [[ $(ensure_container_running $PORTAL_CONTAINER) -eq 0 ]]; then
+    if [[ $(ensure_container_running $PORTAL_CONTAINER) = "0" ]]; then
         echo "### Stopping running container $PORTAL_CONTAINER ###"
         stop_docker_container $PORTAL_CONTAINER || exit_with_error_message "Cannot stop docker container $PORTAL_CONTAINER"
     fi
@@ -49,7 +49,7 @@ function main {
 		    COUNTER=$[$COUNTER + 1]
 		    echo "portal not running on attempt $COUNTER, waiting 5 seconds..."
 		    sleep 5
-		    if [[ $(ensure_container_running $PORTAL_CONTAINER) -eq 0 ]]; then break 2; fi
+		    if [[ $(ensure_container_running $PORTAL_CONTAINER) = "0" ]]; then break 2; fi
     done
     ensure_container_running $PORTAL_CONTAINER || exit_with_error_message "Portal still not running after 1 minute, deployment failed"
     echo "### COMPLETED ###"
