@@ -64,7 +64,7 @@ function main {
     HOMEPAGE_COUNTER=0
     while [[ $HOMEPAGE_COUNTER -lt 12 ]]; do
 		    HOMEPAGE_COUNTER=$[$HOMEPAGE_COUNTER + 1]
-		    echo "home page not available on attempt $COUNTER, waiting 15 seconds..."
+		    echo "home page not available on attempt $HOMEPAGE_COUNTER, waiting 15 seconds..."
 		    sleep 15
 		    if [[ $(ensure_portal_is_available $PORTAL_HOMEPAGE) = "200" ]]; then break 2; fi
     done
