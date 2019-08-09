@@ -61,14 +61,14 @@ function main {
 
     PORTAL_HOMEPAGE="https://$PROD_HOSTNAME/single_cell"
     echo "### ENSURING PORTAL IS AVAILABLE AT $PORTAL_HOMEPAGE ###"
-    COUNTER=0
-    while [[ $COUNTER -lt 36 ]]; do
-		    COUNTER=$[$COUNTER + 1]
-		    echo "home page not available on attempt $COUNTER, waiting 5 seconds..."
-		    sleep 5
+    HOMEPAGE_COUNTER=0
+    while [[ $HOMEPAGE_COUNTER -lt 12 ]]; do
+		    HOMEPAGE_COUNTER=$[$HOMEPAGE_COUNTER + 1]
+		    echo "home page not available on attempt $COUNTER, waiting 15 seconds..."
+		    sleep 15
 		    if [[ $(ensure_portal_is_available $PORTAL_HOMEPAGE) = "200" ]]; then break 2; fi
     done
-    if [[ $(ensure_portal_is_available $PORTAL_HOMEPAGE) = "200" ]] ; then exit_with_error_message "Portal still not available at $PORTAL_HOMEPAGE after 3 minutes, deployment failed" ; fi
+    if [[ $(ensure_portal_is_available $PORTAL_HOMEPAGE) != "200" ]] ; then exit_with_error_message "Portal still not available at $PORTAL_HOMEPAGE after 3 minutes, deployment failed" ; fi
     echo "### Cleaning up ###"
     rm $PORTAL_SECRETS_PATH
     echo "### DEPLOYMENT COMPLETED ###"
