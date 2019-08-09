@@ -59,6 +59,16 @@ function main {
     if [[ $(ensure_container_running $PORTAL_CONTAINER) = "1" ]] ; then exit_with_error_message "Portal still not running after 1 minute, deployment failed" ; fi
     echo "### COMPLETED ###"
 
+    PORTAL_HOMEPAGE="https://$PROD_HOSTNAME/single_cell"
+    echo "### ENSURING PORTAL IS AVAILABLE AT $PORTAL_HOMEPAGE ###"
+    COUNTER=0
+    while [[ $COUNTER -lt 36 ]]; do
+		    COUNTER=$[$COUNTER + 1]
+		    echo "home page not available on attempt $COUNTER, waiting 5 seconds..."
+		    sleep 5
+		    if [[ $(ensure_portal_is_available $PORTAL_HOMEPAGE) = "200" ]]; then break 2; fi
+    done
+    if [[ $(ensure_portal_is_available $PORTAL_HOMEPAGE) = "200" ]] ; then exit_with_error_message "Portal still not available at $PORTAL_HOMEPAGE after 3 minutes, deployment failed" ; fi
     echo "### Cleaning up ###"
     rm $PORTAL_SECRETS_PATH
     echo "### DEPLOYMENT COMPLETED ###"
@@ -68,5 +78,12 @@ function run_command_in_deployment {
     COMMAND="$1"
     cd $DESTINATION_BASE_DIR ; $COMMAND
 }
+
+# make a HEAD request on URL and return HTTP status code
+function ensure_portal_is_available {
+    URL="$1"
+    echo $(curl -Isk $URL | head -n 1 | awk '{ print $2 }')
+}
+
 
 main "$@"
