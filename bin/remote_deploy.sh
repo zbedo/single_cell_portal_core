@@ -44,7 +44,7 @@ function main {
 
     # run boot command
     echo "### Booting $PORTAL_CONTAINER ###"
-    run_command_in_deployment "bin/boot_docker -e '$PASSENGER_APP_ENV' -d '$DESTINATION_BASE_DIR' -h '$PROD_HOSTNAME' -N '$PORTAL_NAMESPACE' -m '$MONGO_LOCALHOST'"
+    run_command_in_deployment "bin/boot_docker -e $PASSENGER_APP_ENV -d $DESTINATION_BASE_DIR -h $PROD_HOSTNAME -N $PORTAL_NAMESPACE -m $MONGO_LOCALHOST"
     echo "### COMPLETED ###"
 
     # ensure portal is running
