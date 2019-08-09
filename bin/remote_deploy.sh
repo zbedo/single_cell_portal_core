@@ -12,6 +12,7 @@ function main {
     # make sure that all necessary variables have been set
     PORTAL_CONTAINER="single_cell"
     PORTAL_CONTAINER_VERSION="latest"
+    echo "### USER: $(whoami) ###"
 
     if [[ -z "$PORTAL_SECRETS_PATH" ]] || [[ -z "$DESTINATION_BASE_DIR" ]]; then
         exit_with_error_message "Not all necessary variables have been set: Git branch: $GIT_BRANCH; " \

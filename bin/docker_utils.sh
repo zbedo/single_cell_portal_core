@@ -78,5 +78,5 @@ function ensure_container_running {
             RUNNING=0
         fi
     done
-    return $RUNNING
+    echo "$RUNNING"
 }
