@@ -5,6 +5,62 @@ module FirestoreInstances
 
   included do
 
+    ##
+    # Firestore document & querying methods
+    ##
+
+    def self.client
+      ApplicationController.firestore_client
+    end
+
+    def self.collection
+      self.client.col(self.collection_name)
+    end
+
+    def reference
+      self.document.reference
+    end
+
+    def document_id
+      self.document.document_id
+    end
+
+    def sub_documents
+      self.reference.col(self.class.sub_collection_name)
+    end
+
+    def self.count(query={})
+      if query.empty?
+        self.collection.get.count
+      else
+        collection_ref = self.collection
+        query.each do |attr, val|
+          collection_ref = collection_ref.where(attr.to_sym, :==, val)
+        end
+        collection_ref.get.count
+      end
+    end
+
+    def self.exists?(query={})
+      if query.empty?
+        false
+      else
+        self.count(query) > 0
+      end
+    end
+
+    def self.query_by(query={})
+      collection_ref = self.collection
+      query.each do |attr, val|
+        collection_ref = collection_ref.where(attr.to_sym, :==, val)
+      end
+      collection_ref.get
+    end
+
+    ##
+    # Attribute getter/setter
+    ##
+
     def initialize(document_snapshot)
       unless ACCEPTED_DOCUMENT_FORMATS.include? document_snapshot.class
         raise ArgumentError, "invalid Firestore document instance: #{document_snapshot.class.name}, must be in #{ACCEPTED_DOCUMENT_FORMATS}"
@@ -37,5 +93,10 @@ module FirestoreInstances
       end
       attrs
     end
+
+    def study_file
+      StudyFile.find(self.file_id)
+    end
+
   end
 end

@@ -5,12 +5,8 @@ class FirestoreCluster
   attr_accessor :name, :study_accession, :cluster_type, :points, :cell_annotations, :domain_ranges, :file_id, :document
 
   ##
-  # Firestore convenience methods
+  # Firestore collection setters
   ##
-
-  def self.client
-    ApplicationController.firestore_client
-  end
 
   def self.collection_name
     :clusters
@@ -20,52 +16,18 @@ class FirestoreCluster
     :data
   end
 
-  def self.collection
-    self.client.col(self.collection_name)
-  end
-
-  def reference
-    self.document.reference
-  end
-
-  def document_id
-    self.document.document_id
-  end
-
-  def sub_documents
-    self.reference.col(FirestoreCluster.sub_collection_name)
-  end
-
   ##
   # Query methods
   ##
 
   def self.by_study(accession)
-    self.collection.where(:study_accession, :==, accession).get
+    clusters = self.query_by(study_accession: accession)
+    clusters.map {|c| self.new(c)}
   end
 
   def self.by_study_and_name(accession, name)
-    self.collection.where(:study_accession, :==, accession).where(:name, :==, name).get.first
-  end
-
-  def self.count(query={})
-    if query.empty?
-      self.collection.get.count
-    else
-      collection_ref = self.collection
-      query.each do |attr, val|
-        collection_ref = collection_ref.where(attr.to_sym, :==, val)
-      end
-      collection_ref.get.count
-    end
-  end
-
-  def self.exists?(query={})
-    if query.empty?
-      false
-    else
-      self.count(query) > 0
-    end
+    cluster = self.query_by(study_accession: accession, name: name)
+    cluster.any? ? self.new(cluster.first) : nil
   end
 
   ##
@@ -107,10 +69,6 @@ class FirestoreCluster
   # list of cell annotation header values by type (group or numeric)
   def cell_annotation_names_by_type(type)
     self.cell_annotations.select {|annotation| annotation['type'] == type}.map {|annotation| annotation['name']}
-  end
-
-  def study_file
-    StudyFile.find(self.file_id)
   end
 
 end
