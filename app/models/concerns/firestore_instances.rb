@@ -31,7 +31,8 @@ module FirestoreInstances
         # omit document as this is just a placeholder to point back to Firestore - we really only want what appears
         # in the "data" for the document, not the document itself
         unless var_name == "@document"
-          attr.merge!({var_name => self.instance_variable_get(var_name)})
+          formatted_name = var_name.gsub(/@/, '') # remove '@' sign from variable name for parity with attributes method
+          attrs.merge!({formatted_name => self.instance_variable_get(var_name)})
         end
       end
       attrs
