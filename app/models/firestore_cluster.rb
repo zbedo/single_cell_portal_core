@@ -1,35 +1,8 @@
 class FirestoreCluster
   include ActiveModel::AttributeAssignment
-
-  ACCEPTED_DOCUMENT_FORMATS = [Google::Cloud::Firestore::DocumentSnapshot, Google::Cloud::Firestore::DocumentReference]
+  include FirestoreInstances
 
   attr_accessor :name, :study_accession, :cluster_type, :points, :cell_annotations, :domain_ranges, :file_id, :document
-
-  def initialize(document_snapshot)
-    unless ACCEPTED_DOCUMENT_FORMATS.include? document_snapshot.class
-      raise ArgumentError, "invalid Firestore document instance: #{document_snapshot.class.name}, must be in #{ACCEPTED_DOCUMENT_FORMATS}"
-    end
-
-    if document_snapshot.is_a?(Google::Cloud::Firestore::DocumentSnapshot)
-      self.document = document_snapshot
-    elsif document_snapshot.is_a?(Google::Cloud::Firestore::DocumentReference)
-      self.document = document_snapshot.get
-    end
-
-    self.attributes = document.data
-  end
-
-  def attributes
-    {
-        name: name,
-        study_accession: study_accession,
-        cluster_type: cluster_type,
-        points: points,
-        cell_annotations: cell_annotations,
-        domain_ranges: domain_ranges,
-        file_id: file_id
-    }
-  end
 
   ##
   # Firestore convenience methods
