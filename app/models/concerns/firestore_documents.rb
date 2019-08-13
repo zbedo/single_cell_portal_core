@@ -1,4 +1,10 @@
-module FirestoreInstances
+module FirestoreDocuments
+
+  ##
+  # FirestoreDocuments: Module to provide an interface between Rails and Firestore documents.  Allows adding class &
+  # instance methods so the Firetore documents behave exactly like the original Mongoid models they are replacing
+  ##
+
   extend ActiveSupport::Concern
 
   ACCEPTED_DOCUMENT_FORMATS = [Google::Cloud::Firestore::DocumentSnapshot, Google::Cloud::Firestore::DocumentReference]
@@ -23,10 +29,6 @@ module FirestoreInstances
 
     def document_id
       self.document.document_id
-    end
-
-    def sub_documents
-      self.reference.col(self.class.sub_collection_name)
     end
 
     def self.count(query={})
@@ -55,6 +57,16 @@ module FirestoreInstances
         collection_ref = collection_ref.where(attr.to_sym, :==, val)
       end
       collection_ref.get
+    end
+
+    def self.by_study(accession)
+      documents = self.query_by(study_accession: accession)
+      documents.map {|doc| self.new(doc)}
+    end
+
+    def self.by_study_and_name(accession, name)
+      doc_ref = self.query_by(study_accession: accession, name: name)
+      doc_ref.any? ? self.new(doc_ref.first) : nil
     end
 
     ##

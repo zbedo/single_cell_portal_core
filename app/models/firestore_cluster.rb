@@ -1,6 +1,7 @@
 class FirestoreCluster
   include ActiveModel::AttributeAssignment
-  include FirestoreInstances
+  include FirestoreDocuments
+  include FirestoreSubDocuments
 
   attr_accessor :name, :study_accession, :cluster_type, :points, :cell_annotations, :domain_ranges, :file_id, :document
 
@@ -14,20 +15,6 @@ class FirestoreCluster
 
   def self.sub_collection_name
     :data
-  end
-
-  ##
-  # Query methods
-  ##
-
-  def self.by_study(accession)
-    clusters = self.query_by(study_accession: accession)
-    clusters.map {|c| self.new(c)}
-  end
-
-  def self.by_study_and_name(accession, name)
-    cluster = self.query_by(study_accession: accession, name: name)
-    cluster.any? ? self.new(cluster.first) : nil
   end
 
   ##
