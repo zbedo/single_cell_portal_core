@@ -51,10 +51,13 @@ module FirestoreDocuments
       end
     end
 
-    def self.query_by(query={})
+    def self.query_by(query={}, limit=nil)
       collection_ref = self.collection
       query.each do |attr, val|
         collection_ref = collection_ref.where(attr.to_sym, :==, val)
+      end
+      if limit.present?
+        collection_ref = collection_ref.limit(limit.to_i)
       end
       collection_ref.get
     end
@@ -67,6 +70,13 @@ module FirestoreDocuments
     def self.by_study_and_name(accession, name)
       doc_ref = self.query_by(study_accession: accession, name: name)
       doc_ref.any? ? self.new(doc_ref.first) : nil
+    end
+
+    # shortcut method to determine if there are any documents of this type for a study
+    # useful for methods like @study.has_expression_data?
+    # will limit to only a single document to cut down on query costs
+    def self.study_has_any?(accession)
+      self.query_by(study_accession: accession).any?
     end
 
     ##

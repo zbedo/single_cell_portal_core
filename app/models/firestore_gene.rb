@@ -16,12 +16,22 @@ class FirestoreGene
 
   # overwrites module method to allow for name/searchable_name query
   # search by case-sensitive name first, and then case-insensitive
+  # return results as a hash to be compliant with current functionality
   def self.by_study_and_name(accession, name)
-    gene = self.query_by(study_accession: accession, name: name)
-    unless gene.any?
-      gene = self.query_by(study_accession: accession, searchable_name: name.downcase)
+    merged_scores = {'searchable_name' => name.downcase, 'name' => name, 'scores' => {}}
+    docs = self.query_by(study_accession: accession, name: name)
+    unless docs.any?
+      docs = self.query_by(study_accession: accession, searchable_name: name.downcase)
     end
-    gene.any? ? self.new(gene.first) : nil
+    if docs.any?
+      docs.each do |doc|
+        gene = self.new(doc)
+        merged_scores['scores'].merge!(gene.scores)
+      end
+      merged_scores
+    else
+      {}
+    end
   end
 
   def scores

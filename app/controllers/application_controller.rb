@@ -81,12 +81,12 @@ class ApplicationController < ActionController::Base
   # load default study options for updating
   def set_study_default_options
     @default_cluster = @study.default_cluster
-    annotations = ApplicationController.firestore_client.col('cell_metadata').where(:study_accession, :==, @study.accession)
+    annotations = FirestoreCellMetadatum.by_study(@study.accession)
     @default_cluster_annotations = {
-        'Study Wide' => annotations.get.map {|metadata| ["#{metadata.data[:name]}", "#{metadata.data[:name]}--#{metadata.data[:annotation_type]}--study"] }.uniq
+        'Study Wide' => annotations.map(&:annotation_select_option)
     }
     unless @default_cluster.nil?
-      @default_cluster_annotations['Cluster-based'] = @default_cluster[:cell_annotations].map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]}
+      @default_cluster_annotations['Cluster-based'] = @default_cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]}
     end
   end
 

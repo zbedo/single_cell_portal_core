@@ -7,7 +7,7 @@ var data = [];
     <% if !data[:annotations].nil? %>
       annotations: <%= raw data[:annotations] %>,
     <% end %>
-    <% if @cluster.data[:cluster_type] == '3d' %>
+    <% if @cluster.is_3d? %>
       z: <%= raw data[:z] %>,
       textposition: 'bottom right',
     <% end %>
@@ -44,7 +44,7 @@ $("#colorscale").change(function() {
     Plotly.update('cluster-plot', data, layout);
 });
 
-$('#cluster-figure-legend').html("<p class='text-center help-block'><%= escape_javascript(render plain: @study.cluster_ordinations_files.detect {|f| f.name == @cluster.data[:name]}.description) %></p>");
+$('#cluster-figure-legend').html("<p class='text-center help-block'><%= escape_javascript(render plain: @cluster.study_file.description) %></p>");
 
 // access actual target div, not jQuery object wrapper for relayout event
 var clusterPlotDiv = document.getElementById('cluster-plot');

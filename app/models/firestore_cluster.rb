@@ -26,9 +26,11 @@ class FirestoreCluster
   # can also load subsample arrays by supplying optional subsample_threshold
   def concatenate_data_arrays(array_name, array_type, subsample_threshold=nil, subsample_annotation=nil)
     docs = self.sub_documents.where(:name, :==, array_name).
-        where(:array_type, :==, array_type).
-        where(:subsample_threshold, :==, subsample_threshold).
-        where(:subsample_annotation, :==, subsample_annotation)
+        where(:array_type, :==, array_type)
+    if subsample_threshold.present? # only append extra queries if a threshold is present
+      docs = docs.where(:subsample_threshold, :==, subsample_threshold).
+          where(:subsample_annotation, :==, subsample_annotation)
+    end
     docs.get.sort_by {|d| d[:array_index]}.map {|d| d.data[:values]}.flatten
   end
 
@@ -39,6 +41,11 @@ class FirestoreCluster
   # check if user has defined a range for this cluster_group (provided in study file)
   def has_range?
     !self.domain_ranges.nil?
+  end
+
+  # TODO: reimplement this to either write coordinate label data to Firestore, or preserve MongoDB query
+  def has_coordinate_labels?
+    false
   end
 
   # return a formatted array for use in a select dropdown that corresponds to a specific cell_annotation

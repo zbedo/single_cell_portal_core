@@ -116,8 +116,8 @@ module ApplicationHelper
 			parameters[:gene_set_cluster]
 		elsif !parameters[:cluster].nil?
 			parameters[:cluster]
-		else``
-			selected_study.default_cluster.data[:name]
+		else
+			selected_study.default_cluster.name
 		end
 	end
 
@@ -202,7 +202,7 @@ module ApplicationHelper
 	def set_colorscale_value(selected_study, parameters)
 		if !parameters[:colorscale].blank?
 			parameters[:colorscale]
-		elsif selected_study.default_cluster.data[:name] == parameters[:cluster] && !selected_study.default_color_profile.blank?
+		elsif selected_study.default_cluster.name == parameters[:cluster] && !selected_study.default_color_profile.blank?
 			selected_study.default_color_profile
 		elsif params[:cluster].blank? && !selected_study.default_color_profile.blank? # no cluster requested, so go to defaults
 			selected_study.default_color_profile

@@ -10,7 +10,7 @@
     dragmode: 'lasso, select'
 	};
 
-  <% if @cluster.data[:cluster_type] == '3d' %>
+  <% if @cluster.is_3d? %>
     var staticCamera = $('#expression-plots').data('scatter-camera');
     staticLayout.scene = {
       camera: staticCamera,
@@ -26,7 +26,7 @@
           range: <%= raw @static_range[:z] %>,
           showticklabels: false
       },
-      <% if @cluster.data[:domain_ranges].present? %>
+      <% if @cluster.has_range? %>
         aspectmode: '<%= @static_aspect[:mode] %>',
         aspectratio: {
           x: <%= @static_aspect[:x] %>,
@@ -38,7 +38,9 @@
       <% end %>
     };
 
-
+    <% if @cluster.has_coordinate_labels? %>
+      staticLayout.scene.annotations = <%= raw @coordinate_labels.to_json %>
+    <% end %>
   <% else %>
     staticLayout.xaxis = {
         range: <%= raw @static_range[:x] %>,
@@ -50,4 +52,7 @@
         showticklabels: false
     };
 
+    <% if @cluster.has_coordinate_labels? %>
+      staticLayout.annotations = <%= raw @coordinate_labels.to_json %>
+    <% end %>
   <% end %>

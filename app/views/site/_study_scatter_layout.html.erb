@@ -12,7 +12,7 @@ var layout = {
     height: plotHeight
 }
 
-<% if @cluster.data[:cluster_type] == '3d' %>
+<% if @cluster.is_3d? %>
   var currentCamera = $('#cluster-plot').data('camera');
   layout.scene = {
       camera: currentCamera,
@@ -33,7 +33,7 @@ var layout = {
       },
       aspectmode: 'cube'
   };
-  <% if @cluster.data[:domain_ranges].present? %>
+  <% if @cluster.has_range? %>
       layout.scene.xaxis.autorange = false;
       layout.scene.xaxis.range = <%= raw @range[:x] %>;
       layout.scene.yaxis.autorange = false;
@@ -46,6 +46,10 @@ var layout = {
           y: <%= @aspect[:y] %>,
           z: <%= @aspect[:z] %>
       }
+  <% end %>
+
+  <% if @cluster.has_coordinate_labels? %>
+    layout.scene.annotations = <%= raw @coordinate_labels.to_json %>
   <% end %>
 
 <% else %>
@@ -62,7 +66,7 @@ var layout = {
   };
 
   // if user has supplied a range, set that, otherwise let Plotly autorange
-  <% if @cluster.data[:domain_ranges].present? %>
+  <% if @cluster.has_range? %>
     layout.xaxis.range = <%= raw @cluster.data[:domain_ranges]['x'] %>;
     layout.yaxis.range = <%= raw @cluster.data[:domain_ranges]['y'] %>;
   <% else %>
@@ -70,4 +74,7 @@ var layout = {
     layout.yaxis.autorange = true;
   <% end %>
 
+  <% if @cluster.has_coordinate_labels? %>
+    layout.annotations = <%= raw @coordinate_labels.to_json %>
+  <% end %>
 <% end %>
