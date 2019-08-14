@@ -146,12 +146,11 @@ class SiteController < ApplicationController
 
     # if only one gene was searched for, make an attempt to load it and redirect to correct page
     if @terms.size == 1
-      @gene = load_best_gene_match(@study.genes.by_name_or_id(@terms.first, @study.expression_matrix_files.map(&:id)), @terms.first)
-      if @gene.empty?
+      if FirestoreGene.exists?(study_accession: @study.accession, name: @term.first)
         redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
                     alert: "No matches found for: #{@terms.first}." and return
       else
-        redirect_to merge_default_redirect_params(view_gene_expression_path(accession: @study.accession, study_name: @study.url_safe_name, gene: @gene['name'],
+        redirect_to merge_default_redirect_params(view_gene_expression_path(accession: @study.accession, study_name: @study.url_safe_name, gene: @terms.first,
                                                                             cluster: cluster, annotation: annotation, consensus: consensus,
                                                                             subsample: subsample, plot_type: plot_type,
                                                                             boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering,
@@ -639,7 +638,8 @@ class SiteController < ApplicationController
       if @selected_annotation[:scope] == 'cluster'
         @annotations = @cluster.concatenate_data_arrays(@selected_annotation[:name], 'annotations')
       else
-        study_annotations = @study.cell_metadata_values(@selected_annotation[:name], @selected_annotation[:type])
+        metadata_doc = FirestoreCellMetadatum.by_study_and_name_and_type(@study.accession, @selected_annotation[:name], @selected_annotation[:type])
+        study_annotations = metadata_doc.cell_annotations
         @annotations = []
         @cells.each do |cell|
           @annotations << study_annotations[cell]
@@ -2066,11 +2066,10 @@ class SiteController < ApplicationController
   # generic expression score getter, preserves order and discards empty matches
   def load_expression_scores(terms)
     genes = []
-    matrix_ids = @study.expression_matrix_files.map(&:id)
     terms.each do |term|
-      matches = @study.genes.by_name_or_id(term, matrix_ids)
-      unless matches.empty?
-        genes << load_best_gene_match(matches, term)
+      match = FirestoreGene.by_study_and_name(@study.accession, term)
+      unless match.empty?
+        genes << match
       end
     end
     genes
@@ -2081,7 +2080,7 @@ class SiteController < ApplicationController
   def search_expression_scores(terms)
     genes = []
     not_found = []
-    known_genes = @study.genes.unique_genes
+    known_genes = FirestoreGene.unique_genes(@study.accession)
     known_searchable_genes = known_genes.map(&:downcase)
     terms.each do |term|
       if known_genes.include?(term) || known_searchable_genes.include?(term)
