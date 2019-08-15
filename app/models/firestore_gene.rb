@@ -39,7 +39,7 @@ class FirestoreGene
 
   # return all unique gene names
   def self.unique_genes(accession)
-    self.by_study(accession).map(&:name)
+    self.by_study(accession).map(&:autocomplete_label)
   end
 
   def scores

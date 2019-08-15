@@ -19,7 +19,6 @@
 //= require jquery_nested_form
 //= require bootstrap-sprockets
 //= require jquery.actual.min
-//= require autocomplete-rails
 //= require echarts.min
 //= require echarts-gl.min
 //= require papaparse.min
@@ -207,21 +206,67 @@ $(document).on('change', '#panel-genes-search input, #panel-genes-search select'
   $('#perform-gene-search').click();
 });
 
-// Enables submitting gene search form by pressing 'Enter',
-// while also ensuring that pressing 'Enter' to select an autocomplete suggestion doesn't
-// trigger form submission
-var keydownIsFromAutocomplete = false;
-$(document).on('keydown', '#search_genes', function(e) {
-  if (e.keyCode === 13 && keydownIsFromAutocomplete === false) { // 13: Return / Enter key
-    $('#perform-gene-search').click();
-  }
-  keydownIsFromAutocomplete = false;
-});
-$(document).on('railsAutocomplete.select', '#search_genes', function(e) {
-  keydownIsFromAutocomplete = true;
-});
+function split( val ) {
+    return val.split( /\s/ );
+}
+function extractLast( term ) {
+    return split( term ).pop();
+}
 
-jQuery.railsAutocomplete.options.noMatchesLabel = "No matches in this study";
+var keydownIsFromAutocomplete = false;
+
+function intializeAutocomplete(selector, entities) {
+
+
+    selector.on( "keydown", function( event ) {
+        if ( event.keyCode === $.ui.keyCode.TAB &&
+            $( this ).autocomplete( "instance" ).menu.active ) {
+            // allow user to select terms with TAB key
+            event.preventDefault();
+        } else if (event.keyCode === $.ui.keyCode.ENTER && keydownIsFromAutocomplete === false) {
+            // only perform search if user has selected items and is pressing ENTER on focused search box
+            $('#perform-gene-search').click();
+        }
+    }).autocomplete(
+        {
+            source: function( request, response ) {
+                // delegate back to autocomplete, but extract the last term
+                response( $.ui.autocomplete.filter(
+                    entities, extractLast( request.term )
+                ) );
+            },
+            minLength: 2,
+            focus: function() {
+                // prevent value inserted on focus
+                return false;
+            },
+            open: function () {
+                // options menu is open, so prevent ENTER from submitting search
+                keydownIsFromAutocomplete = true;
+            },
+            select: function( event, ui ) {
+                var terms = split( this.value );
+                // remove the current input
+                terms.pop();
+                // add the selected item
+                terms.push( ui.item.value );
+                terms.push( "" );
+                this.value = terms.join( " " );
+                // set to false to let autocomplete know that a term has been selected and the next ENTER
+                // keydown will submit search values
+                keydownIsFromAutocomplete = false;
+                return false;
+            },
+            response: function( event, ui) {
+                // show 'No matches found' message
+                if (ui.content.length === 0) {
+                    ui.content.push({label: 'No matches in this study', value: ''});
+                    return ui;
+                }
+            }
+        }
+    );
+}
 
 // used for calculating size of plotly graphs to maintain square aspect ratio
 var SCATTER_RATIO = 0.75;

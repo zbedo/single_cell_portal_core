@@ -6,13 +6,6 @@ GIT
       sassc (>= 1.11)
 
 GIT
-  remote: https://github.com/bigtunacan/rails-jquery-autocomplete
-  revision: 4b54ddfe475f6caae14a22a4890aa7f12030799b
-  specs:
-    rails-jquery-autocomplete (1.0.3)
-      rails (>= 3.2)
-
-GIT
   remote: https://github.com/joliss/jquery-ui-rails
   revision: 0b22d46622c6615334cdfcd86d0d3ea22d9841ca
   specs:
@@ -502,7 +495,6 @@ DEPENDENCIES
   omniauth-rails_csrf_protection
   parallel
   rails (= 5.2.2.1)
-  rails-jquery-autocomplete!
   rest-client
   ruby-debug-ide
   ruby-prof
