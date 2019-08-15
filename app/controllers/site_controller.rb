@@ -129,8 +129,7 @@ class SiteController < ApplicationController
 
   end
 
-  # search for one or more genes to view expression information
-  # will redirect to appropriate method as needed
+  # redirect handler to determine which gene expression method to render
   def search_genes
     @terms = parse_search_terms(:genes)
     # grab saved params for loaded cluster, boxpoints mode, annotations, consensus and other view settings
@@ -146,17 +145,12 @@ class SiteController < ApplicationController
 
     # if only one gene was searched for, make an attempt to load it and redirect to correct page
     if @terms.size == 1
-      if FirestoreGene.exists?(study_accession: @study.accession, name: @term.first)
-        redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
-                    alert: "No matches found for: #{@terms.first}." and return
-      else
         redirect_to merge_default_redirect_params(view_gene_expression_path(accession: @study.accession, study_name: @study.url_safe_name, gene: @terms.first,
                                                                             cluster: cluster, annotation: annotation, consensus: consensus,
                                                                             subsample: subsample, plot_type: plot_type,
                                                                             boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering,
                                                                             heatmap_size: heatmap_size, colorscale: colorscale),
                                                   scpbr: params[:scpbr])  and return
-      end
     end
 
     # else, determine which view to load (heatmaps vs. violin/scatter)
@@ -306,6 +300,7 @@ class SiteController < ApplicationController
     @directories = @study.directory_listings.are_synced
     @primary_data = @study.directory_listings.primary_data
     @other_data = @study.directory_listings.non_primary_data
+    @unique_genes = FirestoreGene.unique_genes(@study.accession)
 
     # double check on download availability: first, check if administrator has disabled downloads
     # then check individual statuses to see what to enable/disable
@@ -404,6 +399,10 @@ class SiteController < ApplicationController
 
   # render box and scatter plots for parent clusters or a particular sub cluster
   def view_gene_expression
+    unless FirestoreGene.exists?(study_accession: @study.accession, name: params[:gene])
+      redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
+                  alert: "No matches found for: #{@terms.first}." and return
+    end
     @options = load_cluster_group_options
     @cluster_annotations = load_cluster_group_annotations
     @top_plot_partial = @selected_annotation[:type] == 'group' ? 'expression_plots_view' : 'expression_annotation_plots_view'
