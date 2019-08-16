@@ -26,11 +26,11 @@ if [[ -n $TCELL_AGENT_APP_ID ]] && [[ -n $TCELL_AGENT_API_KEY ]] ; then
     echo "*** COMPLETED ***"
 fi
 echo "*** CREATING CRON ENV FILES ***"
-echo "export PROD_DATABASE_PASSWORD=$PROD_DATABASE_PASSWORD" >| /home/app/.cron_env
-echo "export SENDGRID_USERNAME=$SENDGRID_USERNAME" >> /home/app/.cron_env
-echo "export SENDGRID_PASSWORD=$SENDGRID_PASSWORD" >> /home/app/.cron_env
-echo "export MONGO_LOCALHOST=$MONGO_LOCALHOST" >> /home/app/.cron_env
-echo "export SECRET_KEY_BASE=$SECRET_KEY_BASE" >> /home/app/.cron_env
+echo "export PROD_DATABASE_PASSWORD='$PROD_DATABASE_PASSWORD'" >| /home/app/.cron_env
+echo "export SENDGRID_USERNAME='$SENDGRID_USERNAME'" >> /home/app/.cron_env
+echo "export SENDGRID_PASSWORD='$SENDGRID_PASSWORD'" >> /home/app/.cron_env
+echo "export MONGO_LOCALHOST='$MONGO_LOCALHOST'" >> /home/app/.cron_env
+echo "export SECRET_KEY_BASE='$SECRET_KEY_BASE'" >> /home/app/.cron_env
 if [[ -z $SERVICE_ACCOUNT_KEY ]]; then
 	echo $GOOGLE_CLOUD_KEYFILE_JSON >| /home/app/.google_service_account.json
 	chmod 400 /home/app/.google_service_account.json
