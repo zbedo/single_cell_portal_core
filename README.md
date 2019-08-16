@@ -120,6 +120,11 @@ about service accounts.  To export the credentials:
 	*  Log into your new GCP project
 	*  Click the navigation menu in the top left and select 'IAM & Admin	' > 'Service Accounts'
 	*  On entry 'Compute Engine default service account', click the 'Options' menu (far right) and select 'Create key'
+	*  Or, you can create a new service account entry with the following roles:
+	  * Editor (project level)
+	  * Cloud Datastore Owner
+	  * Storage Object Viewer
+	  * Genomics Service Agent
 	*  Select 'JSON' and export and save the key locally
 	*  Additionally, a 'read-only' service account is now used for streaming GCS assets to the client in some instances, 
 	so create a second service account and set the role to 'Storage Object Viewer' (see READ-ONLY SERVICE ACCOUNT at the 
@@ -131,7 +136,8 @@ about service accounts.  To export the credentials:
 	* Google Cloud APIs
 	* Google Cloud Billing API
 	* Google Cloud Storage JSON API
-	* Google+ API
+	* Google Cloud Firestore API
+	* Google Cloud Genomics API
 
 * **Registering your Service Account as a FireCloud user**: Once you have configured and booted your instance of the portal, 
 you will need to register your service account as a FireCloud user in order to create a billing project and create studies.  
