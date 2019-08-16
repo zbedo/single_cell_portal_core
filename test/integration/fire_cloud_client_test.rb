@@ -290,8 +290,7 @@ class FireCloudClientTest < ActiveSupport::TestCase
   def test_create_configuration_template
     puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
-    workflow_methods = @fire_cloud_client.get_methods(entityType: 'workflow')
-    method = workflow_methods.sample
+    method = @fire_cloud_client.get_method('single-cell-portal', 'split-cluster', 1)
     assert method.present?, 'Did not retrieve a method to create a configuration template from'
 
     # create template
