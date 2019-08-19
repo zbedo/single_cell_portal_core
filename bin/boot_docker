@@ -135,7 +135,9 @@ done
 # rebuild the docker image if necessary
 docker build -t single_cell_docker:$DOCKER_IMAGE_VERSION -f Dockerfile .
 
-if [[ $PASSENGER_APP_ENV = "production" ]]
+echo "### BOOTING PORTAL IN '$PASSENGER_APP_ENV' MODE"
+
+if [[ "$PASSENGER_APP_ENV" = "production" ]]
 then
 	# generate random secret key for secure cookies
 	docker run -d --name "$CONTAINER_NAME" -p 80:80 -p 443:443 -h "$PROD_HOSTNAME" -v "$PROJECT_DIR:/home/app/webapp:rw" \
@@ -145,7 +147,7 @@ then
 	    -e PROD_HOSTNAME="$PROD_HOSTNAME" -e SENDGRID_USERNAME="$SENDGRID_USERNAME" -e SENDGRID_PASSWORD="$SENDGRID_PASSWORD" \
 	    -e OAUTH_CLIENT_ID="$OAUTH_CLIENT_ID" -e OAUTH_CLIENT_SECRET="$OAUTH_CLIENT_SECRET" -e TCELL_AGENT_APP_ID="$TCELL_AGENT_APP_ID" \
 	    -e TCELL_AGENT_API_KEY="$TCELL_AGENT_API_KEY" -e SENTRY_DSN="$SENTRY_DSN" -e GA_TRACKING_ID="$GA_TRACKING_ID" single_cell_docker:$DOCKER_IMAGE_VERSION
-elif [[ $PASSENGER_APP_ENV = "staging" ]]
+elif [[ "$PASSENGER_APP_ENV" = "staging" ]]
 then
 	docker run -d --name "$CONTAINER_NAME" -p 80:80 -p 443:443 --link mongodb:mongodb -h "$PROD_HOSTNAME" -v "$PROJECT_DIR:/home/app/webapp:rw" \
 	    -v "$PROJECT_DIR/log/nginx:/var/log/nginx:rw" -v "$PROJECT_DIR/data:/home/app/webapp/data:rw" \
@@ -158,7 +160,7 @@ then
 	    -e SENDGRID_PASSWORD="$SENDGRID_PASSWORD" -e OAUTH_CLIENT_ID="$OAUTH_CLIENT_ID" -e OAUTH_CLIENT_SECRET="$OAUTH_CLIENT_SECRET" \
 	    -e SENTRY_DSN="$SENTRY_DSN" -e GA_TRACKING_ID="$GA_TRACKING_ID" -e TCELL_AGENT_APP_ID="$TCELL_AGENT_APP_ID" \
 	    -e TCELL_AGENT_API_KEY="$TCELL_AGENT_API_KEY" single_cell_docker:$DOCKER_IMAGE_VERSION
-elif [[ $PASSENGER_APP_ENV = "test" ]]
+elif [[ "$PASSENGER_APP_ENV" = "test" ]]
 then
 	# used only to run specific unit tests
 	if [ "$TEST_FILEPATH" != "" ]
