@@ -22,7 +22,7 @@ elif [[ $PASSENGER_APP_ENV = "development" ]]; then
 fi
 if [[ -n $TCELL_AGENT_APP_ID ]] && [[ -n $TCELL_AGENT_API_KEY ]] ; then
     echo "*** CONFIGURING TCELL WAF ***"
-    sudo -E -u app -Hs /home/app/webapp/bin/configure_tcell.rb
+    # sudo -E -u app -Hs /home/app/webapp/bin/configure_tcell.rb
     echo "*** COMPLETED ***"
 fi
 echo "*** CREATING CRON ENV FILES ***"
