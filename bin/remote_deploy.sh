@@ -80,7 +80,7 @@ function run_command_in_deployment {
 }
 
 # make a HEAD request on URL and return HTTP status code
-function ensure_portal_is_available {
+function get_http_status_code {
     URL="$1"
     echo $(curl -Isk $URL | head -n 1 | awk '{ print $2 }')
 }
