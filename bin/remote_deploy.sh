@@ -66,9 +66,9 @@ function main {
 		    HOMEPAGE_COUNTER=$[$HOMEPAGE_COUNTER + 1]
 		    echo "home page not available on attempt $HOMEPAGE_COUNTER, waiting 15 seconds..."
 		    sleep 15
-		    if [[ $(ensure_portal_is_available $PORTAL_HOMEPAGE) = "200" ]]; then break 2; fi
+		    if [[ $(get_http_status_code $PORTAL_HOMEPAGE) = "200" ]]; then break 2; fi
     done
-    if [[ $(ensure_portal_is_available $PORTAL_HOMEPAGE) != "200" ]] ; then exit_with_error_message "Portal still not available at $PORTAL_HOMEPAGE after 3 minutes, deployment failed" ; fi
+    if [[ $(get_http_status_code $PORTAL_HOMEPAGE) != "200" ]] ; then exit_with_error_message "Portal still not available at $PORTAL_HOMEPAGE after 3 minutes, deployment failed" ; fi
     echo "### Cleaning up ###"
     rm $PORTAL_SECRETS_PATH
     echo "### DEPLOYMENT COMPLETED ###"
