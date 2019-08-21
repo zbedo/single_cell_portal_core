@@ -1,4 +1,4 @@
-CELL	X	Y	Z	Category	Intensity
+NAME	X	Y	Z	Category	Intensity
 TYPE	numeric	numeric	numeric	group	numeric
 CELL_0001	34.472	32.211	60.035	C	0.719
 CELL_0002	15.975	10.043	21.424	B	0.904
