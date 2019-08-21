@@ -20,11 +20,11 @@ then
 elif [[ $PASSENGER_APP_ENV = "development" ]]; then
     sudo -E -u app -H /home/app/webapp/bin/webpack
 fi
-if [[ -n $TCELL_AGENT_APP_ID ]] && [[ -n $TCELL_AGENT_API_KEY ]] ; then
-    echo "*** CONFIGURING TCELL WAF ***"
-    # sudo -E -u app -Hs /home/app/webapp/bin/configure_tcell.rb
-    echo "*** COMPLETED ***"
-fi
+#if [[ -n $TCELL_AGENT_APP_ID ]] && [[ -n $TCELL_AGENT_API_KEY ]] ; then
+#    echo "*** CONFIGURING TCELL WAF ***"
+#    sudo -E -u app -Hs /home/app/webapp/bin/configure_tcell.rb
+#    echo "*** COMPLETED ***"
+#fi
 echo "*** CREATING CRON ENV FILES ***"
 echo "export PROD_DATABASE_PASSWORD='$PROD_DATABASE_PASSWORD'" >| /home/app/.cron_env
 echo "export SENDGRID_USERNAME='$SENDGRID_USERNAME'" >> /home/app/.cron_env
