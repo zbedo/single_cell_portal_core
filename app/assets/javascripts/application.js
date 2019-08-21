@@ -206,21 +206,29 @@ $(document).on('change', '#panel-genes-search input, #panel-genes-search select'
   $('#perform-gene-search').click();
 });
 
-function split( val ) {
-    return val.split( /\s/ );
+// split a string on spaces, used for extractLast()
+function split(val) {
+    return val.split(/\s/);
 }
-function extractLast( term ) {
-    return split( term ).pop();
+
+// extract last term from a string of autocomplete entries
+function extractLast(term) {
+    return split(term).pop();
 }
 
 var keydownIsFromAutocomplete = false;
 
-function intializeAutocomplete(selector, entities) {
+/**
+ * Sets up autocomplete, e.g. for gene search, using a pre-populated list of values.
+ *
+ * @param selector: DOM selector for form element
+ * @param entities: Array of pre-populated values to search
+ **/
+function initializeAutocomplete(selector, entities) {
 
-
-    selector.on( "keydown", function( event ) {
-        if ( event.keyCode === $.ui.keyCode.TAB &&
-            $( this ).autocomplete( "instance" ).menu.active ) {
+    var jqObject = $(selector);
+    jqObject.on("keydown", function(event) {
+        if (event.keyCode === $.ui.keyCode.TAB && $(this).autocomplete("instance").menu.active) {
             // allow user to select terms with TAB key
             event.preventDefault();
         } else if (event.keyCode === $.ui.keyCode.ENTER && keydownIsFromAutocomplete === false) {
@@ -229,35 +237,39 @@ function intializeAutocomplete(selector, entities) {
         }
     }).autocomplete(
         {
-            source: function( request, response ) {
+            source: function(request, response) {
                 // delegate back to autocomplete, but extract the last term
-                response( $.ui.autocomplete.filter(
-                    entities, extractLast( request.term )
-                ) );
+                response(
+                    $.ui.autocomplete.filter(entities, extractLast(request.term))
+                );
             },
             minLength: 2,
             focus: function() {
                 // prevent value inserted on focus
                 return false;
             },
-            open: function () {
+            open: function() {
                 // options menu is open, so prevent ENTER from submitting search
                 keydownIsFromAutocomplete = true;
             },
-            select: function( event, ui ) {
-                var terms = split( this.value );
+            close: function() {
+                // if menu is closed, then enable ENTER to submit and fire events
+                keydownIsFromAutocomplete = false;
+            },
+            select: function(event, ui) {
+                var terms = split(this.value);
                 // remove the current input
                 terms.pop();
                 // add the selected item
-                terms.push( ui.item.value );
-                terms.push( "" );
-                this.value = terms.join( " " );
+                terms.push(ui.item.value);
+                terms.push("");
+                this.value = terms.join(" ");
                 // set to false to let autocomplete know that a term has been selected and the next ENTER
                 // keydown will submit search values
                 keydownIsFromAutocomplete = false;
                 return false;
             },
-            response: function( event, ui) {
+            response: function(event, ui) {
                 // show 'No matches found' message
                 if (ui.content.length === 0) {
                     ui.content.push({label: 'No matches in this study', value: ''});
@@ -265,7 +277,7 @@ function intializeAutocomplete(selector, entities) {
                 }
             }
         }
-    );
+    )
 }
 
 // used for calculating size of plotly graphs to maintain square aspect ratio
