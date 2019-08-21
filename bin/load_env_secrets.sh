@@ -75,10 +75,10 @@ fi
 
 if [[ -n $VAULT_SECRET_PATH ]] ; then
   # load raw secrets from vault
-  VALS=`vault read -format=json $VAULT_SECRET_PATH`
+  VALS=$(vault read -format=json $VAULT_SECRET_PATH)
 
   # for each key in the secrets config, export the value
-  for key in `echo $VALS | jq .data | jq --raw-output 'keys[]'`
+  for key in $(echo $VALS | jq .data | jq --raw-output 'keys[]')
   do
     echo "setting value for: $key"
     curr_val=$(echo $VALS | jq .data | jq --raw-output .$key)
@@ -87,8 +87,8 @@ if [[ -n $VAULT_SECRET_PATH ]] ; then
 fi
 # now load service account credentials
 if [[ -n $SERVICE_ACCOUNT_PATH ]] ; then
-  CREDS_VALS=`vault read -format=json $SERVICE_ACCOUNT_PATH`
-  JSON_CONTENTS=`echo $CREDS_VALS | jq --raw-output .data`
+  CREDS_VALS=$(vault read -format=json $SERVICE_ACCOUNT_PATH)
+  JSON_CONTENTS=$(echo $CREDS_VALS | jq --raw-output .data)
   echo "setting value for: GOOGLE_CLOUD_KEYFILE_JSON"
   export GOOGLE_CLOUD_KEYFILE_JSON=$(echo -n $JSON_CONTENTS)
   echo "setting value for: GOOGLE_PRIVATE_KEY"
@@ -104,8 +104,8 @@ fi
 # now load public read-only service account credentials
 if [[ -n $READ_ONLY_SERVICE_ACCOUNT_PATH ]] ; then
   echo "setting value for: READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON"
-  READ_ONLY_CREDS_VALS=`vault read -format=json $READ_ONLY_SERVICE_ACCOUNT_PATH`
-  READ_ONLY_JSON_CONTENTS=`echo $READ_ONLY_CREDS_VALS | jq --raw-output .data`
+  READ_ONLY_CREDS_VALS=$(vault read -format=json $READ_ONLY_SERVICE_ACCOUNT_PATH)
+  READ_ONLY_JSON_CONTENTS=$(echo $READ_ONLY_CREDS_VALS | jq --raw-output .data)
 	echo "*** WRITING READ ONLY SERVICE ACCOUNT CREDENTIALS ***"
 	READONLY_FILEPATH="$CONFIG_DIR/.read_only_service_account.json"
 	echo $READ_ONLY_JSON_CONTENTS >| $READONLY_FILEPATH
@@ -115,8 +115,8 @@ fi
 # now load firestore service account credentials
 if [[ -n $FIRESTORE_CREDENTIALS_PATH ]] ; then
   echo "setting value for: FIRESTORE_KEYFILE_JSON"
-  FIRESTORE_CREDS_VALS=`vault read -format=json $FIRESTORE_CREDENTIALS_PATH`
-  FIRESTORE_JSON_CONTENTS=`echo $FIRESTORE_CREDS_VALS | jq --raw-output .data`
+  FIRESTORE_CREDS_VALS=$(vault read -format=json $FIRESTORE_CREDENTIALS_PATH)
+  FIRESTORE_JSON_CONTENTS=$(echo $FIRESTORE_CREDS_VALS | jq --raw-output .data)
   echo "*** WRITING FIRESTORE SERVICE ACCOUNT CREDENTIALS ***"
 	FIRESTORE_FILEPATH="$CONFIG_DIR/.firestore_service_account.json"
 	echo $FIRESTORE_JSON_CONTENTS >| $FIRESTORE_FILEPATH
