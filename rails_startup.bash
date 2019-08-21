@@ -39,11 +39,20 @@ if [[ -z $SERVICE_ACCOUNT_KEY ]]; then
 else
 	echo "export SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY" >> /home/app/.cron_env
 fi
-if [[ -n $READ_ONLY_SERVICE_ACCOUNT_KEY ]]; then
+
+if [[ -n "$READ_ONLY_SERVICE_ACCOUNT_KEY" ]]; then
 	echo "export READ_ONLY_SERVICE_ACCOUNT_KEY=$READ_ONLY_SERVICE_ACCOUNT_KEY" >> /home/app/.cron_env
 else
 	echo "*** NO READONLY SERVICE ACCOUNT DETECTED -- SOME FUNCTIONALITY WILL BE DISABLED ***"
 fi
+
+if [[ -n "$FIRESTORE_CREDENTIALS" ]]; then
+	echo "export FIRESTORE_CREDENTIALS=$FIRESTORE_CREDENTIALS" >> /home/app/.cron_env
+else
+	echo "######### NO FIRESTORE SERVICE ACCOUNT LOADED; EXITING #########"
+	exit 1
+fi
+
 chmod 400 /home/app/.cron_env
 chown app:app /home/app/.cron_env
 echo "*** COMPLETED ***"

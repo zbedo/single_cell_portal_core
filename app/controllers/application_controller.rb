@@ -21,6 +21,13 @@ class ApplicationController < ActionController::Base
 
   rescue_from ActionController::InvalidAuthenticityToken, with: :invalid_csrf
 
+  @@firestore_client = Google::Cloud::Firestore.new(credentials: ENV['FIRESTORE_CREDENTIALS'],
+                                                    project_id: ENV['FIRESTORE_PROJECT'])
+
+  def self.firestore_client
+    @@firestore_client
+  end
+
   # set current_user for use outside of controllers
   # from https://stackoverflow.com/questions/2513383/access-current-user-in-model
   around_action :set_current_user
@@ -74,8 +81,9 @@ class ApplicationController < ActionController::Base
   # load default study options for updating
   def set_study_default_options
     @default_cluster = @study.default_cluster
+    annotations = FirestoreCellMetadatum.by_study(@study.accession)
     @default_cluster_annotations = {
-        'Study Wide' => @study.cell_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
+        'Study Wide' => annotations.map(&:annotation_select_option)
     }
     unless @default_cluster.nil?
       @default_cluster_annotations['Cluster-based'] = @default_cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]}

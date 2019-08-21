@@ -747,15 +747,15 @@ class Study
   ##
 
   def has_expression_data?
-    self.genes.any?
+    FirestoreGene.study_has_any?(self.accession)
   end
 
   def has_cluster_data?
-    self.cluster_groups.any?
+    FirestoreCluster.study_has_any?(self.accession)
   end
 
   def has_cell_metadata?
-    self.cell_metadata.any?
+    FirestoreCellMetadatum.study_has_any?(self.accession)
   end
 
   def has_gene_lists?
@@ -819,9 +819,10 @@ class Study
   # helper to return default cluster to load, will fall back to first cluster if no pf has been set
   # or default cluster cannot be loaded
   def default_cluster
-    default = self.cluster_groups.first
+    clusters = FirestoreCluster.by_study(self.accession)
+    default = clusters.first
     unless self.default_options[:cluster].nil?
-      new_default = self.cluster_groups.by_name(self.default_options[:cluster])
+      new_default = clusters.detect {|cluster| cluster.name == self.default_options[:cluster]}
       unless new_default.nil?
         default = new_default
       end
@@ -834,14 +835,14 @@ class Study
   def default_annotation
     default_cluster = self.default_cluster
     default_annot = self.default_options[:annotation]
+    cell_metadata = FirestoreCellMetadatum.by_study(self.accession)
     # in case default has not been set
     if default_annot.nil?
       if !default_cluster.nil? && default_cluster.cell_annotations.any?
         annot = default_cluster.cell_annotations.first
         default_annot = "#{annot[:name]}--#{annot[:type]}--cluster"
-      elsif self.cell_metadata.any?
-        metadatum = self.cell_metadata.first
-        default_annot = "#{metadatum.name}--#{metadatum.annotation_type}--study"
+      elsif cell_metadata.any?
+        default_annot = cell_metadata.first.annotation_select_value
       else
         # annotation won't be set yet if a user is parsing metadata without clusters, or vice versa
         default_annot = nil
@@ -1021,13 +1022,19 @@ class Study
   # dropdowns for selecting annotations.  can be scoped to one specific cluster, or return all with 'Cluster: ' prepended on the name
   def formatted_annotation_select(cluster: nil, annotation_type: nil)
     options = {}
-    metadata = annotation_type.nil? ? self.cell_metadata : self.cell_metadata.where(annotation_type: annotation_type)
-    options['Study Wide'] = metadata.map(&:annotation_select_option)
+    metadata = FirestoreCellMetadatum.by_study(self.accession)
+    options['Study Wide'] = []
+    metadata.each do |meta|
+      options['Study Wide'] << meta.annotation_select_value
+    end
     if cluster.present?
-      options['Cluster-Based'] = cluster.cell_annotation_select_option(annotation_type)
+      annotations = annotation_type.nil? ? cluster.cell_annotations : cluster.cell_annotations.select {|annot| annot[:type] == annotation_type}
+      options['Cluster-Based'] = annotations.map {|annot| "#{annot[:name]}--#{annot[:type]}--cluster"}
     else
-      self.cluster_groups.each do |cluster_group|
-        options[cluster_group.name] = cluster_group.cell_annotation_select_option(annotation_type, true) # prepend name onto option value
+      clusters = FirestoreCluster.by_study(self.accession)
+      clusters.each do |cluster_group|
+        annotations = annotation_type.nil? ? cluster_group.cell_annotations : cluster_group.cell_annotations.select {|annot| annot[:type] == annotation_type}
+        options[cluster_group.name] = annotations.map {|annot| "#{cluster_group.name}--#{annot[:name]}--#{annot[:type]}--cluster"} # prepend name onto option value
       end
     end
     options
