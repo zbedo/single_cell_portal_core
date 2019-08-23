@@ -13,11 +13,11 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   # Service account JSON credentials
   SERVICE_ACCOUNT_KEY = !ENV['SERVICE_ACCOUNT_KEY'].blank? ? File.absolute_path(ENV['SERVICE_ACCOUNT_KEY']) : ''
   # Google authentication scopes necessary for running pipelines
-  GOOGLE_SCOPES = %w(https://www.googleapis.com/auth/datastore https://www.googleapis.com/auth/devstorage.read_only)
+  GOOGLE_SCOPES = %w(https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/genomics https://www.googleapis.com/auth/datastore https://www.googleapis.com/auth/devstorage.read_only)
   # GCP Compute project to run pipelines in
   COMPUTE_PROJECT = ENV['GOOGLE_CLOUD_PROJECT'].blank? ? '' : ENV['GOOGLE_CLOUD_PROJECT']
   # Docker image in GCP project to pull for running ingest jobs
-  INGEST_DOCKER_IMAGE = "gcr.io/#{COMPUTE_PROJECT}/ingest-pipeline:0.2.0_3da44bf"
+  INGEST_DOCKER_IMAGE = "gcr.io/broad-singlecellportal-staging/ingest-pipeline:0.2.0_3da44bf"
   # List of scp-ingest-pipeline actions and their allowed file types
   FILE_TYPES_BY_ACTION = {
       ingest_expression: ['Expression Matrix', 'MM Coordinate Matrix'],
@@ -52,6 +52,14 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
     self.service = genomics_service
   end
 
+  # Return the service account email
+  #
+  # * *return*
+  #   - (String) Service Account email
+  def issuer
+    self.service.authorization.issuer
+  end
+
   # Runs a pipeline.  Will call sub-methods to instantiate required objects to pass to
   # Google::Apis::GenomicsV2alpha1::GenomicsService.run_pipeline
   #
@@ -71,9 +79,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   def run_pipeline(study_file: , user:, action:)
     study = study_file.study
     accession = study.accession
-    bucket = Study.firecloud_client.get_workspace_bucket(study.bucket_id)
-    region = bucket.location
-    resources = self.create_resources_object(regions: [region])
+    resources = self.create_resources_object(regions: ['us-east4'])
     command_line = self.get_command_line(study_file: study_file, action: action)
     labels = {
         study_accession: accession,
@@ -82,9 +88,10 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
         action: action,
         docker_image: INGEST_DOCKER_IMAGE
     }
-    action = self.create_actions_object(commands: [command_line], labels: labels)
+    action = self.create_actions_object(commands: [command_line])
     pipeline = self.create_pipeline_object(actions: [action], environment: {}, resources: resources)
-    self.service.run_pipeline(pipeline, quota_user: user.id.to_s)
+    pipeline_request = self.create_run_pipeline_request_object(pipeline: pipeline, labels: labels)
+    self.service.run_pipeline(pipeline_request, quota_user: user.id.to_s)
   end
 
   # Get an existing pipeline run
@@ -99,6 +106,21 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   def get_pipeline(name: , fields: nil, user: nil)
     quota_user = user.present? ? user.id.to_s : nil
     self.service.get_project_operation(name, fields: fields, quota_user: quota_user)
+  end
+
+  # Create a run pipeline request object to send to service.run_pipeline
+  #
+  # * *params*
+  #   - +pipeline+ (Google::Apis::GenomicsV2alpha1::Pipeline) => Pipeline object from create_pipeline_object
+  #   - +labels+ (Hash) => Hash of key/value pairs to set as the pipeline labels
+  #
+  # * *return*
+  #   - Google::Apis::GenomicsV2alpha1::RunPipelineRequest
+  def create_run_pipeline_request_object(pipeline:, labels: {})
+    Google::Apis::GenomicsV2alpha1::RunPipelineRequest.new(
+        pipeline: pipeline,
+        labels: labels
+    )
   end
 
   # Create a pipeline object detailing all required information in order to run an ingest job
@@ -155,7 +177,24 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   def create_resources_object(regions:)
     Google::Apis::GenomicsV2alpha1::Resources.new(
          project_id: COMPUTE_PROJECT,
-         regions: regions
+         regions: regions,
+         virtual_machine: self.create_virtual_machine_object
+    )
+  end
+
+  # Instantiate a VM object to specify in resources.  Assigns the portal service account to the VM
+  # to manage permissions
+  #
+  # * *params*
+  #   - +machine_type+ (String) => GCP VM machine type (defaults to 'n1-standard-1')
+  #   - +preemptible+ (Boolean) => Indication of whether VM can be preempted ()
+  # * *return*
+  #   - Google::Apis::GenomicsV2alpha1::VirtualMachine
+  def create_virtual_machine_object(machine_type: 'n1-standard-1', preemptible: true)
+    Google::Apis::GenomicsV2alpha1::VirtualMachine.new(
+        machine_type: machine_type,
+        preemptible: preemptible,
+        service_account: Google::Apis::GenomicsV2alpha1::ServiceAccount.new(email: self.issuer, scopes: GOOGLE_SCOPES)
     )
   end
 
@@ -174,7 +213,6 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
     validate_action_by_file(action, study_file)
     command_line = "python ingest_pipeline.py #{action}"
     study = study_file.study
-    accession = study.accession
     case action.to_s
     when 'ingest_expression'
       if study_file.file_type == 'Expression Matrix'
@@ -195,7 +233,6 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
       command_line += " --cluster-file #{study_file.gs_url} --cell-metadata-file #{metadata_file.gs_url} --subsample"
     end
 
-    command_line += " --study-accession #{accession} --file-id #{study_file.id}"
     command_line
   end
 
