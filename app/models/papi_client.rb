@@ -13,7 +13,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   # Service account JSON credentials
   SERVICE_ACCOUNT_KEY = !ENV['SERVICE_ACCOUNT_KEY'].blank? ? File.absolute_path(ENV['SERVICE_ACCOUNT_KEY']) : ''
   # Google authentication scopes necessary for running pipelines
-  GOOGLE_SCOPES = %w(https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/genomics https://www.googleapis.com/auth/datastore https://www.googleapis.com/auth/devstorage.read_only)
+  GOOGLE_SCOPES = %w(https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/datastore)
   # GCP Compute project to run pipelines in
   COMPUTE_PROJECT = ENV['GOOGLE_CLOUD_PROJECT'].blank? ? '' : ENV['GOOGLE_CLOUD_PROJECT']
   # Docker image in GCP project to pull for running ingest jobs
@@ -79,7 +79,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   def run_pipeline(study_file: , user:, action:)
     study = study_file.study
     accession = study.accession
-    resources = self.create_resources_object(regions: ['us-east4'])
+    resources = self.create_resources_object(regions: ['us-east1'])
     command_line = self.get_command_line(study_file: study_file, action: action)
     labels = {
         study_accession: accession,
@@ -88,8 +88,11 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
         action: action,
         docker_image: INGEST_DOCKER_IMAGE
     }
-    action = self.create_actions_object(commands: [command_line])
-    pipeline = self.create_pipeline_object(actions: [action], environment: {}, resources: resources)
+    action = self.create_actions_object(commands: command_line)
+    environment = {
+        GOOGLE_PROJECT_ID: COMPUTE_PROJECT
+    }
+    pipeline = self.create_pipeline_object(actions: [action], environment: environment, resources: resources)
     pipeline_request = self.create_run_pipeline_request_object(pipeline: pipeline, labels: labels)
     self.service.run_pipeline(pipeline_request, quota_user: user.id.to_s)
   end
@@ -187,10 +190,10 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   #
   # * *params*
   #   - +machine_type+ (String) => GCP VM machine type (defaults to 'n1-standard-1')
-  #   - +preemptible+ (Boolean) => Indication of whether VM can be preempted ()
+  #   - +preemptible+ (Boolean) => Indication of whether VM can be preempted (defaults to false)
   # * *return*
   #   - Google::Apis::GenomicsV2alpha1::VirtualMachine
-  def create_virtual_machine_object(machine_type: 'n1-standard-1', preemptible: true)
+  def create_virtual_machine_object(machine_type: 'n1-standard-1', preemptible: false)
     Google::Apis::GenomicsV2alpha1::VirtualMachine.new(
         machine_type: machine_type,
         preemptible: preemptible,
@@ -233,7 +236,8 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
       command_line += " --cluster-file #{study_file.gs_url} --cell-metadata-file #{metadata_file.gs_url} --subsample"
     end
 
-    command_line
+    # return an array of tokens (Docker expects exec form, which runs without a shell, so cannot be a single command)
+    command_line.split
   end
 
   private
