@@ -70,12 +70,12 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   #     (e.g. 'ingest_cell_metadata', 'subsample')
   #
   # * *return*
-  #   - Google::Apis::GenomicsV2alpha1::Operation
+  #   - (Google::Apis::GenomicsV2alpha1::Operation)
   #
   # * *raises*
-  #   - Google::Apis::ServerError => An error occurred on the server and the request can be retried
-  #   - Google::Apis::ClientError =>  The request is invalid and should not be retried without modification
-  #   - Google::Apis::AuthorizationError => Authorization is required
+  #   - (Google::Apis::ServerError) => An error occurred on the server and the request can be retried
+  #   - (Google::Apis::ClientError) =>  The request is invalid and should not be retried without modification
+  #   - (Google::Apis::AuthorizationError) => Authorization is required
   def run_pipeline(study_file: , user:, action:)
     study = study_file.study
     accession = study.accession
@@ -105,7 +105,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   #   - +user+ (User) => User that originally submitted pipeline
   #
   # * *return*
-  #   - Google::Apis::GenomicsV2alpha1::Operation
+  #   - (Google::Apis::GenomicsV2alpha1::Operation)
   def get_pipeline(name: , fields: nil, user: nil)
     quota_user = user.present? ? user.id.to_s : nil
     self.service.get_project_operation(name, fields: fields, quota_user: quota_user)
@@ -118,7 +118,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   #   - +labels+ (Hash) => Hash of key/value pairs to set as the pipeline labels
   #
   # * *return*
-  #   - Google::Apis::GenomicsV2alpha1::RunPipelineRequest
+  #   - (Google::Apis::GenomicsV2alpha1::RunPipelineRequest)
   def create_run_pipeline_request_object(pipeline:, labels: {})
     Google::Apis::GenomicsV2alpha1::RunPipelineRequest.new(
         pipeline: pipeline,
@@ -135,7 +135,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   #   - +timeout+ (String) => Maximum runtime of pipeline (defaults to 1 week)
   #
   # * *return*
-  #   - Google::Apis::GenomicsV2alpha1::Pipeline
+  #   - (Google::Apis::GenomicsV2alpha1::Pipeline)
   def create_pipeline_object(actions:, environment:, resources:, timeout: nil)
     Google::Apis::GenomicsV2alpha1::Pipeline.new(
         actions: actions,
@@ -158,7 +158,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   #   - +timeout+: (String) => Maximum runtime of action
   #
   #  * *return*
-  #   - Google::Apis::GenomicsV2alpha1::Action
+  #   - (Google::Apis::GenomicsV2alpha1::Action)
   def create_actions_object(commands: [], environment: {}, flags: [], labels: {}, timeout: nil)
     Google::Apis::GenomicsV2alpha1::Action.new(
         commands: commands,
@@ -176,7 +176,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   #   - regions: (Array<String>) => An array of GCP regions allowed for VM allocation
   #
   # * *return*
-  #   - Google::Apis::GenomicsV2alpha1::Resources
+  #   - (Google::Apis::GenomicsV2alpha1::Resources)
   def create_resources_object(regions:)
     Google::Apis::GenomicsV2alpha1::Resources.new(
          project_id: COMPUTE_PROJECT,
@@ -192,7 +192,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   #   - +machine_type+ (String) => GCP VM machine type (defaults to 'n1-standard-1')
   #   - +preemptible+ (Boolean) => Indication of whether VM can be preempted (defaults to false)
   # * *return*
-  #   - Google::Apis::GenomicsV2alpha1::VirtualMachine
+  #   - (Google::Apis::GenomicsV2alpha1::VirtualMachine)
   def create_virtual_machine_object(machine_type: 'n1-standard-1', preemptible: false)
     Google::Apis::GenomicsV2alpha1::VirtualMachine.new(
         machine_type: machine_type,
@@ -208,10 +208,10 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   #   - +action+ (String/Symbol) => Action to perform on ingest
   #
   # * *return*
-  #   - Command Line (String)
+  #   - (Array) Command Line, in Docker "exec" format
   #
   # * *raises*
-  #   - ArgumentError => The requested StudyFile and action do not correspond with each other, or cannot be run yet
+  #   - (ArgumentError) => The requested StudyFile and action do not correspond with each other, or cannot be run yet
   def get_command_line(study_file:, action:)
     validate_action_by_file(action, study_file)
     command_line = "python ingest_pipeline.py #{action}"
