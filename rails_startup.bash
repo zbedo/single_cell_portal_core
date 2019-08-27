@@ -48,6 +48,7 @@ fi
 
 if [[ -n "$FIRESTORE_CREDENTIALS" ]]; then
 	echo "export FIRESTORE_CREDENTIALS=$FIRESTORE_CREDENTIALS" >> /home/app/.cron_env
+	echo "export FIRESTORE_PROJECT=$FIRESTORE_PROJECT" >> /home/app/.cron_env
 else
 	echo "######### NO FIRESTORE SERVICE ACCOUNT LOADED; EXITING #########"
 	exit 1
