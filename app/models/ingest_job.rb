@@ -77,6 +77,14 @@ class IngestJob
     self.metadata['events'].sort_by! {|event| event['timestamp'] }
   end
 
+  # Get all messages from all events
+  #
+  # * *returns*
+  #   - (Array<String>) => Array of all messages in chronological order
+  def event_messages
+    self.events.map {|event| event['description']}
+  end
+
   # Get the total runtime of parsing from event timestamps
   #
   # * *returns*
@@ -108,7 +116,8 @@ class IngestJob
       DeleteQueueJob.new(self.study_file).delay.perform
       Study.firecloud_client.delete_workspace_file(self.study.bucket_id, self.study_file.bucket_location)
       subject = "Error: #{self.study_file.file_type} file: '#{self.study_file.upload_file_name}' parse has failed"
-      SingleCellMailer.notify_user_parse_fail(self.user.email, subject, self.error.message).deliver_now
+      messages = self.event_messages
+      SingleCellMailer.notify_user_parse_fail(self.user.email, subject, "<p>#{messages.join('<br />')}</p>").deliver_now
     else
       Rails.logger.info "IngestJob poller: #{self.pipeline_name} is not done; queuing check for #{run_at}"
       self.delay(run_at: run_at).poll_for_completion
@@ -134,7 +143,7 @@ class IngestJob
   def set_study_default_options
     case self.study_file.file_type
     when 'Metadata'
-      if self.study.default_annotation.nil?
+      if self.study.default_options[:annotation].nil?
         cell_metadatum = FirestoreCellMetadatum.by_study(self.study.accession).first
         self.study.default_options[:annotation] = cell_metadatum.annotation_select_value
         if cell_metadatum.annotation_type == 'numeric'
@@ -142,7 +151,7 @@ class IngestJob
         end
       end
     when 'Cluster'
-      if self.study.default_cluster.nil?
+      if self.study.default_options[:cluster].nil?
         cluster = FirestoreCluster.by_study_and_name(self.study.accession, self.study_file.name)
         self.study.default_options[:cluster] = cluster.name
         if self.study.default_annotation.nil? && cluster.cell_annotations.any?
@@ -154,6 +163,7 @@ class IngestJob
         end
       end
     end
+    Rails.logger.info "Setting default options in #{self.study.name}: #{self.study.default_options}"
     self.study.save
   end
 end

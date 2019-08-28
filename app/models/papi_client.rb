@@ -40,7 +40,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
     }
 
     if SERVICE_ACCOUNT_KEY.present?
-      credentials.merge!({json_key_io: File.open(service_account)})
+      credentials.merge!({json_key_io: File.open(service_account_credentials)})
     end
 
     authorizer = Google::Auth::ServiceAccountCredentials.make_creds(credentials)
@@ -230,7 +230,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
     when 'ingest_cell_metadata'
       command_line += " --cell-metadata-file #{study_file.gs_url}"
     when 'ingest_cluster'
-      command_line += " --cluster-file #{study_file.gs_url} --ingest-cluster"
+      command_line += " --cluster-file #{study_file.gs_url}"
     when 'ingest_subsample'
       metadata_file = study.metadata_file
       command_line += " --cluster-file #{study_file.gs_url} --cell-metadata-file #{metadata_file.gs_url} --subsample"

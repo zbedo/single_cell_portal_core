@@ -922,13 +922,13 @@ class Study
   def set_cell_count
     cell_count = FirestoreCellMetadatum.all_cells(self.accession).count
     self.update!(cell_count: cell_count)
-    Rails.logger.info "#{Time.zone.now}: Setting cell count in #{self.name} to #{cell_count}"
+    Rails.logger.info "Setting cell count in #{self.name} to #{cell_count}"
   end
 
   # helper method to set the number of unique genes in this study
   def set_gene_count
     gene_count = FirestoreGene.unique_genes(self.accession).count
-    Rails.logger.info "#{Time.zone.now}: setting gene count in #{self.name} to #{gene_count}"
+    Rails.logger.info "Setting gene count in #{self.name} to #{gene_count}"
     self.update!(gene_count: gene_count)
   end
 
