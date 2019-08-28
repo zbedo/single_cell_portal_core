@@ -572,7 +572,9 @@ class StudiesController < ApplicationController
     case @study_file.file_type
     when 'Cluster'
       @study_file.update(parse_status: 'parsing')
-      @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user)
+      @study.send_to_firecloud(@study_file)
+      submission = ApplicationController.papi_client.run_pipeline(study_file: @study_file, user: current_user, action: :ingest_cluster)
+      IngestJob.new(pipeline_name: submission.name, study: @study, study_file: @study_file, user: current_user).poll_for_completion
     when 'Coordinate Labels'
       @study_file.update(parse_status: 'parsing')
       # we need to create the bundle here as it doesn't exist yet
@@ -582,8 +584,11 @@ class StudiesController < ApplicationController
       @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user)
     when 'Expression Matrix'
       @study_file.update(parse_status: 'parsing')
-      @study.delay.initialize_gene_expression_data(@study_file, current_user)
+      @study.send_to_firecloud(@study_file)
+      submission = ApplicationController.papi_client.run_pipeline(study_file: @study_file, user: current_user, action: :ingest_expression)
+      IngestJob.new(pipeline_name: submission.name, study: @study, study_file: @study_file, user: current_user).poll_for_completion
     when 'MM Coordinate Matrix'
+      @study.send_to_firecloud(@study_file)
       bundle = @study_file.study_file_bundle
       barcodes = @study_file.bundled_files.detect {|f| f.file_type == '10X Barcodes File'}
       genes = @study_file.bundled_files.detect {|f| f.file_type == '10X Genes File'}
@@ -591,13 +596,13 @@ class StudiesController < ApplicationController
         @study_file.update(parse_status: 'parsing')
         genes.update(parse_status: 'parsing')
         barcodes.update(parse_status: 'parsing')
-        ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, @study_file, genes, barcodes)
+        submission = ApplicationController.papi_client.run_pipeline(study_file: @study_file, user: current_user, action: :ingest_expression)
+        IngestJob.new(pipeline_name: submission.name, study: @study, study_file: @study_file, user: current_user).poll_for_completion
       else
         logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
-        # send file directly to firecloud, will pull down to parse later as needed
-        @study.delay.send_to_firecloud(@study_file)
       end
     when '10X Genes File'
+      @study.send_to_firecloud(@study_file)
       bundle = @study_file.study_file_bundle
       matrix = bundle.parent
       barcodes = bundle.bundled_files.detect {|f| f.file_type == '10X Barcodes File' }
@@ -605,14 +610,14 @@ class StudiesController < ApplicationController
         @study_file.update(parse_status: 'parsing')
         matrix.update(parse_status: 'parsing')
         barcodes.update(parse_status: 'parsing')
-        ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, @study_file, barcodes)
+        submission = ApplicationController.papi_client.run_pipeline(study_file: matrix, user: current_user, action: :ingest_expression)
+        IngestJob.new(pipeline_name: submission.name, study: @study, study_file: matrix, user: current_user).poll_for_completion
       else
         # we can only get here if we have a matrix and no barcodes, which means the barcodes form is already rendered
         logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
-        # send file directly to firecloud, will pull down to parse later as needed
-        @study.delay.send_to_firecloud(@study_file)
       end
     when '10X Barcodes File'
+      @study.send_to_firecloud(@study_file)
       bundle = @study_file.study_file_bundle
       matrix = bundle.parent
       genes = bundle.bundled_files.detect {|f| f.file_type == '10X Genes File' }
@@ -620,19 +625,20 @@ class StudiesController < ApplicationController
         @study_file.update(parse_status: 'parsing')
         genes.update(parse_status: 'parsing')
         matrix.update(parse_status: 'parsing')
-        ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, genes, @study_file)
+        submission = ApplicationController.papi_client.run_pipeline(study_file: matrix, user: current_user, action: :ingest_expression)
+        IngestJob.new(pipeline_name: submission.name, study: @study, study_file: matrix, user: current_user).poll_for_completion
       else
         # we can only get here if we have a matrix and no genes, which means the genes form is already rendered
         logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
-        # send file directly to firecloud, will pull down to parse later as needed
-        @study.delay.send_to_firecloud(@study_file)
       end
     when 'Gene List'
       @study_file.update(parse_status: 'parsing')
       @study.delay.initialize_precomputed_scores(@study_file, current_user)
     when 'Metadata'
       @study_file.update(parse_status: 'parsing')
-      @study.delay.initialize_cell_metadata(@study_file, current_user)
+      @study.send_to_firecloud(@study_file)
+      submission = ApplicationController.papi_client.run_pipeline(study_file: @study_file, user: current_user, action: :ingest_cell_metadata)
+      IngestJob.new(pipeline_name: submission.name, study: @study, study_file: @study_file, user: current_user).poll_for_completion
     end
     changes = ["Study file added: #{@study_file.upload_file_name}"]
     if @study.study_shares.any?
@@ -819,53 +825,62 @@ class StudiesController < ApplicationController
         logger.info "#{Time.zone.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
         @message += " You will receive an email at #{current_user.email} when the parse has completed."
         case @study_file.file_type
-          when 'Cluster'
-            @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false, reparse: true})
-          when 'Coordinate Labels'
-            @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user, {local: false, reparse: true})
-          when 'Expression Matrix'
-            @study.delay.initialize_gene_expression_data(@study_file, current_user, {local: false, reparse: true})
-          when 'MM Coordinate Matrix'
-            barcodes = @study_file.bundled_files.detect {|f| f.file_type == '10X Barcodes File'}
-            genes = @study_file.bundled_files.detect {|f| f.file_type == '10X Genes File'}
-            if barcodes.present? && genes.present?
-              @study_file.update(parse_status: 'parsing')
-              genes.update(parse_status: 'parsing')
-              barcodes.update(parse_status: 'parsing')
-              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, @study_file, genes, barcodes, {sync: true, reparse: true})
-            else
-              logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
-            end
-          when '10X Genes File'
-            matrix_id = @study_file.options[:matrix_id]
-            matrix = @study_file.bundle_parent
-            barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => matrix_id)
-            if barcodes.present? && matrix.present?
-              @study_file.update(parse_status: 'parsing')
-              matrix.update(parse_status: 'parsing')
-              barcodes.update(parse_status: 'parsing')
-              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, @study_file, barcodes, {sync: true, reparse: true})
-            else
-              # we can only get here if we have a matrix and no barcodes, which means the barcodes form is already rendered
-              logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
-            end
-          when '10X Barcodes File'
-            matrix_id = @study_file.options[:matrix_id]
-            matrix = @study_file.bundle_parent
-            genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => matrix_id)
-            if genes.present? && matrix.present?
-              @study_file.update(parse_status: 'parsing')
-              genes.update(parse_status: 'parsing')
-              matrix.update(parse_status: 'parsing')
-              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, genes, @study_file, {sync: true, reparse: true})
-            else
-              # we can only get here if we have a matrix and no genes, which means the genes form is already rendered
-              logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
-            end
-          when 'Gene List'
-            @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false, reparse: true})
-          when 'Metadata'
-            @study.delay.initialize_cell_metadata(@study_file, current_user, {local: false, reparse: true})
+        when 'Cluster'
+          FirestoreCluster.delete_by_study_and_file(@study.accession, @study_file.id.to_s)
+          submission = ApplicationController.papi_client.run_pipeline(study_file: @study_file, user: current_user, action: :ingest_cluster)
+          IngestJob.new(pipeline_name: submission.name, study: @study, study_file: @study_file, user: current_user).poll_for_completion          when 'Coordinate Labels'
+        when 'Expression Matrix'
+          FirestoreGene.delete_by_study_and_file(@study.accession, @study_file.id.to_s)
+          submission = ApplicationController.papi_client.run_pipeline(study_file: @study_file, user: current_user, action: :ingest_expression)
+          IngestJob.new(pipeline_name: submission.name, study: @study, study_file: @study_file, user: current_user).poll_for_completion
+        when 'MM Coordinate Matrix'
+          barcodes = @study_file.bundled_files.detect {|f| f.file_type == '10X Barcodes File'}
+          genes = @study_file.bundled_files.detect {|f| f.file_type == '10X Genes File'}
+          if barcodes.present? && genes.present?
+            FirestoreGene.delete_by_study_and_file(@study.accession, @study_file.id.to_s)
+            @study_file.update(parse_status: 'parsing')
+            genes.update(parse_status: 'parsing')
+            barcodes.update(parse_status: 'parsing')
+            submission = ApplicationController.papi_client.run_pipeline(study_file: @study_file, user: current_user, action: :ingest_expression)
+            IngestJob.new(pipeline_name: submission.name, study: @study, study_file: @study_file, user: current_user).poll_for_completion
+          else
+            logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
+          end
+        when '10X Genes File'
+          matrix_id = @study_file.options[:matrix_id]
+          matrix = @study_file.bundle_parent
+          barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => matrix_id)
+          if barcodes.present? && matrix.present?
+            FirestoreGene.delete_by_study_and_file(@study.accession, matrix.id.to_s)
+            @study_file.update(parse_status: 'parsing')
+            matrix.update(parse_status: 'parsing')
+            barcodes.update(parse_status: 'parsing')
+            submission = ApplicationController.papi_client.run_pipeline(study_file: matrix, user: current_user, action: :ingest_expression)
+            IngestJob.new(pipeline_name: submission.name, study: @study, study_file: matrix, user: current_user).poll_for_completion
+          else
+            # we can only get here if we have a matrix and no barcodes, which means the barcodes form is already rendered
+            logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
+          end
+        when '10X Barcodes File'
+          matrix_id = @study_file.options[:matrix_id]
+          matrix = @study_file.bundle_parent
+          genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => matrix_id)
+          if genes.present? && matrix.present?
+            FirestoreGene.delete_by_study_and_file(@study.accession, matrix.id.to_s)
+            @study_file.update(parse_status: 'parsing')
+            genes.update(parse_status: 'parsing')
+            matrix.update(parse_status: 'parsing')
+            submission = ApplicationController.papi_client.run_pipeline(study_file: matrix, user: current_user, action: :ingest_expression)
+            IngestJob.new(pipeline_name: submission.name, study: @study, study_file: matrix, user: current_user).poll_for_completion
+          else
+            # we can only get here if we have a matrix and no genes, which means the genes form is already rendered
+            logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
+          end
+        when 'Gene List'
+          @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false, reparse: true})
+        when 'Metadata'
+          submission = ApplicationController.papi_client.run_pipeline(study_file: @study_file, user: current_user, action: :ingest_cell_metadata)
+          IngestJob.new(pipeline_name: submission.name, study: @study, study_file: @study_file, user: current_user).poll_for_completion
         end
       end
 
@@ -986,11 +1001,13 @@ class StudiesController < ApplicationController
         # parse file as appropriate type
         case @study_file.file_type
         when 'Cluster'
-          @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false})
+          submission = ApplicationController.papi_client.run_pipeline(study_file: @study_file, user: current_user, action: :ingest_cluster)
+          IngestJob.new(pipeline_name: submission.name, study: @study, study_file: @study_file, user: current_user).poll_for_completion          when 'Coordinate Labels'
         when 'Coordinate Labels'
           @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user, {local: false})
         when 'Expression Matrix'
-          @study.delay.initialize_gene_expression_data(@study_file, current_user, {local: false})
+          submission = ApplicationController.papi_client.run_pipeline(study_file: @study_file, user: current_user, action: :ingest_expression)
+          IngestJob.new(pipeline_name: submission.name, study: @study, study_file: @study_file, user: current_user).poll_for_completion
         when 'MM Coordinate Matrix'
           # we have to cast the study_file ID to a string, otherwise it is a BSON::ObjectID and will not match
           barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => @study_file.id.to_s)
@@ -1001,7 +1018,8 @@ class StudiesController < ApplicationController
             @study_file.update(parse_status: 'parsing')
             genes.update(parse_status: 'parsing')
             barcodes.update(parse_status: 'parsing')
-            ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, @study_file, genes, barcodes, {sync: true})
+            submission = ApplicationController.papi_client.run_pipeline(study_file: @study_file, user: current_user, action: :ingest_expression)
+            IngestJob.new(pipeline_name: submission.name, study: @study, study_file: @study_file, user: current_user).poll_for_completion
           end
         when '10X Genes File'
           matrix_id = @study_file.options[:matrix_id]
@@ -1014,7 +1032,8 @@ class StudiesController < ApplicationController
             @study_file.update(parse_status: 'parsing')
             matrix.update(parse_status: 'parsing')
             barcodes.update(parse_status: 'parsing')
-            ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, @study_file, barcodes, {sync: true})
+            submission = ApplicationController.papi_client.run_pipeline(study_file: matrix, user: current_user, action: :ingest_expression)
+            IngestJob.new(pipeline_name: submission.name, study: @study, study_file: matrix, user: current_user).poll_for_completion
           end
         when '10X Barcodes File'
           matrix_id = @study_file.options[:matrix_id]
@@ -1027,12 +1046,14 @@ class StudiesController < ApplicationController
             @study_file.update(parse_status: 'parsing')
             genes.update(parse_status: 'parsing')
             matrix.update(parse_status: 'parsing')
-            ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, genes, @study_file, {sync: true})
+            submission = ApplicationController.papi_client.run_pipeline(study_file: matrix, user: current_user, action: :ingest_expression)
+            IngestJob.new(pipeline_name: submission.name, study: @study, study_file: matrix, user: current_user).poll_for_completion
           end
         when 'Gene List'
           @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false})
         when 'Metadata'
-          @study.delay.initialize_cell_metadata(@study_file, current_user, {local: false})
+          submission = ApplicationController.papi_client.run_pipeline(study_file: @study_file, user: current_user, action: :ingest_cell_metadata)
+          IngestJob.new(pipeline_name: submission.name, study: @study, study_file: @study_file, user: current_user).poll_for_completion
         when 'Analysis Output'
           case @study_file.options[:analysis_name]
           when 'infercnv'
@@ -1094,11 +1115,15 @@ class StudiesController < ApplicationController
         @message += " You will receive an email at #{current_user.email} when the parse has completed."
         case @study_file.file_type
         when 'Cluster'
-          @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false, reparse: true})
+          FirestoreCluster.delete_by_study_and_file(@study.accession, @study_file.id.to_s)
+          submission = ApplicationController.papi_client.run_pipeline(study_file: @study_file, user: current_user, action: :ingest_cluster)
+          IngestJob.new(pipeline_name: submission.name, study: @study, study_file: @study_file, user: current_user).poll_for_completion          when 'Coordinate Labels'
         when 'Coordinate Labels'
           @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user, {local: false, reparse: true})
         when 'Expression Matrix'
-          @study.delay.initialize_gene_expression_data(@study_file, current_user, {local: false, reparse: true})
+          FirestoreGene.delete_by_study_and_file(@study.accession, @study_file.id.to_s)
+          submission = ApplicationController.papi_client.run_pipeline(study_file: @study_file, user: current_user, action: :ingest_expression)
+          IngestJob.new(pipeline_name: submission.name, study: @study, study_file: @study_file, user: current_user).poll_for_completion
         when 'MM Coordinate Matrix'
           # we have to cast the study_file ID to a string, otherwise it is a BSON::ObjectID and will not match
           barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => @study_file.id.to_s)
@@ -1109,7 +1134,8 @@ class StudiesController < ApplicationController
             @study_file.update(parse_status: 'parsing')
             genes.update(parse_status: 'parsing')
             barcodes.update(parse_status: 'parsing')
-            ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, @study_file, genes, barcodes, {reparse: true, sync: true})
+            submission = ApplicationController.papi_client.run_pipeline(study_file: @study_file, user: current_user, action: :ingest_expression)
+            IngestJob.new(pipeline_name: submission.name, study: @study, study_file: @study_file, user: current_user).poll_for_completion
           end
         when '10X Genes File'
           matrix_id = @study_file.options[:matrix_id]
@@ -1121,7 +1147,8 @@ class StudiesController < ApplicationController
             @study_file.update(parse_status: 'parsing')
             matrix.update(parse_status: 'parsing')
             barcodes.update(parse_status: 'parsing')
-            ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, @study_file, barcodes, {reparse: true, sync: true})
+            submission = ApplicationController.papi_client.run_pipeline(study_file: matrix, user: current_user, action: :ingest_expression)
+            IngestJob.new(pipeline_name: submission.name, study: @study, study_file: matrix, user: current_user).poll_for_completion
           end
         when '10X Barcodes File'
           matrix_id = @study_file.options[:matrix_id]
@@ -1134,12 +1161,14 @@ class StudiesController < ApplicationController
             @study_file.update(parse_status: 'parsing')
             genes.update(parse_status: 'parsing')
             matrix.update(parse_status: 'parsing')
-            ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, genes, @study_file, {reparse: true, sync: true})
+            submission = ApplicationController.papi_client.run_pipeline(study_file: matrix, user: current_user, action: :ingest_expression)
+            IngestJob.new(pipeline_name: submission.name, study: @study, study_file: matrix, user: current_user).poll_for_completion
           end
         when 'Gene List'
           @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false, reparse: true})
         when 'Metadata'
-          @study.delay.initialize_cell_metadata(@study_file, current_user, {local: false, reparse: true})
+          submission = ApplicationController.papi_client.run_pipeline(study_file: @study_file, user: current_user, action: :ingest_cell_metadata)
+          IngestJob.new(pipeline_name: submission.name, study: @study, study_file: @study_file, user: current_user).poll_for_completion
         end
       elsif @study_file.file_type == 'BAM'
         # we need to check if we have a study_file_bundle here

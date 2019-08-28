@@ -13,9 +13,18 @@ class FirestoreCellMetadatum
     :data
   end
 
+  def self.all_cells(accession)
+    doc_ref = self.by_study(accession).first
+    doc_ref.cells
+  end
+
   def self.by_study_and_name_and_type(accession, name, annotation_type)
     doc_ref = self.query_by(study_accession: accession, name: name, annotation_type: annotation_type)
     doc_ref.any? ? self.new(doc_ref.first) : nil
+  end
+
+  def cells
+    self.sub_documents_as_hash(:cell_names, :values).keys
   end
 
   def cell_annotations

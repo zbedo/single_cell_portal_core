@@ -21,31 +21,31 @@ class DeleteQueueJob < Struct.new(:object)
       # now remove all child objects first to free them up to be re-used.
       case file_type
       when 'Cluster'
-        # first check if default cluster needs to be cleared, unless parsing has failed and cleanup didn't happen
-        unless object.cluster_groups.empty? || object.parse_status == 'unparsed'
-          if study.default_cluster.name == object.cluster_groups.first.name
-            study.default_options[:cluster] = nil
-            study.default_options[:annotation] = nil
-            study.save
-          end
-
-          cluster_group_id = ClusterGroup.find_by(study_file_id: object.id, study_id: study.id).id
-          delete_parsed_data(object.id, study.id, ClusterGroup)
-          delete_parsed_data(object.id, study.id, DataArray)
-          user_annotations = UserAnnotation.where(study_id: study.id, cluster_group_id: cluster_group_id )
-          user_annotations.each do |annot|
-            annot.user_data_arrays.delete_all
-            annot.user_annotation_shares.delete_all
-          end
-          user_annotations.delete_all
+        if study.default_cluster.present? &&
+            study.default_cluster.name == object.name
+          study.default_options[:cluster] = nil
+          study.default_options[:annotation] = nil
+          study.save
         end
+        delete_parsed_firestore_documents(FirestoreCluster, study.accession, object.id.to_s)
+        # cluster_group_id = ClusterGroup.find_by(study_file_id: object.id, study_id: study.id).id
+        # delete_parsed_data(object.id, study.id, ClusterGroup)
+        # delete_parsed_data(object.id, study.id, DataArray)
+        # user_annotations = UserAnnotation.where(study_id: study.id, cluster_group_id: cluster_group_id )
+        # user_annotations.each do |annot|
+        #   annot.user_data_arrays.delete_all
+        #   annot.user_annotation_shares.delete_all
+        # end
+        # user_annotations.delete_all
       when 'Coordinate Labels'
         delete_parsed_data(object.id, study.id, DataArray)
         remove_file_from_bundle
       when 'Expression Matrix'
+        delete_parsed_firestore_documents(FirestoreGene, object.study.accession, object.id.to_s)
         delete_parsed_data(object.id, study.id, Gene, DataArray)
         study.set_gene_count
       when 'MM Coordinate Matrix'
+        delete_parsed_firestore_documents(FirestoreGene, object.study.accession, object.id.to_s)
         delete_parsed_data(object.id, study.id, Gene, DataArray)
         study.set_gene_count
       when /10X/
@@ -58,15 +58,18 @@ class DeleteQueueJob < Struct.new(:object)
           end
           parent = object.study_file_bundle.parent
           if parent.present?
+            delete_parsed_firestore_documents(FirestoreGene, object.study.accession, parent.id.to_s)
             delete_parsed_data(parent.id, study.id, Gene, DataArray)
           end
         end
         remove_file_from_bundle
       when 'Metadata'
+        delete_parsed_firestore_documents(FirestoreCellMetadatum, object.study.accession, object.id.to_s)
         delete_parsed_data(object.id, study.id, CellMetadatum, DataArray)
         study.update(cell_count: 0)
         # unset default annotation if it was study-based
-        if study.default_options[:annotation].end_with?('--study')
+        if study.default_options[:annotation].present? &&
+            study.default_options[:annotation].end_with?('--study')
           study.default_options[:annotation] = nil
           study.save
         end
@@ -135,6 +138,18 @@ class DeleteQueueJob < Struct.new(:object)
   def delete_parsed_data(object_id, study_id, *models)
     models.each do |model|
       model.where(study_file_id: object_id, study_id: study_id).delete_all
+    end
+  end
+
+  # remove parsed data from Firestore
+  # TODO: optimize this to run faster in parallel or batch?
+  def delete_parsed_firestore_documents(firestore_class, study_accession, file_id)
+    docs = firestore_class.by_study_and_file_id(study_accession, file_id)
+    docs.each do |doc|
+      doc.sub_documents.get.each do |sub_doc|
+        sub_doc.delete
+      end
+      doc.delete
     end
   end
 end

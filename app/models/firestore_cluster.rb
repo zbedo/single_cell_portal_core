@@ -50,7 +50,11 @@ class FirestoreCluster
 
   # return a formatted array for use in a select dropdown that corresponds to a specific cell_annotation
   def formatted_cell_annotation(annotation, prepend_name=false)
-    ["#{annotation[:name]}", "#{prepend_name ? "#{self.name}--" : nil}#{annotation[:name]}--#{annotation[:type]}--cluster"]
+    ["#{annotation[:name]}", "#{prepend_name ? "#{self.name}--" : nil}#{self.annotation_select_value(annotation)}"]
+  end
+
+  def annotation_select_value(annotation)
+    "#{annotation[:name]}--#{annotation[:type]}--cluster"
   end
 
   # generate a formatted select box options array that corresponds to all this cluster_group's cell_annotations

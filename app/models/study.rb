@@ -821,7 +821,7 @@ class Study
   def default_cluster
     clusters = FirestoreCluster.by_study(self.accession)
     default = clusters.first
-    unless self.default_options[:cluster].nil?
+    if self.default_options[:cluster].nil?
       new_default = clusters.detect {|cluster| cluster.name == self.default_options[:cluster]}
       unless new_default.nil?
         default = new_default
@@ -920,14 +920,14 @@ class Study
 
   # helper method to get number of unique single cells
   def set_cell_count
-    @cell_count = self.all_cells_array.size
-    self.update!(cell_count: @cell_count)
-    Rails.logger.info "#{Time.zone.now}: Setting cell count in #{self.name} to #{@cell_count}"
+    cell_count = FirestoreCellMetadatum.all_cells(self.accession).count
+    self.update!(cell_count: cell_count)
+    Rails.logger.info "#{Time.zone.now}: Setting cell count in #{self.name} to #{cell_count}"
   end
 
   # helper method to set the number of unique genes in this study
   def set_gene_count
-    gene_count = self.genes.pluck(:name).uniq.count
+    gene_count = FirestoreGene.unique_genes(self.accession).count
     Rails.logger.info "#{Time.zone.now}: setting gene count in #{self.name} to #{gene_count}"
     self.update!(gene_count: gene_count)
   end
@@ -1188,6 +1188,9 @@ class Study
       UserDataArray.where(study_id: study.id).delete_all
       AnalysisMetadatum.where(study_id: study.id).delete_all
       StudyFileBundle.where(study_id: study.id).delete_all
+      FirestoreCluster.delete_by_study(study.accession)
+      FirestoreCellMetadatum.delete_by_study(study.accession)
+      FirestoreGene.delete_by_study(study.accession)
       # now destroy study to ensure everything is removed
       study.destroy
       Rails.logger.info "#{Time.zone.now}: delete of #{study.name} completed"

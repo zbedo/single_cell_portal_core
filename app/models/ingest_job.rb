@@ -9,6 +9,14 @@ class IngestJob
 
   validates_presence_of :pipeline_name, :study, :study_file, :user
 
+  # Patch for using with Delayed::Job.  Returns true to mimic an ActiveRecord instance
+  #
+  # * *returns*
+  #   - True::TrueClass
+  def persisted?
+    true
+  end
+
   # Return an updated reference to this ingest run in PAPI
   #
   # * *returns*
@@ -38,7 +46,7 @@ class IngestJob
   # * *returns*
   #   - (Boolean) => Indication of whether or not job failed via an unrecoverable error
   def failed?
-    self.error.any?
+    self.error.present?
   end
 
   # Get a status label for current state of job
@@ -66,7 +74,18 @@ class IngestJob
   # * *returns*
   #   - (Array<Google::Apis::GenomicsV2alpha1::Event>) => Array of pipeline events, sorted by timestamp
   def events
-    self.metadata['events'].sort_by {|event| event.timestamp }
+    self.metadata['events'].sort_by! {|event| event['timestamp'] }
+  end
+
+  # Get the total runtime of parsing from event timestamps
+  #
+  # * *returns*
+  #   - (String) => Text representation of total elapsed time
+  def get_total_runtime
+    events = self.events
+    start_time = DateTime.parse(events.first['timestamp'])
+    completion_time = DateTime.parse(events.last['timestamp'])
+    TimeDifference.between(start_time, completion_time).humanize
   end
 
   # Launch a background polling process.  Will check for completion, and if the pipeline has not completed
@@ -75,17 +94,66 @@ class IngestJob
   #
   # * *params*
   #   - +run_at+ (DateTime) => Time at which to run new polling check
-  def poll_for_completion(run_at: 1.minute.from_now)
+  def poll_for_completion(run_at: 30.seconds.from_now)
     if self.done? && !self.failed?
-      Rails.logger.info "IngestJob poller: #{self.name} is done!"
-      Rails.logger.info "IngestJob poller: #{self.name} status: #{self.current_status}"
+      Rails.logger.info "IngestJob poller: #{self.pipeline_name} is done!"
+      Rails.logger.info "IngestJob poller: #{self.pipeline_name} status: #{self.current_status}"
       self.study_file.update(parse_status: 'parsed')
+      subject = "#{self.study_file.file_type} file: '#{self.study_file.upload_file_name}' has completed parsing"
+      message = ["Total parse time: #{self.get_total_runtime}"]
+      SingleCellMailer.notify_user_parse_complete(self.user.email, subject, message).deliver_now
+      self.set_study_state_after_ingest
     elsif self.done? && self.failed?
-      # TODO: handle errors
+      Rails.logger.error "IngestJob poller: #{self.pipeline_name} has failed."
+      DeleteQueueJob.new(self.study_file).delay.perform
+      Study.firecloud_client.delete_workspace_file(self.study.bucket_id, self.study_file.bucket_location)
+      subject = "Error: #{self.study_file.file_type} file: '#{self.study_file.upload_file_name}' parse has failed"
+      SingleCellMailer.notify_user_parse_fail(self.user.email, subject, self.error.message).deliver_now
     else
-      Rails.logger.info "IngestJob poller: #{updated_operation.name} is not done; queuing check for #{run_at}"
-      self.new(pipeline_name: self.pipeline_name, study: self.study, study_file: self.study_file, user: self.user).
-          delay(queue: 'ingest', run_at: run_at).poll_for_completion
+      Rails.logger.info "IngestJob poller: #{self.pipeline_name} is not done; queuing check for #{run_at}"
+      self.delay(run_at: run_at).poll_for_completion
     end
+  end
+
+  # Set study state depending on what kind of file was just ingested
+  def set_study_state_after_ingest
+    case self.study_file.file_type
+    when 'Metadata'
+      self.study.set_cell_count
+      self.set_study_default_options
+    when 'Expression Matrix'
+      self.study.set_gene_count
+    when 'MM Coordinate Matrix'
+      self.study.set_gene_count
+    when 'Cluster'
+      self.set_study_default_options
+    end
+  end
+
+  # Set the default options for a study after ingesting Clusters/Cell Metadata
+  def set_study_default_options
+    case self.study_file.file_type
+    when 'Metadata'
+      if self.study.default_annotation.nil?
+        cell_metadatum = FirestoreCellMetadatum.by_study(self.study.accession).first
+        self.study.default_options[:annotation] = cell_metadatum.annotation_select_value
+        if cell_metadatum.annotation_type == 'numeric'
+          self.study.default_options[:color_profile] = 'Reds'
+        end
+      end
+    when 'Cluster'
+      if self.study.default_cluster.nil?
+        cluster = FirestoreCluster.by_study_and_name(self.study.accession, self.study_file.name)
+        self.study.default_options[:cluster] = cluster.name
+        if self.study.default_annotation.nil? && cluster.cell_annotations.any?
+          annotation = cluster.cell_annotations.first
+          self.study.default_options[:annotation] = cluster.annotation_select_value(annotation)
+          if annotation[:type] == 'numeric'
+            self.study.default_options[:color_profile] = 'Reds'
+          end
+        end
+      end
+    end
+    self.study.save
   end
 end
