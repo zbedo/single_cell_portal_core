@@ -4,7 +4,7 @@
     "@rails/webpacker": "4.0.7",
     "core-js": "3",
     "ideogram": "1.11.0",
-    "igv": "2.2.15",
+    "igv": "2.1.0",
     "jquery": "3.4.0",
     "jquery-ui": "1.12.1",
     "lodash": "4.17.11",
