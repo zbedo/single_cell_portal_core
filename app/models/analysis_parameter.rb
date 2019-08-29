@@ -22,7 +22,7 @@ class AnalysisParameter
   field :association_filter_attribute, type: String # attribute to filter instances of :associated_model by (e.g. file_type)
   field :association_filter_value, type: String # attribute value to use in above filter (e.g. Expresion Matrix)
   field :output_file_type, type: String # StudyFile#file_type of output files
-  field :visible, type: Boolean, default: proc { optional == true ? false : true} # default to true if input is required
+  field :visible, type: Boolean, default: proc { !optional } # default to true if input is required
   field :apply_to_all, type: Boolean, default: false # whether or not to apply :associated_model_method to all instances (if an array type input)
   field :is_reference_bundle, type: Boolean, default: false # whether or not this input is for a reference genome
 
