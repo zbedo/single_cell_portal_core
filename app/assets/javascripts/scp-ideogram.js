@@ -272,7 +272,7 @@ function initializeIdeogram(url) {
     organism: ideogramInferCnvSettings.organism.toLowerCase(),
     assembly: ideogramInferCnvSettings.assembly,
     chrHeight: 400,
-    dataDir: 'https://unpkg.com/ideogram@1.4.1/dist/data/bands/native/',
+    dataDir: 'https://unpkg.com/ideogram@1.11.0/dist/data/bands/native/',
     annotationsPath: url,
     annotationsLayout: 'heatmap',
     legend: legend,
