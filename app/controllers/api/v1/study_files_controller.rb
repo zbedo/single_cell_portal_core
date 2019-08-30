@@ -454,8 +454,7 @@ module Api
           case @study_file.file_type
           when 'Cluster'
             @study_file.update(parse_status: 'parsing')
-            submission = ApplicationController.papi_client.run_pipeline(study_file: @study_file, user: current_user, action: :ingest_cluster)
-            IngestJob.new(pipeline_name: submission.name, study: @study, study_file: @study_file, user: current_user).poll_for_completion
+            IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: @study_file, user: current_user, action: :ingest_cluster)
             head 204
           when 'Coordinate Labels'
             if @study_file.bundle_parent.present?
@@ -470,8 +469,7 @@ module Api
             end
           when 'Expression Matrix'
             @study_file.update(parse_status: 'parsing')
-            submission = ApplicationController.papi_client.run_pipeline(study_file: @study_file, user: current_user, action: :ingest_expression)
-            IngestJob.new(pipeline_name: submission.name, study: @study, study_file: @study_file, user: current_user).poll_for_completion
+            IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: @study_file, user: current_user, action: :ingest_expression)
             head 204
           when 'MM Coordinate Matrix'
             barcodes = @study_file.bundled_files.detect {|f| f.file_type == '10X Barcodes File'}
@@ -480,8 +478,7 @@ module Api
               @study_file.update(parse_status: 'parsing')
               genes.update(parse_status: 'parsing')
               barcodes.update(parse_status: 'parsing')
-              submission = ApplicationController.papi_client.run_pipeline(study_file: @study_file, user: current_user, action: :ingest_expression)
-              IngestJob.new(pipeline_name: submission.name, study: @study, study_file: @study_file, user: current_user).poll_for_completion
+              IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: @study_file, user: current_user, action: :ingest_expression)
               head 204
             else
               logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
@@ -494,8 +491,7 @@ module Api
             @study.delay.initialize_precomputed_scores(@study_file, current_api_user)
           when 'Metadata'
             @study_file.update(parse_status: 'parsing')
-            submission = ApplicationController.papi_client.run_pipeline(study_file: @study_file, user: current_user, action: :ingest_cell_metadata)
-            IngestJob.new(pipeline_name: submission.name, study: @study, study_file: @study_file, user: current_user).poll_for_completion
+            IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: @study_file, user: current_user, action: :ingest_cell_metadata)
           else
             # study file is not parseable
             render json: {error: "Files of type #{@study_file.file_type} are not parseable"}, status: :unprocessable_entity

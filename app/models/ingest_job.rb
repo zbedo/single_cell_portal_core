@@ -7,7 +7,80 @@ class IngestJob
   include ActiveModel::Model
   attr_accessor :pipeline_name, :study, :study_file, :user
 
+  extend ErrorTracker
+
+  # number of tries to push a file to a study bucket
+  MAX_ATTEMPTS = 3
+
+  # Mappings between actions & Firestore models (for cleaning up data on re-parses)
+  FIRESTORE_MODELS_BY_ACTION = {
+      ingest_expression: FirestoreGene,
+      ingest_cluster: FirestoreCluster,
+      ingest_cell_metadata: FirestoreCellMetadatum,
+      subsample: FirestoreCluster
+  }
+
   validates_presence_of :pipeline_name, :study, :study_file, :user
+
+  # Push a file to a workspace bucket in the background and then launch an ingest run and queue polling
+  # Can also clear out existing data if necessary (in case of a re-parse)
+  #
+  # * *params*
+  #   - +study+ (Study) => Study in which file is being uploaded
+  #   - +study_file+ (StudyFile) => File being uploaded
+  #   - +user+ (User) => User initiating upload
+  #   - +reparse+ (Boolean) => Indication of whether or not a file is being re-ingested, will delete existing documents
+  #
+  # * *raises*
+  #   - (RuntimeError) => If file cannot be pushed to remote bucket
+  def self.push_remote_and_launch_ingest(study: study, study_file: study_file, user: user, action: action, reparse: false)
+    begin
+      file_identifier = "#{study_file.bucket_location}:#{study_file.id}"
+      if reparse
+        Rails.logger.info "Deleting existing data for #{file_identifier}"
+        firestore_class = FIRESTORE_MODELS_BY_ACTION[action]
+        firestore_class.delete_by_study_and_file(study.accession, study_file.id.to_s)
+        Rails.logger.info "Data cleanup for #{file_identifier} complete, now beginning Ingest"
+      end
+      # first check if file is already in bucket (in case user is syncing)
+      remote = Study.firecloud_client.get_workspace_file(study.bucket_id, study_file.bucket_location)
+      if remote.nil?
+        Rails.logger.info "Preparing to push #{file_identifier} to #{study.bucket_id}"
+        study.send_to_firecloud(study_file)
+        is_pushed = false
+        attempts = 1
+        while !is_pushed && attempts <= MAX_ATTEMPTS
+          remote = Study.firecloud_client.get_workspace_file(study.bucket_id, study_file.bucket_location)
+          if remote.present?
+            is_pushed = true
+          else
+            interval = 30 * attempts
+            run_at = interval.seconds.from_now
+            Rails.logger.error "Failed to push #{file_identifier} to #{study.bucket_id}; retrying at #{run_at}"
+            attempts += 1
+            self.delay(run_at: run_at).push_remote_and_launch_ingest(study: study, study_file: study_file, user: user)
+          end
+        end
+      else
+        is_pushed = true # file is already in bucket
+      end
+      if !is_pushed
+        # push has failed 3 times, so exit and report error
+        log_message = "Unable to push #{file_identifier} to to #{study.bucket_id}"
+        Rails.logger.error log_message
+        raise RuntimeError.new(log_message)
+      else
+        Rails.logger.info "Remote found for #{file_identifier}, launching Ingest job"
+        submission = ApplicationController.papi_client.run_pipeline(study_file: study_file, user: user, action: action)
+        Rails.logger.info "Ingest run initiated: #{submission.name}, queueing Ingest poller"
+        self.new(pipeline_name: submission.name, study: study, study_file: study_file, user: user).poll_for_completion
+      end
+    rescue => e
+      Rails.logger.error "Error in launching ingest of #{file_identifier}: #{e.class.name}:#{e.message}"
+      error_context = ErrorTracker.format_extra_context(study, study_file, {action: action})
+      ErrorTracker.report_exception(e, user, error_context)
+    end
+  end
 
   # Patch for using with Delayed::Job.  Returns true to mimic an ActiveRecord instance
   #
@@ -116,8 +189,8 @@ class IngestJob
       DeleteQueueJob.new(self.study_file).delay.perform
       Study.firecloud_client.delete_workspace_file(self.study.bucket_id, self.study_file.bucket_location)
       subject = "Error: #{self.study_file.file_type} file: '#{self.study_file.upload_file_name}' parse has failed"
-      messages = self.event_messages
-      SingleCellMailer.notify_user_parse_fail(self.user.email, subject, "<p>#{messages.join('<br />')}</p>").deliver_now
+      email_body = self.event_messages.map {|msg| "<p>#{msg}</p>"}
+      SingleCellMailer.notify_user_parse_fail(self.user.email, subject, email_body).deliver_now
     else
       Rails.logger.info "IngestJob poller: #{self.pipeline_name} is not done; queuing check for #{run_at}"
       self.delay(run_at: run_at).poll_for_completion

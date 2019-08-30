@@ -95,12 +95,12 @@ module FirestoreDocuments
     # Delete methods
     ##
 
-    def self.delete_by_study(accession)
-      delete_documents(self.by_study(accession))
+    def self.delete_by_study(accession, threads=10)
+      delete_documents(self.query_by(study_accession: accession), threads)
     end
 
-    def self.delete_by_study_and_file(accession, file_id)
-      delete_documents(self.by_study_and_file_id(accession, file_id))
+    def self.delete_by_study_and_file(accession, file_id, threads=10)
+      delete_documents(self.query_by(study_accession: accession, file_id: file_id), threads)
     end
 
     ##
@@ -146,17 +146,16 @@ module FirestoreDocuments
 
     private
 
-    # clean up all documents and sub-documents
-    def delete_documents(documents)
-      if self.respond_to?(:sub_collection)
-        documents.each do |doc|
+    # clean up all documents and sub-documents, using base Firestore classes rather than
+    # FirestoreDocument interface for better performance
+    def self.delete_documents(documents, threads)
+      Parallel.map(documents, in_threads: threads) do |doc|
+        if self.respond_to?(:sub_collection)
           doc.sub_documents.get.each do |sub_doc|
-            sub_doc.delete
+            sub_doc.ref.delete
           end
         end
-      end
-      documents.each do |doc|
-        doc.delete
+        doc.ref.delete
       end
     end
   end

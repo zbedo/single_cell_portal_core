@@ -4,7 +4,12 @@ class GenomeAssembly
   belongs_to :taxon
   has_many :study_files
   has_many :directory_listings
-  has_many :genome_annotations, dependent: :destroy
+  has_many :genome_annotations, dependent: :destroy do
+    def latest
+      order(release_date: :desc).first
+    end
+  end
+
   accepts_nested_attributes_for :genome_annotations, allow_destroy: true
 
   field :name, type: String
@@ -21,10 +26,6 @@ class GenomeAssembly
   validates_uniqueness_of :accession, scope: :taxon_id
 
   def current_annotation
-    if self.genome_annotations.any?
-      self.genome_annotations.order(release_date: :desc).first
-    else
-      nil
-    end
+    self.genome_annotations.latest
   end
 end

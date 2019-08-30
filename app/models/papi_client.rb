@@ -10,6 +10,8 @@ require 'google/apis/genomics_v2alpha1'
 
 class PapiClient < Struct.new(:project, :service_account_credentials, :service)
 
+  extend ErrorTracker
+
   # Service account JSON credentials
   SERVICE_ACCOUNT_KEY = !ENV['SERVICE_ACCOUNT_KEY'].blank? ? File.absolute_path(ENV['SERVICE_ACCOUNT_KEY']) : ''
   # Google authentication scopes necessary for running pipelines
@@ -17,7 +19,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   # GCP Compute project to run pipelines in
   COMPUTE_PROJECT = ENV['GOOGLE_CLOUD_PROJECT'].blank? ? '' : ENV['GOOGLE_CLOUD_PROJECT']
   # Docker image in GCP project to pull for running ingest jobs
-  INGEST_DOCKER_IMAGE = "gcr.io/broad-singlecellportal-staging/ingest-pipeline:0.2.0_3da44bf"
+  INGEST_DOCKER_IMAGE = 'gcr.io/broad-singlecellportal-staging/ingest-pipeline:0.3.0_6a8ef1f'
   # List of scp-ingest-pipeline actions and their allowed file types
   FILE_TYPES_BY_ACTION = {
       ingest_expression: ['Expression Matrix', 'MM Coordinate Matrix'],
@@ -79,7 +81,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   def run_pipeline(study_file: , user:, action:)
     study = study_file.study
     accession = study.accession
-    resources = self.create_resources_object(regions: ['us-east1'])
+    resources = self.create_resources_object(regions: ['us-east4'])
     command_line = self.get_command_line(study_file: study_file, action: action)
     labels = {
         study_accession: accession,
@@ -214,8 +216,8 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   #   - (ArgumentError) => The requested StudyFile and action do not correspond with each other, or cannot be run yet
   def get_command_line(study_file:, action:)
     validate_action_by_file(action, study_file)
-    command_line = "python ingest_pipeline.py #{action}"
     study = study_file.study
+    command_line = "python ingest_pipeline.py --study-accession #{study.accession} --file-id #{study_file.id.to_s} #{action}"
     case action.to_s
     when 'ingest_expression'
       if study_file.file_type == 'Expression Matrix'
@@ -228,25 +230,73 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
                       " --gene-file #{genes_file.gs_url} --barcode-file #{barcodes_file.gs_url}"
       end
     when 'ingest_cell_metadata'
-      command_line += " --cell-metadata-file #{study_file.gs_url}"
+      command_line += " --cell-metadata-file #{study_file.gs_url} --ingest-cell-metadata"
     when 'ingest_cluster'
-      command_line += " --cluster-file #{study_file.gs_url}"
+      command_line += " --cluster-file #{study_file.gs_url} --ingest-cluster"
     when 'ingest_subsample'
       metadata_file = study.metadata_file
       command_line += " --cluster-file #{study_file.gs_url} --cell-metadata-file #{metadata_file.gs_url} --subsample"
     end
 
+    # add optional command line arguments based on file type
+    command_line += self.get_command_line_options(study_file)
     # return an array of tokens (Docker expects exec form, which runs without a shell, so cannot be a single command)
     command_line.split
   end
 
+  # Assemble any optional command line options for ingest by file type
+  #
+  # * *params*
+  #   - +study_file+ (StudyFile) => File to be ingested
+  #
+  # * *returns*
+  #   (Array) => Array representation of optional arguments (Docker exec form), based on file type
+  def get_command_line_options(study_file)
+    opts = ""
+    case study_file.file_type
+    when /Matrix/
+      taxon = study_file.taxon
+      file_opts = {
+          taxon_name: taxon.scientific_name,
+          taxon_common_name: taxon.common_name,
+          ncbi_taxid: taxon.ncbi_taxid
+      }
+      if taxon.current_assembly.present?
+        assembly = taxon.current_assembly
+        file_opts.merge!(genome_assembly_accession: assembly.accession)
+        if assembly.current_annotation.present?
+          file_opts.merge!(genome_annotation: assembly.current_annotation.name)
+        end
+      end
+      opts += " --file-params '#{sanitize_json(file_opts.to_json)}'"
+    when 'Cluster'
+      opts += "--name '#{study_file.name}'"
+      if study_file.get_cluster_domain_ranges.any?
+        opts += "--domain-ranges '#{sanitize_json(study_file.get_cluster_domain_ranges.to_json)}'"
+      end
+    end
+    opts
+  end
+
   private
 
+  # Validate ingest action against file type
+  #
+  # * *params*
+  #   - +action+ (String/Symbol) => Ingest action to perform
+  #   - +study_file+ (StudyFile) => File to be ingested
+  #
+  # * *raises*
+  #   - (ArgumentError) => Ingest action & StudyFile do not correspond with each other, or StudyFile is not parseable
   def validate_action_by_file(action, study_file)
     if !study_file.able_to_parse?
       raise ArgumentError.new("'#{study_file.upload_file_name}' is not parseable or missing required bundled files")
     elsif !FILE_TYPES_BY_ACTION[action.to_sym].include?(study_file.file_type)
       raise ArgumentError.new("'#{action}' cannot be run with file type '#{study_file.file_type}'")
     end
+  end
+
+  def sanitize_json(json)
+    json.gsub(/:/, ": ").gsub(/,/, ", ")
   end
 end
