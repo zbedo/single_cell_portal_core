@@ -69,7 +69,7 @@ then
 	echo "*** COMPLETED ***"
 fi
 echo "*** STARTING DELAYED_JOB ***"
-sudo -E -u app -H bin/delayed_job start $PASSENGER_APP_ENV -n 8
+sudo -E -u app -H bin/delayed_job start $PASSENGER_APP_ENV -n 6
 echo "*** ADDING CRONTAB TO CHECK DELAYED_JOB ***"
 echo "*/15 * * * * . /home/app/.cron_env ; /home/app/webapp/bin/job_monitor.rb -e=$PASSENGER_APP_ENV >> /home/app/webapp/log/cron_out.log 2>&1" | crontab -u app -
 echo "*** COMPLETED ***"
