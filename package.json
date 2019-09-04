@@ -7,7 +7,6 @@
     "igv": "2.1.0",
     "jquery": "3.4.0",
     "jquery-ui": "1.12.1",
-    "lodash": "4.17.11",
     "morpheus-app": "1.0.18",
     "spin.js": "^4.0.0"
   },
