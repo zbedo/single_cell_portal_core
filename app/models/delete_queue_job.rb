@@ -95,7 +95,8 @@ class DeleteQueueJob < Struct.new(:object)
       object.update!(queued_for_deletion: true, upload_file_name: new_name, name: new_name, file_type: 'DELETE')
 
       # reset initialized if needed
-      if study.cluster_groups.empty? || study.genes.empty? || study.cell_metadata.empty?
+      if !FirestoreGene.study_has_any?(study.accession) || !FirestoreCellMetadatum.study_has_any?(study.accession) ||
+          !FirestoreCluster.study_has_any?(study.accession)
         study.update!(initialized: false)
       end
     when 'UserAnnotation'

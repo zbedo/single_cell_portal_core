@@ -211,6 +211,7 @@ class IngestJob
     when 'Cluster'
       self.set_study_default_options
     end
+    self.set_study_initialized
   end
 
   # Set the default options for a study after ingesting Clusters/Cell Metadata
@@ -239,5 +240,14 @@ class IngestJob
     end
     Rails.logger.info "Setting default options in #{self.study.name}: #{self.study.default_options}"
     self.study.save
+  end
+
+  # Set the study "initialized" attribute if all main models are populated
+  def set_study_initialized
+    firestore_classes = [FirestoreGene, FirestoreCluster, FirestoreCellMetadatum]
+    if firestore_classes.map {|fs_class| fs_class.study_has_any?(self.study.accession)}.uniq === [true] &&
+        !self.study.initialized?
+      self.study.update(initialized: true)
+    end
   end
 end
