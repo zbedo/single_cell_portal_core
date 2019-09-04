@@ -1025,7 +1025,7 @@ class Study
     metadata = FirestoreCellMetadatum.by_study(self.accession)
     options['Study Wide'] = []
     metadata.each do |meta|
-      options['Study Wide'] << meta.annotation_select_value
+      options['Study Wide'] << meta.annotation_select_option
     end
     if cluster.present?
       annotations = annotation_type.nil? ? cluster.cell_annotations : cluster.cell_annotations.select {|annot| annot[:type] == annotation_type}

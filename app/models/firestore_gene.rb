@@ -116,38 +116,4 @@ class FirestoreGene
     values = cells.map {|c| scores[c].to_f}
     self.array_robust_z_score(values)
   end
-
-
-  def self.test_ingest(num_genes=1000)
-    print "Populating #{num_genes} genes into Firestore... "
-    accession = 'SCPTEST'
-    file_id = 'performace_test'
-    genes = Gene.pluck(:name).shuffle.take(num_genes)
-    slice_size = num_genes / 10
-    start_time = Time.now
-    Parallel.map(genes.each_slice(slice_size), in_threads: 10) do |slice|
-      self.client.batch do |b|
-        slice.each do |gene|
-          b.set("genes/#{gene}", {name: gene, study_accession: accession, file_id: file_id})
-        end
-      end
-    end
-    end_time = Time.now
-    runtime = TimeDifference.between(start_time, end_time).humanize
-    puts "Completed!"
-    puts "Total runtime to ingest #{num_genes} genes: #{runtime}"
-  end
-
-  def self.test_delete(num_threads=10)
-    accession = 'SCPTEST'
-    file_id = 'performace_test'
-    genes_found = self.count(study_accession: accession, file_id: file_id)
-    print "Preparing to delete #{genes_found} genes from Firestore in #{num_threads} threads... "
-    start_time = Time.now
-    self.delete_by_study_and_file(accession, file_id, num_threads)
-    end_time = Time.now
-    runtime = TimeDifference.between(start_time, end_time).humanize
-    puts "Completed!"
-    puts "Total runtime to delete #{genes_found} genes: #{runtime}"
-  end
 end

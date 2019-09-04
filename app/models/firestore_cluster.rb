@@ -31,7 +31,7 @@ class FirestoreCluster
       docs = docs.where(:subsample_threshold, :==, subsample_threshold).
           where(:subsample_annotation, :==, subsample_annotation)
     end
-    docs.get.sort_by {|d| d[:array_index]}.map {|d| d.data[:values]}.flatten
+    docs.get.sort_by {|d| d[:array_index]}.map {|d| d.data[:value]}.flatten
   end
 
   def is_3d?
@@ -41,6 +41,11 @@ class FirestoreCluster
   # check if user has defined a range for this cluster_group (provided in study file)
   def has_range?
     !self.domain_ranges.nil?
+  end
+
+  # allow lookup of domain ranges by symbol or string
+  def ranges
+    self.domain_ranges.with_indifferent_access
   end
 
   # TODO: reimplement this to either write coordinate label data to Firestore, or preserve MongoDB query

@@ -258,17 +258,17 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
     case study_file.file_type
     when /Matrix/
       taxon = study_file.taxon
-      opts += ["--taxon-name", "'#{taxon.scientific_name}'", "--taxon-common-name", "'#{taxon.common_name}'",
+      opts += ["--taxon-name", "#{taxon.scientific_name}", "--taxon-common-name", "#{taxon.common_name}",
                "--ncbi-taxid", "#{taxon.ncbi_taxid}"]
       if taxon.current_assembly.present?
         assembly = taxon.current_assembly
-        opts += ["--genome-assembly-accession", "'#{assembly.accession}'"]
+        opts += ["--genome-assembly-accession", "#{assembly.accession}"]
         if assembly.current_annotation.present?
-          opts += ["--genome-annotation", "'#{assembly.current_annotation.name}'"]
+          opts += ["--genome-annotation", "#{assembly.current_annotation.name}"]
         end
       end
     when 'Cluster'
-      opts += ["--name", "'#{study_file.name}'"]
+      opts += ["--name", "#{study_file.name}"]
       if study_file.get_cluster_domain_ranges.any?
         opts += ["--domain-ranges", "#{sanitize_json(study_file.get_cluster_domain_ranges.to_json)}"]
       end

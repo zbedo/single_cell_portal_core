@@ -572,7 +572,7 @@ class StudiesController < ApplicationController
     case @study_file.file_type
     when 'Cluster'
       @study_file.update(parse_status: 'parsing')
-      IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: @study_file, user: current_user, action: :ingest_cluster)
+      IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_cluster).delay.push_remote_and_launch_ingest
     when 'Coordinate Labels'
       @study_file.update(parse_status: 'parsing')
       # we need to create the bundle here as it doesn't exist yet
@@ -582,7 +582,7 @@ class StudiesController < ApplicationController
       @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user)
     when 'Expression Matrix'
       @study_file.update(parse_status: 'parsing')
-      IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: @study_file, user: current_user, action: :ingest_expression)
+      IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_expression).delay.push_remote_and_launch_ingest
     when 'MM Coordinate Matrix'
       @study.send_to_firecloud(@study_file)
       bundle = @study_file.study_file_bundle
@@ -592,7 +592,7 @@ class StudiesController < ApplicationController
         @study_file.update(parse_status: 'parsing')
         genes.update(parse_status: 'parsing')
         barcodes.update(parse_status: 'parsing')
-        IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: @study_file, user: current_user, action: :ingest_expression)
+        IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_expression).delay.push_remote_and_launch_ingest
       else
         logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
       end
@@ -605,7 +605,7 @@ class StudiesController < ApplicationController
         @study_file.update(parse_status: 'parsing')
         matrix.update(parse_status: 'parsing')
         barcodes.update(parse_status: 'parsing')
-        IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: matrix, user: current_user, action: :ingest_expression)
+        IngestJob.new(study: @study, study_file: matrix, user: current_user, action: :ingest_expression).delay.push_remote_and_launch_ingest
       else
         # we can only get here if we have a matrix and no barcodes, which means the barcodes form is already rendered
         logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
@@ -619,7 +619,7 @@ class StudiesController < ApplicationController
         @study_file.update(parse_status: 'parsing')
         genes.update(parse_status: 'parsing')
         matrix.update(parse_status: 'parsing')
-        IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: matrix, user: current_user, action: :ingest_expression)
+        IngestJob.new(study: @study, study_file: matrix, user: current_user, action: :ingest_expression).delay.push_remote_and_launch_ingest
       else
         # we can only get here if we have a matrix and no genes, which means the genes form is already rendered
         logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
@@ -630,7 +630,7 @@ class StudiesController < ApplicationController
     when 'Metadata'
       @study_file.update(parse_status: 'parsing')
       @study.send_to_firecloud(@study_file)
-      IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: @study_file, user: current_user, action: :ingest_cell_metadata)
+      IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_cell_metadata).delay.push_remote_and_launch_ingest
     end
     changes = ["Study file added: #{@study_file.upload_file_name}"]
     if @study.study_shares.any?
@@ -818,11 +818,11 @@ class StudiesController < ApplicationController
         @message += " You will receive an email at #{current_user.email} when the parse has completed."
         case @study_file.file_type
         when 'Cluster'
-          IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: @study_file, user: current_user, action: :ingest_cluster, reparse: true)
+          IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_cluster).delay.push_remote_and_launch_ingest(reparse: true)
         when 'Coordinate Labels'
           @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user, {local: false, reparse: true})
         when 'Expression Matrix'
-          IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: @study_file, user: current_user, action: :ingest_expression, reparse: true)
+          IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_expression).delay.push_remote_and_launch_ingest(reparse: true)
         when 'MM Coordinate Matrix'
           barcodes = @study_file.bundled_files.detect {|f| f.file_type == '10X Barcodes File'}
           genes = @study_file.bundled_files.detect {|f| f.file_type == '10X Genes File'}
@@ -830,7 +830,7 @@ class StudiesController < ApplicationController
             @study_file.update(parse_status: 'parsing')
             genes.update(parse_status: 'parsing')
             barcodes.update(parse_status: 'parsing')
-            IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: @study_file, user: current_user, action: :ingest_expression, reparse: true)
+            IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_expression).delay.push_remote_and_launch_ingest(reparse: true)
           else
             logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
           end
@@ -842,7 +842,7 @@ class StudiesController < ApplicationController
             @study_file.update(parse_status: 'parsing')
             matrix.update(parse_status: 'parsing')
             barcodes.update(parse_status: 'parsing')
-            IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: matrix, user: current_user, action: :ingest_expression, reparse: true)
+            IngestJob.new(study: @study, study_file: matrix, user: current_user, action: :ingest_expression).delay.push_remote_and_launch_ingest(reparse: true)
           else
             # we can only get here if we have a matrix and no barcodes, which means the barcodes form is already rendered
             logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
@@ -855,7 +855,7 @@ class StudiesController < ApplicationController
             @study_file.update(parse_status: 'parsing')
             genes.update(parse_status: 'parsing')
             matrix.update(parse_status: 'parsing')
-            IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: matrix, user: current_user, action: :ingest_expression, reparse: true)
+            IngestJob.new(study: @study, study_file: matrix, user: current_user, action: :ingest_expression).delay.push_remote_and_launch_ingest(reparse: true)
           else
             # we can only get here if we have a matrix and no genes, which means the genes form is already rendered
             logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
@@ -863,7 +863,7 @@ class StudiesController < ApplicationController
         when 'Gene List'
           @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false, reparse: true})
         when 'Metadata'
-          IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: @study_file, user: current_user, action: :ingest_cell_metadata, reparse: true)
+          IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_cell_metadata).delay.push_remote_and_launch_ingest(reparse: true)
         end
       end
 
@@ -984,11 +984,11 @@ class StudiesController < ApplicationController
         # parse file as appropriate type
         case @study_file.file_type
         when 'Cluster'
-          IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: @study_file, user: current_user, action: :ingest_cluster)
+          IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_cluster).delay.push_remote_and_launch_ingest
         when 'Coordinate Labels'
           @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user, {local: false})
         when 'Expression Matrix'
-          IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: @study_file, user: current_user, action: :ingest_expression)
+          IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_expression).delay.push_remote_and_launch_ingest
         when 'MM Coordinate Matrix'
           # we have to cast the study_file ID to a string, otherwise it is a BSON::ObjectID and will not match
           barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => @study_file.id.to_s)
@@ -999,7 +999,7 @@ class StudiesController < ApplicationController
             @study_file.update(parse_status: 'parsing')
             genes.update(parse_status: 'parsing')
             barcodes.update(parse_status: 'parsing')
-            IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: @study_file, user: current_user, action: :ingest_expression)
+            IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_expression).delay.push_remote_and_launch_ingest
           end
         when '10X Genes File'
           matrix_id = @study_file.options[:matrix_id]
@@ -1012,7 +1012,7 @@ class StudiesController < ApplicationController
             @study_file.update(parse_status: 'parsing')
             matrix.update(parse_status: 'parsing')
             barcodes.update(parse_status: 'parsing')
-            IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: matrix, user: current_user, action: :ingest_expression)
+            IngestJob.new(study: @study, study_file: matrix, user: current_user, action: :ingest_expression).delay.push_remote_and_launch_ingest
           end
         when '10X Barcodes File'
           matrix_id = @study_file.options[:matrix_id]
@@ -1025,12 +1025,12 @@ class StudiesController < ApplicationController
             @study_file.update(parse_status: 'parsing')
             genes.update(parse_status: 'parsing')
             matrix.update(parse_status: 'parsing')
-            IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: matrix, user: current_user, action: :ingest_expression)
+            IngestJob.new(study: @study, study_file: matrix, user: current_user, action: :ingest_expression).delay.push_remote_and_launch_ingest
           end
         when 'Gene List'
           @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false})
         when 'Metadata'
-          IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: @study_file, user: current_user, action: :ingest_cell_metadata)
+          IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_cell_metadata).delay.push_remote_and_launch_ingest
         when 'Analysis Output'
           case @study_file.options[:analysis_name]
           when 'infercnv'
@@ -1092,11 +1092,11 @@ class StudiesController < ApplicationController
         @message += " You will receive an email at #{current_user.email} when the parse has completed."
         case @study_file.file_type
         when 'Cluster'
-          IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: @study_file, user: current_user, action: :ingest_cluster, reparse: true)
+          IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_cluster).delay.push_remote_and_launch_ingest(reparse: true)
         when 'Coordinate Labels'
           @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user, {local: false, reparse: true})
         when 'Expression Matrix'
-          IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: @study_file, user: current_user, action: :ingest_expression, reparse: true)
+          IngestJob.new.(study: @study, study_file: @study_file, user: current_user, action: :ingest_expression).delay.push_remote_and_launch_ingest(reparse: true)
         when 'MM Coordinate Matrix'
           # we have to cast the study_file ID to a string, otherwise it is a BSON::ObjectID and will not match
           barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => @study_file.id.to_s)
@@ -1107,7 +1107,7 @@ class StudiesController < ApplicationController
             @study_file.update(parse_status: 'parsing')
             genes.update(parse_status: 'parsing')
             barcodes.update(parse_status: 'parsing')
-            IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: @study_file, user: current_user, action: :ingest_expression, reparse: true)
+            IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_expression).delay.push_remote_and_launch_ingest(reparse: true)
           end
         when '10X Genes File'
           matrix_id = @study_file.options[:matrix_id]
@@ -1119,7 +1119,7 @@ class StudiesController < ApplicationController
             @study_file.update(parse_status: 'parsing')
             matrix.update(parse_status: 'parsing')
             barcodes.update(parse_status: 'parsing')
-            IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: matrix, user: current_user, action: :ingest_expression, reparse: true)
+            IngestJob.new(study: @study, study_file: matrix, user: current_user, action: :ingest_expression).delay.push_remote_and_launch_ingest(reparse: true)
           end
         when '10X Barcodes File'
           matrix_id = @study_file.options[:matrix_id]
@@ -1132,12 +1132,12 @@ class StudiesController < ApplicationController
             @study_file.update(parse_status: 'parsing')
             genes.update(parse_status: 'parsing')
             matrix.update(parse_status: 'parsing')
-            IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: matrix, user: current_user, action: :ingest_expression, reparse: true)
+            IngestJob.new(study: @study, study_file: matrix, user: current_user, action: :ingest_expression).delay.push_remote_and_launch_ingest(reparse: true)
           end
         when 'Gene List'
           @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false, reparse: true})
         when 'Metadata'
-          IngestJob.delay.push_remote_and_launch_ingest(study: @study, study_file: @study_file, user: current_user, action: :ingest_cell_metadata, reparse: true)
+          IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_cell_metadata).delay.push_remote_and_launch_ingest(reparse: true)
         end
       elsif @study_file.file_type == 'BAM'
         # we need to check if we have a study_file_bundle here
