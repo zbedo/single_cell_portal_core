@@ -5,7 +5,15 @@
 
 class IngestJob
   include ActiveModel::Model
-  attr_accessor :pipeline_name, :study, :study_file, :user, :action
+
+  # Name of pipeline submission running in GCP (from [PapiClient#run_pipeline])
+  attr_accessor :pipeline_name
+  # Study object where file is being ingested
+  attr_accessor :study
+  # StudyFile being ingested
+  attr_accessor :study_file
+  # Action being performed by Ingest (e.g. ingest_expression, ingest_cluster)
+  attr_accessor :action
 
   extend ErrorTracker
 
@@ -26,10 +34,11 @@ class IngestJob
   # Can also clear out existing data if necessary (in case of a re-parse)
   #
   # * *params*
-  #   - +study+ (Study) => Study in which file is being uploaded
-  #   - +study_file+ (StudyFile) => File being uploaded
-  #   - +user+ (User) => User initiating upload
-  #   - +reparse+ (Boolean) => Indication of whether or not a file is being re-ingested, will delete existing documents
+  #   - +reparse+ [Boolean] => Indication of whether or not a file is being re-ingested, will delete existing documents
+  #
+  # * *yields*
+  #   - (Google::Apis::GenomicsV2alpha1::Operation) => Will submit an ingest job in PAPI
+  #   - (IngestJob.new(attributes).poll_for_completion) => Will queue a Delayed::Job to poll for completion
   #
   # * *raises*
   #   - (RuntimeError) => If file cannot be pushed to remote bucket
