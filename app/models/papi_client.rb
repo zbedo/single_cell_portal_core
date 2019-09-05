@@ -172,7 +172,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
     )
   end
 
-  # Instatiate a resources object to tell where to run a pipeline
+  # Instantiate a resources object to tell where to run a pipeline
   #
   # * *params*
   #   - regions: (Array<String>) => An array of GCP regions allowed for VM allocation
@@ -238,7 +238,6 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
       command_line += " --cluster-file #{study_file.gs_url} --cell-metadata-file #{metadata_file.gs_url} --subsample"
     end
 
-
     # add optional command line arguments based on file type
     optional_args = self.get_command_line_options(study_file)
     # return an array of tokens (Docker expects exec form, which runs without a shell, so cannot be a single command)
@@ -257,17 +256,20 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
     opts = []
     case study_file.file_type
     when /Matrix/
-      taxon = study_file.taxon
-      opts += ["--taxon-name", "#{taxon.scientific_name}", "--taxon-common-name", "#{taxon.common_name}",
-               "--ncbi-taxid", "#{taxon.ncbi_taxid}"]
-      if taxon.current_assembly.present?
-        assembly = taxon.current_assembly
-        opts += ["--genome-assembly-accession", "#{assembly.accession}"]
-        if assembly.current_annotation.present?
-          opts += ["--genome-annotation", "#{assembly.current_annotation.name}"]
+      if study_file.taxon.present?
+        taxon = study_file.taxon
+        opts += ["--taxon-name", "#{taxon.scientific_name}", "--taxon-common-name", "#{taxon.common_name}",
+                 "--ncbi-taxid", "#{taxon.ncbi_taxid}"]
+        if taxon.current_assembly.present?
+          assembly = taxon.current_assembly
+          opts += ["--genome-assembly-accession", "#{assembly.accession}"]
+          if assembly.current_annotation.present?
+            opts += ["--genome-annotation", "#{assembly.current_annotation.name}"]
+          end
         end
       end
     when 'Cluster'
+      # the name of Cluster files is the same as the name of the cluster object itself
       opts += ["--name", "#{study_file.name}"]
       if study_file.get_cluster_domain_ranges.any?
         opts += ["--domain-ranges", "#{sanitize_json(study_file.get_cluster_domain_ranges.to_json)}"]
