@@ -12,6 +12,13 @@ module FirestoreDocuments
   included do
 
     ##
+    # Patch for using with Delayed::Job
+    ##
+    def persisted?
+      true
+    end
+
+    ##
     # Firestore document & querying methods
     ##
 
@@ -72,11 +79,28 @@ module FirestoreDocuments
       doc_ref.any? ? self.new(doc_ref.first) : nil
     end
 
+    def self.by_study_and_file_id(accession, file_id)
+      documents = self.query_by(study_accession: accession, file_id: file_id)
+      documents.map {|doc| self.new(doc)}
+    end
+
     # shortcut method to determine if there are any documents of this type for a study
     # useful for methods like @study.has_expression_data?
     # will limit to only a single document to cut down on query costs
     def self.study_has_any?(accession)
       self.query_by(study_accession: accession).any?
+    end
+
+    ##
+    # Delete methods
+    ##
+
+    def self.delete_by_study(accession, threads=10)
+      delete_documents(self.query_by(study_accession: accession), threads)
+    end
+
+    def self.delete_by_study_and_file(accession, file_id, threads=10)
+      delete_documents(self.query_by(study_accession: accession, file_id: file_id), threads)
     end
 
     ##
@@ -120,5 +144,17 @@ module FirestoreDocuments
       StudyFile.find(self.file_id)
     end
 
+    # clean up all documents and sub-documents, using base Firestore classes rather than
+    # FirestoreDocument interface for better performance
+    def self.delete_documents(documents, threads)
+      Parallel.map(documents, in_threads: threads) do |doc|
+        if self.respond_to?(:sub_collection)
+          doc.ref.col(self.sub_collection).get.each do |sub_doc|
+            sub_doc.ref.delete
+          end
+        end
+        doc.ref.delete
+      end
+    end
   end
 end

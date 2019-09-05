@@ -4,7 +4,7 @@ Dir.chdir(WEB_DIR)
 
 # set up defaults
 @env = 'production'
-@num_workers = 4
+@num_workers = 6
 @interactive = false
 
 # parse args

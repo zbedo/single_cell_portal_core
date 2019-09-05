@@ -19,7 +19,7 @@ module FirestoreSubDocuments
         doc_data = sub_document.data
         document_data.merge!(Hash[doc_data[keys_name.to_sym].zip(doc_data[values_name.to_sym])])
       end
-      document_data
+      document_data.with_indifferent_access
     end
   end
 end

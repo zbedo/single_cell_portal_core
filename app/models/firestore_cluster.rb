@@ -31,7 +31,7 @@ class FirestoreCluster
       docs = docs.where(:subsample_threshold, :==, subsample_threshold).
           where(:subsample_annotation, :==, subsample_annotation)
     end
-    docs.get.sort_by {|d| d[:array_index]}.map {|d| d.data[:values]}.flatten
+    docs.get.sort_by {|d| d[:array_index]}.map {|d| d.data[:value]}.flatten
   end
 
   def is_3d?
@@ -43,6 +43,11 @@ class FirestoreCluster
     !self.domain_ranges.nil?
   end
 
+  # allow lookup of domain ranges by symbol or string
+  def ranges
+    self.domain_ranges.with_indifferent_access
+  end
+
   # TODO: reimplement this to either write coordinate label data to Firestore, or preserve MongoDB query
   def has_coordinate_labels?
     false
@@ -50,7 +55,11 @@ class FirestoreCluster
 
   # return a formatted array for use in a select dropdown that corresponds to a specific cell_annotation
   def formatted_cell_annotation(annotation, prepend_name=false)
-    ["#{annotation[:name]}", "#{prepend_name ? "#{self.name}--" : nil}#{annotation[:name]}--#{annotation[:type]}--cluster"]
+    ["#{annotation[:name]}", "#{prepend_name ? "#{self.name}--" : nil}#{self.annotation_select_value(annotation)}"]
+  end
+
+  def annotation_select_value(annotation)
+    "#{annotation[:name]}--#{annotation[:type]}--cluster"
   end
 
   # generate a formatted select box options array that corresponds to all this cluster_group's cell_annotations

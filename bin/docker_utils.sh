@@ -36,6 +36,11 @@ function set_image_name {
     echo "$IMAGE:$VERSION"
 }
 
+# get all containers (stopped or running)
+function get_all_containers {
+    echo $(docker ps -a --format '{{.Names}}') || exit_with_error_message "could not list all containers"
+}
+
 # get all running containers
 function get_running_containers {
     echo $(docker ps -a --format '{{.Names}}' -f=status=running) || exit_with_error_message "could not list running containers"
@@ -73,5 +78,5 @@ function ensure_container_running {
             RUNNING=0
         fi
     done
-    return $RUNNING
+    echo "$RUNNING"
 }

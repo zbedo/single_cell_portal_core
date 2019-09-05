@@ -14,7 +14,8 @@ SecureHeaders::Configuration.default do |config|
   config.x_content_type_options = "nosniff"
   config.x_xss_protection = "1; mode=block"
   config.x_permitted_cross_domain_policies = "none"
-  config.referrer_policy = %w(strict-origin-when-cross-origin)
+  config.x_download_options = "noopen"
+  config.referrer_policy = %w(origin-when-cross-origin strict-origin-when-cross-origin)
   config.csp = {
       # "meta" values. these will shape the header, but the values are not included in the header.
       preserve_schemes: true, # default: false. Schemes are removed from host sources to save bytes and discourage mixed content.
@@ -23,18 +24,21 @@ SecureHeaders::Configuration.default do |config|
       # directive values: these values will directly translate into source directives
       default_src: %w('self'),
       block_all_mixed_content: true, # see http://www.w3.org/TR/mixed-content/
-      frame_src: %w('self' https://us.input.tcell.insight.rapid7.com), # if child-src isn't supported, the value for frame-src will be set.
+      frame_src: %w('self' https://us.input.tcell.insight.rapid7.com https://us.browser.tcell.insight.rapid7.com
+                     https://us.agent.tcell.insight.rapid7.com), # if child-src isn't supported, the value for frame-src will be set.
       font_src: %w('self' data:),
       form_action: %w('self' https://accounts.google.com),
-      connect_src: ['\'self\'', "https://#{ENV['PROD_HOSTNAME']}", 'https://www.google-analytics.com', 'https://unpkg.com',
-                    'https://www.googleapis.com', 'https://s3.amazonaws.com', 'https://data.broadinstitute.org',
-                    'https://us.input.tcell.insight.rapid7.com', 'https://api.tcell.io'],
+      connect_src: ['\'self\'', "https://#{ENV['HOSTNAME']}", 'https://www.google-analytics.com', 'https://unpkg.com', 'https://igv.org',
+                    'https://www.googleapis.com', 'https://s3.amazonaws.com', 'https://data.broadinstitute.org', 'https://portals.broadinstitute.org',
+                    'https://us.input.tcell.insight.rapid7.com', 'https://api.tcell.io', 'https://us.browser.tcell.insight.rapid7.com',
+                    'https://us.agent.tcell.insight.rapid7.com', 'https://us.jsagent.tcell.insight.rapid7.com'],
       img_src: %w('self' data: https://www.google-analytics.com https://online.swagger.io),
       manifest_src: %w('self'),
       object_src: %w('none'),
       script_src: %w('self' blob: 'unsafe-eval' 'unsafe-inline' 'strict-dynamic' https://cdn.plot.ly https://cdn.datatables.net
                      https://www.google-analytics.com https://cdnjs.cloudflare.com https://maxcdn.bootstrapcdn.com
-                     https://use.fontawesome.com https://jsagent.tcell.io https://api.tcell.io),
+                     https://use.fontawesome.com https://api.tcell.io https://us.browser.tcell.insight.rapid7.com
+                     https://us.jsagent.tcell.insight.rapid7.com https://us.agent.tcell.insight.rapid7.com),
       style_src: %w('self' https://maxcdn.bootstrapcdn.com 'unsafe-inline'),
       upgrade_insecure_requests: true, # see https://www.w3.org/TR/upgrade-insecure-requests/
   }

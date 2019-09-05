@@ -987,6 +987,21 @@ class StudyFile
     end
   end
 
+  # helper to return domain_ranges for FirestoreCluster when launching ingest run
+  def get_cluster_domain_ranges
+    domain_ranges = {}
+    if !self.x_axis_min.nil? && !self.x_axis_max.nil? && !self.y_axis_min.nil? && !self.y_axis_max.nil?
+      domain_ranges = {
+          x: [self.x_axis_min, self.x_axis_max],
+          y: [self.y_axis_min, self.y_axis_max]
+      }
+      if !self.z_axis_min.nil? && !self.z_axis_max.nil?
+        domain_ranges[:z] = [self.z_axis_min, self.z_axis_max]
+      end
+    end
+    domain_ranges
+  end
+
   private
 
   ###

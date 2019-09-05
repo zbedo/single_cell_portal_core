@@ -21,11 +21,17 @@ class ApplicationController < ActionController::Base
 
   rescue_from ActionController::InvalidAuthenticityToken, with: :invalid_csrf
 
-  @@firestore_client = Google::Cloud::Firestore.new(credentials: ENV['FIRESTORE_CREDENTIALS'],
+  @firestore_client = Google::Cloud::Firestore.new(credentials: ENV['FIRESTORE_CREDENTIALS'],
                                                     project_id: ENV['FIRESTORE_PROJECT'])
 
+  @papi_client = PapiClient.new
+
   def self.firestore_client
-    @@firestore_client
+    self.instance_variable_get(:@firestore_client)
+  end
+
+  def self.papi_client
+    self.instance_variable_get(:@papi_client)
   end
 
   # set current_user for use outside of controllers

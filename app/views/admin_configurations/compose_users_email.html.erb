@@ -33,18 +33,18 @@
 
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
 
-    function validateEmail() {
+    async function validateEmail() {
         var subject = $('#email_subject').val();
-        var content = CKEDITOR.instances['email_contents'].getData();
-        if ( subject === '' ) {
+        var content = await ckEditor.then(editor => {return editor.getData();});
+        if (subject === '') {
             alert('You must provide a subject before sending.');
             setErrorOnBlank($('#email_subject'));
         } else if (content === '') {
             alert('You must provide a message before sending');
         } else {
             $('#generic-modal-title').html("Sending Email... Please Wait");
-            launchModalSpinner('#generic-modal-spinner', '#generic-modal', function() {
-                CKEDITOR.instances['email_contents'].updateElement();
+            launchModalSpinner('#generic-modal-spinner', '#generic-modal', async function() {
+                await ckEditor.then(editor => {return editor.updateSourceElement();});
                 $('#new_users_email').submit();
             });
         }
@@ -62,7 +62,7 @@
         validateEmail();
     });
 
-    ClassicEditor
+    var ckEditor = ClassicEditor
         .create( document.querySelector( '#email_contents' ),
             {
                 toolbar: ["heading", '|',  "bold", "italic", "link", "bulletedList", "numberedList", "blockQuote", '|', "undo", "redo"]
