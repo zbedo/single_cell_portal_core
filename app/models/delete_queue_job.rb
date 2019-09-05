@@ -144,16 +144,6 @@ class DeleteQueueJob < Struct.new(:object)
 
   # remove parsed data from Firestore
   def delete_parsed_firestore_documents(firestore_class, study_accession, file_id)
-    collection = ApplicationController.firestore_client.col(firestore_class.collection_name)
-    docs = collection.where(:study_accession, :==, study_accession).where(:file_id, :==, file_id).get
-    docs.each do |doc|
-      if firestore_class.sub_collection_name.present?
-        sub_docs = doc.ref.col(firestore_class.sub_collection_name).get
-        sub_docs.each do |sub_doc|
-          sub_doc.ref.delete
-        end
-      end
-      doc.ref.delete
-    end
+    firestore_class.delete_by_study_and_file_id(study_accession, file_id)
   end
 end

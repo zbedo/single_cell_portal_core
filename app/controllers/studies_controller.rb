@@ -1096,7 +1096,7 @@ class StudiesController < ApplicationController
         when 'Coordinate Labels'
           @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user, {local: false, reparse: true})
         when 'Expression Matrix'
-          IngestJob.new.(study: @study, study_file: @study_file, user: current_user, action: :ingest_expression).delay.push_remote_and_launch_ingest(reparse: true)
+          IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_expression).delay.push_remote_and_launch_ingest(reparse: true)
         when 'MM Coordinate Matrix'
           # we have to cast the study_file ID to a string, otherwise it is a BSON::ObjectID and will not match
           barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => @study_file.id.to_s)

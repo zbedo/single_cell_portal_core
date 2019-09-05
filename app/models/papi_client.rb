@@ -217,7 +217,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   def get_command_line(study_file:, action:)
     validate_action_by_file(action, study_file)
     study = study_file.study
-    command_line = "python ingest_pipeline.py --study-accession #{study.accession} --file-id #{study_file.id.to_s} #{action}"
+    command_line = "python ingest_pipeline.py --study-accession #{study.accession} --file-id #{study_file.id} #{action}"
     case action.to_s
     when 'ingest_expression'
       if study_file.file_type == 'Expression Matrix'

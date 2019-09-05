@@ -144,14 +144,12 @@ module FirestoreDocuments
       StudyFile.find(self.file_id)
     end
 
-    private
-
     # clean up all documents and sub-documents, using base Firestore classes rather than
     # FirestoreDocument interface for better performance
     def self.delete_documents(documents, threads)
       Parallel.map(documents, in_threads: threads) do |doc|
         if self.respond_to?(:sub_collection)
-          doc.sub_documents.get.each do |sub_doc|
+          doc.ref.col(self.sub_collection).get.each do |sub_doc|
             sub_doc.ref.delete
           end
         end
