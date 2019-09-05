@@ -1,18 +1,16 @@
 {
   "dependencies": {
-    "@ckeditor/ckeditor5-build-classic": "^11.0.1",
-    "@rails/webpacker": "3.5",
-    "fstream": "1.0.12",
-    "ideogram": "1.8.0",
+    "@ckeditor/ckeditor5-build-classic": "12.3.1",
+    "@rails/webpacker": "4.0.7",
+    "core-js": "3",
+    "ideogram": "1.11.0",
     "igv": "2.1.0",
     "jquery": "3.4.0",
     "jquery-ui": "1.12.1",
-    "js-yaml": "3.13.1",
-    "lodash": "4.17.11",
     "morpheus-app": "1.0.18",
     "spin.js": "^4.0.0"
   },
   "devDependencies": {
-    "webpack-dev-server": "3.1.11"
+    "webpack-dev-server": "3.8.0"
   }
 }
