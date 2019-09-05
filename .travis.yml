@@ -1,6 +1,6 @@
 language: ruby
 rvm:
-  - 2.5.5
+  - 2.5.5btw
 install: bundle install --jobs=3 --retry=3 --no-deployment
 branches:
   only:
@@ -8,6 +8,9 @@ branches:
   - development
 services:
 - docker
+env:
+global:
+- COMMIT=${TRAVIS_COMMIT::8}
 before_install:
 - gem uninstall -v '>= 2' -i $(rvm gemdir)@global -ax bundler || true
 - gem install bundler -v '< 2'
@@ -16,7 +19,15 @@ before_install:
 - sudo unzip vault_1.0.1_linux_amd64.zip
 - sudo mv vault /usr/local/bin
 - docker pull mongo:3.4
+- export VERSION=$(curl --silent "https://api.github.com/repos/knqyf263/trivy/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+- wget https://github.com/knqyf263/trivy/releases/download/v${VERSION}/trivy_${VERSION}_Linux-64bit.tar.gz
+- tar zxvf trivy_${VERSION}_Linux-64bit.tar.gz
+- ./trivy --exit-code 0 --severity HIGH --quiet --auto-refresh mongo:3.4
+- ./trivy --exit-code 1 --severity CRITICAL --quiet --auto-refresh mongo:3.4
 - docker tag mongo:3.4 mongo:latest
 - docker run -d --name mongodb -p 27017:27017 mongo
 script:
 - bin/load_env_secrets.sh -p secret/kdux/scp/development/scp_config.json -s secret/kdux/scp/development/scp_service_account.json -e test -n single-cell-portal-development
+cache:
+directories:
+- $HOME/.cache/trivy
