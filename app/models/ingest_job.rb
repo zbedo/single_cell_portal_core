@@ -12,6 +12,8 @@ class IngestJob
   attr_accessor :study
   # StudyFile being ingested
   attr_accessor :study_file
+  # User performing ingest run
+  attr_accessor :user
   # Action being performed by Ingest (e.g. ingest_expression, ingest_cluster)
   attr_accessor :action
 
@@ -27,8 +29,6 @@ class IngestJob
       ingest_cell_metadata: FirestoreCellMetadatum,
       subsample: FirestoreCluster
   }
-
-  validates_presence_of :study, :study_file, :user
 
   # Push a file to a workspace bucket in the background and then launch an ingest run and queue polling
   # Can also clear out existing data if necessary (in case of a re-parse)
