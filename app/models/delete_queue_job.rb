@@ -144,6 +144,6 @@ class DeleteQueueJob < Struct.new(:object)
 
   # remove parsed data from Firestore
   def delete_parsed_firestore_documents(firestore_class, study_accession, file_id)
-    firestore_class.delete_by_study_and_file_id(study_accession, file_id)
+    firestore_class.delete_by_study_and_file(study_accession, file_id)
   end
 end
