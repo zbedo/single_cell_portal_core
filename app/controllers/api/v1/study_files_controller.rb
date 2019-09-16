@@ -314,9 +314,6 @@ module Api
               @study.save
             end
             @cluster.update(name: @study_file.name)
-            # also update data_arrays
-            DataArray.where(study_id: @study.id, linear_data_type: 'ClusterGroup', linear_data_id: @cluster.id,
-                            study_file_id: @study_file.id).update_all(cluster_name: study_file_params[:name])
           elsif ['Expression Matrix', 'MM Coordinate Matrix'].include?(study_file_params[:file_type]) && !study_file_params[:y_axis_label].blank?
             # if user is supplying an expression axis label, update default options hash
             @study.update(default_options: @study.default_options.merge(expression_label: study_file_params[:y_axis_label]))
