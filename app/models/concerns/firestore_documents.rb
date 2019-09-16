@@ -38,6 +38,10 @@ module FirestoreDocuments
       self.document.document_id
     end
 
+    def id
+      self.document_id
+    end
+
     def self.count(query={})
       if query.empty?
         self.collection.get.count
@@ -103,6 +107,19 @@ module FirestoreDocuments
       delete_documents(self.query_by(study_accession: accession, file_id: file_id), threads)
     end
 
+    # clean up all documents and sub-documents, using base Firestore classes rather than
+    # FirestoreDocument interface for better performance
+    def self.delete_documents(documents, threads)
+      Parallel.map(documents, in_threads: threads) do |doc|
+        if self.respond_to?(:sub_collection)
+          doc.ref.col(self.sub_collection).get.each do |sub_doc|
+            sub_doc.ref.delete
+          end
+        end
+        doc.ref.delete
+      end
+    end
+
     ##
     # Attribute getter/setter
     ##
@@ -119,7 +136,12 @@ module FirestoreDocuments
       end
 
       # assign only values that are declared as attr_accessor for given model
-      self.document.data.each do |attribute, value|
+      self.initialize_attributes!
+    end
+
+    # set all attribute values based off current data in Firestore, not just the document in memory
+    def initialize_attributes!
+      self.reference.get.data.each do |attribute, value|
         attr_method = "#{attribute}=".to_sym # will be a built-in from ActiveModel::AttributeAssignment
         if self.respond_to?(attr_method)
           self.send(attr_method, value)
@@ -140,21 +162,14 @@ module FirestoreDocuments
       attrs
     end
 
-    def study_file
-      StudyFile.find(self.file_id)
+    # update values in Firestore
+    def update(attibutes={})
+      self.reference.set(attibutes, merge: true)
+      self.initialize_attributes!
     end
 
-    # clean up all documents and sub-documents, using base Firestore classes rather than
-    # FirestoreDocument interface for better performance
-    def self.delete_documents(documents, threads)
-      Parallel.map(documents, in_threads: threads) do |doc|
-        if self.respond_to?(:sub_collection)
-          doc.ref.col(self.sub_collection).get.each do |sub_doc|
-            sub_doc.ref.delete
-          end
-        end
-        doc.ref.delete
-      end
+    def study_file
+      StudyFile.find(self.file_id)
     end
   end
 end

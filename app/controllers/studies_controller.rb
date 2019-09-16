@@ -739,7 +739,7 @@ class StudiesController < ApplicationController
         @precomputed_entry = PrecomputedScore.find_by(study_file_id: study_file_params[:_id])
         @precomputed_entry.update(name: @study_file.name)
       elsif study_file_params[:file_type] == 'Cluster'
-        @cluster = ClusterGroup.find_by(study_file_id: study_file_params[:_id])
+        @cluster = FirestoreCluster.by_study_and_file_id(@study.accession, @study_file.id.to_s)
         # before updating, check if the defaults also need to change
         if @study.default_cluster == @cluster
           @study.default_options[:cluster] = @study_file.name
@@ -794,7 +794,7 @@ class StudiesController < ApplicationController
         logger.info "Updating gene list #{@precomputed_entry.name} to match #{study_file_params[:name]}"
         @precomputed_entry.update(name: @study_file.name)
       elsif study_file_params[:file_type] == 'Cluster' && name_changed
-        @cluster = ClusterGroup.find_by(study_file_id: study_file_params[:_id])
+        @cluster = FirestoreCluster.by_study_and_file_id(@study.accession, study_file_params[:_id])
         logger.info "Updating cluster #{@cluster.name} to match #{study_file_params[:name]}"
 
         # before updating, check if the defaults also need to change
