@@ -37,9 +37,19 @@ class FirestoreGene
     end
   end
 
-  # return all unique gene names
+  # return all unique gene names.  uses query_by for better performance
   def self.unique_genes(accession)
-    self.by_study(accession).map(&:autocomplete_label)
+    query = self.query_by({study_accession: accession})
+    genes = []
+    query.each do |doc|
+      data = doc.data.with_indifferent_access
+      if data[:gene_id].present?
+        genes << "#{data[:name]} (#{data[:gene_id]})"
+      else
+        genes << data[:name]
+      end
+    end
+    genes
   end
 
   def scores
