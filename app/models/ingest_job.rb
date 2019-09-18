@@ -185,7 +185,7 @@ class IngestJob
   #
   # * *params*
   #   - +run_at+ (DateTime) => Time at which to run new polling check
-  def poll_for_completion(run_at: 30.seconds.from_now)
+  def poll_for_completion(run_at: 1.minute.from_now)
     if self.done? && !self.failed?
       Rails.logger.info "IngestJob poller: #{self.pipeline_name} is done!"
       Rails.logger.info "IngestJob poller: #{self.pipeline_name} status: #{self.current_status}"
