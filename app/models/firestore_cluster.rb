@@ -31,7 +31,7 @@ class FirestoreCluster
       docs = docs.where(:subsample_threshold, :==, subsample_threshold).
           where(:subsample_annotation, :==, subsample_annotation)
     end
-    docs.get.sort_by {|d| d[:array_index]}.map {|d| d.data[:value]}.flatten
+    docs.get.sort_by {|d| d[:array_index]}.map {|d| d.data[:values]}.flatten
   end
 
   def is_3d?
