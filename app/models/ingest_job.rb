@@ -199,7 +199,7 @@ class IngestJob
       DeleteQueueJob.new(self.study_file).delay.perform
       Study.firecloud_client.delete_workspace_file(self.study.bucket_id, self.study_file.bucket_location)
       subject = "Error: #{self.study_file.file_type} file: '#{self.study_file.upload_file_name}' parse has failed"
-      email_body = self.event_messages.map {|msg| "<p>#{msg}</p>"}
+      email_body = self.event_messages.join("<br/>")
       SingleCellMailer.notify_user_parse_fail(self.user.email, subject, email_body).deliver_now
     else
       Rails.logger.info "IngestJob poller: #{self.pipeline_name} is not done; queuing check for #{run_at}"
