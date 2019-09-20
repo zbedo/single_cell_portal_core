@@ -449,7 +449,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Hash+ object of workspace instance
   def get_workspace(workspace_namespace, workspace_name)
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}"
     process_firecloud_request(:get, path)
   end
 
@@ -462,7 +462,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Hash+ message of status of workspace deletion
   def delete_workspace(workspace_namespace, workspace_name)
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}"
     process_firecloud_request(:delete, path)
   end
 
@@ -475,7 +475,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Hash+ object of workspace ACL instance
   def get_workspace_acl(workspace_namespace, workspace_name)
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/acl"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/acl"
     process_firecloud_request(:get, path)
   end
 
@@ -490,7 +490,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Hash+ response of ACL update
   def update_workspace_acl(workspace_namespace, workspace_name, acl)
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/acl?inviteUsersNotFound=true"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/acl?inviteUsersNotFound=true"
     process_firecloud_request(:patch, path, acl)
   end
 
@@ -530,7 +530,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Hash+ object of workspace
   def set_workspace_attributes(workspace_namespace, workspace_name, attributes)
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/setAttributes"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/setAttributes"
     process_firecloud_request(:patch, path, attributes.to_json)
   end
 
@@ -543,7 +543,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Hash+ object of workspace
   def get_workspace_storage_cost(workspace_namespace, workspace_name)
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/storageCostEstimate"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/storageCostEstimate"
     process_firecloud_request(:get, path)
   end
 
@@ -654,7 +654,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Hash+ configuration object
   def copy_configuration_to_workspace(workspace_namespace, workspace_name, config_namespace, config_name, snapshot_id, destination_namespace, destination_name)
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/method_configs/copyFromMethodRepo"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/method_configs/copyFromMethodRepo"
     payload = {
         configurationNamespace: config_namespace,
         configurationName: config_name,
@@ -693,7 +693,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Array+ of configuration objects
   def get_workspace_configurations(workspace_namespace, workspace_name)
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/methodconfigs"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/methodconfigs"
     process_firecloud_request(:get, path)
   end
 
@@ -708,7 +708,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Hash+ configuration object
   def get_workspace_configuration(workspace_namespace, workspace_name, config_namespace, config_name)
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/method_configs/#{config_namespace}/#{config_name}"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/method_configs/#{config_namespace}/#{config_name}"
     process_firecloud_request(:get, path)
   end
 
@@ -722,7 +722,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Hash+ configuration object
   def create_workspace_configuration(workspace_namespace, workspace_name, configuration)
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/methodconfigs"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/methodconfigs"
     process_firecloud_request(:post, path, configuration.to_json)
   end
 
@@ -738,7 +738,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Hash+ configuration object
   def update_workspace_configuration(workspace_namespace, workspace_name, config_namespace, config_name, configuration)
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/method_configs/#{config_namespace}/#{config_name}"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/method_configs/#{config_namespace}/#{config_name}"
     process_firecloud_request(:post, path, configuration.to_json)
   end
 
@@ -754,7 +754,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Hash+ configuration object
   def overwrite_workspace_configuration(workspace_namespace, workspace_name, config_namespace, config_name, configuration)
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/method_configs/#{config_namespace}/#{config_name}"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/method_configs/#{config_namespace}/#{config_name}"
     process_firecloud_request(:put, path, configuration.to_json)
   end
 
@@ -776,7 +776,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Array+ of workflow submissions
   def get_workspace_submissions(workspace_namespace, workspace_name)
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/submissions"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/submissions"
     process_firecloud_request(:get, path)
   end
 
@@ -793,7 +793,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Hash+ of workflow submission details
   def validate_workspace_submission(workspace_namespace, workspace_name, config_namespace, config_name, entity_type, entity_name)
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/submissions/validate"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/submissions/validate"
     submission = {
         methodConfigurationNamespace: config_namespace,
         methodConfigurationName: config_name,
@@ -819,7 +819,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Hash+ of workflow submission details
   def create_workspace_submission(workspace_namespace, workspace_name, config_namespace, config_name, entity_type, entity_name)
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/submissions"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/submissions"
     submission = {
         methodConfigurationNamespace: config_namespace,
         methodConfigurationName: config_name,
@@ -841,7 +841,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Hash+ workflow submission object
   def get_workspace_submission(workspace_namespace, workspace_name, submission_id)
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/submissions/#{submission_id}"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/submissions/#{submission_id}"
     process_firecloud_request(:get, path)
   end
 
@@ -855,7 +855,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Boolean+ indication of workflow cancellation
   def abort_workspace_submission(workspace_namespace, workspace_name, submission_id)
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/submissions/#{submission_id}"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/submissions/#{submission_id}"
     process_firecloud_request(:delete, path)
   end
 
@@ -870,7 +870,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Hash+ of workflow object
   def get_workspace_submission_workflow(workspace_namespace, workspace_name, submission_id, workflow_id)
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/submissions/#{submission_id}/workflows/#{workflow_id}"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/submissions/#{submission_id}/workflows/#{workflow_id}"
     process_firecloud_request(:get, path)
   end
 
@@ -885,7 +885,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Array+ of workflow submission outputs
   def get_workspace_submission_outputs(workspace_namespace, workspace_name, submission_id, workflow_id)
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/submissions/#{submission_id}/workflows/#{workflow_id}/outputs"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/submissions/#{submission_id}/workflows/#{workflow_id}/outputs"
     process_firecloud_request(:get, path)
   end
 
@@ -952,7 +952,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Array+ of workspace metadata entities with type and attribute information
   def get_workspace_entities(workspace_namespace, workspace_name)
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/entities_with_type"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/entities_with_type"
     process_firecloud_request(:get, path)
   end
 
@@ -965,7 +965,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Array+ of workspace metadata entities
   def get_workspace_entity_types(workspace_namespace, workspace_name)
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/entities"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/entities"
     process_firecloud_request(:get, path)
   end
 
@@ -979,7 +979,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Array+ of workspace metadata entities with type and attribute information
   def get_workspace_entities_by_type(workspace_namespace, workspace_name, entity_type)
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/entities/#{entity_type}"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/entities/#{entity_type}"
     process_firecloud_request(:get, path)
   end
 
@@ -994,7 +994,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   - +Array+ of workspace metadata entities with type and attribute information
   def get_workspace_entity(workspace_namespace, workspace_name, entity_type, entity_name)
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/entities/#{entity_type}/#{entity_name}"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/entities/#{entity_type}/#{entity_name}"
     process_firecloud_request(:get, path)
   end
 
@@ -1017,7 +1017,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
         attributeName: attribute_name,
         addUpdateAttribute: attribute_value
     }.to_json
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/entities/#{entity_type}/#{entity_name}"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/entities/#{entity_type}/#{entity_name}"
     process_firecloud_request(:patch, path, update)
   end
 
@@ -1033,7 +1033,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   #   - +Array+ of workspace metadata entities with type and attribute information
   def get_workspace_entities_as_tsv(workspace_namespace, workspace_name, entity_type, *attribute_names)
     attribute_list = attribute_names.join(',')
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/entities/#{entity_type}/tsv#{attribute_list.blank? ? nil : '?attributeNames=' + attribute_list}"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/entities/#{entity_type}/tsv#{attribute_list.blank? ? nil : '?attributeNames=' + attribute_list}"
     process_firecloud_request(:get, path)
   end
 
@@ -1047,7 +1047,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   # * *return*
   #   -  String of entity type that was just created
   def import_workspace_entities_file(workspace_namespace, workspace_name, entities_file)
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/importEntities"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/importEntities"
     entities_upload = {
         entities: entities_file
     }
@@ -1071,7 +1071,7 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
         valid_workspace_entities << entity
       end
     end
-    path = self.api_root + "/api/workspaces/#{workspace_namespace}/#{workspace_name}/entities/delete"
+    path = self.api_root + "/api/workspaces/#{uri_encode(workspace_namespace)}/#{uri_encode(workspace_name)}/entities/delete"
     process_firecloud_request(:post, path,  valid_workspace_entities.to_json)
   end
 
@@ -1695,5 +1695,16 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
         error.message + ': ' + error.http_body
       end
     end
+  end
+
+  # URI-encode workspace identifiers (namespaces, workspaces) for use in API requests
+  #
+  # * *params*
+  #   - +identifier+ (String) => Name of Terra namespace/workspace
+  #
+  # * *returns*
+  #   - +String+ => URI-encoded namespace/workspace
+  def uri_encode(identifier)
+    URI.escape(identifier)
   end
 end

@@ -1,8 +1,8 @@
 <%= form_for(:service_account, url: update_service_account_profile_path(account: params[:account]), html: {class: 'form', id: 'firecloud-profile', data: {remote: true}}) do |f| %>
   <%= f.hidden_field :email, value: @profile_info['email'] %>
   <div class="bs-callout bs-callout-primary">
-    <p class="text-primary">Use this form to register or update the FireCloud profile belonging to the <span class="label label-primary"><%= params[:account] %></span> portal service account. The values you provide for first and last name will appear in all auto-generated emails from FireCloud (when workspaces are created or shared, for instance).</p>
-    <p class="text-danger"><i class="fas fa-fw fa-exclamation-triangle"></i> All fields are required.  This profile must be created before you can create projects or workspaces in FireCloud.</p>
+    <p class="text-primary">Use this form to register or update the Terra profile belonging to the <span class="label label-primary"><%= params[:account] %></span> portal service account. The values you provide for first and last name will appear in all auto-generated emails from Terra (when workspaces are created or shared, for instance).</p>
+    <p class="text-danger"><i class="fas fa-fw fa-exclamation-triangle"></i> All fields are required.  This profile must be created before you can create projects or workspaces in Terra.</p>
   </div>
   <div class="form-group">
     <h4>User Info</h4>
