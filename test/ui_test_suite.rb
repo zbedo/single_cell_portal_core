@@ -804,12 +804,12 @@ class UiTestSuite < Test::Unit::TestCase
 
     # verify firecloud workspace creation
     firecloud_link = @driver.find_element(:id, 'firecloud-link')
-    firecloud_url = "https://app.terra.bio/#workspaces/single-cell-portal/#{$env}-test-study-#{$random_seed}"
+    firecloud_url = "https://app.terra.bio/#workspaces/single-cell-portal-#{$env}/test-study-#{$random_seed}"
     firecloud_link.click
     @driver.switch_to.window(@driver.window_handles.last)
     sleep(1) # we need a sleep to let the driver catch up, otherwise we can get stuck in an inbetween state
     accept_firecloud_tos
-    completed = @driver.find_elements(:class, 'fa-check-circle')
+    completed = @driver.find_elements(:class, 'fa-pen')
     assert completed.size >= 1, 'did not provision workspace properly'
     assert @driver.current_url == firecloud_url, 'did not open firecloud workspace'
 
@@ -1021,10 +1021,10 @@ class UiTestSuite < Test::Unit::TestCase
     assert error_message.text == 'Firecloud workspace - there is already an existing workspace using this name. Please choose another name for your study.'
 
     # verify that workspace is still there
-    firecloud_url = 'https://app.terra.bio/#workspaces/single-cell-portal/development-sync-test-study'
+    firecloud_url = "https://app.terra.bio/#workspaces/single-cell-portal-#{$env}/sync-test-study"
     open_new_page(firecloud_url)
     accept_firecloud_tos
-    completed = @driver.find_elements(:class, 'fa-check-circle')
+    completed = @driver.find_elements(:class, 'fa-pen')
     assert completed.size >= 1, "did not find workspace - may have been deleted; please check #{firecloud_url}"
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
@@ -1469,10 +1469,10 @@ class UiTestSuite < Test::Unit::TestCase
 
     # now login as share user and check workspace
     login_as_other($share_email, $share_email_password)
-    firecloud_workspace = "https://app.terra.bio/#workspaces/single-cell-portal-development/sync-test-#{$random_seed}"
+    firecloud_workspace = "https://app.terra.bio/#workspaces/single-cell-portal-#{$env}/sync-test-#{$random_seed}"
     @driver.get firecloud_workspace
     accept_firecloud_tos
-    assert !element_present?(:class, 'fa-check-circle'), 'did not revoke access - study workspace still loads'
+    assert !element_present?(:class, 'fa-pen'), 'did not revoke access - study workspace still loads'
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
@@ -1877,10 +1877,10 @@ class UiTestSuite < Test::Unit::TestCase
     close_modal('message_modal')
 
     # assert access is revoked
-    firecloud_url = "https://app.terra.bio/#workspaces/single-cell-portal/#{$env}-test-study-#{$random_seed}"
+    firecloud_url = "https://app.terra.bio/#workspaces/single-cell-portal-#{$env}/test-study-#{$random_seed}"
     @driver.get firecloud_url
     accept_firecloud_tos
-    assert !element_present?(:class, 'fa-check-circle'), 'did not revoke access - study workspace still loads'
+    assert !element_present?(:class, 'fa-pen'), 'did not revoke access - study workspace still loads'
 
     # test that study admin access is disabled
     # go to homepage first to set referrer
@@ -1923,7 +1923,7 @@ class UiTestSuite < Test::Unit::TestCase
     # assert access is restored, wait a few seconds for changes to propogate
     sleep(3)
     @driver.get firecloud_url
-    assert element_present?(:class, 'fa-check-circle'), 'did not restore access - study workspace does not load'
+    assert element_present?(:class, 'fa-pen'), 'did not restore access - study workspace does not load'
 
     # assert study access is restored
     @driver.get studies_path
@@ -1941,7 +1941,7 @@ class UiTestSuite < Test::Unit::TestCase
 
     # assert firecloud projects are still accessible, but studies and downloads are not
     @driver.get firecloud_url
-    assert element_present?(:class, 'fa-check-circle'), 'did maintain restore access - study workspace does not load'
+    assert element_present?(:class, 'fa-pen'), 'did maintain restore access - study workspace does not load'
     test_study_path = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get(test_study_path)
     wait_for_render(:id, 'study-download-nav')
