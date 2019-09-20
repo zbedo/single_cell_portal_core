@@ -804,7 +804,7 @@ class UiTestSuite < Test::Unit::TestCase
 
     # verify firecloud workspace creation
     firecloud_link = @driver.find_element(:id, 'firecloud-link')
-    firecloud_url = "https://portal.firecloud.org/#workspaces/single-cell-portal/#{$env}-test-study-#{$random_seed}"
+    firecloud_url = "https://app.terra.bio/#workspaces/single-cell-portal/#{$env}-test-study-#{$random_seed}"
     firecloud_link.click
     @driver.switch_to.window(@driver.window_handles.last)
     sleep(1) # we need a sleep to let the driver catch up, otherwise we can get stuck in an inbetween state
@@ -1021,7 +1021,7 @@ class UiTestSuite < Test::Unit::TestCase
     assert error_message.text == 'Firecloud workspace - there is already an existing workspace using this name. Please choose another name for your study.'
 
     # verify that workspace is still there
-    firecloud_url = 'https://portal.firecloud.org/#workspaces/single-cell-portal/development-sync-test-study'
+    firecloud_url = 'https://app.terra.bio/#workspaces/single-cell-portal/development-sync-test-study'
     open_new_page(firecloud_url)
     accept_firecloud_tos
     completed = @driver.find_elements(:class, 'fa-check-circle')
@@ -1469,7 +1469,7 @@ class UiTestSuite < Test::Unit::TestCase
 
     # now login as share user and check workspace
     login_as_other($share_email, $share_email_password)
-    firecloud_workspace = "https://portal.firecloud.org/#workspaces/single-cell-portal-development/sync-test-#{$random_seed}"
+    firecloud_workspace = "https://app.terra.bio/#workspaces/single-cell-portal-development/sync-test-#{$random_seed}"
     @driver.get firecloud_workspace
     accept_firecloud_tos
     assert !element_present?(:class, 'fa-check-circle'), 'did not revoke access - study workspace still loads'
@@ -1877,7 +1877,7 @@ class UiTestSuite < Test::Unit::TestCase
     close_modal('message_modal')
 
     # assert access is revoked
-    firecloud_url = "https://portal.firecloud.org/#workspaces/single-cell-portal/#{$env}-test-study-#{$random_seed}"
+    firecloud_url = "https://app.terra.bio/#workspaces/single-cell-portal/#{$env}-test-study-#{$random_seed}"
     @driver.get firecloud_url
     accept_firecloud_tos
     assert !element_present?(:class, 'fa-check-circle'), 'did not revoke access - study workspace still loads'
