@@ -87,18 +87,13 @@ if [[ -n $VAULT_SECRET_PATH ]] ; then
 fi
 # now load service account credentials
 if [[ -n $SERVICE_ACCOUNT_PATH ]] ; then
+  echo "setting value for: GOOGLE_CLOUD_KEYFILE_JSON"
   CREDS_VALS=$(vault read -format=json $SERVICE_ACCOUNT_PATH)
   JSON_CONTENTS=$(echo $CREDS_VALS | jq --raw-output .data)
-  echo "setting value for: GOOGLE_CLOUD_KEYFILE_JSON"
-  export GOOGLE_CLOUD_KEYFILE_JSON=$(echo -n $JSON_CONTENTS)
-  echo "setting value for: GOOGLE_PRIVATE_KEY"
-  export GOOGLE_PRIVATE_KEY=$(echo $CREDS_VALS | jq --raw-output .data.private_key)
-  echo "setting value for: GOOGLE_CLIENT_EMAIL"
-  export GOOGLE_CLIENT_EMAIL=$(echo $CREDS_VALS | jq --raw-output .data.client_email)
-  echo "setting value for: GOOGLE_CLIENT_ID"
-  export GOOGLE_CLIENT_ID=$(echo $CREDS_VALS | jq --raw-output .data.client_id)
-  echo "setting value for: GOOGLE_CLOUD_PROJECT"
-  export GOOGLE_CLOUD_PROJECT=$(echo $CREDS_VALS | jq --raw-output .data.project_id)
+  echo "*** WRITING MAIN SERVICE ACCOUNT ***"
+  SERVICE_ACCOUNT_FILEPATH="$CONFIG_DIR/.scp_service_account.json"
+	echo $JSON_CONTENTS >| $SERVICE_ACCOUNT_FILEPATH
+  COMMAND=$COMMAND" -k /home/app/webapp/config/.scp_service_account.json"
 fi
 
 # now load public read-only service account credentials
