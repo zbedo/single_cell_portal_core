@@ -451,7 +451,7 @@ module Api
           case @study_file.file_type
           when 'Cluster'
             @study_file.update(parse_status: 'parsing')
-            job = IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_cluster)
+            job = IngestJob.new(study: @study, study_file: @study_file, user: current_api_user, action: :ingest_cluster)
             job.delay.push_remote_and_launch_ingest
             head 204
           when 'Coordinate Labels'
@@ -467,7 +467,7 @@ module Api
             end
           when 'Expression Matrix'
             @study_file.update(parse_status: 'parsing')
-            job = IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_expression)
+            job = IngestJob.new(study: @study, study_file: @study_file, user: current_api_user, action: :ingest_expression)
             job.delay.push_remote_and_launch_ingest
             head 204
           when 'MM Coordinate Matrix'
@@ -477,7 +477,7 @@ module Api
               @study_file.update(parse_status: 'parsing')
               genes.update(parse_status: 'parsing')
               barcodes.update(parse_status: 'parsing')
-              job = IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_expression)
+              job = IngestJob.new(study: @study, study_file: @study_file, user: current_api_user, action: :ingest_expression)
               job.delay.push_remote_and_launch_ingest
               head 204
             else
@@ -491,7 +491,7 @@ module Api
             @study.delay.initialize_precomputed_scores(@study_file, current_api_user)
           when 'Metadata'
             @study_file.update(parse_status: 'parsing')
-            job = IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_cell_metadata)
+            job = IngestJob.new(study: @study, study_file: @study_file, user: current_api_user, action: :ingest_cell_metadata)
             job.delay.push_remote_and_launch_ingest
           else
             # study file is not parseable
