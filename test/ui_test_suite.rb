@@ -297,7 +297,7 @@ class UiTestSuite < Test::Unit::TestCase
     opts = species_dropdown.find_elements(:tag_name, 'option')
     available_species = opts.delete_if {|opt| opt['value'] == '' || opt.text.downcase == 'human' }
     if available_species.any?
-      species_dropdown.send_keys(available_species.sample.text)
+      species_dropdown.send_keys(available_species.select {|s| !s.text != 'human'}.sample.text)
     end
     upload_fastq = fastq_form.find_element(:class, 'upload-fastq')
     upload_fastq.send_keys(@test_data_path + 'cell_1_R1_001.fastq.gz')
@@ -316,7 +316,7 @@ class UiTestSuite < Test::Unit::TestCase
     opts = species_dropdown.find_elements(:tag_name, 'option')
     available_species = opts.delete_if {|opt| opt['value'] == '' || opt.text.downcase == 'human' }
     if available_species.any?
-      species_dropdown.send_keys(available_species.sample.text)
+      species_dropdown.send_keys(available_species.select {|s| !s.text != 'human'}.sample.text)
     end
     new_upload_fastq = new_fastq_form.find_element(:class, 'upload-fastq')
     new_upload_fastq.send_keys(@test_data_path + 'cell_1_I1_001.fastq.gz')
@@ -821,7 +821,7 @@ class UiTestSuite < Test::Unit::TestCase
     @driver.switch_to.window(@driver.window_handles.last)
     sleep(1)
     # select the correct user
-    user_link = @driver.find_element(:xpath, "//p[@data-email='#{$test_email}']")
+    user_link = @driver.find_element(:xpath, "//div[@data-email='#{$test_email}']")
     user_link.click
     table = @driver.find_element(:id, 'p6n-storage-objects-table')
     table_body = table.find_element(:tag_name, 'tbody')
@@ -990,7 +990,7 @@ class UiTestSuite < Test::Unit::TestCase
     @driver.switch_to.window(@driver.window_handles.last)
     sleep(1)
     # select the correct user
-    user_link = @driver.find_element(:xpath, "//p[@data-email='#{$test_email}']")
+    user_link = @driver.find_element(:xpath, "//div[@data-email='#{$test_email}']")
     user_link.click
     table = @driver.find_element(:id, 'p6n-storage-objects-table')
     table_body = table.find_element(:tag_name, 'tbody')
@@ -1148,7 +1148,7 @@ class UiTestSuite < Test::Unit::TestCase
     @driver.switch_to.window(@driver.window_handles.last)
     sleep(1)
     # select the correct user
-    user_link = @driver.find_element(:xpath, "//p[@data-email='#{$share_email}']")
+    user_link = @driver.find_element(:xpath, "//div[@data-email='#{$share_email}']")
     user_link.click
     table = @driver.find_element(:id, 'p6n-storage-objects-table')
     table_body = table.find_element(:tag_name, 'tbody')
@@ -1275,7 +1275,7 @@ class UiTestSuite < Test::Unit::TestCase
         opts = species_dropdown.find_elements(:tag_name, 'option')
         available_species = opts.delete_if {|opt| opt['value'] == ''}
         if available_species.any?
-          taxon = available_species.sample.text
+          taxon = available_species.select {|s| !s.text != 'human'}.sample.text
           species_dropdown.send_keys(taxon)
         end
       end
