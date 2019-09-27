@@ -7,8 +7,6 @@ class StudyAccession
 
   validates_uniqueness_of :accession
 
-  after_create :set_study_accession_value
-
   # is this accession currently assigned to an existing study?
   def assigned?
     self.study.present?
@@ -25,13 +23,5 @@ class StudyAccession
       study.assign_accession
       puts "Accession for #{study.name} assigned: #{study.accession}"
     end
-  end
-
-  private
-
-  # once an accession is persisted, set the accession value in the associated study
-  def set_study_accession_value
-    study = self.study
-    study.update(accession: self.accession)
   end
 end
