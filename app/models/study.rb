@@ -561,7 +561,7 @@ class Study
   # callbacks
   before_validation :set_url_safe_name
   before_validation :set_data_dir, :set_firecloud_workspace_name, on: :create
-  after_validation  :assign_accession
+  after_validation  :assign_accession, on: :create
   # before_save       :verify_default_options
   after_create      :make_data_dir, :set_default_participant
   after_destroy     :remove_data_dir
@@ -569,7 +569,7 @@ class Study
 
   # search definitions
   index({"name" => "text", "description" => "text"}, {background: true})
-
+  index({accession: 1}, {unique: true})
   ###
   #
   # ACCESS CONTROL METHODS

@@ -7,6 +7,11 @@ class StudyAccession
 
   validates_uniqueness_of :accession
 
+  # exclude everything that does not start with "SCP" and end with digits
+  ACCESSION_SANITIZER = /[^SCP\d+$]/
+  # match on accepted accession format of "SCP" and ending with digits
+  ACCESSION_FORMAT = /^SCP\d+$/
+
   # is this accession currently assigned to an existing study?
   def assigned?
     self.study.present?
@@ -22,6 +27,16 @@ class StudyAccession
       puts "Assigning accession for #{study.name}"
       study.assign_accession
       puts "Accession for #{study.name} assigned: #{study.accession}"
+    end
+  end
+
+  # sanitize an input string to format as a StudyAccession
+  def self.sanitize_accession(accession_string)
+    possible_accession = accession_string.gsub(ACCESSION_SANITIZER, '')
+    if possible_accession.match(ACCESSION_FORMAT)
+      possible_accession
+    else
+      nil
     end
   end
 end
