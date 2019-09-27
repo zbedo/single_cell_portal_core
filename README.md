@@ -299,7 +299,7 @@ requirements are as follows:
 * Google Chrome along with 2 Google accounts, one of which needs to be a portal admin account (see 
 [ADMIN USER ACCOUNTS](#admin-user-accounts) above)
 * [Chromedriver](http://chromedriver.chromium.org/)
-* Terra accounts for both Google accounts (see [FIRECLOUD INTEGRATION](#firecloud-integration) below)
+* Terra accounts for both Google accounts (see [TERRA INTEGRATION](#terra-integration) below)
 
 
 #### RUNNING UI TESTS
@@ -459,7 +459,7 @@ and any differing values for hostnames/client secrets/passwords as needed.
 
 *Note: This instance is usually turned off to save on compute costs, so there is no expectation that it is up at any given time*
 
-### FIRECLOUD INTEGRATION
+### TERRA INTEGRATION
 
 The Single Cell Portal stores uploaded study data files in [Terra](https://app.terra.bio/) 
 workspaces, which in turn store data in GCP buckets.  This is all managed through a GCP service account which in turn 
@@ -536,7 +536,7 @@ back to the client for visualization without the need for setting up and externa
 To revoke this access, simply edit the configuration setting and set the value
 to 'No'.
 
-#### FIRECLOUD ACCESS SETTINGS
+#### TERRA ACCESS SETTINGS
 
 Disabling all Terra access is achieved by revoking all access to studies directly in Terra and using the portal 
 permission map (study ownership & shares) as a backup cache.  This will prevent anyone from downloading data either through 
