@@ -2324,6 +2324,21 @@ class UiTestSuite < Test::Unit::TestCase
     submit.click
     studies = @driver.find_elements(:class, 'study-panel').size
     assert studies >= 2, 'incorrect number of studies found. expected >= 2 but found ' + studies.to_s
+    # first load study and get accession value
+    path = @base_url + "/study/test-study-#{$random_seed}"
+    @driver.get(path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    wait_until_page_loads(loaded_path)
+
+    # now search by accession
+    @driver.get(@base_url)
+    search_box = @driver.find_element(:id, 'search_terms')
+    search_box.send_keys("#{study_accession}")
+    submit = @driver.find_element(:id, 'submit-search')
+    submit.click
+    studies = @driver.find_elements(:class, 'study-panel').size
+    assert studies == 1, "Did not load single study by accession value: #{study_accession}, expected 1 but found #{studies}"
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
 

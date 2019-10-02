@@ -561,14 +561,15 @@ class Study
   # callbacks
   before_validation :set_url_safe_name
   before_validation :set_data_dir, :set_firecloud_workspace_name, on: :create
+  after_validation  :assign_accession, on: :create
   # before_save       :verify_default_options
-  after_create      :make_data_dir, :set_default_participant, :assign_accession
+  after_create      :make_data_dir, :set_default_participant
   after_destroy     :remove_data_dir
   before_save       :set_readonly_access
 
   # search definitions
   index({"name" => "text", "description" => "text"}, {background: true})
-
+  index({accession: 1}, {unique: true})
   ###
   #
   # ACCESS CONTROL METHODS
@@ -2827,6 +2828,7 @@ class Study
     while Study.where(accession: next_accession).exists? || StudyAccession.where(accession: next_accession).exists?
       next_accession = StudyAccession.next_available
     end
+    self.accession = next_accession
     StudyAccession.create(accession: next_accession, study_id: self.id)
   end
 
