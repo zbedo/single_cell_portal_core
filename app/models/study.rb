@@ -793,7 +793,7 @@ class Study
 
   # helper to generate a URL to a study's FireCloud workspace
   def workspace_url
-    "https://portal.firecloud.org/#workspaces/#{self.firecloud_project}/#{self.firecloud_workspace}"
+    "https://app.terra.bio/#workspaces/#{self.firecloud_project}/#{self.firecloud_workspace}"
   end
 
   # helper to generate an HTTPS URL to a study's GCP bucket

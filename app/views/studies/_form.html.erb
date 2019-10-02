@@ -17,7 +17,7 @@
 			<%= f.text_field :name, class: 'form-control', autocomplete: 'off' %>
 		</div>
     <div class="col-md-4">
-      <%= f.label :firecloud_project, 'FireCloud Billing Project' %><br />
+      <%= f.label :firecloud_project, 'Terra Billing Project' %><br />
       <% if @study.new_record? %>
         <%= f.select :firecloud_project, options_for_select(@projects, @study.firecloud_project),
                      {include_blank: 'Please select a billing project'}, class: 'form-control' %>
@@ -45,12 +45,12 @@
                      {}, {class: 'form-control'} %>
       </div>
       <div class="col-md-4">
-        <%= f.label :firecloud_workspace, 'Existing FireCloud Workspace' %><br />
+        <%= f.label :firecloud_workspace, 'Existing Terra Workspace' %><br />
         <%= f.text_field :firecloud_workspace, class: 'form-control', disabled: !@study.use_existing_workspace %>
       </div>
       <% else %>
         <div class="col-md-4">
-          <%= f.label :firecloud_workspace, 'FireCloud Workspace' %><br />
+          <%= f.label :firecloud_workspace, 'Terra Workspace' %><br />
           <%= f.text_field :firecloud_workspace, class: 'form-control', readonly: true, title: 'You may not change the workspace of an existing study', data: {toggle: 'tooltip'} %>
         </div>
       <% end %>
