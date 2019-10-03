@@ -15,7 +15,7 @@ require File.expand_path('ui_test_helper.rb', 'test')
 # 3. Gems: rubygems, test-unit, selenium-webdriver (see Gemfile.lock for version requirements)
 # 4. Google Chrome
 # 5. Chromedriver (https://sites.google.com/a/chromium.org/chromedriver/); make sure the verison you install works with your version of chrome
-# 6. Register for FireCloud (https://portal.firecloud.org) for both Google accounts (needed for auth & sharing acls)
+# 6. Register for Terra (https://app.terra.bio) for both Google accounts (needed for auth & sharing acls)
 # 7. The 'test email account' (see below) must be configured as a portal admin.  See 'ADMIN USER ACCOUNTS' in README.md for more information.
 
 # USAGE
@@ -297,7 +297,7 @@ class UiTestSuite < Test::Unit::TestCase
     opts = species_dropdown.find_elements(:tag_name, 'option')
     available_species = opts.delete_if {|opt| opt['value'] == '' || opt.text.downcase == 'human' }
     if available_species.any?
-      species_dropdown.send_keys(available_species.sample.text)
+      species_dropdown.send_keys(available_species.select {|s| !s.text != 'human'}.sample.text)
     end
     upload_fastq = fastq_form.find_element(:class, 'upload-fastq')
     upload_fastq.send_keys(@test_data_path + 'cell_1_R1_001.fastq.gz')
@@ -316,7 +316,7 @@ class UiTestSuite < Test::Unit::TestCase
     opts = species_dropdown.find_elements(:tag_name, 'option')
     available_species = opts.delete_if {|opt| opt['value'] == '' || opt.text.downcase == 'human' }
     if available_species.any?
-      species_dropdown.send_keys(available_species.sample.text)
+      species_dropdown.send_keys(available_species.select {|s| !s.text != 'human'}.sample.text)
     end
     new_upload_fastq = new_fastq_form.find_element(:class, 'upload-fastq')
     new_upload_fastq.send_keys(@test_data_path + 'cell_1_I1_001.fastq.gz')
@@ -804,12 +804,12 @@ class UiTestSuite < Test::Unit::TestCase
 
     # verify firecloud workspace creation
     firecloud_link = @driver.find_element(:id, 'firecloud-link')
-    firecloud_url = "https://portal.firecloud.org/#workspaces/single-cell-portal/#{$env}-test-study-#{$random_seed}"
+    firecloud_url = "https://app.terra.bio/#workspaces/single-cell-portal-#{$env}/test-study-#{$random_seed}"
     firecloud_link.click
     @driver.switch_to.window(@driver.window_handles.last)
     sleep(1) # we need a sleep to let the driver catch up, otherwise we can get stuck in an inbetween state
     accept_firecloud_tos
-    completed = @driver.find_elements(:class, 'fa-check-circle')
+    completed = @driver.find_elements(:class, 'fa-pen')
     assert completed.size >= 1, 'did not provision workspace properly'
     assert @driver.current_url == firecloud_url, 'did not open firecloud workspace'
 
@@ -821,7 +821,7 @@ class UiTestSuite < Test::Unit::TestCase
     @driver.switch_to.window(@driver.window_handles.last)
     sleep(1)
     # select the correct user
-    user_link = @driver.find_element(:xpath, "//p[@data-email='#{$test_email}']")
+    user_link = @driver.find_element(:xpath, "//div[@data-email='#{$test_email}']")
     user_link.click
     table = @driver.find_element(:id, 'p6n-storage-objects-table')
     table_body = table.find_element(:tag_name, 'tbody')
@@ -990,7 +990,7 @@ class UiTestSuite < Test::Unit::TestCase
     @driver.switch_to.window(@driver.window_handles.last)
     sleep(1)
     # select the correct user
-    user_link = @driver.find_element(:xpath, "//p[@data-email='#{$test_email}']")
+    user_link = @driver.find_element(:xpath, "//div[@data-email='#{$test_email}']")
     user_link.click
     table = @driver.find_element(:id, 'p6n-storage-objects-table')
     table_body = table.find_element(:tag_name, 'tbody')
@@ -1021,10 +1021,10 @@ class UiTestSuite < Test::Unit::TestCase
     assert error_message.text == 'Firecloud workspace - there is already an existing workspace using this name. Please choose another name for your study.'
 
     # verify that workspace is still there
-    firecloud_url = 'https://portal.firecloud.org/#workspaces/single-cell-portal/development-sync-test-study'
+    firecloud_url = "https://app.terra.bio/#workspaces/single-cell-portal-#{$env}/sync-test-study"
     open_new_page(firecloud_url)
     accept_firecloud_tos
-    completed = @driver.find_elements(:class, 'fa-check-circle')
+    completed = @driver.find_elements(:class, 'fa-pen')
     assert completed.size >= 1, "did not find workspace - may have been deleted; please check #{firecloud_url}"
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
@@ -1148,7 +1148,7 @@ class UiTestSuite < Test::Unit::TestCase
     @driver.switch_to.window(@driver.window_handles.last)
     sleep(1)
     # select the correct user
-    user_link = @driver.find_element(:xpath, "//p[@data-email='#{$share_email}']")
+    user_link = @driver.find_element(:xpath, "//div[@data-email='#{$share_email}']")
     user_link.click
     table = @driver.find_element(:id, 'p6n-storage-objects-table')
     table_body = table.find_element(:tag_name, 'tbody')
@@ -1275,7 +1275,7 @@ class UiTestSuite < Test::Unit::TestCase
         opts = species_dropdown.find_elements(:tag_name, 'option')
         available_species = opts.delete_if {|opt| opt['value'] == ''}
         if available_species.any?
-          taxon = available_species.sample.text
+          taxon = available_species.select {|s| !s.text != 'human'}.sample.text
           species_dropdown.send_keys(taxon)
         end
       end
@@ -1469,10 +1469,10 @@ class UiTestSuite < Test::Unit::TestCase
 
     # now login as share user and check workspace
     login_as_other($share_email, $share_email_password)
-    firecloud_workspace = "https://portal.firecloud.org/#workspaces/single-cell-portal-development/sync-test-#{$random_seed}"
+    firecloud_workspace = "https://app.terra.bio/#workspaces/single-cell-portal-#{$env}/sync-test-#{$random_seed}"
     @driver.get firecloud_workspace
     accept_firecloud_tos
-    assert !element_present?(:class, 'fa-check-circle'), 'did not revoke access - study workspace still loads'
+    assert !element_present?(:class, 'fa-pen'), 'did not revoke access - study workspace still loads'
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
@@ -1877,10 +1877,10 @@ class UiTestSuite < Test::Unit::TestCase
     close_modal('message_modal')
 
     # assert access is revoked
-    firecloud_url = "https://portal.firecloud.org/#workspaces/single-cell-portal/#{$env}-test-study-#{$random_seed}"
+    firecloud_url = "https://app.terra.bio/#workspaces/single-cell-portal-#{$env}/test-study-#{$random_seed}"
     @driver.get firecloud_url
     accept_firecloud_tos
-    assert !element_present?(:class, 'fa-check-circle'), 'did not revoke access - study workspace still loads'
+    assert !element_present?(:class, 'fa-pen'), 'did not revoke access - study workspace still loads'
 
     # test that study admin access is disabled
     # go to homepage first to set referrer
@@ -1923,7 +1923,7 @@ class UiTestSuite < Test::Unit::TestCase
     # assert access is restored, wait a few seconds for changes to propogate
     sleep(3)
     @driver.get firecloud_url
-    assert element_present?(:class, 'fa-check-circle'), 'did not restore access - study workspace does not load'
+    assert element_present?(:class, 'fa-pen'), 'did not restore access - study workspace does not load'
 
     # assert study access is restored
     @driver.get studies_path
@@ -1941,7 +1941,7 @@ class UiTestSuite < Test::Unit::TestCase
 
     # assert firecloud projects are still accessible, but studies and downloads are not
     @driver.get firecloud_url
-    assert element_present?(:class, 'fa-check-circle'), 'did maintain restore access - study workspace does not load'
+    assert element_present?(:class, 'fa-pen'), 'did maintain restore access - study workspace does not load'
     test_study_path = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get(test_study_path)
     wait_for_render(:id, 'study-download-nav')
@@ -2324,6 +2324,21 @@ class UiTestSuite < Test::Unit::TestCase
     submit.click
     studies = @driver.find_elements(:class, 'study-panel').size
     assert studies >= 2, 'incorrect number of studies found. expected >= 2 but found ' + studies.to_s
+    # first load study and get accession value
+    path = @base_url + "/study/test-study-#{$random_seed}"
+    @driver.get(path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    wait_until_page_loads(loaded_path)
+
+    # now search by accession
+    @driver.get(@base_url)
+    search_box = @driver.find_element(:id, 'search_terms')
+    search_box.send_keys("#{study_accession}")
+    submit = @driver.find_element(:id, 'submit-search')
+    submit.click
+    studies = @driver.find_elements(:class, 'study-panel').size
+    assert studies == 1, "Did not load single study by accession value: #{study_accession}, expected 1 but found #{studies}"
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
 

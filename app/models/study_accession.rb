@@ -30,13 +30,15 @@ class StudyAccession
     end
   end
 
-  # sanitize an input string to format as a StudyAccession
-  def self.sanitize_accession(accession_string)
-    possible_accession = accession_string.gsub(ACCESSION_SANITIZER, '')
-    if possible_accession.match(ACCESSION_FORMAT)
-      possible_accession
-    else
-      nil
+  # sanitize an list of terms to format as a StudyAccession
+  def self.sanitize_accessions(terms)
+    possible_accessions = []
+    terms.each do |term|
+      accession_string = term.strip.gsub(ACCESSION_SANITIZER, '')
+      if accession_string.match(ACCESSION_FORMAT)
+        possible_accessions << accession_string
+      end
     end
+    possible_accessions
   end
 end
