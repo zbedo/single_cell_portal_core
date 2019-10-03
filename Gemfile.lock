@@ -492,6 +492,7 @@ DEPENDENCIES
   spring
   swagger-blocks
   swagger_ui_engine
+  tcell_agent
   test-unit
   travis
   truncate_html
