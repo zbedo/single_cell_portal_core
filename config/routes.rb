@@ -174,6 +174,8 @@ Rails.application.routes.draw do
     match 'profile/:id/subscriptions/study/:study_id', to: 'profiles#update_study_subscription', via: [:post, :patch],
           as: :update_study_subscription
     post 'profile/:id/firecloud_profile', to: 'profiles#update_firecloud_profile', as: :update_user_firecloud_profile
+    get 'profile/:id/accept_tos', to: 'profiles#accept_tos', as: :accept_tos
+    post 'profile/:id/accept_tos', to: 'profiles#record_tos_action', as: :record_tos_action
 
     # data viewing actions
     get 'study/:identifier', to: 'site#legacy_study', as: :legacy_study
