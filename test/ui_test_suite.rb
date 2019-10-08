@@ -4902,31 +4902,20 @@ class UiTestSuite < Test::Unit::TestCase
     assert user_ideogram, "Ideogram did not render using user token: '$('#_ideogramOuterWrap canvas').length > 0' returned #{user_ideogram}"
     puts "Ensured we can load Ideogram and render its annotations"
 
-    # Log out and validate that we can *not* use the read-only service account to load results (SCP-1158)
+    # Log out and validate that we can use the read-only service account to load results (SCP-1856)
     logout_from_portal
     puts "Logged out"
-    @driver.get(loaded_sync_study_path)
-    # we can't use open_ui_tab as this has an explicit wait that will not return in this case as we prompt to sign in
-    explore_tab = @driver.find_element(:id, 'study-visualize-nav')
-    explore_tab.click
-    @wait.until { @driver.current_url.include?('https://accounts.google.com/signin') }
-    puts "Verified no public access to genome visualization"
 
-    # Ensure genome visualizations can be seen by signed-in users without View permission
-    # First, adjust variable names to reflect that the user has not had the study shared with them.
-    user_email = $share_email
-    user_password = $share_email_password
-    login_as_other(user_email, user_password)
+    # Ensure genome visualizations in public studies can be seen by all users (even those not signed-in)
     @driver.get(loaded_sync_study_path)
     open_ui_tab('study-visualize')
     wait_for_render(:css, '#tracks-to-display #filter_1')
     wait_for_render(:id, 'ideogram-container')
-    user_ideogram = @driver.execute_script("return $('#_ideogramOuterWrap canvas').length > 0")
-    assert user_ideogram, "Ideogram did not render using user token: '$('#_ideogramOuterWrap canvas').length > 0' returned #{user_ideogram}"
-    puts "Ensured signed-in users without View permission can see Ideogram annotations"
+    has_ideogram = @driver.execute_script("return $('#_ideogramOuterWrap canvas').length > 0")
+    assert has_ideogram, "Ideogram did not render using user token: '$('#_ideogramOuterWrap canvas').length > 0' returned #{user_ideogram}"
+    puts "Ensured all users can see ideogram in public studies"
 
     # clean up
-    logout_from_portal
     login_as_other($test_email, $test_email_password)
     @driver.get @base_url + '/studies'
     wait_until_page_loads(@base_url + '/studies')
