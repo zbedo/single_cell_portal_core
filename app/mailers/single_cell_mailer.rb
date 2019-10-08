@@ -127,7 +127,7 @@ class SingleCellMailer < ApplicationMailer
 		@study = study
 		@share = share
 		@message = "<p>The study #{@study.name} was unable to properly revoke sharing to #{@share}</p>
-								<p>Please log into <a href='https://portal.firecloud.org'>FireCloud</a> and manually remove this user</p>".html_safe
+								<p>Please log into <a href='https://app.terra.bio'>Terra</a> and manually remove this user</p>".html_safe
 		if @study.deliver_emails?
       mail(to: @study.user.email, subject: "[Single Cell Portal Notifier] Study: #{@study.name} sharing update failed") do |format|
         format.html {render html: @message}

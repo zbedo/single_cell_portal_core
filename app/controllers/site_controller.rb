@@ -87,8 +87,11 @@ class SiteController < ApplicationController
 
     # if search params are present, filter accordingly
     if !params[:search_terms].blank?
-      params[:search_terms] = sanitize_search_values(params[:search_terms])
-      @studies = @viewable.where({:$text => {:$search => params[:search_terms]}}).paginate(page: params[:page], per_page: Study.per_page)
+      search_terms = sanitize_search_values(params[:search_terms])
+      # determine if search values contain possible study accessions
+      possible_accessions = StudyAccession.sanitize_accessions(search_terms.split)
+      @studies = @viewable.any_of({:$text => {:$search => search_terms}}, {:accession.in => possible_accessions}).
+          paginate(page: params[:page], per_page: Study.per_page)
     else
       @studies = @viewable.paginate(page: params[:page], per_page: Study.per_page)
     end
