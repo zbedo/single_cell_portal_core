@@ -132,7 +132,7 @@ function initializeIgv() {
   var igvContainer, igvOptions, tracks, genome, genesTrack, bamTracks,
     genesTrackName, genes, locus;
 
-  // Bail if already displayed or not signed in
+  // Bail if already displayed
   if (igvIsDisplayed()) return;
 
   delete igv.browser;
