@@ -5045,30 +5045,6 @@ class UiTestSuite < Test::Unit::TestCase
     igv_single_instance = @driver.execute_script("return $('.igv-root-div').length === 1;")
     assert igv_single_instance, "Multiple instances of igv.js are display; only one should be"
 
-
-    # sign out and prove that gene search state is remembered after new login
-    logout_from_portal
-    @driver.get(loaded_path)
-    wait_until_page_loads(loaded_path)
-    open_ui_tab('study-visualize')
-    @wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
-    # Search for a gene
-    gene = @genes.sample
-    search_box = @driver.find_element(:id, 'search_genes')
-    search_box.send_keys(gene)
-    search_box.click
-    search_genes = @driver.find_element(:id, 'perform-gene-search')
-    search_genes.click
-    @wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
-
-    # open genome tab and validate gene search is remembered
-    genome_nav = @driver.find_element(:id, 'genome-tab-nav')
-    genome_nav.click
-    log_back_in($test_email)
-    @wait.until {element_visible?(:id, 'genome-tab')}
-    queried_gene = @driver.find_element(:class, 'queried-gene')
-    assert queried_gene.text == gene, "did not load the correct gene, expected #{gene} but found #{queried_gene.text}"
-
     # clean up
     @driver.get studies_path
     wait_until_page_loads(studies_path)
