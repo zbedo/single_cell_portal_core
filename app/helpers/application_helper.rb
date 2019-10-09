@@ -302,15 +302,11 @@ module ApplicationHelper
 	# Return an access token for viewing GCS objects client side, depending on study privacy
 	# Context: https://github.com/broadinstitute/single_cell_portal_core/pull/239
 	def get_read_access_token(study, user)
-		if user.present?
-			if study.public? && Study.read_only_firecloud_client.present?
-				Study.read_only_firecloud_client.valid_access_token["access_token"]
-			else
-				user.valid_access_token[:access_token]
-			end
-		else
-			nil
-		end
+    if study.public? && Study.read_only_firecloud_client.present?
+      Study.read_only_firecloud_client.valid_access_token["access_token"]
+    elsif user.present?
+      user.valid_access_token[:access_token]
+    end
 	end
 
 	def pluralize_without_count(count, noun, text=nil)
