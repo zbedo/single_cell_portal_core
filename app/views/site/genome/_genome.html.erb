@@ -3,10 +3,8 @@ Minimal DOM scaffolding and server-side data for genomic visualizations.
 See partials referenced below and scp-igv.js for larger bodies of code.
 -->
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
-  var at;
   if (typeof accessToken === 'undefined') {
-    at = '<%= get_read_access_token(@study, current_user) %>';
-    window.accessToken = (at === '' ? null : at);
+    window.accessToken = '<%= get_read_access_token(@study, current_user) %>';
   }
 </script>
 <% if @study.has_analysis_outputs?('infercnv', 'ideogram.js') and action_name == 'study' %>

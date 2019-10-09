@@ -90,6 +90,22 @@ class ProfilesController < ApplicationController
     end
   end
 
+  def accept_tos
+
+  end
+
+  def record_tos_action
+    user_accepted = tos_params[:action] == 'accept'
+    if user_accepted
+      # record user acceptance, which tracks the email, the date, and the version of the ToS
+      TosAcceptance.create(email: @user.email)
+      redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]), notice: 'Terms of Service response successfully recorded.' and return
+    else
+      sign_out @user
+      redirect_to merge_default_redirect_params(site_path, scpbr: params[:scpbr]), alert: 'You must accept the Terms of Use in order to sign in.' and return
+    end
+  end
+
   private
 
   # set the requested user account
@@ -121,5 +137,9 @@ class ProfilesController < ApplicationController
     params.require(:fire_cloud_profile).permit(:contactEmail, :email, :firstName, :lastName, :institute, :institutionalProgram,
                                             :nonProfitStatus, :pi, :programLocationCity, :programLocationState,
                                             :programLocationCountry, :title)
+  end
+
+  def tos_params
+    params.require(:tos).permit(:action)
   end
 end
