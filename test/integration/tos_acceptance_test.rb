@@ -20,12 +20,14 @@ class TosAcceptanceTest < ActionDispatch::IntegrationTest
     follow_redirect!
     user_accepted = TosAcceptance.accepted?(@test_user)
     assert !user_accepted, "Did not record user denial, acceptance shows: #{user_accepted}"
+    assert controller.current_user.nil?, "Did not sign out user, current_user is #{controller.current_user}"
     # now accept ToS
     sign_in @test_user
     post record_tos_action_path(id: @test_user.id, tos: {action: 'accept'})
     follow_redirect!
     user_accepted = TosAcceptance.accepted?(@test_user)
     assert user_accepted, "Did not record user acceptance, acceptance shows: #{user_accepted}"
+    assert controller.current_user == @test_user, "Did not preserve sign in, current user is not #{@test_user.email}"
     # now get another page and validate that redirect is no longer being enforced
     get site_path
     assert path == site_path, "Redirect still being enforced, expected path to be #{site_path} but found #{path}"
