@@ -17,7 +17,11 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
 			# update a user's firecloud status
 			@user.delay.update_firecloud_status
 			sign_in(@user)
-			redirect_to request.env['omniauth.origin'] || site_path
+			if TosAcceptance.accepted?(@user)
+				redirect_to request.env['omniauth.origin'] || site_path
+			else
+				redirect_to accept_tos_path(@user.id)
+			end
 		else
 			redirect_to new_user_session_path
 		end

@@ -88,8 +88,9 @@
 
   $('.refresh-submissions-table').click(function() {
     $(this).addClass('disabled');
+    var refreshUrl = "<%= scp_url_for(get_workspace_submissions_path(accession: @study.accession, study_name: @study.url_safe_name), params[:scpbr]) %>";
     $.ajax({
-      url: "<%= get_workspace_submissions_path(accession: @study.accession, study_name: @study.url_safe_name) %>",
+      url: refreshUrl,
       dataType: 'script'
     });
   });
