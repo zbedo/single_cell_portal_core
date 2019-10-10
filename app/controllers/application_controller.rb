@@ -18,6 +18,7 @@ class ApplicationController < ActionController::Base
   before_action :get_download_quota
   before_action :get_deployment_notification
   before_action :set_selected_branding_group
+  before_action :check_tos_acceptance
 
   rescue_from ActionController::InvalidAuthenticityToken, with: :invalid_csrf
 
@@ -97,6 +98,14 @@ class ApplicationController < ActionController::Base
   def set_selected_branding_group
     if params[:scpbr].present?
       @selected_branding_group = BrandingGroup.find_by(name_as_id: params[:scpbr])
+    end
+  end
+
+  # make sure that users are accepting the Terms of Service
+  def check_tos_acceptance
+    # only redirect if user is signed in, has not accepted the ToS, and is not currently on the accept_tos page
+    if user_signed_in? && !TosAcceptance.accepted?(current_user) && request.path != accept_tos_path(current_user.id)
+      redirect_to accept_tos_path(current_user.id) and return
     end
   end
 
