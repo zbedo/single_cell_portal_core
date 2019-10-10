@@ -3435,8 +3435,8 @@ class UiTestSuite < Test::Unit::TestCase
 
     # select an annotation and wait for render
     annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
-    annotation_value = annotation['value']
     annotation = annotations.sample
+    annotation_value = annotation['value']
     annotation.click
     $verbose ? puts( "Using annotation #{annotation_value}") : nil
     @wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
