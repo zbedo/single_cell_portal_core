@@ -387,7 +387,7 @@ class UiTestSuite < Test::Unit::TestCase
     assert cluster_count == 2, "did not find correct number of clusters, expected 2 but found #{cluster_count}"
     assert gene_list_count == 1, "did not find correct number of gene lists, expected 1 but found #{gene_list_count}"
     assert metadata_count == 3, "did not find correct number of metadata objects, expected 3 but found #{metadata_count}"
-    assert cluster_annot_count == 3, "did not find correct number of cluster annotations, expected 2 but found #{cluster_annot_count}"
+    assert cluster_annot_count == 4, "did not find correct number of cluster annotations, expected 4 but found #{cluster_annot_count}"
     assert study_file_count == 8, "did not find correct number of study files, expected 8 but found #{study_file_count}"
     assert primary_data_count == 2, "did not find correct number of primary data files, expected 2 but found #{primary_data_count}"
     assert share_count == 1, "did not find correct number of study shares, expected 1 but found #{share_count}"
@@ -2390,6 +2390,17 @@ class UiTestSuite < Test::Unit::TestCase
       @wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
       cluster_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
       assert cluster_rendered, "cluster plot did not finish rendering on change, expected true but found #{cluster_rendered}"
+
+    # Test rendering of clusters with percent signs in name
+    clusters.select {|opt| opt.text == 'Test Cluster 2'}.first.click
+    sleep(0.5)
+    annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
+    annotations.select {|opt| opt.text == 'Has % sign'}.first.click
+    @wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+    sub_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
+    assert sub_rendered, "plot for cluster with percent sign in name did not finish rendering on change, expected true but found #{sub_rendered}"
+
+
     end
 
     # now test private study
@@ -3424,8 +3435,8 @@ class UiTestSuite < Test::Unit::TestCase
 
     # select an annotation and wait for render
     annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
-    annotation = annotations.sample
     annotation_value = annotation['value']
+    annotation = annotations.sample
     annotation.click
     $verbose ? puts( "Using annotation #{annotation_value}") : nil
     @wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
