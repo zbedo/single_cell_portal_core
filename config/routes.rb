@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  # bare domain redirect to homepage
+  get '/', to:redirect('/single_cell', status: 302)
+
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
   scope 'single_cell' do
     # API Routes
