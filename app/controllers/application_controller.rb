@@ -18,12 +18,6 @@ class ApplicationController < ActionController::Base
   before_action :get_download_quota
   before_action :get_deployment_notification
   before_action :set_selected_branding_group
-  
-  # before_action :store_user_location!, if: :storable_location?
-  # # The callback which stores the current location must be added before you authenticate the user 
-  # # as `authenticate_user!` (or whatever your resource is) will halt the filter chain and redirect 
-  # # before the location can be stored.
-  # before_action :authenticate_user!
 
   rescue_from ActionController::InvalidAuthenticityToken, with: :invalid_csrf
 
