@@ -1064,24 +1064,22 @@ class UiTestSuite < Test::Unit::TestCase
   test 'admin: sharing: view and edit permission' do
     puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
-    # # check view visibility for unauthenticated users
-    # path = @base_url + "/study/private-study-#{$random_seed}"
-    # @driver.get path
-    # assert @driver.current_url == @base_url + "/users/sign_in", 'did not redirect to sign-in page'
-    # assert element_present?(:id, 'message_modal'), 'did not find alert modal'
-    # close_modal('message_modal')
-
-    # login($test_email, $test_email_password)
-    @driver.get @base_url + '/studies'
+    # check view visibility for unauthenticated users
+    path = @base_url + "/study/private-study-#{$random_seed}"
+    @driver.get path
+    assert @driver.current_url == @base_url + "/users/sign_in", 'did not redirect to sign-in page'
+    assert element_present?(:id, 'message_modal'), 'did not find alert modal'
     close_modal('message_modal')
-    login($share_email, $share_email_password)
+
+    login($test_email, $test_email_password)
+    @driver.get @base_url + '/studies'
 
     # get path info
-    # edit = @driver.find_element(:class, "private-study-#{$random_seed}-edit")
-    # edit.click
-    # # wait a few seconds for page to load before getting url
-    # sleep(2)
-    # private_study_id = @driver.current_url.split('/')[5]
+    edit = @driver.find_element(:class, "private-study-#{$random_seed}-edit")
+    edit.click
+    # wait a few seconds for page to load before getting url
+    sleep(2)
+    private_study_id = @driver.current_url.split('/')[5]
     @driver.get @base_url + '/studies'
     edit = @driver.find_element(:class, "test-study-#{$random_seed}-edit")
     edit.click
@@ -1089,65 +1087,51 @@ class UiTestSuite < Test::Unit::TestCase
     sleep(2)
     share_study_id = @driver.current_url.split('/')[5]
 
-    # # # logout
-    # logout_from_portal
+    # logout
+    logout_from_portal
 
-    # # login as share user
-    # login_as_other($share_email, $share_email_password)
+    # login as share user
+    login_as_other($share_email, $share_email_password)
 
-    # # view study
-    # path = @base_url + "/study/private-study-#{$random_seed}"
-    # @driver.get path
-    # assert @driver.current_url == @base_url, 'did not redirect'
-    # assert element_present?(:id, 'message_modal'), 'did not find alert modal'
-    # close_modal('message_modal')
-    # # check public visibility when logged in
-    # path = @base_url + "/study/gzip-parse-#{$random_seed}"
-    # @driver.get path
-    # study_accession = extract_accession_from_url(@driver.current_url)
-    # loaded_path = @base_url + "/study/#{study_accession}/gzip-parse-#{$random_seed}"
-    # assert @driver.current_url == loaded_path, 'did not load public study without share'
+    # view study
+    path = @base_url + "/study/private-study-#{$random_seed}"
+    @driver.get path
+    assert @driver.current_url == @base_url, 'did not redirect'
+    assert element_present?(:id, 'message_modal'), 'did not find alert modal'
+    close_modal('message_modal')
+    # check public visibility when logged in
+    path = @base_url + "/study/gzip-parse-#{$random_seed}"
+    @driver.get path
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/gzip-parse-#{$random_seed}"
+    assert @driver.current_url == loaded_path, 'did not load public study without share'
 
-    # # edit study
-    # edit_path = @base_url + '/studies/' + private_study_id + '/edit'
-    # @driver.get edit_path
-    # assert @driver.current_url == @base_url + '/studies', 'did not redirect'
-    # assert element_present?(:id, 'message_modal'), 'did not find alert modal'
-    # close_modal('message_modal')
+    # edit study
+    edit_path = @base_url + '/studies/' + private_study_id + '/edit'
+    @driver.get edit_path
+    assert @driver.current_url == @base_url + '/studies', 'did not redirect'
+    assert element_present?(:id, 'message_modal'), 'did not find alert modal'
+    close_modal('message_modal')
 
-    # # test share
-    # share_view_path = @base_url + "/study/test-study-#{$random_seed}"
-    # @driver.get share_view_path
-    # study_accession = extract_accession_from_url(@driver.current_url)
-    # loaded_view_share_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
-    # assert @driver.current_url == loaded_view_share_path, 'did not load share study view'
-    # share_edit_path = @base_url + '/studies/' + share_study_id + '/edit'
-    # @driver.get share_edit_path
-    # assert @driver.current_url == share_edit_path, 'did not load share study edit'
+    # test share
+    share_view_path = @base_url + "/study/test-study-#{$random_seed}"
+    @driver.get share_view_path
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_view_share_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    assert @driver.current_url == loaded_view_share_path, 'did not load share study view'
+    share_edit_path = @base_url + '/studies/' + share_study_id + '/edit'
+    @driver.get share_edit_path
+    assert @driver.current_url == share_edit_path, 'did not load share study edit'
 
     # test uploading a file
     upload_path = @base_url + '/studies/' + share_study_id + '/upload'
     @driver.get upload_path
-    puts "after @driver.get upload_path"
     misc_tab = @driver.find_element(:id, 'initialize_misc_form_nav')
     misc_tab.click
-    sleep(20)
-    add_misc = @driver.find_element(:class, 'add-misc')
-    add_misc.click
-    new_misc_form = @driver.find_element(:class, 'new-misc-form')
-    upload_doc = new_misc_form.find_element(:class, 'upload-misc')
+
+    upload_doc = @driver.find_element(:class, 'upload-misc')
     upload_doc.send_keys(@test_data_path + 'README.txt')
     upload_btn = @driver.find_element(:id, 'start-file-upload')
-
-    add_misc = @driver.find_element(:class, 'add-misc')
-    add_misc.click
-    new_misc_form = @driver.find_element(:class, 'new-misc-form')
-    upload_doc = new_misc_form.find_element(:class, 'upload-misc')
-    upload_doc.send_keys(@test_data_path + 'README.txt')
-    wait_for_render(:id, 'start-file-upload')
-    upload_btn = @driver.find_element(:id, 'start-file-upload')
-
-
     sleep(0.5)
     upload_btn.click
     close_modal('upload-success-modal')
@@ -1155,7 +1139,7 @@ class UiTestSuite < Test::Unit::TestCase
     # verify upload has completed and is in FireCloud bucket
     @driver.get @base_url + '/studies/'
     file_count = @driver.find_element(:id, "test-study-#{$random_seed}-study-file-count")
-    assert file_count.text == '11', "did not find correct number of files, expected 11 but found #{file_count.text}"
+    assert file_count.text == '10', "did not find correct number of files, expected 10 but found #{file_count.text}"
     show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
     show_study.click
     # verify gcs bucket upload
