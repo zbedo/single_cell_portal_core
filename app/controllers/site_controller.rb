@@ -1454,7 +1454,6 @@ class SiteController < ApplicationController
   def check_view_permissions
     unless @study.public?
       if (!user_signed_in? && !@study.public?)
-        # To test, load https://localhost/single_cell/study/SCP82/reduce-verbosity-3
         authenticate_user!
       elsif (user_signed_in? && !@study.can_view?(current_user))
         alert = 'You do not have permission to perform that action.'

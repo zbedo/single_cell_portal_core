@@ -1,4 +1,4 @@
-<% unless notice.nil? && alert.nil? %>
+<% unless (notice.nil? || notice.blank?) && (alert.nil? || alert.blank?) %>
 	<div class="modal fade" id="message_modal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 		<div class="modal-dialog">
 			<div class="modal-content">

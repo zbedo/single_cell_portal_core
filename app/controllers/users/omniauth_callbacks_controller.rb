@@ -14,7 +14,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
 			flash[:notice] = I18n.t "devise.omniauth_callbacks.success", :kind => "Google"
 			@user.update(authentication_token: Devise.friendly_token(32))
 			@user.generate_access_token
-			# update a user's firecloud status
+			# update a user's FireCloud status
 			@user.delay.update_firecloud_status
 			sign_in(@user)
 			if TosAcceptance.accepted?(@user)
