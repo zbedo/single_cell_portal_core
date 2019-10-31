@@ -2,9 +2,10 @@
 <html>
 <head>
   <title>Single Cell Portal</title>
+  <%= favicon_link_tag 'scp_favicon.ico' %>
   <%= csrf_meta_tags %>
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
       // if we had search forms to preserve, recall and resubmit
       if ( localStorage.getItem('previous-search-url') ) {
