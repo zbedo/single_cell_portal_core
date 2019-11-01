@@ -27,25 +27,22 @@ class DeleteQueueJob < Struct.new(:object)
           study.default_options[:annotation] = nil
           study.save
         end
-        delete_parsed_firestore_documents(FirestoreCluster, study.accession, object.id.to_s)
-        # cluster_group_id = ClusterGroup.find_by(study_file_id: object.id, study_id: study.id).id
-        # delete_parsed_data(object.id, study.id, ClusterGroup)
-        # delete_parsed_data(object.id, study.id, DataArray)
-        # user_annotations = UserAnnotation.where(study_id: study.id, cluster_group_id: cluster_group_id )
-        # user_annotations.each do |annot|
-        #   annot.user_data_arrays.delete_all
-        #   annot.user_annotation_shares.delete_all
-        # end
-        # user_annotations.delete_all
+        cluster_group_id = ClusterGroup.find_by(study_file_id: object.id, study_id: study.id).id
+        delete_parsed_data(object.id, study.id, ClusterGroup)
+        delete_parsed_data(object.id, study.id, DataArray)
+        user_annotations = UserAnnotation.where(study_id: study.id, cluster_group_id: cluster_group_id )
+        user_annotations.each do |annot|
+          annot.user_data_arrays.delete_all
+          annot.user_annotation_shares.delete_all
+        end
+        user_annotations.delete_all
       when 'Coordinate Labels'
         delete_parsed_data(object.id, study.id, DataArray)
         remove_file_from_bundle
       when 'Expression Matrix'
-        delete_parsed_firestore_documents(FirestoreGene, object.study.accession, object.id.to_s)
         delete_parsed_data(object.id, study.id, Gene, DataArray)
         study.set_gene_count
       when 'MM Coordinate Matrix'
-        delete_parsed_firestore_documents(FirestoreGene, object.study.accession, object.id.to_s)
         delete_parsed_data(object.id, study.id, Gene, DataArray)
         study.set_gene_count
       when /10X/
@@ -58,13 +55,11 @@ class DeleteQueueJob < Struct.new(:object)
           end
           parent = object.study_file_bundle.parent
           if parent.present?
-            delete_parsed_firestore_documents(FirestoreGene, object.study.accession, parent.id.to_s)
             delete_parsed_data(parent.id, study.id, Gene, DataArray)
           end
         end
         remove_file_from_bundle
       when 'Metadata'
-        delete_parsed_firestore_documents(FirestoreCellMetadatum, object.study.accession, object.id.to_s)
         delete_parsed_data(object.id, study.id, CellMetadatum, DataArray)
         study.update(cell_count: 0)
         # unset default annotation if it was study-based
@@ -95,9 +90,8 @@ class DeleteQueueJob < Struct.new(:object)
       object.update!(queued_for_deletion: true, upload_file_name: new_name, name: new_name, file_type: 'DELETE')
 
       # reset initialized if needed
-      if !FirestoreGene.study_has_any?(study.accession) || !FirestoreCellMetadatum.study_has_any?(study.accession) ||
-          !FirestoreCluster.study_has_any?(study.accession)
-        study.update!(initialized: false)
+      if study.cluster_groups.empty? || study.genes.empty? || study.cell_metadata.empty?
+        study.update(initialized: false)
       end
     when 'UserAnnotation'
       study = object.study
@@ -140,10 +134,5 @@ class DeleteQueueJob < Struct.new(:object)
     models.each do |model|
       model.where(study_file_id: object_id, study_id: study_id).delete_all
     end
-  end
-
-  # remove parsed data from Firestore
-  def delete_parsed_firestore_documents(firestore_class, study_accession, file_id)
-    firestore_class.delete_by_study_and_file(study_accession, file_id)
   end
 end

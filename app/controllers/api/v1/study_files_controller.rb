@@ -306,7 +306,7 @@ module Api
             logger.info "Updating gene list #{@precomputed_entry.name} to match #{study_file_params[:name]}"
             @precomputed_entry.update(name: @study_file.name)
           elsif study_file_params[:file_type] == 'Cluster' && name_changed
-            @cluster = FirestoreCluster.by_study_and_file_id(@study.accession, study_file_params[:_id])
+            @cluster = ClusterGroup.find_by(study_file_id: study_file_params[:_id])
             logger.info "Updating cluster #{@cluster.name} to match #{study_file_params[:name]}"
             # before updating, check if the defaults also need to change
             if @study.default_cluster == @cluster

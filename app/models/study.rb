@@ -748,15 +748,15 @@ class Study
   ##
 
   def has_expression_data?
-    FirestoreGene.study_has_any?(self.accession)
+    self.genes.any?
   end
 
   def has_cluster_data?
-    FirestoreCluster.study_has_any?(self.accession)
+    self.cluster_groups.any?
   end
 
   def has_cell_metadata?
-    FirestoreCellMetadatum.study_has_any?(self.accession)
+    self.cell_metadata.any?
   end
 
   def has_gene_lists?
@@ -820,8 +820,7 @@ class Study
   # helper to return default cluster to load, will fall back to first cluster if no pf has been set
   # or default cluster cannot be loaded
   def default_cluster
-    clusters = FirestoreCluster.by_study(self.accession)
-    default = clusters.first
+    default = self.cluster_groups.first
     if self.default_options[:cluster].nil?
       new_default = clusters.detect {|cluster| cluster.name == self.default_options[:cluster]}
       unless new_default.nil?
@@ -922,15 +921,15 @@ class Study
   # helper method to get number of unique single cells
   def set_cell_count
     cell_count = FirestoreCellMetadatum.all_cells(self.accession).count
-    self.update!(cell_count: cell_count)
+    self.update(cell_count: cell_count)
     Rails.logger.info "Setting cell count in #{self.name} to #{cell_count}"
   end
 
   # helper method to set the number of unique genes in this study
   def set_gene_count
-    gene_count = FirestoreGene.unique_genes(self.accession).count
+    gene_count = self.genes.pluck(:name).uniq.count
     Rails.logger.info "Setting gene count in #{self.name} to #{gene_count}"
-    self.update!(gene_count: gene_count)
+    self.update(gene_count: gene_count)
   end
 
   # return a count of the number of fastq files both uploaded and referenced via directory_listings for a study
@@ -1023,19 +1022,13 @@ class Study
   # dropdowns for selecting annotations.  can be scoped to one specific cluster, or return all with 'Cluster: ' prepended on the name
   def formatted_annotation_select(cluster: nil, annotation_type: nil)
     options = {}
-    metadata = FirestoreCellMetadatum.by_study(self.accession)
-    options['Study Wide'] = []
-    metadata.each do |meta|
-      options['Study Wide'] << meta.annotation_select_option
-    end
+    metadata = annotation_type.nil? ? self.cell_metadata : self.cell_metadata.where(annotation_type: annotation_type)
+    options['Study Wide'] = metadata.map(&:annotation_select_option)
     if cluster.present?
-      annotations = annotation_type.nil? ? cluster.cell_annotations : cluster.cell_annotations.select {|annot| annot[:type] == annotation_type}
-      options['Cluster-Based'] = annotations.map {|annot| "#{annot[:name]}--#{annot[:type]}--cluster"}
+      options['Cluster-Based'] = cluster.cell_annotation_select_option(annotation_type)
     else
-      clusters = FirestoreCluster.by_study(self.accession)
-      clusters.each do |cluster_group|
-        annotations = annotation_type.nil? ? cluster_group.cell_annotations : cluster_group.cell_annotations.select {|annot| annot[:type] == annotation_type}
-        options[cluster_group.name] = annotations.map {|annot| "#{cluster_group.name}--#{annot[:name]}--#{annot[:type]}--cluster"} # prepend name onto option value
+      self.cluster_groups.each do |cluster_group|
+        options[cluster_group.name] = cluster_group.cell_annotation_select_option(annotation_type, true) # prepend name onto option value
       end
     end
     options
@@ -1189,9 +1182,6 @@ class Study
       UserDataArray.where(study_id: study.id).delete_all
       AnalysisMetadatum.where(study_id: study.id).delete_all
       StudyFileBundle.where(study_id: study.id).delete_all
-      FirestoreCluster.delete_by_study(study.accession)
-      FirestoreCellMetadatum.delete_by_study(study.accession)
-      FirestoreGene.delete_by_study(study.accession)
       # now destroy study to ensure everything is removed
       study.destroy
       Rails.logger.info "#{Time.zone.now}: delete of #{study.name} completed"
@@ -1606,7 +1596,7 @@ class Study
       if !self.has_expression_label? && !expression_file.y_axis_label.blank?
         Rails.logger.info "#{Time.zone.now}: Setting default expression label in #{self.name} to '#{expression_file.y_axis_label}'"
         opts = self.default_options
-        self.update!(default_options: opts.merge(expression_label: expression_file.y_axis_label))
+        self.update(default_options: opts.merge(expression_label: expression_file.y_axis_label))
       end
 
       # clean up, print stats
@@ -1622,7 +1612,7 @@ class Study
       # set initialized to true if possible
       if self.cluster_groups.any? && self.cell_metadata.any? && !self.initialized?
         Rails.logger.info "#{Time.zone.now}: initializing #{self.name}"
-        self.update!(initialized: true)
+        self.update(initialized: true)
         Rails.logger.info "#{Time.zone.now}: #{self.name} successfully initialized"
       end
 
@@ -1932,7 +1922,7 @@ class Study
       # set initialized to true if possible
       if self.genes.any? && self.cell_metadata.any? && !self.initialized?
         Rails.logger.info "#{Time.zone.now}: initializing #{self.name}"
-        self.update!(initialized: true)
+        self.update(initialized: true)
         Rails.logger.info "#{Time.zone.now}: #{self.name} successfully initialized"
       end
 
@@ -2449,7 +2439,7 @@ class Study
       # set initialized to true if possible
       if self.genes.any? && self.cluster_groups.any? && !self.initialized?
         Rails.logger.info "#{Time.zone.now}: initializing #{self.name}"
-        self.update!(initialized: true)
+        self.update(initialized: true)
         Rails.logger.info "#{Time.zone.now}: #{self.name} successfully initialized"
       end
 

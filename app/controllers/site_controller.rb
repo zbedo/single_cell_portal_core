@@ -303,7 +303,7 @@ class SiteController < ApplicationController
     @directories = @study.directory_listings.are_synced
     @primary_data = @study.directory_listings.primary_data
     @other_data = @study.directory_listings.non_primary_data
-    @unique_genes = FirestoreGene.unique_genes(@study.accession)
+    @unique_genes = @study.genes.unique_genes
 
     # double check on download availability: first, check if administrator has disabled downloads
     # then check individual statuses to see what to enable/disable
@@ -402,10 +402,6 @@ class SiteController < ApplicationController
 
   # render box and scatter plots for parent clusters or a particular sub cluster
   def view_gene_expression
-    unless FirestoreGene.exists?(study_accession: @study.accession, name: params[:gene])
-      redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
-                  alert: "No matches found for: #{@terms.first}." and return
-    end
     @options = load_cluster_group_options
     @cluster_annotations = load_cluster_group_annotations
     @top_plot_partial = @selected_annotation[:type] == 'group' ? 'expression_plots_view' : 'expression_annotation_plots_view'
@@ -421,8 +417,9 @@ class SiteController < ApplicationController
 
   # re-renders plots when changing cluster selection
   def render_gene_expression_plots
-    @gene = FirestoreGene.by_study_and_name(@study.accession, params[:gene])
+    matches = @study.genes.by_name_or_id(params[:gene], @study.expression_matrix_files.map(&:id))
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
+    @gene = load_best_gene_match(matches, params[:gene])
     @y_axis_title = load_expression_axis_title
     # depending on annotation type selection, set up necessary partial names to use in rendering
     if @selected_annotation[:type] == 'group'
@@ -640,8 +637,7 @@ class SiteController < ApplicationController
       if @selected_annotation[:scope] == 'cluster'
         @annotations = @cluster.concatenate_data_arrays(@selected_annotation[:name], 'annotations')
       else
-        metadata_doc = FirestoreCellMetadatum.by_study_and_name_and_type(@study.accession, @selected_annotation[:name], @selected_annotation[:type])
-        study_annotations = metadata_doc.cell_annotations
+        study_annotations = @study.cell_metadata_values(@selected_annotation[:name], @selected_annotation[:type])
         @annotations = []
         @cells.each do |cell|
           @annotations << study_annotations[cell]
@@ -1391,7 +1387,7 @@ class SiteController < ApplicationController
     if selector.nil? || selector.empty?
       @cluster = @study.default_cluster
     else
-      @cluster = FirestoreCluster.by_study_and_name(@study.accession, selector)
+      @cluster = @study.cluster_groups.by_name(selector)
     end
   end
 
@@ -1411,7 +1407,7 @@ class SiteController < ApplicationController
     else
       @selected_annotation = {name: annot_name, type: annot_type, scope: annot_scope}
       if annot_type == 'group'
-        @selected_annotation[:values] = FirestoreCellMetadatum.by_study_and_name_and_type(@study.accession, annot_name, annot_type).unique_values
+        @selected_annotation[:values] = @study.cell_metadata.by_name_and_type(annot_name, annot_type).values
       else
         @selected_annotation[:values] = []
       end
@@ -1544,8 +1540,8 @@ class SiteController < ApplicationController
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     else
       # for study-wide annotations, load from study_metadata values instead of cluster-specific annotations
-      metadata_doc = FirestoreCellMetadatum.by_study_and_name_and_type(@study.accession, annotation[:name], annotation[:type])
-      annotation_hash = metadata_doc.cell_annotations
+      metadata_obj = @study.cell_metadata.by_name_and_type(annotation[:name], annotation[:type])
+      annotation_hash = metadata_obj.cell_annotations
       annotation[:values] = annotation_hash.values
     end
     coordinates = {}
@@ -1656,8 +1652,8 @@ class SiteController < ApplicationController
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     else
       # for study-wide annotations, load from study_metadata values instead of cluster-specific annotations
-      metadata_doc = FirestoreCellMetadatum.by_study_and_name_and_type(@study.accession, annotation[:name], annotation[:type])
-      annotation_hash = metadata_doc.cell_annotations
+      metadata_obj = @study.cell_metadata.by_name_and_type(annotation[:name], annotation[:type])
+      annotation_hash = metadata_obj.cell_annotations
     end
     values = {}
     values[:all] = {x: [], y: [], cells: [], annotations: [], text: [], marker: {size: @study.default_cluster_point_size,
@@ -1710,8 +1706,8 @@ class SiteController < ApplicationController
       annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     else
-      metadata_doc = FirestoreCellMetadatum.by_study_and_name_and_type(@study.accession, annotation[:name], annotation[:type])
-      annotation_hash = metadata_doc.cell_annotations
+      metadata_obj = @study.cell_metadata.by_name_and_type(annotation[:name], annotation[:type])
+      annotation_hash = metadata_obj.cell_annotations
     end
     cells.each_with_index do |cell, index|
       annotation_value = annotation[:scope] == 'cluster' ? annotation_array[index] : annotation_hash[cell]
@@ -1760,8 +1756,7 @@ class SiteController < ApplicationController
       end
     else
       # since annotations are in a hash format, subsampling isn't necessary as we're going to retrieve values by key lookup
-      metadata_doc = FirestoreCellMetadatum.by_study_and_name_and_type(@study.accession, annotation[:name], annotation[:type])
-      annotations = metadata_doc.cell_annotations
+      annotations =  @study.cell_metadata.by_name_and_type(annotation[:name], annotation[:type]).cell_annotations
       cells.each do |cell|
         val = annotations[cell]
         # must check if key exists
@@ -1799,8 +1794,8 @@ class SiteController < ApplicationController
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     else
       # for study-wide annotations, load from cell_metadata values instead of cluster-specific annotations
-      metadata_doc = FirestoreCellMetadatum.by_study_and_name_and_type(@study.accession, annotation[:name], annotation[:type])
-      annotation_hash = metadata_doc.cell_annotations
+      metadata_obj = @study.cell_metadata.by_name_and_type(annotation[:name], annotation[:type])
+      annotation_hash = metadata_obj.cell_annotations
     end
     expression = {}
     expression[:all] = {
@@ -1873,8 +1868,7 @@ class SiteController < ApplicationController
       end
     else
       # no need to subsample annotation since they are in hash format (lookup done by key)
-      metadata_doc = FirestoreCellMetadatum.by_study_and_name_and_type(@study.accession, annotation[:name], annotation[:type])
-      annotations = metadata_doc.cell_annotations
+      annotations =  @study.cell_metadata.by_name_and_type(annotation[:name], annotation[:type]).cell_annotations
       cells.each do |cell|
         val = annotations[cell]
         # must check if key exists
@@ -1922,8 +1916,8 @@ class SiteController < ApplicationController
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     else
       # for study-wide annotations, load from cell_metadata values instead of cluster-specific annotations
-      metadata_doc = FirestoreCellMetadatum.by_study_and_name_and_type(@study.accession, annotation[:name], annotation[:type])
-      annotation_hash = metadata_doc.cell_annotations
+      metadata_obj = @study.cell_metadata.by_name_and_type(annotation[:name], annotation[:type])
+      annotation_hash = metadata_obj.cell_annotations
     end
     expression = {}
     expression[:all] = {
@@ -2006,7 +2000,7 @@ class SiteController < ApplicationController
   # find median expression score for a given cell & list of genes
   def calculate_median(genes, cell)
     values = genes.map {|gene| gene['scores'][cell].to_f}
-    FirestoreGene.array_median(values)
+    Gene.array_median(values)
   end
 
   # set the range for a plotly scatter, will default to data-defined if cluster hasn't defined its own ranges
@@ -2068,10 +2062,11 @@ class SiteController < ApplicationController
   # generic expression score getter, preserves order and discards empty matches
   def load_expression_scores(terms)
     genes = []
+    matrix_ids = @study.expression_matrix_files.map(&:id)
     terms.each do |term|
-      match = FirestoreGene.by_study_and_name(@study.accession, term)
-      unless match.empty?
-        genes << match
+      matches = @study.genes.by_name_or_id(term, matrix_ids)
+      unless matches.empty?
+        genes << load_best_gene_match(matches, term)
       end
     end
     genes
@@ -2082,7 +2077,7 @@ class SiteController < ApplicationController
   def search_expression_scores(terms)
     genes = []
     not_found = []
-    known_genes = FirestoreGene.unique_genes(@study.accession)
+    known_genes = @study.genes.unique_genes
     known_searchable_genes = known_genes.map(&:downcase)
     terms.each do |term|
       if known_genes.include?(term) || known_searchable_genes.include?(term)
@@ -2113,7 +2108,7 @@ class SiteController < ApplicationController
 
   # helper method to load all possible cluster groups for a study
   def load_cluster_group_options
-    FirestoreCluster.by_study(@study.accession).map(&:name)
+    @study.cluster_groups.map(&:name)
   end
 
   # helper method to load all available cluster_group-specific annotations

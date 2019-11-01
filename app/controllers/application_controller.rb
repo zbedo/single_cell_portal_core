@@ -21,14 +21,7 @@ class ApplicationController < ActionController::Base
 
   rescue_from ActionController::InvalidAuthenticityToken, with: :invalid_csrf
 
-  @firestore_client = Google::Cloud::Firestore.new(credentials: ENV['FIRESTORE_CREDENTIALS'],
-                                                    project_id: ENV['FIRESTORE_PROJECT'])
-
   @papi_client = PapiClient.new
-
-  def self.firestore_client
-    self.instance_variable_get(:@firestore_client)
-  end
 
   def self.papi_client
     self.instance_variable_get(:@papi_client)
@@ -87,9 +80,8 @@ class ApplicationController < ActionController::Base
   # load default study options for updating
   def set_study_default_options
     @default_cluster = @study.default_cluster
-    annotations = FirestoreCellMetadatum.by_study(@study.accession)
     @default_cluster_annotations = {
-        'Study Wide' => annotations.map(&:annotation_select_option)
+        'Study Wide' => @study.cell_metadata.map {|metadata| metadata.annotation_select_option }.uniq
     }
     unless @default_cluster.nil?
       @default_cluster_annotations['Cluster-based'] = @default_cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]}
