@@ -6,6 +6,7 @@ branches:
   only:
   - master
   - development
+  - ingest-pipeline-launch
 services:
 - docker
 before_install:
