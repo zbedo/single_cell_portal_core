@@ -136,7 +136,6 @@ about service accounts.  To export the credentials:
 	* Google Cloud APIs
 	* Google Cloud Billing API
 	* Google Cloud Storage JSON API
-	* Google Cloud Firestore API
 	* Google Cloud Genomics API
 
 * **Registering your Service Account as a Terra user**: Once you have configured and booted your instance of the portal, 
