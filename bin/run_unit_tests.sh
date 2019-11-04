@@ -47,6 +47,7 @@ else
   echo "Running all unit & integration tests..."
   declare -a tests=(test/integration/fire_cloud_client_test.rb
                     test/integration/cache_management_test.rb
+                    test/integration/tos_acceptance_test.rb
                     test/integration/study_creation_test.rb
                     test/integration/study_validation_test.rb
                     test/integration/taxons_controller_test.rb

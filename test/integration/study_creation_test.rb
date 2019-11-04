@@ -141,7 +141,7 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     assert cluster_count == 2, "did not find correct number of clusters, expected 2 but found #{cluster_count}"
     assert gene_list_count == 1, "did not find correct number of gene lists, expected 1 but found #{gene_list_count}"
     assert metadata_count == 3, "did not find correct number of metadata objects, expected 3 but found #{metadata_count}"
-    assert cluster_annot_count == 3, "did not find correct number of cluster annotations, expected 2 but found #{cluster_annot_count}"
+    assert cluster_annot_count == 4, "did not find correct number of cluster annotations, expected 4 but found #{cluster_annot_count}"
     assert study_file_count == 8, "did not find correct number of study files, expected 8 but found #{study_file_count}"
     assert primary_data_count == 2, "did not find correct number of primary data files, expected 2 but found #{primary_data_count}"
     assert share_count == 1, "did not find correct number of study shares, expected 1 but found #{share_count}"

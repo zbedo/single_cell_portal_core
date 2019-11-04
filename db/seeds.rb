@@ -9,6 +9,8 @@
 user = User.create!(email:'testing.user@gmail.com', password:'password', admin: true, uid: '12345',
                     api_access_token: {access_token: 'test-api-token', expires_in: 3600, expires_at: Time.zone.now + 1.hour})
 user_2 = User.create!(email: 'sharing.user@gmail.com', password: 'password', uid: '67890')
+# manually accept Terms of Service for sharing user to avoid breaking tests
+TosAcceptance.create(email: user_2.email)
 study = Study.create!(name: 'Testing Study', description: '<p>This is the test study.</p>', data_dir: 'test', user_id: user.id)
 expression_file = StudyFile.create!(name: 'expression_matrix.txt', upload_file_name: 'expression_matrix.txt', study_id: study.id,
                                     file_type: 'Expression Matrix', y_axis_label: 'Expression Scores')

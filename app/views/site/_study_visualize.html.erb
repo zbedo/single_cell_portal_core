@@ -162,15 +162,9 @@
   <% if !@study.can_visualize_clusters? && @ideogram_files.present? %>
     // user has no clusters, but does have ideogram annotations
     $(document).ready(function () {
-        if (<%= !user_signed_in? %>) {
-          $('#study-tabs a[href="#study-visualize"]').on('shown.bs.tab', function() {
-              $('#genome-tab-nav').click(); // force user to sign in
-          });
-        } else {
-            var ideogramSelect = $('#ideogram_annotation');
-            var firstIdeogram = $('#ideogram_annotation option')[1].value;
-            ideogramSelect.val(firstIdeogram).trigger('change'); // manually trigger change to cause ideogram to render
-        }
+      var ideogramSelect = $('#ideogram_annotation');
+      var firstIdeogram = $('#ideogram_annotation option')[1].value;
+      ideogramSelect.val(firstIdeogram).trigger('change'); // manually trigger change to cause ideogram to render
     });
 
   <% end %>

@@ -1447,7 +1447,9 @@ class SiteController < ApplicationController
   # make sure user has view permissions for selected study
   def check_view_permissions
     unless @study.public?
-      if (!user_signed_in? && !@study.public?) || (user_signed_in? && !@study.can_view?(current_user))
+      if (!user_signed_in? && !@study.public?)
+        authenticate_user!
+      elsif (user_signed_in? && !@study.can_view?(current_user))
         alert = 'You do not have permission to perform that action.'
         respond_to do |format|
           format.js {render js: "alert('#{alert}')" and return}
