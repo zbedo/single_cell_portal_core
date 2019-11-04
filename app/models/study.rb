@@ -835,14 +835,14 @@ class Study
   def default_annotation
     default_cluster = self.default_cluster
     default_annot = self.default_options[:annotation]
-    cell_metadata = FirestoreCellMetadatum.by_study(self.accession)
     # in case default has not been set
     if default_annot.nil?
       if !default_cluster.nil? && default_cluster.cell_annotations.any?
         annot = default_cluster.cell_annotations.first
         default_annot = "#{annot[:name]}--#{annot[:type]}--cluster"
-      elsif cell_metadata.any?
-        default_annot = cell_metadata.first.annotation_select_value
+      elsif self.cell_metadata.any?
+        metadatum = self.cell_metadata.first
+        default_annot = "#{metadatum.name}--#{metadatum.annotation_type}--study"
       else
         # annotation won't be set yet if a user is parsing metadata without clusters, or vice versa
         default_annot = nil
@@ -920,7 +920,7 @@ class Study
 
   # helper method to get number of unique single cells
   def set_cell_count
-    cell_count = FirestoreCellMetadatum.all_cells(self.accession).count
+    cell_count = self.all_cells_array.size
     self.update(cell_count: cell_count)
     Rails.logger.info "Setting cell count in #{self.name} to #{cell_count}"
   end
