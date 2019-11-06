@@ -11,6 +11,9 @@ development:
       hosts:
         - <%= ENV['MONGO_LOCALHOST'] %>:27017
       options:
+        user: 'single_cell'
+        password: '<%= ENV['PROD_DATABASE_PASSWORD'] %>'
+
         # Change the default write concern. (default = { w: 1 })
         # write:
         #   w: 1

@@ -106,6 +106,9 @@ if [[ -n $READ_ONLY_SERVICE_ACCOUNT_PATH ]] ; then
   COMMAND=$COMMAND" -K /home/app/webapp/config/.read_only_service_account.json"
 fi
 
+# insert connection information for MongoDB
+COMMAND=$COMMAND" -m $MONGO_LOCALHOST -p $PROD_DATABASE_PASSWORD"
+
 echo "RUNNING BOOT COMMAND: $COMMAND -e $PASSENGER_APP_ENV -N $PORTAL_NAMESPACE"
 # execute requested command
 $COMMAND -e $PASSENGER_APP_ENV -N $PORTAL_NAMESPACE

@@ -24,20 +24,14 @@ Authority for doing local development in https.
 
 ## BEFORE RUNNING THE CONTAINER
 
-Since this project utilizes native Docker for Mac OSX, any resources on the host machine cannot be reached by the running 
-container (specifically, any database resources). Therefore, we will need to deploy a database container using Docker as 
-well.  This project uses [MongoDB](https://hub.docker.com/_/mongo/) as the primary datastore.
+This project uses [MongoDB](https://hub.docker.com/_/mongo/) as the primary datastore, and connects to a remote MongoDB 
+instance in all environments. In order for the portal to operate correctly, you will need to provision 
+a MongoDB instance in Google Cloud Platform.  This can be done using [Google Click to Deploy](https://console.cloud.google.com/marketplace/details/click-to-deploy-images/mongodb), 
+or via providers such as [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).  You may also provision a database manually 
+using a VM in Google Compute Environment if you so desire.
 
-First, create a directory somewhere on your computer in which to store the raw database content (it doesn't matter where 
-as long as it has `rw` permissions, but preferably it would be inside your home directory).
-
-To deploy the database container:
-
-1. Pull the image: `docker pull mongo`
-1. Navigate to the project directory
-1. Run the helper script to start the DB container: `bin/boot_mongo -d (path to data store directory)`
-
-Note: Once the container has been run once, you can stop & restart it using: `docker stop mongodb` or `docker restart mongodb`
+The only requirement is that you add a user account called "single_cell" to your Single Cell Portal database in whatever 
+instances you create.
 
 ## EXTERNAL DEPENDENCIES AND INTEGRATIONS
 
@@ -168,7 +162,7 @@ will need to create a Terra project that will own all the workspaces created in 
 Once the image has successfully built, all registration/configuration steps have been completed, use the following command 
 to start the container:
 
-    bin/boot_docker -u (sendgrid username) -P (sendgrid password) -k (service account key path) -K (read-only service account key path) -o (oauth client id) -S (oauth client secret) -N (portal namespace)
+    bin/boot_docker -u (sendgrid username) -P (sendgrid password) -k (service account key path) -K (read-only service account key path) -o (oauth client id) -S (oauth client secret) -N (portal namespace) -m (mongodb hostname) -p (mongodb password)
 
 This sets up several environment variables in your shell and then runs the following command:
 
