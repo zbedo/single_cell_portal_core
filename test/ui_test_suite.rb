@@ -2,6 +2,8 @@ require 'rubygems'
 require 'test/unit'
 require 'selenium-webdriver'
 require File.expand_path('ui_test_helper.rb', 'test')
+require 'io/console'
+require 'rest-client'
 
 # UI regression suite that exercises functionality through simulating user interactions via Webdriver
 #
@@ -77,6 +79,7 @@ puts "Webdriver Proxy: #{$webdriver_proxy}"
 puts "Random Seed: #{$random_seed}"
 puts "Headless: #{$headless}"
 puts "Verbose: #{$verbose}"
+puts "Secure Scans: #{$secure}"
 
 # make sure download & chromedriver paths exist and portal url is valid, otherwise kill tests before running and print usage
 if !File.exists?($chromedriver_path)
@@ -95,6 +98,42 @@ end
 
 class UiTestSuite < Test::Unit::TestCase
   self.test_order = $order
+
+  class << self
+
+    def startup
+        if $secure
+            puts "LAUNCH OWASP..."
+            # setting up owasp testing
+            system("pkill java")
+            sleep 5
+            # path to local zap application
+            IO.popen("/Applications/OWASP\\ ZAP.app/Contents/Java/zap.sh -daemon -config api.disablekey=true") #The path here should be the zap.sh path under ZAP package/folder on your machine; with the option -config api.disablekey=true, ZAP will not check the apikey, which is enable by default after ZAP 2.6.0
+            sleep 5
+            puts "OWASP ZAP launch completed"
+            puts "SETTING PROXY TO OWASP ZAPROXY..."
+            $webdriver_proxy = 'localhost:8080'
+        end
+    end
+
+    def shutdown
+        if $secure
+            # get results of security test
+            puts "Getting the results of the security test..."
+            RestClient.get "http://localhost:8080/XML/core/view/alerts" #To trigger ZAP to raise alerts if any
+            sleep 5 #Give ZAP some time to process
+            response = RestClient.get "http://localhost:8080/XML/core/view/alerts", params: { zapapiformat: 'XML', baseurl: $portal_url, start: 1 } #Get the alerts ZAP found
+
+            File.open('security_alerts.xml', 'w') do |file|
+                file << response
+            end
+
+            # shutdown owasp
+            RestClient.get "http://localhost:8080/JSON/core/action/shutdown" #Close ZAP instance
+        end
+    end
+
+  end
 
   # setup is called before every test is run, this instantiates the driver and configures waits and other variables needed
   def setup
