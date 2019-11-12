@@ -19,7 +19,6 @@ $0
 -c VALUE	command to execute after loading secrets (defaults to bin/boot_docker, please wrap command in 'quotes' to ensure proper execution)
 -e VALUE	set the environment to boot the portal in (defaults to development)
 -v VALUE  set the version of the Docker image to load (defaults to latest)
--f VALUE	set the path to the Firestore service account in Vault, used for authenticating into Firestore (no default)
 -n VALUE	set the value for PORTAL_NAMESPACE (defaults to single-cell-portal-development)
 -H COMMAND	print this text
 EOF
@@ -30,7 +29,7 @@ PASSENGER_APP_ENV="development"
 COMMAND="bin/boot_docker"
 THIS_DIR="$(cd "$(dirname "$0")"; pwd)"
 CONFIG_DIR="$THIS_DIR/../config"
-while getopts "p:s:r:f:c:e:v:n:H" OPTION; do
+while getopts "p:s:r:c:e:v:n:H" OPTION; do
 case $OPTION in
   p)
     VAULT_SECRET_PATH="$OPTARG"
@@ -53,9 +52,6 @@ case $OPTION in
   n)
     PORTAL_NAMESPACE="$OPTARG"
     ;;
-	f)
-		FIRESTORE_CREDENTIALS_PATH="$OPTARG"
-		;;
   H)
     echo "$usage"
     exit 0
@@ -87,16 +83,14 @@ if [[ -n $VAULT_SECRET_PATH ]] ; then
 fi
 # now load service account credentials
 if [[ -n $SERVICE_ACCOUNT_PATH ]] ; then
+  echo "setting value for: GOOGLE_CLOUD_KEYFILE_JSON"
   CREDS_VALS=$(vault read -format=json $SERVICE_ACCOUNT_PATH)
   JSON_CONTENTS=$(echo $CREDS_VALS | jq --raw-output .data)
-  echo "setting value for: GOOGLE_CLOUD_KEYFILE_JSON"
-  export GOOGLE_CLOUD_KEYFILE_JSON=$(echo -n $JSON_CONTENTS)
-  echo "setting value for: GOOGLE_PRIVATE_KEY"
-  export GOOGLE_PRIVATE_KEY=$(echo $CREDS_VALS | jq --raw-output .data.private_key)
-  echo "setting value for: GOOGLE_CLIENT_EMAIL"
-  export GOOGLE_CLIENT_EMAIL=$(echo $CREDS_VALS | jq --raw-output .data.client_email)
-  echo "setting value for: GOOGLE_CLIENT_ID"
-  export GOOGLE_CLIENT_ID=$(echo $CREDS_VALS | jq --raw-output .data.client_id)
+  echo "*** WRITING MAIN SERVICE ACCOUNT ***"
+  SERVICE_ACCOUNT_FILEPATH="$CONFIG_DIR/.scp_service_account.json"
+	echo $JSON_CONTENTS >| $SERVICE_ACCOUNT_FILEPATH
+  COMMAND=$COMMAND" -k /home/app/webapp/config/.scp_service_account.json"
+  JSON_CONTENTS=`echo $CREDS_VALS | jq --raw-output .data`
   echo "setting value for: GOOGLE_CLOUD_PROJECT"
   export GOOGLE_CLOUD_PROJECT=$(echo $CREDS_VALS | jq --raw-output .data.project_id)
 fi
@@ -112,16 +106,9 @@ if [[ -n $READ_ONLY_SERVICE_ACCOUNT_PATH ]] ; then
   COMMAND=$COMMAND" -K /home/app/webapp/config/.read_only_service_account.json"
 fi
 
-# now load firestore service account credentials
-if [[ -n $FIRESTORE_CREDENTIALS_PATH ]] ; then
-  echo "setting value for: FIRESTORE_KEYFILE_JSON"
-  FIRESTORE_CREDS_VALS=$(vault read -format=json $FIRESTORE_CREDENTIALS_PATH)
-  FIRESTORE_JSON_CONTENTS=$(echo $FIRESTORE_CREDS_VALS | jq --raw-output .data)
-  echo "*** WRITING FIRESTORE SERVICE ACCOUNT CREDENTIALS ***"
-	FIRESTORE_FILEPATH="$CONFIG_DIR/.firestore_service_account.json"
-	echo $FIRESTORE_JSON_CONTENTS >| $FIRESTORE_FILEPATH
-  COMMAND=$COMMAND" -f /home/app/webapp/config/.firestore_service_account.json"
-fi
+# insert connection information for MongoDB
+COMMAND=$COMMAND" -m $MONGO_LOCALHOST -p $PROD_DATABASE_PASSWORD"
+
 echo "RUNNING BOOT COMMAND: $COMMAND -e $PASSENGER_APP_ENV -N $PORTAL_NAMESPACE"
 # execute requested command
 $COMMAND -e $PASSENGER_APP_ENV -N $PORTAL_NAMESPACE

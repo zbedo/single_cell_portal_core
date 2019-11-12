@@ -18,17 +18,11 @@ class ApplicationController < ActionController::Base
   before_action :get_download_quota
   before_action :get_deployment_notification
   before_action :set_selected_branding_group
+  before_action :check_tos_acceptance
 
   rescue_from ActionController::InvalidAuthenticityToken, with: :invalid_csrf
 
-  @firestore_client = Google::Cloud::Firestore.new(credentials: ENV['FIRESTORE_CREDENTIALS'],
-                                                    project_id: ENV['FIRESTORE_PROJECT'])
-
   @papi_client = PapiClient.new
-
-  def self.firestore_client
-    self.instance_variable_get(:@firestore_client)
-  end
 
   def self.papi_client
     self.instance_variable_get(:@papi_client)
@@ -87,9 +81,8 @@ class ApplicationController < ActionController::Base
   # load default study options for updating
   def set_study_default_options
     @default_cluster = @study.default_cluster
-    annotations = FirestoreCellMetadatum.by_study(@study.accession)
     @default_cluster_annotations = {
-        'Study Wide' => annotations.map(&:annotation_select_option)
+        'Study Wide' => @study.cell_metadata.map {|metadata| metadata.annotation_select_option }.uniq
     }
     unless @default_cluster.nil?
       @default_cluster_annotations['Cluster-based'] = @default_cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]}
@@ -111,6 +104,14 @@ class ApplicationController < ActionController::Base
   def set_selected_branding_group
     if params[:scpbr].present?
       @selected_branding_group = BrandingGroup.find_by(name_as_id: params[:scpbr])
+    end
+  end
+
+  # make sure that users are accepting the Terms of Service
+  def check_tos_acceptance
+    # only redirect if user is signed in, has not accepted the ToS, and is not currently on the accept_tos page
+    if user_signed_in? && !TosAcceptance.accepted?(current_user) && request.path != accept_tos_path(current_user.id)
+      redirect_to accept_tos_path(current_user.id) and return
     end
   end
 

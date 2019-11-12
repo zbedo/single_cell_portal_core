@@ -7,7 +7,10 @@ class StudyAccession
 
   validates_uniqueness_of :accession
 
-  after_create :set_study_accession_value
+  # exclude everything that does not start with "SCP" and end with digits
+  ACCESSION_SANITIZER = /[^SCP\d+$]/
+  # match on accepted accession format of "SCP" and ending with digits
+  ACCESSION_FORMAT = /^SCP\d+$/
 
   # is this accession currently assigned to an existing study?
   def assigned?
@@ -27,11 +30,15 @@ class StudyAccession
     end
   end
 
-  private
-
-  # once an accession is persisted, set the accession value in the associated study
-  def set_study_accession_value
-    study = self.study
-    study.update(accession: self.accession)
+  # sanitize an list of terms to format as a StudyAccession
+  def self.sanitize_accessions(terms)
+    possible_accessions = []
+    terms.each do |term|
+      accession_string = term.strip.gsub(ACCESSION_SANITIZER, '')
+      if accession_string.match(ACCESSION_FORMAT)
+        possible_accessions << accession_string
+      end
+    end
+    possible_accessions
   end
 end

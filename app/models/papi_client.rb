@@ -19,7 +19,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   # GCP Compute project to run pipelines in
   COMPUTE_PROJECT = ENV['GOOGLE_CLOUD_PROJECT'].blank? ? '' : ENV['GOOGLE_CLOUD_PROJECT']
   # Docker image in GCP project to pull for running ingest jobs
-  INGEST_DOCKER_IMAGE = 'gcr.io/broad-singlecellportal-staging/ingest-pipeline:0.3.1_2959221'
+  INGEST_DOCKER_IMAGE = 'gcr.io/broad-singlecellportal-staging/ingest-pipeline:0.4.0_059b180'
   # List of scp-ingest-pipeline actions and their allowed file types
   FILE_TYPES_BY_ACTION = {
       ingest_expression: ['Expression Matrix', 'MM Coordinate Matrix'],

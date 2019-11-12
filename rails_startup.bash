@@ -20,17 +20,19 @@ then
 elif [[ $PASSENGER_APP_ENV = "development" ]]; then
     sudo -E -u app -H /home/app/webapp/bin/webpack
 fi
-#if [[ -n $TCELL_AGENT_APP_ID ]] && [[ -n $TCELL_AGENT_API_KEY ]] ; then
-#    echo "*** CONFIGURING TCELL WAF ***"
-#    sudo -E -u app -Hs /home/app/webapp/bin/configure_tcell.rb
-#    echo "*** COMPLETED ***"
-#fi
+if [[ -n $TCELL_AGENT_APP_ID ]] && [[ -n $TCELL_AGENT_API_KEY ]] ; then
+    echo "*** CONFIGURING TCELL WAF ***"
+    sudo -E -u app -Hs /home/app/webapp/bin/configure_tcell.rb
+    echo "*** COMPLETED ***"
+fi
 echo "*** CREATING CRON ENV FILES ***"
 echo "export PROD_DATABASE_PASSWORD='$PROD_DATABASE_PASSWORD'" >| /home/app/.cron_env
 echo "export SENDGRID_USERNAME='$SENDGRID_USERNAME'" >> /home/app/.cron_env
 echo "export SENDGRID_PASSWORD='$SENDGRID_PASSWORD'" >> /home/app/.cron_env
 echo "export MONGO_LOCALHOST='$MONGO_LOCALHOST'" >> /home/app/.cron_env
 echo "export SECRET_KEY_BASE='$SECRET_KEY_BASE'" >> /home/app/.cron_env
+echo "export GOOGLE_CLOUD_PROJECT='$GOOGLE_CLOUD_PROJECT'" >> /home/app/.cron_env
+
 if [[ -z $SERVICE_ACCOUNT_KEY ]]; then
 	echo $GOOGLE_CLOUD_KEYFILE_JSON >| /home/app/.google_service_account.json
 	chmod 400 /home/app/.google_service_account.json
@@ -44,14 +46,6 @@ if [[ -n "$READ_ONLY_SERVICE_ACCOUNT_KEY" ]]; then
 	echo "export READ_ONLY_SERVICE_ACCOUNT_KEY='$READ_ONLY_SERVICE_ACCOUNT_KEY'" >> /home/app/.cron_env
 else
 	echo "*** NO READONLY SERVICE ACCOUNT DETECTED -- SOME FUNCTIONALITY WILL BE DISABLED ***"
-fi
-
-if [[ -n "$FIRESTORE_CREDENTIALS" ]]; then
-	echo "export FIRESTORE_CREDENTIALS='$FIRESTORE_CREDENTIALS'" >> /home/app/.cron_env
-	echo "export FIRESTORE_PROJECT='$FIRESTORE_PROJECT'" >> /home/app/.cron_env
-else
-	echo "######### NO FIRESTORE SERVICE ACCOUNT LOADED; EXITING #########"
-	exit 1
 fi
 
 chmod 400 /home/app/.cron_env
@@ -75,16 +69,18 @@ echo "*** ADDING CRONTAB TO CHECK DELAYED_JOB ***"
 echo "*/15 * * * * . /home/app/.cron_env ; /home/app/webapp/bin/job_monitor.rb -e=$PASSENGER_APP_ENV >> /home/app/webapp/log/cron_out.log 2>&1" | crontab -u app -
 echo "*** COMPLETED ***"
 
+echo "*** REINDEXING DATABASE ***"
+sudo -E -u app -H bin/bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV db:mongoid:create_indexes
+echo "*** COMPLETED ***"
+
 echo "*** ADDING CRONTAB TO REINDEX DATABASE ***"
 (crontab -u app -l ; echo "@daily . /home/app/.cron_env ; cd /home/app/webapp/; bin/bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV db:mongoid:create_indexes >> /home/app/webapp/log/cron_out.log 2>&1") | crontab -u app -
 echo "*** COMPLETED ***"
-
 
 if [[ $PASSENGER_APP_ENV = "development" ]]
 then
   echo "*** DELETING QUEUED STUDIES & FILES ***"
   # run cleanups at boot, don't run crons to reduce memory usage
-  sudo -E -u app -H bin/bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV db:mongoid:create_indexes
 	sudo -E -u app -H bin/rails runner -e $PASSENGER_APP_ENV "StudyFile.delay.delete_queued_files"
 	sudo -E -u app -H bin/rails runner -e $PASSENGER_APP_ENV "UserAnnotation.delay.delete_queued_annotations"
 	sudo -E -u app -H bin/rails runner -e $PASSENGER_APP_ENV "Study.delay.delete_queued_studies"

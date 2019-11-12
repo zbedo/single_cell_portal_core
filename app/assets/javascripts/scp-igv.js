@@ -43,19 +43,6 @@ $(document).on('click', '#genome-tab-nav', function (e) {
   var currentScroll = $(window).scrollTop();
   window.location.hash = '#genome-tab';
   window.scrollTo(0, currentScroll);
-
-
-// Go to Google sign-in page, redirect to this view after authenticating.
-  if (accessToken === null) {
-      // preserve all current search form values, but only if gene(s) are present
-      var geneSearch = $('#search_genes').val();
-      if (typeof geneSearch !== 'undefined' && geneSearch !== '') {
-          preserveGeneSearch();
-      }
-      ga('send', 'event', 'genome', 'sign_in_start');
-      localStorage.setItem('signed-in-via-genome-tab', true);
-      window.location = '/single_cell/users/auth/google_oauth2';
-  }
 });
 
 $(document).on('click', '#plots-tab-nav', function (e) {
@@ -145,8 +132,8 @@ function initializeIgv() {
   var igvContainer, igvOptions, tracks, genome, genesTrack, bamTracks,
     genesTrackName, genes, locus;
 
-  // Bail if already displayed or not signed in
-  if (igvIsDisplayed() || accessToken === null) return;
+  // Bail if already displayed
+  if (igvIsDisplayed()) return;
 
   delete igv.browser;
 
@@ -187,25 +174,8 @@ $(document).ready(function() {
   if (window.location.hash === '#genome-tab') {
     $('#study-visualize-nav > a').click();
 
-    // Reload igv if refreshing, but not upon clicking back button in sign-in
-    if (accessToken !== null) $('#genome-tab-nav > a').click();
-  }
-
-  var signedInViaGenomeTab = localStorage.getItem('signed-in-via-genome-tab');
-  if (signedInViaGenomeTab === 'true') {
-    ga('send', 'event', 'genome', 'sign_in_end_success');
-
-    // Remove usage analysis token
-    localStorage.removeItem('signed-in-via-genome-tab');
-
-    // Load igv
-    $('#study-visualize-nav > a').click();
+    // Reload igv if refreshing
     $('#genome-tab-nav > a').click();
   }
 
-  if (accessToken === null) {
-    $('#genome-tab-nav')
-      .attr('title', 'Click to sign in; only authenticated users can visualize genomes')
-      .attr('data-toogle', 'tooltip');
-  }
 });

@@ -40,7 +40,7 @@
             </td>
             <td class="actions">
               <%= scp_link_to "<i class='fas fa-fw fa-edit'></i> Computes".html_safe, edit_workspace_computes_path(params[:project_name], workspace['workspace']['name']), class: 'btn btn-xs btn-primary edit-computes' %>
-              <%= link_to "<i class='fas fa-fw fa-search'></i> Workspace".html_safe, "https://portal.firecloud.org/#workspaces/#{params[:project_name]}/#{workspace['workspace']['name']}", class: 'btn btn-xs btn-info view-workspace', target: :_blank %>
+              <%= link_to "<i class='fas fa-fw fa-search'></i> Workspace".html_safe, "https://app.terra.bio/#workspaces/#{params[:project_name]}/#{workspace['workspace']['name']}", class: 'btn btn-xs btn-info view-workspace', target: :_blank %>
               <%= link_to "<i class='fas fa-fw fa-archive'></i> Bucket".html_safe, "https://console.cloud.google.com/storage/browser/#{workspace['workspace']['bucketName']}", class: 'btn btn-xs btn-warning view-bucket', target: :_blank %>
             </td>
           </tr>

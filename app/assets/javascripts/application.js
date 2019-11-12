@@ -589,6 +589,9 @@ function getRenderUrlParams() {
     '&heatmap_row_centering=' + heatmap_row_centering +
     '&heatmap_size=' + heatmap_size +
     '&colorscale=' + color_profile;
+
+  urlParams = urlParams.replace('%', '%25');
+
   return urlParams;
 }
 

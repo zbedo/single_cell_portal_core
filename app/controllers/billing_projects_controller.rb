@@ -58,8 +58,8 @@ class BillingProjectsController < ApplicationController
       @fire_cloud_client.add_user_to_billing_project(project_name, 'owner', @portal_service_account)
       redirect_to merge_default_redirect_params(billing_projects_path, scpbr: params[:scpbr]), notice: "Your new project '#{project_name}' was successfully created using '#{billing_account}'" and return
     rescue => e
-      ErrorTracker.report_exception(e, current_user, params)
-      logger.error "#{Time.zone.now}: Unable to create new billing project #{project_name} due to error: #{e.message}"
+      ErrorTracker.report_exception(e, current_user, params.to_unsafe_hash)
+      logger.error "Unable to create new billing project #{project_name} due to error: #{e.message}"
       redirect_to merge_default_redirect_params(billing_projects_path, scpbr: params[:scpbr]), alert: "We were unable to create your new project due to the following error: #{e.message}" and return
     end
   end
@@ -76,8 +76,8 @@ class BillingProjectsController < ApplicationController
       @fire_cloud_client.add_user_to_billing_project(params[:project_name], role, email)
       redirect_to merge_default_redirect_params(billing_projects_path, scpbr: params[:scpbr]), notice: "#{email} has successfully been added to #{params[:project_name]} as #{role}" and return
     rescue => e
-      ErrorTracker.report_exception(e, current_user, params)
-      logger.error "#{Time.zone.now}: Unable to add #{email} to #{params[:project_name]} due to error: #{e.message}"
+      ErrorTracker.report_exception(e, current_user, params.to_unsafe_hash)
+      logger.error "Unable to add #{email} to #{params[:project_name]} due to error: #{e.message}"
       redirect_to merge_default_redirect_params(new_billing_project_user_path, scpbr: params[:scpbr]), alert: "We were unable to add #{email} to #{params[:project_name]} due to the following error: #{e.message}" and return
     end
   end
@@ -90,8 +90,8 @@ class BillingProjectsController < ApplicationController
       @fire_cloud_client.delete_user_from_billing_project(params[:project_name], role, email)
       redirect_to merge_default_redirect_params(billing_projects_path, scpbr: params[:scpbr]), notice: "#{email} has successfully been removed from #{params[:project_name]} as #{role}" and return
     rescue => e
-      ErrorTracker.report_exception(e, current_user, params)
-      logger.error "#{Time.zone.now}: Unable to remove #{email} from #{params[:project_name]} due to error: #{e.message}"
+      ErrorTracker.report_exception(e, current_user, params.to_unsafe_hash)
+      logger.error "Unable to remove #{email} from #{params[:project_name]} due to error: #{e.message}"
       redirect_to merge_default_redirect_params(billing_projects_path, scpbr: params[:scpbr]), alert: "We were unable to remove #{email} from #{params[:project_name]} due to the following error: #{e.message}'" and return
     end
   end
@@ -115,7 +115,7 @@ class BillingProjectsController < ApplicationController
       rescue => e
         error_context = ErrorTracker.format_extra_context({workspace: workspace, params: params})
         ErrorTracker.report_exception(e, current_user, error_context)
-        logger.error "#{Time.zone.now}: Error loading workspaces from #{params[:project_name]} due to error: #{e.message}"
+        logger.error "Error loading workspaces from #{params[:project_name]} due to error: #{e.message}"
       end
 
     end
@@ -154,8 +154,8 @@ class BillingProjectsController < ApplicationController
                                                             compute_params[:can_compute] == 'true')
       @fire_cloud_client.update_workspace_acl(params[:project_name], params[:study_name], new_acl)
     rescue => e
-      ErrorTracker.report_exception(e, current_user, params)
-      logger.error "#{Time.zone.now}: error in updating acl for #{params[:project_name]}:#{params[:study_name]}: #{e.message}"
+      ErrorTracker.report_exception(e, current_user, params.to_unsafe_hash)
+      logger.error "error in updating acl for #{params[:project_name]}:#{params[:study_name]}: #{e.message}"
       @error = e.message
     end
   end
@@ -175,7 +175,7 @@ class BillingProjectsController < ApplicationController
         @workspaces[workspace_name] = actual_cost
         @total_cost += actual_cost
       rescue => e
-        ErrorTracker.report_exception(e, current_user, params)
+        ErrorTracker.report_exception(e, current_user, params.to_unsafe_hash)
         logger.error "Error in computing storage costs for #{params[:project_name]}: #{e.message}"
       end
     end
