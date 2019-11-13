@@ -549,6 +549,8 @@ class FireCloudClientTest < ActiveSupport::TestCase
     # get single remote file
     puts 'getting single file...'
     bucket_file = bucket_files.sample
+    file_exists = @fire_cloud_client.workspace_file_exists?(workspace['bucketName'], bucket_file.name)
+    assert file_exists, "Did not locate bucket file '#{bucket_file.name}'"
     file = @fire_cloud_client.execute_gcloud_method(:get_workspace_file, 0, workspace['bucketName'], bucket_file.name)
     assert file.present?, "Did not retrieve bucket file '#{bucket_file.name}'"
     assert file.generation == bucket_file.generation, "Generation tag is incorrect on retrieved file, expected '#{bucket_file.generation}' but found '#{file.generation}'"
@@ -592,6 +594,11 @@ class FireCloudClientTest < ActiveSupport::TestCase
     puts 'getting API URL for file...'
     api_url = @fire_cloud_client.execute_gcloud_method(:generate_api_url, 0, workspace['bucketName'], participant_filename)
     assert api_url.start_with?("https://www.googleapis.com/storage"), "Did not receive correctly formatted api_url, expected to start with 'https://www.googleapis.com/storage' but found #{api_url}"
+
+    puts 'reading file into memory...'
+    remote_contents = @fire_cloud_client.execute_gcloud_method(:read_workspace_file, 0, workspace['bucketName'], participant_filename)
+    assert remote_contents == participant_contents,
+           "Did not correctly read remote file into memory, contents did not match\n## remote ##\n#{remote_contents}\n## local ##\n#{participant_contents}"
 
     # close upload files
     participant_upload.close

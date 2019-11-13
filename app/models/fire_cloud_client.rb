@@ -1390,6 +1390,24 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
     bucket.file filename
   end
 
+  # check if a study_file in a GCP bucket of a workspace exists
+  # this method should ideally be used outside of :execute_gcloud_method to avoid unnecessary retries
+  #
+  # * *params*
+  #   - +workspace_bucket_id+ (String) => ID of workspace GCP bucket
+  #   - +filename+ (String) => name of file
+  #
+  # * *return*
+  #   - +Boolean+
+  def workspace_file_exists?(workspace_bucket_id, filename)
+    begin
+      self.get_workspace_file(workspace_bucket_id, filename)
+      true
+    rescue => e
+      false
+    end
+  end
+
   # add a file to a workspace bucket
   #
   # * *params*
@@ -1496,6 +1514,21 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
     else
       file.download end_path, opts
     end
+  end
+
+  # read the contents of a file in a workspace bucket into memory
+  #
+  # * *params*
+  #   - +workspace_bucket_id+ (String) => ID of workspace GCP bucket
+  #   - +filename+ (String) => name of file
+  #
+  # * *return*
+  #   - +StringIO+ contents of workspace file
+  def read_workspace_file(workspace_bucket_id, filename)
+    file = self.get_workspace_file(workspace_bucket_id, filename)
+    file_contents = file.download
+    file_contents.rewind
+    file_contents
   end
 
   # generate a signed url to download a file that isn't public (set at study level)
