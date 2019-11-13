@@ -15,7 +15,7 @@ require File.expand_path('ui_test_helper.rb', 'test')
 # 3. Gems: rubygems, test-unit, selenium-webdriver (see Gemfile.lock for version requirements)
 # 4. Google Chrome
 # 5. Chromedriver (https://sites.google.com/a/chromium.org/chromedriver/); make sure the verison you install works with your version of chrome
-# 6. Register for FireCloud (https://portal.firecloud.org) for both Google accounts (needed for auth & sharing acls)
+# 6. Register for Terra (https://app.terra.bio) for both Google accounts (needed for auth & sharing acls)
 # 7. The 'test email account' (see below) must be configured as a portal admin.  See 'ADMIN USER ACCOUNTS' in README.md for more information.
 
 # USAGE
@@ -297,7 +297,7 @@ class UiTestSuite < Test::Unit::TestCase
     opts = species_dropdown.find_elements(:tag_name, 'option')
     available_species = opts.delete_if {|opt| opt['value'] == '' || opt.text.downcase == 'human' }
     if available_species.any?
-      species_dropdown.send_keys(available_species.sample.text)
+      species_dropdown.send_keys(available_species.select {|s| !s.text != 'human'}.sample.text)
     end
     upload_fastq = fastq_form.find_element(:class, 'upload-fastq')
     upload_fastq.send_keys(@test_data_path + 'cell_1_R1_001.fastq.gz')
@@ -316,7 +316,7 @@ class UiTestSuite < Test::Unit::TestCase
     opts = species_dropdown.find_elements(:tag_name, 'option')
     available_species = opts.delete_if {|opt| opt['value'] == '' || opt.text.downcase == 'human' }
     if available_species.any?
-      species_dropdown.send_keys(available_species.sample.text)
+      species_dropdown.send_keys(available_species.select {|s| !s.text != 'human'}.sample.text)
     end
     new_upload_fastq = new_fastq_form.find_element(:class, 'upload-fastq')
     new_upload_fastq.send_keys(@test_data_path + 'cell_1_I1_001.fastq.gz')
@@ -387,7 +387,7 @@ class UiTestSuite < Test::Unit::TestCase
     assert cluster_count == 2, "did not find correct number of clusters, expected 2 but found #{cluster_count}"
     assert gene_list_count == 1, "did not find correct number of gene lists, expected 1 but found #{gene_list_count}"
     assert metadata_count == 3, "did not find correct number of metadata objects, expected 3 but found #{metadata_count}"
-    assert cluster_annot_count == 3, "did not find correct number of cluster annotations, expected 2 but found #{cluster_annot_count}"
+    assert cluster_annot_count == 4, "did not find correct number of cluster annotations, expected 4 but found #{cluster_annot_count}"
     assert study_file_count == 8, "did not find correct number of study files, expected 8 but found #{study_file_count}"
     assert primary_data_count == 2, "did not find correct number of primary data files, expected 2 but found #{primary_data_count}"
     assert share_count == 1, "did not find correct number of study shares, expected 1 but found #{share_count}"
@@ -804,12 +804,12 @@ class UiTestSuite < Test::Unit::TestCase
 
     # verify firecloud workspace creation
     firecloud_link = @driver.find_element(:id, 'firecloud-link')
-    firecloud_url = "https://portal.firecloud.org/#workspaces/single-cell-portal/#{$env}-test-study-#{$random_seed}"
+    firecloud_url = "https://app.terra.bio/#workspaces/single-cell-portal-#{$env}/test-study-#{$random_seed}"
     firecloud_link.click
     @driver.switch_to.window(@driver.window_handles.last)
     sleep(1) # we need a sleep to let the driver catch up, otherwise we can get stuck in an inbetween state
     accept_firecloud_tos
-    completed = @driver.find_elements(:class, 'fa-check-circle')
+    completed = @driver.find_elements(:class, 'fa-pen')
     assert completed.size >= 1, 'did not provision workspace properly'
     assert @driver.current_url == firecloud_url, 'did not open firecloud workspace'
 
@@ -821,7 +821,7 @@ class UiTestSuite < Test::Unit::TestCase
     @driver.switch_to.window(@driver.window_handles.last)
     sleep(1)
     # select the correct user
-    user_link = @driver.find_element(:xpath, "//p[@data-email='#{$test_email}']")
+    user_link = @driver.find_element(:xpath, "//div[@data-email='#{$test_email}']")
     user_link.click
     table = @driver.find_element(:id, 'p6n-storage-objects-table')
     table_body = table.find_element(:tag_name, 'tbody')
@@ -990,7 +990,7 @@ class UiTestSuite < Test::Unit::TestCase
     @driver.switch_to.window(@driver.window_handles.last)
     sleep(1)
     # select the correct user
-    user_link = @driver.find_element(:xpath, "//p[@data-email='#{$test_email}']")
+    user_link = @driver.find_element(:xpath, "//div[@data-email='#{$test_email}']")
     user_link.click
     table = @driver.find_element(:id, 'p6n-storage-objects-table')
     table_body = table.find_element(:tag_name, 'tbody')
@@ -1021,10 +1021,10 @@ class UiTestSuite < Test::Unit::TestCase
     assert error_message.text == 'Firecloud workspace - there is already an existing workspace using this name. Please choose another name for your study.'
 
     # verify that workspace is still there
-    firecloud_url = 'https://portal.firecloud.org/#workspaces/single-cell-portal/development-sync-test-study'
+    firecloud_url = "https://app.terra.bio/#workspaces/single-cell-portal-#{$env}/sync-test-study"
     open_new_page(firecloud_url)
     accept_firecloud_tos
-    completed = @driver.find_elements(:class, 'fa-check-circle')
+    completed = @driver.find_elements(:class, 'fa-pen')
     assert completed.size >= 1, "did not find workspace - may have been deleted; please check #{firecloud_url}"
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
@@ -1067,7 +1067,7 @@ class UiTestSuite < Test::Unit::TestCase
     # check view visibility for unauthenticated users
     path = @base_url + "/study/private-study-#{$random_seed}"
     @driver.get path
-    assert @driver.current_url == @base_url, 'did not redirect'
+    assert @driver.current_url == @base_url + "/users/sign_in", 'did not redirect to sign-in page'
     assert element_present?(:id, 'message_modal'), 'did not find alert modal'
     close_modal('message_modal')
 
@@ -1148,7 +1148,7 @@ class UiTestSuite < Test::Unit::TestCase
     @driver.switch_to.window(@driver.window_handles.last)
     sleep(1)
     # select the correct user
-    user_link = @driver.find_element(:xpath, "//p[@data-email='#{$share_email}']")
+    user_link = @driver.find_element(:xpath, "//div[@data-email='#{$share_email}']")
     user_link.click
     table = @driver.find_element(:id, 'p6n-storage-objects-table')
     table_body = table.find_element(:tag_name, 'tbody')
@@ -1275,7 +1275,7 @@ class UiTestSuite < Test::Unit::TestCase
         opts = species_dropdown.find_elements(:tag_name, 'option')
         available_species = opts.delete_if {|opt| opt['value'] == ''}
         if available_species.any?
-          taxon = available_species.sample.text
+          taxon = available_species.select {|s| !s.text != 'human'}.sample.text
           species_dropdown.send_keys(taxon)
         end
       end
@@ -1469,10 +1469,10 @@ class UiTestSuite < Test::Unit::TestCase
 
     # now login as share user and check workspace
     login_as_other($share_email, $share_email_password)
-    firecloud_workspace = "https://portal.firecloud.org/#workspaces/single-cell-portal-development/sync-test-#{$random_seed}"
+    firecloud_workspace = "https://app.terra.bio/#workspaces/single-cell-portal-#{$env}/sync-test-#{$random_seed}"
     @driver.get firecloud_workspace
     accept_firecloud_tos
-    assert !element_present?(:class, 'fa-check-circle'), 'did not revoke access - study workspace still loads'
+    assert !element_present?(:class, 'fa-pen'), 'did not revoke access - study workspace still loads'
 
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
@@ -1877,10 +1877,10 @@ class UiTestSuite < Test::Unit::TestCase
     close_modal('message_modal')
 
     # assert access is revoked
-    firecloud_url = "https://portal.firecloud.org/#workspaces/single-cell-portal/#{$env}-test-study-#{$random_seed}"
+    firecloud_url = "https://app.terra.bio/#workspaces/single-cell-portal-#{$env}/test-study-#{$random_seed}"
     @driver.get firecloud_url
     accept_firecloud_tos
-    assert !element_present?(:class, 'fa-check-circle'), 'did not revoke access - study workspace still loads'
+    assert !element_present?(:class, 'fa-pen'), 'did not revoke access - study workspace still loads'
 
     # test that study admin access is disabled
     # go to homepage first to set referrer
@@ -1923,7 +1923,7 @@ class UiTestSuite < Test::Unit::TestCase
     # assert access is restored, wait a few seconds for changes to propogate
     sleep(3)
     @driver.get firecloud_url
-    assert element_present?(:class, 'fa-check-circle'), 'did not restore access - study workspace does not load'
+    assert element_present?(:class, 'fa-pen'), 'did not restore access - study workspace does not load'
 
     # assert study access is restored
     @driver.get studies_path
@@ -1941,7 +1941,7 @@ class UiTestSuite < Test::Unit::TestCase
 
     # assert firecloud projects are still accessible, but studies and downloads are not
     @driver.get firecloud_url
-    assert element_present?(:class, 'fa-check-circle'), 'did maintain restore access - study workspace does not load'
+    assert element_present?(:class, 'fa-pen'), 'did maintain restore access - study workspace does not load'
     test_study_path = @base_url + "/study/test-study-#{$random_seed}"
     @driver.get(test_study_path)
     wait_for_render(:id, 'study-download-nav')
@@ -2324,6 +2324,21 @@ class UiTestSuite < Test::Unit::TestCase
     submit.click
     studies = @driver.find_elements(:class, 'study-panel').size
     assert studies >= 2, 'incorrect number of studies found. expected >= 2 but found ' + studies.to_s
+    # first load study and get accession value
+    path = @base_url + "/study/test-study-#{$random_seed}"
+    @driver.get(path)
+    study_accession = extract_accession_from_url(@driver.current_url)
+    loaded_path = @base_url + "/study/#{study_accession}/test-study-#{$random_seed}"
+    wait_until_page_loads(loaded_path)
+
+    # now search by accession
+    @driver.get(@base_url)
+    search_box = @driver.find_element(:id, 'search_terms')
+    search_box.send_keys("#{study_accession}")
+    submit = @driver.find_element(:id, 'submit-search')
+    submit.click
+    studies = @driver.find_elements(:class, 'study-panel').size
+    assert studies == 1, "Did not load single study by accession value: #{study_accession}, expected 1 but found #{studies}"
     puts "#{File.basename(__FILE__)}: '#{self.method_name}' successful!"
   end
 
@@ -2375,6 +2390,17 @@ class UiTestSuite < Test::Unit::TestCase
       @wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
       cluster_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
       assert cluster_rendered, "cluster plot did not finish rendering on change, expected true but found #{cluster_rendered}"
+
+    # Test rendering of clusters with percent signs in name
+    clusters.select {|opt| opt.text == 'Test Cluster 2'}.first.click
+    sleep(0.5)
+    annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
+    annotations.select {|opt| opt.text == 'Has % sign'}.first.click
+    @wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
+    sub_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
+    assert sub_rendered, "plot for cluster with percent sign in name did not finish rendering on change, expected true but found #{sub_rendered}"
+
+
     end
 
     # now test private study
@@ -2471,7 +2497,7 @@ class UiTestSuite < Test::Unit::TestCase
     non_share_public_link = @base_url + "/data/public/#{study_accession}/private-study-#{$random_seed}?filename=README.txt"
     non_share_private_link = @base_url + "/data/private/#{study_accession}/private-study-#{$random_seed}?filename=README.txt"
 
-    # try public rout
+    # try public route
     @driver.get non_share_public_link
     public_alert_text = @driver.find_element(:id, 'alert-content').text
     assert public_alert_text == 'You do not have permission to perform that action.',
@@ -4902,31 +4928,20 @@ class UiTestSuite < Test::Unit::TestCase
     assert user_ideogram, "Ideogram did not render using user token: '$('#_ideogramOuterWrap canvas').length > 0' returned #{user_ideogram}"
     puts "Ensured we can load Ideogram and render its annotations"
 
-    # Log out and validate that we can *not* use the read-only service account to load results (SCP-1158)
+    # Log out and validate that we can use the read-only service account to load results (SCP-1856)
     logout_from_portal
     puts "Logged out"
-    @driver.get(loaded_sync_study_path)
-    # we can't use open_ui_tab as this has an explicit wait that will not return in this case as we prompt to sign in
-    explore_tab = @driver.find_element(:id, 'study-visualize-nav')
-    explore_tab.click
-    @wait.until { @driver.current_url.include?('https://accounts.google.com/signin') }
-    puts "Verified no public access to genome visualization"
 
-    # Ensure genome visualizations can be seen by signed-in users without View permission
-    # First, adjust variable names to reflect that the user has not had the study shared with them.
-    user_email = $share_email
-    user_password = $share_email_password
-    login_as_other(user_email, user_password)
+    # Ensure genome visualizations in public studies can be seen by all users (even those not signed-in)
     @driver.get(loaded_sync_study_path)
     open_ui_tab('study-visualize')
     wait_for_render(:css, '#tracks-to-display #filter_1')
     wait_for_render(:id, 'ideogram-container')
-    user_ideogram = @driver.execute_script("return $('#_ideogramOuterWrap canvas').length > 0")
-    assert user_ideogram, "Ideogram did not render using user token: '$('#_ideogramOuterWrap canvas').length > 0' returned #{user_ideogram}"
-    puts "Ensured signed-in users without View permission can see Ideogram annotations"
+    has_ideogram = @driver.execute_script("return $('#_ideogramOuterWrap canvas').length > 0")
+    assert has_ideogram, "Ideogram did not render using user token: '$('#_ideogramOuterWrap canvas').length > 0' returned #{user_ideogram}"
+    puts "Ensured all users can see ideogram in public studies"
 
     # clean up
-    logout_from_portal
     login_as_other($test_email, $test_email_password)
     @driver.get @base_url + '/studies'
     wait_until_page_loads(@base_url + '/studies')
@@ -5055,30 +5070,6 @@ class UiTestSuite < Test::Unit::TestCase
     open_ui_tab('genome-tab')
     igv_single_instance = @driver.execute_script("return $('.igv-root-div').length === 1;")
     assert igv_single_instance, "Multiple instances of igv.js are display; only one should be"
-
-
-    # sign out and prove that gene search state is remembered after new login
-    logout_from_portal
-    @driver.get(loaded_path)
-    wait_until_page_loads(loaded_path)
-    open_ui_tab('study-visualize')
-    @wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
-    # Search for a gene
-    gene = @genes.sample
-    search_box = @driver.find_element(:id, 'search_genes')
-    search_box.send_keys(gene)
-    search_box.click
-    search_genes = @driver.find_element(:id, 'perform-gene-search')
-    search_genes.click
-    @wait.until {wait_for_plotly_render('#expression-plots', 'box-rendered')}
-
-    # open genome tab and validate gene search is remembered
-    genome_nav = @driver.find_element(:id, 'genome-tab-nav')
-    genome_nav.click
-    log_back_in($test_email)
-    @wait.until {element_visible?(:id, 'genome-tab')}
-    queried_gene = @driver.find_element(:class, 'queried-gene')
-    assert queried_gene.text == gene, "did not load the correct gene, expected #{gene} but found #{queried_gene.text}"
 
     # clean up
     @driver.get studies_path

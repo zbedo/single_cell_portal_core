@@ -41,9 +41,9 @@
                   <td><%= scp_link_to "<span class='fas fa-eye'></span> View Study".html_safe, view_study_path(accession: @study.accession, study_name: @study.url_safe_name), class: 'btn btn-primary', id: 'study-accession-link' %></td>
                 </tr>
                 <tr>
-                  <td>FireCloud Project & Workspace</td>
+                  <td>Terra Project & Workspace</td>
                   <td><%= @study.firecloud_project %>/<%= @study.firecloud_workspace %></td>
-                  <td><%= link_to_if !@study.firecloud_workspace.nil?, "<span class='fas fa-cloud'></span> View FireCloud Workspace".html_safe, @study.workspace_url, class: 'btn btn-info', id: 'firecloud-link', target: :_blank %>
+                  <td><%= link_to_if !@study.firecloud_workspace.nil?, "<span class='fas fa-cloud'></span> View Terra Workspace".html_safe, @study.workspace_url, class: 'btn btn-info', id: 'firecloud-link', target: :_blank %>
                   </td>
                 </tr>
                 <tr>

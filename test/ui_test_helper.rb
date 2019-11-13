@@ -198,15 +198,6 @@ class Test::Unit::TestCase
     $verbose ? puts('login successful') : nil
   end
 
-  # log back into portal with account that has already signed in once
-  def log_back_in(email)
-    $verbose ? puts('logging back in as ' + email) : nil
-    user_email = @driver.find_element(:xpath, "//div[@data-email='#{email}']")
-    user_email.click
-    handle_oauth_redirect(email)
-    $verbose ? puts('login successful') : nil
-  end
-
   # method to log out of google so that we can log in with a different account
   def login_as_other(email, password)
     invalidate_google_session

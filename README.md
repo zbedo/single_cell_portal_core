@@ -24,20 +24,14 @@ Authority for doing local development in https.
 
 ## BEFORE RUNNING THE CONTAINER
 
-Since this project utilizes native Docker for Mac OSX, any resources on the host machine cannot be reached by the running 
-container (specifically, any database resources). Therefore, we will need to deploy a database container using Docker as 
-well.  This project uses [MongoDB](https://hub.docker.com/_/mongo/) as the primary datastore.
+This project uses [MongoDB](https://hub.docker.com/_/mongo/) as the primary datastore, and connects to a remote MongoDB 
+instance in all environments. In order for the portal to operate correctly, you will need to provision 
+a MongoDB instance in Google Cloud Platform.  This can be done using [Google Click to Deploy](https://console.cloud.google.com/marketplace/details/click-to-deploy-images/mongodb), 
+or via providers such as [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).  You may also provision a database manually 
+using a VM in Google Compute Environment if you so desire.
 
-First, create a directory somewhere on your computer in which to store the raw database content (it doesn't matter where 
-as long as it has `rw` permissions, but preferably it would be inside your home directory).
-
-To deploy the database container:
-
-1. Pull the image: `docker pull mongo`
-1. Navigate to the project directory
-1. Run the helper script to start the DB container: `bin/boot_mongo -d (path to data store directory)`
-
-Note: Once the container has been run once, you can stop & restart it using: `docker stop mongodb` or `docker restart mongodb`
+The only requirement is that you add a user account called "single_cell" to your Single Cell Portal database in whatever 
+instances you create.
 
 ## EXTERNAL DEPENDENCIES AND INTEGRATIONS
 
@@ -52,11 +46,11 @@ This is a requirement for all functionality.  The portal utilizes GCP service ac
 various APIs as a part of normal usage.  For more information on how to configure your GCP project, please see 
 [Local Development or Deploying a Private Instance](##local-development-or-deploying-a-private-instance) below.
 
-#### [FireCloud](https://firecloud.org) (REQUIRED)
+#### [Terra](https://terra.bio/) (REQUIRED)
 
-The Single Cell Portal uses FireCloud, which is the Broad Institute's cloud-based analysis platform.  The portal uses 
-FireCloud both as a data and permission store, as well as an analysis platform.  For more information on the integration 
-itself, see [FireCloud Integration](#firecloud-integration) below, or for setting up your own FireCloud project, see 
+The Single Cell Portal uses Terra, which is the Broad Institute's cloud-based analysis platform.  The portal uses 
+Terra both as a data and permission store, as well as an analysis platform.  For more information on the integration 
+itself, see [Terra Integration](#terra-integration) below, or for setting up your own Terra project, see 
 [Local Development or Deploying a Private Instance](##local-development-or-deploying-a-private-instance) below.
 
 #### [Sentry](https://sentry.io)
@@ -110,11 +104,11 @@ to log in with their Google accounts.  To do so:
 
 * **Whitelisting your OAuth Audience**
   * Once you have exported your OAuth credentials, you will need to have your client id whitelisted to allow it to make 
-  authenticated requests into the FireCloud API as per [OpenID Connect 1.0](http://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation)
+  authenticated requests into the Terra API as per [OpenID Connect 1.0](http://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation)
     *  Send an email to **dsp-devops@broadinstitute.org** with your OAuth2 client ID(s) so it can be added to the whitelist
 
 * **GCP Service Account keys**: Regardless of where the portal is deployed, it requires a Google Cloud Platform Service 
-Account in order to make authenticated calls into FireCloud and Google Cloud Storage.  Therefore, you must export the 
+Account in order to make authenticated calls into Terra and Google Cloud Storage.  Therefore, you must export the 
 default service account key.  See https://developers.google.com/identity/protocols/OAuth2ServiceAccount for more information 
 about service accounts.  To export the credentials:
 	*  Log into your new GCP project
@@ -136,23 +130,22 @@ about service accounts.  To export the credentials:
 	* Google Cloud APIs
 	* Google Cloud Billing API
 	* Google Cloud Storage JSON API
-	* Google Cloud Firestore API
 	* Google Cloud Genomics API
 
-* **Registering your Service Account as a FireCloud user**: Once you have configured and booted your instance of the portal, 
-you will need to register your service account as a FireCloud user in order to create a billing project and create studies.  
+* **Registering your Service Account as a Terra user**: Once you have configured and booted your instance of the portal, 
+you will need to register your service account as a Terra user in order to create a billing project and create studies.  
 To do so:
 	* Launch an instance of your portal (see [RUNNING THE CONTAINER](#running-the-container) below)
 	* Create an admin user account (see [ADMIN USER ACCOUNTS](#admin-user-accounts) below)
 	* Log in with the admin account, and select 'Admin Configurations' from the profile menu (top righthand corner)
-	* At the bottom of the page, in the 'Other Tasks' dropdown, select 'Manage Main Service Account FireCloud Registration' 
+	* At the bottom of the page, in the 'Other Tasks' dropdown, select 'Manage Main Service Account Terra Registration' 
 	and click 'Execute Task'
 	* Fill out all form fields and submit
 	* This must be done for both the 'main' and 'read-only' service accounts
 
-* **Creating a FireCloud Project**: Once your OAuth audience has been whitelisted, and before you can create studies, you 
-will need to create a FireCloud project that will own all the workspaces created in the portal. To do this:
-	* Create a [Google Billing Project](https://software.broadinstitute.org/firecloud/documentation/article?id=9762).
+* **Creating a Terra Project**: Once your OAuth audience has been whitelisted, and before you can create studies, you 
+will need to create a Terra project that will own all the workspaces created in the portal. To do this:
+	* Create a [Google Billing Project](https://support.terra.bio/hc/en-us/articles/360026182251#How%20to%20create%20your%20own%20Google%20Billing%20Account).
 	* Using the same Google account that owns the billing project, log into the portal and select 'My Billing Projects' from the profile menu.
 	* Click 'New Billing Project' at the bottom of the page
 		* Select your newly-created billing account
@@ -160,8 +153,8 @@ will need to create a FireCloud project that will own all the workspaces created
 		* Click 'Create Billing Project'
 	
 * **IMPORTANT: Reboot your instance**
-  * Once you have created your FireCloud billing project, you will need to restart your instance and pass the name of your 
-  FireCloud project into <code>bin/boot_docker</code> with <code>-N</code>
+  * Once you have created your Terra billing project, you will need to restart your instance and pass the name of your 
+  Terra project into <code>bin/boot_docker</code> with <code>-N</code>
 
 
 ## RUNNING THE CONTAINER
@@ -169,7 +162,7 @@ will need to create a FireCloud project that will own all the workspaces created
 Once the image has successfully built, all registration/configuration steps have been completed, use the following command 
 to start the container:
 
-    bin/boot_docker -u (sendgrid username) -P (sendgrid password) -k (service account key path) -K (read-only service account key path) -o (oauth client id) -S (oauth client secret) -N (portal namespace)
+    bin/boot_docker -u (sendgrid username) -P (sendgrid password) -k (service account key path) -K (read-only service account key path) -o (oauth client id) -S (oauth client secret) -N (portal namespace) -m (mongodb hostname) -p (mongodb password)
 
 This sets up several environment variables in your shell and then runs the following command:
 
@@ -213,7 +206,7 @@ this needs to be set to allow Rails to communicate with the database.
 1. **SENDGRID_PASSWORD** (passed with -e): The password associated with a Sendgrid account (for sending emails).
 1. **SECRET_KEY_BASE** (passed with -e): Sets the Rails SECRET_KEY_BASE environment variable, used mostly by Devise in authentication for cookies.
 1. **SERVICE_ACCOUNT_KEY** (passed with -e): Sets the SERVICE_ACCOUNT_KEY environment variable, used for making authenticated 
-API calls to FireCloud & GCP.
+API calls to Terra & GCP.
 1. **READ_ONLY_SERVICE_ACCOUNT_KEY** (passed with -e): Sets the READ_ONLY_SERVICE_ACCOUNT_KEY environment variable, used 
 for making authenticated API calls to GCP for streaming assets to the browser.
 1. **OAUTH_CLIENT_ID** (passed with -e): Sets the OAUTH_CLIENT_ID environment variable, used for Google OAuth2 integration.
@@ -255,7 +248,7 @@ server (would be done inside your environment's config file).
 * **-e SECRET_KEY_BASE=[SECRET_KEY_BASE]:** Setting the SECRET_KEY_BASE variable is necessary for creating secure cookies 
 for authentication.  This variable automatically resets every time we restart the container.
 * **-e SERVICE_ACCOUNT_KEY=[SERVICE_ACCOUNT_KEY]:** Setting the SERVICE_ACCOUNT_KEY variable is necessary for making 
-authenticated API calls to FireCloud and GCP.  This should be a file path **relative to the app root** that points to the 
+authenticated API calls to Terra and GCP.  This should be a file path **relative to the app root** that points to the 
 JSON service account key file you exported from GCP.
 * **-e READ_ONLY_SERVICE_ACCOUNT_KEY=[READ_ONLY_SERVICE_ACCOUNT_KEY]:** Setting the READ_ONLY_SERVICE_ACCOUNT_KEY variable 
 is necessary for making authenticated API calls to GCP.  This should be a file path **relative to the app root** that points 
@@ -305,7 +298,7 @@ requirements are as follows:
 * Google Chrome along with 2 Google accounts, one of which needs to be a portal admin account (see 
 [ADMIN USER ACCOUNTS](#admin-user-accounts) above)
 * [Chromedriver](http://chromedriver.chromium.org/)
-* FireCloud accounts for both Google accounts (see [FIRECLOUD INTEGRATION](#firecloud-integration) below)
+* Terra accounts for both Google accounts (see [TERRA INTEGRATION](#terra-integration) below)
 
 
 #### RUNNING UI TESTS
@@ -417,7 +410,7 @@ To access the production instance for maintenance purposes:
 
 * View Docker logs: `docker logs -f single_cell`
 * Once Nginx is running again (i.e. you see "Passenger core online" in Docker logs), take off maintanence mode via `bin/enable_maintenance.sh off`
-* Check https://portals.broadinstitute.org/single_cell to verify that deployment succeeded
+* Check https://singlecell.broadinstitute.org/single_cell to verify that deployment succeeded
 
 If you are deploying your own production instance in a different project, the following VM/OS configurations are recommended:
 * VM: n1-highmem-4 (4 vCPUs, 26 GB memory)
@@ -465,24 +458,24 @@ and any differing values for hostnames/client secrets/passwords as needed.
 
 *Note: This instance is usually turned off to save on compute costs, so there is no expectation that it is up at any given time*
 
-### FIRECLOUD INTEGRATION
+### TERRA INTEGRATION
 
-The Single Cell Portal stores uploaded study data files in [FireCloud](https://software.broadinstitute.org/firecloud/) 
+The Single Cell Portal stores uploaded study data files in [Terra](https://app.terra.bio/) 
 workspaces, which in turn store data in GCP buckets.  This is all managed through a GCP service account which in turn 
 owns all portal workspaces and manages them on behalf of portal users.  All portal-related workspaces are within the 
 `single-cell-portal` namespace (or what the PORTAL_NAMESPACE environment variable is set to), which should be noted is a 
 separate project from the one the portal itself operates out of.
 
-When a study is created through the portal, a call is made to the FireCloud API to provision a workspace and set the ACL 
-to allow owner access to the user who created the study, and read/write access to any designated shares.  Every FireCloud 
+When a study is created through the portal, a call is made to the Terra API to provision a workspace and set the ACL 
+to allow owner access to the user who created the study, and read/write access to any designated shares.  Every Terra 
 workspace comes with a GCP storage bucket, which is where all uploaded files are deposited.  No ACLs are set on individual 
 files as all permissions are inherited from the workspace itself.  Files are first uploaded temporarily locally to the 
 portal (so that they can be parsed if needed) and then sent to the workspace bucket in the background after uploading and 
 parsing have completed.
 
-If a user has not signed up for a FireCloud account, they will receive and invitation email from FireCloud asking them to 
+If a user has not signed up for a Terra account, they will receive and invitation email from Terra asking them to 
 complete their registration.  While they will be able to interact with their study/data through the portal without completing 
-their registration, they will not be able to load their FireCloud workspace or access the associated GCP bucket until they 
+their registration, they will not be able to load their Terra workspace or access the associated GCP bucket until they 
 have done so.
 
 Deleting a study will also delete the associated workspace, unless the user specifies that they want the workspace to be 
@@ -500,12 +493,12 @@ profile menu or at /single_cell/admin).
 There are currently 7 configuration actions:
 
 * Daily download quota limit (defaults to 2 terabytes, but is configurable to any amount, including 0)
-* Manage FireCloud access (can disable local access, compute access, or all access)
+* Manage Terra access (can disable local access, compute access, or all access)
 * Unlock orphaned jobs (any background jobs that were running during a portal restart are locked until this option is used)
 * Refresh API clients (force the FireCloudClient class to renew all access tokens)
-* Manage both service account FireCloud profiles (register or update the FireCloud profile associated with the main & 
+* Manage both service account Terra profiles (register or update the Terra profile associated with the main & 
 readonly portal service accounts).
-* See the current FireCloud API status (for all services)
+* See the current Terra API status (for all services)
 * Synchronize the portal user group (if set, will add all users to user group)
 
 
@@ -529,7 +522,7 @@ Account keys' under [DEPLOYING A PRIVATE INSTANCE](#local-development-or-deployi
 1. Export the JSON credentials to a file and save inside the portal home directory.
 1. When booting your instance (via `bin/boot_docker`), make sure to pass `-K (/path/to/readonly/credentials.json)`
 1. Once the portal is running, navigate to the Admin Control Panel with an admin user account
-1. Select 'Manage Read-Only Service Account FireCloud Registration' from the 'Other Tasks' menu and click 'Execute'
+1. Select 'Manage Read-Only Service Account Terra Registration' from the 'Other Tasks' menu and click 'Execute'
 1. Fill out all form fields and submit.
 1. Once your new service account is registered, create a Config Option of the type 'Read-Only Access Control'
 1. Set the type of value to 'Boolean', and set the value to 'Yes', and save
@@ -542,9 +535,9 @@ back to the client for visualization without the need for setting up and externa
 To revoke this access, simply edit the configuration setting and set the value
 to 'No'.
 
-#### FIRECLOUD ACCESS SETTINGS
+#### TERRA ACCESS SETTINGS
 
-Disabling all FireCloud access is achieved by revoking all access to studies directly in FireCloud and using the portal 
+Disabling all Terra access is achieved by revoking all access to studies directly in Terra and using the portal 
 permission map (study ownership & shares) as a backup cache.  This will prevent anyone from downloading data either through 
 the portal or directly from the workspaces themselves.  This will have the side effect of disallowing any edits to studies 
 while in effect, so this feature should only be used as a last resort to curtail runaway downloads.  While access is disabled, 
@@ -552,10 +545,10 @@ only the portal service account will have access to workspaces.
 
 Disabling compute access will set all user access permissions to READER, thus disabling computes.
 
-Disabling local access does not alter FireCloud permissions, but prevents users from accessing the 'My Studies' page and 
+Disabling local access does not alter Terra permissions, but prevents users from accessing the 'My Studies' page and 
 uploading data through the portal.  Downloads are still enabled, and normal front-end actions are unaffected.  
 
-Re-enabling FireCloud access will restore all permissions back to their original state.
+Re-enabling Terra access will restore all permissions back to their original state.
 
 ### MAINTENANCE MODE
 

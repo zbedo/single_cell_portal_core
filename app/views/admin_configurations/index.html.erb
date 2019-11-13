@@ -59,7 +59,7 @@
               </div>
               <div class="col-md-5 text-right">
                 <%= link_to 'Email All Users', compose_users_email_path, id: 'email-all-users', class: 'btn btn-primary' %>
-                <%= link_to "<span class='fas fa-exclamation-circle'></span> MANAGE FIRECLOUD ACCESS".html_safe, '#', class: 'btn btn-danger panic', id: 'show-panic-modal' %>
+                <%= link_to "<span class='fas fa-exclamation-circle'></span> MANAGE TERRA ACCESS".html_safe, '#', class: 'btn btn-danger panic', id: 'show-panic-modal' %>
               </div>
             </div>
           </div>
@@ -70,12 +70,12 @@
         <div class="modal-dialog modal-lg">
           <div class="modal-content">
             <div class="modal-header">
-              <h4 class="text-center text-danger">MANAGE FIRECLOUD ACCESS</h4>
+              <h4 class="text-center text-danger">MANAGE TERRA ACCESS</h4>
             </div>
             <div class="modal-body">
-              <p class="lead text-center">FireCloud Access is currently: <%= @download_status_label %></p>
+              <p class="lead text-center">Terra Access is currently: <%= @download_status_label %></p>
               <p class="lead text-danger">Clicking 'Disable All Access' will revoke all user permissions to workspaces, thereby preventing any users from uploading/downloading data or running computes.  As a result, access to updating studies will be disabled.</p>
-              <p class="lead text-danger">Clicking 'Disable Local Access' will revoke disable local access to study administrative actions (creating, updating, sharing) and downloading data.  Remote FireCloud permissions are not changed by this status.  This is useful if there is a service outage in the FireCloud API.</p>
+              <p class="lead text-danger">Clicking 'Disable Local Access' will revoke disable local access to study administrative actions (creating, updating, sharing) and downloading data.  Remote Terra permissions are not changed by this status.  This is useful if there is a service outage in the Terra API.</p>
               <p class="lead text-danger">Clicking 'Disable Compute Access' will set all user permissions for workspaces to Read Only, thereby preventing any users from uploading data or running computes.  Users can still download data.  Access to updating studies will be still be disabled.</p>
               <p class="lead text-danger text-center"><strong>Are you sure you wish to proceed?</strong></p>
               <div class="row">

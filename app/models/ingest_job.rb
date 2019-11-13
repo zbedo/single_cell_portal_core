@@ -5,31 +5,40 @@
 
 class IngestJob
   include ActiveModel::Model
-  attr_accessor :pipeline_name, :study, :study_file, :user, :action
+
+  # Name of pipeline submission running in GCP (from [PapiClient#run_pipeline])
+  attr_accessor :pipeline_name
+  # Study object where file is being ingested
+  attr_accessor :study
+  # StudyFile being ingested
+  attr_accessor :study_file
+  # User performing ingest run
+  attr_accessor :user
+  # Action being performed by Ingest (e.g. ingest_expression, ingest_cluster)
+  attr_accessor :action
 
   extend ErrorTracker
 
   # number of tries to push a file to a study bucket
   MAX_ATTEMPTS = 3
 
-  # Mappings between actions & Firestore models (for cleaning up data on re-parses)
-  FIRESTORE_MODELS_BY_ACTION = {
-      ingest_expression: FirestoreGene,
-      ingest_cluster: FirestoreCluster,
-      ingest_cell_metadata: FirestoreCellMetadatum,
-      subsample: FirestoreCluster
+  # Mappings between actions & models (for cleaning up data on re-parses)
+  MODELS_BY_ACTION = {
+      ingest_expression: Gene,
+      ingest_cluster: ClusterGroup,
+      ingest_cell_metadata: CellMetadatum,
+      subsample: ClusterGroup
   }
-
-  validates_presence_of :study, :study_file, :user
 
   # Push a file to a workspace bucket in the background and then launch an ingest run and queue polling
   # Can also clear out existing data if necessary (in case of a re-parse)
   #
   # * *params*
-  #   - +study+ (Study) => Study in which file is being uploaded
-  #   - +study_file+ (StudyFile) => File being uploaded
-  #   - +user+ (User) => User initiating upload
-  #   - +reparse+ (Boolean) => Indication of whether or not a file is being re-ingested, will delete existing documents
+  #   - +reparse+ [Boolean] => Indication of whether or not a file is being re-ingested, will delete existing documents
+  #
+  # * *yields*
+  #   - (Google::Apis::GenomicsV2alpha1::Operation) => Will submit an ingest job in PAPI
+  #   - (IngestJob.new(attributes).poll_for_completion) => Will queue a Delayed::Job to poll for completion
   #
   # * *raises*
   #   - (RuntimeError) => If file cannot be pushed to remote bucket
@@ -38,8 +47,8 @@ class IngestJob
       file_identifier = "#{self.study_file.bucket_location}:#{self.study_file.id}"
       if reparse
         Rails.logger.info "Deleting existing data for #{file_identifier}"
-        firestore_class = FIRESTORE_MODELS_BY_ACTION[action]
-        firestore_class.delete_by_study_and_file(self.study.accession, self.study_file.id.to_s)
+        rails_model = MODELS_BY_ACTION[action]
+        rails_model.where(study_id: self.study.id, study_file_id: self.study_file.id).delete_all
         Rails.logger.info "Data cleanup for #{file_identifier} complete, now beginning Ingest"
       end
       # first check if file is already in bucket (in case user is syncing)
@@ -176,7 +185,7 @@ class IngestJob
   #
   # * *params*
   #   - +run_at+ (DateTime) => Time at which to run new polling check
-  def poll_for_completion(run_at: 30.seconds.from_now)
+  def poll_for_completion(run_at: 1.minute.from_now)
     if self.done? && !self.failed?
       Rails.logger.info "IngestJob poller: #{self.pipeline_name} is done!"
       Rails.logger.info "IngestJob poller: #{self.pipeline_name} status: #{self.current_status}"
@@ -219,7 +228,7 @@ class IngestJob
     case self.study_file.file_type
     when 'Metadata'
       if self.study.default_options[:annotation].nil?
-        cell_metadatum = FirestoreCellMetadatum.by_study(self.study.accession).first
+        cell_metadatum = study.cell_metadata.first
         self.study.default_options[:annotation] = cell_metadatum.annotation_select_value
         if cell_metadatum.annotation_type == 'numeric'
           self.study.default_options[:color_profile] = 'Reds'
@@ -227,7 +236,7 @@ class IngestJob
       end
     when 'Cluster'
       if self.study.default_options[:cluster].nil?
-        cluster = FirestoreCluster.by_study_and_name(self.study.accession, self.study_file.name)
+        cluster = study.cluster_groups.by_name(self.study_file.name)
         self.study.default_options[:cluster] = cluster.name
         if self.study.default_annotation.nil? && cluster.cell_annotations.any?
           annotation = cluster.cell_annotations.first
@@ -244,9 +253,7 @@ class IngestJob
 
   # Set the study "initialized" attribute if all main models are populated
   def set_study_initialized
-    firestore_classes = [FirestoreGene, FirestoreCluster, FirestoreCellMetadatum]
-    if firestore_classes.map {|fs_class| fs_class.study_has_any?(self.study.accession)}.uniq === [true] &&
-        !self.study.initialized?
+    if self.study.cluster_groups.any? && self.study.genes.any? && self.study.cell_metadata.any? && !self.study.initialized?
       self.study.update(initialized: true)
     end
   end

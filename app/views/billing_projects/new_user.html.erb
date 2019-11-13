@@ -1,18 +1,18 @@
-<h1>Add a user to '<%= params[:project_name] %>' FireCloud billing project</h1>
+<h1>Add a user to '<%= params[:project_name] %>' Terra billing project</h1>
 <div class="bs-callout bs-callout-default">
   <h4>Instructions</h4>
-  <p class="help-block">Use the form below to add a user to this FireCloud billing project.  Note that by default, <strong><%= current_user.email %></strong> is set as
+  <p class="help-block">Use the form below to add a user to this Terra billing project.  Note that by default, <strong><%= current_user.email %></strong> is set as
     the project owner.  You will also see the 'SCP Service Account' listed as an owner as well.  <span class="text-danger">Please do not remove either user from your project as this will result in the portal being unable to manage any workspaces
     or files under this project.</span></p>
   <p class="help-block">Normally, you should not need to add a user at the project level.  However, if you encounter a scenario where you need to grant project owner or member
     roles to a user, you can do so here.  The roles are as follows:</p>
   <dl class="dl-horizontal">
     <dt>user</dt>
-    <dd>User will have <strong>read access</strong> to all workspaces in this project, and can create workspaces in FireCloud</dd>
+    <dd>User will have <strong>read access</strong> to all workspaces in this project, and can create workspaces in Terra</dd>
     <dt>owner</dt>
-    <dd>User will have <strong>read/write access</strong> to all workspaces in this project, and can create & delete workspaces in FireCloud</dd>
+    <dd>User will have <strong>read/write access</strong> to all workspaces in this project, and can create & delete workspaces in Terra</dd>
   </dl>
-  <p class="text-primary"><i class="fas fa-fw fa-exclamation-triangle"></i> The user you are adding must already be a FireCloud user in order to add them to the project.</p>
+  <p class="text-primary"><i class="fas fa-fw fa-exclamation-triangle"></i> The user you are adding must already be a Terra user in order to add them to the project.</p>
 </div>
 <div class="well well-lg">
   <%= form_for(:billing_project_user, url: create_billing_project_user_path(project_name: params[:project_name]), html: {class: 'form'}) do |f| %>

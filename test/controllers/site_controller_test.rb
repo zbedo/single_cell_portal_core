@@ -10,6 +10,16 @@ class SiteControllerTest < ActionDispatch::IntegrationTest
     @study = Study.first
   end
 
+  test 'should redirect to home page from bare domain' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+    get '/'
+    assert_response 302, "Did not receive correct HTTP status code, expected 302 but found #{status}"
+    assert_redirected_to site_path, "Did not provide correct redirect, should have gone to #{site_path} but found #{path}"
+    follow_redirect!
+    assert_equal(site_path, path, "Redirect did not successfully complete, #{site_path} != #{path}")
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
+
   test 'should redirect to correct study name url' do
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
