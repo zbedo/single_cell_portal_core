@@ -821,8 +821,8 @@ class Study
   # or default cluster cannot be loaded
   def default_cluster
     default = self.cluster_groups.first
-    if self.default_options[:cluster].nil?
-      new_default = clusters.detect {|cluster| cluster.name == self.default_options[:cluster]}
+    unless self.default_options[:cluster].nil?
+      new_default = self.cluster_groups.by_name(self.default_options[:cluster])
       unless new_default.nil?
         default = new_default
       end
