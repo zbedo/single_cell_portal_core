@@ -269,9 +269,12 @@ class IngestJob
   end
 
   # in case of an error, retrieve the contents of the warning or error file to email to the user
+  # deletes the file immediately after being read
   def read_parse_logfile(filepath)
     if Study.firecloud_client.workspace_file_exists?(self.study.bucket_id, filepath)
-      Study.firecloud_client.execute_gcloud_method(:read_workspace_file, 0, self.study.bucket_id, filepath)
+      file_contents = Study.firecloud_client.execute_gcloud_method(:read_workspace_file, 0, self.study.bucket_id, filepath)
+      # Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, 0, self.study.bucket_id, filepath)
+      file_contents
     else
       nil
     end
@@ -281,18 +284,22 @@ class IngestJob
   def generate_error_email_body
     error_contents = self.read_parse_logfile(self.error_filepath)
     warning_contents = self.read_parse_logfile(self.warning_filepath)
-    event_messages = self.event_messages.map {|msg| "<p>#{msg}</p>"}
+    event_messages = self.event_messages
     message_body = "<p>'#{self.study_file.upload_file_name}' failed during parsing.</p>"
     if error_contents.present?
       message_body += "<h3>Errors</h3>"
-      message_body += error_contents.split("\n").join("<br />")
+      error_contents.each_line do |line|
+        message_body += "#{line}<br />"
+      end
     end
     if warning_contents.present?
       message_body += "<h3>Warnings</h3>"
-      message_body += warning_contents.split("\n").join("<br />")
+      warning_contents..each_line do |line|
+        message_body += "#{line}<br />"
+      end
     end
     message_body += "<h3>Detailed Event Messages</h3>"
-    message_body += event_messages
+    message_body += event_messages.join("<br />")
     message_body
   end
 end

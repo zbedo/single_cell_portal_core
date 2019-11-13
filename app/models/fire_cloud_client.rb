@@ -1401,8 +1401,8 @@ class FireCloudClient < Struct.new(:user, :project, :access_token, :api_root, :s
   #   - +Boolean+
   def workspace_file_exists?(workspace_bucket_id, filename)
     begin
-      self.get_workspace_file(workspace_bucket_id, filename)
-      true
+      file = self.get_workspace_file(workspace_bucket_id, filename)
+      file.present?
     rescue => e
       false
     end
