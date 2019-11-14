@@ -1067,7 +1067,7 @@ class UiTestSuite < Test::Unit::TestCase
     # check view visibility for unauthenticated users
     path = @base_url + "/study/private-study-#{$random_seed}"
     @driver.get path
-    assert @driver.current_url == @base_url, 'did not redirect'
+    assert @driver.current_url == @base_url + "/users/sign_in", 'did not redirect to sign-in page'
     assert element_present?(:id, 'message_modal'), 'did not find alert modal'
     close_modal('message_modal')
 
@@ -2497,7 +2497,7 @@ class UiTestSuite < Test::Unit::TestCase
     non_share_public_link = @base_url + "/data/public/#{study_accession}/private-study-#{$random_seed}?filename=README.txt"
     non_share_private_link = @base_url + "/data/private/#{study_accession}/private-study-#{$random_seed}?filename=README.txt"
 
-    # try public rout
+    # try public route
     @driver.get non_share_public_link
     public_alert_text = @driver.find_element(:id, 'alert-content').text
     assert public_alert_text == 'You do not have permission to perform that action.',
