@@ -19,7 +19,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   # GCP Compute project to run pipelines in
   COMPUTE_PROJECT = ENV['GOOGLE_CLOUD_PROJECT'].blank? ? '' : ENV['GOOGLE_CLOUD_PROJECT']
   # Docker image in GCP project to pull for running ingest jobs
-  INGEST_DOCKER_IMAGE = 'gcr.io/broad-singlecellportal-staging/ingest-pipeline:0.4.0_059b180'
+  INGEST_DOCKER_IMAGE = 'gcr.io/broad-singlecellportal-staging/scp-ingest-pipeline:0.6.0'
   # List of scp-ingest-pipeline actions and their allowed file types
   FILE_TYPES_BY_ACTION = {
       ingest_expression: ['Expression Matrix', 'MM Coordinate Matrix'],
@@ -217,7 +217,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   def get_command_line(study_file:, action:)
     validate_action_by_file(action, study_file)
     study = study_file.study
-    command_line = "python ingest_pipeline.py --study-accession #{study.accession} --file-id #{study_file.id} #{action}"
+    command_line = "python ingest_pipeline.py --study-id #{study.id} --file-id #{study_file.id} #{action}"
     case action.to_s
     when 'ingest_expression'
       if study_file.file_type == 'Expression Matrix'
