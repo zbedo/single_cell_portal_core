@@ -273,7 +273,7 @@ class IngestJob
   def read_parse_logfile(filepath)
     if Study.firecloud_client.workspace_file_exists?(self.study.bucket_id, filepath)
       file_contents = Study.firecloud_client.execute_gcloud_method(:read_workspace_file, 0, self.study.bucket_id, filepath)
-      # Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, 0, self.study.bucket_id, filepath)
+      Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, 0, self.study.bucket_id, filepath)
       file_contents
     else
       nil
