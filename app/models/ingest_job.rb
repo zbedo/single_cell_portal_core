@@ -285,7 +285,7 @@ class IngestJob
     error_contents = self.read_parse_logfile(self.error_filepath)
     warning_contents = self.read_parse_logfile(self.warning_filepath)
     event_messages = self.event_messages
-    message_body = "<p>'#{self.study_file.upload_file_name}' failed during parsing. </p>"
+    message_body = "<p>'#{self.study_file.upload_file_name}' has failed during parsing.</p>"
     if error_contents.present?
       message_body += "<h3>Errors</h3>"
       error_contents.each_line do |line|
