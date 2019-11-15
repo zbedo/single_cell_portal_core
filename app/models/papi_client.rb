@@ -19,7 +19,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   # GCP Compute project to run pipelines in
   COMPUTE_PROJECT = ENV['GOOGLE_CLOUD_PROJECT'].blank? ? '' : ENV['GOOGLE_CLOUD_PROJECT']
   # Docker image in GCP project to pull for running ingest jobs
-  INGEST_DOCKER_IMAGE = 'gcr.io/broad-singlecellportal-staging/ingest-pipeline:0.6.1_6e959b1'
+  INGEST_DOCKER_IMAGE = 'gcr.io/broad-singlecellportal-staging/ingest-pipeline:0.6.2_df40981'
   # List of scp-ingest-pipeline actions and their allowed file types
   FILE_TYPES_BY_ACTION = {
       ingest_expression: ['Expression Matrix', 'MM Coordinate Matrix'],
@@ -81,7 +81,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   def run_pipeline(study_file: , user:, action:)
     study = study_file.study
     accession = study.accession
-    resources = self.create_resources_object(regions: ['us-east4'])
+    resources = self.create_resources_object(regions: ['us-central1'])
     command_line = self.get_command_line(study_file: study_file, action: action)
     labels = {
         study_accession: accession,
@@ -195,7 +195,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   #   - +preemptible+ (Boolean) => Indication of whether VM can be preempted (defaults to false)
   # * *return*
   #   - (Google::Apis::GenomicsV2alpha1::VirtualMachine)
-  def create_virtual_machine_object(machine_type: 'n1-standard-1', preemptible: false)
+  def create_virtual_machine_object(machine_type: 'n1-highmem-4', preemptible: false)
     Google::Apis::GenomicsV2alpha1::VirtualMachine.new(
         machine_type: machine_type,
         preemptible: preemptible,
@@ -217,7 +217,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   def get_command_line(study_file:, action:)
     validate_action_by_file(action, study_file)
     study = study_file.study
-    command_line = "python ingest_pipeline.py --study-id #{study.id} --file-id #{study_file.id} #{action}"
+    command_line = "python ingest_pipeline.py --study-accession #{study.accession} --file-id #{study_file.id} #{action}"
     case action.to_s
     when 'ingest_expression'
       if study_file.file_type == 'Expression Matrix'
@@ -230,7 +230,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
                       " --gene-file #{genes_file.gs_url} --barcode-file #{barcodes_file.gs_url}"
       end
     when 'ingest_cell_metadata'
-      command_line += " --cell-metadata-file #{study_file.gs_url} --ingest-cell-metadata"
+      command_line += " --cell-metadata-file #{study_file.gs_url} --ingest-cell-metadata --validate-convention"
     when 'ingest_cluster'
       command_line += " --cluster-file #{study_file.gs_url} --ingest-cluster"
     when 'ingest_subsample'
