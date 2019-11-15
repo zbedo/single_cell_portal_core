@@ -275,8 +275,6 @@ class IngestJob
       file_contents = Study.firecloud_client.execute_gcloud_method(:read_workspace_file, 0, self.study.bucket_id, filepath)
       Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, 0, self.study.bucket_id, filepath)
       file_contents
-    else
-      nil
     end
   end
 
