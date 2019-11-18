@@ -596,7 +596,8 @@ class FireCloudClientTest < ActiveSupport::TestCase
     assert api_url.start_with?("https://www.googleapis.com/storage"), "Did not receive correctly formatted api_url, expected to start with 'https://www.googleapis.com/storage' but found #{api_url}"
 
     puts 'reading file into memory...'
-    remote_contents = @fire_cloud_client.execute_gcloud_method(:read_workspace_file, 0, workspace['bucketName'], participant_filename)
+    remote_file = @fire_cloud_client.execute_gcloud_method(:read_workspace_file, 0, workspace['bucketName'], participant_filename)
+    remote_contents = remote_file.read
     assert remote_contents == participant_contents,
            "Did not correctly read remote file into memory, contents did not match\n## remote ##\n#{remote_contents}\n## local ##\n#{participant_contents}"
 
