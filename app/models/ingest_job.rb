@@ -199,8 +199,8 @@ class IngestJob
       DeleteQueueJob.new(self.study_file).delay.perform
       Study.firecloud_client.delete_workspace_file(self.study.bucket_id, self.study_file.bucket_location)
       subject = "Error: #{self.study_file.file_type} file: '#{self.study_file.upload_file_name}' parse has failed"
-      email_body = self.event_messages.join("<br/>")
-      SingleCellMailer.notify_user_parse_fail(self.user.email, subject, email_body).deliver_now
+      email_content = self.generate_error_email_body
+      SingleCellMailer.notify_user_parse_fail(self.user.email, subject, email_content).deliver_now
     else
       Rails.logger.info "IngestJob poller: #{self.pipeline_name} is not done; queuing check for #{run_at}"
       self.delay(run_at: run_at).poll_for_completion
@@ -256,5 +256,48 @@ class IngestJob
     if self.study.cluster_groups.any? && self.study.genes.any? && self.study.cell_metadata.any? && !self.study.initialized?
       self.study.update(initialized: true)
     end
+  end
+
+  # path to potential error file in study bucket
+  def error_filepath
+    "parse_logs/#{self.study_file.id}/errors.txt"
+  end
+
+  # path to potential warnings file in study bucket
+  def warning_filepath
+    "parse_logs/#{self.study_file.id}/warnings.txt"
+  end
+
+  # in case of an error, retrieve the contents of the warning or error file to email to the user
+  # deletes the file immediately after being read
+  def read_parse_logfile(filepath)
+    if Study.firecloud_client.workspace_file_exists?(self.study.bucket_id, filepath)
+      file_contents = Study.firecloud_client.execute_gcloud_method(:read_workspace_file, 0, self.study.bucket_id, filepath)
+      Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, 0, self.study.bucket_id, filepath)
+      file_contents
+    end
+  end
+
+  # format an error email message body
+  def generate_error_email_body
+    error_contents = self.read_parse_logfile(self.error_filepath)
+    warning_contents = self.read_parse_logfile(self.warning_filepath)
+    event_messages = self.event_messages
+    message_body = "<p>'#{self.study_file.upload_file_name}' has failed during parsing.</p>"
+    if error_contents.present?
+      message_body += "<h3>Errors</h3>"
+      error_contents.each_line do |line|
+        message_body += "#{line}<br />"
+      end
+    end
+    if warning_contents.present?
+      message_body += "<h3>Warnings</h3>"
+      warning_contents..each_line do |line|
+        message_body += "#{line}<br />"
+      end
+    end
+    message_body += "<h3>Detailed Event Messages</h3>"
+    message_body += event_messages.join("<br />")
+    message_body
   end
 end

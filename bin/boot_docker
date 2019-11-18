@@ -171,7 +171,7 @@ then
       EXTRA_ARGS=$EXTRA_ARGS" -R $TEST_REGEX"
     fi
 	fi
-	docker run --rm -it --name single_cell_test -h localhost -v "$PROJECT_DIR:/home/app/webapp:rw" \
+	docker run --rm -it --name single_cell_test --link mongodb:mongodb -h localhost -v "$PROJECT_DIR:/home/app/webapp:rw" \
 	-e PASSENGER_APP_ENV="$PASSENGER_APP_ENV" -e MONGO_LOCALHOST="$MONGO_LOCALHOST" -e PROD_DATABASE_PASSWORD="$PROD_DATABASE_PASSWORD" \
 	-e SERVICE_ACCOUNT_KEY="$SERVICE_ACCOUNT_KEY" -e PORTAL_NAMESPACE="$PORTAL_NAMESPACE" -e SECRET_KEY_BASE="$SECRET_KEY_BASE" \
 	-e GA_TRACKING_ID="$GA_TRACKING_ID" -e GOOGLE_CLOUD_KEYFILE_JSON="$GOOGLE_CLOUD_KEYFILE_JSON" -e GOOGLE_PRIVATE_KEY="$GOOGLE_PRIVATE_KEY" \
