@@ -19,7 +19,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   # GCP Compute project to run pipelines in
   COMPUTE_PROJECT = ENV['GOOGLE_CLOUD_PROJECT'].blank? ? '' : ENV['GOOGLE_CLOUD_PROJECT']
   # Docker image in GCP project to pull for running ingest jobs
-  INGEST_DOCKER_IMAGE = 'gcr.io/broad-singlecellportal-staging/ingest-pipeline:0.6.2_df40981'
+  INGEST_DOCKER_IMAGE = 'gcr.io/broad-singlecellportal-staging/scp-ingest-pipeline:0.6.2'
   # List of scp-ingest-pipeline actions and their allowed file types
   FILE_TYPES_BY_ACTION = {
       ingest_expression: ['Expression Matrix', 'MM Coordinate Matrix'],
@@ -191,14 +191,16 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   # to manage permissions
   #
   # * *params*
-  #   - +machine_type+ (String) => GCP VM machine type (defaults to 'n1-standard-1')
+  #   - +machine_type+ (String) => GCP VM machine type (defaults to 'n1-highmem-4': 4 CPU, 26GB RAM)
+  #   - +boot_disk_size_gb+ (Integer) => Size of boot disk for VM, in gigabytes (defaults to 100GB)
   #   - +preemptible+ (Boolean) => Indication of whether VM can be preempted (defaults to false)
   # * *return*
   #   - (Google::Apis::GenomicsV2alpha1::VirtualMachine)
-  def create_virtual_machine_object(machine_type: 'n1-highmem-4', preemptible: false)
+  def create_virtual_machine_object(machine_type: 'n1-highmem-4', boot_disk_size_gb: 100, preemptible: false)
     Google::Apis::GenomicsV2alpha1::VirtualMachine.new(
         machine_type: machine_type,
         preemptible: preemptible,
+        boot_disk_size_gb: boot_disk_size_gb,
         service_account: Google::Apis::GenomicsV2alpha1::ServiceAccount.new(email: self.issuer, scopes: GOOGLE_SCOPES)
     )
   end
