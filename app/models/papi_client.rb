@@ -19,7 +19,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   # GCP Compute project to run pipelines in
   COMPUTE_PROJECT = ENV['GOOGLE_CLOUD_PROJECT'].blank? ? '' : ENV['GOOGLE_CLOUD_PROJECT']
   # Docker image in GCP project to pull for running ingest jobs
-  INGEST_DOCKER_IMAGE = 'gcr.io/broad-singlecellportal-staging/scp-ingest-pipeline:0.6.2'
+  INGEST_DOCKER_IMAGE = 'gcr.io/broad-singlecellportal-staging/ingest-pipeline:0.6.2_cbb6a24'
   # List of scp-ingest-pipeline actions and their allowed file types
   FILE_TYPES_BY_ACTION = {
       ingest_expression: ['Expression Matrix', 'MM Coordinate Matrix'],
@@ -91,9 +91,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
         docker_image: INGEST_DOCKER_IMAGE
     }
     action = self.create_actions_object(commands: command_line)
-    environment = {
-        GOOGLE_PROJECT_ID: COMPUTE_PROJECT
-    }
+    environment = self.set_environment_variables
     pipeline = self.create_pipeline_object(actions: [action], environment: environment, resources: resources)
     pipeline_request = self.create_run_pipeline_request_object(pipeline: pipeline, labels: labels)
     self.service.run_pipeline(pipeline_request, quota_user: user.id.to_s)
@@ -172,6 +170,25 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
     )
   end
 
+  # Set necessary environment variables for Ingest Pipeline, including:
+  #   - +DATABASE_HOST+: IP address of MongoDB server
+  #   - +MONGODB_USERNAME+: MongoDB user associated with current schema (defaults to single_cell)
+  #   - +MONGODB_PASSWORD+: Password for above MongoDB user
+  #   - +DATABASE_NAME+: Name of current MongoDB schema as defined by Rails environment
+  #   - +GOOGLE_PROJECT_ID+: Name of the GCP project this pipeline is running in
+  #
+  # * *returns*
+  #   - (Hash) => Hash of required environment variables
+  def set_environment_variables
+    {
+        'DATABASE_HOST' => ENV['MONGO_LOCALHOST'],
+        'MONGODB_USERNAME' => 'single_cell',
+        'MONGODB_PASSWORD' => ENV['PROD_DATABASE_PASSWORD'],
+        'DATABASE_NAME' => Mongoid::Config.clients["default"]["database"],
+        'GOOGLE_PROJECT_ID' => COMPUTE_PROJECT
+    }
+  end
+
   # Instantiate a resources object to tell where to run a pipeline
   #
   # * *params*
@@ -219,7 +236,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   def get_command_line(study_file:, action:)
     validate_action_by_file(action, study_file)
     study = study_file.study
-    command_line = "python ingest_pipeline.py --study-accession #{study.accession} --file-id #{study_file.id} #{action}"
+    command_line = "python ingest_pipeline.py --study-id #{study.id} --study-file-id #{study_file.id} #{action}"
     case action.to_s
     when 'ingest_expression'
       if study_file.file_type == 'Expression Matrix'
@@ -232,7 +249,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
                       " --gene-file #{genes_file.gs_url} --barcode-file #{barcodes_file.gs_url}"
       end
     when 'ingest_cell_metadata'
-      command_line += " --cell-metadata-file #{study_file.gs_url} --ingest-cell-metadata --validate-convention"
+      command_line += " --cell-metadata-file #{study_file.gs_url} --ingest-cell-metadata"
     when 'ingest_cluster'
       command_line += " --cluster-file #{study_file.gs_url} --ingest-cluster"
     when 'ingest_subsample'
