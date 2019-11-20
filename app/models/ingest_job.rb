@@ -168,6 +168,18 @@ class IngestJob
     self.events.map {|event| event['description']}
   end
 
+  # Reconstruct the command line from the pipeline actions
+  #
+  # * *returns*
+  #   - (String) => Deserialized command line
+  def command_line
+    command_line = ""
+    self.metadata['pipeline']['actions'].each do |action|
+      command_line += action['commands'].join(' ') + "\n"
+    end
+    command_line.chomp("\n")
+  end
+
   # Get the total runtime of parsing from event timestamps
   #
   # * *returns*
@@ -282,7 +294,6 @@ class IngestJob
   def generate_error_email_body
     error_contents = self.read_parse_logfile(self.error_filepath)
     warning_contents = self.read_parse_logfile(self.warning_filepath)
-    event_messages = self.event_messages
     message_body = "<p>'#{self.study_file.upload_file_name}' has failed during parsing.</p>"
     if error_contents.present?
       message_body += "<h3>Errors</h3>"
@@ -292,12 +303,22 @@ class IngestJob
     end
     if warning_contents.present?
       message_body += "<h3>Warnings</h3>"
-      warning_contents..each_line do |line|
+      warning_contents.each_line do |line|
         message_body += "#{line}<br />"
       end
     end
-    message_body += "<h3>Detailed Event Messages</h3>"
-    message_body += event_messages.join("<br />")
+    message_body += "<h3>Details</h3>"
+    message_body += "<p>Study Accession: <strong>#{self.study.accession}</strong></p>"
+    message_body += "<p>Study File ID: <strong>#{self.study_file.id}</strong></p>"
+    message_body += "<p>Ingest Run ID: <strong>#{self.pipeline_name}</strong></p>"
+    message_body += "<p>Command Line: <strong>#{self.command_line}</strong></p>"
     message_body
+  end
+
+  # log all event messages to the log for eventual searching
+  def log_error_messages
+    self.event_messages.each do |message|
+      Rails.logger.error "#{self.pipeline_name} log: #{message}"
+    end
   end
 end
