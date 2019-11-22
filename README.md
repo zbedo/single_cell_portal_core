@@ -162,11 +162,11 @@ will need to create a Terra project that will own all the workspaces created in 
 Once the image has successfully built, all registration/configuration steps have been completed, use the following command 
 to start the container:
 
-    bin/boot_docker -u (sendgrid username) -P (sendgrid password) -k (service account key path) -K (read-only service account key path) -o (oauth client id) -S (oauth client secret) -N (portal namespace) -m (mongodb hostname) -p (mongodb password)
+    bin/boot_docker -u (sendgrid username) -P (sendgrid password) -k (service account key path) -K (read-only service account key path) -o (oauth client id) -S (oauth client secret) -N (portal namespace) -m (mongodb hostname) -M (mongodb internal ip) -p (mongodb password)
 
 This sets up several environment variables in your shell and then runs the following command:
 
-    docker run --rm -it --name $CONTAINER_NAME -p 80:80 -p 443:443 -p 587:587 --link mongodb:mongodb -h localhost -v $PROJECT_DIR:/home/app/webapp:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e SENDGRID_USERNAME=$SENDGRID_USERNAME -e SENDGRID_PASSWORD=$SENDGRID_PASSWORD -e SECRET_KEY_BASE=$SECRET_KEY_BASE -e PORTAL_NAMESPACE=$PORTAL_NAMESPACE -e SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY -e OAUTH_CLIENT_ID=$OAUTH_CLIENT_ID -e OAUTH_CLIENT_SECRET=$OAUTH_CLIENT_SECRET -e SENTRY_DSN=$SENTRY_DSN -e GA_TRACKING_ID=$GA_TRACKING_ID -e TCELL_AGENT_APP_ID=$TCELL_AGENT_APP_ID -e TCELL_AGENT_API_KEY=$TCELL_AGENT_API_KEY single_cell_docker
+    docker run --rm -it --name $CONTAINER_NAME -p 80:80 -p 443:443 -p 587:587 --link mongodb:mongodb -h localhost -v $PROJECT_DIR:/home/app/webapp:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST -e MONGO_INTERNAL_IP=$MONGO_INTERNAL_IP -e SENDGRID_USERNAME=$SENDGRID_USERNAME -e SENDGRID_PASSWORD=$SENDGRID_PASSWORD -e SECRET_KEY_BASE=$SECRET_KEY_BASE -e PORTAL_NAMESPACE=$PORTAL_NAMESPACE -e SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY -e OAUTH_CLIENT_ID=$OAUTH_CLIENT_ID -e OAUTH_CLIENT_SECRET=$OAUTH_CLIENT_SECRET -e SENTRY_DSN=$SENTRY_DSN -e GA_TRACKING_ID=$GA_TRACKING_ID -e TCELL_AGENT_APP_ID=$TCELL_AGENT_APP_ID -e TCELL_AGENT_API_KEY=$TCELL_AGENT_API_KEY single_cell_docker
 
 The container will then start running, and will execute its local startup scripts that will configure the application automatically.
 
@@ -200,8 +200,10 @@ containers.
 local development via hot deployment possible.
 1. **PASSENGER_APP_ENV** (passed with -e): The Rails environment you wish to load.  Can be either development, test, or 
 production (default is development).
-1. **MONGO_LOCALHOST** (passed with -e): Name of the container running MongoDB.  Even though our two containers are linked, 
-this needs to be set to allow Rails to communicate with the database.
+1. **MONGO_LOCALHOST** (passed with -e): Hostname of your MongoDB server.  This can be a named host (if using a service) 
+or a public IP address that will accept traffic on port 27107
+1. **MONGO_INTERNAL_IP** (passed with -e): Internal IP address of your MongoDB server.  This is for the Ingest Pipeline to 
+use when connecting to MongoDB if your firewalls are configured to only allow traffic from certain IP ranges.
 1. **SENDGRID_USERNAME** (passed with -e): The username associated with a Sendgrid account (for sending emails).
 1. **SENDGRID_PASSWORD** (passed with -e): The password associated with a Sendgrid account (for sending emails).
 1. **SECRET_KEY_BASE** (passed with -e): Sets the Rails SECRET_KEY_BASE environment variable, used mostly by Devise in authentication for cookies.
@@ -240,8 +242,11 @@ in the correct location for the portal to run.  This accomplishes two things:
 	log or tmp files.
 * **-e PASSENGER_APP_ENV=[RAILS_ENV]:** The Rails environment.  Will default to development, so if you're doing a 
 production deployment, set this accordingly.
-* **-e MONGO_LOCALHOST= [MONGO_LOCALHOST]:** Name of the container running MongoDB.  Even though our two containers are 
-linked, this needs to be set to allow Rails to communicate with the database.
+* **-e MONGO_LOCALHOST= [MONGO_LOCALHOST]:** Hostname of your MongoDB server.  This can be a named host (if using a service) 
+or a public IP address that will accept traffic on port 27107
+* **-e MONGO_INTERNAL_IP= [MONGO_INTERNAL_IP]:** Internal IP address of your MongoDB server.  This is for the Ingest Pipeline to 
+use when connecting to MongoDB if your firewalls are configured to only allow traffic from certain IP ranges.  If you have 
+no such restrictions on your MongoDB instance, this should be set to the same as your MONGO_LOCALHOST.
 * **-e SENDGRID_USERNAME=[SENDGRID_USERNAME] -e SENDGRID_PASSWORD=[SENDGRID_PASSWORD]:** The credentials for Sendgrid to 
 send emails. Alternatively, you could decide to not use Sendgrid and configure the application to use a different SMTP 
 server (would be done inside your environment's config file).
@@ -385,40 +390,45 @@ run only the test called `'test_workspaces'` in `test/integration/fire_cloud_cli
 
 ### PRODUCTION
 
-The official production Single Cell Portal is deployed in Google Cloud Platform.  The project name is **broad-singlecellportal**. 
-Only Broad Institute Single Cell Portal team members have access to this instance.  If you are a collaborator and require 
-access, please email [scp-support@broadinstitute.zendesk.com](mailto:scp-support@broadinstitute.zendesk.com).
+The official production Single Cell Portal is deployed in Google Cloud Platform.  Only Broad Institute Single Cell Portal 
+team members have administrative access to this instance.  If you are a collaborator and require access, please email 
+[scp-support@broadinstitute.zendesk.com](mailto:scp-support@broadinstitute.zendesk.com).
 
-To access the production instance for maintenance purposes:
-* Go to the [broad-singlecellportal](https://console.cloud.google.com/home/dashboard?project=broad-singlecellportal) GCP page
-* Select "Compute Engine" from the top-left nav dropdown
-* At the bottom of the page is the entry for the production VM (called singlecell-production)
-* Click the SSH button under the Connect heading (this will launch an SSH tunnel in a browser window)
-* Once connected, switch to root via `sudo -i`.
-* Change directory to where the portal is running: `cd /home/docker-user/single_cell_portal`
-* Switch to the Docker user: `sudo -u docker-user -Hs`
-* Get latest source code from GitHub: `git pull origin master`
-* Exit Docker user to return to root: `exit`
-* Ensure no uploads or parses are occuring: `tail -n 1000 log/production.log`
-* Put the portal in maintenance mode: `bin/enable_maintenance.sh on`
-* Stop the portal: `docker stop single_cell`
-* Remove the container instance: `docker rm single_cell`
-* Launch a new instance of the portal with the updated container:
+For Single Cell Portal staff: please refer to the SCP playbook and Jenkins server on how to deploy to production.
 
-
-    bin/boot_docker -u (sendgrid username) -P (sendgrid password) -e production -p (prod database password) -h (production hostname) -k (service account key path) -K (read-only service account key path) -o (oauth client id) -S (oauth client secret)`
-
-* View Docker logs: `docker logs -f single_cell`
-* Once Nginx is running again (i.e. you see "Passenger core online" in Docker logs), take off maintanence mode via `bin/enable_maintenance.sh off`
-* Check https://singlecell.broadinstitute.org/single_cell to verify that deployment succeeded
+### NON-BROAD PRODUCTION DEPLOYMENTS
 
 If you are deploying your own production instance in a different project, the following VM/OS configurations are recommended:
 * VM: n1-highmem-4 (4 vCPUs, 26 GB memory)
-* OS: Ubuntu 15.10 (Wily) or later
-* Disks: Two standard persistent disks, one for the portal/database, and a second for upload tmp space mounted at `[/path/to/portal/root]/data`
+* OS: Ubuntu 18.04 (Bionic Beaver) or later
+* Disks: Two standard persistent disks, one for the operating system (boot disk), and a second "data" disk for checking out 
+the portal  source code. It is recommended to provision at least 100GB for the "data" disk to allow enough temp space for 
+multiple concurrent file uploads.
 
 For more information on formatting and mounting additional persistent disks to a GCP VM, please read the 
 [GCP Documentation](https://cloud.google.com/compute/docs/disks/add-persistent-disk#formatting).
+
+To deploy or access an instance of Single Cell Portal in production mode:
+* Go to the your corresponding [GCP Project](https://console.cloud.google.com)
+* Select "Compute Engine" from the top-left nav dropdown
+* Click the SSH button under the Connect heading next to your production VM (this will launch an SSH tunnel in a browser window)
+* Once connected, switch to root via `sudo -i`.
+* Change directory to where the portal is running, for instance: `cd /home/docker-user/deployments/single_cell_portal`
+* Switch to the Docker user: `sudo -u docker-user -Hs`
+* Get latest source code from GitHub: `git pull origin master`
+* Exit Docker user to return to root: `exit`
+* Ensure no uploads are occuring: `tail -n 1000 log/production.log`
+* Put the portal in maintenance mode: `bin/enable_maintenance.sh on`
+* Stop the portal: `docker stop single_cell`
+* Remove the container instance: `docker rm single_cell`
+* Launch a new instance of the portal with the updated container (please refer to the 
+[bin/boot_docker](https://github.com/broadinstitute/single_cell_portal_core/blob/master/bin/boot_docker) script for more 
+information regarding all possible arguments as they are not all listed here):
+
+
+    bin/boot_docker -u (sendgrid username) -P (sendgrid password) -k (service account key path) -K (read-only service account key path) -o (oauth client id) -S (oauth client secret) -N (portal namespace) -m (mongodb hostname) -M (mongodb internal ip) -p (mongodb password) -e production
+
+* Once Nginx is running again (i.e. you see "Passenger core online" in Docker logs), take off maintanence mode via `bin/enable_maintenance.sh off`
 
 #### PRODUCTION DOCKER COMMANDS
 
@@ -426,19 +436,7 @@ For more information on formatting and mounting additional persistent disks to a
 * To stop the portal: `docker stop single_cell` 
 * To remove the portal container: `docker rm single_cell` 
 * To connect to the running portal container: `docker exec -it single_cell bash`
-
-If you have pulled changes from source that require re-building the container, you will need to follow the checklist above 
-in the [PRODUCTION](#production) section.
-
-**You will need to rebuild the docker image if you do any of the following:**
-* Edit the Dockerfile
-* Edit any scripts or configuration files listed in the Dockerfile:
-  * Gemfile (including Gemfile.lock if versions have changed)
-  * set_user_permissions.bash
-  * rails_startup.bash
-  * generate_dh_parameters.bash
-  * nginx.conf
-  * webapp.conf
+* View Docker logs: `docker logs -f single_cell`
 
 When you launch a new instance of the portal, you should get a response that is looks like a long hexadecimal string - 
 this is the instance ID of the new container.  Once the container is running, you can connect to it with the `docker exec` 
@@ -451,10 +449,12 @@ command and perform various Rails-specific actions, like:
 ### STAGING
 
 There is also a staging instance of the Single Cell Portal used for testing new functionality in a production-like setting. 
-This is running inside the same project on the `singlecell-staging` VM.  The staging instance URL is https://single-cell-staging.broadinstitute.org/single_cell
+The staging instance URL is https://single-cell-staging.broadinstitute.org/single_cell
 
 The run command for staging is identical to that of production, with the exception of passing `-e staging` as the environment, 
 and any differing values for hostnames/client secrets/passwords as needed.
+
+For Single Cell Portal staff: please refer to the SCP playbook and Jenkins server on how to deploy to staging.
 
 *Note: This instance is usually turned off to save on compute costs, so there is no expectation that it is up at any given time*
 
