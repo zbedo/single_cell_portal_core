@@ -23,8 +23,8 @@
       <% if !study_file.upload_file_name.nil? %>
         <p><label>Link to file </label><br /><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></p>
       <% else %>
-        <div class="col-sm-4">
-        <%= f.label :use_metadata_convention, "Use Metadata Convention?" %><br />
+        <div class="col-sm-5">
+        <%= f.label :use_metadata_convention, "Use Metadata Convention?" %> <%= render partial: 'metadata_convention_help_popover', locals: {id: f.object.id.to_s} %><br />
         <%= f.select :use_metadata_convention, options_for_select([['Yes', true],['No', false]], study_file.use_metadata_convention), {}, class: 'form-control use-metadata-convention' %>
       </div>
         <%= f.label :upload, 'Upload Data File' %><br />
