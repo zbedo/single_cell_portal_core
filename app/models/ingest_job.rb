@@ -208,6 +208,8 @@ class IngestJob
       self.set_study_state_after_ingest
     elsif self.done? && self.failed?
       Rails.logger.error "IngestJob poller: #{self.pipeline_name} has failed."
+      # log errors to application log for inspection
+      self.log_error_messages
       DeleteQueueJob.new(self.study_file).delay.perform
       Study.firecloud_client.delete_workspace_file(self.study.bucket_id, self.study_file.bucket_location)
       subject = "Error: #{self.study_file.file_type} file: '#{self.study_file.upload_file_name}' parse has failed"

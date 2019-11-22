@@ -19,7 +19,10 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   # GCP Compute project to run pipelines in
   COMPUTE_PROJECT = ENV['GOOGLE_CLOUD_PROJECT'].blank? ? '' : ENV['GOOGLE_CLOUD_PROJECT']
   # Docker image in GCP project to pull for running ingest jobs
-  INGEST_DOCKER_IMAGE = 'gcr.io/broad-singlecellportal-staging/ingest-pipeline:0.6.2_cbb6a24'
+  INGEST_DOCKER_IMAGE = 'gcr.io/broad-singlecellportal-staging/ingest-pipeline:0.8.1_mongotest_fa1ecfc'
+  # Network and sub-network names, if needed
+  GCP_NETWORK_NAME = ENV['GCP_NETWORK_NAME']
+  GCP_SUB_NETWORK_NAME = ENV['GCP_SUB_NETWORK_NAME']
   # List of scp-ingest-pipeline actions and their allowed file types
   FILE_TYPES_BY_ACTION = {
       ingest_expression: ['Expression Matrix', 'MM Coordinate Matrix'],
@@ -90,8 +93,8 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
         action: action,
         docker_image: INGEST_DOCKER_IMAGE
     }
-    action = self.create_actions_object(commands: command_line)
     environment = self.set_environment_variables
+    action = self.create_actions_object(commands: command_line, environment: environment)
     pipeline = self.create_pipeline_object(actions: [action], environment: environment, resources: resources)
     pipeline_request = self.create_run_pipeline_request_object(pipeline: pipeline, labels: labels)
     self.service.run_pipeline(pipeline_request, quota_user: user.id.to_s)
@@ -171,7 +174,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   end
 
   # Set necessary environment variables for Ingest Pipeline, including:
-  #   - +DATABASE_HOST+: IP address of MongoDB server
+  #   - +DATABASE_HOST+: IP address of MongoDB server (use MONGO_INTERNAL_IP for connecting inside GCP)
   #   - +MONGODB_USERNAME+: MongoDB user associated with current schema (defaults to single_cell)
   #   - +MONGODB_PASSWORD+: Password for above MongoDB user
   #   - +DATABASE_NAME+: Name of current MongoDB schema as defined by Rails environment
@@ -181,7 +184,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   #   - (Hash) => Hash of required environment variables
   def set_environment_variables
     {
-        'DATABASE_HOST' => ENV['MONGO_LOCALHOST'],
+        'DATABASE_HOST' => ENV['MONGO_INTERNAL_IP'],
         'MONGODB_USERNAME' => 'single_cell',
         'MONGODB_PASSWORD' => ENV['PROD_DATABASE_PASSWORD'],
         'DATABASE_NAME' => Mongoid::Config.clients["default"]["database"],
@@ -205,7 +208,8 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   end
 
   # Instantiate a VM object to specify in resources.  Assigns the portal service account to the VM
-  # to manage permissions
+  # to manage permissions.  If GCP_NETWORK_NAME and GCP_SUBNETWORK_NAME have been set, it will also
+  # assign the VM to the corresponding project network.  Otherwise, the VM uses the default network.
   #
   # * *params*
   #   - +machine_type+ (String) => GCP VM machine type (defaults to 'n1-highmem-4': 4 CPU, 26GB RAM)
@@ -214,12 +218,18 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   # * *return*
   #   - (Google::Apis::GenomicsV2alpha1::VirtualMachine)
   def create_virtual_machine_object(machine_type: 'n1-highmem-4', boot_disk_size_gb: 100, preemptible: false)
-    Google::Apis::GenomicsV2alpha1::VirtualMachine.new(
+    virtual_machine = Google::Apis::GenomicsV2alpha1::VirtualMachine.new(
         machine_type: machine_type,
         preemptible: preemptible,
         boot_disk_size_gb: boot_disk_size_gb,
         service_account: Google::Apis::GenomicsV2alpha1::ServiceAccount.new(email: self.issuer, scopes: GOOGLE_SCOPES)
     )
+    # assign correct network/sub-network if specified
+    if GCP_NETWORK_NAME.present? && GCP_SUB_NETWORK_NAME.present?
+      virtual_machine.network = Google::Apis::GenomicsV2alpha1::Network.new(name: GCP_NETWORK_NAME,
+                                                                            subnetwork: GCP_SUB_NETWORK_NAME)
+    end
+    virtual_machine
   end
 
   # Determine command line to pass to ingest based off of file & action requested
@@ -249,7 +259,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
                       " --gene-file #{genes_file.gs_url} --barcode-file #{barcodes_file.gs_url}"
       end
     when 'ingest_cell_metadata'
-      command_line += " --cell-metadata-file #{study_file.gs_url} --ingest-cell-metadata"
+      command_line += " --cell-metadata-file #{study_file.gs_url} --study-accession #{study.accession} --ingest-cell-metadata"
     when 'ingest_cluster'
       command_line += " --cluster-file #{study_file.gs_url} --ingest-cluster"
     when 'ingest_subsample'
@@ -292,6 +302,8 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
       opts += ["--name", "#{study_file.name}"]
       if study_file.get_cluster_domain_ranges.any?
         opts += ["--domain-ranges", "#{sanitize_json(study_file.get_cluster_domain_ranges.to_json)}"]
+      else
+        opts += ["--domain-ranges", "{}"]
       end
     end
     opts

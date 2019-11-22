@@ -14,7 +14,8 @@ $0 [OPTION]
 -e VALUE	set the environment (defaults to 'development'. Running in 'production' will cause container to spawn headlessly)
 -d VALUE	set the project directory to mount inside Docker container (defaults to current working directory: `pwd`)
 -D VALUE	set the docker image version to use when booting the container (defaults to 'latest')
--m VALUE	set the MONGO_LOCALHOST variable, only used in development (defaults to 'mongodb')
+-m VALUE	set the MONGO_LOCALHOST variable, used to connect to MongoDB from portal
+-M VALUE	set the MONGO_INTERNAL_IP variable, used to connect to MongoDB from ingest pipeline runs
 -r VALUE	set the maximum allowable RAM to be allocated to portal (defaults to 12GB)
 -N VALUE 	set the PORTAL_NAMESPACE environment variable (default FireCloud project, defaults to 'single-cell-portal')
 -s VALUE	set the SECRET_KEY_BASE variable, used for secure cookies (auto-generates by default)
@@ -52,7 +53,7 @@ GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
 GOOGLE_CLOUD_PROJECT=$GOOGLE_CLOUD_PROJECT
 DOCKER_IMAGE_VERSION='latest'
 
-while getopts "n:N:e:d:D:m:r:s:k:K:f:F:p:h:u:P:H:o:S:y:g:t:R:w:W:" OPTION; do
+while getopts "n:N:e:d:D:m:M:r:s:k:K:f:F:p:h:u:P:H:o:S:y:g:t:R:w:W:" OPTION; do
 case $OPTION in
 	n)
 		CONTAINER_NAME="$OPTARG"
@@ -68,6 +69,9 @@ case $OPTION in
 		;;
 	m)
   	MONGO_LOCALHOST="$OPTARG"
+  	;;
+  M)
+  	MONGO_INTERNAL_IP="$OPTARG"
   	;;
 	r)
 		MAX_RAM="$OPTARG"
@@ -141,7 +145,8 @@ then
 	# generate random secret key for secure cookies
 	docker run -d --name "$CONTAINER_NAME" -p 80:80 -p 443:443 -h "$PROD_HOSTNAME" -v "$PROJECT_DIR:/home/app/webapp:rw" \
 	    -v "$PROJECT_DIR/data:/home/app/webapp/data:rw" -v "$PROJECT_DIR/log/nginx:/var/log/nginx:rw" -e PASSENGER_APP_ENV="$PASSENGER_APP_ENV" \
-	    -e MONGO_LOCALHOST="$MONGO_LOCALHOST" -e PROD_DATABASE_PASSWORD="$PROD_DATABASE_PASSWORD" -e SERVICE_ACCOUNT_KEY="$SERVICE_ACCOUNT_KEY" \
+	    -e MONGO_LOCALHOST="$MONGO_LOCALHOST" -e MONGO_INTERNAL_IP="$MONGO_INTERNAL_IP" -e GCP_NETWORK_NAME=$GCP_NETWORK_NAME \
+	    -e PROD_DATABASE_PASSWORD="$PROD_DATABASE_PASSWORD" -e SERVICE_ACCOUNT_KEY="$SERVICE_ACCOUNT_KEY" \
 	    -e READ_ONLY_SERVICE_ACCOUNT_KEY="$READ_ONLY_SERVICE_ACCOUNT_KEY" -e PORTAL_NAMESPACE="$PORTAL_NAMESPACE" \
 	    -e SECRET_KEY_BASE="$SECRET_KEY_BASE" -e PROD_HOSTNAME="$PROD_HOSTNAME" -e SENDGRID_USERNAME="$SENDGRID_USERNAME" \
 	    -e SENDGRID_PASSWORD="$SENDGRID_PASSWORD" -e OAUTH_CLIENT_ID="$OAUTH_CLIENT_ID" -e OAUTH_CLIENT_SECRET="$OAUTH_CLIENT_SECRET" \
@@ -153,7 +158,8 @@ then
 	    -v "$PROJECT_DIR/log/nginx:/var/log/nginx:rw" -v "$PROJECT_DIR/data:/home/app/webapp/data:rw" \
 	    -v "$PROJECT_DIR/single-cell-staging.broadinstitute.org.crt:/etc/pki/tls/certs/localhost.crt" \
 	    -v "$PROJECT_DIR/single-cell-staging.broadinstitute.org.key:/etc/pki/tls/private/localhost.key" -m "$MAX_RAM" \
-	    -e PASSENGER_APP_ENV="$PASSENGER_APP_ENV" -e MONGO_LOCALHOST="$MONGO_LOCALHOST" -e PROD_DATABASE_PASSWORD="$PROD_DATABASE_PASSWORD" \
+	    -e PASSENGER_APP_ENV="$PASSENGER_APP_ENV" -e MONGO_LOCALHOST="$MONGO_LOCALHOST" -e GCP_NETWORK_NAME=$GCP_NETWORK_NAME \
+	    -e MONGO_INTERNAL_IP="$MONGO_INTERNAL_IP" -e PROD_DATABASE_PASSWORD="$PROD_DATABASE_PASSWORD" \
 	    -e SERVICE_ACCOUNT_KEY="$SERVICE_ACCOUNT_KEY" -e READ_ONLY_SERVICE_ACCOUNT_KEY="$READ_ONLY_SERVICE_ACCOUNT_KEY" \
 	    -e PORTAL_NAMESPACE="$PORTAL_NAMESPACE" -e READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON="$READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON" \
 	    -e SECRET_KEY_BASE="$SECRET_KEY_BASE" -e PROD_HOSTNAME="$PROD_HOSTNAME" -e SENDGRID_USERNAME="$SENDGRID_USERNAME" \
@@ -172,16 +178,17 @@ then
     fi
 	fi
 	docker run --rm -it --name single_cell_test --link mongodb:mongodb -h localhost -v "$PROJECT_DIR:/home/app/webapp:rw" \
-	-e PASSENGER_APP_ENV="$PASSENGER_APP_ENV" -e MONGO_LOCALHOST="$MONGO_LOCALHOST" -e PROD_DATABASE_PASSWORD="$PROD_DATABASE_PASSWORD" \
+	-e PASSENGER_APP_ENV="$PASSENGER_APP_ENV" -e MONGO_LOCALHOST="$MONGO_LOCALHOST" -e MONGO_INTERNAL_IP="$MONGO_INTERNAL_IP" \
+	-e PROD_DATABASE_PASSWORD="$PROD_DATABASE_PASSWORD" -e GCP_NETWORK_NAME=$GCP_NETWORK_NAME  \
 	-e SERVICE_ACCOUNT_KEY="$SERVICE_ACCOUNT_KEY" -e PORTAL_NAMESPACE="$PORTAL_NAMESPACE" -e SECRET_KEY_BASE="$SECRET_KEY_BASE" \
 	-e GA_TRACKING_ID="$GA_TRACKING_ID" -e GOOGLE_CLOUD_KEYFILE_JSON="$GOOGLE_CLOUD_KEYFILE_JSON" -e GOOGLE_PRIVATE_KEY="$GOOGLE_PRIVATE_KEY" \
 	-e GOOGLE_CLIENT_EMAIL="$GOOGLE_CLIENT_EMAIL" -e GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" -e GOOGLE_CLOUD_PROJECT="$GOOGLE_CLOUD_PROJECT" \
 	single_cell_docker:$DOCKER_IMAGE_VERSION bin/run_unit_tests.sh $EXTRA_ARGS
 else
 	docker run --rm -it --name "$CONTAINER_NAME" -p 80:80 -p 443:443 -p 587:587 -h localhost -v $PROJECT_DIR:/home/app/webapp:rw \
-	-v $PROJECT_DIR/log/nginx:/var/log/nginx:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST=$MONGO_LOCALHOST \
+	-v $PROJECT_DIR/log/nginx:/var/log/nginx:rw -e PASSENGER_APP_ENV=$PASSENGER_APP_ENV -e MONGO_LOCALHOST="$MONGO_LOCALHOST" -e MONGO_INTERNAL_IP="$MONGO_INTERNAL_IP" \
 	-e SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY -e READ_ONLY_SERVICE_ACCOUNT_KEY=$READ_ONLY_SERVICE_ACCOUNT_KEY \
-	-e PROD_DATABASE_PASSWORD="$PROD_DATABASE_PASSWORD" -e PORTAL_NAMESPACE=$PORTAL_NAMESPACE \
+	-e PROD_DATABASE_PASSWORD="$PROD_DATABASE_PASSWORD" -e PORTAL_NAMESPACE=$PORTAL_NAMESPACE -e GCP_NETWORK_NAME=$GCP_NETWORK_NAME \
 	-e READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON="$READ_ONLY_GOOGLE_CLOUD_KEYFILE_JSON" -e SENDGRID_USERNAME=$SENDGRID_USERNAME \
 	-e SENDGRID_PASSWORD=$SENDGRID_PASSWORD -e SECRET_KEY_BASE=$SECRET_KEY_BASE -e OAUTH_CLIENT_ID=$OAUTH_CLIENT_ID \
 	-e OAUTH_CLIENT_SECRET=$OAUTH_CLIENT_SECRET -e SENTRY_DSN=$SENTRY_DSN -e GA_TRACKING_ID=$GA_TRACKING_ID \

@@ -110,9 +110,14 @@ class ClusterGroup
     }
   end
 
+  # formatted annotation select option value
+  def annotation_select_value(annotation, prepend_name=false)
+    "#{prepend_name ? "#{self.name}--" : nil}#{annotation[:name]}--#{annotation[:type]}--cluster"
+  end
+
   # return a formatted array for use in a select dropdown that corresponds to a specific cell_annotation
   def formatted_cell_annotation(annotation, prepend_name=false)
-    ["#{annotation[:name]}", "#{prepend_name ? "#{self.name}--" : nil}#{annotation[:name]}--#{annotation[:type]}--cluster"]
+    ["#{annotation[:name]}", self.annotation_select_value(annotation, prepend_name)]
   end
 
   # generate a formatted select box options array that corresponds to all this cluster_group's cell_annotations
