@@ -230,11 +230,10 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
                       " --gene-file #{genes_file.gs_url} --barcode-file #{barcodes_file.gs_url}"
       end
     when 'ingest_cell_metadata'
-      if study_file.use_metadata_convention:
-        validate_convention = "--validate-convention"
-      else:
-        validate_convention = ""
-      command_line += " --cell-metadata-file #{study_file.gs_url} --ingest-cell-metadata #{validate_convention}"
+      command_line += " --cell-metadata-file #{study_file.gs_url} --ingest-cell-metadata"
+      if study_file.use_metadata_convention
+        command_line += " --validate-convention"
+      end
     when 'ingest_cluster'
       command_line += " --cluster-file #{study_file.gs_url} --ingest-cluster"
     when 'ingest_subsample'
