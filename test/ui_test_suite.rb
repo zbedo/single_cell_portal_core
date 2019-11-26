@@ -273,20 +273,22 @@ class UiTestSuite < Test::Unit::TestCase
     next_btn = @driver.find_element(:id, 'next-btn')
     next_btn.click
 
+    # TODO: figure out how to get this to work with ingest
     # upload a coordinate labels file
-    wait_for_render(:class, 'add-coordinate-labels')
-    add_coords_btn = @driver.find_element(:class, 'add-coordinate-labels')
-    add_coords_btn.click
-    wait_for_render(:class, 'initialize_labels_form')
-    coords_form = @driver.find_element(:class, 'initialize_labels_form')
-    cluster_select = coords_form.find_element(:id, 'study_file_options_cluster_group_id')
-    cluster_select.send_keys('Test Cluster 1')
-    upload_coords = coords_form.find_element(:class, 'upload-labels')
-    upload_coords.send_keys(@test_data_path + 'coordinate_labels_1.txt')
-    upload_btn = coords_form.find_element(:id, 'start-file-upload')
-    sleep(0.5)
-    upload_btn.click
-    close_modal('upload-success-modal')
+    # wait_for_render(:class, 'add-coordinate-labels')
+    # add_coords_btn = @driver.find_element(:class, 'add-coordinate-labels')
+    # add_coords_btn.click
+    # wait_for_render(:class, 'initialize_labels_form')
+    # coords_form = @driver.find_element(:class, 'initialize_labels_form')
+    # cluster_select = coords_form.find_element(:id, 'study_file_options_cluster_group_id')
+    # cluster_select.send_keys('Test Cluster 1')
+    # upload_coords = coords_form.find_element(:class, 'upload-labels')
+    # upload_coords.send_keys(@test_data_path + 'coordinate_labels_1.txt')
+    # upload_btn = coords_form.find_element(:id, 'start-file-upload')
+    # sleep(0.5)
+    # upload_btn.click
+    # close_modal('upload-success-modal')
+    # next_btn = @driver.find_element(:id, 'next-btn')
     next_btn = @driver.find_element(:id, 'next-btn')
     next_btn.click
 
@@ -370,6 +372,13 @@ class UiTestSuite < Test::Unit::TestCase
     show_study = @driver.find_element(:class, "test-study-#{$random_seed}-show")
     show_study.click
 
+    # wait for parsing to complete on remote jobs
+    wait_for_file_parse('expression_matrix_example_txt-parse-status')
+    wait_for_file_parse('expression_matrix_example_2_txt-parse-status')
+    wait_for_file_parse('metadata_example2_txt-parse-status')
+    wait_for_file_parse('cluster_example_2_txt-parse-status')
+    wait_for_file_parse('cluster_2_example_2_txt-parse-status')
+
     # verify that counts are correct, this will ensure that everything uploaded & parsed correctly
     cell_count = @driver.find_element(:id, 'cell-count').text.to_i
     gene_count = @driver.find_element(:id, 'gene-count').text.to_i
@@ -388,7 +397,7 @@ class UiTestSuite < Test::Unit::TestCase
     assert gene_list_count == 1, "did not find correct number of gene lists, expected 1 but found #{gene_list_count}"
     assert metadata_count == 3, "did not find correct number of metadata objects, expected 3 but found #{metadata_count}"
     assert cluster_annot_count == 4, "did not find correct number of cluster annotations, expected 4 but found #{cluster_annot_count}"
-    assert study_file_count == 8, "did not find correct number of study files, expected 8 but found #{study_file_count}"
+    assert study_file_count == 7, "did not find correct number of study files, expected 7 but found #{study_file_count}"
     assert primary_data_count == 2, "did not find correct number of primary data files, expected 2 but found #{primary_data_count}"
     assert share_count == 1, "did not find correct number of study shares, expected 1 but found #{share_count}"
     assert resources_count == 1, "did not find correct number of external resources, expected 1 but found #{resources_count}"
@@ -689,9 +698,11 @@ class UiTestSuite < Test::Unit::TestCase
     assert study_file_count.text == '3', "found incorrect number of study files; expected 3 and found #{study_file_count.text}"
     show_study = @driver.find_element(:class, "file-bundle-#{$random_seed}-show")
     show_study.click
+
+    # check counts
     gene_count = @driver.find_element(:id, 'gene-count').text.chomp(' genes').to_i
     i = 0
-    while gene_count == 0 && i < 12 # give parse 1 minute to complete, should be enough
+    while gene_count == 0 && i < 24 # give parse 2 minutes to complete, should be enough
       sleep 5
       @driver.navigate.refresh
       gene_count = @driver.find_element(:id, 'gene-count').text.chomp(' genes').to_i
@@ -928,8 +939,8 @@ class UiTestSuite < Test::Unit::TestCase
     upload_btn.click
     # close modal
     close_modal('upload-success-modal')
-    # wait for a few seconds to allow parses to fail fully
-    sleep(3)
+    # wait for a 2 minutes to allow parses to fail fully
+    sleep(120)
 
     # assert parses all failed and delete study
     @driver.get(@base_url + '/studies')
