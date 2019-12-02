@@ -74,7 +74,7 @@ else
   done
 fi
 echo "Cleaning up..."
-bundle exec bin/rails runner -e test "Study.destroy_all" # destroy all studies to clean up any files
+bundle exec bin/rails runner -e test "Study.delete_all_and_remove_workspaces" # destroy all studies/workspaces to clean up any files
 bundle exec rake RAILS_ENV=test db:purge
 echo "Cleanup complete!"
 end=$(date +%s)
