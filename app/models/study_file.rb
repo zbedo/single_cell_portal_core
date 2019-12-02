@@ -62,6 +62,7 @@ class StudyFile
   field :data_dir, type: String
   field :human_fastq_url, type: String
   field :human_data, type: Boolean, default: false
+  field :use_metadata_convention, type: Boolean, default: false
   field :generation, type: String
   field :x_axis_label, type: String, default: ''
   field :y_axis_label, type: String, default: ''
@@ -183,6 +184,11 @@ class StudyFile
       key :default, false
       key :description, 'Boolean indication whether StudyFile represents human data'
     end
+    property :use_metadata_convention do
+      key :type, :boolean
+      key :default, false
+      key :description, 'Boolean indication whether StudyFile uses the metadata convention'
+    end
     property :generation do
       key :type, :string
       key :description, 'GCS generation tag of File in bucket'
@@ -300,6 +306,11 @@ class StudyFile
           key :default, false
           key :description, 'Boolean indication whether StudyFile represents human data'
         end
+        property :use_metadata_convention do
+          key :type, :boolean
+          key :default, false
+          key :description, 'Boolean indication whether StudyFile uses the metadata convention'
+        end
         property :generation do
           key :type, :string
           key :description, 'GCS generation tag of File in bucket'
@@ -389,6 +400,11 @@ class StudyFile
           key :type, :boolean
           key :default, false
           key :description, 'Boolean indication whether StudyFile represents human data'
+        end
+        property :use_metadata_convention do
+          key :type, :boolean
+          key :default, false
+          key :description, 'Boolean indication whether StudyFile uses the metadata convention'
         end
         property :generation do
           key :type, :string
