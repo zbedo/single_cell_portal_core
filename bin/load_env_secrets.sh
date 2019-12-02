@@ -107,10 +107,7 @@ if [[ -n $READ_ONLY_SERVICE_ACCOUNT_PATH ]] ; then
 fi
 
 # insert connection information for MongoDB if this is not a CI run
-# TODO: configure CI to point to a remote MongoDB instance
-if [[ $PASSENGER_APP_ENV != 'test' ]]; then
-  COMMAND=$COMMAND" -m $MONGO_LOCALHOST -p $PROD_DATABASE_PASSWORD -M $MONGO_INTERNAL_IP"
-fi
+COMMAND=$COMMAND" -m $MONGO_LOCALHOST -p $PROD_DATABASE_PASSWORD -M $MONGO_INTERNAL_IP"
 
 echo "RUNNING BOOT COMMAND: $COMMAND -e $PASSENGER_APP_ENV -N $PORTAL_NAMESPACE"
 # execute requested command

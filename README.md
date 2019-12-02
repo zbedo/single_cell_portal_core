@@ -269,6 +269,35 @@ OAUTH_CLIENT_SECRET variables are necessary for allowing Google user authenticat
 * **single_cell_docker**: This is the name of the image we created earlier. If you chose a different name, please use 
 that here.
 
+### INGEST PIPELINE AND NETWORK ENVIRONMENT VARIABLES
+The Single Cell Portal handles ingesting data into MongoDB via an [ingest pipeline](https://github.com/broadinstitute/scp-ingest-pipeline) 
+that runs via the Google Genomics API (also known as the Pipelines API, or PAPI).  This API should have been enabled as 
+a previous step to this (see [DEPLOYING A PRIVATE INSTANCE](#local-development-or-deploying-a-private-instance)).
+
+In order for the ingest pipeline to connect to MongoDB, and in addition to the variables relating to MongoDB as described 
+in [DOCKER RUN COMMAND ENVIRONMENT VARIABLES](#docker-run-command-environment-variables), there are two further environment 
+variables that may need to be set.  If you have deployed your MongoDB instance in GCP, and it is not on the "default" 
+network, then you must set the following two environment variables to allow the ingest pipeline to connect to MongoDB:
+
+* GCP_NETWORK_NAME (the name of the network your MongoDB VM is deployed on)
+* GCP_SUB_NETWORK_NAME (the name of the sub-network your MongoDB VM is deployed on)
+
+Both of these pieces of information will be available in your VM's information panel in GCE.  To set these variables, as 
+there are not associated flags for bin/boot_docker, please export these two environment variables before calling any boot 
+scripts for the portal:
+
+
+    export GCP_NETWORK_NAME=(name of network)
+    export GCP_SUB_NETWORK_NAME=(name of sub-network)
+
+    bin/boot_docker (rest of arguments)
+
+This will set the necessary values inside the container.  **If your database is on the default network, this step is not 
+necessary.  If you are using a third-party MongoDB provider, please refer to their documentation regarding network access.**
+
+**Single Cell Portal team members should set the associated values inside their vault configurations for their instance 
+of the portal.**
+
 ### ADMIN USER ACCOUNTS
 The Single Cell Portal has the concept of a 'super-admin' user account, which will allow portal admins to view & edit any 
 studies in the portal for QA purposes, as well as receive certain admin-related emails.  This can only be enabled manually 

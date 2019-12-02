@@ -11,7 +11,8 @@ user = User.create!(email:'testing.user@gmail.com', password:'password', admin: 
 user_2 = User.create!(email: 'sharing.user@gmail.com', password: 'password', uid: '67890')
 # manually accept Terms of Service for sharing user to avoid breaking tests
 TosAcceptance.create(email: user_2.email)
-study = Study.create!(name: 'Testing Study', description: '<p>This is the test study.</p>', data_dir: 'test', user_id: user.id)
+study = Study.create!(name: 'Testing Study', description: '<p>This is the test study.</p>',
+                      firecloud_project: ENV['PORTAL_NAMESPACE'], data_dir: 'test', user_id: user.id)
 expression_file = StudyFile.create!(name: 'expression_matrix.txt', upload_file_name: 'expression_matrix.txt', study_id: study.id,
                                     file_type: 'Expression Matrix', y_axis_label: 'Expression Scores')
 cluster_file = StudyFile.create!(name: 'Test Cluster', upload_file_name: 'coordinates.txt', study_id: study.id,
@@ -102,7 +103,7 @@ study_file_bundle = negative_test_study.study_file_bundles.build(bundle_type: ba
 study_file_bundle.add_files(bad_matrix, genes, barcodes_file)
 
 # API TEST SEEDS
-api_study = Study.create!(name: 'API Test Study', data_dir: 'api_test_study', user_id: user.id, firecloud_project: 'scp',
+api_study = Study.create!(name: 'API Test Study', data_dir: 'api_test_study', user_id: user.id, firecloud_project: ENV['PORTAL_NAMESPACE'],
                           firecloud_workspace: 'test-api-test-study')
 StudyShare.create!(email: 'fake.email@gmail.com', permission: 'Reviewer', study_id: api_study.id)
 StudyFile.create!(name: 'cluster_example.txt', upload: File.open(Rails.root.join('test', 'test_data', 'cluster_example.txt')),
