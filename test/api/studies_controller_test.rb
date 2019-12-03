@@ -91,7 +91,7 @@ class StudiesControllerTest < ActionDispatch::IntegrationTest
     assert workspace_name = workspace['name'], "Did not set workspace name correctly, expected #{workspace_name} but found #{workspace['name']}"
     # create ACL
     puts 'creating ACL...'
-    user_acl = Study.firecloud_client.create_workspace_acl(@user.email, 'WRITER', true, false)
+    user_acl = Study.firecloud_client.create_workspace_acl(@user.email, 'WRITER', true, true)
     Study.firecloud_client.update_workspace_acl(FireCloudClient::PORTAL_NAMESPACE, workspace_name, user_acl)
     share_user = User.find_by(email: 'testing.user.2@gmail.com')
     share_acl = Study.firecloud_client.create_workspace_acl(share_user.email, 'READER', true, false)
