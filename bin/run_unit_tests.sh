@@ -24,11 +24,11 @@ FAILED_COUNT=0
 echo "Precompiling assets, yarn and webpacker..."
 RAILS_ENV=test NODE_ENV=test bin/bundle exec rake assets:clean
 RAILS_ENV=test NODE_ENV=test bin/bundle exec rake assets:precompile
-echo "Seeding test database..."
-bundle exec rake RAILS_ENV=test db:seed
-echo "Database initialized, generating random test seed..."
+echo "Generating random seed, seeding test database..."
 RANDOM_SEED=$(openssl rand -hex 16)
 echo $RANDOM_SEED > /home/app/webapp/.random_seed
+bundle exec rake RAILS_ENV=test db:seed
+echo "Database initialized"
 echo "Launching tests using seed: $RANDOM_SEED"
 if [ "$TEST_FILEPATH" != "" ]
 then
@@ -49,7 +49,6 @@ else
                     test/integration/cache_management_test.rb
                     test/integration/tos_acceptance_test.rb
                     test/integration/study_creation_test.rb
-                    test/integration/study_validation_test.rb
                     test/integration/taxons_controller_test.rb
                     test/controllers/analysis_configurations_controller_test.rb
                     test/controllers/site_controller_test.rb
