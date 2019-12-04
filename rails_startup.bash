@@ -62,7 +62,7 @@ then
 	sudo -E -u app -H mkdir -p /home/app/webapp/tmp/pids
 	echo "*** COMPLETED ***"
 fi
-echo "*** STARTING DELAYED_JOB ***"
+echo "*** STARTING DELAYED_JOB for $PASSENGER_APP_ENV env ***"
 rm tmp/pids/delayed_job.*.pid
 sudo -E -u app -H bin/delayed_job start $PASSENGER_APP_ENV -n 6
 echo "*** ADDING CRONTAB TO CHECK DELAYED_JOB ***"

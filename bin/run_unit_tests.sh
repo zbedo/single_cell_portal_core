@@ -23,8 +23,8 @@ RETURN_CODE=0
 FAILED_COUNT=0
 
 export PASSENGER_APP_ENV=test
-echo "*** STARTING DELAYED_JOB ***"
-sudo -E -u app -H bin/delayed_job start $PASSENGER_APP_ENV -n 6
+echo "*** STARTING DELAYED_JOB for $PASSENGER_APP_ENV env ***"
+sudo -E -u app -H bin/delayed_job restart $PASSENGER_APP_ENV -n 6
 
 echo "Precompiling assets, yarn and webpacker..."
 RAILS_ENV=test NODE_ENV=test bin/bundle exec rake assets:clean

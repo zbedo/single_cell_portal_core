@@ -43,11 +43,11 @@ end
 # checks to see if any workers have been killed
 @date = Time.now.strftime("%Y-%m-%d %H:%M:%S")
 if @running == false
-	@log_message = "#{@date}: One or more delayed_job workers have died.  Restarting daemon.\n"
+  @log_message = "#{@date}: One or more delayed_job workers have died.  Restarting daemon for env #{@env}.\n"
 
   # move old logfile to crash backup
   date_string = Time.now.strftime("%Y-%m-%d.%H.%M.%S")
-  File.rename('log/delayed_job.log', "log/delayed_job.crash.#{date_string}.log")
+  File.rename("log/delayed_job.#{@env}.log", "log/delayed_job.#{@env}.crash.#{date_string}.log")
 
 	# restart delayed job workers
 	system(". /home/app/.cron_env ; cd /home/app/webapp ; bin/delayed_job restart #{@env} -n #{@num_workers}")
@@ -59,7 +59,7 @@ if @running == false
 	system(". /home/app/.cron_env ; /home/app/webapp/bin/rails runner -e #{@env} \"SingleCellMailer.delayed_job_email('#{@log_message}').deliver_now\"")
 
 	# write to log
-	log = File.open('log/delayed_job.log', 'w+')
+	log = File.open("log/delayed_job.#{@env}.log", 'w+')
 	log.write @log_message
 	log.close
 
