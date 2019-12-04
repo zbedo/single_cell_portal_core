@@ -24,10 +24,10 @@ Authority for doing local development in https.
 
 ## BEFORE RUNNING THE CONTAINER
 
-This project uses [MongoDB](https://hub.docker.com/_/mongo/) as the primary datastore, and connects to a remote MongoDB 
-instance in all environments. In order for the portal to operate correctly, you will need to provision 
-a MongoDB instance in Google Cloud Platform.  This can be done using [Google Click to Deploy](https://console.cloud.google.com/marketplace/details/click-to-deploy-images/mongodb), 
-or via providers such as [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).  You may also provision a database manually 
+This project uses [MongoDB](https://hub.docker.com/_/mongo/) as the primary datastore, and connects to a remote MongoDB
+instance in all environments. In order for the portal to operate correctly, you will need to provision
+a MongoDB instance in Google Cloud Platform.  This can be done using [Google Click to Deploy](https://console.cloud.google.com/marketplace/details/click-to-deploy-images/mongodb),
+or via providers such as [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).  You may also provision a database manually
 using a VM in Google Compute Environment if you so desire.
 
 The only requirement is that you add a user account called "single_cell" to your Single Cell Portal database in whatever
