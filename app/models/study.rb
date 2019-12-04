@@ -3168,6 +3168,7 @@ class Study
   end
 
   # remove firecloud workspace on delete
+  # TODO: should this be used anywhere? it's private and unused.
   def delete_firecloud_workspace
     begin
       Study.firecloud_client.delete_workspace(self.firecloud_project, self.firecloud_workspace)
