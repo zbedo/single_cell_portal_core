@@ -48,7 +48,7 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     seconds_slept = 0
     max_seconds_to_sleep = 600
     while ( expression_matrix_1.parse_status != 'parsed' ) do
-      if seconds_slept > max_seconds_to_sleep then
+      if seconds_slept > max_seconds_to_sleep
         raise "waited #{seconds_slept} for expression_matrix_1.parse_status to be 'parsed', but it's '#{expression_matrix_1.parse_status}'."
       end
       sleep(sleep_increment)
