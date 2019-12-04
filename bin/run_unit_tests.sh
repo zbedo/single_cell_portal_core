@@ -48,7 +48,12 @@ else
   declare -a tests=(test/integration/fire_cloud_client_test.rb
                     test/integration/cache_management_test.rb
                     test/integration/tos_acceptance_test.rb
-                    test/integration/study_creation_test.rb
+                    test/integration/study_creation_test.rb # TODO: run THIS!
+  )
+
+                    # TODO: especially ignore the first two:
+  declare -a ignored_tests=(test/integration/fire_cloud_client_test.rb
+                    test/integration/study_validation_test.rb
                     test/integration/taxons_controller_test.rb
                     test/controllers/analysis_configurations_controller_test.rb
                     test/controllers/site_controller_test.rb
@@ -82,7 +87,7 @@ min=$(($difference / 60))
 sec=$(($difference % 60))
 echo "Total elapsed time: $min minutes, $sec seconds"
 if [[ $RETURN_CODE -ne 0 ]]; then
-	printf "\n### There were $FAILED_COUNT errors/failed test suites in this run ###\n\n"
+  printf "\n### There were $FAILED_COUNT errors/failed test suites in this run ###\n\n"
 fi
 echo "Exiting with code: $RETURN_CODE"
 exit $RETURN_CODE

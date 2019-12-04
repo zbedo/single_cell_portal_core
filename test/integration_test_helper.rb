@@ -9,6 +9,12 @@ def perform_study_file_upload(filename, study_file_params, study_id)
   patch "/single_cell/studies/#{study_id}/upload", params: study_file_params, headers: {'Content-Type' => 'multipart/form-data'}
 end
 
+# parse a file from the test_data directory to a study
+def perform_study_file_parse(filename, study_id)
+  study_file_params = {file: filename}
+  post "/single_cell/studies/#{study_id}/parse", params: study_file_params, headers: {'Content-Type' => 'multipart/form-data'}, xhr: true
+end
+
 # configure omniauth response for a given user
 def auth_as_user(user)
   OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new({

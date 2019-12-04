@@ -30,7 +30,7 @@ a MongoDB instance in Google Cloud Platform.  This can be done using [Google Cli
 or via providers such as [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).  You may also provision a database manually 
 using a VM in Google Compute Environment if you so desire.
 
-The only requirement is that you add a user account called "single_cell" to your Single Cell Portal database in whatever 
+The only requirement is that you add a user account called "single_cell" to your Single Cell Portal database in whatever
 instances you create.
 
 ## EXTERNAL DEPENDENCIES AND INTEGRATIONS
