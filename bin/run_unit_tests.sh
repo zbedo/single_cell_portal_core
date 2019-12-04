@@ -21,6 +21,11 @@ done
 start=$(date +%s)
 RETURN_CODE=0
 FAILED_COUNT=0
+
+export PASSENGER_APP_ENV=test
+echo "*** STARTING DELAYED_JOB ***"
+sudo -E -u app -H bin/delayed_job start $PASSENGER_APP_ENV -n 6
+
 echo "Precompiling assets, yarn and webpacker..."
 RAILS_ENV=test NODE_ENV=test bin/bundle exec rake assets:clean
 RAILS_ENV=test NODE_ENV=test bin/bundle exec rake assets:precompile
@@ -49,11 +54,6 @@ else
                     test/integration/cache_management_test.rb
                     test/integration/tos_acceptance_test.rb
                     test/integration/study_creation_test.rb # TODO: run THIS!
-  )
-
-                    # TODO: especially ignore the first two:
-  declare -a ignored_tests=(test/integration/fire_cloud_client_test.rb
-                    test/integration/study_validation_test.rb
                     test/integration/taxons_controller_test.rb
                     test/controllers/analysis_configurations_controller_test.rb
                     test/controllers/site_controller_test.rb
