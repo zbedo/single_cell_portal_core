@@ -64,6 +64,7 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     num_genes = @study.gene_count
 
     # verify that counts are correct, this will ensure that everything uploaded & parsed correctly
+    @study.reload
     gene_count = @study.gene_count
     share_count = @study.study_shares.size
 
