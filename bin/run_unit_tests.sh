@@ -24,7 +24,7 @@ FAILED_COUNT=0
 
 export PASSENGER_APP_ENV=test
 echo "*** STARTING DELAYED_JOB for $PASSENGER_APP_ENV env ***"
-sudo -E -u app -H bin/delayed_job restart $PASSENGER_APP_ENV -n 6
+sudo -E -u app -H bin/delayed_job restart $PASSENGER_APP_ENV -n 6 # WARNING: this is a HACK that will prevent delayed_job from running in development mode, for example
 
 echo "Precompiling assets, yarn and webpacker..."
 RAILS_ENV=test NODE_ENV=test bin/bundle exec rake assets:clean
