@@ -25,7 +25,7 @@ FAILED_COUNT=0
 if [[ ! -d /home/app/webapp/tmp ]]
 then
     echo "*** MAKING tmp DIR ***"
-    mkdir -p /home/app/webapp/tmp
+    mkdir /home/app/webapp/tmp
     chown root:app /home/app/webapp/tmp
     chmod g+w /home/app/webapp/tmp
     echo "*** COMPLETED ***"

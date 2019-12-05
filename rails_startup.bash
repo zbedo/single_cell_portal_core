@@ -56,6 +56,14 @@ echo "*** RUNNING PENDING MIGRATIONS ***"
 sudo -E -u app -H bin/rake RAILS_ENV=$PASSENGER_APP_ENV db:migrate
 echo "*** COMPLETED ***"
 
+if [[ ! -d /home/app/webapp/tmp ]]
+then
+    echo "*** MAKING tmp DIR ***"
+    mkdir /home/app/webapp/tmp
+    chown root:app /home/app/webapp/tmp
+    chmod g+w /home/app/webapp/tmp
+    echo "*** COMPLETED ***"
+fi
 if [[ ! -d /home/app/webapp/tmp/pids ]]
 then
     echo "*** MAKING tmp/pids DIR ***"
