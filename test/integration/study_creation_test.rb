@@ -56,7 +56,7 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
       seconds_slept += sleep_increment
       expression_matrix_1.reload
     end
-    puts "...done sleeping (#{seconds_slept} seconds, expression_matrix_1.parse_status is \"#{expression_matrix_1.parse_status}\")."
+    puts "...done sleeping (#{seconds_slept} seconds)"
     assert_equal 'parsed', expression_matrix_1.parse_status
 
     assert_equal 19, @study.genes.size, 'Did not parse all genes from expression matrix'
