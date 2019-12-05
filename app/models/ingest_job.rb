@@ -83,7 +83,8 @@ class IngestJob
         Rails.logger.info "Remote found for #{file_identifier}, launching Ingest job"
         submission = ApplicationController.papi_client.run_pipeline(study_file: self.study_file, user: self.user, action: self.action)
         Rails.logger.info "Ingest run initiated: #{submission.name}, queueing Ingest poller"
-        IngestJob.new(pipeline_name: submission.name, study: self.study, study_file: self.study_file, user: self.user).poll_for_completion
+        IngestJob.new(pipeline_name: submission.name, study: self.study, study_file: self.study_file,
+                      user: self.user, action: self.action).poll_for_completion
       end
     rescue => e
       Rails.logger.error "Error in launching ingest of #{file_identifier}: #{e.class.name}:#{e.message}"
@@ -234,7 +235,7 @@ class IngestJob
       self.study.set_gene_count
     when 'Cluster'
       self.set_study_default_options
-      self.launch_subsample_jobs
+      # self.launch_subsample_jobs
     end
     self.set_study_initialized
   end
@@ -243,7 +244,7 @@ class IngestJob
   def set_study_default_options
     case self.study_file.file_type
     when 'Metadata'
-      if self.study.default_options[:annotation].nil?
+      if self.study.default_options[:annotation].blank?
         cell_metadatum = study.cell_metadata.first
         self.study.default_options[:annotation] = cell_metadatum.annotation_select_value
         if cell_metadatum.annotation_type == 'numeric'
@@ -254,7 +255,7 @@ class IngestJob
       if self.study.default_options[:cluster].nil?
         cluster = study.cluster_groups.by_name(self.study_file.name)
         self.study.default_options[:cluster] = cluster.name
-        if self.study.default_annotation.nil? && cluster.cell_annotations.any?
+        if self.study.default_annotation.blank? && cluster.cell_annotations.any?
           annotation = cluster.cell_annotations.first
           self.study.default_options[:annotation] = cluster.annotation_select_value(annotation)
           if annotation[:type] == 'numeric'
@@ -303,7 +304,7 @@ class IngestJob
                                                                       action: :ingest_subsample)
           Rails.logger.info "Subsampling run initiated: #{submission.name}, queueing Ingest poller"
           IngestJob.new(pipeline_name: submission.name, study: self.study, study_file: cluster_file,
-                        user: self.user).poll_for_completion
+                        user: self.user, action: self.action).poll_for_completion
         end
       end
     end

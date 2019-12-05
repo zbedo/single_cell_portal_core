@@ -19,7 +19,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   # GCP Compute project to run pipelines in
   COMPUTE_PROJECT = ENV['GOOGLE_CLOUD_PROJECT'].blank? ? '' : ENV['GOOGLE_CLOUD_PROJECT']
   # Docker image in GCP project to pull for running ingest jobs
-  INGEST_DOCKER_IMAGE = 'gcr.io/broad-singlecellportal-staging/scp-ingest-pipeline:0.8.1'
+  INGEST_DOCKER_IMAGE = 'gcr.io/broad-singlecellportal-staging/scp-ingest-pipeline:0.8.2'
   # Network and sub-network names, if needed
   GCP_NETWORK_NAME = ENV['GCP_NETWORK_NAME']
   GCP_SUB_NETWORK_NAME = ENV['GCP_SUB_NETWORK_NAME']
@@ -271,7 +271,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
     end
 
     # add optional command line arguments based on file type
-    optional_args = self.get_command_line_options(study_file)
+    optional_args = self.get_command_line_options(study_file, action)
     # return an array of tokens (Docker expects exec form, which runs without a shell, so cannot be a single command)
     exec_form = command_line.split + optional_args
     exec_form
@@ -281,10 +281,11 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   #
   # * *params*
   #   - +study_file+ (StudyFile) => File to be ingested
+  #   - +action+ (String/Symbol) => Action being performed on file
   #
   # * *returns*
   #   (Array) => Array representation of optional arguments (Docker exec form), based on file type
-  def get_command_line_options(study_file)
+  def get_command_line_options(study_file, action)
     opts = []
     case study_file.file_type
     when /Matrix/
@@ -303,10 +304,13 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
     when 'Cluster'
       # the name of Cluster files is the same as the name of the cluster object itself
       opts += ["--name", "#{study_file.name}"]
-      if study_file.get_cluster_domain_ranges.any?
-        opts += ["--domain-ranges", "#{sanitize_json(study_file.get_cluster_domain_ranges.to_json)}"]
-      else
-        opts += ["--domain-ranges", "{}"]
+      # add domain ranges if this cluster is being ingested (not needed for subsampling)
+      if action.to_sym == :ingest_cluster
+        if study_file.get_cluster_domain_ranges.any?
+          opts += ["--domain-ranges", "#{sanitize_json(study_file.get_cluster_domain_ranges.to_json)}"]
+        else
+          opts += ["--domain-ranges", "{}"]
+        end
       end
     end
     opts
