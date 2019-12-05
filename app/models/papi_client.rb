@@ -15,7 +15,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   # Service account JSON credentials
   SERVICE_ACCOUNT_KEY = !ENV['SERVICE_ACCOUNT_KEY'].blank? ? File.absolute_path(ENV['SERVICE_ACCOUNT_KEY']) : ''
   # Google authentication scopes necessary for running pipelines
-  GOOGLE_SCOPES = %w(https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/datastore)
+  GOOGLE_SCOPES = %w(https://www.googleapis.com/auth/cloud-platform)
   # GCP Compute project to run pipelines in
   COMPUTE_PROJECT = ENV['GOOGLE_CLOUD_PROJECT'].blank? ? '' : ENV['GOOGLE_CLOUD_PROJECT']
   # Docker image in GCP project to pull for running ingest jobs
