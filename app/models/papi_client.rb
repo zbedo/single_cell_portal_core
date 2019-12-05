@@ -82,6 +82,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   #   - (Google::Apis::ClientError) =>  The request is invalid and should not be retried without modification
   #   - (Google::Apis::AuthorizationError) => Authorization is required
   def run_pipeline(study_file: , user:, action:)
+    Rails.logger.info "eweitz in run_pipeline"
     study = study_file.study
     accession = study.accession
     resources = self.create_resources_object(regions: ['us-central1'])
@@ -97,6 +98,9 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
     action = self.create_actions_object(commands: command_line, environment: environment)
     pipeline = self.create_pipeline_object(actions: [action], environment: environment, resources: resources)
     pipeline_request = self.create_run_pipeline_request_object(pipeline: pipeline, labels: labels)
+    Rails.logger.info "pipeline_request"
+    Rails.logger.info pipeline_request
+    Rails.logger.info pipeline_request.to_yaml
     self.service.run_pipeline(pipeline_request, quota_user: user.id.to_s)
   end
 
