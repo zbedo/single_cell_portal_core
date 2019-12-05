@@ -81,7 +81,6 @@ class IngestJob
         raise RuntimeError.new(log_message)
       else
         Rails.logger.info "Remote found for #{file_identifier}, launching Ingest job"
-        Rails.logger.info "eweitz before run_pipeline"
         submission = ApplicationController.papi_client.run_pipeline(study_file: self.study_file, user: self.user, action: self.action)
         Rails.logger.info "Ingest run initiated: #{submission.name}, queueing Ingest poller"
         IngestJob.new(pipeline_name: submission.name, study: self.study, study_file: self.study_file, user: self.user).poll_for_completion
