@@ -29,22 +29,12 @@ function clean_up {
   echo "Cleanup complete!"
 }
 clean_up
-
-if [[ ! -d /home/app/webapp/tmp ]]
-then
-    echo "*** MAKING tmp DIR ***"
-    mkdir /home/app/webapp/tmp
-    chown root:app /home/app/webapp/tmp
-    chmod g+w /home/app/webapp/tmp
-    echo "*** COMPLETED ***"
-fi
 if [[ ! -d /home/app/webapp/tmp/pids ]]
 then
     echo "*** MAKING tmp/pids DIR ***"
-    sudo -E -u app -H mkdir -p /home/app/webapp/tmp/pids || { echo "FAILED to create ./tmp/pids/" >&2;echo DEBUG:;hostname;whoami;ls -lhd /home/app/webapp /home/app/webapp/tmp /home/app/webapp/tmp/*/;echo END DEBUG; exit 1; }
+    mkdir -p /home/app/webapp/tmp/pids || { echo "FAILED to create ./tmp/pids/" >&2; exit 1; }
     echo "*** COMPLETED ***"
 fi
-echo DEBUG:;ls -lhd /home/app/webapp /home/app/webapp/tmp /home/app/webapp/tmp/*/ # TODO: DELETE DEBUG
 export PASSENGER_APP_ENV=test
 echo "*** STARTING DELAYED_JOB for $PASSENGER_APP_ENV env ***"
 rm -f tmp/pids/delayed_job.*.pid
