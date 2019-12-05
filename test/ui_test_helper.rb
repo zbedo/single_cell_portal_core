@@ -212,6 +212,8 @@ class Test::Unit::TestCase
     complete_login_process(email, password)
     # wait for redirect to finish by checking for footer element
     handle_oauth_redirect(email)
+    # accept SCP terms of service if needed
+    accept_scp_tos
     $verbose ? puts('login successful') : nil
   end
 
@@ -231,6 +233,8 @@ class Test::Unit::TestCase
     complete_login_process(email, password)
     # wait for redirect to finish by checking for footer element
     handle_oauth_redirect(email)
+    # accept SCP terms of service if needed
+    accept_scp_tos
     $verbose ? puts('login successful') : nil
   end
 
@@ -419,4 +423,14 @@ class Test::Unit::TestCase
     option.click
   end
 
+  def accept_scp_tos
+    $verbose ? puts('checking SCP terms of service') : nil
+    @wait.until {@driver.current_url =~ /single_cell/}
+    if @driver.current_url =~ /accept_tos/
+      $verbose ? puts('accepting SCP terms of service') : nil
+      accept = @driver.find_element(:id, 'accept-tos')
+      accept.click
+    end
+    $verbose ? puts('SCP terms of service check complete') : nil
+  end
 end
