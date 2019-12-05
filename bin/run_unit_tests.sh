@@ -22,9 +22,18 @@ start=$(date +%s)
 RETURN_CODE=0
 FAILED_COUNT=0
 
+if [[ ! -d /home/app/webapp/tmp/pids ]]
+then
+	echo "*** MAKING TMP DIR ***"
+	sudo -E -u app -H mkdir -p /home/app/webapp/tmp/pids
+	echo "*** COMPLETED ***"
+fi
 export PASSENGER_APP_ENV=test
 echo "*** STARTING DELAYED_JOB for $PASSENGER_APP_ENV env ***"
-sudo -E -u app -H bin/delayed_job restart $PASSENGER_APP_ENV -n 6 # WARNING: this is a HACK that will prevent delayed_job from running in development mode, for example
+rm tmp/pids/delayed_job.*.pid
+
+# WARNING: this is a HACK that will prevent delayed_job from running in development mode, for example:
+sudo -E -u app -H bin/delayed_job restart $PASSENGER_APP_ENV -n 6 || { echo "FAILED to start DELAYED_JOB" >&2; exit 1; }
 
 echo "Precompiling assets, yarn and webpacker..."
 RAILS_ENV=test NODE_ENV=test bin/bundle exec rake assets:clean
@@ -53,7 +62,7 @@ else
   declare -a tests=(test/integration/fire_cloud_client_test.rb
                     test/integration/cache_management_test.rb
                     test/integration/tos_acceptance_test.rb
-                    test/integration/study_creation_test.rb # TODO: run THIS!
+                    test/integration/study_creation_test.rb
                     test/integration/taxons_controller_test.rb
                     test/controllers/analysis_configurations_controller_test.rb
                     test/controllers/site_controller_test.rb
