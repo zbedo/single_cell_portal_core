@@ -51,10 +51,12 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
       if seconds_slept > max_seconds_to_sleep
         raise "waited #{seconds_slept} for expression_matrix_1.parse_status to be 'parsed', but it's '#{expression_matrix_1.parse_status}'."
       end
+      puts "sleeping for #{sleep_increment} seconds (#{seconds_slept}/#{max_seconds_to_sleep} seconds slept so far, expression_matrix_1.parse_status is \"#{expression_matrix_1.parse_status}\")..."
       sleep(sleep_increment)
       seconds_slept += sleep_increment
       expression_matrix_1.reload
     end
+    puts "...done sleeping (#{seconds_slept} seconds, expression_matrix_1.parse_status is \"#{expression_matrix_1.parse_status}\")."
     assert_equal 'parsed', expression_matrix_1.parse_status
 
     assert_equal 19, @study.genes.size, 'Did not parse all genes from expression matrix'
