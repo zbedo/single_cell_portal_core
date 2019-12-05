@@ -58,9 +58,9 @@ echo "*** COMPLETED ***"
 
 if [[ ! -d /home/app/webapp/tmp/pids ]]
 then
-	echo "*** MAKING TMP DIR ***"
-	sudo -E -u app -H mkdir -p /home/app/webapp/tmp/pids || { echo "FAILED to create ./tmp/pids/" >&2; exit 1; }
-	echo "*** COMPLETED ***"
+    echo "*** MAKING tmp/pids DIR ***"
+    sudo -E -u app -H mkdir -p /home/app/webapp/tmp/pids || { echo "FAILED to create ./tmp/pids/" >&2; exit 1; }
+    echo "*** COMPLETED ***"
 fi
 echo "*** STARTING DELAYED_JOB for $PASSENGER_APP_ENV env ***"
 rm tmp/pids/delayed_job.*.pid
