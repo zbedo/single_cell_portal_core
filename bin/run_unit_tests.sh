@@ -22,7 +22,14 @@ start=$(date +%s)
 RETURN_CODE=0
 FAILED_COUNT=0
 
-whoami
+function clean_up {
+  echo "Cleaning up..."
+  bundle exec bin/rails runner -e test "Study.delete_all_and_remove_workspaces" # destroy all studies/workspaces to clean up any files
+  bundle exec rake RAILS_ENV=test db:purge
+  echo "Cleanup complete!"
+}
+clean_up
+
 if [[ ! -d /home/app/webapp/tmp ]]
 then
     echo "*** MAKING tmp DIR ***"
@@ -94,10 +101,7 @@ else
       fi
   done
 fi
-echo "Cleaning up..."
-bundle exec bin/rails runner -e test "Study.delete_all_and_remove_workspaces" # destroy all studies/workspaces to clean up any files
-bundle exec rake RAILS_ENV=test db:purge
-echo "Cleanup complete!"
+clean_up
 end=$(date +%s)
 difference=$(($end - $start))
 min=$(($difference / 60))
