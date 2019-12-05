@@ -22,6 +22,7 @@ start=$(date +%s)
 RETURN_CODE=0
 FAILED_COUNT=0
 
+whoami
 if [[ ! -d /home/app/webapp/tmp ]]
 then
     echo "*** MAKING tmp DIR ***"
@@ -40,7 +41,7 @@ echo DEBUG:;ls -lhd /home/app/webapp /home/app/webapp/tmp /home/app/webapp/tmp/*
 export PASSENGER_APP_ENV=test
 echo "*** STARTING DELAYED_JOB for $PASSENGER_APP_ENV env ***"
 rm -f tmp/pids/delayed_job.*.pid
-sudo -E -u app -H bin/delayed_job restart $PASSENGER_APP_ENV -n 6 || { echo "FAILED to start DELAYED_JOB" >&2; exit 1; } # WARNING: using "restart" with environment of test is a HACK that will prevent delayed_job from running in development mode, for example
+bin/delayed_job restart $PASSENGER_APP_ENV -n 6 || { echo "FAILED to start DELAYED_JOB" >&2; exit 1; } # WARNING: using "restart" with environment of test is a HACK that will prevent delayed_job from running in development mode, for example
 
 echo "Precompiling assets, yarn and webpacker..."
 RAILS_ENV=test NODE_ENV=test bin/bundle exec rake assets:clean
