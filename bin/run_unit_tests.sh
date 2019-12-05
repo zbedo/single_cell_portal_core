@@ -25,12 +25,12 @@ FAILED_COUNT=0
 if [[ ! -d /home/app/webapp/tmp/pids ]]
 then
 	echo "*** MAKING TMP DIR ***"
-	sudo -E -u app -H mkdir -p /home/app/webapp/tmp/pids
+	sudo -E -u app -H mkdir -p /home/app/webapp/tmp/pids || { echo "FAILED to create ./tmp/pids/" >&2;echo DEBUG:;hostname;whoami;ls -lhd /home/app/webapp/tmp /home/app/webapp/tmp/*/;echo END DEBUG; exit 1; }
 	echo "*** COMPLETED ***"
 fi
 export PASSENGER_APP_ENV=test
 echo "*** STARTING DELAYED_JOB for $PASSENGER_APP_ENV env ***"
-rm tmp/pids/delayed_job.*.pid
+rm -f tmp/pids/delayed_job.*.pid
 
 # WARNING: this is a HACK that will prevent delayed_job from running in development mode, for example:
 sudo -E -u app -H bin/delayed_job restart $PASSENGER_APP_ENV -n 6 || { echo "FAILED to start DELAYED_JOB" >&2; exit 1; }
