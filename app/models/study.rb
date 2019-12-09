@@ -549,7 +549,10 @@ class Study
   validates_format_of :name, with: ValidationTools::OBJECT_LABELS,
                       message: ValidationTools::OBJECT_LABELS_ERROR
 
-  validates_format_of :firecloud_workspace, :firecloud_project, :data_dir, :bucket_id, :url_safe_name,
+  validates_format_of :firecloud_workspace, :firecloud_project,
+                      with: ValidationTools::ALPHANUMERIC_SPACE_DASH, message: ValidationTools::ALPHANUMERIC_SPACE_DASH_ERROR
+
+  validates_format_of :data_dir, :bucket_id, :url_safe_name,
                       with: ValidationTools::ALPHANUMERIC_DASH, message: ValidationTools::ALPHANUMERIC_DASH_ERROR
 
   # update validators
