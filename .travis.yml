@@ -19,4 +19,4 @@ before_install:
 - sudo unzip vault_1.0.1_linux_amd64.zip
 - sudo mv vault /usr/local/bin
 script:
-- bin/load_env_secrets.sh -p secret/kdux/scp/development/scp_config.json -s secret/kdux/scp/development/scp_service_account.json -e test -n single-cell-portal-development
+- bin/load_env_secrets.sh -p secret/kdux/scp/staging/scp_config.json -s secret/kdux/scp/staging/scp_service_account.json -e test -n single-cell-portal-staging
