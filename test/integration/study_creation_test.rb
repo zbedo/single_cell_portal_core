@@ -60,7 +60,6 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     assert_equal 'parsed', expression_matrix_1.parse_status
 
     assert_equal 19, @study.genes.size, 'Did not parse all genes from expression matrix'
-    num_genes = @study.gene_count
 
     # verify that counts are correct, this will ensure that everything uploaded & parsed correctly
     @study.reload

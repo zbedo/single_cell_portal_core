@@ -92,17 +92,6 @@ gene2_cells = gene_2.data_arrays.build(name: gene_2.cell_key, array_type: 'cells
                                        array_index: 1, study_id: study.id, study_file_id: expression_file.id, values: all_cell_array)
 gene2_cells.save!
 
-# Negative tests study
-negative_test_study = Study.create!(name: 'Negative Testing Study', description: '<p>This is the negative test study.</p>', data_dir: 'negative-test', user_id: user.id)
-bad_matrix = StudyFile.create!(name: 'GRCh38/test_bad_matrix.mtx', upload: File.open(Rails.root.join('test', 'test_data', 'GRCh38', 'test_bad_matrix.mtx')),
-                               file_type: 'MM Coordinate Matrix', study_id: negative_test_study.id)
-genes = StudyFile.create!(name: 'GRCh38/test_genes.tsv', upload: File.open(Rails.root.join('test', 'test_data', 'GRCh38', 'test_genes.tsv')),
-                               file_type: '10X Genes File', study_id: negative_test_study.id)
-barcodes_file = StudyFile.create!(name: 'GRCh38/barcodes.tsv', upload: File.open(Rails.root.join('test', 'test_data', 'GRCh38', 'barcodes.tsv')),
-                             file_type: '10X Barcodes File', study_id: negative_test_study.id)
-study_file_bundle = negative_test_study.study_file_bundles.build(bundle_type: bad_matrix.file_type)
-study_file_bundle.add_files(bad_matrix, genes, barcodes_file)
-
 # API TEST SEEDS
 api_study = Study.create!(name: "API Test Study #{@random_seed}", data_dir: 'api_test_study', user_id: user.id,
                           firecloud_project: ENV['PORTAL_NAMESPACE'])

@@ -46,7 +46,7 @@ RAILS_ENV=test NODE_ENV=test bin/bundle exec rake assets:precompile
 echo "Generating random seed, seeding test database..."
 RANDOM_SEED=$(openssl rand -hex 16)
 echo $RANDOM_SEED > /home/app/webapp/.random_seed
-bundle exec rake RAILS_ENV=test db:seed
+bundle exec rake RAILS_ENV=test db:seed || { echo "FAILED to seed test database!" >&2; exit 1; }
 echo "Database initialized"
 echo "Launching tests using seed: $RANDOM_SEED"
 if [ "$TEST_FILEPATH" != "" ]
@@ -79,7 +79,6 @@ else
                     test/api/directory_listings_controller_test.rb
                     test/models/cluster_group_test.rb
                     test/models/user_annotation_test.rb
-                    test/models/parse_utils_test.rb
                     test/models/analysis_configuration_test.rb
   )
   for test_name in ${tests[*]}; do
