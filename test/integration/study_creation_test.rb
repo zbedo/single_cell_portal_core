@@ -32,7 +32,7 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     @study = Study.find_by(name: "Test Study #{@random_seed}")
     assert @study.present?, "Study did not successfully save"
 
-    # upload files and parse manually
+    # upload files and request parse
 
     # expression matrix #1
     file_params = {study_file: {file_type: 'Expression Matrix', study_id: @study.id.to_s}}
