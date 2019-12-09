@@ -235,7 +235,7 @@ class IngestJob
       self.study.set_gene_count
     when 'Cluster'
       self.set_study_default_options
-      # self.launch_subsample_jobs
+      self.launch_subsample_jobs
     end
     self.set_study_initialized
   end
@@ -290,7 +290,7 @@ class IngestJob
                                                                     action: :ingest_subsample)
         Rails.logger.info "Subsampling run initiated: #{submission.name}, queueing Ingest poller"
         IngestJob.new(pipeline_name: submission.name, study: self.study, study_file: self.study_file,
-                      user: self.user).poll_for_completion
+                      user: self.user, action: self.action).poll_for_completion
       end
     when 'Metadata'
       # subsample all cluster files that have already finished parsing.  any in-process cluster parses, or new submissions
