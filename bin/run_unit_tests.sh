@@ -68,6 +68,7 @@ else
                     test/integration/cache_management_test.rb
                     test/integration/tos_acceptance_test.rb
                     test/integration/study_creation_test.rb
+                    test/integration/study_validation_test.rb
                     test/integration/taxons_controller_test.rb
                     test/controllers/analysis_configurations_controller_test.rb
                     test/controllers/site_controller_test.rb
