@@ -14,23 +14,23 @@ execute the following steps:
 1. Navigate to the project directory
 1. Build the Single Cell Portal image: `docker build -t single_cell_docker -f Dockerfile .`
 
-This will start the automated process of building the Docker image for running the portal.  The image is built off of the 
-[Passenger-docker baseimage](https://github.com/phusion/passenger-docker) and comes with Ruby, Nginx, and Passenger by 
-default, with additional packages added to the [Broad Institute KDUX Rails baseimage](https://hub.docker.com/r/broadinstitute/kdux-rails-baseimage/) 
-which pulls from the original baseimage.  The extended image contains ImageMagick, and self-signed SSL certificats & CA 
+This will start the automated process of building the Docker image for running the portal.  The image is based on the
+[Passenger-docker baseimage](https://github.com/phusion/passenger-docker) and comes with Ruby, Nginx, and Passenger by
+default, but built on a different base image and with additional packages added to the [Broad Institute SCP Rails baseimage](https://github.com/broadinstitute/scp-rails-baseimage/)
+which pulls from the original baseimage. The extended image contains ImageMagick, and self-signed SSL certificates & CA
 Authority for doing local development in https.
 
 *If this is your first time building the image, it may take several minutes to download and install everything.*
 
 ## BEFORE RUNNING THE CONTAINER
 
-This project uses [MongoDB](https://hub.docker.com/_/mongo/) as the primary datastore, and connects to a remote MongoDB 
-instance in all environments. In order for the portal to operate correctly, you will need to provision 
-a MongoDB instance in Google Cloud Platform.  This can be done using [Google Click to Deploy](https://console.cloud.google.com/marketplace/details/click-to-deploy-images/mongodb), 
-or via providers such as [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).  You may also provision a database manually 
+This project uses [MongoDB](https://hub.docker.com/_/mongo/) as the primary datastore, and connects to a remote MongoDB
+instance in all environments. In order for the portal to operate correctly, you will need to provision
+a MongoDB instance in Google Cloud Platform.  This can be done using [Google Click to Deploy](https://console.cloud.google.com/marketplace/details/click-to-deploy-images/mongodb),
+or via providers such as [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).  You may also provision a database manually
 using a VM in Google Compute Environment if you so desire.
 
-The only requirement is that you add a user account called "single_cell" to your Single Cell Portal database in whatever 
+The only requirement is that you add a user account called "single_cell" to your Single Cell Portal database in whatever
 instances you create.
 
 ## EXTERNAL DEPENDENCIES AND INTEGRATIONS
@@ -44,14 +44,14 @@ you will need to create resources and accounts in order for the portal to functi
 The Single Cell Portal is currently deployed in Google Cloud Platform (specifically, on a Google Compute Engine virtual machine).
 This is a requirement for all functionality.  The portal utilizes GCP service accounts for making authenticated calls to 
 various APIs as a part of normal usage.  For more information on how to configure your GCP project, please see 
-[Local Development or Deploying a Private Instance](##local-development-or-deploying-a-private-instance) below.
+[Local Development or Deploying a Private Instance](#local-development-or-deploying-a-private-instance) below.
 
 #### [Terra](https://terra.bio/) (REQUIRED)
 
 The Single Cell Portal uses Terra, which is the Broad Institute's cloud-based analysis platform.  The portal uses 
 Terra both as a data and permission store, as well as an analysis platform.  For more information on the integration 
 itself, see [Terra Integration](#terra-integration) below, or for setting up your own Terra project, see 
-[Local Development or Deploying a Private Instance](##local-development-or-deploying-a-private-instance) below.
+[Local Development or Deploying a Private Instance](#local-development-or-deploying-a-private-instance) below.
 
 #### [Sentry](https://sentry.io)
 
@@ -381,9 +381,9 @@ Similarly, you can pass `--ignore-name /pattern/` to run all tests that do not m
 More information on usage & test configuration can be found in the comments at the top of the test suite.
 
 ### UNIT & INTEGRATION TESTS
-There is a smaller unit & integration test framework for the Single Cell Portal that is run using the built-in test Rails 
-harness, which uses [Test::Unit](https://github.com/test-unit/test-unit) and [minitest-rails](https://github.com/blowmage/minitest-rails). 
-These unit & integration tests only cover specific functionality that requires integration with portal models and methods, 
+There is a smaller unit & integration test framework for the Single Cell Portal that is run using the built-in test Rails
+harness, which uses [Test::Unit](https://github.com/test-unit/test-unit) and [minitest-rails](https://github.com/blowmage/minitest-rails).
+These unit & integration tests only cover specific functionality that requires integration with portal models and methods,
 and therefore cannot be run from the UI test suite.
 
 These tests are run automatically after setting up the application and seeding the test database.  This is 

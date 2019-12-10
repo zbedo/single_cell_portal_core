@@ -21,13 +21,32 @@ done
 start=$(date +%s)
 RETURN_CODE=0
 FAILED_COUNT=0
+
+function clean_up {
+  echo "Cleaning up..."
+  bundle exec bin/rails runner -e test "Study.delete_all_and_remove_workspaces" # destroy all studies/workspaces to clean up any files
+  bundle exec rake RAILS_ENV=test db:purge
+  echo "Cleanup complete!"
+}
+clean_up
+if [[ ! -d /home/app/webapp/tmp/pids ]]
+then
+    echo "*** MAKING tmp/pids DIR ***"
+    mkdir -p /home/app/webapp/tmp/pids || { echo "FAILED to create ./tmp/pids/" >&2; exit 1; }
+    echo "*** COMPLETED ***"
+fi
+export PASSENGER_APP_ENV=test
+echo "*** STARTING DELAYED_JOB for $PASSENGER_APP_ENV env ***"
+rm -f tmp/pids/delayed_job.*.pid
+bin/delayed_job restart $PASSENGER_APP_ENV -n 6 || { echo "FAILED to start DELAYED_JOB" >&2; exit 1; } # WARNING: using "restart" with environment of test is a HACK that will prevent delayed_job from running in development mode, for example
+
 echo "Precompiling assets, yarn and webpacker..."
 RAILS_ENV=test NODE_ENV=test bin/bundle exec rake assets:clean
 RAILS_ENV=test NODE_ENV=test bin/bundle exec rake assets:precompile
 echo "Generating random seed, seeding test database..."
 RANDOM_SEED=$(openssl rand -hex 16)
 echo $RANDOM_SEED > /home/app/webapp/.random_seed
-bundle exec rake RAILS_ENV=test db:seed
+bundle exec rake RAILS_ENV=test db:seed || { echo "FAILED to seed test database!" >&2; exit 1; }
 echo "Database initialized"
 echo "Launching tests using seed: $RANDOM_SEED"
 if [ "$TEST_FILEPATH" != "" ]
@@ -60,7 +79,6 @@ else
                     test/api/directory_listings_controller_test.rb
                     test/models/cluster_group_test.rb
                     test/models/user_annotation_test.rb
-                    test/models/parse_utils_test.rb
                     test/models/analysis_configuration_test.rb
   )
   for test_name in ${tests[*]}; do
@@ -72,17 +90,14 @@ else
       fi
   done
 fi
-echo "Cleaning up..."
-bundle exec bin/rails runner -e test "Study.delete_all_and_remove_workspaces" # destroy all studies/workspaces to clean up any files
-bundle exec rake RAILS_ENV=test db:purge
-echo "Cleanup complete!"
+clean_up
 end=$(date +%s)
 difference=$(($end - $start))
 min=$(($difference / 60))
 sec=$(($difference % 60))
 echo "Total elapsed time: $min minutes, $sec seconds"
 if [[ $RETURN_CODE -ne 0 ]]; then
-	printf "\n### There were $FAILED_COUNT errors/failed test suites in this run ###\n\n"
+  printf "\n### There were $FAILED_COUNT errors/failed test suites in this run ###\n\n"
 fi
 echo "Exiting with code: $RETURN_CODE"
 exit $RETURN_CODE
