@@ -1,6 +1,6 @@
 require "integration_test_helper"
 
-class StudyAdminTest < ActionDispatch::IntegrationTest
+class StudyValidationTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
 
   setup do
@@ -26,8 +26,8 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
     @study = Study.find_by(name: "Parse Failure Study #{@random_seed}")
     assert @study.present?, "Study did not successfully save"
 
+    # upload files and request parse
 
-    # upload files and parse manually
     # bad expression matrix
     file_params = {study_file: {file_type: 'Expression Matrix', study_id: @study.id.to_s}}
     perform_study_file_upload('expression_matrix_example_bad.txt', file_params, @study.id)
@@ -40,7 +40,6 @@ class StudyAdminTest < ActionDispatch::IntegrationTest
     assert @study.genes.size == 0, "Found #{@study.genes.size} genes when should have found 0"
     assert @study.expression_matrix_files.size == 0,
            "Found #{@study.expression_matrix_files.size} expression matrices when should have found 0"
-
 
     # bad metadata file
     file_params = {study_file: {file_type: 'Metadata', study_id: @study.id.to_s}}

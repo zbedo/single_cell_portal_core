@@ -34,40 +34,88 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
 
     # upload files and request parse
 
+    example_files = {
+      expression: {
+        name: 'expression_matrix_example.txt'
+      },
+      metadata: {
+        name: 'metadata_example2.txt'
+      },
+      cluster: {
+        name: 'cluster_example_2.txt'
+      }
+    }
+
     # expression matrix #1
     file_params = {study_file: {file_type: 'Expression Matrix', study_id: @study.id.to_s}}
-    perform_study_file_upload('expression_matrix_example.txt', file_params, @study.id)
+    perform_study_file_upload(example_files[:expression][:name], file_params, @study.id)
     assert_response 200, "Expression matrix upload failed: #{@response.code}"
-    assert @study.expression_matrix_files.size == 1, "Expression matrix failed to associate, found #{@study.expression_matrix_files.size} files"
-    expression_matrix_1 = @study.expression_matrix_files.first
-    assert_equal 'unparsed', expression_matrix_1.parse_status
-    initiate_study_file_parse('expression_matrix_example.txt', @study.id)
-    assert_response 200, "Expression matrix parse job failed to start: #{@response.code}"
+    assert_equal 1, @study.expression_matrix_files.size, "Expression matrix failed to associate, found #{@study.expression_matrix_files.size} files"
+    example_files[:expression][:object] = @study.expression_matrix_files.first
 
-    sleep_increment = 60
+    # metadata file
+    file_params = {study_file: {file_type: 'Metadata', study_id: @study.id.to_s}}
+    perform_study_file_upload(example_files[:metadata][:name], file_params, @study.id)
+    assert_response 200, "Metadata upload failed: #{@response.code}"
+    example_files[:metadata][:object] = @study.metadata_file
+    assert example_files[:metadata][:object].present?, "Metadata failed to associate, found no file: #{example_files[:metadata][:object].present?}"
+
+    # first cluster
+    file_params = {study_file:
+                       {
+                           name: 'Test Cluster 1', file_type: 'Cluster', study_id: @study.id.to_s,
+                           study_file_x_axis_min: -100, study_file_x_axis_max: 100, study_file_y_axis_min: -75,
+                           study_file_y_axis_max: 75, study_file_z_axis_min: -125, study_file_z_axis_max: 125,
+                           study_file_x_axis_label: 'X Axis', study_file_y_axis_label: 'Y Axis', study_file_z_axis_label: 'Z Axis'
+                       }
+    }
+    perform_study_file_upload('cluster_example_2.txt', file_params, @study.id)
+    assert_response 200, "Cluster 1 upload failed: #{@response.code}"
+    assert_equal 1, @study.cluster_ordinations_files.size, "Cluster 1 failed to associate, found #{@study.cluster_ordinations_files.size} files"
+    example_files[:cluster][:object] = @study.cluster_ordinations_files.first
+
+    example_files.values.each do |file|
+      puts "Requesting parse for file \"#{file[:name]}\"."
+      assert_equal 'unparsed', file[:object].parse_status
+      initiate_study_file_parse(file[:name], @study.id)
+      assert_response 200, "Expression matrix parse job failed to start: #{@response.code}"
+    end
+
     seconds_slept = 0
-    max_seconds_to_sleep = 1200
-    while ( expression_matrix_1.parse_status != 'parsed' ) do
-      if seconds_slept > max_seconds_to_sleep
-        raise "waited #{seconds_slept} for expression_matrix_1.parse_status to be 'parsed', but it's '#{expression_matrix_1.parse_status}'."
+    sleep_increment = 30
+    max_seconds_to_sleep = 180
+
+    while ( example_files.values.any? { |e| e[:object].parse_status != 'parsed' } ) do
+      puts "After #{seconds_slept} seconds, " + (example_files.values.map { |e| "#{e[:name]} is #{e[:object].parse_status}"}).join(", ") + '.'
+      if seconds_slept >= max_seconds_to_sleep
+        raise "Even after #{seconds_slept} seconds, not all files have been parsed."
       end
-      puts "sleeping for #{sleep_increment} seconds (#{seconds_slept}/#{max_seconds_to_sleep} seconds slept so far, expression_matrix_1.parse_status is \"#{expression_matrix_1.parse_status}\")..."
       sleep(sleep_increment)
       seconds_slept += sleep_increment
-      expression_matrix_1.reload
+      example_files.values.each do |e|
+        assert_not e[:object].queued_for_deletion, "parsing #{e[:name]} failed"
+        e[:object].reload
+      end
     end
-    puts "...done sleeping (#{seconds_slept} seconds)"
-    assert_equal 'parsed', expression_matrix_1.parse_status
+    puts "...all files have been parsed after #{seconds_slept} seconds."
 
     assert_equal 19, @study.genes.size, 'Did not parse all genes from expression matrix'
 
     # verify that counts are correct, this will ensure that everything uploaded & parsed correctly
     @study.reload
     gene_count = @study.gene_count
+    cluster_count = @study.cluster_groups.size
+    metadata_count = @study.cell_metadata.size
+    cluster_annot_count = @study.cluster_annotation_count
+    study_file_count = @study.study_files.non_primary_data.size
     share_count = @study.study_shares.size
 
-    assert gene_count == 19, "did not find correct number of genes, expected 19 but found #{gene_count}"
-    assert share_count == 1, "did not find correct number of study shares, expected 1 but found #{share_count}"
+    assert_equal 19, gene_count, "did not find correct number of genes"
+    assert_equal 1, cluster_count, "did not find correct number of clusters"
+    assert_equal 3, metadata_count, "did not find correct number of metadata objects"
+    assert_equal 2, cluster_annot_count, "did not find correct number of cluster annotations"
+    assert_equal 3, study_file_count, "did not find correct number of study files"
+    assert_equal 1, share_count, "did not find correct number of study shares"
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
 

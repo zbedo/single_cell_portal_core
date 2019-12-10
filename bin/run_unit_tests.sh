@@ -86,6 +86,7 @@ else
       code=$? # immediately capture exit code to prevent this from getting clobbered
       if [[ $code -ne 0 ]]; then
         RETURN_CODE=$code
+        first_test_to_fail=${first_test_to_fail-"$test_name"}
         ((FAILED_COUNT++))
       fi
   done
@@ -97,7 +98,7 @@ min=$(($difference / 60))
 sec=$(($difference % 60))
 echo "Total elapsed time: $min minutes, $sec seconds"
 if [[ $RETURN_CODE -ne 0 ]]; then
-  printf "\n### There were $FAILED_COUNT errors/failed test suites in this run ###\n\n"
+  printf "\n### There were $FAILED_COUNT errors/failed test suites in this run, starting with $first_test_to_fail ###\n\n"
 fi
 echo "Exiting with code: $RETURN_CODE"
 exit $RETURN_CODE
