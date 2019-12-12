@@ -49,16 +49,8 @@ class StudyValidationTest < ActionDispatch::IntegrationTest
     assert_response 200, "Metadata upload failed: #{@response.code}"
     metadata_study_file = @study.metadata_file
     assert metadata_study_file.present?, "Metadata failed to associate, found no file: #{metadata_study_file.present?}"
-    begin
-      # this parse is a file header issue, which does throw and error
-      @study.initialize_cell_metadata(metadata_study_file, @test_user)
-    rescue => e
-      assert e.is_a?(StandardError), "Caught unknown error during parse: #{e.class}:#{e.message}"
-    end
-    assert @study.cell_metadata.size == 0, "Found #{@study.cell_metadata.size} genes when should have found 0"
-    assert @study.metadata_file.nil?,
-           "Found metadata file when should have found none"
-
+    initiate_study_file_parse('metadata_bad.txt', @study.id)
+    assert_response 200, "Metadata parse job failed to start: #{@response.code}"
 
     # bad cluster
     file_params = {study_file: {name: 'Test Cluster 1', file_type: 'Cluster', study_id: @study.id.to_s}}
@@ -66,16 +58,8 @@ class StudyValidationTest < ActionDispatch::IntegrationTest
     assert_response 200, "Cluster 1 upload failed: #{@response.code}"
     assert @study.cluster_ordinations_files.size == 1, "Cluster 1 failed to associate, found #{@study.cluster_ordinations_files.size} files"
     cluster_file_1 = @study.cluster_ordinations_files.first
-    begin
-      # this parse is a file header issue, which does throw and error
-      @study.initialize_cluster_group_and_data_arrays(cluster_file_1, @test_user)
-    rescue => e
-      assert e.is_a?(StandardError), "Caught unknown error during parse: #{e.class}:#{e.message}"
-    end
-    assert @study.cluster_groups.size == 0, "Found #{@study.cluster_groups.size} genes when should have found 0"
-    assert @study.cluster_ordinations_files.size == 0,
-           "Found #{@study.cluster_ordinations_files.size} cluster files when should have found 0"
-
+    initiate_study_file_parse('cluster_bad.txt', @study.id)
+    assert_response 200, "Cluster parse job failed to start: #{@response.code}"
 
     # bad marker gene list
     file_params = {study_file: {name: 'Test Gene List', file_type: 'Gene List', study_id: @study.id.to_s}}
@@ -125,58 +109,6 @@ class StudyValidationTest < ActionDispatch::IntegrationTest
                  "FireCloud project was not correct, expected #{FireCloudClient::PORTAL_NAMESPACE} but found #{@study.firecloud_project}"
     assert_equal "firecloud-attribute-test-#{@random_seed}", @study.firecloud_workspace,
                  "FireCloud workspace was not correct, expected test-firecloud-attribute-test-#{@random_seed} but found #{@study.firecloud_workspace}"
-    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
-  end
-
-  # this test depends on several of the studies from test/integration/study_creation_test.rb; that suite should be run
-  # first before running this test, and without changing the random_seed variable
-  test 'should grant access by share permission' do
-    puts "#{File.basename(__FILE__)}: #{self.method_name}"
-    @test_study = Study.find_by(name: "Test Study #{@random_seed}")
-    @private_study = Study.find_by(name: "Private Study #{@random_seed}")
-    @gzip_study = Study.find_by(name: "Gzip Parse #{@random_seed}")
-    view_private_path = view_study_path(accession: @private_study.accession, study_name: @private_study.url_safe_name)
-    view_gzip_path = view_study_path(accession: @gzip_study.accession, study_name: @gzip_study.url_safe_name)
-    edit_test_study_path = study_path(@test_study.id)
-    edit_private_study_path = study_path(@private_study.id)
-
-    # sign out of normal test user and auth as the sharing user
-    sign_out(@test_user)
-    auth_as_user(@sharing_user)
-    sign_in(@sharing_user)
-
-    # view private study, should fail and redirect
-    get view_private_path
-    assert_redirected_to site_path, "Did not redirect to site path, current path is #{path}"
-
-    # view public study
-    get view_gzip_path
-    assert_response 200,
-                    "Did not correctly load #{view_gzip_path}, expected response 200 but found #{@response.code}"
-    assert_equal view_gzip_path, path,
-                 "Did not correctly load #{view_gzip_path}, current path is #{path}"
-
-    # edit private study, should fail and redirect
-    get edit_private_study_path
-    assert_redirected_to studies_path, "Did not redirect to studies path, current path is #{path}"
-    follow_redirect!
-    assert_equal studies_path, path,
-                 "Did not correctly load #{studies_path}, current path is #{path}"
-
-    # edit shared study
-    get edit_test_study_path
-    assert_response 200,
-                    "Did not correctly load #{edit_test_study_path}, expected response 200 but found #{@response.code}"
-    assert_equal edit_test_study_path, path,
-                 "Did not correctly load #{edit_test_study_path}, current path is #{path}"
-
-
-    # upload a file to shared study
-    file_params = {study_file: {file_type: 'Documentation', study_id: @test_study.id.to_s}}
-    perform_study_file_upload('README.txt', file_params, @test_study.id)
-    assert_response 200, "Doc file upload failed: #{@response.code}"
-    assert @test_study.study_files.where(file_type: 'Documentation').size == 2,
-           "Doc failed to associate, found #{@test_study.study_files.where(file_type: 'Documentation').size} files"
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 
