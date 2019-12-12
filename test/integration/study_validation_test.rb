@@ -39,10 +39,6 @@ class StudyValidationTest < ActionDispatch::IntegrationTest
     assert_response 200, "Expression matrix parse job failed to start: #{@response.code}"
 
 
-    sleep 60
-    # pp expression_matrix_1
-    assert expression_matrix_1.queued_for_deletion
-
     # bad metadata file
     file_params = {study_file: {file_type: 'Metadata', study_id: @study.id.to_s}}
     perform_study_file_upload('metadata_bad.txt', file_params, @study.id)
@@ -60,6 +56,11 @@ class StudyValidationTest < ActionDispatch::IntegrationTest
     cluster_file_1 = @study.cluster_ordinations_files.first
     initiate_study_file_parse('cluster_bad.txt', @study.id)
     assert_response 200, "Cluster parse job failed to start: #{@response.code}"
+
+    sleep 60
+    assert expression_matrix_1.queued_for_deletion
+    assert metadata_study_file.queued_for_deletion
+    assert cluster_file_1.queued_for_deletion
 
     # bad marker gene list
     file_params = {study_file: {name: 'Test Gene List', file_type: 'Gene List', study_id: @study.id.to_s}}
