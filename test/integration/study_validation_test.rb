@@ -35,11 +35,13 @@ class StudyValidationTest < ActionDispatch::IntegrationTest
     assert @study.expression_matrix_files.size == 1, "Expression matrix failed to associate, found #{@study.expression_matrix_files.size} files"
     expression_matrix_1 = @study.expression_matrix_files.first
     # this parse has a duplicate gene, which will not throw an error - it is caught internally
-    @study.initialize_gene_expression_data(expression_matrix_1, @test_user)
+    initiate_study_file_parse('expression_matrix_example_bad.txt', @study.id)
+    assert_response 200, "Expression matrix parse job failed to start: #{@response.code}"
 
-    assert @study.genes.size == 0, "Found #{@study.genes.size} genes when should have found 0"
-    assert @study.expression_matrix_files.size == 0,
-           "Found #{@study.expression_matrix_files.size} expression matrices when should have found 0"
+
+    sleep 60
+    # pp expression_matrix_1
+    assert expression_matrix_1.queued_for_deletion
 
     # bad metadata file
     file_params = {study_file: {file_type: 'Metadata', study_id: @study.id.to_s}}
