@@ -93,7 +93,7 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
       sleep(sleep_increment)
       seconds_slept += sleep_increment
       example_files.values.each do |e|
-        assert_not e[:object].queued_for_deletion, "parsing #{e[:name]} failed"
+        assert_not e[:object].queued_for_deletion, "parsing #{e[:name]} failed, and is queued for deletion"
         e[:object].reload
       end
     end
