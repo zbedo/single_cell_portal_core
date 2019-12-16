@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# script that is called when booting portal in test environment to run all unit tests in the correct order as some
+# script that is called when booting portal in test environment to run all unit tests and integration tests in the correct order as some
 # tests change downstream behavior after they've run
 #
 # can take the following arguments:
