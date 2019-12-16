@@ -24,7 +24,7 @@ FAILED_COUNT=0
 
 function clean_up {
   echo "Cleaning up..."
-  bundle exec bin/rails runner -e test "Study.delete_all_and_remove_workspaces" || { echo "FAILED to delete studies and workspaces" >&2; exit; } # destroy all studies/workspaces to clean up any files
+  bundle exec bin/rails runner -e test "Study.delete_all_and_remove_workspaces" || { echo "FAILED to delete studies and workspaces" >&2; exit 1; } # destroy all studies/workspaces to clean up any files
   bundle exec rake RAILS_ENV=test db:purge
   echo "Cleanup complete!"
 }
