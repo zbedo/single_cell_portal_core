@@ -77,7 +77,7 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     ## request parse
     example_files.each do |file_type,file|
       puts "Requesting parse for file \"#{file[:name]}\"."
-      assert_equal 'unparsed', file[:object].parse_status
+      assert_equal 'unparsed', file[:object].parse_status, "Incorrect parse_status for #{file[:name]}"
       initiate_study_file_parse(file[:name], study.id)
       assert_response 200, "#{file_type} parse job failed to start: #{@response.code}"
     end
@@ -101,8 +101,8 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     puts "After #{seconds_slept} seconds, " + (example_files.values.map { |e| "#{e[:name]} is #{e[:object].parse_status}"}).join(", ") + '.'
 
     example_files.values.each do |e|
-      assert_equal 'parsed', e[:object].parse_status
-      assert_not e[:object].queued_for_deletion
+      assert_equal 'parsed', e[:object].parse_status, "Incorrect parse_status for #{e[:name]}"
+      assert_not e[:object].queued_for_deletion, "#{e[:name]} should be queued for deletion"
     end
 
     assert_equal 19, study.genes.size, 'Did not parse all genes from expression matrix'

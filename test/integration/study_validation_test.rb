@@ -64,7 +64,7 @@ class StudyValidationTest < ActionDispatch::IntegrationTest
     ## request parse
     example_files.each do |file_type,file|
       puts "Requesting parse for file \"#{file[:name]}\"."
-      assert_equal 'unparsed', file[:object].parse_status
+      assert_equal 'unparsed', file[:object].parse_status, "Incorrect parse_status for #{file[:name]}"
       initiate_study_file_parse(file[:name], study.id)
       assert_response 200, "#{file_type} parse job failed to start: #{@response.code}"
     end
@@ -89,7 +89,7 @@ class StudyValidationTest < ActionDispatch::IntegrationTest
     study.reload
 
     example_files.values.each do |e|
-      assert_equal 'failed', e[:object].parse_status
+      assert_equal 'failed', e[:object].parse_status, "Incorrect parse_status for #{e[:name]}"
       assert e[:object].queued_for_deletion
     end
 
