@@ -140,7 +140,6 @@ class Taxon
 
   # parser to auto-add taxons, and assemblies from an uploaded file, returning number of new entities
   def self.parse_from_file(tempfile_upload, user)
-    Rails.logger.info "eweitz in taxon parse_from_file"
     if tempfile_upload.is_a?(ActionDispatch::Http::UploadedFile)
       file = File.open(tempfile_upload.tempfile.path)
       original_filename = tempfile_upload.original_filename
@@ -158,7 +157,6 @@ class Taxon
     if headers.first.starts_with?('#')
       headers.first.gsub!(/#\s/, '') # remove hash sign if present
     end
-    Rails.logger.info "eweitz parse_from_file 2"
     common_name_idx = headers.index('common_name')
     scientific_name_idx = headers.index('scientific_name')
     taxid_idx = headers.index('taxid')
@@ -172,7 +170,6 @@ class Taxon
     annot_release_date_idx = headers.index('annotation_release_date')
     annot_link_idx = headers.index('annotation_url')
     annot_index_link_idx = headers.index('annotation_index_url')
-    Rails.logger.info "eweitz parse_from_file 3"
     # load reference bucket workspace for use in parsing annotation links
     reference_ws_config = AdminConfiguration.find_by(config_type: 'Reference Data Workspace')
     if reference_ws_config.present?
@@ -180,7 +177,6 @@ class Taxon
       ref_workspace = Study.firecloud_client.get_workspace(project, workspace)
       bucket_id = ref_workspace['workspace']['bucketName']
     end
-    Rails.logger.info "eweitz parse_from_file 4"
     while !file.eof?
       vals = file.readline.split("\t").map(&:strip)
       # check if all we're adding is another assembly
@@ -193,7 +189,6 @@ class Taxon
       taxon.notes = "Uploaded from #{original_filename} on #{Date.today}"
       taxon.save!
       num_species += 1
-      Rails.logger.info "eweitz parse_from_file 5"
       assembly = taxon.genome_assemblies.find_by(accession: vals[assembly_accession_idx])
       if assembly.nil?
         assembly = taxon.genome_assemblies.build
@@ -203,35 +198,20 @@ class Taxon
       assembly.release_date = vals[assembly_release_date_idx]
       assembly.save!
       num_assemblies += 1
-      Rails.logger.info "eweitz parse_from_file 6"
       # only add annotations if all fields are present, need to check that headers are there and that there are values
       if annot_name_idx.present? && annot_release_date_idx.present? && annot_link_idx.present? && annot_index_link_idx.present? &&
       !vals[annot_name_idx].blank? && !vals[annot_release_date_idx].blank? && !vals[annot_link_idx].blank? && !vals[annot_index_link_idx].blank?
         annotation = assembly.genome_annotations.find_by(name: vals[annot_name_idx])
-        Rails.logger.info "eweitz parse_from_file 7"
         if annotation.nil?
           annotation = assembly.genome_annotations.build
         end
-        Rails.logger.info "eweitz parse_from_file 8"
         annotation.name = vals[annot_name_idx]
         annotation.release_date = vals[annot_release_date_idx]
-        Rails.logger.info "eweitz parse_from_file 9"
         # handle annotation links according to content
         annotation.link = process_annotation_link_value(vals[annot_link_idx], bucket_id)
-        Rails.logger.info "eweitz parse_from_file 10"
         annotation.index_link = process_annotation_link_value(vals[annot_index_link_idx], bucket_id)
-        Rails.logger.info "eweitz parse_from_file 11"
-        begin
-          annotation.save!
-        rescue => e
-          Rails.logger.error "Error in parse_from_file: #{e.message}"
-          Rails.logger.error e.backtrace.join("\n")
-          Rails.logger.error "Problematic annotation:"
-          Rails.logger.error annotation.to_yaml
-        end
-        Rails.logger.info "eweitz parse_from_file 12"
+        annotation.save!
         num_annotations += 1
-        
       end
     end
     {new_species: num_species, new_assemblies: num_assemblies, new_annotations: num_annotations}
@@ -247,7 +227,7 @@ class Taxon
     # determine if this is an external url, or a link to a file in the reference bucket
     if bucket_id.present? && link.include?(bucket_id)
       processed_link = link.split(bucket_id).last
-      # trim off leading slash if present
+      # trim of leading slash if present
       processed_link.starts_with?('/') ? processed_link[1..-1] : processed_link
     else
       link
