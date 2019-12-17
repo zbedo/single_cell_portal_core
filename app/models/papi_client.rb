@@ -97,8 +97,10 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
     action = self.create_actions_object(commands: command_line, environment: environment)
     pipeline = self.create_pipeline_object(actions: [action], environment: environment, resources: resources)
     pipeline_request = self.create_run_pipeline_request_object(pipeline: pipeline, labels: labels)
-    Rails.logger.info "Request object sent to Google Pipelines API (PAPI):"
-    Rails.logger.info pipeline_request.to_yaml
+    Rails.logger.info "Request object sent to Google Pipelines API (PAPI), excluding 'environment' parameters:"
+    sanitized_pipeline_request = pipeline_request.to_h[:pipeline].except(:environment)
+    sanitized_pipeline_request[:actions] = sanitized_pipeline_request[:actions][0].except(:environment)
+    Rails.logger.info sanitized_pipeline_request.to_yaml
     self.service.run_pipeline(pipeline_request, quota_user: user.id.to_s)
   end
 
