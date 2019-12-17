@@ -83,7 +83,8 @@ class IngestJob
         Rails.logger.info "Remote found for #{file_identifier}, launching Ingest job"
         submission = ApplicationController.papi_client.run_pipeline(study_file: self.study_file, user: self.user, action: self.action)
         Rails.logger.info "Ingest run initiated: #{submission.name}, queueing Ingest poller"
-        IngestJob.new(pipeline_name: submission.name, study: self.study, study_file: self.study_file, user: self.user).poll_for_completion
+        IngestJob.new(pipeline_name: submission.name, study: self.study, study_file: self.study_file,
+                      user: self.user, action: self.action).poll_for_completion
       end
     rescue => e
       Rails.logger.error "Error in launching ingest of #{file_identifier}: #{e.class.name}:#{e.message}"
@@ -228,12 +229,14 @@ class IngestJob
     when 'Metadata'
       self.study.set_cell_count
       self.set_study_default_options
+      self.launch_subsample_jobs
     when 'Expression Matrix'
       self.study.set_gene_count
     when 'MM Coordinate Matrix'
       self.study.set_gene_count
     when 'Cluster'
       self.set_study_default_options
+      self.launch_subsample_jobs
     end
     self.set_study_initialized
   end
@@ -242,7 +245,7 @@ class IngestJob
   def set_study_default_options
     case self.study_file.file_type
     when 'Metadata'
-      if self.study.default_options[:annotation].nil?
+      if self.study.default_options[:annotation].blank?
         cell_metadatum = study.cell_metadata.first
         self.study.default_options[:annotation] = cell_metadatum.annotation_select_value
         if cell_metadatum.annotation_type == 'numeric'
@@ -253,7 +256,7 @@ class IngestJob
       if self.study.default_options[:cluster].nil?
         cluster = study.cluster_groups.by_name(self.study_file.name)
         self.study.default_options[:cluster] = cluster.name
-        if self.study.default_annotation.nil? && cluster.cell_annotations.any?
+        if self.study.default_annotation.blank? && cluster.cell_annotations.any?
           annotation = cluster.cell_annotations.first
           self.study.default_options[:annotation] = cluster.annotation_select_value(annotation)
           if annotation[:type] == 'numeric'
@@ -270,6 +273,41 @@ class IngestJob
   def set_study_initialized
     if self.study.cluster_groups.any? && self.study.genes.any? && self.study.cell_metadata.any? && !self.study.initialized?
       self.study.update(initialized: true)
+    end
+  end
+
+  # determine if subsampling needs to be run based on file ingested and current study state
+  def launch_subsample_jobs
+    case self.study_file.file_type
+    when 'Cluster'
+      # only subsample if ingest_cluster was just run, new cluster is > 1K points, and a metadata file is parsed
+      cluster_ingested = self.action.to_sym == :ingest_cluster
+      cluster_needs_subsampling = ClusterGroup.find_by(study_id: self.study.id, study_file_id: self.study_file.id).points > 1000
+      metadata_parsed = self.study.metadata_file.present? && self.study.metadata_file.parsed?
+      if cluster_ingested && cluster_needs_subsampling && metadata_parsed
+        file_identifier = "#{self.study_file.bucket_location}:#{self.study_file.id}"
+        Rails.logger.info "Launching subsampling ingest run for #{file_identifier} after #{self.action}"
+        submission = ApplicationController.papi_client.run_pipeline(study_file: self.study_file, user: self.user,
+                                                                    action: :ingest_subsample)
+        Rails.logger.info "Subsampling run initiated: #{submission.name}, queueing Ingest poller"
+        IngestJob.new(pipeline_name: submission.name, study: self.study, study_file: self.study_file,
+                      user: self.user, action: self.action).poll_for_completion
+      end
+    when 'Metadata'
+      # subsample all cluster files that have already finished parsing.  any in-process cluster parses, or new submissions
+      # will be handled by the above case.  Again, only subsample for completed clusters > 1K points
+      metadata_identifier = "#{self.study_file.bucket_location}:#{self.study_file.id}"
+      self.study.study_files.where(file_type: 'Cluster', parse_status: 'parsed').each do |cluster_file|
+        if ClusterGroup.find_by(study_id: self.study.id, study_file_id: cluster_file.id).points > 1000
+          file_identifier = "#{cluster_file.bucket_location}:#{cluster_file.id}"
+          Rails.logger.info "Launching subsampling ingest run for #{file_identifier} after #{self.action} of #{metadata_identifier}"
+          submission = ApplicationController.papi_client.run_pipeline(study_file: cluster_file, user: self.user,
+                                                                      action: :ingest_subsample)
+          Rails.logger.info "Subsampling run initiated: #{submission.name}, queueing Ingest poller"
+          IngestJob.new(pipeline_name: submission.name, study: self.study, study_file: cluster_file,
+                        user: self.user, action: self.action).poll_for_completion
+        end
+      end
     end
   end
 
