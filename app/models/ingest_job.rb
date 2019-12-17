@@ -303,6 +303,16 @@ class IngestJob
       error_contents.each_line do |line|
         message_body += "#{line}<br />"
       end
+
+      if error_contents.size == 0
+        message_body += "<h3>Event Messages (since no errors were shown)</h3>"
+        message_body += "<ul>"
+        self.event_messages.each do |e|
+          message_body += "<li>#{ERB::Util.html_escape(e)}</li>"
+        end
+        message_body += "</ul>"
+      end
+
     end
     if warning_contents.present?
       message_body += "<h3>Warnings</h3>"
