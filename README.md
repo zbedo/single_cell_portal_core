@@ -387,7 +387,7 @@ These unit & integration tests only cover specific functionality that requires i
 and therefore cannot be run from the UI test suite.
 
 These tests are run automatically after setting up the application and seeding the test database.  This is 
-handled via a shell script `bin/run_unit_tests.sh` that will precompile any needed assets (for performance), seed the 
+handled via a shell script `bin/run_tests.sh` that will precompile any needed assets (for performance), seed the 
 test database, run the tests, and then destroy all created records to clean up after running.
 
 To run the unit & integration test suite, the `boot_docker` script can be used:

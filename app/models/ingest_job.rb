@@ -211,6 +211,7 @@ class IngestJob
       Rails.logger.error "IngestJob poller: #{self.pipeline_name} has failed."
       # log errors to application log for inspection
       self.log_error_messages
+      self.study_file.update(parse_status: 'failed')
       DeleteQueueJob.new(self.study_file).delay.perform
       Study.firecloud_client.delete_workspace_file(self.study.bucket_id, self.study_file.bucket_location)
       subject = "Error: #{self.study_file.file_type} file: '#{self.study_file.upload_file_name}' parse has failed"
@@ -340,6 +341,16 @@ class IngestJob
       error_contents.each_line do |line|
         message_body += "#{line}<br />"
       end
+
+      if error_contents.size == 0
+        message_body += "<h3>Event Messages (since no errors were shown)</h3>"
+        message_body += "<ul>"
+        self.event_messages.each do |e|
+          message_body += "<li><pre>#{ERB::Util.html_escape(e)}</pre></li>"
+        end
+        message_body += "</ul>"
+      end
+
     end
     if warning_contents.present?
       message_body += "<h3>Warnings</h3>"

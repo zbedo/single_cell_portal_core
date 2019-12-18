@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# script that is called when booting portal in test environment to run all unit tests in the correct order as some
+# script that is called when booting portal in test environment to run all unit tests and integration tests in the correct order as some
 # tests change downstream behavior after they've run
 #
 # can take the following arguments:
@@ -24,7 +24,7 @@ FAILED_COUNT=0
 
 function clean_up {
   echo "Cleaning up..."
-  bundle exec bin/rails runner -e test "Study.delete_all_and_remove_workspaces" # destroy all studies/workspaces to clean up any files
+  bundle exec bin/rails runner -e test "Study.delete_all_and_remove_workspaces" || { echo "FAILED to delete studies and workspaces" >&2; exit 1; } # destroy all studies/workspaces to clean up any files
   bundle exec rake RAILS_ENV=test db:purge
   echo "Cleanup complete!"
 }
@@ -68,6 +68,7 @@ else
                     test/integration/cache_management_test.rb
                     test/integration/tos_acceptance_test.rb
                     test/integration/study_creation_test.rb
+                    test/integration/study_validation_test.rb
                     test/integration/taxons_controller_test.rb
                     test/controllers/analysis_configurations_controller_test.rb
                     test/controllers/site_controller_test.rb
@@ -77,6 +78,7 @@ else
                     test/api/study_file_bundles_controller_test.rb
                     test/api/study_shares_controller_test.rb
                     test/api/directory_listings_controller_test.rb
+                    test/models/cluster_group_test.rb # deprecated, but needed to set up for user_annotation_test
                     test/models/user_annotation_test.rb
                     test/models/analysis_configuration_test.rb
   )
@@ -85,6 +87,7 @@ else
       code=$? # immediately capture exit code to prevent this from getting clobbered
       if [[ $code -ne 0 ]]; then
         RETURN_CODE=$code
+        first_test_to_fail=${first_test_to_fail-"$test_name"}
         ((FAILED_COUNT++))
       fi
   done
@@ -95,8 +98,10 @@ difference=$(($end - $start))
 min=$(($difference / 60))
 sec=$(($difference % 60))
 echo "Total elapsed time: $min minutes, $sec seconds"
-if [[ $RETURN_CODE -ne 0 ]]; then
-  printf "\n### There were $FAILED_COUNT errors/failed test suites in this run ###\n\n"
+if [[ $RETURN_CODE -eq 0 ]]; then
+  printf "\n### All test suites PASSED ###\n\n"
+else
+  printf "\n### There were $FAILED_COUNT errors/failed test suites in this run, starting with $first_test_to_fail ###\n\n"
 fi
 echo "Exiting with code: $RETURN_CODE"
 exit $RETURN_CODE

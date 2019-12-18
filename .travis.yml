@@ -7,7 +7,7 @@ branches:
   - master
   - development
   - ingest-pipeline-launch
-  - sl-ingest-integration-tests
+  - sl-ingest-validation-tests
 services:
 - docker
 before_install:
