@@ -1,5 +1,5 @@
 # use KDUX base Rails image, configure only project-specific items here
-FROM singlecellportal/rails-baseimage:1.0.0
+FROM singlecellportal/rails-baseimage:1.0.1
 
 # Set ruby version
 RUN bash -lc 'rvm --default use ruby-2.5.5'
