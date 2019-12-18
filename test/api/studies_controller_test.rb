@@ -6,8 +6,9 @@ class StudiesControllerTest < ActionDispatch::IntegrationTest
   include Requests::HttpHelpers
 
   setup do
+    @random_seed = File.open(Rails.root.join('.random_seed')).read.strip
     @user = User.first
-    @study = Study.find_by(name: 'API Test Study')
+    @study = Study.find_by(name: "API Test Study #{@random_seed}")
     OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new({
                                                                            :provider => 'google_oauth2',
                                                                            :uid => '123545',
@@ -30,7 +31,7 @@ class StudiesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     # check all attributes against database
     @study.attributes.each do |attribute, value|
-      if attribute =~ /_id/
+      if attribute =~ /_id/ && attribute != 'bucket_id' # make sure we're not parsing string as JSON
         assert json[attribute] == JSON.parse(value.to_json), "Attribute mismatch: #{attribute} is incorrect, expected #{JSON.parse(value.to_json)} but found #{json[attribute.to_s]}"
       elsif attribute =~ /_at/
         assert DateTime.parse(json[attribute]) == value, "Attribute mismatch: #{attribute} is incorrect, expected #{value} but found #{DateTime.parse(json[attribute])}"
@@ -64,7 +65,7 @@ class StudiesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert json['description'] == update_attributes[:study][:description], "Did not set name correctly, expected #{update_attributes[:study][:description]} but found #{json['description']}"
     # delete study, passing ?workspace=persist to skip FireCloud workspace deletion
-    execute_http_request(:delete, api_v1_study_path(id: study_id, workspace: 'persist'))
+    execute_http_request(:delete, api_v1_study_path(id: study_id))
     assert_response 204, "Did not successfully delete study, expected response of 204 but found #{@response.response_code}"
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
@@ -74,23 +75,23 @@ class StudiesControllerTest < ActionDispatch::IntegrationTest
   test 'should create and then sync study' do
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
     # create study by calling FireCloud API manually
+    study_name = "Sync Study #{SecureRandom.uuid}"
+    workspace_name = study_name.downcase.gsub(/[^a-zA-Z0-9]+/, '-').chomp('-')
     study_attributes = {
         study: {
-            name: "Sync Study #{SecureRandom.uuid}"
+            name: study_name,
+            use_existing_workspace: true,
+            firecloud_workspace: workspace_name,
+            firecloud_project: FireCloudClient::PORTAL_NAMESPACE,
+            user_id: @user.id
         }
     }
-    workspace_name = study_attributes[:study][:name].downcase.gsub(/[^a-zA-Z0-9]+/, '-').chomp('-')
     puts 'creating workspace...'
     workspace = Study.firecloud_client.create_workspace(FireCloudClient::PORTAL_NAMESPACE, workspace_name)
     assert workspace_name = workspace['name'], "Did not set workspace name correctly, expected #{workspace_name} but found #{workspace['name']}"
-    # update study_attributes
-    study_attributes[:study][:firecloud_project] = FireCloudClient::PORTAL_NAMESPACE
-    study_attributes[:study][:firecloud_workspace] = workspace_name
-    study_attributes[:study][:bucket_id] = workspace['bucketName']
-    study_attributes[:study][:user_id] = @user.id
     # create ACL
     puts 'creating ACL...'
-    user_acl = Study.firecloud_client.create_workspace_acl(@user.email, 'WRITER', true, false)
+    user_acl = Study.firecloud_client.create_workspace_acl(@user.email, 'WRITER', true, true)
     Study.firecloud_client.update_workspace_acl(FireCloudClient::PORTAL_NAMESPACE, workspace_name, user_acl)
     share_user = User.find_by(email: 'testing.user.2@gmail.com')
     share_acl = Study.firecloud_client.create_workspace_acl(share_user.email, 'READER', true, false)

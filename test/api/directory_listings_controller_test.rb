@@ -7,7 +7,8 @@ class DirectoryListingsControllerTest < ActionDispatch::IntegrationTest
 
   setup do
     @user = User.first
-    @study = Study.find_by(name: 'API Test Study')
+    @random_seed = File.open(Rails.root.join('.random_seed')).read.strip
+    @study = Study.find_by(name: "API Test Study #{@random_seed}")
     @directory_listing = @study.directory_listings.first
     OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new({
                                                                            :provider => 'google_oauth2',

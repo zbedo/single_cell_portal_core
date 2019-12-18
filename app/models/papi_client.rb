@@ -15,11 +15,14 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   # Service account JSON credentials
   SERVICE_ACCOUNT_KEY = !ENV['SERVICE_ACCOUNT_KEY'].blank? ? File.absolute_path(ENV['SERVICE_ACCOUNT_KEY']) : ''
   # Google authentication scopes necessary for running pipelines
-  GOOGLE_SCOPES = %w(https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/datastore)
+  GOOGLE_SCOPES = %w(https://www.googleapis.com/auth/cloud-platform)
   # GCP Compute project to run pipelines in
   COMPUTE_PROJECT = ENV['GOOGLE_CLOUD_PROJECT'].blank? ? '' : ENV['GOOGLE_CLOUD_PROJECT']
   # Docker image in GCP project to pull for running ingest jobs
-  INGEST_DOCKER_IMAGE = 'gcr.io/broad-singlecellportal-staging/scp-ingest-pipeline:0.6.2'
+  INGEST_DOCKER_IMAGE = 'gcr.io/broad-singlecellportal-staging/scp-ingest-pipeline:0.10.1'
+  # Network and sub-network names, if needed
+  GCP_NETWORK_NAME = ENV['GCP_NETWORK_NAME']
+  GCP_SUB_NETWORK_NAME = ENV['GCP_SUB_NETWORK_NAME']
   # List of scp-ingest-pipeline actions and their allowed file types
   FILE_TYPES_BY_ACTION = {
       ingest_expression: ['Expression Matrix', 'MM Coordinate Matrix'],
@@ -90,12 +93,14 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
         action: action,
         docker_image: INGEST_DOCKER_IMAGE
     }
-    action = self.create_actions_object(commands: command_line)
-    environment = {
-        GOOGLE_PROJECT_ID: COMPUTE_PROJECT
-    }
+    environment = self.set_environment_variables
+    action = self.create_actions_object(commands: command_line, environment: environment)
     pipeline = self.create_pipeline_object(actions: [action], environment: environment, resources: resources)
     pipeline_request = self.create_run_pipeline_request_object(pipeline: pipeline, labels: labels)
+    Rails.logger.info "Request object sent to Google Pipelines API (PAPI), excluding 'environment' parameters:"
+    sanitized_pipeline_request = pipeline_request.to_h[:pipeline].except(:environment)
+    sanitized_pipeline_request[:actions] = sanitized_pipeline_request[:actions][0].except(:environment)
+    Rails.logger.info sanitized_pipeline_request.to_yaml
     self.service.run_pipeline(pipeline_request, quota_user: user.id.to_s)
   end
 
@@ -172,6 +177,25 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
     )
   end
 
+  # Set necessary environment variables for Ingest Pipeline, including:
+  #   - +DATABASE_HOST+: IP address of MongoDB server (use MONGO_INTERNAL_IP for connecting inside GCP)
+  #   - +MONGODB_USERNAME+: MongoDB user associated with current schema (defaults to single_cell)
+  #   - +MONGODB_PASSWORD+: Password for above MongoDB user
+  #   - +DATABASE_NAME+: Name of current MongoDB schema as defined by Rails environment
+  #   - +GOOGLE_PROJECT_ID+: Name of the GCP project this pipeline is running in
+  #
+  # * *returns*
+  #   - (Hash) => Hash of required environment variables
+  def set_environment_variables
+    {
+        'DATABASE_HOST' => ENV['MONGO_INTERNAL_IP'],
+        'MONGODB_USERNAME' => 'single_cell',
+        'MONGODB_PASSWORD' => ENV['PROD_DATABASE_PASSWORD'],
+        'DATABASE_NAME' => Mongoid::Config.clients["default"]["database"],
+        'GOOGLE_PROJECT_ID' => COMPUTE_PROJECT
+    }
+  end
+
   # Instantiate a resources object to tell where to run a pipeline
   #
   # * *params*
@@ -188,7 +212,8 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   end
 
   # Instantiate a VM object to specify in resources.  Assigns the portal service account to the VM
-  # to manage permissions
+  # to manage permissions.  If GCP_NETWORK_NAME and GCP_SUBNETWORK_NAME have been set, it will also
+  # assign the VM to the corresponding project network.  Otherwise, the VM uses the default network.
   #
   # * *params*
   #   - +machine_type+ (String) => GCP VM machine type (defaults to 'n1-highmem-4': 4 CPU, 26GB RAM)
@@ -197,12 +222,18 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   # * *return*
   #   - (Google::Apis::GenomicsV2alpha1::VirtualMachine)
   def create_virtual_machine_object(machine_type: 'n1-highmem-4', boot_disk_size_gb: 100, preemptible: false)
-    Google::Apis::GenomicsV2alpha1::VirtualMachine.new(
+    virtual_machine = Google::Apis::GenomicsV2alpha1::VirtualMachine.new(
         machine_type: machine_type,
         preemptible: preemptible,
         boot_disk_size_gb: boot_disk_size_gb,
         service_account: Google::Apis::GenomicsV2alpha1::ServiceAccount.new(email: self.issuer, scopes: GOOGLE_SCOPES)
     )
+    # assign correct network/sub-network if specified
+    if GCP_NETWORK_NAME.present? && GCP_SUB_NETWORK_NAME.present?
+      virtual_machine.network = Google::Apis::GenomicsV2alpha1::Network.new(name: GCP_NETWORK_NAME,
+                                                                            subnetwork: GCP_SUB_NETWORK_NAME)
+    end
+    virtual_machine
   end
 
   # Determine command line to pass to ingest based off of file & action requested
@@ -219,7 +250,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   def get_command_line(study_file:, action:)
     validate_action_by_file(action, study_file)
     study = study_file.study
-    command_line = "python ingest_pipeline.py --study-accession #{study.accession} --file-id #{study_file.id} #{action}"
+    command_line = "python ingest_pipeline.py --study-id #{study.id} --study-file-id #{study_file.id} #{action}"
     case action.to_s
     when 'ingest_expression'
       if study_file.file_type == 'Expression Matrix'
@@ -232,9 +263,9 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
                       " --gene-file #{genes_file.gs_url} --barcode-file #{barcodes_file.gs_url}"
       end
     when 'ingest_cell_metadata'
-      command_line += " --cell-metadata-file #{study_file.gs_url} --ingest-cell-metadata"
+      command_line += " --cell-metadata-file #{study_file.gs_url} --study-accession #{study.accession} --ingest-cell-metadata"
       if study_file.use_metadata_convention
-        command_line += " --validate-convention"
+        command_line += " --validate-convention --bq-dataset cell_metadata --bq-table alexandria_convention"
       end
     when 'ingest_cluster'
       command_line += " --cluster-file #{study_file.gs_url} --ingest-cluster"
@@ -244,7 +275,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
     end
 
     # add optional command line arguments based on file type
-    optional_args = self.get_command_line_options(study_file)
+    optional_args = self.get_command_line_options(study_file, action)
     # return an array of tokens (Docker expects exec form, which runs without a shell, so cannot be a single command)
     exec_form = command_line.split + optional_args
     exec_form
@@ -254,10 +285,11 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   #
   # * *params*
   #   - +study_file+ (StudyFile) => File to be ingested
+  #   - +action+ (String/Symbol) => Action being performed on file
   #
   # * *returns*
   #   (Array) => Array representation of optional arguments (Docker exec form), based on file type
-  def get_command_line_options(study_file)
+  def get_command_line_options(study_file, action)
     opts = []
     case study_file.file_type
     when /Matrix/
@@ -276,8 +308,13 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
     when 'Cluster'
       # the name of Cluster files is the same as the name of the cluster object itself
       opts += ["--name", "#{study_file.name}"]
-      if study_file.get_cluster_domain_ranges.any?
-        opts += ["--domain-ranges", "#{sanitize_json(study_file.get_cluster_domain_ranges.to_json)}"]
+      # add domain ranges if this cluster is being ingested (not needed for subsampling)
+      if action.to_sym == :ingest_cluster
+        if study_file.get_cluster_domain_ranges.any?
+          opts += ["--domain-ranges", "#{sanitize_json(study_file.get_cluster_domain_ranges.to_json)}"]
+        else
+          opts += ["--domain-ranges", "{}"]
+        end
       end
     end
     opts

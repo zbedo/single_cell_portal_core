@@ -27,15 +27,17 @@ class DeleteQueueJob < Struct.new(:object)
           study.default_options[:annotation] = nil
           study.save
         end
-        cluster_group_id = ClusterGroup.find_by(study_file_id: object.id, study_id: study.id).id
+        cluster = ClusterGroup.find_by(study_file_id: object.id, study_id: study.id)
         delete_parsed_data(object.id, study.id, ClusterGroup)
         delete_parsed_data(object.id, study.id, DataArray)
-        user_annotations = UserAnnotation.where(study_id: study.id, cluster_group_id: cluster_group_id )
-        user_annotations.each do |annot|
-          annot.user_data_arrays.delete_all
-          annot.user_annotation_shares.delete_all
+        if cluster.present?
+          user_annotations = UserAnnotation.where(study_id: study.id, cluster_group_id: cluster.id )
+          user_annotations.each do |annot|
+            annot.user_data_arrays.delete_all
+            annot.user_annotation_shares.delete_all
+          end
+          user_annotations.delete_all
         end
-        user_annotations.delete_all
       when 'Coordinate Labels'
         delete_parsed_data(object.id, study.id, DataArray)
         remove_file_from_bundle

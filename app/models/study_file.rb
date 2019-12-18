@@ -26,7 +26,7 @@ class StudyFile
                      '10X Barcodes File', 'Gene List', 'Metadata', 'Analysis Output']
   DISALLOWED_SYNC_TYPES = ['Fastq']
   UPLOAD_STATUSES = %w(new uploading uploaded)
-  PARSE_STATUSES = %w(unparsed parsing parsed)
+  PARSE_STATUSES = %w(unparsed parsing parsed failed)
   PRIMARY_DATA_EXTENTIONS = %w(fastq fastq.zip fastq.gz fastq.tar.gz fq fq.zip fq.gz fq.tar.gz bam bam.gz bam.bai bam.gz.bai)
   PRIMARY_DATA_TYPES = ['Fastq', 'BAM', 'BAM Index']
   TAXON_REQUIRED_TYPES = ['Fastq', 'BAM', 'Expression Matrix', 'MM Coordinate Matrix', 'Ideogram Annotations']
@@ -929,6 +929,11 @@ class StudyFile
   # DOM ID of the parent div holding the form for this file, used in upload wizard and sync page
   def form_container_id
     "container-#{self.id}"
+  end
+
+  # DOM ID for use in Selenium for accessing difference elements
+  def name_as_id
+    self.upload_file_name.gsub(/\./, '_')
   end
 
   def generate_expression_matrix_cells

@@ -1,5 +1,8 @@
 require "test_helper"
 
+# DEPRECATED
+# This test case is deprecated in favor of subsampling in scp-ingest-pipeline
+
 class ClusterGroupTest < ActiveSupport::TestCase
   def setup
     @cluster_group = ClusterGroup.first

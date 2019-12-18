@@ -58,13 +58,13 @@ echo "*** COMPLETED ***"
 
 if [[ ! -d /home/app/webapp/tmp/pids ]]
 then
-	echo "*** MAKING TMP DIR ***"
-	sudo -E -u app -H mkdir -p /home/app/webapp/tmp/pids
-	echo "*** COMPLETED ***"
+    echo "*** MAKING tmp/pids DIR ***"
+    sudo -E -u app -H mkdir -p /home/app/webapp/tmp/pids || { echo "FAILED to create ./tmp/pids/" >&2; exit 1; }
+    echo "*** COMPLETED ***"
 fi
-echo "*** STARTING DELAYED_JOB ***"
+echo "*** STARTING DELAYED_JOB for $PASSENGER_APP_ENV env ***"
 rm tmp/pids/delayed_job.*.pid
-sudo -E -u app -H bin/delayed_job start $PASSENGER_APP_ENV -n 6
+sudo -E -u app -H bin/delayed_job start $PASSENGER_APP_ENV -n 6 || { echo "FAILED to start DELAYED_JOB" >&2; exit 1; }
 echo "*** ADDING CRONTAB TO CHECK DELAYED_JOB ***"
 echo "*/15 * * * * . /home/app/.cron_env ; /home/app/webapp/bin/job_monitor.rb -e=$PASSENGER_APP_ENV >> /home/app/webapp/log/cron_out.log 2>&1" | crontab -u app -
 echo "*** COMPLETED ***"

@@ -13,6 +13,7 @@ class SiteControllerTest < ActionDispatch::IntegrationTest
                                                                            :email => 'testing.user@gmail.com'
                                                                        })
     sign_in @user
+    @random_seed = File.open(Rails.root.join('.random_seed')).read.strip
   end
 
   test 'should get all studies' do
@@ -28,7 +29,7 @@ class SiteControllerTest < ActionDispatch::IntegrationTest
   test 'should get one study' do
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
-    @study = Study.find_by(name: 'API Test Study')
+    @study = Study.find_by(name: "API Test Study #{@random_seed}")
     execute_http_request(:get, api_v1_site_study_view_path(accession: @study.accession))
     assert_response :success
     assert json['study_files'].size == 3, "Did not find correct number of files, expected 3 but found #{json['study_files'].size}"
@@ -64,7 +65,7 @@ class SiteControllerTest < ActionDispatch::IntegrationTest
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
     # manually set detached to validate 410 status
-    @study = Study.find_by(name: 'API Test Study')
+    @study = Study.find_by(name: "API Test Study #{@random_seed}")
     @study.update(detached: true)
     file = @study.study_files.first
 

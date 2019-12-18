@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# script that is called when booting portal in test environment to run all unit tests in the correct order as some
+# script that is called when booting portal in test environment to run all unit tests and integration tests in the correct order as some
 # tests change downstream behavior after they've run
 #
 # can take the following arguments:
@@ -21,14 +21,33 @@ done
 start=$(date +%s)
 RETURN_CODE=0
 FAILED_COUNT=0
+
+function clean_up {
+  echo "Cleaning up..."
+  bundle exec bin/rails runner -e test "Study.delete_all_and_remove_workspaces" || { echo "FAILED to delete studies and workspaces" >&2; exit 1; } # destroy all studies/workspaces to clean up any files
+  bundle exec rake RAILS_ENV=test db:purge
+  echo "Cleanup complete!"
+}
+clean_up
+if [[ ! -d /home/app/webapp/tmp/pids ]]
+then
+    echo "*** MAKING tmp/pids DIR ***"
+    mkdir -p /home/app/webapp/tmp/pids || { echo "FAILED to create ./tmp/pids/" >&2; exit 1; }
+    echo "*** COMPLETED ***"
+fi
+export PASSENGER_APP_ENV=test
+echo "*** STARTING DELAYED_JOB for $PASSENGER_APP_ENV env ***"
+rm -f tmp/pids/delayed_job.*.pid
+bin/delayed_job restart $PASSENGER_APP_ENV -n 6 || { echo "FAILED to start DELAYED_JOB" >&2; exit 1; } # WARNING: using "restart" with environment of test is a HACK that will prevent delayed_job from running in development mode, for example
+
 echo "Precompiling assets, yarn and webpacker..."
 RAILS_ENV=test NODE_ENV=test bin/bundle exec rake assets:clean
 RAILS_ENV=test NODE_ENV=test bin/bundle exec rake assets:precompile
-echo "Seeding test database..."
-bundle exec rake RAILS_ENV=test db:seed
-echo "Database initialized, generating random test seed..."
+echo "Generating random seed, seeding test database..."
 RANDOM_SEED=$(openssl rand -hex 16)
 echo $RANDOM_SEED > /home/app/webapp/.random_seed
+bundle exec rake RAILS_ENV=test db:seed || { echo "FAILED to seed test database!" >&2; exit 1; }
+echo "Database initialized"
 echo "Launching tests using seed: $RANDOM_SEED"
 if [ "$TEST_FILEPATH" != "" ]
 then
@@ -59,9 +78,8 @@ else
                     test/api/study_file_bundles_controller_test.rb
                     test/api/study_shares_controller_test.rb
                     test/api/directory_listings_controller_test.rb
-                    test/models/cluster_group_test.rb
+                    test/models/cluster_group_test.rb # deprecated, but needed to set up for user_annotation_test
                     test/models/user_annotation_test.rb
-                    test/models/parse_utils_test.rb
                     test/models/analysis_configuration_test.rb
   )
   for test_name in ${tests[*]}; do
@@ -69,21 +87,21 @@ else
       code=$? # immediately capture exit code to prevent this from getting clobbered
       if [[ $code -ne 0 ]]; then
         RETURN_CODE=$code
+        first_test_to_fail=${first_test_to_fail-"$test_name"}
         ((FAILED_COUNT++))
       fi
   done
 fi
-echo "Cleaning up..."
-bundle exec bin/rails runner -e test "Study.destroy_all" # destroy all studies to clean up any files
-bundle exec rake RAILS_ENV=test db:purge
-echo "Cleanup complete!"
+clean_up
 end=$(date +%s)
 difference=$(($end - $start))
 min=$(($difference / 60))
 sec=$(($difference % 60))
 echo "Total elapsed time: $min minutes, $sec seconds"
-if [[ $RETURN_CODE -ne 0 ]]; then
-	printf "\n### There were $FAILED_COUNT errors/failed test suites in this run ###\n\n"
+if [[ $RETURN_CODE -eq 0 ]]; then
+  printf "\n### All test suites PASSED ###\n\n"
+else
+  printf "\n### There were $FAILED_COUNT errors/failed test suites in this run, starting with $first_test_to_fail ###\n\n"
 fi
 echo "Exiting with code: $RETURN_CODE"
 exit $RETURN_CODE

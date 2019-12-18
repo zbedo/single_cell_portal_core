@@ -6,12 +6,14 @@
 #   cities = City.create([{ name: 'Chicago' }, { name: 'Copenhagen' }])
 #   Mayor.create(name: 'Emanuel', city: cities.first)
 #
+@random_seed = File.open(Rails.root.join('.random_seed')).read.strip 
 user = User.create!(email:'testing.user@gmail.com', password:'password', admin: true, uid: '12345',
                     api_access_token: {access_token: 'test-api-token', expires_in: 3600, expires_at: Time.zone.now + 1.hour})
 user_2 = User.create!(email: 'sharing.user@gmail.com', password: 'password', uid: '67890')
 # manually accept Terms of Service for sharing user to avoid breaking tests
 TosAcceptance.create(email: user_2.email)
-study = Study.create!(name: 'Testing Study', description: '<p>This is the test study.</p>', data_dir: 'test', user_id: user.id)
+study = Study.create!(name: "Testing Study #{@random_seed}", description: '<p>This is the test study.</p>',
+                      firecloud_project: ENV['PORTAL_NAMESPACE'], data_dir: 'test', user_id: user.id)
 expression_file = StudyFile.create!(name: 'expression_matrix.txt', upload_file_name: 'expression_matrix.txt', study_id: study.id,
                                     file_type: 'Expression Matrix', y_axis_label: 'Expression Scores')
 cluster_file = StudyFile.create!(name: 'Test Cluster', upload_file_name: 'coordinates.txt', study_id: study.id,
@@ -90,20 +92,9 @@ gene2_cells = gene_2.data_arrays.build(name: gene_2.cell_key, array_type: 'cells
                                        array_index: 1, study_id: study.id, study_file_id: expression_file.id, values: all_cell_array)
 gene2_cells.save!
 
-# Negative tests study
-negative_test_study = Study.create!(name: 'Negative Testing Study', description: '<p>This is the negative test study.</p>', data_dir: 'negative-test', user_id: user.id)
-bad_matrix = StudyFile.create!(name: 'GRCh38/test_bad_matrix.mtx', upload: File.open(Rails.root.join('test', 'test_data', 'GRCh38', 'test_bad_matrix.mtx')),
-                               file_type: 'MM Coordinate Matrix', study_id: negative_test_study.id)
-genes = StudyFile.create!(name: 'GRCh38/test_genes.tsv', upload: File.open(Rails.root.join('test', 'test_data', 'GRCh38', 'test_genes.tsv')),
-                               file_type: '10X Genes File', study_id: negative_test_study.id)
-barcodes_file = StudyFile.create!(name: 'GRCh38/barcodes.tsv', upload: File.open(Rails.root.join('test', 'test_data', 'GRCh38', 'barcodes.tsv')),
-                             file_type: '10X Barcodes File', study_id: negative_test_study.id)
-study_file_bundle = negative_test_study.study_file_bundles.build(bundle_type: bad_matrix.file_type)
-study_file_bundle.add_files(bad_matrix, genes, barcodes_file)
-
 # API TEST SEEDS
-api_study = Study.create!(name: 'API Test Study', data_dir: 'api_test_study', user_id: user.id, firecloud_project: 'scp',
-                          firecloud_workspace: 'test-api-test-study')
+api_study = Study.create!(name: "API Test Study #{@random_seed}", data_dir: 'api_test_study', user_id: user.id,
+                          firecloud_project: ENV['PORTAL_NAMESPACE'])
 StudyShare.create!(email: 'fake.email@gmail.com', permission: 'Reviewer', study_id: api_study.id)
 StudyFile.create!(name: 'cluster_example.txt', upload: File.open(Rails.root.join('test', 'test_data', 'cluster_example.txt')),
                   study_id: api_study.id, file_type: 'Cluster')
