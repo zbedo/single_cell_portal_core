@@ -256,7 +256,7 @@ class IngestJob
       if self.study.default_options[:cluster].nil?
         cluster = study.cluster_groups.by_name(self.study_file.name)
         self.study.default_options[:cluster] = cluster.name
-        if self.study.default_annotation.blank? && cluster.cell_annotations.any?
+        if self.study.default_options[:annotation].blank? && cluster.cell_annotations.any?
           annotation = cluster.cell_annotations.first
           self.study.default_options[:annotation] = cluster.annotation_select_value(annotation)
           if annotation[:type] == 'numeric'
@@ -291,7 +291,7 @@ class IngestJob
                                                                     action: :ingest_subsample)
         Rails.logger.info "Subsampling run initiated: #{submission.name}, queueing Ingest poller"
         IngestJob.new(pipeline_name: submission.name, study: self.study, study_file: self.study_file,
-                      user: self.user, action: self.action).poll_for_completion
+                      user: self.user, action: :ingest_subsample).poll_for_completion
       end
     when 'Metadata'
       # subsample all cluster files that have already finished parsing.  any in-process cluster parses, or new submissions
@@ -305,7 +305,7 @@ class IngestJob
                                                                       action: :ingest_subsample)
           Rails.logger.info "Subsampling run initiated: #{submission.name}, queueing Ingest poller"
           IngestJob.new(pipeline_name: submission.name, study: self.study, study_file: cluster_file,
-                        user: self.user, action: self.action).poll_for_completion
+                        user: self.user, action: :ingest_subsample).poll_for_completion
         end
       end
     end
