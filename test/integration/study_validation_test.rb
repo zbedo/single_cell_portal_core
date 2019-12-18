@@ -40,7 +40,7 @@ class StudyValidationTest < ActionDispatch::IntegrationTest
 
     ## upload files
 
-    # bad expression matrix
+    # bad expression matrix, bad first header column, duplicate row
     file_params = {study_file: {file_type: 'Expression Matrix', study_id: study.id.to_s}}
     perform_study_file_upload('expression_matrix_example_bad.txt', file_params, study.id)
     assert_response 200, "Expression matrix upload failed: #{@response.code}"
