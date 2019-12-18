@@ -98,7 +98,9 @@ difference=$(($end - $start))
 min=$(($difference / 60))
 sec=$(($difference % 60))
 echo "Total elapsed time: $min minutes, $sec seconds"
-if [[ $RETURN_CODE -ne 0 ]]; then
+if [[ $RETURN_CODE -eq 0 ]]; then
+  printf "\n### All test suites PASSED ###\n\n"
+else
   printf "\n### There were $FAILED_COUNT errors/failed test suites in this run, starting with $first_test_to_fail ###\n\n"
 fi
 echo "Exiting with code: $RETURN_CODE"
