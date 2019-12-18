@@ -346,7 +346,7 @@ class IngestJob
         message_body += "<h3>Event Messages (since no errors were shown)</h3>"
         message_body += "<ul>"
         self.event_messages.each do |e|
-          message_body += "<li>#{ERB::Util.html_escape(e)}</li>"
+          message_body += "<li><pre>#{ERB::Util.html_escape(e)}</pre></li>"
         end
         message_body += "</ul>"
       end
