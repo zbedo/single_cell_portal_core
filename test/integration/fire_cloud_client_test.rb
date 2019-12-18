@@ -573,14 +573,14 @@ class FireCloudClientTest < ActiveSupport::TestCase
 
     # generate a signed URL for a file
     puts 'getting signed URL for file...'
-    signed_url = @fire_cloud_client.execute_gcloud_method(:generate_signed_url, 0, workspace['bucketName'], participant_filename, expires: 10)
+    signed_url = @fire_cloud_client.execute_gcloud_method(:generate_signed_url, 0, workspace['bucketName'], participant_filename, expires: 12)
     signed_url_response = RestClient.get signed_url
     assert signed_url_response.code == 200, "Did not receive correct response code on signed_url, expected 200 but found #{signed_url_response.code}"
     participant_contents = participant_upload.read
     assert participant_contents == signed_url_response.body, "Response body contents are incorrect, expected '#{participant_contents}' but found '#{signed_url_response.body}'"
 
     # check timeout
-    sleep(10)
+    sleep(12)
     begin
       RestClient.get signed_url
     rescue RestClient::BadRequest => timeout
