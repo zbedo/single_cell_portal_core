@@ -1,3 +1,5 @@
 Your Single Cell Portal parse job has completed with the following results:
 
 <%= @message.join("\n") %>
+
+Study URL: <%= legacy_study_url(identifier: @study.accession) %>

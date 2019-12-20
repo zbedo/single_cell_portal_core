@@ -207,7 +207,7 @@ class IngestJob
       self.study_file.reload # refresh cached instance of study_file
       subject = "#{self.study_file.file_type} file: '#{self.study_file.upload_file_name}' has completed parsing"
       message = self.generate_success_email_array
-      SingleCellMailer.notify_user_parse_complete(self.user.email, subject, message).deliver_now
+      SingleCellMailer.notify_user_parse_complete(self.user.email, subject, message, self.study).deliver_now
       self.set_study_state_after_ingest
       self.study_file.invalidate_cache_by_file_type # clear visualization caches for file
     elsif self.done? && self.failed?
@@ -219,7 +219,7 @@ class IngestJob
       Study.firecloud_client.delete_workspace_file(self.study.bucket_id, self.study_file.bucket_location)
       subject = "Error: #{self.study_file.file_type} file: '#{self.study_file.upload_file_name}' parse has failed"
       email_content = self.generate_error_email_body
-      SingleCellMailer.notify_user_parse_fail(self.user.email, subject, email_content).deliver_now
+      SingleCellMailer.notify_user_parse_fail(self.user.email, subject, email_content, self.study).deliver_now
     else
       Rails.logger.info "IngestJob poller: #{self.pipeline_name} is not done; queuing check for #{run_at}"
       self.delay(run_at: run_at).poll_for_completion
