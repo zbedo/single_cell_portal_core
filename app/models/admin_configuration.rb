@@ -19,7 +19,8 @@ class AdminConfiguration
   FIRECLOUD_ACCESS_NAME = 'FireCloud Access'
   API_NOTIFIER_NAME = 'API Health Check Notifier'
   NUMERIC_VALS = %w(byte kilobyte megabyte terabyte petabyte exabyte)
-  CONFIG_TYPES = ['Daily User Download Quota', 'Workflow Name', 'Portal FireCloud User Group', 'Reference Data Workspace', 'Read-Only Access Control', API_NOTIFIER_NAME]
+  CONFIG_TYPES = ['Daily User Download Quota', 'Workflow Name', 'Portal FireCloud User Group',
+                  'Reference Data Workspace', 'Read-Only Access Control', 'QA Dev Email', API_NOTIFIER_NAME]
   ALL_CONFIG_TYPES = CONFIG_TYPES.dup << FIRECLOUD_ACCESS_NAME
   VALUE_TYPES = %w(Numeric Boolean String)
 
@@ -32,7 +33,8 @@ class AdminConfiguration
   validates_inclusion_of :value_type, in: VALUE_TYPES
   validates_inclusion_of :multiplier, in: NUMERIC_VALS, allow_blank: true
   validates_format_of :value, with: ValidationTools::OBJECT_LABELS,
-                      message: ValidationTools::OBJECT_LABELS_ERROR
+                      message: ValidationTools::OBJECT_LABELS_ERROR,
+                      unless: proc {|attributes| attributes.config_type == 'QA Dev Email'} # allow '@' for this config
 
   validate :manage_readonly_access
 

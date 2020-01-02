@@ -34,7 +34,7 @@ class IngestJob
   # Can also clear out existing data if necessary (in case of a re-parse)
   #
   # * *params*
-  #   - +reparse+ [Boolean] => Indication of whether or not a file is being re-ingested, will delete existing documents
+  #   - +reparse+ (Boolean) => Indication of whether or not a file is being re-ingested, will delete existing documents
   #
   # * *yields*
   #   - (Google::Apis::GenomicsV2alpha1::Operation) => Will submit an ingest job in PAPI
@@ -203,10 +203,13 @@ class IngestJob
       Rails.logger.info "IngestJob poller: #{self.pipeline_name} is done!"
       Rails.logger.info "IngestJob poller: #{self.pipeline_name} status: #{self.current_status}"
       self.study_file.update(parse_status: 'parsed')
+      self.study.reload # refresh cached instance of study
+      self.study_file.reload # refresh cached instance of study_file
       subject = "#{self.study_file.file_type} file: '#{self.study_file.upload_file_name}' has completed parsing"
-      message = ["Total parse time: #{self.get_total_runtime}"]
-      SingleCellMailer.notify_user_parse_complete(self.user.email, subject, message).deliver_now
+      message = self.generate_success_email_array
+      SingleCellMailer.notify_user_parse_complete(self.user.email, subject, message, self.study).deliver_now
       self.set_study_state_after_ingest
+      self.study_file.invalidate_cache_by_file_type # clear visualization caches for file
     elsif self.done? && self.failed?
       Rails.logger.error "IngestJob poller: #{self.pipeline_name} has failed."
       # log errors to application log for inspection
@@ -216,7 +219,7 @@ class IngestJob
       Study.firecloud_client.delete_workspace_file(self.study.bucket_id, self.study_file.bucket_location)
       subject = "Error: #{self.study_file.file_type} file: '#{self.study_file.upload_file_name}' parse has failed"
       email_content = self.generate_error_email_body
-      SingleCellMailer.notify_user_parse_fail(self.user.email, subject, email_content).deliver_now
+      SingleCellMailer.notify_user_parse_fail(self.user.email, subject, email_content, self.study).deliver_now
     else
       Rails.logger.info "IngestJob poller: #{self.pipeline_name} is not done; queuing check for #{run_at}"
       self.delay(run_at: run_at).poll_for_completion
@@ -224,15 +227,18 @@ class IngestJob
   end
 
   # Set study state depending on what kind of file was just ingested
+  # Does not return anything, but will set state and launch other jobs as needed
+  #
+  # * *yields
+  # *
+  #   - Study#set_cell_count, :set_study_default_options, Study#set_gene_count, and :set_study_initialized
   def set_study_state_after_ingest
     case self.study_file.file_type
     when 'Metadata'
       self.study.set_cell_count
       self.set_study_default_options
       self.launch_subsample_jobs
-    when 'Expression Matrix'
-      self.study.set_gene_count
-    when 'MM Coordinate Matrix'
+    when /Matrix/
       self.study.set_gene_count
     when 'Cluster'
       self.set_study_default_options
@@ -242,6 +248,9 @@ class IngestJob
   end
 
   # Set the default options for a study after ingesting Clusters/Cell Metadata
+  #
+  # * *yields*
+  #   - Sets study default options for clusters/annotations
   def set_study_default_options
     case self.study_file.file_type
     when 'Metadata'
@@ -270,6 +279,9 @@ class IngestJob
   end
 
   # Set the study "initialized" attribute if all main models are populated
+  #
+  # * *yields*
+  #   - Sets study initialized to True if needed
   def set_study_initialized
     if self.study.cluster_groups.any? && self.study.genes.any? && self.study.cell_metadata.any? && !self.study.initialized?
       self.study.update(initialized: true)
@@ -277,6 +289,9 @@ class IngestJob
   end
 
   # determine if subsampling needs to be run based on file ingested and current study state
+  #
+  # * *yields*
+  #   - (IngestJob) => new ingest job for subsampling
   def launch_subsample_jobs
     case self.study_file.file_type
     when 'Cluster'
@@ -312,17 +327,29 @@ class IngestJob
   end
 
   # path to potential error file in study bucket
+  #
+  # * *returns*
+  #   - (String) => String representation of path to parse error file
   def error_filepath
     "parse_logs/#{self.study_file.id}/errors.txt"
   end
 
   # path to potential warnings file in study bucket
+  #
+  # * *returns*
+  #   - (String) => String representation of path to parse warnings file
   def warning_filepath
     "parse_logs/#{self.study_file.id}/warnings.txt"
   end
 
   # in case of an error, retrieve the contents of the warning or error file to email to the user
   # deletes the file immediately after being read
+  #
+  # * *params*
+  #   - +filepath+ (String) => relative path of file to read in bucket
+  #
+  # * *returns*
+  #   - (String) => Contents of file
   def read_parse_logfile(filepath)
     if Study.firecloud_client.workspace_file_exists?(self.study.bucket_id, filepath)
       file_contents = Study.firecloud_client.execute_gcloud_method(:read_workspace_file, 0, self.study.bucket_id, filepath)
@@ -331,7 +358,47 @@ class IngestJob
     end
   end
 
+  # generates parse completion email body
+  #
+  # * *returns*
+  #   - (Array) => List of message strings to print in a completion email
+  def generate_success_email_array
+    message = ["Total parse time: #{self.get_total_runtime}"]
+    case self.study_file.file_type
+    when /Matrix/
+      genes = Gene.where(study_id: self.study.id, study_file_id: self.study_file.id).count
+      message << "Gene-level entries created: #{genes}"
+    when 'Metadata'
+      cell_metadata = CellMetadatum.where(study_id: self.study.id, study_file_id: self.study_file.id)
+      message << "Entries created:"
+      cell_metadata.each do |metadata|
+        unless metadata.nil?
+          message << "#{metadata.name}: #{metadata.annotation_type}#{metadata.values.any? ? ' (' + metadata.values.join(', ') + ')' : nil}"
+        end
+      end
+    when 'Cluster'
+      cluster = ClusterGroup.find_by(study_id: self.study.id, study_file_id: self.study_file.id)
+      if self.action == :ingest_cluster
+        message << "Cluster created: #{cluster.name}, type: #{cluster.cluster_type}"
+        if cluster.cell_annotations.any?
+          message << "Annotations:"
+          cluster.cell_annotations.each do |annot|
+            message << "#{annot['name']}: #{annot['type']}#{annot['type'] == 'group' ? ' (' + annot['values'].join(',') + ')' : nil}"
+          end
+        end
+        message << "Total points in cluster: #{cluster.points}"
+      else
+        message << "Subsampling has completed for #{cluster.name}"
+        message << "Subsamples generated: #{cluster.subsample_thresholds_required.join(', ')}"
+      end
+    end
+    message
+  end
+
   # format an error email message body
+  #
+  # * *returns*
+  #  - (String) => Contents of error messages for parse failure email
   def generate_error_email_body
     error_contents = self.read_parse_logfile(self.error_filepath)
     warning_contents = self.read_parse_logfile(self.warning_filepath)
@@ -341,17 +408,15 @@ class IngestJob
       error_contents.each_line do |line|
         message_body += "#{line}<br />"
       end
-
-      if error_contents.size == 0
-        message_body += "<h3>Event Messages (since no errors were shown)</h3>"
-        message_body += "<ul>"
-        self.event_messages.each do |e|
-          message_body += "<li><pre>#{ERB::Util.html_escape(e)}</pre></li>"
-        end
-        message_body += "</ul>"
+    else
+      message_body += "<h3>Event Messages (since no errors were shown)</h3>"
+      message_body += "<ul>"
+      self.event_messages.each do |e|
+        message_body += "<li><pre>#{ERB::Util.html_escape(e)}</pre></li>"
       end
-
+      message_body += "</ul>"
     end
+
     if warning_contents.present?
       message_body += "<h3>Warnings</h3>"
       warning_contents.each_line do |line|
@@ -367,6 +432,9 @@ class IngestJob
   end
 
   # log all event messages to the log for eventual searching
+  #
+  # * *yields*
+  #   - Error log messages in event of parse failure
   def log_error_messages
     self.event_messages.each do |message|
       Rails.logger.error "#{self.pipeline_name} log: #{message}"
