@@ -37,7 +37,7 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
         name: 'expression_matrix_example.txt'
       },
       metadata: {
-        name: 'metadata_example2.txt'
+        name: 'metadata_example_using_convention.txt'
       },
       cluster: {
         name: 'cluster_example_2.txt'
@@ -54,7 +54,7 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     example_files[:expression][:object] = study.expression_matrix_files.first
 
     # metadata file
-    file_params = {study_file: {file_type: 'Metadata', study_id: study.id.to_s}}
+    file_params = {study_file: {file_type: 'Metadata', study_id: study.id.to_s, use_metadata_convention: true}}
     perform_study_file_upload(example_files[:metadata][:name], file_params, study.id)
     assert_response 200, "Metadata upload failed: #{@response.code}"
     example_files[:metadata][:object] = study.metadata_file
@@ -69,7 +69,7 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
                            study_file_x_axis_label: 'X Axis', study_file_y_axis_label: 'Y Axis', study_file_z_axis_label: 'Z Axis'
                        }
     }
-    perform_study_file_upload('cluster_example_2.txt', file_params, study.id)
+    perform_study_file_upload(example_files[:cluster][:name], file_params, study.id)
     assert_response 200, "Cluster 1 upload failed: #{@response.code}"
     assert_equal 1, study.cluster_ordinations_files.size, "Cluster 1 failed to associate, found #{study.cluster_ordinations_files.size} files"
     example_files[:cluster][:object] = study.cluster_ordinations_files.first
@@ -82,7 +82,7 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
       assert_response 200, "#{file_type} parse job failed to start: #{@response.code}"
     end
 
-    seconds_slept = 120
+    seconds_slept = 60
     sleep seconds_slept
     sleep_increment = 10
     max_seconds_to_sleep = 300
@@ -118,7 +118,7 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
 
     assert_equal 19, gene_count, "did not find correct number of genes"
     assert_equal 1, cluster_count, "did not find correct number of clusters"
-    assert_equal 3, metadata_count, "did not find correct number of metadata objects"
+    assert_equal 22, metadata_count, "did not find correct number of metadata objects"
     assert_equal 2, cluster_annot_count, "did not find correct number of cluster annotations"
     assert_equal 3, study_file_count, "did not find correct number of study files"
     assert_equal 1, share_count, "did not find correct number of study shares"

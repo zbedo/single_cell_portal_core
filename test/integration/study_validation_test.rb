@@ -33,6 +33,9 @@ class StudyValidationTest < ActionDispatch::IntegrationTest
       metadata: {
         name: 'metadata_bad.txt'
       },
+      metadata_breaking_convention: {
+        name: 'metadata_example2.txt'
+      },
       cluster: {
         name: 'cluster_bad.txt'
       }
@@ -54,6 +57,13 @@ class StudyValidationTest < ActionDispatch::IntegrationTest
     example_files[:metadata][:object] = study.metadata_file
     assert example_files[:metadata][:object].present?, "Metadata failed to associate, found no file: #{example_files[:metadata][:object].present?}"
 
+    # good metadata file, but falsely claiming to use the metadata_convention
+    file_params = {study_file: {file_type: 'Metadata', study_id: study.id.to_s, use_metadata_convention: true}}
+    perform_study_file_upload('metadata_example2.txt', file_params, study.id)
+    assert_response 200, "Metadata upload failed: #{@response.code}"
+    example_files[:metadata_breaking_convention][:object] = study.metadata_file
+    assert example_files[:metadata_breaking_convention][:object].present?, "Metadata failed to associate, found no file: #{example_files[:metadata_breaking_convention][:object].present?}"
+
     # bad cluster
     file_params = {study_file: {name: 'Bad Test Cluster 1', file_type: 'Cluster', study_id: study.id.to_s}}
     perform_study_file_upload('cluster_bad.txt', file_params, study.id)
@@ -69,7 +79,7 @@ class StudyValidationTest < ActionDispatch::IntegrationTest
       assert_response 200, "#{file_type} parse job failed to start: #{@response.code}"
     end
 
-    seconds_slept = 120
+    seconds_slept = 60
     sleep seconds_slept
     sleep_increment = 10
     max_seconds_to_sleep = 180
