@@ -7,3 +7,5 @@
   <%= mail_to 'scp-support@broadinstitute.zendesk.com', 'scp-support@broadinstitute.zendesk.com', subject: "File Ingest Error" %>.
   Please copy and paste the "Details" section into the body of the email to help us diagnose your issue.
 </p>
+
+<p>Study URL: <%= legacy_study_url(identifier: @study.accession) %></p>

@@ -310,6 +310,11 @@ class ClusterGroup
     true
   end
 
+  # determine which subsampling levels are required for this cluster
+  def subsample_thresholds_required
+    ClusterGroup::SUBSAMPLE_THRESHOLDS.select {|sample| sample < self.points}
+  end
+
   ##
   #
   # CLASS INSTANCE METHODS

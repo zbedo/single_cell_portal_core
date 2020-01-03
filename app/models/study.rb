@@ -2085,7 +2085,7 @@ class Study
       filename = coordinate_file.upload_file_name
       coordinate_file.remove_local_copy
       coordinate_file.destroy
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Coordinate Labels file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Coordinate Labels file: '#{filename}' parse has failed", error_message, self).deliver_now
       raise StandardError, error_message
     end
 
@@ -2102,7 +2102,7 @@ class Study
         end
       end
       coordinate_file.destroy
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Coordinate Labels file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Coordinate Labels file: '#{filename}' parse has failed", error_message, self).deliver_now
       raise StandardError, error_message
     end
 
@@ -2211,7 +2211,7 @@ class Study
       cluster_study_file.invalidate_cache_by_file_type
 
       begin
-        SingleCellMailer.notify_user_parse_complete(user.email, "Coordinate Label file: '#{coordinate_file.upload_file_name}' has completed parsing", @message).deliver_now
+        SingleCellMailer.notify_user_parse_complete(user.email, "Coordinate Label file: '#{coordinate_file.upload_file_name}' has completed parsing", @message, self).deliver_now
       rescue => e
         ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "#{Time.zone.now}: Unable to deliver email: #{e.message}"
@@ -2259,7 +2259,7 @@ class Study
       coordinate_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.zone.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Coordinate Labels file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Coordinate Labels file: '#{filename}' parse has failed", error_message, self).deliver_now
 
     end
   end
@@ -2605,7 +2605,7 @@ class Study
       marker_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.zone.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Gene List file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Gene List file: '#{filename}' parse has failed", error_message, self).deliver_now
       # raise standard error to halt execution
       raise StandardError, error_message
     end
@@ -2616,7 +2616,7 @@ class Study
       filename = marker_file.upload_file_name
       marker_file.destroy
       Rails.logger.info Time.zone.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Gene List file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Gene List file: '#{filename}' parse has failed", error_message, self).deliver_now
       raise StandardError, error_message
     end
 
@@ -2683,7 +2683,7 @@ class Study
 
       # send email
       begin
-        SingleCellMailer.notify_user_parse_complete(user.email, "Gene list file: '#{marker_file.name}' has completed parsing", @message).deliver_now
+        SingleCellMailer.notify_user_parse_complete(user.email, "Gene list file: '#{marker_file.name}' has completed parsing", @message, self).deliver_now
       rescue => e
         ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "#{Time.zone.now}: Unable to deliver email: #{e.message}"
@@ -2731,7 +2731,7 @@ class Study
       marker_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.zone.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Gene List file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Gene List file: '#{filename}' parse has failed", error_message, self).deliver_now
     end
     true
   end

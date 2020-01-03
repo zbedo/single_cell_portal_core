@@ -29,14 +29,22 @@ class SingleCellMailer < ApplicationMailer
     end
   end
 
-  def notify_user_parse_complete(email, title, message)
+  def notify_user_parse_complete(email, title, message, study)
     @message = message
+    @study = study
     mail(to: email, subject: '[Single Cell Portal Notifier] ' + title)
   end
 
-  def notify_user_parse_fail(email, title, error)
+  def notify_user_parse_fail(email, title, error, study)
     @error = error
-    mail(to: email, subject: '[Single Cell Portal Notifier] ' + title)
+    @study = study
+    dev_email_config = AdminConfiguration.find_by(config_type: 'QA Dev Email')
+    if dev_email_config.present?
+      dev_email = dev_email_config.value
+      mail(to: email, bcc: dev_email, subject: '[Single Cell Portal Notifier] ' + title)
+    else
+      mail(to: email, subject: '[Single Cell Portal Notifier] ' + title)
+    end
   end
 
   def daily_disk_status
