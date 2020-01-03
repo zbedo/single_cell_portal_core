@@ -297,9 +297,11 @@ class IngestJob
     when 'Cluster'
       # only subsample if ingest_cluster was just run, new cluster is > 1K points, and a metadata file is parsed
       cluster_ingested = self.action.to_sym == :ingest_cluster
-      cluster_needs_subsampling = ClusterGroup.find_by(study_id: self.study.id, study_file_id: self.study_file.id).points > 1000
+      cluster = ClusterGroup.find_by(study_id: self.study.id, study_file_id: self.study_file.id)
       metadata_parsed = self.study.metadata_file.present? && self.study.metadata_file.parsed?
-      if cluster_ingested && cluster_needs_subsampling && metadata_parsed
+      if cluster_ingested && cluster.can_subsample? && metadata_parsed
+        # immediately set cluster.subsampled = true to gate race condition if metadata file just finished parsing
+        cluster.update(subsampled: true)
         file_identifier = "#{self.study_file.bucket_location}:#{self.study_file.id}"
         Rails.logger.info "Launching subsampling ingest run for #{file_identifier} after #{self.action}"
         submission = ApplicationController.papi_client.run_pipeline(study_file: self.study_file, user: self.user,
@@ -313,7 +315,10 @@ class IngestJob
       # will be handled by the above case.  Again, only subsample for completed clusters > 1K points
       metadata_identifier = "#{self.study_file.bucket_location}:#{self.study_file.id}"
       self.study.study_files.where(file_type: 'Cluster', parse_status: 'parsed').each do |cluster_file|
-        if ClusterGroup.find_by(study_id: self.study.id, study_file_id: cluster_file.id).points > 1000
+        cluster = ClusterGroup.find_by(study_id: self.study.id, study_file_id: cluster_file.id)
+        if cluster.can_subsample?
+          # set cluster.subsampled = true to avoid future race conditions
+          cluster.update(subsampled: true)
           file_identifier = "#{cluster_file.bucket_location}:#{cluster_file.id}"
           Rails.logger.info "Launching subsampling ingest run for #{file_identifier} after #{self.action} of #{metadata_identifier}"
           submission = ApplicationController.papi_client.run_pipeline(study_file: cluster_file, user: self.user,
