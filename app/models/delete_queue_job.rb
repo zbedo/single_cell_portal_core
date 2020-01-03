@@ -64,7 +64,7 @@ class DeleteQueueJob < Struct.new(:object)
       when 'Metadata'
         # clean up all subsampled data, as it is now invalid and will be regenerated
         # once a user adds another metadata file
-        ClusterGroup.where(study.id).each do |cluster|
+        ClusterGroup.where(study_id: study.id).each do |cluster|
           delete_subsampled_data(study.id, cluster.study_file.id, cluster.id)
         end
 
