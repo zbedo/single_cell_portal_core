@@ -62,6 +62,12 @@ class DeleteQueueJob < Struct.new(:object)
         end
         remove_file_from_bundle
       when 'Metadata'
+        # clean up all subsampled data, as it is now invalid and will be regenerated
+        # once a user adds another metadata file
+        ClusterGroup.where(study_id: study.id).each do |cluster_group|
+          delete_subsampled_data(cluster_group)
+        end
+
         delete_parsed_data(object.id, study.id, CellMetadatum, DataArray)
         study.update(cell_count: 0)
         # unset default annotation if it was study-based
@@ -136,5 +142,11 @@ class DeleteQueueJob < Struct.new(:object)
     models.each do |model|
       model.where(study_file_id: object_id, study_id: study_id).delete_all
     end
+  end
+
+  # remove all subsampling data when a user deletes a metadata file, as adding a new metadata file will cause all
+  # subsamples to be regenerated
+  def delete_subsampled_data(cluster)
+    cluster.find_subsampled_data_arrays.delete_all
   end
 end
