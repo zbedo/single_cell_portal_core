@@ -316,15 +316,20 @@ class ClusterGroup
     SUBSAMPLE_THRESHOLDS.select {|sample| sample < self.points}
   end
 
+  # find all 'subsampled' data arrays
+  def find_subsampled_data_arrays
+    DataArray.where(study_id: self.study_id, study_file_id: self.study_file_id, linear_data_type: 'ClusterGroup',
+                    linear_data_id: self.id, :subsample_threshold.nin => [nil],
+                    :subsample_annotation.nin => [nil])
+  end
+
   # control gate for invoking subsampling
   def can_subsample?
     if self.points < SUBSAMPLE_THRESHOLDS.min || self.subsampled
       false
     else
       # check if there are any data arrays belonging to this cluster that have a subsample threshold & annotation
-      !DataArray.where(study_id: self.study_id, study_file_id: self.study_file_id, linear_data_type: 'ClusterGroup',
-                       linear_data_id: self.id, :subsample_threshold.nin => [nil],
-                       :subsample_annotation.nin => [nil]).any?
+      !self.find_subsampled_data_arrays.any?
     end
   end
 
