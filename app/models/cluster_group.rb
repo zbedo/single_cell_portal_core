@@ -313,12 +313,12 @@ class ClusterGroup
 
   # determine which subsampling levels are required for this cluster
   def subsample_thresholds_required
-    ClusterGroup::SUBSAMPLE_THRESHOLDS.select {|sample| sample < self.points}
+    SUBSAMPLE_THRESHOLDS.select {|sample| sample < self.points}
   end
 
   # control gate for invoking subsampling
   def can_subsample?
-    if self.points < 1000 || self.subsampled
+    if self.points < SUBSAMPLE_THRESHOLDS.min || self.subsampled
       false
     else
       # check if there are any data arrays belonging to this cluster that have a subsample threshold & annotation
