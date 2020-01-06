@@ -13,6 +13,13 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
 
   test 'create default testing study' do
 
+    # TODO? : DELETE?:
+    bgc = ApplicationController.bigquery_client
+    assert_equal 1, bgc.datasets.count
+    assert_equal 'cell_metadata', bgc.datasets.first.dataset_id
+    assert_equal 1, bgc.datasets.first.tables.count
+    assert_equal 'alexandria_convention', bgc.datasets.first.tables.first.table_id
+
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
     study_params = {
         study: {
@@ -29,6 +36,7 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     post studies_path, params: study_params
     follow_redirect!
     assert_response 200, "Did not redirect to upload successfully"
+    sleep 1
     study = Study.find_by(name: "Test Study #{@random_seed}")
     assert study.present?, "Study did not successfully save"
 
@@ -84,7 +92,7 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
 
     seconds_slept = 60
     sleep seconds_slept
-    sleep_increment = 10
+    sleep_increment = 15
     max_seconds_to_sleep = 300
     until ( example_files.values.all? { |e| ['parsed', 'failed'].include? e[:object].parse_status } ) do
       puts "After #{seconds_slept} seconds, " + (example_files.values.map { |e| "#{e[:name]} is #{e[:object].parse_status}"}).join(", ") + '.'
@@ -122,6 +130,18 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     assert_equal 2, cluster_annot_count, "did not find correct number of cluster annotations"
     assert_equal 3, study_file_count, "did not find correct number of study files"
     assert_equal 1, share_count, "did not find correct number of study shares"
+
+    # This would be cleaner as a separate test, but it's here for now because
+    # it depends on having already uploaded a convention following metadata
+    # file:
+    assert_equal 1, bgc.datasets.count
+    assert_equal 'cell_metadata', bgc.datasets.first.dataset_id
+    assert_equal 1, bgc.datasets.first.tables.count
+    assert_equal 'alexandria_convention', bgc.datasets.first.tables.first.table_id
+    # TODO: request delete metadata file
+    # TODO: wait for a status to change, or failing that just wait for all delayed jobs to finish
+    # TODO: assert that all records have been deleted in bigquery # TODO: select by :study_accession
+
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
 
