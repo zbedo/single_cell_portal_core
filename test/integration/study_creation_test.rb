@@ -11,14 +11,15 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     @random_seed = File.open(Rails.root.join('.random_seed')).read.strip
   end
 
-  test 'create default testing study' do
+  test 'create/delete default testing study' do
 
-    # TODO? : DELETE?:
-    bgc = ApplicationController.bigquery_client
-    assert_equal 1, bgc.datasets.count
-    assert_equal 'cell_metadata', bgc.datasets.first.dataset_id
-    assert_equal 1, bgc.datasets.first.tables.count
-    assert_equal 'alexandria_convention', bgc.datasets.first.tables.first.table_id
+    bqc = ApplicationController.bigquery_client
+    assert_equal 1, bqc.datasets.count
+    bq_dataset = bqc.datasets.first
+    assert_equal 'cell_metadata', bq_dataset.dataset_id
+    assert_equal 1, bq_dataset.tables.count
+    bq_table = bq_dataset.tables.first
+    assert_equal 'alexandria_convention', bq_table.table_id
 
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
     study_params = {
@@ -134,14 +135,21 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     # This would be cleaner as a separate test, but it's here for now because
     # it depends on having already uploaded a convention following metadata
     # file:
-    assert_equal 1, bgc.datasets.count
-    assert_equal 'cell_metadata', bgc.datasets.first.dataset_id
-    assert_equal 1, bgc.datasets.first.tables.count
-    assert_equal 'alexandria_convention', bgc.datasets.first.tables.first.table_id
-    # TODO: request delete metadata file
+    assert_equal 1, bqc.datasets.count
+    assert_equal 'cell_metadata', bq_dataset.dataset_id
+    assert_equal 1, bq_dataset.tables.count
+    assert_equal 'alexandria_convention', bq_table.table_id
+    assert bq_table.rows_count > 0
+
+    study.study_files.each do |sf|
+      delete api_v1_study_study_file_path(study_id: study.id, id: sf.id), as: :json, headers: {authorization: "Bearer #{@test_user.api_access_token[:access_token]}" }
+      assert_response 204, "Did not successfully delete study file, expected success code 204 but found #{@response.code}"
+    end
+
     # TODO: wait for a status to change, or failing that just wait for all delayed jobs to finish
     # TODO: assert that all records have been deleted in bigquery # TODO: select by :study_accession
 
+    # TODO: assert_equal 0, bgc.datasets.first.tables.first.rows_count # assert that all records have been deleted in bigquery # TODO? (only if I have to): select by :study_accession
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
 

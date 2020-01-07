@@ -62,7 +62,9 @@ class DeleteQueueJob < Struct.new(:object)
         end
         remove_file_from_bundle
       when 'Metadata'
-        # TODO: delete/select by :study_accession
+        bq_dataset = ApplicationController.bigquery_client.dataset 'cell_metadata'
+        # TODO TODO: if @study_file.use metadata_convention)
+        bq_dataset.query "DELETE FROM alexandria_convention WHERE study_accession = '#{study.accession}'" # TODO: is there anything I should be doing to check for success?
         delete_parsed_data(object.id, study.id, CellMetadatum, DataArray)
         study.update(cell_count: 0)
         # unset default annotation if it was study-based
