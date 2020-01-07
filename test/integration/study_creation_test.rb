@@ -141,6 +141,19 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     assert_equal 'alexandria_convention', bq_table.table_id
     assert bq_table.rows_count > 0
 
+    seconds_slept = 60
+    sleep seconds_slept
+    sleep_increment = 40
+    max_seconds_to_sleep = 600
+    until ( bq_table.rows_count == 0) do
+       if seconds_slept >= max_seconds_to_sleep
+         raise "Even #{seconds_slept} seconds after requesting file deletion, not all records have been deleted from bigquery."
+       end
+       sleep(sleep_increment)
+       seconds_slept += sleep_increment
+    end
+    assert_equal 0, bq_table.rows_count # assert that all records have been deleted in bigquery
+
     study.study_files.each do |sf|
       delete api_v1_study_study_file_path(study_id: study.id, id: sf.id), as: :json, headers: {authorization: "Bearer #{@test_user.api_access_token[:access_token]}" }
       assert_response 204, "Did not successfully delete study file, expected success code 204 but found #{@response.code}"
