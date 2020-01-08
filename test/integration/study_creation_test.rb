@@ -145,6 +145,7 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     # request delete
     study.study_files.each do |sf|
       # request delete metadata file:
+      puts "Requesting delete for study file #{sf.name}"
       delete api_v1_study_study_file_path(study_id: study.id, id: sf.id), as: :json, headers: {authorization: "Bearer #{@test_user.api_access_token[:access_token]}" }
     end
 
