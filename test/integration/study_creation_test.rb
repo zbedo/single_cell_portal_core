@@ -125,7 +125,7 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     study_file_count = study.study_files.non_primary_data.size
     share_count = study.study_shares.size
 
-    assert_equal 19, gene_count, "did not find correct number of genes"
+    # I don't need this, perhaps, because this happens a little later: assert_equal 19, gene_count, "did not find correct number of genes"
     assert_equal 1, cluster_count, "did not find correct number of clusters"
     assert_equal 22, metadata_count, "did not find correct number of metadata objects"
     assert_equal 2, cluster_annot_count, "did not find correct number of cluster annotations"
@@ -141,6 +141,13 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     assert_equal 'alexandria_convention', bq_table.table_id
     assert bq_table.rows_count > 0
 
+
+    # request delete
+    study.study_files.each do |sf|
+      # request delete each file:
+      delete api_v1_study_study_file_path(study_id: study.id, id: sf.id), as: :json, headers: {authorization: "Bearer #{@test_user.api_access_token[:access_token]}" }
+    end
+
     seconds_slept = 60
     sleep seconds_slept
     sleep_increment = 40
@@ -151,18 +158,13 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
        end
        sleep(sleep_increment)
        seconds_slept += sleep_increment
-    end
-    assert_equal 0, bq_table.rows_count # assert that all records have been deleted in bigquery
 
-    study.study_files.each do |sf|
-      delete api_v1_study_study_file_path(study_id: study.id, id: sf.id), as: :json, headers: {authorization: "Bearer #{@test_user.api_access_token[:access_token]}" }
-      assert_response 204, "Did not successfully delete study file, expected success code 204 but found #{@response.code}"
     end
+    assert_equal 0, bq_table.rows_count # assert that all records have been deleted in bigquery # TODO? (only if I have to): select by :study_accession
+
 
     # TODO: wait for a status to change, or failing that just wait for all delayed jobs to finish
-    # TODO: assert that all records have been deleted in bigquery # TODO: select by :study_accession
 
-    # TODO: assert_equal 0, bgc.datasets.first.tables.first.rows_count # assert that all records have been deleted in bigquery # TODO? (only if I have to): select by :study_accession
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
 
