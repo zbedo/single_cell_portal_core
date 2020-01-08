@@ -37,9 +37,6 @@ var PAGE_RENDERED = false;
 var OPEN_MODAL = '';
 var CLUSTER_TYPE = '3d';
 var UNSAFE_CHARACTERS = /[\;\/\?\:\@\=\&\'\"\<\>\#\%\{\}\|\\\^\~\[\]\`]/g;
-var MAX_GENE_SEARCH = 20;
-var GENE_SEARCH_LIMIT_MSG = 'For performance reasons, gene search is limited to ' + MAX_GENE_SEARCH + ' genes.  ' +
-    'Please use multiple searches to view more genes.';
 
 // Minimum width of plot + legend
 // Addresses https://github.com/broadinstitute/single_cell_portal/issues/20
@@ -227,7 +224,7 @@ var keydownIsFromAutocomplete = false;
  * @param selector: DOM selector for form element
  * @param entities: Array of pre-populated values to search
  **/
-function initializeAutocomplete(selector, entities) {
+function initializeAutocomplete(selector, entities, maxGenes, errorMsg) {
 
     var jqObject = $(selector);
     jqObject.on("keydown", function(event) {
@@ -262,9 +259,9 @@ function initializeAutocomplete(selector, entities) {
             select: function(event, ui) {
                 var terms = split(this.value);
                 // check if user has added more that 20 genes, in which case alert and remove the last term
-                if (terms.length > MAX_GENE_SEARCH) {
+                if (terms.length > maxGenes) {
                     console.log('Too many genes selected, aborting autocomplete');
-                    alert(GENE_SEARCH_LIMIT_MSG);
+                    alert(errorMsg);
                     terms.pop();
                 } else {
                     // remove the current input

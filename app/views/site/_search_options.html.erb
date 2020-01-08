@@ -56,7 +56,7 @@
                     window.uniqueGenes = studyGenes;
                 }
 
-                initializeAutocomplete('#search_genes', window.uniqueGenes);
+                initializeAutocomplete('#search_genes', window.uniqueGenes, window.MAX_GENE_SEARCH, window.MAX_GENE_SEARCH_MSG);
 
                 $('#clear-gene-search').click(function(){
                     clearForm('search_genes');
