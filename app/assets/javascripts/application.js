@@ -37,6 +37,9 @@ var PAGE_RENDERED = false;
 var OPEN_MODAL = '';
 var CLUSTER_TYPE = '3d';
 var UNSAFE_CHARACTERS = /[\;\/\?\:\@\=\&\'\"\<\>\#\%\{\}\|\\\^\~\[\]\`]/g;
+var MAX_GENE_SEARCH = 20;
+var GENE_SEARCH_LIMIT_MSG = 'For performance reasons, gene search is limited to ' + MAX_GENE_SEARCH + ' genes.  ' +
+    'Please use multiple searches to view more genes.';
 
 // Minimum width of plot + legend
 // Addresses https://github.com/broadinstitute/single_cell_portal/issues/20
@@ -258,11 +261,18 @@ function initializeAutocomplete(selector, entities) {
             },
             select: function(event, ui) {
                 var terms = split(this.value);
-                // remove the current input
-                terms.pop();
-                // add the selected item
-                terms.push(ui.item.value);
-                terms.push("");
+                // check if user has added more that 20 genes, in which case alert and remove the last term
+                if (terms.length > MAX_GENE_SEARCH) {
+                    console.log('Too many genes selected, aborting autocomplete');
+                    alert(GENE_SEARCH_LIMIT_MSG);
+                    terms.pop();
+                } else {
+                    // remove the current input
+                    terms.pop();
+                    // add the selected item
+                    terms.push(ui.item.value);
+                    terms.push("");
+                }
                 this.value = terms.join(" ");
                 // set to false to let autocomplete know that a term has been selected and the next ENTER
                 // keydown will submit search values
