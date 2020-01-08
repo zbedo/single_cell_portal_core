@@ -144,7 +144,7 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
 
     # request delete
     study.study_files.each do |sf|
-      # request delete each file:
+      # request delete metadata file:
       delete api_v1_study_study_file_path(study_id: study.id, id: sf.id), as: :json, headers: {authorization: "Bearer #{@test_user.api_access_token[:access_token]}" }
     end
 
@@ -153,12 +153,12 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     sleep_increment = 40
     max_seconds_to_sleep = 600
     until ( bq_table.rows_count == 0) do
-       if seconds_slept >= max_seconds_to_sleep
-         raise "Even #{seconds_slept} seconds after requesting file deletion, not all records have been deleted from bigquery."
-       end
-       sleep(sleep_increment)
-       seconds_slept += sleep_increment
-
+      puts "#{seconds_slept} seconds after requesting file deletion, bq_table.rows_count is #{bq_table.rows_count} (at #{`date`.chomp})." # TODO: DELETE?
+      if seconds_slept >= max_seconds_to_sleep
+        raise "Even #{seconds_slept} seconds after requesting file deletion, not all records have been deleted from bigquery."
+      end
+      sleep(sleep_increment)
+      seconds_slept += sleep_increment
     end
     assert_equal 0, bq_table.rows_count # assert that all records have been deleted in bigquery # TODO? (only if I have to): select by :study_accession
 
