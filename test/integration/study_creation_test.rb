@@ -20,6 +20,7 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     assert_equal 1, bq_dataset.tables.count
     bq_table = bq_dataset.tables.first
     assert_equal 'alexandria_convention', bq_table.table_id
+    initial_bq_table_rows_count = bq_table.rows_count
 
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
     study_params = {
@@ -140,6 +141,7 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     assert_equal 1, bq_dataset.tables.count
     assert_equal 'alexandria_convention', bq_table.table_id
     assert bq_table.rows_count > 0
+    assert_equal initial_bq_table_rows_count + 30, bq_table.rows_count
 
 
     # request delete
@@ -152,8 +154,8 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     seconds_slept = 60
     sleep seconds_slept
     sleep_increment = 40
-    max_seconds_to_sleep = 600
-    until ( bq_table.rows_count == 0) do
+    max_seconds_to_sleep = 200
+    until ( bq_table.rows_count <= initial_bq_table_rows_count) do
       puts "#{seconds_slept} seconds after requesting file deletion, bq_table.rows_count is #{bq_table.rows_count} (at #{`date`.chomp})." # TODO: DELETE?
       if seconds_slept >= max_seconds_to_sleep
         raise "Even #{seconds_slept} seconds after requesting file deletion, not all records have been deleted from bigquery."
@@ -161,6 +163,7 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
       sleep(sleep_increment)
       seconds_slept += sleep_increment
     end
+    assert_equal initial_bq_table_rows_count, bq_table.rows_count # assert that all records have been deleted in bigquery # TODO? (only if I have to): select by :study_accession
     assert_equal 0, bq_table.rows_count # assert that all records have been deleted in bigquery # TODO? (only if I have to): select by :study_accession
 
 
