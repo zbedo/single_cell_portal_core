@@ -43,6 +43,7 @@ group :development do
   gem 'test-unit'
   gem 'brakeman', :require => false
   gem 'listen'
+  gem 'byebug'
 end
 
 gem 'devise'
