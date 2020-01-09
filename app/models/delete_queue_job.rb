@@ -63,8 +63,9 @@ class DeleteQueueJob < Struct.new(:object)
         remove_file_from_bundle
       when 'Metadata'
         bq_dataset = ApplicationController.bigquery_client.dataset 'cell_metadata'
-        # TODO TODO: if @study_file.use metadata_convention)
-        bq_dataset.query "DELETE FROM alexandria_convention WHERE study_accession = '#{study.accession}'" # TODO: is there anything I should be doing to check for success?
+        if object.use_metadata_convention
+          bq_dataset.query "DELETE FROM alexandria_convention WHERE study_accession = '#{study.accession}' AND file_id = '#{object.id}'"
+        end
 
         # clean up all subsampled data, as it is now invalid and will be regenerated
         # once a user adds another metadata file

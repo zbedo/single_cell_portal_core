@@ -38,8 +38,8 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     bq_dataset = bqc.datasets.first
     assert_equal 'cell_metadata', bq_dataset.dataset_id
     assert_equal 1, bq_dataset.tables.count
-    bq_table = bq_dataset.tables.first
-    assert_equal 'alexandria_convention', bq_table.table_id
+    assert_equal 'alexandria_convention', bq_dataset.tables.first.table_id
+    initial_bq_row_count = get_bq_row_count(bq_dataset, study)
 
     example_files = {
       expression: {
@@ -132,45 +132,34 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     assert_equal 3, study_file_count, "did not find correct number of study files"
     assert_equal 1, share_count, "did not find correct number of study shares"
 
-    # This would be cleaner as a separate test, but it's here for now because
-    # it depends on having already uploaded a convention following metadata
-    # file:
-    assert_equal 1, bqc.datasets.count
-    assert_equal 'cell_metadata', bq_dataset.dataset_id
-    assert_equal 1, bq_dataset.tables.count
-    assert_equal 'alexandria_convention', bq_table.table_id
-    assert bq_table.rows_count > 0
-    assert_equal initial_bq_table_rows_count + 30, bq_table.rows_count
-
+    assert_equal initial_bq_row_count + 30, get_bq_row_count(bq_dataset, study)
 
     # request delete
     study.study_files.each do |sf|
-      # request delete metadata file:
       puts "Requesting delete for study file #{sf.name}"
       delete api_v1_study_study_file_path(study_id: study.id, id: sf.id), as: :json, headers: {authorization: "Bearer #{@test_user.api_access_token[:access_token]}" }
     end
 
-    seconds_slept = 60
-    sleep seconds_slept
-    sleep_increment = 40
-    max_seconds_to_sleep = 200
-    until ( bq_table.rows_count <= initial_bq_table_rows_count) do
-      puts "#{seconds_slept} seconds after requesting file deletion, bq_table.rows_count is #{bq_table.rows_count} (at #{`date`.chomp})." # TODO: DELETE?
+    seconds_slept = 0
+    sleep_increment = 10
+    max_seconds_to_sleep = 60
+    until ( (bq_row_count = get_bq_row_count(bq_dataset, study)) <= initial_bq_row_count) do
+      puts "#{seconds_slept} seconds after requesting file deletion, bq_row_count is #{bq_row_count}."
       if seconds_slept >= max_seconds_to_sleep
         raise "Even #{seconds_slept} seconds after requesting file deletion, not all records have been deleted from bigquery."
       end
       sleep(sleep_increment)
       seconds_slept += sleep_increment
     end
-    assert_equal initial_bq_table_rows_count, bq_table.rows_count # assert that all records have been deleted in bigquery # TODO? (only if I have to): select by :study_accession
-    assert_equal 0, bq_table.rows_count # assert that all records have been deleted in bigquery # TODO? (only if I have to): select by :study_accession
-
-
-    # TODO: wait for a status to change, or failing that just wait for all delayed jobs to finish
-
+    puts "#{seconds_slept} seconds after requesting file deletion, bq_row_count is #{bq_row_count}."
+    assert get_bq_row_count(bq_dataset, study) <= initial_bq_row_count # using "<=" instead of "==" in case there were rows from a previous aborted test to clean up
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
 
+  end
+
+  def get_bq_row_count(bq_dataset, study)
+    bq_dataset.query("SELECT COUNT(*) count FROM alexandria_convention WHERE study_accession = '#{study.accession}'", cache: false)[0][:count]
   end
 
 end
