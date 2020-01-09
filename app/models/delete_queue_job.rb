@@ -147,9 +147,6 @@ class DeleteQueueJob < Struct.new(:object)
       model.where(study_file_id: object_id, study_id: study_id).delete_all
     end
   end
-<<<<<<< HEAD
-end
-=======
 
   # remove all subsampling data when a user deletes a metadata file, as adding a new metadata file will cause all
   # subsamples to be regenerated
@@ -157,4 +154,3 @@ end
     cluster.find_subsampled_data_arrays.delete_all
   end
 end
->>>>>>> ingest-pipeline-launch
