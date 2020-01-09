@@ -13,15 +13,6 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
 
   test 'create/delete default testing study' do
 
-    bqc = ApplicationController.bigquery_client
-    assert_equal 1, bqc.datasets.count
-    bq_dataset = bqc.datasets.first
-    assert_equal 'cell_metadata', bq_dataset.dataset_id
-    assert_equal 1, bq_dataset.tables.count
-    bq_table = bq_dataset.tables.first
-    assert_equal 'alexandria_convention', bq_table.table_id
-    initial_bq_table_rows_count = bq_table.rows_count
-
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
     study_params = {
         study: {
@@ -41,6 +32,14 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     sleep 1
     study = Study.find_by(name: "Test Study #{@random_seed}")
     assert study.present?, "Study did not successfully save"
+
+    bqc = ApplicationController.bigquery_client
+    assert_equal 1, bqc.datasets.count
+    bq_dataset = bqc.datasets.first
+    assert_equal 'cell_metadata', bq_dataset.dataset_id
+    assert_equal 1, bq_dataset.tables.count
+    bq_table = bq_dataset.tables.first
+    assert_equal 'alexandria_convention', bq_table.table_id
 
     example_files = {
       expression: {
@@ -110,6 +109,7 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     end
     puts "After #{seconds_slept} seconds, " + (example_files.values.map { |e| "#{e[:name]} is #{e[:object].parse_status}"}).join(", ") + '.'
 
+    # confirm that parsing is complete
     example_files.values.each do |e|
       assert_equal 'parsed', e[:object].parse_status, "Incorrect parse_status for #{e[:name]}"
       assert_not e[:object].queued_for_deletion, "#{e[:name]} should be queued for deletion"
@@ -118,7 +118,6 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     assert_equal 19, study.genes.size, 'Did not parse all genes from expression matrix'
 
     # verify that counts are correct, this will ensure that everything uploaded & parsed correctly
-    study.reload
     gene_count = study.gene_count
     cluster_count = study.cluster_groups.size
     metadata_count = study.cell_metadata.size
