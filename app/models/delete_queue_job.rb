@@ -65,6 +65,13 @@ class DeleteQueueJob < Struct.new(:object)
         bq_dataset = ApplicationController.bigquery_client.dataset 'cell_metadata'
         # TODO TODO: if @study_file.use metadata_convention)
         bq_dataset.query "DELETE FROM alexandria_convention WHERE study_accession = '#{study.accession}'" # TODO: is there anything I should be doing to check for success?
+
+        # clean up all subsampled data, as it is now invalid and will be regenerated
+        # once a user adds another metadata file
+        ClusterGroup.where(study_id: study.id).each do |cluster_group|
+          delete_subsampled_data(cluster_group)
+        end
+
         delete_parsed_data(object.id, study.id, CellMetadatum, DataArray)
         study.update(cell_count: 0)
         # unset default annotation if it was study-based
@@ -140,4 +147,14 @@ class DeleteQueueJob < Struct.new(:object)
       model.where(study_file_id: object_id, study_id: study_id).delete_all
     end
   end
+<<<<<<< HEAD
 end
+=======
+
+  # remove all subsampling data when a user deletes a metadata file, as adding a new metadata file will cause all
+  # subsamples to be regenerated
+  def delete_subsampled_data(cluster)
+    cluster.find_subsampled_data_arrays.delete_all
+  end
+end
+>>>>>>> ingest-pipeline-launch
