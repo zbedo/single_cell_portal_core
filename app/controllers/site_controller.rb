@@ -203,7 +203,10 @@ class SiteController < ApplicationController
       delim = params[:search][:genes].include?(',') ? ',' : ' '
       raw_genes = params[:search][:genes].split(delim)
       @genes = sanitize_search_values(raw_genes).split(',').map(&:strip)
-
+      # limit gene search for performance reasons
+      if @genes.size > Gene::MAX_GENE_SEARCH
+        @genes = @genes.take(Gene::MAX_GENE_SEARCH)
+      end
       @results = []
       if !@study.initialized?
         head 422
