@@ -258,14 +258,13 @@ function initializeAutocomplete(selector, entities, maxGenes, errorMsg) {
             },
             select: function(event, ui) {
                 var terms = split(this.value);
+                // remove the current input
+                terms.pop();
                 // check if user has added more that 20 genes, in which case alert and remove the last term
-                if (terms.length > maxGenes) {
+                if (terms.length - 1 > maxGenes) {
                     console.log('Too many genes selected, aborting autocomplete');
                     alert(errorMsg);
-                    terms.pop();
                 } else {
-                    // remove the current input
-                    terms.pop();
                     // add the selected item
                     terms.push(ui.item.value);
                     terms.push("");
