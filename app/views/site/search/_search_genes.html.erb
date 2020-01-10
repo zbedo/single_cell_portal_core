@@ -44,9 +44,17 @@
             var target = document.getElementById('wrap');
             var spinner = new Spinner(opts).spin(target);
             $(target).data('spinner', spinner);
-            var requestUrl = '<%= javascript_safe_url("/single_cell/search_all_genes") %>';
+            var requestUrl = '<%= javascript_safe_url(search_all_genes_path) %>';
             var genes = $('#search_genes').val().split(' ');
             var numGenes = genes.length;
+            // limit number of genes to MAX_GENE_SEARCH
+            if (numGenes > <%= Gene::MAX_GENE_SEARCH %>) {
+                console.log('Too many genes, limiting global gene search');
+                alert('<%= Gene::MAX_GENE_SEARCH_MSG %>');
+                genes = genes.slice(0, <%= Gene::MAX_GENE_SEARCH %>);
+                numGenes = genes.length;
+                $('#search_genes').val(genes.join(' '));
+            }
             requestUrl += '?genes=' + genes.join('+') + '&num_genes=' + numGenes;
             gaTrack(requestUrl, 'Single Cell Portal | Global Gene Search');
             ga('send', 'event', 'engaged_user_action', 'global_gene_search');
