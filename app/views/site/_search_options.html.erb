@@ -49,6 +49,16 @@
             </div>
             <%= link_to "<span class='fas fa-chevron-left'></span> Back".html_safe, "javascript:", class: "btn pull-right #{action_name == 'study' ? 'btn-default disabled' : 'btn-warning'}", id: 'clear-gene-search', title: 'Clear gene search and return to cluster scatter plots', data: {toggle: 'tooltip'} %>
             <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
+                $('#search_genes').on('change', function() {
+                    // limit number of gene searches
+                    var searchGenes = $(this).val().split(' ');
+                    if (searchGenes.length > window.MAX_GENE_SEARCH) {
+                        alert(window.MAX_GENE_SEARCH_MSG);
+                        searchGenes = searchGenes.slice(0, window.MAX_GENE_SEARCH);
+                        $(this).val(searchGenes.join(' '));
+                    }
+                });
+
                 $('#clear-gene-search').click(function(){
                     clearForm('search_genes');
                     $(this).tooltip('hide');
@@ -74,6 +84,11 @@
                                 results;
                             if (file && file.length) {
                                 lines = file.split(/[,\n]/);
+                                // limit gene search to MAX_GENE_SEARCH
+                                if (lines.length > window.MAX_GENE_SEARCH) {
+                                    alert(window.MAX_GENE_SEARCH_MSG);
+                                    lines = lines.slice(0, MAX_GENE_SEARCH);
+                                }
                                 sanitizedContent = [];
                                 $(lines).each(function(i, line) {
                                     // scrub quotes if present
