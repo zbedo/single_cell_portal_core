@@ -125,7 +125,6 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     study_file_count = study.study_files.non_primary_data.size
     share_count = study.study_shares.size
 
-    # I don't need this, perhaps, because this happens a little later: assert_equal 19, gene_count, "did not find correct number of genes"
     assert_equal 1, cluster_count, "did not find correct number of clusters"
     assert_equal 22, metadata_count, "did not find correct number of metadata objects"
     assert_equal 2, cluster_annot_count, "did not find correct number of cluster annotations"
@@ -135,10 +134,8 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     assert_equal initial_bq_row_count + 30, get_bq_row_count(bq_dataset, study)
 
     # request delete
-    study.study_files.each do |sf|
-      puts "Requesting delete for study file #{sf.name}"
-      delete api_v1_study_study_file_path(study_id: study.id, id: sf.id), as: :json, headers: {authorization: "Bearer #{@test_user.api_access_token[:access_token]}" }
-    end
+    puts "Requesting delete for metadata_example_using_convention.txt"
+    delete api_v1_study_study_file_path(study_id: study.id, id: example_files[:metadata][:object].id), as: :json, headers: {authorization: "Bearer #{@test_user.api_access_token[:access_token]}" }
 
     seconds_slept = 0
     sleep_increment = 10

@@ -1,4 +1,3 @@
-require "google/cloud/bigquery"
 
 class ApplicationController < ActionController::Base
 
