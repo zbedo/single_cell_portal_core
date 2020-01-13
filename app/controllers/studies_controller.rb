@@ -901,9 +901,9 @@ class StudiesController < ApplicationController
         # delete matching caches
         @study_file.invalidate_cache_by_file_type
         # queue for deletion
+        @file_type = @study_file.file_type
         @study_file.update(queued_for_deletion: true)
         DeleteQueueJob.new(@study_file).delay.perform
-        @file_type = @study_file.file_type
         @message = "'#{@study_file.name}' has been successfully deleted."
         @partial = @study_file.wizard_partial_name
         # delete source file in FireCloud and then remove record
