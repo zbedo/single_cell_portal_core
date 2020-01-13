@@ -52,7 +52,8 @@
           </div>
           </br>
           <div class="row">
-            <p class="col-sm-12">* Additionally, you will need to upload the <%= link_to 'genes', 'https://kb.10xgenomics.com/hc/en-us/articles/115000794686-How-is-the-MEX-format-used-for-the-gene-barcode-matrices', target: :_blank %> (.csv or .tsv) and
+            <p class="col-sm-12">* Before upload, <strong>MM Coordinate Matrix file must be <%= link_to 'sorted', 'https://github.com/broadinstitute/single_cell_portal/wiki/Sorting-Matrix-Market-Coordinate-Matricesx', target: :_blank %></strong>.
+              Additionally, you will need to upload the <%= link_to 'genes', 'https://kb.10xgenomics.com/hc/en-us/articles/115000794686-How-is-the-MEX-format-used-for-the-gene-barcode-matrices', target: :_blank %> (.csv or .tsv) and
               <%= link_to 'barcodes', 'https://kb.10xgenomics.com/hc/en-us/articles/115000794686-How-is-the-MEX-format-used-for-the-gene-barcode-matrices', target: :_blank %> (.tsv or .csv) files separately.</p>
             <p class="col-sm-12">** <%= link_to 'Gzipped', 'https://www.gnu.org/software/gzip/manual/gzip.html', target: :_blank %>  files of this type (e.g. .txt.gz) are accepted as well</p>
           </div>
@@ -102,7 +103,7 @@
                 <li>The header of <strong>“TYPE”</strong>to declare metadata types (see below).</li>
                 <li>A value for each metadata column declaring its datatype</li>
                 <ul>
-                  <li>The two accepted values are <strong>“group”</strong> (set membership) or <strong>“numeric”</strong>(continuous scores). *</li>
+                  <li>The two accepted values are <strong>“group”</strong> (set membership) or <strong>“numeric”</strong> (continuous scores). *</li>
                 </ul>
               </ul>
             </ul>
@@ -132,7 +133,7 @@
           <div class="col-md-9 col-lg-offset-2 col-md-offset-1">
             <ul>
               <li>3 columns</li>
-              <li>A header row containing the value <strong>“NAME”, “X”, “Y”,</strong> optionally <strong>“Z”</strong>,  and columns containing cell-level annotations
+              <li>A header row containing the value <strong>“NAME”, “X”, “Y”,</strong> optionally <strong>“Z”</strong>, and columns containing cell-level annotations
               </li>
               <li>A second row with:</li>
               <ul >
@@ -140,7 +141,7 @@
                 <li>A value for each metadata column declaring its datatype
                 </li>
                 <ul>
-                  <li>The two accepted values are <strong>“group”</strong> (set membership) or <strong>“numeric”</strong>(continuous scores). *</li>
+                  <li>The two accepted values are <strong>“group”</strong> (set membership) or <strong>“numeric”</strong> (continuous scores). *</li>
                   <li>The values for the “X”, “Y”, and “Z” columns must be set to “numeric”.</li>
                 </ul>
               </ul>

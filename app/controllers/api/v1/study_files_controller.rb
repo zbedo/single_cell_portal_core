@@ -467,8 +467,7 @@ module Api
             end
           when 'Expression Matrix'
             @study_file.update(parse_status: 'parsing')
-            job = IngestJob.new(study: @study, study_file: @study_file, user: current_api_user, action: :ingest_expression)
-            job.delay.push_remote_and_launch_ingest
+            @study.delay.initialize_gene_expression_data(@study_file, current_api_user)
             head 204
           when 'MM Coordinate Matrix'
             barcodes = @study_file.bundled_files.detect {|f| f.file_type == '10X Barcodes File'}
@@ -477,8 +476,7 @@ module Api
               @study_file.update(parse_status: 'parsing')
               genes.update(parse_status: 'parsing')
               barcodes.update(parse_status: 'parsing')
-              job = IngestJob.new(study: @study, study_file: @study_file, user: current_api_user, action: :ingest_expression)
-              job.delay.push_remote_and_launch_ingest
+              ParseUtils.delay.cell_ranger_expression_parse(@study, current_api_user, @study_file, genes, barcodes)
               head 204
             else
               logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"

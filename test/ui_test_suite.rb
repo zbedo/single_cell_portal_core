@@ -1361,6 +1361,16 @@ class UiTestSuite < Test::Unit::TestCase
     assert primary_data_count == 1, "did not find correct number of primary data files, expected 1 but found #{primary_data_count}"
     assert other_data_count == 19, "did not find correct number of other data files, expected 19 but found #{primary_data_count}"
 
+    # give time for parses to complete
+    i = 0
+    parsed_files = @driver.find_elements(:class, 'study-file-parsed').map {|el| el['data-parsed'] == 'true'}.uniq
+    while parsed_files.size > 1 && i < 12
+      i += 1
+      sleep(10)
+      @driver.get @driver.current_url
+      parsed_files = @driver.find_elements(:class, 'study-file-parsed').map {|el| el['data-parsed'] == 'true'}.uniq
+    end
+
     # make sure edits saved by going through updated list of synced files and comparing values
     updated_files.each do |id, values|
       study_file_table_row = @driver.find_element(:id, id)
