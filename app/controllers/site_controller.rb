@@ -135,6 +135,11 @@ class SiteController < ApplicationController
   # redirect handler to determine which gene expression method to render
   def search_genes
     @terms = parse_search_terms(:genes)
+    # limit gene search for performance reasons
+    if @terms.size > Gene::MAX_GENE_SEARCH
+      @terms = @terms.take(Gene::MAX_GENE_SEARCH)
+      search_message = Gene::MAX_GENE_SEARCH_MSG
+    end
     # grab saved params for loaded cluster, boxpoints mode, annotations, consensus and other view settings
     cluster = params[:search][:cluster]
     annotation = params[:search][:annotation]
@@ -165,14 +170,14 @@ class SiteController < ApplicationController
                                                                               plot_type: plot_type,  boxpoints: boxpoints,
                                                                               heatmap_row_centering: heatmap_row_centering,
                                                                               heatmap_size: heatmap_size, colorscale: colorscale),
-                                                scpbr: params[:scpbr])
+                                                scpbr: params[:scpbr]), notice: search_message
     else
       redirect_to merge_default_redirect_params(view_gene_expression_heatmap_path(accession: @study.accession, study_name: @study.url_safe_name,
                                                                                   search: {genes: @terms.join(' ')}, cluster: cluster,
                                                                                   annotation: annotation, plot_type: plot_type,
                                                                                   boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering,
                                                                                   heatmap_size: heatmap_size, colorscale: colorscale),
-                                                scpbr: params[:scpbr])
+                                                scpbr: params[:scpbr]), notice: search_message
     end
   end
 
@@ -198,7 +203,10 @@ class SiteController < ApplicationController
       delim = params[:search][:genes].include?(',') ? ',' : ' '
       raw_genes = params[:search][:genes].split(delim)
       @genes = sanitize_search_values(raw_genes).split(',').map(&:strip)
-
+      # limit gene search for performance reasons
+      if @genes.size > Gene::MAX_GENE_SEARCH
+        @genes = @genes.take(Gene::MAX_GENE_SEARCH)
+      end
       @results = []
       if !@study.initialized?
         head 422

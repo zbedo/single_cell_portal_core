@@ -224,7 +224,7 @@ var keydownIsFromAutocomplete = false;
  * @param selector: DOM selector for form element
  * @param entities: Array of pre-populated values to search
  **/
-function initializeAutocomplete(selector, entities) {
+function initializeAutocomplete(selector, entities, maxGenes, errorMsg) {
 
     var jqObject = $(selector);
     jqObject.on("keydown", function(event) {
@@ -260,9 +260,15 @@ function initializeAutocomplete(selector, entities) {
                 var terms = split(this.value);
                 // remove the current input
                 terms.pop();
-                // add the selected item
-                terms.push(ui.item.value);
-                terms.push("");
+                // check if user has added more that 20 genes, in which case alert and remove the last term
+                if (terms.length - 1 > maxGenes) {
+                    console.log('Too many genes selected, aborting autocomplete');
+                    alert(errorMsg);
+                } else {
+                    // add the selected item
+                    terms.push(ui.item.value);
+                    terms.push("");
+                }
                 this.value = terms.join(" ");
                 // set to false to let autocomplete know that a term has been selected and the next ENTER
                 // keydown will submit search values

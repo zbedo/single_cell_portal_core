@@ -56,7 +56,7 @@
                     window.uniqueGenes = studyGenes;
                 }
 
-                initializeAutocomplete('#search_genes', window.uniqueGenes);
+                initializeAutocomplete('#search_genes', window.uniqueGenes, window.MAX_GENE_SEARCH, window.MAX_GENE_SEARCH_MSG);
 
                 $('#clear-gene-search').click(function(){
                     clearForm('search_genes');
@@ -83,6 +83,11 @@
                                 results;
                             if (file && file.length) {
                                 lines = file.split(/[,\n]/);
+                                // limit gene search to MAX_GENE_SEARCH
+                                if (lines.length > MAX_GENE_SEARCH) {
+                                    alert(GENE_SEARCH_LIMIT_MSG);
+                                    lines = lines.slice(0, MAX_GENE_SEARCH);
+                                }
                                 sanitizedContent = [];
                                 $(lines).each(function(i, line) {
                                     // scrub quotes if present
