@@ -26,6 +26,7 @@
 /config/tcell_agent.config
 ssmtp.conf
 /tcell
+.byebug_history
 # Ignore hidden macOS files
 .DS_Store
 node_modules/*

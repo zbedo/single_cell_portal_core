@@ -104,6 +104,7 @@ GEM
     bson (4.3.0)
     bson_ext (1.5.1)
     builder (3.2.3)
+    byebug (11.0.1)
     childprocess (0.9.0)
       ffi (~> 1.0, >= 1.0.11)
     climate_control (0.2.0)
@@ -165,6 +166,12 @@ GEM
       representable (~> 3.0)
       retriable (>= 2.0, < 4.0)
       signet (~> 0.10)
+    google-cloud-bigquery (1.14.1)
+      concurrent-ruby (~> 1.0)
+      google-api-client (~> 0.26)
+      google-cloud-core (~> 1.2)
+      googleauth (>= 0.6.2, < 0.10.0)
+      mini_mime (~> 1.0)
     google-cloud-core (1.2.7)
       google-cloud-env (~> 1.0)
     google-cloud-env (1.0.5)
@@ -444,6 +451,7 @@ DEPENDENCIES
   bootstrap-sass!
   brakeman
   bson_ext
+  byebug
   coffee-rails
   daemons
   debase
@@ -452,6 +460,7 @@ DEPENDENCIES
   devise
   font-awesome-sass!
   gibberish
+  google-cloud-bigquery
   google-cloud-storage
   googleauth
   jbuilder (~> 2.0)
@@ -499,4 +508,4 @@ RUBY VERSION
    ruby 2.5.7p206
 
 BUNDLED WITH
-   2.1.0
+   2.1.4

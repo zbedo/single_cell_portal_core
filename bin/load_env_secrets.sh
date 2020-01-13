@@ -88,7 +88,7 @@ if [[ -n $SERVICE_ACCOUNT_PATH ]] ; then
   JSON_CONTENTS=$(echo $CREDS_VALS | jq --raw-output .data)
   echo "*** WRITING MAIN SERVICE ACCOUNT ***"
   SERVICE_ACCOUNT_FILEPATH="$CONFIG_DIR/.scp_service_account.json"
-	echo $JSON_CONTENTS >| $SERVICE_ACCOUNT_FILEPATH
+  echo $JSON_CONTENTS >| $SERVICE_ACCOUNT_FILEPATH
   COMMAND=$COMMAND" -k /home/app/webapp/config/.scp_service_account.json"
   JSON_CONTENTS=`echo $CREDS_VALS | jq --raw-output .data`
   echo "setting value for: GOOGLE_CLOUD_PROJECT"
