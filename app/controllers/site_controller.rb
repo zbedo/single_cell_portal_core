@@ -159,7 +159,7 @@ class SiteController < ApplicationController
         redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
                     alert: "No matches found for: #{@terms.first}." and return
       else
-        redirect_to merge_default_redirect_params(view_gene_expression_path(accession: @study.accession, study_name: @study.url_safe_name, gene: @gene['name'],
+        redirect_to merge_default_redirect_params(view_gene_expression_path(accession: @study.accession, study_name: @study.url_safe_name, gene: @terms.first,
                                                                             cluster: cluster, annotation: annotation, consensus: consensus,
                                                                             subsample: subsample, plot_type: plot_type,
                                                                             boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering,
