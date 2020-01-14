@@ -1361,7 +1361,7 @@ class UiTestSuite < Test::Unit::TestCase
     assert primary_data_count == 1, "did not find correct number of primary data files, expected 1 but found #{primary_data_count}"
     assert other_data_count == 19, "did not find correct number of other data files, expected 19 but found #{primary_data_count}"
 
-    # give time for parses to complete
+    # Parse should take less than 2 minutes
     i = 0
     parsed_files = @driver.find_elements(:class, 'study-file-parsed').map {|el| el['data-parsed'] == 'true'}.uniq
     while parsed_files.size > 1 && i < 12
