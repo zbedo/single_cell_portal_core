@@ -153,12 +153,19 @@ class SiteController < ApplicationController
 
     # if only one gene was searched for, make an attempt to load it and redirect to correct page
     if @terms.size == 1
-        redirect_to merge_default_redirect_params(view_gene_expression_path(accession: @study.accession, study_name: @study.url_safe_name, gene: @terms.first,
+      # do a quick presence check to make sure the gene exists before trying to load
+      file_ids = load_study_expression_matrix_ids(@study.id)
+      if !Gene.study_has?(@study.id, file_ids, @terms.first)
+        redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
+                    alert: "No matches found for: #{@terms.first}." and return
+      else
+        redirect_to merge_default_redirect_params(view_gene_expression_path(accession: @study.accession, study_name: @study.url_safe_name, gene: @gene['name'],
                                                                             cluster: cluster, annotation: annotation, consensus: consensus,
                                                                             subsample: subsample, plot_type: plot_type,
                                                                             boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering,
                                                                             heatmap_size: heatmap_size, colorscale: colorscale),
                                                   scpbr: params[:scpbr])  and return
+      end
     end
 
     # else, determine which view to load (heatmaps vs. violin/scatter)
@@ -498,7 +505,7 @@ class SiteController < ApplicationController
     # call search_expression_scores to return values not found
 
     terms = params[:gene_set].blank? && !params[:consensus].blank? ? parse_search_terms(:genes) : @study.precomputed_scores.by_name(params[:gene_set]).gene_list
-    @genes, @not_found = search_expression_scores(terms)
+    @genes, @not_found = search_expression_scores(terms, @study.id)
 
     consensus = params[:consensus].nil? ? 'Mean ' : params[:consensus].capitalize + ' '
     @gene_list = @genes.map{|gene| gene['name']}.join(' ')
@@ -529,7 +536,7 @@ class SiteController < ApplicationController
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
     consensus = params[:consensus].nil? ? 'Mean ' : params[:consensus].capitalize + ' '
     @gene_list = @genes.map{|gene| gene['gene']}.join(' ')
-    dotplot_genes, dotplot_not_found = search_expression_scores(terms)
+    dotplot_genes, dotplot_not_found = search_expression_scores(terms, @study.id)
     @dotplot_gene_list = dotplot_genes.map{|gene| gene['name']}.join(' ')
     @y_axis_title = consensus + ' ' + load_expression_axis_title
     # depending on annotation type selection, set up necessary partial names to use in rendering
@@ -587,7 +594,7 @@ class SiteController < ApplicationController
   def view_gene_expression_heatmap
     # parse and divide up genes
     terms = parse_search_terms(:genes)
-    @genes, @not_found = search_expression_scores(terms)
+    @genes, @not_found = search_expression_scores(terms, @study.id)
     @gene_list = @genes.map{|gene| gene['name']}.join(' ')
     # load dropdown options
     @options = load_cluster_group_options
@@ -2058,6 +2065,11 @@ class SiteController < ApplicationController
   #
   ###
 
+  # load expression matrix ids for optimized search speed
+  def load_study_expression_matrix_ids(study_id)
+    StudyFile.where(study_id: study_id, :file_type.in => ['Expression Matrix', 'MM Coordinate Matrix']).map(&:id)
+  end
+
   # generic search term parser
   def parse_search_terms(key)
     terms = params[:search][key]
@@ -2072,7 +2084,7 @@ class SiteController < ApplicationController
   # generic expression score getter, preserves order and discards empty matches
   def load_expression_scores(terms)
     genes = []
-    matrix_ids = @study.expression_matrix_files.map(&:id)
+    matrix_ids = load_study_expression_matrix_ids(@study.id)
     terms.each do |term|
       matches = @study.genes.by_name_or_id(term, matrix_ids)
       unless matches.empty?
@@ -2084,13 +2096,12 @@ class SiteController < ApplicationController
 
   # search genes and save terms not found.  does not actually load expression scores to improve search speed,
   # but rather just matches gene names if possible.  to load expression values, use load_expression_scores
-  def search_expression_scores(terms)
+  def search_expression_scores(terms, study_id)
     genes = []
     not_found = []
-    known_genes = @study.genes.unique_genes
-    known_searchable_genes = known_genes.map(&:downcase)
+    file_ids = load_study_expression_matrix_ids(study_id)
     terms.each do |term|
-      if known_genes.include?(term) || known_searchable_genes.include?(term)
+      if Gene.study_has?(study_id, file_ids, term)
         genes << {'name' => term}
       else
         not_found << {'name' => term}
