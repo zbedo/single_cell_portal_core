@@ -17,7 +17,7 @@ all_logs = Dir.entries("log").keep_if {|l| !l.start_with?('.')}
     end
   else
 		all_logs.select {|l| l =~ /#{i}/}.each do |log|
-      if log.split('.').first == 'delayed_job'
+      if log.split('.').first == 'delayed_job' && log.split('.').size == 3
         basename = log.split('.')[0..1].join('.')
       else
         basename = log.split('.').first
@@ -29,7 +29,7 @@ end
 
 # find all logs that haven't been rolled over yet and rename
 all_logs.select {|l| l.split('.').last == 'log'}.each do |log|
-  if log.split('.').first == 'delayed_job'
+  if log.split('.').first == 'delayed_job' && log.split('.').size == 3
     basename = log.split('.')[0..1].join('.')
   else
     basename = log.split('.').first
