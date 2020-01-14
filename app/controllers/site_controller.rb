@@ -155,7 +155,7 @@ class SiteController < ApplicationController
     if @terms.size == 1
       # do a quick presence check to make sure the gene exists before trying to load
       file_ids = load_study_expression_matrix_ids(@study.id)
-      if !Gene.study_has?(@study.id, file_ids, @terms.first)
+      if !Gene.study_has_gene?(study_id: @study.id, expr_matrix_ids: file_ids, gene_name: @terms.first)
         redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
                     alert: "No matches found for: #{@terms.first}." and return
       else
@@ -2101,7 +2101,7 @@ class SiteController < ApplicationController
     not_found = []
     file_ids = load_study_expression_matrix_ids(study_id)
     terms.each do |term|
-      if Gene.study_has?(study_id, file_ids, term)
+      if Gene.study_has_gene?(study_id: study_id, expr_matrix_ids: file_ids, gene_name: term)
         genes << {'name' => term}
       else
         not_found << {'name' => term}

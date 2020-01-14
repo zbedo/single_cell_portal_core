@@ -69,7 +69,7 @@ class Gene
   ##
 
   # find if a study has a given gene quickly for search gating
-  def self.study_has?(study_id, expr_matrix_ids, gene_name)
+  def self.study_has_gene?(study_id:, expr_matrix_ids:, gene_name:)
     Gene.where(study_id: study_id, :study_file_id.in => expr_matrix_ids).any_of({name: gene_name},{searchable_name: gene_name}).exists?
   end
 
