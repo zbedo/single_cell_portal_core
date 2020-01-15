@@ -17,6 +17,7 @@ all_logs = Dir.entries("log").keep_if {|l| !l.start_with?('.')}
     end
   else
 		all_logs.select {|l| l =~ /#{i}/}.each do |log|
+      # handling of delayed_job.log is different that delayed_job.[RAILS_ENV].log
       if log.split('.').first == 'delayed_job' && log.split('.').size == 3
         basename = log.split('.')[0..1].join('.')
       else
