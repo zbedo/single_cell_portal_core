@@ -273,7 +273,7 @@ class UiTestSuite < Test::Unit::TestCase
     next_btn = @driver.find_element(:id, 'next-btn')
     next_btn.click
 
-    # TODO: figure out how to get this to work with ingest
+    # SCP-2072: figure out how to get this to work with ingest
     # upload a coordinate labels file
     # wait_for_render(:class, 'add-coordinate-labels')
     # add_coords_btn = @driver.find_element(:class, 'add-coordinate-labels')
@@ -1361,6 +1361,16 @@ class UiTestSuite < Test::Unit::TestCase
     assert primary_data_count == 1, "did not find correct number of primary data files, expected 1 but found #{primary_data_count}"
     assert other_data_count == 19, "did not find correct number of other data files, expected 19 but found #{primary_data_count}"
 
+    # Parse should take less than 2 minutes
+    i = 0
+    parsed_files = @driver.find_elements(:class, 'study-file-parsed').map {|el| el['data-parsed'] == 'true'}.uniq
+    while parsed_files.size > 1 && i < 12
+      i += 1
+      sleep(10)
+      @driver.get @driver.current_url
+      parsed_files = @driver.find_elements(:class, 'study-file-parsed').map {|el| el['data-parsed'] == 'true'}.uniq
+    end
+
     # make sure edits saved by going through updated list of synced files and comparing values
     updated_files.each do |id, values|
       study_file_table_row = @driver.find_element(:id, id)
@@ -2373,9 +2383,10 @@ class UiTestSuite < Test::Unit::TestCase
     assert rendered, "cluster plot did not finish rendering, expected true but found #{rendered}"
 
     # check for coordinate labels
-    labels = @driver.execute_script("return layout.scene.annotations;")
-    assert_not_nil labels, 'Did not return coordinate labels'
-    assert labels.size == 8, "Did not find coorect number of coordinate labels, expected 8 but found #{labels.size}"
+    # SCP-2072: figure out how to get these back into first create-study: test so we can assert this
+    # labels = @driver.execute_script("return layout.scene.annotations;")
+    # assert_not_nil labels, 'Did not return coordinate labels'
+    # assert labels.size == 8, "Did not find coorect number of coordinate labels, expected 8 but found #{labels.size}"
 
     # load subclusters
     view_options_panel = @driver.find_element(:id, 'view-option-link')
@@ -2401,18 +2412,17 @@ class UiTestSuite < Test::Unit::TestCase
       @wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
       cluster_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
       assert cluster_rendered, "cluster plot did not finish rendering on change, expected true but found #{cluster_rendered}"
+    end
 
     # Test rendering of clusters with percent signs in name
     clusters.select {|opt| opt.text == 'Test Cluster 2'}.first.click
-    sleep(0.5)
+    sleep(1) # let 'rendered' for #cluster-plot set to false
+    @wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
     annotations = @driver.find_element(:id, 'annotation').find_elements(:tag_name, 'option')
     annotations.select {|opt| opt.text == 'Has % sign'}.first.click
     @wait.until {wait_for_plotly_render('#cluster-plot', 'rendered')}
     sub_rendered = @driver.execute_script("return $('#cluster-plot').data('rendered')")
     assert sub_rendered, "plot for cluster with percent sign in name did not finish rendering on change, expected true but found #{sub_rendered}"
-
-
-    end
 
     # now test private study
     login($test_email, $test_email_password)
@@ -2641,7 +2651,7 @@ class UiTestSuite < Test::Unit::TestCase
   ##
 
   # search for a single gene and view plots
-  test 'front-end: search-genes: single' do
+  test 'front-end: view: search-genes: single' do
     puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     path = @base_url + "/study/test-study-#{$random_seed}"
@@ -2787,7 +2797,7 @@ class UiTestSuite < Test::Unit::TestCase
   end
 
   # search for multiple genes, but collapse using a consensus metric and view plots
-  test 'front-end: search-genes: multiple consensus' do
+  test 'front-end: view: search-genes: multiple consensus' do
     puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     path = @base_url + "/study/test-study-#{$random_seed}"
@@ -2959,7 +2969,7 @@ class UiTestSuite < Test::Unit::TestCase
   end
 
   # search for multiple genes and view as a dot plot, and heatmap
-  test 'front-end: search-genes: multiple dot plot heatmap' do
+  test 'front-end: view: search-genes: multiple dot plot heatmap' do
     puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     path = @base_url + "/study/test-study-#{$random_seed}"
@@ -3074,7 +3084,7 @@ class UiTestSuite < Test::Unit::TestCase
   end
 
   # search for multiple genes by uploading a text file of gene names
-  test 'front-end: search-genes: multiple upload file' do
+  test 'front-end: view: search-genes: multiple upload file' do
     puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     path = @base_url + "/study/test-study-#{$random_seed}"
@@ -3122,7 +3132,7 @@ class UiTestSuite < Test::Unit::TestCase
   end
 
   # perform a global gene search for public & private studies
-  test 'front-end: search-genes: global' do
+  test 'front-end: view: search-genes: global' do
     puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     @driver.get @base_url
@@ -3196,7 +3206,7 @@ class UiTestSuite < Test::Unit::TestCase
   end
 
   # view a list of marker genes as a heatmap
-  test 'front-end: marker-gene: heatmap' do
+  test 'front-end: view: marker-gene: heatmap' do
     puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     path = @base_url + "/study/test-study-#{$random_seed}"
@@ -3263,7 +3273,7 @@ class UiTestSuite < Test::Unit::TestCase
   end
 
   # view a list of marker genes as distribution plots
-  test 'front-end: marker-gene: box/scatter' do
+  test 'front-end: view: marker-gene: box/scatter' do
     puts "#{File.basename(__FILE__)}: '#{self.method_name}'"
 
     path = @base_url + "/study/test-study-#{$random_seed}"

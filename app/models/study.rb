@@ -1456,7 +1456,7 @@ class Study
       expression_file.remove_local_copy
       expression_file.destroy
       Rails.logger.info Time.zone.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Expression file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Expression file: '#{filename}' parse has failed", error_message, self).deliver_now
       raise StandardError, error_message
     end
 
@@ -1466,7 +1466,7 @@ class Study
       expression_file.remove_local_copy
       expression_file.destroy
       Rails.logger.info Time.zone.now.to_s + ': ' + @validation_error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Expression file: '#{filename}' parse has failed", @validation_error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Expression file: '#{filename}' parse has failed", @validation_error_message, self).deliver_now
       raise StandardError, error_message
     end
 
@@ -1669,7 +1669,7 @@ class Study
       expression_file.destroy
       error_message = "#{@last_line}: #{e.message}"
       Rails.logger.info Time.zone.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Gene Expression matrix: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Gene Expression matrix: '#{filename}' parse has failed", error_message, self).deliver_now
     end
     true
   end
@@ -1731,7 +1731,7 @@ class Study
       filename = ordinations_file.upload_file_name
       ordinations_file.remove_local_copy
       ordinations_file.destroy
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Cluster file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Cluster file: '#{filename}' parse has failed", error_message, self).deliver_now
       raise StandardError, error_message
     end
 
@@ -1742,7 +1742,7 @@ class Study
       filename = ordinations_file.upload_file_name
       ordinations_file.remove_local_copy
       ordinations_file.destroy
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Cluster file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Cluster file: '#{filename}' parse has failed", error_message, self).deliver_now
       raise StandardError, error_message
     end
 
@@ -2027,7 +2027,7 @@ class Study
       ordinations_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.zone.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Cluster file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Cluster file: '#{filename}' parse has failed", error_message, self).deliver_now
     end
     true
   end
@@ -2319,7 +2319,7 @@ class Study
       metadata_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.zone.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Metadata file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Metadata file: '#{filename}' parse has failed", error_message, self).deliver_now
       raise StandardError, error_message
     end
 
@@ -2329,7 +2329,7 @@ class Study
       filename = metadata_file.upload_file_name
       metadata_file.destroy
       Rails.logger.info Time.zone.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Metadata file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Metadata file: '#{filename}' parse has failed", error_message, self).deliver_now
       raise StandardError, error_message
     end
 
@@ -2546,7 +2546,7 @@ class Study
       metadata_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.zone.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Metadata file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Metadata file: '#{filename}' parse has failed", error_message, self).deliver_now
     end
     true
   end
