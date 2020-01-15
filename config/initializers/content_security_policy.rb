@@ -31,14 +31,17 @@ SecureHeaders::Configuration.default do |config|
       connect_src: ['\'self\'', "https://#{ENV['HOSTNAME']}", 'https://www.google-analytics.com', 'https://unpkg.com', 'https://igv.org',
                     'https://www.googleapis.com', 'https://s3.amazonaws.com', 'https://data.broadinstitute.org', 'https://portals.broadinstitute.org',
                     'https://us.input.tcell.insight.rapid7.com', 'https://api.tcell.io', 'https://us.browser.tcell.insight.rapid7.com',
-                    'https://us.agent.tcell.insight.rapid7.com', 'https://us.jsagent.tcell.insight.rapid7.com', 'https://accounts.google.com'],
+                    'https://us.agent.tcell.insight.rapid7.com', 'https://us.jsagent.tcell.insight.rapid7.com', 'https://accounts.google.com',
+                    'https://bam.nr-data.net'
+                  ],
       img_src: %w('self' data: https://www.google-analytics.com https://online.swagger.io),
       manifest_src: %w('self'),
       object_src: %w('none'),
       script_src: %w('self' blob: 'unsafe-eval' 'unsafe-inline' 'strict-dynamic' https://cdn.plot.ly https://cdn.datatables.net
                      https://www.google-analytics.com https://cdnjs.cloudflare.com https://maxcdn.bootstrapcdn.com
                      https://use.fontawesome.com https://api.tcell.io https://us.browser.tcell.insight.rapid7.com
-                     https://us.jsagent.tcell.insight.rapid7.com https://us.agent.tcell.insight.rapid7.com),
+                     https://us.jsagent.tcell.insight.rapid7.com https://us.agent.tcell.insight.rapid7.com https://js-agent.newrelic.com
+                     https://bam.nr-data.net),
       style_src: %w('self' https://maxcdn.bootstrapcdn.com 'unsafe-inline'),
       upgrade_insecure_requests: true, # see https://www.w3.org/TR/upgrade-insecure-requests/
   }

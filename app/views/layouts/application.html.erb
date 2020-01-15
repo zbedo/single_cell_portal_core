@@ -18,6 +18,11 @@
           window.location = searchUrl;
       }
   </script>
+
+  <script type="text/javascript"  nonce="<%= content_security_policy_script_nonce %>">
+      <%= render '/layouts/nr_script.js' %>
+  </script>
+
   <%= stylesheet_link_tag    'application', media: 'all' %>
   <%= nonced_javascript_include_tag "https://cdn.plot.ly/plotly-1.47.4.min.js" %>
   <%= nonced_javascript_pack_tag 'application' %>
