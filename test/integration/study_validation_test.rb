@@ -27,9 +27,6 @@ class StudyValidationTest < ActionDispatch::IntegrationTest
     assert study.present?, "Study did not successfully save"
 
     example_files = {
-      expression: {
-        name: 'expression_matrix_example_bad.txt'
-      },
       metadata: {
         name: 'metadata_bad.txt'
       },
@@ -42,13 +39,6 @@ class StudyValidationTest < ActionDispatch::IntegrationTest
     }
 
     ## upload files
-
-    # bad expression matrix, bad first header column, duplicate row
-    file_params = {study_file: {file_type: 'Expression Matrix', study_id: study.id.to_s}}
-    perform_study_file_upload('expression_matrix_example_bad.txt', file_params, study.id)
-    assert_response 200, "Expression matrix upload failed: #{@response.code}"
-    assert_equal 1, study.expression_matrix_files.size, "Expression matrix failed to associate, found #{study.expression_matrix_files.size} files"
-    example_files[:expression][:object] = study.expression_matrix_files.first
 
     # bad metadata file
     file_params = {study_file: {file_type: 'Metadata', study_id: study.id.to_s}}
@@ -103,8 +93,6 @@ class StudyValidationTest < ActionDispatch::IntegrationTest
       assert e[:object].queued_for_deletion
     end
 
-    assert_equal 0, study.genes.size
-    assert_equal 0, study.expression_matrix_files.size
     assert_equal 0, study.cell_metadata.size
     assert study.metadata_file.nil?, "Found metadata file when should have found none"
     assert_equal 0, study.cluster_groups.size
@@ -126,6 +114,23 @@ class StudyValidationTest < ActionDispatch::IntegrationTest
     assert_response 200, "Did not redirect to upload successfully"
     study = Study.find_by(name: "Local Parse Failure Study #{@random_seed}")
     assert study.present?, "Study did not successfully save"
+
+    # bad expression matrix
+    file_params = {study_file: {file_type: 'Expression Matrix', study_id: study.id.to_s}}
+    perform_study_file_upload('expression_matrix_example_bad.txt', file_params, study.id)
+    assert_response 200, "Expression matrix upload failed: #{@response.code}"
+    assert study.expression_matrix_files.size == 1, "Expression matrix failed to associate, found #{study.expression_matrix_files.size} files"
+    expression_matrix_1 = study.expression_matrix_files.first
+    # this parse has a duplicate gene, which will throw an error
+    begin
+      study.initialize_gene_expression_data(expression_matrix_1, @test_user)
+    rescue => e
+      assert e.is_a?(StandardError), "Caught unknown error during parse: #{e.class}:#{e.message}"
+    end
+
+    assert study.genes.size == 0, "Found #{study.genes.size} genes when should have found 0"
+    assert study.expression_matrix_files.size == 0,
+           "Found #{study.expression_matrix_files.size} expression matrices when should have found 0"
 
     # bad marker gene list
     file_params = {study_file: {name: 'Bad Test Gene List', file_type: 'Gene List', study_id: study.id.to_s}}
