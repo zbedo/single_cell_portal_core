@@ -273,7 +273,7 @@ class UiTestSuite < Test::Unit::TestCase
     next_btn = @driver.find_element(:id, 'next-btn')
     next_btn.click
 
-    # TODO: figure out how to get this to work with ingest
+    # SCP-2072: figure out how to get this to work with ingest
     # upload a coordinate labels file
     # wait_for_render(:class, 'add-coordinate-labels')
     # add_coords_btn = @driver.find_element(:class, 'add-coordinate-labels')
@@ -2383,7 +2383,7 @@ class UiTestSuite < Test::Unit::TestCase
     assert rendered, "cluster plot did not finish rendering, expected true but found #{rendered}"
 
     # check for coordinate labels
-    # TODO: figure out how to get these back into first create-study: test so we can assert this
+    # SCP-2072: figure out how to get these back into first create-study: test so we can assert this
     # labels = @driver.execute_script("return layout.scene.annotations;")
     # assert_not_nil labels, 'Did not return coordinate labels'
     # assert labels.size == 8, "Did not find coorect number of coordinate labels, expected 8 but found #{labels.size}"
