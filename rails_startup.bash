@@ -7,17 +7,18 @@ echo "*** COMPLETED ***"
 echo "*** ROLLING OVER LOGS ***"
 ruby /home/app/webapp/bin/cycle_logs.rb
 echo "*** COMPLETED ***"
-echo "*** COMPILING NODE MODULES ***"
-sudo -E -u app -H bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE yarn:install
-echo "*** COMPLETED ***"
 if [[ $PASSENGER_APP_ENV = "production" ]] || [[ $PASSENGER_APP_ENV = "staging" ]]
 then
     echo "*** PRECOMPILING ASSETS ***"
+    sudo -E -u app -H bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE yarn:install
     sudo -E -u app -H bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE assets:clean
     sudo -E -u app -H bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE assets:precompile
     sudo -E -u app -H bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE webpacker:compile
     echo "*** COMPLETED ***"
 elif [[ $PASSENGER_APP_ENV = "development" ]]; then
+    echo "*** UPGRADING/COMPILING NODE MODULES ***"
+    # force upgrade in local development to ensure yarn.lock is continually updated
+    sudo -E -u app -H yarn upgrade
     sudo -E -u app -H /home/app/webapp/bin/webpack
 fi
 if [[ -n $TCELL_AGENT_APP_ID ]] && [[ -n $TCELL_AGENT_API_KEY ]] ; then
@@ -37,15 +38,17 @@ if [[ -z $SERVICE_ACCOUNT_KEY ]]; then
 	echo $GOOGLE_CLOUD_KEYFILE_JSON >| /home/app/.google_service_account.json
 	chmod 400 /home/app/.google_service_account.json
 	chown app:app /home/app/.google_service_account.json
-	echo "export SERVICE_ACCOUNT_KEY=/home/app/.google_service_account.json" >> /home/app/.cron_env
+	echo "export SERVICE_ACCOUNT_KEY='/home/app/.google_service_account.json'" >> /home/app/.cron_env
 else
-	echo "export SERVICE_ACCOUNT_KEY=$SERVICE_ACCOUNT_KEY" >> /home/app/.cron_env
+	echo "export SERVICE_ACCOUNT_KEY='$SERVICE_ACCOUNT_KEY'" >> /home/app/.cron_env
 fi
-if [[ -n $READ_ONLY_SERVICE_ACCOUNT_KEY ]]; then
-	echo "export READ_ONLY_SERVICE_ACCOUNT_KEY=$READ_ONLY_SERVICE_ACCOUNT_KEY" >> /home/app/.cron_env
+
+if [[ -n "$READ_ONLY_SERVICE_ACCOUNT_KEY" ]]; then
+	echo "export READ_ONLY_SERVICE_ACCOUNT_KEY='$READ_ONLY_SERVICE_ACCOUNT_KEY'" >> /home/app/.cron_env
 else
 	echo "*** NO READONLY SERVICE ACCOUNT DETECTED -- SOME FUNCTIONALITY WILL BE DISABLED ***"
 fi
+
 chmod 400 /home/app/.cron_env
 chown app:app /home/app/.cron_env
 echo "*** COMPLETED ***"
@@ -56,12 +59,13 @@ echo "*** COMPLETED ***"
 
 if [[ ! -d /home/app/webapp/tmp/pids ]]
 then
-	echo "*** MAKING TMP DIR ***"
-	sudo -E -u app -H mkdir -p /home/app/webapp/tmp/pids
-	echo "*** COMPLETED ***"
+    echo "*** MAKING tmp/pids DIR ***"
+    sudo -E -u app -H mkdir -p /home/app/webapp/tmp/pids || { echo "FAILED to create ./tmp/pids/" >&2; exit 1; }
+    echo "*** COMPLETED ***"
 fi
-echo "*** STARTING DELAYED_JOB ***"
-sudo -E -u app -H bin/delayed_job start $PASSENGER_APP_ENV -n 4
+echo "*** STARTING DELAYED_JOB for $PASSENGER_APP_ENV env ***"
+rm tmp/pids/delayed_job.*.pid
+sudo -E -u app -H bin/delayed_job start $PASSENGER_APP_ENV -n 6 || { echo "FAILED to start DELAYED_JOB" >&2; exit 1; }
 echo "*** ADDING CRONTAB TO CHECK DELAYED_JOB ***"
 echo "*/15 * * * * . /home/app/.cron_env ; /home/app/webapp/bin/job_monitor.rb -e=$PASSENGER_APP_ENV >> /home/app/webapp/log/cron_out.log 2>&1" | crontab -u app -
 echo "*** COMPLETED ***"

@@ -549,6 +549,8 @@ class FireCloudClientTest < ActiveSupport::TestCase
     # get single remote file
     puts 'getting single file...'
     bucket_file = bucket_files.sample
+    file_exists = @fire_cloud_client.workspace_file_exists?(workspace['bucketName'], bucket_file.name)
+    assert file_exists, "Did not locate bucket file '#{bucket_file.name}'"
     file = @fire_cloud_client.execute_gcloud_method(:get_workspace_file, 0, workspace['bucketName'], bucket_file.name)
     assert file.present?, "Did not retrieve bucket file '#{bucket_file.name}'"
     assert file.generation == bucket_file.generation, "Generation tag is incorrect on retrieved file, expected '#{bucket_file.generation}' but found '#{file.generation}'"
@@ -571,14 +573,15 @@ class FireCloudClientTest < ActiveSupport::TestCase
 
     # generate a signed URL for a file
     puts 'getting signed URL for file...'
-    signed_url = @fire_cloud_client.execute_gcloud_method(:generate_signed_url, 0, workspace['bucketName'], participant_filename, expires: 5)
+    seconds_to_expire = 15
+    signed_url = @fire_cloud_client.execute_gcloud_method(:generate_signed_url, 0, workspace['bucketName'], participant_filename, expires: seconds_to_expire)
     signed_url_response = RestClient.get signed_url
     assert signed_url_response.code == 200, "Did not receive correct response code on signed_url, expected 200 but found #{signed_url_response.code}"
     participant_contents = participant_upload.read
     assert participant_contents == signed_url_response.body, "Response body contents are incorrect, expected '#{participant_contents}' but found '#{signed_url_response.body}'"
 
     # check timeout
-    sleep(5)
+    sleep(seconds_to_expire)
     begin
       RestClient.get signed_url
     rescue RestClient::BadRequest => timeout
@@ -592,6 +595,12 @@ class FireCloudClientTest < ActiveSupport::TestCase
     puts 'getting API URL for file...'
     api_url = @fire_cloud_client.execute_gcloud_method(:generate_api_url, 0, workspace['bucketName'], participant_filename)
     assert api_url.start_with?("https://www.googleapis.com/storage"), "Did not receive correctly formatted api_url, expected to start with 'https://www.googleapis.com/storage' but found #{api_url}"
+
+    puts 'reading file into memory...'
+    remote_file = @fire_cloud_client.execute_gcloud_method(:read_workspace_file, 0, workspace['bucketName'], participant_filename)
+    remote_contents = remote_file.read
+    assert remote_contents == participant_contents,
+           "Did not correctly read remote file into memory, contents did not match\n## remote ##\n#{remote_contents}\n## local ##\n#{participant_contents}"
 
     # close upload files
     participant_upload.close

@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-ruby '2.5.5'
+ruby '2.5.7'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '5.2.2.1'
@@ -38,11 +38,12 @@ group :development do
 
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem 'spring'
-	gem 'ruby-debug-ide'
-	gem 'debase'
+  gem 'ruby-debug-ide'
+  gem 'debase'
   gem 'test-unit'
   gem 'brakeman', :require => false
   gem 'listen'
+  gem 'byebug'
 end
 
 gem 'devise'
@@ -50,6 +51,7 @@ gem 'omniauth-google-oauth2'
 gem 'omniauth-rails_csrf_protection'
 gem 'googleauth'
 gem 'google-cloud-storage', require: 'google/cloud/storage'
+gem 'google-cloud-bigquery', require: "google/cloud/bigquery"
 gem 'selenium-webdriver'
 gem 'jquery-ui-rails', :git => 'https://github.com/joliss/jquery-ui-rails'
 gem 'bootstrap-sass', :git => 'https://github.com/twbs/bootstrap-sass'
@@ -67,7 +69,6 @@ gem 'jquery-fileupload-rails'
 gem 'mongoid-paperclip', :require => 'mongoid_paperclip', git: 'https://github.com/mrrooijen/mongoid-paperclip'
 gem 'non-stupid-digest-assets'
 gem 'will_paginate_mongoid'
-gem 'rails-jquery-autocomplete', git: 'https://github.com/bigtunacan/rails-jquery-autocomplete'
 gem 'naturally'
 gem 'rest-client'
 gem 'actionpack-action_caching'
@@ -83,4 +84,5 @@ gem 'swagger_ui_engine'
 gem 'sentry-raven'
 gem 'travis'
 gem 'rubyzip'
+gem 'time_difference'
 gem 'tcell_agent'

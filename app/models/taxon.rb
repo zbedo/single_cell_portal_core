@@ -5,7 +5,12 @@ class Taxon
 
   has_many :study_files
   has_many :directory_listings
-  has_many :genome_assemblies, dependent: :destroy
+  has_many :genome_assemblies, dependent: :destroy do
+    def latest
+      order(release_date: :desc).first
+    end
+  end
+
   accepts_nested_attributes_for :genome_assemblies, allow_destroy: true
   belongs_to :user
 
@@ -127,6 +132,10 @@ class Taxon
 
   def display_name
     "#{self.common_name}"
+  end
+
+  def current_assembly
+    self.genome_assemblies.latest
   end
 
   # parser to auto-add taxons, and assemblies from an uploaded file, returning number of new entities

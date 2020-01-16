@@ -17,15 +17,24 @@ all_logs = Dir.entries("log").keep_if {|l| !l.start_with?('.')}
     end
   else
 		all_logs.select {|l| l =~ /#{i}/}.each do |log|
-      basename = log.split('.').first
+      # handling of delayed_job.log is different that delayed_job.[RAILS_ENV].log
+      if log.split('.').first == 'delayed_job' && log.split('.').size == 3
+        basename = log.split('.')[0..1].join('.')
+      else
+        basename = log.split('.').first
+      end
 			File.exists?("log/#{basename}.#{i}.log") ? File.rename("log/#{basename}.#{i}.log", "log/#{basename}.#{i + 1}.log") : next
 		end
   end
 end
 
 # find all logs that haven't been rolled over yet and rename
-all_logs.select {|l| l.split('.')[1] == 'log'}.each do |log|
-	basename = log.split('.').first
+all_logs.select {|l| l.split('.').last == 'log'}.each do |log|
+  if log.split('.').first == 'delayed_job' && log.split('.').size == 3
+    basename = log.split('.')[0..1].join('.')
+  else
+    basename = log.split('.').first
+  end
   if File.exists?("log/#{basename}.log")
 		FileUtils.cp("log/#{basename}.log", "log/#{basename}.1.log")
 		File.delete("log/#{basename}.log")

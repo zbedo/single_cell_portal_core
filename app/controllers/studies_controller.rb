@@ -572,7 +572,8 @@ class StudiesController < ApplicationController
     case @study_file.file_type
     when 'Cluster'
       @study_file.update(parse_status: 'parsing')
-      @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user)
+      job = IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_cluster)
+      job.delay.push_remote_and_launch_ingest
     when 'Coordinate Labels'
       @study_file.update(parse_status: 'parsing')
       # we need to create the bundle here as it doesn't exist yet
@@ -584,6 +585,7 @@ class StudiesController < ApplicationController
       @study_file.update(parse_status: 'parsing')
       @study.delay.initialize_gene_expression_data(@study_file, current_user)
     when 'MM Coordinate Matrix'
+      @study.send_to_firecloud(@study_file)
       bundle = @study_file.study_file_bundle
       barcodes = @study_file.bundled_files.detect {|f| f.file_type == '10X Barcodes File'}
       genes = @study_file.bundled_files.detect {|f| f.file_type == '10X Genes File'}
@@ -594,10 +596,9 @@ class StudiesController < ApplicationController
         ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, @study_file, genes, barcodes)
       else
         logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
-        # send file directly to firecloud, will pull down to parse later as needed
-        @study.delay.send_to_firecloud(@study_file)
       end
     when '10X Genes File'
+      @study.send_to_firecloud(@study_file)
       bundle = @study_file.study_file_bundle
       matrix = bundle.parent
       barcodes = bundle.bundled_files.detect {|f| f.file_type == '10X Barcodes File' }
@@ -609,10 +610,10 @@ class StudiesController < ApplicationController
       else
         # we can only get here if we have a matrix and no barcodes, which means the barcodes form is already rendered
         logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
-        # send file directly to firecloud, will pull down to parse later as needed
         @study.delay.send_to_firecloud(@study_file)
       end
     when '10X Barcodes File'
+      @study.send_to_firecloud(@study_file)
       bundle = @study_file.study_file_bundle
       matrix = bundle.parent
       genes = bundle.bundled_files.detect {|f| f.file_type == '10X Genes File' }
@@ -624,7 +625,6 @@ class StudiesController < ApplicationController
       else
         # we can only get here if we have a matrix and no genes, which means the genes form is already rendered
         logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
-        # send file directly to firecloud, will pull down to parse later as needed
         @study.delay.send_to_firecloud(@study_file)
       end
     when 'Gene List'
@@ -632,7 +632,9 @@ class StudiesController < ApplicationController
       @study.delay.initialize_precomputed_scores(@study_file, current_user)
     when 'Metadata'
       @study_file.update(parse_status: 'parsing')
-      @study.delay.initialize_cell_metadata(@study_file, current_user)
+      @study.send_to_firecloud(@study_file)
+      job = IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_cell_metadata)
+      job.delay.push_remote_and_launch_ingest
     end
     changes = ["Study file added: #{@study_file.upload_file_name}"]
     if @study.study_shares.any?
@@ -805,9 +807,6 @@ class StudiesController < ApplicationController
           @study.save
         end
         @cluster.update(name: @study_file.name)
-        # also update data_arrays
-        DataArray.where(study_id: @study.id, linear_data_type: 'ClusterGroup', linear_data_id: @cluster.id,
-                        study_file_id: @study_file.id).update_all(cluster_name: study_file_params[:name])
       elsif study_file_params[:file_type] == 'Expression Matrix' && !study_file_params[:y_axis_label].blank?
         # if user is supplying an expression axis label, update default options hash
         @study.update(default_options: @study.default_options.merge(expression_label: study_file_params[:y_axis_label]))
@@ -819,53 +818,57 @@ class StudiesController < ApplicationController
         logger.info "#{Time.zone.now}: Parsing #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} as remote file"
         @message += " You will receive an email at #{current_user.email} when the parse has completed."
         case @study_file.file_type
-          when 'Cluster'
-            @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false, reparse: true})
-          when 'Coordinate Labels'
-            @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user, {local: false, reparse: true})
-          when 'Expression Matrix'
-            @study.delay.initialize_gene_expression_data(@study_file, current_user, {local: false, reparse: true})
-          when 'MM Coordinate Matrix'
-            barcodes = @study_file.bundled_files.detect {|f| f.file_type == '10X Barcodes File'}
-            genes = @study_file.bundled_files.detect {|f| f.file_type == '10X Genes File'}
-            if barcodes.present? && genes.present?
-              @study_file.update(parse_status: 'parsing')
-              genes.update(parse_status: 'parsing')
-              barcodes.update(parse_status: 'parsing')
-              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, @study_file, genes, barcodes, {sync: true, reparse: true})
-            else
-              logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
-            end
-          when '10X Genes File'
-            matrix_id = @study_file.options[:matrix_id]
-            matrix = @study_file.bundle_parent
-            barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => matrix_id)
-            if barcodes.present? && matrix.present?
-              @study_file.update(parse_status: 'parsing')
-              matrix.update(parse_status: 'parsing')
-              barcodes.update(parse_status: 'parsing')
-              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, @study_file, barcodes, {sync: true, reparse: true})
-            else
-              # we can only get here if we have a matrix and no barcodes, which means the barcodes form is already rendered
-              logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
-            end
-          when '10X Barcodes File'
-            matrix_id = @study_file.options[:matrix_id]
-            matrix = @study_file.bundle_parent
-            genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => matrix_id)
-            if genes.present? && matrix.present?
-              @study_file.update(parse_status: 'parsing')
-              genes.update(parse_status: 'parsing')
-              matrix.update(parse_status: 'parsing')
-              ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, genes, @study_file, {sync: true, reparse: true})
-            else
-              # we can only get here if we have a matrix and no genes, which means the genes form is already rendered
-              logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
-            end
-          when 'Gene List'
-            @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false, reparse: true})
-          when 'Metadata'
-            @study.delay.initialize_cell_metadata(@study_file, current_user, {local: false, reparse: true})
+        when 'Cluster'
+          @study_file.update(parse_status: 'parsing')
+          job = IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_cluster)
+          job.delay.push_remote_and_launch_ingest(reparse: true)
+        when 'Coordinate Labels'
+          @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user, {local: false, reparse: true})
+        when 'Expression Matrix'
+          @study.delay.initialize_gene_expression_data(@study_file, current_user, {local: false, reparse: true})
+        when 'MM Coordinate Matrix'
+          barcodes = @study_file.bundled_files.detect {|f| f.file_type == '10X Barcodes File'}
+          genes = @study_file.bundled_files.detect {|f| f.file_type == '10X Genes File'}
+          if barcodes.present? && genes.present?
+            @study_file.update(parse_status: 'parsing')
+            genes.update(parse_status: 'parsing')
+            barcodes.update(parse_status: 'parsing')
+            ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, @study_file, genes, barcodes, {sync: true, reparse: true})
+          else
+            logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
+          end
+        when '10X Genes File'
+          matrix_id = @study_file.options[:matrix_id]
+          matrix = @study_file.bundle_parent
+          barcodes = @study.study_files.find_by(file_type: '10X Barcodes File', 'options.matrix_id' => matrix_id)
+          if barcodes.present? && matrix.present?
+            @study_file.update(parse_status: 'parsing')
+            matrix.update(parse_status: 'parsing')
+            barcodes.update(parse_status: 'parsing')
+            ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, @study_file, barcodes, {sync: true, reparse: true})
+          else
+            # we can only get here if we have a matrix and no barcodes, which means the barcodes form is already rendered
+            logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
+          end
+        when '10X Barcodes File'
+          matrix_id = @study_file.options[:matrix_id]
+          matrix = @study_file.bundle_parent
+          genes = @study.study_files.find_by(file_type: '10X Genes File', 'options.matrix_id' => matrix_id)
+          if genes.present? && matrix.present?
+            @study_file.update(parse_status: 'parsing')
+            genes.update(parse_status: 'parsing')
+            matrix.update(parse_status: 'parsing')
+            ParseUtils.delay.cell_ranger_expression_parse(@study, current_user, matrix, genes, @study_file, {sync: true, reparse: true})
+          else
+            # we can only get here if we have a matrix and no genes, which means the genes form is already rendered
+            logger.info "#{Time.zone.now}: Parse for #{@study_file.name} as #{@study_file.file_type} in study #{@study.name} aborted; missing required files"
+          end
+        when 'Gene List'
+          @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false, reparse: true})
+        when 'Metadata'
+          @study_file.update(parse_status: 'parsing')
+          job = IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_cell_metadata)
+          job.delay.push_remote_and_launch_ingest(reparse: true)
         end
       end
 
@@ -894,9 +897,9 @@ class StudiesController < ApplicationController
         # delete matching caches
         @study_file.invalidate_cache_by_file_type
         # queue for deletion
+        @file_type = @study_file.file_type
         @study_file.update(queued_for_deletion: true)
         DeleteQueueJob.new(@study_file).delay.perform
-        @file_type = @study_file.file_type
         @message = "'#{@study_file.name}' has been successfully deleted."
         @partial = @study_file.wizard_partial_name
         # delete source file in FireCloud and then remove record
@@ -986,7 +989,9 @@ class StudiesController < ApplicationController
         # parse file as appropriate type
         case @study_file.file_type
         when 'Cluster'
-          @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false})
+          @study_file.update(parse_status: 'parsing')
+          job = IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_cluster)
+          job.delay.push_remote_and_launch_ingest
         when 'Coordinate Labels'
           @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user, {local: false})
         when 'Expression Matrix'
@@ -1032,7 +1037,9 @@ class StudiesController < ApplicationController
         when 'Gene List'
           @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false})
         when 'Metadata'
-          @study.delay.initialize_cell_metadata(@study_file, current_user, {local: false})
+          @study_file.update(parse_status: 'parsing')
+          job = IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_cell_metadata)
+          job.delay.push_remote_and_launch_ingest
         when 'Analysis Output'
           case @study_file.options[:analysis_name]
           when 'infercnv'
@@ -1094,7 +1101,9 @@ class StudiesController < ApplicationController
         @message += " You will receive an email at #{current_user.email} when the parse has completed."
         case @study_file.file_type
         when 'Cluster'
-          @study.delay.initialize_cluster_group_and_data_arrays(@study_file, current_user, {local: false, reparse: true})
+          @study_file.update(parse_status: 'parsing')
+          job = IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_cluster)
+          job.delay.push_remote_and_launch_ingest(reparse: true)
         when 'Coordinate Labels'
           @study.delay.initialize_coordinate_label_data_arrays(@study_file, current_user, {local: false, reparse: true})
         when 'Expression Matrix'
@@ -1139,7 +1148,9 @@ class StudiesController < ApplicationController
         when 'Gene List'
           @study.delay.initialize_precomputed_scores(@study_file, current_user, {local: false, reparse: true})
         when 'Metadata'
-          @study.delay.initialize_cell_metadata(@study_file, current_user, {local: false, reparse: true})
+          @study_file.update(parse_status: 'parsing')
+          job = IngestJob.new(study: @study, study_file: @study_file, user: current_user, action: :ingest_cell_metadata)
+          job.delay.push_remote_and_launch_ingest(reparse: true)
         end
       elsif @study_file.file_type == 'BAM'
         # we need to check if we have a study_file_bundle here
@@ -1308,9 +1319,9 @@ class StudiesController < ApplicationController
   # study file params whitelist
   def study_file_params
     params.require(:study_file).permit(:_id, :study_id, :name, :upload, :upload_file_name, :upload_content_type, :upload_file_size,
-                                       :remote_location, :description, :file_type, :status, :human_fastq_url, :human_data, :cluster_type,
-                                       :generation, :x_axis_label, :y_axis_label, :z_axis_label, :x_axis_min, :x_axis_max, :y_axis_min,
-                                       :y_axis_max, :z_axis_min, :z_axis_max, :taxon_id, :genome_assembly_id, :study_file_bundle_id,
+                                       :remote_location, :description, :file_type, :status, :human_fastq_url, :human_data, :use_metadata_convention,
+                                       :cluster_type, :generation, :x_axis_label, :y_axis_label, :z_axis_label, :x_axis_min, :x_axis_max,
+                                       :y_axis_min, :y_axis_max, :z_axis_min, :z_axis_max, :taxon_id, :genome_assembly_id, :study_file_bundle_id,
                                        options: [:cluster_group_id, :font_family, :font_size, :font_color, :matrix_id, :submission_id,
                                                  :bam_id, :analysis_name, :visualization_name, :cluster_name, :annotation_name])
   end
