@@ -165,7 +165,7 @@ class ParseUtils
       @message << "Total Time: #{time.first} minutes, #{time.last} seconds"
       Rails.logger.info @message.join("\n")
       begin
-        SingleCellMailer.notify_user_parse_complete(user.email, "Gene-barcode matrix expression data has completed parsing", @message).deliver_now
+        SingleCellMailer.notify_user_parse_complete(user.email, "Gene-barcode matrix expression data has completed parsing", @message, self).deliver_now
       rescue => e
         ErrorTracker.report_exception(e, user, {message: @message})
         Rails.logger.error "#{Time.zone.now}: Unable to deliver email: #{e.message}"
@@ -212,7 +212,7 @@ class ParseUtils
       matrix_study_file.destroy
       genes_study_file.destroy
       barcodes_study_file.destroy
-      SingleCellMailer.notify_user_parse_fail(user.email, "Gene-barcode matrix expression data in #{study.name} parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Gene-barcode matrix expression data in #{study.name} parse has failed", error_message, self).deliver_now
       false
     end
   end
@@ -291,17 +291,17 @@ class ParseUtils
               Delayed::Job.enqueue(UploadCleanupJob.new(study, study_file, 0), run_at: run_at)
             end
           else
-            SingleCellMailer.notify_user_parse_fail(user.email, "Error: Zipfile extraction from inferCNV submission #{archive_file.options[:submission_id]} in #{study.name}", study_file.errors.full_messages.join(', ')).deliver_now
+            SingleCellMailer.notify_user_parse_fail(user.email, "Error: Zipfile extraction from inferCNV submission #{archive_file.options[:submission_id]} in #{study.name}", study_file.errors.full_messages.join(', '), self).deliver_now
           end
         end
         # email user that file extraction is complete
         message = ['The following files were extracted from the Ideogram zip archive and added to your study:']
         files_created.each {|file| message << file}
-        SingleCellMailer.notify_user_parse_complete(user.email, "Zipfile extraction of inferCNV submission #{archive_file.options[:submission_id]} outputs has completed", message).deliver_now
+        SingleCellMailer.notify_user_parse_complete(user.email, "Zipfile extraction of inferCNV submission #{archive_file.options[:submission_id]} outputs has completed", message, self).deliver_now
       end
     rescue => e
       remove_extracted_archive_files(study, archive_file, extracted_files)
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Zipfile extraction from inferCNV submission #{archive_file.options[:submission_id]} in #{study.name} has failed", e.message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Zipfile extraction from inferCNV submission #{archive_file.options[:submission_id]} in #{study.name} has failed", e.message, self).deliver_now
     end
   end
 

@@ -1620,7 +1620,7 @@ class Study
       end
 
       begin
-        SingleCellMailer.notify_user_parse_complete(user.email, "Expression file: '#{expression_file.name}' has completed parsing", @message).deliver_now
+        SingleCellMailer.notify_user_parse_complete(user.email, "Expression file: '#{expression_file.name}' has completed parsing", @message, self).deliver_now
       rescue => e
         ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "#{Time.zone.now}: Unable to deliver email: #{e.message}"
@@ -1978,7 +1978,7 @@ class Study
       end
 
       begin
-        SingleCellMailer.notify_user_parse_complete(user.email, "Cluster file: '#{ordinations_file.upload_file_name}' has completed parsing", @message).deliver_now
+        SingleCellMailer.notify_user_parse_complete(user.email, "Cluster file: '#{ordinations_file.upload_file_name}' has completed parsing", @message, self).deliver_now
       rescue => e
         ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "#{Time.zone.now}: Unable to deliver email: #{e.message}"
@@ -2494,7 +2494,7 @@ class Study
 
       # send email on completion
       begin
-        SingleCellMailer.notify_user_parse_complete(user.email, "Metadata file: '#{metadata_file.upload_file_name}' has completed parsing", @message).deliver_now
+        SingleCellMailer.notify_user_parse_complete(user.email, "Metadata file: '#{metadata_file.upload_file_name}' has completed parsing", @message, self).deliver_now
       rescue => e
         ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "#{Time.zone.now}: Unable to deliver email: #{e.message}"
