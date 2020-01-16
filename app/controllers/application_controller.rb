@@ -1,3 +1,4 @@
+
 class ApplicationController < ActionController::Base
 
   extend ErrorTracker
@@ -21,6 +22,30 @@ class ApplicationController < ActionController::Base
   before_action :check_tos_acceptance
 
   rescue_from ActionController::InvalidAuthenticityToken, with: :invalid_csrf
+
+  @papi_client = PapiClient.new
+
+  def self.papi_client
+    self.instance_variable_get(:@papi_client)
+  end
+
+  # TODO: DRY with papi_client.rb:
+  # GCP Compute project to run pipelines in
+  COMPUTE_PROJECT = ENV['GOOGLE_CLOUD_PROJECT'].blank? ? '' : ENV['GOOGLE_CLOUD_PROJECT']
+  # Service account JSON credentials
+  SERVICE_ACCOUNT_KEY = !ENV['SERVICE_ACCOUNT_KEY'].blank? ? File.absolute_path(ENV['SERVICE_ACCOUNT_KEY']) : ''
+
+  def self.bigquery_client
+    @bigquery_client ||= new_bigquery_client
+  end
+
+  def self.new_bigquery_client
+    Google::Cloud::Bigquery.configure do |config|
+      config.project_id  = COMPUTE_PROJECT
+      config.credentials = SERVICE_ACCOUNT_KEY
+    end
+    Google::Cloud::Bigquery.new
+  end
 
   # set current_user for use outside of controllers
   # from https://stackoverflow.com/questions/2513383/access-current-user-in-model
@@ -76,7 +101,7 @@ class ApplicationController < ActionController::Base
   def set_study_default_options
     @default_cluster = @study.default_cluster
     @default_cluster_annotations = {
-        'Study Wide' => @study.cell_metadata.map {|metadata| ["#{metadata.name}", "#{metadata.name}--#{metadata.annotation_type}--study"] }.uniq
+        'Study Wide' => @study.cell_metadata.map {|metadata| metadata.annotation_select_option }.uniq
     }
     unless @default_cluster.nil?
       @default_cluster_annotations['Cluster-based'] = @default_cluster.cell_annotations.map {|annot| ["#{annot[:name]}", "#{annot[:name]}--#{annot[:type]}--cluster"]}

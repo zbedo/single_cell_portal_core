@@ -11,6 +11,9 @@ development:
       hosts:
         - <%= ENV['MONGO_LOCALHOST'] %>:27017
       options:
+        user: 'single_cell'
+        password: '<%= ENV['PROD_DATABASE_PASSWORD'] %>'
+
         # Change the default write concern. (default = { w: 1 })
         # write:
         #   w: 1
@@ -139,7 +142,7 @@ staging:
     default:
       database: single_cell_portal_staging
       hosts:
-        - mongodb:27017
+        - <%= ENV['MONGO_LOCALHOST'] %>:27017
       options:
         user: 'single_cell'
         password: '<%= ENV['PROD_DATABASE_PASSWORD'] %>'
@@ -152,6 +155,7 @@ test:
       hosts:
         - <%= ENV['MONGO_LOCALHOST'] %>:27017
       options:
-        max_pool_size: 1
+        user: 'single_cell'
+        password: '<%= ENV['PROD_DATABASE_PASSWORD'] %>'
   options:
     raise_not_found_error: false

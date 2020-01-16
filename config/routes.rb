@@ -164,11 +164,6 @@ Rails.application.routes.draw do
     get 'bulk_data/:accession/:study_name/:download_object/:totat', to: 'site#download_bulk_files', as: :download_bulk_files,
         constraints: {filename: /.*/}
 
-    # autocomplete
-    resources :gene, only: [:show, :index] do
-      get :autocomplete_gene_name, on: :collection
-    end
-
     # user account actions
     get 'profile/:id', to: 'profiles#show', as: :view_profile
     match 'profile/:id', to: 'profiles#update', via: [:post, :patch], as: :update_profile

@@ -132,8 +132,7 @@ class SiteController < ApplicationController
 
   end
 
-  # search for one or more genes to view expression information
-  # will redirect to appropriate method as needed
+  # redirect handler to determine which gene expression method to render
   def search_genes
     @terms = parse_search_terms(:genes)
     # limit gene search for performance reasons
@@ -154,12 +153,13 @@ class SiteController < ApplicationController
 
     # if only one gene was searched for, make an attempt to load it and redirect to correct page
     if @terms.size == 1
-      @gene = load_best_gene_match(@study.genes.by_name_or_id(@terms.first, @study.expression_matrix_files.map(&:id)), @terms.first)
-      if @gene.empty?
+      # do a quick presence check to make sure the gene exists before trying to load
+      file_ids = load_study_expression_matrix_ids(@study.id)
+      if !Gene.study_has_gene?(study_id: @study.id, expr_matrix_ids: file_ids, gene_name: @terms.first)
         redirect_to merge_default_redirect_params(request.referrer, scpbr: params[:scpbr]),
                     alert: "No matches found for: #{@terms.first}." and return
       else
-        redirect_to merge_default_redirect_params(view_gene_expression_path(accession: @study.accession, study_name: @study.url_safe_name, gene: @gene['name'],
+        redirect_to merge_default_redirect_params(view_gene_expression_path(accession: @study.accession, study_name: @study.url_safe_name, gene: @terms.first,
                                                                             cluster: cluster, annotation: annotation, consensus: consensus,
                                                                             subsample: subsample, plot_type: plot_type,
                                                                             boxpoints: boxpoints, heatmap_row_centering: heatmap_row_centering,
@@ -318,6 +318,7 @@ class SiteController < ApplicationController
     @directories = @study.directory_listings.are_synced
     @primary_data = @study.directory_listings.primary_data
     @other_data = @study.directory_listings.non_primary_data
+    @unique_genes = @study.genes.unique_genes
 
     # double check on download availability: first, check if administrator has disabled downloads
     # then check individual statuses to see what to enable/disable
@@ -377,7 +378,7 @@ class SiteController < ApplicationController
   def render_cluster
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
     @coordinates = load_cluster_group_data_array_points(@selected_annotation, subsample)
-    @plot_type = @cluster.cluster_type == '3d' ? 'scatter3d' : 'scattergl'
+    @plot_type = @cluster.is_3d? ? 'scatter3d' : 'scattergl'
     @options = load_cluster_group_options
     @cluster_annotations = load_cluster_group_annotations
     if @cluster.has_coordinate_labels?
@@ -504,7 +505,7 @@ class SiteController < ApplicationController
     # call search_expression_scores to return values not found
 
     terms = params[:gene_set].blank? && !params[:consensus].blank? ? parse_search_terms(:genes) : @study.precomputed_scores.by_name(params[:gene_set]).gene_list
-    @genes, @not_found = search_expression_scores(terms)
+    @genes, @not_found = search_expression_scores(terms, @study.id)
 
     consensus = params[:consensus].nil? ? 'Mean ' : params[:consensus].capitalize + ' '
     @gene_list = @genes.map{|gene| gene['name']}.join(' ')
@@ -535,7 +536,7 @@ class SiteController < ApplicationController
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
     consensus = params[:consensus].nil? ? 'Mean ' : params[:consensus].capitalize + ' '
     @gene_list = @genes.map{|gene| gene['gene']}.join(' ')
-    dotplot_genes, dotplot_not_found = search_expression_scores(terms)
+    dotplot_genes, dotplot_not_found = search_expression_scores(terms, @study.id)
     @dotplot_gene_list = dotplot_genes.map{|gene| gene['name']}.join(' ')
     @y_axis_title = consensus + ' ' + load_expression_axis_title
     # depending on annotation type selection, set up necessary partial names to use in rendering
@@ -593,7 +594,7 @@ class SiteController < ApplicationController
   def view_gene_expression_heatmap
     # parse and divide up genes
     terms = parse_search_terms(:genes)
-    @genes, @not_found = search_expression_scores(terms)
+    @genes, @not_found = search_expression_scores(terms, @study.id)
     @gene_list = @genes.map{|gene| gene['name']}.join(' ')
     # load dropdown options
     @options = load_cluster_group_options
@@ -1536,7 +1537,6 @@ class SiteController < ApplicationController
   def load_cluster_group_data_array_points(annotation, subsample_threshold=nil)
     # construct annotation key to load subsample data_arrays if needed, will be identical to params[:annotation]
     subsample_annotation = "#{annotation[:name]}--#{annotation[:type]}--#{annotation[:scope]}"
-    # load data - passing nil for subsample_threshold automatically loads all values
     x_array = @cluster.concatenate_data_arrays('x', 'coordinates', subsample_threshold, subsample_annotation)
     y_array = @cluster.concatenate_data_arrays('y', 'coordinates', subsample_threshold, subsample_annotation)
     z_array = @cluster.concatenate_data_arrays('z', 'coordinates', subsample_threshold, subsample_annotation)
@@ -1559,7 +1559,7 @@ class SiteController < ApplicationController
       # for study-wide annotations, load from study_metadata values instead of cluster-specific annotations
       metadata_obj = @study.cell_metadata.by_name_and_type(annotation[:name], annotation[:type])
       annotation_hash = metadata_obj.cell_annotations
-      annotation[:values] = metadata_obj.values
+      annotation[:values] = annotation_hash.values
     end
     coordinates = {}
     if annotation[:type] == 'numeric'
@@ -1619,7 +1619,7 @@ class SiteController < ApplicationController
           coordinates[annotation_value][:cells] << cells[index]
           coordinates[annotation_value][:x] << x_array[index]
           coordinates[annotation_value][:y] << y_array[index]
-          if @cluster.cluster_type == '3d'
+          if @cluster.is_3d?
             coordinates[annotation_value][:z] << z_array[index]
           end
         end
@@ -1635,7 +1635,7 @@ class SiteController < ApplicationController
             coordinates[annotation_value][:x] << x_array[index]
             coordinates[annotation_value][:y] << y_array[index]
             coordinates[annotation_value][:cells] << cell
-            if @cluster.cluster_type == '3d'
+            if @cluster.is_3d?
               coordinates[annotation_value][:z] << z_array[index]
             end
           end
@@ -1668,6 +1668,7 @@ class SiteController < ApplicationController
       annotation_array = user_annotation.concatenate_user_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
       cells = user_annotation.concatenate_user_data_arrays('text', 'cells', subsample_threshold, subsample_annotation)
     else
+      # for study-wide annotations, load from study_metadata values instead of cluster-specific annotations
       metadata_obj = @study.cell_metadata.by_name_and_type(annotation[:name], annotation[:type])
       annotation_hash = metadata_obj.cell_annotations
     end
@@ -1798,7 +1799,7 @@ class SiteController < ApplicationController
     annotation_array = []
     annotation_hash = {}
     if annotation[:scope] == 'cluster'
-      annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold)
+      annotation_array = @cluster.concatenate_data_arrays(annotation[:name], 'annotations', subsample_threshold, subsample_annotation)
     elsif annotation[:scope] == 'user'
       # for user annotations, we have to load by id as names may not be unique to clusters
       user_annotation = UserAnnotation.find(annotation[:id])
@@ -2064,6 +2065,11 @@ class SiteController < ApplicationController
   #
   ###
 
+  # load expression matrix ids for optimized search speed
+  def load_study_expression_matrix_ids(study_id)
+    StudyFile.where(study_id: study_id, :file_type.in => ['Expression Matrix', 'MM Coordinate Matrix']).map(&:id)
+  end
+
   # generic search term parser
   def parse_search_terms(key)
     terms = params[:search][key]
@@ -2078,7 +2084,7 @@ class SiteController < ApplicationController
   # generic expression score getter, preserves order and discards empty matches
   def load_expression_scores(terms)
     genes = []
-    matrix_ids = @study.expression_matrix_files.map(&:id)
+    matrix_ids = load_study_expression_matrix_ids(@study.id)
     terms.each do |term|
       matches = @study.genes.by_name_or_id(term, matrix_ids)
       unless matches.empty?
@@ -2090,13 +2096,12 @@ class SiteController < ApplicationController
 
   # search genes and save terms not found.  does not actually load expression scores to improve search speed,
   # but rather just matches gene names if possible.  to load expression values, use load_expression_scores
-  def search_expression_scores(terms)
+  def search_expression_scores(terms, study_id)
     genes = []
     not_found = []
-    known_genes = @study.genes.unique_genes
-    known_searchable_genes = known_genes.map(&:downcase)
+    file_ids = load_study_expression_matrix_ids(study_id)
     terms.each do |term|
-      if known_genes.include?(term) || known_searchable_genes.include?(term)
+      if Gene.study_has_gene?(study_id: study_id, expr_matrix_ids: file_ids, gene_name: term)
         genes << {'name' => term}
       else
         not_found << {'name' => term}

@@ -16,7 +16,7 @@
     </div>
     <div class="input-group">
       <% if @study.has_expression_data? && @study.can_visualize_clusters? %>
-        <%= f.autocomplete_field :genes, autocomplete_gene_name_gene_index_path(study_id: @study._id), {multiple: true, class: 'form-control search-genes-input', placeholder: 'Search genes', value: set_search_value, data: {delimiter: ' '} } %>
+        <%= f.text_field :genes, {multiple: true, class: 'form-control search-genes-input', placeholder: 'Search genes', value: set_search_value, data: {delimiter: ' '} } %>
       <% else %>
         <input class="form-control" type="text" disabled="disabled" data-toggle="tooltip" title="This study has no gene expression and clustering data available" />
       <% end %>
@@ -49,15 +49,14 @@
             </div>
             <%= link_to "<span class='fas fa-chevron-left'></span> Back".html_safe, "javascript:", class: "btn pull-right #{action_name == 'study' ? 'btn-default disabled' : 'btn-warning'}", id: 'clear-gene-search', title: 'Clear gene search and return to cluster scatter plots', data: {toggle: 'tooltip'} %>
             <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
-                $('#search_genes').on('change', function() {
-                    // limit number of gene searches
-                    var searchGenes = $(this).val().split(' ');
-                    if (searchGenes.length > window.MAX_GENE_SEARCH) {
-                        alert(window.MAX_GENE_SEARCH_MSG);
-                        searchGenes = searchGenes.slice(0, window.MAX_GENE_SEARCH);
-                        $(this).val(searchGenes.join(' '));
-                    }
-                });
+
+                var studyGenes = <%= @unique_genes.present? ? raw(@unique_genes) : [] %>;
+                if (studyGenes.length > 0 ) {
+                    // cache in window to reduce queries on subsequent rendering calls
+                    window.uniqueGenes = studyGenes;
+                }
+
+                initializeAutocomplete('#search_genes', window.uniqueGenes, window.MAX_GENE_SEARCH, window.MAX_GENE_SEARCH_MSG);
 
                 $('#clear-gene-search').click(function(){
                     clearForm('search_genes');
@@ -85,8 +84,8 @@
                             if (file && file.length) {
                                 lines = file.split(/[,\n]/);
                                 // limit gene search to MAX_GENE_SEARCH
-                                if (lines.length > window.MAX_GENE_SEARCH) {
-                                    alert(window.MAX_GENE_SEARCH_MSG);
+                                if (lines.length > MAX_GENE_SEARCH) {
+                                    alert(GENE_SEARCH_LIMIT_MSG);
                                     lines = lines.slice(0, MAX_GENE_SEARCH);
                                 }
                                 sanitizedContent = [];

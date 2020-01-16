@@ -26,7 +26,7 @@ class StudyFile
                      '10X Barcodes File', 'Gene List', 'Metadata', 'Analysis Output']
   DISALLOWED_SYNC_TYPES = ['Fastq']
   UPLOAD_STATUSES = %w(new uploading uploaded)
-  PARSE_STATUSES = %w(unparsed parsing parsed)
+  PARSE_STATUSES = %w(unparsed parsing parsed failed)
   PRIMARY_DATA_EXTENTIONS = %w(fastq fastq.zip fastq.gz fastq.tar.gz fq fq.zip fq.gz fq.tar.gz bam bam.gz bam.bai bam.gz.bai)
   PRIMARY_DATA_TYPES = ['Fastq', 'BAM', 'BAM Index']
   TAXON_REQUIRED_TYPES = ['Fastq', 'BAM', 'Expression Matrix', 'MM Coordinate Matrix', 'Ideogram Annotations']
@@ -62,6 +62,7 @@ class StudyFile
   field :data_dir, type: String
   field :human_fastq_url, type: String
   field :human_data, type: Boolean, default: false
+  field :use_metadata_convention, type: Boolean, default: false
   field :generation, type: String
   field :x_axis_label, type: String, default: ''
   field :y_axis_label, type: String, default: ''
@@ -183,6 +184,11 @@ class StudyFile
       key :default, false
       key :description, 'Boolean indication whether StudyFile represents human data'
     end
+    property :use_metadata_convention do
+      key :type, :boolean
+      key :default, false
+      key :description, 'Boolean indication whether StudyFile uses the metadata convention'
+    end
     property :generation do
       key :type, :string
       key :description, 'GCS generation tag of File in bucket'
@@ -300,6 +306,11 @@ class StudyFile
           key :default, false
           key :description, 'Boolean indication whether StudyFile represents human data'
         end
+        property :use_metadata_convention do
+          key :type, :boolean
+          key :default, false
+          key :description, 'Boolean indication whether StudyFile uses the metadata convention'
+        end
         property :generation do
           key :type, :string
           key :description, 'GCS generation tag of File in bucket'
@@ -389,6 +400,11 @@ class StudyFile
           key :type, :boolean
           key :default, false
           key :description, 'Boolean indication whether StudyFile represents human data'
+        end
+        property :use_metadata_convention do
+          key :type, :boolean
+          key :default, false
+          key :description, 'Boolean indication whether StudyFile uses the metadata convention'
         end
         property :generation do
           key :type, :string
@@ -915,6 +931,11 @@ class StudyFile
     "container-#{self.id}"
   end
 
+  # DOM ID for use in Selenium for accessing difference elements
+  def name_as_id
+    self.upload_file_name.gsub(/\./, '_')
+  end
+
   def generate_expression_matrix_cells
     begin
       study = self.study
@@ -985,6 +1006,21 @@ class StudyFile
       puts msg
       Rails.logger.error msg
     end
+  end
+
+  # helper to return domain_ranges for clusters when launching ingest run
+  def get_cluster_domain_ranges
+    domain_ranges = {}
+    if !self.x_axis_min.nil? && !self.x_axis_max.nil? && !self.y_axis_min.nil? && !self.y_axis_max.nil?
+      domain_ranges = {
+          x: [self.x_axis_min, self.x_axis_max],
+          y: [self.y_axis_min, self.y_axis_max]
+      }
+      if !self.z_axis_min.nil? && !self.z_axis_max.nil?
+        domain_ranges[:z] = [self.z_axis_min, self.z_axis_max]
+      end
+    end
+    domain_ranges
   end
 
   private

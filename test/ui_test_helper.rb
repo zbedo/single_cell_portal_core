@@ -172,6 +172,23 @@ class Test::Unit::TestCase
     raise Selenium::WebDriver::Error::TimeOutError, "Timing out on render check of #{plot}"
   end
 
+  def wait_for_file_parse(file_id)
+    i = 1
+    i.upto(12) do
+      done = @driver.execute_script("return $('##{file_id}').data('parsed')")
+      if !done
+        $verbose ? puts("Waiting for #{file_id} to finish parsing") : nil
+        sleep(10)
+        @driver.get @driver.current_url
+        next
+      else
+        $verbose ? puts("#{file_id} has finished parsing") : nil
+        return true
+      end
+    end
+    raise Selenium::WebDriver::Error::TimeOutError, "Timing out on parse check of #{file_id}"
+  end
+
   # scroll to section of page as needed
   def scroll_to(section)
     case section

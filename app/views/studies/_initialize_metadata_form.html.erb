@@ -23,6 +23,10 @@
       <% if !study_file.upload_file_name.nil? %>
         <p><label>Link to file </label><br /><%= render partial: '/layouts/download_link', locals: {study: @study, study_file: study_file} %></p>
       <% else %>
+        <div class="col-sm-5">
+        <%= f.label :use_metadata_convention, "Use Metadata Convention?" %> <%= render partial: 'metadata_convention_help_popover', locals: {id: f.object.id.to_s} %><br />
+        <%= f.select :use_metadata_convention, options_for_select([['Yes', true],['No', false]], study_file.use_metadata_convention), {}, class: 'form-control use-metadata-convention' %>
+      </div>
         <%= f.label :upload, 'Upload Data File' %><br />
         <%= f.file_field :upload, class: 'btn btn-info fileinput-button', id: 'upload-metadata' %>
         <%= f.hidden_field :status, value: study_file.new_record? ? 'uploading' : 'uploaded' %>
@@ -64,7 +68,7 @@
 				url: "<%= upload_study_path(@study._id) %>",
 				maxChunkSize: 10000000, // 10 MB
 				type: 'PATCH',
-				acceptFileTypes: /(\.|\/)(txt|text)$/i,
+				acceptFileTypes: /(\.|\/)(txt|text|tsv|csv)$/i,
 				add: function (e, data) {
 					fileUploading = true;
 					var that = this;

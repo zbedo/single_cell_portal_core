@@ -923,16 +923,16 @@ class Study
 
   # helper method to get number of unique single cells
   def set_cell_count
-    @cell_count = self.all_cells_array.size
-    self.update!(cell_count: @cell_count)
-    Rails.logger.info "#{Time.zone.now}: Setting cell count in #{self.name} to #{@cell_count}"
+    cell_count = self.all_cells_array.size
+    self.update(cell_count: cell_count)
+    Rails.logger.info "Setting cell count in #{self.name} to #{cell_count}"
   end
 
   # helper method to set the number of unique genes in this study
   def set_gene_count
     gene_count = self.genes.pluck(:name).uniq.count
-    Rails.logger.info "#{Time.zone.now}: setting gene count in #{self.name} to #{gene_count}"
-    self.update!(gene_count: gene_count)
+    Rails.logger.info "Setting gene count in #{self.name} to #{gene_count}"
+    self.update(gene_count: gene_count)
   end
 
   # return a count of the number of fastq files both uploaded and referenced via directory_listings for a study
@@ -1456,7 +1456,7 @@ class Study
       expression_file.remove_local_copy
       expression_file.destroy
       Rails.logger.info Time.zone.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Expression file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Expression file: '#{filename}' parse has failed", error_message, self).deliver_now
       raise StandardError, error_message
     end
 
@@ -1466,7 +1466,7 @@ class Study
       expression_file.remove_local_copy
       expression_file.destroy
       Rails.logger.info Time.zone.now.to_s + ': ' + @validation_error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Expression file: '#{filename}' parse has failed", @validation_error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Expression file: '#{filename}' parse has failed", @validation_error_message, self).deliver_now
       raise StandardError, error_message
     end
 
@@ -1599,7 +1599,7 @@ class Study
       if !self.has_expression_label? && !expression_file.y_axis_label.blank?
         Rails.logger.info "#{Time.zone.now}: Setting default expression label in #{self.name} to '#{expression_file.y_axis_label}'"
         opts = self.default_options
-        self.update!(default_options: opts.merge(expression_label: expression_file.y_axis_label))
+        self.update(default_options: opts.merge(expression_label: expression_file.y_axis_label))
       end
 
       # clean up, print stats
@@ -1615,12 +1615,12 @@ class Study
       # set initialized to true if possible
       if self.cluster_groups.any? && self.cell_metadata.any? && !self.initialized?
         Rails.logger.info "#{Time.zone.now}: initializing #{self.name}"
-        self.update!(initialized: true)
+        self.update(initialized: true)
         Rails.logger.info "#{Time.zone.now}: #{self.name} successfully initialized"
       end
 
       begin
-        SingleCellMailer.notify_user_parse_complete(user.email, "Expression file: '#{expression_file.name}' has completed parsing", @message).deliver_now
+        SingleCellMailer.notify_user_parse_complete(user.email, "Expression file: '#{expression_file.name}' has completed parsing", @message, self).deliver_now
       rescue => e
         ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "#{Time.zone.now}: Unable to deliver email: #{e.message}"
@@ -1669,7 +1669,7 @@ class Study
       expression_file.destroy
       error_message = "#{@last_line}: #{e.message}"
       Rails.logger.info Time.zone.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Gene Expression matrix: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Gene Expression matrix: '#{filename}' parse has failed", error_message, self).deliver_now
     end
     true
   end
@@ -1731,7 +1731,7 @@ class Study
       filename = ordinations_file.upload_file_name
       ordinations_file.remove_local_copy
       ordinations_file.destroy
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Cluster file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Cluster file: '#{filename}' parse has failed", error_message, self).deliver_now
       raise StandardError, error_message
     end
 
@@ -1742,7 +1742,7 @@ class Study
       filename = ordinations_file.upload_file_name
       ordinations_file.remove_local_copy
       ordinations_file.destroy
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Cluster file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Cluster file: '#{filename}' parse has failed", error_message, self).deliver_now
       raise StandardError, error_message
     end
 
@@ -1925,7 +1925,7 @@ class Study
       # set initialized to true if possible
       if self.genes.any? && self.cell_metadata.any? && !self.initialized?
         Rails.logger.info "#{Time.zone.now}: initializing #{self.name}"
-        self.update!(initialized: true)
+        self.update(initialized: true)
         Rails.logger.info "#{Time.zone.now}: #{self.name} successfully initialized"
       end
 
@@ -1978,7 +1978,7 @@ class Study
       end
 
       begin
-        SingleCellMailer.notify_user_parse_complete(user.email, "Cluster file: '#{ordinations_file.upload_file_name}' has completed parsing", @message).deliver_now
+        SingleCellMailer.notify_user_parse_complete(user.email, "Cluster file: '#{ordinations_file.upload_file_name}' has completed parsing", @message, self).deliver_now
       rescue => e
         ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "#{Time.zone.now}: Unable to deliver email: #{e.message}"
@@ -2027,7 +2027,7 @@ class Study
       ordinations_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.zone.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Cluster file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Cluster file: '#{filename}' parse has failed", error_message, self).deliver_now
     end
     true
   end
@@ -2085,7 +2085,7 @@ class Study
       filename = coordinate_file.upload_file_name
       coordinate_file.remove_local_copy
       coordinate_file.destroy
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Coordinate Labels file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Coordinate Labels file: '#{filename}' parse has failed", error_message, self).deliver_now
       raise StandardError, error_message
     end
 
@@ -2102,7 +2102,7 @@ class Study
         end
       end
       coordinate_file.destroy
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Coordinate Labels file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Coordinate Labels file: '#{filename}' parse has failed", error_message, self).deliver_now
       raise StandardError, error_message
     end
 
@@ -2211,7 +2211,7 @@ class Study
       cluster_study_file.invalidate_cache_by_file_type
 
       begin
-        SingleCellMailer.notify_user_parse_complete(user.email, "Coordinate Label file: '#{coordinate_file.upload_file_name}' has completed parsing", @message).deliver_now
+        SingleCellMailer.notify_user_parse_complete(user.email, "Coordinate Label file: '#{coordinate_file.upload_file_name}' has completed parsing", @message, self).deliver_now
       rescue => e
         ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "#{Time.zone.now}: Unable to deliver email: #{e.message}"
@@ -2259,7 +2259,7 @@ class Study
       coordinate_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.zone.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Coordinate Labels file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Coordinate Labels file: '#{filename}' parse has failed", error_message, self).deliver_now
 
     end
   end
@@ -2319,7 +2319,7 @@ class Study
       metadata_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.zone.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Metadata file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Metadata file: '#{filename}' parse has failed", error_message, self).deliver_now
       raise StandardError, error_message
     end
 
@@ -2329,7 +2329,7 @@ class Study
       filename = metadata_file.upload_file_name
       metadata_file.destroy
       Rails.logger.info Time.zone.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Metadata file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Metadata file: '#{filename}' parse has failed", error_message, self).deliver_now
       raise StandardError, error_message
     end
 
@@ -2442,7 +2442,7 @@ class Study
       # set initialized to true if possible
       if self.genes.any? && self.cluster_groups.any? && !self.initialized?
         Rails.logger.info "#{Time.zone.now}: initializing #{self.name}"
-        self.update!(initialized: true)
+        self.update(initialized: true)
         Rails.logger.info "#{Time.zone.now}: #{self.name} successfully initialized"
       end
 
@@ -2494,7 +2494,7 @@ class Study
 
       # send email on completion
       begin
-        SingleCellMailer.notify_user_parse_complete(user.email, "Metadata file: '#{metadata_file.upload_file_name}' has completed parsing", @message).deliver_now
+        SingleCellMailer.notify_user_parse_complete(user.email, "Metadata file: '#{metadata_file.upload_file_name}' has completed parsing", @message, self).deliver_now
       rescue => e
         ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "#{Time.zone.now}: Unable to deliver email: #{e.message}"
@@ -2546,7 +2546,7 @@ class Study
       metadata_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.zone.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Metadata file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Metadata file: '#{filename}' parse has failed", error_message, self).deliver_now
     end
     true
   end
@@ -2605,7 +2605,7 @@ class Study
       marker_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.zone.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Gene List file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Gene List file: '#{filename}' parse has failed", error_message, self).deliver_now
       # raise standard error to halt execution
       raise StandardError, error_message
     end
@@ -2616,7 +2616,7 @@ class Study
       filename = marker_file.upload_file_name
       marker_file.destroy
       Rails.logger.info Time.zone.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Gene List file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Gene List file: '#{filename}' parse has failed", error_message, self).deliver_now
       raise StandardError, error_message
     end
 
@@ -2683,7 +2683,7 @@ class Study
 
       # send email
       begin
-        SingleCellMailer.notify_user_parse_complete(user.email, "Gene list file: '#{marker_file.name}' has completed parsing", @message).deliver_now
+        SingleCellMailer.notify_user_parse_complete(user.email, "Gene list file: '#{marker_file.name}' has completed parsing", @message, self).deliver_now
       rescue => e
         ErrorTracker.report_exception(e, user, error_context)
         Rails.logger.error "#{Time.zone.now}: Unable to deliver email: #{e.message}"
@@ -2731,7 +2731,7 @@ class Study
       marker_file.destroy
       error_message = "#{@last_line} ERROR: #{e.message}"
       Rails.logger.info Time.zone.now.to_s + ': ' + error_message
-      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Gene List file: '#{filename}' parse has failed", error_message).deliver_now
+      SingleCellMailer.notify_user_parse_fail(user.email, "Error: Gene List file: '#{filename}' parse has failed", error_message, self).deliver_now
     end
     true
   end
@@ -2868,6 +2868,27 @@ class Study
     end
   end
 
+  # deletes all studies and removes all firecloud workspaces, will ONLY work if the environment is 'test' or 'pentest'
+  # cannot be run in production/staging/development
+  def self.delete_all_and_remove_workspaces
+    if Rails.env == 'test' || Rails.env == 'pentest'
+      self.all.each do |study|
+        workspace_project = study.firecloud_project
+        workspace_name = study.firecloud_workspace
+        Rails.logger.info "Removing workspace #{workspace_project}/#{workspace_name} in #{Rails.env} environment"
+        begin
+          Study.firecloud_client.delete_workspace(workspace_project, workspace_name)
+          study.destroy
+        rescue => e
+          Rails.logger.error "Error in removing #{workspace_project}/#{workspace_name}"
+          Rails.logger.error "#{e.class.name}:"
+          Rails.logger.error "#{e.message}"
+        end
+        Rails.logger.info "Workspace #{workspace_project}/#{workspace_name} successfully removed."
+      end
+    end
+  end
+
   private
 
   ###
@@ -2910,220 +2931,214 @@ class Study
   # automatically create a FireCloud workspace on study creation after validating name & url_safe_name
   # will raise validation errors if creation, bucket or ACL assignment fail for any reason and deletes workspace on validation fail
   def initialize_with_new_workspace
-    unless Rails.env == 'test' # testing for this is handled through ui_test_suite.rb which runs against development database
+    Rails.logger.info "#{Time.zone.now}: Study: #{self.name} creating FireCloud workspace"
+    validate_name_and_url
 
-      Rails.logger.info "#{Time.zone.now}: Study: #{self.name} creating FireCloud workspace"
-      validate_name_and_url
-
-      # check if project is valid to use
-      if self.firecloud_project != FireCloudClient::PORTAL_NAMESPACE
-        client = FireCloudClient.new(self.user, self.firecloud_project)
-        projects = client.get_billing_projects.map {|project| project['projectName']}
-        unless projects.include?(self.firecloud_project)
-          errors.add(:firecloud_project, ' is not a project you are a member of.  Please choose another project.')
-        end
+    # check if project is valid to use
+    if self.firecloud_project != FireCloudClient::PORTAL_NAMESPACE
+      client = FireCloudClient.new(self.user, self.firecloud_project)
+      projects = client.get_billing_projects.map {|project| project['projectName']}
+      unless projects.include?(self.firecloud_project)
+        errors.add(:firecloud_project, ' is not a project you are a member of.  Please choose another project.')
       end
+    end
 
-      unless self.errors.any?
-        begin
-          # create workspace
-          if self.firecloud_project == FireCloudClient::PORTAL_NAMESPACE
-            workspace = Study.firecloud_client.create_workspace(self.firecloud_project, self.firecloud_workspace)
-          else
-            workspace = client.create_workspace(self.firecloud_project, self.firecloud_workspace)
+    unless self.errors.any?
+      begin
+        # create workspace
+        if self.firecloud_project == FireCloudClient::PORTAL_NAMESPACE
+          workspace = Study.firecloud_client.create_workspace(self.firecloud_project, self.firecloud_workspace)
+        else
+          workspace = client.create_workspace(self.firecloud_project, self.firecloud_workspace)
+        end
+        Rails.logger.info "#{Time.zone.now}: Study: #{self.name} FireCloud workspace creation successful"
+
+        # wait until after workspace creation to set service account permissions
+        Rails.logger.info "#{Time.zone.now}: Study: #{self.name} checking service account permissions"
+        has_access = set_service_account_permissions
+        if !has_access
+          errors.add(:firecloud_workspace, ": We encountered an error when attempting to set service account permissions.  Please try again, or chose a different project.")
+        else
+          Rails.logger.info "#{Time.zone.now}: Study: #{self.name} service account permissions ok"
+        end
+
+        ws_name = workspace['name']
+        # validate creation
+        unless ws_name == self.firecloud_workspace
+          # delete workspace on validation fail
+          Study.firecloud_client.delete_workspace(self.firecloud_project, self.firecloud_workspace)
+          errors.add(:firecloud_workspace, ' was not created properly (workspace name did not match or was not created).  Please try again later.')
+          return false
+        end
+        Rails.logger.info "#{Time.zone.now}: Study: #{self.name} FireCloud workspace validation successful"
+        # set bucket_id
+        bucket = workspace['bucketName']
+        self.bucket_id = bucket
+        if self.bucket_id.nil?
+          # delete workspace on validation fail
+          Study.firecloud_client.delete_workspace(self.firecloud_project, self.firecloud_workspace)
+          errors.add(:firecloud_workspace, ' was not created properly (storage bucket was not set).  Please try again later.')
+          return false
+        end
+        Rails.logger.info "#{Time.zone.now}: Study: #{self.name} FireCloud bucket assignment successful"
+
+        # if user has no project acls, then we set specific workspace-level acls
+        if self.firecloud_project == FireCloudClient::PORTAL_NAMESPACE
+          # set workspace acl
+          study_owner = self.user.email
+          workspace_permission = 'WRITER'
+          can_compute = true
+          # if study project is in the compute blacklist, revoke compute permission
+          if Rails.env == 'production' && FireCloudClient::COMPUTE_BLACKLIST.include?(self.firecloud_project)
+            can_compute = false
           end
-          Rails.logger.info "#{Time.zone.now}: Study: #{self.name} FireCloud workspace creation successful"
-
-          # wait until after workspace creation to set service account permissions
-          Rails.logger.info "#{Time.zone.now}: Study: #{self.name} checking service account permissions"
-          has_access = set_service_account_permissions
-          if !has_access
-            errors.add(:firecloud_workspace, ": We encountered an error when attempting to set service account permissions.  Please try again, or chose a different project.")
-          else
-            Rails.logger.info "#{Time.zone.now}: Study: #{self.name} service account permissions ok"
-          end
-
-          ws_name = workspace['name']
-          # validate creation
-          unless ws_name == self.firecloud_workspace
+          acl = Study.firecloud_client.create_workspace_acl(study_owner, workspace_permission, true, can_compute)
+          Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, acl)
+          # validate acl
+          ws_acl = Study.firecloud_client.get_workspace_acl(self.firecloud_project, ws_name)
+          unless ws_acl['acl'][study_owner]['accessLevel'] == workspace_permission && ws_acl['acl'][study_owner]['canCompute'] == can_compute
             # delete workspace on validation fail
             Study.firecloud_client.delete_workspace(self.firecloud_project, self.firecloud_workspace)
-            errors.add(:firecloud_workspace, ' was not created properly (workspace name did not match or was not created).  Please try again later.')
+            errors.add(:firecloud_workspace, ' was not created properly (permissions do not match).  Please try again later.')
             return false
           end
-          Rails.logger.info "#{Time.zone.now}: Study: #{self.name} FireCloud workspace validation successful"
-          # set bucket_id
-          bucket = workspace['bucketName']
-          self.bucket_id = bucket
-          if self.bucket_id.nil?
-            # delete workspace on validation fail
-            Study.firecloud_client.delete_workspace(self.firecloud_project, self.firecloud_workspace)
-            errors.add(:firecloud_workspace, ' was not created properly (storage bucket was not set).  Please try again later.')
-            return false
-          end
-          Rails.logger.info "#{Time.zone.now}: Study: #{self.name} FireCloud bucket assignment successful"
-
-          # if user has no project acls, then we set specific workspace-level acls
-          if self.firecloud_project == FireCloudClient::PORTAL_NAMESPACE
-            # set workspace acl
-            study_owner = self.user.email
-            workspace_permission = 'WRITER'
-            can_compute = true
-            # if study project is in the compute blacklist, revoke compute permission
-            if Rails.env == 'production' && FireCloudClient::COMPUTE_BLACKLIST.include?(self.firecloud_project)
-              can_compute = false
-            end
-            acl = Study.firecloud_client.create_workspace_acl(study_owner, workspace_permission, true, can_compute)
-            Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, acl)
-            # validate acl
-            ws_acl = Study.firecloud_client.get_workspace_acl(self.firecloud_project, ws_name)
-            unless ws_acl['acl'][study_owner]['accessLevel'] == workspace_permission && ws_acl['acl'][study_owner]['canCompute'] == can_compute
-              # delete workspace on validation fail
-              Study.firecloud_client.delete_workspace(self.firecloud_project, self.firecloud_workspace)
-              errors.add(:firecloud_workspace, ' was not created properly (permissions do not match).  Please try again later.')
+        end
+        Rails.logger.info "#{Time.zone.now}: Study: #{self.name} FireCloud workspace acl assignment successful"
+        if self.study_shares.any?
+          Rails.logger.info "#{Time.zone.now}: Study: #{self.name} FireCloud workspace acl assignment for shares starting"
+          self.study_shares.each do |share|
+            begin
+              acl = Study.firecloud_client.create_workspace_acl(share.email, StudyShare::FIRECLOUD_ACL_MAP[share.permission], true, false)
+              Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, acl)
+              Rails.logger.info "#{Time.zone.now}: Study: #{self.name} FireCloud workspace acl assignment for shares #{share.email} successful"
+            rescue RuntimeError => e
+              error_context = ErrorTracker.format_extra_context(self, acl)
+              # remove study description as it's not useful
+              error_context['study'].delete('description')
+              ErrorTracker.report_exception(e, user, error_context)
+              errors.add(:study_shares, "Could not create a share for #{share.email} to workspace #{self.firecloud_workspace} due to: #{e.message}")
               return false
             end
           end
-          Rails.logger.info "#{Time.zone.now}: Study: #{self.name} FireCloud workspace acl assignment successful"
-          if self.study_shares.any?
-            Rails.logger.info "#{Time.zone.now}: Study: #{self.name} FireCloud workspace acl assignment for shares starting"
-            self.study_shares.each do |share|
-              begin
-                acl = Study.firecloud_client.create_workspace_acl(share.email, StudyShare::FIRECLOUD_ACL_MAP[share.permission], true, false)
-                Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, acl)
-                Rails.logger.info "#{Time.zone.now}: Study: #{self.name} FireCloud workspace acl assignment for shares #{share.email} successful"
-              rescue RuntimeError => e
-                error_context = ErrorTracker.format_extra_context(self, acl)
-                # remove study description as it's not useful
-                error_context['study'].delete('description')
-                ErrorTracker.report_exception(e, user, error_context)
-                errors.add(:study_shares, "Could not create a share for #{share.email} to workspace #{self.firecloud_workspace} due to: #{e.message}")
-                return false
-              end
-            end
-          end
-
-        rescue => e
-          error_context = ErrorTracker.format_extra_context(self)
-          # remove study description as it's not useful
-          error_context['study'].delete('description')
-          ErrorTracker.report_exception(e, user, error_context)
-          # delete workspace on any fail as this amounts to a validation fail
-          Rails.logger.info "#{Time.zone.now}: Error creating workspace: #{e.message}"
-          # delete firecloud workspace unless error is 409 Conflict (workspace already taken)
-          if e.message.include?("Workspace #{self.firecloud_project}/#{self.firecloud_workspace} already exists")
-            errors.add(:firecloud_workspace, ' - there is already an existing workspace using this name.  Please choose another name for your study.')
-            errors.add(:name, ' - you must choose a different name for your study.')
-            self.firecloud_workspace = nil
-          else
-            Study.firecloud_client.delete_workspace(self.firecloud_project, self.firecloud_workspace)
-            errors.add(:firecloud_workspace, " creation failed: #{e.message}; Please try again.")
-          end
-          return false
         end
+
+      rescue => e
+        error_context = ErrorTracker.format_extra_context(self)
+        # remove study description as it's not useful
+        error_context['study'].delete('description')
+        ErrorTracker.report_exception(e, user, error_context)
+        # delete workspace on any fail as this amounts to a validation fail
+        Rails.logger.info "#{Time.zone.now}: Error creating workspace: #{e.message}"
+        # delete firecloud workspace unless error is 409 Conflict (workspace already taken)
+        if e.message.include?("Workspace #{self.firecloud_project}/#{self.firecloud_workspace} already exists")
+          errors.add(:firecloud_workspace, ' - there is already an existing workspace using this name.  Please choose another name for your study.')
+          errors.add(:name, ' - you must choose a different name for your study.')
+          self.firecloud_workspace = nil
+        else
+          Study.firecloud_client.delete_workspace(self.firecloud_project, self.firecloud_workspace)
+          errors.add(:firecloud_workspace, " creation failed: #{e.message}; Please try again.")
+        end
+        return false
       end
     end
   end
 
   # validator to use existing FireCloud workspace
   def initialize_with_existing_workspace
-    unless Rails.env == 'test'
+    Rails.logger.info "#{Time.zone.now}: Study: #{self.name} using FireCloud workspace: #{self.firecloud_workspace}"
+    validate_name_and_url
+    # check if workspace is already being used
+    if Study.where(firecloud_workspace: self.firecloud_workspace).exists?
+      errors.add(:firecloud_workspace, ': The workspace you provided is already in use by another study.  Please use another workspace.')
+      return false
+    end
 
-      Rails.logger.info "#{Time.zone.now}: Study: #{self.name} using FireCloud workspace: #{self.firecloud_workspace}"
-      validate_name_and_url
-      # check if workspace is already being used
-      if Study.where(firecloud_workspace: self.firecloud_workspace).exists?
-        errors.add(:firecloud_workspace, ': The workspace you provided is already in use by another study.  Please use another workspace.')
-        return false
+    # check if project is valid to use
+    if self.firecloud_project != FireCloudClient::PORTAL_NAMESPACE
+      client = FireCloudClient.new(self.user, self.firecloud_project)
+      projects = client.get_billing_projects.map {|project| project['projectName']}
+      unless projects.include?(self.firecloud_project)
+        errors.add(:firecloud_project, ' is not a project you are a member of.  Please choose another project.')
       end
+    end
 
-      # check if project is valid to use
-      if self.firecloud_project != FireCloudClient::PORTAL_NAMESPACE
-        client = FireCloudClient.new(self.user, self.firecloud_project)
-        projects = client.get_billing_projects.map {|project| project['projectName']}
-        unless projects.include?(self.firecloud_project)
-          errors.add(:firecloud_project, ' is not a project you are a member of.  Please choose another project.')
-        end
-      end
-
-      Rails.logger.info "#{Time.zone.now}: Study: #{self.name} checking service account permissions"
-      has_access = set_service_account_permissions
-      if !has_access
-        errors.add(:firecloud_workspace, ": We encountered an error when attempting to set service account permissions.  Please try again, or chose a different project.")
-      else
-        Rails.logger.info "#{Time.zone.now}: Study: #{self.name} service account permissions ok"
-      end
-      unless self.errors.any?
-        begin
-          workspace = Study.firecloud_client.get_workspace(self.firecloud_project, self.firecloud_workspace)
-          study_owner = self.user.email
-          # set acls if using default project
-          if self.firecloud_project == FireCloudClient::PORTAL_NAMESPACE
-            workspace_permission = 'WRITER'
-            can_compute = true
-            # if study project is in the compute blacklist, revoke compute permission
-            if Rails.env == 'production' && FireCloudClient::COMPUTE_BLACKLIST.include?(self.firecloud_project)
-              can_compute = false
-              Rails.logger.info "#{Time.zone.now}: Study: #{self.name} removing compute permissions"
-              compute_acl = Study.firecloud_client.create_workspace_acl(self.user.email, workspace_permission, true, can_compute)
-              Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, compute_acl)
-            end
-            acl = Study.firecloud_client.get_workspace_acl(self.firecloud_project, self.firecloud_workspace)
-            # first check workspace authorization domain
-            auth_domain = workspace['workspace']['authorizationDomain']
-            unless auth_domain.empty?
-              errors.add(:firecloud_workspace, ': The workspace you provided is restricted.  We currently do not allow use of restricted workspaces.  Please use another workspace.')
-              return false
-            end
-            # check permissions
-            if acl['acl'][study_owner].nil? || acl['acl'][study_owner]['accessLevel'] == 'READER'
-              errors.add(:firecloud_workspace, ': You do not have write permission for the workspace you provided.  Please use another workspace.')
-              return false
-            end
-            # check compute permissions
-            if acl['acl'][study_owner]['canCompute'] != can_compute
-              errors.add(:firecloud_workspace, ': There was an error setting the permissions on your workspace (compute permissions were not set correctly).  Please try again.')
-              return false
-            end
-            Rails.logger.info "#{Time.zone.now}: Study: #{self.name} FireCloud workspace acl check successful"
-            # set bucket_id, it is nested lower since we had to get an existing workspace
+    Rails.logger.info "#{Time.zone.now}: Study: #{self.name} checking service account permissions"
+    has_access = set_service_account_permissions
+    if !has_access
+      errors.add(:firecloud_workspace, ": We encountered an error when attempting to set service account permissions.  Please try again, or chose a different project.")
+    else
+      Rails.logger.info "#{Time.zone.now}: Study: #{self.name} service account permissions ok"
+    end
+    unless self.errors.any?
+      begin
+        workspace = Study.firecloud_client.get_workspace(self.firecloud_project, self.firecloud_workspace)
+        study_owner = self.user.email
+        # set acls if using default project
+        if self.firecloud_project == FireCloudClient::PORTAL_NAMESPACE
+          workspace_permission = 'WRITER'
+          can_compute = true
+          # if study project is in the compute blacklist, revoke compute permission
+          if Rails.env == 'production' && FireCloudClient::COMPUTE_BLACKLIST.include?(self.firecloud_project)
+            can_compute = false
+            Rails.logger.info "#{Time.zone.now}: Study: #{self.name} removing compute permissions"
+            compute_acl = Study.firecloud_client.create_workspace_acl(self.user.email, workspace_permission, true, can_compute)
+            Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, compute_acl)
           end
-
-          bucket = workspace['workspace']['bucketName']
-          self.bucket_id = bucket
-          if self.bucket_id.nil?
-            # delete workspace on validation fail
-            errors.add(:firecloud_workspace, ' was not created properly (storage bucket was not set).  Please try again later.')
+          acl = Study.firecloud_client.get_workspace_acl(self.firecloud_project, self.firecloud_workspace)
+          # first check workspace authorization domain
+          auth_domain = workspace['workspace']['authorizationDomain']
+          unless auth_domain.empty?
+            errors.add(:firecloud_workspace, ': The workspace you provided is restricted.  We currently do not allow use of restricted workspaces.  Please use another workspace.')
             return false
           end
-          Rails.logger.info "#{Time.zone.now}: Study: #{self.name} FireCloud bucket assignment successful"
-          if self.study_shares.any?
-            Rails.logger.info "#{Time.zone.now}: Study: #{self.name} FireCloud workspace acl assignment for shares starting"
-            self.study_shares.each do |share|
-              begin
-                acl = Study.firecloud_client.create_workspace_acl(share.email, StudyShare::FIRECLOUD_ACL_MAP[share.permission], true, false)
-                Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, acl)
-                Rails.logger.info "#{Time.zone.now}: Study: #{self.name} FireCloud workspace acl assignment for shares #{share.email} successful"
-              rescue RuntimeError => e
-                error_context = ErrorTracker.format_extra_context(self, acl)
-                # remove study description as it's not useful
-                error_context['study'].delete('description')
-                ErrorTracker.report_exception(e, user, error_context)
-                errors.add(:study_shares, "Could not create a share for #{share.email} to workspace #{self.firecloud_workspace} due to: #{e.message}")
-                return false
-              end
-            end
+          # check permissions
+          if acl['acl'][study_owner].nil? || acl['acl'][study_owner]['accessLevel'] == 'READER'
+            errors.add(:firecloud_workspace, ': You do not have write permission for the workspace you provided.  Please use another workspace.')
+            return false
           end
-        rescue => e
-          error_context = ErrorTracker.format_extra_context(self)
-          # remove study description as it's not useful
-          error_context['study'].delete('description')
-          ErrorTracker.report_exception(e, user, error_context)
-          # delete workspace on any fail as this amounts to a validation fail
-          Rails.logger.info "#{Time.zone.now}: Error assigning workspace: #{e.message}"
-          errors.add(:firecloud_workspace, " assignment failed: #{e.message}; Please check the workspace in question and try again.")
+          # check compute permissions
+          if acl['acl'][study_owner]['canCompute'] != can_compute
+            errors.add(:firecloud_workspace, ': There was an error setting the permissions on your workspace (compute permissions were not set correctly).  Please try again.')
+            return false
+          end
+          Rails.logger.info "#{Time.zone.now}: Study: #{self.name} FireCloud workspace acl check successful"
+          # set bucket_id, it is nested lower since we had to get an existing workspace
+        end
+
+        bucket = workspace['workspace']['bucketName']
+        self.bucket_id = bucket
+        if self.bucket_id.nil?
+          # delete workspace on validation fail
+          errors.add(:firecloud_workspace, ' was not created properly (storage bucket was not set).  Please try again later.')
           return false
         end
+        Rails.logger.info "#{Time.zone.now}: Study: #{self.name} FireCloud bucket assignment successful"
+        if self.study_shares.any?
+          Rails.logger.info "#{Time.zone.now}: Study: #{self.name} FireCloud workspace acl assignment for shares starting"
+          self.study_shares.each do |share|
+            begin
+              acl = Study.firecloud_client.create_workspace_acl(share.email, StudyShare::FIRECLOUD_ACL_MAP[share.permission], true, false)
+              Study.firecloud_client.update_workspace_acl(self.firecloud_project, self.firecloud_workspace, acl)
+              Rails.logger.info "#{Time.zone.now}: Study: #{self.name} FireCloud workspace acl assignment for shares #{share.email} successful"
+            rescue RuntimeError => e
+              error_context = ErrorTracker.format_extra_context(self, acl)
+              # remove study description as it's not useful
+              error_context['study'].delete('description')
+              ErrorTracker.report_exception(e, user, error_context)
+              errors.add(:study_shares, "Could not create a share for #{share.email} to workspace #{self.firecloud_workspace} due to: #{e.message}")
+              return false
+            end
+          end
+        end
+      rescue => e
+        error_context = ErrorTracker.format_extra_context(self)
+        # remove study description as it's not useful
+        error_context['study'].delete('description')
+        ErrorTracker.report_exception(e, user, error_context)
+        # delete workspace on any fail as this amounts to a validation fail
+        Rails.logger.info "#{Time.zone.now}: Error assigning workspace: #{e.message}"
+        errors.add(:firecloud_workspace, " assignment failed: #{e.message}; Please check the workspace in question and try again.")
+        return false
       end
     end
   end
@@ -3156,6 +3171,7 @@ class Study
   end
 
   # remove firecloud workspace on delete
+  # TODO: should this be used anywhere? it's private and unused.
   def delete_firecloud_workspace
     begin
       Study.firecloud_client.delete_workspace(self.firecloud_project, self.firecloud_workspace)

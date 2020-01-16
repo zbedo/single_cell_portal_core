@@ -7,7 +7,7 @@ var data = [];
     <% if !data[:annotations].nil? %>
       annotations: <%= raw data[:annotations] %>,
     <% end %>
-    <% if @cluster.cluster_type == '3d' %>
+    <% if @cluster.is_3d? %>
       z: <%= raw data[:z] %>,
       textposition: 'bottom right',
     <% end %>

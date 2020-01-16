@@ -12,6 +12,7 @@ class ClusterGroup
   field :cluster_type, type: String
   field :cell_annotations, type: Array
   field :domain_ranges, type: Hash
+  field :subsampled, type: Boolean, default: false
 
   validates_uniqueness_of :name, scope: :study_id
   validates_presence_of :name, :cluster_type
@@ -110,9 +111,14 @@ class ClusterGroup
     }
   end
 
+  # formatted annotation select option value
+  def annotation_select_value(annotation, prepend_name=false)
+    "#{prepend_name ? "#{self.name}--" : nil}#{annotation[:name]}--#{annotation[:type]}--cluster"
+  end
+
   # return a formatted array for use in a select dropdown that corresponds to a specific cell_annotation
   def formatted_cell_annotation(annotation, prepend_name=false)
-    ["#{annotation[:name]}", "#{prepend_name ? "#{self.name}--" : nil}#{annotation[:name]}--#{annotation[:type]}--cluster"]
+    ["#{annotation[:name]}", self.annotation_select_value(annotation, prepend_name)]
   end
 
   # generate a formatted select box options array that corresponds to all this cluster_group's cell_annotations
@@ -303,6 +309,28 @@ class ClusterGroup
     end
     Rails.logger.info "#{Time.zone.now}: Subsampling complete for cluster '#{self.name}' using annotation: #{annotation_name} (#{annotation_type}, #{annotation_scope}) at resolution #{sample_size}"
     true
+  end
+
+  # determine which subsampling levels are required for this cluster
+  def subsample_thresholds_required
+    SUBSAMPLE_THRESHOLDS.select {|sample| sample < self.points}
+  end
+
+  # find all 'subsampled' data arrays
+  def find_subsampled_data_arrays
+    DataArray.where(study_id: self.study_id, study_file_id: self.study_file_id, linear_data_type: 'ClusterGroup',
+                    linear_data_id: self.id, :subsample_threshold.nin => [nil],
+                    :subsample_annotation.nin => [nil])
+  end
+
+  # control gate for invoking subsampling
+  def can_subsample?
+    if self.points < SUBSAMPLE_THRESHOLDS.min || self.subsampled
+      false
+    else
+      # check if there are any data arrays belonging to this cluster that have a subsample threshold & annotation
+      !self.find_subsampled_data_arrays.any?
+    end
   end
 
   ##

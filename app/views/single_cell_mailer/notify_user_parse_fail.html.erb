@@ -1,7 +1,11 @@
 <p>Your Single Cell Portal parse job has failed with the following error:</p>
 
-<p><%= @error %></p>
+<%= @error.html_safe %>
 
 <p>This file has been deleted from your study, and any child database records removed.
   If you have any questions about this error, you can contact the Single Cell Portal Team at
-  <%= mail_to 'scp-support@broadinstitute.zendesk.com', 'scp-support@broadinstitute.zendesk.com' %>.</p>
+  <%= mail_to 'scp-support@broadinstitute.zendesk.com', 'scp-support@broadinstitute.zendesk.com', subject: "File Ingest Error" %>.
+  Please copy and paste the "Details" section into the body of the email to help us diagnose your issue.
+</p>
+
+<p>Study URL: <%= legacy_study_url(identifier: @study.accession) %></p>

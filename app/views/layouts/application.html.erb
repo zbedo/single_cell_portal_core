@@ -10,6 +10,7 @@
       // load the max number of gene searches and corresponding error message.
       window.MAX_GENE_SEARCH = <%= Gene::MAX_GENE_SEARCH %>;
       window.MAX_GENE_SEARCH_MSG = '<%= Gene::MAX_GENE_SEARCH_MSG %>';
+
       // if we had search forms to preserve, recall and resubmit
       if ( localStorage.getItem('previous-search-url') ) {
           var searchUrl = localStorage.getItem('previous-search-url');
@@ -17,6 +18,11 @@
           window.location = searchUrl;
       }
   </script>
+
+  <script type="text/javascript"  nonce="<%= content_security_policy_script_nonce %>">
+      <%= render '/layouts/nr_script.js' %>
+  </script>
+
   <%= stylesheet_link_tag    'application', media: 'all' %>
   <%= nonced_javascript_include_tag "https://cdn.plot.ly/plotly-1.47.4.min.js" %>
   <%= nonced_javascript_pack_tag 'application' %>

@@ -48,7 +48,7 @@
           <div class="row ">
             <i class="col-sm-5  text-center">An “Expression Matrix” is a dense matrix (.txt, .tsv, or .csv)** that has a header row containing the value “GENE” in the first column, and single cell names in each successive column.</i>
             <i class="col-sm-4  col-sm-offset-1 text-center">An “MM Coordinate Matrix” *, as seen in <%= link_to '10x Genomics', 'https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/output/matrices', target: :_blank %>,
-              is a Matrix Market file (.mtx, .mm, or .txt)** that contains a <%= link_to 'sorted', 'https://github.com/broadinstitute/single_cell_portal/wiki/Sorting-Matrix-Market-Coordinate-Matricesx', target: :_blank %> sparse matrix in coordinate form. </i>
+              is a Matrix Market file (.mtx, .mm, or .txt)** that contains a sparse matrix in coordinate form. </i>
           </div>
           </br>
           <div class="row">
@@ -103,7 +103,7 @@
                 <li>The header of <strong>“TYPE”</strong>to declare metadata types (see below).</li>
                 <li>A value for each metadata column declaring its datatype</li>
                 <ul>
-                  <li>The two accepted values are <strong>“group”</strong> (set membership) or <strong>“numeric”</strong>(continuous scores). *</li>
+                  <li>The two accepted values are <strong>“group”</strong> (set membership) or <strong>“numeric”</strong> (continuous scores).*</li>
                 </ul>
               </ul>
             </ul>
@@ -133,7 +133,7 @@
           <div class="col-md-9 col-lg-offset-2 col-md-offset-1">
             <ul>
               <li>3 columns</li>
-              <li>A header row containing the value <strong>“NAME”, “X”, “Y”,</strong> optionally <strong>“Z”</strong>,  and columns containing cell-level annotations
+              <li>A header row containing the value <strong>“NAME”, “X”, “Y”,</strong> optionally <strong>“Z”</strong>, and columns containing cell-level annotations
               </li>
               <li>A second row with:</li>
               <ul >
@@ -141,7 +141,7 @@
                 <li>A value for each metadata column declaring its datatype
                 </li>
                 <ul>
-                  <li>The two accepted values are <strong>“group”</strong> (set membership) or <strong>“numeric”</strong>(continuous scores). *</li>
+                  <li>The two accepted values are <strong>“group”</strong> (set membership) or <strong>“numeric”</strong> (continuous scores).*</li>
                   <li>The values for the “X”, “Y”, and “Z” columns must be set to “numeric”.</li>
                 </ul>
               </ul>

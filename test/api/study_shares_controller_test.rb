@@ -6,8 +6,9 @@ class StudySharesControllerTest < ActionDispatch::IntegrationTest
   include Requests::HttpHelpers
 
   setup do
+    @random_seed = File.open(Rails.root.join('.random_seed')).read.strip
     @user = User.first
-    @study = Study.find_by(name: 'API Test Study')
+    @study = Study.find_by(name: "API Test Study #{@random_seed}")
     @study_share = @study.study_shares.first
     OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new({
                                                                            :provider => 'google_oauth2',

@@ -21,18 +21,17 @@ class DeleteQueueJob < Struct.new(:object)
       # now remove all child objects first to free them up to be re-used.
       case file_type
       when 'Cluster'
-        # first check if default cluster needs to be cleared, unless parsing has failed and cleanup didn't happen
-        unless object.cluster_groups.empty? || object.parse_status == 'unparsed'
-          if study.default_cluster.name == object.cluster_groups.first.name
-            study.default_options[:cluster] = nil
-            study.default_options[:annotation] = nil
-            study.save
-          end
-
-          cluster_group_id = ClusterGroup.find_by(study_file_id: object.id, study_id: study.id).id
-          delete_parsed_data(object.id, study.id, ClusterGroup)
-          delete_parsed_data(object.id, study.id, DataArray)
-          user_annotations = UserAnnotation.where(study_id: study.id, cluster_group_id: cluster_group_id )
+        if study.default_cluster.present? &&
+            study.default_cluster.name == object.name
+          study.default_options[:cluster] = nil
+          study.default_options[:annotation] = nil
+          study.save
+        end
+        cluster = ClusterGroup.find_by(study_file_id: object.id, study_id: study.id)
+        delete_parsed_data(object.id, study.id, ClusterGroup)
+        delete_parsed_data(object.id, study.id, DataArray)
+        if cluster.present?
+          user_annotations = UserAnnotation.where(study_id: study.id, cluster_group_id: cluster.id )
           user_annotations.each do |annot|
             annot.user_data_arrays.delete_all
             annot.user_annotation_shares.delete_all
@@ -63,10 +62,22 @@ class DeleteQueueJob < Struct.new(:object)
         end
         remove_file_from_bundle
       when 'Metadata'
+        bq_dataset = ApplicationController.bigquery_client.dataset 'cell_metadata'
+        if object.use_metadata_convention
+          bq_dataset.query "DELETE FROM alexandria_convention WHERE study_accession = '#{study.accession}' AND file_id = '#{object.id}'"
+        end
+
+        # clean up all subsampled data, as it is now invalid and will be regenerated
+        # once a user adds another metadata file
+        ClusterGroup.where(study_id: study.id).each do |cluster_group|
+          delete_subsampled_data(cluster_group)
+        end
+
         delete_parsed_data(object.id, study.id, CellMetadatum, DataArray)
         study.update(cell_count: 0)
         # unset default annotation if it was study-based
-        if study.default_options[:annotation].end_with?('--study')
+        if study.default_options[:annotation].present? &&
+            study.default_options[:annotation].end_with?('--study')
           study.default_options[:annotation] = nil
           study.save
         end
@@ -93,7 +104,7 @@ class DeleteQueueJob < Struct.new(:object)
 
       # reset initialized if needed
       if study.cluster_groups.empty? || study.genes.empty? || study.cell_metadata.empty?
-        study.update!(initialized: false)
+        study.update(initialized: false)
       end
     when 'UserAnnotation'
       study = object.study
@@ -136,5 +147,11 @@ class DeleteQueueJob < Struct.new(:object)
     models.each do |model|
       model.where(study_file_id: object_id, study_id: study_id).delete_all
     end
+  end
+
+  # remove all subsampling data when a user deletes a metadata file, as adding a new metadata file will cause all
+  # subsamples to be regenerated
+  def delete_subsampled_data(cluster)
+    cluster.find_subsampled_data_arrays.delete_all
   end
 end

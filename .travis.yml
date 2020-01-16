@@ -1,7 +1,7 @@
 language: ruby
 rvm:
-  - 2.5.5
-install: bundle install --jobs=3 --retry=3 --no-deployment
+  - 2.5.7
+install: gem install travis
 branches:
   only:
   - master
@@ -10,15 +10,11 @@ branches:
 services:
 - docker
 before_install:
-- rm yarn.lock
 - gem uninstall -v '>= 2' -i $(rvm gemdir)@global -ax bundler || true
 - gem install bundler -v '< 2'
 - sudo apt-get update && sudo apt-get -y install curl unzip jq
 - sudo curl -O https://releases.hashicorp.com/vault/1.0.1/vault_1.0.1_linux_amd64.zip
 - sudo unzip vault_1.0.1_linux_amd64.zip
 - sudo mv vault /usr/local/bin
-- docker pull mongo:3.4
-- docker tag mongo:3.4 mongo:latest
-- docker run -d --name mongodb -p 27017:27017 mongo
 script:
-- bin/load_env_secrets.sh -p secret/kdux/scp/development/scp_config.json -s secret/kdux/scp/development/scp_service_account.json -e test -n single-cell-portal-development
+- bin/load_env_secrets.sh -p secret/kdux/scp/staging/scp_config.json -s secret/kdux/scp/staging/scp_service_account.json -e test -n single-cell-portal-staging
