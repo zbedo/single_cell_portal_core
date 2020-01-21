@@ -67,8 +67,8 @@ var layout = {
 
   // if user has supplied a range, set that, otherwise let Plotly autorange
   <% if @cluster.has_range? %>
-    layout.xaxis.range = <%= raw @cluster.ranges[:x] %>;
-    layout.yaxis.range = <%= raw @cluster.ranges[:y] %>;
+    layout.xaxis.range = <%= raw @cluster.domain_ranges[:x] %>;
+    layout.yaxis.range = <%= raw @cluster.domain_ranges[:y] %>;
   <% else %>
     layout.xaxis.autorange = true;
     layout.yaxis.autorange = true;
