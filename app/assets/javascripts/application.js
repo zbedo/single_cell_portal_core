@@ -214,7 +214,6 @@ function split(val) {
 // extract last term from a string of autocomplete entries
 function extractLast(term) {
     sanitizedTerm = term.trim(); // remove trailing whitespace to prevent returning all results
-    console.log('attempting to autocompelte on "' + sanitizedTerm + '"');
     return split(sanitizedTerm).pop();
 }
 
