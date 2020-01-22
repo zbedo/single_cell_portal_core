@@ -16,6 +16,16 @@ SecureHeaders::Configuration.default do |config|
   config.x_permitted_cross_domain_policies = "none"
   config.x_download_options = "noopen"
   config.referrer_policy = %w(origin-when-cross-origin strict-origin-when-cross-origin)
+  allowed_connect_sources = ['\'self\'', "https://#{ENV['HOSTNAME']}", 'https://www.google-analytics.com', 'https://unpkg.com', 'https://igv.org',
+                    'https://www.googleapis.com', 'https://s3.amazonaws.com', 'https://data.broadinstitute.org', 'https://portals.broadinstitute.org',
+                    'https://us.input.tcell.insight.rapid7.com', 'https://api.tcell.io', 'https://us.browser.tcell.insight.rapid7.com',
+                    'https://us.agent.tcell.insight.rapid7.com', 'https://us.jsagent.tcell.insight.rapid7.com', 'https://accounts.google.com',
+                    'https://bam.nr-data.net']
+  if ENV['NOT_DOCKERIZED']
+    # enable connections to live reload server
+    allowed_connect_sources.push('http://localhost:3035')
+    allowed_connect_sources.push('ws://localhost:3035')
+  end
   config.csp = {
       # "meta" values. these will shape the header, but the values are not included in the header.
       preserve_schemes: true, # default: false. Schemes are removed from host sources to save bytes and discourage mixed content.
@@ -28,12 +38,7 @@ SecureHeaders::Configuration.default do |config|
                      https://us.agent.tcell.insight.rapid7.com), # if child-src isn't supported, the value for frame-src will be set.
       font_src: %w('self' data:),
       form_action: %w('self' https://accounts.google.com),
-      connect_src: ['\'self\'', "https://#{ENV['HOSTNAME']}", 'https://www.google-analytics.com', 'https://unpkg.com', 'https://igv.org',
-                    'https://www.googleapis.com', 'https://s3.amazonaws.com', 'https://data.broadinstitute.org', 'https://portals.broadinstitute.org',
-                    'https://us.input.tcell.insight.rapid7.com', 'https://api.tcell.io', 'https://us.browser.tcell.insight.rapid7.com',
-                    'https://us.agent.tcell.insight.rapid7.com', 'https://us.jsagent.tcell.insight.rapid7.com', 'https://accounts.google.com',
-                    'https://bam.nr-data.net'
-                  ],
+      connect_src: allowed_connect_sources,
       img_src: %w('self' data: https://www.google-analytics.com https://online.swagger.io),
       manifest_src: %w('self'),
       object_src: %w('none'),

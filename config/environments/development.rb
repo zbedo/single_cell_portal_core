@@ -41,7 +41,7 @@ Rails.application.configure do
 
   # Mitigate X-Forwarded-Host injection attacks
   config.action_controller.default_url_options = { :host => 'localhost', protocol: 'https' }
-  config.action_controller.asset_host = 'localhost'
+  config.action_controller.asset_host = ENV['NOT_DOCKERIZED'] ? 'localhost:3000' : 'localhost'
 
   # Use an evented file watcher to asynchronously detect changes in source code,
   # routes, locales, etc. This feature depends on the listen gem.
