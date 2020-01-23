@@ -359,7 +359,7 @@ class IngestJob
     if Study.firecloud_client.workspace_file_exists?(self.study.bucket_id, filepath)
       file_contents = Study.firecloud_client.execute_gcloud_method(:read_workspace_file, 0, self.study.bucket_id, filepath)
       Study.firecloud_client.execute_gcloud_method(:delete_workspace_file, 0, self.study.bucket_id, filepath)
-      file_contents
+      file_contents.read
     end
   end
 
@@ -408,6 +408,8 @@ class IngestJob
     error_contents = self.read_parse_logfile(self.error_filepath)
     warning_contents = self.read_parse_logfile(self.warning_filepath)
     message_body = "<p>'#{self.study_file.upload_file_name}' has failed during parsing.</p>"
+    Rails.logger.info "Error file contents: #{error_contents}"
+    Rails.logger.info "Error contents present? #{error_contents.present?}"
     if error_contents.present?
       message_body += "<h3>Errors</h3>"
       error_contents.each_line do |line|
