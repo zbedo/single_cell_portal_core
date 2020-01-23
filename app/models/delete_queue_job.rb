@@ -71,7 +71,6 @@ class DeleteQueueJob < Struct.new(:object)
         # once a user adds another metadata file
         ClusterGroup.where(study_id: study.id).each do |cluster_group|
           delete_subsampled_data(cluster_group)
-          cluster_group.update(subsampled: false)
         end
 
         delete_parsed_data(object.id, study.id, CellMetadatum, DataArray)
@@ -154,5 +153,6 @@ class DeleteQueueJob < Struct.new(:object)
   # subsamples to be regenerated
   def delete_subsampled_data(cluster)
     cluster.find_subsampled_data_arrays.delete_all
+    cluster.update(subsampled: false)
   end
 end
