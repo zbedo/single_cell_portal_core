@@ -1,3 +1,5 @@
+require 'json'
+
 # Run the rails server in non-dockerized form
 if ARGV[0].nil?
   puts 'You must specify your username'
