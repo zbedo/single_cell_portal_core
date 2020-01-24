@@ -8,11 +8,12 @@ Developing on SCP without a Docker container, while less robust, opens up some f
 2.  Run bundler -v to ensure Bundler is installed.  If not,  gem install bundler.
 3.  cd to where you have the single_cell_portal_core Git repo checked out.
 4.  Run `bundle install`
-5.  Run `ruby rails_local_setup.rb $BROAD_USERNAME`, where $BROAD_USERNAME is a something like eweitz
-6.  Run the source command the script outputs
-7.  Run `rails s`
-8.  (optional, for live reload) In another tab, run bin/webpack-dev-server
-9. (needed if you are working on functionality that involves delayed jobs).
+5.  Run `yarn install`
+6.  Run `ruby rails_local_setup.rb $BROAD_USERNAME`, where $BROAD_USERNAME is a something like eweitz
+7.  Run the source command the script outputs
+8.  Run `rails s`
+9.  (optional, for live reload) In another tab, run bin/webpack-dev-server
+10. (needed if you are working on functionality that involves delayed jobs).
     * In another terminal, run the source command output in step 7
     * run `rails jobs:work`
 10.  You're all set!  You can now go to localhost:3000 and see the website.
