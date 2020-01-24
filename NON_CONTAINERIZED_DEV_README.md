@@ -12,7 +12,7 @@ Developing on SCP without a Docker container, while less robust, opens up some f
 6.  Run `ruby rails_local_setup.rb $BROAD_USERNAME`, where $BROAD_USERNAME is a something like eweitz
 7.  Run the source command the script outputs
 8.  Run `rails s`
-9.  (optional, for live reload) In another tab, run bin/webpack-dev-server
+9.  (optional, for live reload) In a separate terminal, run bin/webpack-dev-server
 10. (needed if you are working on functionality that involves delayed jobs).
     * In another terminal, run the source command output in step 7
     * run `rails jobs:work`
