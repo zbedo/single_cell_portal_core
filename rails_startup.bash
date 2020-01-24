@@ -18,7 +18,7 @@ then
 elif [[ $PASSENGER_APP_ENV = "development" ]]; then
     echo "*** UPGRADING/COMPILING NODE MODULES ***"
     # force upgrade in local development to ensure yarn.lock is continually updated
-    sudo -E -u app -H yarn upgrade
+    sudo -E -u app -H yarn install
     sudo -E -u app -H /home/app/webapp/bin/webpack
 fi
 if [[ -n $TCELL_AGENT_APP_ID ]] && [[ -n $TCELL_AGENT_API_KEY ]] ; then
