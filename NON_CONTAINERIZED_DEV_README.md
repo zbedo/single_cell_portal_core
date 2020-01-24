@@ -16,11 +16,11 @@ Developing on SCP without a Docker container, while less robust, opens up some f
 10. (needed if you are working on functionality that involves delayed jobs).
     * In another terminal, run the source command output in step 7
     * run `rails jobs:work`
-10.  You're all set!  You can now go to localhost:3000 and see the website.
+11.  You're all set!  You can now go to localhost:3000 and see the website.
 
 
 ## KNOWN ISSUES
-0. Developing outside the docker container inherently runs more risk that your code will not work in the docker environment in staging/production.  BE CAREFUL.  If your changes are non-trivial, confirm your changes work in the containerized deploy before committing (ESPECIALLY changes involving package.json and/or the Gemfile)
-1. You may experience difficulty toggling back and forth between containerized and non-containerized deployment, as node-sass bindings are OS-specific.  If you see an error like 'No matching version of node-sass found'
+1. Developing outside the docker container inherently runs more risk that your code will not work in the docker environment in staging/production.  BE CAREFUL.  If your changes are non-trivial, confirm your changes work in the containerized deploy before committing (ESPECIALLY changes involving package.json and/or the Gemfile)
+2. You may experience difficulty toggling back and forth between containerized and non-containerized deployment, as node-sass bindings are OS-specific.  If you see an error like 'No matching version of node-sass found'
    * if this error occurs when trying to deploy in the container, fix it by deleting the `node-modules/node-sass` folder, and then rerunning the load_env_secrets process
    * if the error is when you're trying to run locally, fix it by running `npm rebuild node-sass`
