@@ -2,18 +2,21 @@ import React, { Component } from 'react';
 import Button from 'react-bootstrap/Button';
 import InputGroup from 'react-bootstrap/InputGroup';
 
-const boxStyle = {width: '300px'};
+const boxStyle = {width: '200px'};
 
-/**
- * Are these two sets equal?
- * Adapted for readability from https://stackoverflow.com/a/31129384
- * 
- * @param {Set} setA 
- * @param {Set} setB 
- */
-function equalSets(setA, setB) {
-  if (setA.size !== setB.size) return false;
-  for (var a of setA) if (!setB.has(a)) return false;
+function arraysEqual(a, b) {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  if (a.length != b.length) return false;
+
+  // If you don't care about the order of the elements inside
+  // the array, you should sort both arrays here.
+  // Please note that calling sort on an array will modify that array.
+  // you might want to clone your array first.
+
+  for (var i = 0; i < a.length; ++i) {
+    if (a[i] !== b[i]) return false;
+  }
   return true;
 }
 
@@ -29,7 +32,7 @@ export default class FiltersBox extends Component {
 
   getCheckedFilterIDs = () => {
     const checkedSelector = `#${this.facetID} input:checked`;
-    const checkedFilterIDs = 
+    const checkedFilterIDs =
       [...document.querySelectorAll(checkedSelector)].map((filter) => {
         return filter.id.split('-').slice(-1);
       });
@@ -38,15 +41,16 @@ export default class FiltersBox extends Component {
 
   updateCanSaveState = () => {
     this.setState(() => ({
-      canSave: this.state.selection !== this.state.savedSelection
+      canSave: !arraysEqual(this.state.selection, this.state.savedSelection)
     }));
   }
 
   handleFilterClick = () => {
     this.setState(() => ({
       selection: this.getCheckedFilterIDs()
-    }));
-    this.updateCanSaveState();
+    }), () => {
+      this.updateCanSaveState();
+    });
   };
 
   handleSaveClick = (event) => {
@@ -58,9 +62,6 @@ export default class FiltersBox extends Component {
       savedSelection: this.getCheckedFilterIDs()
     }));
   };
-
-  // componentDidUpdate(prevProps, prevState, snapshot) {
-  // }
 
   render() {
     const facetName = this.props.facet.name;
