@@ -1,8 +1,6 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from 'react-bootstrap/Button';
 import InputGroup from 'react-bootstrap/InputGroup';
-
-const boxStyle = {width: '200px'};
 
 function arraysEqual(a, b) {
   if (a === b) return true;
@@ -20,90 +18,88 @@ function arraysEqual(a, b) {
   return true;
 }
 
-export default class FiltersBox extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      canSave: false,
-      savedSelection: [],
-      selection: [], // Array of selected (e.g. checked) filters
-    }
-  }
+const boxStyle = {
+  width: '200px',
+  display: ''
+};
 
-  getCheckedFilterIDs = () => {
-    const checkedSelector = `#${this.facetID} input:checked`;
+export default function FiltersBox(props) {
+  const [canSave, setCanSave] = useState(false);
+  const [savedSelection, setSavedSelection] = useState([]);
+  const [selection, setSelection] = useState([]);
+
+  useEffect(() => {
+    setCanSave(!arraysEqual(selection, savedSelection));
+  }, [selection])
+
+  useEffect(() => {
+    setCanSave(false);
+  }, [savedSelection])
+
+  // Systematic, predictable IDs help UX research and UI development.
+  //
+  // Form of IDs: <general name> <specific name(s)>
+  // General name: All lowercase, specified in app code (e.g. 'save-facet', 'filter')
+  // Specific name(s): Cased as specified in API (e.g. 'species', 'NCBItaxon9606')
+  //
+  // UI code concatenates names in the ID.  Names in ID are hyphen-delimited.
+  //
+  // Examples:
+  //   * save-facet-species (for calls-to-action use ID: <action> <component>)
+  //   * filter-species-NCBItaxon9606
+  const facetName = props.facet.name;
+  const facetID = `facet-${facetName}`;
+  const saveID = `save-${facetID}`;
+
+  /**
+   * Returns IDs of selected filters.
+   * Enables comparing current vs. saved filters
+   */
+  function getCheckedFilterIDs() {
+    const checkedSelector = `#${facetID} input:checked`;
     const checkedFilterIDs =
       [...document.querySelectorAll(checkedSelector)].map((filter) => {
-        return filter.id.split('-').slice(-1);
+        return filter.id;
       });
     return checkedFilterIDs
   }
 
-  updateCanSaveState = () => {
-    this.setState(() => ({
-      canSave: !arraysEqual(this.state.selection, this.state.savedSelection)
-    }));
+  function handleFilterClick() {
+    setSelection(getCheckedFilterIDs());
   }
 
-  handleFilterClick = () => {
-    this.setState(() => ({
-      selection: this.getCheckedFilterIDs()
-    }), () => {
-      this.updateCanSaveState();
-    });
-  };
-
-  handleSaveClick = (event) => {
+  function handleSaveClick(event) {
     const saveButtonClasses = Array.from(event.target.classList);
-    
+  
     if (saveButtonClasses.includes('disabled')) return;
-
-    this.setState(() => ({
-      savedSelection: this.getCheckedFilterIDs()
-    }));
+    
+    setSavedSelection(getCheckedFilterIDs());
   };
 
-  render() {
-    const facetName = this.props.facet.name;
-
-    // Systematic, predictable IDs help UX research and UI development.
-    //
-    // Form of IDs: <general name> <specific name(s)>
-    // General name: All lowercase, specified in app code (e.g. 'save-facet', 'filter')
-    // Specific name(s): Cased as specified in API (e.g. 'species', 'NCBItaxon9606')
-    //
-    // UI code concatenates names in the ID.  Names in ID are hyphen-delimited.
-    //
-    // Examples:
-    //   * save-facet-species (for calls-to-action use ID: <action> <component>)
-    //   * filter-species-NCBItaxon9606
-    this.facetID = `facet-${facetName}`
-    const saveID = `save-${this.facetID}`;
-
-    return (
-      <div id={this.facetID} style={boxStyle}>
-        {this.props.facet.filters.map((d) => {
-          const id = `filter-${facetName}-${d.id}`;
-          return (
-            <li key={id} id={id}>
-              <InputGroup.Checkbox
-                aria-label="Checkbox"
-                name={d.id}
-                onClick={this.handleFilterClick}
-              />
-              <label htmlFor={id}>{d.name}</label>
-            </li>
-          );
-        })}
-        <span>Clear</span>
-        <Button 
-          id={saveID}
-          className={this.state.canSave ? 'enabled' : 'disabled'}
-          onClick={this.handleSaveClick}
-          >
-          SAVE
-        </Button>
-      </div>
-    );
-  }
+  return (
+    <div id={facetID} style={boxStyle}>
+      {props.facet.filters.map((d) => {
+        const id = `filter-${facetName}-${d.id}`;
+        return (
+          <li key={'li-' + id}>
+            <InputGroup.Checkbox
+              id={id}
+              aria-label="Checkbox"
+              name={id}
+              onClick={handleFilterClick}
+            />
+            <label htmlFor={id}>{d.name}</label>
+          </li>
+        );
+      })}
+      <span>Clear</span>
+      <Button 
+        id={saveID}
+        className={canSave ? 'enabled' : 'disabled'}
+        onClick={handleSaveClick}
+        >
+        SAVE
+      </Button>
+    </div>
+  );
 }
