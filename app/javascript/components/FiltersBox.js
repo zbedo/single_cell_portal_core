@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Button from 'react-bootstrap/Button';
 import InputGroup from 'react-bootstrap/InputGroup';
+import FiltersSearchBar from './FiltersSearchBar';
 
 function arraysEqual(a, b) {
   if (a === b) return true;
@@ -43,15 +44,16 @@ export default function FiltersBox(props) {
   //   * save-facet-species (for calls-to-action use ID: <action> <component>)
   //   * filter-species-NCBItaxon9606
   const facetName = props.facet.name;
-  const facetID = `facet-${facetName}`;
-  const saveID = `save-${facetID}`;
+  const componentName = 'filters-box';
+  const filtersBoxID = `${componentName}-${facetName}`;
+  const saveID = `save-${filtersBoxID}`;
 
   /**
    * Returns IDs of selected filters.
    * Enables comparing current vs. saved filters
    */
   function getCheckedFilterIDs() {
-    const checkedSelector = `#${facetID} input:checked`;
+    const checkedSelector = `#${filtersBoxID} input:checked`;
     const checkedFilterIDs =
       [...document.querySelectorAll(checkedSelector)].map((filter) => {
         return filter.id;
@@ -72,7 +74,8 @@ export default function FiltersBox(props) {
   };
 
   return (
-    <div class='filters-box' id={`filters-box-${facetID}`} style={{display: props.show ? '' : 'none'}}>
+    <div class={componentName} id={`${filtersBoxID}`} style={{display: props.show ? '' : 'none'}}>
+      <FiltersSearchBar filtersBoxID={filtersBoxID} />
       <ul>
         {props.facet.filters.map((d) => {
           const id = `filter-${facetName}-${d.id}`;
@@ -92,9 +95,8 @@ export default function FiltersBox(props) {
       <span>Clear</span>
       <Button 
         id={saveID}
-        className={'facet-save-button ' + (canSave ? 'enabled' : 'disabled')}
-        onClick={handleSaveClick}
-        >
+        className={(canSave ? 'enabled' : 'disabled')}
+        onClick={handleSaveClick}>
         SAVE
       </Button>
     </div>
