@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Button from 'react-bootstrap/Button';
 import InputGroup from 'react-bootstrap/InputGroup';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
+
 import FiltersSearchBar from './FiltersSearchBar';
 
 function arraysEqual(a, b) {
@@ -76,6 +79,18 @@ export default function FiltersBox(props) {
   return (
     <div class={componentName} id={`${filtersBoxID}`} style={{display: props.show ? '' : 'none'}}>
       <FiltersSearchBar filtersBoxID={filtersBoxID} />
+      <p class='filters-box-header'>
+        <span class='default-filters-list-name'>FREQUENTLY SEARCHED</span>
+        <span class='facet-ontology-links'>
+          {props.facet.links.map((link) => {
+            return (
+              <a href={link.url} target='_blank'>
+                {link.name}&nbsp;&nbsp;<FontAwesomeIcon icon={faExternalLinkAlt}/><br/>
+              </a>
+            );
+          })}
+        </span>
+      </p>
       <ul>
         {props.facet.filters.map((d) => {
           const id = `filter-${facetName}-${d.id}`;

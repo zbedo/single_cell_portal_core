@@ -20,23 +20,11 @@ function Facet(props) {
     setShowFilters(!showFilters);
   }
 
-  const style = {
-    padding: '8px 16px',
-    marginRight: '8px',
-    borderRadius: '15px',
-    border: '0.64px solid #4D72AA',
-    boxSizing: 'border-box',
-    color: '#4D72AA',
-    fontWeight: '500',
-    cursor: 'pointer'
-  };
-
   return (
       <span
         id={facetID}
-        className='facet'>
+        className={`facet ${showFilters ? 'active' : ''}`}>
         <span
-          style={style}
           onClick={handleClick}>
           {facetName}
         </span>
