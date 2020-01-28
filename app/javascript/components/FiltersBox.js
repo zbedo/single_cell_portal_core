@@ -92,13 +92,15 @@ export default function FiltersBox(props) {
           );
         })}
       </ul>
-      <span>Clear</span>
-      <Button 
-        id={saveID}
-        className={(canSave ? 'enabled' : 'disabled')}
-        onClick={handleSaveClick}>
-        SAVE
-      </Button>
+      <div class="filters-box-footer">
+        <span>Clear</span>
+        <Button 
+          id={saveID}
+          className={'facet-save-button ' + (canSave ? 'enabled' : 'disabled')}
+          onClick={handleSaveClick}>
+          SAVE
+        </Button>
+      </div>
     </div>
   );
 }
