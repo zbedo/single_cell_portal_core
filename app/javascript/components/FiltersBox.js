@@ -18,11 +18,6 @@ function arraysEqual(a, b) {
   return true;
 }
 
-const boxStyle = {
-  width: '200px',
-  display: ''
-};
-
 export default function FiltersBox(props) {
   const [canSave, setCanSave] = useState(false);
   const [savedSelection, setSavedSelection] = useState([]);
@@ -30,11 +25,11 @@ export default function FiltersBox(props) {
 
   useEffect(() => {
     setCanSave(!arraysEqual(selection, savedSelection));
-  }, [selection])
+  }, [selection]);
 
   useEffect(() => {
     setCanSave(false);
-  }, [savedSelection])
+  }, [savedSelection]);
 
   // Systematic, predictable IDs help UX research and UI development.
   //
@@ -77,7 +72,7 @@ export default function FiltersBox(props) {
   };
 
   return (
-    <div id={facetID} style={boxStyle}>
+    <div id={facetID} style={{width: '200px', display: props.show ? '' : 'none'}}>
       {props.facet.filters.map((d) => {
         const id = `filter-${facetName}-${d.id}`;
         return (

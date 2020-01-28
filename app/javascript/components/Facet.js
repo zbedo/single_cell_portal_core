@@ -7,23 +7,33 @@ import FiltersBox from './FiltersBox';
  * @param {*} value 
  */
 function slug(value) {
-  return value.toLowerCase().replace('')
+  return value.toLowerCase().replace(/ /g, '-');
 }
 
 function Facet(props) {
   
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
   
-  function handleClick(event) {
+  function handleClick() {
     setShowFilters(!showFilters);
-    console.log('showFilters in handleClick:')
-    console.log(showFilters)
   }
 
   const facetName = props.facet.name;
 
+  const style = {
+    padding: '8px 16px',
+    marginRight: '8px',
+    borderRadius: '15px',
+    border: '0.64px solid #4D72AA',
+    boxSizing: 'border-box',
+    color: '#4D72AA',
+    fontWeight: '500',
+    cursor: 'pointer'
+  }
+
   return (
       <span 
+        style={style}
         id={slug(facetName)}
         onClick={handleClick}>
         {facetName}
