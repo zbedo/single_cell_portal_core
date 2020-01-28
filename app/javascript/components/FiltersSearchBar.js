@@ -4,46 +4,31 @@ import InputGroup from 'react-bootstrap/InputGroup';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import Col from 'react-bootstrap/Col';
+import Button from 'react-bootstrap/Button';
 
 export default function FiltersSearchBar(props) {
   const componentName = 'filters-search-bar';
   const filtersSearchBarID = `${componentName}-${props.filtersBoxID}`;
+
+  const buttonStyle = {
+    float: 'right',
+    position: 'relative',
+    top: '-2.4em',
+    borderRadius: '0 4px 4px 0'
+  }
+
   return (
-    <div>
-      {/* <InputGroup>
-        <InputGroup.Prepend>
-            <InputGroup.Text>
-              <FontAwesomeIcon icon={faSearch} />
-            </InputGroup.Text>
-        </InputGroup.Prepend>
+    <div style={{margin: '2px'}}>
+      <Form.Group controlId={filtersSearchBarID}>
         <Form.Control
-          id={filtersSearchBarID}
-          type='text'
-          placeholder='Search'
+          className={componentName}
+          type="text"
+          placeholder="Search"
         />
-      </InputGroup> */}
-      {/* <FontAwesomeIcon icon={faCoffee} /> */}
-      <Form>
-      <Form.Row>
-        <Form.Group as={Col} md="4" controlId="validationCustomUsername">
-          <Form.Label>Username</Form.Label>
-          <InputGroup>
-            <InputGroup.Prepend>
-              <InputGroup.Text id="inputGroupPrepend">@</InputGroup.Text>
-            </InputGroup.Prepend>
-            <Form.Control
-              type="text"
-              placeholder="Username"
-              aria-describedby="inputGroupPrepend"
-              required
-            />
-            <Form.Control.Feedback type="invalid">
-              Please choose a username.
-            </Form.Control.Feedback>
-          </InputGroup>
-        </Form.Group>
-      </Form.Row>
-      </Form>
+        <Button style={buttonStyle}>
+          <FontAwesomeIcon icon={faSearch}/>
+        </Button>
+      </Form.Group>
     </div>
   );
 }
