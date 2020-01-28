@@ -72,25 +72,27 @@ export default function FiltersBox(props) {
   };
 
   return (
-    <div id={facetID} style={{width: '200px', display: props.show ? '' : 'none'}}>
-      {props.facet.filters.map((d) => {
-        const id = `filter-${facetName}-${d.id}`;
-        return (
-          <li key={'li-' + id}>
-            <InputGroup.Checkbox
-              id={id}
-              aria-label="Checkbox"
-              name={id}
-              onClick={handleFilterClick}
-            />
-            <label htmlFor={id}>{d.name}</label>
-          </li>
-        );
-      })}
+    <div class='filters-box' id={`filters-box-${facetID}`} style={{display: props.show ? '' : 'none'}}>
+      <ul>
+        {props.facet.filters.map((d) => {
+          const id = `filter-${facetName}-${d.id}`;
+          return (
+            <li key={'li-' + id}>
+              <InputGroup.Checkbox
+                id={id}
+                aria-label="Checkbox"
+                name={id}
+                onClick={handleFilterClick}
+              />
+              <label htmlFor={id}>{d.name}</label>
+            </li>
+          );
+        })}
+      </ul>
       <span>Clear</span>
       <Button 
         id={saveID}
-        className={canSave ? 'enabled' : 'disabled'}
+        className={'facet-save-button ' + (canSave ? 'enabled' : 'disabled')}
         onClick={handleSaveClick}
         >
         SAVE

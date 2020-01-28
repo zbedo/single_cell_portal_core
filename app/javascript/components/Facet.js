@@ -34,7 +34,8 @@ function Facet(props) {
   return (
       <span 
         style={style}
-        id={slug(facetName)}
+        id={`facet-${slug(facetName)}`}
+        className='facet'
         onClick={handleClick}>
         {facetName}
         <FiltersBox show={showFilters} facet={props.facet} />

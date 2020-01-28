@@ -4,6 +4,7 @@ import Facet from './Facet';
 const facets = [
   {
     name: 'Species',
+    link: {name: 'NCBI Taxonomy', url: 'https://foo.tdb'},
     filters: [
       {name: 'Human', id: 'NCBItaxon9606'},
       {name: 'Mouse', id: 'NCBItaxon10090'},
@@ -12,11 +13,12 @@ const facets = [
   },
   {
     name: 'Disease',
+    link: {name: 'Disease ontology', url: 'https://bar.tdb'},
     filters: [
       {name: 'tubercolosis', id: 'DOID0000123'},
       {name: 'ocular tubercolosis', id: 'DOID0000123'},
       {name: 'tuberculosis, spinal', id: 'DOID0000123'},
-      {name: 'endocrime tuberculosis', id: 'DOID0000123'},
+      {name: 'endocrine tuberculosis', id: 'DOID0000123'},
       {name: 'inactive tuberculosis', id: 'DOID0000123'},
       {name: 'tubercolosis, bovine', id: 'DOID0000123'},
       {name: 'tuberculosis, avian', id: 'DOID0000123'},
@@ -29,7 +31,7 @@ const facets = [
 
 function ScpSearchStudies() {
   return (
-    <div className="ScpSearch">
+    <div>
       {
         facets.map((facet) => {
           return <Facet facet={facet} />

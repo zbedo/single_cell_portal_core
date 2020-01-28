@@ -480,6 +480,28 @@ h4, .h4, h5, .h5, h6, .h6 {
   padding-left: 15px;
 }
 
+/**
+* Styles for React-based faceted search UI for studies
+*/
+
+#search-studies .facet ul {
+  list-style-type: none;
+}
+
+#search-studies .facet li {
+  width: 250px;
+}
+
+#search-studies .filters-box {
+  width: 500px;
+  border: 1px solid #aaa;
+}
+
+#search-studies .facet-save-button {
+  float: right;
+  margin: 0 10px 10px 0;
+}
+
 /*
  * Off Canvas, a collapsible side bar used for e.g. 'View Options' menu
  * --------------------------------------------------
