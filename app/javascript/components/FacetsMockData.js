@@ -2,18 +2,9 @@
 // Proposed API endpoint: GET /facets
 export const facetsResponseMock = [
   {
-    name: 'Species',
-    id: 'species',
-    links: [{name: 'NCBI Taxonomy', url: 'https://foo.tdb'}],
-    filters: [
-      {name: 'human', id: 'NCBItaxon9606'},
-      {name: 'mouse', id: 'NCBItaxon10090'},
-      {name: 'cow', id: 'NCBItaxon5555'},
-    ]
-  },
-  {
     name: 'Disease',
     id: 'disease',
+    type: 'array',
     links: [
       {name: 'Disease Ontology', url: 'https://bar.tdb'},
       {name: 'PATO Ontology', url: 'https://pato.tdb'},
@@ -27,6 +18,7 @@ export const facetsResponseMock = [
   {
     name: 'Organ',
     id: 'organ',
+    type: 'string',
     links: [{name: 'UBERON', url: 'https://uberon.tbd'}],
     filters: [
       {name: 'Brain', id: 'UBERON000123'},
@@ -34,7 +26,72 @@ export const facetsResponseMock = [
       {name: 'Skeletal muscle', id: 'UBERON000125'},
       {name: 'PBMC', id: 'UBERON000126'},
     ]
-  }
+  },
+  {
+    name: 'Species',
+    id: 'species',
+    type: 'string',
+    links: [{name: 'NCBI Taxonomy', url: 'https://foo.tdb'}],
+    filters: [
+      {name: 'Human', id: 'NCBItaxon9606'},
+      {name: 'Mouse', id: 'NCBItaxon10090'},
+      {name: 'Cow', id: 'NCBItaxon5555'},
+    ]
+  },
+  {
+    name: 'Cell type',
+    id: 'cell_type',
+    type: 'string',
+    links: [{name: 'Cell Line Ontology', url: 'https://clo.tdb'}],
+    filters: [
+      {name: 'Macrophage', id: 'CLO0000123'},
+      {name: 'Lymphocyte', id: 'CLO0000124'},
+      {name: 'Mast cell', id: 'CLO0000125'},
+    ]
+  },
+  {
+    name: 'Sex',
+    id: 'sex',
+    links: [],
+    type: 'string',
+    filters: [
+      {name: 'female', id: 'SCPO00001'},
+      {name: 'male', id: 'SCPO00002'},
+      {name: 'mixed', id: 'SCPO00002'},
+      {name: 'unknown', id: 'SCPO00004'},
+    ]
+  },
+  {
+    name: 'Race',
+    id: 'race',
+    links: [],
+    filters: [
+      {name: 'Foo', id: 'SCPO00004'},
+      {name: 'Bar', id: 'SCPO00005'},
+      {name: 'Baz', id: 'SCPO00006'},
+    ]
+  },
+  {
+    name: 'Library preparation protocol',
+    id: 'library-preparation-protocol',
+    links: [],
+    filters: [
+      {name: 'Foo', id: 'SCPO00004'},
+      {name: 'Bar', id: 'SCPO00005'},
+      {name: 'Baz', id: 'SCPO00006'},
+    ]
+  },
+  {
+    name: 'Organism age',
+    id: 'organism-age',
+    links: [],
+    type: 'number',
+    filters: [
+      {name: 'Foo', id: 'SCPO00004'},
+      {name: 'Bar', id: 'SCPO00005'},
+      {name: 'Baz', id: 'SCPO00006'},
+    ]
+  },
 ];
 
 // Proposed API endpoint: GET /search-filters?facet=disease&query=tuberculosis

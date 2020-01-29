@@ -484,7 +484,6 @@ h4, .h4, h5, .h5, h6, .h6 {
 * Styles for React-based faceted search UI for studies
 */
 
-
 // TODO: Consider removing this min-height once study result list can be shown
 #main-body {
   min-height: 300px;
@@ -525,7 +524,7 @@ h4, .h4, h5, .h5, h6, .h6 {
 }
 
 #search-studies .filters-box {
-  width: 500px;
+  width: 400px;
   border: 1px solid #aaa;
   background: #fff;
   position: absolute;
