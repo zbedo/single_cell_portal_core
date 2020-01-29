@@ -48,8 +48,8 @@ class SearchFacetTest < ActiveSupport::TestCase
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
     non_array_query = @search_facet.generate_non_array_query
-    assert_match /DISTINCT #{@search_facet.big_query_id_column}/, non_array_query,
-                 "Non-array query did not contain correct DISTINCT clause: #{non_array_query}"
+    non_array_match = /DISTINCT #{@search_facet.big_query_id_column}/
+    assert_match non_array_match, non_array_query, "Non-array query did not contain correct DISTINCT clause: #{non_array_query}"
     array_facet = SearchFacet.new(
         name: 'Disease',
         identifier: 'disease',
@@ -68,8 +68,8 @@ class SearchFacetTest < ActiveSupport::TestCase
     column = array_facet.big_query_id_column
     identifier = 'id'
     array_query = array_facet.generate_array_query(column, identifier)
-    assert_match /SELECT DISTINCT #{identifier}.*UNNEST\(#{column}\)/, array_query,
-                 "Array query did not correctly name identifier or unnest column: #{array_query}"
+    array_match = /SELECT DISTINCT #{identifier}.*UNNEST\(#{column}\)/
+    assert_match array_match, array_query, "Array query did not correctly name identifier or unnest column: #{array_query}"
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} complete!"
   end
