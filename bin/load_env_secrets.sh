@@ -69,8 +69,8 @@ if [[ -z $SERVICE_ACCOUNT_PATH ]] && [[ -z $VAULT_SECRET_PATH ]] ; then
   exit 1
 fi
 
-#  clear this evironment variable just in case this terminal was used for local development
-export NOT_DOCKERIZED=
+#  clear this environment variable just in case this terminal was used for local development
+unset NOT_DOCKERIZED
 
 if [[ -n $VAULT_SECRET_PATH ]] ; then
   # load raw secrets from vault
