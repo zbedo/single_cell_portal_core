@@ -53,7 +53,7 @@ export default function FiltersBox(props) {
 
   /**
    * Returns IDs of selected filters.
-   * Enables comparing current vs. saved filters
+   * Enables comparing current vs. saved filters to enable/disable SAVE button
    */
   function getCheckedFilterIDs() {
     const checkedSelector = `#${filtersBoxID} input:checked`;

@@ -484,6 +484,12 @@ h4, .h4, h5, .h5, h6, .h6 {
 * Styles for React-based faceted search UI for studies
 */
 
+
+// TODO: Consider removing this min-height once study result list can be shown
+#main-body {
+  min-height: 300px;
+}
+
 #search-studies .facet > span {
   padding: 8px 16px;
   margin-right: 8px;
@@ -499,7 +505,6 @@ h4, .h4, h5, .h5, h6, .h6 {
   color: #fff;
   background-color: #4d72aa;
 }
-
 
 #search-studies .facet ul {
   list-style-type: none;
@@ -519,15 +524,18 @@ h4, .h4, h5, .h5, h6, .h6 {
   float: right;
 }
 
-#search-studies .filters-box label {
-  margin-left: 8px;
-  font-weight: normal;
-}
-
 #search-studies .filters-box {
   width: 500px;
   border: 1px solid #aaa;
   background: #fff;
+  position: absolute;
+  z-index: 9000;
+  height: 225px;
+}
+
+#search-studies .filters-box label {
+  margin-left: 8px;
+  font-weight: normal;
 }
 
 #search-studies .facet-save-button {
