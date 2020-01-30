@@ -28,7 +28,7 @@ class ApplicationController < ActionController::Base
   end
 
   def self.big_query_client
-    @@big_query_client ||= BigQueryClient.new
+    @@big_query_client ||= BigQueryClient.new.client
   end
 
   # set current_user for use outside of controllers
