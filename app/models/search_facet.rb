@@ -138,7 +138,7 @@ class SearchFacet
   private
 
   # determine if this facet references array-based data in BQ as data_type will look like "ARRAY<STRING>"
-  def set_is_array_based
+  def set_is_array_based_from_bq
     column_schema = SearchFacet.get_table_schema(column_name: self.big_query_id_column)
     self.is_array_based = column_schema[:data_type].include?('ARRAY')
   end
