@@ -35,6 +35,8 @@ export default function FiltersBox(props) {
     setCanSave(false);
   }, [savedSelection]);
 
+  // Consider moving this to a UI code style guide.
+  //
   // Systematic, predictable IDs help UX research and UI development.
   //
   // Form of IDs: <general name> <specific name(s)>
@@ -77,14 +79,14 @@ export default function FiltersBox(props) {
   };
 
   return (
-    <div class={componentName} id={`${filtersBoxID}`} style={{display: props.show ? '' : 'none'}}>
+    <div className={componentName} id={filtersBoxID} style={{display: props.show ? '' : 'none'}}>
       <FiltersSearchBar filtersBoxID={filtersBoxID} />
       <p class='filters-box-header'>
         <span class='default-filters-list-name'>FREQUENTLY SEARCHED</span>
         <span class='facet-ontology-links'>
-          {props.facet.links.map((link) => {
+          {props.facet.links.map((link, i) => {
             return (
-              <a href={link.url} target='_blank'>
+              <a key={`link-${i}`} href={link.url} target='_blank'>
                 {link.name}&nbsp;&nbsp;<FontAwesomeIcon icon={faExternalLinkAlt}/><br/>
               </a>
             );
@@ -92,21 +94,29 @@ export default function FiltersBox(props) {
         </span>
       </p>
       <ul>
-        {props.facet.filters.map((d) => {
-          const id = `filter-${facetName}-${d.id}`;
-          return (
-            <li key={'li-' + id}>
-              <InputGroup.Checkbox
-                id={id}
-                aria-label="Checkbox"
-                name={id}
-                onClick={handleFilterClick}
-              />
-              <label htmlFor={id}>{d.name}</label>
-            </li>
-          );
-        })}
+        {
+          // Consider abstracting this and similar code block in
+          // FacetsAccordion into new FiltersList component
+          props.facet.filters.map((d) => {
+            const id = `filter-${facetName}-${d.id}`;
+            return (
+              <li key={'li-' + id}>
+                <InputGroup.Checkbox
+                  id={id}
+                  aria-label="Checkbox"
+                  name={id}
+                  onClick={handleFilterClick}
+                />
+                <label htmlFor={id}>{d.name}</label>
+              </li>
+            );
+          })
+        }
       </ul>
+      {/* 
+      Consider abstracting this and similar code block in
+      FacetsAccordionBox into new FiltersList component
+       */}
       <div class="filters-box-footer">
         <span>Clear</span>
         <Button 

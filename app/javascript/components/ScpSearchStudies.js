@@ -1,5 +1,7 @@
 import React from 'react';
+
 import Facet from './Facet';
+import MoreFiltersButton from './MoreFiltersButton';
 
 // Only for development!  We'll fetch data once API endpoints are available.
 import {facetsResponseMock, searchFiltersResponseMock} from './FacetsMockData';
@@ -21,8 +23,8 @@ function ScpSearchStudies() {
           return <Facet facet={facet} />
         })
       }
+      <MoreFiltersButton facets={moreFacets} />
     </div>
-    // <MoreFilters facets={moreFacets} />
   );
 }
 

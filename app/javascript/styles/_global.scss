@@ -489,7 +489,8 @@ h4, .h4, h5, .h5, h6, .h6 {
   min-height: 300px;
 }
 
-#search-studies .facet > span {
+#search-studies .facet > span,
+#search-studies #more-filters-button > span {
   padding: 8px 16px;
   margin-right: 8px;
   border-radius: 15px;
@@ -500,7 +501,8 @@ h4, .h4, h5, .h5, h6, .h6 {
   cursor: pointer;
 }
 
-#search-studies .facet.active > span {
+#search-studies .facet.active > span,
+#search-studies #more-filters-button.active > span {
   color: #fff;
   background-color: #4d72aa;
 }
