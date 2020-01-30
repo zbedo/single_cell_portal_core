@@ -1,6 +1,7 @@
 class SearchFacet
   include Mongoid::Document
   include Mongoid::Timestamps
+  include Swagger::Blocks
 
   extend ErrorTracker
 
@@ -19,6 +20,120 @@ class SearchFacet
   validates_uniqueness_of :big_query_id_column, scope: [:convention_name, :convention_version]
   validate :ensure_ontology_url_format, if: proc {|attributes| attributes[:is_ontology_based]}
   before_create :set_is_array_based, if: proc {|attributes| attributes[:is_array_based].nil?}
+
+  swagger_schema :SearchFacet do
+    key :required, [:name, :identifier, :big_query_id_column, :big_query_name_column, :convention_name, :convention_version]
+    key :name, 'SearchFacet'
+    property :name do
+      key :type, :string
+      key :description, 'Name/category of facet'
+    end
+    property :identifier do
+      key :type, :string
+      key :description, 'ID of facet from convention JSON'
+    end
+    property :filters do
+      key :type, :array
+      key :description, 'Array of filter values for facet'
+      items type: :object do
+        key :title, 'FacetFilter'
+        key :required, [:name, :id]
+        property :name do
+          key :type, :string
+          key :description, 'Display name of filter'
+        end
+        property :id do
+          key :type, :string
+          key :description, 'ID value of filter (if different)'
+        end
+      end
+    end
+    property :is_ontology_based do
+      key :type, :boolean
+      key :description, 'Filter values based on ontological data'
+    end
+    property :ontology_urls do
+      key :type, :array
+      key :description, 'Array of external links to ontologies (if ontology-based)'
+      items type: :object do
+        key :title, 'OntologyUrl'
+        key :required, [:name, :url]
+        property :name do
+          key :type, :string
+          key :description, 'Display name of ontology'
+        end
+        property :url do
+          key :type, :string
+          key :description, 'External link to ontology'
+        end
+      end
+    end
+    property :is_array_based do
+      key :type, :boolean
+      key :description, 'Filter values sourced from array-based BigQuery column'
+    end
+    property :big_query_id_column do
+      key :type, :string
+      key :description, 'Column in BigQuery to source ID values from'
+    end
+    property :big_query_name_column do
+      key :type, :string
+      key :description, 'Column in BigQuery to source name values from'
+    end
+    property :convention_name do
+      key :type, :string
+      key :description, 'Name of metadata convention facet is sourced from'
+    end
+    property :convention_version do
+      key :type, :string
+      key :description, 'Version of metadata convention facet is sourced from'
+    end
+  end
+
+  swagger_schema :SearchFacetConfig do
+    key :name, 'SearchFacetConfig'
+    key :required, [:name, :id, :links, :filters]
+    property :name do
+      key :type, :string
+      key :description, 'Name/category of search facet'
+    end
+    property :id do
+      key :type, :string
+      key :description, 'ID of facet from convention JSON'
+    end
+    property :filters do
+      key :type, :array
+      key :description, 'Array of filter values for facet'
+      items type: :object do
+        key :title, 'FacetFilter'
+        key :required, [:name, :id]
+        property :name do
+          key :type, :string
+          key :description, 'Display name of filter'
+        end
+        property :id do
+          key :type, :string
+          key :description, 'ID value of filter (if different)'
+        end
+      end
+    end
+    property :links do
+      key :type, :array
+      key :description, 'Array of external links to ontologies (if ontology-based)'
+      items type: :object do
+        key :title, 'OntologyUrl'
+        key :required, [:name, :url]
+        property :name do
+          key :type, :string
+          key :description, 'Display name of ontology'
+        end
+        property :url do
+          key :type, :string
+          key :description, 'External link to ontology'
+        end
+      end
+    end
+  end
 
   def self.big_query_dataset
     ApplicationController.big_query_client.dataset(CellMetadatum::BIGQUERY_DATASET)
