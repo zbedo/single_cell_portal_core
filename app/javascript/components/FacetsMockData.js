@@ -57,7 +57,7 @@ export const facetsResponseMock = [
     filters: [
       {name: 'female', id: 'SCPO00001'},
       {name: 'male', id: 'SCPO00002'},
-      {name: 'mixed', id: 'SCPO00002'},
+      {name: 'mixed', id: 'SCPO00003'},
       {name: 'unknown', id: 'SCPO00004'},
     ]
   },

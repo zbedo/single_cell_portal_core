@@ -5,26 +5,22 @@ import Card from 'react-bootstrap/Card';
 import InputGroup from 'react-bootstrap/InputGroup';
 
 export default function FacetsAccordion(props) {
-  console.log('props.facets')
-  console.log(props.facets)
   return (
     // Accordions provide a way to restrict Card components to only open one at a time.
     // https://react-bootstrap.github.io/components/accordion/
     <Accordion defaultActiveKey="0">
       {
         props.facets.map((facet) => {
+          return (
           <Card>
-          <Card.Header>
-            <Accordion.Toggle as={Button} variant="link" eventKey="0">
-              {facet.name}
-            </Accordion.Toggle>
-          </Card.Header>
-          <Accordion.Collapse eventKey="0">
-            <Card.Body>
-              <ul>
+              <Card.Header>
+                <Accordion.Toggle as={Button} variant="link" eventKey="0">
+                  {facet.name}
+                </Accordion.Toggle>
+              </Card.Header>
+              <Accordion.Collapse eventKey="0">
+              <Card.Body>
                 {
-                  // Consider abstracting this and similar code block in
-                  // FiltersBox into new FiltersList component
                   facet.filters.map((d) => {
                     const id = `filter-${facet.name}-${d.id}`;
                     return (
@@ -39,11 +35,11 @@ export default function FacetsAccordion(props) {
                       </li>
                     );
                   })
-                }
-              </ul>
-            </Card.Body>
-          </Accordion.Collapse>
-        </Card>
+              }
+              </Card.Body>
+              </Accordion.Collapse>
+            </Card>
+          );
         })
       }
     </Accordion>
