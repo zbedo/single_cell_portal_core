@@ -1,3 +1,4 @@
-search_facet_config.facet_config.each do |attr, val|
-  json.set! attr, val
-end
+json.set! :name, search_facet_config.name
+json.set! :id, search_facet_config.identifier
+json.set! :links, search_facet_config.ontology_urls
+json.set! :filters, search_facet_config.filters

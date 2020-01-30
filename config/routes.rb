@@ -49,6 +49,7 @@ Rails.application.routes.draw do
         end
         scope :search do
           get 'facets', to: 'search#facets', as: :search_facets
+          get 'facet_filters', to: 'search#search_facet_filters', as: :search_facet_filters
         end
       end
     end

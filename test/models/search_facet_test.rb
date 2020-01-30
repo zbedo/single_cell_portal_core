@@ -30,19 +30,6 @@ class SearchFacetTest < ActiveSupport::TestCase
     puts "#{File.basename(__FILE__)}: #{self.method_name} complete!"
   end
 
-  # should return facet configuration object with name of facet for UI and filter options of id/name
-  test 'should return facet config' do
-    puts "#{File.basename(__FILE__)}: #{self.method_name}"
-
-    config = @search_facet.facet_config
-    assert_equal @search_facet.name, config[:name]
-    assert_equal @search_facet.identifier, config[:id]
-    assert_equal @search_facet.ontology_urls, config[:links]
-    assert_equal @search_facet.filters, config[:filters]
-
-    puts "#{File.basename(__FILE__)}: #{self.method_name} complete!"
-  end
-
   # should generate correct kind of query for DISTINCT filters based on array/non-array columns
   test 'should generate correct distinct queries' do
     puts "#{File.basename(__FILE__)}: #{self.method_name}"

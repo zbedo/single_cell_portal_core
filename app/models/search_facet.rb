@@ -135,6 +135,35 @@ class SearchFacet
     end
   end
 
+  swagger_schema :SearchFacetQuery do
+    key :name, 'SearchFacetQuery'
+    key :required, [:facet, :query, :filters]
+    property :name do
+      key :type, :string
+      key :description, 'ID of facet from convention JSON'
+    end
+    property :query do
+      key :type, :string
+      key :description, 'User-supplied query string'
+    end
+    property :filters do
+      key :type, :array
+      key :description, 'Array of matching filter values for facet from query'
+      items type: :object do
+        key :title, 'FacetFilter'
+        key :required, [:name, :id]
+        property :name do
+          key :type, :string
+          key :description, 'Display name of filter'
+        end
+        property :id do
+          key :type, :string
+          key :description, 'ID value of filter (if different)'
+        end
+      end
+    end
+  end
+
   def self.big_query_dataset
     ApplicationController.big_query_client.dataset(CellMetadatum::BIGQUERY_DATASET)
   end
@@ -170,15 +199,6 @@ class SearchFacet
     end
   end
 
-  # return a formatted object to use to render search UI component
-  def facet_config
-    {
-        name: self.name,
-        id: self.identifier,
-        links: self.ontology_urls,
-        filters: self.filters
-    }
-  end
 
   # retrieve unique values from BigQuery and format an array of hashes with :name and :id values to populate :filters attribute
   def get_unique_filter_values

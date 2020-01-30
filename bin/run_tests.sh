@@ -79,6 +79,7 @@ else
                     test/api/study_file_bundles_controller_test.rb
                     test/api/study_shares_controller_test.rb
                     test/api/directory_listings_controller_test.rb
+                    test/api/search_controller_test.rb
                     test/models/cluster_group_test.rb # deprecated, but needed to set up for user_annotation_test
                     test/models/user_annotation_test.rb
                     test/models/analysis_configuration_test.rb
