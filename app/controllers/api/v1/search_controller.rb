@@ -5,7 +5,92 @@ module Api
       include Swagger::Blocks
 
       before_action :set_current_api_user!
-      before_action :set_search_facet, only: :search_facet_filters
+      before_action :set_search_facet, only: :facet_filters
+
+      swagger_path '/search' do
+        operation :get do
+          key :tags, [
+              'Search'
+          ]
+          key :summary, 'Faceted & keyword search for studies & cells'
+          key :description, 'Search studies or cells using facets and keywords'
+          key :operationId, 'search_studies'
+          parameter do
+            key :name, :type
+            key :in, :query
+            key :description, 'Type of query to perform (study- or cell-based)'
+            key :required, true
+            key :type, :string
+            key :enum, ['study', 'cell']
+          end
+          parameter do
+            key :name, :facets
+            key :in, :query
+            key :description, 'User-supplied list facets and filters, formatted as: "facet_id:filter_value+facet_id_2:filter_value_2,filter_value_3"'
+            key :required, false
+            key :type, :string
+          end
+          parameter do
+            key :name, :terms
+            key :in, :query
+            key :description, 'User-supplied query string'
+            key :required, false
+            key :type, :string
+          end
+          response 200 do
+            key :description, 'Search parameters, Studies and StudyFiles'
+            schema do
+              key :title, 'Search Results'
+              property :type do
+                key :type, :string
+                key :description, 'Type of search performed'
+              end
+              property :terms do
+                key :type, :string
+                key :title, 'Keywords used in search'
+              end
+              property :facets do
+                key :type, :array
+                key :title, 'Array of facets/filters used in search'
+                items do
+                  key :title, 'SearchFacetQuery'
+                  key :'$ref', :SearchFacetQuery
+                end
+              end
+              property :studies do
+                key :type, :array
+                items do
+                  key :title, 'Study, StudyFiles'
+                  key :'$ref', :SiteStudyWithFiles
+                end
+              end
+            end
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+        end
+      end
+
+      def index
+        order = [:view_order.asc, :name.asc]
+        if api_user_signed_in?
+          @viewable = Study.viewable(current_user).order_by(order)
+        else
+          @viewable = Study.where(public: true).order_by(order)
+        end
+
+        # if search params are present, filter accordingly
+        if !params[:terms].blank?
+          search_terms = sanitize_search_values(params[:terms])
+          # determine if search values contain possible study accessions
+          possible_accessions = StudyAccession.sanitize_accessions(search_terms.split)
+          @studies = @viewable.any_of({:$text => {:$search => search_terms}}, {:accession.in => possible_accessions}).
+              paginate(page: params[:page], per_page: Study.per_page)
+        else
+          @studies = @viewable.paginate(page: params[:page], per_page: Study.per_page)
+        end
+      end
 
       swagger_path '/search/facets' do
         operation :get do
@@ -25,6 +110,9 @@ module Api
                 key :'$ref', :SearchFacetConfig
               end
             end
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
           end
         end
       end
@@ -62,10 +150,13 @@ module Api
               key :'$ref', :SearchFacetQuery
             end
           end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
         end
       end
 
-      def search_facet_filters
+      def facet_filters
         # sanitize query string for regexp matching
         @query_string = params[:query]
         query_matcher = /#{Regexp.escape(@query_string)}/i
@@ -76,6 +167,16 @@ module Api
 
       def set_search_facet
         @search_facet = SearchFacet.find_by(identifier: params[:facet])
+      end
+
+      # sanitize search values
+      def sanitize_search_values(terms)
+        if terms.is_a?(Array)
+          sanitized = terms.map {|t| view_context.sanitize(t)}
+          sanitized.join(',')
+        else
+          view_context.sanitize(terms)
+        end
       end
     end
   end
