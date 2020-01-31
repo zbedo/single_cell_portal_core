@@ -1,3 +1,8 @@
+##
+# SearchFacet: cached representation of convention cell metadata that has been loaded into BigQuery.  This data is
+# used to render faceted search UI components faster and more easily than round-trip calls to BigQuery
+#
+
 class SearchFacet
   include Mongoid::Document
   include Mongoid::Timestamps
@@ -19,7 +24,7 @@ class SearchFacet
   validates_presence_of :name, :identifier, :big_query_id_column, :big_query_name_column, :convention_name, :convention_version
   validates_uniqueness_of :big_query_id_column, scope: [:convention_name, :convention_version]
   validate :ensure_ontology_url_format, if: proc {|attributes| attributes[:is_ontology_based]}
-  before_create :set_is_array_based, if: proc {|attributes| attributes[:is_array_based].nil?}
+  before_create :set_is_array_based_from_bq, if: proc {|attributes| attributes[:is_array_based].nil?}
 
   swagger_schema :SearchFacet do
     key :required, [:name, :identifier, :big_query_id_column, :big_query_name_column, :convention_name, :convention_version]
@@ -268,7 +273,7 @@ class SearchFacet
   private
 
   # determine if this facet references array-based data in BQ as data_type will look like "ARRAY<STRING>"
-  def set_is_array_based
+  def set_is_array_based_from_bq
     column_schema = SearchFacet.get_table_schema(column_name: self.big_query_id_column)
     self.is_array_based = column_schema[:data_type].include?('ARRAY')
   end

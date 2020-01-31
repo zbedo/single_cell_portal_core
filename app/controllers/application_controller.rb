@@ -23,15 +23,12 @@ class ApplicationController < ActionController::Base
 
   rescue_from ActionController::InvalidAuthenticityToken, with: :invalid_csrf
 
-  @papi_client = PapiClient.new
-  @big_query_client = BigQueryClient.new
-
   def self.papi_client
-    self.instance_variable_get(:@papi_client)
+    @@papi_client ||= PapiClient.new
   end
 
   def self.big_query_client
-    self.instance_variable_get(:@big_query_client).client
+    @@big_query_client ||= BigQueryClient.new.client
   end
 
   # set current_user for use outside of controllers

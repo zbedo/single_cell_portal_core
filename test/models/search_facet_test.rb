@@ -23,8 +23,8 @@ class SearchFacetTest < ActiveSupport::TestCase
 
     SearchFacet.stub :big_query_dataset, mock do
       filters = @search_facet.get_unique_filter_values
-      assert_equal @filter_results, filters
       mock.verify
+      assert_equal @filter_results, filters
     end
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
