@@ -592,7 +592,9 @@ class Study
 
   # return all studies that are viewable by a given user as a Mongoid criterion
   def self.viewable(user)
-    if user.admin?
+    if user.nil?
+      self.where(queued_for_deletion: false, public: true)
+    elsif user.admin?
       self.where(queued_for_deletion: false)
     else
       public = self.where(public: true, queued_for_deletion: false).map(&:id)

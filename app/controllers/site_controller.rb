@@ -66,11 +66,7 @@ class SiteController < ApplicationController
     end
 
     # load viewable studies in requested order
-    if user_signed_in?
-      @viewable = Study.viewable(current_user).order_by(@order)
-    else
-      @viewable = Study.where(public: true).order_by(@order)
-    end
+    @viewable = Study.viewable(current_user).order_by(@order)
 
     # filter list if in branding group mode
     if @selected_branding_group.present?
@@ -189,7 +185,7 @@ class SiteController < ApplicationController
   end
 
   def get_viewable_studies
-    @studies = user_signed_in? ? Study.viewable(current_user) : Study.where(queued_for_deletion: false, public: true)
+    @studies = Study.viewable(current_user)
 
     # restrict to branding group if present
     if @selected_branding_group.present?

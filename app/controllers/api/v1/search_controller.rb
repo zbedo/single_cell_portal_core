@@ -14,7 +14,7 @@ module Api
               'Search'
           ]
           key :summary, 'Faceted & keyword search for studies & cells'
-          key :description, 'Search studies or cells using facets and keywords'
+          key :description, 'Search studies or cells using facets and keywords.'
           key :operationId, 'search_studies'
           parameter do
             key :name, :type
@@ -96,18 +96,14 @@ module Api
             key :description, 'Accept or Content-Type headers missing or misconfigured'
           end
           response 500 do
-            key :description, 'Server error or malformed query'
+            key :description, 'Server error'
           end
         end
       end
 
       def index
         order = [:view_order.asc, :name.asc]
-        if api_user_signed_in?
-          @viewable = Study.viewable(current_user).order_by(order)
-        else
-          @viewable = Study.where(public: true).order_by(order)
-        end
+        @viewable = Study.viewable(current_api_user).order_by(order)
 
         # if search params are present, filter accordingly
         if !params[:terms].blank?
@@ -121,7 +117,7 @@ module Api
 
         # only call BigQuery if list of possible studies is larger than 0 and we have matching facets to use
         if @studies.count > 0 && @facets.any?
-          @big_query_search = generate_bq_query_string(@facets)
+          @big_query_search = Api::V1::SearchController.generate_bq_query_string(@facets)
           Rails.logger.info "Searching BigQuery using facet-based query: #{@big_query_search}"
           raw_accessions = ApplicationController.big_query_client.dataset(CellMetadatum::BIGQUERY_DATASET).query @big_query_search
           job_id = raw_accessions.job_gapi.job_reference.job_id
@@ -195,7 +191,7 @@ module Api
             key :description, 'Accept or Content-Type headers missing or misconfigured'
           end
           response 500 do
-            key :description, 'Server error or malformed query'
+            key :description, 'Server error'
           end
         end
       end
@@ -253,7 +249,7 @@ module Api
       # generate query string for BQ
       # array-based columns need to set up data in WITH clauses to allow for a single UNNEST(column_name) call,
       # otherwise UNNEST() is called multiple times for each user-supplied filter value and could impact performance
-      def generate_bq_query_string(facets)
+      def self.generate_bq_query_string(facets)
         base_query = "SELECT DISTINCT study_accession "
         from_clause = "FROM #{CellMetadatum::BIGQUERY_TABLE}"
         where_clauses = []
