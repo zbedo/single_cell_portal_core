@@ -489,8 +489,8 @@ h4, .h4, h5, .h5, h6, .h6 {
   min-height: 300px;
 }
 
-#search-studies .facet > span,
-#search-studies #more-filters-button > span {
+#search-panel .facet > span,
+#search-panel #more-filters-button > span {
   padding: 8px 16px;
   margin-right: 8px;
   border-radius: 15px;
@@ -501,31 +501,31 @@ h4, .h4, h5, .h5, h6, .h6 {
   cursor: pointer;
 }
 
-#search-studies .facet.active > span,
-#search-studies #more-filters-button.active > span {
+#search-panel .facet.active > span,
+#search-panel #more-filters-button.active > span {
   color: #fff;
   background-color: #4d72aa;
 }
 
-#search-studies .facet ul {
+#search-panel ul {
   list-style-type: none;
   padding-left: 15px;
 }
 
-#search-studies .facet li {
+#search-panel li {
   width: 250px;
 }
 
-#search-studies .default-filters-list-name {
+#search-panel .default-filters-list-name {
   padding-left: 15px;
   font-weight: bold;
 }
 
-#search-studies .facet-ontology-links {
+#search-panel .facet-ontology-links {
   float: right;
 }
 
-#search-studies .filters-box {
+#search-panel .filters-box {
   width: 400px;
   border: 1px solid #aaa;
   background: #fff;
@@ -534,24 +534,40 @@ h4, .h4, h5, .h5, h6, .h6 {
   height: 225px;
 }
 
-#search-studies .filters-box label {
+#search-panel label {
   margin-left: 8px;
   font-weight: normal;
 }
 
-#search-studies .facet-save-button {
+#search-panel .facet-save-button {
   float: right;
   margin: 0 10px 10px 0;
 }
 
-#search-studies .filters-box-footer {
+#search-panel .filters-box-footer {
   height: 40px;
 }
 
-#search-studies #facets-accordion-box {
+#search-panel #facets-accordion-box {
   background: #fff;
   height: 300px;
   width: 400px;
+  position: relative;
+  top: 15px;
+  padding-top: 1px;
+}
+
+#search-panel .accordion .card {
+  margin: 10px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+}
+
+#search-panel .accordion .card-header {
+  padding: 5px;
+  color: #4d72aa;
+  font-weight: 500;
+  cursor: pointer;
 }
 
 /*

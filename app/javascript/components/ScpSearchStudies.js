@@ -17,7 +17,7 @@ window.searchFiltersResponse = searchFiltersResponseMock;
 
 function ScpSearchStudies() {
   return (
-    <div>
+    <div id='search-panel'>
       {
         defaultFacets.map((facet) => {
           return <Facet facet={facet} />

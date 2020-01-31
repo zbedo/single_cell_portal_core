@@ -36,7 +36,7 @@ export default function FacetsAccordionBox(props) {
       <FacetsAccordion facets={props.facets} />
       {/* 
       Consider abstracting this and similar code block in
-      FiltersBox into new SearchPanelBoxFooter component
+      FiltersBox into a new component
        */}
       <Button
         id='save-more-filters'

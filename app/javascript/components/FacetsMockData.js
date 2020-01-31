@@ -64,6 +64,7 @@ export const facetsResponseMock = [
   {
     name: 'Race',
     id: 'race',
+    type: 'string',
     links: [],
     filters: [
       {name: 'Foo', id: 'SCPO00004'},
@@ -73,7 +74,8 @@ export const facetsResponseMock = [
   },
   {
     name: 'Library preparation protocol',
-    id: 'library-preparation-protocol',
+    id: 'library_preparation_protocol',
+    type: 'string',
     links: [],
     filters: [
       {name: 'Foo', id: 'SCPO00004'},
@@ -83,14 +85,12 @@ export const facetsResponseMock = [
   },
   {
     name: 'Organism age',
-    id: 'organism-age',
+    id: 'organism_age',
     links: [],
     type: 'number',
-    filters: [
-      {name: 'Foo', id: 'SCPO00004'},
-      {name: 'Bar', id: 'SCPO00005'},
-      {name: 'Baz', id: 'SCPO00006'},
-    ]
+    max: '130',
+    min: '0',
+    unit: 'years'
   },
 ];
 

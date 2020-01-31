@@ -97,8 +97,8 @@ export default function FiltersBox(props) {
       </p>
       <ul>
         {
-          // Consider abstracting this and similar code block in
-          // FacetsAccordion into new FiltersList component
+          // TODO: Abstract to use Filters component 
+          // after determining how to do so while supporting onClick interaction
           props.facet.filters.map((d) => {
             const id = `filter-${facetName}-${d.id}`;
             return (
@@ -117,7 +117,7 @@ export default function FiltersBox(props) {
       </ul>
       {/* 
       Consider abstracting this and similar code block in
-      FacetsAccordionBox into new FiltersList component
+      FacetsAccordionBox into new component
        */}
       <div class="filters-box-footer">
         <span>Clear</span>

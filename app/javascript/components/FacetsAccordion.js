@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import Button from 'react-bootstrap/Button';
+import React from 'react';
 import Accordion from 'react-bootstrap/Accordion';
 import Card from 'react-bootstrap/Card';
-import InputGroup from 'react-bootstrap/InputGroup';
+
+import Filters from './Filters';
 
 export default function FacetsAccordion(props) {
   return (
@@ -10,33 +10,18 @@ export default function FacetsAccordion(props) {
     // https://react-bootstrap.github.io/components/accordion/
     <Accordion defaultActiveKey="0">
       {
-        props.facets.map((facet) => {
+        props.facets.map((facet, i) => {
           return (
-          <Card>
+            <Card>
               <Card.Header>
-                <Accordion.Toggle as={Button} variant="link" eventKey="0">
+                <Accordion.Toggle as={Card.Header} variant="link" eventKey={i}>
                   {facet.name}
                 </Accordion.Toggle>
               </Card.Header>
-              <Accordion.Collapse eventKey="0">
-              <Card.Body>
-                {
-                  facet.filters.map((d) => {
-                    const id = `filter-${facet.name}-${d.id}`;
-                    return (
-                      <li key={'li-' + id}>
-                        <InputGroup.Checkbox
-                          id={id}
-                          aria-label="Checkbox"
-                          name={id}
-                          // onClick={handleFilterClick}
-                        />
-                        <label htmlFor={id}>{d.name}</label>
-                      </li>
-                    );
-                  })
-              }
-              </Card.Body>
+              <Accordion.Collapse eventKey={i}>
+                <Card.Body>
+                  <Filters facet={facet} />
+                </Card.Body>
               </Accordion.Collapse>
             </Card>
           );

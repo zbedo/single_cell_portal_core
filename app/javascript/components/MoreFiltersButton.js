@@ -5,9 +5,6 @@ import FacetsAccordionBox from './FacetsAccordionBox';
 export default function MoreFiltersButton(props) {
   
   const [show, setShow] = useState(false);
-
-  console.log('in MoreFiltersButton  props.facets')
-  console.log(props.facets)
   
   // const facetName = props.facet.name;
 
