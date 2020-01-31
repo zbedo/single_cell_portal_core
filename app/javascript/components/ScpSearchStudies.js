@@ -15,6 +15,12 @@ const moreFacets = facets.filter(facet => moreFacetIDs.includes(facet.id));
 
 window.searchFiltersResponse = searchFiltersResponseMock;
 
+/**
+ * Component for SCP advanced search UI
+ *
+ * This is the entry point into React code from the traditional JS code
+ * See related integration at /app/javascript/packs/application.js
+ */
 function ScpSearchStudies() {
   return (
     <div id='search-panel'>

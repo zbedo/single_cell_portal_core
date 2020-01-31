@@ -22,6 +22,9 @@ function arraysEqual(a, b) {
   return true;
 }
 
+/**
+ * Component for filter search and filter lists, and related functionality
+ */
 export default function FiltersBox(props) {
   const [canSave, setCanSave] = useState(false);
   const [savedSelection, setSavedSelection] = useState([]);
@@ -35,7 +38,7 @@ export default function FiltersBox(props) {
     setCanSave(false);
   }, [savedSelection]);
 
-  // Consider moving this to a UI code style guide.
+  // TODO: Get opinions, perhaps move to a UI code style guide.
   //
   // Systematic, predictable IDs help UX research and UI development.
   //
@@ -98,7 +101,8 @@ export default function FiltersBox(props) {
       <ul>
         {
           // TODO: Abstract to use Filters component 
-          // after determining how to do so while supporting onClick interaction
+          // after passing through function for onClick interaction
+          // (SCP-2109)
           props.facet.filters.map((d) => {
             const id = `filter-${facetName}-${d.id}`;
             return (
@@ -116,8 +120,8 @@ export default function FiltersBox(props) {
         }
       </ul>
       {/* 
-      Consider abstracting this and similar code block in
-      FacetsAccordionBox into new component
+      TODO: abstracting this and similar code block in
+      FacetsAccordionBox into new component (SCP-2109)
        */}
       <div class="filters-box-footer">
         <span>Clear</span>

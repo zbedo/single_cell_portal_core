@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Slider, Rail, Handles, Tracks, Ticks } from "react-compound-slider";
 import InputGroup from 'react-bootstrap/InputGroup';
 
+/**
+ * Component for a list of string-based filters, e.g. disease, species
+ */
 function FilterList(props) {
   return (
     <ul>
@@ -23,6 +26,11 @@ function FilterList(props) {
   );
 }
 
+/**
+ * Component for slider to filter numerical facets, e.g. organism age
+ *
+ * Stub, will develop.
+ */
 function FilterSlider(props) {
   const facet = props.facet;
   // React Compound Slider
@@ -37,6 +45,9 @@ function FilterSlider(props) {
   );
 }
 
+/**
+ * Component for filter list and filter slider
+ */
 export default function Filters(props) {
   const facet = props.facet;
   if (facet.type === 'string') {

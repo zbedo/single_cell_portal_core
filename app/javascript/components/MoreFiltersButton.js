@@ -4,6 +4,11 @@ import { faSlidersH } from '@fortawesome/free-solid-svg-icons';
 
 import FacetsAccordionBox from './FacetsAccordionBox';
 
+/**
+ * Component for "More Filters" button.  Clicking shows facets accordion box.
+ *
+ * UI spec: https://projects.invisionapp.com/d/main#/console/19272801/402387756/preview
+ */
 export default function MoreFiltersButton(props) {
   
   const [show, setShow] = useState(false);

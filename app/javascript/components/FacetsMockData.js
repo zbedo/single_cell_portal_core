@@ -1,4 +1,11 @@
 
+/**
+ * This mock data is imported by ScpSearchStudies.js and used
+ * to populate the search UI for the prototype.
+ *
+ * The data structures are quickly evolving drafts.
+ */
+
 // Proposed API endpoint: GET /facets
 export const facetsResponseMock = [
   {

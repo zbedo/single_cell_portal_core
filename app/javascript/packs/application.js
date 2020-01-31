@@ -9,6 +9,8 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom';
+
+// Note 'components/ScpSearchStudies' is '/app/javascript/components/ScpSearchStudies.js'
 import ScpSearchStudies from 'components/ScpSearchStudies';
 
 document.addEventListener('DOMContentLoaded', () => {
