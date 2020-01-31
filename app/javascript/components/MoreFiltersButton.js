@@ -21,7 +21,7 @@ export default function MoreFiltersButton(props) {
         <span
           onClick={handleClick}>
           <FontAwesomeIcon className="icon-left" icon={faSlidersH}/>
-          More filters
+          More Filters
         </span>
         <FacetsAccordionBox show={show} facets={props.facets} />
       </span>

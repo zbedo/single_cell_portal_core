@@ -39,7 +39,7 @@ export const facetsResponseMock = [
     ]
   },
   {
-    name: 'Cell type',
+    name: 'Cell Type',
     id: 'cell_type',
     type: 'string',
     links: [{name: 'Cell Line Ontology', url: 'https://clo.tdb'}],
@@ -73,7 +73,7 @@ export const facetsResponseMock = [
     ]
   },
   {
-    name: 'Library preparation protocol',
+    name: 'Library Preparation Protocol',
     id: 'library_preparation_protocol',
     type: 'string',
     links: [],
@@ -84,7 +84,7 @@ export const facetsResponseMock = [
     ]
   },
   {
-    name: 'Organism age',
+    name: 'Organism Age',
     id: 'organism_age',
     links: [],
     type: 'number',
