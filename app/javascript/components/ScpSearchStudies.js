@@ -1,6 +1,6 @@
 import React from 'react';
 
-import Facet from './Facet';
+import FacetControl from './FacetControl';
 import MoreFiltersButton from './MoreFiltersButton';
 
 // Only for development!  We'll fetch data once API endpoints are available.
@@ -26,7 +26,7 @@ function ScpSearchStudies() {
     <div id='search-panel'>
       {
         defaultFacets.map((facet) => {
-          return <Facet facet={facet} />
+          return <FacetControl facet={facet} />
         })
       }
       <MoreFiltersButton facets={moreFacets} />
