@@ -117,7 +117,7 @@ module Api
 
         # only call BigQuery if list of possible studies is larger than 0 and we have matching facets to use
         if @studies.count > 0 && @facets.any?
-          @big_query_search = Api::V1::SearchController.generate_bq_query_string(@facets)
+          @big_query_search = self.class.generate_bq_query_string(@facets)
           Rails.logger.info "Searching BigQuery using facet-based query: #{@big_query_search}"
           raw_accessions = ApplicationController.big_query_client.dataset(CellMetadatum::BIGQUERY_DATASET).query @big_query_search
           job_id = raw_accessions.job_gapi.job_reference.job_id
