@@ -27,7 +27,7 @@ class SearchFacetTest < ActiveSupport::TestCase
       mock.verify
     end
 
-    puts "#{File.basename(__FILE__)}: #{self.method_name} complete!"
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 
   # should generate correct kind of query for DISTINCT filters based on array/non-array columns
@@ -37,28 +37,14 @@ class SearchFacetTest < ActiveSupport::TestCase
     non_array_query = @search_facet.generate_non_array_query
     non_array_match = /DISTINCT #{@search_facet.big_query_id_column}/
     assert_match non_array_match, non_array_query, "Non-array query did not contain correct DISTINCT clause: #{non_array_query}"
-    array_facet = SearchFacet.new(
-        name: 'Disease',
-        identifier: 'disease',
-        is_ontology_based: true,
-        is_array_based: true,
-        filters: [],
-        ontology_urls: [
-            {name: 'Monarch Disease Ontology', url: 'https://www.ebi.ac.uk/ols/ontologies/mondo'},
-            {name: 'Phenotype And Trait Ontology', url: 'https://www.ebi.ac.uk/ols/ontologies/pato'}
-        ],
-        big_query_id_column: 'disease',
-        big_query_name_column: 'disease__ontology_label',
-        convention_name: 'alexandria_convention',
-        convention_version: '1.1.3'
-    )
+    array_facet = SearchFacet.find_by(name: 'Disease')
     column = array_facet.big_query_id_column
     identifier = 'id'
     array_query = array_facet.generate_array_query(column, identifier)
     array_match = /SELECT DISTINCT #{identifier}.*UNNEST\(#{column}\)/
     assert_match array_match, array_query, "Array query did not correctly name identifier or unnest column: #{array_query}"
 
-    puts "#{File.basename(__FILE__)}: #{self.method_name} complete!"
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 
   # should validate search facet correctly, especially links to external ontologies
@@ -81,6 +67,6 @@ class SearchFacetTest < ActiveSupport::TestCase
     assert_equal @search_facet.errors.to_hash[:ontology_urls].first,
                  'contains an invalid URL: not a url'
 
-    puts "#{File.basename(__FILE__)}: #{self.method_name} complete!"
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 end

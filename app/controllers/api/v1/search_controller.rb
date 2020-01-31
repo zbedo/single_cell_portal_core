@@ -95,6 +95,9 @@ module Api
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
           end
+          response 500 do
+            key :description, 'Server error or malformed query'
+          end
         end
       end
 
@@ -191,6 +194,9 @@ module Api
           response 406 do
             key :description, 'Accept or Content-Type headers missing or misconfigured'
           end
+          response 500 do
+            key :description, 'Server error or malformed query'
+          end
         end
       end
 
@@ -209,24 +215,26 @@ module Api
 
       def set_search_facets_and_filters
         @facets = []
-        facet_queries = params[:facets].split('+')
-        facet_queries.each do |query|
-          facet_id, raw_filters = query.split(':')
-          filter_values = raw_filters.split(',')
-          facet = SearchFacet.find_by(identifier: facet_id)
-          if facet.present?
-            matching_filters = []
-            facet.filters.each do |filter|
-              if filter_values.include?(filter[:id])
-                matching_filters << filter
+        if params[:facets].present?
+          facet_queries = params[:facets].split('+')
+          facet_queries.each do |query|
+            facet_id, raw_filters = query.split(':')
+            filter_values = raw_filters.split(',')
+            facet = SearchFacet.find_by(identifier: facet_id)
+            if facet.present?
+              matching_filters = []
+              facet.filters.each do |filter|
+                if filter_values.include?(filter[:id])
+                  matching_filters << filter
+                end
               end
-            end
-            if matching_filters.any?
-              @facets << {
-                  id: facet.identifier,
-                  filters: matching_filters,
-                  object_id: facet.id # used for lookup later in :generate_bq_query_string
-              }
+              if matching_filters.any?
+                @facets << {
+                    id: facet.identifier,
+                    filters: matching_filters,
+                    object_id: facet.id # used for lookup later in :generate_bq_query_string
+                }
+              end
             end
           end
         end
@@ -243,28 +251,43 @@ module Api
       end
 
       # generate query string for BQ
+      # array-based columns need to set up data in WITH clauses to allow for a single UNNEST(column_name) call,
+      # otherwise UNNEST() is called multiple times for each user-supplied filter value and could impact performance
       def generate_bq_query_string(facets)
-        base_query = "SELECT DISTINCT study_accession FROM #{CellMetadatum::BIGQUERY_TABLE} WHERE "
-        sub_queries = []
+        base_query = "SELECT DISTINCT study_accession "
+        from_clause = "FROM #{CellMetadatum::BIGQUERY_TABLE}"
+        where_clauses = []
+        with_clauses = []
         facets.each do |facet_obj|
           # get the facet instance in order to run query
           search_facet = SearchFacet.find(facet_obj[:object_id])
           column_name = search_facet.big_query_id_column
           if search_facet.is_array_based?
+            # if facet is array-based, we need to format an array of filter values selected by user
+            # and add this as a WITH clause, then add two UNNEST() calls for both the BQ array column
+            # and the user filters to optimize the query
+            # example query:
+            # WITH disease_filters AS (SELECT['MONDO_0000001', 'MONDO_0006052'] as disease_value)
+            # FROM cell_metadata.alexandria_convention, disease_filters, UNNEST(disease_filters.disease_value) AS disease_val
+            # WHERE (disease_val IN UNNEST(disease))
+            facet_id = search_facet.identifier
+            filter_arr_name = "#{facet_id}_filters"
+            filter_val_name = "#{facet_id}_value"
+            filter_where_val = "#{facet_id}_val"
             filter_values = facet_obj[:filters].map {|filter| filter[:id]}
-            unnest_queries = []
-            filter_values.each do |value|
-              unnest_queries << "'#{value}' IN UNNEST(#{column_name})"
-            end
-            sub_queries << "(#{unnest_queries.join(" OR ")})"
+            with_clauses << "#{filter_arr_name} AS (SELECT#{filter_values} as #{filter_val_name})"
+            from_clause += ", #{filter_arr_name}, UNNEST(#{filter_arr_name}.#{filter_val_name}) AS #{filter_where_val}"
+            where_clauses << "(#{filter_where_val} IN UNNEST(#{column_name}))"
           else
+            # for non-array columns we can pass an array of quoted values and call IN directly
             filter_values = facet_obj[:filters].map {|filter| filter[:id]}
-            sub_queries << "#{column_name} IN ('#{filter_values.join('\',\'')}')"
+            where_clauses << "#{column_name} IN ('#{filter_values.join('\',\'')}')"
           end
         end
-        base_query += sub_queries.join(" AND ")
+        # prepend WITH clauses before base_query, then add FROM and dependent WHERE clauses
+        # all facets are treated as AND clauses
+        "WITH #{with_clauses.join(", ")} " + base_query + from_clause + " WHERE " + where_clauses.join(" AND ")
       end
     end
   end
 end
-
