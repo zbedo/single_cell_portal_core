@@ -102,15 +102,15 @@ module Api
       end
 
       def index
-        order = [:view_order.asc, :name.asc]
-        @viewable = Study.viewable(current_api_user).order_by(order)
+        @viewable = Study.viewable(current_api_user)
 
         # if search params are present, filter accordingly
         if params[:terms].present?
-          search_terms = sanitize_search_values(params[:terms])
+          @search_terms = sanitize_search_values(params[:terms])
           # determine if search values contain possible study accessions
-          possible_accessions = StudyAccession.sanitize_accessions(search_terms.split)
-          @studies = @viewable.any_of({:$text => {:$search => search_terms}}, {:accession.in => possible_accessions})
+          possible_accessions = StudyAccession.sanitize_accessions(@search_terms.split)
+          @studies = @viewable.any_of({:$text => {:$search => @search_terms}},
+                                      {:accession.in => possible_accessions}).order_by {|study| study.search_weight(@search_terms.split) }
         else
           @studies = @viewable
         end
@@ -127,7 +127,7 @@ module Api
           # uniquify result list as one study may match multiple facets/filters
           @convention_accessions = query_results.map {|match| match[:study_accession]}.uniq
           Rails.logger.info "Found #{@convention_accessions.count} matching studies from BQ job #{job_id}: #{@convention_accessions}"
-          @studies = @studies.where(:accession.in => @convention_accessions)
+          @studies = @studies.where(:accession.in => @convention_accessions).order_by {|study| @studies_by_facet[study.accession][:facet_search_weight]}
         end
         # paginate results
         @studies.paginate(page: params[:page], per_page: Study.per_page)
@@ -295,20 +295,25 @@ module Api
       def self.match_studies_by_facet(query_results, search_facets)
         matches = {}
         query_results.each do |result|
-          matches[result[:study_accession]] ||= {}
+          accession = result[:study_accession]
+          matches[accession] ||= {}
+          search_weight = 0
           result.keys.keep_if { |key| key != :study_accession }.each do |key|
             facet_name = key.to_s.chomp('_val')
             matching_facet = search_facets.detect { |facet| facet[:id] == facet_name }
             matching_filter = matching_facet[:filters].detect { |filter| filter[:id] == result[key] }
             if facet_name != key.to_s
               # results with a key ending in _val are array based, and may have multiple matches, so append to existing list
-              matches[result[:study_accession]][facet_name] ||= []
-              matches[result[:study_accession]][facet_name] << matching_filter
+              matches[accession][facet_name] ||= []
+              matches[accession][facet_name] << matching_filter
             else
               # for non-array columns, still store as an array for consistent rendering in the UI
-              matches[result[:study_accession]][facet_name] = [matching_filter]
+              matches[accession][facet_name] = [matching_filter]
             end
+            search_weight += 1
           end
+          # compute a score for relevance weighting
+          matches[accession][:facet_search_weight] = search_weight
         end
         matches
       end

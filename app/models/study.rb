@@ -564,6 +564,10 @@ class Study
       key :type, :string
       key :description, 'Keyword term matches'
     end
+    property :term_search_weight do
+      key :type, :integer
+      key :description, 'Relevance of term match'
+    end
     property :study_files do
       key :type, :object
       key :title, 'Cell Metadata and Expression Files'
@@ -807,6 +811,16 @@ class Study
       acl["#{share.email}"] = share.permission
     end
     acl
+  end
+
+  # compute a simplistic relevance score by counting instances of terms in names/descriptions
+  def search_weight(terms)
+    score = 0
+    terms.each do |term|
+      text_blob = "#{self.name} #{self.description}"
+      score += text_blob.scan(/#{term}/i).size
+    end
+    score
   end
 
   ###
