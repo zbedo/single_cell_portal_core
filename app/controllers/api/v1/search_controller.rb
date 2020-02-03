@@ -123,23 +123,7 @@ module Api
           query_results = ApplicationController.big_query_client.dataset(CellMetadatum::BIGQUERY_DATASET).query @big_query_search
           job_id = query_results.job_gapi.job_reference.job_id
           # build up map of study matches by facet & filter value (for adding labels in UI)
-          query_results.each do |result|
-            @studies_by_facet[result[:study_accession]] ||= {}
-            result.keys.keep_if {|key| key != :study_accession}.each do |key|
-              facet_name = key.to_s.chomp('_val')
-              matching_facet = @facets.detect {|facet| facet[:id] == facet_name}
-              matching_filter = matching_facet[:filters].detect {|filter| filter[:id] == result[key]}
-              if facet_name != key.to_s
-                # results with a key ending in _val are array based, and may have multiple matches, so append to existing list
-                @studies_by_facet[result[:study_accession]][facet_name] ||= []
-                @studies_by_facet[result[:study_accession]][facet_name] << matching_filter
-              else
-                # for non-array columns, still store as an array for consistent rendering in the UI
-                @studies_by_facet[result[:study_accession]][facet_name] = [matching_filter]
-              end
-            end
-          end
-          Rails.logger.info "facet matches: #{@studies_by_facet}"
+          @studies_by_facet = self.class.match_studies_by_facet(query_results, @facets)
           # uniquify result list as one study may match multiple facets/filters
           @convention_accessions = query_results.map {|match| match[:study_accession]}.uniq
           Rails.logger.info "Found #{@convention_accessions.count} matching studies from BQ job #{job_id}: #{@convention_accessions}"
@@ -305,6 +289,28 @@ module Api
         # prepend WITH clauses before base_query, then add FROM and dependent WHERE clauses
         # all facets are treated as AND clauses
         "WITH #{with_clauses.join(", ")} " + base_query + from_clause + " WHERE " + where_clauses.join(" AND ")
+      end
+
+      # build a match of studies to facets/filters used in search (for labeling studies in UI with matches)
+      def self.match_studies_by_facet(query_results, search_facets)
+        matches = {}
+        query_results.each do |result|
+          matches[result[:study_accession]] ||= {}
+          result.keys.keep_if { |key| key != :study_accession }.each do |key|
+            facet_name = key.to_s.chomp('_val')
+            matching_facet = search_facets.detect { |facet| facet[:id] == facet_name }
+            matching_filter = matching_facet[:filters].detect { |filter| filter[:id] == result[key] }
+            if facet_name != key.to_s
+              # results with a key ending in _val are array based, and may have multiple matches, so append to existing list
+              matches[result[:study_accession]][facet_name] ||= []
+              matches[result[:study_accession]][facet_name] << matching_filter
+            else
+              # for non-array columns, still store as an array for consistent rendering in the UI
+              matches[result[:study_accession]][facet_name] = [matching_filter]
+            end
+          end
+        end
+        matches
       end
     end
   end
