@@ -60,6 +60,9 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_equal study_count, 1, "Did not find correct number of studies, expected 1 but found #{study_count}"
     result_accession = json['studies'].first['accession']
     assert_equal result_accession, study.accession, "Did not find correct study; expected #{study.accession} but found #{result_accession}"
+    matched_facets = json['studies'].first['facet_matches'].keys.sort
+    source_facets = facets.map(&:identifier).sort
+    assert_equal source_facets, matched_facets, "Did not match on correct facets; expected #{source_facets} but found #{matched_facets}"
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
@@ -72,6 +75,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     result_count = json['studies'].size
     assert_equal study_count, result_count, "Did not find correct number of studies, expected #{study_count} but found #{result_count}"
+    assert_equal @random_seed, json['studies'].first['term_matches']
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end

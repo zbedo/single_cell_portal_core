@@ -7,5 +7,5 @@ json.facets do
   end
 end
 json.studies do
-  json.array! @studies, partial: 'api/v1/site/study', as: :study
+  json.array! @studies, partial: 'api/v1/search/study', as: :study
 end

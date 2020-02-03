@@ -87,7 +87,7 @@ module Api
                 key :type, :array
                 items do
                   key :title, 'Study, StudyFiles'
-                  key :'$ref', :SiteStudyWithFiles
+                  key :'$ref', :SearchStudyWithFiles
                 end
               end
             end
@@ -106,7 +106,7 @@ module Api
         @viewable = Study.viewable(current_api_user).order_by(order)
 
         # if search params are present, filter accordingly
-        if !params[:terms].blank?
+        if params[:terms].present?
           search_terms = sanitize_search_values(params[:terms])
           # determine if search values contain possible study accessions
           possible_accessions = StudyAccession.sanitize_accessions(search_terms.split)
@@ -117,11 +117,31 @@ module Api
 
         # only call BigQuery if list of possible studies is larger than 0 and we have matching facets to use
         if @studies.count > 0 && @facets.any?
+          @studies_by_facet = {}
           @big_query_search = self.class.generate_bq_query_string(@facets)
           Rails.logger.info "Searching BigQuery using facet-based query: #{@big_query_search}"
-          raw_accessions = ApplicationController.big_query_client.dataset(CellMetadatum::BIGQUERY_DATASET).query @big_query_search
-          job_id = raw_accessions.job_gapi.job_reference.job_id
-          @convention_accessions = raw_accessions.map {|match| match[:study_accession]}
+          query_results = ApplicationController.big_query_client.dataset(CellMetadatum::BIGQUERY_DATASET).query @big_query_search
+          job_id = query_results.job_gapi.job_reference.job_id
+          # build up map of study matches by facet & filter value (for adding labels in UI)
+          query_results.each do |result|
+            @studies_by_facet[result[:study_accession]] ||= {}
+            result.keys.keep_if {|key| key != :study_accession}.each do |key|
+              facet_name = key.to_s.chomp('_val')
+              matching_facet = @facets.detect {|facet| facet[:id] == facet_name}
+              matching_filter = matching_facet[:filters].detect {|filter| filter[:id] == result[key]}
+              if facet_name != key.to_s
+                # results with a key ending in _val are array based, and may have multiple matches, so append to existing list
+                @studies_by_facet[result[:study_accession]][facet_name] ||= []
+                @studies_by_facet[result[:study_accession]][facet_name] << matching_filter
+              else
+                # for non-array columns, still store as an array for consistent rendering in the UI
+                @studies_by_facet[result[:study_accession]][facet_name] = [matching_filter]
+              end
+            end
+          end
+          Rails.logger.info "facet matches: #{@studies_by_facet}"
+          # uniquify result list as one study may match multiple facets/filters
+          @convention_accessions = query_results.map {|match| match[:study_accession]}.uniq
           Rails.logger.info "Found #{@convention_accessions.count} matching studies from BQ job #{job_id}: #{@convention_accessions}"
           @studies = @studies.where(:accession.in => @convention_accessions)
         end
@@ -250,8 +270,8 @@ module Api
       # array-based columns need to set up data in WITH clauses to allow for a single UNNEST(column_name) call,
       # otherwise UNNEST() is called multiple times for each user-supplied filter value and could impact performance
       def self.generate_bq_query_string(facets)
-        base_query = "SELECT DISTINCT study_accession "
-        from_clause = "FROM #{CellMetadatum::BIGQUERY_TABLE}"
+        base_query = "SELECT DISTINCT study_accession"
+        from_clause = " FROM #{CellMetadatum::BIGQUERY_TABLE}"
         where_clauses = []
         with_clauses = []
         facets.each do |facet_obj|
@@ -274,7 +294,9 @@ module Api
             with_clauses << "#{filter_arr_name} AS (SELECT#{filter_values} as #{filter_val_name})"
             from_clause += ", #{filter_arr_name}, UNNEST(#{filter_arr_name}.#{filter_val_name}) AS #{filter_where_val}"
             where_clauses << "(#{filter_where_val} IN UNNEST(#{column_name}))"
+            base_query += ", #{filter_where_val}"
           else
+            base_query += ", #{column_name}"
             # for non-array columns we can pass an array of quoted values and call IN directly
             filter_values = facet_obj[:filters].map {|filter| filter[:id]}
             where_clauses << "#{column_name} IN ('#{filter_values.join('\',\'')}')"
