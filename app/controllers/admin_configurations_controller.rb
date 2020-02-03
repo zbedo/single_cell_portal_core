@@ -322,7 +322,7 @@ class AdminConfigurationsController < ApplicationController
     User::DEFAULT_FEATURE_FLAGS.each do |key, _value|
       # for each possible feature flag, check if the vaule was set on the form via a field name feature_flag_<<flag name>>
       flag_form_val = params[('feature_flag_' + key).to_sym]
-      # if it was set, and not set to '-' (default), include it in the updated values'
+      # if it was set, and not set to '-' (default), include it in the updated values
       if flag_form_val && flag_form_val != '-'
         updated_flag_data[key] = flag_form_val == '1' ? true : false
       end
