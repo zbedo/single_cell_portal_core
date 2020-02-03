@@ -1,7 +1,7 @@
 import React from 'react';
 
 import FacetControl from './FacetControl';
-import MoreFiltersButton from './MoreFiltersButton';
+import MoreFacetsButton from './MoreFacetsButton';
 import DownloadButton from './DownloadButton';
 
 // Only for development!  We'll fetch data once API endpoints are available.
@@ -30,7 +30,7 @@ function ScpSearchStudies() {
           return <FacetControl facet={facet} />
         })
       }
-      <MoreFiltersButton facets={moreFacets} />
+      <MoreFacetsButton facets={moreFacets} />
       <DownloadButton />
     </div>
   );

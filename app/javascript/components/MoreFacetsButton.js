@@ -9,7 +9,7 @@ import FacetsAccordionBox from './FacetsAccordionBox';
  *
  * UI spec: https://projects.invisionapp.com/d/main#/console/19272801/402387756/preview
  */
-export default function MoreFiltersButton(props) {
+export default function MoreFacetsButton(props) {
   
   const [show, setShow] = useState(false);
   
@@ -21,12 +21,12 @@ export default function MoreFiltersButton(props) {
 
   return (
       <span
-        id='more-filters-button'
+        id='more-facets-button'
         className={`${show ? 'active' : ''}`}>
         <span
           onClick={handleClick}>
           <FontAwesomeIcon className="icon-left" icon={faSlidersH}/>
-          More Filters
+          More Facets
         </span>
         <FacetsAccordionBox show={show} facets={props.facets} />
       </span>
