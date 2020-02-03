@@ -12,7 +12,7 @@ export default function FacetsAccordion(props) {
       {
         props.facets.map((facet, i) => {
           return (
-            <Card>
+            <Card key={i}>
               <Card.Header>
                 <Accordion.Toggle as={Card.Header} variant="link" eventKey={i}>
                   {facet.name}

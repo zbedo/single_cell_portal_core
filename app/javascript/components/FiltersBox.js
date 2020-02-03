@@ -70,9 +70,9 @@ export default function FiltersBox(props) {
   return (
     <div className={componentName} id={filtersBoxID} style={{display: props.show ? '' : 'none'}}>
       <FiltersSearchBar filtersBoxID={filtersBoxID} />
-      <p class='filters-box-header'>
-        <span class='default-filters-list-name'>FREQUENTLY SEARCHED</span>
-        <span class='facet-ontology-links'>
+      <p className='filters-box-header'>
+        <span className='default-filters-list-name'>FREQUENTLY SEARCHED</span>
+        <span className='facet-ontology-links'>
           {
           props.facet.links.map((link, i) => {
             return (
@@ -109,7 +109,7 @@ export default function FiltersBox(props) {
       TODO: abstracting this and similar code block in
       FacetsAccordionBox into new component (SCP-2109)
        */}
-      <div class="filters-box-footer">
+      <div className='filters-box-footer'>
         <span>Clear</span>
         <Button 
           id={saveID}

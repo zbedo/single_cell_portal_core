@@ -26,8 +26,8 @@ function ScpSearchStudies() {
   return (
     <div id='search-panel'>
       {
-        defaultFacets.map((facet) => {
-          return <FacetControl facet={facet} />
+        defaultFacets.map((facet, i) => {
+          return <FacetControl facet={facet} key={i}/>
         })
       }
       <MoreFacetsButton facets={moreFacets} />
