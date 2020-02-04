@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSlidersH } from '@fortawesome/free-solid-svg-icons';
 
-import FacetsAccordionBox from './FacetsAccordionBox';
+// import FacetsAccordionBox from './FacetsAccordionBox';
 
 /**
- * Component for "More Filters" button.  Clicking shows facets accordion box.
+ * Component for "More Facets" button.  Clicking shows facets accordion box.
  *
  * UI spec: https://projects.invisionapp.com/d/main#/console/19272801/402387756/preview
  */
@@ -28,7 +28,7 @@ export default function MoreFacetsButton(props) {
           <FontAwesomeIcon className="icon-left" icon={faSlidersH}/>
           More Facets
         </span>
-        <FacetsAccordionBox show={show} facets={props.facets} />
+        {/* <FacetsAccordionBox show={show} facets={props.facets} /> */}
       </span>
     );
 }
