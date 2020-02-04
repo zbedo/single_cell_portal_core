@@ -9,6 +9,8 @@
 
 import 'styles/application.scss'
 
+import React from 'react';
+import ReactDOM from 'react-dom';
 import $ from 'jquery';
 import jQuery from 'jquery';
 import {Spinner} from 'spin.js';
@@ -20,11 +22,10 @@ import 'jquery-ui/ui/effects/effect-highlight';
 import igv from 'igv';
 import morpheus from 'morpheus-app';
 import Ideogram from 'ideogram';
-import React from 'react';
-import ReactDOM from 'react-dom';
 // Per https://ckeditor.com/docs/ckeditor5/latest/builds/guides/integration/advanced-setup.html#scenario-1-integrating-existing-builds
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
+// Note 'components/ScpSearchStudies' is '/app/javascript/components/ScpSearchStudies.js'
 import ScpSearchStudies from 'components/ScpSearchStudies';
 
 document.addEventListener('DOMContentLoaded', () => {

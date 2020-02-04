@@ -12,7 +12,17 @@
       </ul>
       <div class="tab-content top-pad">
         <div class="tab-pane active in" id="search-studies" role="tabpanel">
-          <%= render partial: '/site/search/search_studies' %>
+          <!--
+            This is where React integrates into Rails.
+
+            Ensure any updates to this ID are reflected in the ReactDOM.render call
+            in app/javascript/packs/application.js
+          -->
+          <% if User.feature_flag_for_user(current_user, "faceted_search") %>
+            <div id="scp-search-studies-root-element"></div>
+          <% else %>
+            <%= render partial: '/site/search/search_studies' %>
+          <% end %>
         </div>
         <div class="tab-pane" id="search-genes" role="tabpanel">
           <%= render partial: '/site/search/search_genes' %>
