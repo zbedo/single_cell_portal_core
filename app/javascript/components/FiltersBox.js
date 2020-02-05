@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
 import isEqual from 'lodash/isEqual';
 
-// import FiltersSearchBar from './FiltersSearchBar';
+import FiltersSearchBar from './FiltersSearchBar';
 
 
 /**
@@ -39,7 +39,7 @@ export default function FiltersBox(props) {
   //   * filter-species-NCBItaxon9606
   const facetName = props.facet.name;
   const componentName = 'filters-box';
-  const filtersBoxID = `${componentName}-${facetName}`;
+  const filtersBoxID = `${componentName}-${props.facet.id}`;
   const saveID = `save-${filtersBoxID}`;
 
   /**
@@ -56,6 +56,7 @@ export default function FiltersBox(props) {
   }
 
   function handleFilterClick() {
+    console.log('handling')
     setSelection(getCheckedFilterIDs());
   }
 
@@ -69,7 +70,7 @@ export default function FiltersBox(props) {
 
   return (
     <div className={componentName} id={filtersBoxID} style={{display: props.show ? '' : 'none'}}>
-      {/* <FiltersSearchBar filtersBoxID={filtersBoxID} /> */}
+      <FiltersSearchBar filtersBoxID={filtersBoxID} />
       <p className='filters-box-header'>
         <span className='default-filters-list-name'>FREQUENTLY SEARCHED</span>
         <span className='facet-ontology-links'>
@@ -93,15 +94,13 @@ export default function FiltersBox(props) {
             const id = `filter-${facetName}-${d.id}`;
             return (
               <li key={'li-' + id}>
-                <InputGroup
-                  id={id}
-                  name={id}
+                <input
+                  type="checkbox"
+                  aria-label="Checkbox"
                   onClick={handleFilterClick}
-                >
-                  <InputGroup.Addon>
-                  <input type="checkbox" aria-label="Checkbox" />
-                  </InputGroup.Addon>
-                </InputGroup>
+                  name={id}
+                  id={id}
+                />
                 <label htmlFor={id}>{d.name}</label>
               </li>
             );
@@ -116,7 +115,8 @@ export default function FiltersBox(props) {
         <span>Clear</span>
         <Button 
           id={saveID}
-          className={'facet-save-button ' + (canSave ? 'enabled' : 'disabled')}
+          bsStyle='primary'
+          className={'facet-save-button ' + (canSave ? 'active' : 'disabled')}
           onClick={handleSaveClick}>
           SAVE
         </Button>

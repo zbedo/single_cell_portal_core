@@ -118,3 +118,8 @@ export const searchFiltersResponseMock = {
     {name: 'Abdominal tuberculosis', id: 'DOID0000132'},
   ]
 };
+
+export const bulkDownloadResponseMock = {
+  totat: '770733',
+  time_interval: '1800'
+}

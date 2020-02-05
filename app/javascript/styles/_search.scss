@@ -9,7 +9,8 @@
 
 #search-panel {
   .facet > span,
-  #more-facets-button > span {
+  #more-facets-button > span,
+  #download-button > span {
     padding: 8px 16px;
     margin-right: 8px;
     border-radius: 15px;
@@ -21,7 +22,8 @@
   }
 
   .facet.active > span,
-  #more-facets-button.active > span {
+  #more-facets-button.active > span,
+  #download-button.active > span {
     color: #fff;
     background-color: #4d72aa;
   }
@@ -87,9 +89,5 @@
     color: #4d72aa;
     font-weight: 500;
     cursor: pointer;
-  }
-
-  .icon-left {
-    margin-right: 8px;
   }
 }

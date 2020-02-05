@@ -243,6 +243,14 @@ label {
   margin-bottom: 25px;
 }
 
+/** 
+  eweitz 2020-02-05:
+  Used for button icons in faceted search panel, and related Download modal
+**/
+.icon-left {
+  margin-right: 8px;
+}
+
 .btn-file {
   position: relative;
   overflow: hidden;
