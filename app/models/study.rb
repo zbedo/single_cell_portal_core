@@ -2948,23 +2948,29 @@ class Study
     end
   end
 
+  # deletes the study and its underlying workspace.  This method is disabled in production
+  def destroy_and_remove_workspace
+    if Rails.env == 'production'
+      return
+    end
+    Rails.logger.info "Removing workspace #{firecloud_project}/#{firecloud_workspace} in #{Rails.env} environment"
+    begin
+      Study.firecloud_client.delete_workspace(firecloud_project, firecloud_workspace)
+      destroy
+    rescue => e
+      Rails.logger.error "Error in removing #{firecloud_project}/#{firecloud_workspace}"
+      Rails.logger.error "#{e.class.name}:"
+      Rails.logger.error "#{e.message}"
+    end
+    Rails.logger.info "Workspace #{firecloud_project}/#{firecloud_workspace} successfully removed."
+  end
+
   # deletes all studies and removes all firecloud workspaces, will ONLY work if the environment is 'test' or 'pentest'
   # cannot be run in production/staging/development
   def self.delete_all_and_remove_workspaces
     if Rails.env == 'test' || Rails.env == 'pentest'
       self.all.each do |study|
-        workspace_project = study.firecloud_project
-        workspace_name = study.firecloud_workspace
-        Rails.logger.info "Removing workspace #{workspace_project}/#{workspace_name} in #{Rails.env} environment"
-        begin
-          Study.firecloud_client.delete_workspace(workspace_project, workspace_name)
-          study.destroy
-        rescue => e
-          Rails.logger.error "Error in removing #{workspace_project}/#{workspace_name}"
-          Rails.logger.error "#{e.class.name}:"
-          Rails.logger.error "#{e.message}"
-        end
-        Rails.logger.info "Workspace #{workspace_project}/#{workspace_name} successfully removed."
+        study.destroy_and_remove_workspace
       end
     end
   end

@@ -1,0 +1,10 @@
+{
+  "study": {
+    "name": "HIV - Blood study",
+    "description": "<p>Mock study, looks at blood from cows with HIV</p>",
+    "data_dir": "test"
+  },
+  "files": [
+     {"type": "Metadata", "filename": "metadata.tsv", "use_metadata_convention": true}
+  ]
+}

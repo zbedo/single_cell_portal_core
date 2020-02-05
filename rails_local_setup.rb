@@ -1,8 +1,11 @@
+#!/usr/bin/env ruby
+
 require 'json'
 
 # Run the rails server in non-dockerized form
 # usage:
 # ruby rails_local_setup.rb <username>
+# This script must be run from the directory it lives in
 # you may also specify --no-tcell to run locally without tcell, which currently clutters the console with CSP warnings in development mode
 
 if ARGV[0].nil?
@@ -24,7 +27,7 @@ service_account_path = "#{base_vault_path}/scp_service_account.json"
 
 # defaults
 PASSENGER_APP_ENV = "development"
-CONFIG_DIR = "config"
+CONFIG_DIR = File.expand_path('.') + "/config"
 
   # load raw secrets from vault
 puts 'Processing secret parameters from vault'

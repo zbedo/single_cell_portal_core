@@ -1,0 +1,10 @@
+{
+  "study": {
+    "name": "Bronchial Lymphoid study",
+    "description": "<p>Mock study, mouse tuberculosis and GERD</p>",
+    "data_dir": "test"
+  },
+  "files": [
+     {"type": "Metadata", "filename": "AA_metadata.tsv"}
+  ]
+}
