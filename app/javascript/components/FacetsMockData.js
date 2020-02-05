@@ -119,7 +119,7 @@ export const searchFiltersResponseMock = {
   ]
 };
 
-export const bulkDownloadResponseMock = {
-  totat: '770733',
+export const authCodeResponseMock = {
+  auth_code: '770733',
   time_interval: '1800'
 }

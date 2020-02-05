@@ -5,7 +5,7 @@ import Modal from 'react-bootstrap/lib/Modal';
 import Button from 'react-bootstrap/lib/Button';
 
 // TODO: Remove this once API endpoint is integrated
-import {bulkDownloadResponseMock} from './FacetsMockData';
+import {authCodeResponseMock} from './FacetsMockData';
 
 function fetchDownloadConfig() {
   // TODO: Move this documentation to a more summary location, but still within the code.
@@ -24,18 +24,18 @@ function fetchDownloadConfig() {
   //      disease:MONDO_0018177,MONDO_0005089   having glioblastoma OR sarcoma
   //
 
-  const searchQuery = '?terms=copy%20number&facets=species:NCBItaxon9606+disease:MONDO_0018177,MONDO_0005089';
-  const totat = bulkDownloadResponseMock.totat; // TOTAT: Time-based One-Time Access Token.  Authorization for anonymous users.
+  const searchQuery = '&file_types=metadata,expression&accessions=SCP1,SCP2';
+  const authCode = authCodeResponseMock.auth_code; // Auth code is a one-time authorization token (OTAC)
 
-  const timeInterval = bulkDownloadResponseMock.time_interval;
+  const timeInterval = authCodeResponseMock.time_interval;
 
   // Gets a curl configuration ("cfg.txt") containing signed
   // URLs and output names for all files in the download object.
   const url = (
     window.origin +
-    '/api/v1/bulk_download' +
-    '/' + searchQuery +
-    '/' + totat
+    '/api/v1/bulk_download?auth_code=' +
+    authCode +
+    searchQuery
   );
   const flag = (window.location.host === 'localhost') ? 'k' : ''; // "-k" === "--insecure"
   
@@ -45,16 +45,16 @@ function fetchDownloadConfig() {
     'curl -K cfg.txt'
   );
 
-  return [totat, timeInterval, downloadCommand];
+  return [authCode, timeInterval, downloadCommand];
 }
 
 function DownloadCommandContainer() {
   
-  const [totat, timeInterval, downloadCommand] = fetchDownloadConfig();
+  const [authCode, timeInterval, downloadCommand] = fetchDownloadConfig();
 
-  const expiresMinutes = timeInterval / 60;
+  const expiresMinutes = Math.floor(timeInterval / 60); // seconds -> minutes
 
-  const commandID = 'command-' + totat;
+  const commandID = 'command-' + authCode;
 
   return (
     <div>
@@ -63,11 +63,11 @@ function DownloadCommandContainer() {
           id={commandID}
           class="form-control curl-download-command"
           value={downloadCommand}
-          readonly
+          readOnly
         />
         <span class="input-group-btn"> +
           <button 
-            id={'copy-button-' + totat}
+            id={'copy-button-' + authCode}
             class="btn btn-default btn-copy" 
             data-clipboard-target={'#' + commandID}
             data-toggle="tooltip"
@@ -75,20 +75,19 @@ function DownloadCommandContainer() {
             <i class="far fa-copy"></i>
           </button>
           <button 
-            id={'refresh-button-' + totat}
+            id={'refresh-button-' + authCode}
             class="btn btn-default btn-refresh glyphicon glyphicon-refresh"
             data-toggle="tooltip"
-            // style="top: -0.5px;"
             title="Refresh download command">
           </button>
         </span>
         </div>
       <div style={{fontSize: '12px'}}>
         Valid for one use within {' '}
-        <span class="countdown" id={'countdown-' + totat}>
+        <span class="countdown" id={'countdown-' + authCode}>
           {expiresMinutes}
         </span>{' '}
-        minutes.  Paste into Mac/Linux/Unix terminal and execute to download.
+        minutes.  If your command has expired, click refresh button at right in this box.
       </div>
     </div>
   );
@@ -112,6 +111,22 @@ export default function DownloadButton(props) {
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
 
+  // Enables copying to clipboard upon clicking a "clipboard" icon,
+  // like on GitHub.  https://clipboardjs.com.
+  var clipboard = new Clipboard('.btn-copy');
+  clipboard.on('success', function(event) {
+    $('#' + event.trigger.id)
+      .attr('title', 'Copied!')
+      .tooltip('fixTitle')
+      .tooltip('show');
+  });
+
+  $('body').on('click', '.btn-refresh', function(event) {
+    var commandContainer = $(this).parentsUntil('.command-container').parent();
+    var downloadObject = commandContainer.attr('id').split('-').slice(-1)[0];
+    writeDownloadCommand(downloadObject);
+  });
+
   return (
       <>
       <span
@@ -123,12 +138,21 @@ export default function DownloadButton(props) {
           Download
         </span>
       </span>
-      <Modal id='bulk-download-modal' show={show} onHide={handleClose} animation='false'>
+      <Modal
+        id='bulk-download-modal'
+        show={show}
+        onHide={handleClose}
+        animation='false'
+        bsSize='large'
+      >
         <Modal.Header closeButton>
-          <Modal.Title>Bulk Download</Modal.Title>
+          <Modal.Title><h2 class='text-center'>Bulk Download</h2></Modal.Title>
         </Modal.Header>
   
         <Modal.Body>
+          <p className='lead'>
+          To download files matching your search, copy this command and paste it into your terminal:
+          </p>
           <p className='lead command-container' id='command-container-all'>
             {/* <Button
               bsStyle='primary'
