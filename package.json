@@ -14,6 +14,7 @@
     "jquery-ui": "1.12.1",
     "morpheus-app": "1.0.18",
     "node-sass": "^4.13.1",
+    "postcss-cssnext": "3.1.0",
     "prop-types": "^15.7.2",
     "react": "^16.12.0",
     "react-bootstrap": "^1.0.0-beta.16",
@@ -22,7 +23,6 @@
     "spin.js": "^4.0.0"
   },
   "devDependencies": {
-    "postcss-cssnext": "3.1.0",
     "webpack-dev-server": "3.8.0"
   }
 }
