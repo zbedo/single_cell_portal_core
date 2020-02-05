@@ -391,7 +391,7 @@ GEM
       actionpack (>= 4.0)
       activesupport (>= 4.0)
       sprockets (>= 3.0.0)
-    swagger-blocks (2.0.2)
+    swagger-blocks (3.0.0)
     swagger_ui_engine (1.1.2)
       rails (>= 4.2)
       sass-rails
