@@ -23,3 +23,7 @@ def auth_as_user(user)
                                                                          :email => user.email
                                                                      })
 end
+
+def get_bq_row_count(bq_dataset, study)
+  bq_dataset.query("SELECT COUNT(*) count FROM #{CellMetadatum::BIGQUERY_TABLE} WHERE study_accession = '#{study.accession}'", cache: false)[0][:count]
+end

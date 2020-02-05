@@ -48,6 +48,7 @@ echo "Generating random seed, seeding test database..."
 RANDOM_SEED=$(openssl rand -hex 16)
 echo $RANDOM_SEED > /home/app/webapp/.random_seed
 bundle exec rake RAILS_ENV=test db:seed || { echo "FAILED to seed test database!" >&2; exit 1; }
+bundle exec rake RAILS_ENV=test db:mongoid:create_indexes
 echo "Database initialized"
 echo "Launching tests using seed: $RANDOM_SEED"
 if [ "$TEST_FILEPATH" != "" ]
@@ -69,6 +70,7 @@ else
                     test/integration/cache_management_test.rb
                     test/integration/tos_acceptance_test.rb
                     test/integration/study_creation_test.rb
+                    test/api/search_controller_test.rb # running search test here to use data from study_creation_test
                     test/integration/study_validation_test.rb
                     test/integration/taxons_controller_test.rb
                     test/controllers/analysis_configurations_controller_test.rb
