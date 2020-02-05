@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Button from 'react-bootstrap/lib/Button';
-import InputGroup from 'react-bootstrap/lib/InputGroup';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
 import isEqual from 'lodash/isEqual';
 
-// import FiltersSearchBar from './FiltersSearchBar';
+import FiltersSearchBar from './FiltersSearchBar';
 
 
 /**
@@ -56,7 +55,6 @@ export default function FiltersBox(props) {
   }
 
   function handleFilterClick() {
-    console.log('handling')
     setSelection(getCheckedFilterIDs());
   }
 
@@ -70,7 +68,7 @@ export default function FiltersBox(props) {
 
   return (
     <div className={componentName} id={filtersBoxID} style={{display: props.show ? '' : 'none'}}>
-      {/* <FiltersSearchBar filtersBoxID={filtersBoxID} /> */}
+      <FiltersSearchBar filtersBoxID={filtersBoxID} />
       <p className='filters-box-header'>
         <span className='default-filters-list-name'>FREQUENTLY SEARCHED</span>
         <span className='facet-ontology-links'>
