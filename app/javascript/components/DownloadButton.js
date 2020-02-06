@@ -140,14 +140,6 @@ export default function DownloadButton(props) {
           To download files matching your search, copy this command and paste it into your terminal:
           </p>
           <p className='lead command-container' id='command-container-all'>
-            {/* <Button
-              bsStyle='primary'
-              id='get-download-command_all'
-              onClick={createDownloadCommand}
-            >
-              <FontAwesomeIcon className="icon-left" icon={faDownload}/>
-              Get download command for study files matching your search
-            </Button> */}
             <DownloadCommandContainer />
           </p>
         </Modal.Body>
