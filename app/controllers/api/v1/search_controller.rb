@@ -7,6 +7,7 @@ module Api
       before_action :set_current_api_user!
       before_action :set_search_facet, only: :facet_filters
       before_action :set_search_facets_and_filters, only: :index
+      before_action :set_branding_group, only: :index
 
       swagger_path '/search' do
         operation :get do
@@ -38,6 +39,13 @@ module Api
             key :required, false
             key :type, :string
           end
+          parameter do
+            key :name, :scpbr
+            key :in, :query
+            key :description, 'Requested branding group (to filter results on)'
+            key :reqired, false
+            key :type, :string
+          end
           response 200 do
             key :description, 'Search parameters, Studies and StudyFiles'
             schema do
@@ -50,9 +58,21 @@ module Api
                 key :type, :string
                 key :title, 'Keywords used in search'
               end
-              property :page do
+              property :current_page do
+                key :type, :integer
+                key :title, 'Current page of paginated studies'
+              end
+              property :total_pages do
+                key :type, :integer
+                key :title, 'Total number of pages of studies'
+              end
+              property :total_entries do
+                key :type, :integer
+                key :title, 'Total number of studies matching search'
+              end
+              property :scpbr do
                 key :type, :string
-                key :title, 'Pagination control'
+                key :description, 'Requested branding group id'
               end
               property :facets do
                 key :type, :array
@@ -115,6 +135,11 @@ module Api
           @studies = @viewable
         end
 
+        # filter results by branding group, if specified
+        if @selected_branding_group.present?
+          @studies = @viewable.where(branding_group_id: @selected_branding_group.id)
+        end
+
         # only call BigQuery if list of possible studies is larger than 0 and we have matching facets to use
         if @studies.count > 0 && @facets.any?
           @studies_by_facet = {}
@@ -130,7 +155,7 @@ module Api
           @studies = @studies.where(:accession.in => @convention_accessions).order_by {|study| @studies_by_facet[study.accession][:facet_search_weight]}
         end
         # paginate results
-        @studies.paginate(page: params[:page], per_page: Study.per_page)
+        @results = @studies.paginate(page: params[:page], per_page: Study.per_page)
       end
 
       swagger_path '/search/facets' do
@@ -208,6 +233,10 @@ module Api
       end
 
       private
+
+      def set_branding_group
+        @selected_branding_group = BrandingGroup.find_by(name_as_id: params[:scpbr])
+      end
 
       def set_search_facet
         @search_facet = SearchFacet.find_by(identifier: params[:facet])
