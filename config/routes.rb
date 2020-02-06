@@ -47,6 +47,11 @@ Rails.application.routes.draw do
           delete 'studies/:accession/submissions/:submission_id', to: 'site#get_study_submission', as: :site_abort_study_submission
           delete 'studies/:accession/submissions/:submission_id/remove', to: 'site#get_study_submission_dir', as: :site_delete_study_submission_dir
         end
+        scope :search do
+          get 'facets', to: 'search#facets', as: :search_facets
+          get 'facet_filters', to: 'search#facet_filters', as: :search_facet_filters
+          get '/', to: 'search#index', as: :search
+        end
       end
     end
 

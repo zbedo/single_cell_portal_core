@@ -22,6 +22,10 @@ module Api
           key :description, 'Browse public/shared Studies, and configure/submit Analyses'
         end
         tag do
+          key :name, 'Search'
+          key :description, 'Keyword and Faceted search operations'
+        end
+        tag do
           key :name, 'Status'
           key :description, 'Status operations'
         end
@@ -76,6 +80,7 @@ module Api
           Study,
           StudyFile,
           DirectoryListing,
+          SearchFacet,
           StudyShare,
           StudyFileBundle,
           Taxon,
@@ -88,7 +93,8 @@ module Api
           Api::V1::SchemasController,
           Api::V1::TaxonsController,
           Api::V1::StatusController,
-          Api::V1::SiteController
+          Api::V1::SiteController,
+          Api::V1::SearchController
       ].freeze
 
       def index

@@ -10,16 +10,22 @@ echo "*** COMPLETED ***"
 if [[ $PASSENGER_APP_ENV = "production" ]] || [[ $PASSENGER_APP_ENV = "staging" ]]
 then
     echo "*** PRECOMPILING ASSETS ***"
-    sudo -E -u app -H bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE yarn:install
-    sudo -E -u app -H bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE assets:clean
-    sudo -E -u app -H bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE assets:precompile
-    sudo -E -u app -H bundle exec rake RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE webpacker:compile
+    sudo -E -u app -H bundle exec rake NODE_ENV=$PASSENGER_APP_ENV RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE yarn:install
+    sudo -E -u app -H bundle exec rake NODE_ENV=$PASSENGER_APP_ENV RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE assets:clean
+    sudo -E -u app -H bundle exec rake NODE_ENV=$PASSENGER_APP_ENV RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE assets:precompile
+    sudo -E -u app -H bundle exec rake NODE_ENV=$PASSENGER_APP_ENV RAILS_ENV=$PASSENGER_APP_ENV SECRET_KEY_BASE=$SECRET_KEY_BASE webpacker:compile
     echo "*** COMPLETED ***"
 elif [[ $PASSENGER_APP_ENV = "development" ]]; then
     echo "*** UPGRADING/COMPILING NODE MODULES ***"
     # force upgrade in local development to ensure yarn.lock is continually updated
-    sudo -E -u app -H yarn upgrade
+    sudo -E -u app -H yarn install
     sudo -E -u app -H /home/app/webapp/bin/webpack
+    if [ $? -ne 0 ]; then
+        echo "***Webpack failed, attempting clean reinstall***"
+        # rebuild sass in case you are switching between containerized/non containerized (this is a no-op if the correct files are already built)
+        sudo -E -u app -H yarn install --force
+        sudo -E -u app -H /home/app/webapp/bin/webpack
+    fi
 fi
 if [[ -n $TCELL_AGENT_APP_ID ]] && [[ -n $TCELL_AGENT_API_KEY ]] ; then
     echo "*** CONFIGURING TCELL WAF ***"

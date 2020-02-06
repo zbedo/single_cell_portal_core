@@ -44,11 +44,7 @@ module Api
       end
 
       def studies
-        if api_user_signed_in?
-          @studies = Study.viewable(current_api_user)
-        else
-          @studies = Study.where(public: true)
-        end
+        @studies = Study.viewable(current_api_user)
       end
 
       swagger_path '/site/studies/{accession}' do

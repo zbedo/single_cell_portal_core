@@ -11,7 +11,7 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     @random_seed = File.open(Rails.root.join('.random_seed')).read.strip
   end
 
-  test 'create/delete default testing study' do
+  test 'create default testing study' do
 
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
     study_params = {
@@ -33,12 +33,11 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     study = Study.find_by(name: "Test Study #{@random_seed}")
     assert study.present?, "Study did not successfully save"
 
-    bqc = ApplicationController.bigquery_client
-    assert_equal 1, bqc.datasets.count
-    bq_dataset = bqc.datasets.first
-    assert_equal 'cell_metadata', bq_dataset.dataset_id
-    assert_equal 1, bq_dataset.tables.count
-    assert_equal 'alexandria_convention', bq_dataset.tables.first.table_id
+    bqc = ApplicationController.big_query_client
+    bq_dataset = bqc.datasets.detect {|dataset| dataset.dataset_id == CellMetadatum::BIGQUERY_DATASET}
+    assert_not_nil bq_dataset, "Did not find #{CellMetadatum::BIGQUERY_DATASET} dataset in BigQuery"
+    bq_table = bq_dataset.tables.detect {|table| table.table_id == CellMetadatum::BIGQUERY_TABLE}
+    assert_not_nil bq_table, "Did not find #{CellMetadatum::BIGQUERY_TABLE} table in #{CellMetadatum::BIGQUERY_DATASET}"
     initial_bq_row_count = get_bq_row_count(bq_dataset, study)
 
     example_files = {
@@ -118,7 +117,6 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
     assert_equal 19, study.genes.size, 'Did not parse all genes from expression matrix'
 
     # verify that counts are correct, this will ensure that everything uploaded & parsed correctly
-    gene_count = study.gene_count
     cluster_count = study.cluster_groups.size
     metadata_count = study.cell_metadata.size
     cluster_annot_count = study.cluster_annotation_count
@@ -133,30 +131,7 @@ class StudyCreationTest < ActionDispatch::IntegrationTest
 
     assert_equal initial_bq_row_count + 30, get_bq_row_count(bq_dataset, study)
 
-    # request delete
-    puts "Requesting delete for metadata_example_using_convention.txt"
-    delete api_v1_study_study_file_path(study_id: study.id, id: example_files[:metadata][:object].id), as: :json, headers: {authorization: "Bearer #{@test_user.api_access_token[:access_token]}" }
-
-    seconds_slept = 0
-    sleep_increment = 10
-    max_seconds_to_sleep = 60
-    until ( (bq_row_count = get_bq_row_count(bq_dataset, study)) <= initial_bq_row_count) do
-      puts "#{seconds_slept} seconds after requesting file deletion, bq_row_count is #{bq_row_count}."
-      if seconds_slept >= max_seconds_to_sleep
-        raise "Even #{seconds_slept} seconds after requesting file deletion, not all records have been deleted from bigquery."
-      end
-      sleep(sleep_increment)
-      seconds_slept += sleep_increment
-    end
-    puts "#{seconds_slept} seconds after requesting file deletion, bq_row_count is #{bq_row_count}."
-    assert get_bq_row_count(bq_dataset, study) <= initial_bq_row_count # using "<=" instead of "==" in case there were rows from a previous aborted test to clean up
-
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
 
   end
-
-  def get_bq_row_count(bq_dataset, study)
-    bq_dataset.query("SELECT COUNT(*) count FROM alexandria_convention WHERE study_accession = '#{study.accession}'", cache: false)[0][:count]
-  end
-
 end
