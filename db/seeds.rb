@@ -116,3 +116,8 @@ SearchFacet.create(name: 'Species', identifier: 'species', filters: [{id: 'NCBIT
                    ontology_urls: [{name: 'NCBI organismal classification', url: 'https://www.ebi.ac.uk/ols/api/ontologies/ncbitaxon'}],
                    is_ontology_based: true, is_array_based: false, big_query_id_column: 'species', big_query_name_column: 'species__ontology_label',
                    convention_name: 'alexandria_convention', convention_version: '1.1.3')
+SearchFacet.create(name: 'Disease', identifier: 'disease', filters: [{id: 'MONDO_0000001', name: 'disease or disorder'}],
+                   ontology_urls: [{name: 'Monarch Disease Ontology', url: 'https://www.ebi.ac.uk/ols/api/ontologies/mondo'},
+                                   {name: 'Phenotype And Trait Ontology', url: 'https://www.ebi.ac.uk/ols/ontologies/pato'}],
+                   is_ontology_based: true, is_array_based: true, big_query_id_column: 'disease', big_query_name_column: 'disease__ontology_label',
+                   convention_name: 'alexandria_convention', convention_version: '1.1.3')

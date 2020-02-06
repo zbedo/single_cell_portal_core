@@ -523,6 +523,74 @@ class Study
     end
   end
 
+  swagger_schema :SearchStudyWithFiles do
+    property :name do
+      key :type, :string
+      key :description, 'Name of Study'
+    end
+    property :description do
+      key :type, :string
+      key :description, 'HTML description blob for Study'
+    end
+    property :accession do
+      key :type, :string
+      key :description, 'Accession (used in permalinks, not editable)'
+    end
+    property :public do
+      key :type, :boolean
+      key :default, true
+      key :description, 'Boolean indication of whether Study is publicly readable'
+    end
+    property :detached do
+      key :type, :boolean
+      key :default, false
+      key :description, 'Boolean indication of whether Study has been \'detached\' from its FireCloud workspace, usually when the workspace is deleted directly in FireCloud'
+    end
+    property :cell_count do
+      key :type, :number
+      key :format, :integer
+      key :default, 0
+      key :description, 'Number of unique cell names in Study (set from Metadata StudyFile)'
+    end
+    property :study_url do
+      key :type, :string
+      key :description, 'Relative URL path to view study'
+    end
+    property :facet_matches do
+      key :type, :object
+      key :description, 'SearchFacet filter matches'
+    end
+    property :term_matches do
+      key :type, :string
+      key :description, 'Keyword term matches'
+    end
+    property :term_search_weight do
+      key :type, :integer
+      key :description, 'Relevance of term match'
+    end
+    property :study_files do
+      key :type, :object
+      key :title, 'Cell Metadata and Expression Files'
+      key :description, 'Available StudyFiles for download/streaming'
+      property :Metadata do
+        key :title, 'Metadata Files'
+        key :type, :array
+        items do
+          key :title, 'StudyFile'
+          key '$ref', 'SiteStudyFile'
+        end
+      end
+      property :Expression do
+        key :title, 'Expression Matrices'
+        key :type, :array
+        items do
+          key :title, 'StudyFile'
+          key '$ref', 'SiteStudyFile'
+        end
+      end
+    end
+  end
+
 
   ###
   #
@@ -592,7 +660,9 @@ class Study
 
   # return all studies that are viewable by a given user as a Mongoid criterion
   def self.viewable(user)
-    if user.admin?
+    if user.nil?
+      self.where(queued_for_deletion: false, public: true)
+    elsif user.admin?
       self.where(queued_for_deletion: false)
     else
       public = self.where(public: true, queued_for_deletion: false).map(&:id)
@@ -741,6 +811,16 @@ class Study
       acl["#{share.email}"] = share.permission
     end
     acl
+  end
+
+  # compute a simplistic relevance score by counting instances of terms in names/descriptions
+  def search_weight(terms)
+    score = 0
+    terms.each do |term|
+      text_blob = "#{self.name} #{self.description}"
+      score += text_blob.scan(/#{term}/i).size
+    end
+    score
   end
 
   ###

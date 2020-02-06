@@ -276,6 +276,15 @@ class User
     DEFAULT_FEATURE_FLAGS.merge(feature_flags ? feature_flags : {})
   end
 
+  # gets the feature flag value for a given user, and the default value if no user is given
+  def self.feature_flag_for_user(user, flag_key)
+    if user.present?
+      user.feature_flags_with_defaults[flag_key]
+    else
+      DEFAULT_FEATURE_FLAGS[flag_key]
+    end
+  end
+
   # helper method to migrate study ownership & shares from old email to new email
   def self.migrate_studies_and_shares(existing_email, new_email)
     existing_user = self.find_by(email: existing_email)
