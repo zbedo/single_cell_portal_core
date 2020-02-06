@@ -106,7 +106,6 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     auth_code = json['totat']
 
     files = study.study_files.by_type(['Expression Matrix', 'Metadata'])
-    filenames = files.map(&:upload_file_name)
     execute_http_request(:get, api_v1_search_bulk_download_path(
         auth_code: auth_code, accessions: study.accession, file_types: file_types)
     )
