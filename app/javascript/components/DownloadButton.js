@@ -2,28 +2,11 @@ import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDownload } from '@fortawesome/free-solid-svg-icons';
 import Modal from 'react-bootstrap/lib/Modal';
-import Button from 'react-bootstrap/lib/Button';
 
 // TODO: Remove this once API endpoint is integrated
 import {authCodeResponseMock} from './FacetsMockData';
 
 function fetchDownloadConfig() {
-  // TODO: Move this documentation to a more summary location, but still within the code.
-  //
-  // Example search query:
-  //
-  // terms=copy%20number&facets=species:NCBITaxon_9606+disease:MONDO_0018177,MONDO_0005089
-  //
-  // Human-readable interpretation:
-  //
-  // Search for SCP studies that have:
-  //    terms=copy%20number                  A title or description containing the terms "copy" OR "number"
-  //    &facets=                              AND cells that have been annotated using the SCP metadata convention to be 
-  //      species:NCBITaxon_9606                from human
-  //      +                                     AND
-  //      disease:MONDO_0018177,MONDO_0005089   having glioblastoma OR sarcoma
-  //
-
   const searchQuery = '&file_types=metadata,expression&accessions=SCP1,SCP2';
   const authCode = authCodeResponseMock.auth_code; // Auth code is a one-time authorization token (OTAC)
 
