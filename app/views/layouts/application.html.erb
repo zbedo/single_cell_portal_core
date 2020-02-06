@@ -42,9 +42,9 @@
 <body <%= @selected_branding_group.present? ? "data-branding-id=#{@selected_branding_group.name_as_id}" : nil %>>
 
   <%# 
-    TODO: Move these includes back into HEAD element when 
+    TODO: In SCP-2121, move these includes back into HEAD element now that 
     https://github.com/react-bootstrap/react-bootstrap/issues/3645
-    is resolved
+    seems resolved
   %>
 
   <%= nonced_javascript_pack_tag 'application' %>
