@@ -31,6 +31,7 @@
 //= require scp-igv
 //= require scp-ideogram
 //= require scp-dot-plot
+//= require scp-react-rails
 
 var fileUploading = false;
 var PAGE_RENDERED = false;

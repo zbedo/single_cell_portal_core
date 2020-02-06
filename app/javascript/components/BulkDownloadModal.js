@@ -8,9 +8,6 @@ export default function BulkDownloadModel(props) {
   const handleClose = () => {} //setShow(false);
   const handleShow = () => {} //setShow(true);
 
-  console.log('props')
-  console.log(props)
-
   return(
     <>
       <div>test</div>

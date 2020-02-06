@@ -111,21 +111,7 @@ export default function DownloadButton(props) {
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
 
-  // Enables copying to clipboard upon clicking a "clipboard" icon,
-  // like on GitHub.  https://clipboardjs.com.
-  var clipboard = new Clipboard('.btn-copy');
-  clipboard.on('success', function(event) {
-    $('#' + event.trigger.id)
-      .attr('title', 'Copied!')
-      .tooltip('fixTitle')
-      .tooltip('show');
-  });
-
-  $('body').on('click', '.btn-refresh', function(event) {
-    var commandContainer = $(this).parentsUntil('.command-container').parent();
-    var downloadObject = commandContainer.attr('id').split('-').slice(-1)[0];
-    writeDownloadCommand(downloadObject);
-  });
+  window.SCP.initBulkDownloadClipboard();
 
   return (
       <>
