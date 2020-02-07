@@ -33,6 +33,8 @@ class StudyFile
   ASSEMBLY_REQUIRED_TYPES = ['BAM', 'Ideogram Annotations']
   GZIP_MAGIC_NUMBER = "\x1f\x8b".force_encoding(Encoding::ASCII_8BIT)
   REQUIRED_ATTRIBUTES = %w(file_type name)
+  BULK_DOWNLOAD_TYPES = ['Expression', 'Metadata', 'Cluster', 'Coordinate Labels','Fastq', 'BAM', 'Documentation',
+                         'Other', 'Analysis Output', 'Ideogram Annotations']
 
   # Constants for scoping values for AnalysisParameter inputs/outputs
   ASSOCIATED_MODEL_METHOD = %w(gs_url name upload_file_name bucket_location)
@@ -653,8 +655,34 @@ class StudyFile
     end
   end
 
+  # generate a download path to use with bulk_download
+  # takes the form of :study_accession/:output_directory_name/:filename
+  def bulk_download_pathname
+    "#{self.study.accession}/#{self.output_directory_name}/#{self.upload_file_name}"
+  end
+
+  # retrieve a directory name based on file_type
+  # bundled files travel with the parent, using their parent's directory
+  # dense (Expression Matrix) and sparse (MM Coordinate Matrix) are lumped together
+  def output_directory_name
+    if self.is_bundled? && !self.bundle_parent?
+      self.bundle_parent.output_directory_name
+    else
+      case self.file_type
+      when /Expression/
+        'expression'
+      else
+        self.file_type.downcase.gsub(/\s/, '_')
+      end
+    end
+  end
+
   def is_local?
     self.local_location.present?
+  end
+
+  def is_bundled?
+    self.study_file_bundle.present?
   end
 
   # get any 'bundled' files that correspond to this file
