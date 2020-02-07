@@ -1,7 +1,8 @@
 import React from 'react';
 
 import FacetControl from './FacetControl';
-import MoreFiltersButton from './MoreFiltersButton';
+import MoreFacetsButton from './MoreFacetsButton';
+import DownloadButton from './DownloadButton';
 
 // Only for development!  We'll fetch data once API endpoints are available.
 import {facetsResponseMock, searchFiltersResponseMock} from './FacetsMockData';
@@ -25,11 +26,12 @@ function ScpSearchStudies() {
   return (
     <div id='search-panel'>
       {
-        defaultFacets.map((facet) => {
-          return <FacetControl facet={facet} />
+        defaultFacets.map((facet, i) => {
+          return <FacetControl facet={facet} key={i}/>
         })
       }
-      <MoreFiltersButton facets={moreFacets} />
+      <MoreFacetsButton facets={moreFacets} />
+      <DownloadButton />
     </div>
   );
 }
