@@ -1,11 +1,8 @@
 import React from 'react';
-import KeyWordSearch from './KeyWordSearch';
+import KeyWordSearch from './KeywordSearch';
 import Button from 'react-bootstrap/lib/Button';
 // import FacetControl from './FacetControl';
 // import MoreFiltersButton from './MoreFiltersButton';
-import Grid from 'react-bootstrap/lib/Grid';
-import Row from 'react-bootstrap/lib/Row';
-import Col from 'react-bootstrap/lib/Col';
 import { faNewspaper, faChevronLeft } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
