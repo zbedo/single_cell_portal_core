@@ -1,10 +1,9 @@
 import React from 'react';
-import KeyWordSearch from './KeywordSearch';
-import Button from 'react-bootstrap/lib/Button';
-// import FacetControl from './FacetControl';
-// import MoreFiltersButton from './MoreFiltersButton';
-import { faNewspaper, faChevronLeft } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
+import FacetControl from './FacetControl';
+import MoreFacetsButton from './MoreFacetsButton';
+import DownloadButton from './DownloadButton';
+import KeywordSearch from './KeywordSearch';
 
 // Only for development!  We'll fetch data once API endpoints are available.
 import {facetsResponseMock, searchFiltersResponseMock} from './FacetsMockData';
@@ -39,14 +38,14 @@ function SearchPanel() {
   // tab when it should be able to support the 'home' Seach Panel, Studies, Genes and Cells search panels.
   return (
     <div className='container-fluid' id='search-panel'>
-    <KeyWordSearch/>
-      {/*
+      <KeywordSearch/>
+      {
         defaultFacets.map((facet, i) => {
           return <FacetControl facet={facet} key={i}/>
         })
-      */}
-      {/* <MoreFacetsButton facets={moreFacets} />
-      <DownloadButton /> */}
+      }
+      <MoreFacetsButton facets={moreFacets} />
+      <DownloadButton />
     </div>
   );
 }
