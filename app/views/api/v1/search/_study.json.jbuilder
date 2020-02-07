@@ -18,11 +18,16 @@ if study.detached
   json.set! :study_files, 'Unavailable (cannot load study workspace or bucket)'
 else
   json.study_files do
-    json.set! :Metadata do
-      json.array! study.study_files.by_type('Metadata'), partial: 'api/v1/search/study_file', as: :study_file, locals: {study: study}
-    end
-    json.set! :Expression do
-      json.array! study.study_files.by_type(['Expression Matrix', 'MM Coordinate Matrix']), partial: 'api/v1/search/study_file', as: :study_file, locals: {study: study}
+    StudyFile::BULK_DOWNLOAD_TYPES.each do |file_category|
+      if file_category == 'Expression'
+        json.set! :Expression do
+          json.array! study.study_files.by_type(['Expression Matrix', 'MM Coordinate Matrix']), partial: 'api/v1/search/study_file', as: :study_file, locals: {study: study}
+        end
+      else
+        json.set! file_category do
+          json.array! study.study_files.by_type(file_category), partial: 'api/v1/search/study_file', as: :study_file, locals: {study: study}
+        end
+      end
     end
   end
 end
