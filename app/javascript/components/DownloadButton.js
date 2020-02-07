@@ -20,12 +20,13 @@ function fetchDownloadConfig() {
     authCode +
     searchQuery
   );
-  const flag = (window.location.host === 'localhost') ? 'k' : ''; // "-k" === "--insecure"
+  const curlSecureFlag = (window.location.host === 'localhost') ? 'k' : ''; // "-k" === "--insecure"
   
   // This is what the user will run in their terminal to download the data.
+  // TODO: Consider checking the node environment (either at compile or runtime) instead of the hostname
   const downloadCommand = (
-    'curl "' + url + '" -' + flag + 'o cfg.txt; ' +
-    'curl -K cfg.txt'
+    'curl "' + url + '" -' + curlSecureFlag + 'o cfg.txt; ' +
+    'curl -K cfg.txt; rm cfg.txt'
   );
 
   return [authCode, timeInterval, downloadCommand];
@@ -98,11 +99,8 @@ export default function DownloadButton(props) {
 
   return (
       <>
-      <span
-        id='download-button'
-        className={`${show ? 'active' : ''}`}>
-        <span
-          onClick={showModalAndFetchDownloadCommand}>
+      <span id='download-button' className={`${show ? 'active' : ''}`}>
+        <span onClick={showModalAndFetchDownloadCommand}>
           <FontAwesomeIcon className="icon-left" icon={faDownload}/>
           Download
         </span>

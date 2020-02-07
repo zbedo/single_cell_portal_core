@@ -98,12 +98,13 @@
                       '/' + totat
                   );
 
-                  var flag = (window.location.host === 'localhost') ? 'k' : ''; // "-k" === "--insecure"
+                  var curlSecureFlag = (window.location.host === 'localhost') ? 'k' : ''; // "-k" === "--insecure"
 
                   // This is what the user will run in their terminal to download the data.
+                  // TODO: Consider checking the node environment (either at compile or runtime) instead of the hostname
                   var downloadCommand = (
-                      'curl &quot;' + url + '&quot; -' + flag + 'o cfg.txt; ' +
-                      'curl -K cfg.txt'
+                      'curl &quot;' + url + '&quot; -' + curlSecureFlag + 'o cfg.txt; ' +
+                      'curl -K cfg.txt; rm cfg.txt'
                   );
 
                   var commandID = 'command-' + totat;

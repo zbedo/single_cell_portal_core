@@ -8,7 +8,7 @@
  * then delete the legacy JS.
  */
 
-window.SCP = {
+window.SCP = window.SCP || {
 
   // Old use: app/views/site/_study_download_data.html.erb
   // New use: app/javascript/components/DownloadButton.js
