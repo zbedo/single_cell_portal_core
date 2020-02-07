@@ -213,19 +213,19 @@ module Api
           key :tags, [
               'Search'
           ]
-          key :summary, 'Create One-time Auth Code for downloads'
-          key :description, 'Create and return a One-Time Authorization Code to identify a user for bulk downloads'
+          key :summary, 'Create one-time auth code for downloads'
+          key :description, 'Create and return a one-time authorization code (OTAC) to identify a user for bulk downloads'
           key :operationId, 'search_auth_code_path'
           response 200 do
             key :description, 'One-time auth code and time interval, in seconds'
             schema do
-              property :totat do
+              property :auth_code do
                 key :type, :integer
                 key :description, 'One-time auth code'
               end
-              property :ti do
+              property :time_interval do
                 key :type, :integer
-                key :description, 'Time interval (in seconds) otac will be valid'
+                key :description, 'Time interval (in seconds) OTAC will be valid'
               end
             end
           end
@@ -241,7 +241,8 @@ module Api
       def create_auth_code
         half_hour = 1800 # seconds
         otac_and_ti = current_api_user.create_totat(half_hour)
-        render json: otac_and_ti
+        auth_code_response = {auth_code: otac_and_ti[:totat], time_interval: otac_and_ti[:ti]}
+        render json: auth_code_response
       end
 
       swagger_path '/search/bulk_download' do
@@ -268,10 +269,15 @@ module Api
           end
           parameter do
             key :name, :file_types
-            key :type, :string
             key :in, :query
-            key :description, "Comma-delimited list of file types (including 'all' for all files)"
-            key :required, true
+            key :description, 'Comma-delimited list of file types'
+            key :required, false
+            key :type, :array
+            items do
+              key :type, :string
+              key :enum, StudyFile::BULK_DOWNLOAD_TYPES
+            end
+            key :collectionFormat, :csv
           end
           response 200 do
             key :description, 'Curl configuration file with signed URLs for requested data'
@@ -303,7 +309,11 @@ module Api
         totat = params[:auth_code]
         valid_totat = User.verify_totat(totat)
         accessions = params[:accessions].split(',').map(&:strip)
-        file_types = params[:file_types].split(',').map(&:strip)
+        if params[:file_types].present?
+          file_types = params[:file_types].split(',').map(&:strip)
+        else
+          file_types = []
+        end
 
         # sanitize study accessions and file types
         sanitized_accessions = StudyAccession.sanitize_accessions(accessions)
@@ -312,8 +322,8 @@ module Api
         # validate request parameters
         if totat.blank? || valid_totat == false
           render json: {error: 'Invalid authorization token'}, status: 403 and return
-        elsif sanitized_accessions.blank? || sanitized_file_types.blank?
-          render json: {error: 'Invalid request parameters; study accessions or file types not found'}, status: 400 and return
+        elsif sanitized_accessions.blank?
+          render json: {error: 'Invalid request parameters; study accessions not found'}, status: 400 and return
         end
 
         # load the user from the auth token
@@ -326,9 +336,14 @@ module Api
         end
 
         # get requested files
-        files_requested = Study.where(:accession.in => sanitized_accessions).map {
-            |study| study.study_files.by_type(sanitized_file_types)
-        }.flatten
+        studies = Study.where(:accession.in => sanitized_accessions)
+        if sanitized_file_types.present?
+          files_requested = studies.map {
+              |study| study.study_files.by_type(sanitized_file_types)
+          }.flatten
+        else
+          files_requested = studies.map(&:study_files).flatten
+        end
 
         # determine quota impact
         download_quota = ApplicationController.get_download_quota
