@@ -1,109 +1,56 @@
 import React from 'react';
-import Tab from 'react-bootstrap/lib/Tab';
-import Tabs from 'react-bootstrap/lib/Tabs';
+import KeyWordSearch from './KeyWordSearch';
+import Button from 'react-bootstrap/lib/Button';
+// import FacetControl from './FacetControl';
+// import MoreFiltersButton from './MoreFiltersButton';
+import Grid from 'react-bootstrap/lib/Grid';
+import Row from 'react-bootstrap/lib/Row';
+import Col from 'react-bootstrap/lib/Col';
+import { faNewspaper, faChevronLeft } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-const results = [
-  {
-    type:'study',
-    name: 'Single nucleus RNA-seq',
-    cell_count: 5426,
-    acession: 'SCP1',
-    description: 'orem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.',
-    url: 'singlecell.broadinstitute.org/single_cell/api/v1/site/studies'
-  },
-  {
-    type:'study',
-    name: 'Single nucleus RNA-seq',
-    cell_count: 5426,
-    acession: 'SCP2',
-    description: 'orem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.',
-    url: 'singlecell.broadinstitute.org/single_cell/api/v1/site/studies'
-  },
-  {type:'study',
-    name: 'Single nucleus RNA-seq',
-    cell_count: 5426,
-    acession: 'SCP3',
-    description: 'orem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.',
-  },
-  {
-    type:'study',
-    name: 'Single nucleus RNA-seq',
-    cell_count: 5426,
-    acession: 'SCP4',
-    description: 'orem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.',
-  },
-  {type:'study',
-    name: 'Single nucleus RNA-seq',
-    cell_count: 5426,
-    acession: 'SCP5',
-    description: 'orem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.',
-  },
-];
+// Only for development!  We'll fetch data once API endpoints are available.
+import {facetsResponseMock, searchFiltersResponseMock} from './FacetsMockData';
+const facets = facetsResponseMock;
 
-class ResultsPanel extends React.Component{
-  // This component will need the results prop refined:
-  // This is how to structure this component without passing the results
-  // prop serveral levels down :https://reactjs.org/docs/context.html#before-you-use-context
-  constructor(props){
-    super(props);
-    this.state = {
-      results: undefined,
-      facets : []
-    };
-    this.handleStudyLabel = this.handleStudyLabel.bind(this);
-    };
+const defaultFacetIDs = ['disease', 'organ', 'species', 'cell_type'];
+const moreFacetIDs = ['sex', 'race', 'library_preparation_protocol', 'organism_age'];
 
-    render(){
-      
-      return(
-        <div>
-          <Tabs defaultActiveKey='study' transition={false}>
-            <Tab eventKey='study' title="Studies" >
-              <StudyResults handleStudyLabel = {this.handleStudyLabel} results={this.state.results}/>
-            </Tab>   
-            <Tab eventKey='files' title='Files'/>       
-        </Tabs>
-        </div>
+const defaultFacets = facets.filter(facet => defaultFacetIDs.includes(facet.id));
+const moreFacets = facets.filter(facet => moreFacetIDs.includes(facet.id));
+
+window.searchFiltersResponse = searchFiltersResponseMock;
+
+const searchStyle= {
+  'font-size':'22px',
+  color: '#333F52'
+
+}
+const searchPanelStyle = {
+  borderRadius: '25px',
+  background: 'white'
+};
+/**
+ * Component for SCP advanced search UI
+ *
+ * This is the entry point into React code from the traditional JS code
+ * See related integration at /app/javascript/packs/application.js
+ */
+function SearchPanel() {
+  // Note:  Enventually this fuction will have State and will turn into a class component. There's room for this to become 
+  // a higher order Component (HOC). This Search component is specific to the "Studies"
+  // tab when it should be able to support the 'home' Seach Panel, Studies, Genes and Cells search panels.
+  return (
+    <div style={searchPanelStyle} className='container-fluid' id='search-panel'>
+    <KeyWordSearch/>
+      {/*
+        defaultFacets.map((facet, i) => {
+          return <FacetControl facet={facet} key={i}/>
+        })
+      */}
+      {/* <MoreFacetsButton facets={moreFacets} />
+      <DownloadButton /> */}
+    </div>
   );
-  
-    }
-  }
-
-const StudyResults = (props) => {
-  return(
-    <Tab.Content>
-       { props.results.length &&
-          props.results.map((result)=>(
-            <Study 
-              key={result.acession} 
-              study={result}
-              handleStudyLabel = {props.handleStudyLabel}
-              />
-          )
-              
-          )
-        }
-        </Tab.Content>);
-
 }
-StudyResults.defaultProps = {
-  // This may move up to the homepage as a property/state that's passed into the 
-  // ResultsPanel component as the property results
-  results: results
-
-}
-
-const Study =(props)=>{
-    return(
-          <div key={props.study.acession}>
-            <label for={props.study.name}>
-              <a href="url">{props.study.name} </a></label>
-            <div>
-              <span class="badge badge-secondary">{props.study.cell_count} </span>
-            </div>
-            <p disabled accession = {props.study.name}>{props.study.description}</p>
-          </div>
-            );
-  }
-
-export default ResultsPanel;
+export default SearchPanel;
