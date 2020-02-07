@@ -21,15 +21,15 @@ const moreFacets = facets.filter(facet => moreFacetIDs.includes(facet.id));
 
 window.searchFiltersResponse = searchFiltersResponseMock;
 
-const searchStyle= {
-  'font-size':'22px',
-  color: '#333F52'
+// const searchStyle= {
+//   'font-size':'22px',
+//   color: '#333F52'
 
-}
-const searchPanelStyle = {
-  borderRadius: '25px',
-  background: 'white'
-};
+// }
+// const searchPanelStyle = {
+//   borderRadius: '25px',
+//   background: 'white'
+// };
 /**
  * Component for SCP advanced search UI
  *
@@ -41,7 +41,7 @@ function SearchPanel() {
   // a higher order Component (HOC). This Search component is specific to the "Studies"
   // tab when it should be able to support the 'home' Seach Panel, Studies, Genes and Cells search panels.
   return (
-    <div style={searchPanelStyle} className='container-fluid' id='search-panel'>
+    <div className='container-fluid' id='search-panel'>
     <KeyWordSearch/>
       {/*
         defaultFacets.map((facet, i) => {
