@@ -1,6 +1,5 @@
 import React from 'react';
 import { Slider, Rail, Handles, Tracks, Ticks } from "react-compound-slider";
-import InputGroup from 'react-bootstrap/InputGroup';
 
 /**
  * Component for a list of string-based filters, e.g. disease, species
@@ -12,11 +11,7 @@ function FilterList(props) {
       props.facet.filters.map((filter) => {
         return (
           <li key={'li-' + filter.id}>
-            <InputGroup.Checkbox
-              id={filter.id}
-              aria-label="Checkbox"
-              name={filter.id}
-            />
+            <input type="checkbox" aria-label="checkbox" id={filter.id} name={filter.id} />
             <label htmlFor={filter.id}>{filter.name}</label>
           </li>
         );

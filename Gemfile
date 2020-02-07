@@ -53,7 +53,7 @@ gem 'googleauth'
 gem 'google-cloud-storage', require: 'google/cloud/storage'
 gem 'google-cloud-bigquery', require: "google/cloud/bigquery"
 gem 'selenium-webdriver'
-gem 'jquery-ui-rails', :git => 'https://github.com/joliss/jquery-ui-rails'
+gem 'jquery-ui-rails'
 gem 'bootstrap-sass', :git => 'https://github.com/twbs/bootstrap-sass'
 gem 'font-awesome-sass', git: 'https://github.com/FortAwesome/font-awesome-sass'
 gem 'mongoid'

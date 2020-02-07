@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Button from 'react-bootstrap/Button';
-import InputGroup from 'react-bootstrap/InputGroup';
+import Button from 'react-bootstrap/lib/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
 import isEqual from 'lodash/isEqual';
@@ -39,7 +38,7 @@ export default function FiltersBox(props) {
   //   * filter-species-NCBItaxon9606
   const facetName = props.facet.name;
   const componentName = 'filters-box';
-  const filtersBoxID = `${componentName}-${facetName}`;
+  const filtersBoxID = `${componentName}-${props.facet.id}`;
   const saveID = `save-${filtersBoxID}`;
 
   /**
@@ -70,9 +69,9 @@ export default function FiltersBox(props) {
   return (
     <div className={componentName} id={filtersBoxID} style={{display: props.show ? '' : 'none'}}>
       <FiltersSearchBar filtersBoxID={filtersBoxID} />
-      <p class='filters-box-header'>
-        <span class='default-filters-list-name'>FREQUENTLY SEARCHED</span>
-        <span class='facet-ontology-links'>
+      <p className='filters-box-header'>
+        <span className='default-filters-list-name'>FREQUENTLY SEARCHED</span>
+        <span className='facet-ontology-links'>
           {
           props.facet.links.map((link, i) => {
             return (
@@ -93,11 +92,12 @@ export default function FiltersBox(props) {
             const id = `filter-${facetName}-${d.id}`;
             return (
               <li key={'li-' + id}>
-                <InputGroup.Checkbox
-                  id={id}
+                <input
+                  type="checkbox"
                   aria-label="Checkbox"
-                  name={id}
                   onClick={handleFilterClick}
+                  name={id}
+                  id={id}
                 />
                 <label htmlFor={id}>{d.name}</label>
               </li>
@@ -109,11 +109,12 @@ export default function FiltersBox(props) {
       TODO: abstracting this and similar code block in
       FacetsAccordionBox into new component (SCP-2109)
        */}
-      <div class="filters-box-footer">
+      <div className='filters-box-footer'>
         <span>Clear</span>
         <Button 
           id={saveID}
-          className={'facet-save-button ' + (canSave ? 'enabled' : 'disabled')}
+          bsStyle='primary'
+          className={'facet-save-button ' + (canSave ? 'active' : 'disabled')}
           onClick={handleSaveClick}>
           SAVE
         </Button>

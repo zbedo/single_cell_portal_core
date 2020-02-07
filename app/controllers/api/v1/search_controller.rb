@@ -5,6 +5,7 @@ module Api
       include Swagger::Blocks
 
       before_action :set_current_api_user!
+      before_action :authenticate_api_user!, only: [:create_auth_code, :bulk_download]
       before_action :set_search_facet, only: :facet_filters
       before_action :set_search_facets_and_filters, only: :index
       before_action :set_branding_group, only: :index
@@ -230,6 +231,152 @@ module Api
         @query_string = params[:query]
         query_matcher = /#{Regexp.escape(@query_string)}/i
         @matching_filters = @search_facet.filters.select {|filter| filter[:name] =~ query_matcher}
+      end
+
+      swagger_path '/search/auth_code' do
+        operation :post do
+          key :tags, [
+              'Search'
+          ]
+          key :summary, 'Create one-time auth code for downloads'
+          key :description, 'Create and return a one-time authorization code (OTAC) to identify a user for bulk downloads'
+          key :operationId, 'search_auth_code_path'
+          response 200 do
+            key :description, 'One-time auth code and time interval, in seconds'
+            schema do
+              property :auth_code do
+                key :type, :integer
+                key :description, 'One-time auth code'
+              end
+              property :time_interval do
+                key :type, :integer
+                key :description, 'Time interval (in seconds) OTAC will be valid'
+              end
+            end
+          end
+          response 401 do
+            key :description, 'User is not signed in'
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+        end
+      end
+
+      def create_auth_code
+        half_hour = 1800 # seconds
+        otac_and_ti = current_api_user.create_totat(half_hour)
+        auth_code_response = {auth_code: otac_and_ti[:totat], time_interval: otac_and_ti[:time_interval]}
+        render json: auth_code_response
+      end
+
+      swagger_path '/search/bulk_download' do
+        operation :get do
+          key :tags, [
+              'Search'
+          ]
+          key :summary, 'Bulk download study data'
+          key :description, 'Download files in bulk of multiple types from one or more studies via curl'
+          key :operationId, 'search_bulk_download_path'
+          parameter do
+            key :name, :auth_code
+            key :type, :integer
+            key :in, :query
+            key :description, 'User-specific one-time authorization code'
+            key :required, true
+          end
+          parameter do
+            key :name, :accessions
+            key :type, :string
+            key :in, :query
+            key :description, 'Comma-delimited list of Study accessions'
+            key :required, true
+          end
+          parameter do
+            key :name, :file_types
+            key :in, :query
+            key :description, 'Comma-delimited list of file types'
+            key :required, false
+            key :type, :array
+            items do
+              key :type, :string
+              key :enum, StudyFile::BULK_DOWNLOAD_TYPES
+            end
+            key :collectionFormat, :csv
+          end
+          response 200 do
+            key :description, 'Curl configuration file with signed URLs for requested data'
+            key :type, :string
+          end
+          response 400 do
+            key :description, 'Invalid study accessions or requested file types'
+          end
+          response 401 do
+            key :description, 'User not signed in'
+          end
+          response 403 do
+            key :description, 'Invalid auth token, or requested download exceeds user download quota'
+            schema do
+              key :title, 'Error'
+              property :message do
+                key :type, :string
+                key :description, 'Error message'
+              end
+            end
+          end
+          response 406 do
+            key :description, 'Accept or Content-Type headers missing or misconfigured'
+          end
+        end
+      end
+
+      def bulk_download
+        totat = params[:auth_code]
+        valid_totat = User.verify_totat(totat)
+        accessions = params[:accessions].split(',').map(&:strip)
+        if params[:file_types].present?
+          file_types = params[:file_types].split(',').map(&:strip)
+        else
+          file_types = []
+        end
+
+        # sanitize study accessions and file types
+        sanitized_accessions = StudyAccession.sanitize_accessions(accessions)
+        valid_accessions = Study.where(:accession.in => sanitized_accessions).map(&:accession)
+        sanitized_file_types = StudyFile::BULK_DOWNLOAD_TYPES & file_types # find array intersection
+
+        # validate request parameters
+        if totat.blank? || valid_totat == false
+          render json: {error: 'Invalid authorization token'}, status: 403 and return
+        elsif valid_accessions.blank?
+          render json: {error: 'Invalid request parameters; study accessions not found'}, status: 400 and return
+        end
+
+        # load the user from the auth token
+        requested_user = valid_totat
+
+        # get requested files
+        # reference BulkDownloadService as ::BulkDownloadService to avoid NameError when resolving reference
+        files_requested = ::BulkDownloadService.get_requested_files(file_types: sanitized_file_types,
+                                                                    study_accessions: sanitized_accessions)
+
+        # determine quota impact & update user's download quota
+        # will throw a RuntimeError if the download exceeds the user's daily quota
+        begin
+          ::BulkDownloadService.update_user_download_quota(user: requested_user, files: files_requested)
+        rescue RuntimeError => e
+          render json: {error: e.message}, status: 403 and return
+        end
+
+        # generate curl config file
+        logger.info "Beginning creation of curl configuration for user_id, auth token: #{requested_user.id}, #{totat}"
+        start_time = Time.zone.now
+        @configuration = ::BulkDownloadService.generate_curl_configuration(study_files: files_requested, user: requested_user)
+        end_time = Time.zone.now
+        runtime = TimeDifference.between(start_time, end_time).humanize
+        logger.info "Curl configs generated for studies #{sanitized_accessions}, #{files_requested.size} total files"
+        logger.info "Total time in generating curl configuration: #{runtime}"
+        send_data @configuration, type: 'text/plain', filename: 'cfg.txt'
       end
 
       private

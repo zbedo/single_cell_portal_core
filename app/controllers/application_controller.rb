@@ -58,13 +58,7 @@ class ApplicationController < ActionController::Base
 
   # retrieve the current download quota
   def get_download_quota
-    config_entry = AdminConfiguration.find_by(config_type: 'Daily User Download Quota')
-    if config_entry.nil? || config_entry.value_type != 'Numeric'
-      # fallback in case entry cannot be found or is set to wrong type
-      @download_quota = 2.terabytes
-    else
-      @download_quota = config_entry.convert_value_by_type
-    end
+    self.class.get_download_quota
   end
 
   #see if deployment has been scheduled
@@ -154,6 +148,17 @@ class ApplicationController < ActionController::Base
   def set_csrf_headers
     if request.xhr?
       cookies['XSRF-TOKEN'] = form_authenticity_token if cookies['XSRF-TOKEN'].blank?
+    end
+  end
+
+  # protected method to allow access from other controllers
+  def self.get_download_quota
+    config_entry = AdminConfiguration.find_by(config_type: 'Daily User Download Quota')
+    if config_entry.nil? || config_entry.value_type != 'Numeric'
+      # fallback in case entry cannot be found or is set to wrong type
+      @download_quota = 2.terabytes
+    else
+      @download_quota = config_entry.convert_value_by_type
     end
   end
 end
