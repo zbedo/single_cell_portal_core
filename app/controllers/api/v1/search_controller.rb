@@ -241,7 +241,7 @@ module Api
       def create_auth_code
         half_hour = 1800 # seconds
         otac_and_ti = current_api_user.create_totat(half_hour)
-        auth_code_response = {auth_code: otac_and_ti[:totat], time_interval: otac_and_ti[:ti]}
+        auth_code_response = {auth_code: otac_and_ti[:totat], time_interval: otac_and_ti[:time_interval]}
         render json: auth_code_response
       end
 
@@ -317,67 +317,40 @@ module Api
 
         # sanitize study accessions and file types
         sanitized_accessions = StudyAccession.sanitize_accessions(accessions)
+        valid_accessions = Study.where(:accession.in => sanitized_accessions).map(&:accession)
         sanitized_file_types = StudyFile::BULK_DOWNLOAD_TYPES & file_types # find array intersection
 
         # validate request parameters
         if totat.blank? || valid_totat == false
           render json: {error: 'Invalid authorization token'}, status: 403 and return
-        elsif sanitized_accessions.blank?
+        elsif valid_accessions.blank?
           render json: {error: 'Invalid request parameters; study accessions not found'}, status: 400 and return
         end
 
         # load the user from the auth token
         requested_user = valid_totat
 
-        # replace 'Expression' with both dense & sparse matrix file types
-        if sanitized_file_types.include?('Expression')
-          sanitized_file_types.delete_if {|file_type| file_type == 'Expression'}
-          sanitized_file_types += ['Expression Matrix', 'MM Coordinate Matrix']
-        end
-
         # get requested files
-        studies = Study.where(:accession.in => sanitized_accessions)
-        if sanitized_file_types.present?
-          files_requested = studies.map {
-              |study| study.study_files.by_type(sanitized_file_types)
-          }.flatten
-        else
-          files_requested = studies.map(&:study_files).flatten
+        # reference BulkDownloadService as ::BulkDownloadService to avoid NameError when resolving reference
+        files_requested = ::BulkDownloadService.get_requested_files(file_types: sanitized_file_types,
+                                                                    study_accessions: sanitized_accessions)
+
+        # determine quota impact & update user's download quota
+        # will throw a RuntimeError if the download exceeds the user's daily quota
+        begin
+          ::BulkDownloadService.update_user_download_quota(user: requested_user, files: files_requested)
+        rescue RuntimeError => e
+          render json: {error: e.message}, status: 403 and return
         end
 
-        # determine quota impact
-        download_quota = ApplicationController.get_download_quota
-        bytes_requested = files_requested.map(&:upload_file_size).reduce(:+)
-        user_bytes_allowed = requested_user.daily_download_quota + bytes_requested
-        if user_bytes_allowed > download_quota
-          render json: {error: 'Requested total file size exceeds user download quota'}, status: 403 and return
-        end
-
+        # generate curl config file
         logger.info "Beginning creation of curl configuration for user_id, auth token: #{requested_user.id}, #{totat}"
-        curl_configs = ['--create-dirs', '--compressed']
         start_time = Time.zone.now
-
-        # Get signed URLs for all files in the requested download objects, and update user quota
-        Parallel.map(files_requested, in_threads: 100) do |study_file|
-          client = FireCloudClient.new
-          curl_configs << self.class.get_curl_config(file: study_file, fc_client: client)
-          # send along any bundled files along with the parent
-          if study_file.is_bundle_parent?
-            study_file.bundled_files.each do |bundled_file|
-              curl_configs << self.class.get_curl_config(file: bundled_file, fc_client: client)
-            end
-          end
-        end
-        requested_user.update(daily_download_quota: bytes_requested)
-
-        # log results
+        @configuration = ::BulkDownloadService.generate_curl_configuration(study_files: files_requested, user: requested_user)
         end_time = Time.zone.now
         runtime = TimeDifference.between(start_time, end_time).humanize
         logger.info "Curl configs generated for studies #{sanitized_accessions}, #{files_requested.size} total files"
         logger.info "Total time in generating curl configuration: #{runtime}"
-
-        # send configuration file
-        @configuration = curl_configs.join("\n\n")
         send_data @configuration, type: 'text/plain', filename: 'cfg.txt'
       end
 
@@ -490,35 +463,6 @@ module Api
           matches[accession][:facet_search_weight] = search_weight
         end
         matches
-      end
-
-      # Helper method for generating a curl command to download a file from a bucket.  Returns file's curl config, size.
-      def self.get_curl_config(file:, fc_client: )
-
-        fc_client ||= Study.firecloud_client
-        # if a file is a StudyFile, use bucket_location, otherwise the :name key will contain its location (if DirectoryListing)
-        file_location = file.bucket_location
-        study = file.study
-        output_path = file.bulk_download_pathname
-
-        begin
-          signed_url = fc_client.execute_gcloud_method(:generate_signed_url, 0, study.bucket_id, file_location,
-                                                       expires: 1.day.to_i) # 1 day in seconds, 86400
-          curl_config = [
-              'url="' + signed_url + '"',
-              'output="' + output_path + '"'
-          ]
-        rescue => e
-          error_context = ErrorTracker.format_extra_context(study, file)
-          ErrorTracker.report_exception(e, current_user, error_context)
-          logger.error "Error generating signed url for #{output_path}; #{e.message}"
-          curl_config = [
-              '# Error downloading ' + output_path + '.  ' +
-                  'Did you delete the file in the bucket and not sync it in Single Cell Portal?'
-          ]
-        end
-
-        curl_config.join("\n")
       end
     end
   end

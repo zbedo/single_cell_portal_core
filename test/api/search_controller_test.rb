@@ -87,8 +87,8 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
 
     execute_http_request(:post, api_v1_create_auth_code_path)
     assert_response :success
-    assert_not_nil json['totat'], "Did not generate auth code; missing 'totat' field: #{json}"
-    auth_code = json['totat']
+    assert_not_nil json['auth_code'], "Did not generate auth code; missing 'totat' field: #{json}"
+    auth_code = json['auth_code']
     @user.reload
     assert_equal auth_code, @user.totat
 
@@ -103,7 +103,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     file_types = %w(Expression Metadata).join(',')
     execute_http_request(:post, api_v1_create_auth_code_path)
     assert_response :success
-    auth_code = json['totat']
+    auth_code = json['auth_code']
 
     files = study.study_files.by_type(['Expression Matrix', 'Metadata'])
     execute_http_request(:get, api_v1_search_bulk_download_path(
