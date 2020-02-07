@@ -41,6 +41,9 @@ const results = [
 ];
 
 class ResultsPanel extends React.Component{
+  // This component will need the results prop refined:
+  // This is how to structure this component without passing the results
+  // prop serveral levels down :https://reactjs.org/docs/context.html#before-you-use-context
   constructor(props){
     super(props);
     this.state = {
@@ -50,15 +53,6 @@ class ResultsPanel extends React.Component{
     this.handleStudyLabel = this.handleStudyLabel.bind(this);
     };
 
-    handleStudyLabel(studyURL){
-      // This eventually will be an API call that will render the associated
-      // Study page 
-      alert({studyURL})  
-    }
-    
-    showResults(){
-      // Function to hande future pagination
-    }
     render(){
       
       return(
@@ -76,8 +70,6 @@ class ResultsPanel extends React.Component{
   }
 
 const StudyResults = (props) => {
-  // This component may have state/props where onMount a API call is made
-  // to get the initial results on the home page.
   return(
     <Tab.Content>
        { props.results.length &&
@@ -95,15 +87,13 @@ const StudyResults = (props) => {
 
 }
 StudyResults.defaultProps = {
-  // This may move up to the homepage as a property that's passed into the 
+  // This may move up to the homepage as a property/state that's passed into the 
   // ResultsPanel component as the property results
   results: results
 
 }
 
 const Study =(props)=>{
-   //There needs to be a handler for when a study is clicked it takes
-  // a user to the corresponding study page
     return(
           <div key={props.study.acession}>
             <label for={props.study.name}>

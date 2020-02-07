@@ -34,6 +34,11 @@ document.addEventListener('DOMContentLoaded', () => {
       <ScpSearchStudies />, document.getElementById('scp-search-studies-root-element'),
     )
   }
+  if (document.getElementById('scp-search-results-root-element')) {
+    ReactDOM.render(
+      <ResultsPanel />, document.getElementById('scp-search-results-root-element'),
+    )
+  }
 });
 
 // SCP expects these variables to be global.
