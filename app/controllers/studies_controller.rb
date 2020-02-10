@@ -419,7 +419,7 @@ class StudiesController < ApplicationController
 
       # revoke all study_shares
       @study.study_shares.delete_all
-      update_message = "Study '#{name}'was successfully destroyed. All #{params[:workspace].nil? ? 'workspace data & ' : nil}parsed database records have been destroyed."
+      update_message = "Study '#{name}'was successfully deleted. All #{params[:workspace].blank? ? 'workspace data & ' : nil}parsed database records have been removed as well."
 
       respond_to do |format|
         format.html { redirect_to merge_default_redirect_params(studies_path, scpbr: params[:scpbr]), notice: update_message }
