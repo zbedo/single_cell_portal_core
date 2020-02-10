@@ -9,13 +9,19 @@ import camelcaseKeys from 'camelcase-keys';
 
 const defaultBasePath = '/single_cell/api/v1';
 
-// Returns mock data for all API responses.  Only for dev.
+// If true, returns mock data for all API responses.  Only for dev.
 const globalMock = false;
 
 // API endpoints that use HTTP methods other than the SCP API default
 const otherMethods = {
   '/search/auth_code': 'POST'
 };
+
+const otherHeaders = {
+  '/search/auth_code': {
+    'Authorization': 'Bearer ' + window.userAccessToken
+  }
+}
 
 /**
  * Get a one-time authorization code for download, and its lifetime in seconds
@@ -46,17 +52,22 @@ export async function fetchAuthCode(mock=false) {
  */
 export default async function scpApi(path, mock=false) {
   
+  if (globalMock) mock = true;
   const basePath = (mock || globalMock) ? '/mock_data' : defaultBasePath;
   const method = (!mock && path in otherMethods) ? otherMethods[path] : 'GET';
-  path = basePath + path;
-  if (mock) path += '.json'; // e.g. /mock_data/search/auth_code.json
+  let fullPath = basePath + path;
+  if (mock) fullPath += '.json'; // e.g. /mock_data/search/auth_code.json
 
-  const response = await fetch(path, {
+  const baseHeaders = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  }
+  const headers = (!mock && path in otherHeaders) ? otherHeaders[path] : {};
+  const allHeaders = Object.assign(baseHeaders, headers);
+
+  const response = await fetch(fullPath, {
     method: method,
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    }
+    headers: allHeaders
   });
   const json = await response.json();
   

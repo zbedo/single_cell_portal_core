@@ -4,13 +4,10 @@ import { faDownload } from '@fortawesome/free-solid-svg-icons';
 import Modal from 'react-bootstrap/lib/Modal';
 import { fetchAuthCode } from './../lib/scp-api';
 
-// TODO: Remove this once API endpoint is integrated
-import {authCodeResponseMock} from './FacetsMockData';
-
 async function fetchDownloadConfig() {
   const searchQuery = '&file_types=metadata,expression&accessions=SCP1,SCP2';
 
-  const {authCode, timeInterval} = await fetchAuthCode(true);
+  const {authCode, timeInterval} = await fetchAuthCode();
 
   // Gets a curl configuration ("cfg.txt") containing signed
   // URLs and output names for all files in the download object.

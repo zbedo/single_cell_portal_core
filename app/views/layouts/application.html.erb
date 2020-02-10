@@ -18,6 +18,9 @@
           localStorage.removeItem('previous-search-url');
           window.location = searchUrl;
       }
+
+      window.userAccessToken = '<%= get_user_access_token(current_user) %>';
+
   </script>
 
   <script type="text/javascript"  nonce="<%= content_security_policy_script_nonce %>">
