@@ -86,7 +86,7 @@
         var study = $(this).parent().parent().find('.study-name').text();
         var keepWorkspace = $(this).data('workspace');
         var deleteMessage = 'Are you sure you want to delete \"' + study + '\"?' +
-        ' This will remove all associated database records for your study,';
+        ' This will remove all associated portal records for your study,';
         if (keepWorkspace === 'persist') {
             deleteMessage += ' but will keep the associated Terra workspace in place.';
         } else {
