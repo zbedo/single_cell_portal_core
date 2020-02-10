@@ -54,7 +54,8 @@ export default async function scpApi(path, mock=false) {
   const response = await fetch(path, {
     method: method,
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
     }
   });
   const json = await response.json();

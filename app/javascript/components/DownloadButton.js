@@ -10,8 +10,7 @@ import {authCodeResponseMock} from './FacetsMockData';
 async function fetchDownloadConfig() {
   const searchQuery = '&file_types=metadata,expression&accessions=SCP1,SCP2';
 
-  const foo = await fetchAuthCode(true);
-  const {authCode, timeInterval} = foo;//await fetchAuthCode(mock=true);
+  const {authCode, timeInterval} = await fetchAuthCode(true);
 
   // Gets a curl configuration ("cfg.txt") containing signed
   // URLs and output names for all files in the download object.
