@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDownload } from '@fortawesome/free-solid-svg-icons';
 import Modal from 'react-bootstrap/lib/Modal';
+import { fetchAuthCode } from './../lib/scp-api';
 
 // TODO: Remove this once API endpoint is integrated
 import {authCodeResponseMock} from './FacetsMockData';
 
-function fetchDownloadConfig() {
+async function fetchDownloadConfig() {
   const searchQuery = '&file_types=metadata,expression&accessions=SCP1,SCP2';
-  const authCode = authCodeResponseMock.auth_code; // Auth code is a one-time authorization token (OTAC)
 
-  const timeInterval = authCodeResponseMock.time_interval;
+  const foo = await fetchAuthCode(true);
+  const {authCode, timeInterval} = foo;//await fetchAuthCode(mock=true);
 
   // Gets a curl configuration ("cfg.txt") containing signed
   // URLs and output names for all files in the download object.
@@ -29,37 +30,45 @@ function fetchDownloadConfig() {
     'curl -K cfg.txt; rm cfg.txt'
   );
 
-  return [authCode, timeInterval, downloadCommand];
+  return {
+    authCode: authCode,
+    timeInterval: timeInterval,
+    downloadCommand: downloadCommand
+  };
 }
 
 function DownloadCommandContainer() {
-  
-  const [authCode, timeInterval, downloadCommand] = fetchDownloadConfig();
 
-  const expiresMinutes = Math.floor(timeInterval / 60); // seconds -> minutes
+  const [downloadConfig, setDownloadConfig] = useState({});
 
-  const commandID = 'command-' + authCode;
+  useEffect(() => {
+    const fetchData = async () => {
+      const dlConfig = await fetchDownloadConfig();
+      setDownloadConfig(dlConfig);
+    };
+    fetchData();
+  }, []);
 
   return (
     <div>
       <div class="input-group">
         <input
-          id={commandID}
+          id={'command-' + downloadConfig.authCode}
           class="form-control curl-download-command"
-          value={downloadCommand}
+          value={downloadConfig.downloadCommand}
           readOnly
         />
         <span class="input-group-btn"> +
           <button 
-            id={'copy-button-' + authCode}
+            id={'copy-button-' + downloadConfig.authCode}
             class="btn btn-default btn-copy" 
-            data-clipboard-target={'#' + commandID}
+            data-clipboard-target={'#command-' + downloadConfig.authCode}
             data-toggle="tooltip"
             title="Copy to clipboard">
             <i class="far fa-copy"></i>
           </button>
           <button 
-            id={'refresh-button-' + authCode}
+            id={'refresh-button-' + downloadConfig.authCode}
             class="btn btn-default btn-refresh glyphicon glyphicon-refresh"
             data-toggle="tooltip"
             title="Refresh download command">
@@ -68,8 +77,8 @@ function DownloadCommandContainer() {
         </div>
       <div style={{fontSize: '12px'}}>
         Valid for one use within {' '}
-        <span class="countdown" id={'countdown-' + authCode}>
-          {expiresMinutes}
+        <span class="countdown" id={'countdown-' + downloadConfig.authCode}>
+          {Math.floor(downloadConfig.timeInterval / 60)} {/* seconds -> minutes */}
         </span>{' '}
         minutes.  If your command has expired, click refresh button at right in this box.
       </div>

@@ -57,7 +57,7 @@ module Api
           key :name, 'Taxons'
           key :description, 'List of available species, genome assemblies & annotations'
         end
-        key :host, "#{ENV['HOSTNAME']}"
+        key :host, "#{ENV['HOSTNAME']}#{ENV['NOT_DOCKERIZED'] ? ':3000' : nil}"
         key :basePath, '/single_cell/api/v1'
         key :consumes, ['application/json']
         key :produces, ['application/json']
