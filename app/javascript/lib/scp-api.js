@@ -9,9 +9,6 @@ import camelcaseKeys from 'camelcase-keys';
 
 const defaultBasePath = '/single_cell/api/v1';
 
-// If true, returns mock data for all API responses.  Only for dev.
-const globalMock = false;
-
 // API endpoints that use HTTP methods other than the SCP API default
 const otherMethods = {
   '/search/auth_code': 'POST'
@@ -56,6 +53,35 @@ export async function fetchFacets(mock=false) {
   return await scpApi('/search/facets', mock);
 }
 
+// If true, returns mock data for all API responses.  Only for dev.
+let globalMock = false;
+
+/**
+ * Sets flag on whether to use mock data for all API responses.
+ *
+ * This method is useful for tests and certain development scenarios,
+ * e.g. when evolving a new API or to work around occasional API blockers.
+ *
+ * @param {Boolean} flag Whether to use mock data for all API responses
+ */
+export function setGlobalMockFlag(flag) {
+  globalMock = flag;
+}
+
+// Modifiable in setMockOrigin, used in unit tests
+let mockOrigin = '';
+
+/**
+ * Sets origin (e.g. http://localhost:3000) for mocked SCP API URLs
+ *
+ * This enables mock data to be used from Jest tests
+ *
+ * @param {Boolean} origin Origin (e.g. http://localhost:3000) for mocked SCP API URLs
+ */
+export function setMockOrigin(origin) {
+  mockOrigin = origin;
+}
+
 /**
  * Returns a list of matching filters for a given facet
  * 
@@ -72,8 +98,9 @@ export async function fetchFacets(mock=false) {
  * @returns {Promise} Promise object containing camel-cased data from API
  */
 export async function fetchFacetsFilters(facet, query, mock=false) {
-  const queryString = (!mock) ? `?facet=${facet}&query=${query}` : `_${facet}_${query}`;
   
+  const queryString = (!(mock || globalMock)) ? `?facet=${facet}&query=${query}` : `_${facet}_${query}`;
+
   return await scpApi(`/search/facets_filters${queryString}`, mock);
 }
 
@@ -84,9 +111,9 @@ export async function fetchFacetsFilters(facet, query, mock=false) {
  * @param {Boolean} mock | Whether to use mock data.  Helps development, tests.
  */
 export default async function scpApi(path, mock=false) {
-  
+  console.log('in scpApi, path: ', path)
   if (globalMock) mock = true;
-  const basePath = (mock || globalMock) ? '/mock_data' : defaultBasePath;
+  const basePath = (mock || globalMock) ? mockOrigin + '/mock_data' : defaultBasePath;
   const method = (!mock && path in otherMethods) ? otherMethods[path] : 'GET';
   let fullPath = basePath + path;
   if (mock) fullPath += '.json'; // e.g. /mock_data/search/auth_code.json
@@ -104,6 +131,7 @@ export default async function scpApi(path, mock=false) {
   });
   const json = await response.json();
   
+  console.log('json', json)
   // Converts API's snake_case to JS-preferrable camelCase,
   // for easy destructuring assignment.
   return camelcaseKeys(json);

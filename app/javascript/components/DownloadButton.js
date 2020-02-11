@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDownload } from '@fortawesome/free-solid-svg-icons';
 import Modal from 'react-bootstrap/lib/Modal';
+import Clipboard from 'react-clipboard.js';
+
 import { fetchAuthCode } from './../lib/scp-api';
 
 async function fetchDownloadConfig() {
@@ -42,6 +44,10 @@ function DownloadCommandContainer() {
     fetchData();
   }, []);
 
+  function onSuccess() {
+    console.log('TODO: Show "Copied!" tooltip');
+  }
+
   return (
     <div>
       <div className='input-group'>
@@ -51,15 +57,16 @@ function DownloadCommandContainer() {
           value={downloadConfig.downloadCommand}
           readOnly
         />
-        <span className='input-group-btn'> +
-          <button 
-            id={'copy-button-' + downloadConfig.authCode}
-            className='btn btn-default btn-copy'
-            data-clipboard-target={'#command-' + downloadConfig.authCode}
-            data-toggle='tooltip'
-            title='Copy to clipboard'>
-            <i className='far fa-copy'></i>
-          </button>
+        <span className='input-group-btn'>
+            <Clipboard
+              data-clipboard-target={'#command-' + downloadConfig.authCode}
+              onSuccess={onSuccess}
+              className='btn btn-default btn-copy'
+              data-toggle='tooltip'
+              button-title='Copy to clipboard'
+            >
+              <i className='far fa-copy'></i>
+            </Clipboard>
           <button 
             id={'refresh-button-' + downloadConfig.authCode}
             className='btn btn-default btn-refresh glyphicon glyphicon-refresh'
@@ -95,9 +102,6 @@ export default function DownloadButton(props) {
   }
 
   const handleClose = () => setShow(false);
-
-  // Defined in app/assets/javascripts/react_rails/bulkDownloadClipboard.js
-  window.SCP.initBulkDownloadClipboard();
 
   return (
       <>
