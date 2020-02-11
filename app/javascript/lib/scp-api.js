@@ -10,7 +10,7 @@ import camelcaseKeys from 'camelcase-keys';
 const defaultBasePath = '/single_cell/api/v1';
 
 // If true, returns mock data for all API responses.  Only for dev.
-const globalMock = false;
+const globalMock = true;
 
 // API endpoints that use HTTP methods other than the SCP API default
 const otherMethods = {
@@ -42,6 +42,39 @@ const otherHeaders = {
  */
 export async function fetchAuthCode(mock=false) {
   return await scpApi('/search/auth_code', mock);
+}
+
+/**
+ * Returns a list of all available search facets, including default filter values
+ * 
+ * Docs: https:///singlecell.broadinstitute.org/single_cell/api/swagger_docs/v1#!/Search/search_facets_path
+ * 
+ * @param {Boolean} mock Whether to use mock data.  Helps development, tests.
+ * @returns {Promise} Promise object containing camel-cased data from API
+ */
+export async function fetchFacets(mock=false) {
+  return await scpApi('/search/facets', mock);
+}
+
+/**
+ * Returns a list of matching filters for a given facet
+ * 
+ * Docs: https:///singlecell.broadinstitute.org/single_cell/api/swagger_docs/v1#!/Search/search_facet_filters_path
+ * 
+ * @example
+ * // returns Promise for mock JSON in /mock_data/facets_filters_disease_tuberculosis.json
+ * fetchFacetsFilters('disease', 'tuberculosis', true);
+ * // returns Promise for live JSON as shown example from "Docs" link above (but camel-cased)
+ * fetchFacetsFilters('disease', 'tuberculosis');
+ * @param {String} facet Identifier of facet
+ * @param {String} query User-supplied query string
+ * @param {Boolean} mock Whether to use mock data.  Helps development, tests.
+ * @returns {Promise} Promise object containing camel-cased data from API
+ */
+export async function fetchFacetsFilters(facet, query, mock=false) {
+  const queryString = (!mock) ? `?facet=${facet}&query=${query}` : `_${facet}_${query}`;
+  
+  return await scpApi(`/search/facets_filters${queryString}`, mock);
 }
 
 /**

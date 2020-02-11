@@ -1,0 +1,16 @@
+{
+  "facet": "disease",
+  "query": "tuberculosis",
+  "filters": [
+    {"name": "Tubercolosis", "id": "DOID0000123"},
+    {"name": "Ocular tubercolosis", "id": "DOID0000124"},
+    {"name": "Tuberculosis, spinal", "id": "DOID0000125"},
+    {"name": "Endocrine tuberculosis", "id": "DOID0000126"},
+    {"name": "Inactive tuberculosis", "id": "DOID0000127"},
+    {"name": "Tubercolosis, bovine", "id": "DOID0000128"},
+    {"name": "Tuberculosis, avian", "id": "DOID0000129"},
+    {"name": "Esophageal tubercolosis", "id": "DOID0000130"},
+    {"name": "Intestinal tuberculosis", "id": "DOID0000131"},
+    {"name": "Abdominal tuberculosis", "id": "DOID0000132"}
+  ]
+}

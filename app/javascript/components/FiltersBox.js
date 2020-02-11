@@ -68,7 +68,7 @@ export default function FiltersBox(props) {
 
   return (
     <div className={componentName} id={filtersBoxID} style={{display: props.show ? '' : 'none'}}>
-      <FiltersSearchBar filtersBoxID={filtersBoxID} />
+      <FiltersSearchBar filtersBoxID={filtersBoxID} facetID={props.facet.id} />
       <p className='filters-box-header'>
         <span className='default-filters-list-name'>FREQUENTLY SEARCHED</span>
         <span className='facet-ontology-links'>
