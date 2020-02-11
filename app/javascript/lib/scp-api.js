@@ -10,7 +10,7 @@ import camelcaseKeys from 'camelcase-keys';
 const defaultBasePath = '/single_cell/api/v1';
 
 // If true, returns mock data for all API responses.  Only for dev.
-const globalMock = true;
+const globalMock = false;
 
 // API endpoints that use HTTP methods other than the SCP API default
 const otherMethods = {
