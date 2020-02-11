@@ -25,7 +25,7 @@ export default function FiltersSearchBar(props) {
   // For example, among the many filters in the "Disease" facet, search
   // for filters matching the term "tuberculosis".
   async function searchFilters(terms) {
-    const apiData = await fetchFacetsFilters(props.facetID, terms, true);
+    const apiData = await fetchFacetsFilters(props.facetID, terms);
     const matchingFilters = apiData.filters;
     setMatchingFilters(matchingFilters);
   }
