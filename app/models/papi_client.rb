@@ -45,7 +45,6 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
     }
 
     if SERVICE_ACCOUNT_KEY.present?
-
       credentials.merge!({json_key_io: File.open(service_account_credentials)})
     end
 

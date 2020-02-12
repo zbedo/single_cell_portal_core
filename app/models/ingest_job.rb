@@ -76,7 +76,6 @@ class IngestJob
       end
       if !is_pushed
         # push has failed 3 times, so exit and report error
-        byebug
         log_message = "Unable to push #{file_identifier} to #{self.study.bucket_id}"
         Rails.logger.error log_message
         raise RuntimeError.new(log_message)
