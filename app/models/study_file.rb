@@ -33,7 +33,7 @@ class StudyFile
   ASSEMBLY_REQUIRED_TYPES = ['BAM', 'Ideogram Annotations']
   GZIP_MAGIC_NUMBER = "\x1f\x8b".force_encoding(Encoding::ASCII_8BIT)
   REQUIRED_ATTRIBUTES = %w(file_type name)
-  BULK_DOWNLOAD_TYPES = ['Expression', 'Metadata', 'Cluster', 'Coordinate Labels','Fastq', 'BAM', 'Documentation',
+  BULK_DOWNLOAD_TYPES = ['Expression', 'Metadata', 'Cluster', 'Coordinate Labels', 'Fastq', 'BAM', 'Documentation',
                          'Other', 'Analysis Output', 'Ideogram Annotations']
 
   # Constants for scoping values for AnalysisParameter inputs/outputs
