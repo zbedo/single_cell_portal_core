@@ -8,9 +8,9 @@
       {"name": "PATO Ontology", "url": "https://pato.tdb"}
     ],
     "filters": [
-      {"name": "Tubercolosis", "id": "DOID0000123"},
-      {"name": "Ocular tubercolosis", "id": "DOID0000124"},
-      {"name": "Tuberculosis, spinal", "id": "DOID0000125"}
+      {"name": "HIV", "id": "DOID0000123"},
+      {"name": "Tuberculosis", "id": "DOID0000124"},
+      {"name": "Healthy", "id": "DOID0000125"}
     ]
   },
   {

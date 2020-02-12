@@ -28,6 +28,18 @@
     cursor: pointer;
   }
 
+  .filters-search-bar {
+    margin: 4px 2px 10px 2px;
+  }
+
+  .clear-filters {
+    color: #4d72aa;
+    margin-left: 10px;
+    position: relative;
+    top: 8px;
+    cursor: pointer;
+  }
+
   .facet.active > span,
   #more-facets-button.active > span,
   #download-button.active > span {
@@ -59,7 +71,6 @@
     background: #fff;
     position: absolute;
     z-index: 9000;
-    height: 225px;
   }
 
   label {
@@ -67,7 +78,7 @@
     font-weight: normal;
   }
 
-  .facet-save-button {
+  .facet-apply-button {
     float: right;
     margin: 0 10px 10px 0;
   }

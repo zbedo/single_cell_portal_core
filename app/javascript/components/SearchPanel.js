@@ -22,7 +22,7 @@ export default function SearchPanel() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const facets = await fetchFacets(true);
+      const facets = await fetchFacets(true); // TODO: Remove 'true' when metadata seeding is ready
       const df = facets.filter(facet => defaultFacetIDs.includes(facet.id));
       const mf = facets.filter(facet => moreFacetIDs.includes(facet.id));
       setDefaultFacets(df);

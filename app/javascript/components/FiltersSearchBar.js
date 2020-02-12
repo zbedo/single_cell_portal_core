@@ -43,11 +43,11 @@ export default function FiltersSearchBar(props) {
 
   return (
     <div style={{margin: '2px'}}>
-      <Form onSubmit={handleSubmit}>
+      <Form className={componentName} onSubmit={handleSubmit}>
         <FormControl
           id={filtersSearchBarID}
-          className={componentName}
           type="text"
+          autoComplete='false'
           placeholder="Search"
         />
         <Button className='search-button' onClick={handleSearchButtonClick}>

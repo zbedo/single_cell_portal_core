@@ -6,44 +6,60 @@ import isEqual from 'lodash/isEqual';
 
 import FiltersSearchBar from './FiltersSearchBar';
 
+/**
+ * Component that can be clicked to unselect filters
+ */
+function ClearFilters(props) {
+  return (
+    <span
+      id={`clear-filters-${props.facetID}`}
+      className='clear-filters'
+      style={{display: props.show ? '' : 'none'}}
+      onClick={props.onClick}
+    >
+      CLEAR
+    </span>
+  );
+}
 
 /**
  * Component for filter search and filter lists, and related functionality
  */
 export default function FiltersBox(props) {
-  const [canSave, setCanSave] = useState(false);
-  const [savedSelection, setSavedSelection] = useState([]);
+  const [canApply, setCanApply] = useState(false);
+  const [showClear, setShowClear] = useState(false);
+  const [appliedSelection, setAppliedSelection] = useState([]);
   const [selection, setSelection] = useState([]);
 
   useEffect(() => {
-    setCanSave(!isEqual(selection, savedSelection));
+    setCanApply(!isEqual(selection, appliedSelection));
   }, [selection]);
 
   useEffect(() => {
-    setCanSave(false);
-  }, [savedSelection]);
+    setCanApply(false);
+  }, [appliedSelection]);
 
   // TODO: Get opinions, perhaps move to a UI code style guide.
   //
   // Systematic, predictable IDs help UX research and UI development.
   //
   // Form of IDs: <general name> <specific name(s)>
-  // General name: All lowercase, specified in app code (e.g. 'save-facet', 'filter')
+  // General name: All lowercase, specified in app code (e.g. 'apply-facet', 'filter')
   // Specific name(s): Cased as specified in API (e.g. 'species', 'NCBItaxon9606')
   //
   // UI code concatenates names in the ID.  Names in ID are hyphen-delimited.
   //
   // Examples:
-  //   * save-facet-species (for calls-to-action use ID: <action> <component>)
+  //   * apply-facet-species (for calls-to-action use ID: <action> <component>)
   //   * filter-species-NCBItaxon9606
   const facetName = props.facet.name;
   const componentName = 'filters-box';
   const filtersBoxID = `${componentName}-${props.facet.id}`;
-  const saveID = `save-${filtersBoxID}`;
+  const applyID = `apply-${filtersBoxID}`;
 
   /**
    * Returns IDs of selected filters.
-   * Enables comparing current vs. saved filters to enable/disable SAVE button
+   * Enables comparing current vs. applied filters to enable/disable APPLY button
    */
   function getCheckedFilterIDs() {
     const checkedSelector = `#${filtersBoxID} input:checked`;
@@ -54,17 +70,29 @@ export default function FiltersBox(props) {
     return checkedFilterIDs
   }
 
-  function handleFilterClick() {
-    setSelection(getCheckedFilterIDs());
+  function updateSelections() {
+    const checkedFilterIDs = getCheckedFilterIDs();
+    setSelection(checkedFilterIDs);
+
+    setShowClear(checkedFilterIDs.length > 0);
   }
 
-  function handleSaveClick(event) {
-    const saveButtonClasses = Array.from(event.target.classList);
-  
-    if (saveButtonClasses.includes('disabled')) return;
-    
-    setSavedSelection(getCheckedFilterIDs());
+  function handleApplyClick(event) {
+    const applyButtonClasses = Array.from(event.target.classList);
+
+    if (applyButtonClasses.includes('disabled')) return;
+
+    setAppliedSelection(getCheckedFilterIDs());
   };
+
+  function clearFilters() {
+    const checkedSelector = `#${filtersBoxID} input:checked`;
+    document.querySelectorAll(checkedSelector).forEach((checkedInput) => {
+      checkedInput.checked = false;
+    });
+
+    updateSelections();
+  }
 
   return (
     <div className={componentName} id={filtersBoxID} style={{display: props.show ? '' : 'none'}}>
@@ -85,7 +113,7 @@ export default function FiltersBox(props) {
       </p>
       <ul>
         {
-          // TODO: Abstract to use Filters component 
+          // TODO: Abstract to use Filters component
           // after passing through function for onClick interaction
           // (SCP-2109)
           props.facet.filters.map((d) => {
@@ -95,7 +123,7 @@ export default function FiltersBox(props) {
                 <input
                   type="checkbox"
                   aria-label="Checkbox"
-                  onClick={handleFilterClick}
+                  onClick={updateSelections}
                   name={id}
                   id={id}
                 />
@@ -105,18 +133,22 @@ export default function FiltersBox(props) {
           })
         }
       </ul>
-      {/* 
+      {/*
       TODO: abstracting this and similar code block in
       FacetsAccordionBox into new component (SCP-2109)
        */}
       <div className='filters-box-footer'>
-        <span>Clear</span>
-        <Button 
-          id={saveID}
+        <ClearFilters
+          show={showClear}
+          facetID={props.facet.id}
+          onClick={clearFilters}
+        />
+        <Button
+          id={applyID}
           bsStyle='primary'
-          className={'facet-save-button ' + (canSave ? 'active' : 'disabled')}
-          onClick={handleSaveClick}>
-          SAVE
+          className={'facet-apply-button ' + (canApply ? 'active' : 'disabled')}
+          onClick={handleApplyClick}>
+          APPLY
         </Button>
       </div>
     </div>

@@ -54,7 +54,7 @@ export async function fetchFacets(mock=false) {
 }
 
 // If true, returns mock data for all API responses.  Only for dev.
-let globalMock = false;
+let globalMock = true;
 
 /**
  * Sets flag on whether to use mock data for all API responses.
