@@ -1,8 +1,8 @@
 /**
  * @fileoverview JavaScript client for Single Cell Portal REST API
- * 
+ *
  * Succinct, well-documented SCP API wrappers, also enabling easy mocks
- * 
+ *
  * API docs: https://singlecell.broadinstitute.org/single_cell/api
  */
 import camelcaseKeys from 'camelcase-keys';
@@ -22,18 +22,18 @@ const otherHeaders = {
 
 /**
  * Get a one-time authorization code for download, and its lifetime in seconds
- * 
+ *
  * TODO:
  * - Update API to use "expires_in" instead of "time_interval", for understandability
- * 
+ *
  * Example return:
  * {
  *  authCode: 12345,
  *  timeInterval: 1800
  * }
- * 
+ *
  * Docs: https:///singlecell.broadinstitute.org/single_cell/api/swagger_docs/v1#!/Search/search_auth_code_path
- * 
+ *
  * @param {Boolean} mock Whether to use mock data.  Helps development, tests.
  * @returns {Promise} Promise object described in "Example return" above
  */
@@ -43,9 +43,9 @@ export async function fetchAuthCode(mock=false) {
 
 /**
  * Returns a list of all available search facets, including default filter values
- * 
+ *
  * Docs: https:///singlecell.broadinstitute.org/single_cell/api/swagger_docs/v1#!/Search/search_facets_path
- * 
+ *
  * @param {Boolean} mock Whether to use mock data.  Helps development, tests.
  * @returns {Promise} Promise object containing camel-cased data from API
  */
@@ -54,7 +54,7 @@ export async function fetchFacets(mock=false) {
 }
 
 // If true, returns mock data for all API responses.  Only for dev.
-let globalMock = true;
+let globalMock = false;
 
 /**
  * Sets flag on whether to use mock data for all API responses.
@@ -84,9 +84,9 @@ export function setMockOrigin(origin) {
 
 /**
  * Returns a list of matching filters for a given facet
- * 
+ *
  * Docs: https:///singlecell.broadinstitute.org/single_cell/api/swagger_docs/v1#!/Search/search_facet_filters_path
- * 
+ *
  * @example
  * // returns Promise for mock JSON in /mock_data/facets_filters_disease_tuberculosis.json
  * fetchFacetsFilters('disease', 'tuberculosis', true);
@@ -98,7 +98,7 @@ export function setMockOrigin(origin) {
  * @returns {Promise} Promise object containing camel-cased data from API
  */
 export async function fetchFacetsFilters(facet, query, mock=false) {
-  
+
   const queryString = (!(mock || globalMock)) ? `?facet=${facet}&query=${query}` : `_${facet}_${query}`;
 
   return await scpApi(`/search/facets_filters${queryString}`, mock);
@@ -106,7 +106,7 @@ export async function fetchFacetsFilters(facet, query, mock=false) {
 
 /**
  * Client for SCP REST API.  Less fetch boilerplate, easier mocks.
- * 
+ *
  * @param {String} path | Relative path for API endpoint, e.g. /search/auth_code
  * @param {Boolean} mock | Whether to use mock data.  Helps development, tests.
  */
@@ -130,7 +130,7 @@ export default async function scpApi(path, mock=false) {
     headers: allHeaders
   });
   const json = await response.json();
-  
+
   console.log('json', json)
   // Converts API's snake_case to JS-preferrable camelCase,
   // for easy destructuring assignment.

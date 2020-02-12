@@ -15,42 +15,19 @@ import { fetchFacetsFilters } from './../lib/scp-api';
  */
 export default function FiltersSearchBar(props) {
 
-  const [matchingFilters, setMatchingFilters] = useState([]);
-
   const componentName = 'filters-search-bar';
   const filtersSearchBarID = `${componentName}-${props.filtersBoxID}`;
 
-  // Search for filters in this facet that match input text terms
-  //
-  // For example, among the many filters in the "Disease" facet, search
-  // for filters matching the term "tuberculosis".
-  async function searchFilters(terms) {
-    const apiData = await fetchFacetsFilters(props.facetID, terms);
-    const matchingFilters = apiData.filters;
-    setMatchingFilters(matchingFilters);
-  }
-
-  async function handleSubmit(event) {
-    event.preventDefault();
-    const terms = event.target.elements[filtersSearchBarID].value;
-    await searchFilters(terms);
-  }
-
-  async function handleSearchButtonClick(event) {
-    const terms = event.parentElement.parentElement.elements[filtersSearchBarID].value;
-    await searchFilters(terms);
-  }
-
   return (
     <div style={{margin: '2px'}}>
-      <Form className={componentName} onSubmit={handleSubmit}>
+      <Form className={componentName} onSubmit={props.handleSubmit}>
         <FormControl
           id={filtersSearchBarID}
           type="text"
           autoComplete='false'
           placeholder="Search"
         />
-        <Button className='search-button' onClick={handleSearchButtonClick}>
+        <Button className='search-button' onClick={props.handleSearchButtonClick}>
           <FontAwesomeIcon icon={faSearch}/>
         </Button>
       </Form>

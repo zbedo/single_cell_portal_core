@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
 import isEqual from 'lodash/isEqual';
 
+import Filters from './Filters';
 import FiltersSearchBar from './FiltersSearchBar';
 
 /**
@@ -30,6 +31,11 @@ export default function FiltersBox(props) {
   const [showClear, setShowClear] = useState(false);
   const [appliedSelection, setAppliedSelection] = useState([]);
   const [selection, setSelection] = useState([]);
+  const [matchingFilters, setMatchingFilters] = useState([]);
+  // const [show, setShow] = useState(props.show);
+
+  // console.log('props.show', props.show)
+  // console.log('show', show)
 
   useEffect(() => {
     setCanApply(!isEqual(selection, appliedSelection));
@@ -83,6 +89,7 @@ export default function FiltersBox(props) {
     if (applyButtonClasses.includes('disabled')) return;
 
     setAppliedSelection(getCheckedFilterIDs());
+    // setShow(false);
   };
 
   function clearFilters() {
@@ -94,9 +101,35 @@ export default function FiltersBox(props) {
     updateSelections();
   }
 
+  // Search for filters in this facet that match input text terms
+  //
+  // For example, among the many filters in the "Disease" facet, search
+  // for filters matching the term "tuberculosis".
+  async function searchFilters(terms) {
+    const apiData = await fetchFacetsFilters(props.facetID, terms);
+    const matchingFilters = apiData.filters;
+    setMatchingFilters(matchingFilters);
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    const terms = event.target.elements[filtersSearchBarID].value;
+    await searchFilters(terms);
+  }
+
+  async function handleSearchButtonClick(event) {
+    const terms = event.parentElement.parentElement.elements[filtersSearchBarID].value;
+    await searchFilters(terms);
+  }
+
   return (
     <div className={componentName} id={filtersBoxID} style={{display: props.show ? '' : 'none'}}>
-      <FiltersSearchBar filtersBoxID={filtersBoxID} facetID={props.facet.id} />
+      <FiltersSearchBar
+        filtersBoxID={filtersBoxID}
+        facetID={props.facet.id}
+        handleSubmit={handleSubmit}
+        handleSearchButtonClick={handleSearchButtonClick}
+      />
       <p className='filters-box-header'>
         <span className='default-filters-list-name'>FREQUENTLY SEARCHED</span>
         <span className='facet-ontology-links'>
@@ -112,26 +145,11 @@ export default function FiltersBox(props) {
         </span>
       </p>
       <ul>
-        {
-          // TODO: Abstract to use Filters component
-          // after passing through function for onClick interaction
-          // (SCP-2109)
-          props.facet.filters.map((d) => {
-            const id = `filter-${facetName}-${d.id}`;
-            return (
-              <li key={'li-' + id}>
-                <input
-                  type="checkbox"
-                  aria-label="Checkbox"
-                  onClick={updateSelections}
-                  name={id}
-                  id={id}
-                />
-                <label htmlFor={id}>{d.name}</label>
-              </li>
-            );
-          })
-        }
+        <Filters
+          facetType='string'
+          filters={props.facet.filters}
+          onClick={updateSelections}
+        />
       </ul>
       {/*
       TODO: abstracting this and similar code block in
