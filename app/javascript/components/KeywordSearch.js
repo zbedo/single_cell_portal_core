@@ -44,7 +44,7 @@ class KeyWordSearch extends React.Component{
         <InputGroup>
           <input 
           type="text" 
-          placeholder="Enter Keyword" 
+          placeholder="Enter keyword" 
           name="searchText"/>
             <Button className="facet-save-button" onClick={this.handleSubmit}>
               <FontAwesomeIcon icon={faSearch} />
