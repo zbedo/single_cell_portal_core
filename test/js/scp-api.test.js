@@ -3,13 +3,8 @@ const fetch = require('node-fetch');
 import {
   fetchAuthCode,
   fetchFacets,
-  fetchFacetsFilters,
-  setGlobalMockFlag,
-  setMockOrigin
+  fetchFacetsFilters
 } from '../../app/javascript/lib/scp-api';
-
-setGlobalMockFlag(true);
-setMockOrigin('http://localhost:3000');
 
 describe('JavaScript client for SCP REST API', () => {
   beforeAll(() => {

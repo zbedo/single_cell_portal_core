@@ -35,7 +35,7 @@ let defaultInit = {
  */
 export async function fetchAuthCode(mock=false) {
   let init = defaultInit;
-  if (mock === false) {
+  if (mock === false && globalMock === false) {
     const customHeaders = Object.assign(defaultInit.headers, {
       'Authorization': 'Bearer ' + window.userAccessToken
     });
@@ -44,7 +44,6 @@ export async function fetchAuthCode(mock=false) {
       headers: customHeaders
     }
   }
-  console.log('init', init)
   return await scpApi('/search/auth_code', init, mock);
 }
 
@@ -109,7 +108,10 @@ export function setMockOrigin(origin) {
  */
 export async function fetchFacetsFilters(facet, query, mock=false) {
 
-  const queryString = (!(mock || globalMock)) ? `?facet=${facet}&query=${query}` : `_${facet}_${query}`;
+  let queryString = `?facet=${facet}&query=${query}`;
+  if (mock || globalMock) {
+    queryString = `_${facet}_${query}`;
+  }
 
   const pathAndQueryString = `/search/facets_filters${queryString}`
 
@@ -133,7 +135,6 @@ export default async function scpApi(path, init, mock=false) {
   const response = await fetch(fullPath, init);
   const json = await response.json();
 
-  console.log('json', json)
   // Converts API's snake_case to JS-preferrable camelCase,
   // for easy destructuring assignment.
   return camelcaseKeys(json);
