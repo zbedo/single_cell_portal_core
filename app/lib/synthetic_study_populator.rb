@@ -1,6 +1,6 @@
 
 # class to populate synthetic studies from files.
-# See db/seed/synthetic_studies for exampels of the file formats
+# See db/seed/synthetic_studies for examples of the file formats
 class SyntheticStudyPopulator
   DEFAULT_SYNTHETIC_STUDY_PATH = Rails.root.join('db', 'seed', 'synthetic_studies')
   # populates all studies defined in db/seed/synthetic_studies
