@@ -76,7 +76,7 @@ class IngestJob
       end
       if !is_pushed
         # push has failed 3 times, so exit and report error
-        log_message = "Unable to push #{file_identifier} to to #{self.study.bucket_id}"
+        log_message = "Unable to push #{file_identifier} to #{self.study.bucket_id}"
         Rails.logger.error log_message
         raise RuntimeError.new(log_message)
       else
@@ -237,7 +237,7 @@ class IngestJob
     when 'Metadata'
       self.study.set_cell_count
       self.set_study_default_options
-      self.launch_subsample_jobs
+      #self.launch_subsample_jobs
       # update search facets if convention data
       if self.study_file.use_metadata_convention
         SearchFacet.delay.update_all_facet_filters
@@ -246,7 +246,7 @@ class IngestJob
       self.study.set_gene_count
     when 'Cluster'
       self.set_study_default_options
-      self.launch_subsample_jobs
+      #self.launch_subsample_jobs
     end
     self.set_study_initialized
   end
