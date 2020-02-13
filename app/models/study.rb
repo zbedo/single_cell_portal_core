@@ -2956,6 +2956,7 @@ class Study
     Rails.logger.info "Removing workspace #{firecloud_project}/#{firecloud_workspace} in #{Rails.env} environment"
     begin
       Study.firecloud_client.delete_workspace(firecloud_project, firecloud_workspace)
+      DeleteQueueJob.new(metadata_file).perform
       destroy
     rescue => e
       Rails.logger.error "Error in removing #{firecloud_project}/#{firecloud_workspace}"

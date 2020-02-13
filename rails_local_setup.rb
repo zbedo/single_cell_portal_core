@@ -43,6 +43,11 @@ secret_data_hash.each do |key, value|
   end
 end
 
+source_file_string += "export DATABASE_NAME=single_cell_portal_development\n"
+source_file_string += "export MONGODB_USERNAME=#{secret_data_hash['MONGODB_ADMIN_USER']}\n"
+source_file_string += "export MONGODB_PASSWORD=#{secret_data_hash['MONGODB_ADMIN_PASSWORD']}\n"
+source_file_string += "export DATABASE_HOST=#{secret_data_hash['MONGO_LOCALHOST']}\n"
+
 puts 'Processing service account info'
 service_account_string = `vault read -format=json #{service_account_path}`
 service_account_hash = JSON.parse(service_account_string)['data']
