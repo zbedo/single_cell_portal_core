@@ -342,7 +342,7 @@ module ApplicationHelper
   def email_as_id(email)
     email.gsub(/[@\.]/, '-')
   end
-  
+
 	# Return an access token for viewing GCS objects client side, depending on study privacy
 	# Context: https://github.com/broadinstitute/single_cell_portal_core/pull/239
   def get_read_access_token(study, user)
@@ -358,7 +358,7 @@ module ApplicationHelper
     if user.present?
       user.valid_access_token[:access_token]
     end
-	end
+  end
 
   def pluralize_without_count(count, noun, text=nil)
     count.to_i == 1 ? "#{noun}#{text}" : "#{noun.pluralize}#{text}"
