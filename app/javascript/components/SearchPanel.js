@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
+import KeywordSearch from './KeywordSearch';
 import FacetControl from './FacetControl';
 import MoreFacetsButton from './MoreFacetsButton';
 import DownloadButton from './DownloadButton';
@@ -10,12 +11,15 @@ const defaultFacetIDs = ['disease', 'organ', 'species', 'cell_type'];
 const moreFacetIDs = ['sex', 'race', 'library_preparation_protocol', 'organism_age'];
 
 /**
- * Component for SCP advanced search UI
+ * Component for SCP faceted search UI
  *
  * This is the entry point into React code from the traditional JS code
  * See related integration at /app/javascript/packs/application.js
  */
 export default function SearchPanel() {
+  // Note: This might become  a Higher-Order Component (HOC).
+  // This search component is currently specific to the "Studies" tab, but
+  // could possibly also enable search for "Genes" and "Cells" tabs.
 
   const [defaultFacets, setDefaultFacets] = useState([]);
   const [moreFacets, setMoreFacets] = useState([]);
@@ -32,7 +36,8 @@ export default function SearchPanel() {
   }, []);
 
   return (
-    <div id='search-panel'>
+    <div className='container-fluid' id='search-panel'>
+      <KeywordSearch />
       {
         defaultFacets.map((facet, i) => {
           return <FacetControl facet={facet} key={i}/>

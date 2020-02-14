@@ -399,6 +399,10 @@ To run the unit & integration test suite, the `boot_docker` script can be used:
 
 This will boot a new instance of the portal in test mode and run all associated tests, *not including the UI test suite*.
 
+If you are a Broad engineer developing the canonical Single Cell Portal, run unit and integration tests like so:
+
+    bin/load_env_secrets.sh -e test -p vault/path/to/your/development/scp_config.json -s vault/path/to/your/development/scp_service_account.json -r vault/path/to/your/development/read_only_service_account.json
+
 It is also possible to run individual tests suites by passing the following parameters to `boot_docker`. To run all tests
 in a single suite:
 

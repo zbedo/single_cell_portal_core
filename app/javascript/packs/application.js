@@ -27,11 +27,17 @@ import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
 // Note 'components/SearchPanel' is '/app/javascript/components/SearchPanel.js'
 import SearchPanel from 'components/SearchPanel';
+import ResultsPanel from 'components/ResultsPanel';
 
 document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('scp-search-studies-root-element')) {
     ReactDOM.render(
       <SearchPanel />, document.getElementById('scp-search-studies-root-element'),
+    )
+  }
+  if (document.getElementById('scp-search-results-root-element')) {
+    ReactDOM.render(
+      <ResultsPanel />, document.getElementById('scp-search-results-root-element'),
     )
   }
 });

@@ -6,10 +6,12 @@
 #   cities = City.create([{ name: 'Chicago' }, { name: 'Copenhagen' }])
 #   Mayor.create(name: 'Emanuel', city: cities.first)
 #
-@random_seed = File.open(Rails.root.join('.random_seed')).read.strip 
+@random_seed = File.open(Rails.root.join('.random_seed')).read.strip
+user_access_token = {access_token: 'test-api-token', expires_in: 3600, expires_at: Time.zone.now + 1.hour}
 user = User.create!(email:'testing.user@gmail.com', password:'password', admin: true, uid: '12345',
-                    api_access_token: {access_token: 'test-api-token', expires_in: 3600, expires_at: Time.zone.now + 1.hour})
-user_2 = User.create!(email: 'sharing.user@gmail.com', password: 'password', uid: '67890')
+                    api_access_token: user_access_token, access_token: user_access_token)
+user_2 = User.create!(email: 'sharing.user@gmail.com', password: 'password', uid: '67890',
+                    api_access_token: user_access_token, access_token: user_access_token)
 # manually accept Terms of Service for sharing user to avoid breaking tests
 TosAcceptance.create(email: user_2.email)
 study = Study.create!(name: "Testing Study #{@random_seed}", description: '<p>This is the test study.</p>',
@@ -103,7 +105,7 @@ DirectoryListing.create!(name: 'csvs', file_type: 'csv', files: [{name: 'foo.csv
 StudyFileBundle.create!(bundle_type: 'BAM', original_file_list: [{'name' => 'sample_1.bam', 'file_type' => 'BAM'},
                                                                  {'name' => 'sample_1.bam.bai', 'file_type' => 'BAM Index'}],
                         study_id: api_study.id)
-User.create!(email:'testing.user.2@gmail.com', password:'someotherpassword',
+api_user = User.create!(email:'testing.user.2@gmail.com', password:'someotherpassword',
              api_access_token: {access_token: 'test-api-token-2', expires_in: 3600, expires_at: Time.zone.now + 1.hour})
 
 # Analysis Configuration seeds
@@ -121,3 +123,4 @@ SearchFacet.create(name: 'Disease', identifier: 'disease', filters: [{id: 'MONDO
                                    {name: 'Phenotype And Trait Ontology', url: 'https://www.ebi.ac.uk/ols/ontologies/pato'}],
                    is_ontology_based: true, is_array_based: true, big_query_id_column: 'disease', big_query_name_column: 'disease__ontology_label',
                    convention_name: 'alexandria_convention', convention_version: '1.1.3')
+BrandingGroup.create(name: 'Test Brand', user_id: api_user.id, font_family: 'Helvetica Neue, sans-serif', background_color: '#FFFFFF')

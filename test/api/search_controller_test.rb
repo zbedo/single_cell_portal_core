@@ -121,4 +121,27 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
+
+  test 'should filter search results by branding group' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+
+    # add study to branding group and search - should get 1 result
+    study = Study.find_by(name: "Test Study #{@random_seed}")
+    branding_group = BrandingGroup.first
+    study.update(branding_group_id: branding_group.id)
+
+    query_parameters = {type: 'study', terms: @random_seed, scpbr: branding_group.name_as_id}
+    execute_http_request(:get, api_v1_search_path(query_parameters))
+    assert_response :success
+    result_count = json['studies'].size
+    assert_equal 1, result_count, "Did not find correct number of studies, expected 1 but found #{result_count}"
+
+    # remove study from group and search again - should get 0 results
+    study.update(branding_group_id: nil)
+    execute_http_request(:get, api_v1_search_path(query_parameters))
+    assert_response :success
+    assert_empty json['studies'], "Did not find correct number of studies, expected 0 but found #{json['studies'].size}"
+
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
 end
