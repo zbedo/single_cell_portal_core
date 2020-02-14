@@ -58,7 +58,7 @@ class ApplicationController < ActionController::Base
 
   # retrieve the current download quota
   def get_download_quota
-    self.class.get_download_quota
+    @download_quota = self.class.get_download_quota
   end
 
   #see if deployment has been scheduled
