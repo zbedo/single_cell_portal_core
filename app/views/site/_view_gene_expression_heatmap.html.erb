@@ -152,18 +152,14 @@
             url: "<%= get_new_annotations_path(study: params[:study])%>?cluster=" + newCluster,
             method: 'GET',
             dataType: 'script',
-            success: function (data) {
-                // parse response as a string and see if currently selected annotation exists in new annotations
-                if (data.indexOf(currAnnot) >= 0) {
-                    $('#annotation').val(currAnnot);
-                }
-                $(document).ready(function () {
+            complete: function (jqXHR, textStatus) {
+                if (textStatus === 'success') {
                     // since we now have new annotations, we need to set them in the search form for persistence
                     var an = $('#annotation').val();
                     $('#search_annotation').val(an);
                     $('#gene_set_annotation').val(an);
                     drawHeatmap();
-                });
+                }
             }
         });
     });
