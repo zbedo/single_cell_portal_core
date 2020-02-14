@@ -7,8 +7,9 @@
 #   Mayor.create(name: 'Emanuel', city: cities.first)
 #
 @random_seed = File.open(Rails.root.join('.random_seed')).read.strip
+user_access_token = {access_token: 'test-api-token', expires_in: 3600, expires_at: Time.zone.now + 1.hour}
 user = User.create!(email:'testing.user@gmail.com', password:'password', admin: true, uid: '12345',
-                    api_access_token: {access_token: 'test-api-token', expires_in: 3600, expires_at: Time.zone.now + 1.hour})
+                    api_access_token: user_access_token, access_token: user_access_token)
 user_2 = User.create!(email: 'sharing.user@gmail.com', password: 'password', uid: '67890')
 # manually accept Terms of Service for sharing user to avoid breaking tests
 TosAcceptance.create(email: user_2.email)
