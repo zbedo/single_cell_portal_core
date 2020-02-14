@@ -1,8 +1,11 @@
+#!/usr/bin/env ruby
+
 require 'json'
 
 # Run the rails server in non-dockerized form
 # usage:
 # ruby rails_local_setup.rb <username>
+# This script must be run from the directory it lives in
 # you may also specify --no-tcell to run locally without tcell, which currently clutters the console with CSP warnings in development mode
 
 if ARGV[0].nil?
@@ -24,7 +27,7 @@ service_account_path = "#{base_vault_path}/scp_service_account.json"
 
 # defaults
 PASSENGER_APP_ENV = "development"
-CONFIG_DIR = "config"
+CONFIG_DIR = File.expand_path('.') + "/config"
 
   # load raw secrets from vault
 puts 'Processing secret parameters from vault'
@@ -39,6 +42,11 @@ secret_data_hash.each do |key, value|
     source_file_string += "export #{key}=#{value}\n"
   end
 end
+
+source_file_string += "export DATABASE_NAME=single_cell_portal_development\n"
+source_file_string += "export MONGODB_USERNAME=#{secret_data_hash['MONGODB_ADMIN_USER']}\n"
+source_file_string += "export MONGODB_PASSWORD=#{secret_data_hash['MONGODB_ADMIN_PASSWORD']}\n"
+source_file_string += "export DATABASE_HOST=#{secret_data_hash['MONGO_LOCALHOST']}\n"
 
 puts 'Processing service account info'
 service_account_string = `vault read -format=json #{service_account_path}`
