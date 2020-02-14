@@ -1,6 +1,6 @@
 
 # class to populate synthetic studies from files.
-# See db/seed/synthetic_studies for exampels of the file formats
+# See db/seed/synthetic_studies for examples of the file formats
 class SyntheticStudyPopulator
   DEFAULT_SYNTHETIC_STUDY_PATH = Rails.root.join('db', 'seed', 'synthetic_studies')
   # populates all studies defined in db/seed/synthetic_studies
@@ -28,7 +28,8 @@ class SyntheticStudyPopulator
   private
 
   def self.create_study(synthetic_study_folder, study_config, user)
-    user_suffix = '-' + (`git config user.email`.strip[0, 2] || 'xx')
+    user_suffix = '-' + user.email.partition('@').first
+    # suffix the study name to avoid inter-developer conflicts.  Remove this once we have separate firecloud namespaces
     suffixed_name = study_config['study']['name'] + user_suffix
     existing_study = Study.find_by(name: suffixed_name)
     if existing_study

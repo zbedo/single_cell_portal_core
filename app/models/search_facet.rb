@@ -16,6 +16,7 @@ class SearchFacet
   field :is_ontology_based, type: Boolean, default: false
   field :ontology_urls, type: Array, default: []
   field :is_array_based, type: Boolean
+  field :is_numeric, type: Boolean, default: false
   field :big_query_id_column, type: String
   field :big_query_name_column, type: String
   field :convention_name, type: String
