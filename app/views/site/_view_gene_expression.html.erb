@@ -122,7 +122,7 @@
           $('#gene_set_cluster').val(newCluster);
           // get new annotation options and re-render
           $.ajax({
-              url: "<%= get_new_annotations_path(accession: params[:accession], study_name: params[:study_name])%>?cluster=" + newCluster,
+              url: "<%= get_new_annotations_path(accession: params[:accession], study_name: params[:study_name])%>?cluster=" + encodeURIComponent(newCluster),
               method: 'GET',
               dataType: 'script',
               complete: function (jqXHR, textStatus) {
