@@ -57,7 +57,7 @@ function renderDistribution<%= @identifier %>() {
     var annotation = $('#<%= @target %>-annotation').val();
     var subsample = $('#<%= @target %>-subsample').val();
     var identifier = '<%= @identifier %>'
-    url += 'cluster=' + cluster + '&annotation=' + annotation + '&subsample=' + subsample + '&identifier=' + identifier;
+    url += 'cluster=' + encodeURIComponent(cluster) + '&annotation=' + encodeURIComponent(annotation) + '&subsample=' + subsample + '&identifier=' + identifier;
     // append request token to validate XHR requests
     var requestToken = '<%= params[:request_user_token] %>'
     url += '&request_user_token=' + requestToken;
@@ -78,22 +78,16 @@ $("#<%= @target %>-annotation, #<%= @target %>-subsample").change(function() {
 $("#<%= @target %>-cluster").change(function() {
     $('#cluster-plot').data('rendered', false);
     var newCluster = $(this).val();
-    var currAnnot = $('#<%= @target %>-annotation').val();
     // get new annotation options and re-render
     $.ajax({
         url: "<%= get_new_annotations_path(study_name: @study.url_safe_name)%>?cluster=" + encodeURIComponent(newCluster) + '&target=<%= @target %>',
         method: 'GET',
         dataType: 'script',
-        success: function (data) {
+        complete: function (jqXHR, textStatus) {
             // parse response as a string and see if currently selected annotation exists in new annotations
-            if (data.indexOf(currAnnot) >= 0) {
-                $('#<%= @target %>-annotation').val(currAnnot);
+            if (textStatus === 'success') {
+                renderDistribution<%= @identifier %>();
             }
-            $(document).ready(function () {
-                // since we now have new annotations, we need to set them in the search form for persistence
-                var an = $('#annotation').val();
-                renderDistribution<%= @identifier %>()
-            });
         }
     });
 });
