@@ -46,6 +46,10 @@ group :development do
   gem 'byebug'
 end
 
+group :test do
+  gem 'byebug'
+end
+
 gem 'devise'
 gem 'omniauth-google-oauth2'
 gem 'omniauth-rails_csrf_protection'
