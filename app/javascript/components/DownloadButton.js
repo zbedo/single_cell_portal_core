@@ -4,9 +4,14 @@ import { faDownload } from '@fortawesome/free-solid-svg-icons';
 import Modal from 'react-bootstrap/lib/Modal';
 import Clipboard from 'react-clipboard.js';
 
-import { fetchAuthCode } from './../lib/scp-api';
+import { fetchAuthCode } from 'lib/scp-api';
 
-async function fetchDownloadConfig() {
+/**
+ * Fetch auth code, build download command, return configuration object
+ *
+ * @returns {Object} Object for auth code, time interval, and download command
+ */
+async function generateDownloadConfig() {
   const searchQuery = '&file_types=metadata,expression&accessions=SCP1,SCP2';
 
   const {authCode, timeInterval} = await fetchAuthCode();
@@ -17,9 +22,9 @@ async function fetchDownloadConfig() {
   // URLs and output names for all files in the download object.
   const url = `${window.origin}/api/v1/bulk_download${queryString}`;
   const curlSecureFlag = (window.location.host === 'localhost') ? 'k' : ''; // "-k" === "--insecure"
-  
+
   // This is what the user will run in their terminal to download the data.
-  // TODO: Consider checking the node environment (either at compile or runtime) instead of the hostname
+  // To consider: check the node environment (either at compile or runtime) instead of the hostname
   const downloadCommand = (
     'curl "' + url + '" -' + curlSecureFlag + 'o cfg.txt; ' +
     'curl -K cfg.txt; rm cfg.txt'
@@ -38,14 +43,14 @@ function DownloadCommandContainer() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const dlConfig = await fetchDownloadConfig();
+      const dlConfig = await generateDownloadConfig();
       setDownloadConfig(dlConfig);
     };
     fetchData();
   }, []);
 
   function onSuccess() {
-    console.log('TODO: Show "Copied!" tooltip');
+    console.log('TODO (SCP-2121): Show "Copied!" tooltip');
   }
 
   return (
@@ -67,16 +72,15 @@ function DownloadCommandContainer() {
             >
               <i className='far fa-copy'></i>
             </Clipboard>
-          <button 
+          <button
             id={'refresh-button-' + downloadConfig.authCode}
-            className='btn btn-default btn-refresh glyphicon glyphicon-refresh'
-            style={{marginTop: '-3px'}}
+            className='download-refresh-button btn btn-default btn-refresh glyphicon glyphicon-refresh'
             data-toggle='tooltip'
             title='Refresh download command'>
           </button>
         </span>
         </div>
-      <div style={{fontSize: '12px'}}>
+      <div id="download-command-caption">
         Valid for one use within {' '}
         <span className='countdown' id={'countdown-' + downloadConfig.authCode}>
           {Math.floor(downloadConfig.timeInterval / 60)} {/* seconds -> minutes */}
@@ -121,7 +125,7 @@ export default function DownloadButton(props) {
         <Modal.Header closeButton>
           <h2 className='text-center'>Bulk Download</h2>
         </Modal.Header>
-  
+
         <Modal.Body>
           <p className='lead'>
           To download files matching your search, copy this command and paste it into your terminal:

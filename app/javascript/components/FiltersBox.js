@@ -13,7 +13,7 @@ import FiltersSearchBar from './FiltersSearchBar';
 function ClearFilters(props) {
   return (
     <span
-      id={`clear-filters-${props.facetID}`}
+      id={`clear-filters-${props.facetId}`}
       className='clear-filters'
       style={{display: props.show ? '' : 'none'}}
       onClick={props.onClick}
@@ -60,15 +60,15 @@ export default function FiltersBox(props) {
   //   * filter-species-NCBItaxon9606
   const facetName = props.facet.name;
   const componentName = 'filters-box';
-  const filtersBoxID = `${componentName}-${props.facet.id}`;
-  const applyID = `apply-${filtersBoxID}`;
+  const filtersboxId = `${componentName}-${props.facet.id}`;
+  const applyId = `save-${filtersboxId}`;
 
   /**
    * Returns IDs of selected filters.
    * Enables comparing current vs. applied filters to enable/disable APPLY button
    */
   function getCheckedFilterIDs() {
-    const checkedSelector = `#${filtersBoxID} input:checked`;
+    const checkedSelector = `#${filtersboxId} input:checked`;
     const checkedFilterIDs =
       [...document.querySelectorAll(checkedSelector)].map((filter) => {
         return filter.id;
@@ -84,12 +84,11 @@ export default function FiltersBox(props) {
   }
 
   function handleApplyClick(event) {
-    const applyButtonClasses = Array.from(event.target.classList);
+    const saveButtonClasses = Array.from(event.target.classList);
 
-    if (applyButtonClasses.includes('disabled')) return;
+    if (saveButtonClasses.includes('disabled')) return;
 
-    setAppliedSelection(getCheckedFilterIDs());
-    // setShow(false);
+    setSavedSelection(getCheckedFilterIDs());
   };
 
   function clearFilters() {
@@ -106,30 +105,25 @@ export default function FiltersBox(props) {
   // For example, among the many filters in the "Disease" facet, search
   // for filters matching the term "tuberculosis".
   async function searchFilters(terms) {
-    const apiData = await fetchFacetsFilters(props.facetID, terms);
+    const apiData = await fetchFacetsFilters(props.facetId, terms);
     const matchingFilters = apiData.filters;
     setMatchingFilters(matchingFilters);
   }
 
-  async function handleSubmit(event) {
+  async function handleApply(event) {
     event.preventDefault();
-    const terms = event.target.elements[filtersSearchBarID].value;
+    const terms = event.target.elements[filtersSearchBarId].value;
     await searchFilters(terms);
   }
 
-  async function handleSearchButtonClick(event) {
+  async function handleApplyButtonClick(event) {
     const terms = event.parentElement.parentElement.elements[filtersSearchBarID].value;
     await searchFilters(terms);
   }
 
   return (
-    <div className={componentName} id={filtersBoxID} style={{display: props.show ? '' : 'none'}}>
-      <FiltersSearchBar
-        filtersBoxID={filtersBoxID}
-        facetID={props.facet.id}
-        handleSubmit={handleSubmit}
-        handleSearchButtonClick={handleSearchButtonClick}
-      />
+    <div className={componentName} id={filtersboxId} style={{display: props.show ? '' : 'none'}}>
+      <FiltersSearchBar filtersboxId={filtersboxId} facetId={props.facet.id} />
       <p className='filters-box-header'>
         <span className='default-filters-list-name'>FREQUENTLY SEARCHED</span>
         <span className='facet-ontology-links'>
@@ -158,11 +152,11 @@ export default function FiltersBox(props) {
       <div className='filters-box-footer'>
         <ClearFilters
           show={showClear}
-          facetID={props.facet.id}
+          facetId={props.facet.id}
           onClick={clearFilters}
         />
         <Button
-          id={applyID}
+          id={applyId}
           bsStyle='primary'
           className={'facet-apply-button ' + (canApply ? 'active' : 'disabled')}
           onClick={handleApplyClick}>

@@ -5,10 +5,10 @@ import FacetControl from './FacetControl';
 import MoreFacetsButton from './MoreFacetsButton';
 import DownloadButton from './DownloadButton';
 
-import { fetchFacets } from './../lib/scp-api';
+import { fetchFacets } from 'lib/scp-api';
 
-const defaultFacetIDs = ['disease', 'organ', 'species', 'cell_type'];
-const moreFacetIDs = ['sex', 'race', 'library_preparation_protocol', 'organism_age'];
+const defaultFacetIds = ['disease', 'organ', 'species', 'cell_type'];
+const moreFacetIds = ['sex', 'race', 'library_preparation_protocol', 'organism_age'];
 
 /**
  * Component for SCP faceted search UI
@@ -26,9 +26,9 @@ export default function SearchPanel() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const facets = await fetchFacets(); // TODO: Remove 'true' when metadata seeding is ready
-      const df = facets.filter(facet => defaultFacetIDs.includes(facet.id));
-      const mf = facets.filter(facet => moreFacetIDs.includes(facet.id));
+      const facets = await fetchFacets(true);
+      const df = facets.filter(facet => defaultFacetIds.includes(facet.id));
+      const mf = facets.filter(facet => moreFacetIds.includes(facet.id));
       setDefaultFacets(df);
       setMoreFacets(mf);
     };
