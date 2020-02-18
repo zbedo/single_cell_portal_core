@@ -153,13 +153,7 @@
             method: 'GET',
             dataType: 'script',
             complete: function (jqXHR, textStatus) {
-                if (textStatus === 'success') {
-                    // since we now have new annotations, we need to set them in the search form for persistence
-                    var an = $('#annotation').val();
-                    $('#search_annotation').val(an);
-                    $('#gene_set_annotation').val(an);
-                    drawHeatmap();
-                }
+                renderWithNewCluster(textStatus, drawHeatmap());
             }
         });
     });

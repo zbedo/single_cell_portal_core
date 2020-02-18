@@ -671,6 +671,8 @@ class SiteController < ApplicationController
   def get_new_annotations
     @cluster_annotations = load_cluster_group_annotations
     @target = params[:target].blank? ? nil : params[:target] + '-'
+    # used to match value of previous annotation with new values
+    @flattened_annotations = @cluster_annotations.values.map {|coll| coll.map(&:last)}.flatten
   end
 
   # return JSON representation of selected annotation

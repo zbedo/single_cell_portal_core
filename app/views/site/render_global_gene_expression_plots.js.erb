@@ -84,10 +84,7 @@ $("#<%= @target %>-cluster").change(function() {
         method: 'GET',
         dataType: 'script',
         complete: function (jqXHR, textStatus) {
-            // parse response as a string and see if currently selected annotation exists in new annotations
-            if (textStatus === 'success') {
-                renderDistribution<%= @identifier %>();
-            }
+            renderWithNewCluster(textStatus, renderDistribution<%= @identifier %>(), false);
         }
     });
 });

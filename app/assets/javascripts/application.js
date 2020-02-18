@@ -1048,3 +1048,16 @@ function reopenUiTab(navTarget) {
         $(navTarget + ' a[href="' + tab + '"]').tab('show');
     }
 }
+
+// re-render a plot after a user selects a new cluster from the dropdown menu, usually called from a complete() callback
+// in an $.ajax() function
+function renderWithNewCluster(updateStatusText, renderCallback, setAnnotation=true) {
+    if (updateStatusText === 'success') {
+        if (setAnnotation) {
+            var an = $('#annotation').val();
+            $('#search_annotation').val(an);
+            $('#gene_set_annotation').val(an);
+        }
+        renderCallback();
+    }
+}
