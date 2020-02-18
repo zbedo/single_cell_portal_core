@@ -37,7 +37,7 @@ export async function fetchAuthCode(mock=false) {
   let init = defaultInit;
   if (mock === false && globalMock === false) {
     const customHeaders = Object.assign(defaultInit.headers, {
-      'Authorization': 'Bearer ' + window.userAccessToken
+      'Authorization': 'Bearer ' + window.SCP.userAccessToken
     });
     init = {
       method: 'POST',

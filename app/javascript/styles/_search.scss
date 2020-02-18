@@ -2,7 +2,7 @@
 * Styles for React-based faceted search UI for studies
 */
 
-// TODO: Consider removing this min-height once study result list can be shown
+// To consider: remove this min-height once study result list can be shown
 #main-body {
   min-height: 300px;
 }
@@ -12,6 +12,16 @@
   position: relative;
   top: -2.4em;
   border-radius: 0 4px 4px 0;
+}
+
+#bulk-download-modal {
+  #download-command-caption {
+    font-size: 12px;
+  }
+
+  .download-refresh-button {
+    margin-top: -3px;
+  }
 }
 
 #search-panel {
