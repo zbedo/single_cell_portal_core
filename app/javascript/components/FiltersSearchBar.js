@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import Button from 'react-bootstrap/lib/Button';
 
-import { fetchFacetsFilters } from './../lib/scp-api';
+import { fetchFacetsFilters } from 'lib/scp-api';
 
 /**
  * Component to search filters within a given facet
@@ -42,7 +42,7 @@ export default function FiltersSearchBar(props) {
   }
 
   return (
-    <div style={{margin: '2px'}}>
+    <div class="filters-search-bar">
       <Form onSubmit={handleSubmit}>
         <FormControl
           id={filtersSearchBarID}

@@ -4,7 +4,7 @@ import { faDownload } from '@fortawesome/free-solid-svg-icons';
 import Modal from 'react-bootstrap/lib/Modal';
 import Clipboard from 'react-clipboard.js';
 
-import { fetchAuthCode } from './../lib/scp-api';
+import { fetchAuthCode } from 'lib/scp-api';
 
 /**
  * Fetch auth code, build download command, return configuration object
