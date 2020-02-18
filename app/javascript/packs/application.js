@@ -37,7 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (document.getElementById('scp-search-results-root-element')) {
     ReactDOM.render(
-      <ResultsPanel />, document.getElementById('scp-search-results-root-element'),
+      // TODO: Uncomment before opening PR
+      // <ResultsPanel />, document.getElementById('scp-search-results-root-element'),
     )
   }
 });

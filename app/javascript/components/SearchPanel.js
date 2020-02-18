@@ -26,7 +26,7 @@ export default function SearchPanel() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const facets = await fetchFacets(true); // TODO: Remove 'true' when metadata seeding is ready
+      const facets = await fetchFacets(); // TODO: Remove 'true' when metadata seeding is ready
       const df = facets.filter(facet => defaultFacetIDs.includes(facet.id));
       const mf = facets.filter(facet => moreFacetIDs.includes(facet.id));
       setDefaultFacets(df);
@@ -37,7 +37,7 @@ export default function SearchPanel() {
 
   return (
     <div className='container-fluid' id='search-panel'>
-      <KeywordSearch />
+      {/* <KeywordSearch /> TODO: Uncomment before opening PR */}
       {
         defaultFacets.map((facet, i) => {
           return <FacetControl facet={facet} key={i}/>
