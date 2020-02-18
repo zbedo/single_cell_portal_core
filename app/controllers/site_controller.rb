@@ -479,7 +479,7 @@ class SiteController < ApplicationController
       subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
       @gene = load_best_gene_match(matches, params[:gene])
       @identifier = params[:identifier] # unique identifer for each plot for namespacing JS variables/functions (@gene.id)
-      @target = 'study-' + @study.url_safe_name + '-gene-' + params[:gene].gsub(/\W/, '-')
+      @target = 'study-' + @study.id + '-gene-' + @identifier
       @y_axis_title = load_expression_axis_title
       if @selected_annotation[:type] == 'group'
         @values = load_expression_boxplot_data_array_scores(@selected_annotation, subsample)

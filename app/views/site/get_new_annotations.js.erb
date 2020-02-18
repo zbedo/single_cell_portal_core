@@ -7,6 +7,6 @@ selectedAnnotationElement.html("<%= escape_javascript(select_tag :annotation, gr
 // also reload subsampling options as they may have changed
 selectedSubsampleElement.html("<%= escape_javascript(select_tag :subsample, options_for_select(subsampling_options(@cluster.points), params[:subsample]), {include_blank: 'All Cells', class: 'form-control'}) %>");
 
-if (annotationData.indexOf(selectedAnnotation) >= 0) {
+if (annotationData.includes(selectedAnnotation)) {
     selectedAnnotationElement.val(selectedAnnotation);
 }

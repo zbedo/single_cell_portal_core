@@ -1061,3 +1061,10 @@ function renderWithNewCluster(updateStatusText, renderCallback, setAnnotation=tr
         renderCallback();
     }
 }
+
+// extract out identifier for global gene search by trimming off last -cluster, -annotation, or -subsample
+function extractIdentifierFromId(domId) {
+    var idParts = domId.split('-');
+    idParts.pop();
+    return idParts.join('-');
+}
