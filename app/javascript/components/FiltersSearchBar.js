@@ -18,20 +18,16 @@ export default function FiltersSearchBar(props) {
   const componentName = 'filters-search-bar';
   const filtersSearchBarId = `${componentName}-${props.filtersBoxId}`;
 
-  function handleSubmit() {
-
-  }
-
   return (
     <div class="filters-search-bar">
-      <Form onSubmit={handleSubmit}>
+      <Form onSubmit={props.onSubmit}>
         <FormControl
           id={filtersSearchBarId}
           type="text"
           autoComplete='false'
           placeholder="Search"
         />
-        <Button className='search-button' onClick={props.handleSearchButtonClick}>
+        <Button className='search-button' onClick={props.onClick}>
           <FontAwesomeIcon icon={faSearch}/>
         </Button>
       </Form>
