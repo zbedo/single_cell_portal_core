@@ -37,6 +37,7 @@
             alert('Please enter a term before searching.');
             return false;
         } else {
+            window.GLOBAL_GENE_SEARCH_RESULTS = {};
             $('#page').val('1');
             $("#gene-search-results").empty();
             $('#gene-search-results-count').html($('div.gene-panel').length);
@@ -60,6 +61,56 @@
             ga('send', 'event', 'engaged_user_action', 'global_gene_search');
             return true;
         }
+    });
+
+    function renderDistribution(identifier) {
+        var studyAttr = window.GLOBAL_GENE_SEARCH_RESULTS[identifier];
+        var geneExpUrl = studyAttr.renderUrl;
+        var targetPlot = document.getElementById(identifier + '-plot');
+        var geneId = studyAttr.geneId;
+
+        $(targetPlot).data('rendered', false);
+        // no need to store spinners in data attribute as entire plot div will be re-rendered
+        new Spinner(opts).spin(targetPlot);
+
+        var cluster = $('#' + identifier + '-cluster').val();
+        var annotation = $('#' + identifier + '-annotation').val();
+        var subsample = $('#' + identifier + '-subsample').val();
+        geneExpUrl += '?cluster=' + encodeURIComponent(cluster) + '&annotation=' + encodeURIComponent(annotation) +
+        '&subsample=' + subsample + '&identifier=' + geneId;
+        // append request token to validate XHR requests
+        var requestToken = '<%= user_signed_in? ? current_user.id.to_s + ':' + current_user.authentication_token : nil %>';
+        geneExpUrl += '&request_user_token=' + requestToken;
+
+        // make call to load distribution plot
+        $.ajax({
+            url: geneExpUrl,
+            method: 'GET',
+            dataType: 'script'
+        });
+    }
+
+    // listener for cluster nav, specific to study page
+    $('#gene-search-results').on('change', '.global-gene-annotation, global-gene-subsample', function () {
+        var identifier = extractIdentifierFromId($(this).attr('id'));
+        renderDistribution(identifier);
+    });
+
+    $('#gene-search-results').on('change', '.global-gene-cluster', function() {
+        var newCluster = $(this).val();
+        var identifier = extractIdentifierFromId($(this).attr('id'));
+        var annotUrl = window.GLOBAL_GENE_SEARCH_RESULTS[identifier].annotationUrl;
+        var that = $(this); // store original context
+        // get new annotation options and re-render
+        $.ajax({
+            url: annotUrl + "?cluster=" + encodeURIComponent(newCluster) + '&target=' + identifier,
+            method: 'GET',
+            dataType: 'script',
+            complete: function (jqXHR, textStatus) {
+                var callback = $.proxy(renderDistribution, that, identifier);
+                renderWithNewCluster(textStatus, callback, false);
+            }
+        });
     });
 
 </script>

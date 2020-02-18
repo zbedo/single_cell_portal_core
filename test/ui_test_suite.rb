@@ -3146,10 +3146,14 @@ class UiTestSuite < Test::Unit::TestCase
     submit = @driver.find_element(:id, 'submit-gene-search')
     submit.click
     # wait until the plot has rendered
-    panel_id = "study-test-study-#{$random_seed}-gene-#{gene}"
+    panel = @driver.find_element(:xpath, "//div[@data-study='study-test-study-#{$random_seed}']")
+    panel_id = panel['id']
     plot_id = panel_id + '-plot'
-    while !element_present?(:id, plot_id)
+    counter = 0
+    while !element_present?(:id, plot_id) && counter < 5
       scroll_to(:bottom) # pagination test
+      sleep 5
+      count += 1
     end
     @wait.until {wait_for_plotly_render('#' + plot_id, 'rendered')}
     panel_div = @driver.find_element(:id, panel_id)
@@ -3178,12 +3182,15 @@ class UiTestSuite < Test::Unit::TestCase
     second_search_genes_form.send_keys(gene)
     submit = @driver.find_element(:id, 'submit-gene-search')
     submit.click
-    while !element_present?(:id, plot_id)
-      scroll_to(:bottom)
+    while !element_present?(:id, plot_id) && counter < 5
+      scroll_to(:bottom) # pagination test
+      sleep 5
+      count += 1
     end
     @wait.until {wait_for_plotly_render('#' + plot_id, 'rendered')}
     # wait until the plot has rendered
-    private_panel_id = "study-private-study-#{$random_seed}-gene-#{gene}"
+    private_panel = @driver.find_element(:xpath, "//div[@data-study='study-private-study-#{$random_seed}']")
+    private_panel_id = private_panel['id']
     private_plot_id = private_panel_id + '-plot'
     @wait.until {wait_for_plotly_render('#' + private_plot_id, 'rendered')}
     private_panel_div = @driver.find_element(:id, private_panel_id)
