@@ -100,20 +100,20 @@ export function setMockOrigin(origin) {
  *
  * @example
  *
- * // returns Promise for mock JSON in /mock_data/facets_filters_disease_tuberculosis.json
- * fetchFacetsFilters('disease', 'tuberculosis', true);
+ * // returns Promise for mock JSON in /mock_data/facet_filters_disease_tuberculosis.json
+ * fetchFacetFilters('disease', 'tuberculosis', true);
  *
  * // returns Promise for live JSON as shown example from "Docs" link above (but camel-cased)
- * fetchFacetsFilters('disease', 'tuberculosis');
+ * fetchFacetFilters('disease', 'tuberculosis');
  */
-export async function fetchFacetsFilters(facet, query, mock=false) {
+export async function fetchFacetFilters(facet, query, mock=false) {
 
   let queryString = `?facet=${facet}&query=${query}`;
   if (mock || globalMock) {
     queryString = `_${facet}_${query}`;
   }
 
-  const pathAndQueryString = `/search/facets_filters${queryString}`
+  const pathAndQueryString = `/search/facet_filters${queryString}`
 
   return await scpApi(pathAndQueryString, defaultInit, mock);
 }

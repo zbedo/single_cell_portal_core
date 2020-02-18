@@ -3,7 +3,7 @@ const fetch = require('node-fetch');
 import {
   fetchAuthCode,
   fetchFacets,
-  fetchFacetsFilters
+  fetchFacetFilters
 } from '../../app/javascript/lib/scp-api';
 
 describe('JavaScript client for SCP REST API', () => {
@@ -18,7 +18,7 @@ describe('JavaScript client for SCP REST API', () => {
   });
 
   it('should return 10 filters from fetchFacetFilters', async () => {
-    const apiData = await fetchFacetsFilters('disease', 'tuberculosis');
+    const apiData = await fetchFacetFilters('disease', 'tuberculosis');
     expect(apiData.filters).toHaveLength(10);
   });
 

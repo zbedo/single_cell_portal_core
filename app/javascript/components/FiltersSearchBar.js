@@ -5,8 +5,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import Button from 'react-bootstrap/lib/Button';
 
-import { fetchFacetsFilters } from 'lib/scp-api';
-
 /**
  * Component to search filters within a given facet
  * Used when facet has many available filters (e.g. disease)
@@ -15,17 +13,14 @@ import { fetchFacetsFilters } from 'lib/scp-api';
  */
 export default function FiltersSearchBar(props) {
 
-  const componentName = 'filters-search-bar';
-  const filtersSearchBarId = `${componentName}-${props.filtersBoxId}`;
-
   return (
-    <div class="filters-search-bar">
+    <div class='filters-search-bar'>
       <Form onSubmit={props.onSubmit}>
         <FormControl
-          id={filtersSearchBarId}
-          type="text"
+          id={props.id}
+          type='text'
           autoComplete='false'
-          placeholder="Search"
+          placeholder='Search'
         />
         <Button className='search-button' onClick={props.onClick}>
           <FontAwesomeIcon icon={faSearch}/>

@@ -26,7 +26,7 @@ export default function SearchPanel() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const facets = await fetchFacets(true);
+      const facets = await fetchFacets();
       const df = facets.filter(facet => defaultFacetIds.includes(facet.id));
       const mf = facets.filter(facet => moreFacetIds.includes(facet.id));
       setDefaultFacets(df);

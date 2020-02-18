@@ -4,6 +4,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
 import isEqual from 'lodash/isEqual';
 
+import { fetchFacetFilters } from 'lib/scp-api';
+
 import Filters from './Filters';
 import FiltersSearchBar from './FiltersSearchBar';
 
@@ -60,15 +62,17 @@ export default function FiltersBox(props) {
   //   * filter-species-NCBItaxon9606
   const facetName = props.facet.name;
   const componentName = 'filters-box';
-  const filtersboxId = `${componentName}-${props.facet.id}`;
-  const applyId = `save-${filtersboxId}`;
+  const filtersBoxId = `${componentName}-${props.facet.id}`;
+  const applyId = `save-${filtersBoxId}`;
+
+  const filtersSearchBarId = `filters-search-bar-${filtersBoxId}`;
 
   /**
    * Returns IDs of selected filters.
    * Enables comparing current vs. applied filters to enable/disable APPLY button
    */
   function getCheckedFilterIDs() {
-    const checkedSelector = `#${filtersboxId} input:checked`;
+    const checkedSelector = `#${filtersBoxId} input:checked`;
     const checkedFilterIDs =
       [...document.querySelectorAll(checkedSelector)].map((filter) => {
         return filter.id;
@@ -92,7 +96,7 @@ export default function FiltersBox(props) {
   };
 
   function clearFilters() {
-    const checkedSelector = `#${filtersBoxID} input:checked`;
+    const checkedSelector = `#${filtersBoxId} input:checked`;
     document.querySelectorAll(checkedSelector).forEach((checkedInput) => {
       checkedInput.checked = false;
     });
@@ -105,25 +109,29 @@ export default function FiltersBox(props) {
   // For example, among the many filters in the "Disease" facet, search
   // for filters matching the term "tuberculosis".
   async function searchFilters(terms) {
-    const apiData = await fetchFacetsFilters(props.facetId, terms);
+    const apiData = await fetchFacetFilters(props.facet.id, terms);
     const matchingFilters = apiData.filters;
     setMatchingFilters(matchingFilters);
   }
 
-  async function handleApply(event) {
+  async function handleFilterSearchSubmit(event) {
     event.preventDefault();
     const terms = event.target.elements[filtersSearchBarId].value;
     await searchFilters(terms);
   }
 
-  async function handleApplyButtonClick(event) {
-    const terms = event.parentElement.parentElement.elements[filtersSearchBarID].value;
+  async function handleFilterSearchButtonClick(event) {
+    const terms = event.parentElement.parentElement.elements[filtersSearchBarId].value;
     await searchFilters(terms);
   }
 
   return (
-    <div className={componentName} id={filtersboxId} style={{display: props.show ? '' : 'none'}}>
-      <FiltersSearchBar filtersboxId={filtersboxId} facetId={props.facet.id} />
+    <div className={componentName} id={filtersBoxId} style={{display: props.show ? '' : 'none'}}>
+      <FiltersSearchBar
+        id={filtersSearchBarId}
+        onClick={handleFilterSearchButtonClick}
+        onSubmit={handleFilterSearchSubmit}
+      />
       <p className='filters-box-header'>
         <span className='default-filters-list-name'>FREQUENTLY SEARCHED</span>
         <span className='facet-ontology-links'>
