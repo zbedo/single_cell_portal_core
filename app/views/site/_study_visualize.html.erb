@@ -123,25 +123,14 @@
         $('#search_cluster').val(newCluster);
         $('#gene_set_cluster').val(newCluster);
         // grab currently selected annotation
-        var currAnnot = $('#annotation').val();
         var currSubsample = $('#subsample').val();
         // get new annotation options and re-render
         $.ajax({
             url: "<%= get_new_annotations_path(accession: @study.accession, study_name: @study.url_safe_name)%>?cluster=" + encodeURIComponent(newCluster) + '&subsample=' + encodeURIComponent(currSubsample),
             method: 'GET',
             dataType: 'script',
-            success: function (data) {
-                // parse response as a string and see if currently selected annotation exists in new annotations
-                if (data.indexOf(currAnnot) >= 0) {
-                    $('#annotation').val(currAnnot);
-                }
-                $(document).ready(function () {
-                    // since we now have new annotations, we need to set them in the search form for persistence
-                    var an = $('#annotation').val();
-                    $('#search_annotation').val(an);
-                    $('#gene_set_annotation').val(an);
-                    renderScatter();
-                });
+            complete: function (jqXHR, textStatus) {
+                renderWithNewCluster(textStatus, renderScatter);
             }
         });
     });

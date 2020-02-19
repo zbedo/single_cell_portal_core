@@ -81,8 +81,8 @@
         $('#search_annotation').val(''); // clear value first
         $("#search_annotation").val(selectedAnnot);
         var requestToken = '<%= user_signed_in? ? current_user.id.to_s + ':' + current_user.authentication_token : nil %>';
-        dataPath += '&cluster=' + cluster + '&request_user_token=' + requestToken;
-        var newAnnotPath = '<%= annotation_query_path(accession: params[:accession], study_name: params[:study_name]) %>?cluster=' + cluster + '&annotation=' + selectedAnnot + '&request_user_token=' + requestToken;
+        dataPath += '&cluster=' + encodeURIComponent(cluster) + '&request_user_token=' + requestToken;
+        var newAnnotPath = '<%= annotation_query_path(accession: params[:accession], study_name: params[:study_name]) %>?cluster=' + encodeURIComponent(cluster) + '&annotation=' + encodeURIComponent(selectedAnnot) + '&request_user_token=' + requestToken;
         var colorScalingMode = 'relative';
         // determine whether to scale row colors globally or by row
         if (heatmap_row_centering !== '') {
@@ -152,18 +152,8 @@
             url: "<%= get_new_annotations_path(study: params[:study])%>?cluster=" + newCluster,
             method: 'GET',
             dataType: 'script',
-            success: function (data) {
-                // parse response as a string and see if currently selected annotation exists in new annotations
-                if (data.indexOf(currAnnot) >= 0) {
-                    $('#annotation').val(currAnnot);
-                }
-                $(document).ready(function () {
-                    // since we now have new annotations, we need to set them in the search form for persistence
-                    var an = $('#annotation').val();
-                    $('#search_annotation').val(an);
-                    $('#gene_set_annotation').val(an);
-                    drawHeatmap();
-                });
+            complete: function (jqXHR, textStatus) {
+                renderWithNewCluster(textStatus, drawHeatmap);
             }
         });
     });
