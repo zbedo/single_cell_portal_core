@@ -20,4 +20,25 @@ class SearchFacetPopulatorTest < ActionDispatch::IntegrationTest
     assert_equal [], sex_facet.ontology_urls
 
   end
+
+  test 'updates existing facets' do
+    SearchFacet.destroy_all
+    SearchFacet.create!(name: "disease",
+                        identifier: "disease",
+                        is_ontology_based: true,
+                        is_array_based: false,
+                        big_query_id_column: 'disease',
+                        big_query_name_column: 'disease__ontology_label',
+                        convention_name: 'alexandria_convention',
+                        convention_version: '1.1.3',
+                        ontology_urls: [{name: 'to.do.com', url: 'https://www.ebi.ac.uk/ols/api/ontologies/mondo'}])
+    SearchFacetPopulator.populate_from_schema
+    assert_equal 10, SearchFacet.count
+
+    # spot-check a couple of facets
+    disease_facet = SearchFacet.find_by(name: 'disease')
+    assert_equal true, disease_facet.is_ontology_based
+    assert_equal true, disease_facet.is_array_based
+    assert_equal 'https://www.ebi.ac.uk/ols/api/ontologies/mondo', disease_facet.ontology_urls.first['url']
+  end
 end

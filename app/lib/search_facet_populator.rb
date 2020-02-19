@@ -23,18 +23,18 @@ class SearchFacetPopulator
     is_ontology_based = field_def['ontology'].present?
     ontology_label_field_name = facet_name + '__ontology_label'
 
-    updated_facet = SearchFacet.find_or_create_by!(name: facet_name) do |facet|
-      facet.identifier = facet_name
-      facet.is_ontology_based = is_ontology_based
-      facet.is_array_based = 'array'.casecmp(field_def['type']) == 0
-      facet.is_numeric = 'number'.casecmp(field_def['type']) == 0
-      facet.big_query_id_column = facet_name
-      facet.big_query_name_column = is_ontology_based ? ontology_label_field_name : facet_name
-      facet.convention_name = schema_object['title']
-      facet.convention_version = alexandria_convention_config[:version]
-      # for now, just set the ontology name to the URL, since IIRC we're delegating display responsibility to the front end
-      facet.ontology_urls = is_ontology_based ? [{name: field_def['ontology'], url: field_def['ontology']}] : []
-    end
+    updated_facet = SearchFacet.find_or_initialize_by(name: facet_name)
+    updated_facet.identifier = facet_name
+    updated_facet.is_ontology_based = is_ontology_based
+    updated_facet.is_array_based = 'array'.casecmp(field_def['type']) == 0
+    updated_facet.is_numeric = 'number'.casecmp(field_def['type']) == 0
+    updated_facet.big_query_id_column = facet_name
+    updated_facet.big_query_name_column = is_ontology_based ? ontology_label_field_name : facet_name
+    updated_facet.convention_name = schema_object['title']
+    updated_facet.convention_version = alexandria_convention_config[:version]
+    # for now, just set the ontology name to the URL, since IIRC we're delegating display responsibility to the front end
+    updated_facet.ontology_urls = is_ontology_based ? [{name: field_def['ontology'], url: field_def['ontology']}] : []
+    updated_facet.save!
     updated_facet.update_filter_values!
     updated_facet
   end
