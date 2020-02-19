@@ -18,6 +18,7 @@
     "jquery-ui": "1.12.1",
     "morpheus-app": "1.0.18",
     "node-sass": "^4.13.1",
+    "pluralize": "^8.0.0",
     "postcss-cssnext": "3.1.0",
     "prop-types": "^15.7.2",
     "react": "^16.12.0",

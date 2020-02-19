@@ -3,6 +3,7 @@ import Button from 'react-bootstrap/lib/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
 import isEqual from 'lodash/isEqual';
+import pluralize from 'pluralize';
 
 import { fetchFacetFilters } from 'lib/scp-api';
 
@@ -33,11 +34,9 @@ export default function FiltersBox(props) {
   const [showClear, setShowClear] = useState(false);
   const [appliedSelection, setAppliedSelection] = useState([]);
   const [selection, setSelection] = useState([]);
-  const [matchingFilters, setMatchingFilters] = useState([]);
+  const [matchingFilters, setMatchingFilters] = useState(props.facet.filters);
+  const [hasFilterSearchResults, setHasFilterSearchResults] = useState(false);
   // const [show, setShow] = useState(props.show);
-
-  // console.log('props.show', props.show)
-  // console.log('show', show)
 
   useEffect(() => {
     setCanApply(!isEqual(selection, appliedSelection));
@@ -71,20 +70,20 @@ export default function FiltersBox(props) {
    * Returns IDs of selected filters.
    * Enables comparing current vs. applied filters to enable/disable APPLY button
    */
-  function getCheckedFilterIDs() {
+  function getCheckedFilterIds() {
     const checkedSelector = `#${filtersBoxId} input:checked`;
-    const checkedFilterIDs =
+    const checkedFilterIds =
       [...document.querySelectorAll(checkedSelector)].map((filter) => {
         return filter.id;
       });
-    return checkedFilterIDs
+    return checkedFilterIds
   }
 
   function updateSelections() {
-    const checkedFilterIDs = getCheckedFilterIDs();
-    setSelection(checkedFilterIDs);
+    const checkedFilterIds = getCheckedFilterIds();
+    setSelection(checkedFilterIds);
 
-    setShowClear(checkedFilterIDs.length > 0);
+    setShowClear(checkedFilterIds.length > 0);
   }
 
   function handleApplyClick(event) {
@@ -92,8 +91,8 @@ export default function FiltersBox(props) {
 
     if (saveButtonClasses.includes('disabled')) return;
 
-    setSavedSelection(getCheckedFilterIDs());
-  };
+    setSavedSelection(getCheckedFilterIds());
+  }
 
   function clearFilters() {
     const checkedSelector = `#${filtersBoxId} input:checked`;
@@ -111,6 +110,9 @@ export default function FiltersBox(props) {
   async function searchFilters(terms) {
     const apiData = await fetchFacetFilters(props.facet.id, terms);
     const matchingFilters = apiData.filters;
+    if (matchingFilters.length > 1) {
+      setHasFilterSearchResults(true);
+    }
     setMatchingFilters(matchingFilters);
   }
 
@@ -125,6 +127,17 @@ export default function FiltersBox(props) {
     await searchFilters(terms);
   }
 
+  function getFiltersSummary() {
+    let filtersSummary = 'FREQUENTLY SEARCHED';
+
+    if (hasFilterSearchResults) {
+      const numMatches = matchingFilters.length;
+      const resultsName = pluralize(facetName, numMatches);
+      filtersSummary = `${numMatches} ${resultsName} found`;
+    }
+    return filtersSummary;
+  }
+
   return (
     <div className={componentName} id={filtersBoxId} style={{display: props.show ? '' : 'none'}}>
       <FiltersSearchBar
@@ -133,7 +146,9 @@ export default function FiltersBox(props) {
         onSubmit={handleFilterSearchSubmit}
       />
       <p className='filters-box-header'>
-        <span className='default-filters-list-name'>FREQUENTLY SEARCHED</span>
+        <span className='default-filters-list-name'>
+          {getFiltersSummary()}
+        </span>
         <span className='facet-ontology-links'>
           {
           props.facet.links.map((link, i) => {
@@ -149,7 +164,7 @@ export default function FiltersBox(props) {
       <ul>
         <Filters
           facetType='string'
-          filters={props.facet.filters}
+          filters={matchingFilters}
           onClick={updateSelections}
         />
       </ul>
