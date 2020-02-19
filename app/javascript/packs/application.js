@@ -26,13 +26,13 @@ import Ideogram from 'ideogram';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
 // Note 'components/SearchPanel' is '/app/javascript/components/SearchPanel.js'
-import ScpSearchStudies from 'components/SearchPanel';
+import SearchPanel from 'components/SearchPanel';
 import ResultsPanel from 'components/ResultsPanel';
 
 document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('scp-search-studies-root-element')) {
     ReactDOM.render(
-      <ScpSearchStudies />, document.getElementById('scp-search-studies-root-element'),
+      <SearchPanel />, document.getElementById('scp-search-studies-root-element'),
     )
   }
   if (document.getElementById('scp-search-results-root-element')) {

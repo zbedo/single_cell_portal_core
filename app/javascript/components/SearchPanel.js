@@ -1,44 +1,43 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
+import KeywordSearch from './KeywordSearch';
 import FacetControl from './FacetControl';
 import MoreFacetsButton from './MoreFacetsButton';
 import DownloadButton from './DownloadButton';
-import KeywordSearch from './KeywordSearch';
 
-// Only for development!  We'll fetch data once API endpoints are available.
-import {facetsResponseMock, searchFiltersResponseMock} from './FacetsMockData';
-const facets = facetsResponseMock;
+import { fetchFacets } from 'lib/scp-api';
 
-const defaultFacetIDs = ['disease', 'organ', 'species', 'cell_type'];
-const moreFacetIDs = ['sex', 'race', 'library_preparation_protocol', 'organism_age'];
+const defaultFacetIds = ['disease', 'organ', 'species', 'cell_type'];
+const moreFacetIds = ['sex', 'race', 'library_preparation_protocol', 'organism_age'];
 
-const defaultFacets = facets.filter(facet => defaultFacetIDs.includes(facet.id));
-const moreFacets = facets.filter(facet => moreFacetIDs.includes(facet.id));
-
-window.searchFiltersResponse = searchFiltersResponseMock;
-
-// const searchStyle= {
-//   'font-size':'22px',
-//   color: '#333F52'
-
-// }
-// const searchPanelStyle = {
-//   borderRadius: '25px',
-//   background: 'white'
-// };
 /**
- * Component for SCP advanced search UI
+ * Component for SCP faceted search UI
  *
  * This is the entry point into React code from the traditional JS code
  * See related integration at /app/javascript/packs/application.js
  */
-function SearchPanel() {
-  // Note:  Enventually this fuction will have State and will turn into a class component. There's room for this to become 
-  // a higher order Component (HOC). This Search component is specific to the "Studies"
-  // tab when it should be able to support the 'home' Seach Panel, Studies, Genes and Cells search panels.
+export default function SearchPanel() {
+  // Note: This might become  a Higher-Order Component (HOC).
+  // This search component is currently specific to the "Studies" tab, but
+  // could possibly also enable search for "Genes" and "Cells" tabs.
+
+  const [defaultFacets, setDefaultFacets] = useState([]);
+  const [moreFacets, setMoreFacets] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const facets = await fetchFacets(true);
+      const df = facets.filter(facet => defaultFacetIds.includes(facet.id));
+      const mf = facets.filter(facet => moreFacetIds.includes(facet.id));
+      setDefaultFacets(df);
+      setMoreFacets(mf);
+    };
+    fetchData();
+  }, []);
+
   return (
     <div className='container-fluid' id='search-panel'>
-      <KeywordSearch/>
+      <KeywordSearch />
       {
         defaultFacets.map((facet, i) => {
           return <FacetControl facet={facet} key={i}/>
@@ -49,4 +48,3 @@ function SearchPanel() {
     </div>
   );
 }
-export default SearchPanel;
