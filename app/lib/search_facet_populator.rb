@@ -35,6 +35,7 @@ class SearchFacetPopulator
       # for now, just set the ontology name to the URL, since IIRC we're delegating display responsibility to the front end
       facet.ontology_urls = is_ontology_based ? [{name: field_def['ontology'], url: field_def['ontology']}] : []
     end
+    updated_facet.update_filter_values!
   end
 
   def self.fetch_alexandria_convention_schema
