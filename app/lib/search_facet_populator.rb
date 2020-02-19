@@ -25,24 +25,24 @@ class SearchFacetPopulator
     is_ontology_based = field_def['ontology'].present?
     ontology_label_field_name = facet_name + '__ontology_label'
 
-    updated_facet = SearchFacet.find_or_create_by!(name: facet_name) do |facet|
-      facet.identifier = facet_name
-      facet.data_type = field_def['type'] == 'array' ? field_def['items']['type'] : field_def['type']
-      facet.is_ontology_based = is_ontology_based
-      facet.is_array_based = 'array'.casecmp(field_def['type']) == 0
-      facet.big_query_id_column = facet_name
-      facet.big_query_name_column = is_ontology_based ? ontology_label_field_name : facet_name
-      facet.convention_name = schema_object['title']
-      facet.convention_version = alexandria_convention_config[:version]
-      if is_ontology_based
-        url = field_def['ontology']
-        ontology_name = fetch_ontology_name_from_url(url)
-        if ontology_name.blank?
-          ontology_name = url
-        end
-        facet.ontology_urls = [{name: ontology_name, url: url}]
+    updated_facet = SearchFacet.find_or_initialize_by(name: facet_name)
+    updated_facet.identifier = facet_name
+    updated_facet.data_type = field_def['type'] == 'array' ? field_def['items']['type'] : field_def['type']
+    updated_facet.is_ontology_based = is_ontology_based
+    updated_facet.is_array_based = 'array'.casecmp(field_def['type']) == 0
+    updated_facet.big_query_id_column = facet_name
+    updated_facet.big_query_name_column = is_ontology_based ? ontology_label_field_name : facet_name
+    updated_facet.convention_name = schema_object['title']
+    updated_facet.convention_version = alexandria_convention_config[:version]
+    if is_ontology_based
+      url = field_def['ontology']
+      ontology_name = fetch_ontology_name_from_url(url)
+      if ontology_name.blank?
+        ontology_name = url
       end
-    end
+      updated_facet.ontology_urls = [{name: ontology_name, url: url}]
+      end
+    updated_facet.save!
     updated_facet.update_filter_values!
     updated_facet
   end
