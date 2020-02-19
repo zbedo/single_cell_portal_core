@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import Button from 'react-bootstrap/lib/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
@@ -7,6 +7,7 @@ import pluralize from 'pluralize';
 
 import { fetchFacetFilters } from 'lib/scp-api';
 
+import { SearchContext } from './SearchPanel';
 import Filters from './Filters';
 import FiltersSearchBar from './FiltersSearchBar';
 
@@ -30,6 +31,8 @@ function ClearFilters(props) {
  * Component for filter search and filter lists, and related functionality
  */
 export default function FiltersBox(props) {
+  const searchContext = useContext(SearchContext);
+
   const [canApply, setCanApply] = useState(false);
   const [showClear, setShowClear] = useState(false);
   const [appliedSelection, setAppliedSelection] = useState([]);
@@ -60,9 +63,10 @@ export default function FiltersBox(props) {
   //   * apply-facet-species (for calls-to-action use ID: <action> <component>)
   //   * filter-species-NCBItaxon9606
   const facetName = props.facet.name;
+  const facetId = props.facet.id;
   const componentName = 'filters-box';
-  const filtersBoxId = `${componentName}-${props.facet.id}`;
-  const applyId = `save-${filtersBoxId}`;
+  const filtersBoxId = `${componentName}-${facetId}`;
+  const applyId = `apply-${filtersBoxId}`;
 
   const filtersSearchBarId = `filters-search-bar-${filtersBoxId}`;
 
@@ -82,16 +86,23 @@ export default function FiltersBox(props) {
   function updateSelections() {
     const checkedFilterIds = getCheckedFilterIds();
     setSelection(checkedFilterIds);
-
     setShowClear(checkedFilterIds.length > 0);
   }
 
   function handleApplyClick(event) {
-    const saveButtonClasses = Array.from(event.target.classList);
+    const applyButtonClasses = Array.from(event.target.classList);
 
-    if (saveButtonClasses.includes('disabled')) return;
+    if (applyButtonClasses.includes('disabled')) return;
 
-    setSavedSelection(getCheckedFilterIds());
+    const checkedFilterIds = getCheckedFilterIds();
+
+    if (checkedFilterIds.length > 0) {
+      searchContext.facets[facetId] = checkedFilterIds.join(',');
+    } else {
+      delete searchContext.facets[facetId];
+    }
+
+    setAppliedSelection(checkedFilterIds);
   }
 
   function clearFilters() {
