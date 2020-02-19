@@ -1,12 +1,14 @@
 # Methods for populating SearchFacets, based on manual config or schema files
 
 class SearchFacetPopulator
+
+  EXCLUDED_BQ_COLUMNS = %w(CellID donor_id biosample_id)
   # loads the alexandria convention schema and populates search facets from it
   def self.populate_from_schema
     schema_object = fetch_alexandria_convention_schema
     required_fields = schema_object['required']
     required_fields.each do |field_name|
-      if !field_name.include?('__ontology_label')
+      if !EXCLUDED_BQ_COLUMNS.include?(field_name) && !field_name.include?('__ontology_label')
         populate_facet_by_name(field_name, schema_object)
       end
     end
@@ -25,15 +27,21 @@ class SearchFacetPopulator
 
     updated_facet = SearchFacet.find_or_create_by!(name: facet_name) do |facet|
       facet.identifier = facet_name
+      facet.data_type = field_def['type'] == 'array' ? field_def['items']['type'] : field_def['type']
       facet.is_ontology_based = is_ontology_based
       facet.is_array_based = 'array'.casecmp(field_def['type']) == 0
-      facet.is_numeric = 'number'.casecmp(field_def['type']) == 0
       facet.big_query_id_column = facet_name
       facet.big_query_name_column = is_ontology_based ? ontology_label_field_name : facet_name
       facet.convention_name = schema_object['title']
       facet.convention_version = alexandria_convention_config[:version]
-      # for now, just set the ontology name to the URL, since IIRC we're delegating display responsibility to the front end
-      facet.ontology_urls = is_ontology_based ? [{name: field_def['ontology'], url: field_def['ontology']}] : []
+      if is_ontology_based
+        url = field_def['ontology']
+        ontology_name = fetch_ontology_name_from_url(url)
+        if ontology_name.blank?
+          ontology_name = url
+        end
+        facet.ontology_urls = [{name: ontology_name, url: url}]
+      end
     end
     updated_facet.update_filter_values!
     updated_facet
@@ -49,6 +57,18 @@ class SearchFacetPopulator
       url: 'https://storage.googleapis.com/broad-singlecellportal-public/AMC_v1.1.3.json',
       version: '1.1.3' # hardcoded here since the version is not part of the schema file
     }
+  end
+
+  def self.fetch_ontology_name_from_url(ontology_url)
+    begin
+      response = RestClient.get ontology_url
+      ontology = JSON.parse(response.body)
+      ontology['config']['title']
+    rescue RestClient::Exception => e
+      Rails.logger.error "Unable to retrieve ontology name from #{url}: #{e.class.name}: #{e.message}"
+    rescue JSON::ParserError => e
+      Rails.logger.error "Unable to parse response from #{url}: #{e.class.name}: #{e.message}"
+    end
   end
 
   # quick method to get a few key facets into the database.
