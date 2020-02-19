@@ -34,7 +34,7 @@ export default function SearchPanel() {
   return (
     <SearchContext.Provider value={searchContexts.study}>
       <div className='container-fluid' id='search-panel'>
-        {/* <KeywordSearch /> TODO: Uncomment before opening PR */}
+        <KeywordSearch />
         <FacetsPanel />
         <DownloadButton />
       </div>
