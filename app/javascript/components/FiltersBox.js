@@ -110,9 +110,9 @@ export default function FiltersBox(props) {
   async function searchFilters(terms) {
     const apiData = await fetchFacetFilters(props.facet.id, terms);
     const matchingFilters = apiData.filters;
-    if (matchingFilters.length > 1) {
-      setHasFilterSearchResults(true);
-    }
+
+    setHasFilterSearchResults(apiData.query !== '' && matchingFilters.length > 0);
+
     setMatchingFilters(matchingFilters);
   }
 
