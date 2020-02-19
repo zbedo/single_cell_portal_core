@@ -36,6 +36,7 @@ class SearchFacetPopulator
       facet.ontology_urls = is_ontology_based ? [{name: field_def['ontology'], url: field_def['ontology']}] : []
     end
     updated_facet.update_filter_values!
+    updated_facet
   end
 
   def self.fetch_alexandria_convention_schema
