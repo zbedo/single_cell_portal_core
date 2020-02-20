@@ -6,7 +6,7 @@ class SearchFacetPopulatorTest < ActionDispatch::IntegrationTest
   test 'populate facets from alexandria convention data' do
     SearchFacet.destroy_all
     SearchFacetPopulator.populate_from_schema
-    assert_equal 10, SearchFacet.count
+    assert_equal 7, SearchFacet.count
 
     # spot-check a couple of facets
     disease_facet = SearchFacet.find_by(name: 'disease')
@@ -33,7 +33,7 @@ class SearchFacetPopulatorTest < ActionDispatch::IntegrationTest
                         convention_version: '1.1.3',
                         ontology_urls: [{name: 'to.do.com', url: 'https://www.ebi.ac.uk/ols/api/ontologies/mondo'}])
     SearchFacetPopulator.populate_from_schema
-    assert_equal 10, SearchFacet.count
+    assert_equal 7, SearchFacet.count
 
     # spot-check a couple of facets
     disease_facet = SearchFacet.find_by(name: 'disease')

@@ -43,7 +43,6 @@ class SearchFacetPopulator
       updated_facet.ontology_urls = [{name: ontology_name, url: url}]
       end
     updated_facet.save!
-    updated_facet.update_filter_values!
     updated_facet
   end
 

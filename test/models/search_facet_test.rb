@@ -10,6 +10,9 @@ class SearchFacetTest < ActiveSupport::TestCase
         {id: 'NCBITaxon_9606', name: 'Homo sapiens'},
         {id: 'NCBITaxon_10090', name: 'Mus musculus'}
     ]
+
+    # mock schema for organism_age column in BigQuery
+    @column_schema = [{column_name: 'organism_age', data_type: 'FLOAT64', is_nullable: 'YES'}]
   end
 
   # should return expected filters list
@@ -54,7 +57,7 @@ class SearchFacetTest < ActiveSupport::TestCase
     assert @search_facet.valid?, "Testing search facet did not validate: #{@search_facet.errors.full_messages}"
     invalid_facet = SearchFacet.new
     assert_not invalid_facet.valid?, 'Did not correctly find validation errors on empty facet'
-    expected_error_count = 6
+    expected_error_count = 7
     invalid_facet_error_count = invalid_facet.errors.size
     assert_equal expected_error_count, invalid_facet_error_count,
            "Did not find correct number of errors; expected #{expected_error_count} but found #{invalid_facet_error_count}"
@@ -66,6 +69,33 @@ class SearchFacetTest < ActiveSupport::TestCase
     assert_not @search_facet.valid?, 'Did not correctly find validation errors on invalid facet'
     assert_equal @search_facet.errors.to_hash[:ontology_urls].first,
                  'contains an invalid URL: not a url'
+
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
+
+  test 'should set data_type and is_array_based on create' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+
+    mock = Minitest::Mock.new
+    mock.expect :query, @column_schema, [String]
+
+    SearchFacet.stub :big_query_dataset, mock do
+      age_facet = SearchFacet.create(
+          name: 'Organism Age',
+          identifier: 'organism_age',
+          big_query_id_column: 'organism_age',
+          big_query_name_column: 'organism_age',
+          is_ontology_based: false,
+          convention_name: 'alexandria_convention',
+          convention_version: '1.1.3'
+      )
+      mock.verify
+      assert_equal 'number', age_facet.data_type,
+                   "Did not correctly set facet data_type, expected 'number' but found '#{age_facet.data_type}'"
+      assert_not age_facet.is_array_based?,
+                   "Did not correctly set is_array_based, expected false but found #{age_facet.is_array_based?}"
+      assert age_facet.is_numeric?, "Did not correctly return true for is_numeric with data_type: #{age_facet.data_type}"
+    end
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end

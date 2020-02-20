@@ -32,7 +32,9 @@ class SearchFacet
   validates_presence_of :name, :identifier, :data_type, :big_query_id_column, :big_query_name_column, :convention_name, :convention_version
   validates_uniqueness_of :big_query_id_column, scope: [:convention_name, :convention_version]
   validate :ensure_ontology_url_format, if: proc {|attributes| attributes[:is_ontology_based]}
-  before_create :set_data_type_and_array, if: proc {|attributes| attributes[:is_array_based].blank? || attributes[:data_type].blank?}
+  before_validation :set_data_type_and_array, on: :create,
+                    if: proc {|attr| (attr[:is_array_based].blank? || attr[:data_type].blank?) && attr[:big_query_id_column].present?}
+  after_create :update_filter_values!
 
   swagger_schema :SearchFacet do
     key :required, [:name, :identifier, :data_type, :big_query_id_column, :big_query_name_column, :convention_name, :convention_version]
