@@ -38,11 +38,13 @@ node_modules/*
 /public/packs-test
 /node_modules
 yarn-debug.log*
+yarn-error.log*
 .yarn-integrity
 /.random_seed
 scp_config.env
 scp_service_account.json
 read_only_service_account.json
+coverage
 
 # Ignore output of genome references pipeline
 scripts/genomes/output/

@@ -50,6 +50,8 @@ Rails.application.routes.draw do
         scope :search do
           get 'facets', to: 'search#facets', as: :search_facets
           get 'facet_filters', to: 'search#facet_filters', as: :search_facet_filters
+          post 'auth_code', to: 'search#create_auth_code', as: :create_auth_code
+          get 'bulk_download', to: 'search#bulk_download', as: :search_bulk_download
           get '/', to: 'search#index', as: :search
         end
       end

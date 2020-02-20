@@ -13,7 +13,7 @@ class PapiClient < Struct.new(:project, :service_account_credentials, :service)
   extend ErrorTracker
 
   # Service account JSON credentials
-  SERVICE_ACCOUNT_KEY = !ENV['SERVICE_ACCOUNT_KEY'].blank? ? File.absolute_path(ENV['SERVICE_ACCOUNT_KEY']) : ''
+  SERVICE_ACCOUNT_KEY = !ENV['SERVICE_ACCOUNT_KEY'].blank? ? (ENV['NON_DOCKERIZED'] ? ENV['SERVICE_ACCOUNT_KEY'] : File.absolute_path(ENV['SERVICE_ACCOUNT_KEY'])) : ''
   # Google authentication scopes necessary for running pipelines
   GOOGLE_SCOPES = %w(https://www.googleapis.com/auth/cloud-platform)
   # GCP Compute project to run pipelines in

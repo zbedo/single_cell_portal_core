@@ -20,6 +20,7 @@
           -->
           <% if User.feature_flag_for_user(current_user, "faceted_search") %>
             <div id="scp-search-studies-root-element"></div>
+            <div id="scp-search-results-root-element"></div>
           <% else %>
             <%= render partial: '/site/search/search_studies' %>
           <% end %>

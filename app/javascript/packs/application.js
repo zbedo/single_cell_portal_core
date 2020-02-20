@@ -25,13 +25,19 @@ import Ideogram from 'ideogram';
 // Per https://ckeditor.com/docs/ckeditor5/latest/builds/guides/integration/advanced-setup.html#scenario-1-integrating-existing-builds
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
-// Note 'components/ScpSearchStudies' is '/app/javascript/components/ScpSearchStudies.js'
-import ScpSearchStudies from 'components/ScpSearchStudies';
+// Note 'components/SearchPanel' is '/app/javascript/components/SearchPanel.js'
+import SearchPanel from 'components/SearchPanel';
+import ResultsPanel from 'components/ResultsPanel';
 
 document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('scp-search-studies-root-element')) {
     ReactDOM.render(
-      <ScpSearchStudies />, document.getElementById('scp-search-studies-root-element'),
+      <SearchPanel />, document.getElementById('scp-search-studies-root-element'),
+    )
+  }
+  if (document.getElementById('scp-search-results-root-element')) {
+    ReactDOM.render(
+      <ResultsPanel />, document.getElementById('scp-search-results-root-element'),
     )
   }
 });

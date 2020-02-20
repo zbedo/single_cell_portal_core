@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "test": "jest --coverage"
+  },
   "dependencies": {
     "@babel/preset-react": "^7.8.3",
     "@ckeditor/ckeditor5-build-classic": "12.3.1",
@@ -7,6 +10,7 @@
     "@fortawesome/react-fontawesome": "^0.1.8",
     "@rails/webpacker": "4.0.7",
     "babel-plugin-transform-react-remove-prop-types": "^0.4.24",
+    "camelcase-keys": "^6.1.2",
     "core-js": "3",
     "ideogram": "1.11.0",
     "igv": "2.1.0",
@@ -14,15 +18,23 @@
     "jquery-ui": "1.12.1",
     "morpheus-app": "1.0.18",
     "node-sass": "^4.13.1",
+    "pluralize": "^8.0.0",
     "postcss-cssnext": "3.1.0",
     "prop-types": "^15.7.2",
     "react": "^16.12.0",
-    "react-bootstrap": "^1.0.0-beta.16",
+    "react-bootstrap": "^0.33.1",
+    "react-clipboard.js": "^2.0.16",
     "react-compound-slider": "^3.0.0-beta.1",
     "react-dom": "^16.12.0",
     "spin.js": "^4.0.0"
   },
   "devDependencies": {
+    "enzyme": "^3.11.0",
+    "enzyme-adapter-react-16": "^1.15.2",
+    "jest-cli": "^25.1.0",
+    "jest-environment-enzyme": "^7.1.2",
+    "jest-enzyme": "^7.1.2",
+    "node-fetch": "^2.6.0",
     "webpack-dev-server": "3.8.0"
   }
 }

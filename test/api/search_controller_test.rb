@@ -6,7 +6,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
   include Requests::HttpHelpers
 
   setup do
-    @user = User.first
+    @user = User.find_by(email: 'testing.user.2@gmail.com')
     OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new({
                                                                            :provider => 'google_oauth2',
                                                                            :uid => '123545',
@@ -77,6 +77,70 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     result_count = json['studies'].size
     assert_equal study_count, result_count, "Did not find correct number of studies, expected #{study_count} but found #{result_count}"
     assert_equal @random_seed, json['studies'].first['term_matches']
+
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
+
+  # should generate an auth code for a given user
+  test 'should generate auth code' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+
+    execute_http_request(:post, api_v1_create_auth_code_path)
+    assert_response :success
+    assert_not_nil json['auth_code'], "Did not generate auth code; missing 'totat' field: #{json}"
+    auth_code = json['auth_code']
+    @user.reload
+    assert_equal auth_code, @user.totat
+
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
+
+  # should generate a config text file to pass to curl for bulk download
+  test 'should generate curl config for bulk download' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+
+    study = Study.find_by(name: "Test Study #{@random_seed}")
+    file_types = %w(Expression Metadata).join(',')
+    execute_http_request(:post, api_v1_create_auth_code_path)
+    assert_response :success
+    auth_code = json['auth_code']
+
+    files = study.study_files.by_type(['Expression Matrix', 'Metadata'])
+    execute_http_request(:get, api_v1_search_bulk_download_path(
+        auth_code: auth_code, accessions: study.accession, file_types: file_types)
+    )
+    assert_response :success
+
+    config_file = json
+    files.each do |file|
+      filename = file.upload_file_name
+      assert config_file.include?(filename), "Did not find URL for filename: #{filename}"
+      output_path = file.bulk_download_pathname
+      assert config_file.include?(output_path), "Did not correctly set output path for #{filename} to #{output_path}"
+    end
+
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
+
+  test 'should filter search results by branding group' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+
+    # add study to branding group and search - should get 1 result
+    study = Study.find_by(name: "Test Study #{@random_seed}")
+    branding_group = BrandingGroup.first
+    study.update(branding_group_id: branding_group.id)
+
+    query_parameters = {type: 'study', terms: @random_seed, scpbr: branding_group.name_as_id}
+    execute_http_request(:get, api_v1_search_path(query_parameters))
+    assert_response :success
+    result_count = json['studies'].size
+    assert_equal 1, result_count, "Did not find correct number of studies, expected 1 but found #{result_count}"
+
+    # remove study from group and search again - should get 0 results
+    study.update(branding_group_id: nil)
+    execute_http_request(:get, api_v1_search_path(query_parameters))
+    assert_response :success
+    assert_empty json['studies'], "Did not find correct number of studies, expected 0 but found #{json['studies'].size}"
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end

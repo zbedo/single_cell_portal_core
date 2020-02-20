@@ -30,8 +30,14 @@
                   <%= scp_link_to "<span class='fas fa-sync-alt'></span> Sync Workspace".html_safe, sync_study_path(study), class: "btn btn-xs btn-warning #{study.url_safe_name}-sync sync-button" %>
                   <%= scp_link_to "<span class='fas fa-edit'></span> Edit Study".html_safe, edit_study_path(study), class: "btn btn-xs btn-primary #{study.url_safe_name}-edit" %>
                   <% if study.can_delete?(current_user) %>
-                    <%= scp_link_to "<span class='fas fa-trash'></span> Delete All".html_safe, study_path(study), class: "btn btn-xs btn-danger delete-btn #{study.url_safe_name}-delete", title: 'Delete everything including Terra workspace' , method: :delete, data: {toggle: 'tooltip', placement: 'top'} %>
-                    <%= scp_link_to "<span class='fas fa-trash'></span> Delete Local Only".html_safe, study_path(id: study.id, workspace: 'persist'), class: "btn btn-xs btn-danger delete-btn #{study.url_safe_name}-delete-local", title: 'Delete all database records but keep Terra workspace' , method: :delete, data: {toggle: 'tooltip', placement: 'top'} %>
+                    <%= scp_link_to "<span class='fas fa-trash'></span> Delete Study & Workspace".html_safe, study_path(study),
+                                    class: "btn btn-xs btn-danger delete-btn #{study.url_safe_name}-delete",
+                                    title: 'Delete everything, including Terra workspace' , method: :delete,
+                                    data: {toggle: 'tooltip', placement: 'top'} %>
+                    <%= scp_link_to "<span class='fas fa-trash'></span> Delete Study Only".html_safe, study_path(id: study.id, workspace: 'persist'),
+                                    class: "btn btn-xs btn-danger delete-btn #{study.url_safe_name}-delete-local",
+                                    title: 'Delete all database records but keep Terra workspace' , method: :delete,
+                                    data: {toggle: 'tooltip', placement: 'top', workspace: 'persist'} %>
                   <% end %>
                 <% end %>
               </td>
@@ -78,7 +84,16 @@
     $('#studies').on('click', '.delete-btn', function(){
         // get name of study for confirmation
         var study = $(this).parent().parent().find('.study-name').text();
-        if ( confirm('Are you sure you want to delete \"' + study + '\"? This will remove all associated database records, including the Terra workspace and all uploaded files.')) {
+        var keepWorkspace = $(this).data('workspace');
+        var deleteMessage = 'Are you sure you want to delete \"' + study + '\"?' +
+        ' This will remove all associated portal records for your study,';
+        if (keepWorkspace === 'persist') {
+            deleteMessage += ' but will keep the associated Terra workspace in place.';
+        } else {
+            deleteMessage += ' including the Terra workspace and all uploaded files.';
+        }
+        deleteMessage += "\n\nThis cannot be undone.";
+        if ( confirm(deleteMessage)) {
             launchModalSpinner('#delete-modal-spinner','#delete-modal', function() {
                 return true;
             });

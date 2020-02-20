@@ -479,7 +479,7 @@ class SiteController < ApplicationController
       subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
       @gene = load_best_gene_match(matches, params[:gene])
       @identifier = params[:identifier] # unique identifer for each plot for namespacing JS variables/functions (@gene.id)
-      @target = 'study-' + @study.url_safe_name + '-gene-' + params[:gene].gsub(/\W/, '-')
+      @target = 'study-' + @study.id + '-gene-' + @identifier
       @y_axis_title = load_expression_axis_title
       if @selected_annotation[:type] == 'group'
         @values = load_expression_boxplot_data_array_scores(@selected_annotation, subsample)
@@ -671,6 +671,8 @@ class SiteController < ApplicationController
   def get_new_annotations
     @cluster_annotations = load_cluster_group_annotations
     @target = params[:target].blank? ? nil : params[:target] + '-'
+    # used to match value of previous annotation with new values
+    @flattened_annotations = @cluster_annotations.values.map {|coll| coll.map(&:last)}.flatten
   end
 
   # return JSON representation of selected annotation
