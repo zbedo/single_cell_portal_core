@@ -19,7 +19,6 @@ function ClearFilters(props) {
     <span
       id={`clear-filters-${props.facetId}`}
       className='clear-filters'
-      style={{display: props.show ? '' : 'none'}}
       onClick={props.onClick}
     >
       CLEAR
@@ -170,11 +169,12 @@ export default function FiltersBox(props) {
       FacetsAccordionBox into new component (SCP-2109)
        */}
       <div className='filters-box-footer'>
+        {showClear &&
         <ClearFilters
-          show={showClear}
           facetId={props.facet.id}
           onClick={clearFilters}
         />
+        }
         <Button
           id={applyId}
           bsStyle='primary'
