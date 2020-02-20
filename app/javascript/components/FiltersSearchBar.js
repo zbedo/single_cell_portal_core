@@ -8,21 +8,32 @@ import Button from 'react-bootstrap/lib/Button';
 /**
  * Component to search filters within a given facet
  * Used when facet has many available filters (e.g. disease)
- *
- * Stub, will develop.
  */
 export default function FiltersSearchBar(props) {
 
+  const filtersSearchBarId = `filters-search-bar-${props.filtersBoxId}`;
+
+  async function handleFilterSearchSubmit(event) {
+    event.preventDefault();
+    const terms = document.getElementById(filtersSearchBarId).value;
+    await props.searchFilters(terms);
+  }
+
+  async function handleFilterSearchButtonClick() {
+    const terms = document.getElementById(filtersSearchBarId).value;
+    await props.searchFilters(terms);
+  }
+
   return (
     <div class='filters-search-bar'>
-      <Form onSubmit={props.onSubmit}>
+      <Form onSubmit={handleFilterSearchSubmit}>
         <FormControl
-          id={props.id}
+          id={filtersSearchBarId}
           type='text'
           autoComplete='false'
           placeholder='Search'
         />
-        <Button className='search-button' onClick={props.onClick}>
+        <Button className='search-button' onClick={handleFilterSearchButtonClick}>
           <FontAwesomeIcon icon={faSearch}/>
         </Button>
       </Form>
