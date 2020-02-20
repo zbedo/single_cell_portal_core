@@ -5,7 +5,7 @@ class SearchFacetPopulator
   EXCLUDED_BQ_COLUMNS = %w(CellID donor_id biosample_id)
   # loads the alexandria convention schema and populates search facets from it
   def self.populate_from_schema
-    schema_object = fetch_alexandria_convention_schema
+    schema_object = fetch_json_from_url(alexandria_convention_config[:url])
     required_fields = schema_object['required']
     required_fields.each do |field_name|
       if !EXCLUDED_BQ_COLUMNS.include?(field_name) && !field_name.include?('__ontology_label')
@@ -36,19 +36,13 @@ class SearchFacetPopulator
     updated_facet.convention_version = alexandria_convention_config[:version]
     if is_ontology_based
       url = field_def['ontology']
-      ontology_name = fetch_ontology_name_from_url(url)
-      if ontology_name.blank?
-        ontology_name = url
-      end
+      ontology = fetch_json_from_url(url)
+      # check if response has expected keys; if not, default to URL for name value
+      ontology_name = ontology.dig('config', 'title') ? ontology['config']['title'] : url
       updated_facet.ontology_urls = [{name: ontology_name, url: url}]
       end
     updated_facet.save!
     updated_facet
-  end
-
-  def self.fetch_alexandria_convention_schema
-    schema_string = Net::HTTP.get(URI(alexandria_convention_config[:url]))
-    JSON.parse(schema_string)
   end
 
   def self.alexandria_convention_config
@@ -58,13 +52,13 @@ class SearchFacetPopulator
     }
   end
 
-  def self.fetch_ontology_name_from_url(ontology_url)
+  # generic fetch of JSON from remote URL, for parsing convention schema or EBI OLS ontology entries
+  def self.fetch_json_from_url(url)
     begin
-      response = RestClient.get ontology_url
-      ontology = JSON.parse(response.body)
-      ontology['config']['title']
+      response = RestClient.get url
+      JSON.parse(response.body)
     rescue RestClient::Exception => e
-      Rails.logger.error "Unable to retrieve ontology name from #{url}: #{e.class.name}: #{e.message}"
+      Rails.logger.error "Unable to fetch JSON from #{url}: #{e.class.name}: #{e.message}"
     rescue JSON::ParserError => e
       Rails.logger.error "Unable to parse response from #{url}: #{e.class.name}: #{e.message}"
     end
