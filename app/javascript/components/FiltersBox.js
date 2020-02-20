@@ -19,7 +19,6 @@ function ClearFilters(props) {
     <span
       id={`clear-filters-${props.facetId}`}
       className='clear-filters'
-      style={{display: props.show ? '' : 'none'}}
       onClick={props.onClick}
     >
       CLEAR
@@ -67,8 +66,6 @@ export default function FiltersBox(props) {
   const componentName = 'filters-box';
   const filtersBoxId = `${componentName}-${facetId}`;
   const applyId = `apply-${filtersBoxId}`;
-
-  const filtersSearchBarId = `filters-search-bar-${filtersBoxId}`;
 
   /**
    * Returns IDs of selected filters.
@@ -127,17 +124,6 @@ export default function FiltersBox(props) {
     setMatchingFilters(matchingFilters);
   }
 
-  async function handleFilterSearchSubmit(event) {
-    event.preventDefault();
-    const terms = event.target.elements[filtersSearchBarId].value;
-    await searchFilters(terms);
-  }
-
-  async function handleFilterSearchButtonClick(event) {
-    const terms = event.parentElement.parentElement.elements[filtersSearchBarId].value;
-    await searchFilters(terms);
-  }
-
   function getFiltersSummary() {
     let filtersSummary = 'FREQUENTLY SEARCHED';
 
@@ -152,9 +138,8 @@ export default function FiltersBox(props) {
   return (
     <div className={componentName} id={filtersBoxId} style={{display: props.show ? '' : 'none'}}>
       <FiltersSearchBar
-        id={filtersSearchBarId}
-        onClick={handleFilterSearchButtonClick}
-        onSubmit={handleFilterSearchSubmit}
+        filtersBoxId={filtersBoxId}
+        searchFilters={searchFilters}
       />
       <p className='filters-box-header'>
         <span className='default-filters-list-name'>
@@ -184,11 +169,12 @@ export default function FiltersBox(props) {
       FacetsAccordionBox into new component (SCP-2109)
        */}
       <div className='filters-box-footer'>
+        {showClear &&
         <ClearFilters
-          show={showClear}
           facetId={props.facet.id}
           onClick={clearFilters}
         />
+        }
         <Button
           id={applyId}
           bsStyle='primary'
