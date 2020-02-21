@@ -1,6 +1,6 @@
 class AddInitialFacets < Mongoid::Migration
   def self.up
-    FacetPopulator.populate_sample_facets
+    SearchFacetPopulator.populate_sample_facets
   end
 
   def self.down
