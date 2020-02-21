@@ -13,6 +13,7 @@ class SearchFacetPopulatorTest < ActionDispatch::IntegrationTest
     assert_equal true, disease_facet.is_ontology_based
     assert_equal true, disease_facet.is_array_based
     assert_equal 'https://www.ebi.ac.uk/ols/api/ontologies/mondo', disease_facet.ontology_urls.first['url']
+    assert_equal 'MONDO: Monarch Disease Ontology', disease_facet.ontology_urls.first['name']
 
     sex_facet = SearchFacet.find_by(name: 'sex')
     assert_equal false, sex_facet.is_ontology_based
@@ -31,7 +32,7 @@ class SearchFacetPopulatorTest < ActionDispatch::IntegrationTest
                         big_query_name_column: 'disease__ontology_label',
                         convention_name: 'alexandria_convention',
                         convention_version: '1.1.3',
-                        ontology_urls: [{name: 'to.do.com', url: 'https://www.ebi.ac.uk/ols/api/ontologies/mondo'}])
+                        ontology_urls: [{name: 'MONDO: Monarch Disease Ontology', url: 'https://www.ebi.ac.uk/ols/api/ontologies/mondo'}])
     SearchFacetPopulator.populate_from_schema
     assert_equal 7, SearchFacet.count
 
@@ -40,5 +41,6 @@ class SearchFacetPopulatorTest < ActionDispatch::IntegrationTest
     assert_equal true, disease_facet.is_ontology_based
     assert_equal true, disease_facet.is_array_based
     assert_equal 'https://www.ebi.ac.uk/ols/api/ontologies/mondo', disease_facet.ontology_urls.first['url']
+    assert_equal 'MONDO: Monarch Disease Ontology', disease_facet.ontology_urls.first['name']
   end
 end
