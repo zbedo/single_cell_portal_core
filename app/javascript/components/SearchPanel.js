@@ -23,7 +23,7 @@ export const SearchContext = React.createContext(searchContexts.study);
 /**
  * Component for SCP faceted search UI
  *
- * This is the entry point into React code from the traditional JS code
+ * This is an entry point into React code from the traditional JS code
  * See related integration at /app/javascript/packs/application.js
  */
 export default function SearchPanel() {

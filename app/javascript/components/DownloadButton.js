@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDownload } from '@fortawesome/free-solid-svg-icons';
 import Modal from 'react-bootstrap/lib/Modal';
+import Tooltip from 'react-bootstrap/lib/Tooltip';
 import Clipboard from 'react-clipboard.js';
 
 import { fetchAuthCode } from 'lib/scp-api';
@@ -41,16 +42,20 @@ function DownloadCommandContainer() {
 
   const [downloadConfig, setDownloadConfig] = useState({});
 
-  useEffect(() => {
+  async function updateDownloadConfig() {
     const fetchData = async () => {
       const dlConfig = await generateDownloadConfig();
       setDownloadConfig(dlConfig);
     };
     fetchData();
+  }
+
+  useEffect(() => {
+    updateDownloadConfig();
   }, []);
 
-  function onSuccess() {
-    console.log('TODO (SCP-2121): Show "Copied!" tooltip');
+  function onClipboardCopySuccess(event) {
+
   }
 
   return (
@@ -65,7 +70,7 @@ function DownloadCommandContainer() {
         <span className='input-group-btn'>
             <Clipboard
               data-clipboard-target={'#command-' + downloadConfig.authCode}
-              onSuccess={onSuccess}
+              onSuccess={onClipboardCopySuccess}
               className='btn btn-default btn-copy'
               data-toggle='tooltip'
               button-title='Copy to clipboard'
@@ -76,6 +81,7 @@ function DownloadCommandContainer() {
             id={'refresh-button-' + downloadConfig.authCode}
             className='download-refresh-button btn btn-default btn-refresh glyphicon glyphicon-refresh'
             data-toggle='tooltip'
+            onClick={updateDownloadConfig}
             title='Refresh download command'>
           </button>
         </span>
