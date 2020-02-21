@@ -52,6 +52,7 @@ Rails.application.routes.draw do
           get 'facet_filters', to: 'search#facet_filters', as: :search_facet_filters
           post 'auth_code', to: 'search#create_auth_code', as: :create_auth_code
           get 'bulk_download', to: 'search#bulk_download', as: :search_bulk_download
+          get 'bulk_download_size', to: 'search#bulk_download_size', as: :search_bulk_download_size
           get '/', to: 'search#index', as: :search
         end
       end

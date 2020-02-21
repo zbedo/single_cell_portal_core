@@ -122,6 +122,32 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 
+  test 'should return preview of bulk download files and total bytes' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+
+    study = Study.find_by(name: "Test Study #{@random_seed}")
+    file_types = %w(Expression Metadata).join(',')
+    execute_http_request(:get, api_v1_search_bulk_download_size_path(
+        accessions: study.accession, file_types: file_types.join(','))
+    )
+    assert_response :success
+
+    expected_response = {
+        Metadata: {
+            total_files: 1,
+            total_bytes: study.metadata_file.upload_file_size
+        },
+        Expression: {
+            total_files: 1,
+            total_bytes: study.expression_matrix_files.first.upload_file_size
+        }
+    }.with_indifferent_access
+
+    assert_equal expected_response, json.with_indifferent_access,
+                 "Did not correctly return bulk download sizes, expected #{expected_response} but found #{json}"
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
+
   test 'should filter search results by branding group' do
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
