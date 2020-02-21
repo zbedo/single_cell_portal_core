@@ -40,7 +40,7 @@ class SearchFacetPopulator
       # check if response has expected keys; if not, default to URL for name value
       ontology_name = ontology.dig('config', 'title') ? ontology['config']['title'] : url
       updated_facet.ontology_urls = [{name: ontology_name, url: url}]
-      end
+    end
     updated_facet.save!
     updated_facet
   end
