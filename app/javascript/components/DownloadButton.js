@@ -64,7 +64,7 @@ function DownloadCommandContainer() {
         <input
           id={'command-' + downloadConfig.authCode}
           className='form-control curl-download-command'
-          value={downloadConfig.downloadCommand}
+          value={downloadConfig.downloadCommand || ''}
           readOnly
         />
         <span className='input-group-btn'>
