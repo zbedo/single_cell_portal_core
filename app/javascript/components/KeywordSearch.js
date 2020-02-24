@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Button from 'react-bootstrap/lib/Button';
 import InputGroup from 'react-bootstrap/lib/InputGroup';
 import Form from 'react-bootstrap/lib/Form';
@@ -7,17 +7,15 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 
 export default function KeywordSearch (props){
-  const [searchTerms, setsearchTerms] = useState('');
 
   const handleSubmit = (event) => {
     // Prevent full page reload
     event.preventDefault();
     const searchTerm = event.target.elements.keywordText.value.trim();
     if(searchTerm){
-      setsearchTerms(searchTerm);
-      };
       props.updateKeyword(searchTerm);
-    }
+    };
+  }
   
   return (
     <div id='keyword-search'>
