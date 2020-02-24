@@ -12,8 +12,10 @@ import { fetchAuthCode } from 'lib/scp-api';
  *
  * @returns {Object} Object for auth code, time interval, and download command
  */
-async function generateDownloadConfig() {
-  const searchQuery = '&file_types=metadata,expression&accessions=SCP1,SCP2';
+async function generateDownloadConfig(matchingStudies) {
+
+  const accessions = matchingStudies.join(',');
+  const searchQuery = `&file_types=metadata,expression&accessions=${accessions}`;
 
   const {authCode, timeInterval} = await fetchAuthCode();
 
@@ -38,24 +40,25 @@ async function generateDownloadConfig() {
   };
 }
 
-function DownloadCommandContainer() {
+function DownloadCommandContainer(props) {
 
   const [downloadConfig, setDownloadConfig] = useState({});
 
-  async function updateDownloadConfig() {
+  async function updateDownloadConfig(matchingStudies) {
     const fetchData = async () => {
-      const dlConfig = await generateDownloadConfig();
+      const dlConfig = await generateDownloadConfig(matchingStudies);
       setDownloadConfig(dlConfig);
     };
     fetchData();
   }
 
   useEffect(() => {
-    updateDownloadConfig();
+    updateDownloadConfig(props.matchingStudies);
   }, []);
 
   function onClipboardCopySuccess(event) {
-
+    // TODO: Add polish to show "Copied!" upon clicking "Copy" button, then
+    // hide.  As in Bulk Download modal in study View / Explore.  (SCP-2164)
   }
 
   return (
@@ -137,7 +140,7 @@ export default function DownloadButton(props) {
           To download files matching your search, copy this command and paste it into your terminal:
           </p>
           <div className='lead command-container' id='command-container-all'>
-            <DownloadCommandContainer />
+            <DownloadCommandContainer matchingStudies={props.matchingStudies} />
           </div>
         </Modal.Body>
 

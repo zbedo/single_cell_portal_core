@@ -31,12 +31,16 @@ export default function SearchPanel() {
   // This search component is currently specific to the "Studies" tab, but
   // could possibly also enable search for "Genes" and "Cells" tabs.
 
+  // TODO (SCP-2169): Remove this crude mock data with a prop when
+  // 1) HomePage component is merged and and 2) /search response is updated.
+  const matchingStudies = ['SCP1', 'SCP2'];
+
   return (
     <SearchContext.Provider value={searchContexts.study}>
       <div className='container-fluid' id='search-panel'>
         <KeywordSearch />
         <FacetsPanel />
-        <DownloadButton />
+        <DownloadButton matchingStudies={matchingStudies} />
       </div>
     </SearchContext.Provider>
   );
