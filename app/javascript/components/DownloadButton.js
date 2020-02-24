@@ -58,7 +58,7 @@ function DownloadCommandContainer(props) {
 
   function onClipboardCopySuccess(event) {
     // TODO: Add polish to show "Copied!" upon clicking "Copy" button, then
-    // hide.  As in Bulk Download modal in study View / Explore.  (SCP-2164)
+    // hide.  As in Bulk Download modal in study View / Explore.  (SCP-2167)
   }
 
   return (
