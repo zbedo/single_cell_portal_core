@@ -25,7 +25,7 @@ export default function FiltersSearchBar(props) {
   }
 
   return (
-    <div class='filters-search-bar'>
+    <div className='filters-search-bar'>
       <Form onSubmit={handleFilterSearchSubmit}>
         <FormControl
           id={filtersSearchBarId}
