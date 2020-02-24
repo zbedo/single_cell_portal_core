@@ -26,7 +26,7 @@ export const SearchContext = React.createContext(searchContexts.study);
  * This is the entry point into React code from the traditional JS code
  * See related integration at /app/javascript/packs/application.js
  */
-export default function SearchPanel() {
+export default function SearchPanel(props) {
   // Note: This might become  a Higher-Order Component (HOC).
   // This search component is currently specific to the "Studies" tab, but
   // could possibly also enable search for "Genes" and "Cells" tabs.
@@ -34,7 +34,7 @@ export default function SearchPanel() {
   return (
     <SearchContext.Provider value={searchContexts.study}>
       <div className='container-fluid' id='search-panel'>
-        <KeywordSearch />
+        <KeywordSearch updateKeyword={props.updateKeyword}/>
         <FacetsPanel />
         <DownloadButton />
       </div>

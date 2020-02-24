@@ -39,19 +39,12 @@ const StudyResults = (props) => {
   return(
     <Tab.Content id ='results-content'>
        {results}
-        </Tab.Content>);
+    </Tab.Content>);
 
 }
 
 const Study =(props)=> {
-  const convertUnicode = (input) => {
-    return input.replace(/\\u(\w\w\w\w)/g,function(a,b) {
-      var charcode = parseInt(b,16);
-      return String.fromCharCode(charcode);
-    });
-  }
-  // Accounts for innerHTML in study description
-  const studyDescription =  {__html: props.study.description};
+  const  foo =  {__html: props.study.description};
 
     return(
           <div key={props.study.accession}>
@@ -61,7 +54,7 @@ const Study =(props)=> {
               <span id = 'cell-count'className="badge badge-secondary">{props.study.cell_count} Cells </span>
             </div>
             
-            <span dangerouslySetInnerHTML={studyDescription} id='descrition-text-area' disabled accession = {props.study.name}></span>
+            <span dangerouslySetInnerHTML={foo} id='descrition-text-area' disabled accession = {props.study.name}></span>
           </div>
             );
   }
