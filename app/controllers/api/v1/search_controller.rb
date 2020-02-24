@@ -75,6 +75,13 @@ module Api
                 key :type, :string
                 key :description, 'Requested branding group id'
               end
+              property :matching_accessions do
+                key :type, :array
+                key :description, 'Array of study accessions matching query'
+                items do
+                  key :type, :string
+                end
+              end
               property :facets do
                 key :type, :array
                 key :title, 'SearchFacets'
@@ -155,6 +162,8 @@ module Api
           Rails.logger.info "Found #{@convention_accessions.count} matching studies from BQ job #{job_id}: #{@convention_accessions}"
           @studies = @studies.where(:accession.in => @convention_accessions).order_by {|study| @studies_by_facet[study.accession][:facet_search_weight]}
         end
+        # save list of study accessions for bulk_download/bulk_download_size calls, as well as caching query results
+        @matching_accessions = @studies.pluck(:accession)
         # paginate results
         @results = @studies.paginate(page: params[:page], per_page: Study.per_page)
       end
@@ -565,7 +574,7 @@ module Api
       def self.find_matching_accessions(raw_accessions)
         accessions = split_query_param_on_delim(parameter: raw_accessions)
         sanitized_accessions = StudyAccession.sanitize_accessions(accessions)
-        Study.where(:accession.in => sanitized_accessions).map(&:accession)
+        Study.where(:accession.in => sanitized_accessions).pluck(:accession)
       end
 
       # find valid bulk download types from query parameters

@@ -56,6 +56,10 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     facet_query = facet_queries.map {|query| query.join(':')}.join('+')
     execute_http_request(:get, api_v1_search_path(type: 'study', facets: facet_query))
     assert_response :success
+    expected_accessions = [study.accession]
+    matching_accessions = json['matching_accessions']
+    assert_equal expected_accessions, matching_accessions,
+                 "Did not return correct array of matching accessions, expected #{expected_accessions} but found #{matching_accessions}"
     study_count = json['studies'].size
     assert_equal study_count, 1, "Did not find correct number of studies, expected 1 but found #{study_count}"
     result_accession = json['studies'].first['accession']
@@ -74,6 +78,11 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     study_count = Study.count
     execute_http_request(:get, api_v1_search_path(type: 'study', terms: @random_seed))
     assert_response :success
+    expected_accessions = Study.pluck(:accession)
+    matching_accessions = json['matching_accessions'].sort # need to sort results since they are returned in weighted order
+    assert_equal expected_accessions, matching_accessions,
+                 "Did not return correct array of matching accessions, expected #{expected_accessions} but found #{matching_accessions}"
+
     result_count = json['studies'].size
     assert_equal study_count, result_count, "Did not find correct number of studies, expected #{study_count} but found #{result_count}"
     assert_equal @random_seed, json['studies'].first['term_matches']
@@ -126,7 +135,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
     study = Study.find_by(name: "Test Study #{@random_seed}")
-    file_types = %w(Expression Metadata).join(',')
+    file_types = %w(Expression Metadata)
     execute_http_request(:get, api_v1_search_bulk_download_size_path(
         accessions: study.accession, file_types: file_types.join(','))
     )
