@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDownload } from '@fortawesome/free-solid-svg-icons';
 import Modal from 'react-bootstrap/lib/Modal';
+// import Tooltip from 'react-bootstrap/lib/Tooltip'; // We'll need this when refining onClipboardCopySuccess
 import Clipboard from 'react-clipboard.js';
 
 import { fetchAuthCode } from 'lib/scp-api';
@@ -11,8 +12,10 @@ import { fetchAuthCode } from 'lib/scp-api';
  *
  * @returns {Object} Object for auth code, time interval, and download command
  */
-async function generateDownloadConfig() {
-  const searchQuery = '&file_types=metadata,expression&accessions=SCP1,SCP2';
+async function generateDownloadConfig(matchingStudies) {
+
+  const accessions = matchingStudies.join(',');
+  const searchQuery = `&file_types=metadata,expression&accessions=${accessions}`;
 
   const {authCode, timeInterval} = await fetchAuthCode();
 
@@ -37,20 +40,25 @@ async function generateDownloadConfig() {
   };
 }
 
-function DownloadCommandContainer() {
+function DownloadCommandContainer(props) {
 
   const [downloadConfig, setDownloadConfig] = useState({});
 
-  useEffect(() => {
+  async function updateDownloadConfig(matchingStudies) {
     const fetchData = async () => {
-      const dlConfig = await generateDownloadConfig();
+      const dlConfig = await generateDownloadConfig(matchingStudies);
       setDownloadConfig(dlConfig);
     };
     fetchData();
+  }
+
+  useEffect(() => {
+    updateDownloadConfig(props.matchingStudies);
   }, []);
 
-  function onSuccess() {
-    console.log('TODO (SCP-2121): Show "Copied!" tooltip');
+  function onClipboardCopySuccess(event) {
+    // TODO: Add polish to show "Copied!" upon clicking "Copy" button, then
+    // hide.  As in Bulk Download modal in study View / Explore.  (SCP-2167)
   }
 
   return (
@@ -59,13 +67,13 @@ function DownloadCommandContainer() {
         <input
           id={'command-' + downloadConfig.authCode}
           className='form-control curl-download-command'
-          value={downloadConfig.downloadCommand}
+          value={downloadConfig.downloadCommand || ''}
           readOnly
         />
         <span className='input-group-btn'>
             <Clipboard
               data-clipboard-target={'#command-' + downloadConfig.authCode}
-              onSuccess={onSuccess}
+              onSuccess={onClipboardCopySuccess}
               className='btn btn-default btn-copy'
               data-toggle='tooltip'
               button-title='Copy to clipboard'
@@ -76,6 +84,7 @@ function DownloadCommandContainer() {
             id={'refresh-button-' + downloadConfig.authCode}
             className='download-refresh-button btn btn-default btn-refresh glyphicon glyphicon-refresh'
             data-toggle='tooltip'
+            onClick={updateDownloadConfig}
             title='Refresh download command'>
           </button>
         </span>
@@ -131,7 +140,7 @@ export default function DownloadButton(props) {
           To download files matching your search, copy this command and paste it into your terminal:
           </p>
           <div className='lead command-container' id='command-container-all'>
-            <DownloadCommandContainer />
+            <DownloadCommandContainer matchingStudies={props.matchingStudies} />
           </div>
         </Modal.Body>
 

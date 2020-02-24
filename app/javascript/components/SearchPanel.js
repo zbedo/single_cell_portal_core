@@ -23,7 +23,7 @@ export const SearchContext = React.createContext(searchContexts.study);
 /**
  * Component for SCP faceted search UI
  *
- * This is the entry point into React code from the traditional JS code
+ * This is an entry point into React code from the traditional JS code
  * See related integration at /app/javascript/packs/application.js
  */
 export default function SearchPanel() {
@@ -31,12 +31,17 @@ export default function SearchPanel() {
   // This search component is currently specific to the "Studies" tab, but
   // could possibly also enable search for "Genes" and "Cells" tabs.
 
+  // TODO (SCP-2169): Remove this crude mock data with a prop when
+  // 1) HomePage component is merged and and 2) /search response is updated.
+  // Note: matchingStudies will be called matching_accessions in upstream API
+  const matchingStudies = ['SCP1', 'SCP2'];
+
   return (
     <SearchContext.Provider value={searchContexts.study}>
       <div className='container-fluid' id='search-panel'>
         <KeywordSearch />
         <FacetsPanel />
-        <DownloadButton />
+        <DownloadButton matchingStudies={matchingStudies} />
       </div>
     </SearchContext.Provider>
   );
