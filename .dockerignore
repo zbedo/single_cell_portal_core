@@ -1,7 +1,8 @@
-public/single_cell/*
+public/*
 tmp/*
 data/*
 log/*
 data_bak
-/config/*.json
+config/*.json
 node_modules/*
+.git
