@@ -661,20 +661,27 @@ class StudyFile
     "#{self.study.accession}/#{self.output_directory_name}/#{self.upload_file_name}"
   end
 
+  # Map of StudyFile#file_type to ::BULK_DOWNLOAD_TYPES, maintaining relationship for bundled files to parent
+  def bulk_download_type
+    # put bundled files in a sub-directory named after the bundle parent's ID so relationship is maintained
+    if self.is_bundled?
+      bp = self.bundle_parent
+      "#{bp.output_directory_name}/#{bp.id}"
+    else
+      case self.file_type
+      when /Expression/
+        'Expression'
+      else
+        self.file_type
+      end
+    end
+  end
+
   # retrieve a directory name based on file_type
   # bundled files travel with the parent, using their parent's directory
   # dense (Expression Matrix) and sparse (MM Coordinate Matrix) are lumped together
   def output_directory_name
-    if self.is_bundled? && !self.bundle_parent?
-      self.bundle_parent.output_directory_name
-    else
-      case self.file_type
-      when /Expression/
-        'expression'
-      else
-        self.file_type.downcase.gsub(/\s/, '_')
-      end
-    end
+    self.bulk_download_type.downcase.gsub(/\s/, '_')
   end
 
   def is_local?

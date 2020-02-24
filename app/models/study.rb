@@ -570,22 +570,16 @@ class Study
     end
     property :study_files do
       key :type, :object
-      key :title, 'Cell Metadata and Expression Files'
-      key :description, 'Available StudyFiles for download/streaming'
-      property :Metadata do
-        key :title, 'Metadata Files'
-        key :type, :array
-        items do
-          key :title, 'StudyFile'
-          key '$ref', 'SiteStudyFile'
-        end
-      end
-      property :Expression do
-        key :title, 'Expression Matrices'
-        key :type, :array
-        items do
-          key :title, 'StudyFile'
-          key '$ref', 'SiteStudyFile'
+      key :title, 'StudyFiles'
+      key :description, 'Available StudyFiles for download, by type'
+      StudyFile::BULK_DOWNLOAD_TYPES.each do |file_type|
+        property file_type do
+          key :title, "#{file_type} Files"
+          key :type, :array
+          items do
+            key :title, 'StudyFile'
+            key '$ref', 'SiteStudyFile'
+          end
         end
       end
     end
