@@ -15,20 +15,29 @@ class SearchFacet
   field :filters, type: Array, default: []
   field :is_ontology_based, type: Boolean, default: false
   field :ontology_urls, type: Array, default: []
+  field :data_type, type: String
   field :is_array_based, type: Boolean
-  field :is_numeric, type: Boolean, default: false
   field :big_query_id_column, type: String
   field :big_query_name_column, type: String
   field :convention_name, type: String
   field :convention_version, type: String
+  field :unit, type: String # unit represented by values in number-based facets
+  field :min, type: Float # minimum allowed value for number-based facets
+  field :max, type: Float # maximum allowed value for number-based facets
 
-  validates_presence_of :name, :identifier, :big_query_id_column, :big_query_name_column, :convention_name, :convention_version
+  DATA_TYPES = %w(string number boolean)
+  BQ_DATA_TYPES = %w(STRING FLOAT64 BOOL)
+  BQ_TO_FACET_TYPES = Hash[BQ_DATA_TYPES.zip(DATA_TYPES)]
+
+  validates_presence_of :name, :identifier, :data_type, :big_query_id_column, :big_query_name_column, :convention_name, :convention_version
   validates_uniqueness_of :big_query_id_column, scope: [:convention_name, :convention_version]
   validate :ensure_ontology_url_format, if: proc {|attributes| attributes[:is_ontology_based]}
-  before_create :set_is_array_based_from_bq, if: proc {|attributes| attributes[:is_array_based].nil?}
+  before_validation :set_data_type_and_array, on: :create,
+                    if: proc {|attr| (attr[:is_array_based].blank? || attr[:data_type].blank?) && attr[:big_query_id_column].present?}
+  after_create :update_filter_values!
 
   swagger_schema :SearchFacet do
-    key :required, [:name, :identifier, :big_query_id_column, :big_query_name_column, :convention_name, :convention_version]
+    key :required, [:name, :identifier, :data_type, :big_query_id_column, :big_query_name_column, :convention_name, :convention_version]
     key :name, 'SearchFacet'
     property :name do
       key :type, :string
@@ -37,6 +46,11 @@ class SearchFacet
     property :identifier do
       key :type, :string
       key :description, 'ID of facet from convention JSON'
+    end
+    property :data_type do
+      key :type, :string
+      key :description, 'Data type of column entries'
+      key :enum, DATA_TYPES
     end
     property :filters do
       key :type, :array
@@ -107,6 +121,20 @@ class SearchFacet
       key :type, :string
       key :description, 'ID of facet from convention JSON'
     end
+    property :type do
+      key :type, :string
+      key :description, 'Data type of column entries'
+      key :enum, DATA_TYPES
+    end
+    property :items do
+      key :title, 'ArrayItems'
+      key :type, :object
+      key :description, 'Individual item properties (if array based)'
+      property :type do
+        key :type, :string
+        key :description, 'Data type of individual array items'
+      end
+    end
     property :filters do
       key :type, :array
       key :description, 'Array of filter values for facet'
@@ -139,6 +167,18 @@ class SearchFacet
         end
       end
     end
+    property :unit do
+      key :type, :string
+      key :description, 'Unit represented by numeric values'
+    end
+    property :min do
+      key :type, :float
+      key :description, 'Minumum allowed value for numeric columns'
+    end
+    property :max do
+      key :type, :float
+      key :description, 'Maximum allowed value for numeric columns'
+    end
   end
 
   swagger_schema :SearchFacetQuery do
@@ -147,6 +187,11 @@ class SearchFacet
     property :name do
       key :type, :string
       key :description, 'ID of facet from convention JSON'
+    end
+    property :type do
+      key :type, :string
+      key :description, 'Data type of column entries'
+      key :enum, DATA_TYPES
     end
     property :query do
       key :type, :string
@@ -205,6 +250,10 @@ class SearchFacet
     end
   end
 
+  # helper to know if column is numeric
+  def is_numeric?
+    self.data_type == 'number'
+  end
 
   # retrieve unique values from BigQuery and format an array of hashes with :name and :id values to populate :filters attribute
   def get_unique_filter_values
@@ -274,9 +323,12 @@ class SearchFacet
   private
 
   # determine if this facet references array-based data in BQ as data_type will look like "ARRAY<STRING>"
-  def set_is_array_based_from_bq
+  def set_data_type_and_array
     column_schema = SearchFacet.get_table_schema(column_name: self.big_query_id_column)
-    self.is_array_based = column_schema[:data_type].include?('ARRAY')
+    detected_type = column_schema[:data_type]
+    self.is_array_based = detected_type.include?('ARRAY')
+    item_type = BQ_DATA_TYPES.detect {|d| detected_type.match(d).present?}
+    self.data_type = BQ_TO_FACET_TYPES[item_type]
   end
 
   # custom validator for checking ontology_urls array

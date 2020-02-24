@@ -86,6 +86,7 @@ else
                     test/models/user_annotation_test.rb
                     test/models/analysis_configuration_test.rb
                     test/models/search_facet_test.rb
+                    test/integration/lib/search_facet_populator_test.rb
                     test/models/big_query_client_test.rb
   )
   for test_name in ${tests[*]}; do
