@@ -32,7 +32,7 @@ export default function SearchPanel() {
   // could possibly also enable search for "Genes" and "Cells" tabs.
 
   // TODO (SCP-2169): Remove this crude mock data with a prop when
-  // 1) HomePage component is merged and and 2) /search response is updated.
+  // 1) HomePage component is merged and 2) /search response is updated.
   // Note: matchingStudies will be called matching_accessions in upstream API
   const matchingStudies = ['SCP1', 'SCP2'];
 
