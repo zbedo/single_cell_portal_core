@@ -54,8 +54,8 @@ function FilterSlider(props) {
  */
 export default function Filters(props) {
   const filters = props.filters;
-  console.log('in Filters, props:')
-  console.log(props)
+  // console.log('in Filters, props:')
+  // console.log(props)
   if (props.facet.type !== 'number') {
     return <FilterList filters={filters} onClick={props.onClick} />;
   } else {

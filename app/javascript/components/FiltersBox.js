@@ -1,53 +1,36 @@
-import React, { useContext, useState, useEffect } from 'react';
-import Button from 'react-bootstrap/lib/Button';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
 import isEqual from 'lodash/isEqual';
 import pluralize from 'pluralize';
 
-
-
 import { fetchFacetFilters } from 'lib/scp-api';
-
-import { SearchContext } from './SearchPanel';
 import Filters from './Filters';
 import FiltersSearchBar from './FiltersSearchBar';
-import useApplyAndClear from './useApplyAndClear';
-
-
-/**
- * Component that can be clicked to unselect filters
- */
-function ClearFilters(props) {
-  return (
-    <span
-      id={`clear-filters-${props.facetId}`}
-      className='clear-filters'
-      onClick={props.onClick}
-    >
-      CLEAR
-    </span>
-  );
-}
+import {ApplyButton, ClearFilters, useApplyAndClear} from './ApplyAndClear';
 
 /**
- * Component for filter search and filter lists, and related functionality
+ * Component for filter search and filter lists
  */
 export default function FiltersBox(props) {
-  const searchContext = useContext(SearchContext);
 
+  // State for reusable "APPLY" and "Clear" buttons.
+  // This uses a custom hook to encapsulate reusable state code and functions.
+  // The FacetsAccordionBox also uses this custom hook.
+  // It's like a Higher-Order Component, but for function components.
   const {
     canApply, setCanApply,
-    showClear, setShowClear,
-    appliedSelection, setAppliedSelection,
-    selection, setSelection
+    showClear,
+    appliedSelection,
+    selection,
+    updateSelections,
+    handleApplyClick,
+    clearFilters
   } = useApplyAndClear();
 
+  // State that is specific to FiltersBox
   const [matchingFilters, setMatchingFilters] = useState(props.facet.filters);
   const [hasFilterSearchResults, setHasFilterSearchResults] = useState(false);
-  // const [show, setShow] = useState(props.show);
-
-  const component = this;
 
   useEffect(() => {
     setCanApply(!isEqual(selection, appliedSelection));
@@ -75,54 +58,6 @@ export default function FiltersBox(props) {
   const componentName = 'filters-box';
   const filtersBoxId = `${componentName}-${facetId}`;
   const applyId = `apply-${filtersBoxId}`;
-
-  /**
-   * Returns IDs of selected filters.
-   * Enables comparing current vs. applied filters to enable/disable APPLY button
-   */
-  function getCheckedFilterIds() {
-    const checkedSelector = `#${filtersBoxId} input:checked`;
-    const checkedFilterIds =
-      [...document.querySelectorAll(checkedSelector)].map((filter) => {
-        return filter.id;
-      });
-    return checkedFilterIds
-  }
-
-  function updateSelections() {
-    const checkedFilterIds = getCheckedFilterIds();
-    setSelection(checkedFilterIds);
-    setShowClear(checkedFilterIds.length > 0);
-  }
-
-  function handleApplyClick(event) {
-    const applyButtonClasses = Array.from(event.target.classList);
-
-    if (applyButtonClasses.includes('disabled')) return;
-
-    const checkedFilterIds = getCheckedFilterIds();
-
-    if (checkedFilterIds.length > 0) {
-      searchContext.facets[facetId] = checkedFilterIds.join(',');
-    } else {
-      delete searchContext.facets[facetId];
-    }
-
-    setAppliedSelection(checkedFilterIds);
-  }
-
-  function clearFilters() {
-    console.log('in clearFilters, this:');
-    console.log(this);
-    console.log('in clearFilters, component:');
-    console.log(component);
-    const checkedSelector = `#${filtersBoxId} input:checked`;
-    document.querySelectorAll(checkedSelector).forEach((checkedInput) => {
-      checkedInput.checked = false;
-    });
-
-    updateSelections();
-  }
 
   // Search for filters in this facet that match input text terms
   //
@@ -174,7 +109,7 @@ export default function FiltersBox(props) {
         <Filters
           facet={props.facet}
           filters={matchingFilters}
-          onClick={updateSelections}
+          onClick={() => {updateSelections(filtersBoxId)}}
         />
       </ul>
       {/*
@@ -185,16 +120,14 @@ export default function FiltersBox(props) {
         {showClear &&
         <ClearFilters
           facetId={props.facet.id}
-          onClick={clearFilters}
+          onClick={() => {clearFilters(filtersBoxId)}}
         />
         }
-        <Button
+        <ApplyButton
           id={applyId}
-          bsStyle='primary'
           className={'facet-apply-button ' + (canApply ? 'active' : 'disabled')}
-          onClick={handleApplyClick}>
-          APPLY
-        </Button>
+          onClick={(event) => {handleApplyClick(event, facetId)}}></ApplyButton>
+        />
       </div>
     </div>
   );
