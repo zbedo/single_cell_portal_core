@@ -1,32 +1,34 @@
-import React, {useState, useEffect } from 'react';
-import SearchPanel from './SearchPanel';
-import ResultsPanel from './ResultsPanel';
+import React, { useState, useEffect } from 'react'
+import SearchPanel from './SearchPanel'
+import ResultsPanel from './ResultsPanel'
+import { fetchSearch } from '../lib/scp-api'
+
+/**
+ * Wrapper component search and result panels
+ */
+export default function HomePageContent() {
+  const [results, setResults] = useState('')
+  const [keyword, setKeyword] = useState('')
+  const [type] = useState('study')
+
+  const handleKeywordUpdate = keyword => {
+    setKeyword(keyword)
+  }
 
 
-export default function HomePageContent(){
-    const [results, setResults] = useState('');
-    const [keyword, setKeyword] = useState('');
-    const [type] = useState('study');
-    const [facets] = useState({});
+  useEffect(() => {
+    const fetchData = async () => {
+      const results = await fetchSearch(type, keyword, '')
+      setResults(results)
+    }
+    fetchData()
+  }, [keyword])
 
-    const handleKeywordUpdate = (keyword) => {
-        setKeyword(keyword)
-            }
-
-    useEffect( () => {
-       fetch(`http://localhost:3000/single_cell/api/v1/search?type=${type}&terms=${keyword}`, {
-                headers: {
-                    'Accept': 'application/json',
-                }})
-                  .then((studyResults)=>{
-                                return studyResults.json()
-                            }).then(data =>setResults(data))}, [keyword]);
-
-    return (
-        <div>
-            <SearchPanel updateKeyword={handleKeywordUpdate}/>
-            {results && <ResultsPanel results={results}/>}
-        </div>
-    )
+  return (
+    <div>
+      <SearchPanel updateKeyword={handleKeywordUpdate}/>
+      {results && <ResultsPanel results={results}/>}
+    </div>
+  )
 }
 
