@@ -9,6 +9,7 @@ import { fetchSearch } from '../lib/scp-api'
 export default function HomePageContent() {
   const [results, setResults] = useState('')
   const [keyword, setKeyword] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
   const [type] = useState('study')
 
   const handleKeywordUpdate = keyword => {
@@ -18,11 +19,12 @@ export default function HomePageContent() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const results = await fetchSearch(type, keyword, '')
+      const results = await fetchSearch(type, keyword, '', currentPage)
       setResults(results)
+      console.log(results)
     }
     fetchData()
-  }, [keyword])
+  }, [keyword, currentPage])
 
   return (
     <div>
