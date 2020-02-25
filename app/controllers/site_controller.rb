@@ -2063,7 +2063,7 @@ class SiteController < ApplicationController
 
   # load expression matrix ids for optimized search speed
   def load_study_expression_matrix_ids(study_id)
-    StudyFile.where(study_id: study_id, :file_type.in => ['Expression Matrix', 'MM Coordinate Matrix']).pluck(&:id)
+    StudyFile.where(study_id: study_id, :file_type.in => ['Expression Matrix', 'MM Coordinate Matrix']).map(&:id)
   end
 
   # generic search term parser
