@@ -38,16 +38,16 @@ module Api
             end
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not authorized to edit Study'
+            key :description, ApiBaseController.forbidden('edit Study')
           end
           response 404 do
-            key :description, 'Study is not found'
+            key :description, ApiBaseController.not_found(Study)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
         end
       end
@@ -87,16 +87,16 @@ module Api
             end
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not authorized to edit Study'
+            key :description, ApiBaseController.forbidden('edit Study')
           end
           response 404 do
-            key :description, 'Study or DirectoryListing is not found'
+            key :description, ApiBaseController.not_found(Study, DirectoryListing)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
         end
       end
@@ -137,19 +137,31 @@ module Api
             end
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not authorized to edit Study'
+            key :description, ApiBaseController.forbidden('edit Study')
           end
           response 404 do
-            key :description, 'Study is not found'
+            key :description, ApiBaseController.not_found(Study)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 422 do
-            key :description, 'DirectoryListing validation failed'
+            key :description, ApiBaseController.unprocessable_entity(DirectoryListing)
+            schema do
+              key :title, 'ValidationErrors'
+              property :errors do
+                key :type, :array
+                key :description, 'Validation errors'
+                key :required, true
+                items do
+                  key :type, :string
+                  key :description, 'Error message'
+                end
+              end
+            end
           end
         end
       end
@@ -206,16 +218,16 @@ module Api
             end
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not authorized to edit Study'
+            key :description, ApiBaseController.forbidden('edit Study')
           end
           response 404 do
-            key :description, 'Study or DirectoryListing is not found'
+            key :description, ApiBaseController.not_found(Study, DirectoryListing)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 422 do
             key :description, 'DirectoryListing validation failed'
@@ -260,16 +272,16 @@ module Api
             key :description, 'Successful DirectoryListing deletion'
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not authorized to delete Study'
+            key :description, ApiBaseController.forbidden('edit Study')
           end
           response 404 do
-            key :description, 'Study or DirectoryListing is not found'
+            key :description, ApiBaseController.not_found(Study, DirectoryListing)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
         end
       end

@@ -8,9 +8,11 @@ module Api
           before_action :validate_content_type!
         end
 
-        # force all requests to be application/json
+        # default to JSON responses, disallow other Accept header formats
         def validate_content_type!
-          head 406 unless request.headers['Accept'] === 'application/json'
+          if request.headers['Accept'].present? && !%w(*/* application/json).include?(request.headers['Accept'])
+            head 406
+          end
         end
       end
     end

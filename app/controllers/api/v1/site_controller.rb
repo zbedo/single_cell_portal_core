@@ -38,7 +38,7 @@ module Api
             end
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
         end
       end
@@ -70,16 +70,16 @@ module Api
             end
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not allowed to view study'
+            key :description, ApiBaseController.forbidden('view study')
           end
           response 404 do
-            key :description, 'Study not found'
+            key :description, ApiBaseController.not_found(Study)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
         end
       end
@@ -115,16 +115,16 @@ module Api
             key :type, :file
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not allowed to view study'
+            key :description, ApiBaseController.forbidden('view study')
           end
           response 404 do
-            key :description, 'Study or StudyFile not found'
+            key :description, ApiBaseController.not_found(Study, StudyFile)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 410 do
             key :description, ApiBaseController.resource_gone
@@ -200,16 +200,16 @@ module Api
             end
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not allowed to view study, or does not have permission to stream file from bucket'
+            key :description, ApiBaseController.forbidden('view study or stream file')
           end
           response 404 do
-            key :description, 'Study or StudyFile not found'
+            key :description, ApiBaseController.not_found(Study, StudyFile)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 410 do
             key :description, ApiBaseController.resource_gone
@@ -271,7 +271,7 @@ module Api
             end
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
         end
       end
@@ -317,10 +317,10 @@ module Api
             end
           end
           response 404 do
-            key :description, 'Analysis Configuration not found'
+            key :description, ApiBaseController.not_found(AnalysisConfiguration)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
         end
       end
@@ -426,16 +426,16 @@ module Api
             end
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not allowed to view/run computes in study'
+            key :description, ApiBaseController.forbidden('view or run computes in Study')
           end
           response 404 do
-            key :description, 'Analysis Configuration or Study not found'
+            key :description, ApiBaseController.not_found(Study, AnalysisConfiguration)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
         end
       end
@@ -506,16 +506,16 @@ module Api
             key :description, 'Malformed submission parameters'
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not allowed to view/run computes in study'
+            key :description, ApiBaseController.forbidden('view or run computes in Study')
           end
           response 404 do
-            key :description, 'Analysis Configuration or Study not found'
+            key :description, ApiBaseController.not_found(Study, AnalysisConfiguration)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 500 do
             key :description, 'Internal server error (no submission)'
@@ -578,16 +578,16 @@ module Api
             key :description, 'Array of analysis submissions'
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not allowed to view/run computes in study'
+            key :description, ApiBaseController.forbidden('view or run computes in Study')
           end
           response 404 do
-            key :description, 'Study not found'
+            key :description, ApiBaseController.not_found(Study)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
         end
       end
@@ -633,16 +633,16 @@ module Api
             key :description, 'Analysis submission object w/ individual workflow statuses'
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not allowed to view/run computes in study'
+            key :description, ApiBaseController.forbidden('view or run computes in Study')
           end
           response 404 do
-            key :description, 'Study not found'
+            key :description, ApiBaseController.not_found(Study)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
         end
       end
@@ -679,16 +679,16 @@ module Api
             key :description, 'Analysis submission successfully aborted'
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not allowed to view/run computes in study'
+            key :description, ApiBaseController.forbidden('view or run computes in Study')
           end
           response 404 do
-            key :description, 'Study not found'
+            key :description, ApiBaseController.not_found(Study)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 412 do
             key :description, 'Analysis submission has already completed running and cannot be aborted anymore'
@@ -743,16 +743,16 @@ module Api
             key :description, 'Analysis submission bucket directory successfully deleted'
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not allowed to view/run computes in study'
+            key :description, ApiBaseController.forbidden('view or run computes in Study')
           end
           response 404 do
-            key :description, 'Study not found'
+            key :description, ApiBaseController.not_found(Study)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 412 do
             key :description, 'Analysis submission is still running; cannot remove bucket submission directory'
@@ -828,16 +828,16 @@ module Api
             end
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not allowed to view/run computes in study'
+            key :description, ApiBaseController.forbidden('view or run computes in Study')
           end
           response 404 do
-            key :description, 'Study not found'
+            key :description, ApiBaseController.not_found(Study)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
         end
       end

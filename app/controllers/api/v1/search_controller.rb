@@ -128,7 +128,7 @@ module Api
             end
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 500 do
             key :description, 'Server error'
@@ -195,7 +195,7 @@ module Api
             end
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
         end
       end
@@ -234,7 +234,7 @@ module Api
             end
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 500 do
             key :description, 'Server error'
@@ -271,10 +271,10 @@ module Api
             end
           end
           response 401 do
-            key :description, 'User is not signed in'
+            key :description, ApiBaseController.unauthorized
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
         end
       end
@@ -339,7 +339,7 @@ module Api
             key :description, 'Invalid study accessions or requested file types'
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
         end
       end
@@ -401,10 +401,10 @@ module Api
             key :description, 'Invalid study accessions or requested file types'
           end
           response 401 do
-            key :description, 'User not signed in'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'Invalid auth token, or requested download exceeds user download quota'
+            key :description, ApiBaseController.forbidden('download with provided auth_token, or download exceeds user quota')
             schema do
               key :title, 'Error'
               property :message do
@@ -414,7 +414,7 @@ module Api
             end
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
         end
       end

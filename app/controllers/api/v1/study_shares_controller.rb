@@ -40,16 +40,16 @@ module Api
             end
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not authorized to edit Study'
+            key :description, ApiBaseController.forbidden('edit Study')
           end
           response 404 do
-            key :description, 'Study is not found'
+            key :description, ApiBaseController.not_found(Study)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 410 do
             key :description, ApiBaseController.resource_gone
@@ -92,16 +92,16 @@ module Api
             end
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not authorized to edit Study'
+            key :description, ApiBaseController.forbidden('edit Study')
           end
           response 404 do
-            key :description, 'Study or StudyShare is not found'
+            key :description, ApiBaseController.not_found(Study, StudyShare)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 410 do
             key :description, ApiBaseController.resource_gone
@@ -146,22 +146,34 @@ module Api
             end
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not authorized to edit Study'
+            key :description, ApiBaseController.forbidden('edit Study')
           end
           response 404 do
-            key :description, 'Study is not found'
+            key :description, ApiBaseController.not_found(Study)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 410 do
             key :description, ApiBaseController.resource_gone
           end
           response 422 do
-            key :description, 'StudyShare validation failed'
+            key :description, ApiBaseController.unprocessable_entity(StudyShare)
+            schema do
+              key :title, 'ValidationErrors'
+              property :errors do
+                key :type, :array
+                key :description, 'Validation errors'
+                key :required, true
+                items do
+                  key :type, :string
+                  key :description, 'Error message'
+                end
+              end
+            end
           end
         end
       end
@@ -216,22 +228,34 @@ module Api
             end
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not authorized to edit Study'
+            key :description, ApiBaseController.forbidden('edit Study')
           end
           response 404 do
-            key :description, 'Study or StudyShare is not found'
+            key :description, ApiBaseController.not_found(Study, StudyShare)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 410 do
             key :description, ApiBaseController.resource_gone
           end
           response 422 do
-            key :description, 'StudyShare validation failed'
+            key :description, ApiBaseController.unprocessable_entity(StudyShare)
+            schema do
+              key :title, 'ValidationErrors'
+              property :errors do
+                key :type, :array
+                key :description, 'Validation errors'
+                key :required, true
+                items do
+                  key :type, :string
+                  key :description, 'Error message'
+                end
+              end
+            end
           end
         end
       end
@@ -271,16 +295,16 @@ module Api
             key :description, 'Successful StudyShare deletion'
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not authorized to delete Study'
+            key :description, ApiBaseController.forbidden('delete Study')
           end
           response 404 do
-            key :description, 'Study or StudyShare is not found'
+            key :description, ApiBaseController.not_found(Study, StudyShare)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 410 do
             key :description, ApiBaseController.resource_gone
