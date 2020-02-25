@@ -5,11 +5,15 @@ import { faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
 import isEqual from 'lodash/isEqual';
 import pluralize from 'pluralize';
 
+
+
 import { fetchFacetFilters } from 'lib/scp-api';
 
 import { SearchContext } from './SearchPanel';
 import Filters from './Filters';
 import FiltersSearchBar from './FiltersSearchBar';
+import useApplyAndClear from './useApplyAndClear';
+
 
 /**
  * Component that can be clicked to unselect filters
@@ -32,13 +36,18 @@ function ClearFilters(props) {
 export default function FiltersBox(props) {
   const searchContext = useContext(SearchContext);
 
-  const [canApply, setCanApply] = useState(false);
-  const [showClear, setShowClear] = useState(false);
-  const [appliedSelection, setAppliedSelection] = useState([]);
-  const [selection, setSelection] = useState([]);
+  const {
+    canApply, setCanApply,
+    showClear, setShowClear,
+    appliedSelection, setAppliedSelection,
+    selection, setSelection
+  } = useApplyAndClear();
+
   const [matchingFilters, setMatchingFilters] = useState(props.facet.filters);
   const [hasFilterSearchResults, setHasFilterSearchResults] = useState(false);
   // const [show, setShow] = useState(props.show);
+
+  const component = this;
 
   useEffect(() => {
     setCanApply(!isEqual(selection, appliedSelection));
@@ -103,6 +112,10 @@ export default function FiltersBox(props) {
   }
 
   function clearFilters() {
+    console.log('in clearFilters, this:');
+    console.log(this);
+    console.log('in clearFilters, component:');
+    console.log(component);
     const checkedSelector = `#${filtersBoxId} input:checked`;
     document.querySelectorAll(checkedSelector).forEach((checkedInput) => {
       checkedInput.checked = false;
@@ -159,7 +172,7 @@ export default function FiltersBox(props) {
       </p>
       <ul>
         <Filters
-          facetType='string'
+          facet={props.facet}
           filters={matchingFilters}
           onClick={updateSelections}
         />

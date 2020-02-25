@@ -9,27 +9,27 @@ import FacetsAccordion from './FacetsAccordion';
  * UI spec: https://projects.invisionapp.com/d/main#/console/19272801/402387756/preview
  *
  * TODO:
- *  - Implement SAVE (APPLY), Clear
+ *  - Handle APPLY, Clear
  *  - Add angle icons
  */
 export default function FacetsAccordionBox(props) {
-  
+
   // TODO: canSave interaction (SCP-2109)
   const [canSave, setCanSave] = useState(false);
 
   return (
     <div id='facets-accordion-box' style={{display: props.show ? '' : 'none'}}>
       <FacetsAccordion facets={props.facets} />
-      {/* 
+      {/*
       TODO: Abstract this and similar code block in
       FiltersBox into a new component (SCP-2109)
        */}
       <Button
         id='save-more-filters'
         className={'facet-save-button ' + (canSave ? 'enabled' : 'disabled')}
-        // onClick={handleSaveClick}
+        // onClick={handleApplyClick}
         >
-        SAVE
+        APPLY
       </Button>
     </div>
   );

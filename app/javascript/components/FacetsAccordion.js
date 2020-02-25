@@ -19,7 +19,11 @@ export default function FacetsAccordion(props) {
                 </Panel.Title>
               </Panel.Heading>
               <Panel.Body collapsible>
-                {/* <Filters facet={facet} /> */}
+                <Filters
+                  facet={facet}
+                  filters={facet.filters}
+                  onClick={function() {console.log('TODO')}}
+                />
               </Panel.Body>
             </Panel>
           );
