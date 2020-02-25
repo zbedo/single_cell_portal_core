@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import Tab from 'react-bootstrap/lib/Tab'
 import Tabs from 'react-bootstrap/lib/Tabs'
+import Pagination from 'react-bootstrap/lib/Pagination'
 
 const ResultsPanel = props => {
   return (
@@ -13,7 +14,27 @@ const ResultsPanel = props => {
           <Tab eventKey='files' title='Files'/>
         </Tabs>
       </Tab.Container>
+
     </div>
+  )
+}
+
+const ResultsPagination = props => {
+  const [activePage, setActivePage] = useState(1)
+  const pageItems = []
+  for (let pageIndex =1; pageIndex <= props.totalPages; pageIndex++) {
+    pageItems.push(
+      <Pagination.Item key={pageIndex} active={pageIndex === activePage}>
+        {pageIndex}
+      </Pagination.Item>,
+    )
+  }
+
+
+  return (
+    <Pagination>
+      {pageItems}
+    </Pagination>
   )
 }
 
@@ -21,12 +42,12 @@ const StudyResults = props => {
   let displayedResults
   if (props.results.studies.length>0) {
     displayedResults = props.results.studies.map(result => (
-      <div key={result.accession} className='card'>
-        <Study
-          study={result}
-          handleStudyLabel = {props.handleStudyLabel}
-        />
-      </div>
+      <Study
+        study={result}
+        handleStudyLabel = {props.handleStudyLabel}
+        key={result.accession}
+        className='card'
+      />
     ),
     )
   } else {
@@ -36,6 +57,7 @@ const StudyResults = props => {
   return (
     <Tab.Content id ='results-content'>
       {displayedResults}
+      <ResultsPagination totalPages = {props.results.totalPages}/>
     </Tab.Content>)
 }
 
