@@ -9,7 +9,7 @@ const ResultsPanel = props => {
       <Tab.Container id="result-tabs" defaultActiveKey="study">
         <Tabs defaultActiveKey='study' animation={false} >
           <Tab eventKey='study' title="Studies" >
-            <StudyResults results={props.results}/>
+            <Results results={props.results}/>
           </Tab>
           <Tab eventKey='files' title='Files'/>
         </Tabs>
@@ -38,13 +38,12 @@ const ResultsPagination = props => {
   )
 }
 
-const StudyResults = props => {
+const Results = props => {
   let displayedResults
   if (props.results.studies.length>0) {
     displayedResults = props.results.studies.map(result => (
       <Study
         study={result}
-        handleStudyLabel = {props.handleStudyLabel}
         key={result.accession}
         className='card'
       />
