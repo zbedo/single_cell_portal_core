@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSlidersH } from '@fortawesome/free-solid-svg-icons';
@@ -22,7 +23,7 @@ export default function MoreFacetsButton(props) {
   return (
       <span
         id='more-facets-button'
-        className={`${show ? 'active' : ''}`}>
+        className={`${show ? 'active' : ''} facet`}>
         <span
           onClick={handleClick}>
           <FontAwesomeIcon className="icon-left" icon={faSlidersH}/>
