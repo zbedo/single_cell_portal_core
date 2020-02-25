@@ -18,9 +18,9 @@ const ResultsPanel = props => {
 }
 
 const StudyResults = props => {
-  let results
+  let displayedResults
   if (props.results.studies.length>0) {
-    results = props.results.studies.map(result => (
+    displayedResults = props.results.studies.map(result => (
       <div key={result.accession} className='card'>
         <Study
           study={result}
@@ -30,12 +30,12 @@ const StudyResults = props => {
     ),
     )
   } else {
-    results = <p>No Results</p>
+    displayedResults = <p>No Results</p>
   }
 
   return (
     <Tab.Content id ='results-content'>
-      {results}
+      {displayedResults}
     </Tab.Content>)
 }
 
