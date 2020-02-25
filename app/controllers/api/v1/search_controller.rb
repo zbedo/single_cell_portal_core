@@ -41,6 +41,13 @@ module Api
             key :type, :string
           end
           parameter do
+            key :name, :page
+            key :in, :query
+            key :description, 'Page number for pagination control'
+            key :required, false
+            key :type, :integer
+          end
+          parameter do
             key :name, :scpbr
             key :in, :query
             key :description, 'Requested branding group (to filter results on)'
