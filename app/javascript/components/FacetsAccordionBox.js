@@ -9,7 +9,7 @@ import {ApplyButton, ClearFilters, useApplyAndClear} from './ApplyAndClear';
  *
  * UI spec: https://projects.invisionapp.com/d/main#/console/19272801/402387756/preview
  *
- * TODO:
+ * Polish to consider:
  *  - Add angle icons
  */
 export default function FacetsAccordionBox(props) {

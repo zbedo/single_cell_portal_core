@@ -16,8 +16,21 @@ export default function FacetsPanel() {
       const facets = await fetchFacets();
       const df = facets.filter(facet => defaultFacetIds.includes(facet.id));
       const mf = facets.filter(facet => moreFacetIds.includes(facet.id));
+
+      const organismAgeMock = [{
+        "name": "Organism Age",
+        "id": "organism_age",
+        "links": [],
+        "type": "number",
+        "max": "130",
+        "min": "0",
+        "unit": "years"
+      }]
+
+      const mfWithAgeMock = [...mf, ...organismAgeMock];
+
       setDefaultFacets(df);
-      setMoreFacets(mf);
+      setMoreFacets(mfWithAgeMock);
     };
     fetchData();
   }, []);
