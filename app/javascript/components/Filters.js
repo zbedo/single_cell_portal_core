@@ -1,6 +1,6 @@
 import React from 'react';
 import { Slider, Rail, Handles, Tracks, Ticks } from "react-compound-slider";
-import { Handle, Track, Tick } from './slider/components.tsx';
+import { Handle, Track, Tick } from './slider/components';
 
 /**
  * Component for a list of string-based filters, e.g. disease, species
@@ -78,27 +78,35 @@ const domain = [0, 130];
 
 class FilterSlider extends React.Component {
   state = {
-    values: [0, 130]
+    values: domain,
+    inputValues: domain
   };
 
   onChange = (values) => {
-    document.querySelector('#input-min-organism-age').value = values[0];
-    document.querySelector('#input-max-organism-age').value = values[1];
-    this.setState({ values });
+    const inputValues = values;
+    this.setState({ values, inputValues });
   };
 
   onTextInputChange = (event) => {
     const target = event.target;
-    const value = parseInt(target.value);
+    const rawValue = target.value;
+    const float = parseFloat(rawValue);
     const index = target.id.includes('min') ? 0 : 1;
     let values = this.state.values.slice();
+    let inputValues = this.state.values.slice();
+
+    let value = float;
+    if (isNaN(float)) value = values[index]; // ignore invalid input
+
     values[index] = value;
-    this.setState({ values });
+    inputValues[index] = rawValue;
+
+    this.setState({ values, inputValues });
   }
 
   render() {
     const {
-      state: { values }
+      state: { values, inputValues }
     } = this;
 
     return (
@@ -106,25 +114,28 @@ class FilterSlider extends React.Component {
         <input
           id="input-min-organism-age"
           onChange={(event) => this.onTextInputChange(event)}
-          placeholder="0"
+          type="number"
+          min={domain[0]}
+          max={domain[1]}
+          value={inputValues[0]}
           style={{'width': '60px'}}
         />
         <span style={{'margin': '0 4px 0 4px'}}>-</span>
         <input
           id="input-max-organism-age"
           onChange={(event) => this.onTextInputChange(event)}
-          placeholder="130"
+          type="number"
+          min={domain[0]}
+          max={domain[1]}
+          value={inputValues[1]}
           style={{'width': '60px', 'marginRight': '8px'}}
         />
         <select>
-          <option>years</option>
-          <option>months</option>
-          <option>weeks</option>
-          <option>days</option>
-          <option>hours</option>
-          <option>seconds</option>
-          <option>milliseconds</option>
-          <option>microseconds</option>
+          <option>Years</option>
+          <option>Months</option>
+          <option>Weeks</option>
+          <option>Days</option>
+          <option>Hours</option>
         </select>
         <div style={{ height: 120, width: '100%' }}>
           <Slider

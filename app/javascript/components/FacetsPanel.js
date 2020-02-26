@@ -24,7 +24,8 @@ export default function FacetsPanel() {
         "type": "number",
         "max": "130",
         "min": "0",
-        "unit": "years"
+        "unit": "years",
+        "all_units": ["hours", "days", "weeks", "months", "years"]
       }];
 
       const mfWithAgeMock = [...mf, ...organismAgeMock];
