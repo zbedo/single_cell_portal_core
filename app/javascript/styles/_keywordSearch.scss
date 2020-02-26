@@ -1,0 +1,48 @@
+/**
+* Styles for React-based faceted search UI for studies
+*/
+
+$brand-color: #4d72aa;
+
+#keyword-search {
+  box-sizing: border-box;
+  display: inline-block;
+  height: 35px;
+  width: 461px;
+}
+
+#keyword-input-group {
+  background-color: white;
+  border: 1px solid $brand-color;
+  border-radius: 15px;
+  height: 100%;
+  width:100%;
+}
+
+#keyword-input {
+  border: none;
+  color: $brand-color;
+  font-weight: 500;
+  height: 100%;
+  line-height: 100%;
+  margin-left: 15px;
+  padding: 0 16px;
+  width: 90%;
+}
+
+#keyword-submit {
+  display: inline-block;
+}
+
+#keyword-submit {
+  button {
+    background-color: $brand-color;
+    border: none;
+    border-radius: 15px;
+  }
+
+  svg {
+    color: white;
+  }
+}
+

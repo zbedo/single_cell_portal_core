@@ -1,3 +1,4 @@
+/* eslint-disable */
 /**
  * @fileoverview JavaScript client for Single Cell Portal REST API
  *
@@ -56,6 +57,7 @@ export async function fetchAuthCode(mock=false) {
  * @returns {Promise} Promise object containing camel-cased data from API
  */
 export async function fetchFacets(mock=false) {
+  let init = defaultInit;
   return await scpApi('/search/facets', defaultInit, mock);
 }
 
@@ -119,6 +121,26 @@ export async function fetchFacetFilters(facet, query, mock=false) {
 }
 
 /**
+ * Returns a list of matching studies given a keyword and facets
+ *
+ * Docs: https:///singlecell.broadinstitute.org/single_cell/api/swagger_docs/v1#!/Search/search_facet_filters_path
+ *
+ * @param {type} Type of query to perform (study- or cell-based)
+ * @param {terms} User-supplied query string
+ * @param {facets} User-supplied list facets and filters
+ * @returns {Promise} Promise object containing camel-cased data from API
+ *
+ * @example
+ *
+ * fetchSearch('study', 'tuberculosis');
+ */
+export async function fetchSearch(type, terms, facets, mock=false){
+  // Needs to be edited to include facets
+  const searchPathAndQueryString = `/search?type=${type}&terms=${terms}`
+  return await scpApi(searchPathAndQueryString, defaultInit, mock);
+}
+
+/**
  * Client for SCP REST API.  Less fetch boilerplate, easier mocks.
  *
  * @param {String} path | Relative path for API endpoint, e.g. /search/auth_code
@@ -126,7 +148,8 @@ export async function fetchFacetFilters(facet, query, mock=false) {
  * @param {Boolean} mock | Whether to use mock data.  Helps development, tests.
  */
 export default async function scpApi(path, init, mock=false) {
-
+  console.log(path)
+  console.log(init)
   if (globalMock) mock = true;
   const basePath = (mock || globalMock) ? mockOrigin + '/mock_data' : defaultBasePath;
   let fullPath = basePath + path;
