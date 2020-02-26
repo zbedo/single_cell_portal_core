@@ -19,7 +19,7 @@ const railOuterStyle = {
   position: 'absolute' as 'absolute',
   width: '100%',
   height: 42,
-  transform: 'translate(0%, -50%)',
+  // transform: 'translate(0%, -50%)',
   borderRadius: 7,
   cursor: 'pointer',
 };
@@ -28,7 +28,7 @@ const railInnerStyle = {
   position: 'absolute' as 'absolute',
   width: '100%',
   height: 14,
-  transform: 'translate(0%, -50%)',
+  // transform: 'translate(0%, -50%)',
   borderRadius: 7,
   pointerEvents: 'none' as 'none',
   backgroundColor: 'rgb(155,155,155)',
@@ -69,7 +69,7 @@ export const Handle: React.FC<HandleProps> = ({
         style={{
           left: `${percent}%`,
           position: 'absolute',
-          transform: 'translate(-50%, -50%)',
+          transform: 'translate(-50%, -25%)',
           WebkitTapHighlightColor: 'rgba(0,0,0,0)',
           zIndex: 5,
           width: 28,
@@ -87,7 +87,7 @@ export const Handle: React.FC<HandleProps> = ({
         style={{
           left: `${percent}%`,
           position: 'absolute',
-          transform: 'translate(-50%, -50%)',
+          transform: 'translate(-50%, -25%)',
           zIndex: 2,
           width: 24,
           height: 24,
@@ -152,7 +152,7 @@ export const Track: React.FC<TrackProps> = ({
     <div
       style={{
         position: 'absolute',
-        transform: 'translate(0%, -50%)',
+        // transform: 'translate(0%, -50%)',
         height: 14,
         zIndex: 1,
         backgroundColor: disabled ? '#999' : '#607E9E',
@@ -192,7 +192,7 @@ export const Tick: React.FC<TickProps> = ({ tick, count, format = d => d }) => {
         style={{
           position: 'absolute',
           marginTop: 22,
-          fontSize: 10,
+          fontSize: 14,
           textAlign: 'center',
           marginLeft: `${-(100 / count) / 2}%`,
           width: `${100 / count}%`,
