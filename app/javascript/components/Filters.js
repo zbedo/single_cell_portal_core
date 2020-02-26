@@ -90,14 +90,10 @@ class FilterSlider extends React.Component {
   onTextInputChange = (event) => {
     const target = event.target;
     const value = parseInt(target.value);
-    this.setState(() => {
-      const index = target.id.includes('min') ? 0 : 1;
-      let newValues = this.state.values;
-      newValues[index] = value;
-      console.log('newValues')
-      console.log(newValues)
-      return {values: newValues};
-    })
+    const index = target.id.includes('min') ? 0 : 1;
+    let values = this.state.values.slice();
+    values[index] = value;
+    this.setState({ values });
   }
 
   render() {
