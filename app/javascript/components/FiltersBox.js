@@ -112,10 +112,6 @@ export default function FiltersBox(props) {
           onClick={() => {updateSelections(filtersBoxId)}}
         />
       </ul>
-      {/*
-      TODO: abstracting this and similar code block in
-      FacetsAccordionBox into new component (SCP-2109)
-       */}
       <div className='filters-box-footer'>
         {showClear &&
         <ClearFilters
@@ -126,7 +122,7 @@ export default function FiltersBox(props) {
         <ApplyButton
           id={applyId}
           className={'facet-apply-button ' + (canApply ? 'active' : 'disabled')}
-          onClick={(event) => {handleApplyClick(event, facetId)}}></ApplyButton>
+          onClick={(event) => {handleApplyClick(event, facetId)}}
         />
       </div>
     </div>

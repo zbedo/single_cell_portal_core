@@ -24,14 +24,16 @@ export function ClearFilters(props) {
  * filters for the current facet or facet accordion.
  */
 export function ApplyButton(props) {
-  <Button
-    id={props.id}
-    bsStyle='primary'
-    className={props.className}
-    onClick={props.onClick}
-  >
-  APPLY
-  </Button>
+  return (
+    <Button
+      id={props.id}
+      bsStyle='primary'
+      className={props.className}
+      onClick={props.onClick}
+    >
+    APPLY
+    </Button>
+  );
 }
 /**
  * Custom hook for boxes that have "APPLY" and "Clear" for one or more
@@ -65,7 +67,7 @@ export function useApplyAndClear() {
     setShowClear(checkedFilterIds.length > 0);
   }
 
-  function handleApplyClick(event, facetId) {
+  function handleApplyClick(event, facetId, isMultipleFacets=false) {
     const applyButtonClasses = Array.from(event.target.classList);
 
     if (applyButtonClasses.includes('disabled')) return;
