@@ -44,8 +44,26 @@ module Api
       end
 
       # HTTP 422 - Unprocessable entity; failed validation
-      def self.unprocessable_entity(entity)
-        "#{entity} validation failed"
+      module SwaggerResponses
+        module ValidationFailureResponse
+          def self.extended(base)
+            base.response 422 do
+              key :description, 'Resource failed validation'
+              schema do
+                key :title, 'ValidationErrors'
+                property :errors do
+                  key :type, :array
+                  key :description, 'Validation errors'
+                  key :required, true
+                  items do
+                    key :type, :string
+                    key :description, 'Error message'
+                  end
+                end
+              end
+            end
+          end
+        end
       end
     end
   end

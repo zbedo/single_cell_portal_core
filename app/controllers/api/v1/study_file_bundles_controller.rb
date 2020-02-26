@@ -158,21 +158,7 @@ module Api
           response 410 do
             key :description, ApiBaseController.resource_gone
           end
-          response 422 do
-            key :description, ApiBaseController.unprocessable_entity(StudyFileBundle)
-            schema do
-              key :title, 'ValidationErrors'
-              property :errors do
-                key :type, :array
-                key :description, 'Validation errors'
-                key :required, true
-                items do
-                  key :type, :string
-                  key :description, 'Error message'
-                end
-              end
-            end
-          end
+          extend SwaggerResponses::ValidationFailureResponse
         end
       end
       

@@ -148,21 +148,7 @@ module Api
           response 406 do
             key :description, ApiBaseController.not_acceptable
           end
-          response 422 do
-            key :description, ApiBaseController.unprocessable_entity(DirectoryListing)
-            schema do
-              key :title, 'ValidationErrors'
-              property :errors do
-                key :type, :array
-                key :description, 'Validation errors'
-                key :required, true
-                items do
-                  key :type, :string
-                  key :description, 'Error message'
-                end
-              end
-            end
-          end
+          extend SwaggerResponses::ValidationFailureResponse
         end
       end
 
@@ -229,9 +215,7 @@ module Api
           response 406 do
             key :description, ApiBaseController.not_acceptable
           end
-          response 422 do
-            key :description, 'DirectoryListing validation failed'
-          end
+          extend SwaggerResponses::ValidationFailureResponse
         end
       end
 
