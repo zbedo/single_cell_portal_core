@@ -74,16 +74,31 @@ const railStyle = {
   backgroundColor: 'rgb(155,155,155)'
 };
 
-const domain = [100, 500];
+const domain = [0, 130];
 
 class FilterSlider extends React.Component {
   state = {
-    values: [150, 300]
+    values: [0, 130]
   };
 
   onChange = (values) => {
+    document.querySelector('#input-min-organism-age').value = values[0];
+    document.querySelector('#input-max-organism-age').value = values[1];
     this.setState({ values });
   };
+
+  onTextInputChange = (event) => {
+    const target = event.target;
+    const value = parseInt(target.value);
+    this.setState(() => {
+      const index = target.id.includes('min') ? 0 : 1;
+      let newValues = this.state.values;
+      newValues[index] = value;
+      console.log('newValues')
+      console.log(newValues)
+      return {values: newValues};
+    })
+  }
 
   render() {
     const {
@@ -91,59 +106,84 @@ class FilterSlider extends React.Component {
     } = this;
 
     return (
-      <div style={{ height: 120, width: '100%' }}>
-        <Slider
-          mode={1}
-          step={1}
-          domain={domain}
-          rootStyle={sliderStyle}
-          onChange={this.onChange}
-          values={values}
-        >
-          <Rail>
-            {({ getRailProps }) => (
-              <div style={railStyle} {...getRailProps()} />
-            )}
-          </Rail>
-          <Handles>
-            {({ handles, getHandleProps }) => (
-              <div className="slider-handles">
-                {handles.map(handle => (
-                  <Handle
-                    key={handle.id}
-                    handle={handle}
-                    domain={domain}
-                    getHandleProps={getHandleProps}
-                  />
-                ))}
-              </div>
-            )}
-          </Handles>
-          <Tracks left={false} right={false}>
-            {({ tracks, getTrackProps }) => (
-              <div className="slider-tracks">
-                {tracks.map(({ id, source, target }) => (
-                  <Track
-                    key={id}
-                    source={source}
-                    target={target}
-                    getTrackProps={getTrackProps}
-                  />
-                ))}
-              </div>
-            )}
-          </Tracks>
-          <Ticks count={10}>
-            {({ ticks }) => (
-              <div className="slider-ticks">
-                {ticks.map(tick => (
-                  <Tick key={tick.id} tick={tick} count={ticks.length} />
-                ))}
-              </div>
-            )}
-          </Ticks>
-        </Slider>
-      </div>
+      <>
+        <input
+          id="input-min-organism-age"
+          onChange={(event) => this.onTextInputChange(event)}
+          placeholder="0"
+          style={{'width': '60px'}}
+        />
+        <span style={{'margin': '0 4px 0 4px'}}>-</span>
+        <input
+          id="input-max-organism-age"
+          onChange={(event) => this.onTextInputChange(event)}
+          placeholder="130"
+          style={{'width': '60px', 'marginRight': '8px'}}
+        />
+        <select>
+          <option>years</option>
+          <option>months</option>
+          <option>weeks</option>
+          <option>days</option>
+          <option>hours</option>
+          <option>seconds</option>
+          <option>milliseconds</option>
+          <option>microseconds</option>
+        </select>
+        <div style={{ height: 120, width: '100%' }}>
+          <Slider
+            mode={1}
+            step={1}
+            domain={domain}
+            rootStyle={sliderStyle}
+            onChange={this.onChange}
+            values={values}
+          >
+            <Rail>
+              {({ getRailProps }) => (
+                <div style={railStyle} {...getRailProps()} />
+              )}
+            </Rail>
+            <Handles>
+              {({ handles, getHandleProps }) => (
+                <div className="slider-handles">
+                  {handles.map(handle => (
+                    <Handle
+                      key={handle.id}
+                      handle={handle}
+                      domain={domain}
+                      getHandleProps={getHandleProps}
+                    />
+                  ))}
+                </div>
+              )}
+            </Handles>
+            <Tracks left={false} right={false}>
+              {({ tracks, getTrackProps }) => (
+                <div className="slider-tracks">
+                  {tracks.map(({ id, source, target }) => (
+                    <Track
+                      key={id}
+                      source={source}
+                      target={target}
+                      getTrackProps={getTrackProps}
+                    />
+                  ))}
+                </div>
+              )}
+            </Tracks>
+            <Ticks count={6}>
+              {({ ticks }) => (
+                <div className="slider-ticks">
+                  {ticks.map(tick => (
+                    <Tick key={tick.id} tick={tick} count={ticks.length} />
+                  ))}
+                </div>
+              )}
+            </Ticks>
+          </Slider>
+        </div>
+      </>
     );
   }
 }
