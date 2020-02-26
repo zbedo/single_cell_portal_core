@@ -138,14 +138,18 @@ module Api
 
       def index
         @viewable = Study.viewable(current_api_user)
-
+        @search_type = :keyword
         # if search params are present, filter accordingly
         if params[:terms].present?
           @search_terms = sanitize_search_values(params[:terms])
           # determine if search values contain possible study accessions
           possible_accessions = StudyAccession.sanitize_accessions(@search_terms.split)
           @studies = @viewable.any_of({:$text => {:$search => @search_terms}},
-                                      {:accession.in => possible_accessions}).order_by {|study| study.search_weight(@search_terms.split) }
+                                      {:accession.in => possible_accessions})
+          # all of our terms were accessions, so this is a "cached" query
+          if possible_accessions.size == @search_terms.split.size
+            @search_type = :accession
+          end
         else
           @studies = @viewable
         end
@@ -157,6 +161,7 @@ module Api
 
         # only call BigQuery if list of possible studies is larger than 0 and we have matching facets to use
         if @studies.count > 0 && @facets.any?
+          @search_type = :facet
           @studies_by_facet = {}
           @big_query_search = self.class.generate_bq_query_string(@facets)
           Rails.logger.info "Searching BigQuery using facet-based query: #{@big_query_search}"
@@ -167,11 +172,19 @@ module Api
           # uniquify result list as one study may match multiple facets/filters
           @convention_accessions = query_results.map {|match| match[:study_accession]}.uniq
           Rails.logger.info "Found #{@convention_accessions.count} matching studies from BQ job #{job_id}: #{@convention_accessions}"
-          @studies = @studies.where(:accession.in => @convention_accessions).order_by {|study| @studies_by_facet[study.accession][:facet_search_weight]}
+          @studies = @studies.where(:accession.in => @convention_accessions)
+        end
+        # determine sort order for pagination; minus sign (-) means a descending search
+        case @search_type
+        when :keyword
+          @studies = @studies.to_a.sort_by {|study| -study.search_weight(@search_terms.split) }
+        when :accession
+          @studies = @studies.to_a.sort_by {|study| possible_accessions.index(study.accession) }
+        when :facet
+          @studies = @studies.to_a.sort_by {|study| -@studies_by_facet[study.accession][:facet_search_weight]}
         end
         # save list of study accessions for bulk_download/bulk_download_size calls, as well as caching query results
-        @matching_accessions = @studies.pluck(:accession)
-        # paginate results
+        @matching_accessions = @studies.map(&:accession)
         @results = @studies.paginate(page: params[:page], per_page: Study.per_page)
       end
 
