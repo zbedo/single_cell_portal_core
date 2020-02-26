@@ -22,7 +22,7 @@ const railStyle = {
   backgroundColor: 'rgb(155,155,155)'
 };
 
-const domain = [0, 130];
+const domain = [0, 150];
 
 export default class FilterSlider extends React.Component {
   state = {
