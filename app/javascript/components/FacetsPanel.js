@@ -25,7 +25,7 @@ export default function FacetsPanel() {
         "max": "130",
         "min": "0",
         "unit": "years"
-      }]
+      }];
 
       const mfWithAgeMock = [...mf, ...organismAgeMock];
 
