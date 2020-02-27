@@ -4,9 +4,6 @@ import React from 'react';
 import { Slider, Rail, Handles, Tracks, Ticks } from "react-compound-slider";
 import { Handle, Track, Tick } from './slider/components';
 
-/**
- * Component for slider to filter numerical facets, e.g. organism age
- */
 const sliderStyle = {
   margin: '5%',
   position: 'relative',
@@ -22,6 +19,13 @@ const railStyle = {
   backgroundColor: 'rgb(155,155,155)'
 };
 
+/**
+ * Component for slider to filter numerical facets, e.g. organism age
+ *
+ * TODO (SCP-2149):
+ * - Update search context upon applying values
+ * - Convert selected values into seconds, regardless of selected unit
+ */
 export default class FilterSlider extends React.Component {
 
   constructor(props) {
