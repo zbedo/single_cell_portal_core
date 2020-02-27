@@ -22,20 +22,28 @@ const railStyle = {
   backgroundColor: 'rgb(155,155,155)'
 };
 
-const domain = [0, 150];
-
 export default class FilterSlider extends React.Component {
-  state = {
-    values: domain,
-    inputValues: domain
-  };
+
+  constructor(props) {
+    super(props);
+
+    this.domain = [parseInt(props.facet.min), parseInt(props.facet.max)];
+
+    this.state = {
+      values: this.domain,
+      inputValues: this.domain
+    }
+  }
 
   onChange = (values) => {
     const inputValues = values;
     this.setState({ values, inputValues });
   };
 
-  onTextInputChange = (event) => {
+  /**
+   * Changes slider value upon changing the number input control value.
+   */
+  onNumberInputChange = (event) => {
     const target = event.target;
     const rawValue = target.value;
     const float = parseFloat(rawValue);
@@ -61,20 +69,20 @@ export default class FilterSlider extends React.Component {
       <>
         <input
           id="input-min-organism-age"
-          onChange={(event) => this.onTextInputChange(event)}
+          onChange={(event) => this.onNumberInputChange(event)}
           type="number"
-          min={domain[0]}
-          max={domain[1]}
+          min={this.domain[0]}
+          max={this.domain[1]}
           value={inputValues[0]}
           style={{'width': '60px'}}
         />
         <span style={{'margin': '0 4px 0 4px'}}>-</span>
         <input
           id="input-max-organism-age"
-          onChange={(event) => this.onTextInputChange(event)}
+          onChange={(event) => this.onNumberInputChange(event)}
           type="number"
-          min={domain[0]}
-          max={domain[1]}
+          min={this.domain[0]}
+          max={this.domain[1]}
           value={inputValues[1]}
           style={{'width': '60px', 'marginRight': '8px'}}
         />
@@ -89,7 +97,7 @@ export default class FilterSlider extends React.Component {
           <Slider
             mode={1}
             step={1}
-            domain={domain}
+            domain={this.domain}
             rootStyle={sliderStyle}
             onChange={this.onChange}
             values={values}
@@ -106,7 +114,7 @@ export default class FilterSlider extends React.Component {
                     <Handle
                       key={handle.id}
                       handle={handle}
-                      domain={domain}
+                      domain={this.domain}
                       getHandleProps={getHandleProps}
                     />
                   ))}

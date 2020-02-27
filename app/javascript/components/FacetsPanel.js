@@ -22,7 +22,7 @@ export default function FacetsPanel() {
         "id": "organism_age",
         "links": [],
         "type": "number",
-        "max": "130",
+        "max": "150",
         "min": "0",
         "unit": "years",
         "all_units": ["hours", "days", "weeks", "months", "years"]
