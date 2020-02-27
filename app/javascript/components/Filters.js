@@ -35,8 +35,7 @@ function FilterList(props) {
  */
 function FilterSlider(props) {
   const facet = props.facet;
-  console.log('FacetSlider facet:')
-  console.log(facet)
+
   // React Compound Slider
   // API: https://react-compound-slider.netlify.com/docs
   // Examples: https://react-compound-slider.netlify.com/horizontal
