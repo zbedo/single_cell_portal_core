@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSlidersH } from '@fortawesome/free-solid-svg-icons';
 
-import FacetsAccordionBox from './FacetsAccordionBox';
+import FacetsAccordion from './FacetsAccordion';
 
 /**
  * Component for "More Facets" button.  Clicking shows facets accordion box.
@@ -29,7 +29,7 @@ export default function MoreFacetsButton(props) {
           <FontAwesomeIcon className="icon-left" icon={faSlidersH}/>
           More Facets
         </span>
-        <FacetsAccordionBox show={show} facets={props.facets} />
+        {show && <FacetsAccordion facets={props.facets} />}
       </span>
     );
 }
