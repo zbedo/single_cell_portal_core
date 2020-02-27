@@ -586,6 +586,10 @@ uploading data through the portal.  Downloads are still enabled, and normal fron
 
 Re-enabling Terra access will restore all permissions back to their original state.
 
+#### SYNTHETIC DATA
+
+Synthetic study data for testing and demonstrating portal features is configured in db/seed/synthetic_studies.  See the [Synthetic study README](./db/seed/synthetic_studies/README.md)
+
 ### MAINTENANCE MODE
 
 The production Single Cell portal has a defined maintenance window every **Thursday from 12-2PM EST**.  To minimize user

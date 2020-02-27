@@ -13,7 +13,7 @@ class SearchFacetPopulatorTest < ActionDispatch::IntegrationTest
     assert_equal true, disease_facet.is_ontology_based
     assert_equal true, disease_facet.is_array_based
     assert_equal 'https://www.ebi.ac.uk/ols/api/ontologies/mondo', disease_facet.ontology_urls.first['url']
-    assert_equal 'MONDO: Monarch Disease Ontology', disease_facet.ontology_urls.first['name']
+    assert_equal 'Mondo Disease Ontology', disease_facet.ontology_urls.first['name']
 
     sex_facet = SearchFacet.find_by(name: 'sex')
     assert_equal false, sex_facet.is_ontology_based
@@ -41,6 +41,6 @@ class SearchFacetPopulatorTest < ActionDispatch::IntegrationTest
     assert_equal true, disease_facet.is_ontology_based
     assert_equal true, disease_facet.is_array_based
     assert_equal 'https://www.ebi.ac.uk/ols/api/ontologies/mondo', disease_facet.ontology_urls.first['url']
-    assert_equal 'MONDO: Monarch Disease Ontology', disease_facet.ontology_urls.first['name']
+    assert_equal 'Mondo Disease Ontology', disease_facet.ontology_urls.first['name']
   end
 end

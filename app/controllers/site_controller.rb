@@ -428,9 +428,8 @@ class SiteController < ApplicationController
 
   # re-renders plots when changing cluster selection
   def render_gene_expression_plots
-    matches = @study.genes.by_name_or_id(params[:gene], @study.expression_matrix_files.map(&:id))
     subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
-    @gene = load_best_gene_match(matches, params[:gene])
+    @gene = @study.genes.by_name_or_id(params[:gene], @study.expression_matrix_files.map(&:id))
     @y_axis_title = load_expression_axis_title
     # depending on annotation type selection, set up necessary partial names to use in rendering
     if @selected_annotation[:type] == 'group'
@@ -475,9 +474,8 @@ class SiteController < ApplicationController
   # renders gene expression plots, but from global gene search. uses default annotations on first render, but takes URL parameters after that
   def render_global_gene_expression_plots
     if check_xhr_view_permissions
-      matches = @study.genes.by_name_or_id(params[:gene], @study.expression_matrix_files.map(&:id))
       subsample = params[:subsample].blank? ? nil : params[:subsample].to_i
-      @gene = load_best_gene_match(matches, params[:gene])
+      @gene = @study.genes.by_name_or_id(params[:gene], @study.expression_matrix_files.map(&:id))
       @identifier = params[:identifier] # unique identifer for each plot for namespacing JS variables/functions (@gene.id)
       @target = 'study-' + @study.id + '-gene-' + @identifier
       @y_axis_title = load_expression_axis_title
@@ -2086,7 +2084,7 @@ class SiteController < ApplicationController
     terms.each do |term|
       matches = @study.genes.by_name_or_id(term, matrix_ids)
       unless matches.empty?
-        genes << load_best_gene_match(matches, term)
+        genes << matches
       end
     end
     genes
