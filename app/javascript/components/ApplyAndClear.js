@@ -62,7 +62,11 @@ export function useApplyAndClear() {
   }
 
   function updateSelections(facetBoxId) {
+    console.log('in updateSelections, facetBoxId:')
+    console.log(facetBoxId)
     const checkedFilterIds = getCheckedFilterIds(facetBoxId);
+    console.log('in updateSelections, checkedFilterIds:')
+    console.log(checkedFilterIds)
     setSelection(checkedFilterIds);
     setShowClear(checkedFilterIds.length > 0);
   }

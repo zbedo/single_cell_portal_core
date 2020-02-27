@@ -2,7 +2,7 @@ import React from 'react';
 import PanelGroup from 'react-bootstrap/lib/PanelGroup';
 import Panel from 'react-bootstrap/lib/Panel';
 
-import Filters from './Filters';
+import FiltersBox from './FiltersBox'
 
 import {ApplyButton, ClearFilters, useApplyAndClear} from './ApplyAndClear';
 
@@ -39,25 +39,10 @@ export default function FacetsAccordion(props) {
                 </Panel.Title>
               </Panel.Heading>
               <Panel.Body collapsible>
-
-                <Filters
+                <FiltersBox
                   facet={facet}
                   filters={facet.filters}
-                  onClick={function() {console.log('TODO')}}
                 />
-                <div className='facets-accordion-box-footer'>
-                  {showClear &&
-                  <ClearFilters
-                    facetId={props.facet.id}
-                    onClick={() => {clearFilters(componentId)}}
-                  />
-                  }
-                  <ApplyButton
-                    id={'apply-' + componentId}
-                    className={'facet-apply-button ' + (canApply ? 'active' : 'disabled')}
-                    onClick={(event) => {handleApplyClick(event, componentId, true)}}
-                  />
-                </div>
               </Panel.Body>
             </Panel>
           );

@@ -50,7 +50,7 @@ export default function FiltersBox(props) {
   const applyId = `apply-${filtersBoxId}`;
 
   return (
-    <>
+    <div id={filtersBoxId}>
       <Filters
         facet={props.facet}
         filters={props.filters}
@@ -69,6 +69,6 @@ export default function FiltersBox(props) {
           onClick={(event) => {handleApplyClick(event, facetId)}}
         />
       </div>
-    </>
+    </div>
   );
 }

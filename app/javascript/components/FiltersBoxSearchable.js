@@ -32,9 +32,8 @@ export default function FiltersBoxSearchable(props) {
   //   * filter-species-NCBItaxon9606
   const facetName = props.facet.name;
   const facetId = props.facet.id;
-  const componentName = 'filters-box';
-  const filtersBoxId = `${componentName}-${facetId}`;
-  const applyId = `apply-${filtersBoxId}`;
+  const componentName = 'filters-box-searchable';
+  const componentId = `${componentName}-${facetId}`;
 
   // Search for filters in this facet that match input text terms
   //
@@ -61,9 +60,9 @@ export default function FiltersBoxSearchable(props) {
   }
 
   return (
-    <div className={componentName} id={filtersBoxId} style={{display: props.show ? '' : 'none'}}>
+    <div className={componentName} id={componentId} style={{display: props.show ? '' : 'none'}}>
       <FiltersSearchBar
-        filtersBoxId={filtersBoxId}
+        filtersBoxId={componentId}
         searchFilters={searchFilters}
       />
       <p className='filters-box-header'>
