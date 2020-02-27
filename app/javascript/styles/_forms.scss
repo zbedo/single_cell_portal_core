@@ -1,0 +1,21 @@
+#home-page-tabs, #study-tabs {
+  border-bottom: none;
+  li  {
+    a {
+      font-size: larger;
+      color: $action-color;
+      border: none;
+      background-color: transparent;
+      :hover {
+        font-weight: bold;
+      }
+
+    }
+
+  }
+  li.active > a {
+    border-bottom: 2px solid $action-color;
+    background: #fff;
+    color: #333;
+  }
+}

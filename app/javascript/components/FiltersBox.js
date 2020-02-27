@@ -7,7 +7,7 @@ import pluralize from 'pluralize';
 
 import { fetchFacetFilters } from 'lib/scp-api';
 
-import { SearchContext } from './SearchPanel';
+import { StudySearchContext } from 'components/search/StudySearchProvider';
 import Filters from './Filters';
 import FiltersSearchBar from './FiltersSearchBar';
 
@@ -30,11 +30,11 @@ function ClearFilters(props) {
  * Component for filter search and filter lists, and related functionality
  */
 export default function FiltersBox(props) {
-  const searchContext = useContext(SearchContext);
+  const searchContext = useContext(StudySearchContext);
 
   const [canApply, setCanApply] = useState(false);
   const [showClear, setShowClear] = useState(false);
-  const [appliedSelection, setAppliedSelection] = useState([]);
+  const appliedSelection = searchContext.params.facets[props.facet.id]
   const [selection, setSelection] = useState([]);
   const [matchingFilters, setMatchingFilters] = useState(props.facet.filters);
   const [hasFilterSearchResults, setHasFilterSearchResults] = useState(false);
@@ -93,13 +93,9 @@ export default function FiltersBox(props) {
 
     const checkedFilterIds = getCheckedFilterIds();
 
-    if (checkedFilterIds.length > 0) {
-      searchContext.facets[facetId] = checkedFilterIds.join(',');
-    } else {
-      delete searchContext.facets[facetId];
-    }
-
-    setAppliedSelection(checkedFilterIds);
+    let updatedFacetValue = {};
+    updatedFacetValue[facetId] = checkedFilterIds
+    searchContext.updateSearch({facets: updatedFacetValue})
   }
 
   function clearFilters() {

@@ -1,18 +1,13 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import Tab from 'react-bootstrap/lib/Tab'
 import Tabs from 'react-bootstrap/lib/Tabs'
+import { StudySearchContext } from 'components/search/StudySearchProvider'
 
 const ResultsPanel = props => {
+  const searchContext = useContext(StudySearchContext)
   return (
     <div id="results-panel">
-      <Tab.Container id="result-tabs" defaultActiveKey="study">
-        <Tabs defaultActiveKey='study' animation={false} >
-          <Tab eventKey='study' title="Studies" >
-            <StudyResults results={props.results}/>
-          </Tab>
-          <Tab eventKey='files' title='Files'/>
-        </Tabs>
-      </Tab.Container>
+      {searchContext.results.studies && <StudyResults results={searchContext.results}/>}
     </div>
   )
 }
