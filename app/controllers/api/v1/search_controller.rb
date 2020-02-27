@@ -138,7 +138,8 @@ module Api
 
       def index
         @viewable = Study.viewable(current_api_user)
-        @search_type = :keyword
+        # variable for determining how we will sort search results for relevance
+        sort_type = :keyword
         # if search params are present, filter accordingly
         if params[:terms].present?
           @search_terms = sanitize_search_values(params[:terms])
@@ -146,9 +147,10 @@ module Api
           possible_accessions = StudyAccession.sanitize_accessions(@search_terms.split)
           @studies = @viewable.any_of({:$text => {:$search => @search_terms}},
                                       {:accession.in => possible_accessions})
-          # all of our terms were accessions, so this is a "cached" query
+          # all of our terms were accessions, so this is a "cached" query, and we want to return
+          # results in the exact order specified in the accessions array
           if possible_accessions.size == @search_terms.split.size
-            @search_type = :accession
+            sort_type = :accession
           end
         else
           @studies = @viewable
@@ -161,7 +163,7 @@ module Api
 
         # only call BigQuery if list of possible studies is larger than 0 and we have matching facets to use
         if @studies.count > 0 && @facets.any?
-          @search_type = :facet
+          sort_type = :facet
           @studies_by_facet = {}
           @big_query_search = self.class.generate_bq_query_string(@facets)
           Rails.logger.info "Searching BigQuery using facet-based query: #{@big_query_search}"
@@ -175,7 +177,7 @@ module Api
           @studies = @studies.where(:accession.in => @convention_accessions)
         end
         # determine sort order for pagination; minus sign (-) means a descending search
-        case @search_type
+        case sort_type
         when :keyword
           @studies = @studies.to_a.sort_by {|study| -study.search_weight(@search_terms.split) }
         when :accession

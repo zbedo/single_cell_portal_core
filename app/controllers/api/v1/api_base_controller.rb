@@ -23,7 +23,7 @@ module Api
         'User is not authenticated'
       end
 
-      # HTTP 403 - User is not forbidden from performing action
+      # HTTP 403 - User is forbidden from performing action
       def self.forbidden(message)
         "User unauthorized to #{message}"
       end
@@ -35,10 +35,10 @@ module Api
 
       # HTTP 406 - invalid response content type requested
       def self.not_acceptable
-        'Only Accept: application/json header allowed'
+        '"Accept" header must contain "application/json" or "*/*"'
       end
 
-      # HTTP 410 - Resource gone (this only happens when a Study workspace has been deleted
+      # HTTP 410 - Resource gone (this only happens when a Study workspace has been deleted)
       def self.resource_gone
         'Study workspace is not found, cannot complete action'
       end
