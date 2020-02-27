@@ -8,7 +8,7 @@ import { SearchContext } from './SearchPanel';
 /**
  * Component that can be clicked to unselect filters
  */
-export function ClearFilters(props) {
+function ClearFilters(props) {
   return (
     <span
       id={`clear-filters-${props.facetId}`}
@@ -24,7 +24,7 @@ export function ClearFilters(props) {
  * Component for the "APPLY" button that can be clicked it to save selected
  * filters for the current facet or facet accordion.
  */
-export function ApplyButton(props) {
+function ApplyButton(props) {
   return (
     <Button
       id={props.id}
