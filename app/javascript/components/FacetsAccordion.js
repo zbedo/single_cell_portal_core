@@ -6,8 +6,6 @@ import FiltersBox from './FiltersBox'
 
 export default function FacetsAccordion(props) {
 
-  const componentId = `facets-accordion`
-
   return (
     // Accordions provide a way to restrict Card components to only open one at a time.
     // https://react-bootstrap.github.io/components/accordion/
