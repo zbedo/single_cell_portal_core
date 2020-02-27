@@ -4,7 +4,27 @@ import Panel from 'react-bootstrap/lib/Panel';
 
 import Filters from './Filters';
 
+import {ApplyButton, ClearFilters, useApplyAndClear} from './ApplyAndClear';
+
 export default function FacetsAccordion(props) {
+
+
+  // State for reusable "APPLY" and "Clear" buttons.
+  // This uses a custom hook to encapsulate reusable state code and functions.
+  // The FiltersBox component also uses this custom hook.
+  // It's like a Higher-Order Component, but for function components.
+  const {
+    canApply, setCanApply,
+    showClear,
+    appliedSelection,
+    selection,
+    updateSelections,
+    handleApplyClick,
+    clearFilters
+  } = useApplyAndClear();
+
+  const componentId = `facets-accordion`
+
   return (
     // Accordions provide a way to restrict Card components to only open one at a time.
     // https://react-bootstrap.github.io/components/accordion/
@@ -19,11 +39,25 @@ export default function FacetsAccordion(props) {
                 </Panel.Title>
               </Panel.Heading>
               <Panel.Body collapsible>
+
                 <Filters
                   facet={facet}
                   filters={facet.filters}
                   onClick={function() {console.log('TODO')}}
                 />
+                <div className='facets-accordion-box-footer'>
+                  {showClear &&
+                  <ClearFilters
+                    facetId={props.facet.id}
+                    onClick={() => {clearFilters(componentId)}}
+                  />
+                  }
+                  <ApplyButton
+                    id={'apply-' + componentId}
+                    className={'facet-apply-button ' + (canApply ? 'active' : 'disabled')}
+                    onClick={(event) => {handleApplyClick(event, componentId, true)}}
+                  />
+                </div>
               </Panel.Body>
             </Panel>
           );

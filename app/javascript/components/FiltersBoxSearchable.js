@@ -1,44 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
-import isEqual from 'lodash/isEqual';
 import pluralize from 'pluralize';
 
+
 import { fetchFacetFilters } from 'lib/scp-api';
-import Filters from './Filters';
+import FiltersBox from './FiltersBox';
 import FiltersSearchBar from './FiltersSearchBar';
-import {ApplyButton, ClearFilters, useApplyAndClear} from './ApplyAndClear';
 
 /**
  * Component for filter search and filter lists
  */
-export default function FiltersBox(props) {
-
-  // State for reusable "APPLY" and "Clear" buttons.
-  // This uses a custom hook to encapsulate reusable state code and functions.
-  // The FacetsAccordionBox also uses this custom hook.
-  // It's like a Higher-Order Component, but for function components.
-  const {
-    canApply, setCanApply,
-    showClear,
-    appliedSelection,
-    selection,
-    updateSelections,
-    handleApplyClick,
-    clearFilters
-  } = useApplyAndClear();
+export default function FiltersBoxSearchable(props) {
 
   // State that is specific to FiltersBox
   const [matchingFilters, setMatchingFilters] = useState(props.facet.filters);
   const [hasFilterSearchResults, setHasFilterSearchResults] = useState(false);
-
-  useEffect(() => {
-    setCanApply(!isEqual(selection, appliedSelection));
-  }, [selection]);
-
-  useEffect(() => {
-    setCanApply(false);
-  }, [appliedSelection]);
 
   // TODO: Get opinions, perhaps move to a UI code style guide.
   //
@@ -105,26 +82,10 @@ export default function FiltersBox(props) {
           }
         </span>
       </p>
-      <ul>
-        <Filters
-          facet={props.facet}
-          filters={matchingFilters}
-          onClick={() => {updateSelections(filtersBoxId)}}
-        />
-      </ul>
-      <div className='filters-box-footer'>
-        {showClear &&
-        <ClearFilters
-          facetId={props.facet.id}
-          onClick={() => {clearFilters(filtersBoxId)}}
-        />
-        }
-        <ApplyButton
-          id={applyId}
-          className={'facet-apply-button ' + (canApply ? 'active' : 'disabled')}
-          onClick={(event) => {handleApplyClick(event, facetId)}}
-        />
-      </div>
+      <FiltersBox
+        facet={props.facet}
+        filters={matchingFilters}
+      />
     </div>
   );
 }

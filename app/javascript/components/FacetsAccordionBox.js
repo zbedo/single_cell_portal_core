@@ -28,14 +28,6 @@ export default function FacetsAccordionBox(props) {
     clearFilters
   } = useApplyAndClear();
 
-  useEffect(() => {
-    setCanApply(!isEqual(selection, appliedSelection));
-  }, [selection]);
-
-  useEffect(() => {
-    setCanApply(false);
-  }, [appliedSelection]);
-
   const componentId = 'facets-accordion-box';
 
   return (
@@ -44,19 +36,6 @@ export default function FacetsAccordionBox(props) {
         facets={props.facets}
         onApplyFilter={updateSelections}
       />
-      <div className='facets-accordion-box-footer'>
-        {showClear &&
-        <ClearFilters
-          facetId={props.facet.id}
-          onClick={() => {clearFilters(componentId)}}
-        />
-        }
-        <ApplyButton
-          id={'apply-' + componentId}
-          className={'facet-apply-button ' + (canApply ? 'active' : 'disabled')}
-          onClick={(event) => {handleApplyClick(event, componentId, true)}}
-        />
-      </div>
     </div>
   );
 }
