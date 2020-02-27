@@ -1,6 +1,7 @@
 /**
 * Styles for React-based faceted search UI for studies
 */
+@import './_colors.scss';
 
 // To consider: remove this min-height once study result list can be shown
 #main-body {
@@ -26,15 +27,24 @@
 
 #search-panel {
   .facet{
-    background-color: white;
-    vertical-align: top;
     display: inline-block;
-    padding: 8px 16px;
     margin-right: 8px;
-    border-radius: 15px;
-    border: 0.64px solid #4d72aa;
     box-sizing: border-box;
-    cursor: pointer;
+    vertical-align: top;
+    > a {
+      background-color: white;
+      padding: 8px 16px;
+      border-radius: 15px;
+      border: 0.64px solid #4d72aa;
+      width: 100%;
+      box-sizing: border-box;
+      display: inline-block;
+      cursor: pointer;
+      &:hover {
+        text-decoration: none;
+        color: $action-color;
+      }
+    }
   }
   #download-button{
     background-color: white;
@@ -47,7 +57,6 @@
     box-sizing: border-box;
     cursor: pointer;
   }
-  .facet > span,
   #more-facets-button > span,
   #download-button > span {
     color: #4d72aa;
