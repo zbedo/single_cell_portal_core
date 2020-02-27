@@ -12,7 +12,7 @@ module Api
         # will allow */* or application/json in any part of Accept header and respond with JSON
         def validate_content_type!
           accept_header = request.headers['Accept'].present? ? request.headers['Accept'] : ''
-          if !accept_header.include?("*/*") && !accept_header.include?('application/json')
+          if !accept_header.match(Regexp.union(%w(*/* application/json)))
             head 406
           else
             request.format = :json # override format to force JSON response
