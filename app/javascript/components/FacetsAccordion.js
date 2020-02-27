@@ -4,24 +4,7 @@ import Panel from 'react-bootstrap/lib/Panel';
 
 import FiltersBox from './FiltersBox'
 
-import {ApplyButton, ClearFilters, useApplyAndClear} from './ApplyAndClear';
-
 export default function FacetsAccordion(props) {
-
-
-  // State for reusable "APPLY" and "Clear" buttons.
-  // This uses a custom hook to encapsulate reusable state code and functions.
-  // The FiltersBox component also uses this custom hook.
-  // It's like a Higher-Order Component, but for function components.
-  const {
-    canApply, setCanApply,
-    showClear,
-    appliedSelection,
-    selection,
-    updateSelections,
-    handleApplyClick,
-    clearFilters
-  } = useApplyAndClear();
 
   const componentId = `facets-accordion`
 
