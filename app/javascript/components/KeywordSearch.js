@@ -1,39 +1,41 @@
-import React from 'react'
+import React, { useState, useContext } from 'react';
 import Button from 'react-bootstrap/lib/Button'
 import InputGroup from 'react-bootstrap/lib/InputGroup'
 import Form from 'react-bootstrap/lib/Form'
 import { faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { StudySearchContext } from 'components/search/StudySearchProvider'
 
 /**
  * Component to search using a keyword value
- *
+ * optionally takes a 'keywordValue' prop with the initial value for the field
  */
 export default function KeywordSearch(props) {
-  const handleSubmit = event => {
+  const searchContext = useContext(StudySearchContext)
+  const [keywordValue, setKeywordValue] = useState('');
+
+  const handleSubmit = submitValue => {
     // Prevent full page reload
     event.preventDefault()
-    const searchTerm = event.target.keywordText.value.trim()
-    if (searchTerm) {
-      props.updateKeyword(searchTerm)
-    };
+    searchContext.updateSearch({terms: submitValue})
   }
 
   return (
-    <Form horizontal onSubmit = {handleSubmit} id='keyword-search' >
-      <InputGroup id='keyword-input-group'>
+    <Form horizontal onSubmit = {() => handleSubmit(keywordValue)} className='study-keyword-search' >
+      <InputGroup>
         <input
-          id="keyword-input"
+          className="form-control"
           type="text"
+          value={keywordValue}
+          onChange={(e) => setKeywordValue(e.target.value) }
           placeholder="Enter keyword"
           name="keywordText"/>
-        <div id='keyword-submit'>
+        <div className="input-group-append">
           <Button type='submit'>
             <FontAwesomeIcon icon={faSearch} />
           </Button>
         </div>
       </InputGroup>
     </Form>
-
   )
 }

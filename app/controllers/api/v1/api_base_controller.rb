@@ -16,12 +16,54 @@ module Api
 
       ##
       # Generic message formatters to use in Swagger responses
-      # TODO: Extend to 401/403/404
       ##
 
-      # handle a 410 response message (both in UI and API) - this only happens when a Study workspace has been deleted
+      # HTTP 401 - User is not signed in
+      def self.unauthorized
+        'User is not authenticated'
+      end
+
+      # HTTP 403 - User is forbidden from performing action
+      def self.forbidden(message)
+        "User unauthorized to #{message}"
+      end
+
+      # HTTP 404 - Resource not found
+      def self.not_found(*resources)
+        "#{resources.join(', ')} not found"
+      end
+
+      # HTTP 406 - invalid response content type requested
+      def self.not_acceptable
+        '"Accept" header must contain "application/json" or "*/*"'
+      end
+
+      # HTTP 410 - Resource gone (this only happens when a Study workspace has been deleted)
       def self.resource_gone
         'Study workspace is not found, cannot complete action'
+      end
+
+      # HTTP 422 - Unprocessable entity; failed validation
+      module SwaggerResponses
+        module ValidationFailureResponse
+          def self.extended(base)
+            base.response 422 do
+              key :description, 'Resource failed validation'
+              schema do
+                key :title, 'ValidationErrors'
+                property :errors do
+                  key :type, :array
+                  key :description, 'Validation errors'
+                  key :required, true
+                  items do
+                    key :type, :string
+                    key :description, 'Error message'
+                  end
+                end
+              end
+            end
+          end
+        end
       end
     end
   end

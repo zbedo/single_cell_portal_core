@@ -1,6 +1,7 @@
 /**
 * Styles for React-based faceted search UI for studies
 */
+@import './_colors.scss';
 
 // To consider: remove this min-height once study result list can be shown
 #main-body {
@@ -26,15 +27,24 @@
 
 #search-panel {
   .facet{
-    background-color: white;
-    vertical-align: top;
     display: inline-block;
-    padding: 8px 16px;
     margin-right: 8px;
-    border-radius: 15px;
-    border: 0.64px solid #4d72aa;
     box-sizing: border-box;
-    cursor: pointer;
+    vertical-align: top;
+    > a {
+      background-color: white;
+      padding: 8px 16px;
+      border-radius: 15px;
+      border: 0.64px solid #4d72aa;
+      width: 100%;
+      box-sizing: border-box;
+      display: inline-block;
+      cursor: pointer;
+      &:hover {
+        text-decoration: none;
+        color: $action-color;
+      }
+    }
   }
   #download-button{
     background-color: white;
@@ -47,7 +57,6 @@
     box-sizing: border-box;
     cursor: pointer;
   }
-  .facet > span,
   #more-facets-button > span,
   #download-button > span {
     color: #4d72aa;
@@ -91,12 +100,14 @@
     float: right;
   }
 
-  .filters-box {
+  .filters-box-searchable {
     width: 400px;
     border: 1px solid #aaa;
     background: #fff;
     position: absolute;
     z-index: 9000;
+    border-radius: 5px;
+    padding: 2px;
   }
 
   label {
@@ -118,8 +129,24 @@
     height: 300px;
     width: 400px;
     position: relative;
-    top: 15px;
-    padding-top: 1px;
+    top: 5px;
+    padding: 3px;
+    border-radius: 5px;
+
+    .panel-heading {
+      background: #fff;
+      padding: 0px;
+      width: 100%;
+      border: none;
+    }
+    .panel-title a {
+      padding: 10px 15px;
+      color: $action-color;
+      width: 100%;
+      display: block;
+      border: 1px solid #ddd;
+
+    }
   }
 
   .accordion .card {
@@ -137,5 +164,14 @@
 
   .filters-search-bar {
     margin: 2px;
+    input {
+      background: #eee;
+      border: none;
+    }
+    button {
+      background: #eee;
+      border: none;
+      color: $action-color;
+    }
   }
 }

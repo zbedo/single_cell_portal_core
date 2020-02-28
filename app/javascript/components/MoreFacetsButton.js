@@ -24,10 +24,11 @@ export default function MoreFacetsButton(props) {
       <span
         id='more-facets-button'
         className={`${show ? 'active' : ''} facet`}>
-        <span onClick={handleClick}>
+        <a
+          onClick={handleClick}>
           <FontAwesomeIcon className="icon-left" icon={faSlidersH}/>
           More Facets
-        </span>
+        </a>
         {show && <FacetsAccordion facets={props.facets} />}
       </span>
     );

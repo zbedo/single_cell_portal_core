@@ -7,6 +7,7 @@
  * API docs: https://singlecell.broadinstitute.org/single_cell/api
  */
 import camelcaseKeys from 'camelcase-keys';
+import _compact from 'lodash/compact'
 
 const defaultBasePath = '/single_cell/api/v1';
 
@@ -136,8 +137,19 @@ export async function fetchFacetFilters(facet, query, mock=false) {
  */
 export async function fetchSearch(type, terms, facets, mock=false){
   // Needs to be edited to include facets
-  const searchPathAndQueryString = `/search?type=${type}&terms=${terms}`
+  const searchPathAndQueryString = `/search?type=${type}&terms=${terms}&facets=${buildFacetQueryString(facets)}`
   return await scpApi(searchPathAndQueryString, defaultInit, mock);
+}
+
+function buildFacetQueryString(facets) {
+  if (!facets || !Object.keys(facets).length) {
+    return ''
+  }
+  return _compact(Object.keys(facets).map((facetId) => {
+    if (facets[facetId].length) {
+      return `${facetId}:${facets[facetId].join(',')}`
+    }
+  })).join('+')
 }
 
 /**
