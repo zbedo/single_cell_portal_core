@@ -24,7 +24,7 @@ async function generateDownloadConfig(matchingAccessions) {
 
   // Gets a curl configuration ("cfg.txt") containing signed
   // URLs and output names for all files in the download object.
-  const url = `${window.origin}/api/v1/bulk_download${queryString}`;
+  const url = `${window.origin}/single_cell/api/v1/search/bulk_download${queryString}`;
   const curlSecureFlag = (window.location.host === 'localhost') ? 'k' : ''; // "-k" === "--insecure"
 
   // This is what the user will run in their terminal to download the data.
@@ -107,27 +107,36 @@ function DownloadCommandContainer(props) {
  *
  * UI spec: https://projects.invisionapp.com/d/main#/console/19272801/402387755/preview
  */
-export default function DownloadButton(props) {
+export default function DownloadButton() {
 
   const searchContext = useContext(StudySearchContext)
 
-  console.log('searchContext')
-  console.log(searchContext)
-
   const matchingAccessions = searchContext.results.matchingAccessions || [];
 
-  const [active, isActive] = useState(matchingAccessions.length > 0);
+  /**
+   * Reports whether Download button be active,
+   * i.e. user is signed in and has search results
+   */
+  function shouldBeActive() {
+    return window.SCP.userAccessToken !== '' && matchingAccessions.length > 0;
+  }
+
+  const [active, setActive] = useState(shouldBeActive());
   const [show, setShow] = useState(false);
 
+  useEffect(() => {
+    setActive(shouldBeActive());
+  })
+
   function showModalAndFetchDownloadCommand() {
-    setShow(!show);
+    if (active) setShow(!show);
   }
 
   const handleClose = () => setShow(false);
 
   return (
       <>
-      <span id='download-button' className={`${active ? 'active' : ''}`}>
+      <span id='download-button' className={active ? 'active' : ''}>
         <span onClick={showModalAndFetchDownloadCommand}>
           <FontAwesomeIcon className="icon-left" icon={faDownload}/>
           Download
