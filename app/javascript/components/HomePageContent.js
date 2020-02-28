@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import SearchPanel from './SearchPanel'
 import ResultsPanel from './ResultsPanel'
-import { fetchSearch } from '../lib/scp-api'
 import SearchContextProvider from 'components/search/StudySearchProvider'
 
 /**
@@ -15,4 +14,3 @@ export default function HomePageContent() {
     </SearchContextProvider>
   )
 }
-
