@@ -34,6 +34,7 @@ function FilterList(props) {
  */
 function FilterSlider(props) {
   const facet = props.facet;
+
   // React Compound Slider
   // API: https://react-compound-slider.netlify.com/docs
   // Examples: https://react-compound-slider.netlify.com/horizontal
@@ -51,9 +52,9 @@ function FilterSlider(props) {
  */
 export default function Filters(props) {
   const filters = props.filters;
-  if (props.facetType === 'string') {
+  if (props.facet.type !== 'number') {
     return <FilterList filters={filters} onClick={props.onClick} />;
   } else {
-    return <FilterSlider filters={filters} />;
+    return <FilterSlider facet={props.facet} />;
   }
 }

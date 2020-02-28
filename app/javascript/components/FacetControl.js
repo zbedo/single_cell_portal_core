@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import FiltersBox from './FiltersBox';
+import FiltersBoxSearchable from './FiltersBoxSearchable';
 
 /**
  * Converts string value to lowercase, hyphen-delimited version
@@ -28,7 +28,7 @@ export default function FacetControl(props) {
           onClick={handleClick}>
           {facetName}
         </span>
-        <FiltersBox show={showFilters} facet={props.facet} />
+        <FiltersBoxSearchable show={showFilters} facet={props.facet} />
       </span>
     );
 
