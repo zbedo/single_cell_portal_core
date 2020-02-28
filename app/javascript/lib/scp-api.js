@@ -160,8 +160,6 @@ function buildFacetQueryString(facets) {
  * @param {Boolean} mock | Whether to use mock data.  Helps development, tests.
  */
 export default async function scpApi(path, init, mock=false) {
-  console.log(path)
-  console.log(init)
   if (globalMock) mock = true;
   const basePath = (mock || globalMock) ? mockOrigin + '/mock_data' : defaultBasePath;
   let fullPath = basePath + path;

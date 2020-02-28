@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import FiltersBox from './FiltersBox';
+import FiltersBoxSearchable from './FiltersBoxSearchable';
 import { StudySearchContext } from 'components/search/StudySearchProvider';
 import _filter from 'lodash/filter'
+
 /**
  * Converts string value to lowercase, hyphen-delimited version
  * e.g. "Cell type" -> "cell-type"
@@ -51,12 +53,12 @@ export default function FacetControl(props) {
   return (
       <span ref={node}
         id={facetId}
-        className={`facet ${showFilters ? 'active' : ''} ${selectedFilterString ? ' selected' : ''}`}>
+        className={`facet ${showFilters ? 'active' : ''} ${selectedFilterString ? 'selected' : ''}`}>
         <a
           onClick={handleButtonClick}>
           { selectedFilterString ? selectedFilterString : facetName }
         </a>
-        <FiltersBox show={showFilters} facet={props.facet} setShow={setShowFilters} />
+        <FiltersBoxSearchable show={showFilters} facet={props.facet} setShow={setShowFilters}/>
       </span>
     );
 

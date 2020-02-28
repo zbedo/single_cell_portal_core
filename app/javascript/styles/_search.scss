@@ -100,12 +100,14 @@
     float: right;
   }
 
-  .filters-box {
+  .filters-box-searchable {
     width: 400px;
     border: 1px solid #aaa;
     background: #fff;
     position: absolute;
     z-index: 9000;
+    border-radius: 5px;
+    padding: 2px;
   }
 
   label {
@@ -122,7 +124,7 @@
     height: 40px;
   }
 
-  #facets-accordion-box {
+  #facets-accordion {
     background: #fff;
     height: 300px;
     width: 400px;
@@ -146,5 +148,14 @@
 
   .filters-search-bar {
     margin: 2px;
+    input {
+      background: #eee;
+      border: none;
+    }
+    button {
+      background: #eee;
+      border: none;
+      color: $action-color;
+    }
   }
 }
