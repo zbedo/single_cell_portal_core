@@ -129,8 +129,24 @@
     height: 300px;
     width: 400px;
     position: relative;
-    top: 15px;
-    padding-top: 1px;
+    top: 5px;
+    padding: 3px;
+    border-radius: 5px;
+
+    .panel-heading {
+      background: #fff;
+      padding: 0px;
+      width: 100%;
+      border: none;
+    }
+    .panel-title a {
+      padding: 10px 15px;
+      color: $action-color;
+      width: 100%;
+      display: block;
+      border: 1px solid #ddd;
+
+    }
   }
 
   .accordion .card {

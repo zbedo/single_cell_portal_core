@@ -15,7 +15,7 @@ export default function FacetsAccordion(props) {
           props.facets.map((facet, i) => {
             return (
               <Panel key={i} eventKey={i}>
-                <Panel.Heading>
+                <Panel.Heading >
                   <Panel.Title toggle>
                     {facet.name}
                   </Panel.Title>
