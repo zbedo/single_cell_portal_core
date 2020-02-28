@@ -137,8 +137,12 @@ export async function fetchFacetFilters(facet, query, mock=false) {
  */
 export async function fetchSearch(type, terms, facets, mock=false){
   // Needs to be edited to include facets
-  const searchPathAndQueryString = `/search?type=${type}&terms=${terms}&facets=${buildFacetQueryString(facets)}`
+  const searchPathAndQueryString = `/search?${buildSearchQueryString(type, terms, facets)}`
   return await scpApi(searchPathAndQueryString, defaultInit, mock);
+}
+
+export function buildSearchQueryString(type, terms, facets) {
+  return `type=${type}&terms=${terms}&facets=${buildFacetQueryString(facets)}`
 }
 
 function buildFacetQueryString(facets) {
@@ -150,6 +154,17 @@ function buildFacetQueryString(facets) {
       return `${facetId}:${facets[facetId].join(',')}`
     }
   })).join('+')
+}
+
+export function buildFacetsFromQueryString(facetsParamString) {
+  let facets = {}
+  if (facetsParamString) {
+    facetsParamString.split('+').forEach((facetString) => {
+      let facetArray = facetString.split(':')
+      facets[facetArray[0]] = facetArray[1].split(',')
+    })
+  }
+  return facets;
 }
 
 /**

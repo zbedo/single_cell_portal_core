@@ -12,7 +12,7 @@ import { StudySearchContext } from 'components/search/StudySearchProvider'
  */
 export default function KeywordSearch(props) {
   const searchContext = useContext(StudySearchContext)
-  const [keywordValue, setKeywordValue] = useState('');
+  const [keywordValue, setKeywordValue] = useState(searchContext.params.terms);
 
   const handleSubmit = submitValue => {
     // Prevent full page reload
