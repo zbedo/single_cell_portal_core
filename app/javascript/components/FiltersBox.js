@@ -96,6 +96,7 @@ export default function FiltersBox(props) {
     let updatedFacetValue = {};
     updatedFacetValue[facetId] = checkedFilterIds
     searchContext.updateSearch({facets: updatedFacetValue})
+    props.setShow(false)
   }
 
   function clearFilters() {

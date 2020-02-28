@@ -56,7 +56,7 @@ export default function FacetControl(props) {
           onClick={handleButtonClick}>
           { selectedFilterString ? selectedFilterString : facetName }
         </a>
-        <FiltersBox show={showFilters} facet={props.facet} />
+        <FiltersBox show={showFilters} facet={props.facet} setShow={setShowFilters} />
       </span>
     );
 
