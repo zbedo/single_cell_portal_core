@@ -87,7 +87,7 @@
 				url: "<%= upload_study_path(@study._id) %>",
 				maxChunkSize: 10000000,
 				type: 'PATCH',
-				acceptFileTypes: /(\.|\/)(txt|text|mm|mtx|tsv|csv)(\.gz)?$/i,
+				acceptFileTypes: ALLOWED_FILE_TYPES['expression'],
 				add: function (e, data) {
 					fileUploading = true;
 					var that = this;
