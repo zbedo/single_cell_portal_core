@@ -1,84 +1,24 @@
 import React, { useState, useEffect } from 'react'
 import Tab from 'react-bootstrap/lib/Tab'
 import Tabs from 'react-bootstrap/lib/Tabs'
+import Panel from 'react-bootstrap/lib/Panel'
 import Pagination from 'react-bootstrap/lib/Pagination'
 import { useTable } from 'react-table'
 
 
 const ResultsPanel = props => {
-  /*
-   * const fakeData = React.useMemo(() => [
-   *   {
-   *     study: 'Title 1',
-   *   },
-   *   {
-   *     study: 'Title 2',
-   *   },
-   *   {
-   *     study: 'Title 3',
-   *   },
-   * ])
-   */
-  let displayedResults
-  if (props.results.studies.length>0) {
-    displayedResults = React.useMemo(() => props.results.studies.map(result => (
-      {
-        study: <Study
-          study={result}
-          key={result.accession}
-          className='card'
-        />,
-      }
-    ),
-    ))
-  }
-  const column = React.useMemo(() => [{ Header: 'First Name', accessor: 'study' }])
-  console.log(props)
-  const {
-    getTableProps,
-    getTableBodyProps,
-    rows,
-    prepareRow,
-  } = useTable({
-    columns: column,
-    data: displayedResults,
-  })
   return (
-    <table {...getTableProps()}>
-      <tbody {...getTableBodyProps()}>
-        {rows.map((row, i) => {
-          prepareRow(row)
-          return (
-            <tr {...row.getRowProps()}>
-              {row.cells.map(cell => {
-                return <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
-              })}
-            </tr>
-          )
-        })}
-      </tbody>
-    </table>
-
+    <Panel id="results-panel">
+      <Tab.Container id="result-tabs" defaultActiveKey="study">
+        <Tabs defaultActiveKey='study' animation={false} >
+          <Tab eventKey='study' title="Studies" >
+            <StudyResults results={props.results} handlePageTurn={props.handlePageTurn}/>
+          </Tab>
+          <Tab eventKey='files' title='Files'/>
+        </Tabs>
+      </Tab.Container>
+    </Panel>
   )
-
-
-  /*
-   * return (
-   *   <div id="results-panel">
-   *     <Tab.Container id="result-tabs" defaultActiveKey="study">
-   *       <Tabs defaultActiveKey='study' animation={false} >
-   *         <Tab eventKey='study' title="Studies" >
-   *           <Results results={props.results} handlePageTurn={props.handlePageTurn}/>
-   *         </Tab>
-   *         <Tab eventKey='files' title='Files'/>
-   *       </Tabs>
-   *     </Tab.Container>
-   */
-
-  /*
-   *   </div>
-   * )
-   */
 }
 
 const ResultsPagination = props => {
@@ -112,13 +52,11 @@ const ResultsPagination = props => {
   )
 }
 
-const Results = props => {
+const StudyResults = props => {
   const columns = React.useMemo(
     () => [{
-      Header: 'Studies',
       accessor: 'study',
     }])
-
   let displayedResults
   if (props.results.studies.length>0) {
     displayedResults = props.results.studies.map(result => (
@@ -132,23 +70,36 @@ const Results = props => {
     ),
     )
   } else {
-    displayedResults = <p>No Results</p>
+    displayedResults = { study: <p>No Results</p> }
   }
   const {
     getTableProps,
     getTableBodyProps,
-    headerGroups,
     rows,
     prepareRow,
-  }= useTable(
-    {
-      columns,
-      displayedResults,
-    })
-  return (<ReactTable
-    data={data}
-    columns={columns}
-  />)
+  } = useTable({
+    columns,
+    data: displayedResults,
+  })
+  return (
+    <Tab.Content id ='results-content'>
+      <table {...getTableProps()}>
+        <tbody {...getTableBodyProps()}>
+          {rows.map((row, i) => {
+            prepareRow(row)
+            return (
+              <tr {...row.getRowProps()}>
+                {row.cells.map(cell => {
+                  return <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
+                })}
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </Tab.Content>
+
+  )
   /*
    * return (
    *   <Tab.Content id ='results-content'>
