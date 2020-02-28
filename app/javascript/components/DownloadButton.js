@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDownload } from '@fortawesome/free-solid-svg-icons';
 import Modal from 'react-bootstrap/lib/Modal';
 // import Tooltip from 'react-bootstrap/lib/Tooltip'; // We'll need this when refining onClipboardCopySuccess
 import Clipboard from 'react-clipboard.js';
 
+import { StudySearchContext } from 'components/search/StudySearchProvider'
 import { fetchAuthCode } from 'lib/scp-api';
 
 /**
@@ -108,6 +109,12 @@ function DownloadCommandContainer(props) {
  */
 export default function DownloadButton(props) {
 
+  const searchContext = useContext(StudySearchContext)
+
+  console.log('searchContext')
+  console.log(searchContext)
+
+  const [active, isActive] = useState(searchContext.results.length > 0);
   const [show, setShow] = useState(false);
 
   function showModalAndFetchDownloadCommand() {
@@ -118,7 +125,7 @@ export default function DownloadButton(props) {
 
   return (
       <>
-      <span id='download-button' className={`${show ? 'active' : ''}`}>
+      <span id='download-button' className={`${active ? 'active' : ''}`}>
         <span onClick={showModalAndFetchDownloadCommand}>
           <FontAwesomeIcon className="icon-left" icon={faDownload}/>
           Download
@@ -140,7 +147,7 @@ export default function DownloadButton(props) {
           To download files matching your search, copy this command and paste it into your terminal:
           </p>
           <div className='lead command-container' id='command-container-all'>
-            <DownloadCommandContainer matchingStudies={props.matchingStudies} />
+            <DownloadCommandContainer matchingStudies={searchContext.results.matching_accessions} />
           </div>
         </Modal.Body>
 
