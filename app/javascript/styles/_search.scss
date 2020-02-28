@@ -102,7 +102,7 @@
   }
 
   .facet-ontology-links {
-    float: right;
+    text-align: right;
   }
 
   .filters-box-searchable, #facets-accordion {
@@ -114,6 +114,11 @@
     border-radius: 5px;
     padding: 2px;
     margin-top: 2px;
+  }
+
+  .filters-box-header {
+    margin-top: 5px;
+    margin-bottom: 0px;
   }
 
   label {
