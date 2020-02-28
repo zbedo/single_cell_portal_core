@@ -2,8 +2,7 @@ closeModalSpinner('#spinner_target', '#loading-modal', function () {
     $('#breadcrumbs').replaceWith("<%= escape_javascript(render partial: '/layouts/breadcrumbs') %>");
     $('#title-bar').html("<%= escape_javascript(render partial: 'view_precomputed_gene_expression_heatmap_title_bar') %>");
     $('#study-visualize').html("<%= escape_javascript(render partial: 'view_precomputed_gene_expression_heatmap') %>");
-    $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices') %>");
-    // clear any resize listeners
+    showMessageModal("<%= notice.present? ? notice.html_safe : nil %>", "<%= alert.present? ? alert.html_safe : nil %>")
     $(window).off('resizeEnd');
     enableDefaultActions();
     var requestUrl = "<%= javascript_safe_url(request.fullpath) %>";
