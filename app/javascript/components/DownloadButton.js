@@ -13,9 +13,9 @@ import { fetchAuthCode } from 'lib/scp-api';
  *
  * @returns {Object} Object for auth code, time interval, and download command
  */
-async function generateDownloadConfig(matchingStudies) {
+async function generateDownloadConfig(matchingAccessions) {
 
-  const accessions = matchingStudies.join(',');
+  const accessions = matchingAccessions.join(',');
   const searchQuery = `&file_types=metadata,expression&accessions=${accessions}`;
 
   const {authCode, timeInterval} = await fetchAuthCode();
@@ -54,7 +54,7 @@ function DownloadCommandContainer(props) {
   }
 
   useEffect(() => {
-    updateDownloadConfig(props.matchingStudies);
+    updateDownloadConfig(props.matchingAccessions);
   }, []);
 
   function onClipboardCopySuccess(event) {
@@ -114,7 +114,9 @@ export default function DownloadButton(props) {
   console.log('searchContext')
   console.log(searchContext)
 
-  const [active, isActive] = useState(searchContext.results.length > 0);
+  const matchingAccessions = searchContext.results.matchingAccessions || [];
+
+  const [active, isActive] = useState(matchingAccessions.length > 0);
   const [show, setShow] = useState(false);
 
   function showModalAndFetchDownloadCommand() {
@@ -147,7 +149,7 @@ export default function DownloadButton(props) {
           To download files matching your search, copy this command and paste it into your terminal:
           </p>
           <div className='lead command-container' id='command-container-all'>
-            <DownloadCommandContainer matchingStudies={searchContext.results.matching_accessions} />
+            <DownloadCommandContainer matchingAccessions={matchingAccessions} />
           </div>
         </Modal.Body>
 
