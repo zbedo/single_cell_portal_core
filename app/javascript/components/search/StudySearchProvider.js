@@ -56,7 +56,7 @@ export default class StudySearchProvider extends React.Component {
   }
 
   updateSearch = async (searchParams) => {
-    const effectiveParams = _assign(this.state.params, searchParams)
+    const effectiveParams = Object.assign(this.state.params, searchParams)
     if (searchParams) {
       navigate('?' + buildSearchQueryString('study', effectiveParams.terms, effectiveParams.facets))
     }
