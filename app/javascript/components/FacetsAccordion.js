@@ -10,12 +10,12 @@ export default function FacetsAccordion(props) {
     // Accordions provide a way to restrict Card components to only open one at a time.
     // https://react-bootstrap.github.io/components/accordion/
     <div id='facets-accordion'>
-      <PanelGroup accordion>
+      <PanelGroup id="facets-accordion-group" accordion>
         {
           props.facets.map((facet, i) => {
             return (
               <Panel key={i} eventKey={i}>
-                <Panel.Heading>
+                <Panel.Heading >
                   <Panel.Title toggle>
                     {facet.name}
                   </Panel.Title>
@@ -24,6 +24,7 @@ export default function FacetsAccordion(props) {
                   <FiltersBox
                     facet={facet}
                     filters={facet.filters}
+                    setShow={props.setShow}
                   />
                 </Panel.Body>
               </Panel>

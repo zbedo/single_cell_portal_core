@@ -2,6 +2,7 @@ import React, { useContext, useState, useEffect } from 'react';
 import isEqual from 'lodash/isEqual';
 import Button from 'react-bootstrap/lib/Button';
 
+import { StudySearchContext } from 'components/search/StudySearchProvider';
 import Filters from './Filters';
 import { SearchContext } from './SearchPanel';
 
@@ -41,12 +42,11 @@ function ApplyButton(props) {
  * Component for filter lists that have Apply and Clear
  */
 export default function FiltersBox(props) {
-
-  const searchContext = useContext(SearchContext);
+  const searchContext = useContext(StudySearchContext);
 
   const [canApply, setCanApply] = useState(false);
   const [showClear, setShowClear] = useState(false);
-  const [appliedSelection, setAppliedSelection] = useState([]);
+  const appliedSelection = searchContext.params.facets[props.facet.id]
   const [selection, setSelection] = useState([]);
 
   useEffect(() => {
@@ -102,13 +102,12 @@ export default function FiltersBox(props) {
 
     const checkedFilterIds = getCheckedFilterIds();
 
-    if (checkedFilterIds.length > 0) {
-      searchContext.facets[facetId] = checkedFilterIds.join(',');
-    } else {
-      delete searchContext.facets[facetId];
+    let updatedFacetValue = {};
+    updatedFacetValue[facetId] = checkedFilterIds
+    searchContext.updateSearch({facets: updatedFacetValue})
+    if (props.setShow) {
+      props.setShow(false)
     }
-
-    setAppliedSelection(checkedFilterIds);
   }
 
   function clearFilters() {
