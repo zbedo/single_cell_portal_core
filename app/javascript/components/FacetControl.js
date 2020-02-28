@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import FiltersBox from './FiltersBox';
-
+import { StudySearchContext } from 'components/search/StudySearchProvider';
+import _filter from 'lodash/filter'
 /**
  * Converts string value to lowercase, hyphen-delimited version
  * e.g. "Cell type" -> "cell-type"
@@ -10,15 +11,6 @@ function slug(value) {
 }
 
 export default function FacetControl(props) {
-
-  const [showFilters, setShowFilters] = useState(false);
-
-  const facetName = props.facet.name;
-  const facetId = `facet-${slug(facetName)}`;
-
-  function handleButtonClick() {
-    setShowFilters(!showFilters);
-  }
   // add event listener to detect mouseclicks outside the modal, so we know to close it
   // see https://medium.com/@pitipatdop/little-neat-trick-to-capture-click-outside-with-react-hook-ba77c37c7e82
   useEffect(() => {
@@ -29,6 +21,23 @@ export default function FacetControl(props) {
       document.removeEventListener("mousedown", handleOtherClick);
     };
   }, []);
+
+  const [showFilters, setShowFilters] = useState(false);
+
+  const facetName = props.facet.name;
+  const facetId = `facet-${slug(facetName)}`;
+  const searchContext = useContext(StudySearchContext)
+  const facetParams = searchContext.params.facets[props.facet.id]
+  let selectedFilterString = undefined
+  if (facetParams && facetParams.length) {
+    let selectedFilters = props.facet.filters.filter(filter => { return facetParams.indexOf(filter.id) >= 0})
+    selectedFilterString = selectedFilters.map(filter => filter.name).join(', ')
+  }
+
+  function handleButtonClick() {
+    setShowFilters(!showFilters);
+  }
+
 
   const node = useRef()
   const handleOtherClick = e => {
@@ -42,10 +51,10 @@ export default function FacetControl(props) {
   return (
       <span ref={node}
         id={facetId}
-        className={`facet ${showFilters ? 'active' : ''}`}>
+        className={`facet ${showFilters ? 'active' : ''} ${selectedFilterString ? ' selected' : ''}`}>
         <a
           onClick={handleButtonClick}>
-          {facetName}
+          { selectedFilterString ? selectedFilterString : facetName }
         </a>
         <FiltersBox show={showFilters} facet={props.facet} />
       </span>
