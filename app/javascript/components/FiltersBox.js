@@ -45,19 +45,11 @@ function ApplyButton(props) {
 export default function FiltersBox(props) {
   const searchContext = useContext(StudySearchContext);
 
-  const [canApply, setCanApply] = useState(false);
-
   const appliedSelection = searchContext.params.facets[props.facet.id]
   const [selection, setSelection] = useState(appliedSelection ? appliedSelection : []);
   const [showClear, setShowClear] = useState(selection.length > 0);
 
-  useEffect(() => {
-    setCanApply(!isEqual(selection, appliedSelection));
-  }, [selection]);
-
-  useEffect(() => {
-    setCanApply(false);
-  }, [appliedSelection]);
+  const canApply = !isEqual(selection, appliedSelection)
 
   // TODO: Get opinions, perhaps move to a UI code style guide.
   //
