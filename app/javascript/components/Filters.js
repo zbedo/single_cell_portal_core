@@ -5,7 +5,6 @@ import FilterSlider from './FilterSlider';
  * Component for a list of string-based filters, e.g. disease, species
  */
 function FilterList(props) {
-  if (typeof props.filters === 'undefined') return (<></>); // TODO: Remove this once /search/facets response is fixed
   return (
     <ul>
     {
