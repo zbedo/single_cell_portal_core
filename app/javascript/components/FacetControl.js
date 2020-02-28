@@ -32,7 +32,7 @@ export default function FacetControl(props) {
   const facetParams = searchContext.params.facets[props.facet.id]
   let selectedFilterString = undefined
   if (facetParams && facetParams.length) {
-    let selectedFilters = props.facet.filters.filter(filter => { return facetParams.indexOf(filter.id) >= 0})
+    let selectedFilters = props.facet.filters.filter(filter => facetParams.includes(filter.id))
     selectedFilterString = selectedFilters.map(filter => filter.name).join(', ')
   }
 

@@ -21,6 +21,7 @@ export default function FacetsAccordion(props) {
                 <FiltersBox
                   facet={facet}
                   filters={facet.filters}
+                  setShow={props.setShow}
                 />
               </Panel.Body>
             </Panel>
