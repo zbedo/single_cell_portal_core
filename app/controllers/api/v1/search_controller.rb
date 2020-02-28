@@ -139,9 +139,10 @@ module Api
       def index
         @viewable = Study.viewable(current_api_user)
         # variable for determining how we will sort search results for relevance
-        sort_type = :keyword
+        sort_type = :none
         # if search params are present, filter accordingly
         if params[:terms].present?
+          sort_type = :keyword
           @search_terms = sanitize_search_values(params[:terms])
           # determine if search values contain possible study accessions
           possible_accessions = StudyAccession.sanitize_accessions(@search_terms.split)
@@ -184,6 +185,9 @@ module Api
           @studies = @studies.to_a.sort_by {|study| possible_accessions.index(study.accession) }
         when :facet
           @studies = @studies.to_a.sort_by {|study| -@studies_by_facet[study.accession][:facet_search_weight]}
+        else
+          # we have sort_type of :none, so preserve original ordering of :view_order and :name, both ascending
+          @studies = @studies.order_by([:view_order.asc, :name.asc])
         end
         # save list of study accessions for bulk_download/bulk_download_size calls, as well as caching query results
         @matching_accessions = @studies.map(&:accession)
@@ -559,9 +563,10 @@ module Api
             where_clauses << "#{column_name} IN ('#{filter_values.join('\',\'')}')"
           end
         end
-        # prepend WITH clauses before base_query, then add FROM and dependent WHERE clauses
+        # prepend WITH clauses before base_query (if needed), then add FROM and dependent WHERE clauses
         # all facets are treated as AND clauses
-        "WITH #{with_clauses.join(", ")} " + base_query + from_clause + " WHERE " + where_clauses.join(" AND ")
+        with_statement = with_clauses.any? ? "WITH #{with_clauses.join(", ")} " : ""
+        with_statement + base_query + from_clause + " WHERE " + where_clauses.join(" AND ")
       end
 
       # build a match of studies to facets/filters used in search (for labeling studies in UI with matches)
