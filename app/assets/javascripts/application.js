@@ -49,6 +49,14 @@ var exploreMenusToggleState = {
   right: -1
 };
 
+// allowed file extension for upload forms
+var ALLOWED_FILE_TYPES = {
+    expression: /(\.|\/)(txt|text|mm|mtx|tsv|csv)(\.gz)?$/i,
+    plainText: /(\.|\/)(txt|text|tsv|csv)$/i,
+    primaryData: /((\.(fq|fastq)(\.tar)?\.gz$)|\.bam)/i,
+    bundled: /(\.|\/)(txt|text|tsv|csv|bam\.bai)(\.gz)?$/i,
+    miscellaneous: /(\.|\/)(txt|text|tsv|csv|jpg|jpeg|png|pdf|doc|docx|xls|xlsx|ppt|pptx|zip)(\.gz)?$/i
+};
 
 // options for Spin.js
 var opts = {

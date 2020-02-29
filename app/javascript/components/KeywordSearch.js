@@ -14,7 +14,7 @@ export default function KeywordSearch(props) {
   const searchContext = useContext(StudySearchContext)
   const [keywordValue, setKeywordValue] = useState(searchContext.params.terms);
 
-  const handleSubmit = submitValue => {
+  function handleSubmit(submitValue) {
     // Prevent full page reload
     event.preventDefault()
     searchContext.updateSearch({terms: submitValue})

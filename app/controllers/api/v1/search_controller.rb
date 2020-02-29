@@ -559,9 +559,10 @@ module Api
             where_clauses << "#{column_name} IN ('#{filter_values.join('\',\'')}')"
           end
         end
-        # prepend WITH clauses before base_query, then add FROM and dependent WHERE clauses
+        # prepend WITH clauses before base_query (if needed), then add FROM and dependent WHERE clauses
         # all facets are treated as AND clauses
-        "WITH #{with_clauses.join(", ")} " + base_query + from_clause + " WHERE " + where_clauses.join(" AND ")
+        with_statement = with_clauses.any? ? "WITH #{with_clauses.join(", ")} " : ""
+        with_statement + base_query + from_clause + " WHERE " + where_clauses.join(" AND ")
       end
 
       # build a match of studies to facets/filters used in search (for labeling studies in UI with matches)
