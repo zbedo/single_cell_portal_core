@@ -86,7 +86,7 @@ function DownloadCommandContainer(props) {
             id={'refresh-button-' + downloadConfig.authCode}
             className='download-refresh-button btn btn-default btn-refresh glyphicon glyphicon-refresh'
             data-toggle='tooltip'
-            onClick={updateDownloadConfig}
+            onClick={() => { updateDownloadConfig(props.matchingAccessions) }}
             title='Refresh download command'>
           </button>
         </span>
