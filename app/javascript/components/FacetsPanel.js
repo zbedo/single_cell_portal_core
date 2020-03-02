@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import FacetControl from './FacetControl';
 import MoreFacetsButton from './MoreFacetsButton';
-import { StudySearchContext } from 'components/search/StudySearchProvider'
+import { StudySearchContext } from './search/StudySearchProvider'
 
 
 export default function FacetsPanel() {
