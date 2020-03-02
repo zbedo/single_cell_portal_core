@@ -1,7 +1,6 @@
-import React from 'react';
-
-
+import React, { useState } from 'react';
 import { Slider, Rail, Handles, Tracks, Ticks } from "react-compound-slider";
+
 import { Handle, Track, Tick } from './slider/components';
 
 const sliderStyle = {
@@ -24,133 +23,122 @@ const railStyle = {
  *
  * TODO (SCP-2149):
  * - Update search context upon applying values
- * - Convert selected values into seconds, regardless of selected unit
  */
-export default class FilterSlider extends React.Component {
+export default function FilterSlider(props) {
 
-  constructor(props) {
-    super(props);
+  const domain = [parseInt(props.facet.min), parseInt(props.facet.max)]
 
-    this.domain = [parseInt(props.facet.min), parseInt(props.facet.max)];
+  const [values, setValues] = useState(domain)
+  const [inputValues, setInputValues] = useState(domain)
 
-    this.state = {
-      values: this.domain,
-      inputValues: this.domain
-    }
-  }
-
-  onChange = (values) => {
-    const inputValues = values;
-    this.setState({ values, inputValues });
+  function onChange(values) {
+    setValues(values)
+    setInputValues(values)
   };
 
   /**
    * Changes slider value upon changing the number input control value.
    */
-  onNumberInputChange = (event) => {
+  function onNumberInputChange(event) {
     const target = event.target;
     const rawValue = target.value;
     const float = parseFloat(rawValue);
     const index = target.id.includes('min') ? 0 : 1;
-    let values = this.state.values.slice();
-    let inputValues = this.state.values.slice();
+    let changedValues = values.slice();
+    let changedInputValues = values.slice();
 
     let value = float;
-    if (isNaN(float)) value = values[index]; // ignore invalid input
+    if (isNaN(float)) value = changedValues[index]; // ignore invalid input
 
-    values[index] = value;
-    inputValues[index] = rawValue;
+    changedValues[index] = value;
+    changedInputValues[index] = rawValue;
 
-    this.setState({ values, inputValues });
+    setValues(changedValues)
+    setInputValues(changedInputValues)
   }
 
-  render() {
-    const {
-      state: { values, inputValues }
-    } = this;
+  return (
+    <>
+      <input
+        id="input-min-organism-age"
+        onChange={(event) => onNumberInputChange(event)}
+        type="number"
+        min={domain[0]}
+        max={domain[1]}
+        value={inputValues[0]}
+        style={{'width': '60px'}}
+      />
+      <span style={{'margin': '0 4px 0 4px'}}>-</span>
+      <input
+        id="input-max-organism-age"
+        onChange={(event) => onNumberInputChange(event)}
+        type="number"
+        min={domain[0]}
+        max={domain[1]}
+        value={inputValues[1]}
+        style={{'width': '60px', 'marginRight': '8px'}}
+      />
+      <select>
+        <option>Years</option>
+        <option>Months</option>
+        <option>Weeks</option>
+        <option>Days</option>
+        <option>Hours</option>
+      </select>
+      <div style={{ height: 120, width: '100%' }}>
+        <Slider
+          mode={1}
+          step={1}
+          domain={domain}
+          rootStyle={sliderStyle}
+          onChange={onChange}
+          values={values}
+        >
+          <Rail>
+            {({ getRailProps }) => (
+              <div style={railStyle} {...getRailProps()} />
+            )}
+          </Rail>
+          <Handles>
+            {({ handles, getHandleProps }) => (
+              <div className="slider-handles">
+                {handles.map(handle => (
+                  <Handle
+                    key={handle.id}
+                    handle={handle}
+                    domain={domain}
+                    getHandleProps={getHandleProps}
+                  />
+                ))}
+              </div>
+            )}
+          </Handles>
+          <Tracks left={false} right={false}>
+            {({ tracks, getTrackProps }) => (
+              <div className="slider-tracks">
+                {tracks.map(({ id, source, target }) => (
+                  <Track
+                    key={id}
+                    source={source}
+                    target={target}
+                    getTrackProps={getTrackProps}
+                  />
+                ))}
+              </div>
+            )}
+          </Tracks>
+          <Ticks count={6}>
+            {({ ticks }) => (
+              <div className="slider-ticks">
+                {ticks.map(tick => (
+                  <Tick key={tick.id} tick={tick} count={ticks.length} />
+                ))}
+              </div>
+            )}
+          </Ticks>
+        </Slider>
+      </div>
+    </>
+  );
 
-    return (
-      <>
-        <input
-          id="input-min-organism-age"
-          onChange={(event) => this.onNumberInputChange(event)}
-          type="number"
-          min={this.domain[0]}
-          max={this.domain[1]}
-          value={inputValues[0]}
-          style={{'width': '60px'}}
-        />
-        <span style={{'margin': '0 4px 0 4px'}}>-</span>
-        <input
-          id="input-max-organism-age"
-          onChange={(event) => this.onNumberInputChange(event)}
-          type="number"
-          min={this.domain[0]}
-          max={this.domain[1]}
-          value={inputValues[1]}
-          style={{'width': '60px', 'marginRight': '8px'}}
-        />
-        <select>
-          <option>Years</option>
-          <option>Months</option>
-          <option>Weeks</option>
-          <option>Days</option>
-          <option>Hours</option>
-        </select>
-        <div style={{ height: 120, width: '100%' }}>
-          <Slider
-            mode={1}
-            step={1}
-            domain={this.domain}
-            rootStyle={sliderStyle}
-            onChange={this.onChange}
-            values={values}
-          >
-            <Rail>
-              {({ getRailProps }) => (
-                <div style={railStyle} {...getRailProps()} />
-              )}
-            </Rail>
-            <Handles>
-              {({ handles, getHandleProps }) => (
-                <div className="slider-handles">
-                  {handles.map(handle => (
-                    <Handle
-                      key={handle.id}
-                      handle={handle}
-                      domain={this.domain}
-                      getHandleProps={getHandleProps}
-                    />
-                  ))}
-                </div>
-              )}
-            </Handles>
-            <Tracks left={false} right={false}>
-              {({ tracks, getTrackProps }) => (
-                <div className="slider-tracks">
-                  {tracks.map(({ id, source, target }) => (
-                    <Track
-                      key={id}
-                      source={source}
-                      target={target}
-                      getTrackProps={getTrackProps}
-                    />
-                  ))}
-                </div>
-              )}
-            </Tracks>
-            <Ticks count={6}>
-              {({ ticks }) => (
-                <div className="slider-ticks">
-                  {ticks.map(tick => (
-                    <Tick key={tick.id} tick={tick} count={ticks.length} />
-                  ))}
-                </div>
-              )}
-            </Ticks>
-          </Slider>
-        </div>
-      </>
-    );
-  }
 }
