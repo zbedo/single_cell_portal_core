@@ -5,7 +5,8 @@ import Modal from 'react-bootstrap/lib/Modal';
 // import Tooltip from 'react-bootstrap/lib/Tooltip'; // We'll need this when refining onClipboardCopySuccess
 import Clipboard from 'react-clipboard.js';
 
-import { StudySearchContext } from 'components/search/StudySearchProvider'
+import { useStudySearchContext } from 'components/search/StudySearchProvider'
+import { useUserContext } from './UserProvider'
 import { fetchAuthCode } from 'lib/scp-api';
 
 /**
@@ -107,9 +108,10 @@ function DownloadCommandContainer(props) {
  *
  * UI spec: https://projects.invisionapp.com/d/main#/console/19272801/402387755/preview
  */
-export default function DownloadButton() {
+export default function DownloadButton(props) {
 
-  const searchContext = useContext(StudySearchContext)
+  const searchContext = useStudySearchContext()
+  const userContext = useUserContext()
 
   const matchingAccessions = searchContext.results.matchingAccessions || [];
 
@@ -118,7 +120,7 @@ export default function DownloadButton() {
    * i.e. user is signed in and has search results
    */
   function shouldBeActive() {
-    return window.SCP.userAccessToken !== '' && matchingAccessions.length > 0;
+    return userContext.accessToken !== '' && matchingAccessions.length > 0;
   }
 
   const [active, setActive] = useState(shouldBeActive());

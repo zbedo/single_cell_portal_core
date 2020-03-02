@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { fetchSearch } from 'lib/scp-api'
 import _cloneDeep from 'lodash/cloneDeep'
 import _assign from 'lodash/assign'
@@ -15,6 +15,10 @@ const emptySearch = {
 }
 
 export const StudySearchContext = React.createContext(emptySearch)
+
+export function useStudySearchContext() {
+  return useContext(StudySearchContext)
+}
 
 export default class StudySearchProvider extends React.Component {
   constructor(props) {
