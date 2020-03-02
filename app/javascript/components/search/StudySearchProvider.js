@@ -15,7 +15,8 @@ const moreFacetIds = ['sex', 'race', 'library_preparation_protocol', 'organism_a
 const emptySearch = {
   params: {
     terms: '',
-    facets: {}
+    facets: {},
+    page: 1
   },
   results: [],
   isLoaded: false,
@@ -33,6 +34,7 @@ export default class StudySearchProvider extends React.Component {
     const queryParams = queryString.parse(window.location.search);
     let initialState = _cloneDeep(emptySearch)
     initialState.params = {
+      page: queryParams.page ? queryParams.page : 1,
       terms: queryParams.terms ? queryParams.terms : '',
       facets: buildFacetsFromQueryString(queryParams.facets)
     }

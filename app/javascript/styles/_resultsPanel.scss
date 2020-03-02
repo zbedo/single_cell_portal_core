@@ -1,5 +1,6 @@
 #results-panel {
   padding-top: 14px;
+
 }
 
 #results-panel > div > ul {
@@ -11,16 +12,16 @@
   border-left: 1px solid #d8dde6;
   border-right: 1px solid #d8dde6;
   padding: 10px;
+
 }
 
 #results-content > div {
   background-color: #fff;
   border-radius: 5px;
   box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.12), 0 3px 2px 0 rgba(0, 0, 0, 0.12);
-  height: 219px;
   margin: 0 auto;
+  margin-top: 10px;
   padding: 15px;
-  width: 1196px;
   width: 100%;
 
   #cell-count {
