@@ -178,13 +178,14 @@ module Api
           @studies = @studies.where(:accession.in => @convention_accessions)
         end
         # determine sort order for pagination; minus sign (-) means a descending search
+        @studies = @studies.to_a
         case sort_type
         when :keyword
-          @studies = @studies.to_a.sort_by {|study| -study.search_weight(@search_terms.split) }
+          @studies = @studies.sort_by {|study| -study.search_weight(@search_terms.split) }
         when :accession
-          @studies = @studies.to_a.sort_by {|study| possible_accessions.index(study.accession) }
+          @studies = @studies.sort_by {|study| possible_accessions.index(study.accession) }
         when :facet
-          @studies = @studies.to_a.sort_by {|study| -@studies_by_facet[study.accession][:facet_search_weight]}
+          @studies = @studies.sort_by {|study| -@studies_by_facet[study.accession][:facet_search_weight]}
         else
           # we have sort_type of :none, so preserve original ordering of :view_order and :name, both ascending
           @studies = @studies.order_by([:view_order.asc, :name.asc])
