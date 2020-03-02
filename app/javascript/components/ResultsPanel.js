@@ -3,12 +3,12 @@ import Tab from 'react-bootstrap/lib/Tab'
 import Tabs from 'react-bootstrap/lib/Tabs'
 import Panel from 'react-bootstrap/lib/Panel'
 import Pagination from 'react-bootstrap/lib/Pagination'
-import { useTable } from 'react-table'
+import { useTable, usePagination } from 'react-table'
 
 
 const ResultsPanel = props => {
   return (
-    <Panel id="results-panel">
+    <div id="results-panel">
       <Tab.Container id="result-tabs" defaultActiveKey="study">
         <Tabs defaultActiveKey='study' animation={false} >
           <Tab eventKey='study' title="Studies" >
@@ -17,7 +17,7 @@ const ResultsPanel = props => {
           <Tab eventKey='files' title='Files'/>
         </Tabs>
       </Tab.Container>
-    </Panel>
+    </div>
   )
 }
 
@@ -70,17 +70,41 @@ const StudyResults = props => {
     ),
     )
   } else {
-    displayedResults = { study: <p>No Results</p> }
+    displayedResults = [{ study: <p>No Results</p> }]
   }
   const {
     getTableProps,
     getTableBodyProps,
-    rows,
     prepareRow,
+    rows,
+    /*
+     * Instead of using 'rows', we'll use page,
+     * which has only the rows for the active page
+     */
+
+    // The rest of these things are super handy, too ;)
+    canPreviousPage,
+    canNextPage,
+    pageOptions,
+    pageCount,
+    gotoPage,
+    nextPage,
+    previousPage,
+    setPageSize,
+    state: { pageIndex, pageSize },
   } = useTable({
     columns,
     data: displayedResults,
-  })
+    // holds pagination states
+    initialState: {
+      pageIndex: props.results.currentPage,
+      manualPagination: true,
+      pageCount: props.results.totalPages,
+      // This will change when there's a way to determine amount of results per page via API endpoint
+      pageSize: 5,
+    },
+  },
+  usePagination)
   return (
     <Tab.Content id ='results-content'>
       <table {...getTableProps()}>
@@ -88,25 +112,38 @@ const StudyResults = props => {
           {rows.map((row, i) => {
             prepareRow(row)
             return (
-              <tr {...row.getRowProps()}>
+              <tr {...row.getRowProps()} className='result-row'>
                 {row.cells.map(cell => {
-                  return <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
+                  return <td {...cell.getCellProps()} id='result-cell'>{cell.render('Cell')}</td>
                 })}
               </tr>
             )
           })}
         </tbody>
       </table>
+      <div className="pagination">
+        <button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
+          {'<<'}
+        </button>{' '}
+        <button onClick={() => previousPage()} disabled={!canPreviousPage}>
+          {'<'}
+        </button>{' '}
+        <button onClick={() => nextPage()} disabled={!canNextPage}>
+          {'>'}
+        </button>{' '}
+        <button onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>
+          {'>>'}
+        </button>{' '}
+        <span>
+        Page{' '}
+          <strong>
+            {pageIndex} of {pageCount}
+          </strong>{' '}
+        </span>
+      </div>
     </Tab.Content>
 
   )
-  /*
-   * return (
-   *   <Tab.Content id ='results-content'>
-   *     {displayedResults}
-   *     <ResultsPagination totalPages = {props.results.totalPages} handlePageTurn={props.handlePageTurn}/>
-   *   </Tab.Content>)
-   */
 }
 
 const Study =props => {
