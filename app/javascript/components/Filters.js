@@ -14,9 +14,10 @@ function FilterList(props) {
             <input
               type='checkbox'
               aria-label='checkbox'
-              onClick={props.onClick}
+              onChange={(e) => {props.onChange(filter.id, e.target.checked)}}
               id={filter.id}
               name={filter.id}
+              checked={props.selection.includes(filter.id)}
             />
             <label htmlFor={filter.id}>{filter.name}</label>
           </li>
@@ -34,6 +35,7 @@ function FilterList(props) {
  */
 function FilterSlider(props) {
   const facet = props.facet;
+
   // React Compound Slider
   // API: https://react-compound-slider.netlify.com/docs
   // Examples: https://react-compound-slider.netlify.com/horizontal
@@ -51,9 +53,9 @@ function FilterSlider(props) {
  */
 export default function Filters(props) {
   const filters = props.filters;
-  if (props.facetType === 'string') {
-    return <FilterList filters={filters} onClick={props.onClick} />;
+  if (props.facet.type !== 'number') {
+    return <FilterList filters={filters} onChange={props.onFilterValueChange} selection={props.selection} />;
   } else {
-    return <FilterSlider filters={filters} />;
+    return <FilterSlider facet={props.facet} />;
   }
 }

@@ -100,18 +100,28 @@ class Study
 
   has_many :genes, dependent: :delete do
     def by_name_or_id(term, study_file_ids)
-      found_scores = any_of({name: term, :study_file_id.in => study_file_ids},
+      all_matches = any_of({name: term, :study_file_id.in => study_file_ids},
                             {searchable_name: term.downcase, :study_file_id.in => study_file_ids},
                             {gene_id: term, :study_file_id.in => study_file_ids})
-      if found_scores.empty?
-        return []
+      if all_matches.empty?
+        []
       else
         # since we can have duplicate genes but not cells, merge into one object for rendering
-        merged_scores = {'searchable_name' => term.downcase, 'name' => term, 'scores' => {}}
-        found_scores.each do |score|
+        # allow for case-sensitive matching over case-insensitive
+        exact_matches = all_matches.select {|g| g.name == term}
+        if exact_matches.any?
+          data = exact_matches
+        else
+          # group by searchable name to find any possible case sensitivity issues, then uniquify by study_file_id
+          # this will drop any fuzzy matches caused by case insensitivity that would lead to merging genes
+          # that were intended to be unique
+          data = all_matches.group_by(&:searchable_name).values.map {|group| group.uniq(&:study_file_id)}.flatten
+        end
+        merged_scores = {'searchable_name' => data.first.searchable_name, 'name' => data.first.name, 'scores' => {}}
+        data.each do |score|
           merged_scores['scores'].merge!(score.scores)
         end
-        return [merged_scores]
+        merged_scores
       end
     end
 

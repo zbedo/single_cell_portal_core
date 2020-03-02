@@ -1,18 +1,19 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
+import { StudySearchContext } from 'components/search/StudySearchProvider'
 import Tab from 'react-bootstrap/lib/Tab'
 import Tabs from 'react-bootstrap/lib/Tabs'
 import Panel from 'react-bootstrap/lib/Panel'
 import Pagination from 'react-bootstrap/lib/Pagination'
 import { useTable, usePagination } from 'react-table'
 
-
 const ResultsPanel = props => {
+  const searchContext = useContext(StudySearchContext)
   return (
     <div id="results-panel">
       <Tab.Container id="result-tabs" defaultActiveKey="study">
         <Tabs defaultActiveKey='study' animation={false} >
           <Tab eventKey='study' title="Studies" >
-            <StudyResults results={props.results} handlePageTurn={props.handlePageTurn}/>
+            <StudyResults results={searchContext.results} handlePageTurn={(pageNum) => {searchContext.updateSearch({page: pageNum})}}/>
           </Tab>
           <Tab eventKey='files' title='Files'/>
         </Tabs>
@@ -58,7 +59,7 @@ const StudyResults = props => {
       accessor: 'study',
     }])
   let displayedResults
-  if (props.results.studies.length>0) {
+  if (props.results.studies && props.results.studies.length>0) {
     displayedResults = props.results.studies.map(result => (
       {
         study: <Study

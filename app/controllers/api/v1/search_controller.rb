@@ -41,6 +41,13 @@ module Api
             key :type, :string
           end
           parameter do
+            key :name, :page
+            key :in, :query
+            key :description, 'Page number for pagination control'
+            key :required, false
+            key :type, :integer
+          end
+          parameter do
             key :name, :scpbr
             key :in, :query
             key :description, 'Requested branding group (to filter results on)'
@@ -121,7 +128,7 @@ module Api
             end
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 500 do
             key :description, 'Server error'
@@ -131,6 +138,8 @@ module Api
 
       def index
         @viewable = Study.viewable(current_api_user)
+        # variable for determining how we will sort search results for relevance
+        sort_type = :keyword
 
         # if search params are present, filter accordingly
         if params[:terms].present?
@@ -138,7 +147,12 @@ module Api
           # determine if search values contain possible study accessions
           possible_accessions = StudyAccession.sanitize_accessions(@search_terms.split)
           @studies = @viewable.any_of({:$text => {:$search => @search_terms}},
-                                      {:accession.in => possible_accessions}).order_by {|study| study.search_weight(@search_terms.split) }
+                                      {:accession.in => possible_accessions})
+          # all of our terms were accessions, so this is a "cached" query, and we want to return
+          # results in the exact order specified in the accessions array
+          if possible_accessions.size == @search_terms.split.size
+            sort_type = :accession
+          end
         else
           @studies = @viewable
         end
@@ -150,6 +164,7 @@ module Api
 
         # only call BigQuery if list of possible studies is larger than 0 and we have matching facets to use
         if @studies.count > 0 && @facets.any?
+          sort_type = :facet
           @studies_by_facet = {}
           @big_query_search = self.class.generate_bq_query_string(@facets)
           Rails.logger.info "Searching BigQuery using facet-based query: #{@big_query_search}"
@@ -160,11 +175,21 @@ module Api
           # uniquify result list as one study may match multiple facets/filters
           @convention_accessions = query_results.map {|match| match[:study_accession]}.uniq
           Rails.logger.info "Found #{@convention_accessions.count} matching studies from BQ job #{job_id}: #{@convention_accessions}"
-          @studies = @studies.where(:accession.in => @convention_accessions).order_by {|study| @studies_by_facet[study.accession][:facet_search_weight]}
+          @studies = @studies.where(:accession.in => @convention_accessions)
+        end
+
+        @studies = @studies.to_a
+        # determine sort order for pagination; minus sign (-) means a descending search
+        case sort_type
+        when :keyword && params[:terms].present?
+          @studies = @studies.sort_by {|study| -study.search_weight(@search_terms.split) }
+        when :accession && params[:terms].present?
+          @studies = @studies.sort_by {|study| possible_accessions.index(study.accession) }
+        when :facet
+          @studies = @studies.sort_by {|study| -@studies_by_facet[study.accession][:facet_search_weight]}
         end
         # save list of study accessions for bulk_download/bulk_download_size calls, as well as caching query results
-        @matching_accessions = @studies.pluck(:accession)
-        # paginate results
+        @matching_accessions = @studies.map(&:accession)
         @results = @studies.paginate(page: params[:page], per_page: Study.per_page)
       end
 
@@ -188,7 +213,7 @@ module Api
             end
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
         end
       end
@@ -227,7 +252,7 @@ module Api
             end
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 500 do
             key :description, 'Server error'
@@ -264,10 +289,10 @@ module Api
             end
           end
           response 401 do
-            key :description, 'User is not signed in'
+            key :description, ApiBaseController.unauthorized
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
         end
       end
@@ -332,7 +357,7 @@ module Api
             key :description, 'Invalid study accessions or requested file types'
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
         end
       end
@@ -394,10 +419,10 @@ module Api
             key :description, 'Invalid study accessions or requested file types'
           end
           response 401 do
-            key :description, 'User not signed in'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'Invalid auth token, or requested download exceeds user download quota'
+            key :description, ApiBaseController.forbidden('download with provided auth_token, or download exceeds user quota')
             schema do
               key :title, 'Error'
               property :message do
@@ -407,7 +432,7 @@ module Api
             end
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
         end
       end
@@ -537,9 +562,10 @@ module Api
             where_clauses << "#{column_name} IN ('#{filter_values.join('\',\'')}')"
           end
         end
-        # prepend WITH clauses before base_query, then add FROM and dependent WHERE clauses
+        # prepend WITH clauses before base_query (if needed), then add FROM and dependent WHERE clauses
         # all facets are treated as AND clauses
-        "WITH #{with_clauses.join(", ")} " + base_query + from_clause + " WHERE " + where_clauses.join(" AND ")
+        with_statement = with_clauses.any? ? "WITH #{with_clauses.join(", ")} " : ""
+        with_statement + base_query + from_clause + " WHERE " + where_clauses.join(" AND ")
       end
 
       # build a match of studies to facets/filters used in search (for labeling studies in UI with matches)

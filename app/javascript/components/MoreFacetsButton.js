@@ -1,9 +1,9 @@
 /* eslint-disable */
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSlidersH } from '@fortawesome/free-solid-svg-icons';
 
-// import FacetsAccordionBox from './FacetsAccordionBox';
+import FacetsAccordion from './FacetsAccordion';
 
 /**
  * Component for "More Facets" button.  Clicking shows facets accordion box.
@@ -11,25 +11,45 @@ import { faSlidersH } from '@fortawesome/free-solid-svg-icons';
  * UI spec: https://projects.invisionapp.com/d/main#/console/19272801/402387756/preview
  */
 export default function MoreFacetsButton(props) {
-  
+
   const [show, setShow] = useState(false);
-  
+
   // const facetName = props.facet.name;
 
   function handleClick() {
     setShow(!show);
   }
+  // add event listener to detect mouseclicks outside the accordion, so we know to close it
+  // if we have any more controls like this, consider a HOC for this behavior (shared in FacetControl as well)
+  useEffect(() => {
+    // add when mounted
+    document.addEventListener("mousedown", handleOtherClick);
+    // return function to be called when unmounted
+    return () => {
+      document.removeEventListener("mousedown", handleOtherClick);
+    };
+  }, []);
+
+  const node = useRef()
+  const handleOtherClick = e => {
+    if (node.current.contains(e.target)) {
+      // click was inside the modal, do nothing
+      return;
+    }
+    setShow(false)
+  };
 
   return (
       <span
         id='more-facets-button'
-        className={`${show ? 'active' : ''} facet`}>
-        <span
+        className={`${show ? 'active' : ''} facet`}
+        ref={node}>
+        <a
           onClick={handleClick}>
           <FontAwesomeIcon className="icon-left" icon={faSlidersH}/>
           More Facets
-        </span>
-        {/* <FacetsAccordionBox show={show} facets={props.facets} /> */}
+        </a>
+        {show && <FacetsAccordion facets={props.facets} setShow={setShow} />}
       </span>
     );
 }

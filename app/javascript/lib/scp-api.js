@@ -7,6 +7,7 @@
  * API docs: https://singlecell.broadinstitute.org/single_cell/api
  */
 import camelcaseKeys from 'camelcase-keys';
+import _compact from 'lodash/compact'
 
 const defaultBasePath = '/single_cell/api/v1';
 
@@ -134,10 +135,35 @@ export async function fetchFacetFilters(facet, query, mock=false) {
  *
  * fetchSearch('study', 'tuberculosis');
  */
-export async function fetchSearch(type, terms, facets, currentPage, mock=false){
-  // Needs to be edited to include facets
-  const searchPathAndQueryString = `/search?type=${type}&terms=${terms}&page=${currentPage}`
+export async function fetchSearch(type, terms, facets, page, mock=false){
+  const searchPathAndQueryString = `/search?${buildSearchQueryString(type, terms, facets, page)}`
   return await scpApi(searchPathAndQueryString, defaultInit, mock);
+}
+
+export function buildSearchQueryString(type, terms, facets, page) {
+  return `type=${type}&terms=${terms}&facets=${buildFacetQueryString(facets)}&page=${page ? page : 1}`
+}
+
+function buildFacetQueryString(facets) {
+  if (!facets || !Object.keys(facets).length) {
+    return ''
+  }
+  return _compact(Object.keys(facets).map((facetId) => {
+    if (facets[facetId].length) {
+      return `${facetId}:${facets[facetId].join(',')}`
+    }
+  })).join('+')
+}
+
+export function buildFacetsFromQueryString(facetsParamString) {
+  let facets = {}
+  if (facetsParamString) {
+    facetsParamString.split('+').forEach((facetString) => {
+      let facetArray = facetString.split(':')
+      facets[facetArray[0]] = facetArray[1].split(',')
+    })
+  }
+  return facets;
 }
 
 /**
@@ -148,8 +174,6 @@ export async function fetchSearch(type, terms, facets, currentPage, mock=false){
  * @param {Boolean} mock | Whether to use mock data.  Helps development, tests.
  */
 export default async function scpApi(path, init, mock=false) {
-  console.log(path)
-  console.log(init)
   if (globalMock) mock = true;
   const basePath = (mock || globalMock) ? mockOrigin + '/mock_data' : defaultBasePath;
   let fullPath = basePath + path;
