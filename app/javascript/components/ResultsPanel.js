@@ -99,11 +99,11 @@ const StudyResults = props => {
     // holds pagination states
     initialState: {
       pageIndex: props.results.currentPage,
-      manualPagination: true,
-      pageCount: props.results.totalPages,
       // This will change when there's a way to determine amount of results per page via API endpoint
       pageSize: 5,
     },
+    pageCount: props.results.totalPages,
+    manualPagination: true,
   },
   usePagination)
   return (
