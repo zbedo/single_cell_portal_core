@@ -19,6 +19,7 @@ class SearchFacet
   field :is_array_based, type: Boolean
   field :big_query_id_column, type: String
   field :big_query_name_column, type: String
+  field :big_query_conversion_column, type: String # for converting numeric columns with units, like organism_age
   field :convention_name, type: String
   field :convention_version, type: String
   field :unit, type: String # unit represented by values in number-based facets
@@ -28,6 +29,16 @@ class SearchFacet
   DATA_TYPES = %w(string number boolean)
   BQ_DATA_TYPES = %w(STRING FLOAT64 BOOL)
   BQ_TO_FACET_TYPES = Hash[BQ_DATA_TYPES.zip(DATA_TYPES)]
+
+  # Time multipliers, from https://github.com/broadinstitute/scp-ingest-pipeline/blob/master/ingest/validation/validate_metadata.py#L785
+  TIME_MULTIPLIERS = {
+      hours: 3600,
+      days: 86400,
+      weeks: 604800,
+      months: 2626560, #(day * 30.4 to fuzzy-account for different months)
+      years: 31557600 # (day * 365.25 to fuzzy-account for leap-years)
+  }.with_indifferent_access
+  TIME_UNITS = TIME_MULTIPLIERS.keys
 
   validates_presence_of :name, :identifier, :data_type, :big_query_id_column, :big_query_name_column, :convention_name, :convention_version
   validates_uniqueness_of :big_query_id_column, scope: [:convention_name, :convention_version]
@@ -255,6 +266,18 @@ class SearchFacet
     self.data_type == 'number'
   end
 
+  # know if a facet needs unit conversion
+  def must_convert?
+    self.big_query_conversion_column.present? && self.unit != 'seconds'
+  end
+
+  # convert a numeric time-based value into seconds, defaulting to declared unit type
+  def calculate_time_in_seconds(base_value:, unit_label: self.unit)
+    multiplier = TIME_MULTIPLIERS[unit_label]
+    # cast as float to allow passing in strings from search requests as values
+    base_value.to_f * multiplier
+  end
+
   # retrieve unique values from BigQuery and format an array of hashes with :name and :id values to populate :filters attribute
   def get_unique_filter_values
     Rails.logger.info "Updating filter values for SearchFacet: #{self.name} using id: #{self.big_query_id_column} and name: #{self.big_query_name_column}"
@@ -262,6 +285,8 @@ class SearchFacet
     if self.is_array_based
       queries << self.generate_array_query(self.big_query_id_column, 'id')
       queries << self.generate_array_query(self.big_query_name_column, 'name')
+    elsif self.is_numeric?
+      queries << self.generate_minmax_query
     else
       queries << self.generate_non_array_query
     end
@@ -271,7 +296,7 @@ class SearchFacet
         Rails.logger.info "Executing query: #{query_string}"
         results << SearchFacet.big_query_dataset.query(query_string)
       end
-      return assemble_filters_array(results)
+      return self.is_numeric? ? results.flatten.first : assemble_filters_array(results)
     rescue => e
       Rails.logger.error "Error retrieving unique values for #{CellMetadatum::BIGQUERY_TABLE}: #{e.class.name}:#{e.message}"
       error_context = ErrorTracker.format_extra_context({queries: queries})
@@ -282,9 +307,13 @@ class SearchFacet
 
   # update cached filters in place with new values
   def update_filter_values!
-    values = self.get_unique_filter_values.to_a
+    values = self.get_unique_filter_values
     unless values.empty?
-      self.update(filters: values)
+      if self.is_numeric?
+        self.update(min: values[:MIN], max: values[:MAX])
+      else
+        self.update(filters: values.to_a)
+      end
     else
       false # did not get any results back, meaning :retrieve_unique_filter_values encountered an error
     end
@@ -302,6 +331,11 @@ class SearchFacet
   # generate query string to retrieve distinct values for non-array based facets
   def generate_non_array_query
     "SELECT DISTINCT #{self.big_query_id_column} AS id, #{self.big_query_name_column} AS name FROM #{CellMetadatum::BIGQUERY_TABLE}"
+  end
+
+  # generate a minmax query string to set bounds for numeric facets
+  def generate_minmax_query
+    "SELECT MIN(#{self.big_query_id_column}) AS MIN, MAX(#{self.big_query_id_column}) AS MAX FROM #{CellMetadatum::BIGQUERY_TABLE}"
   end
 
   # stitch together results into the formatted filters array based on whether or not we ran one or two queries

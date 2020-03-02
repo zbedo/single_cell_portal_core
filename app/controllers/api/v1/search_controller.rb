@@ -503,9 +503,18 @@ module Api
             facet = SearchFacet.find_by(identifier: facet_id)
             if facet.present?
               matching_filters = []
-              facet.filters.each do |filter|
-                if filter_values.include?(filter[:id])
-                  matching_filters << filter
+              if facet.is_numeric?
+                # first filter value is range, e.g. 20-40, second value is unit, e.g. years
+                min_value, max_value = self.class.split_query_param_on_delim(parameter: filter_values.first, delimiter: '-')
+                requested_unit = filter_values.last
+                if facet.min >= min_value || max_value <= max_value
+                  matching_filters << {name: facet.identifier, min: min_value, max: max_value, unit: requested_unit}
+                end
+              else
+                facet.filters.each do |filter|
+                  if filter_values.include?(filter[:id])
+                    matching_filters << filter
+                  end
                 end
               end
               if matching_filters.any?
@@ -559,6 +568,19 @@ module Api
             from_clause += ", #{filter_arr_name}, UNNEST(#{filter_arr_name}.#{filter_val_name}) AS #{filter_where_val}"
             where_clauses << "(#{filter_where_val} IN UNNEST(#{column_name}))"
             base_query += ", #{filter_where_val}"
+          elsif search_facet.is_numeric?
+            # run a range query (e.g. WHERE organism_age BETWEEN 20 and 60)
+            base_query += ", #{column_name}"
+            query_on = column_name
+            min_value = facet_obj[:filters][:min]
+            max_value = facet_obj[:filters][:max]
+            unit = facet_obj[:filters][:unit]
+            if search_facet.must_convert?
+              query_on = search_facet.big_query_conversion_column
+              min_value = search_facet.calculate_time_in_seconds(min_value, unit)
+              max_value = search_facet.calculate_time_in_seconds(max_value, unit)
+            end
+            where_clauses << "#{query_on} BETWEEN #{min_value} AND #{max_value}"
           else
             base_query += ", #{column_name}"
             # for non-array columns we can pass an array of quoted values and call IN directly
@@ -582,7 +604,12 @@ module Api
           result.keys.keep_if { |key| key != :study_accession }.each do |key|
             facet_name = key.to_s.chomp('_val')
             matching_facet = search_facets.detect { |facet| facet[:id] == facet_name }
-            matching_filter = matching_facet[:filters].detect { |filter| filter[:id] == result[key] }
+            facet_obj = SearchFacet.find(matching_facet[:object_id])
+            if facet_obj.is_numeric?
+              matching_filter = {name: facet_name, value: result[facet_name]}
+            else
+              matching_filter = matching_facet[:filters].detect { |filter| filter[:id] == result[key] }
+            end
             if facet_name != key.to_s
               # results with a key ending in _val are array based, and may have multiple matches, so append to existing list
               matches[accession][facet_name] ||= []
