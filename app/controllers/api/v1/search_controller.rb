@@ -140,6 +140,7 @@ module Api
         @viewable = Study.viewable(current_api_user)
         # variable for determining how we will sort search results for relevance
         sort_type = :none
+
         # if search params are present, filter accordingly
         if params[:terms].present?
           sort_type = :keyword
@@ -177,8 +178,9 @@ module Api
           Rails.logger.info "Found #{@convention_accessions.count} matching studies from BQ job #{job_id}: #{@convention_accessions}"
           @studies = @studies.where(:accession.in => @convention_accessions)
         end
-        # determine sort order for pagination; minus sign (-) means a descending search
+
         @studies = @studies.to_a
+        # determine sort order for pagination; minus sign (-) means a descending search
         case sort_type
         when :keyword
           @studies = @studies.sort_by {|study| -study.search_weight(@search_terms.split) }
@@ -187,8 +189,8 @@ module Api
         when :facet
           @studies = @studies.sort_by {|study| -@studies_by_facet[study.accession][:facet_search_weight]}
         else
-          # we have sort_type of :none, so preserve original ordering of :view_order and :name, both ascending
-          @studies = @studies.order_by([:view_order.asc, :name.asc])
+          # we have sort_type of :none, so preserve original ordering of :view_order
+          @studies = @studies.sort_by(&:view_order)
         end
         # save list of study accessions for bulk_download/bulk_download_size calls, as well as caching query results
         @matching_accessions = @studies.map(&:accession)
