@@ -26,6 +26,16 @@
 }
 
 #search-panel {
+  a {
+    cursor: pointer;
+    text-decoration: none;
+    color: $action-color;
+    &:hover {
+      text-decoration: none;
+      color: $action-color;
+      background: lighten($action-color, 50%);
+    }
+  }
   .facet{
     display: inline-block;
     margin-right: 8px;
@@ -39,11 +49,6 @@
       width: 100%;
       box-sizing: border-box;
       display: inline-block;
-      cursor: pointer;
-      &:hover {
-        text-decoration: none;
-        color: $action-color;
-      }
     }
   }
   #download-button{
@@ -97,10 +102,10 @@
   }
 
   .facet-ontology-links {
-    float: right;
+    text-align: right;
   }
 
-  .filters-box-searchable {
+  .filters-box-searchable, #facets-accordion {
     width: 400px;
     border: 1px solid #aaa;
     background: #fff;
@@ -108,6 +113,12 @@
     z-index: 9000;
     border-radius: 5px;
     padding: 2px;
+    margin-top: 2px;
+  }
+
+  .filters-box-header {
+    margin-top: 5px;
+    margin-bottom: 0px;
   }
 
   label {
@@ -125,13 +136,7 @@
   }
 
   #facets-accordion {
-    background: #fff;
     height: 300px;
-    width: 400px;
-    position: relative;
-    top: 5px;
-    padding: 3px;
-    border-radius: 5px;
 
     .panel-heading {
       background: #fff;
@@ -145,7 +150,6 @@
       width: 100%;
       display: block;
       border: 1px solid #ddd;
-
     }
   }
 

@@ -13,16 +13,6 @@ function slug(value) {
 }
 
 export default function FacetControl(props) {
-  // add event listener to detect mouseclicks outside the modal, so we know to close it
-  // see https://medium.com/@pitipatdop/little-neat-trick-to-capture-click-outside-with-react-hook-ba77c37c7e82
-  useEffect(() => {
-    // add when mounted
-    document.addEventListener("mousedown", handleOtherClick);
-    // return function to be called when unmounted
-    return () => {
-      document.removeEventListener("mousedown", handleOtherClick);
-    };
-  }, []);
 
   const [showFilters, setShowFilters] = useState(false);
 
@@ -30,9 +20,9 @@ export default function FacetControl(props) {
   const facetId = `facet-${slug(facetName)}`;
   const searchContext = useContext(StudySearchContext)
   const facetParams = searchContext.params.facets[props.facet.id]
-  let selectedFilterString = undefined
+  var selectedFilterString
   if (facetParams && facetParams.length) {
-    let selectedFilters = props.facet.filters.filter(filter => { return facetParams.indexOf(filter.id) >= 0})
+    let selectedFilters = props.facet.filters.filter(filter => facetParams.includes(filter.id))
     selectedFilterString = selectedFilters.map(filter => filter.name).join(', ')
   }
 
@@ -49,6 +39,17 @@ export default function FacetControl(props) {
     }
     setShowFilters(false)
   };
+
+  // add event listener to detect mouseclicks outside the modal, so we know to close it
+  // see https://medium.com/@pitipatdop/little-neat-trick-to-capture-click-outside-with-react-hook-ba77c37c7e82
+  useEffect(() => {
+    // add when mounted
+    document.addEventListener("mousedown", handleOtherClick);
+    // return function to be called when unmounted
+    return () => {
+      document.removeEventListener("mousedown", handleOtherClick);
+    };
+  }, []);
 
   return (
       <span ref={node}

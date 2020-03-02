@@ -49,7 +49,7 @@ export default function FiltersBoxSearchable(props) {
   }
 
   function getFiltersSummary() {
-    let filtersSummary = 'FREQUENTLY SEARCHED';
+    let filtersSummary = 'TOP FILTERS';
 
     if (hasFilterSearchResults) {
       const numMatches = matchingFilters.length;
@@ -61,6 +61,17 @@ export default function FiltersBoxSearchable(props) {
 
   return (
     <div className={componentName} id={componentId} style={{display: props.show ? '' : 'none'}}>
+      <div className='facet-ontology-links'>
+          {
+          props.facet.links.map((link, i) => {
+            return (
+              <a key={`link-${i}`} href={link.url} target='_blank'>
+                {link.name}&nbsp;&nbsp;<FontAwesomeIcon icon={faExternalLinkAlt}/>
+              </a>
+            );
+          })
+          }
+      </div>
       <FiltersSearchBar
         filtersBoxId={componentId}
         searchFilters={searchFilters}
@@ -68,17 +79,6 @@ export default function FiltersBoxSearchable(props) {
       <p className='filters-box-header'>
         <span className='default-filters-list-name'>
           {getFiltersSummary()}
-        </span>
-        <span className='facet-ontology-links'>
-          {
-          props.facet.links.map((link, i) => {
-            return (
-              <a key={`link-${i}`} href={link.url} target='_blank'>
-                {link.name}&nbsp;&nbsp;<FontAwesomeIcon icon={faExternalLinkAlt}/><br/>
-              </a>
-            );
-          })
-          }
         </span>
       </p>
       <FiltersBox
