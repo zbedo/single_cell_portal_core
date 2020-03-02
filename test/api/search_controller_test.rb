@@ -46,6 +46,25 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     puts "#{File.basename(__FILE__)}: #{self.method_name} completed!"
   end
 
+  test 'should return viewable studies on empty search' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+
+    execute_http_request(:get, api_v1_search_path(type: 'study'))
+    assert_response :success
+    expected_studies = Study.viewable(@user).pluck(:accession).sort
+    found_studies = json['matching_accessions'].sort
+    assert_equal expected_studies, found_studies, "Did not return correct studies; expected #{expected_studies} but found #{found_studies}"
+
+    sign_out @user
+    execute_http_request(:get, api_v1_search_path(type: 'study'))
+    assert_response :success
+    expected_studies = Study.viewable(nil).pluck(:accession).sort
+    public_studies = json['matching_accessions'].sort
+    assert_equal expected_studies, public_studies, "Did not return correct studies; expected #{expected_studies} but found #{public_studies}"
+
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
+
   test 'should return search results using facets' do
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
