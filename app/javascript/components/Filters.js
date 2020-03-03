@@ -37,17 +37,15 @@ export default function Filters(props) {
     return (
       <FilterCheckboxes
         filters={filters}
-        onChange={props.onChangeFilterCheckboxes}
+        onChange={props.updateSelectionForFilterCheckboxes}
         selection={props.selection}
       />
     );
   } else {
-    console.log('props')
-    console.log(props)
     return (
       <FilterSlider
         facet={props.facet}
-        onChange={props.onChangeFilterSlider}
+        onChange={props.updateSelectionForFilterSlider}
         selection={props.selection}
       />
     );

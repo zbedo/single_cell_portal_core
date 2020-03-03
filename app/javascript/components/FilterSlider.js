@@ -26,7 +26,7 @@ const railStyle = {
  */
 export default function FilterSlider(props) {
 
-  const facet = props.facet;
+  const facet = props.facet
 
   const domain = [parseInt(facet.min), parseInt(facet.max)]
 
@@ -39,8 +39,8 @@ export default function FilterSlider(props) {
   function updateValues(values) {
     setValues(values)
     setInputValues(values)
-    const selection = values.join('-') + ',' + unit.toLowerCase()
-    props.onChange(null, selection)
+    const ranges = values.join('-') + ',' + unit.toLowerCase()
+    props.onChange(ranges)
   }
 
   function onChange(values) {
