@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
 import { StudySearchContext } from 'components/search/StudySearchProvider'
-import StudyResults from 'components/StudyResults'
+import StudyResults from './StudyResults'
 /**
  * Component for Results displayed on the homepage
  */
