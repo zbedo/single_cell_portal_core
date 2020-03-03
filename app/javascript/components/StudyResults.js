@@ -6,12 +6,14 @@ import { useTable, usePagination } from 'react-table'
 /**
  * Wrapper component for studies tab on homepage
  */
-const StudyResults = props => {
+const StudyResultsContainer = props => {
+  const studies = <StudiesList studies={props.results}/>
+
   return (
     <Tab.Container id="result-tabs" defaultActiveKey="study">
       <Tabs defaultActiveKey='study' animation={false} >
         <Tab eventKey='study' title="Studies" >
-          <StudiesTabContent changePage ={props.handlePageTurn} studies= {props.results}/>
+          <StudiesResults changePage ={props.handlePageTurn} data= {studies}/>
         </Tab>
         <Tab eventKey='files' title='Files'></Tab>
       </Tabs>
@@ -19,16 +21,8 @@ const StudyResults = props => {
   )
 }
 
-/**
- * Component for the content of the 'Studies' tab
- */
-const StudiesTabContent = ({ studies, changePage }) => {
-  const columns = React.useMemo(
-    () => [{
-      accessor: 'study',
-    }])
-
-  const data = studies.studies.map(result => (
+const StudiesList = studies => {
+  studies.studies.map(result => (
     {
       study: <Study
         study={result}
@@ -38,7 +32,16 @@ const StudiesTabContent = ({ studies, changePage }) => {
     }
   ),
   )
+}
 
+/**
+ * Component for the content of the 'Studies' tab
+ */
+const StudiesResults = ({ studies, changePage }) => {
+  const columns = React.useMemo(
+    () => [{
+      accessor: 'study',
+    }])
   const {
     getTableProps,
     getTableBodyProps,
@@ -131,4 +134,4 @@ const Study =props => {
     </div>
   )
 }
-export default StudyResults
+export default StudyResultsContainer

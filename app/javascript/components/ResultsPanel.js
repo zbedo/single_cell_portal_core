@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
 import { StudySearchContext } from 'components/search/StudySearchProvider'
-import StudyResults from './StudyResults'
+import StudyResultsContainer from './StudyResults'
 /**
  * Component for Results displayed on the homepage
  */
@@ -9,7 +9,7 @@ const ResultsPanel = props => {
   let displayedResults = <span></span>
   if (searchContext.isLoaded) {
     if (searchContext.results.studies.length > 0) {
-      displayedResults = <StudyResults
+      displayedResults = <StudyResultsContainer
         results={searchContext.results}
         handlePageTurn={pageNum => {searchContext.updateSearch({ page: pageNum })}}
       />
