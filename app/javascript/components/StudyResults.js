@@ -98,7 +98,7 @@ const StudiesTabContent = ({ studies, changePage }) => {
           {'>'}
         </button>{' '}
         <button
-          onClick={() => {gotoPage(pageCount); changePage(studies.total_pages)}}
+          onClick={() => {gotoPage(pageCount); changePage(studies.totalPages)}}
           disabled={!canNextPage}>
           {'>>'}
         </button>{' '}
