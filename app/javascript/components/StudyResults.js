@@ -122,7 +122,7 @@ const Study =props => {
       <label htmlFor={props.study.name} id= 'result-title'>
         <a href={props.study.study_url}>{props.study.name} </a></label>
       <div>
-        <span id = 'cell-count'className="badge badge-secondary">{props.study.cell_count} Cells </span>
+        <span id='cell-count' className='badge badge-secondary'>{props.study.cell_count} Cells </span>
       </div>
       <span dangerouslySetInnerHTML={studyDescription} id='descrition-text-area' disabled accession = {props.study.name}></span>
     </div>
