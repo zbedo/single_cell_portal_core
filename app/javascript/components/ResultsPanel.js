@@ -8,7 +8,7 @@ const ResultsPanel = props => {
   const searchContext = useContext(StudySearchContext)
   let displayedResults = <span></span>
   if (searchContext.isLoaded) {
-    if (searchContext.results.studies.length>0) {
+    if (searchContext.results.studies.length > 0) {
       displayedResults = <StudyResults
         results={searchContext.results}
         handlePageTurn={pageNum => {searchContext.updateSearch({ page: pageNum })}}
