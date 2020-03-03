@@ -126,4 +126,26 @@ class SearchFacetTest < ActiveSupport::TestCase
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
+
+  test 'should convert time values between units' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+
+    age_facet = SearchFacet.find_by(identifier: 'organism_age')
+    times = {
+        hours: 336,
+        days: 14,
+        weeks: 2
+    }
+    convert_between = times.keys.reverse # [weeks, days, hours]
+    # convert hours to weeks, days to days (should return without conversion), and weeks to hours
+    times.each_with_index do |(unit, time_val), index|
+      convert_unit = convert_between[index]
+      converted_time = age_facet.convert_time_between_units(base_value: time_val, original_unit: unit, new_unit: convert_unit)
+      expected_time = times[convert_unit]
+      assert_equal expected_time, converted_time,
+                   "Did not convert #{time_val} correctly from #{unit} to #{convert_unit}; expected #{expected_time} but found #{converted_time}"
+    end
+
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
 end
