@@ -32,19 +32,19 @@ class SearchFacet
 
   # Time multipliers, from https://github.com/broadinstitute/scp-ingest-pipeline/blob/master/ingest/validation/validate_metadata.py#L785
   TIME_MULTIPLIERS = {
-      hours: 3600,
-      days: 86400,
-      weeks: 604800,
+      years: 31557600, # (day * 365.25 to fuzzy-account for leap-years)
       months: 2626560, #(day * 30.4 to fuzzy-account for different months)
-      years: 31557600 # (day * 365.25 to fuzzy-account for leap-years)
-  }.with_indifferent_access
-  TIME_UNITS = TIME_MULTIPLIERS.keys
+      weeks: 604800,
+      days: 86400,
+      hours: 3600
+  }.with_indifferent_access.freeze
+  TIME_UNITS = TIME_MULTIPLIERS.keys.freeze
 
   validates_presence_of :name, :identifier, :data_type, :big_query_id_column, :big_query_name_column, :convention_name, :convention_version
   validates_uniqueness_of :big_query_id_column, scope: [:convention_name, :convention_version]
   validate :ensure_ontology_url_format, if: proc {|attributes| attributes[:is_ontology_based]}
   before_validation :set_data_type_and_array, on: :create,
-                    if: proc {|attr| (attr[:is_array_based].blank? || attr[:data_type].blank?) && attr[:big_query_id_column].present?}
+                    if: proc {|attr| (![true, false].include?(attr[:is_array_based]) || attr[:data_type].blank?) && attr[:big_query_id_column].present?}
   after_create :update_filter_values!
 
   swagger_schema :SearchFacet do
@@ -111,6 +111,10 @@ class SearchFacet
       key :type, :string
       key :description, 'Column in BigQuery to source name values from'
     end
+    property :big_query_conversion_column do
+      key :type, :string
+      key :description, 'Column in BigQuery to run numeric conversions against (if needed)'
+    end
     property :convention_name do
       key :type, :string
       key :description, 'Name of metadata convention facet is sourced from'
@@ -118,6 +122,19 @@ class SearchFacet
     property :convention_version do
       key :type, :string
       key :description, 'Version of metadata convention facet is sourced from'
+    end
+    property :unit do
+      key :type, :string
+      key :description, 'Unit for numeric facets'
+      key :enum, TIME_UNITS
+    end
+    property :min do
+      key :type, :float
+      key :description, 'Minimum value for numeric facets'
+    end
+    property :max do
+      key :type, :float
+      key :description, 'Maximum value for numeric facets'
     end
   end
 

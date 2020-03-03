@@ -505,10 +505,10 @@ module Api
               matching_filters = []
               if facet.is_numeric?
                 # first filter value is range, e.g. 20-40, second value is unit, e.g. years
-                min_value, max_value = self.class.split_query_param_on_delim(parameter: filter_values.first, delimiter: '-')
+                min_value, max_value = self.class.split_query_param_on_delim(parameter: filter_values.first, delimiter: '-').map(&:to_f)
                 requested_unit = filter_values.last
                 if facet.min >= min_value || max_value <= max_value
-                  matching_filters << {name: facet.identifier, min: min_value, max: max_value, unit: requested_unit}
+                  matching_filters = {min: min_value, max: max_value, unit: requested_unit}
                 end
               else
                 facet.filters.each do |filter|
@@ -577,8 +577,8 @@ module Api
             unit = facet_obj[:filters][:unit]
             if search_facet.must_convert?
               query_on = search_facet.big_query_conversion_column
-              min_value = search_facet.calculate_time_in_seconds(min_value, unit)
-              max_value = search_facet.calculate_time_in_seconds(max_value, unit)
+              min_value = search_facet.calculate_time_in_seconds(base_value: min_value, unit_label: unit)
+              max_value = search_facet.calculate_time_in_seconds(base_value: max_value, unit_label: unit)
             end
             where_clauses << "#{query_on} BETWEEN #{min_value} AND #{max_value}"
           else
@@ -606,7 +606,9 @@ module Api
             matching_facet = search_facets.detect { |facet| facet[:id] == facet_name }
             facet_obj = SearchFacet.find(matching_facet[:object_id])
             if facet_obj.is_numeric?
-              matching_filter = {name: facet_name, value: result[facet_name]}
+              match = matching_facet[:filters].dup
+              match.delete(:name)
+              matching_filter = match
             else
               matching_filter = matching_facet[:filters].detect { |filter| filter[:id] == result[key] }
             end
