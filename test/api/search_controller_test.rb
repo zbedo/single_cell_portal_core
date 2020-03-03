@@ -69,7 +69,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
     study = Study.find_by(name: "Test Study #{@random_seed}")
-    facets = SearchFacet.all
+    facets = SearchFacet.where(data_type: 'string')
     # format facet query string; this will be done by the search UI in production
     facet_queries = facets.map {|facet| [facet.identifier, facet.filters.map {|f| f[:id]}.join(',')]}
     facet_query = facet_queries.map {|query| query.join(':')}.join('+')
@@ -87,6 +87,27 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     matched_facets.delete_if {|facet| facet == 'facet_search_weight'} # remove search weight as it is not relevant
     source_facets = facets.map(&:identifier).sort
     assert_equal source_facets, matched_facets, "Did not match on correct facets; expected #{source_facets} but found #{matched_facets}"
+
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
+
+  test 'should return search results using numeric facets' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+
+    study = Study.find_by(name: "Test Study #{@random_seed}")
+    facet = SearchFacet.find_by(identifier: 'organism_age')
+
+    # loop through 3 different units (days, months, years) to run a numeric-based facet query with conversion
+    # days should return nothing, but months and years should match the testing study
+    %w(days months years).each do |unit|
+      facet_query = "#{facet.identifier}:#{facet.min + 1}-#{facet.max - 1},#{unit}"
+      execute_http_request(:get, api_v1_search_path(type: 'study', facets: facet_query))
+      assert_response :success
+      expected_accessions = unit == 'days' ? [] : [study.accession]
+      matching_accessions = json['matching_accessions']
+      assert_equal expected_accessions, matching_accessions,
+                   "Facet query: #{facet_query} returned incorrect matches; expected #{expected_accessions} but found #{matching_accessions}"
+    end
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end

@@ -11,8 +11,10 @@ class SearchFacetTest < ActiveSupport::TestCase
         {id: 'NCBITaxon_10090', name: 'Mus musculus'}
     ]
 
-    # mock schema for organism_age column in BigQuery
-    @column_schema = [{column_name: 'organism_age', data_type: 'FLOAT64', is_nullable: 'YES'}]
+    # mock schema for number_of_reads column in BigQuery
+    @column_schema = [{column_name: 'number_of_reads', data_type: 'FLOAT64', is_nullable: 'YES'}]
+    # mock minmax query for organism_age query
+    @minmax_results = {MIN: rand(10) + 1, MAX: rand(100) + 10}
   end
 
   # should return expected filters list
@@ -80,21 +82,46 @@ class SearchFacetTest < ActiveSupport::TestCase
     mock.expect :query, @column_schema, [String]
 
     SearchFacet.stub :big_query_dataset, mock do
-      age_facet = SearchFacet.create(
-          name: 'Organism Age',
-          identifier: 'organism_age',
-          big_query_id_column: 'organism_age',
-          big_query_name_column: 'organism_age',
+      reads_facet = SearchFacet.create(
+          name: 'Number of Reads',
+          identifier: 'number_of_reads',
+          big_query_id_column: 'number_of_reads',
+          big_query_name_column: 'number_of_reads',
           is_ontology_based: false,
           convention_name: 'alexandria_convention',
           convention_version: '1.1.3'
       )
       mock.verify
-      assert_equal 'number', age_facet.data_type,
-                   "Did not correctly set facet data_type, expected 'number' but found '#{age_facet.data_type}'"
-      assert_not age_facet.is_array_based?,
-                   "Did not correctly set is_array_based, expected false but found #{age_facet.is_array_based?}"
-      assert age_facet.is_numeric?, "Did not correctly return true for is_numeric with data_type: #{age_facet.data_type}"
+      assert_equal 'number', reads_facet.data_type,
+                   "Did not correctly set facet data_type, expected 'number' but found '#{reads_facet.data_type}'"
+      assert_not reads_facet.is_array_based?,
+                   "Did not correctly set is_array_based, expected false but found #{reads_facet.is_array_based?}"
+      assert reads_facet.is_numeric?, "Did not correctly return true for is_numeric? with data_type: #{reads_facet.data_type}"
+
+    end
+
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
+
+  test 'should set minmax values for numeric facets' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+
+    mock = Minitest::Mock.new
+    mock.expect :query, @minmax_results, [String]
+
+    SearchFacet.stub :big_query_dataset, mock do
+      age_facet = SearchFacet.find_by(identifier: 'organism_age')
+      age_facet.update_filter_values!
+      mock.verify
+      assert age_facet.must_convert?,
+             "Did not correctly return true for must_convert? with conversion column: #{age_facet.big_query_conversion_column}"
+      minmax_query = age_facet.generate_minmax_query
+      minmax_match = /SELECT MIN\(#{age_facet.big_query_id_column}\).*MAX\(#{age_facet.big_query_id_column}\)/
+      assert_match minmax_match, minmax_query, "Minmax query improperly formed: #{minmax_query}"
+      assert_equal @minmax_results[:MIN], age_facet.min,
+                   "Did not set minimum value; expected #{@minmax_results[:MIN]} but found #{age_facet.min}"
+      assert_equal @minmax_results[:MAX], age_facet.max,
+                   "Did not set minimum value; expected #{@minmax_results[:MAX]} but found #{age_facet.max}"
     end
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
