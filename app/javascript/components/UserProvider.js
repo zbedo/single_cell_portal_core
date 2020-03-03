@@ -10,7 +10,7 @@ let user = {
 
 export const UserContext = React.createContext(user)
 
-export function useUserContext() {
+export function useContextUser() {
   return useContext(UserContext)
 }
 

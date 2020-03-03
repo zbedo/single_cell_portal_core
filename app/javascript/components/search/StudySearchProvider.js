@@ -27,7 +27,7 @@ const emptySearch = {
 
 export const StudySearchContext = React.createContext(emptySearch)
 
-export function useStudySearchContext() {
+export function useContextStudySearch() {
   return useContext(StudySearchContext)
 }
 

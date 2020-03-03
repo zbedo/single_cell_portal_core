@@ -15,11 +15,11 @@ describe('Download components for faceted search', () => {
     const userContext = {accessToken: 'test'};
     const studySearchContext = {results: {matchingAccessions: ['SCP1', 'SCP2']}}
 
-    jest.spyOn(UserProvider, 'useUserContext').mockImplementation(() => {
+    jest.spyOn(UserProvider, 'useContextUser').mockImplementation(() => {
       return userContext
     })
 
-    jest.spyOn(StudySearchProvider, 'useStudySearchContext').mockImplementation(() => {
+    jest.spyOn(StudySearchProvider, 'useContextStudySearch').mockImplementation(() => {
       return studySearchContext
     })
 
