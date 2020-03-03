@@ -546,7 +546,6 @@ function closeModalSpinner(spinnerTarget, modalTarget, callback) {
 
 // handles showing/hiding main message_modal and cleaning up state on full & partial page renders
 function showMessageModal(notice=null, alert=null) {
-    console.log('calling showMessageModal');
     // close any open modals
     if (OPEN_MODAL) {
         var modalTarget = $('#' + OPEN_MODAL);
@@ -574,7 +573,7 @@ function showMessageModal(notice=null, alert=null) {
     }
 
     // don't timeout alert messages
-    if (alert) {
+    if (!alert) {
         setTimeout(function() {
             $("#message_modal").modal("hide");
         }, 3000);
