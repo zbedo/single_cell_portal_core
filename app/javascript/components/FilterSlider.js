@@ -26,24 +26,26 @@ const railStyle = {
  */
 export default function FilterSlider(props) {
 
-  const domain = [parseInt(props.facet.min), parseInt(props.facet.max)]
+  const facet = props.facet;
+
+  const domain = [parseInt(facet.min), parseInt(facet.max)]
+
+  const units = facet.all_units.slice().reverse() // larger to smaller units
 
   const [values, setValues] = useState(domain)
   const [inputValues, setInputValues] = useState(domain)
-  const [unit, setUnit] = useState['Year']
+  const [unit, setUnit] = useState('year')
 
   function updateValues(values) {
     setValues(values)
     setInputValues(values)
-    console.log('values')
-    console.log(values)
     const selection = values.join('-') + ',' + unit.toLowerCase()
-    props.onSelectFilter(null, selection)
+    props.onChange(null, selection)
   }
 
   function onChange(values) {
     updateValues(values)
-  };
+  }
 
   /**
    * Changes slider value upon changing the number input control value.
@@ -87,11 +89,9 @@ export default function FilterSlider(props) {
         style={{'width': '60px', 'marginRight': '8px'}}
       />
       <select>
-        {
-          props.units_all.map((unit) => {
-            return <option>{unit}</option>
-          })
-        }
+        {units.map((unit, i) =>
+          <option key={i}>{unit}</option>
+        )}
       </select>
       <div style={{ height: 120, width: '100%' }}>
         <Slider

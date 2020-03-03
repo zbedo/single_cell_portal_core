@@ -2,9 +2,9 @@ import React from 'react';
 import FilterSlider from './FilterSlider';
 
 /**
- * Component for a list of string-based filters, e.g. disease, species
+ * Component for a list of checkbox filters, e.g. disease, species
  */
-function FilterList(props) {
+function FilterCheckboxes(props) {
   return (
     <ul>
     {
@@ -34,8 +34,22 @@ function FilterList(props) {
 export default function Filters(props) {
   const filters = props.filters;
   if (props.facet.type !== 'number') {
-    return <FilterList filters={filters} onChange={props.onFilterValueChange} selection={props.selection} />;
+    return (
+      <FilterCheckboxes
+        filters={filters}
+        onChange={props.onChangeFilterCheckboxes}
+        selection={props.selection}
+      />
+    );
   } else {
-    return <FilterSlider facet={props.facet} onSelectFilter={props.onSelectFilter} />;
+    console.log('props')
+    console.log(props)
+    return (
+      <FilterSlider
+        facet={props.facet}
+        onChange={props.onChangeFilterSlider}
+        selection={props.selection}
+      />
+    );
   }
 }

@@ -102,7 +102,8 @@ export default function FiltersBox(props) {
       <Filters
         facet={props.facet}
         filters={props.filters}
-        onFilterValueChange={updateSelection}
+        onChangeFilterCheckboxes={updateSelection}
+        onChangeFilterSlider={updateSelection}
         selection={selection}
       />
       <div className='filters-box-footer'>
