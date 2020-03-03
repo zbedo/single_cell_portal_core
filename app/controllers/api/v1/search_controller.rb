@@ -507,7 +507,14 @@ module Api
                 # first filter value is range, e.g. 20-40, second value is unit, e.g. years
                 min_value, max_value = self.class.split_query_param_on_delim(parameter: filter_values.first, delimiter: '-').map(&:to_f)
                 requested_unit = filter_values.last
-                if facet.min >= min_value || max_value <= max_value
+                facet_min = facet.min.dup
+                facet_max = facet.max.dup
+                # before matching on range, see if we need to convert
+                if requested_unit != facet.unit
+                  facet_min = facet.convert_time_between_units(base_value: facet_min, original_unit: facet.unit, new_unit: requested_unit)
+                  facet_max = facet.convert_time_between_units(base_value: facet_max, original_unit: facet.unit, new_unit: requested_unit)
+                end
+                if min_value >= facet_min || max_value <= facet_max
                   matching_filters = {min: min_value, max: max_value, unit: requested_unit}
                 end
               else

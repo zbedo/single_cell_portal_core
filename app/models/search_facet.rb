@@ -295,6 +295,19 @@ class SearchFacet
     base_value.to_f * multiplier
   end
 
+  # convert a time-based value from one unit to another
+  def convert_time_between_units(base_value:, original_unit:, new_unit:)
+    if original_unit == new_unit
+      base_value
+    else
+      # first convert to seconds
+      value_in_seconds = self.calculate_time_in_seconds(base_value: base_value, unit_label: original_unit)
+      # now divide by multiplier to get value in new unit
+      denominator = TIME_MULTIPLIERS[new_unit]
+      value_in_seconds.to_f / denominator
+    end
+  end
+
   # retrieve unique values from BigQuery and format an array of hashes with :name and :id values to populate :filters attribute
   def get_unique_filter_values
     Rails.logger.info "Updating filter values for SearchFacet: #{self.name} using id: #{self.big_query_id_column} and name: #{self.big_query_name_column}"
