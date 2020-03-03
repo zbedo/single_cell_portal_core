@@ -89,10 +89,18 @@ export default function FiltersBox(props) {
     return checkedFilterIds
   }
 
-  function updateSelections() {
-    const checkedFilterIds = getCheckedFilterIds(filtersBoxId);
-    setSelection(checkedFilterIds);
-    setShowClear(checkedFilterIds.length > 0);
+  function updateCheckboxSelections() {
+    const checkedFilterIds = getCheckedFilterIds(filtersBoxId)
+    setSelection(checkedFilterIds)
+    setShowClear(checkedFilterIds.length > 0)
+  }
+
+  function updateSelections(event=null, selection=null) {
+    if (!event) {
+
+    } else if (event.type === 'click') {
+      updateCheckboxSelections()
+    }
   }
 
   function handleApplyClick(event) {
@@ -124,7 +132,7 @@ export default function FiltersBox(props) {
       <Filters
         facet={props.facet}
         filters={props.filters}
-        onClick={updateSelections}
+        onSelectFilter={(event) => {updateSelections(event)}}
       />
       <div className='filters-box-footer'>
         {showClear &&

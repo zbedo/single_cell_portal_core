@@ -33,8 +33,8 @@ function FilterList(props) {
 export default function Filters(props) {
   const filters = props.filters;
   if (props.facet.type !== 'number') {
-    return <FilterList filters={filters} onClick={props.onClick} />;
+    return <FilterList filters={filters} onSelectFilter={props.onSelectFilter} />;
   } else {
-    return <FilterSlider facet={props.facet} />;
+    return <FilterSlider facet={props.facet} onSelectFilter={props.onSelectFilter} />;
   }
 }

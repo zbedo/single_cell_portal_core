@@ -30,10 +30,19 @@ export default function FilterSlider(props) {
 
   const [values, setValues] = useState(domain)
   const [inputValues, setInputValues] = useState(domain)
+  const [unit, setUnit] = useState['Year']
 
-  function onChange(values) {
+  function updateValues(values) {
     setValues(values)
     setInputValues(values)
+    console.log('values')
+    console.log(values)
+    const selection = values.join('-') + ',' + unit.toLowerCase()
+    props.onSelectFilter(null, selection)
+  }
+
+  function onChange(values) {
+    updateValues(values)
   };
 
   /**
@@ -53,8 +62,7 @@ export default function FilterSlider(props) {
     changedValues[index] = value;
     changedInputValues[index] = rawValue;
 
-    setValues(changedValues)
-    setInputValues(changedInputValues)
+    updateValues(values)
   }
 
   return (
@@ -79,11 +87,11 @@ export default function FilterSlider(props) {
         style={{'width': '60px', 'marginRight': '8px'}}
       />
       <select>
-        <option>Years</option>
-        <option>Months</option>
-        <option>Weeks</option>
-        <option>Days</option>
-        <option>Hours</option>
+        {
+          props.units_all.map((unit) => {
+            return <option>{unit}</option>
+          })
+        }
       </select>
       <div style={{ height: 120, width: '100%' }}>
         <Slider
