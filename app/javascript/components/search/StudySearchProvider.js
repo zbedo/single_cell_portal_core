@@ -2,9 +2,9 @@ import React from 'react'
 import { fetchSearch, fetchFacets, buildSearchQueryString, buildFacetsFromQueryString } from 'lib/scp-api'
 import _cloneDeep from 'lodash/cloneDeep'
 import _assign from 'lodash/assign'
-import { Router, navigate } from "@reach/router"
-import * as queryString from 'query-string';
-
+import { Router, navigate } from '@reach/router'
+import * as queryString from 'query-string'
+/* eslint-disable */
 /*
   This is a single component and paired context that manages both the facet data and the search params and data
 */
@@ -62,7 +62,7 @@ export default class StudySearchProvider extends React.Component {
     if (searchParams) {
       navigate('?' + buildSearchQueryString('study', effectiveParams.terms, effectiveParams.facets))
     }
-    const results = await fetchSearch('study', effectiveParams.terms, effectiveParams.facets)
+    const results = await fetchSearch('study', effectiveParams.terms, effectiveParams.facets, effectiveParams.page)
     this.setState({
       params: effectiveParams,
       isError: false,
