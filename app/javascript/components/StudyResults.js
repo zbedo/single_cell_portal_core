@@ -11,7 +11,7 @@ const StudyResults = props => {
     <Tab.Container id="result-tabs" defaultActiveKey="study">
       <Tabs defaultActiveKey='study' animation={false} >
         <Tab eventKey='study' title="Studies" >
-          <StudiesTabContent turnPage ={props.handlePageTurn} studies= {props.results}/>
+          <StudiesTabContent changePage ={props.handlePageTurn} studies= {props.results}/>
         </Tab>
         <Tab eventKey='files' title='Files'></Tab>
       </Tabs>
@@ -22,7 +22,7 @@ const StudyResults = props => {
 /**
  * Component for the content of the 'Studies' tab
  */
-const StudiesTabContent = ({ studies, turnPage }) => {
+const StudiesTabContent = ({ studies, changePage }) => {
   const columns = React.useMemo(
     () => [{
       accessor: 'study',
@@ -83,22 +83,22 @@ const StudiesTabContent = ({ studies, turnPage }) => {
       </table>
       <div className="pagination">
         <button
-          onClick={() => {gotoPage(0); turnPage(1)}}
+          onClick={() => {gotoPage(0); changePage(1)}}
           disabled={!canPreviousPage}>
           {'<<'}
         </button>{' '}
         <button
-          onClick={() => {previousPage(); turnPage(studies.currentPage-1)}}
+          onClick={() => {previousPage(); changePage(studies.currentPage-1)}}
           disabled={!canPreviousPage}>
           {'<'}
         </button>{' '}
         <button
-          onClick={() => {nextPage(); turnPage(studies.currentPage+1)}}
+          onClick={() => {nextPage(); changePage(studies.currentPage+1)}}
           disabled={!canNextPage}>
           {'>'}
         </button>{' '}
         <button
-          onClick={() => {gotoPage(pageCount); turnPage(studies.total_pages)}}
+          onClick={() => {gotoPage(pageCount); changePage(studies.total_pages)}}
           disabled={!canNextPage}>
           {'>>'}
         </button>{' '}
