@@ -18,7 +18,7 @@ const ResultsPanel = props => {
     }
   }
   return (
-    <div id="results-panel">
+    <div className="results-panel">
       {displayedResults}
     </div>
   )
