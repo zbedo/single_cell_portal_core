@@ -13,7 +13,7 @@ const StudyResults = props => {
         <Tab eventKey='study' title="Studies" >
           <StudiesTabContent turnPage ={props.handlePageTurn} studies= {props.results}/>
         </Tab>
-        <Tab eventKey='files' title="Files"></Tab>
+        <Tab eventKey='files' title='Files'></Tab>
       </Tabs>
     </Tab.Container>
   )
