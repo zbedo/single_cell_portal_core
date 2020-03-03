@@ -28,7 +28,7 @@ module.exports = {
         "jsx-a11y",
         "import"
     ],
-    "rules": {
+    'rules': {
         'array-bracket-newline': ['warn', 'consistent'],
         'array-bracket-spacing': 'warn',
         'block-spacing': 'warn',
