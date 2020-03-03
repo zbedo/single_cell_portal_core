@@ -51,7 +51,7 @@
       display: inline-block;
     }
   }
-  #download-button{
+  #download-button {
     background-color: white;
     vertical-align: top;
     display: inline-block;
@@ -64,8 +64,22 @@
   }
   #more-facets-button > span,
   #download-button > span {
-    color: #4d72aa;
+    color: $action-color;
     font-weight: 500;
+  }
+
+  #download-button.active {
+    background-color: $action-color;
+  }
+
+  #download-button.active > span {
+    color: #fff;
+  }
+
+  .facet.active > span,
+  #more-facets-button.active > span {
+    color: #fff;
+    background-color: $action-color;
   }
 
   .filters-search-bar {
@@ -78,13 +92,6 @@
     position: relative;
     top: 8px;
     cursor: pointer;
-  }
-
-  .facet.active > span,
-  #more-facets-button.active > span,
-  #download-button.active > span {
-    color: #fff;
-    background-color: #4d72aa;
   }
 
   ul {
