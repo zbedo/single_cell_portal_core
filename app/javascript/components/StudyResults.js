@@ -81,6 +81,9 @@ const StudiesTabContent = ({ studies, changePage }) => {
           })}
         </tbody>
       </table>
+      {
+        // Taken from https://codesandbox.io/s/github/tannerlinsley/react-table/tree/master/examples/pagination
+      }
       <div className="pagination">
         <button
           onClick={() => {gotoPage(0); changePage(1)}}
