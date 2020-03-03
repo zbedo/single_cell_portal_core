@@ -64,12 +64,12 @@
   }
   #more-facets-button > span,
   #download-button > span {
-    color: #4d72aa;
+    color: $action-color;
     font-weight: 500;
   }
 
   #download-button.active {
-    background-color: #4d72aa;
+    background-color: $action-color;
   }
 
   #download-button.active > span {
@@ -79,7 +79,7 @@
   .facet.active > span,
   #more-facets-button.active > span {
     color: #fff;
-    background-color: #4d72aa;
+    background-color: $action-color;
   }
 
   .filters-search-bar {

@@ -5,8 +5,8 @@ import Modal from 'react-bootstrap/lib/Modal';
 // import Tooltip from 'react-bootstrap/lib/Tooltip'; // We'll need this when refining onClipboardCopySuccess
 import Clipboard from 'react-clipboard.js';
 
-import { useStudySearchContext } from 'components/search/StudySearchProvider'
-import { useUserContext } from './UserProvider'
+import { useContextStudySearch } from './search/StudySearchProvider'
+import { useContextUser } from './UserProvider'
 import { fetchAuthCode } from 'lib/scp-api';
 
 /**
@@ -110,8 +110,10 @@ function DownloadCommandContainer(props) {
  */
 export default function DownloadButton(props) {
 
-  const searchContext = useStudySearchContext()
-  const userContext = useUserContext()
+  const searchContext = useContextStudySearch()
+  const userContext = useContextUser()
+
+  const [show, setShow] = useState(false)
 
   const matchingAccessions = searchContext.results.matchingAccessions || [];
 
@@ -119,16 +121,7 @@ export default function DownloadButton(props) {
    * Reports whether Download button be active,
    * i.e. user is signed in and has search results
    */
-  function shouldBeActive() {
-    return userContext.accessToken !== '' && matchingAccessions.length > 0;
-  }
-
-  const [active, setActive] = useState(shouldBeActive());
-  const [show, setShow] = useState(false);
-
-  useEffect(() => {
-    setActive(shouldBeActive());
-  })
+  const active = userContext.accessToken !== '' && matchingAccessions.length > 0
 
   function showModalAndFetchDownloadCommand() {
     if (active) setShow(!show);

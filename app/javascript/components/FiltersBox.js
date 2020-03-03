@@ -5,6 +5,7 @@ import Button from 'react-bootstrap/lib/Button';
 import { StudySearchContext } from 'components/search/StudySearchProvider';
 import Filters from './Filters';
 import { SearchContext } from './SearchPanel';
+import _remove from 'lodash/remove'
 
 /**
  * Component that can be clicked to unselect filters
@@ -44,18 +45,11 @@ function ApplyButton(props) {
 export default function FiltersBox(props) {
   const searchContext = useContext(StudySearchContext);
 
-  const [canApply, setCanApply] = useState(false);
-  const [showClear, setShowClear] = useState(false);
   const appliedSelection = searchContext.params.facets[props.facet.id]
-  const [selection, setSelection] = useState([]);
+  const [selection, setSelection] = useState(appliedSelection ? appliedSelection : []);
+  const [showClear, setShowClear] = useState(selection.length > 0);
 
-  useEffect(() => {
-    setCanApply(!isEqual(selection, appliedSelection));
-  }, [selection]);
-
-  useEffect(() => {
-    setCanApply(false);
-  }, [appliedSelection]);
+  const canApply = !isEqual(selection, appliedSelection)
 
   // TODO: Get opinions, perhaps move to a UI code style guide.
   //
@@ -75,43 +69,24 @@ export default function FiltersBox(props) {
   const filtersBoxId = `${componentName}-${facetId}`;
   const applyId = `apply-${filtersBoxId}`;
 
-
-  /**
-   * Returns IDs of selected filters.
-   * Enables comparing current vs. applied filters to enable/disable APPLY button
-   */
-  function getCheckedFilterIds() {
-    const checkedSelector = `#${filtersBoxId} input:checked`;
-    const checkedFilterIds =
-      [...document.querySelectorAll(checkedSelector)].map((filter) => {
-        return filter.id;
-      });
-    return checkedFilterIds
-  }
-
-  function updateCheckboxSelections() {
-    const checkedFilterIds = getCheckedFilterIds(filtersBoxId)
-    setSelection(checkedFilterIds)
-    setShowClear(checkedFilterIds.length > 0)
-  }
-
-  function updateSelections(event=null, selection=null) {
-    if (!event) {
-
-    } else if (event.type === 'click') {
-      updateCheckboxSelections()
+  function updateSelection(filterId, value) {
+    let newSelection = selection.slice()
+    if (value && !newSelection.includes(filterId)) {
+      newSelection.push(filterId)
     }
+    if (!value) {
+      _remove(newSelection, (id) => { return id === filterId; })
+    }
+    setSelection(newSelection);
+    setShowClear(newSelection.length > 0);
   }
 
   function handleApplyClick(event) {
     const applyButtonClasses = Array.from(event.target.classList);
-
     if (applyButtonClasses.includes('disabled')) return;
 
-    const checkedFilterIds = getCheckedFilterIds();
-
     let updatedFacetValue = {};
-    updatedFacetValue[facetId] = checkedFilterIds
+    updatedFacetValue[facetId] = selection
     searchContext.updateSearch({facets: updatedFacetValue})
     if (props.setShow) {
       props.setShow(false)
@@ -119,12 +94,7 @@ export default function FiltersBox(props) {
   }
 
   function clearFilters() {
-    const checkedSelector = `#${filtersBoxId} input:checked`;
-    document.querySelectorAll(checkedSelector).forEach((checkedInput) => {
-      checkedInput.checked = false;
-    });
-
-    updateSelections();
+    setSelection([])
   }
 
   return (
@@ -132,7 +102,8 @@ export default function FiltersBox(props) {
       <Filters
         facet={props.facet}
         filters={props.filters}
-        onSelectFilter={(event) => {updateSelections(event)}}
+        onFilterValueChange={updateSelection}
+        selection={selection}
       />
       <div className='filters-box-footer'>
         {showClear &&
