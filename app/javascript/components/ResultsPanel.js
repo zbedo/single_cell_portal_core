@@ -14,7 +14,7 @@ const ResultsPanel = props => {
         handlePageTurn={pageNum => {searchContext.updateSearch({ page: pageNum })}}
       />
     } else {
-      displayedResults = <p>No Results</p>
+      displayedResults = <p>No results</p>
     }
   }
   return (
