@@ -62,10 +62,21 @@ export default class StudySearchProvider extends React.Component {
   }
 
   updateSearch = async (searchParams) => {
+    if (searchParams && !searchParams.page) {
+      // if this is an update to the search terms, reset the results page to 0
+      searchParams.page = 1
+    }
     const effectiveParams = Object.assign(this.state.params, searchParams)
     if (searchParams) {
-      navigate('?' + buildSearchQueryString('study', effectiveParams.terms, effectiveParams.facets))
+      navigate('?' + buildSearchQueryString('study', effectiveParams.terms, effectiveParams.facets, effectiveParams.page))
     }
+    // reset the scroll in case they scrolled down to read prior results
+    window.scrollTo(0,0)
+    this.setState({
+      params: effectiveParams,
+      isLoaded: false,
+      results: []
+    })
     const results = await fetchSearch('study', effectiveParams.terms, effectiveParams.facets, effectiveParams.page)
     this.setState({
       params: effectiveParams,

@@ -19,3 +19,13 @@
     color: #333;
   }
 }
+
+button.text-button {
+  font-size: larger;
+  color: $action-color;
+  background-color: transparent;
+  border-radius: 3px;
+  :hover {
+    font-weight: bold;
+  }
+}

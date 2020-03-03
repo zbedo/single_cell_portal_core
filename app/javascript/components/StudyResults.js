@@ -2,33 +2,19 @@ import React from 'react'
 import Tab from 'react-bootstrap/lib/Tab'
 import Tabs from 'react-bootstrap/lib/Tabs'
 import { useTable, usePagination } from 'react-table'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCaretLeft, faCaretRight, faBackward, faForward } from '@fortawesome/free-solid-svg-icons';
 
 /**
- * Wrapper component for studies tab on homepage
+ * Wrapper component for studies on homepage
  */
-const StudyResults = props => {
-  return (
-    <Tab.Container id="result-tabs" defaultActiveKey="study">
-      <Tabs defaultActiveKey='study' animation={false} >
-        <Tab eventKey='study' title="Studies" >
-          <StudiesTabContent changePage ={props.handlePageTurn} studies= {props.results}/>
-        </Tab>
-        <Tab eventKey='files' title='Files'></Tab>
-      </Tabs>
-    </Tab.Container>
-  )
-}
-
-/**
- * Component for the content of the 'Studies' tab
- */
-const StudiesTabContent = ({ studies, changePage }) => {
+const StudyResults = ({ results, changePage }) => {
   const columns = React.useMemo(
     () => [{
       accessor: 'study',
     }])
 
-  const data = studies.studies.map(result => (
+  const data = results.studies.map(result => (
     {
       study: <Study
         study={result}
@@ -56,17 +42,28 @@ const StudiesTabContent = ({ studies, changePage }) => {
     data,
     // holds pagination states
     initialState: {
-      pageIndex: studies.currentPage -1,
+      pageIndex: results.currentPage -1,
       // This will change when there's a way to determine amount of results per page via API endpoint
       pageSize: 5,
     },
-    pageCount: studies.totalPages,
+    pageCount: results.totalPages,
     manualPagination: true,
   },
   usePagination)
   return (
-
-    <Tab.Content id ='results-content'>
+    <>
+      <div className="row">
+        <div className="col-md-4">
+          { results.totalStudies } total studies found
+        </div>
+        <div className="col-md-4">
+          <PagingControl currentPage={results.currentPage}
+                         totalPages={results.totalPages}
+                         changePage={changePage}
+                         canPreviousPage={canPreviousPage}
+                         canNextPage={canNextPage}/>
+        </div>
+      </div>
       <table {...getTableProps()}>
         <tbody {...getTableBodyProps()}>
           {rows.map((row, i) => {
@@ -81,39 +78,46 @@ const StudiesTabContent = ({ studies, changePage }) => {
           })}
         </tbody>
       </table>
-      {
-        // Taken from https://codesandbox.io/s/github/tannerlinsley/react-table/tree/master/examples/pagination
-      }
-      <div className="pagination">
-        <button
-          onClick={() => {gotoPage(0); changePage(1)}}
-          disabled={!canPreviousPage}>
-          {'<<'}
-        </button>{' '}
-        <button
-          onClick={() => {previousPage(); changePage(studies.currentPage-1)}}
-          disabled={!canPreviousPage}>
-          {'<'}
-        </button>{' '}
-        <button
-          onClick={() => {nextPage(); changePage(studies.currentPage+1)}}
-          disabled={!canNextPage}>
-          {'>'}
-        </button>{' '}
-        <button
-          onClick={() => {gotoPage(pageCount); changePage(studies.totalPages)}}
-          disabled={!canNextPage}>
-          {'>>'}
-        </button>{' '}
-        <span>
-          Page{' '}
-          <strong>
-            {studies.currentPage} of {studies.totalPages}
-          </strong>{' '}
-        </span>
-      </div>
-    </Tab.Content>
-
+      <PagingControl currentPage={results.currentPage}
+                     totalPages={results.totalPages}
+                     changePage={changePage}
+                     canPreviousPage={canPreviousPage}
+                     canNextPage={canNextPage}/>
+    </>
+  )
+}
+// Taken from https://codesandbox.io/s/github/tannerlinsley/react-table/tree/master/examples/pagination
+const PagingControl = ({currentPage, totalPages, changePage, canPreviousPage, canNextPage}) => {
+  return (
+    <div className="pagination">
+      <button
+        className="text-button"
+        onClick={() => {changePage(1)}}
+        disabled={!canPreviousPage}>
+        <FontAwesomeIcon icon={faBackward}/>
+      </button>
+      <button
+        className="text-button"
+        onClick={() => {changePage(currentPage - 1)}}
+        disabled={!canPreviousPage}>
+        <FontAwesomeIcon icon={faCaretLeft}/>
+      </button>
+      <span className="currentPage">
+        Page {currentPage} of {totalPages}
+      </span>
+      <button
+        className="text-button"
+        onClick={() => {changePage(currentPage + 1)}}
+        disabled={!canNextPage}>
+        <FontAwesomeIcon icon={faCaretRight}/>
+      </button>
+      <button
+        className="text-button"
+        onClick={() => {changePage(totalPages)}}
+        disabled={!canNextPage}>
+        <FontAwesomeIcon icon={faForward}/>
+      </button>
+    </div>
   )
 }
 

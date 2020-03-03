@@ -243,7 +243,7 @@ label {
   margin-bottom: 25px;
 }
 
-/** 
+/**
   eweitz 2020-02-05:
   Used for button icons in faceted search panel, and related Download modal
 **/
@@ -639,4 +639,16 @@ h4, .h4, h5, .h5, h6, .h6 {
   max-height: 500px;
   overflow-y: scroll;
   margin-bottom: 15px;
+}
+
+.gene-load-spinner {
+  animation-name: gene-load-spin;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-duration: 2s;
+}
+
+@keyframes gene-load-spin {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(-360deg); }
 }
