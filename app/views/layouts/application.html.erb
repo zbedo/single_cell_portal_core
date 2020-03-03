@@ -67,6 +67,19 @@
     <%= render '/layouts/nav' %>
 <%end %>
 <div id="notices-target">
+  <div class="modal fade" id="message_modal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-body">
+          <p class="text-success text-center" id="notice-content"></p>
+          <p class="text-danger text-center" id="alert-content"><strong></strong></p>
+        </div>
+        <div class="modal-footer">
+          <button class="close" data-dismiss="modal">×</button>
+        </div>
+      </div>
+    </div>
+  </div>
   <%= render '/layouts/notices' %>
 </div>
 <% if controller_name == 'site' && action_name == 'index' %>

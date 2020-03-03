@@ -552,6 +552,42 @@ function closeModalSpinner(spinnerTarget, modalTarget, callback) {
     $(modalTarget).modal('hide');
 }
 
+// handles showing/hiding main message_modal and cleaning up state on full & partial page renders
+function showMessageModal(notice=null, alert=null) {
+    // close any open modals
+    if (OPEN_MODAL) {
+        var modalTarget = $('#' + OPEN_MODAL);
+        var modalData = modalTarget.data('bs.modal');
+        if ( typeof modalData !== 'undefined' && modalData.isShown) {
+            modalTarget.modal("hide");
+        }
+    }
+
+    var noticeElement = $('#notice-content');
+    var alertElement = $('#alert-content');
+    if (notice) {
+        noticeElement.html(notice);
+    } else {
+        noticeElement.empty();
+    }
+    if (alert) {
+        alertElement.html("<strong>" + alert + "</strong>");
+    } else {
+        alertElement.empty();
+    }
+
+    if (notice || alert) {
+        $("#message_modal").modal("show");
+    }
+
+    // don't timeout alert messages
+    if (!alert) {
+        setTimeout(function() {
+            $("#message_modal").modal("hide");
+        }, 3000);
+    }
+}
+
 // Propagate changes from the View Options sidebar to the Search Genes form.
 function updateSearchGeneParams() {
 

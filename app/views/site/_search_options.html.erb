@@ -66,7 +66,7 @@
                         });
                     });
                 });
-                $('#perform-gene-search').click(function(){
+                $('#perform-gene-search').on('click', function(event){
                     var fileInput = $('#search_upload')[0];
                     if (fileInput.files.length) {
                         var reader = new FileReader();
@@ -92,30 +92,40 @@
                                 });
                                 searchString = sanitizedContent.join(' ');
                                 $('#search_genes').val(searchString);
-                                $(fileInput).val("").change(submitGeneSearch());
+                                $(fileInput).val("").change(submitGeneSearch(event));
                             }
                         });
                     } else {
-                        submitGeneSearch();
+                        submitGeneSearch(event);
                     }
                 });
-                function submitGeneSearch() {
+                function submitGeneSearch(event) {
                     if ( $('#search_genes').val() == '' && $('#search_upload').val() == '' ) {
                         alert('You must specify at least one gene or upload a list of genes to search');
                         setErrorOnBlank($('.search-genes-input'));
                     } else {
                         $(window).off('resizeEnd');
-                        launchModalSpinner('#spinner_target', '#loading-modal', function() {
-                            var form = $('#search-genes-form');
-                            $.ajax({
-                                type: 'POST',
-                                url: form.attr('action'),
-                                data: form.serialize(),
-                                dataType: 'script'
+                        if (event.type == 'click') {
+                            launchModalSpinner('#spinner_target', '#loading-modal', function() {
+                                var form = $('#search-genes-form');
+                                $.ajax({
+                                    type: 'POST',
+                                    url: form.attr('action'),
+                                    data: form.serialize(),
+                                    dataType: 'script'
+                                });
                             });
-                        });
+                        } else if (event.type == 'submit') {
+                            launchModalSpinner('#spinner_target', '#loading-modal', function() {
+                                return true; // just return as submit event has fired
+                            });
+                        }
                     }
-                };
+                }
+                // handler to catch ENTER keypress and open modal
+                $('#search-genes-form').on('submit', function(submitEvent) {
+                    submitGeneSearch(submitEvent);
+                });
             </script>
           </div>
         </div>

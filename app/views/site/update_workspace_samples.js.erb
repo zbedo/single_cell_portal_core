@@ -4,5 +4,5 @@ closeModalSpinner('#generic-modal-spinner', "#generic-modal", function() {
         updateSampleTable([]);
     }
     $('#workflow_study_data').val('')
-    $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {notice: @notice}) %>");
+    showMessageModal("<%= @notice.present? ? @notice.html_safe : nil %>", "<%= @alert.present? ? @alert.html_safe : nil %>");
 });

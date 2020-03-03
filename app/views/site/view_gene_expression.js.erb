@@ -2,7 +2,7 @@ closeModalSpinner('#spinner_target', '#loading-modal', function () {
     $('#breadcrumbs').replaceWith("<%= escape_javascript(render partial: '/layouts/breadcrumbs') %>");
     $('#title-bar').html("<%= escape_javascript(render partial: 'view_gene_expression_title_bar') %>");
     $('#study-visualize').html("<%= escape_javascript(render partial: 'view_gene_expression') %>");
-    $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices') %>");
+    showMessageModal("<%= notice.present? ? notice.html_safe : nil %>", "<%= alert.present? ? alert.html_safe : nil %>")
     enableDefaultActions();
     var requestUrl = "<%= javascript_safe_url(request.fullpath) %>";
     ga('send', 'event', 'engaged_user_action', 'study_gene_search_single');

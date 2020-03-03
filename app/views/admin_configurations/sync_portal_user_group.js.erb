@@ -6,6 +6,6 @@ closeModalSpinner('#working-modal-spinner', '#working-modal', function() {
       $('#generic-update-modal-body').html("<%= escape_javascript(render partial: 'user_group_sync_list') %>");
       $('#generic-update-modal').modal('show')
     <% else %>
-      $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {alert: @alert}) %>");
+      showMessageModal("<%= @notice.present? ? @notice.html_safe : nil %>", "<%= @alert.present? ? @alert.html_safe : nil %>");
     <% end %>
 });
