@@ -83,8 +83,8 @@ export default function FiltersBox(props) {
 
   function updateSelectionForFilterSlider(ranges) {
     let newSelection = selection.slice()
-    if (!newSelection.includes(ranges)) {
-      newSelection.push(ranges)
+    if (!newSelection !== [ranges]) {
+      newSelection = [ranges]
     }
     setSelection(newSelection);
     setShowClear(newSelection.length > 0)

@@ -20,9 +20,6 @@ const railStyle = {
 
 /**
  * Component for slider to filter numerical facets, e.g. organism age
- *
- * TODO (SCP-2149):
- * - Update search context upon applying values
  */
 export default function FilterSlider(props) {
 
@@ -30,7 +27,7 @@ export default function FilterSlider(props) {
 
   const domain = [parseInt(facet.min), parseInt(facet.max)]
 
-  const units = facet.all_units.slice().reverse() // larger to smaller units
+  const units = facet.all_units.slice()
 
   const [values, setValues] = useState(domain)
   const [inputValues, setInputValues] = useState(domain)
@@ -88,7 +85,7 @@ export default function FilterSlider(props) {
         value={inputValues[1]}
         style={{'width': '60px', 'marginRight': '8px'}}
       />
-      <select>
+      <select onChange={(event) => {setUnit(event.target.value)}}>
         {units.map((unit, i) =>
           <option key={i}>{unit}</option>
         )}
