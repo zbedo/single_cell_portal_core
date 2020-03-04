@@ -124,7 +124,7 @@ export default function FilterSlider(props) {
         value={inputValues[1]}
         style={{'width': '60px', 'marginRight': '8px'}}
       />
-      <select onChange={(event) => {updateUnit(event.target.value)}}>
+      <select value={unit} onChange={(event) => {updateUnit(event.target.value)}}>
         {units.map((unit, i) =>
           <option key={i}>{unit}</option>
         )}
