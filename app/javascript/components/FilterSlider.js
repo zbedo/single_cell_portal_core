@@ -39,11 +39,11 @@ export default function FilterSlider(props) {
 
   if (props.selection.length > 0) {
 
-    // props.selection can be either a:
-    //  - string, if coming from update within component
-    //  - array, if coming from
+    // props.selection can be either an array with:
+    //  - one element, if passed via non-empty URL parameter for `organism_age`
+    //  - multiple elements, if manually entering numbers
     let rangeAndUnit = undefined;
-    if (Array.isArray(props.selection)) {
+    if (props.selection.length > 1) {
       rangeAndUnit = props.selection
     } else {
       rangeAndUnit = props.selection[0].split(',')

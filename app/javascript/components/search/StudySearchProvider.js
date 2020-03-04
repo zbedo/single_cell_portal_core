@@ -51,22 +51,23 @@ export default class StudySearchProvider extends React.Component {
     const df = facets.filter(facet => defaultFacetIds.includes(facet.id));
     const mf = facets.filter(facet => moreFacetIds.includes(facet.id));
 
-    // const organismAgeMock = [{
-    //   "name": "Organism Age",
-    //   "id": "organism_age",
-    //   "links": [],
-    //   "type": "number",
-    //   "max": "150",
-    //   "min": "0",
-    //   "unit": "year",
-    //   "all_units": ["year", "month", "week", "day", "hour"]
-    // }];
+    const organismAgeMock = [{
+      "name": "Organism Age",
+      "id": "organism_age",
+      "links": [],
+      "type": "number",
+      "max": "150",
+      "min": "0",
+      "unit": "year",
+      "all_units": ["year", "month", "week", "day", "hour"]
+    }];
 
-    // const mfWithAgeMock = [...mf, ...organismAgeMock];
+    const mfWithAgeMock = [...mf, ...organismAgeMock];
 
     this.setState({
       defaultFacets: df,
-      moreFacets: mf
+      // moreFacets: mf
+      moreFacets: mfWithAgeMock
     })
   }
 
