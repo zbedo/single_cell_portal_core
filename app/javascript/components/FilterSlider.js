@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Slider, Rail, Handles, Tracks, Ticks } from "react-compound-slider";
+import { Slider, Rail, Handles, Tracks, Ticks } from 'react-compound-slider';
 
 import { Handle, Track, Tick } from './slider/components';
 
@@ -25,7 +25,8 @@ export default function FilterSlider(props) {
 
   const facet = props.facet
 
-  const domain = [parseInt(facet.min), parseInt(facet.max)]
+  const [min, max] = [parseInt(facet.min), parseInt(facet.max)]
+  const domain = [min, max]
 
   const units = facet.all_units.slice()
 
@@ -56,10 +57,6 @@ export default function FilterSlider(props) {
     updateAppliedSelection(values, unit)
   }
 
-  function onChange(values) {
-    updateValues(values)
-  }
-
   /**
    * Changes slider value upon changing the number input control value.
    */
@@ -83,21 +80,21 @@ export default function FilterSlider(props) {
   return (
     <>
       <input
-        id="input-min-organism-age"
+        id='input-min-organism-age'
         onChange={(event) => onNumberInputChange(event)}
         type="number"
-        min={domain[0]}
-        max={domain[1]}
+        min={min}
+        max={max}
         value={inputValues[0]}
         style={{'width': '60px'}}
       />
       <span style={{'margin': '0 4px 0 4px'}}>-</span>
       <input
-        id="input-max-organism-age"
+        id='input-max-organism-age'
         onChange={(event) => onNumberInputChange(event)}
-        type="number"
-        min={domain[0]}
-        max={domain[1]}
+        type='number'
+        min={min}
+        max={max}
         value={inputValues[1]}
         style={{'width': '60px', 'marginRight': '8px'}}
       />
@@ -112,7 +109,7 @@ export default function FilterSlider(props) {
           step={1}
           domain={domain}
           rootStyle={sliderStyle}
-          onChange={onChange}
+          onChange={updateValues}
           values={values}
         >
           <Rail>
@@ -122,7 +119,7 @@ export default function FilterSlider(props) {
           </Rail>
           <Handles>
             {({ handles, getHandleProps }) => (
-              <div className="slider-handles">
+              <div className='slider-handles'>
                 {handles.map(handle => (
                   <Handle
                     key={handle.id}
@@ -136,7 +133,7 @@ export default function FilterSlider(props) {
           </Handles>
           <Tracks left={false} right={false}>
             {({ tracks, getTrackProps }) => (
-              <div className="slider-tracks">
+              <div className='slider-tracks'>
                 {tracks.map(({ id, source, target }) => (
                   <Track
                     key={id}
@@ -150,7 +147,7 @@ export default function FilterSlider(props) {
           </Tracks>
           <Ticks count={6}>
             {({ ticks }) => (
-              <div className="slider-ticks">
+              <div className='slider-ticks'>
                 {ticks.map(tick => (
                   <Tick key={tick.id} tick={tick} count={ticks.length} />
                 ))}
