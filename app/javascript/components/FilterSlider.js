@@ -38,11 +38,14 @@ export default function FilterSlider(props) {
   let propsUnit = ''
 
   if (props.selection.length > 0) {
-    let rangeAndUnit = props.selection[0].split(',')
+    // If filling with pre-selected values, e.g. reloading page with previous
+    // selection in URL, or from "Apply" button click
+    let rangeAndUnit = props.selection;
     propsRange = rangeAndUnit.slice(0, 2)
     propsUnit = rangeAndUnit.slice(-1)[0]
     propsRange = propsRange.map(value => parseInt(value))
   } else {
+    // If freshly loading
     propsRange = domain.slice()
     propsUnit = facet.unit
   }
