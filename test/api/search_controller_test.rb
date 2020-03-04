@@ -100,7 +100,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     # loop through 3 different units (days, months, years) to run a numeric-based facet query with conversion
     # days should return nothing, but months and years should match the testing study
     %w(days months years).each do |unit|
-      facet_query = "#{facet.identifier}:#{facet.min + 1}-#{facet.max - 1},#{unit}"
+      facet_query = "#{facet.identifier}:#{facet.min + 1},#{facet.max - 1},#{unit}"
       execute_http_request(:get, api_v1_search_path(type: 'study', facets: facet_query))
       assert_response :success
       expected_accessions = unit == 'days' ? [] : [study.accession]
