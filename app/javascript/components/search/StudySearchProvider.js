@@ -56,8 +56,8 @@ export default class StudySearchProvider extends React.Component {
       "type": "number",
       "max": "150",
       "min": "0",
-      "unit": "years",
-      "all_units": ["years", "months", "weeks", "days", "hours"]
+      "unit": "year",
+      "all_units": ["year", "month", "week", "day", "hour"]
     }];
 
     const mfWithAgeMock = [...mf, ...organismAgeMock];

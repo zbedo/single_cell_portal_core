@@ -30,6 +30,7 @@ export default function FilterSlider(props) {
   const units = facet.all_units.slice()
 
   let [propsRange, propsUnit] = [domain, facet.unit]
+
   if (props.selection !== '') {
     [propsRange, propsUnit] = props.selection
     propsRange = propsRange.split('-').map(value => parseInt(value))
@@ -39,11 +40,20 @@ export default function FilterSlider(props) {
   const [inputValues, setInputValues] = useState(propsRange)
   const [unit, setUnit] = useState(propsUnit)
 
+  function updateAppliedSelection(values, unit) {
+    const ranges = values.join('-') + ',' + unit
+    props.onChange(ranges)
+  }
+
   function updateValues(values) {
     setValues(values)
     setInputValues(values)
-    const ranges = values.join('-') + ',' + propsUnit.toLowerCase()
-    props.onChange(ranges)
+    updateAppliedSelection(values, unit)
+  }
+
+  function updateUnit(unit) {
+    setUnit(unit)
+    updateAppliedSelection(values, unit)
   }
 
   function onChange(values) {
@@ -91,7 +101,7 @@ export default function FilterSlider(props) {
         value={inputValues[1]}
         style={{'width': '60px', 'marginRight': '8px'}}
       />
-      <select onChange={(event) => {setUnit(event.target.value)}}>
+      <select onChange={(event) => {updateUnit(event.target.value)}}>
         {units.map((unit, i) =>
           <option key={i}>{unit}</option>
         )}
