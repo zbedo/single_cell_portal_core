@@ -502,28 +502,7 @@ module Api
             filter_values = self.class.split_query_param_on_delim(parameter: raw_filters)
             facet = SearchFacet.find_by(identifier: facet_id)
             if facet.present?
-              matching_filters = []
-              if facet.is_numeric?
-                # first filter value is range, e.g. 20-40, second value is unit, e.g. years
-                min_value, max_value = self.class.split_query_param_on_delim(parameter: filter_values.first, delimiter: '-').map(&:to_f)
-                requested_unit = filter_values.last
-                facet_min = facet.min.dup
-                facet_max = facet.max.dup
-                # before matching on range, see if we need to convert
-                if requested_unit != facet.unit
-                  facet_min = facet.convert_time_between_units(base_value: facet_min, original_unit: facet.unit, new_unit: requested_unit)
-                  facet_max = facet.convert_time_between_units(base_value: facet_max, original_unit: facet.unit, new_unit: requested_unit)
-                end
-                if min_value >= facet_min || max_value <= facet_max
-                  matching_filters = {min: min_value, max: max_value, unit: requested_unit}
-                end
-              else
-                facet.filters.each do |filter|
-                  if filter_values.include?(filter[:id])
-                    matching_filters << filter
-                  end
-                end
-              end
+              matching_filters = self.class.find_matching_filters(facet: facet, filter_values: filter_values)
               if matching_filters.any?
                 @facets << {
                     id: facet.identifier,
@@ -610,29 +589,44 @@ module Api
           search_weight = 0
           result.keys.keep_if { |key| key != :study_accession }.each do |key|
             facet_name = key.to_s.chomp('_val')
-            matching_facet = search_facets.detect { |facet| facet[:id] == facet_name }
-            facet_obj = SearchFacet.find(matching_facet[:object_id])
-            if facet_obj.is_numeric?
-              match = matching_facet[:filters].dup
-              match.delete(:name)
-              matching_filter = match
-            else
-              matching_filter = matching_facet[:filters].detect { |filter| filter[:id] == result[key] }
-            end
-            if facet_name != key.to_s
-              # results with a key ending in _val are array based, and may have multiple matches, so append to existing list
-              matches[accession][facet_name] ||= []
-              matches[accession][facet_name] << matching_filter
-            else
-              # for non-array columns, still store as an array for consistent rendering in the UI
-              matches[accession][facet_name] = [matching_filter]
-            end
+            matching_filter = match_results_by_filter(search_result: result, result_key: key, facets: search_facets)
+            matches[accession][facet_name] ||= []
+            matches[accession][facet_name] << matching_filter unless matches[accession][facet_name].include?(matching_filter)
             search_weight += 1
           end
           # compute a score for relevance weighting
           matches[accession][:facet_search_weight] = search_weight
         end
         matches
+      end
+
+      # find matching filters within a given facet based on query parameters
+      def self.find_matching_filters(facet:, filter_values:)
+        matching_filters = []
+        if facet.is_numeric?
+          # if we have more than two values, we likely have a unit parameter and need to convert values
+          if filter_values.size > 2 && SearchFacet::TIME_UNITS.include?(filter_values.last)
+            requested_unit = filter_values.slice!(-1)
+          end
+          min_value, max_value = filter_values.map(&:to_f)
+          facet_min = facet.min.dup
+          facet_max = facet.max.dup
+          # if unit was sent in query, convert
+          if requested_unit.present? && facet.must_convert?
+            facet_min = facet.convert_time_between_units(base_value: facet_min, original_unit: facet.unit, new_unit: requested_unit)
+            facet_max = facet.convert_time_between_units(base_value: facet_max, original_unit: facet.unit, new_unit: requested_unit)
+          end
+          if min_value >= facet_min || max_value <= facet_max
+            matching_filters = {min: min_value, max: max_value, unit: requested_unit}
+          end
+        else
+          facet.filters.each do |filter|
+            if filter_values.include?(filter[:id])
+              matching_filters << filter
+            end
+          end
+        end
+        matching_filters
       end
 
       # find valid StudyAccessions from query parameters
@@ -652,6 +646,20 @@ module Api
       # generic split function, handles type checking
       def self.split_query_param_on_delim(parameter:, delimiter: ',')
         parameter.is_a?(Array) ? parameter : parameter.to_s.split(delimiter).map(&:strip)
+      end
+
+      # build a map of facet filter matches to studies for computing simplistic weights for scoring
+      def self.match_results_by_filter(search_result:, result_key:, facets:)
+        facet_name = result_key.to_s.chomp('_val')
+        matching_facet = facets.detect { |facet| facet[:id] == facet_name }
+        facet_obj = SearchFacet.find(matching_facet[:object_id])
+        if facet_obj.is_numeric?
+          match = matching_facet[:filters].dup
+          match.delete(:name)
+          return match
+        else
+          return matching_facet[:filters].detect { |filter| filter[:id] == search_result[result_key] }
+        end
       end
     end
   end
