@@ -29,14 +29,20 @@ export default function FilterSlider(props) {
 
   const units = facet.all_units.slice()
 
-  const [values, setValues] = useState(domain)
-  const [inputValues, setInputValues] = useState(domain)
-  const [unit, setUnit] = useState('year')
+  let [propsRange, propsUnit] = [domain, facet.unit]
+  if (props.selection !== '') {
+    [propsRange, propsUnit] = props.selection
+    propsRange = propsRange.split('-').map(value => parseInt(value))
+  }
+
+  const [values, setValues] = useState(propsRange)
+  const [inputValues, setInputValues] = useState(propsRange)
+  const [unit, setUnit] = useState(propsUnit)
 
   function updateValues(values) {
     setValues(values)
     setInputValues(values)
-    const ranges = values.join('-') + ',' + unit.toLowerCase()
+    const ranges = values.join('-') + ',' + propsUnit.toLowerCase()
     props.onChange(ranges)
   }
 
