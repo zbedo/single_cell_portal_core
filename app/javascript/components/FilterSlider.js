@@ -34,11 +34,17 @@ export default function FilterSlider(props) {
 
   const units = facet.all_units.slice()
 
-  let [propsRange, propsUnit] = [domain, facet.unit]
+  let propsRange = ''
+  let propsUnit = ''
 
-  if (props.selection !== '') {
-    [propsRange, propsUnit] = props.selection
-    propsRange = propsRange.split('-').map(value => parseInt(value))
+  if (props.selection.length > 0) {
+    let rangeAndUnit = props.selection[0].split(',')
+    propsRange = rangeAndUnit.slice(0, 2)
+    propsUnit = rangeAndUnit.slice(-1)[0]
+    propsRange = propsRange.map(value => parseInt(value))
+  } else {
+    propsRange = domain.slice()
+    propsUnit = facet.unit
   }
 
   const [values, setValues] = useState(propsRange)
@@ -50,7 +56,7 @@ export default function FilterSlider(props) {
    * upon clicking "Apply"
    */
   function updateAppliedSelection(values, unit) {
-    const ranges = values.join('-') + ',' + unit
+    const ranges = values.join(',') + ',' + unit
     props.onChange(ranges)
   }
 
