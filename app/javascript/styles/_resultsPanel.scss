@@ -7,6 +7,15 @@
   background-color: #dce3e9;
 }
 
+.results-header {
+  height: 50px;
+  .results-totals {
+    height: 100%;
+    padding-top: 15px;
+    padding-left: 2em;
+  }
+}
+
 .results-content {
   background-color: white;
   border-left: 1px solid #d8dde6;

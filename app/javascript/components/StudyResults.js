@@ -3,7 +3,7 @@ import Tab from 'react-bootstrap/lib/Tab'
 import Tabs from 'react-bootstrap/lib/Tabs'
 import { useTable, usePagination } from 'react-table'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCaretLeft, faCaretRight, faBackward, faForward } from '@fortawesome/free-solid-svg-icons';
+import { faAngleDoubleLeft, faAngleLeft, faAngleRight, faAngleDoubleRight } from '@fortawesome/free-solid-svg-icons';
 
 /**
  * Wrapper component for studies on homepage
@@ -52,9 +52,9 @@ const StudyResults = ({ results, changePage }) => {
   usePagination)
   return (
     <>
-      <div className="row">
-        <div className="col-md-4">
-          { results.totalStudies } total studies found
+      <div className="row results-header">
+        <div className="col-md-4 results-totals">
+          <strong>{ results.totalStudies }</strong> total studies found
         </div>
         <div className="col-md-4">
           <PagingControl currentPage={results.currentPage}
@@ -94,13 +94,13 @@ const PagingControl = ({currentPage, totalPages, changePage, canPreviousPage, ca
         className="text-button"
         onClick={() => {changePage(1)}}
         disabled={!canPreviousPage}>
-        <FontAwesomeIcon icon={faBackward}/>
+        <FontAwesomeIcon icon={faAngleDoubleLeft}/>
       </button>
       <button
         className="text-button"
         onClick={() => {changePage(currentPage - 1)}}
         disabled={!canPreviousPage}>
-        <FontAwesomeIcon icon={faCaretLeft}/>
+        <FontAwesomeIcon icon={faAngleLeft}/>
       </button>
       <span className="currentPage">
         Page {currentPage} of {totalPages}
@@ -109,13 +109,13 @@ const PagingControl = ({currentPage, totalPages, changePage, canPreviousPage, ca
         className="text-button"
         onClick={() => {changePage(currentPage + 1)}}
         disabled={!canNextPage}>
-        <FontAwesomeIcon icon={faCaretRight}/>
+        <FontAwesomeIcon icon={faAngleRight}/>
       </button>
       <button
         className="text-button"
         onClick={() => {changePage(totalPages)}}
         disabled={!canNextPage}>
-        <FontAwesomeIcon icon={faForward}/>
+        <FontAwesomeIcon icon={faAngleDoubleRight}/>
       </button>
     </div>
   )
