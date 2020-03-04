@@ -62,7 +62,7 @@ export default class StudySearchProvider extends React.Component {
     //   "all_units": ["year", "month", "week", "day", "hour"]
     // }];
 
-    const mfWithAgeMock = [...mf, ...organismAgeMock];
+    // const mfWithAgeMock = [...mf, ...organismAgeMock];
 
     this.setState({
       defaultFacets: df,
