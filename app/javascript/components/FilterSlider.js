@@ -20,6 +20,10 @@ const railStyle = {
 
 /**
  * Component for slider to filter numerical facets, e.g. organism age
+ *
+ * TODO:
+ * - Support unit-less numerical facets, e.g. bmi, number_of_reads (SCP-2201)
+ * - Support rate units, e.g. small_molecule_perturbation__concentration (SCP-2201)
  */
 export default function FilterSlider(props) {
 
@@ -41,6 +45,10 @@ export default function FilterSlider(props) {
   const [inputValues, setInputValues] = useState(propsRange)
   const [unit, setUnit] = useState(propsUnit)
 
+  /**
+   * Propagates changes upstream, so results get filtered and URL updates
+   * upon clicking "Apply"
+   */
   function updateAppliedSelection(values, unit) {
     const ranges = values.join('-') + ',' + unit
     props.onChange(ranges)
