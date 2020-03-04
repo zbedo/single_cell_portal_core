@@ -38,14 +38,21 @@ export default function FilterSlider(props) {
   let propsUnit = ''
 
   if (props.selection.length > 0) {
-    // If filling with pre-selected values, e.g. reloading page with previous
-    // selection in URL, or from "Apply" button click
-    let rangeAndUnit = props.selection;
+
+    // props.selection can be either a:
+    //  - string, if coming from update within component
+    //  - array, if coming from
+    let rangeAndUnit = undefined;
+    if (Array.isArray(props.selection)) {
+      rangeAndUnit = props.selection
+    } else {
+      rangeAndUnit = props.selection[0].split(',')
+    }
+
     propsRange = rangeAndUnit.slice(0, 2)
     propsUnit = rangeAndUnit.slice(-1)[0]
     propsRange = propsRange.map(value => parseInt(value))
   } else {
-    // If freshly loading
     propsRange = domain.slice()
     propsUnit = facet.unit
   }
@@ -91,7 +98,9 @@ export default function FilterSlider(props) {
     changedValues[index] = value;
     changedInputValues[index] = rawValue;
 
-    updateValues(values)
+    updateValues(changedValues)
+    setInputValues(changedInputValues)
+    updateAppliedSelection(changedValues, unit)
   }
 
   return (
