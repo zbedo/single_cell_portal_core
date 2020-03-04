@@ -10,6 +10,7 @@ import { Router } from '@reach/router'
  * Wrapper component search and result panels
  */
 export default function HomePageContent() {
+  // create a wrapper component for the search display since <Router> assumes that all of its unwrapped children (even nested) be routes
   const SearchRoute = (props) => (
     <SearchContextProvider {...props}>
       <SearchPanel/>
