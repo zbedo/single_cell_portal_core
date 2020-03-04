@@ -135,14 +135,13 @@ export async function fetchFacetFilters(facet, query, mock=false) {
  *
  * fetchSearch('study', 'tuberculosis');
  */
-export async function fetchSearch(type, terms, facets, mock=false){
-  // Needs to be edited to include facets
-  const searchPathAndQueryString = `/search?${buildSearchQueryString(type, terms, facets)}`
+export async function fetchSearch(type, terms, facets, page, mock=false){
+  const searchPathAndQueryString = `/search?${buildSearchQueryString(type, terms, facets, page)}`
   return await scpApi(searchPathAndQueryString, defaultInit, mock);
 }
 
-export function buildSearchQueryString(type, terms, facets) {
-  return `type=${type}&terms=${terms}&facets=${buildFacetQueryString(facets)}`
+export function buildSearchQueryString(type, terms, facets, page) {
+  return `type=${type}&terms=${terms}&facets=${buildFacetQueryString(facets)}&page=${page ? page : 1}`
 }
 
 function buildFacetQueryString(facets) {
