@@ -1,4 +1,4 @@
-sdevelopment:
+development:
   # Configure available database clients. (required)
   clients:
     # Defines the default client. (required)
