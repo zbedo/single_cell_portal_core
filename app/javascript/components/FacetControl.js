@@ -82,7 +82,7 @@ export default function FacetControl(props) {
         id={facetId}
         className={`facet ${showFilters ? 'active' : ''} ${selectedFilterString ? 'selected' : ''}`}>
         <a onClick={handleButtonClick}>
-          { selectedFilterString ? controlContent : facetName  }
+          { controlContent }
         </a>
         <FiltersBoxSearchable
           show={showFilters}
