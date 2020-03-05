@@ -32,7 +32,7 @@ export default function FilterSlider(props) {
   const [min, max] = [parseInt(facet.min), parseInt(facet.max)]
   const domain = [min, max]
 
-  const units = facet.all_units.slice()
+  const units = facet.allUnits.slice()
 
   let propsRange = ''
   let propsUnit = ''

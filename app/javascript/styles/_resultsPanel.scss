@@ -7,13 +7,32 @@
   background-color: #dce3e9;
 }
 
-#results-content.tab-content {
+.results-header {
+  height: 50px;
+  .results-totals {
+    height: 100%;
+    padding-top: 15px;
+    padding-left: 2em;
+  }
+}
+
+.results-content {
   background-color: white;
   border-left: 1px solid #d8dde6;
   border-right: 1px solid #d8dde6;
   padding: 10px;
+  min-height: 50vh;
+  .loading-panel, .error-panel {
+    box-shadow: none;
+    padding-top: 1em;
+    text-align: center;
+  }
 
+  .loading-panel {
+    color: #777
+  }
 }
+
 .result-row {
   background-color: #fff;
   border-radius: 5px;
@@ -22,6 +41,7 @@
   margin-top: 10px;
   padding: 15px;
   width: 100%;
+
   #result-cell{
     padding: 10px;
   }
@@ -48,4 +68,18 @@
 .pagination{
   text-align: center;
   display: block;
+  margin: 10px;
+  button {
+    border: none;
+    color: $action-color;
+    background-color: #eee;
+    border-radius: 3px;
+    cursor: pointer;
+    margin: 0 0.2em;
+    padding-top: 3px;
+    min-width: 30px;
+  }
+  .currentPage {
+    margin: 0 0.2em 0 0.2em;
+  }
 }
