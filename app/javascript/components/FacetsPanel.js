@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import FacetControl from './FacetControl';
 import MoreFacetsButton from './MoreFacetsButton';
-import { SearchFacetContext } from 'components/search/SearchFacetProvider'
+import { SearchFacetContext } from './search/SearchFacetProvider'
 
 
 export default function FacetsPanel() {
