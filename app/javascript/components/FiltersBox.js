@@ -69,8 +69,7 @@ export default function FiltersBox(props) {
   const filtersBoxId = `${componentName}-${facetId}`;
   const applyId = `apply-${filtersBoxId}`;
 
-
-  function updateSelection(filterId, value) {
+  function updateSelectionForFilterCheckboxes(filterId, value) {
     let newSelection = selection.slice()
     if (value && !newSelection.includes(filterId)) {
       newSelection.push(filterId)
@@ -80,6 +79,15 @@ export default function FiltersBox(props) {
     }
     setSelection(newSelection);
     setShowClear(newSelection.length > 0);
+  }
+
+  function updateSelectionForFilterSlider(ranges) {
+    let newSelection = selection.slice()
+    if (!newSelection !== [ranges]) {
+      newSelection = [ranges]
+    }
+    setSelection(newSelection);
+    setShowClear(newSelection.length > 0)
   }
 
   function handleApplyClick(event) {
@@ -103,7 +111,8 @@ export default function FiltersBox(props) {
       <Filters
         facet={props.facet}
         filters={props.filters}
-        onFilterValueChange={updateSelection}
+        updateSelectionForFilterCheckboxes={updateSelectionForFilterCheckboxes}
+        updateSelectionForFilterSlider={updateSelectionForFilterSlider}
         selection={selection}
       />
       <div className='filters-box-footer'>
