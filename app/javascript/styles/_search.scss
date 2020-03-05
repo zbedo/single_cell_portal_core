@@ -143,7 +143,12 @@
       display: block;
       margin: 5px 2px;
       .filters-box-searchable {
-        margin-left: 50px;
+        position: relative;
+        width: 98%;
+        border: none;
+        margin-top: -2px;
+        border-top-left-radius: 0px;
+        border-top-right-radius: 0px;
       }
     }
   }
