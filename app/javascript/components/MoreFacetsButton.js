@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSlidersH } from '@fortawesome/free-solid-svg-icons';
 
 import FacetsAccordion from './FacetsAccordion';
+import { useContextStudySearch } from 'components/search/StudySearchProvider';
 
 /**
  * Component for "More Facets" button.  Clicking shows facets accordion box.
@@ -11,7 +12,7 @@ import FacetsAccordion from './FacetsAccordion';
  * UI spec: https://projects.invisionapp.com/d/main#/console/19272801/402387756/preview
  */
 export default function MoreFacetsButton(props) {
-
+  let searchContext = useContextStudySearch();
   const [show, setShow] = useState(false);
 
   // const facetName = props.facet.name;
@@ -39,15 +40,20 @@ export default function MoreFacetsButton(props) {
     setShow(false)
   };
 
+  const numFacetsApplied = props.facets.filter((facet) => {
+    return searchContext.params.facets[facet.id] && searchContext.params.facets[facet.id].length
+  }).length
+  const facetCountString = numFacetsApplied > 0 ? `(${numFacetsApplied})` : ''
+
   return (
       <span
         id='more-facets-button'
-        className={`${show ? 'active' : ''} facet`}
+        className={`${show || numFacetsApplied ? 'active' : ''} facet`}
         ref={node}>
         <a
           onClick={handleClick}>
           <FontAwesomeIcon className="icon-left" icon={faSlidersH}/>
-          More Facets
+          More Facets { facetCountString }
         </a>
         {show && <FacetsAccordion facets={props.facets} setShow={setShow} />}
       </span>

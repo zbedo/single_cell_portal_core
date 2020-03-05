@@ -59,28 +59,34 @@ export default function FiltersBoxSearchable(props) {
     return filtersSummary;
   }
 
+  const showSearchBar = props.facet.links.length > 0
+
   return (
     <div className={componentName} id={componentId} style={{display: props.show ? '' : 'none'}}>
-      <div className='facet-ontology-links'>
-          {
-          props.facet.links.map((link, i) => {
-            return (
-              <a key={`link-${i}`} href={link.url} target='_blank'>
-                {link.name}&nbsp;&nbsp;<FontAwesomeIcon icon={faExternalLinkAlt}/>
-              </a>
-            );
-          })
-          }
-      </div>
-      <FiltersSearchBar
-        filtersBoxId={componentId}
-        searchFilters={searchFilters}
-      />
-      <p className='filters-box-header'>
-        <span className='default-filters-list-name'>
-          {getFiltersSummary()}
-        </span>
-      </p>
+      { showSearchBar && (
+        <>
+          <div className='facet-ontology-links'>
+            {
+            props.facet.links.map((link, i) => {
+              return (
+                <a key={`link-${i}`} href={link.url} target='_blank'>
+                  {link.name}&nbsp;&nbsp;<FontAwesomeIcon icon={faExternalLinkAlt}/>
+                </a>
+              );
+            })
+            }
+          </div>
+          <FiltersSearchBar
+            filtersBoxId={componentId}
+            searchFilters={searchFilters}
+          />
+          <p className='filters-box-header'>
+            <span className='default-filters-list-name'>
+              {getFiltersSummary()}
+            </span>
+          </p>
+        </>
+      )}
       <FiltersBox
         facet={props.facet}
         filters={matchingFilters}

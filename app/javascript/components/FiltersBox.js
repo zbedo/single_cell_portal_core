@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import isEqual from 'lodash/isEqual';
+import _isEqual from 'lodash/isEqual';
 import Button from 'react-bootstrap/lib/Button';
 
 import { StudySearchContext } from 'components/search/StudySearchProvider';
@@ -45,11 +45,12 @@ function ApplyButton(props) {
 export default function FiltersBox(props) {
   const searchContext = useContext(StudySearchContext);
 
-  const appliedSelection = searchContext.params.facets[props.facet.id]
+  let appliedSelection = searchContext.params.facets[props.facet.id]
+  appliedSelection = appliedSelection ? appliedSelection : []
   const selection = props.selection
   const setSelection = props.setSelection
   const showClear = selection.length > 0;
-  const canApply = !isEqual(selection, appliedSelection)
+  const canApply = !_isEqual(selection, appliedSelection)
 
   // TODO: Get opinions, perhaps move to a UI code style guide.
   //
@@ -90,8 +91,7 @@ export default function FiltersBox(props) {
   }
 
   function handleApplyClick(event) {
-    const applyButtonClasses = Array.from(event.target.classList);
-    if (applyButtonClasses.includes('disabled')) return;
+    if (!canApply) return;
 
     let updatedFacetValue = {};
     updatedFacetValue[facetId] = selection

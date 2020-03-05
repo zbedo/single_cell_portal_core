@@ -4,7 +4,7 @@ import FiltersBoxSearchable from './FiltersBoxSearchable';
 import { StudySearchContext } from 'components/search/StudySearchProvider';
 import _filter from 'lodash/filter'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 
 /**
  * Converts string value to lowercase, hyphen-delimited version
@@ -74,7 +74,7 @@ export default function FacetControl(props) {
 
   let controlContent = facetName
   if (selectedFilterString) {
-    controlContent = <>{ selectedFilterString } <button ref={clearNode} className="facet-clear" onClick={ clearFacet }><FontAwesomeIcon icon={faTimes}/></button></>
+    controlContent = <>{ selectedFilterString } <button ref={clearNode} className="facet-clear" onClick={ clearFacet }><FontAwesomeIcon icon={faTimesCircle}/></button></>
   }
 
   return (
