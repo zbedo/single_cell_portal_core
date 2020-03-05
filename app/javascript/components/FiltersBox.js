@@ -46,9 +46,9 @@ export default function FiltersBox(props) {
   const searchContext = useContext(StudySearchContext);
 
   const appliedSelection = searchContext.params.facets[props.facet.id]
-  const [selection, setSelection] = useState(appliedSelection ? appliedSelection : []);
-  const [showClear, setShowClear] = useState(selection.length > 0);
-
+  const selection = props.selection
+  const setSelection = props.setSelection
+  const showClear = selection.length > 0;
   const canApply = !isEqual(selection, appliedSelection)
 
   // TODO: Get opinions, perhaps move to a UI code style guide.
@@ -79,7 +79,6 @@ export default function FiltersBox(props) {
       _remove(newSelection, (id) => { return id === filterId; })
     }
     setSelection(newSelection);
-    setShowClear(newSelection.length > 0);
   }
 
   function handleApplyClick(event) {
