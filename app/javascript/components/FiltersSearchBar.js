@@ -25,13 +25,13 @@ export default function FiltersSearchBar(props) {
   }
 
   return (
-    <div class='filters-search-bar'>
+    <div className='filters-search-bar'>
       <Form onSubmit={handleFilterSearchSubmit}>
         <FormControl
           id={filtersSearchBarId}
           type='text'
           autoComplete='false'
-          placeholder='Search'
+          placeholder='Search for a filter'
         />
         <Button className='search-button' onClick={handleFilterSearchButtonClick}>
           <FontAwesomeIcon icon={faSearch}/>

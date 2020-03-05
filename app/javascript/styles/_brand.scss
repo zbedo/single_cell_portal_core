@@ -1,3 +1,5 @@
+@import './_colors.scss';
+
 .mask {
   height: 245px;
   background-color: #FFFFFF;
@@ -118,7 +120,7 @@
   .panel-heading {
     background-color: #ffffff !important;
     a {
-      color: #2691D0;
+      color: $action-color;
     }
   }
   .panel-body {
@@ -130,23 +132,7 @@
   font-size: small;
 }
 
-#home-page-tabs, #study-tabs {
-  border-bottom: none;
-  li  {
-    a {
-      font-size: larger;
-      color: #2691D0;
-      border: none;
-      background-color: transparent;
-      :hover {
-        font-weight: bold;
-      }
-    }
-  }
-  li.active > a {
-    border-bottom: 2px solid #2691D0;
-  }
-}
+
 
 .table-striped {
   border-radius: 8px;

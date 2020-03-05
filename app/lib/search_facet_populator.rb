@@ -1,12 +1,14 @@
 # Methods for populating SearchFacets, based on manual config or schema files
 
 class SearchFacetPopulator
+
+  EXCLUDED_BQ_COLUMNS = %w(CellID donor_id biosample_id)
   # loads the alexandria convention schema and populates search facets from it
   def self.populate_from_schema
-    schema_object = fetch_alexandria_convention_schema
+    schema_object = fetch_json_from_url(alexandria_convention_config[:url])
     required_fields = schema_object['required']
     required_fields.each do |field_name|
-      if !field_name.include?('__ontology_label')
+      if !EXCLUDED_BQ_COLUMNS.include?(field_name) && !field_name.include?('__ontology_label')
         populate_facet_by_name(field_name, schema_object)
       end
     end
@@ -25,23 +27,22 @@ class SearchFacetPopulator
 
     updated_facet = SearchFacet.find_or_initialize_by(name: facet_name)
     updated_facet.identifier = facet_name
+    updated_facet.data_type = field_def['type'] == 'array' ? field_def['items']['type'] : field_def['type']
     updated_facet.is_ontology_based = is_ontology_based
     updated_facet.is_array_based = 'array'.casecmp(field_def['type']) == 0
-    updated_facet.is_numeric = 'number'.casecmp(field_def['type']) == 0
     updated_facet.big_query_id_column = facet_name
     updated_facet.big_query_name_column = is_ontology_based ? ontology_label_field_name : facet_name
     updated_facet.convention_name = schema_object['title']
     updated_facet.convention_version = alexandria_convention_config[:version]
-    # for now, just set the ontology name to the URL, since IIRC we're delegating display responsibility to the front end
-    updated_facet.ontology_urls = is_ontology_based ? [{name: field_def['ontology'], url: field_def['ontology']}] : []
+    if is_ontology_based
+      url = field_def['ontology']
+      ontology = fetch_json_from_url(url)
+      # check if response has expected keys; if not, default to URL for name value
+      ontology_name = ontology.dig('config', 'title') ? ontology['config']['title'] : url
+      updated_facet.ontology_urls = [{name: ontology_name, url: url}]
+    end
     updated_facet.save!
-    updated_facet.update_filter_values!
     updated_facet
-  end
-
-  def self.fetch_alexandria_convention_schema
-    schema_string = Net::HTTP.get(URI(alexandria_convention_config[:url]))
-    JSON.parse(schema_string)
   end
 
   def self.alexandria_convention_config
@@ -49,6 +50,18 @@ class SearchFacetPopulator
       url: 'https://storage.googleapis.com/broad-singlecellportal-public/AMC_v1.1.3.json',
       version: '1.1.3' # hardcoded here since the version is not part of the schema file
     }
+  end
+
+  # generic fetch of JSON from remote URL, for parsing convention schema or EBI OLS ontology entries
+  def self.fetch_json_from_url(url)
+    begin
+      response = RestClient.get url
+      JSON.parse(response.body)
+    rescue RestClient::Exception => e
+      Rails.logger.error "Unable to fetch JSON from #{url}: #{e.class.name}: #{e.message}"
+    rescue JSON::ParserError => e
+      Rails.logger.error "Unable to parse response from #{url}: #{e.class.name}: #{e.message}"
+    end
   end
 
   # quick method to get a few key facets into the database.

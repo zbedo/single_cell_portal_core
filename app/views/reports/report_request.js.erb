@@ -1,7 +1,7 @@
 $('#contact-modal').on('hidden.bs.modal', function() {
     $('#contact-modal').off('hidden.bs.modal'); // clear event to prevent queueing
     CKEDITOR.instances.report_request_message.setData(''); // clear contents of CKEditor
-    $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {notice: 'Your message has been successfully delivered.'}) %>");
+    showMessageModal("Your message has been successfully delivered.", "");
 });
 
 $('#contact-modal').modal('hide');

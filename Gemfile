@@ -33,7 +33,7 @@ gem 'bootsnap', '>= 1.1.0', require: false
 gem 'minitest-rails'
 gem 'minitest-reporters'
 
-group :development do
+group :development, :test do
   # Access an IRB console on exception pages or by using <%= console %> in views
 
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
@@ -46,16 +46,12 @@ group :development do
   gem 'byebug'
 end
 
-group :test do
-  gem 'byebug'
-end
-
 gem 'devise'
 gem 'omniauth-google-oauth2'
 gem 'omniauth-rails_csrf_protection'
 gem 'googleauth'
 gem 'google-cloud-storage', require: 'google/cloud/storage'
-gem 'google-cloud-bigquery', require: "google/cloud/bigquery"
+gem 'google-cloud-bigquery', require: 'google/cloud/bigquery'
 gem 'selenium-webdriver'
 gem 'jquery-ui-rails'
 gem 'bootstrap-sass', :git => 'https://github.com/twbs/bootstrap-sass'
@@ -73,6 +69,7 @@ gem 'jquery-fileupload-rails'
 gem 'mongoid-paperclip', :require => 'mongoid_paperclip', git: 'https://github.com/mrrooijen/mongoid-paperclip'
 gem 'non-stupid-digest-assets'
 gem 'will_paginate_mongoid'
+gem 'will_paginate'
 gem 'naturally'
 gem 'rest-client'
 gem 'actionpack-action_caching'

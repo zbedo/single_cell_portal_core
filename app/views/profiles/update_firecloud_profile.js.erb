@@ -1,3 +1,2 @@
-$('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {notice: @notice, alert: @alert}) %>");
-$('#message_modal').modal('show')
+showMessageModal("<%= @notice.present? ? @notice.html_safe : nil %>", "<%= @alert.present? ? @alert.html_safe : nil %>");
 $('#profile-firecloud').html("<%= escape_javascript(render partial: 'user_firecloud_profile') %>")

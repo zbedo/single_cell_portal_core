@@ -4,10 +4,10 @@
     <div class="col-md-12">
       <ul class="nav nav-tabs sc-tabs" role="tablist" id="home-page-tabs">
         <li role="presentation" class="home-nav active" id="search-studies-nav">
-          <a href="#search-studies" class="home-nav-tab" data-toggle="tab">Search Studies <span class="fas fa-book"></span></a>
+          <a href="#search-studies" class="home-nav-tab" data-toggle="tab"><span class="fas fa-book"></span> Search Studies</a>
         </li>
         <li role="presentation" class="home-nav" id="search-genes-nav">
-          <a href="#search-genes" class="home-nav-tab" data-toggle="tab">Search Genes <span class="fas fa-dna"></span></a>
+          <a href="#search-genes" class="home-nav-tab" data-toggle="tab"><span class="fas fa-dna"></span> Search Genes</a>
         </li>
       </ul>
       <div class="tab-content top-pad">
@@ -19,8 +19,7 @@
             in app/javascript/packs/application.js
           -->
           <% if User.feature_flag_for_user(current_user, "faceted_search") %>
-            <div id="scp-search-studies-root-element"></div>
-            <div id="scp-search-results-root-element"></div>
+            <div id="home-page-content"></div>
           <% else %>
             <%= render partial: '/site/search/search_studies' %>
           <% end %>

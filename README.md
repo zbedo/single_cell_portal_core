@@ -314,6 +314,12 @@ To create an admin user account:
 ## DEVELOPING OUTSIDE THE CONTAINER
 Developing on SCP without a Docker container, while less robust, opens up some faster development paradigms, including live css/js reloading, faster build times, and byebug debugging in rails.  See [Non-containerized development README](./NON_CONTAINERIZED_DEV_README.md) for instructions
 
+## UPDATING JAVASCRIPT PEER/INDIRECT DEPENDENCIES
+Since `yarn` does not automatically upgrade peer/indirect dependencies automatically (it will only update packages declared 
+in package.json), The following snippet can be used to update dependencies not covered in `yarn upgrade`:
+
+https://gist.github.com/pftg/fa8fe4ca2bb4638fbd19324376487f42
+
 ## TESTS
 
 ### UI REGRESSION SUITE
@@ -585,6 +591,10 @@ Disabling local access does not alter Terra permissions, but prevents users from
 uploading data through the portal.  Downloads are still enabled, and normal front-end actions are unaffected.
 
 Re-enabling Terra access will restore all permissions back to their original state.
+
+#### SYNTHETIC DATA
+
+Synthetic study data for testing and demonstrating portal features is configured in db/seed/synthetic_studies.  See the [Synthetic study README](./db/seed/synthetic_studies/README.md)
 
 ### MAINTENANCE MODE
 

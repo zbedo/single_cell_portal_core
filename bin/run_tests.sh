@@ -71,7 +71,7 @@ else
                     test/integration/tos_acceptance_test.rb
                     test/integration/study_creation_test.rb
                     test/api/search_controller_test.rb # running search test here to use data from study_creation_test
-                    test/models/bulk_download_service_test.rb
+                    test/integration/lib/bulk_download_service_test.rb
                     test/integration/study_validation_test.rb
                     test/integration/taxons_controller_test.rb
                     test/controllers/analysis_configurations_controller_test.rb
@@ -84,8 +84,10 @@ else
                     test/api/directory_listings_controller_test.rb
                     test/models/cluster_group_test.rb # deprecated, but needed to set up for user_annotation_test
                     test/models/user_annotation_test.rb
+                    test/models/study_test.rb
                     test/models/analysis_configuration_test.rb
                     test/models/search_facet_test.rb
+                    test/integration/lib/search_facet_populator_test.rb
                     test/models/big_query_client_test.rb
   )
   for test_name in ${tests[*]}; do

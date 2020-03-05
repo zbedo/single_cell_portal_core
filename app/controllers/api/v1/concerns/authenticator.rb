@@ -56,6 +56,9 @@ module Api
             else
               user
             end
+          elsif controller_name == 'search' && action_name == 'bulk_download'
+            Rails.logger.info "Authenticating user via auth_token: #{params[:auth_code]}"
+            User.find_by(totat: params[:auth_code].to_i)
           end
         end
 

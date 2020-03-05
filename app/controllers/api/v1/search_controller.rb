@@ -41,6 +41,13 @@ module Api
             key :type, :string
           end
           parameter do
+            key :name, :page
+            key :in, :query
+            key :description, 'Page number for pagination control'
+            key :required, false
+            key :type, :integer
+          end
+          parameter do
             key :name, :scpbr
             key :in, :query
             key :description, 'Requested branding group (to filter results on)'
@@ -67,13 +74,20 @@ module Api
                 key :type, :integer
                 key :title, 'Total number of pages of studies'
               end
-              property :total_entries do
+              property :total_studies do
                 key :type, :integer
                 key :title, 'Total number of studies matching search'
               end
               property :scpbr do
                 key :type, :string
                 key :description, 'Requested branding group id'
+              end
+              property :matching_accessions do
+                key :type, :array
+                key :description, 'Array of study accessions matching query'
+                items do
+                  key :type, :string
+                end
               end
               property :facets do
                 key :type, :array
@@ -114,7 +128,7 @@ module Api
             end
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 500 do
             key :description, 'Server error'
@@ -124,14 +138,22 @@ module Api
 
       def index
         @viewable = Study.viewable(current_api_user)
+        # variable for determining how we will sort search results for relevance
+        sort_type = :none
 
         # if search params are present, filter accordingly
         if params[:terms].present?
+          sort_type = :keyword
           @search_terms = sanitize_search_values(params[:terms])
           # determine if search values contain possible study accessions
           possible_accessions = StudyAccession.sanitize_accessions(@search_terms.split)
           @studies = @viewable.any_of({:$text => {:$search => @search_terms}},
-                                      {:accession.in => possible_accessions}).order_by {|study| study.search_weight(@search_terms.split) }
+                                      {:accession.in => possible_accessions})
+          # all of our terms were accessions, so this is a "cached" query, and we want to return
+          # results in the exact order specified in the accessions array
+          if possible_accessions.size == @search_terms.split.size
+            sort_type = :accession
+          end
         else
           @studies = @viewable
         end
@@ -143,6 +165,7 @@ module Api
 
         # only call BigQuery if list of possible studies is larger than 0 and we have matching facets to use
         if @studies.count > 0 && @facets.any?
+          sort_type = :facet
           @studies_by_facet = {}
           @big_query_search = self.class.generate_bq_query_string(@facets)
           Rails.logger.info "Searching BigQuery using facet-based query: #{@big_query_search}"
@@ -153,9 +176,24 @@ module Api
           # uniquify result list as one study may match multiple facets/filters
           @convention_accessions = query_results.map {|match| match[:study_accession]}.uniq
           Rails.logger.info "Found #{@convention_accessions.count} matching studies from BQ job #{job_id}: #{@convention_accessions}"
-          @studies = @studies.where(:accession.in => @convention_accessions).order_by {|study| @studies_by_facet[study.accession][:facet_search_weight]}
+          @studies = @studies.where(:accession.in => @convention_accessions)
         end
-        # paginate results
+
+        @studies = @studies.to_a
+        # determine sort order for pagination; minus sign (-) means a descending search
+        case sort_type
+        when :keyword
+          @studies = @studies.sort_by {|study| -study.search_weight(@search_terms.split) }
+        when :accession
+          @studies = @studies.sort_by {|study| possible_accessions.index(study.accession) }
+        when :facet
+          @studies = @studies.sort_by {|study| -@studies_by_facet[study.accession][:facet_search_weight]}
+        else
+          # we have sort_type of :none, so preserve original ordering of :view_order
+          @studies = @studies.sort_by(&:view_order)
+        end
+        # save list of study accessions for bulk_download/bulk_download_size calls, as well as caching query results
+        @matching_accessions = @studies.map(&:accession)
         @results = @studies.paginate(page: params[:page], per_page: Study.per_page)
       end
 
@@ -179,7 +217,7 @@ module Api
             end
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
         end
       end
@@ -218,7 +256,7 @@ module Api
             end
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 500 do
             key :description, 'Server error'
@@ -255,10 +293,10 @@ module Api
             end
           end
           response 401 do
-            key :description, 'User is not signed in'
+            key :description, ApiBaseController.unauthorized
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
         end
       end
@@ -268,6 +306,79 @@ module Api
         otac_and_ti = current_api_user.create_totat(half_hour)
         auth_code_response = {auth_code: otac_and_ti[:totat], time_interval: otac_and_ti[:time_interval]}
         render json: auth_code_response
+      end
+
+      swagger_path '/search/bulk_download_size' do
+        operation :get do
+          key :tags, [
+              'Search'
+          ]
+          key :summary, 'Preview of number of files/bytes requested for download'
+          key :description, 'Preview of the number of files and bytes (by file type) requested for download from search results'
+          key :operationId, 'search_bulk_download_size_path'
+          parameter do
+            key :name, :accessions
+            key :type, :string
+            key :in, :query
+            key :description, 'Comma-delimited list of Study accessions'
+            key :required, true
+          end
+          parameter do
+            key :name, :file_types
+            key :in, :query
+            key :description, 'Comma-delimited list of file types'
+            key :required, false
+            key :type, :array
+            items do
+              key :type, :string
+              key :enum, StudyFile::BULK_DOWNLOAD_TYPES
+            end
+            key :collectionFormat, :csv
+          end
+          response 200 do
+            key :description, 'Information about total number of files and sizes by type'
+            key :type, :object
+            key :title, 'FileSizesByType'
+            schema do
+              StudyFile::BULK_DOWNLOAD_TYPES.each do |file_type|
+                property file_type do
+                  key :type, :object
+                  key :title, file_type
+                  key :description, "#{file_type} files"
+                  property :total_files do
+                    key :type, :integer
+                    key :description, "Number of #{file_type} files"
+                  end
+                  property :total_bytes do
+                    key :type, :integer
+                    key :description, "Total number of bytes for #{file_type} files"
+                  end
+                end
+              end
+            end
+          end
+          response 400 do
+            key :description, 'Invalid study accessions or requested file types'
+          end
+          response 406 do
+            key :description, ApiBaseController.not_acceptable
+          end
+        end
+      end
+
+      def bulk_download_size
+        # sanitize study accessions and file types
+        valid_accessions = self.class.find_matching_accessions(params[:accessions])
+        sanitized_file_types = self.class.find_matching_file_types(params[:file_types])
+
+        if valid_accessions.blank?
+          render json: {error: 'Invalid request parameters; study accessions not found'}, status: 400 and return
+        end
+
+        @files_by_type = ::BulkDownloadService.get_requested_file_sizes_by_type(file_types: sanitized_file_types,
+                                                                                study_accessions: valid_accessions)
+
+        render json: @files_by_type
       end
 
       swagger_path '/search/bulk_download' do
@@ -312,10 +423,10 @@ module Api
             key :description, 'Invalid study accessions or requested file types'
           end
           response 401 do
-            key :description, 'User not signed in'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'Invalid auth token, or requested download exceeds user download quota'
+            key :description, ApiBaseController.forbidden('download with provided auth_token, or download exceeds user quota')
             schema do
               key :title, 'Error'
               property :message do
@@ -325,7 +436,7 @@ module Api
             end
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
         end
       end
@@ -333,17 +444,10 @@ module Api
       def bulk_download
         totat = params[:auth_code]
         valid_totat = User.verify_totat(totat)
-        accessions = params[:accessions].split(',').map(&:strip)
-        if params[:file_types].present?
-          file_types = params[:file_types].split(',').map(&:strip)
-        else
-          file_types = []
-        end
 
         # sanitize study accessions and file types
-        sanitized_accessions = StudyAccession.sanitize_accessions(accessions)
-        valid_accessions = Study.where(:accession.in => sanitized_accessions).map(&:accession)
-        sanitized_file_types = StudyFile::BULK_DOWNLOAD_TYPES & file_types # find array intersection
+        valid_accessions = self.class.find_matching_accessions(params[:accessions])
+        sanitized_file_types = self.class.find_matching_file_types(params[:file_types])
 
         # validate request parameters
         if totat.blank? || valid_totat == false
@@ -358,7 +462,7 @@ module Api
         # get requested files
         # reference BulkDownloadService as ::BulkDownloadService to avoid NameError when resolving reference
         files_requested = ::BulkDownloadService.get_requested_files(file_types: sanitized_file_types,
-                                                                    study_accessions: sanitized_accessions)
+                                                                    study_accessions: valid_accessions)
 
         # determine quota impact & update user's download quota
         # will throw a RuntimeError if the download exceeds the user's daily quota
@@ -374,7 +478,7 @@ module Api
         @configuration = ::BulkDownloadService.generate_curl_configuration(study_files: files_requested, user: requested_user)
         end_time = Time.zone.now
         runtime = TimeDifference.between(start_time, end_time).humanize
-        logger.info "Curl configs generated for studies #{sanitized_accessions}, #{files_requested.size} total files"
+        logger.info "Curl configs generated for studies #{valid_accessions}, #{files_requested.size} total files"
         logger.info "Total time in generating curl configuration: #{runtime}"
         send_data @configuration, type: 'text/plain', filename: 'cfg.txt'
       end
@@ -392,18 +496,13 @@ module Api
       def set_search_facets_and_filters
         @facets = []
         if params[:facets].present?
-          facet_queries = params[:facets].split('+')
+          facet_queries = self.class.split_query_param_on_delim(parameter: params[:facets], delimiter: '+')
           facet_queries.each do |query|
-            facet_id, raw_filters = query.split(':')
-            filter_values = raw_filters.split(',')
+            facet_id, raw_filters = self.class.split_query_param_on_delim(parameter: query, delimiter: ':')
+            filter_values = self.class.split_query_param_on_delim(parameter: raw_filters)
             facet = SearchFacet.find_by(identifier: facet_id)
             if facet.present?
-              matching_filters = []
-              facet.filters.each do |filter|
-                if filter_values.include?(filter[:id])
-                  matching_filters << filter
-                end
-              end
+              matching_filters = self.class.find_matching_filters(facet: facet, filter_values: filter_values)
               if matching_filters.any?
                 @facets << {
                     id: facet.identifier,
@@ -455,6 +554,19 @@ module Api
             from_clause += ", #{filter_arr_name}, UNNEST(#{filter_arr_name}.#{filter_val_name}) AS #{filter_where_val}"
             where_clauses << "(#{filter_where_val} IN UNNEST(#{column_name}))"
             base_query += ", #{filter_where_val}"
+          elsif search_facet.is_numeric?
+            # run a range query (e.g. WHERE organism_age BETWEEN 20 and 60)
+            base_query += ", #{column_name}"
+            query_on = column_name
+            min_value = facet_obj[:filters][:min]
+            max_value = facet_obj[:filters][:max]
+            unit = facet_obj[:filters][:unit]
+            if search_facet.must_convert?
+              query_on = search_facet.big_query_conversion_column
+              min_value = search_facet.calculate_time_in_seconds(base_value: min_value, unit_label: unit)
+              max_value = search_facet.calculate_time_in_seconds(base_value: max_value, unit_label: unit)
+            end
+            where_clauses << "#{query_on} BETWEEN #{min_value} AND #{max_value}"
           else
             base_query += ", #{column_name}"
             # for non-array columns we can pass an array of quoted values and call IN directly
@@ -462,9 +574,10 @@ module Api
             where_clauses << "#{column_name} IN ('#{filter_values.join('\',\'')}')"
           end
         end
-        # prepend WITH clauses before base_query, then add FROM and dependent WHERE clauses
+        # prepend WITH clauses before base_query (if needed), then add FROM and dependent WHERE clauses
         # all facets are treated as AND clauses
-        "WITH #{with_clauses.join(", ")} " + base_query + from_clause + " WHERE " + where_clauses.join(" AND ")
+        with_statement = with_clauses.any? ? "WITH #{with_clauses.join(", ")} " : ""
+        with_statement + base_query + from_clause + " WHERE " + where_clauses.join(" AND ")
       end
 
       # build a match of studies to facets/filters used in search (for labeling studies in UI with matches)
@@ -476,22 +589,77 @@ module Api
           search_weight = 0
           result.keys.keep_if { |key| key != :study_accession }.each do |key|
             facet_name = key.to_s.chomp('_val')
-            matching_facet = search_facets.detect { |facet| facet[:id] == facet_name }
-            matching_filter = matching_facet[:filters].detect { |filter| filter[:id] == result[key] }
-            if facet_name != key.to_s
-              # results with a key ending in _val are array based, and may have multiple matches, so append to existing list
-              matches[accession][facet_name] ||= []
-              matches[accession][facet_name] << matching_filter
-            else
-              # for non-array columns, still store as an array for consistent rendering in the UI
-              matches[accession][facet_name] = [matching_filter]
-            end
+            matching_filter = match_results_by_filter(search_result: result, result_key: key, facets: search_facets)
+            matches[accession][facet_name] ||= []
+            matches[accession][facet_name] << matching_filter unless matches[accession][facet_name].include?(matching_filter)
             search_weight += 1
           end
           # compute a score for relevance weighting
           matches[accession][:facet_search_weight] = search_weight
         end
         matches
+      end
+
+      # find matching filters within a given facet based on query parameters
+      def self.find_matching_filters(facet:, filter_values:)
+        matching_filters = []
+        if facet.is_numeric?
+          # if we have more than two values, we likely have a unit parameter and need to convert values
+          if filter_values.size > 2 && SearchFacet::TIME_UNITS.include?(filter_values.last)
+            requested_unit = filter_values.slice!(-1)
+          end
+          min_value, max_value = filter_values.map(&:to_f)
+          facet_min = facet.min.dup
+          facet_max = facet.max.dup
+          # if unit was sent in query, convert
+          if requested_unit.present? && facet.must_convert?
+            facet_min = facet.convert_time_between_units(base_value: facet_min, original_unit: facet.unit, new_unit: requested_unit)
+            facet_max = facet.convert_time_between_units(base_value: facet_max, original_unit: facet.unit, new_unit: requested_unit)
+          end
+          if min_value >= facet_min || max_value <= facet_max
+            matching_filters = {min: min_value, max: max_value, unit: requested_unit}
+          end
+        else
+          facet.filters.each do |filter|
+            if filter_values.include?(filter[:id])
+              matching_filters << filter
+            end
+          end
+        end
+        matching_filters
+      end
+
+      # find valid StudyAccessions from query parameters
+      # only returns accessions currently in use
+      def self.find_matching_accessions(raw_accessions)
+        accessions = split_query_param_on_delim(parameter: raw_accessions)
+        sanitized_accessions = StudyAccession.sanitize_accessions(accessions)
+        Study.where(:accession.in => sanitized_accessions).pluck(:accession)
+      end
+
+      # find valid bulk download types from query parameters
+      def self.find_matching_file_types(raw_file_types)
+        file_types = split_query_param_on_delim(parameter: raw_file_types)
+        StudyFile::BULK_DOWNLOAD_TYPES & file_types # find array intersection
+      end
+
+      # generic split function, handles type checking
+      def self.split_query_param_on_delim(parameter:, delimiter: ',')
+        parameter.is_a?(Array) ? parameter : parameter.to_s.split(delimiter).map(&:strip)
+      end
+
+      # build a map of facet filter matches to studies for computing simplistic weights for scoring
+      def self.match_results_by_filter(search_result:, result_key:, facets:)
+        facet_name = result_key.to_s.chomp('_val')
+        matching_facet = facets.detect { |facet| facet[:id] == facet_name }
+        facet_obj = SearchFacet.find(matching_facet[:object_id])
+        if facet_obj.is_numeric?
+          match = matching_facet[:filters].dup
+          match.delete(:name)
+          return match
+        else
+          return matching_facet[:filters].detect { |filter| filter[:id] == search_result[result_key] }
+        end
       end
     end
   end

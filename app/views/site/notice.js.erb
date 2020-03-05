@@ -1,3 +1,14 @@
 closeModalSpinner("#" + OPEN_MODAL + ' div.spinner-target', '#' + OPEN_MODAL, function() {
-    $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {alert: @alert, notice: @notice}) %>");
+    // update modal content
+    $('#notice-content').html("<%= !@notice.blank? ? @notice.html_safe : nil %>");
+    $('#alert-content').html("<%= !@alert.blank? ? @alert.html_safe : nil %>");
+
+    $("#message_modal").modal("show");
+
+    // don't timeout alert messages
+    if (<%= alert.nil? %>) {
+        setTimeout(function() {
+            $("#message_modal").modal("hide");
+        }, 3000);
+    }
 });

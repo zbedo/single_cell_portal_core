@@ -37,6 +37,29 @@ class BulkDownloadServiceTest < ActiveSupport::TestCase
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
 
+  test 'should get requested file sizes by query' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+
+    requested_file_types = %w(Metadata Expression)
+    files_by_size = BulkDownloadService.get_requested_file_sizes_by_type(file_types: requested_file_types, study_accessions: [@study.accession])
+    assert_equal 2, files_by_size.keys.size,
+                 "Did not find correct number of file classes, expected 2 but found #{files_by_size.keys.size}"
+    expected_response = {
+        Metadata: {
+            total_files: 1,
+            total_bytes: @study.metadata_file.upload_file_size
+        },
+        Expression: {
+            total_files: 1,
+            total_bytes: @study.expression_matrix_files.first.upload_file_size
+        }
+    }.with_indifferent_access
+    assert_equal expected_response, files_by_size.with_indifferent_access,
+                 "Did not return correct response, expected: #{expected_response} but found #{files_by_size}"
+
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
+
   # should return curl configuration file contents
   # mock call to GCS as this is covered in API/SearchControllerTest
   test 'should generate curl configuration' do

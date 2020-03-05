@@ -40,16 +40,16 @@ module Api
             end
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not authorized to edit Study'
+            key :description, ApiBaseController.forbidden('edit Study')
           end
           response 404 do
-            key :description, 'Study is not found'
+            key :description, ApiBaseController.not_found(Study)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 410 do
             key :description, ApiBaseController.resource_gone
@@ -92,16 +92,16 @@ module Api
             end
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not authorized to edit Study'
+            key :description, ApiBaseController.forbidden('edit Study')
           end
           response 404 do
-            key :description, 'Study or StudyFile is not found'
+            key :description, ApiBaseController.not_found(Study, StudyFile)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 410 do
             key :description, ApiBaseController.resource_gone
@@ -171,23 +171,21 @@ module Api
             end
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not authorized to edit Study'
+            key :description, ApiBaseController.forbidden('edit Study')
           end
           response 404 do
-            key :description, 'Study or StudyFile is not found'
+            key :description, ApiBaseController.not_found(Study, StudyFile)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 410 do
             key :description, ApiBaseController.resource_gone
           end
-          response 422 do
-            key :description, 'StudyFile validation failed'
-          end
+          extend SwaggerResponses::ValidationFailureResponse
         end
       end
 
@@ -253,23 +251,21 @@ module Api
             end
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not authorized to edit Study'
+            key :description, ApiBaseController.forbidden('edit Study')
           end
           response 404 do
-            key :description, 'Study or StudyFile is not found'
+            key :description, ApiBaseController.not_found(Study, StudyFile)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 410 do
             key :description, ApiBaseController.resource_gone
           end
-          response 422 do
-            key :description, 'StudyFile validation failed'
-          end
+          extend SwaggerResponses::ValidationFailureResponse
         end
       end
 
@@ -350,16 +346,16 @@ module Api
             key :description, 'Successful StudyFile deletion'
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not authorized to delete Study'
+            key :description, ApiBaseController.forbidden('edit Study')
           end
           response 404 do
-            key :description, 'Study or StudyFile is not found'
+            key :description, ApiBaseController.not_found(Study, StudyFile)
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 410 do
             key :description, ApiBaseController.resource_gone
@@ -418,19 +414,19 @@ module Api
             key :description, 'Successful StudyFile parse launch'
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not authorized to edit Study'
+            key :description, ApiBaseController.forbidden('edit Study')
           end
           response 404 do
-            key :description, 'Study or StudyFile is not found'
+            key :description, ApiBaseController.not_found(Study, StudyFile)
           end
           response 405 do
             key :description, 'StudyFile is already parsing'
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 410 do
             key :description, ApiBaseController.resource_gone
@@ -537,19 +533,19 @@ module Api
             end
           end
           response 401 do
-            key :description, 'User is not authenticated'
+            key :description, ApiBaseController.unauthorized
           end
           response 403 do
-            key :description, 'User is not authorized to edit Study'
+            key :description, ApiBaseController.forbidden('edit Study')
           end
           response 404 do
-            key :description, 'Study or StudyFile is not found'
+            key :description, ApiBaseController.not_found(Study, StudyFile)
           end
           response 405 do
             key :description, 'StudyFile is already parsing'
           end
           response 406 do
-            key :description, 'Accept or Content-Type headers missing or misconfigured'
+            key :description, ApiBaseController.not_acceptable
           end
           response 410 do
             key :description, ApiBaseController.resource_gone

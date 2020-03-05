@@ -1,0 +1,85 @@
+.results-panel {
+  padding-top: 14px;
+
+}
+
+.results-panel > div > ul {
+  background-color: #dce3e9;
+}
+
+.results-header {
+  height: 50px;
+  .results-totals {
+    height: 100%;
+    padding-top: 15px;
+    padding-left: 2em;
+  }
+}
+
+.results-content {
+  background-color: white;
+  border-left: 1px solid #d8dde6;
+  border-right: 1px solid #d8dde6;
+  padding: 10px;
+  min-height: 50vh;
+  .loading-panel, .error-panel {
+    box-shadow: none;
+    padding-top: 1em;
+    text-align: center;
+  }
+
+  .loading-panel {
+    color: #777
+  }
+}
+
+.result-row {
+  background-color: #fff;
+  border-radius: 5px;
+  box-shadow: 0 0 2px 0 rgba(0, 0, 0, 0.12), 0 3px 2px 0 rgba(0, 0, 0, 0.12);
+  margin: 0 auto;
+  margin-top: 10px;
+  padding: 15px;
+  width: 100%;
+
+  #result-cell{
+    padding: 10px;
+  }
+  #result-title {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 20px;
+  }
+  #descrition-text-area {
+    color: #333f52;
+    color: #333f52;
+    font-size: 14px;
+    height: 120px;
+    line-height: 22px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 1133px;
+    word-wrap: break-word;
+  }
+  #cell-count {
+    background-color: green;
+  }
+}
+.pagination{
+  text-align: center;
+  display: block;
+  margin: 10px;
+  button {
+    border: none;
+    color: $action-color;
+    background-color: #eee;
+    border-radius: 3px;
+    cursor: pointer;
+    margin: 0 0.2em;
+    padding-top: 3px;
+    min-width: 30px;
+  }
+  .currentPage {
+    margin: 0 0.2em 0 0.2em;
+  }
+}

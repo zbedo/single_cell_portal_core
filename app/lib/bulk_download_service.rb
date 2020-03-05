@@ -53,8 +53,7 @@ class BulkDownloadService
     end
   end
 
-  # Runs a pipeline.  Will call sub-methods to instantiate required objects to pass to
-  # Google::Apis::GenomicsV2alpha1::GenomicsService.run_pipeline
+  # Get an array of StudyFiles from matching StudyAccessions and file_types
   #
   # * *params*
   #   - +file_types+ (Array<String>) => Array of requested file types to be ingested
@@ -78,6 +77,26 @@ class BulkDownloadService
     else
       return studies.map(&:study_files).flatten
     end
+  end
+
+  # Get a preview of the number of files/total bytes by StudyAccession and file_type
+  #
+  # * *params*
+  #   - +file_types+ (Array<String>) => Array of requested file types to be ingested
+  #   - +study_accessions+ (Array<String>) => Array of StudyAccession values from which to pull files
+  #
+  # * *return*
+  #   - (Hash) => Hash of StudyFile::BULK_DOWNLOAD_TYPES matching query w/ number of files and total bytes
+  def self.get_requested_file_sizes_by_type(file_types: [], study_accessions:)
+    # replace 'Expression' with both dense & sparse matrix file types
+    requested_files = get_requested_files(file_types: file_types, study_accessions: study_accessions)
+    files_by_type = {}
+    requested_types = requested_files.map(&:bulk_download_type).uniq
+    requested_types.each do |req_type|
+      files = requested_files.select {|file| file.bulk_download_type == req_type}
+      files_by_type[req_type] = {total_files: files.size, total_bytes: files.map(&:upload_file_size).reduce(:+)}
+    end
+    files_by_type
   end
 
   # Generate a String representation of a configuration file containing URLs and output paths to pass to

@@ -1,0 +1,39 @@
+/**
+* Styles for React-based faceted search UI for studies
+*/
+
+
+@import './_colors.scss';
+
+.study-keyword-search {
+  box-sizing: border-box;
+  display: inline-block;
+  height: 37px;
+  width: 260px;
+
+  input {
+    background-color: white;
+    border: 1px solid $action-color;
+    border-radius: 15px 0px 0px 15px;
+    height: 100%;
+    width:100%;
+    color: $action-color;
+    font-weight: 500;
+    height: 37px;
+    line-height: 100%;
+    padding: 0 16px;
+    width: 90%;
+  }
+
+  button {
+    width: 40px;
+    height: 37px;
+    background-color: $action-color;
+    border: none;
+    border-radius: 0px 15px 15px  0px;
+
+    svg {
+      color: white;
+    }
+  }
+}

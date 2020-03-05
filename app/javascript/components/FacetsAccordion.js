@@ -1,32 +1,33 @@
 import React from 'react';
-import Accordion from 'react-bootstrap/lib/Accordion';
-import Card from 'react-bootstrap/lib/Card';
+import PanelGroup from 'react-bootstrap/lib/PanelGroup';
+import Panel from 'react-bootstrap/lib/Panel';
 
-import Filters from './Filters';
+import FiltersBox from './FiltersBox'
 
 export default function FacetsAccordion(props) {
+
   return (
-    // Accordions provide a way to restrict Card components to only open one at a time.
-    // https://react-bootstrap.github.io/components/accordion/
-    <Accordion defaultActiveKey="0">
+    <PanelGroup accordion id='facets-accordion'>
       {
         props.facets.map((facet, i) => {
           return (
-            <Card key={i}>
-              <Card.Header>
-                <Accordion.Toggle as={Card.Header} variant="link" eventKey={i}>
+            <Panel key={i} eventKey={i}>
+              <Panel.Heading >
+                <Panel.Title toggle>
                   {facet.name}
-                </Accordion.Toggle>
-              </Card.Header>
-              <Accordion.Collapse eventKey={i}>
-                <Card.Body>
-                  <Filters facet={facet} />
-                </Card.Body>
-              </Accordion.Collapse>
-            </Card>
+                </Panel.Title>
+              </Panel.Heading>
+              <Panel.Body collapsible>
+                <FiltersBox
+                  facet={facet}
+                  filters={facet.filters}
+                  setShow={props.setShow}
+                />
+              </Panel.Body>
+            </Panel>
           );
         })
       }
-    </Accordion>
+    </PanelGroup>
   );
 }

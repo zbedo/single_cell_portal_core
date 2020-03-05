@@ -52,6 +52,9 @@ module Api
               key :'$ref', :Taxon
             end
           end
+          response 404 do
+            key :description, ApiBaseController.not_found(Taxon)
+          end
         end
       end
       # GET /single_cell/api/v1/taxons/:id

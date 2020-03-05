@@ -1,6 +1,7 @@
 /**
 * Styles for React-based faceted search UI for studies
 */
+@import './_colors.scss';
 
 // To consider: remove this min-height once study result list can be shown
 #main-body {
@@ -25,17 +26,73 @@
 }
 
 #search-panel {
-  .facet > span,
-  #more-facets-button > span,
-  #download-button > span {
+  a {
+    cursor: pointer;
+    text-decoration: none;
+    color: $action-color;
+    &:hover {
+      text-decoration: none;
+      color: $action-color;
+      background: lighten($action-color, 50%);
+    }
+  }
+  .facet{
+    display: inline-block;
+    margin-right: 8px;
+    box-sizing: border-box;
+    vertical-align: top;
+    > a {
+      background-color: white;
+      padding: 8px 16px;
+      border-radius: 15px;
+      border: 0.64px solid #4d72aa;
+      width: 100%;
+      box-sizing: border-box;
+      display: inline-block;
+    }
+    &.active > a, &.selected > a {
+      background-color: $action-color;
+      color: #fff;
+    }
+
+    .facet-clear {
+      margin-left: 1em;
+      background: #fff;
+      color: $action-color;
+      border-radius: 1em;
+      border: none;
+      font-size: 0.8em;
+    }
+  }
+  #download-button {
+    background-color: white;
+    vertical-align: top;
+    display: inline-block;
     padding: 8px 16px;
     margin-right: 8px;
     border-radius: 15px;
     border: 0.64px solid #4d72aa;
     box-sizing: border-box;
-    color: #4d72aa;
-    font-weight: 500;
     cursor: pointer;
+  }
+  #more-facets-button > span,
+  #download-button > span {
+    color: $action-color;
+    font-weight: 500;
+  }
+
+  #download-button.active {
+    background-color: $action-color;
+  }
+
+  #download-button.active > span {
+    color: #fff;
+  }
+
+  .facet.active > span,
+  #more-facets-button.active > span {
+    color: #fff;
+    background-color: $action-color;
   }
 
   .filters-search-bar {
@@ -48,13 +105,6 @@
     position: relative;
     top: 8px;
     cursor: pointer;
-  }
-
-  .facet.active > span,
-  #more-facets-button.active > span,
-  #download-button.active > span {
-    color: #fff;
-    background-color: #4d72aa;
   }
 
   ul {
@@ -72,15 +122,23 @@
   }
 
   .facet-ontology-links {
-    float: right;
+    text-align: right;
   }
 
-  .filters-box {
+  .filters-box-searchable, #facets-accordion {
     width: 400px;
     border: 1px solid #aaa;
     background: #fff;
     position: absolute;
     z-index: 9000;
+    border-radius: 5px;
+    padding: 2px;
+    margin-top: 2px;
+  }
+
+  .filters-box-header {
+    margin-top: 5px;
+    margin-bottom: 0px;
   }
 
   label {
@@ -97,13 +155,22 @@
     height: 40px;
   }
 
-  #facets-accordion-box {
-    background: #fff;
+  #facets-accordion {
     height: 300px;
-    width: 400px;
-    position: relative;
-    top: 15px;
-    padding-top: 1px;
+
+    .panel-heading {
+      background: #fff;
+      padding: 0px;
+      width: 100%;
+      border: none;
+    }
+    .panel-title a {
+      padding: 10px 15px;
+      color: $action-color;
+      width: 100%;
+      display: block;
+      border: 1px solid #ddd;
+    }
   }
 
   .accordion .card {
@@ -121,5 +188,14 @@
 
   .filters-search-bar {
     margin: 2px;
+    input {
+      background: #eee;
+      border: none;
+    }
+    button {
+      background: #eee;
+      border: none;
+      color: $action-color;
+    }
   }
 }

@@ -11,6 +11,8 @@ class DeleteQueueJob < Struct.new(:object)
     # determine type of delete job
     case object.class.name
     when 'Study'
+      # first check if we have convention metadata to delete
+      delete_convention_data(study: object, metadata_file: object.metadata_file)
       # mark for deletion, rename study to free up old name for use, and restrict access by removing owner
       new_name = "DELETE-#{object.data_dir}"
       object.update!(public: false, name: new_name, url_safe_name: new_name)
@@ -62,11 +64,7 @@ class DeleteQueueJob < Struct.new(:object)
         end
         remove_file_from_bundle
       when 'Metadata'
-        bq_dataset = ApplicationController.big_query_client.dataset CellMetadatum::BIGQUERY_DATASET
-        if object.use_metadata_convention
-          bq_dataset.query "DELETE FROM #{CellMetadatum::BIGQUERY_TABLE} WHERE study_accession = '#{study.accession}' AND file_id = '#{object.id}'"
-          SearchFacet.delay.update_all_facet_filters
-        end
+        delete_convention_data(study: study, metadata_file: object)
 
         # clean up all subsampled data, as it is now invalid and will be regenerated
         # once a user adds another metadata file
@@ -155,5 +153,14 @@ class DeleteQueueJob < Struct.new(:object)
   def delete_subsampled_data(cluster)
     cluster.find_subsampled_data_arrays.delete_all
     cluster.update(subsampled: false)
+  end
+
+  # delete convention data from BQ if a user deletes a convention metadata file, or a study that contains convention data
+  def delete_convention_data(study:, metadata_file:)
+    bq_dataset = ApplicationController.big_query_client.dataset CellMetadatum::BIGQUERY_DATASET
+    if metadata_file.use_metadata_convention
+      bq_dataset.query "DELETE FROM #{CellMetadatum::BIGQUERY_TABLE} WHERE study_accession = '#{study.accession}' AND file_id = '#{metadata_file.id}'"
+      SearchFacet.delay.update_all_facet_filters
+    end
   end
 end

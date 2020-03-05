@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDownload } from '@fortawesome/free-solid-svg-icons';
 import Modal from 'react-bootstrap/lib/Modal';
+// import Tooltip from 'react-bootstrap/lib/Tooltip'; // We'll need this when refining onClipboardCopySuccess
 import Clipboard from 'react-clipboard.js';
 
+import { useContextStudySearch } from './search/StudySearchProvider'
+import { useContextUser } from './UserProvider'
 import { fetchAuthCode } from 'lib/scp-api';
 
 /**
@@ -11,8 +14,10 @@ import { fetchAuthCode } from 'lib/scp-api';
  *
  * @returns {Object} Object for auth code, time interval, and download command
  */
-async function generateDownloadConfig() {
-  const searchQuery = '&file_types=metadata,expression&accessions=SCP1,SCP2';
+async function generateDownloadConfig(matchingAccessions) {
+
+  const accessions = matchingAccessions.join(',');
+  const searchQuery = `&file_types=metadata,expression&accessions=${accessions}`;
 
   const {authCode, timeInterval} = await fetchAuthCode();
 
@@ -20,7 +25,7 @@ async function generateDownloadConfig() {
 
   // Gets a curl configuration ("cfg.txt") containing signed
   // URLs and output names for all files in the download object.
-  const url = `${window.origin}/api/v1/bulk_download${queryString}`;
+  const url = `${window.origin}/single_cell/api/v1/search/bulk_download${queryString}`;
   const curlSecureFlag = (window.location.host === 'localhost') ? 'k' : ''; // "-k" === "--insecure"
 
   // This is what the user will run in their terminal to download the data.
@@ -37,20 +42,25 @@ async function generateDownloadConfig() {
   };
 }
 
-function DownloadCommandContainer() {
+function DownloadCommandContainer(props) {
 
   const [downloadConfig, setDownloadConfig] = useState({});
 
-  useEffect(() => {
+  async function updateDownloadConfig(matchingStudies) {
     const fetchData = async () => {
-      const dlConfig = await generateDownloadConfig();
+      const dlConfig = await generateDownloadConfig(matchingStudies);
       setDownloadConfig(dlConfig);
     };
     fetchData();
+  }
+
+  useEffect(() => {
+    updateDownloadConfig(props.matchingAccessions);
   }, []);
 
-  function onSuccess() {
-    console.log('TODO (SCP-2121): Show "Copied!" tooltip');
+  function onClipboardCopySuccess(event) {
+    // TODO: Add polish to show "Copied!" upon clicking "Copy" button, then
+    // hide.  As in Bulk Download modal in study View / Explore.  (SCP-2167)
   }
 
   return (
@@ -59,13 +69,13 @@ function DownloadCommandContainer() {
         <input
           id={'command-' + downloadConfig.authCode}
           className='form-control curl-download-command'
-          value={downloadConfig.downloadCommand}
+          value={downloadConfig.downloadCommand || ''}
           readOnly
         />
         <span className='input-group-btn'>
             <Clipboard
               data-clipboard-target={'#command-' + downloadConfig.authCode}
-              onSuccess={onSuccess}
+              onSuccess={onClipboardCopySuccess}
               className='btn btn-default btn-copy'
               data-toggle='tooltip'
               button-title='Copy to clipboard'
@@ -76,6 +86,7 @@ function DownloadCommandContainer() {
             id={'refresh-button-' + downloadConfig.authCode}
             className='download-refresh-button btn btn-default btn-refresh glyphicon glyphicon-refresh'
             data-toggle='tooltip'
+            onClick={() => { updateDownloadConfig(props.matchingAccessions) }}
             title='Refresh download command'>
           </button>
         </span>
@@ -99,17 +110,28 @@ function DownloadCommandContainer() {
  */
 export default function DownloadButton(props) {
 
-  const [show, setShow] = useState(false);
+  const searchContext = useContextStudySearch()
+  const userContext = useContextUser()
+
+  const [show, setShow] = useState(false)
+
+  const matchingAccessions = searchContext.results.matchingAccessions || [];
+
+  /**
+   * Reports whether Download button be active,
+   * i.e. user is signed in and has search results
+   */
+  const active = userContext.accessToken !== '' && matchingAccessions.length > 0
 
   function showModalAndFetchDownloadCommand() {
-    setShow(!show);
+    if (active) setShow(!show);
   }
 
   const handleClose = () => setShow(false);
 
   return (
       <>
-      <span id='download-button' className={`${show ? 'active' : ''}`}>
+      <span id='download-button' className={active ? 'active' : ''}>
         <span onClick={showModalAndFetchDownloadCommand}>
           <FontAwesomeIcon className="icon-left" icon={faDownload}/>
           Download
@@ -131,7 +153,7 @@ export default function DownloadButton(props) {
           To download files matching your search, copy this command and paste it into your terminal:
           </p>
           <div className='lead command-container' id='command-container-all'>
-            <DownloadCommandContainer />
+            <DownloadCommandContainer matchingAccessions={matchingAccessions} />
           </div>
         </Modal.Body>
 

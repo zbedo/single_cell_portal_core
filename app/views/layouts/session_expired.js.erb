@@ -1,8 +1,1 @@
-if (OPEN_MODAL !== '') {
-    console.log('closing open modal: ' + OPEN_MODAL);
-    closeModalSpinner("#" + OPEN_MODAL + ' div.spinner-target', '#' + OPEN_MODAL, function() {
-        $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {alert: @alert, notice: @notice}) %>");
-    });
-} else {
-    $('#notices-target').html("<%= escape_javascript(render partial: '/layouts/notices', locals: {alert: @alert, notice: @notice}) %>");
-}
+showMessageModal("<%= @notice.present? ? @notice.html_safe : nil %>", "<%= @alert.present? ? @alert.html_safe : nil %>");
