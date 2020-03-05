@@ -3,6 +3,8 @@ import React, { useState, useEffect, useRef, useContext } from 'react';
 import FiltersBoxSearchable from './FiltersBoxSearchable';
 import { StudySearchContext } from 'components/search/StudySearchProvider';
 import _filter from 'lodash/filter'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTimes } from '@fortawesome/free-solid-svg-icons';
 
 /**
  * Converts string value to lowercase, hyphen-delimited version
@@ -16,18 +18,37 @@ export default function FacetControl(props) {
 
   const [showFilters, setShowFilters] = useState(false);
 
+
+
   const facetName = props.facet.name;
   const facetId = `facet-${slug(facetName)}`;
   const searchContext = useContext(StudySearchContext)
-  const facetParams = searchContext.params.facets[props.facet.id]
+  const appliedSelection = searchContext.params.facets[props.facet.id]
+  const [selection, setSelection] = useState(appliedSelection ? appliedSelection : [])
   var selectedFilterString
-  if (facetParams && facetParams.length) {
-    let selectedFilters = props.facet.filters.filter(filter => facetParams.includes(filter.id))
-    selectedFilterString = selectedFilters.map(filter => filter.name).join(', ')
+  if (appliedSelection && appliedSelection.length) {
+    let selectedFilters = props.facet.filters.filter(filter => appliedSelection.includes(filter.id))
+    if (selectedFilters.length > 1) {
+      selectedFilterString = `${facetName} (${selectedFilters.length})`
+    } else {
+      selectedFilterString = selectedFilters[0].name
+    }
   }
 
-  function handleButtonClick() {
-    setShowFilters(!showFilters);
+  const clearNode = useRef()
+  function handleButtonClick(e) {
+    if (clearNode.current && clearNode.current.contains(e.target)) {
+      setShowFilters(false);
+    } else {
+      setShowFilters(!showFilters);
+    }
+  }
+
+  function clearFacet() {
+    let clearedFacet = {}
+    clearedFacet[facetName] = []
+    setSelection([])
+    searchContext.updateSearch({facets: clearedFacet})
   }
 
 
@@ -51,15 +72,24 @@ export default function FacetControl(props) {
     };
   }, []);
 
+  let controlContent = facetName
+  if (selectedFilterString) {
+    controlContent = <>{ selectedFilterString } <button ref={clearNode} className="facet-clear" onClick={ clearFacet }><FontAwesomeIcon icon={faTimes}/></button></>
+  }
+
   return (
       <span ref={node}
         id={facetId}
         className={`facet ${showFilters ? 'active' : ''} ${selectedFilterString ? 'selected' : ''}`}>
-        <a
-          onClick={handleButtonClick}>
-          { selectedFilterString ? selectedFilterString : facetName }
+        <a onClick={handleButtonClick}>
+          { controlContent }
         </a>
-        <FiltersBoxSearchable show={showFilters} facet={props.facet} setShow={setShowFilters}/>
+        <FiltersBoxSearchable
+          show={showFilters}
+          facet={props.facet}
+          setShow={setShowFilters}
+          selection={selection}
+          setSelection={setSelection}/>
       </span>
     );
 

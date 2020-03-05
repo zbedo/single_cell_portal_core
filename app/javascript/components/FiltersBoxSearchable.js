@@ -85,6 +85,8 @@ export default function FiltersBoxSearchable(props) {
         facet={props.facet}
         filters={matchingFilters}
         setShow={props.setShow}
+        selection={props.selection}
+        setSelection={props.setSelection}
       />
     </div>
   );

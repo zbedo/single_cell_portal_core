@@ -41,12 +41,12 @@ export default function StudySearchProvider(props) {
 
   // update the search criteria
   async function updateSearch(searchParams) {
-    const effectiveParams = Object.assign(updatedParams, searchParams)
+    const effectiveFacets = Object.assign({}, updatedParams.facets, searchParams.facets)
+    const effectiveTerms = ('terms' in searchParams) ? searchParams.terms : updatedParams.terms
     // reset the page to 1 for new searches, unless otherwise specified
-    if (!searchParams.page) {
-      effectiveParams.page = 1
-    }
-    navigate('?' + buildSearchQueryString('study', effectiveParams.terms, effectiveParams.facets, effectiveParams.page))
+    const effectivePage = searchParams.page ? searchParams.page : 1
+
+    navigate('?' + buildSearchQueryString('study', effectiveTerms, effectiveFacets, effectivePage))
   }
 
   //perform the actual API search
