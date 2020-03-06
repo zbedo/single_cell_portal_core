@@ -3,13 +3,15 @@
 module.exports = {
     "env": {
         "browser": true,
-        "es6": true
+        "es6": true,
+        "jest/globals": true
     },
     "extends": [
         "eslint:recommended",
         "prettier",
         "plugin:react/recommended",
-        "google"
+        "google",
+        "plugin:jest/recommended"
     ],
     "globals": {
         "Atomics": "readonly",
@@ -26,7 +28,8 @@ module.exports = {
     "plugins": [
         "react",
         "jsx-a11y",
-        "import"
+        "import",
+        "jest"
     ],
     'rules': {
         'array-bracket-newline': ['warn', 'consistent'],
@@ -77,5 +80,14 @@ module.exports = {
         'prefer-spread': 'warn',
         'rest-spread-spacing': 'warn',
         'template-curly-spacing': 'warn',
+
+        //Jest
+        "jest/no-disabled-tests": "warn",
+        // remove .only from your tests whenever you are using the exclusivity feature
+        // so test can be executed on build system
+        "jest/no-focused-tests": "error",
+        "jest/no-identical-title": "error",
+        //Reminds should be used upon asserting expectations on object's length property
+        "jest/prefer-to-have-length": "warn",
     }
 };

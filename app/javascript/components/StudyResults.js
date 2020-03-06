@@ -6,9 +6,9 @@ import { useTable, usePagination } from 'react-table'
 /**
  * Wrapper component for studies tab on homepage
  */
-const StudyResultsContainer = props => {
+export default function StudyResultsContainer(props) {
   const studies = <StudiesList studies={props.results}/>
-
+  console.log('foo')
   return (
     <Tab.Container id="result-tabs" defaultActiveKey="study">
       <Tabs defaultActiveKey='study' animation={false} >
@@ -37,7 +37,7 @@ const StudiesList = studies => {
 /**
  * Component for the content of the 'Studies' tab
  */
-const StudiesResults = ({ studies, changePage }) => {
+export function StudiesResults({ studies, changePage }) {
   const columns = React.useMemo(
     () => [{
       accessor: 'study',
@@ -134,4 +134,3 @@ const Study =props => {
     </div>
   )
 }
-export default StudyResultsContainer
