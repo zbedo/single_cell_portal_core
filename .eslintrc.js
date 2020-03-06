@@ -80,6 +80,8 @@ module.exports = {
         'rest-spread-spacing': 'warn',
         'template-curly-spacing': 'warn',
 
-        'react/prop-types': 'off'
+        // React
+        'react/prop-types': 'off',
+        'react/jsx-key': 'off'
     }
 };
