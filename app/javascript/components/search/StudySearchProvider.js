@@ -5,7 +5,7 @@ import _assign from 'lodash/assign'
 import _isEqual from 'lodash/isEqual'
 import { navigate, useParams } from '@reach/router'
 import * as queryString from 'query-string'
-/* eslint-disable */
+
 /*
   This is a single component and paired context that manages the search params and data
 */

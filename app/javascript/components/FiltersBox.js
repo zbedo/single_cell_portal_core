@@ -1,10 +1,9 @@
-import React, { useContext, useState, useEffect } from 'react';
-import _isEqual from 'lodash/isEqual';
-import Button from 'react-bootstrap/lib/Button';
+import React, { useContext } from 'react'
+import _isEqual from 'lodash/isEqual'
+import Button from 'react-bootstrap/lib/Button'
 
-import { StudySearchContext } from 'components/search/StudySearchProvider';
-import Filters from './Filters';
-import { SearchContext } from './SearchPanel';
+import { StudySearchContext } from 'components/search/StudySearchProvider'
+import Filters from './Filters'
 import _remove from 'lodash/remove'
 
 /**
@@ -19,7 +18,7 @@ function ClearFilters(props) {
     >
       CLEAR
     </span>
-  );
+  )
 }
 
 /**
@@ -36,20 +35,20 @@ function ApplyButton(props) {
     >
     APPLY
     </Button>
-  );
+  )
 }
 
 /**
  * Component for filter lists that have Apply and Clear
  */
 export default function FiltersBox(props) {
-  const searchContext = useContext(StudySearchContext);
+  const searchContext = useContext(StudySearchContext)
 
   let appliedSelection = searchContext.params.facets[props.facet.id]
   appliedSelection = appliedSelection ? appliedSelection : []
   const selection = props.selection
   const setSelection = props.setSelection
-  const showClear = selection.length > 0;
+  const showClear = selection.length > 0
   const canApply = !_isEqual(selection, appliedSelection)
 
   // TODO: Get opinions, perhaps move to a UI code style guide.
@@ -57,28 +56,28 @@ export default function FiltersBox(props) {
   // Systematic, predictable IDs help UX research and UI development.
   //
   // Form of IDs: <general name> <specific name(s)>
-  // General name: All lowercase, specified in app code (e.g. 'apply-facet', 'filter')
-  // Specific name(s): Cased as specified in API (e.g. 'species', 'NCBItaxon9606')
+  // General name: All lowercase, specified in app code (e.g. 'apply-facet')
+  // Specific name(s): Cased as specified in API (e.g. 'NCBITaxon_9606')
   //
   // UI code concatenates names in the ID.  Names in ID are hyphen-delimited.
   //
   // Examples:
   //   * apply-facet-species (for calls-to-action use ID: <action> <component>)
-  //   * filter-species-NCBItaxon9606
-  const facetId = props.facet.id;
-  const componentName = 'filters-box';
-  const filtersBoxId = `${componentName}-${facetId}`;
-  const applyId = `apply-${filtersBoxId}`;
+  //   * filter-species-NCBITaxon_9606
+  const facetId = props.facet.id
+  const componentName = 'filters-box'
+  const filtersBoxId = `${componentName}-${facetId}`
+  const applyId = `apply-${filtersBoxId}`
 
   function updateSelectionForFilterCheckboxes(filterId, value) {
-    let newSelection = selection.slice()
+    const newSelection = selection.slice()
     if (value && !newSelection.includes(filterId)) {
       newSelection.push(filterId)
     }
     if (!value) {
-      _remove(newSelection, (id) => { return id === filterId; })
+      _remove(newSelection, id => {return id === filterId})
     }
-    setSelection(newSelection);
+    setSelection(newSelection)
   }
 
   function updateSelectionForFilterSlider(ranges) {
@@ -86,16 +85,15 @@ export default function FiltersBox(props) {
     if (!newSelection !== [ranges]) {
       newSelection = [ranges]
     }
-    setSelection(newSelection);
-    setShowClear(newSelection.length > 0)
+    setSelection(newSelection)
   }
 
   function handleApplyClick(event) {
-    if (!canApply) return;
+    if (!canApply) return
 
-    let updatedFacetValue = {};
+    const updatedFacetValue = {}
     updatedFacetValue[facetId] = selection
-    searchContext.updateSearch({facets: updatedFacetValue})
+    searchContext.updateSearch({ facets: updatedFacetValue })
     if (props.setShow) {
       props.setShow(false)
     }
@@ -123,10 +121,10 @@ export default function FiltersBox(props) {
         }
         <ApplyButton
           id={applyId}
-          className={'facet-apply-button ' + (canApply ? 'active' : 'disabled')}
+          className={`facet-apply-button ${canApply ? 'active' : 'disabled'}`}
           onClick={handleApplyClick}
         />
       </div>
     </div>
-  );
+  )
 }

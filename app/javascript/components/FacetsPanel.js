@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useContext } from 'react';
-import FacetControl from './FacetControl';
-import MoreFacetsButton from './MoreFacetsButton';
+import React, { useState, useEffect, useContext } from 'react'
+import FacetControl from './FacetControl'
+import MoreFacetsButton from './MoreFacetsButton'
 import { SearchFacetContext } from './search/SearchFacetProvider'
-
 
 export default function FacetsPanel() {
   const searchFacetContext = useContext(SearchFacetContext)
@@ -16,5 +15,5 @@ export default function FacetsPanel() {
       }
       <MoreFacetsButton facets={searchFacetContext.moreFacets} />
     </>
-  );
+  ))
 }
