@@ -38,7 +38,7 @@ const testFacets = [{
     allUnits: ["years", "months", "weeks", "days", "hours"]
   }]
 
-describe('Basic More facets capability for faceted search', () => {
+describe('Basic "More Facets" capability for faceted search', () => {
   it('the More Facets Button should correctly render when facets are selected', async () => {
     const routerNav = jest.spyOn(Reach, 'navigate')
 
