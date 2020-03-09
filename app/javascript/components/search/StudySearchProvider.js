@@ -1,14 +1,13 @@
 import React, { useContext, useState } from 'react'
-import { fetchSearch, buildSearchQueryString, buildFacetsFromQueryString } from 'lib/scp-api'
+import {
+  fetchSearch, buildSearchQueryString, buildFacetsFromQueryString
+} from 'lib/scp-api'
 import _cloneDeep from 'lodash/cloneDeep'
-import _assign from 'lodash/assign'
 import _isEqual from 'lodash/isEqual'
-import { navigate, useParams } from '@reach/router'
+import { navigate } from '@reach/router'
 import * as queryString from 'query-string'
-/* eslint-disable */
-/*
-  This is a single component and paired context that manages the search params and data
-*/
+
+
 const emptySearch = {
   params: {
     terms: '',
@@ -19,7 +18,11 @@ const emptySearch = {
   isLoading: false,
   isLoaded: false,
   isError: false,
-  updateSearch: () => { throw new Error('You are trying to use this context outside of a Provider container') }
+  updateSearch: () => {
+    throw new Error(
+      'You are trying to use this context outside of a Provider container'
+    )
+  }
 }
 
 export const StudySearchContext = React.createContext(emptySearch)
@@ -28,43 +31,59 @@ export function useContextStudySearch() {
   return useContext(StudySearchContext)
 }
 
+/**
+  Component and paired context that manage search params and data
+*/
 export default function StudySearchProvider(props) {
-  let defaultState = _cloneDeep(emptySearch)
+  const defaultState = _cloneDeep(emptySearch)
   defaultState.updateSearch = updateSearch
-  let [searchState, setSearchState] = useState(defaultState)
-  const queryParams = queryString.parse(props.location.search);
-  let updatedParams = {
+  const [searchState, setSearchState] = useState(defaultState)
+  const queryParams = queryString.parse(props.location.search)
+  const updatedParams = {
     page: queryParams.page ? queryParams.page : 1,
     terms: queryParams.terms ? queryParams.terms : '',
     facets: buildFacetsFromQueryString(queryParams.facets)
   }
 
-  // update the search criteria
+  /**
+  * update the search criteria
+  */
   async function updateSearch(searchParams) {
-    const effectiveFacets = Object.assign({}, updatedParams.facets, searchParams.facets)
-    const effectiveTerms = ('terms' in searchParams) ? searchParams.terms : updatedParams.terms
+    const effectiveFacets =
+      Object.assign({}, updatedParams.facets, searchParams.facets)
+    const effectiveTerms =
+      ('terms' in searchParams) ? searchParams.terms : updatedParams.terms
     // reset the page to 1 for new searches, unless otherwise specified
     const effectivePage = searchParams.page ? searchParams.page : 1
 
-    navigate('?' + buildSearchQueryString('study', effectiveTerms, effectiveFacets, effectivePage))
+    navigate(`?${buildSearchQueryString(
+      'study', effectiveTerms, effectiveFacets, effectivePage
+    )}`)
   }
 
-  //perform the actual API search
+  /**
+  * Perform the actual API search
+  */
   async function performSearch(searchParams) {
     // reset the scroll in case they scrolled down to read prior results
-    window.scrollTo(0,0)
-    const results = await fetchSearch('study', searchParams.terms, searchParams.facets, searchParams.page)
+    window.scrollTo(0, 0)
+    const results = await fetchSearch(
+      'study', searchParams.terms, searchParams.facets, searchParams.page
+    )
     setSearchState({
       params: searchParams,
       isError: false,
       isLoading: false,
       isLoaded: true,
-      results: results,
-      updateSearch: updateSearch
+      results,
+      updateSearch
     })
   }
 
-  if (!_isEqual(updatedParams, searchState.params) || !searchState.isLoading && !searchState.isLoaded) {
+  if (
+    !_isEqual(updatedParams, searchState.params) ||
+    !searchState.isLoading && !searchState.isLoaded
+  ) {
     performSearch(updatedParams)
     setSearchState({
       params: updatedParams,
@@ -72,7 +91,7 @@ export default function StudySearchProvider(props) {
       isLoading: true,
       isLoaded: false,
       results: [],
-      updateSearch: updateSearch
+      updateSearch
     })
   }
 

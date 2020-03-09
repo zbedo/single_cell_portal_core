@@ -1,4 +1,3 @@
-/* eslint-disable */
 /**
  * @fileoverview JavaScript client for Single Cell Portal REST API
  *

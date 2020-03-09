@@ -56,12 +56,12 @@
     }
 
     .facet-clear {
-      margin-left: 1em;
-      background: #fff;
-      color: $action-color;
-      border-radius: 1em;
+      float: right;
+      padding: 0px;
+      background-color: $action-color;
+      margin-left: 0.5em;
+      color: #fff;
       border: none;
-      font-size: 0.8em;
     }
   }
   #download-button {
@@ -126,7 +126,7 @@
   }
 
   .filters-box-searchable, #facets-accordion {
-    width: 400px;
+    width: 250px;
     border: 1px solid #aaa;
     background: #fff;
     position: absolute;
@@ -134,6 +134,23 @@
     border-radius: 5px;
     padding: 2px;
     margin-top: 2px;
+  }
+
+  #facets-accordion {
+    background: #eff2f5;
+    .facet {
+      width: 98%;
+      display: block;
+      margin: 5px 2px;
+      .filters-box-searchable {
+        position: relative;
+        width: 98%;
+        border: none;
+        margin-top: -2px;
+        border-top-left-radius: 0px;
+        border-top-right-radius: 0px;
+      }
+    }
   }
 
   .filters-box-header {

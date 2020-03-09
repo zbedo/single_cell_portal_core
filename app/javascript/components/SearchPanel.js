@@ -1,8 +1,8 @@
-import React from 'react';
+import React from 'react'
 
-import KeywordSearch from './KeywordSearch';
-import FacetsPanel from './FacetsPanel';
-import DownloadButton from './DownloadButton';
+import KeywordSearch from './KeywordSearch'
+import FacetsPanel from './FacetsPanel'
+import DownloadButton from './DownloadButton'
 
 /**
  * Component for SCP faceted search UI
@@ -21,5 +21,6 @@ export default function SearchPanel(props) {
       <FacetsPanel />
       <DownloadButton />
     </div>
-  );
+  )
 }
+

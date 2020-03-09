@@ -4,8 +4,8 @@ import React, { useContext } from 'react'
 // so default such cases to a blank string
 const accessToken = 'SCP' in window ? window.SCP.userAccessToken : ''
 
-let user = {
-  accessToken: accessToken
+const user = {
+  accessToken
 }
 
 export const UserContext = React.createContext(user)
