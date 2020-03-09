@@ -73,7 +73,7 @@ class SearchFacetPopulator
       facet.is_array_based = false
       facet.big_query_id_column = 'species'
       facet.big_query_name_column = 'species__ontology_label'
-      facet.convention_name = 'Alexandria Convention'
+      facet.convention_name = 'Alexandria Metadata Convention'
       facet.convention_version = '1.1.3'
       facet.ontology_urls = [{name: 'NCBI organismal classification', url: 'https://www.ebi.ac.uk/ols/api/ontologies/ncbitaxon'}]
     end
@@ -83,7 +83,7 @@ class SearchFacetPopulator
       facet.is_array_based = false
       facet.big_query_id_column = 'sex'
       facet.big_query_name_column = 'sex'
-      facet.convention_name = 'alexandria_convention'
+      facet.convention_name = 'Alexandria Metadata Convention'
       facet.convention_version = '1.1.3'
     end
 
@@ -93,7 +93,7 @@ class SearchFacetPopulator
       facet.is_array_based = false
       facet.big_query_id_column = 'organ'
       facet.big_query_name_column = 'organ__ontology_label'
-      facet.convention_name = 'alexandria_convention'
+      facet.convention_name = 'Alexandria Metadata Convention'
       facet.convention_version = '1.1.3'
       facet.ontology_urls = [{name: 'Uber-anatomy ontology', url: 'https://www.ebi.ac.uk/ols/api/ontologies/uberon'}]
     end
@@ -104,7 +104,7 @@ class SearchFacetPopulator
       facet.is_array_based = true
       facet.big_query_id_column = 'disease'
       facet.big_query_name_column = 'disease__ontology_label'
-      facet.convention_name = 'alexandria_convention'
+      facet.convention_name = 'Alexandria Metadata Convention'
       facet.convention_version = '1.1.3'
       facet.ontology_urls = [{name: 'MONDO: Monarch Disease Ontology', url: 'https://www.ebi.ac.uk/ols/api/ontologies/mondo'}]
     end
@@ -115,7 +115,7 @@ class SearchFacetPopulator
       facet.is_array_based = false
       facet.big_query_id_column = 'library_preparation_protocol'
       facet.big_query_name_column = 'library_preparation_protocol__ontology_label'
-      facet.convention_name = 'alexandria_convention'
+      facet.convention_name = 'Alexandria Metadata Convention'
       facet.convention_version = '1.1.3'
       facet.ontology_urls = [{name: 'Experimental Factor Ontology', url: 'https://www.ebi.ac.uk/ols/api/ontologies/efo'}]
     end
