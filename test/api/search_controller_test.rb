@@ -71,7 +71,12 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     study = Study.find_by(name: "Test Study #{@random_seed}")
     facets = SearchFacet.where(data_type: 'string')
     # format facet query string; this will be done by the search UI in production
-    facet_queries = facets.map {|facet| [facet.identifier, facet.filters.map {|f| f[:id]}.join(',')]}
+    facet_queries = []
+    facets.each do |facet|
+      if facet.filters.any?
+        facet_queries << [facet.identifier, facet.filters.map {|f| f[:id]}.join(',')]
+      end
+    end
     facet_query = facet_queries.map {|query| query.join(':')}.join('+')
     execute_http_request(:get, api_v1_search_path(type: 'study', facets: facet_query))
     assert_response :success
