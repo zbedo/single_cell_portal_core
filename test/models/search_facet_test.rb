@@ -88,7 +88,7 @@ class SearchFacetTest < ActiveSupport::TestCase
           big_query_id_column: 'number_of_reads',
           big_query_name_column: 'number_of_reads',
           is_ontology_based: false,
-          convention_name: 'alexandria_convention',
+          convention_name: 'Alexandria Metadata Convention',
           convention_version: '1.1.3'
       )
       mock.verify

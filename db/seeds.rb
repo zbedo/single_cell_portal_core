@@ -115,16 +115,41 @@ AnalysisConfiguration.create(namespace: 'single-cell-portal', name: 'split-clust
                              configuration_snapshot: 2, description: 'This is a test description.')
 
 # SearchFacet seeds
-SearchFacet.create(name: 'Species', identifier: 'species', filters: [{id: 'NCBITaxon_9606', name: 'Homo sapiens'}],
-                   ontology_urls: [{name: 'NCBI organismal classification', url: 'https://www.ebi.ac.uk/ols/api/ontologies/ncbitaxon'}],
-                   data_type: 'string', is_ontology_based: true, is_array_based: false, big_query_id_column: 'species',
-                   big_query_name_column: 'species__ontology_label', convention_name: 'alexandria_convention', convention_version: '1.1.3')
-SearchFacet.create(name: 'Disease', identifier: 'disease', filters: [{id: 'MONDO_0000001', name: 'disease or disorder'}],
-                   ontology_urls: [{name: 'Monarch Disease Ontology', url: 'https://www.ebi.ac.uk/ols/api/ontologies/mondo'},
-                                   {name: 'Phenotype And Trait Ontology', url: 'https://www.ebi.ac.uk/ols/ontologies/pato'}],
-                   data_type: 'string', is_ontology_based: true, is_array_based: true, big_query_id_column: 'disease',
-                   big_query_name_column: 'disease__ontology_label', convention_name: 'alexandria_convention', convention_version: '1.1.3')
-SearchFacet.create(name: 'Organism Age', identifier: 'organism_age', big_query_id_column: 'organism_age', big_query_name_column: 'organism_age',
-                   big_query_conversion_column: 'organism_age__seconds', is_ontology_based: false, data_type: 'number',
-                   is_array_based: false, convention_name: 'alexandria_convention', convention_version: '1.1.3', unit: 'years')
+SearchFacet.find_or_create_by!(identifier: 'species') do |facet|
+  facet.name = 'Species'
+  facet.filters = [{id: 'NCBITaxon_9606', name: 'Homo sapiens'}]
+  facet.ontology_urls = [{name: 'NCBI organismal classification', url: 'https://www.ebi.ac.uk/ols/api/ontologies/ncbitaxon'}]
+  facet.data_type = 'string'
+  facet.is_ontology_based = true
+  facet.is_array_based = false
+  facet.big_query_id_column = 'species'
+  facet.big_query_name_column = 'species__ontology_label'
+  facet.convention_name = 'Alexandria Metadata Convention'
+  facet.convention_version = '1.1.3'
+end
+
+SearchFacet.find_or_create_by!(identifier: 'disease') do |facet|
+    facet.name = 'Disease'
+    facet.filters = [{id: 'MONDO_0000001', name: 'disease or disorder'}]
+    facet.ontology_urls = [{name: 'Monarch Disease Ontology', url: 'https://www.ebi.ac.uk/ols/api/ontologies/mondo'},
+                           {name: 'Phenotype And Trait Ontology', url: 'https://www.ebi.ac.uk/ols/ontologies/pato'}]
+    facet.data_type = 'string'
+    facet.is_ontology_based = true
+    facet.is_array_based = true
+    facet.big_query_id_column = 'disease'
+    facet.big_query_name_column = 'disease__ontology_label'
+    facet.convention_name = 'Alexandria Metadata Convention'
+    facet.convention_version = '1.1.3'
+end
+SearchFacet.find_or_create_by!(identifier: 'organism_age') do |facet|
+    facet.name = 'Organism Age'
+    facet.data_type = 'number'
+    facet.is_ontology_based = false
+    facet.is_array_based = false
+    facet.big_query_id_column = 'organism_age'
+    facet.big_query_name_column = 'organism_age'
+    facet.big_query_conversion_column ='organism_age__seconds'
+    facet.convention_name = 'Alexandria Metadata Convention'
+    facet.convention_version = '1.1.3'
+end
 BrandingGroup.create(name: 'Test Brand', user_id: api_user.id, font_family: 'Helvetica Neue, sans-serif', background_color: '#FFFFFF')

@@ -73,7 +73,7 @@ class SearchFacetPopulator
       facet.is_array_based = false
       facet.big_query_id_column = 'species'
       facet.big_query_name_column = 'species__ontology_label'
-      facet.convention_name = 'alexandria_convention'
+      facet.convention_name = 'Alexandria Convention'
       facet.convention_version = '1.1.3'
       facet.ontology_urls = [{name: 'NCBI organismal classification', url: 'https://www.ebi.ac.uk/ols/api/ontologies/ncbitaxon'}]
     end
