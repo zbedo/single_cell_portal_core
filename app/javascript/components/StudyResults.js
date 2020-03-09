@@ -2,7 +2,7 @@ import React from 'react'
 import { useTable, usePagination } from 'react-table'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
-  faAngleDoubleLeft, faAngleLeft, faAngleRight, faAngleDoubleRight,
+  faAngleDoubleLeft, faAngleLeft, faAngleRight, faAngleDoubleRight
 } from '@fortawesome/free-solid-svg-icons'
 
 /**
@@ -11,7 +11,7 @@ import {
 const StudyResults = ({ results, changePage }) => {
   const columns = React.useMemo(
     () => [{
-      accessor: 'study',
+      accessor: 'study'
     }])
 
   const data = results.studies.map(result => (
@@ -20,9 +20,9 @@ const StudyResults = ({ results, changePage }) => {
         study={result}
         key={result.accession}
         className='card'
-      />,
+      />
     }
-  ),
+  )
   )
 
   const {
@@ -31,7 +31,7 @@ const StudyResults = ({ results, changePage }) => {
     prepareRow,
     rows,
     canPreviousPage,
-    canNextPage,
+    canNextPage
   } = useTable({
     columns,
     data,
@@ -40,10 +40,10 @@ const StudyResults = ({ results, changePage }) => {
       pageIndex: results.currentPage -1,
       // This will change when there's a way to determine amount of results
       // per page via API endpoint
-      pageSize: 5,
+      pageSize: 5
     },
     pageCount: results.totalPages,
-    manualPagination: true,
+    manualPagination: true
   },
   usePagination)
   return (
@@ -88,7 +88,7 @@ const StudyResults = ({ results, changePage }) => {
 }
 // Taken from https://codesandbox.io/s/github/tannerlinsley/react-table/tree/master/examples/pagination
 const PagingControl = ({
-  currentPage, totalPages, changePage, canPreviousPage, canNextPage,
+  currentPage, totalPages, changePage, canPreviousPage, canNextPage
 }) => {
   return (
     <div className="pagination">

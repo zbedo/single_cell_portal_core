@@ -42,7 +42,7 @@ async function generateDownloadConfig(matchingAccessions) {
   return {
     authCode,
     timeInterval,
-    downloadCommand,
+    downloadCommand
   }
 }
 

@@ -16,7 +16,7 @@ describe('Download components for faceted search', () => {
 
     const userContext = { accessToken: 'test' }
     const studySearchContext = {
-      results: { matchingAccessions: ['SCP1', 'SCP2'] },
+      results: { matchingAccessions: ['SCP1', 'SCP2'] }
     }
 
     jest.spyOn(UserProvider, 'useContextUser')

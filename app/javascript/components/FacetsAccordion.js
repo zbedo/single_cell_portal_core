@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import PanelGroup from 'react-bootstrap/lib/PanelGroup';
-import Panel from 'react-bootstrap/lib/Panel';
+import React from 'react'
+import PanelGroup from 'react-bootstrap/lib/PanelGroup'
 
 import FacetControl from './FacetControl'
 
+/**
+ * Expandable sections for facets in "More Facets" popup
+ */
 export default function FacetsAccordion(props) {
   return (
     <PanelGroup accordion id='facets-accordion'>
@@ -11,9 +13,9 @@ export default function FacetsAccordion(props) {
         props.facets.map((facet, i) => {
           return (
             <FacetControl facet={facet} key={i}/>
-          );
+          )
         })
       }
     </PanelGroup>
-  );
+  )
 }

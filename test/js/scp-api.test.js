@@ -4,7 +4,7 @@ const fetch = require('node-fetch')
 
 import {
   fetchAuthCode,
-  fetchFacetFilters,
+  fetchFacetFilters
 } from '../../app/javascript/lib/scp-api'
 
 describe('JavaScript client for SCP REST API', () => {

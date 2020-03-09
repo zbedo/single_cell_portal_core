@@ -5,7 +5,7 @@ configure({ adapter: new Adapter() })
 
 import {
   setGlobalMockFlag,
-  setMockOrigin,
+  setMockOrigin
 } from '../../app/javascript/lib/scp-api'
 
 setGlobalMockFlag(true)

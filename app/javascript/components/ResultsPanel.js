@@ -4,7 +4,6 @@ import StudyResults from './StudyResults'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDna, faExclamationCircle } from '@fortawesome/free-solid-svg-icons'
 
-
 /**
  * Component for Results displayed on the homepage
  */

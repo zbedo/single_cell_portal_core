@@ -5,21 +5,15 @@ import React, { useContext } from 'react'
 const accessToken = 'SCP' in window ? window.SCP.userAccessToken : ''
 
 const user = {
-  accessToken,
+  accessToken
 }
 
 export const UserContext = React.createContext(user)
 
-/**
- * Context wrapper needed for tests
- */
 export function useContextUser() {
   return useContext(UserContext)
 }
 
-/**
- * Context provider for user auth state
- */
 export default function UserProvider(props) {
   return (
     <UserContext.Provider value={user}>

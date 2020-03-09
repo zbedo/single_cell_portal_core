@@ -6,7 +6,7 @@ import { Handle, Track, Tick } from './slider/components'
 const sliderStyle = {
   margin: '5%',
   position: 'relative',
-  width: '90%',
+  width: '90%'
 }
 
 const railStyle = {
@@ -15,7 +15,7 @@ const railStyle = {
   height: 14,
   borderRadius: 7,
   cursor: 'pointer',
-  backgroundColor: 'rgb(155,155,155)',
+  backgroundColor: 'rgb(155,155,155)'
 }
 
 /**
@@ -126,7 +126,7 @@ export default function FilterSlider(props) {
       />
       <select value={unit} onChange={event => {updateUnit(event.target.value)}}>
         {units.map((unit, i) =>
-          <option key={i}>{unit}</option>,
+          <option key={i}>{unit}</option>
         )}
       </select>
       <div style={{ height: 120, width: '100%' }}>
