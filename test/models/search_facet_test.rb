@@ -3,7 +3,7 @@ require "test_helper"
 class SearchFacetTest < ActiveSupport::TestCase
 
   def setup
-    @search_facet = SearchFacet.first
+    @search_facet = SearchFacet.find_by(identifier: 'species')
 
     # filter_results to return from mock call to BigQuery
     @filter_results = [
@@ -42,7 +42,7 @@ class SearchFacetTest < ActiveSupport::TestCase
     non_array_query = @search_facet.generate_non_array_query
     non_array_match = /DISTINCT #{@search_facet.big_query_id_column}/
     assert_match non_array_match, non_array_query, "Non-array query did not contain correct DISTINCT clause: #{non_array_query}"
-    array_facet = SearchFacet.find_by(name: 'Disease')
+    array_facet = SearchFacet.find_by(identifier: 'disease')
     column = array_facet.big_query_id_column
     identifier = 'id'
     array_query = array_facet.generate_array_query(column, identifier)
