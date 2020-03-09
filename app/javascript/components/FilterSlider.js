@@ -59,7 +59,7 @@ export default function FilterSlider(props) {
 
   const [values, setValues] = useState(propsRange)
   const [inputValues, setInputValues] = useState(propsRange)
-  const [unit, setUnit] = useState(propsUnit)
+  const [unit, setUnit] = useState(propsUnit ? propsUnit : facet.allUnits[0])
 
   /**
    * Propagates changes upstream, so results get filtered and URL updates

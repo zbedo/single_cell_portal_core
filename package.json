@@ -1,7 +1,7 @@
 {
   "scripts": {
     "test": "jest --coverage",
-    "lint": "eslint.js",
+    "lint": "eslint app/javascript",
     "fix-styles": "prettier-stylelint --write 'src/**/*.{css,scss}' "
   },
   "dependencies": {

@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useContext } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSlidersH } from '@fortawesome/free-solid-svg-icons'
 
 import FacetsAccordion from './FacetsAccordion'
-import { useContextStudySearch } from 'components/search/StudySearchProvider'
+import { StudySearchContext } from 'components/search/StudySearchProvider'
 
 /**
  * Component for "More Facets" button.  Clicking shows facets accordion box.
@@ -11,7 +11,7 @@ import { useContextStudySearch } from 'components/search/StudySearchProvider'
  * UI spec: https://projects.invisionapp.com/d/main#/console/19272801/402387756/preview
  */
 export default function MoreFacetsButton(props) {
-  const searchContext = useContextStudySearch()
+  const searchContext = useContext(StudySearchContext)
   const [show, setShow] = useState(false)
 
   // const facetName = props.facet.name;

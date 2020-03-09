@@ -138,6 +138,8 @@
 
   #facets-accordion {
     background: #eff2f5;
+    overflow-y: scroll;
+    overflow-x: hidden;
     .facet {
       width: 98%;
       display: block;
@@ -147,8 +149,6 @@
         width: 98%;
         border: none;
         margin-top: -2px;
-        border-top-left-radius: 0px;
-        border-top-right-radius: 0px;
       }
     }
   }
