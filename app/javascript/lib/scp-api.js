@@ -22,7 +22,7 @@ const defaultInit = {
  * Get a one-time authorization code for download, and its lifetime in seconds
  *
  * TODO:
- * - Update API to use "expires_in" instead of "time_interval", for understandability
+ * - Update API to use "expires_in" instead of "time_interval"
  *
  * Docs: https:///singlecell.broadinstitute.org/single_cell/api/swagger_docs/v1#!/Search/search_auth_code_path
  *
@@ -49,7 +49,7 @@ export async function fetchAuthCode(mock=false) {
 }
 
 /**
- * Returns a list of all available search facets, including default filter values
+ * Returns list of all available search facets, including default filter values
  *
  * Docs: https:///singlecell.broadinstitute.org/single_cell/api/swagger_docs/v1#!/Search/search_facets_path
  *
@@ -57,7 +57,6 @@ export async function fetchAuthCode(mock=false) {
  * @returns {Promise} Promise object containing camel-cased data from API
  */
 export async function fetchFacets(mock=false) {
-  const init = defaultInit
   return await scpApi('/search/facets', defaultInit, mock)
 }
 
@@ -102,10 +101,12 @@ export function setMockOrigin(origin) {
  *
  * @example
  *
- * // returns Promise for mock JSON in /mock_data/facet_filters_disease_tuberculosis.json
+ * // returns Promise for mock JSON
+ * // in /mock_data/facet_filters_disease_tuberculosis.json
  * fetchFacetFilters('disease', 'tuberculosis', true);
  *
- * // returns Promise for live JSON as shown example from "Docs" link above (but camel-cased)
+ * // returns Promise for live JSON as shown example from
+ * // "Docs" link above (but camel-cased)
  * fetchFacetFilters('disease', 'tuberculosis');
  */
 export async function fetchFacetFilters(facet, query, mock=false) {
@@ -134,14 +135,20 @@ export async function fetchFacetFilters(facet, query, mock=false) {
  * fetchSearch('study', 'tuberculosis');
  */
 export async function fetchSearch(type, terms, facets, page, mock=false) {
-  const searchPathAndQueryString = `/search?${buildSearchQueryString(type, terms, facets, page)}`
-  return await scpApi(searchPathAndQueryString, defaultInit, mock)
+  const path = `/search?${buildSearchQueryString(type, terms, facets, page)}`
+  return await scpApi(path, defaultInit, mock)
 }
 
+/**
+ * Constructs query string used for /search REST API endpoint
+ */
 export function buildSearchQueryString(type, terms, facets, page) {
-  return `type=${type}&terms=${terms}&facets=${buildFacetQueryString(facets)}&page=${page ? page : 1}`
+  return `type=${type}&terms=${terms}&facets=${buildFacetQueryString(facets)}&page=${page ? page : 1}` // eslint-disable-line max-len
 }
 
+/**
+ * Serializes "facets" URL parameter for /search API endpoint
+ */
 function buildFacetQueryString(facets) {
   if (!facets || !Object.keys(facets).length) {
     return ''
@@ -154,6 +161,9 @@ function buildFacetQueryString(facets) {
   return encodeURIComponent(rawURL) // needed for the + , : characters
 }
 
+/**
+ * Deserializes "facets" URL parameter into facets object
+ */
 export function buildFacetsFromQueryString(facetsParamString) {
   const facets = {}
   if (facetsParamString) {
@@ -174,7 +184,8 @@ export function buildFacetsFromQueryString(facetsParamString) {
  */
 export default async function scpApi(path, init, mock=false) {
   if (globalMock) mock = true
-  const basePath = (mock || globalMock) ? `${mockOrigin}/mock_data` : defaultBasePath
+  const basePath =
+    (mock || globalMock) ? `${mockOrigin}/mock_data` : defaultBasePath
   let fullPath = basePath + path
   if (mock) fullPath += '.json' // e.g. /mock_data/search/auth_code.json
 
