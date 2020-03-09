@@ -8,5 +8,8 @@ import {
   setMockOrigin
 } from '../../app/javascript/lib/scp-api'
 
-setGlobalMockFlag(true)
-setMockOrigin('http://localhost:3000')
+setGlobalMockFlag(true);
+setMockOrigin('http://localhost:3000');
+
+// convert scrolls to no-ops as otherwise they will error
+global.scrollTo = jest.fn();

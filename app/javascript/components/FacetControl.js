@@ -31,8 +31,11 @@ export default function FacetControl(props) {
       props.facet.filters.filter(filter => appliedSelection.includes(filter.id))
     if (selectedFilters.length > 1) {
       selectedFilterString = `${facetName} (${selectedFilters.length})`
-    } else {
+    } else if (selectedFilters.length === 1){
       selectedFilterString = selectedFilters[0].name
+    } else {
+      // it's a numeric range filter
+      selectedFilterString = `${appliedSelection[0]}-${appliedSelection[1]} ${appliedSelection[2]}`
     }
   }
 

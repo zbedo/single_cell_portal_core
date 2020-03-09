@@ -4,7 +4,7 @@ import {
 } from 'lib/scp-api'
 import _cloneDeep from 'lodash/cloneDeep'
 import _isEqual from 'lodash/isEqual'
-import { navigate } from '@reach/router'
+import { Router, navigate, useParams } from '@reach/router'
 import * as queryString from 'query-string'
 
 
@@ -31,47 +31,28 @@ export function useContextStudySearch() {
   return useContext(StudySearchContext)
 }
 
-/**
-  Component and paired context that manage search params and data
-*/
-export default function StudySearchProvider(props) {
-  const defaultState = _cloneDeep(emptySearch)
+function StudySearchProvider(props) {
+  let defaultState = _cloneDeep(emptySearch)
   defaultState.updateSearch = updateSearch
-  const [searchState, setSearchState] = useState(defaultState)
-  const queryParams = queryString.parse(props.location.search)
-  const updatedParams = {
-    page: queryParams.page ? queryParams.page : 1,
-    terms: queryParams.terms ? queryParams.terms : '',
-    facets: buildFacetsFromQueryString(queryParams.facets)
-  }
+  let [searchState, setSearchState] = useState(defaultState)
+  let searchParams = props.searchParams
 
-  /**
-  * update the search criteria
-  */
-  async function updateSearch(searchParams) {
-    const effectiveFacets =
-      Object.assign({}, updatedParams.facets, searchParams.facets)
-    const effectiveTerms =
-      ('terms' in searchParams) ? searchParams.terms : updatedParams.terms
+  // update the search criteria
+  async function updateSearch(updatedParams) {
+    const effectiveFacets = Object.assign({}, searchParams.facets, updatedParams.facets)
+    const effectiveTerms = ('terms' in updatedParams) ? updatedParams.terms : searchParams.terms
     // reset the page to 1 for new searches, unless otherwise specified
-    const effectivePage = searchParams.page ? searchParams.page : 1
-
-    navigate(`?${buildSearchQueryString(
-      'study', effectiveTerms, effectiveFacets, effectivePage
-    )}`)
+    const effectivePage = updatedParams.page ? updatedParams.page : 1
+    navigate('?' + buildSearchQueryString('study', effectiveTerms, effectiveFacets, effectivePage))
   }
 
-  /**
-  * Perform the actual API search
-  */
-  async function performSearch(searchParams) {
+  //perform the actual API search
+  async function performSearch(params) {
     // reset the scroll in case they scrolled down to read prior results
-    window.scrollTo(0, 0)
-    const results = await fetchSearch(
-      'study', searchParams.terms, searchParams.facets, searchParams.page
-    )
+    window.scrollTo(0,0)
+    const results = await fetchSearch('study', params.terms, params.facets, params.page)
     setSearchState({
-      params: searchParams,
+      params: params,
       isError: false,
       isLoading: false,
       isLoaded: true,
@@ -80,13 +61,10 @@ export default function StudySearchProvider(props) {
     })
   }
 
-  if (
-    !_isEqual(updatedParams, searchState.params) ||
-    !searchState.isLoading && !searchState.isLoaded
-  ) {
-    performSearch(updatedParams)
+  if (!_isEqual(searchParams, searchState.params) || !searchState.isLoading && !searchState.isLoaded) {
+    performSearch(searchParams)
     setSearchState({
-      params: updatedParams,
+      params: searchParams,
       isError: false,
       isLoading: true,
       isLoaded: false,
@@ -94,10 +72,31 @@ export default function StudySearchProvider(props) {
       updateSearch
     })
   }
-
   return (
     <StudySearchContext.Provider value={searchState}>
       { props.children }
     </StudySearchContext.Provider>
+  )
+}
+
+export default function RoutableStudySearchProvider(props) {
+  // create a wrapper component for the search display since <Router> assumes that all of its unwrapped children (even nested) be routes
+  const SearchRoute = (routerProps) => {
+    const queryParams = queryString.parse(routerProps.location.search);
+    let searchParams = {
+      page: queryParams.page ? queryParams.page : 1,
+      terms: queryParams.terms ? queryParams.terms : '',
+      facets: buildFacetsFromQueryString(queryParams.facets)
+    }
+    return(
+      <StudySearchProvider searchParams={searchParams}>
+        {props.children}
+      </StudySearchProvider>
+    )
+  }
+  return (
+    <Router>
+      <SearchRoute default/>
+    </Router>
   )
 }
