@@ -31,15 +31,19 @@ export default function FacetControl(props) {
       props.facet.filters.filter(filter => appliedSelection.includes(filter.id))
     if (selectedFilters.length > 1) {
       selectedFilterString = `${facetName} (${selectedFilters.length})`
-    } else if (selectedFilters.length === 1){
+    } else if (selectedFilters.length === 1) {
       selectedFilterString = selectedFilters[0].name
     } else {
       // it's a numeric range filter
-      selectedFilterString = `${appliedSelection[0]}-${appliedSelection[1]} ${appliedSelection[2]}`
+      selectedFilterString = `${appliedSelection[0]}-${appliedSelection[1]}
+                              ${appliedSelection[2]}`
     }
   }
 
   const clearNode = useRef()
+  /**
+    * Click on the facet control itself
+    */
   function handleButtonClick(e) {
     if (clearNode.current && clearNode.current.contains(e.target)) {
       setShowFilters(false)
@@ -48,6 +52,9 @@ export default function FacetControl(props) {
     }
   }
 
+  /**
+    * Clear the selection and update search results
+    */
   function clearFacet() {
     const clearedFacet = {}
     clearedFacet[facetName] = []

@@ -77,7 +77,7 @@ export default function FiltersBox(props) {
     if (!value) {
       _remove(newSelection, id => {return id === filterId})
     }
-    setSelection(newSelection);
+    setSelection(newSelection)
   }
 
   function updateSelectionForFilterSlider(ranges) {

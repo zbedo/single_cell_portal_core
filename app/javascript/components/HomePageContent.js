@@ -4,7 +4,6 @@ import ResultsPanel from './ResultsPanel'
 import StudySearchProvider from 'components/search/StudySearchProvider'
 import SearchFacetProvider from 'components/search/SearchFacetProvider'
 import UserProvider from 'components/UserProvider'
-import { Router } from '@reach/router'
 
 /**
  * Wrapper component search and result panels
