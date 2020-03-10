@@ -151,7 +151,7 @@ module Api
           # for keywords only, we can use the text index
           # for exact phrases (or combination) we have to run a regex search manually on names/descriptions
           if @search_terms.include?("\"")
-            @term_list = self.class.split_query_string_by_context(query_string: @search_terms)
+            @term_list = self.class.extract_phrases_from_search(query_string: @search_terms)
             study_regex = /(#{@term_list.join('|')})/i
             @studies = @viewable.any_of({name: study_regex}, {description: study_regex},
                                         {:accession.in => possible_accessions})
@@ -536,9 +536,12 @@ module Api
         end
       end
 
-      def self.split_query_string_by_context(query_string:)
+      # extract any "quoted phrases" from query string and tokenize terms
+      def self.extract_phrases_from_search(query_string:)
         terms = []
         query_string.split("\"").each do |substring|
+          # when splitting on double quotes, phrases will not have any leading/trailing whitespace
+          # individual lists of terms will have one or the other, which is how we differentiate
           if substring.start_with?(' ') || substring.end_with?(' ')
             terms += substring.strip.split
           else
