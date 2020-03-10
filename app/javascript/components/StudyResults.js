@@ -20,7 +20,6 @@ const StudyResults = ({ results, changePage }) => {
       study: <Study
         study={result}
         key={result.accession}
-        className='card'
       />
     }
   )
