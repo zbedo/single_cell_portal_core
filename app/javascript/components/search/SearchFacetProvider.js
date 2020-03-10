@@ -1,8 +1,10 @@
 import React, { useContext, useState } from 'react'
 import { fetchFacets } from 'lib/scp-api'
 
-const defaultFacetIds = ['disease', 'organ', 'species', 'cell_type'];
-const moreFacetIds = ['sex', 'race', 'library_preparation_protocol', 'organism_age'];
+const defaultFacetIds = ['disease', 'organ', 'species', 'cell_type']
+const moreFacetIds = [
+  'sex', 'race', 'library_preparation_protocol', 'organism_age'
+]
 
 export const SearchFacetContext = React.createContext({
   defaultFacets: [],
@@ -12,11 +14,11 @@ export const SearchFacetContext = React.createContext({
 })
 
 export function useContextSearchFacet() {
-  return useContext(StudySearchContext)
+  return useContext(SearchFacetContext)
 }
 
 export default function SearchFacetProvider(props) {
-  let [facetState, setFacetState] = useState({
+  const [facetState, setFacetState] = useState({
     defaultFacets: [],
     moreFacets: [],
     isLoading: false,
@@ -29,9 +31,9 @@ export default function SearchFacetProvider(props) {
       isLoading: true,
       isLoaded: false
     })
-    const facets = await fetchFacets();
-    const df = facets.filter(facet => defaultFacetIds.includes(facet.id));
-    const mf = facets.filter(facet => moreFacetIds.includes(facet.id));
+    const facets = await fetchFacets()
+    const df = facets.filter(facet => defaultFacetIds.includes(facet.id))
+    const mf = facets.filter(facet => moreFacetIds.includes(facet.id))
     setFacetState({
       defaultFacets: df,
       moreFacets: mf,
@@ -40,7 +42,7 @@ export default function SearchFacetProvider(props) {
     })
   }
   if (!facetState.isLoading && !facetState.isLoaded) {
-    updateFacets();
+    updateFacets()
   }
   return (
     <SearchFacetContext.Provider value={facetState}>

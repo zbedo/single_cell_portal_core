@@ -1,4 +1,3 @@
-/* eslint-disable */
 /**
  * @fileoverview JavaScript client for Single Cell Portal REST API
  *
@@ -6,12 +5,12 @@
  *
  * API docs: https://singlecell.broadinstitute.org/single_cell/api
  */
-import camelcaseKeys from 'camelcase-keys';
+import camelcaseKeys from 'camelcase-keys'
 import _compact from 'lodash/compact'
 
-const defaultBasePath = '/single_cell/api/v1';
+const defaultBasePath = '/single_cell/api/v1'
 
-let defaultInit = {
+const defaultInit = {
   method: 'GET',
   headers: {
     'Content-Type': 'application/json',
@@ -36,17 +35,17 @@ let defaultInit = {
  * fetchAuthCode(true)
  */
 export async function fetchAuthCode(mock=false) {
-  let init = defaultInit;
+  let init = defaultInit
   if (mock === false && globalMock === false) {
     const customHeaders = Object.assign(defaultInit.headers, {
-      'Authorization': 'Bearer ' + window.SCP.userAccessToken
-    });
+      'Authorization': `Bearer ${window.SCP.userAccessToken}`
+    })
     init = {
       method: 'POST',
       headers: customHeaders
     }
   }
-  return await scpApi('/search/auth_code', init, mock);
+  return await scpApi('/search/auth_code', init, mock)
 }
 
 /**
@@ -58,12 +57,12 @@ export async function fetchAuthCode(mock=false) {
  * @returns {Promise} Promise object containing camel-cased data from API
  */
 export async function fetchFacets(mock=false) {
-  let init = defaultInit;
-  return await scpApi('/search/facets', defaultInit, mock);
+  const init = defaultInit
+  return await scpApi('/search/facets', defaultInit, mock)
 }
 
 // If true, returns mock data for all API responses.  Only for dev.
-let globalMock = false;
+let globalMock = false
 
 /**
  * Sets flag on whether to use mock data for all API responses.
@@ -74,11 +73,11 @@ let globalMock = false;
  * @param {Boolean} flag Whether to use mock data for all API responses
  */
 export function setGlobalMockFlag(flag) {
-  globalMock = flag;
+  globalMock = flag
 }
 
 // Modifiable in setMockOrigin, used in unit tests
-let mockOrigin = '';
+let mockOrigin = ''
 
 /**
  * Sets origin (e.g. http://localhost:3000) for mocked SCP API URLs
@@ -88,7 +87,7 @@ let mockOrigin = '';
  * @param {Boolean} origin Origin (e.g. http://localhost:3000) for mocked SCP API URLs
  */
 export function setMockOrigin(origin) {
-  mockOrigin = origin;
+  mockOrigin = origin
 }
 
 /**
@@ -110,15 +109,14 @@ export function setMockOrigin(origin) {
  * fetchFacetFilters('disease', 'tuberculosis');
  */
 export async function fetchFacetFilters(facet, query, mock=false) {
-
-  let queryString = `?facet=${facet}&query=${query}`;
+  let queryString = `?facet=${facet}&query=${query}`
   if (mock || globalMock) {
-    queryString = `_${facet}_${query}`;
+    queryString = `_${facet}_${query}`
   }
 
   const pathAndQueryString = `/search/facet_filters${queryString}`
 
-  return await scpApi(pathAndQueryString, defaultInit, mock);
+  return await scpApi(pathAndQueryString, defaultInit, mock)
 }
 
 /**
@@ -135,9 +133,9 @@ export async function fetchFacetFilters(facet, query, mock=false) {
  *
  * fetchSearch('study', 'tuberculosis');
  */
-export async function fetchSearch(type, terms, facets, page, mock=false){
+export async function fetchSearch(type, terms, facets, page, mock=false) {
   const searchPathAndQueryString = `/search?${buildSearchQueryString(type, terms, facets, page)}`
-  return await scpApi(searchPathAndQueryString, defaultInit, mock);
+  return await scpApi(searchPathAndQueryString, defaultInit, mock)
 }
 
 export function buildSearchQueryString(type, terms, facets, page) {
@@ -148,23 +146,23 @@ function buildFacetQueryString(facets) {
   if (!facets || !Object.keys(facets).length) {
     return ''
   }
-  const rawURL = _compact(Object.keys(facets).map((facetId) => {
+  const rawURL = _compact(Object.keys(facets).map(facetId => {
     if (facets[facetId].length) {
       return `${facetId}:${facets[facetId].join(',')}`
     }
   })).join('+')
-  return encodeURIComponent(rawURL)  // needed for the + , : characters
+  return encodeURIComponent(rawURL) // needed for the + , : characters
 }
 
 export function buildFacetsFromQueryString(facetsParamString) {
-  let facets = {}
+  const facets = {}
   if (facetsParamString) {
-    facetsParamString.split('+').forEach((facetString) => {
-      let facetArray = facetString.split(':')
+    facetsParamString.split('+').forEach(facetString => {
+      const facetArray = facetString.split(':')
       facets[facetArray[0]] = facetArray[1].split(',')
     })
   }
-  return facets;
+  return facets
 }
 
 /**
@@ -175,15 +173,15 @@ export function buildFacetsFromQueryString(facetsParamString) {
  * @param {Boolean} mock | Whether to use mock data.  Helps development, tests.
  */
 export default async function scpApi(path, init, mock=false) {
-  if (globalMock) mock = true;
-  const basePath = (mock || globalMock) ? mockOrigin + '/mock_data' : defaultBasePath;
-  let fullPath = basePath + path;
-  if (mock) fullPath += '.json'; // e.g. /mock_data/search/auth_code.json
+  if (globalMock) mock = true
+  const basePath = (mock || globalMock) ? `${mockOrigin}/mock_data` : defaultBasePath
+  let fullPath = basePath + path
+  if (mock) fullPath += '.json' // e.g. /mock_data/search/auth_code.json
 
-  const response = await fetch(fullPath, init);
-  const json = await response.json();
+  const response = await fetch(fullPath, init)
+  const json = await response.json()
 
   // Converts API's snake_case to JS-preferrable camelCase,
   // for easy destructuring assignment.
-  return camelcaseKeys(json);
+  return camelcaseKeys(json)
 }

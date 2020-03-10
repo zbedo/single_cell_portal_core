@@ -47,6 +47,7 @@ RAILS_ENV=test NODE_ENV=test bin/bundle exec rake assets:precompile
 echo "Generating random seed, seeding test database..."
 RANDOM_SEED=$(openssl rand -hex 16)
 echo $RANDOM_SEED > /home/app/webapp/.random_seed
+bundle exec rake RAILS_ENV=test db:migrate
 bundle exec rake RAILS_ENV=test db:seed || { echo "FAILED to seed test database!" >&2; exit 1; }
 bundle exec rake RAILS_ENV=test db:mongoid:create_indexes
 echo "Database initialized"

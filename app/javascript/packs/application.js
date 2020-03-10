@@ -33,7 +33,7 @@ import HomePageContent from 'components/HomePageContent'
 document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('home-page-content')) {
     ReactDOM.render(
-      <HomePageContent />, document.getElementById('home-page-content'),
+      <HomePageContent />, document.getElementById('home-page-content')
     )
   }
 })
