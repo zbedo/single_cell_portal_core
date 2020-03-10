@@ -31,4 +31,8 @@ module StudiesHelper
 			site_path(order: order_val, search_terms: search_val)
 		end
 	end
+
+  def get_convention_label
+		"<span class='fas fa-copyright text-muted' aria-hidden='true' title='Convention Metadata' data-toggle='tooltip'></span>".html_safe
+	end
 end
