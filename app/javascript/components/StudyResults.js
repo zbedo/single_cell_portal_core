@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faAngleDoubleLeft, faAngleLeft, faAngleRight, faAngleDoubleRight
 } from '@fortawesome/free-solid-svg-icons'
+import Study from './Study'
 
 /**
  * Wrapper component for studies on homepage
@@ -123,24 +124,4 @@ const PagingControl = ({
   )
 }
 
-const Study = props => {
-  const studyDescription = { __html: props.study.description }
-
-  return (
-    <div key={props.study.accession}>
-      <label htmlFor={props.study.name} id= 'result-title'>
-        <a href={props.study.study_url}>{props.study.name} </a></label>
-      <div>
-        <span id='cell-count' className='badge badge-secondary'>
-          {props.study.cell_count} Cells
-        </span>
-      </div>
-      <span
-        disabled
-        dangerouslySetInnerHTML={studyDescription}
-        id='descrition-text-area'
-        accession={props.study.name}></span>
-    </div>
-  )
-}
 export default StudyResults
