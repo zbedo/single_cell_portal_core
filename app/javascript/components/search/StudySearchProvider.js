@@ -34,7 +34,7 @@ export function useContextStudySearch() {
   * renders a StudySearchContext tied to its props,
   * fires route navigate on changes to params
   */
-function StudySearchProvider(props) {
+export function BaseStudySearchProvider(props) {
   const defaultState = _cloneDeep(emptySearch)
   defaultState.updateSearch = updateSearch
   const [searchState, setSearchState] = useState(defaultState)
@@ -111,9 +111,9 @@ export default function RoutableStudySearchProvider(props) {
       facets: buildFacetsFromQueryString(queryParams.facets)
     }
     return (
-      <StudySearchProvider searchParams={searchParams}>
+      <BaseStudySearchProvider searchParams={searchParams}>
         {props.children}
-      </StudySearchProvider>
+      </BaseStudySearchProvider>
     )
   }
   return (

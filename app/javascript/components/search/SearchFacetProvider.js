@@ -31,7 +31,7 @@ export default function SearchFacetProvider(props) {
       isLoading: true,
       isLoaded: false
     })
-    const facets = await fetchFacets()
+    const facets = await fetchFacets(true)
     const df = facets.filter(facet => defaultFacetIds.includes(facet.id))
     const mf = facets.filter(facet => moreFacetIds.includes(facet.id))
     setFacetState({
