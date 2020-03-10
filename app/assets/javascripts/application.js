@@ -55,7 +55,7 @@ var ALLOWED_FILE_TYPES = {
     plainText: /(\.|\/)(txt|text|tsv|csv)$/i,
     primaryData: /((\.(fq|fastq)(\.tar)?\.gz$)|\.bam)/i,
     bundled: /(\.|\/)(txt|text|tsv|csv|bam\.bai)(\.gz)?$/i,
-    miscellaneous: /(\.|\/)(txt|text|tsv|csv|jpg|jpeg|png|pdf|doc|docx|xls|xlsx|ppt|pptx|zip)(\.gz)?$/i
+    miscellaneous: /(\.|\/)(txt|text|tsv|csv|jpg|jpeg|png|pdf|doc|docx|xls|xlsx|ppt|pptx|zip|loom|h5|h5ad|h5an)(\.gz)?$/i
 };
 
 // options for Spin.js
