@@ -1,10 +1,14 @@
 {
   "study": {
     "name": "Human HIV and Tuberculosis, blood study",
-    "description": "<p>Investigating human blood with HIV (AE). Jean Chang, Eric Weitz, Jon Bistline, Eno-Abasi Augustine-Akpan, Devon Bush, Vicky Horst.  Journal of SCP Synthetic Studies.  Volume 1, p1, February 2020.  Adding synthetic study data to development and staging environments has been shown to improve testability of new code.  We extend those findings to the Single Cell Portal by adding this synthetic data.</p>",
+    "description": "<p>Investigating human blood with HIV (AE). Jean Chang, Eric Weitz, Jon Bistline, Eno-Abasi Augustine-Akpan, Devon Bush, Vicky Horst.  Journal of SCP Synthetic Studies.  Volume 1, p1, February 2020.  Adding synthetic study data to development and staging environments has been shown to improve testability of new code.  We extend those findings to the Single Cell Portal by adding this synthetic data.</p><p>'sample_type': {'cultured primary cells': 130}, 'disease': {'MONDO_0005109': 10, 'MONDO_0018076': 120}, 'disease__ontology_label': {'HIV infectious disease': 10, 'tuberculosis': 120}, 'organ': {'UBERON_0000178': 130}, 'organ__ontology_label': {'blood': 130}, 'library_preparation_protocol': {'EFO_0009899': 130}, 'library_preparation_protocol__ontology_label': {'10X 3' v2 sequencing': 130},  'species': {'NCBITaxon_9606': 130}, 'species__ontology_label': {'Homo sapiens': 130}, 'sex': {'unknown': 130}, 'is_living': {'unknown': 130}, 'cell_type': {'CL_0000034': 20, 'CL_0000066': 73, 'CL_0000075': 20, 'CL_0000094': 1, 'CL_0000236': 16}, 'cell_type__ontology_label': {'B cell': 16, 'columnar/cuboidal epithelial cell': 20, 'epithelial cell': 73, 'granulocyte': 1, 'stem cell': 20}}</p>",
     "data_dir": "test"
   },
   "files": [
-     {"type": "Metadata", "filename": "metadata.tsv", "use_metadata_convention": true}
+    {
+      "type": "Metadata",
+      "filename": "metadata.tsv",
+      "use_metadata_convention": true
+    }
   ]
 }
