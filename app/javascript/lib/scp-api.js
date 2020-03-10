@@ -5,8 +5,12 @@
  *
  * API docs: https://singlecell.broadinstitute.org/single_cell/api
  */
+
 import camelcaseKeys from 'camelcase-keys'
 import _compact from 'lodash/compact'
+
+import { accessToken } from './../components/UserProvider'
+import { logSearch } from './metrics-api'
 
 const defaultBasePath = '/single_cell/api/v1'
 
@@ -38,7 +42,7 @@ export async function fetchAuthCode(mock=false) {
   let init = defaultInit
   if (mock === false && globalMock === false) {
     const customHeaders = Object.assign(defaultInit.headers, {
-      'Authorization': `Bearer ${window.SCP.userAccessToken}`
+      'Authorization': `Bearer ${accessToken}`
     })
     init = {
       method: 'POST',
@@ -136,6 +140,9 @@ export async function fetchFacetFilters(facet, query, mock=false) {
  */
 export async function fetchSearch(type, terms, facets, page, mock=false) {
   const path = `/search?${buildSearchQueryString(type, terms, facets, page)}`
+
+  logSearch(type, terms, facets, page)
+
   return await scpApi(path, defaultInit, mock)
 }
 
@@ -143,7 +150,9 @@ export async function fetchSearch(type, terms, facets, page, mock=false) {
  * Constructs query string used for /search REST API endpoint
  */
 export function buildSearchQueryString(type, terms, facets, page) {
-  return `type=${type}&terms=${terms}&facets=${buildFacetQueryString(facets)}&page=${page ? page : 1}` // eslint-disable-line max-len
+  const facetsParam = buildFacetQueryString(facets)
+  const pageParam = page ? page : 1
+  return `type=${type}&terms=${terms}&facets=${facetsParam}&page=${pageParam}`
 }
 
 /**
