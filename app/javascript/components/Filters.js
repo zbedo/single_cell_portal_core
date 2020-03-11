@@ -1,10 +1,10 @@
 import React from 'react';
-import { Slider, Rail, Handles, Tracks, Ticks } from "react-compound-slider";
+import FilterSlider from './FilterSlider';
 
 /**
- * Component for a list of string-based filters, e.g. disease, species
+ * Component for a list of checkbox filters, e.g. disease, species
  */
-function FilterList(props) {
+function FilterCheckboxes(props) {
   return (
     <ul>
     {
@@ -29,33 +29,25 @@ function FilterList(props) {
 }
 
 /**
- * Component for slider to filter numerical facets, e.g. organism age
- *
- * Stub, will develop.
- */
-function FilterSlider(props) {
-  const facet = props.facet;
-
-  // React Compound Slider
-  // API: https://react-compound-slider.netlify.com/docs
-  // Examples: https://react-compound-slider.netlify.com/horizontal
-  return (
-    <li>
-      <Slider
-        domain={[facet.min, facet.max]}
-      />
-    </li>
-  );
-}
-
-/**
  * Component for filter list and filter slider
  */
 export default function Filters(props) {
   const filters = props.filters;
   if (props.facet.type !== 'number') {
-    return <FilterList filters={filters} onChange={props.onFilterValueChange} selection={props.selection} />;
+    return (
+      <FilterCheckboxes
+        filters={filters}
+        onChange={props.updateSelectionForFilterCheckboxes}
+        selection={props.selection}
+      />
+    );
   } else {
-    return <FilterSlider facet={props.facet} />;
+    return (
+      <FilterSlider
+        facet={props.facet}
+        onChange={props.updateSelectionForFilterSlider}
+        selection={props.selection}
+      />
+    );
   }
 }

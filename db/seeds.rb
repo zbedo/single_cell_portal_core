@@ -124,4 +124,7 @@ SearchFacet.create(name: 'Disease', identifier: 'disease', filters: [{id: 'MONDO
                                    {name: 'Phenotype And Trait Ontology', url: 'https://www.ebi.ac.uk/ols/ontologies/pato'}],
                    data_type: 'string', is_ontology_based: true, is_array_based: true, big_query_id_column: 'disease',
                    big_query_name_column: 'disease__ontology_label', convention_name: 'alexandria_convention', convention_version: '1.1.3')
+SearchFacet.create(name: 'Organism Age', identifier: 'organism_age', big_query_id_column: 'organism_age', big_query_name_column: 'organism_age',
+                   big_query_conversion_column: 'organism_age__seconds', is_ontology_based: false, data_type: 'number',
+                   is_array_based: false, convention_name: 'alexandria_convention', convention_version: '1.1.3', unit: 'years')
 BrandingGroup.create(name: 'Test Brand', user_id: api_user.id, font_family: 'Helvetica Neue, sans-serif', background_color: '#FFFFFF')

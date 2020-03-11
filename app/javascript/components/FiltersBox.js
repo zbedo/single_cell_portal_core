@@ -46,9 +46,9 @@ export default function FiltersBox(props) {
   const searchContext = useContext(StudySearchContext);
 
   const appliedSelection = searchContext.params.facets[props.facet.id]
-  const [selection, setSelection] = useState(appliedSelection ? appliedSelection : []);
-  const [showClear, setShowClear] = useState(selection.length > 0);
-
+  const selection = props.selection
+  const setSelection = props.setSelection
+  const showClear = selection.length > 0;
   const canApply = !isEqual(selection, appliedSelection)
 
   // TODO: Get opinions, perhaps move to a UI code style guide.
@@ -69,8 +69,7 @@ export default function FiltersBox(props) {
   const filtersBoxId = `${componentName}-${facetId}`;
   const applyId = `apply-${filtersBoxId}`;
 
-
-  function updateSelection(filterId, value) {
+  function updateSelectionForFilterCheckboxes(filterId, value) {
     let newSelection = selection.slice()
     if (value && !newSelection.includes(filterId)) {
       newSelection.push(filterId)
@@ -79,7 +78,15 @@ export default function FiltersBox(props) {
       _remove(newSelection, (id) => { return id === filterId; })
     }
     setSelection(newSelection);
-    setShowClear(newSelection.length > 0);
+  }
+
+  function updateSelectionForFilterSlider(ranges) {
+    let newSelection = selection.slice()
+    if (!newSelection !== [ranges]) {
+      newSelection = [ranges]
+    }
+    setSelection(newSelection);
+    setShowClear(newSelection.length > 0)
   }
 
   function handleApplyClick(event) {
@@ -103,7 +110,8 @@ export default function FiltersBox(props) {
       <Filters
         facet={props.facet}
         filters={props.filters}
-        onFilterValueChange={updateSelection}
+        updateSelectionForFilterCheckboxes={updateSelectionForFilterCheckboxes}
+        updateSelectionForFilterSlider={updateSelectionForFilterSlider}
         selection={selection}
       />
       <div className='filters-box-footer'>

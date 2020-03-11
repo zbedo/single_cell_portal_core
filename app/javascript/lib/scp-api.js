@@ -148,11 +148,12 @@ function buildFacetQueryString(facets) {
   if (!facets || !Object.keys(facets).length) {
     return ''
   }
-  return _compact(Object.keys(facets).map((facetId) => {
+  const rawURL = _compact(Object.keys(facets).map((facetId) => {
     if (facets[facetId].length) {
       return `${facetId}:${facets[facetId].join(',')}`
     }
   })).join('+')
+  return encodeURIComponent(rawURL)  // needed for the + , : characters
 }
 
 export function buildFacetsFromQueryString(facetsParamString) {

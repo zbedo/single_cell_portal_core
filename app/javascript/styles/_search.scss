@@ -50,6 +50,19 @@
       box-sizing: border-box;
       display: inline-block;
     }
+    &.active > a, &.selected > a {
+      background-color: $action-color;
+      color: #fff;
+    }
+
+    .facet-clear {
+      margin-left: 1em;
+      background: #fff;
+      color: $action-color;
+      border-radius: 1em;
+      border: none;
+      font-size: 0.8em;
+    }
   }
   #download-button {
     background-color: white;
