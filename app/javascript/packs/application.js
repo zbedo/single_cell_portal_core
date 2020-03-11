@@ -27,15 +27,23 @@ import Ideogram from 'ideogram'
 // Per https://ckeditor.com/docs/ckeditor5/latest/builds/guides/integration/advanced-setup.html#scenario-1-integrating-existing-builds
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic'
 
+
 // Note 'components/HomePageContent' is '/app/javascript/components/HomePageContent.js'
 import HomePageContent from 'components/HomePageContent'
+import { logPageView, logClick } from 'lib/metrics-api'
 
 document.addEventListener('DOMContentLoaded', () => {
+  logPageView()
+
   if (document.getElementById('home-page-content')) {
     ReactDOM.render(
       <HomePageContent />, document.getElementById('home-page-content')
     )
   }
+})
+
+$(document).on('click', 'body', event => {
+  logClick(event)
 })
 
 // SCP expects these variables to be global.

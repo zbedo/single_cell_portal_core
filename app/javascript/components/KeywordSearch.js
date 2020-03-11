@@ -18,16 +18,15 @@ export default function KeywordSearch(props) {
    * Updates terms in search context upon submitting keyword search
    */
   function handleSubmit(event) {
-    // Prevent full page reload
     event.preventDefault()
-    const submitValue = e.target.value
-    searchContext.updateSearch({ terms: submitValue })
+    const submitValue = event.target.value
+    searchContext.updateSearch({ terms: submitValue }, event)
   }
 
   return (
     <Form
       horizontal
-      onSubmit = {() => handleSubmit(keywordValue)}
+      onSubmit = {event => handleSubmit(event)}
       className='study-keyword-search'
     >
       <InputGroup>
