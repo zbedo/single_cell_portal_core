@@ -17,9 +17,10 @@ export default function KeywordSearch(props) {
   /**
    * Updates terms in search context upon submitting keyword search
    */
-  function handleSubmit(submitValue) {
+  function handleSubmit(event) {
     // Prevent full page reload
     event.preventDefault()
+    const submitValue = e.target.value
     searchContext.updateSearch({ terms: submitValue })
   }
 

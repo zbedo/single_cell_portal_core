@@ -3,7 +3,8 @@ import { accessToken } from './../components/UserProvider'
 const defaultInit = {
   method: 'POST',
   headers: {
-    'Authorization': `Bearer ${accessToken}`
+    'Authorization': `Bearer ${accessToken}`,
+    'Content-Type': 'application/json'
   }
 }
 
@@ -18,11 +19,27 @@ if ('SCP' in window) {
 }
 
 /**
- * Log search metrics
+ * Log study search metrics.  Might support gene, cell search in future.
  */
 export function logSearch(type, terms, facets, page) {
-  const props = { type, terms, page }
+  const defaultProps = { type, terms, page }
+  const numTerms = terms.split(' ').length
+
+  const props = Object.assign(defaultProps, { numTerms })
+
   log('search', props)
+}
+
+/**
+ * Log filter search metrics
+ */
+export function logFilterSearch(facet, terms) {
+  const defaultProps = { facet, terms }
+  const numTerms = terms.split(' ').length
+
+  const props = Object.assign(defaultProps, { numTerms })
+
+  log('search-filter', props)
 }
 
 /**
@@ -41,8 +58,5 @@ export default function log(name, props) {
     })
   }
   const init = Object.assign(defaultInit, body)
-  console.log('init')
-  console.log(init)
-  // fetch(`${bardDomain}/event`, init)
-  fetch('https://terra-bard-dev.appspot.com/api/event', init)
+  fetch(`${bardDomain}/api/event`, init)
 }

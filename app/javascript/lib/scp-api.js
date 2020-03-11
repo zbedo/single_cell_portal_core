@@ -10,7 +10,7 @@ import camelcaseKeys from 'camelcase-keys'
 import _compact from 'lodash/compact'
 
 import { accessToken } from './../components/UserProvider'
-import { logSearch } from './metrics-api'
+import { logSearch, logFilterSearch } from './metrics-api'
 
 const defaultBasePath = '/single_cell/api/v1'
 
@@ -119,6 +119,8 @@ export async function fetchFacetFilters(facet, query, mock=false) {
     queryString = `_${facet}_${query}`
   }
 
+  logFilterSearch(facet, query)
+
   const pathAndQueryString = `/search/facet_filters${queryString}`
 
   return await scpApi(pathAndQueryString, defaultInit, mock)
@@ -129,19 +131,24 @@ export async function fetchFacetFilters(facet, query, mock=false) {
  *
  * Docs: https:///singlecell.broadinstitute.org/single_cell/api/swagger_docs/v1#!/Search/search_facet_filters_path
  *
- * @param {type} Type of query to perform (study- or cell-based)
- * @param {terms} User-supplied query string
- * @param {facets} User-supplied list facets and filters
+ * @param {String} type Type of query to perform (study- or cell-based)
+ * @param {String} terms User-supplied query string
+ * @param {Object} facets User-supplied list facets and filters
+ * @param {Integer} page User-supplied list facets and filters
+ * @param {Object} trigger Event that triggered search; used for analytics
+ * @param {Boolean} mock Whether to use mock data
  * @returns {Promise} Promise object containing camel-cased data from API
  *
  * @example
  *
  * fetchSearch('study', 'tuberculosis');
  */
-export async function fetchSearch(type, terms, facets, page, mock=false) {
+export async function fetchSearch(
+  type, terms, facets, page, trigger=null, mock=false
+) {
   const path = `/search?${buildSearchQueryString(type, terms, facets, page)}`
 
-  logSearch(type, terms, facets, page)
+  logSearch(type, terms, facets, page, trigger)
 
   return await scpApi(path, defaultInit, mock)
 }
