@@ -120,6 +120,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
   test 'should return search results using keywords' do
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
+    # test single keyword first
     study_count = Study.count
     execute_http_request(:get, api_v1_search_path(type: 'study', terms: @random_seed))
     assert_response :success
@@ -128,9 +129,30 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_equal expected_accessions, matching_accessions,
                  "Did not return correct array of matching accessions, expected #{expected_accessions} but found #{matching_accessions}"
 
-    result_count = json['studies'].size
-    assert_equal study_count, result_count, "Did not find correct number of studies, expected #{study_count} but found #{result_count}"
-    assert_equal @random_seed, json['studies'].first['term_matches']
+    assert_equal @random_seed, json['studies'].first['term_matches'].first
+
+    # test exact phrase
+    search_phrase = "\"API Test Study\""
+    execute_http_request(:get, api_v1_search_path(type: 'study', terms: search_phrase))
+    assert_response :success
+    quoted_accessions = Study.where(name: "API Test Study #{@random_seed}").pluck(:accession)
+    found_accessions = json['matching_accessions'] # no need to sort as there should only be one result
+    assert_equal quoted_accessions, found_accessions,
+                 "Did not return correct array of matching accessions, expected #{quoted_accessions} but found #{found_accessions}"
+
+    assert_equal search_phrase.gsub(/\"/, ''), json['studies'].first['term_matches'].first
+
+    # test combination
+    search_phrase += " testing"
+    execute_http_request(:get, api_v1_search_path(type: 'study', terms: search_phrase))
+    assert_response :success
+    mixed_accessions = Study.any_of({name: "API Test Study #{@random_seed}"},
+                                       {name: "Testing Study #{@random_seed}"}).pluck(:accession).sort
+    found_mixed_accessions = json['matching_accessions'].sort
+    assert_equal mixed_accessions, found_mixed_accessions,
+                 "Did not return correct array of matching accessions, expected #{found_mixed_accessions} but found #{mixed_accessions}"
+    assert_equal "testing", json['studies'].first['term_matches'].first
+    assert_equal "API Test Study", json['studies'].last['term_matches'].first
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end

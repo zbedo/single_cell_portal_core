@@ -571,8 +571,12 @@ class Study
       key :description, 'SearchFacet filter matches'
     end
     property :term_matches do
-      key :type, :string
+      key :type, :array
       key :description, 'Keyword term matches'
+      items do
+        key :title, 'TermMatch'
+        key :type, :string
+      end
     end
     property :term_search_weight do
       key :type, :integer
@@ -819,12 +823,19 @@ class Study
 
   # compute a simplistic relevance score by counting instances of terms in names/descriptions
   def search_weight(terms)
-    score = 0
+    weights = {
+        total: 0,
+        terms: {}
+    }
     terms.each do |term|
       text_blob = "#{self.name} #{self.description}"
-      score += text_blob.scan(/#{term}/i).size
+      score = text_blob.scan(/#{term}/i).size
+      if score > 0
+        weights[:total] += score
+        weights[:terms][term] = score
+      end
     end
-    score
+    weights
   end
 
   ###

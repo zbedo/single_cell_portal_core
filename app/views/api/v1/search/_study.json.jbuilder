@@ -11,8 +11,9 @@ if @studies_by_facet.present?
   json.set! :facet_matches, @studies_by_facet[study.accession]
 end
 if params[:terms].present?
-  json.set! :term_matches, @search_terms
-  json.set! :term_search_weight, study.search_weight(@search_terms.split)
+  search_weight = study.search_weight(@term_list)
+  json.set! :term_matches, search_weight[:terms].keys
+  json.set! :term_search_weight, search_weight[:total]
 end
 if study.detached
   json.set! :study_files, 'Unavailable (cannot load study workspace or bucket)'
