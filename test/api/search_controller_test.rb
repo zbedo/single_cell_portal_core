@@ -129,7 +129,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_equal expected_accessions, matching_accessions,
                  "Did not return correct array of matching accessions, expected #{expected_accessions} but found #{matching_accessions}"
 
-    assert_equal @random_seed, json['studies'].first['term_matches']
+    assert_equal @random_seed, json['studies'].first['term_matches'].first
 
     # test exact phrase
     search_phrase = "\"API Test Study\""
