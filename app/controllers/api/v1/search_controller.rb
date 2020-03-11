@@ -152,7 +152,7 @@ module Api
           # for exact phrases (or combination) we have to run a regex search manually on names/descriptions
           if @search_terms.include?("\"")
             @term_list = self.class.extract_phrases_from_search(query_string: @search_terms)
-            study_regex = /(#{@term_list.join('|')})/i
+            study_regex = self.class.escape_terms_for_regex(term_list: @term_list)
             @studies = @viewable.any_of({name: study_regex}, {description: study_regex},
                                         {:accession.in => possible_accessions})
           else
@@ -548,7 +548,13 @@ module Api
             terms << substring
           end
         end
-        terms
+        terms.delete_if(&:blank?) # there is usually one blank entry if we had a quoted phrase, so remove it
+      end
+
+      # escape regular expression control characters from list of search terms and format for search
+      def self.escape_terms_for_regex(term_list:)
+        escaped_terms = term_list.map {|term| Regexp.quote term}
+        /(#{escaped_terms.join('|')})/i
       end
 
       # generate query string for BQ
