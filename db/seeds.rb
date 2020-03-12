@@ -115,6 +115,7 @@ AnalysisConfiguration.create(namespace: 'single-cell-portal', name: 'split-clust
                              configuration_snapshot: 2, description: 'This is a test description.')
 
 # SearchFacet seeds
+# These facets represent 3 of the main types: String-based (both for array- and non-array columns), and numeric
 SearchFacet.create(name: 'Species', identifier: 'species', filters: [{id: 'NCBITaxon_9606', name: 'Homo sapiens'}],
                    ontology_urls: [{name: 'NCBI organismal classification', url: 'https://www.ebi.ac.uk/ols/api/ontologies/ncbitaxon'}],
                    data_type: 'string', is_ontology_based: true, is_array_based: false, big_query_id_column: 'species',
