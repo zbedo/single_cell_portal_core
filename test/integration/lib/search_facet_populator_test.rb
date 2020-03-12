@@ -30,7 +30,7 @@ class SearchFacetPopulatorTest < ActionDispatch::IntegrationTest
                         is_array_based: false,
                         big_query_id_column: 'disease',
                         big_query_name_column: 'disease__ontology_label',
-                        convention_name: 'alexandria_convention',
+                        convention_name: 'Alexandria Metadata Convention',
                         convention_version: '1.1.3',
                         ontology_urls: [{name: 'MONDO: Monarch Disease Ontology', url: 'https://www.ebi.ac.uk/ols/api/ontologies/mondo'}])
     SearchFacetPopulator.populate_from_schema

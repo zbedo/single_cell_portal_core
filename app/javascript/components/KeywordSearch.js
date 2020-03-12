@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext } from 'react'
 import Button from 'react-bootstrap/lib/Button'
 import InputGroup from 'react-bootstrap/lib/InputGroup'
 import Form from 'react-bootstrap/lib/Form'
@@ -12,22 +12,29 @@ import { StudySearchContext } from 'components/search/StudySearchProvider'
  */
 export default function KeywordSearch(props) {
   const searchContext = useContext(StudySearchContext)
-  const [keywordValue, setKeywordValue] = useState(searchContext.params.terms);
+  const [keywordValue, setKeywordValue] = useState(searchContext.params.terms)
 
+  /**
+   * Updates terms in search context upon submitting keyword search
+   */
   function handleSubmit(submitValue) {
     // Prevent full page reload
     event.preventDefault()
-    searchContext.updateSearch({terms: submitValue})
+    searchContext.updateSearch({ terms: submitValue })
   }
 
   return (
-    <Form horizontal onSubmit = {() => handleSubmit(keywordValue)} className='study-keyword-search' >
+    <Form
+      horizontal
+      onSubmit = {() => handleSubmit(keywordValue)}
+      className='study-keyword-search'
+    >
       <InputGroup>
         <input
           className="form-control"
           type="text"
           value={keywordValue}
-          onChange={(e) => setKeywordValue(e.target.value) }
+          onChange={e => setKeywordValue(e.target.value) }
           placeholder="Enter keyword"
           name="keywordText"/>
         <div className="input-group-append">

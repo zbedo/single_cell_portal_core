@@ -1,9 +1,19 @@
+<<<<<<< HEAD
 import React, { useState, useEffect } from 'react'
 import Tab from 'react-bootstrap/lib/Tab'
 import Tabs from 'react-bootstrap/lib/Tabs'
 import { useTable, usePagination } from 'react-table'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faAngleDoubleLeft, faAngleLeft, faAngleRight, faAngleDoubleRight } from '@fortawesome/free-solid-svg-icons'
+=======
+import React from 'react'
+import { useTable, usePagination } from 'react-table'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import {
+  faAngleDoubleLeft, faAngleLeft, faAngleRight, faAngleDoubleRight
+} from '@fortawesome/free-solid-svg-icons'
+import Study from './Study'
+>>>>>>> aa44ab98f5bb1f0baabde0e3a732d88f9eb3df42
 
 /**
  * Wrapper component for studies on homepage
@@ -42,7 +52,7 @@ export function StudiesResults(props) {
   const { results, changePage } = props
   const columns = React.useMemo(
     () => [{
-      accessor: 'study',
+      accessor: 'study'
     }])
   const data = results.studies.map(result => (
     {
@@ -50,11 +60,16 @@ export function StudiesResults(props) {
         terms={results.terms}
         facets = {results.facets}
         study={result}
+<<<<<<< HEAD
         key={results.accession}
         className='card'
       />,
+=======
+        key={result.accession}
+      />
+>>>>>>> aa44ab98f5bb1f0baabde0e3a732d88f9eb3df42
     }
-  ),
+  )
   )
   const {
     getTableProps,
@@ -62,23 +77,25 @@ export function StudiesResults(props) {
     prepareRow,
     rows,
     canPreviousPage,
-    canNextPage,
-    pageCount,
-    gotoPage,
-    nextPage,
-    previousPage,
-    state: { pageIndex, pageSize },
+    canNextPage
   } = useTable({
     columns,
     data,
     // holds pagination states
     initialState: {
+<<<<<<< HEAD
       pageIndex: (results.currentPage - 1),
       // This will change when there's a way to determine amount of results per page via API endpoint
       pageSize: 5,
+=======
+      pageIndex: results.currentPage -1,
+      // This will change when there's a way to determine amount of results
+      // per page via API endpoint
+      pageSize: 5
+>>>>>>> aa44ab98f5bb1f0baabde0e3a732d88f9eb3df42
     },
     pageCount: results.totalPages,
-    manualPagination: true,
+    manualPagination: true
   },
   usePagination)
   return (
@@ -88,11 +105,21 @@ export function StudiesResults(props) {
           <strong>{ results.totalStudies }</strong> total studies found
         </div>
         <div className="col-md-4">
+<<<<<<< HEAD
           <PagingControl currentPage={results.currentPage}
             totalPages={results.totalPages}
             changePage={changePage}
             canPreviousPage={canPreviousPage}
             canNextPage={canNextPage}/>
+=======
+          <PagingControl
+            currentPage={results.currentPage}
+            totalPages={results.totalPages}
+            changePage={changePage}
+            canPreviousPage={canPreviousPage}
+            canNextPage={canNextPage}
+          />
+>>>>>>> aa44ab98f5bb1f0baabde0e3a732d88f9eb3df42
         </div>
       </div>
       <table {...getTableProps()}>
@@ -102,23 +129,39 @@ export function StudiesResults(props) {
             return (
               <tr {...row.getRowProps()} className='result-row'>
                 {row.cells.map(cell => {
-                  return <td key {...cell.getCellProps()} id='result-cell'>{cell.render('Cell')}</td>
+                  return <td key {...cell.getCellProps()} id='result-cell'>{cell.render('Cell')}</td> // eslint-disable-line max-len
                 })}
               </tr>
             )
           })}
         </tbody>
       </table>
+<<<<<<< HEAD
       <PagingControl currentPage={results.currentPage}
         totalPages={results.totalPages}
         changePage={changePage}
         canPreviousPage={canPreviousPage}
         canNextPage={canNextPage}/>
+=======
+      <PagingControl
+        currentPage={results.currentPage}
+        totalPages={results.totalPages}
+        changePage={changePage}
+        canPreviousPage={canPreviousPage}
+        canNextPage={canNextPage}
+      />
+>>>>>>> aa44ab98f5bb1f0baabde0e3a732d88f9eb3df42
     </>
   )
 }
 // Taken from https://codesandbox.io/s/github/tannerlinsley/react-table/tree/master/examples/pagination
+<<<<<<< HEAD
 const PagingControl = ({ currentPage, totalPages, changePage, canPreviousPage, canNextPage }) => {
+=======
+const PagingControl = ({
+  currentPage, totalPages, changePage, canPreviousPage, canNextPage
+}) => {
+>>>>>>> aa44ab98f5bb1f0baabde0e3a732d88f9eb3df42
   return (
     <div className="pagination">
       <button
@@ -152,6 +195,7 @@ const PagingControl = ({ currentPage, totalPages, changePage, canPreviousPage, c
   )
 }
 
+<<<<<<< HEAD
 export const Study = study => {
   const { terms, facets } = study
   const [studyTitle, setStudyTitle] = useState()
@@ -193,3 +237,6 @@ export const Study = study => {
     </div>
   )
 }
+=======
+export default StudyResults
+>>>>>>> aa44ab98f5bb1f0baabde0e3a732d88f9eb3df42
