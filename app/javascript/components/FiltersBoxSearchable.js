@@ -44,7 +44,7 @@ export default function FiltersBoxSearchable(props) {
    * for filters matching the term "tuberculosis".
    */
   async function searchFilters(terms) {
-    const apiData = await fetchFacetFilters(props.facet.id, terms, true)
+    const apiData = await fetchFacetFilters(props.facet.id, terms)
     const matchingFilters = apiData.filters
     const hasResults = apiData.query !== '' && matchingFilters.length > 0
 
