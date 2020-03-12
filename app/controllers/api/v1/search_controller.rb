@@ -171,7 +171,7 @@ module Api
 
         # filter results by branding group, if specified
         if @selected_branding_group.present?
-          @studies = @viewable.where(branding_group_id: @selected_branding_group.id)
+          @studies = @studies.where(branding_group_id: @selected_branding_group.id)
         end
 
         # only call BigQuery if list of possible studies is larger than 0 and we have matching facets to use
@@ -207,9 +207,9 @@ module Api
         # save list of study accessions for bulk_download/bulk_download_size calls, as well as caching query results
         @matching_accessions = @studies.map(&:accession)
 
-        # if a user ran a faceted search, also run a "fuzzy" search by converting filter display values to keywords
+        # if a user only ran a faceted search, attempt to infer results by converting filter display values to keywords
         if params[:terms].blank? && @facets.any?
-          @filter_keywords = self.class.convert_filter_names_to_search(facets: @facets)
+          @filter_keywords = self.class.convert_filters_for_inferred_search(facets: @facets)
           filter_regex = self.class.escape_terms_for_regex(term_list: @filter_keywords)
           base_studies = @selected_branding_group.present? ? @viewable.where(branding_group_id: @selected_branding_group.id) : @viewable
           inferred_studies = base_studies.any_of({name: filter_regex}, {description: filter_regex}).
@@ -626,8 +626,8 @@ module Api
         with_statement + base_query + from_clause + " WHERE " + where_clauses.join(" AND ")
       end
 
-      # convert a list of facet filters into a keyword search for inferred/fuzzy matching
-      def self.convert_filter_names_to_search(facets:)
+      # convert a list of facet filters into a keyword search for inferred matching
+      def self.convert_filters_for_inferred_search(facets:)
         filter_terms = []
         facets.each do |facet|
           search_facet = SearchFacet.find(facet[:object_id])
