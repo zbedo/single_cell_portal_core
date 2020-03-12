@@ -592,7 +592,7 @@ class Study
       key :description, 'Available StudyFiles for download, by type'
       StudyFile::BULK_DOWNLOAD_TYPES.each do |file_type|
         property file_type do
-          key :title, "#{file_type} Files"
+          key :description, "#{file_type} Files"
           key :type, :array
           items do
             key :title, 'StudyFile'
