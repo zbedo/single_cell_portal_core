@@ -1,0 +1,6 @@
+<div class="form-group row">
+  <div class="col-sm-4">
+    <%= f.label :use_metadata_convention, "Use Metadata Convention?" %> <%= render partial: 'metadata_convention_help_popover', locals: {id: f.object.id.to_s} %><br />
+    <%= f.select :use_metadata_convention, options_for_select([['Yes', true],['No', false]], f.object.use_metadata_convention), {}, class: 'form-control use-metadata-convention', disabled: !f.object.new_record? %>
+  </div>
+</div>

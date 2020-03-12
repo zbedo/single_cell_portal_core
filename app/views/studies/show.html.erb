@@ -228,7 +228,7 @@
             <tr id="study-file-<%= study_file.id %>">
               <td class="study-file-name"><%= study_file.name %></td>
               <td class="study-file-description"><%= study_file.description %></td>
-              <td class="study-file-file-type"><%= study_file.file_type %></td>
+              <td class="study-file-file-type"><%= study_file.file_type %>&nbsp;<%= study_file.use_metadata_convention ? get_convention_label : nil %></td>
               <td class="study-file-species-info">
                 <% if study_file.taxon.present? %>
                   <%= study_file.species_name %> <%= study_file.genome_assembly.present? ? " (#{study_file.genome_assembly_name})" : nil %>
