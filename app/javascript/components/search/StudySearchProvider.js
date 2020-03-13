@@ -34,7 +34,7 @@ export function useContextStudySearch() {
   * renders a StudySearchContext tied to its props,
   * fires route navigate on changes to params
   */
-export function BaseStudySearchProvider(props) {
+export function PropsStudySearchProvider(props) {
   const defaultState = _cloneDeep(emptySearch)
   defaultState.updateSearch = updateSearch
   const [searchState, setSearchState] = useState(defaultState)
@@ -100,7 +100,7 @@ export function BaseStudySearchProvider(props) {
   * StudySearchContext and rendering children.
   * The routing is all via query params
   */
-export default function RoutableStudySearchProvider(props) {
+export default function StudySearchProvider(props) {
   // create a wrapper component for the search display since <Router>
   // assumes that all of its unwrapped children (even nested) be routes
   const SearchRoute = routerProps => {
@@ -111,9 +111,9 @@ export default function RoutableStudySearchProvider(props) {
       facets: buildFacetsFromQueryString(queryParams.facets)
     }
     return (
-      <BaseStudySearchProvider searchParams={searchParams}>
+      <PropsStudySearchProvider searchParams={searchParams}>
         {props.children}
-      </BaseStudySearchProvider>
+      </PropsStudySearchProvider>
     )
   }
   return (

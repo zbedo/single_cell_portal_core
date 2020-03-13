@@ -6,7 +6,7 @@ import * as Reach from '@reach/router'
 const fetch = require('node-fetch');
 
 import MoreFacetsButton from 'components/MoreFacetsButton';
-import StudySearchProvider from 'components/search/StudySearchProvider';
+import { PropsStudySearchProvider } from 'components/search/StudySearchProvider';
 import * as ScpAPI from 'lib/scp-api'
 
 const testFacets = [{
@@ -46,9 +46,9 @@ describe('Basic "More Facets" capability for faceted search', () => {
       return wrapper.find('#more-facets-button').first()
     }
     const wrapper = mount((
-      <StudySearchProvider terms={''} facets={{}} page={1}>
+      <PropsStudySearchProvider searchParams={{terms:'', facets: {}, page: 1}}>
         <MoreFacetsButton facets={testFacets}/>
-      </StudySearchProvider>
+      </PropsStudySearchProvider>
     ))
     expect(moreButton()).toHaveLength(1)
     expect(moreButton().hasClass('active')).toEqual(false)

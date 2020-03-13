@@ -6,7 +6,7 @@ import * as Reach from '@reach/router'
 const fetch = require('node-fetch');
 
 import FacetControl from 'components/FacetControl';
-import { BaseStudySearchProvider } from 'components/search/StudySearchProvider';
+import { PropsStudySearchProvider } from 'components/search/StudySearchProvider';
 import * as ScpAPI from 'lib/scp-api'
 
 const speciesFacet = {
@@ -33,9 +33,9 @@ describe('Facet control handles selections appropriately', () => {
       return wrapper.find('#facet-species').first()
     }
     const wrapper = mount((
-      <BaseStudySearchProvider searchParams={{terms: '', facets:{}, page: 1}}>
+      <PropsStudySearchProvider searchParams={{terms: '', facets:{}, page: 1}}>
         <FacetControl facet={speciesFacet}/>
-      </BaseStudySearchProvider>
+      </PropsStudySearchProvider>
     ))
     expect(speciesControl()).toHaveLength(1)
     expect(speciesControl().hasClass('active')).toEqual(false)
@@ -106,13 +106,12 @@ describe('Facet control handles facets with many filters', () => {
       return wrapper.find('#facet-species').first()
     }
     const wrapper = mount((
-      <BaseStudySearchProvider searchParams={{terms: '', facets:{}, page: 1}}>
+      <PropsStudySearchProvider searchParams={{terms: '', facets:{}, page: 1}}>
         <FacetControl facet={longSpeciesFacet}/>
-      </BaseStudySearchProvider>
+      </PropsStudySearchProvider>
     ))
 
     wrapper.find('#facet-species > a').simulate('click')
-    console.log(wrapper.debug())
     // by default, only show the first 15 filters
     expect(speciesControl().find('.facet-filter-list li').length).toEqual(15)
 
