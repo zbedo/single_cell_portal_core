@@ -121,7 +121,6 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
     # test single keyword first
-    study_count = Study.count
     execute_http_request(:get, api_v1_search_path(type: 'study', terms: @random_seed))
     assert_response :success
     expected_accessions = Study.pluck(:accession)
