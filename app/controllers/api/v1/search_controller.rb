@@ -211,11 +211,16 @@ module Api
           # preserve existing search terms, if present
           @filter_keywords = @term_list.present? ? @term_list.dup : []
           @filter_keywords += self.class.convert_filters_for_inferred_search(facets: @facets)
-          inferred_studies = self.class.generate_mongo_query_by_case(terms: @filter_keywords, base_studies: @viewable,
-                                                                     accessions: @matching_accessions, query_case: :inferred)
-          @inferred_accessions = inferred_studies.pluck(:accession)
-          @matching_accessions += @inferred_accessions
-          @studies += inferred_studies.sort_by {|study| -study.search_weight(@filter_keywords)[:total] }
+          # only run inferred search if we have extra keywords to run; numeric facets do not generate inferred searches
+          if @filter_keywords.any?
+            logger.info "Running inferred search using #{@filter_keywords}"
+            inferred_studies = self.class.generate_mongo_query_by_case(terms: @filter_keywords, base_studies: @viewable,
+                                                                       accessions: @matching_accessions, query_case: :inferred)
+            @inferred_accessions = inferred_studies.pluck(:accession)
+            logger.info "Found #{@inferred_accessions.count} inferred matches: #{@inferred_accessions}"
+            @matching_accessions += @inferred_accessions
+            @studies += inferred_studies.sort_by {|study| -study.search_weight(@filter_keywords)[:total] }
+          end
         end
         @results = @studies.paginate(page: params[:page], per_page: Study.per_page)
       end
