@@ -12,7 +12,9 @@ class DeleteQueueJob < Struct.new(:object)
     case object.class.name
     when 'Study'
       # first check if we have convention metadata to delete
-      delete_convention_data(study: object, metadata_file: object.metadata_file)
+      if object.metadata_file.present?
+        delete_convention_data(study: object, metadata_file: object.metadata_file)
+      end
       # mark for deletion, rename study to free up old name for use, and restrict access by removing owner
       new_name = "DELETE-#{object.data_dir}"
       object.update!(public: false, name: new_name, url_safe_name: new_name)
