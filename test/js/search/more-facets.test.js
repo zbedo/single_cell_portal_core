@@ -42,11 +42,11 @@ describe('Basic "More Facets" capability for faceted search', () => {
   it('the More Facets Button should correctly render when facets are selected', async () => {
     const routerNav = jest.spyOn(Reach, 'navigate')
 
-    let moreButton = function() {
+    let moreButton = () => {
       return wrapper.find('#more-facets-button').first()
     }
     const wrapper = mount((
-      <PropsStudySearchProvider searchParams={{terms:'', facets: {}, page: 1}}>
+      <PropsStudySearchProvider searchParams={{terms: '', facets:{}, page: 1}}>
         <MoreFacetsButton facets={testFacets}/>
       </PropsStudySearchProvider>
     ))
@@ -64,5 +64,34 @@ describe('Basic "More Facets" capability for faceted search', () => {
     wrapper.find('#facet-sex button.facet-apply-button').simulate('click')
     expect(routerNav).toHaveBeenLastCalledWith('?type=study&terms=&facets=sex%3Afemale&page=1')
   });
+});
 
+describe('Filter slider works within more facets', () => {
+  it('the More Facets Button should correctly render when facets are selected', async () => {
+    const routerNav = jest.spyOn(Reach, 'navigate')
+
+    let ageFacet = () => {
+      return wrapper.find('#facet-organism_age').first()
+    }
+    const wrapper = mount((
+      <PropsStudySearchProvider searchParams={{terms: '', facets:{}, page: 1}}>
+        <MoreFacetsButton facets={testFacets}/>
+      </PropsStudySearchProvider>
+    ))
+    wrapper.find('#more-facets-button > a').simulate('click')
+
+    wrapper.find('#facet-organism_age > a').simulate('click')
+
+    expect(ageFacet().find('input[type="number"]').length).toEqual(2)
+    expect(ageFacet().find('input[type="number"]').first().props().value).toEqual(1)
+    expect(ageFacet().find('input[type="number"]').last().props().value).toEqual(180)
+    expect(ageFacet().find('select').first().props().value).toEqual("years")
+    debugger
+    ageFacet().find('input[type="number"]').first().simulate('change', {
+      target: {value: 50}
+    })
+    expect(ageFacet().find('button.facet-apply-button').hasClass('active')).toEqual(true)
+    ageFacet().find('button.facet-apply-button').simulate('click')
+    expect(routerNav).toHaveBeenLastCalledWith('?type=study&terms=&facets=organism_age%3A50%2C180%2C&page=1')
+  });
 });

@@ -1,10 +1,22 @@
 import React from 'react'
 import FilterSlider from './FilterSlider'
-
+import _remove from 'lodash/remove'
 /**
  * Component for a list of checkbox filters, e.g. disease, species
  */
 function FilterCheckboxes(props) {
+
+  function updateSelection(filterId, value) {
+    const newSelection = props.selection.slice()
+    if (value && !newSelection.includes(filterId)) {
+      newSelection.push(filterId)
+    }
+    if (!value) {
+      _remove(newSelection, id => {return id === filterId})
+    }
+    props.setSelection(newSelection)
+  }
+
   return (
     <ul className="facet-filter-list">
       {
@@ -14,7 +26,7 @@ function FilterCheckboxes(props) {
               <input
                 type='checkbox'
                 aria-label='checkbox'
-                onChange={e => {props.onChange(filter.id, e.target.checked)}}
+                onChange={e => {updateSelection(filter.id, e.target.checked)}}
                 id={filter.id}
                 name={filter.id}
                 checked={props.selection.includes(filter.id)}
@@ -37,7 +49,7 @@ export default function Filters(props) {
     return (
       <FilterCheckboxes
         filters={filters}
-        onChange={props.updateSelectionForFilterCheckboxes}
+        setSelection={props.setSelection}
         selection={props.selection}
       />
     )
@@ -45,7 +57,7 @@ export default function Filters(props) {
     return (
       <FilterSlider
         facet={props.facet}
-        onChange={props.updateSelectionForFilterSlider}
+        setSelection={props.setSelection}
         selection={props.selection}
       />
     )

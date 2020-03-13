@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Slider, Rail, Handles, Tracks, Ticks } from 'react-compound-slider'
 
 import { Handle, Track, Tick } from './slider/components'
+import _clone from 'lodash/clone'
 
 const sliderStyle = {
   margin: '5%',
@@ -25,6 +26,9 @@ const railStyle = {
  * - Support unit-less numerical facets, e.g. bmi, number_of_reads
  * - Support rate units, e.g. small_molecule_perturbation__concentration
  */
+ /*
+  * props.selection should be an array of [min,max,unit]
+  */
 export default function FilterSlider(props) {
   const facet = props.facet
 
@@ -33,98 +37,54 @@ export default function FilterSlider(props) {
 
   const units = facet.allUnits.slice()
 
-  let propsRange = ''
+  let propsSelection = _clone(props.selection)
+  let propsRange = []
   let propsUnit = ''
 
-  if (props.selection.length > 0) {
-    /*
-     * props.selection can be either an array with:
-     *  - one element, if passed via non-empty URL parameter for `organism_age`
-     *  - multiple elements, if manually entering numbers
-     */
-    let rangeAndUnit = undefined
-    if (props.selection.length > 1) {
-      rangeAndUnit = props.selection
-    } else {
-      rangeAndUnit = props.selection[0].split(',')
-    }
-
-    propsRange = rangeAndUnit.slice(0, 2)
-    propsUnit = rangeAndUnit.slice(-1)[0]
+  if (propsSelection && propsSelection.length === 3) {
+    propsRange = propsSelection.slice(0, 2)
     propsRange = propsRange.map(value => parseInt(value))
+    propsUnit = propsSelection[2]
   } else {
     propsRange = domain.slice()
     propsUnit = facet.unit
   }
 
-  const [values, setValues] = useState(propsRange)
-  const [inputValues, setInputValues] = useState(propsRange)
-  const [unit, setUnit] = useState(propsUnit ? propsUnit : facet.allUnits[0])
-
-  /**
-   * Propagates changes upstream, so results get filtered and URL updates
-   * upon clicking "Apply"
-   */
-  function updateAppliedSelection(values, unit) {
-    const ranges = `${values.join(',')},${unit}`
-    props.onChange(ranges)
+  const unit = propsUnit ? propsUnit : facet.allUnits[0]
+  function handleUpdate(update) {
+    if ('min' in update) {
+      propsRange[0] = update.min
+    }
+    if ('max' in update) {
+      propsRange[1] = update.max
+    }
+    if ('unit' in update) {
+      propsUnit = update.unit
+    }
+    props.setSelection([propsRange[0], propsRange[1], propsUnit])
   }
-
-  function updateValues(values) {
-    setValues(values)
-    setInputValues(values)
-    updateAppliedSelection(values, unit)
-  }
-
-  function updateUnit(unit) {
-    setUnit(unit)
-    updateAppliedSelection(values, unit)
-  }
-
-  /**
-   * Changes slider value upon changing the number input control value.
-   */
-  function onNumberInputChange(event) {
-    const target = event.target
-    const rawValue = target.value
-    const float = parseFloat(rawValue)
-    const index = target.id.includes('min') ? 0 : 1
-    const changedValues = values.slice()
-    const changedInputValues = values.slice()
-
-    let value = float
-    if (isNaN(float)) value = changedValues[index] // ignore invalid input
-
-    changedValues[index] = value
-    changedInputValues[index] = rawValue
-
-    updateValues(changedValues)
-    setInputValues(changedInputValues)
-    updateAppliedSelection(changedValues, unit)
-  }
-
   return (
     <>
       <input
         id='input-min-organism-age'
-        onChange={event => onNumberInputChange(event)}
+        onChange={event => handleUpdate({min: event.target.value})}
         type="number"
         min={min}
         max={max}
-        value={inputValues[0]}
+        value={propsRange[0]}
         style={{ 'width': '60px' }}
       />
       <span style={{ 'margin': '0 4px 0 4px' }}>-</span>
       <input
         id='input-max-organism-age'
-        onChange={event => onNumberInputChange(event)}
+        onChange={event => handleUpdate({max: event.target.value})}
         type='number'
         min={min}
         max={max}
-        value={inputValues[1]}
+        value={propsRange[1]}
         style={{ 'width': '60px', 'marginRight': '8px' }}
       />
-      <select value={unit} onChange={event => {updateUnit(event.target.value)}}>
+      <select value={unit} onChange={event => handleUpdate({unit: event.target.value})}>
         {units.map((unit, i) =>
           <option key={i}>{unit}</option>
         )}
@@ -135,8 +95,8 @@ export default function FilterSlider(props) {
           step={1}
           domain={domain}
           rootStyle={sliderStyle}
-          onChange={updateValues}
-          values={values}
+          onChange={newValues => handleUpdate({min: newValues[0], max: newValues[1]})}
+          values={propsRange}
         >
           <Rail>
             {({ getRailProps }) => (
