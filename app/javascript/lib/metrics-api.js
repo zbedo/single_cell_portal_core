@@ -14,6 +14,7 @@ const bardDomainsByEnv = {
   'production': 'https://terra-bard-prod.appspot.com'
 }
 let bardDomain = ''
+const env = ''
 let userId = ''
 if ('SCP' in window) {
   bardDomain = bardDomainsByEnv[window.SCP.environment]
@@ -109,13 +110,24 @@ function logClickOther(target) {
   log('click:other', props)
 }
 
+/**
+ * Count terms, i.e. space-delimited strings, and consider [""] to have 0 terms
+ */
+function getNumberOfTerms(terms) {
+  let numTerms = 0
+  const splitTerms = terms.split(' ')
+  if (splitTerms.length !== 1 && splitTerms[0] === '') {
+    numTerms = splitTerms.length
+  }
+  return numTerms
+}
 
 /**
  * Log study search metrics.  Might support gene, cell search in future.
  */
 export function logSearch(type, terms, facets, page) {
   const defaultProps = { type, terms, page }
-  const numTerms = terms.split(' ').length
+  const numTerms = getNumberOfTerms(terms)
 
   const props = Object.assign(defaultProps, { numTerms })
 
@@ -127,7 +139,7 @@ export function logSearch(type, terms, facets, page) {
  */
 export function logFilterSearch(facet, terms) {
   const defaultProps = { facet, terms }
-  const numTerms = terms.split(' ').length
+  const numTerms = getNumberOfTerms(terms)
 
   const props = Object.assign(defaultProps, { numTerms })
 
@@ -148,9 +160,10 @@ export default function log(name, props={}) {
 
   props = Object.assign(props, {
     appId: 'single-cell-portal',
+    timestamp: Date.now(),
     appPath,
     userId,
-    cohort: 'dev'
+    env
   })
 
   const body = {
