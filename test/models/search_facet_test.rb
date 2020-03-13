@@ -14,7 +14,7 @@ class SearchFacetTest < ActiveSupport::TestCase
     # mock schema for number_of_reads column in BigQuery
     @column_schema = [{column_name: 'number_of_reads', data_type: 'FLOAT64', is_nullable: 'YES'}]
     # mock minmax query for organism_age query
-    @minmax_results = {MIN: rand(10) + 1, MAX: rand(100) + 10}
+    @minmax_results = [{MIN: rand(10) + 1, MAX: rand(100) + 10}]
   end
 
   # should return expected filters list
@@ -36,18 +36,21 @@ class SearchFacetTest < ActiveSupport::TestCase
   end
 
   # should generate correct kind of query for DISTINCT filters based on array/non-array columns
+  # generate_query_string_by_type should return the correct query string in each case, based on facet type
   test 'should generate correct distinct queries' do
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
-    non_array_query = @search_facet.generate_non_array_query
+    non_array_query = @search_facet.generate_query_string_by_type
     non_array_match = /DISTINCT #{@search_facet.big_query_id_column}/
     assert_match non_array_match, non_array_query, "Non-array query did not contain correct DISTINCT clause: #{non_array_query}"
     array_facet = SearchFacet.find_by(identifier: 'disease')
-    column = array_facet.big_query_id_column
-    identifier = 'id'
-    array_query = array_facet.generate_array_query(column, identifier)
-    array_match = /SELECT DISTINCT #{identifier}.*UNNEST\(#{column}\)/
-    assert_match array_match, array_query, "Array query did not correctly name identifier or unnest column: #{array_query}"
+    array_query = array_facet.generate_query_string_by_type
+    array_match = /SELECT DISTINCT id.*UNNEST\(#{array_facet.big_query_id_column}\) AS id_col WITH OFFSET id_pos.*WHERE id_pos = name_pos/
+    assert_match array_match, array_query, "Array query did not correctly unnest column or match offset positions: #{array_query}"
+    numeric_facet = SearchFacet.find_by(identifier: 'organism_age')
+    numeric_query = numeric_facet.generate_query_string_by_type
+    numeric_match = /MIN\(#{numeric_facet.big_query_id_column}\).*MAX\(#{numeric_facet.big_query_id_column}\)/
+    assert_match numeric_match, numeric_query, "MinMax query did not contain MIN or MAX calls for correct columns: #{numeric_query}"
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
   end
@@ -118,10 +121,10 @@ class SearchFacetTest < ActiveSupport::TestCase
       minmax_query = age_facet.generate_minmax_query
       minmax_match = /SELECT MIN\(#{age_facet.big_query_id_column}\).*MAX\(#{age_facet.big_query_id_column}\)/
       assert_match minmax_match, minmax_query, "Minmax query improperly formed: #{minmax_query}"
-      assert_equal @minmax_results[:MIN], age_facet.min,
-                   "Did not set minimum value; expected #{@minmax_results[:MIN]} but found #{age_facet.min}"
-      assert_equal @minmax_results[:MAX], age_facet.max,
-                   "Did not set minimum value; expected #{@minmax_results[:MAX]} but found #{age_facet.max}"
+      assert_equal @minmax_results.first[:MIN], age_facet.min,
+                   "Did not set minimum value; expected #{@minmax_results.first[:MIN]} but found #{age_facet.min}"
+      assert_equal @minmax_results.first[:MAX], age_facet.max,
+                   "Did not set minimum value; expected #{@minmax_results.first[:MAX]} but found #{age_facet.max}"
     end
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
