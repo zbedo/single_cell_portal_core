@@ -33,17 +33,19 @@ import HomePageContent from 'components/HomePageContent'
 import { logPageView, logClick } from 'lib/metrics-api'
 
 document.addEventListener('DOMContentLoaded', () => {
-  logPageView()
-
   if (document.getElementById('home-page-content')) {
+    // Logs only page views for faceted search UI
+    logPageView()
+
     ReactDOM.render(
       <HomePageContent />, document.getElementById('home-page-content')
     )
-  }
-})
 
-$(document).on('click', 'body', event => {
-  logClick(event)
+    // Only logs clicks for home page with faceted search UI
+    $(document).on('click', 'body', event => {
+      logClick(event)
+    })
+  }
 })
 
 // SCP expects these variables to be global.
