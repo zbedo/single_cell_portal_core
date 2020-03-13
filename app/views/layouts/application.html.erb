@@ -24,6 +24,7 @@
 
       window.SCP.userAccessToken = '<%= get_user_access_token(current_user) %>';
       window.SCP.environment = '<%= Rails.env %>';
+      window.SCP.userId = '<%= SecureRandom.uuid %>';
 
   </script>
 
@@ -160,16 +161,16 @@
   <% end %>
 </div>
 <script type="text/javascript" nonce="<%= content_security_policy_script_nonce %>">
-    // set the unique cookie for tracking user IDs in GA
-    // this is not personally identifiable, lasts for 1 year or until cleared
 
+    // Set the unique cookie for tracking user IDs in GA.  Also used in Mixpanel.
+    // This is not personally identifiable, lasts for 1 year or until cleared.
     if ( typeof Cookies.get('user_id') === 'undefined' ) {
-        Cookies.set('user_id', '<%= SecureRandom.uuid %>', {expires: 365})
+        Cookies.set('user_id', window.SCP.userId, {expires: 365})
     }
 
     // set userId in Google Analytics
     var userId = Cookies.get('user_id');
-    ga('set', 'userId', userId);
+    ga('set', 'userId', window.SCP.userId);
 
     // variable used mostly for testing
     PAGE_RENDERED = true;

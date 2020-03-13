@@ -14,57 +14,55 @@ const bardDomainsByEnv = {
   'production': 'https://terra-bard-prod.appspot.com'
 }
 let bardDomain = ''
+let userId = ''
 if ('SCP' in window) {
   bardDomain = bardDomainsByEnv[window.SCP.environment]
+
+  // To consider: Replace SCP-specific userId with DSP-wide userId
+  userId = window.SCP.userId
 }
 
 /**
  * Log page view, i.e. page load
  */
 export function logPageView() {
-  const props = { url: document.location.href }
-  log('page:view', props)
+  log('page:view')
 }
 
 /** Log click on page.  Delegates to more element-specific loggers. */
 export function logClick(event) {
   const target = event.target
   const tag = target.localName.toLowerCase() // local tag name
-  const props = {}
 
   if (tag === 'a') {
-    logClickLink(target, props)
+    logClickLink(target)
   } else if (tag === 'button') {
-    logClickButton(target, props)
+    logClickButton(target)
   } else if (tag === 'input') {
-    logClickInput(target, props)
+    logClickInput(target)
   } else {
-    logClickOther(target, props)
+    logClickOther(target)
   }
 }
 
 /**
  * Log click on link, i.e. anchor (<a ...) tag
  */
-function logClickLink(target, props) {
-  props = Object.assign(props, {
-    text: target.text
-  })
+function logClickLink(target) {
+  const props = { text: target.text }
   log('click:link', props)
 }
 
 /**
- * Log click on button
+ * Log click on button, e.g. for pagination, "Apply", etc.
  */
-function logClickButton(target, props) {
-  props = Object.assign(props, {
-    text: target.text
-  })
+function logClickButton(target) {
+  const props = { text: target.text }
   log('click:button', props)
 }
 
 /**
- * Get the text of any label for an input
+ * Get label elements for an input element
  *
  * From https://stackoverflow.com/a/15061155
  */
@@ -92,13 +90,13 @@ function getLabelsForInputElement(element) {
 /**
  * Log click on input by type, e.g. text, number, checkbox
  */
-function logClickInput(target, props) {
-  const labels = getLabelsForInputElement(target)
+function logClickInput(target) {
+  const domLabels = getLabelsForInputElement(target)
 
   // User-facing label
-  const label = labels.length > 0 ? labels[0].innerText : ''
+  const label = domLabels.length > 0 ? domLabels[0].innerText : ''
 
-  props = Object.assign(props, { label })
+  const props = { label }
 
   log(`click:input-${target.type}`, props)
 }
@@ -106,10 +104,8 @@ function logClickInput(target, props) {
 /**
  * Log clicks on elements that are not otherwise classified
  */
-function logClickOther(target, props) {
-  props = Object.assign(props, {
-    text: target.text
-  })
+function logClickOther(target) {
+  const props = { text: target.text }
   log('click:other', props)
 }
 
@@ -144,10 +140,16 @@ export function logFilterSearch(facet, terms) {
  * @param {String} name
  * @param {Object} props
  */
-export default function log(name, props) {
+export default function log(name, props={}) {
+  // If/when Mixpanel is extended beyond home page, remove study name from
+  // appPath at least for non-public studies to align with Terra's on
+  // identifiable data we want to omit this logging.
+  const appPath = window.location.pathname
+
   props = Object.assign(props, {
     appId: 'single-cell-portal',
-    distinct_id: 'scp-placeholder-0', // TODO: Make this generic
+    appPath,
+    userId,
     cohort: 'dev'
   })
 
