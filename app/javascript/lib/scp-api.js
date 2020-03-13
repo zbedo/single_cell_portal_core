@@ -23,7 +23,9 @@ const defaultInit = {
   }
 }
 
-if (globalMock === false) {
+if (
+  accessToken !== '' // accessToken is a blank string when not signed in
+) {
   defaultInit.headers = Object.assign(defaultInit.headers, {
     'Authorization': `Bearer ${accessToken}`
   })
