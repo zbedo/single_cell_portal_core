@@ -16,8 +16,12 @@ class SearchFacetPopulator
 
   # creates/updates a facet from a name, and returns the new SearchFacet.
   # To manually populate a new Alexandria convention facet from the rails console, run e.g.
-  # SearchFacetPopulator.populate_facet_by_name('vaccination__route', SearchFacetPopulator.fetch_alexandria_convention_schema)
-  def self.populate_facet_by_name(facet_name, schema_object)
+  # SearchFacetPopulator.populate_facet_by_name('vaccination__route')
+  def self.populate_facet_by_name(facet_name, schema_object=nil)
+    if schema_object.nil?
+      # default to alexandria convention
+      schema_object = fetch_json_from_url(alexandria_convention_config[:url])
+    end
     field_def = schema_object['properties'][facet_name]
     if !field_def
       throw "Unrecognized field name '#{facet_name}' -- could not find definition in schema"

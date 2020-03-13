@@ -6,7 +6,7 @@ import FilterSlider from './FilterSlider'
  */
 function FilterCheckboxes(props) {
   return (
-    <ul>
+    <ul className="facet-filter-list">
       {
         props.filters.map(filter => {
           return (
