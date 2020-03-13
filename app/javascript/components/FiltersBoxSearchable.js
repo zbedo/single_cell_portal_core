@@ -75,7 +75,7 @@ export default function FiltersBoxSearchable(props) {
 
   const showSearchBar = props.facet.links.length > 0
   let selectedFilterBadges = <></>
-  if (props.selection.length) {
+  if (props.selection.length && props.facet.type != 'number') {
     selectedFilterBadges = (
       <div className="filter-badge-list">
         { props.selection.map(filterId => {
