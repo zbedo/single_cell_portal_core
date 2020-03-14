@@ -35,7 +35,7 @@ export default function FilterSlider(props) {
   const [min, max] = [parseInt(facet.min), parseInt(facet.max)]
   const domain = [min, max]
 
-  const units = facet.allUnits.slice()
+
 
   let propsSelection = _clone(props.selection)
   let propsRange = []
@@ -50,7 +50,6 @@ export default function FilterSlider(props) {
     propsUnit = facet.unit
   }
 
-  const unit = propsUnit ? propsUnit : facet.allUnits[0]
   function handleUpdate(update) {
     if ('min' in update) {
       propsRange[0] = update.min
@@ -63,6 +62,20 @@ export default function FilterSlider(props) {
     }
     props.setSelection([propsRange[0], propsRange[1], propsUnit])
   }
+
+  let unitControl = ''
+  if (facet.allUnits && facet.allUnits.length) {
+    const units = facet.allUnits
+    const unit = propsUnit ? propsUnit : facet.allUnits[0]
+    unitControl = (
+        <select value={unit} onChange={event => handleUpdate({unit: event.target.value})}>
+          {units.map((unit, i) =>
+            <option key={i}>{unit}</option>
+          )}
+        </select>
+      )
+  }
+
   return (
     <>
       <input
@@ -84,11 +97,7 @@ export default function FilterSlider(props) {
         value={propsRange[1]}
         style={{ 'width': '60px', 'marginRight': '8px' }}
       />
-      <select value={unit} onChange={event => handleUpdate({unit: event.target.value})}>
-        {units.map((unit, i) =>
-          <option key={i}>{unit}</option>
-        )}
-      </select>
+      { unitControl }
       <div style={{ height: 120, width: '100%' }}>
         <Slider
           mode={1}

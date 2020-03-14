@@ -32,7 +32,7 @@ const testFacets = [{
     id: "organism_age",
     links: [],
     filters: [],
-    unit: null,
+    unit: 'years',
     max: 180,
     min: 1,
     allUnits: ["years", "months", "weeks", "days", "hours"]
@@ -86,12 +86,13 @@ describe('Filter slider works within more facets', () => {
     expect(ageFacet().find('input[type="number"]').first().props().value).toEqual(1)
     expect(ageFacet().find('input[type="number"]').last().props().value).toEqual(180)
     expect(ageFacet().find('select').first().props().value).toEqual("years")
-    debugger
+
     ageFacet().find('input[type="number"]').first().simulate('change', {
       target: {value: 50}
     })
     expect(ageFacet().find('button.facet-apply-button').hasClass('active')).toEqual(true)
     ageFacet().find('button.facet-apply-button').simulate('click')
-    expect(routerNav).toHaveBeenLastCalledWith('?type=study&terms=&facets=organism_age%3A50%2C180%2C&page=1')
+    expect(routerNav).toHaveBeenLastCalledWith('?type=study&terms=&facets=organism_age%3A50%2C180%2Cyears&page=1')
   });
 });
+

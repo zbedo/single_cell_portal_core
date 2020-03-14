@@ -14,5 +14,5 @@ if search_facet_config.is_numeric?
   json.set! :unit, search_facet_config.unit
   json.set! :max, search_facet_config.max
   json.set! :min, search_facet_config.min
-  json.set! :all_units, SearchFacet::TIME_UNITS
+  json.set! :all_units, search_facet_config.is_time_unit? ? SearchFacet::TIME_UNITS : nil
 end
