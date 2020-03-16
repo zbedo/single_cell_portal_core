@@ -26,6 +26,10 @@
       window.SCP.environment = '<%= Rails.env %>';
       window.SCP.userId = '<%= SecureRandom.uuid %>';
 
+      // Maps filter IDs to filter names for easier analytics.
+      // See use in scp-api.js and metrics-api.js.
+      window.SCP.filterNamesById = {};
+
   </script>
 
   <script type="text/javascript"  nonce="<%= content_security_policy_script_nonce %>">

@@ -147,6 +147,34 @@ function getNumFacetsAndFilters(facets) {
   return [numFacets, numFilters]
 }
 
+
+/**
+ * Returns human-friendly list of applied filters for each facet
+ *
+ * This enables us to more feasibly answer "What filters are people using?"
+ *
+ * Renames keys in facets for easier discoverability as event properties in
+ * Mixpanel.  E.g. instead of "disease" and "species", which will not appear
+ * together in Mixpanel's alphabetized list, log these as "facet-disease" and
+ * "facet-species".
+ *
+ * Also renames filters from opaque IDs (e.g. MONDO_0018076) to huamn-readable
+ * labels (e.g. tuberculosis).
+ */
+function getFriendlyFilterListByFacet(facets) {
+  const filterListByFacet = {}
+  Object.entries(facets).forEach(([facet, filters]) => {
+    const friendlyFacet = `facet-${facet}`
+    const friendlyFilters = filters.map(filterId => {
+      // This global variable is initialized in application.html.erb
+      // and populated in scp-api.js
+      return window.SCP.filterNamesById[filterId]
+    })
+    filterListByFacet[friendlyFacet] = friendlyFilters
+  })
+  return filterListByFacet
+}
+
 /**
  * Log study search metrics.  Might support gene, cell search in future.
  */
@@ -161,8 +189,15 @@ export function logSearch(type, terms, facets, page) {
 
   const numTerms = getNumberOfTerms(terms)
   const [numFacets, numFilters] = getNumFacetsAndFilters(facets)
+  const facetList = Object.keys(facets)
 
-  const props = { type, terms, page, numTerms, numFacets, numFilters }
+  const filterListByFacet = getFriendlyFilterListByFacet(facets)
+
+  const simpleProps = {
+    type, terms, page,
+    numTerms, numFacets, numFilters, facetList
+  }
+  const props = Object.assign(simpleProps, filterListByFacet)
 
   log('search', props)
 

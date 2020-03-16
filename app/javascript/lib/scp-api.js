@@ -34,6 +34,31 @@ if (
 }
 
 /**
+ * Populates global id-to-name map of retrieved filters, for easier analytics.
+ * See downstream use of window.SCP.filterNamesById in metrics-api.js.
+ */
+function mapFilters(facetsOrFilters, isFacets=false) {
+  // If testing, skip.  Tech debt to reconsider later.
+  if ('SCP' in window === false) return
+
+  // This construct is kludgy, but helps cohesion and encapsulation
+  // by putting related dense code here instead of in the calling functions
+  if (isFacets) {
+    const facets = facetsOrFilters
+    facets.map(facet => {
+      facet.filters.map(filter => {
+        window.SCP.filterNamesById[filter.id] = filter.name
+      })
+    })
+  } else {
+    const filters = facetsOrFilters
+    filters.map(filter => {
+      window.SCP.filterNamesById[filter.id] = filter.name
+    })
+  }
+}
+
+/**
  * Get a one-time authorization code for download, and its lifetime in seconds
  *
  * TODO:
@@ -68,7 +93,11 @@ export async function fetchAuthCode(mock=false) {
  * @returns {Promise} Promise object containing camel-cased data from API
  */
 export async function fetchFacets(mock=false) {
-  return await scpApi('/search/facets', defaultInit, mock)
+  const facets = await scpApi('/search/facets', defaultInit, mock)
+
+  mapFilters(facets, true)
+
+  return facets
 }
 
 /**
@@ -127,7 +156,11 @@ export async function fetchFacetFilters(facet, query, mock=false) {
 
   const pathAndQueryString = `/search/facet_filters${queryString}`
 
-  return await scpApi(pathAndQueryString, defaultInit, mock)
+  const filters = await scpApi(pathAndQueryString, defaultInit, mock)
+
+  mapFilters(filters)
+
+  return filters
 }
 
 /**
