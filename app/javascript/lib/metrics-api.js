@@ -45,7 +45,8 @@ export function logClick(event) {
   } else if (tag === 'input') {
     logClickInput(target)
   } else {
-    logClickOther(target)
+    // Perhaps uncomment when Mixpanel quota increases
+    // logClickOther(target)
   }
 }
 
