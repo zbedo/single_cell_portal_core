@@ -283,7 +283,7 @@ class SearchFacet
     self.data_type == 'number'
   end
 
-  # for now, assume it's time if it's numeric and has a base of years
+  # for now, assume it's time if it's numeric and has a known time unit
   def is_time_unit?
     self.is_numeric? && TIME_UNITS.include?(self.unit)
   end
