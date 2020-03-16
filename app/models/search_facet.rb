@@ -283,6 +283,11 @@ class SearchFacet
     self.data_type == 'number'
   end
 
+  # for now, assume it's time if it's numeric and has a known time unit
+  def is_time_unit?
+    self.is_numeric? && TIME_UNITS.include?(self.unit)
+  end
+
   # know if a facet needs unit conversion
   def must_convert?
     self.big_query_conversion_column.present? && self.unit != 'seconds'
