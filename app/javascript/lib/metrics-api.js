@@ -60,6 +60,9 @@ function logClickLink(target) {
 function logClickButton(target) {
   const props = { text: target.text }
   log('click:button', props)
+
+  // Google Analytics fallback: remove once Bard and Mixpanel are ready for SCP
+  ga('send', 'event', 'click', element)
 }
 
 /**
@@ -98,8 +101,11 @@ function logClickInput(target) {
   const label = domLabels.length > 0 ? domLabels[0].innerText : ''
 
   const props = { label }
+  const element = `input-${target.type}`
+  log(`click:${element}`, props)
 
-  log(`click:input-${target.type}`, props)
+  // Google Analytics fallback: remove once Bard and Mixpanel are ready for SCP
+  ga('send', 'event', 'click', element)
 }
 
 /**
@@ -108,6 +114,9 @@ function logClickInput(target) {
 function logClickOther(target) {
   const props = { text: target.text }
   log('click:other', props)
+
+  // Google Analytics fallback: remove once Bard and Mixpanel are ready for SCP
+  ga('send', 'event', 'click', 'other')
 }
 
 /**
@@ -127,12 +136,12 @@ function getNumberOfTerms(terms) {
  */
 export function logSearch(type, terms, facets, page) {
   const numTerms = getNumberOfTerms(terms)
-  // const defaultProps = { type, terms, page }
-  // const numTerms = getNumberOfTerms(terms)
 
-  // const props = Object.assign(defaultProps, { numTerms })
+  const defaultProps = { type, terms, page }
+  const props = Object.assign(defaultProps, { numTerms })
+  log('search', props)
 
-  // log('search', props)
+  // Google Analytics fallback: remove once Bard and Mixpanel are ready for SCP
   ga('send', 'event', 'faceted-search', 'study-search', 'num-terms', numTerms)
 }
 
@@ -144,8 +153,9 @@ export function logFilterSearch(facet, terms) {
 
   const defaultProps = { facet, terms }
   const props = Object.assign(defaultProps, { numTerms })
+  log('search-filter', props)
 
-  // log('search-filter', props)
+  // Google Analytics fallback: remove once Bard and Mixpanel are ready for SCP
   ga('send', 'event', 'faceted-search', 'search-filter', 'num-terms', numTerms)
 }
 
