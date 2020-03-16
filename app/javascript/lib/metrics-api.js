@@ -1,5 +1,8 @@
 import { accessToken } from './../components/UserProvider'
 
+// See note in logSearch
+let isPageLoadSearch = true
+
 const defaultInit = {
   method: 'POST',
   headers: {
@@ -62,7 +65,7 @@ function logClickButton(target) {
   log('click:button', props)
 
   // Google Analytics fallback: remove once Bard and Mixpanel are ready for SCP
-  ga('send', 'event', 'click', element) // eslint-disable-line no-undef
+  ga('send', 'event', 'click', 'button')
 }
 
 /**
@@ -135,10 +138,19 @@ function getNumberOfTerms(terms) {
  * Log study search metrics.  Might support gene, cell search in future.
  */
 export function logSearch(type, terms, facets, page) {
+  if (isPageLoadSearch === true) {
+    // Loading home page triggers search, which is a side-effect / artifact
+    // with regard to tracking user interactions.  This variable is set to
+    // false once per page load as a way to omit such artifacts from logging.
+    isPageLoadSearch = false
+    return
+  }
+
   const numTerms = getNumberOfTerms(terms)
 
   const defaultProps = { type, terms, page }
   const props = Object.assign(defaultProps, { numTerms })
+
   log('search', props)
 
   // Google Analytics fallback: remove once Bard and Mixpanel are ready for SCP
