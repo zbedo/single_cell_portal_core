@@ -228,6 +228,15 @@ export function logFilterSearch(facet, terms) {
 }
 
 /**
+ * Log when a download is authorized.
+ * This is our best web-client-side methodology for measuring downloads.
+ */
+export function logDownloadAuthorization() {
+  log('download-authorization')
+  ga('send', 'event', 'faceted-search', 'download-authorization') // eslint-disable-line no-undef, max-len
+}
+
+/**
  * Log metrics to Mixpanel via Bard web service
  *
  * @param {String} name

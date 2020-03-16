@@ -10,7 +10,7 @@ import camelcaseKeys from 'camelcase-keys'
 import _compact from 'lodash/compact'
 
 import { accessToken } from './../components/UserProvider'
-import { logFilterSearch, logSearch } from './metrics-api'
+import { logFilterSearch, logSearch, logDownloadAuthorization } from './metrics-api'
 
 // If true, returns mock data for all API responses.  Only for dev.
 let globalMock = false
@@ -81,6 +81,7 @@ export async function fetchAuthCode(mock=false) {
       method: 'POST'
     })
   }
+  logDownloadAuthorization()
   return await scpApi('/search/auth_code', init, mock)
 }
 
