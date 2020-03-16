@@ -72,7 +72,7 @@ class StudyValidationTest < ActionDispatch::IntegrationTest
     seconds_slept = 60
     sleep seconds_slept
     sleep_increment = 15
-    max_seconds_to_sleep = 180
+    max_seconds_to_sleep = 300
     until ( example_files.values.all? { |e| ['parsed', 'failed'].include? e[:object].parse_status } ) do
       puts "After #{seconds_slept} seconds, " + (example_files.values.map { |e| "#{e[:name]} is #{e[:object].parse_status}"}).join(", ") + '.'
       if seconds_slept >= max_seconds_to_sleep

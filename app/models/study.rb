@@ -582,13 +582,17 @@ class Study
       key :type, :integer
       key :description, 'Relevance of term match'
     end
+    property :inferred_match do
+      key :type, :boolean
+      key :description, 'Indication if match is inferred (e.g. converting facet filter value to keyword search)'
+    end
     property :study_files do
       key :type, :object
       key :title, 'StudyFiles'
       key :description, 'Available StudyFiles for download, by type'
       StudyFile::BULK_DOWNLOAD_TYPES.each do |file_type|
         property file_type do
-          key :title, "#{file_type} Files"
+          key :description, "#{file_type} Files"
           key :type, :array
           items do
             key :title, 'StudyFile'

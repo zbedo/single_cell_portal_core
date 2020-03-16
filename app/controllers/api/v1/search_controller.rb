@@ -138,6 +138,11 @@ module Api
 
       def index
         @viewable = Study.viewable(current_api_user)
+
+        # filter results by branding group, if specified
+        if @selected_branding_group.present?
+          @viewable = @viewable.where(branding_group_id: @selected_branding_group.id)
+        end
         # variable for determining how we will sort search results for relevance
         sort_type = :none
 
@@ -147,31 +152,28 @@ module Api
           @search_terms = sanitize_search_values(params[:terms])
           # determine if search values contain possible study accessions
           possible_accessions = StudyAccession.sanitize_accessions(@search_terms.split)
-          # next, determine which kind of search to use
-          # for keywords only, we can use the text index
-          # for exact phrases (or combination) we have to run a regex search manually on names/descriptions
+          # determine query case based off of search terms (either :keyword or :phrase)
           if @search_terms.include?("\"")
             @term_list = self.class.extract_phrases_from_search(query_string: @search_terms)
-            study_regex = self.class.escape_terms_for_regex(term_list: @term_list)
-            @studies = @viewable.any_of({name: study_regex}, {description: study_regex},
-                                        {:accession.in => possible_accessions})
+            logger.info "Performing phrase-based search using #{@term_list}"
+            @studies = self.class.generate_mongo_query_by_context(terms: @term_list, base_studies: @viewable,
+                                                                  accessions: possible_accessions, query_context: :phrase)
+            logger.info "Found #{@studies.count} studies in phrase search: #{@studies.pluck(:accession)}"
           else
             @term_list = @search_terms.split
-            @studies = @viewable.any_of({:$text => {:$search => @search_terms}},
-                                        {:accession.in => possible_accessions})
+            logger.info "Performing keyword-based search using #{@term_list}"
+            @studies = self.class.generate_mongo_query_by_context(terms: @search_terms, base_studies: @viewable,
+                                                                  accessions: possible_accessions, query_context: :keyword)
+            logger.info "Found #{@studies.count} studies in keyword search: #{@studies.pluck(:accession)}"
+
           end
           # all of our terms were accessions, so this is a "cached" query, and we want to return
           # results in the exact order specified in the accessions array
-          if possible_accessions.size == @search_terms.split.size
+          if possible_accessions.size == @term_list.size
             sort_type = :accession
           end
         else
           @studies = @viewable
-        end
-
-        # filter results by branding group, if specified
-        if @selected_branding_group.present?
-          @studies = @viewable.where(branding_group_id: @selected_branding_group.id)
         end
 
         # only call BigQuery if list of possible studies is larger than 0 and we have matching facets to use
@@ -179,19 +181,19 @@ module Api
           sort_type = :facet
           @studies_by_facet = {}
           @big_query_search = self.class.generate_bq_query_string(@facets)
-          Rails.logger.info "Searching BigQuery using facet-based query: #{@big_query_search}"
+          logger.info "Searching BigQuery using facet-based query: #{@big_query_search}"
           query_results = ApplicationController.big_query_client.dataset(CellMetadatum::BIGQUERY_DATASET).query @big_query_search
           job_id = query_results.job_gapi.job_reference.job_id
           # build up map of study matches by facet & filter value (for adding labels in UI)
           @studies_by_facet = self.class.match_studies_by_facet(query_results, @facets)
           # uniquify result list as one study may match multiple facets/filters
           @convention_accessions = query_results.map {|match| match[:study_accession]}.uniq
-          Rails.logger.info "Found #{@convention_accessions.count} matching studies from BQ job #{job_id}: #{@convention_accessions}"
+          logger.info "Found #{@convention_accessions.count} matching studies from BQ job #{job_id}: #{@convention_accessions}"
           @studies = @studies.where(:accession.in => @convention_accessions)
         end
 
-        @studies = @studies.to_a
         # determine sort order for pagination; minus sign (-) means a descending search
+        @studies = @studies.to_a
         case sort_type
         when :keyword
           @studies = @studies.sort_by {|study| -study.search_weight(@term_list)[:total] }
@@ -203,8 +205,27 @@ module Api
           # we have sort_type of :none, so preserve original ordering of :view_order
           @studies = @studies.sort_by(&:view_order)
         end
-        # save list of study accessions for bulk_download/bulk_download_size calls, as well as caching query results
+
+        # save list of study accessions for bulk_download/bulk_download_size calls, in order of results
         @matching_accessions = @studies.map(&:accession)
+        logger.info "Total matching accessions from all non-inferred searches: #{@matching_accessions}"
+
+        # if a user ran a faceted search, attempt to infer results by converting filter display values to keywords
+        if @facets.any?
+          # preserve existing search terms, if present
+          @filter_keywords = @term_list.present? ? @term_list.dup : []
+          @filter_keywords += self.class.convert_filters_for_inferred_search(facets: @facets)
+          # only run inferred search if we have extra keywords to run; numeric facets do not generate inferred searches
+          if @filter_keywords.any?
+            logger.info "Running inferred search using #{@filter_keywords}"
+            inferred_studies = self.class.generate_mongo_query_by_context(terms: @filter_keywords, base_studies: @viewable,
+                                                                          accessions: @matching_accessions, query_context: :inferred)
+            @inferred_accessions = inferred_studies.pluck(:accession)
+            logger.info "Found #{@inferred_accessions.count} inferred matches: #{@inferred_accessions}"
+            @matching_accessions += @inferred_accessions
+            @studies += inferred_studies.sort_by {|study| -study.search_weight(@filter_keywords)[:total] }
+          end
+        end
         @results = @studies.paginate(page: params[:page], per_page: Study.per_page)
       end
 
@@ -557,6 +578,27 @@ module Api
         /(#{escaped_terms.join('|')})/i
       end
 
+      # generate a Mongoid::Criteria object to perform a keyword/exact phrase search based on contextual use case
+      # supports the following query_contexts: :keyword (individual terms), :phrase (quoted phrases & keywords)
+      # and :inferred (converting a facet-based query to keywords)
+      # will scope the query based off of :base_studies, and include/exclude studies matching
+      # :accessions based on the :query_context (included by default, but excluded in :inferred to avoid duplicates)
+      def self.generate_mongo_query_by_context(terms:, base_studies:, accessions:, query_context:)
+        case query_context
+        when :keyword
+          base_studies.any_of({:$text => {:$search => terms}}, {:accession.in => accessions})
+        when :phrase
+          study_regex = escape_terms_for_regex(term_list: terms)
+          base_studies.any_of({name: study_regex}, {description: study_regex}, {:accession.in => accessions})
+        when :inferred
+          filter_regex = escape_terms_for_regex(term_list: terms)
+          base_studies.any_of({name: filter_regex}, {description: filter_regex}).where(:accession.nin => accessions)
+        else
+          # no matching query case, so perform normal text-index search
+          base_studies.any_of({:$text => {:$search => terms}}, {:accession.in => accessions})
+        end
+      end
+
       # generate query string for BQ
       # array-based columns need to set up data in WITH clauses to allow for a single UNNEST(column_name) call,
       # otherwise UNNEST() is called multiple times for each user-supplied filter value and could impact performance
@@ -610,6 +652,19 @@ module Api
         # all facets are treated as AND clauses
         with_statement = with_clauses.any? ? "WITH #{with_clauses.join(", ")} " : ""
         with_statement + base_query + from_clause + " WHERE " + where_clauses.join(" AND ")
+      end
+
+      # convert a list of facet filters into a keyword search for inferred matching
+      def self.convert_filters_for_inferred_search(facets:)
+        filter_terms = []
+        facets.each do |facet|
+          search_facet = SearchFacet.find(facet[:object_id])
+          # only use non-numeric facets
+          if !search_facet.is_numeric?
+            filter_terms += search_facet[:filters].map {|filter| filter[:name]}
+          end
+        end
+        filter_terms
       end
 
       # build a match of studies to facets/filters used in search (for labeling studies in UI with matches)
