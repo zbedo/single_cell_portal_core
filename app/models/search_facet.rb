@@ -311,7 +311,7 @@ class SearchFacet
   # retrieve unique values from BigQuery and format an array of hashes with :name and :id values to populate :filters attribute
   def get_unique_filter_values
     Rails.logger.info "Updating filter values for SearchFacet: #{self.name} using id: #{self.big_query_id_column} and name: #{self.big_query_name_column}"
-    query_string = self.generate_query_string_by_type
+    query_string = self.generate_bq_query_string
     begin
       Rails.logger.info "Executing query: #{query_string}"
       results = SearchFacet.big_query_dataset.query(query_string)
@@ -339,7 +339,7 @@ class SearchFacet
   end
 
   # return the correct query string for updating filter values from BQ based on facet type
-  def generate_query_string_by_type
+  def generate_bq_query_string
     if self.is_array_based
       self.generate_array_query
     elsif self.is_numeric?

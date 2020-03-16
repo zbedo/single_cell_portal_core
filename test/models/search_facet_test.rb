@@ -40,15 +40,15 @@ class SearchFacetTest < ActiveSupport::TestCase
   test 'should generate correct distinct queries' do
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
-    non_array_query = @search_facet.generate_query_string_by_type
+    non_array_query = @search_facet.generate_bq_query_string
     non_array_match = /DISTINCT #{@search_facet.big_query_id_column}/
     assert_match non_array_match, non_array_query, "Non-array query did not contain correct DISTINCT clause: #{non_array_query}"
     array_facet = SearchFacet.find_by(identifier: 'disease')
-    array_query = array_facet.generate_query_string_by_type
+    array_query = array_facet.generate_bq_query_string
     array_match = /SELECT DISTINCT id.*UNNEST\(#{array_facet.big_query_id_column}\) AS id_col WITH OFFSET id_pos.*WHERE id_pos = name_pos/
     assert_match array_match, array_query, "Array query did not correctly unnest column or match offset positions: #{array_query}"
     numeric_facet = SearchFacet.find_by(identifier: 'organism_age')
-    numeric_query = numeric_facet.generate_query_string_by_type
+    numeric_query = numeric_facet.generate_bq_query_string
     numeric_match = /MIN\(#{numeric_facet.big_query_id_column}\).*MAX\(#{numeric_facet.big_query_id_column}\)/
     assert_match numeric_match, numeric_query, "MinMax query did not contain MIN or MAX calls for correct columns: #{numeric_query}"
 
