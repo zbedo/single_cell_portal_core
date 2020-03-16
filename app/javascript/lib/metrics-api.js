@@ -135,6 +135,19 @@ function getNumberOfTerms(terms) {
 }
 
 /**
+ * Counts facets (e.g. species, disease) and filters (e.g. human, COVID-19)
+ */
+function getNumFacetsAndFilters(facets) {
+  const numFacets = Object.keys(facets).length
+  const numFilters =
+    Object.values(facets).reduce((prevNumFilters, filterArray) => {
+      return prevNumFilters + filterArray.length
+    }, 0)
+
+  return [numFacets, numFilters]
+}
+
+/**
  * Log study search metrics.  Might support gene, cell search in future.
  */
 export function logSearch(type, terms, facets, page) {
@@ -147,9 +160,9 @@ export function logSearch(type, terms, facets, page) {
   }
 
   const numTerms = getNumberOfTerms(terms)
+  const [numFacets, numFilters] = getNumFacetsAndFilters(facets)
 
-  const defaultProps = { type, terms, page }
-  const props = Object.assign(defaultProps, { numTerms })
+  const props = { type, terms, page, numTerms, numFacets, numFilters }
 
   log('search', props)
 
