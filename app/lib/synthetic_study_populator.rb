@@ -28,17 +28,13 @@ class SyntheticStudyPopulator
   private
 
   def self.create_study(synthetic_study_folder, study_config, user)
-    user_suffix = '-' + user.email.partition('@').first
-    # suffix the study name to avoid inter-developer conflicts.  Remove this once we have separate firecloud namespaces
-    suffixed_name = study_config['study']['name'] + user_suffix
-    existing_study = Study.find_by(name: suffixed_name)
+    existing_study = Study.find_by(name: study_config['study']['name'])
     if existing_study
       puts("Destroying Study #{existing_study.name}, id #{existing_study.id}")
       existing_study.destroy_and_remove_workspace
     end
 
     study = Study.new(study_config['study'])
-    study.name = suffixed_name
     study.user ||= user
     study.firecloud_project ||= ENV['PORTAL_NAMESPACE']
     puts("Saving Study #{study.name}")
