@@ -155,8 +155,8 @@ function getNumFacetsAndFilters(facets) {
  *
  * Renames keys in facets for easier discoverability as event properties in
  * Mixpanel.  E.g. instead of "disease" and "species", which will not appear
- * together in Mixpanel's alphabetized list, log these as "facet-disease" and
- * "facet-species".
+ * together in Mixpanel's alphabetized list, log these as "filtersDisease" and
+ * "filtersSpecies".
  *
  * Also renames filters from opaque IDs (e.g. MONDO_0018076) to huamn-readable
  * labels (e.g. tuberculosis).
@@ -164,7 +164,8 @@ function getNumFacetsAndFilters(facets) {
 function getFriendlyFilterListByFacet(facets) {
   const filterListByFacet = {}
   Object.entries(facets).forEach(([facet, filters]) => {
-    const friendlyFacet = `facet-${facet}`
+    // e.g.
+    const friendlyFacet = `filters${facet[0].toUpperCase() + facet.slice(1)}`
     const friendlyFilters = filters.map(filterId => {
       // This global variable is initialized in application.html.erb
       // and populated in scp-api.js
@@ -180,6 +181,7 @@ function getFriendlyFilterListByFacet(facets) {
  */
 export function logSearch(type, terms, facets, page) {
   if (isPageLoadSearch === true) {
+    // This prevents over-reporting searches.
     // Loading home page triggers search, which is a side-effect / artifact
     // with regard to tracking user interactions.  This variable is set to
     // false once per page load as a way to omit such artifacts from logging.
