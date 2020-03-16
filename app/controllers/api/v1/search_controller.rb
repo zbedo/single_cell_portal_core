@@ -156,13 +156,16 @@ module Api
           if @search_terms.include?("\"")
             @term_list = self.class.extract_phrases_from_search(query_string: @search_terms)
             logger.info "Performing phrase-based search using #{@term_list}"
-            @studies = self.class.generate_mongo_query_by_case(terms: @term_list, base_studies: @viewable,
-                                                               accessions: possible_accessions, query_case: :phrase)
+            @studies = self.class.generate_mongo_query_by_context(terms: @term_list, base_studies: @viewable,
+                                                                  accessions: possible_accessions, query_context: :phrase)
+            logger.info "Found #{@studies.count} studies in phrase search: #{@studies.pluck(:accession)}"
           else
             @term_list = @search_terms.split
             logger.info "Performing keyword-based search using #{@term_list}"
-            @studies = self.class.generate_mongo_query_by_case(terms: @search_terms, base_studies: @viewable,
-                                                               accessions: possible_accessions, query_case: :keyword)
+            @studies = self.class.generate_mongo_query_by_context(terms: @search_terms, base_studies: @viewable,
+                                                                  accessions: possible_accessions, query_context: :keyword)
+            logger.info "Found #{@studies.count} studies in keyword search: #{@studies.pluck(:accession)}"
+
           end
           # all of our terms were accessions, so this is a "cached" query, and we want to return
           # results in the exact order specified in the accessions array
@@ -205,6 +208,7 @@ module Api
 
         # save list of study accessions for bulk_download/bulk_download_size calls, in order of results
         @matching_accessions = @studies.map(&:accession)
+        logger.info "Total matching accessions from all non-inferred searches: #{@matching_accessions}"
 
         # if a user ran a faceted search, attempt to infer results by converting filter display values to keywords
         if @facets.any?
@@ -214,8 +218,8 @@ module Api
           # only run inferred search if we have extra keywords to run; numeric facets do not generate inferred searches
           if @filter_keywords.any?
             logger.info "Running inferred search using #{@filter_keywords}"
-            inferred_studies = self.class.generate_mongo_query_by_case(terms: @filter_keywords, base_studies: @viewable,
-                                                                       accessions: @matching_accessions, query_case: :inferred)
+            inferred_studies = self.class.generate_mongo_query_by_context(terms: @filter_keywords, base_studies: @viewable,
+                                                                          accessions: @matching_accessions, query_context: :inferred)
             @inferred_accessions = inferred_studies.pluck(:accession)
             logger.info "Found #{@inferred_accessions.count} inferred matches: #{@inferred_accessions}"
             @matching_accessions += @inferred_accessions
@@ -574,13 +578,13 @@ module Api
         /(#{escaped_terms.join('|')})/i
       end
 
-      # generate a Mongoid::Criteria object to perform a keyword/exact phrase search based on use case
-      # supports the following cases: :keyword (individual terms), :phrase (quoted phrases & keywords)
+      # generate a Mongoid::Criteria object to perform a keyword/exact phrase search based on contextual use case
+      # supports the following query_contexts: :keyword (individual terms), :phrase (quoted phrases & keywords)
       # and :inferred (converting a facet-based query to keywords)
       # will scope the query based off of :base_studies, and include/exclude studies matching
-      # :accessions based on the :query_case (included by default, but excluded in :inferred to avoid duplicates)
-      def self.generate_mongo_query_by_case(terms:, base_studies:, accessions:, query_case:)
-        case query_case
+      # :accessions based on the :query_context (included by default, but excluded in :inferred to avoid duplicates)
+      def self.generate_mongo_query_by_context(terms:, base_studies:, accessions:, query_context:)
+        case query_context
         when :keyword
           base_studies.any_of({:$text => {:$search => terms}}, {:accession.in => accessions})
         when :phrase

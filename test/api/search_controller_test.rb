@@ -274,6 +274,26 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert inferred_study['inferred_match'],
            "Did not mark last search results as inferred_match: #{inferred_study['inferred_match']} != true"
 
+    # test combination of facets & keywords
+    search_phrase = "Study #{@random_seed}"
+    expected_accessions = Study.all.pluck(:accession).sort
+    execute_http_request(:get, api_v1_search_path(type: 'study', facets: facet_query, terms: "\"#{search_phrase}\""))
+    assert_response :success
+    found_accessions = json['matching_accessions'].sort
+    assert_equal expected_accessions, found_accessions,
+                 "Did not find expected accessions for phrase & facet search, expected #{expected_accessions} but found #{found_accessions}"
+    # the combination of phrase + facet search is an AND, so 'API Test Study' will still be inferred as it does not
+    # meet both search criteria
+    non_inferred_study = json['studies'].first
+    inferred_study = json['studies'].last
+    assert_not non_inferred_study['inferred_match'],
+               "First search result #{non_inferred_study['accession']} incorrectly marked as inferred"
+    assert inferred_study['inferred_match'],
+           "Last search result #{inferred_study['accession']} was not marked inferred"
+    json['studies'].each do |study|
+      assert_includes study['term_matches'], search_phrase,
+                      "Did not find #{search_phrase} in term_matches for #{study['accession']}: #{study['term_matches']}"
+    end
     # reset description so other tests aren't broken
     other_study.update(description: original_description)
 
