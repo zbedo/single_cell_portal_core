@@ -77,9 +77,9 @@ function mapFilters(facetsOrFilters, isFacets=false) {
 export async function fetchAuthCode(mock=false) {
   let init = defaultInit
   if (mock === false && globalMock === false) {
-    init = {
+    init = Object.assign(defaultInit, {
       method: 'POST'
-    }
+    })
   }
   return await scpApi('/search/auth_code', init, mock)
 }
