@@ -116,7 +116,7 @@ function logClickOther(target) {
 function getNumberOfTerms(terms) {
   let numTerms = 0
   const splitTerms = terms.split(' ')
-  if (splitTerms.length !== 1 && splitTerms[0] === '') {
+  if (splitTerms.length > 0 && splitTerms[0] !== '') {
     numTerms = splitTerms.length
   }
   return numTerms
@@ -126,24 +126,27 @@ function getNumberOfTerms(terms) {
  * Log study search metrics.  Might support gene, cell search in future.
  */
 export function logSearch(type, terms, facets, page) {
-  const defaultProps = { type, terms, page }
   const numTerms = getNumberOfTerms(terms)
+  // const defaultProps = { type, terms, page }
+  // const numTerms = getNumberOfTerms(terms)
 
-  const props = Object.assign(defaultProps, { numTerms })
+  // const props = Object.assign(defaultProps, { numTerms })
 
-  log('search', props)
+  // log('search', props)
+  ga('send', 'event', 'faceted-search', 'study-search', 'num-terms', numTerms)
 }
 
 /**
  * Log filter search metrics
  */
 export function logFilterSearch(facet, terms) {
-  const defaultProps = { facet, terms }
   const numTerms = getNumberOfTerms(terms)
 
+  const defaultProps = { facet, terms }
   const props = Object.assign(defaultProps, { numTerms })
 
-  log('search-filter', props)
+  // log('search-filter', props)
+  ga('send', 'event', 'faceted-search', 'search-filter', 'num-terms', numTerms)
 }
 
 /**
@@ -152,7 +155,7 @@ export function logFilterSearch(facet, terms) {
  * @param {String} name
  * @param {Object} props
  */
-export default function log(name, props={}) {
+export function log(name, props={}) {
   // If/when Mixpanel is extended beyond home page, remove study name from
   // appPath at least for non-public studies to align with Terra's on
   // identifiable data we want to omit this logging.
