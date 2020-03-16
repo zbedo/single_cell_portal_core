@@ -178,7 +178,6 @@ module Api
 
         # only call BigQuery if list of possible studies is larger than 0 and we have matching facets to use
         if @studies.count > 0 && @facets.any?
-          logger.info "facets: #{@facets}"
           sort_type = :facet
           @studies_by_facet = {}
           @big_query_search = self.class.generate_bq_query_string(@facets)
