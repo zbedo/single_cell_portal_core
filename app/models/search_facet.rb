@@ -311,25 +311,14 @@ class SearchFacet
   # retrieve unique values from BigQuery and format an array of hashes with :name and :id values to populate :filters attribute
   def get_unique_filter_values
     Rails.logger.info "Updating filter values for SearchFacet: #{self.name} using id: #{self.big_query_id_column} and name: #{self.big_query_name_column}"
-    queries = []
-    if self.is_array_based
-      queries << self.generate_array_query(self.big_query_id_column, 'id')
-      queries << self.generate_array_query(self.big_query_name_column, 'name')
-    elsif self.is_numeric?
-      queries << self.generate_minmax_query
-    else
-      queries << self.generate_non_array_query
-    end
+    query_string = self.generate_bq_query_string
     begin
-      results = []
-      queries.each do |query_string|
-        Rails.logger.info "Executing query: #{query_string}"
-        results << SearchFacet.big_query_dataset.query(query_string)
-      end
-      return self.is_numeric? ? results.flatten.first : assemble_filters_array(results)
+      Rails.logger.info "Executing query: #{query_string}"
+      results = SearchFacet.big_query_dataset.query(query_string)
+      self.is_numeric? ? results.first : results
     rescue => e
       Rails.logger.error "Error retrieving unique values for #{CellMetadatum::BIGQUERY_TABLE}: #{e.class.name}:#{e.message}"
-      error_context = ErrorTracker.format_extra_context({queries: queries})
+      error_context = ErrorTracker.format_extra_context({query_string: query_string})
       ErrorTracker.report_exception(e, nil, error_context)
       []
     end
@@ -349,13 +338,22 @@ class SearchFacet
     end
   end
 
+  # return the correct query string for updating filter values from BQ based on facet type
+  def generate_bq_query_string
+    if self.is_array_based
+      self.generate_array_query
+    elsif self.is_numeric?
+      self.generate_minmax_query
+    else
+      self.generate_non_array_query
+    end
+  end
+
   # generate a single query to get DISTINCT values from an array-based column, preserving order
-  # this way we can do two queries, and stitch them together in a hash as the order will be the same
-  # e.g. IDs will line up with NAMEs
-  def generate_array_query(column_name, identifier)
-    "SELECT DISTINCT #{identifier} FROM(SELECT array_col AS #{identifier}, " + \
-    "FROM #{CellMetadatum::BIGQUERY_TABLE}, UNNEST(#{column_name}) AS array_col " + \
-    "WITH OFFSET AS offset ORDER BY offset)"
+  def generate_array_query
+    "SELECT DISTINCT id, name FROM(SELECT id_col AS id, name_col as name " + \
+    "FROM #{CellMetadatum::BIGQUERY_TABLE}, UNNEST(#{self.big_query_id_column}) AS id_col WITH OFFSET id_pos, " + \
+    "UNNEST(#{self.big_query_name_column}) as name_col WITH OFFSET name_pos WHERE id_pos = name_pos)"
   end
 
   # generate query string to retrieve distinct values for non-array based facets
@@ -366,22 +364,6 @@ class SearchFacet
   # generate a minmax query string to set bounds for numeric facets
   def generate_minmax_query
     "SELECT MIN(#{self.big_query_id_column}) AS MIN, MAX(#{self.big_query_id_column}) AS MAX FROM #{CellMetadatum::BIGQUERY_TABLE}"
-  end
-
-  # stitch together results into the formatted filters array based on whether or not we ran one or two queries
-  def assemble_filters_array(results_array)
-    if results_array.size == 1
-      results_array.first # already in the correct form, so just return
-    else
-      # we have two hashes we need to merge together
-      filters_array = []
-      id_array = results_array.first
-      name_array = results_array.last
-      id_array.each_with_index do |filter_hash, index|
-        filters_array << filter_hash.merge(name_array[index])
-      end
-      filters_array
-    end
   end
 
   private
