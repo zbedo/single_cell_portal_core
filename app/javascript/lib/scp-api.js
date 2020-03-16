@@ -139,7 +139,6 @@ export async function fetchFacetFilters(facet, query, mock=false) {
  * @param {String} terms User-supplied query string
  * @param {Object} facets User-supplied list facets and filters
  * @param {Integer} page User-supplied list facets and filters
- * @param {Object} trigger Event that triggered search; used for analytics
  * @param {Boolean} mock Whether to use mock data
  * @returns {Promise} Promise object containing camel-cased data from API
  *
@@ -148,11 +147,11 @@ export async function fetchFacetFilters(facet, query, mock=false) {
  * fetchSearch('study', 'tuberculosis');
  */
 export async function fetchSearch(
-  type, terms, facets, page, trigger=null, mock=false
+  type, terms, facets, page, mock=false
 ) {
   const path = `/search?${buildSearchQueryString(type, terms, facets, page)}`
 
-  logSearch(type, terms, facets, page, trigger)
+  logSearch(type, terms, facets, page)
 
   return await scpApi(path, defaultInit, mock)
 }
