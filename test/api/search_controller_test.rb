@@ -264,7 +264,6 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     # this should be picked up by the "inferred" search
     filter_name = species_facet.filters.first[:name]
     other_study.update(description: filter_name)
-    facet_query = "#{species_facet.identifier}:#{species_facet.filters.first[:id]}"
     execute_http_request(:get, api_v1_search_path(type: 'study', facets: facet_query))
     assert_response :success
     inferred_accessions = [convention_study.accession, other_study.accession]
@@ -274,7 +273,21 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert inferred_study['inferred_match'],
            "Did not mark last search results as inferred_match: #{inferred_study['inferred_match']} != true"
 
-    # test combination of facets & keywords
+    # reset description so other tests aren't broken
+    other_study.update(description: original_description)
+
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
+
+  test 'should run inferred search using facets and phrase' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+
+    other_study = Study.find_by(name: "API Test Study #{@random_seed}")
+    original_description = other_study.description.to_s.dup
+    species_facet = SearchFacet.find_by(identifier: 'species')
+    facet_query = "#{species_facet.identifier}:#{species_facet.filters.first[:id]}"
+    filter_name = species_facet.filters.first[:name]
+    other_study.update(description: filter_name)
     search_phrase = "Study #{@random_seed}"
     expected_accessions = Study.all.pluck(:accession).sort
     execute_http_request(:get, api_v1_search_path(type: 'study', facets: facet_query, terms: "\"#{search_phrase}\""))
