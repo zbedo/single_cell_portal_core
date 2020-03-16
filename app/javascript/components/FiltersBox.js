@@ -4,7 +4,6 @@ import Button from 'react-bootstrap/lib/Button'
 
 import { StudySearchContext } from 'components/search/StudySearchProvider'
 import Filters from './Filters'
-import _remove from 'lodash/remove'
 
 /**
  * Component that can be clicked to unselect filters
@@ -69,25 +68,6 @@ export default function FiltersBox(props) {
   const filtersBoxId = `${componentName}-${facetId}`
   const applyId = `apply-${filtersBoxId}`
 
-  function updateSelectionForFilterCheckboxes(filterId, value) {
-    const newSelection = selection.slice()
-    if (value && !newSelection.includes(filterId)) {
-      newSelection.push(filterId)
-    }
-    if (!value) {
-      _remove(newSelection, id => {return id === filterId})
-    }
-    setSelection(newSelection)
-  }
-
-  function updateSelectionForFilterSlider(ranges) {
-    let newSelection = selection.slice()
-    if (!newSelection !== [ranges]) {
-      newSelection = [ranges]
-    }
-    setSelection(newSelection)
-  }
-
   function handleApplyClick(event) {
     if (!canApply) return
 
@@ -108,9 +88,8 @@ export default function FiltersBox(props) {
       <Filters
         facet={props.facet}
         filters={props.filters}
-        updateSelectionForFilterCheckboxes={updateSelectionForFilterCheckboxes}
-        updateSelectionForFilterSlider={updateSelectionForFilterSlider}
         selection={selection}
+        setSelection={setSelection}
       />
       <div className='filters-box-footer'>
         {showClear &&

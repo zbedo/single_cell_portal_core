@@ -378,6 +378,9 @@ class IngestJob
       genes = Gene.where(study_id: self.study.id, study_file_id: self.study_file.id).count
       message << "Gene-level entries created: #{genes}"
     when 'Metadata'
+      if self.study_file.use_metadata_convention
+        message << "This metadata file was validated against the current <a href='https://github.com/broadinstitute/single_cell_portal/wiki/Metadata-Convention'>Metadata Convention</a>"
+      end
       cell_metadata = CellMetadatum.where(study_id: self.study.id, study_file_id: self.study_file.id)
       message << "Entries created:"
       cell_metadata.each do |metadata|

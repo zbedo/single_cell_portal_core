@@ -147,8 +147,19 @@ module Api
           @search_terms = sanitize_search_values(params[:terms])
           # determine if search values contain possible study accessions
           possible_accessions = StudyAccession.sanitize_accessions(@search_terms.split)
-          @studies = @viewable.any_of({:$text => {:$search => @search_terms}},
-                                      {:accession.in => possible_accessions})
+          # next, determine which kind of search to use
+          # for keywords only, we can use the text index
+          # for exact phrases (or combination) we have to run a regex search manually on names/descriptions
+          if @search_terms.include?("\"")
+            @term_list = self.class.extract_phrases_from_search(query_string: @search_terms)
+            study_regex = self.class.escape_terms_for_regex(term_list: @term_list)
+            @studies = @viewable.any_of({name: study_regex}, {description: study_regex},
+                                        {:accession.in => possible_accessions})
+          else
+            @term_list = @search_terms.split
+            @studies = @viewable.any_of({:$text => {:$search => @search_terms}},
+                                        {:accession.in => possible_accessions})
+          end
           # all of our terms were accessions, so this is a "cached" query, and we want to return
           # results in the exact order specified in the accessions array
           if possible_accessions.size == @search_terms.split.size
@@ -183,7 +194,7 @@ module Api
         # determine sort order for pagination; minus sign (-) means a descending search
         case sort_type
         when :keyword
-          @studies = @studies.sort_by {|study| -study.search_weight(@search_terms.split) }
+          @studies = @studies.sort_by {|study| -study.search_weight(@term_list)[:total] }
         when :accession
           @studies = @studies.sort_by {|study| possible_accessions.index(study.accession) }
         when :facet
@@ -523,6 +534,27 @@ module Api
         else
           view_context.sanitize(terms)
         end
+      end
+
+      # extract any "quoted phrases" from query string and tokenize terms
+      def self.extract_phrases_from_search(query_string:)
+        terms = []
+        query_string.split("\"").each do |substring|
+          # when splitting on double quotes, phrases will not have any leading/trailing whitespace
+          # individual lists of terms will have one or the other, which is how we differentiate
+          if substring.start_with?(' ') || substring.end_with?(' ')
+            terms += substring.strip.split
+          else
+            terms << substring
+          end
+        end
+        terms.delete_if(&:blank?) # there is usually one blank entry if we had a quoted phrase, so remove it
+      end
+
+      # escape regular expression control characters from list of search terms and format for search
+      def self.escape_terms_for_regex(term_list:)
+        escaped_terms = term_list.map {|term| Regexp.quote term}
+        /(#{escaped_terms.join('|')})/i
       end
 
       # generate query string for BQ

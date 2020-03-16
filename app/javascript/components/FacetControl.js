@@ -35,7 +35,8 @@ export default function FacetControl(props) {
       selectedFilterString = selectedFilters[0].name
     } else {
       // it's a numeric range filter
-      selectedFilterString = `${appliedSelection[0]}-${appliedSelection[1]}
+      selectedFilterString = `${facetName}:
+                              ${appliedSelection[0]}-${appliedSelection[1]}
                               ${appliedSelection[2]}`
     }
   }

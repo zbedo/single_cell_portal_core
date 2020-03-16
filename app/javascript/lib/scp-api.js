@@ -10,7 +10,10 @@ import camelcaseKeys from 'camelcase-keys'
 import _compact from 'lodash/compact'
 
 import { accessToken } from './../components/UserProvider'
-import { logSearch, logFilterSearch } from './metrics-api'
+import { logFilterSearch, logSearch } from './metrics-api'
+
+// If true, returns mock data for all API responses.  Only for dev.
+let globalMock = false
 
 const defaultBasePath = '/single_cell/api/v1'
 
@@ -20,6 +23,14 @@ const defaultInit = {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   }
+}
+
+if (
+  accessToken !== '' // accessToken is a blank string when not signed in
+) {
+  defaultInit.headers = Object.assign(defaultInit.headers, {
+    'Authorization': `Bearer ${accessToken}`
+  })
 }
 
 /**
@@ -41,12 +52,8 @@ const defaultInit = {
 export async function fetchAuthCode(mock=false) {
   let init = defaultInit
   if (mock === false && globalMock === false) {
-    const customHeaders = Object.assign(defaultInit.headers, {
-      'Authorization': `Bearer ${accessToken}`
-    })
     init = {
-      method: 'POST',
-      headers: customHeaders
+      method: 'POST'
     }
   }
   return await scpApi('/search/auth_code', init, mock)
@@ -63,9 +70,6 @@ export async function fetchAuthCode(mock=false) {
 export async function fetchFacets(mock=false) {
   return await scpApi('/search/facets', defaultInit, mock)
 }
-
-// If true, returns mock data for all API responses.  Only for dev.
-let globalMock = false
 
 /**
  * Sets flag on whether to use mock data for all API responses.
