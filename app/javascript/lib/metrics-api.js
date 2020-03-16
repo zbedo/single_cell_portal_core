@@ -62,7 +62,7 @@ function logClickButton(target) {
   log('click:button', props)
 
   // Google Analytics fallback: remove once Bard and Mixpanel are ready for SCP
-  ga('send', 'event', 'click', element)
+  ga('send', 'event', 'click', element) // eslint-disable-line no-undef
 }
 
 /**
@@ -105,7 +105,7 @@ function logClickInput(target) {
   log(`click:${element}`, props)
 
   // Google Analytics fallback: remove once Bard and Mixpanel are ready for SCP
-  ga('send', 'event', 'click', element)
+  ga('send', 'event', 'click', element) // eslint-disable-line no-undef
 }
 
 /**
@@ -116,7 +116,7 @@ function logClickOther(target) {
   log('click:other', props)
 
   // Google Analytics fallback: remove once Bard and Mixpanel are ready for SCP
-  ga('send', 'event', 'click', 'other')
+  ga('send', 'event', 'click', 'other') // eslint-disable-line no-undef
 }
 
 /**
@@ -142,7 +142,10 @@ export function logSearch(type, terms, facets, page) {
   log('search', props)
 
   // Google Analytics fallback: remove once Bard and Mixpanel are ready for SCP
-  ga('send', 'event', 'faceted-search', 'study-search', 'num-terms', numTerms)
+  ga( // eslint-disable-line no-undef
+    'send', 'event', 'faceted-search', 'study-search',
+    'num-terms', numTerms
+  )
 }
 
 /**
@@ -156,7 +159,10 @@ export function logFilterSearch(facet, terms) {
   log('search-filter', props)
 
   // Google Analytics fallback: remove once Bard and Mixpanel are ready for SCP
-  ga('send', 'event', 'faceted-search', 'search-filter', 'num-terms', numTerms)
+  ga( // eslint-disable-line no-undef
+    'send', 'event', 'faceted-search', 'search-filter',
+    'num-terms', numTerms
+  )
 }
 
 /**
@@ -186,5 +192,9 @@ export function log(name, props={}) {
     })
   }
   const init = Object.assign(defaultInit, body)
-  fetch(`${bardDomain}/api/event`, init)
+
+  // Remove once Bard and Mixpanel are ready for SCP
+  if ('SCP' in window && window.SCP.environment !== 'production') {
+    fetch(`${bardDomain}/api/event`, init)
+  }
 }

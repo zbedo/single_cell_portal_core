@@ -13,3 +13,9 @@ setMockOrigin('http://localhost:3000')
 
 // convert scrolls to no-ops as otherwise they will error
 global.scrollTo = jest.fn()
+
+// Google Analytics fallback: remove once Bard and Mixpanel are ready for SCP
+// This enables tests for SCP
+global.ga = function(mock1, mock2, mock3, mock4) {
+  return
+}
