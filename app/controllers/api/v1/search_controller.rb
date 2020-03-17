@@ -661,7 +661,7 @@ module Api
           search_facet = SearchFacet.find(facet[:object_id])
           # only use non-numeric facets
           if !search_facet.is_numeric?
-            filter_terms += search_facet[:filters].map {|filter| filter[:name]}
+            filter_terms += facet[:filters].map {|filter| filter[:name]}
           end
         end
         filter_terms
@@ -672,17 +672,14 @@ module Api
         matches = {}
         query_results.each do |result|
           accession = result[:study_accession]
-          matches[accession] ||= {}
-          search_weight = 0
+          matches[accession] ||= {facet_search_weight: 0}
           result.keys.keep_if { |key| key != :study_accession }.each do |key|
             facet_name = key.to_s.chomp('_val')
             matching_filter = match_results_by_filter(search_result: result, result_key: key, facets: search_facets)
             matches[accession][facet_name] ||= []
             matches[accession][facet_name] << matching_filter unless matches[accession][facet_name].include?(matching_filter)
-            search_weight += 1
+            matches[accession][:facet_search_weight] += 1
           end
-          # compute a score for relevance weighting
-          matches[accession][:facet_search_weight] = search_weight
         end
         matches
       end
