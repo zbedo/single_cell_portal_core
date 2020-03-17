@@ -20,7 +20,8 @@ SecureHeaders::Configuration.default do |config|
                     'https://www.googleapis.com', 'https://s3.amazonaws.com', 'https://data.broadinstitute.org', 'https://portals.broadinstitute.org',
                     'https://us.input.tcell.insight.rapid7.com', 'https://api.tcell.io', 'https://us.browser.tcell.insight.rapid7.com',
                     'https://us.agent.tcell.insight.rapid7.com', 'https://us.jsagent.tcell.insight.rapid7.com', 'https://accounts.google.com',
-                    'https://bam.nr-data.net']
+                    'https://bam.nr-data.net', 'https://terra-bard-dev.appspot.com', 'https://terra-bard-alpha.appspot.com',
+                    'https://terra-bard-prod.appspot.com']
   if ENV['NOT_DOCKERIZED']
     # enable connections to live reload server
     allowed_connect_sources.push('http://localhost:3035')

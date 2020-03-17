@@ -40,21 +40,18 @@ export function PropsStudySearchProvider(props) {
   const [searchState, setSearchState] = useState(defaultState)
   const searchParams = props.searchParams
 
-  /** update the search criteria */
-  async function updateSearch(updatedParams) {
-    const effectiveFacets = Object.assign({},
-      searchParams.facets,
-      updatedParams.facets)
-    const effectiveTerms = ('terms' in updatedParams) ?
-      updatedParams.terms :
-      searchParams.terms
+  /**
+   * Update search parameters in URL
+   *
+   * @param {Object} newParams Parameters to update
+   */
+  async function updateSearch(newParams) {
+    const facets = Object.assign({}, searchParams.facets, newParams.facets)
+    const terms = ('terms' in newParams) ? newParams.terms : searchParams.terms
     // reset the page to 1 for new searches, unless otherwise specified
-    const effectivePage = updatedParams.page ? updatedParams.page : 1
-    const qstring = buildSearchQueryString('study',
-      effectiveTerms,
-      effectiveFacets,
-      effectivePage)
-    navigate(`?${qstring}`)
+    const page = newParams.page ? newParams.page : 1
+    const queryString = buildSearchQueryString('study', terms, facets, page)
+    navigate(`?${queryString}`)
   }
 
   /** perform the actual API search */
