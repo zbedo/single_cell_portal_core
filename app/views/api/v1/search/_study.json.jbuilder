@@ -18,7 +18,7 @@ end
 # if this is an inferred match, use :term_matches for highlighting, but set :inferred_match to true
 if @inferred_accessions.present? && @inferred_accessions.include?(study.accession)
   json.set! :inferred_match, true
-  inferred_weight = study.search_weight(@filter_keywords)
+  inferred_weight = study.search_weight(@inferred_terms)
   json.set! :term_matches, inferred_weight[:terms].keys
   json.set! :term_search_weight, inferred_weight[:total]
 end
