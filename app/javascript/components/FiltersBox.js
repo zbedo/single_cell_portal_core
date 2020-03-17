@@ -68,7 +68,10 @@ export default function FiltersBox(props) {
   const filtersBoxId = `${componentName}-${facetId}`
   const applyId = `apply-${filtersBoxId}`
 
-  function handleApplyClick(event) {
+  /**
+   * Update search context with applied facets upon clicking "Apply"
+   */
+  function handleApplyClick() {
     if (!canApply) return
 
     const updatedFacetValue = {}

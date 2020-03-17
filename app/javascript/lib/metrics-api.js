@@ -161,7 +161,7 @@ function getNumFacetsAndFilters(facets) {
  * together in Mixpanel's alphabetized list, log these as "filtersDisease" and
  * "filtersSpecies".
  *
- * Also renames filters from opaque IDs (e.g. MONDO_0018076) to huamn-readable
+ * Also renames filters from opaque IDs (e.g. MONDO_0018076) to human-readable
  * labels (e.g. tuberculosis).
  */
 function getFriendlyFilterListByFacet(facets) {
