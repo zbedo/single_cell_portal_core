@@ -167,18 +167,14 @@ export async function fetchSearch(
   return await scpApi(path, defaultInit, mock)
 }
 
-/**
- * Constructs query string used for /search REST API endpoint
- */
+/** Constructs query string used for /search REST API endpoint */
 export function buildSearchQueryString(type, terms, facets, page) {
   const facetsParam = buildFacetQueryString(facets)
   const pageParam = page ? page : 1
   return `type=${type}&terms=${terms}&facets=${facetsParam}&page=${pageParam}`
 }
 
-/**
- * Serializes "facets" URL parameter for /search API endpoint
- */
+/** Serializes "facets" URL parameter for /search API endpoint */
 function buildFacetQueryString(facets) {
   if (!facets || !Object.keys(facets).length) {
     return ''
@@ -191,9 +187,7 @@ function buildFacetQueryString(facets) {
   return encodeURIComponent(rawURL) // needed for the + , : characters
 }
 
-/**
- * Deserializes "facets" URL parameter into facets object
- */
+/** Deserializes "facets" URL parameter into facets object */
 export function buildFacetsFromQueryString(facetsParamString) {
   const facets = {}
   if (facetsParamString) {
