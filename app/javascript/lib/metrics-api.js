@@ -240,6 +240,9 @@ export function logDownloadAuthorization() {
 /**
  * Log metrics to Mixpanel via Bard web service
  *
+ * Bard docs:
+ * https://terra-bard-prod.appspot.com/docs/
+ *
  * @param {String} name
  * @param {Object} props
  */
@@ -253,7 +256,8 @@ export function log(name, props={}) {
     appId: 'single-cell-portal',
     timestamp: Date.now(),
     appPath,
-    userId,
+    userId, // Required by Bard; should
+    distinct_id: userId, // Needed for Mixpanel "Distinct ID" (Bard papercut)
     env
   })
 
