@@ -257,7 +257,7 @@ export function log(name, props={}) {
     appId: 'single-cell-portal',
     timestamp: Date.now(),
     appPath,
-    userId, // Required by Bard; should
+    userId, // Required by Bard; perhaps Bard should handle distinct_id
     distinct_id: userId, // Needed for Mixpanel "Distinct ID" (Bard papercut)
     env
   })
