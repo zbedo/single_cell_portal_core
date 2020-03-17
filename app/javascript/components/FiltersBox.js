@@ -73,7 +73,7 @@ export default function FiltersBox(props) {
 
     const updatedFacetValue = {}
     updatedFacetValue[facetId] = selection
-    searchContext.updateSearch({ facets: updatedFacetValue }, event)
+    searchContext.updateSearch({ facets: updatedFacetValue })
     if (props.setShow) {
       props.setShow(false)
     }

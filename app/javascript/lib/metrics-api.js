@@ -17,11 +17,13 @@ const bardDomainsByEnv = {
   'production': 'https://terra-bard-prod.appspot.com'
 }
 let bardDomain = ''
-const env = ''
+let env = ''
 let userId = ''
-if ('SCP' in window) {
-  bardDomain = bardDomainsByEnv[window.SCP.environment]
 
+// TODO (SCP-2237): Use Node environment to get React execution context
+if ('SCP' in window) {
+  env = window.SCP.environment
+  bardDomain = bardDomainsByEnv[env]
   // To consider: Replace SCP-specific userId with DSP-wide userId
   userId = window.SCP.userId
 }
@@ -165,7 +167,6 @@ function getNumFacetsAndFilters(facets) {
 function getFriendlyFilterListByFacet(facets) {
   const filterListByFacet = {}
   Object.entries(facets).forEach(([facet, filters]) => {
-    // e.g.
     const friendlyFacet = `filters${facet[0].toUpperCase() + facet.slice(1)}`
     const friendlyFilters = filters.map(filterId => {
       // This global variable is initialized in application.html.erb
