@@ -18,6 +18,8 @@ const emptySearch = {
   isLoading: false,
   isLoaded: false,
   isError: false,
+  isLoadingDownloadPreview: false,
+  isLoadedDownloadPreview: false,
   updateSearch: () => {
     throw new Error(
       'You are trying to use this context outside of a Provider container'
@@ -58,29 +60,37 @@ export function PropsStudySearchProvider(props) {
   async function performSearch(params) {
     // reset the scroll in case they scrolled down to read prior results
     window.scrollTo(0, 0)
+
     const results = await fetchSearch('study',
       params.terms,
       params.facets,
       params.page)
+
     setSearchState({
       params,
       isError: false,
       isLoading: false,
       isLoaded: true,
+      isLoadingDownloadPreview: true,
+      isLoadedDownloadPreview: false,
       results,
       updateSearch
     })
   }
 
+  // Search done on initial page load
   if (!_isEqual(searchParams, searchState.params) ||
       !searchState.isLoading &&
       !searchState.isLoaded) {
     performSearch(searchParams)
+
     setSearchState({
       params: searchParams,
       isError: false,
       isLoading: true,
       isLoaded: false,
+      isLoadingDownloadPreview: false,
+      isLoadedDownloadPreview: false,
       results: [],
       updateSearch
     })

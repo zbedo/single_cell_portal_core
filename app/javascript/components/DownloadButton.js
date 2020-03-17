@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload } from '@fortawesome/free-solid-svg-icons'
 import Modal from 'react-bootstrap/lib/Modal'
+
 // We'll need this when refining onClipboardCopySuccess
 // import Tooltip from 'react-bootstrap/lib/Tooltip';
 import Clipboard from 'react-clipboard.js'
