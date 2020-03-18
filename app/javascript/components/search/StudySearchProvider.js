@@ -2,10 +2,12 @@ import React, { useContext, useState } from 'react'
 import {
   fetchSearch, buildSearchQueryString, buildFacetsFromQueryString
 } from 'lib/scp-api'
+import SearchSelectionProvider from 'components/search/SearchSelectionProvider'
 import _cloneDeep from 'lodash/cloneDeep'
 import _isEqual from 'lodash/isEqual'
 import { Router, navigate } from '@reach/router'
 import * as queryString from 'query-string'
+
 
 
 const emptySearch = {
@@ -87,7 +89,9 @@ export function PropsStudySearchProvider(props) {
   }
   return (
     <StudySearchContext.Provider value={searchState}>
-      { props.children }
+      <SearchSelectionProvider>
+        { props.children }
+      </SearchSelectionProvider>
     </StudySearchContext.Provider>
   )
 }
