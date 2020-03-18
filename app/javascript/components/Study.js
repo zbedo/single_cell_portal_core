@@ -34,19 +34,24 @@ function stripTags(rawString) {
 }
 
 /* displays a brief summary of a study, with a link to the study page */
-export default function Study(props) {
-  const studyDescription = formatDescription(props.study.description)
+export default function Study({study}) {
+  const studyDescription = formatDescription(study.description)
+  let inferredBadge = <></>
+  if (study.inferred_match) {
+    const helpText = `${study.term_matches.join(', ')} was not found in study metadata, only in study title or description`
+    inferredBadge = <span className="badge soft-badge"  data-toggle="tooltip" title={helpText}>text match only</span>
+  }
 
   return (
-    <div key={props.study.accession}>
-      <label htmlFor={props.study.name} id= 'result-title'>
-        <a href={props.study.study_url}>{props.study.name} </a></label>
+    <>
+      <label htmlFor={study.name} id= 'result-title'>
+        <a href={study.study_url}>{study.name} </a> {inferredBadge}</label>
       <div>
         <span id='cell-count' className='badge badge-secondary'>
-          {props.study.cell_count} Cells
+          {study.cell_count} Cells
         </span>
       </div>
       {studyDescription}
-    </div>
+    </>
   )
 }
