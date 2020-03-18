@@ -37,6 +37,7 @@ describe('Facet control handles selections appropriately', () => {
         <FacetControl facet={speciesFacet}/>
       </PropsStudySearchProvider>
     ))
+
     expect(speciesControl()).toHaveLength(1)
     expect(speciesControl().hasClass('active')).toEqual(false)
     wrapper.find('#facet-species > a').simulate('click')

@@ -8,6 +8,7 @@ import {
   fetchSearch, buildSearchQueryString, buildFacetsFromQueryString,
   fetchDownloadSize
 } from 'lib/scp-api'
+import SearchSelectionProvider from 'components/search/SearchSelectionProvider'
 
 const emptySearch = {
   params: {
@@ -128,7 +129,9 @@ export function PropsStudySearchProvider(props) {
   }
   return (
     <StudySearchContext.Provider value={searchState}>
-      { props.children }
+      <SearchSelectionProvider>
+        { props.children }
+      </SearchSelectionProvider>
     </StudySearchContext.Provider>
   )
 }
