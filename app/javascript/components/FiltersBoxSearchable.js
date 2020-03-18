@@ -12,7 +12,7 @@ import FiltersSearchBar from './FiltersSearchBar'
 /**
  * Component for filter search and filter lists
  */
-export default function FiltersBoxSearchable({facet, selection, setSelection, performSearch, show, setShow}) {
+export default function FiltersBoxSearchable({facet, selection, setSelection, show, setShow}) {
   // State that is specific to FiltersBox
   const [matchingFilters, setMatchingFilters] = useState(facet.filters.slice(0, 15))
   const [hasFilterSearchResults, setHasFilterSearchResults] = useState(false)
@@ -134,7 +134,6 @@ export default function FiltersBoxSearchable({facet, selection, setSelection, pe
             setShow={setShow}
             selection={selection}
             setSelection={setSelection}
-            performSearch={performSearch}
           />
         </div>
       }

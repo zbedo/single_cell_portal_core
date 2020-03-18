@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react'
+import React, { useContext } from 'react'
 import Button from 'react-bootstrap/lib/Button'
 import InputGroup from 'react-bootstrap/lib/InputGroup'
 import Form from 'react-bootstrap/lib/Form'

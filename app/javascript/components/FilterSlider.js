@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Slider, Rail, Handles, Tracks, Ticks } from 'react-compound-slider'
 
 import { Handle, Track, Tick } from './slider/components'
@@ -68,7 +68,8 @@ export default function FilterSlider(props) {
     const units = facet.allUnits
     const unit = propsUnit ? propsUnit : facet.allUnits[0]
     unitControl = (
-        <select value={unit} onChange={event => handleUpdate({unit: event.target.value})}>
+        <select value={unit}
+                onChange={event => handleUpdate({unit: event.target.value})}>
           {units.map((unit, i) =>
             <option key={i}>{unit}</option>
           )}
@@ -104,7 +105,9 @@ export default function FilterSlider(props) {
           step={1}
           domain={domain}
           rootStyle={sliderStyle}
-          onChange={newValues => handleUpdate({min: newValues[0], max: newValues[1]})}
+          onChange={newValues =>
+            handleUpdate({min: newValues[0], max: newValues[1]})
+          }
           values={propsRange}
         >
           <Rail>
