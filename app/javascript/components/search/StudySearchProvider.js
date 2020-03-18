@@ -35,9 +35,11 @@ const emptySearch = {
 
 export const StudySearchContext = React.createContext(emptySearch)
 
+/** Wrapper for deep mocking via Jest / Enzyme */
 export function useContextStudySearch() {
   return useContext(StudySearchContext)
 }
+
 /**
   * renders a StudySearchContext tied to its props,
   * fires route navigate on changes to params
@@ -137,10 +139,10 @@ export function PropsStudySearchProvider(props) {
 }
 
 /**
-  * Self-contained component for providing a url-routable
-  * StudySearchContext and rendering children.
-  * The routing is all via query params
-  */
+ * Self-contained component for providing a url-routable
+ * StudySearchContext and rendering children.
+ * The routing is all via query params
+ */
 export default function StudySearchProvider(props) {
   // create a wrapper component for the search display since <Router>
   // assumes that all of its unwrapped children (even nested) be routes
