@@ -595,8 +595,8 @@ module Api
           # in order to maintain the same behavior as normal facets, we run each facet separately and get matching accessions
           # this gives us an array of arrays of matching accessions; now find the intersection (:&)
           filters = terms.values.map {|keywords| escape_terms_for_regex(term_list: keywords)}
-          accessions_by_filter = filters.map {|filter| base_studies.any_of({name: filter}, {description: filter}).
-              where(:accession.nin => accessions).pluck(:accession)}
+          accessions_by_filter = filters.map {|filter| base_studies.any_of({name: filter}, {description: filter})
+                                                           .where(:accession.nin => accessions).pluck(:accession)}
           base_studies.where(:accession.in => accessions_by_filter.inject(:&))
         else
           # no matching query case, so perform normal text-index search
