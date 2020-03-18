@@ -10,6 +10,9 @@ import Clipboard from 'react-clipboard.js'
 import { useContextStudySearch } from './search/StudySearchProvider'
 import { useContextUser } from './UserProvider'
 import { fetchAuthCode } from 'lib/scp-api'
+import {
+  getNumFacetsAndFilters, getNumberOfTerms
+} from '../lib/scp-api-metrics'
 
 /**
  * Fetch auth code, build download command, return configuration object
@@ -169,8 +172,12 @@ function getLeadText(downloadSize) {
   `)
 }
 
+/** Determine if search has any parameters, i.e. terms or filters */
 function hasSearchParams(searchContext) {
-  return true
+  const params = searchContext.params
+  const numTerms = getNumberOfTerms(params.terms)
+  const [numFacets, numFilters] = getNumFacetsAndFilters(params.facets)
+  return (numTerms + numFacets + numFilters) > 0
 }
 
 /**

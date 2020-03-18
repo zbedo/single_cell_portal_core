@@ -41,7 +41,7 @@ export function mapFiltersForLogging(facetsOrFilters, isFacets=false) {
 /**
  * Count terms, i.e. space-delimited strings, and consider [""] to have 0 terms
  */
-function getNumberOfTerms(terms) {
+export function getNumberOfTerms(terms) {
   let numTerms = 0
   const splitTerms = terms.split(' ')
   if (splitTerms.length > 0 && splitTerms[0] !== '') {
@@ -53,7 +53,7 @@ function getNumberOfTerms(terms) {
 /**
  * Counts facets (e.g. species, disease) and filters (e.g. human, COVID-19)
  */
-function getNumFacetsAndFilters(facets) {
+export function getNumFacetsAndFilters(facets) {
   const numFacets = Object.keys(facets).length
   const numFilters =
     Object.values(facets).reduce((prevNumFilters, filterArray) => {
