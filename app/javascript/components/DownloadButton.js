@@ -203,10 +203,6 @@ export default function DownloadButton(props) {
     hasSearchParams(searchContext.params)
   )
 
-  function showModalAndFetchDownloadCommand() {
-    if (active) setShow(!show)
-  }
-
   let hint = 'To download, first do a search'
   if (active) hint = 'Download files for your search results'
 
@@ -222,7 +218,7 @@ export default function DownloadButton(props) {
           id='download-button'
           className={`btn btn-primary ${active ? 'active' : 'disabled'}`}
         >
-          <span onClick={showModalAndFetchDownloadCommand}>
+          <span onClick={() => {if (active) setShow(!show)}}>
             <FontAwesomeIcon className="icon-left" icon={faDownload}/>
           Download
           </span>
