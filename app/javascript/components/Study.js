@@ -12,9 +12,9 @@ export function formatDescription(rawDescription, term) {
 }
 
 function highlightText(text, terms) {
+  const matchedIndicies = []
   if (terms) {
     let match
-    const matchedIndicies = []
     const regex = RegExp(terms, 'gi')
     // Find indices where match occured
     while ((match = regex.exec(text)) != null) {
@@ -24,7 +24,7 @@ function highlightText(text, terms) {
       return { styledText: text.replace(regex, `<span id='highlight'>${terms}</span>`), matchedIndicies }
     }
   }
-  return { styledText: text }
+  return { styledText: text, matchedIndicies }
 }
 
 function shortenDescription(textDescription, term) {
@@ -41,7 +41,7 @@ function shortenDescription(textDescription, term) {
     const ranges = matchesOutSideDescriptionWordLimit.filter(index => index < descriptionWordLimit+firstIndex)
     const start = ((matchedIndicies.length- matchesOutSideDescriptionWordLimit.length)*(lengthOfHighlightTag+term.length)) +firstIndex
     const end = start + descriptionWordLimit + (ranges.length*(lengthOfHighlightTag+term.length))
-    const descriptionText = styledText.slice(start, end)
+    const descriptionText = styledText.slice(start-100, end)
     const displayedStudyDescription = { __html: descriptionText }
     // Determine if there are matches to display in summary paragraph
     const amountOfMatchesInSummaryWordLimit = matchedIndicies.filter(matchedIndex => matchedIndex <= summaryWordLimit).length
