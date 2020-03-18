@@ -1,19 +1,12 @@
-<<<<<<< HEAD
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import Tab from 'react-bootstrap/lib/Tab'
 import Tabs from 'react-bootstrap/lib/Tabs'
-import { useTable, usePagination } from 'react-table'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faAngleDoubleLeft, faAngleLeft, faAngleRight, faAngleDoubleRight } from '@fortawesome/free-solid-svg-icons'
-=======
-import React from 'react'
 import { useTable, usePagination } from 'react-table'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faAngleDoubleLeft, faAngleLeft, faAngleRight, faAngleDoubleRight
 } from '@fortawesome/free-solid-svg-icons'
 import Study from './Study'
->>>>>>> aa44ab98f5bb1f0baabde0e3a732d88f9eb3df42
 
 /**
  * Wrapper component for studies on homepage
@@ -39,9 +32,9 @@ export const StudiesList = ({ studies }) => {
         study={result}
         key={result.accession}
         className='card'
-      />,
+      />
     }
-  ),
+  )
   )
 }
 
@@ -60,14 +53,8 @@ export function StudiesResults(props) {
         terms={results.terms}
         facets = {results.facets}
         study={result}
-<<<<<<< HEAD
-        key={results.accession}
-        className='card'
-      />,
-=======
         key={result.accession}
       />
->>>>>>> aa44ab98f5bb1f0baabde0e3a732d88f9eb3df42
     }
   )
   )
@@ -83,16 +70,10 @@ export function StudiesResults(props) {
     data,
     // holds pagination states
     initialState: {
-<<<<<<< HEAD
-      pageIndex: (results.currentPage - 1),
-      // This will change when there's a way to determine amount of results per page via API endpoint
-      pageSize: 5,
-=======
       pageIndex: results.currentPage -1,
       // This will change when there's a way to determine amount of results
       // per page via API endpoint
       pageSize: 5
->>>>>>> aa44ab98f5bb1f0baabde0e3a732d88f9eb3df42
     },
     pageCount: results.totalPages,
     manualPagination: true
@@ -105,13 +86,6 @@ export function StudiesResults(props) {
           <strong>{ results.totalStudies }</strong> total studies found
         </div>
         <div className="col-md-4">
-<<<<<<< HEAD
-          <PagingControl currentPage={results.currentPage}
-            totalPages={results.totalPages}
-            changePage={changePage}
-            canPreviousPage={canPreviousPage}
-            canNextPage={canNextPage}/>
-=======
           <PagingControl
             currentPage={results.currentPage}
             totalPages={results.totalPages}
@@ -119,7 +93,6 @@ export function StudiesResults(props) {
             canPreviousPage={canPreviousPage}
             canNextPage={canNextPage}
           />
->>>>>>> aa44ab98f5bb1f0baabde0e3a732d88f9eb3df42
         </div>
       </div>
       <table {...getTableProps()}>
@@ -136,13 +109,6 @@ export function StudiesResults(props) {
           })}
         </tbody>
       </table>
-<<<<<<< HEAD
-      <PagingControl currentPage={results.currentPage}
-        totalPages={results.totalPages}
-        changePage={changePage}
-        canPreviousPage={canPreviousPage}
-        canNextPage={canNextPage}/>
-=======
       <PagingControl
         currentPage={results.currentPage}
         totalPages={results.totalPages}
@@ -150,18 +116,13 @@ export function StudiesResults(props) {
         canPreviousPage={canPreviousPage}
         canNextPage={canNextPage}
       />
->>>>>>> aa44ab98f5bb1f0baabde0e3a732d88f9eb3df42
     </>
   )
 }
 // Taken from https://codesandbox.io/s/github/tannerlinsley/react-table/tree/master/examples/pagination
-<<<<<<< HEAD
-const PagingControl = ({ currentPage, totalPages, changePage, canPreviousPage, canNextPage }) => {
-=======
 const PagingControl = ({
   currentPage, totalPages, changePage, canPreviousPage, canNextPage
 }) => {
->>>>>>> aa44ab98f5bb1f0baabde0e3a732d88f9eb3df42
   return (
     <div className="pagination">
       <button
@@ -194,49 +155,3 @@ const PagingControl = ({
     </div>
   )
 }
-
-<<<<<<< HEAD
-export const Study = study => {
-  const { terms, facets } = study
-  const [studyTitle, setStudyTitle] = useState()
-  const [studyText, setStudyText] = useState()
-
-  // eslint-disable-next-line require-jsdoc
-  function highlightText(text) {
-    if (terms || facets.length>0) {
-      const searchTermIndex = text.indexOf(terms)
-      if (searchTermIndex != -1) {
-        return `${text.substring(0, searchTermIndex)}<span class='highlight'> ${text.substring(searchTermIndex, searchTermIndex+ terms.length)} </span> ${text.substring(searchTermIndex+ terms.length)}`
-      }
-    }
-    return text
-  }
-
-  useEffect(() => {
-    setStudyTitle(highlightText(study.study.name))
-    setStudyText(highlightText(study.study.description))
-  }, [])
-
-  const displayedStudyDescription = { __html: studyText }
-  const displayedStudyTitle= { __html: studyTitle }
-
-  return (
-    <div key={study.study.accession}>
-      <label htmlFor={studyTitle} id= 'result-title'>
-        <a href={study.study.study_url} dangerouslySetInnerHTML={displayedStudyTitle}></a></label>
-      <div>
-        <span id='cell-count' className='badge badge-secondary'>
-          {study.study.cell_count} Cells
-        </span>
-      </div>
-      <span
-        disabled
-        dangerouslySetInnerHTML={displayedStudyDescription}
-        id='descrition-text-area'
-        accession={study.study.accession}></span>
-    </div>
-  )
-}
-=======
-export default StudyResults
->>>>>>> aa44ab98f5bb1f0baabde0e3a732d88f9eb3df42
