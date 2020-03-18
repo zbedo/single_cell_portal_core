@@ -15,15 +15,8 @@ const StudyResults = ({ results, changePage }) => {
       accessor: 'study'
     }])
 
-  const data = results.studies.map(result => (
-    {
-      study: <Study
-        study={result}
-        key={result.accession}
-      />
-    }
-  )
-  )
+  // convert to an array of objects with a 'study' property for react-table
+  const data = results.studies.map(study => { return {study: study}})
 
   const {
     getTableProps,
@@ -46,6 +39,11 @@ const StudyResults = ({ results, changePage }) => {
     manualPagination: true
   },
   usePagination)
+
+  function getRowProps(row) {
+    const studyClass = row.values.study.inferred_match ? 'inferred-match result-row' : 'result-row'
+    return { className: studyClass }
+  }
   return (
     <>
       <div className="row results-header">
@@ -67,9 +65,13 @@ const StudyResults = ({ results, changePage }) => {
           {rows.map((row, i) => {
             prepareRow(row)
             return (
-              <tr {...row.getRowProps()} className='result-row'>
+              <tr {...row.getRowProps(getRowProps(row))}>
                 {row.cells.map(cell => {
-                  return <td key {...cell.getCellProps()} id='result-cell'>{cell.render('Cell')}</td> // eslint-disable-line max-len
+                  return (
+                    <td key {...cell.getCellProps()}>
+                      <Study study={cell.value}/>
+                    </td>
+                  )
                 })}
               </tr>
             )
