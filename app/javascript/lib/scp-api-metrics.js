@@ -27,7 +27,11 @@ export function mapFiltersForLogging(facetsOrFilters, isFacets=false) {
       })
     })
   } else {
-    const filters = facetsOrFilters
+    let filters = facetsOrFilters
+    // handle facet filter search results
+    if (facetsOrFilters.filters) {
+      filters = facetsOrFilters.filters
+    }
     filters.map(filter => {
       filterNamesById[filter.id] = filter.name
     })
