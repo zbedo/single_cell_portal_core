@@ -25,9 +25,10 @@ export default function FacetControl(props) {
   const searchContext = useContext(StudySearchContext)
   const appliedSelection = searchContext.params.facets[props.facet.id]
   const selectionContext = useContext(SearchSelectionContext)
-  const selection = selectionContext.facets[props.facet.id] ?
-                      selectionContext.facets[props.facet.id] :
-                      []
+  let selection = []
+  if (selectionContext.facets[props.facet.id]) {
+    selection = selectionContext.facets[props.facet.id]
+  }
 
   let selectedFilterString
   if (appliedSelection && appliedSelection.length) {

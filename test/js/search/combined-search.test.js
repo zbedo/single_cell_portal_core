@@ -43,7 +43,7 @@ const speciesFacet = {
   }
 
 describe('Apply applies all changes made in the search panel', () => {
-  it('applies keywod changes when applying from a facet', async () => {
+  it('applies keyword changes when applying from a facet', async () => {
     const routerNav = jest.spyOn(Reach, 'navigate')
 
     const wrapper = mount((
