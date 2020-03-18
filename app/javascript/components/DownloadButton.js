@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload } from '@fortawesome/free-solid-svg-icons'
 import Modal from 'react-bootstrap/lib/Modal'
-
-// We'll need this when refining onClipboardCopySuccess
 import Tooltip from 'react-bootstrap/lib/Tooltip'
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger'
 import Clipboard from 'react-clipboard.js'
 
 import { useContextStudySearch } from './search/StudySearchProvider'
@@ -173,8 +172,7 @@ function getLeadText(downloadSize) {
 }
 
 /** Determine if search has any parameters, i.e. terms or filters */
-function hasSearchParams(searchContext) {
-  const params = searchContext.params
+function hasSearchParams(params) {
   const numTerms = getNumberOfTerms(params.terms)
   const [numFacets, numFilters] = getNumFacetsAndFilters(params.facets)
   return (numTerms + numFacets + numFilters) > 0
@@ -202,28 +200,34 @@ export default function DownloadButton(props) {
   const active = (
     userContext.accessToken !== '' &&
     matchingAccessions.length > 0 &&
-    hasSearchParams(searchContext)
+    hasSearchParams(searchContext.params)
   )
 
   function showModalAndFetchDownloadCommand() {
     if (active) setShow(!show)
   }
 
+  let hint = 'To download, first do a search'
+  if (active) hint = 'Download files for your search results'
+
   const handleClose = () => setShow(false)
 
   return (
     <>
-      <span
-        id='download-button'
-        className={active ? 'active' : 'disabled'}
-        data-toggle="tooltip"
-        title={active ? 'Download files for your search results' : 'Do a search to get results to download'}
+      <OverlayTrigger
+        placement="top"
+        overlay={<Tooltip id="download-tooltip">{hint}</Tooltip>}
       >
-        <span onClick={showModalAndFetchDownloadCommand}>
-          <FontAwesomeIcon className="icon-left" icon={faDownload}/>
+        <button
+          id='download-button'
+          className={`btn btn-primary ${active ? 'active' : 'disabled'}`}
+        >
+          <span onClick={showModalAndFetchDownloadCommand}>
+            <FontAwesomeIcon className="icon-left" icon={faDownload}/>
           Download
-        </span>
-      </span>
+          </span>
+        </button>
+      </OverlayTrigger>
       <Modal
         id='bulk-download-modal'
         show={show}
