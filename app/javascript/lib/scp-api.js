@@ -165,6 +165,26 @@ export async function fetchFacetFilters(facet, query, mock=false) {
 }
 
 /**
+ *  Returns number of files and bytes (by file type), to preview bulk download
+ *
+ * Docs:
+ * https://singlecell.broadinstitute.org/single_cell/api/swagger_docs/v1#!/Search/search_bulk_download_size_path
+ *
+ * @param {Array} List of study accessions to preview download
+ * @param {Array} fileTypes List of file types in studies to preview download
+ *
+ * @example returns Promise for JSON
+ * {"Expression":{"total_files":4,"total_bytes":1797720765},"Metadata":{"total_files":2,"total_bytes":865371}}
+ * fetchDownloadSize([SCP200, SCP201], ["Expression", "Metadata"])
+ */
+export async function fetchDownloadSize(accessions, fileTypes, mock=false) {
+  const fileTypesString = fileTypes.join(',')
+  const queryString = `?accessions=${accessions}&file_types=${fileTypesString}`
+  const pathAndQueryString = `/search/bulk_download_size/${queryString}`
+  return await scpApi(pathAndQueryString)
+}
+
+/**
  * Returns a list of matching studies given a keyword and facets
  *
  * Docs: https:///singlecell.broadinstitute.org/single_cell/api/swagger_docs/v1#!/Search/search_facet_filters_path

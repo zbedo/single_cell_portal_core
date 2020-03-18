@@ -4,7 +4,7 @@ import { faDownload } from '@fortawesome/free-solid-svg-icons'
 import Modal from 'react-bootstrap/lib/Modal'
 
 // We'll need this when refining onClipboardCopySuccess
-// import Tooltip from 'react-bootstrap/lib/Tooltip';
+import Tooltip from 'react-bootstrap/lib/Tooltip'
 import Clipboard from 'react-clipboard.js'
 
 import { useContextStudySearch } from './search/StudySearchProvider'
@@ -46,6 +46,12 @@ async function generateDownloadConfig(matchingAccessions) {
     downloadCommand
   }
 }
+
+/**
+ * Get preview of download sizes
+ *
+ * @param {*} downloadSize
+ */
 
 /**
  * Container for curl command to download files
@@ -116,6 +122,56 @@ function DownloadCommandContainer(props) {
   )
 }
 
+/**
+ * Format number in bytes, with human-friendly units
+ *
+ * Derived from https://gist.github.com/lanqy/5193417#gistcomment-2663632
+ */
+function bytesToSize(bytes) {
+  const sizes = ['bytes', 'KB', 'MB', 'GB', 'TB']
+  if (bytes === 0) return 'n/a'
+
+  // eweitz: Most implementations use log(1024), but such units are
+  // binary and have values like MiB (mebibyte)
+  const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1000)), 10)
+
+  if (i === 0) return `${bytes} ${sizes[i]}`
+  return `${(bytes / (1000 ** i)).toFixed(1)} ${sizes[i]}`
+}
+
+/**
+ * Get introductory text for download command, including download size
+ *
+ * @param {Object} downloadSize Size in bytes, by file type
+ */
+function getLeadText(downloadSize) {
+  // Sum sizes by file type to total size for download
+  const totalSize =
+    Object.values(downloadSize).reduce((prevSize, sizeObj) => {
+      return sizeObj.total_bytes + prevSize
+    }, 0)
+  const prettyBytes = bytesToSize(totalSize)
+
+  // Get file type summary
+  // E.g. "metadata and expression" or
+  // (possibly later) "metadata, cluster, and expression"
+  const ft = Object.keys(downloadSize)
+  let fileTypes = ft.join(' and ')
+  if (ft.length > 2) {
+    const allButLast = ft.slice(0, -1)
+    const last = ft.slice(-1)[0]
+    fileTypes = `${allButLast.join(', ')}, and ${last}`
+  }
+
+  return (`
+    To download ${prettyBytes} in ${fileTypes} files
+    matching your search, copy this command and paste it into your terminal:
+  `)
+}
+
+function hasSearchParams(searchContext) {
+  return true
+}
 
 /**
  * Component for "Download" button and Bulk Download modal.
@@ -129,12 +185,18 @@ export default function DownloadButton(props) {
   const [show, setShow] = useState(false)
 
   const matchingAccessions = searchContext.results.matchingAccessions || []
+  const downloadSize = searchContext.downloadSize
 
   /**
-   * Reports whether Download button be active,
-   * i.e. user is signed in and has search results
+   * Reports whether Download button should be active,
+   * i.e. user is signed in, has search results,
+   * and search has parameters (i.e. user would not download all studies)
    */
-  const active = userContext.accessToken !== '' && matchingAccessions.length > 0
+  const active = (
+    userContext.accessToken !== '' &&
+    matchingAccessions.length > 0 &&
+    hasSearchParams(searchContext)
+  )
 
   function showModalAndFetchDownloadCommand() {
     if (active) setShow(!show)
@@ -144,7 +206,12 @@ export default function DownloadButton(props) {
 
   return (
     <>
-      <span id='download-button' className={active ? 'active' : ''}>
+      <span
+        id='download-button'
+        className={active ? 'active' : 'disabled'}
+        data-toggle="tooltip"
+        title={active ? 'Download files for your search results' : 'Do a search to get results to download'}
+      >
         <span onClick={showModalAndFetchDownloadCommand}>
           <FontAwesomeIcon className="icon-left" icon={faDownload}/>
           Download
@@ -163,11 +230,12 @@ export default function DownloadButton(props) {
 
         <Modal.Body>
           <p className='lead'>
-          To download files matching your search,{' '}
-          copy this command and paste it into your terminal:
+            {getLeadText(downloadSize)}
           </p>
           <div className='lead command-container' id='command-container-all'>
-            <DownloadCommandContainer matchingAccessions={matchingAccessions} />
+            <DownloadCommandContainer
+              matchingAccessions={matchingAccessions}
+            />
           </div>
         </Modal.Body>
 
