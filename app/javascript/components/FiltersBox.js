@@ -3,6 +3,7 @@ import _isEqual from 'lodash/isEqual'
 import Button from 'react-bootstrap/lib/Button'
 
 import { StudySearchContext } from 'components/search/StudySearchProvider'
+import { SearchSelectionContext } from './search/SearchSelectionProvider'
 import Filters from './Filters'
 
 /**
@@ -42,6 +43,7 @@ function ApplyButton(props) {
  */
 export default function FiltersBox(props) {
   const searchContext = useContext(StudySearchContext)
+  const selectionContext = useContext(SearchSelectionContext)
 
   let appliedSelection = searchContext.params.facets[props.facet.id]
   appliedSelection = appliedSelection ? appliedSelection : []
@@ -74,9 +76,7 @@ export default function FiltersBox(props) {
   function handleApplyClick() {
     if (!canApply) return
 
-    const updatedFacetValue = {}
-    updatedFacetValue[facetId] = selection
-    searchContext.updateSearch({ facets: updatedFacetValue })
+    selectionContext.performSearch()
     if (props.setShow) {
       props.setShow(false)
     }
