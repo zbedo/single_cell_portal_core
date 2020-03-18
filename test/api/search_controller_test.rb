@@ -282,6 +282,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
   test 'should run inferred search using facets and phrase' do
     puts "#{File.basename(__FILE__)}: #{self.method_name}"
 
+    convention_study = Study.find_by(name: "Test Study #{@random_seed}")
     other_study = Study.find_by(name: "API Test Study #{@random_seed}")
     original_description = other_study.description.to_s.dup
     species_facet = SearchFacet.find_by(identifier: 'species')
@@ -289,10 +290,10 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     filter_name = species_facet.filters.first[:name]
     other_study.update(description: filter_name)
     search_phrase = "Study #{@random_seed}"
-    expected_accessions = Study.all.pluck(:accession).sort
+    expected_accessions = [convention_study.accession, other_study.accession]
     execute_http_request(:get, api_v1_search_path(type: 'study', facets: facet_query, terms: "\"#{search_phrase}\""))
     assert_response :success
-    found_accessions = json['matching_accessions'].sort
+    found_accessions = json['matching_accessions']
     assert_equal expected_accessions, found_accessions,
                  "Did not find expected accessions for phrase & facet search, expected #{expected_accessions} but found #{found_accessions}"
     # the combination of phrase + facet search is an AND, so 'API Test Study' will still be inferred as it does not
@@ -308,6 +309,38 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
                       "Did not find #{search_phrase} in term_matches for #{study['accession']}: #{study['term_matches']}"
     end
     # reset description so other tests aren't broken
+    other_study.update(description: original_description)
+
+    puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"
+  end
+
+  test 'should find intersection of facets on inferred search' do
+    puts "#{File.basename(__FILE__)}: #{self.method_name}"
+
+    # update other_study to match one filter from facets; should not be inferred since it doesn't meet both criteria
+    convention_study = Study.find_by(name: "Test Study #{@random_seed}")
+    other_study = Study.find_by(name: "API Test Study #{@random_seed}")
+    original_description = other_study.description.to_s.dup
+    facets = SearchFacet.where(:identifier.in => %w(species disease))
+    facet_query = facets.map {|facet| "#{facet.identifier}:#{facet.filters.first[:id]}"}.join('+')
+    single_facet_name = facets.sample.filters.first[:name]
+    other_study.update(description: single_facet_name)
+    execute_http_request(:get, api_v1_search_path(type: 'study', facets: facet_query))
+    assert_response :success
+    expected_accessions = [convention_study.accession]
+    assert_equal expected_accessions, json['matching_accessions'],
+                 "Did not find expected accessions before inferred search, expected #{expected_accessions} but found #{json['matching_accessions']}"
+
+    # update to match both filters; should be inferred
+    double_facet_name = facets.map {|facet| facet.filters.first[:name]}.join(' ')
+    other_study.update(description: double_facet_name)
+    execute_http_request(:get, api_v1_search_path(type: 'study', facets: facet_query))
+    assert_response :success
+    inferred_accessions = [convention_study.accession, other_study.accession]
+    assert_equal inferred_accessions, json['matching_accessions'],
+                 "Did not find expected accessions after inferred search, expected #{inferred_accessions} but found #{json['matching_accessions']}"
+    inferred_study = json['studies'].last
+    assert inferred_study['inferred_match'], "Did not correctly mark #{other_study.accession} as inferred"
     other_study.update(description: original_description)
 
     puts "#{File.basename(__FILE__)}: #{self.method_name} successful!"

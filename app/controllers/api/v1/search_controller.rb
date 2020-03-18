@@ -213,17 +213,18 @@ module Api
         # if a user ran a faceted search, attempt to infer results by converting filter display values to keywords
         if @facets.any?
           # preserve existing search terms, if present
-          @filter_keywords = @term_list.present? ? @term_list.dup : []
-          @filter_keywords += self.class.convert_filters_for_inferred_search(facets: @facets)
+          facets_to_keywords = @term_list.present? ? {keywords: @term_list.dup} : {}
+          facets_to_keywords.merge!(self.class.convert_filters_for_inferred_search(facets: @facets))
           # only run inferred search if we have extra keywords to run; numeric facets do not generate inferred searches
-          if @filter_keywords.any?
-            logger.info "Running inferred search using #{@filter_keywords}"
-            inferred_studies = self.class.generate_mongo_query_by_context(terms: @filter_keywords, base_studies: @viewable,
+          if facets_to_keywords.any?
+            @inferred_terms = facets_to_keywords.values.flatten
+            logger.info "Running inferred search using #{facets_to_keywords}"
+            inferred_studies = self.class.generate_mongo_query_by_context(terms: facets_to_keywords, base_studies: @viewable,
                                                                           accessions: @matching_accessions, query_context: :inferred)
             @inferred_accessions = inferred_studies.pluck(:accession)
             logger.info "Found #{@inferred_accessions.count} inferred matches: #{@inferred_accessions}"
             @matching_accessions += @inferred_accessions
-            @studies += inferred_studies.sort_by {|study| -study.search_weight(@filter_keywords)[:total] }
+            @studies += inferred_studies.sort_by {|study| -study.search_weight(@inferred_terms)[:total] }
           end
         end
         @results = @studies.paginate(page: params[:page], per_page: Study.per_page)
@@ -591,8 +592,12 @@ module Api
           study_regex = escape_terms_for_regex(term_list: terms)
           base_studies.any_of({name: study_regex}, {description: study_regex}, {:accession.in => accessions})
         when :inferred
-          filter_regex = escape_terms_for_regex(term_list: terms)
-          base_studies.any_of({name: filter_regex}, {description: filter_regex}).where(:accession.nin => accessions)
+          # in order to maintain the same behavior as normal facets, we run each facet separately and get matching accessions
+          # this gives us an array of arrays of matching accessions; now find the intersection (:&)
+          filters = terms.values.map {|keywords| escape_terms_for_regex(term_list: keywords)}
+          accessions_by_filter = filters.map {|filter| base_studies.any_of({name: filter}, {description: filter})
+                                                           .where(:accession.nin => accessions).pluck(:accession)}
+          base_studies.where(:accession.in => accessions_by_filter.inject(:&))
         else
           # no matching query case, so perform normal text-index search
           base_studies.any_of({:$text => {:$search => terms}}, {:accession.in => accessions})
@@ -655,16 +660,17 @@ module Api
       end
 
       # convert a list of facet filters into a keyword search for inferred matching
+      # treats each facet separately so we can find intersection across all
       def self.convert_filters_for_inferred_search(facets:)
-        filter_terms = []
+        terms_by_facet = {}
         facets.each do |facet|
           search_facet = SearchFacet.find(facet[:object_id])
           # only use non-numeric facets
           if !search_facet.is_numeric?
-            filter_terms += facet[:filters].map {|filter| filter[:name]}
+            terms_by_facet[search_facet.identifier] = facet[:filters].map {|filter| filter[:name]}
           end
         end
-        filter_terms
+        terms_by_facet
       end
 
       # build a match of studies to facets/filters used in search (for labeling studies in UI with matches)
@@ -677,8 +683,10 @@ module Api
             facet_name = key.to_s.chomp('_val')
             matching_filter = match_results_by_filter(search_result: result, result_key: key, facets: search_facets)
             matches[accession][facet_name] ||= []
-            matches[accession][facet_name] << matching_filter unless matches[accession][facet_name].include?(matching_filter)
-            matches[accession][:facet_search_weight] += 1
+            if !matches[accession][facet_name].include?(matching_filter)
+              matches[accession][facet_name] << matching_filter
+              matches[accession][:facet_search_weight] += 1
+            end
           end
         end
         matches
