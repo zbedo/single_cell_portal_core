@@ -11,17 +11,22 @@ export function formatDescription(rawDescription, term) {
   return shortenDescription(textDescription, term)
 }
 
-function highlightText(text, terms) {
+function highlightText(text, termMatches) {
   const matchedIndicies = []
-  if (terms) {
-    let match
-    const regex = RegExp(terms, 'gi')
-    // Find indices where match occured
-    while ((match = regex.exec(text)) != null) {
-      matchedIndicies.push(match.index)
-    }
+  if (termMatches) {
+    termMatches.forEach((term, index) => {
+      let match
+      const regex = RegExp(term, 'gi')
+      // Find indices where match occured
+      while ((match = regex.exec(text)) != null) {
+        matchedIndicies.push(match.index)
+      }
+    })
     if (matchedIndicies.length>0) {
-      return { styledText: text.replace(regex, `<span id='highlight'>${terms}</span>`), matchedIndicies }
+      termMatches.forEach((term, index) => {
+        const regex = RegExp(term, 'gi')
+        text = text.replace(regex, `<span id='highlight'>${term}</span>`)
+      })
     }
   }
   return { styledText: text, matchedIndicies }
@@ -74,9 +79,9 @@ function stripTags(rawString) {
 
 /* displays a brief summary of a study, with a link to the study page */
 export default function Study({ study }) {
-  const { terms, facets } = study
-  const studyTitle= highlightText(study.name, terms).styledText
-  const studyDescription = formatDescription(study.description, terms)
+  const { term_matches, facets } = study
+  const studyTitle= highlightText(study.name, term_matches).styledText
+  const studyDescription = formatDescription(study.description, term_matches)
   const displayStudyTitle = { __html: studyTitle }
   let inferredBadge = <></>
   if (study.inferred_match) {
