@@ -14,7 +14,6 @@ export default function StudyResultsContainer(props) {
         <Tab eventKey='study' title="Studies" >
           <StudiesResults changePage ={props.changePage} results={props.results} />
         </Tab>
-        <Tab eventKey='files' title='Files'></Tab>
       </Tabs>
     </Tab.Container>
   )
