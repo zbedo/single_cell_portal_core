@@ -3,7 +3,7 @@ import React from 'react'
 import KeywordSearch from './KeywordSearch'
 import FacetsPanel from './FacetsPanel'
 import DownloadButton from './DownloadButton'
-
+import DownloadProvider from 'components/search/DownloadProvider'
 
 /**
  * Component for SCP faceted search UI
@@ -17,7 +17,9 @@ export default function SearchPanel() {
     <div className='container-fluid' id='search-panel'>
       <KeywordSearch/>
       <FacetsPanel/>
-      <DownloadButton />
+      <DownloadProvider>
+        <DownloadButton />
+      </DownloadProvider>
     </div>
   )
 }

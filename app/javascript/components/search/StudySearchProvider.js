@@ -5,8 +5,7 @@ import { Router, navigate } from '@reach/router'
 import * as queryString from 'query-string'
 
 import {
-  fetchSearch, buildSearchQueryString, buildFacetsFromQueryString,
-  fetchDownloadSize
+  fetchSearch, buildSearchQueryString, buildFacetsFromQueryString
 } from 'lib/scp-api'
 import SearchSelectionProvider from 'components/search/SearchSelectionProvider'
 
@@ -21,10 +20,6 @@ const emptySearch = {
   isLoading: false,
   isLoaded: false,
   isError: false,
-
-  downloadSize: {},
-  isLoadingDownloadSize: false,
-  isLoadedDownloadSize: false,
 
   updateSearch: () => {
     throw new Error(
@@ -48,7 +43,6 @@ export function PropsStudySearchProvider(props) {
   const defaultState = _cloneDeep(emptySearch)
   defaultState.updateSearch = updateSearch
   const [searchState, setSearchState] = useState(defaultState)
-  const downloadSize = emptySearch.downloadSize
   const searchParams = props.searchParams
 
   /**
@@ -63,27 +57,6 @@ export function PropsStudySearchProvider(props) {
     const page = newParams.page ? newParams.page : 1
     const queryString = buildSearchQueryString('study', terms, facets, page)
     navigate(`?${queryString}`)
-  }
-
-  /** Update size preview for bulk download */
-  async function updateDownloadSize(params, results) {
-    const accessions = results.matchingAccessions
-    const fileTypes = ['Expression', 'Metadata']
-    const size = await fetchDownloadSize(accessions, fileTypes)
-
-    setSearchState({
-      params,
-      isError: false,
-      isLoading: false,
-      isLoaded: true,
-
-      isLoadingDownloadSize: false,
-      isLoadedDownloadSize: true,
-      downloadSize: size,
-
-      results,
-      updateSearch
-    })
   }
 
   /** perform the actual API search */
@@ -101,14 +74,9 @@ export function PropsStudySearchProvider(props) {
       isError: false,
       isLoading: false,
       isLoaded: true,
-      isLoadingDownloadSize: true,
-      isLoadedDownloadSize: false,
       results,
-      downloadSize: {},
       updateSearch
     })
-
-    updateDownloadSize(params, results)
   }
 
   // Search done on initial page load
@@ -122,10 +90,7 @@ export function PropsStudySearchProvider(props) {
       isError: false,
       isLoading: true,
       isLoaded: false,
-      isLoadingDownloadSize: false,
-      isLoadedDownloadSize: false,
       results: [],
-      downloadSize,
       updateSearch
     })
   }

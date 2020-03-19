@@ -7,6 +7,7 @@ import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger'
 
 import { useContextStudySearch } from './search/StudySearchProvider'
 import { useContextUser } from './UserProvider'
+import { useContextDownload } from './search/DownloadProvider'
 import { fetchAuthCode } from 'lib/scp-api'
 import {
   getNumFacetsAndFilters, getNumberOfTerms
@@ -28,7 +29,7 @@ async function generateDownloadConfig(matchingAccessions) {
   // Gets a curl configuration ("cfg.txt") containing signed
   // URLs and output names for all files in the download object.
   const baseUrl = `${window.origin}/single_cell/api/v1/`
-  const url = `${baseUrl}/search/bulk_download${queryString}`
+  const url = `${baseUrl}search/bulk_download${queryString}`
 
   // "-k" === "--insecure"
   const curlSecureFlag = (window.location.host === 'localhost') ? 'k' : ''
@@ -203,24 +204,27 @@ function hasSearchParams(params) {
  *
  * UI spec: https://projects.invisionapp.com/d/main#/console/19272801/402387755/preview
  */
-export default function DownloadButton() {
+export default function DownloadButton(props) {
   const searchContext = useContextStudySearch()
   const userContext = useContextUser()
+  const downloadContext = useContextDownload({ results: searchContext.results })
 
   const [show, setShow] = useState(false)
 
   const matchingAccessions = searchContext.results.matchingAccessions || []
-  const downloadSize = searchContext.downloadSize
+  const downloadSize = downloadContext.downloadSize
 
   /**
    * Reports whether Download button should be active,
    * i.e. user is signed in, has search results,
    * and search has parameters (i.e. user would not download all studies)
+   * and download context (i.e. download size preview) has loaded
    */
   const active = (
     userContext.accessToken !== '' &&
     matchingAccessions.length > 0 &&
-    hasSearchParams(searchContext.params)
+    hasSearchParams(searchContext.params) &&
+    downloadContext.isLoaded
   )
 
   let hint = 'To download, first do a search'
