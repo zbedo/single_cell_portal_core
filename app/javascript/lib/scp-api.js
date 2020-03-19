@@ -182,9 +182,11 @@ export async function fetchSearch(
 ) {
   const path = `/search?${buildSearchQueryString(type, terms, facets, page)}`
 
+  const searchResults = await scpApi(path, defaultInit, mock)
+
   logSearch(type, terms, facets, page)
 
-  return await scpApi(path, defaultInit, mock)
+  return searchResults
 }
 
 /** Constructs query string used for /search REST API endpoint */
