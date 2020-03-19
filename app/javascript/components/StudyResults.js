@@ -2,22 +2,17 @@ import React from 'react'
 import Tab from 'react-bootstrap/lib/Tab'
 import Tabs from 'react-bootstrap/lib/Tabs'
 import { useTable, usePagination } from 'react-table'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {
-  faAngleDoubleLeft, faAngleLeft, faAngleRight, faAngleDoubleRight
-} from '@fortawesome/free-solid-svg-icons'
 import Study from './Study'
 import PagingControl from './PagingControl'
 /**
  * Wrapper component for studies on homepage
  */
 export default function StudyResultsContainer(props) {
-  // const studies = <StudiesList studies={props.results}/>
   return (
     <Tab.Container id="result-tabs" defaultActiveKey="study">
       <Tabs defaultActiveKey='study' animation={false} >
         <Tab eventKey='study' title="Studies" >
-          <StudiesResults changePage ={props.changePage} results={props.results}/>
+          <StudiesResults changePage ={props.changePage} results={props.results} />
         </Tab>
         <Tab eventKey='files' title='Files'></Tab>
       </Tabs>
@@ -25,18 +20,6 @@ export default function StudyResultsContainer(props) {
   )
 }
 
-export const StudiesList = ({ studies }) => {
-  return studies.studies.map(result => (
-    {
-      study: <Study
-        study={result}
-        key={result.accession}
-        className='card'
-      />
-    }
-  )
-  )
-}
 
 /**
  * Component for the content of the 'Studies' tab

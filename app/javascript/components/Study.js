@@ -48,10 +48,10 @@ function shortenDescription(textDescription, term) {
     if (amountOfMatchesInSummaryWordLimit>0) {
       //  Need to recaluculate index positions because added html changes size of textDescription
       const summaryEndIndex= (amountOfMatchesInSummaryWordLimit *(lengthOfHighlightTag+term))
-      const summaryText = styledText.slice(0, summaryEndIndex)
+      var summaryText = styledText.slice(0, summaryEndIndex)
       return <><span>{summaryText}</span> <span className="detail">...</span><span dangerouslySetInnerHTML={displayedStudyDescription}></span>{suffixTag}</>
     }
-    const summaryText = styledText.slice(0, summaryWordLimit)
+    var summaryText = styledText.slice(0, summaryWordLimit)
     return <><span>{summaryText} </span><span className="detail">...</span> <span dangerouslySetInnerHTML={displayedStudyDescription}></span>{suffixTag}</>
   }
   const displayedStudyDescription = { __html: styledText.slice(0, descriptionWordLimit) }
