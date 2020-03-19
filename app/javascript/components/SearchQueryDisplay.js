@@ -1,4 +1,6 @@
 import React from 'react'
+import { faSearch } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 export default function SearchQueryDisplay({terms, facets}) {
   const hasFacets = facets.length > 0
@@ -10,6 +12,18 @@ export default function SearchQueryDisplay({terms, facets}) {
   let facetsDisplay = <span></span>
   let termsDisplay = <span></span>
 
+  function formattedJoinedList(itemTexts, itemClass, joinText) {
+    return itemTexts.map((text, index) => {
+        return (
+          <span key={index}>
+            <span className={itemClass}>{text}</span>
+            { (index != itemTexts.length - 1) &&
+              <span className="join-text">{joinText}</span>}
+          </span>
+        )
+    })
+  }
+
   if (hasFacets) {
     let FacetContainer = (props) => <>{props.children}</>
     if (hasTerms) {
@@ -20,15 +34,7 @@ export default function SearchQueryDisplay({terms, facets}) {
       return (<span key={index}>
         (
           <span className="facet-name">{facet.id}: </span>
-          {facet.filters.map((filter, filterIndex) => {
-              return (
-                <span key={filterIndex}>
-                  <span className="filter-name">{filter.name}</span>
-                  { (filterIndex != facet.filters.length - 1) &&
-                    <span className="join-text"> OR </span>}
-                </span>
-              )
-          })}
+          { formattedJoinedList(facet.filters.map(filter => filter.name), 'filter-name', ' OR ')}
         )
         { (index != facets.length - 1) &&
           <span className="join-text"> AND </span>}
@@ -39,18 +45,11 @@ export default function SearchQueryDisplay({terms, facets}) {
   if (hasTerms) {
     termsDisplay = (
       <span>Text contains (
-        {terms.map((term, index) => {
-          return (
-            <span key={index}>
-              <span className="search-term">{term}</span>
-              { (index != terms.length - 1) &&
-                <span className="join-text"> OR </span>}
-            </span>)
-        })}
+        { formattedJoinedList(terms, 'search-term', ' OR ') }
       )</span>)
     if (hasFacets) {
       termsDisplay = <span>({termsDisplay})</span>
     }
   }
-  return <div className="search-query">Query: {termsDisplay}{facetsDisplay}</div>
+  return <div className="search-query"> <FontAwesomeIcon icon={faSearch} />: {termsDisplay}{facetsDisplay}</div>
 }
