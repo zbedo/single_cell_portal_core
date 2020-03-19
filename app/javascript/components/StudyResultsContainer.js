@@ -1,22 +1,37 @@
 import React from 'react'
+import Tab from 'react-bootstrap/lib/Tab'
+import Tabs from 'react-bootstrap/lib/Tabs'
 import { useTable, usePagination } from 'react-table'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {
-  faAngleDoubleLeft, faAngleLeft, faAngleRight, faAngleDoubleRight
-} from '@fortawesome/free-solid-svg-icons'
 import Study from './Study'
-
+import PagingControl from './PagingControl'
 /**
  * Wrapper component for studies on homepage
  */
-const StudyResults = ({ results, changePage }) => {
+export default function StudyResultsContainer(props) {
+  return (
+    <Tab.Container id="result-tabs" defaultActiveKey="study">
+      <Tabs defaultActiveKey='study' animation={false} >
+        <Tab eventKey='study' title="Studies" >
+          <StudiesResults changePage ={props.changePage} results={props.results} />
+        </Tab>
+      </Tabs>
+    </Tab.Container>
+  )
+}
+
+
+/**
+ * Component for the content of the 'Studies' tab
+ */
+export function StudiesResults(props) {
+  const { results, changePage } = props
   const columns = React.useMemo(
     () => [{
       accessor: 'study'
     }])
 
   // convert to an array of objects with a 'study' property for react-table
-  const data = results.studies.map(study => { return {study: study}})
+  const data = results.studies.map(study => {return { study }})
 
   const {
     getTableProps,
@@ -88,41 +103,3 @@ const StudyResults = ({ results, changePage }) => {
     </>
   )
 }
-// Taken from https://codesandbox.io/s/github/tannerlinsley/react-table/tree/master/examples/pagination
-const PagingControl = ({
-  currentPage, totalPages, changePage, canPreviousPage, canNextPage
-}) => {
-  return (
-    <div className="pagination">
-      <button
-        className="text-button"
-        onClick={() => {changePage(1)}}
-        disabled={!canPreviousPage}>
-        <FontAwesomeIcon icon={faAngleDoubleLeft}/>
-      </button>
-      <button
-        className="text-button"
-        onClick={() => {changePage(currentPage - 1)}}
-        disabled={!canPreviousPage}>
-        <FontAwesomeIcon icon={faAngleLeft}/>
-      </button>
-      <span className="currentPage">
-        Page {currentPage} of {totalPages}
-      </span>
-      <button
-        className="text-button"
-        onClick={() => {changePage(currentPage + 1)}}
-        disabled={!canNextPage}>
-        <FontAwesomeIcon icon={faAngleRight}/>
-      </button>
-      <button
-        className="text-button"
-        onClick={() => {changePage(totalPages)}}
-        disabled={!canNextPage}>
-        <FontAwesomeIcon icon={faAngleDoubleRight}/>
-      </button>
-    </div>
-  )
-}
-
-export default StudyResults
