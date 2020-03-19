@@ -12,45 +12,45 @@ export function formatDescription(rawDescription, term) {
 }
 
 function highlightText(text, termMatches) {
-  const matchedIndicies = []
+  const matchedIndices = []
   if (termMatches) {
     termMatches.forEach((term, index) => {
       let match
       const regex = RegExp(term, 'gi')
       // Find indices where match occured
       while ((match = regex.exec(text)) != null) {
-        matchedIndicies.push(match.index)
+        matchedIndices.push(match.index)
       }
     })
-    if (matchedIndicies.length>0) {
+    if (matchedIndices.length>0) {
       termMatches.forEach((term, index) => {
         const regex = RegExp(term, 'gi')
         text = text.replace(regex, `<span id='highlight'>${term}</span>`)
       })
     }
   }
-  return { styledText: text, matchedIndicies }
+  return { styledText: text, matchedIndices }
 }
 
 function shortenDescription(textDescription, term) {
-  const { styledText, matchedIndicies } = highlightText(textDescription, term)
+  const { styledText, matchedIndices } = highlightText(textDescription, term)
   const suffixTag = <span className="detail"> ...(continued)</span>
 
   // Check if there are matches outside of the descriptionWordLimit
-  if (matchedIndicies.some(matchedIndex => matchedIndex >= descriptionWordLimit)) {
+  if (matchedIndices.some(matchedIndex => matchedIndex >= descriptionWordLimit)) {
     // Find matches occur outside descriptionWordLimit
-    const matchesOutSideDescriptionWordLimit = matchedIndicies.filter(matchedIndex => matchedIndex>descriptionWordLimit)
+    const matchesOutSideDescriptionWordLimit = matchedIndices.filter(matchedIndex => matchedIndex>descriptionWordLimit)
 
     const firstIndex = matchesOutSideDescriptionWordLimit[0]
     // Find matches that fit within the n+descriptionWordLimit
     const ranges = matchesOutSideDescriptionWordLimit.filter(index => index < descriptionWordLimit+firstIndex)
     // Determine where start and end index to ensure matched keywords are included
-    const start = ((matchedIndicies.length- matchesOutSideDescriptionWordLimit.length)*(lengthOfHighlightTag+term.length)) +firstIndex
+    const start = ((matchedIndices.length- matchesOutSideDescriptionWordLimit.length)*(lengthOfHighlightTag+term.length)) +firstIndex
     const end = start + descriptionWordLimit + (ranges.length*(lengthOfHighlightTag+term.length))
     const descriptionText = styledText.slice(start-100, end)
     const displayedStudyDescription = { __html: descriptionText }
     // Determine if there are matches to display in summary paragraph
-    const amountOfMatchesInSummaryWordLimit = matchedIndicies.filter(matchedIndex => matchedIndex <= summaryWordLimit).length
+    const amountOfMatchesInSummaryWordLimit = matchedIndices.filter(matchedIndex => matchedIndex <= summaryWordLimit).length
     if (amountOfMatchesInSummaryWordLimit>0) {
       //  Need to recaluculate index positions because added html changes size of textDescription
       const beginningTextIndex= (amountOfMatchesInSummaryWordLimit *(lengthOfHighlightTag+term.length))
@@ -97,7 +97,7 @@ export default function Study({ study }) {
           <a href={study.study_url} dangerouslySetInnerHTML = {displayStudyTitle}></a>{inferredBadge}
         </label>
         <div>
-          <span id='cell-count' className='badge badge-secondary'>
+          <span className='badge badge-secondary cell-count'>
             {study.cell_count} Cells
           </span>
         </div>
