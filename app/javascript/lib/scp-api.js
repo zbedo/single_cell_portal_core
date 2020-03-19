@@ -54,7 +54,7 @@ if (
 export async function fetchAuthCode(mock=false) {
   let init = defaultInit
   if (mock === false && globalMock === false) {
-    init = Object.assign(defaultInit, {
+    init = Object.assign({}, defaultInit, {
       method: 'POST'
     })
   }
